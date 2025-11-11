@@ -128,6 +128,7 @@ class RoomOpsAPITester:
         
         # Test create room
         room_data = {
+            "tenant_id": "dummy",  # Will be overwritten by backend
             "room_number": "101",
             "room_type": "deluxe",
             "floor": 1,

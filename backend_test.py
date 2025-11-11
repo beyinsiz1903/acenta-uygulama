@@ -341,6 +341,7 @@ class RoomOpsAPITester:
         # Test create loyalty program (need guest first)
         if self.created_resources['guests']:
             program_data = {
+                "tenant_id": "dummy",  # Will be overwritten by backend
                 "guest_id": self.created_resources['guests'][0],
                 "tier": "bronze",
                 "points": 100,

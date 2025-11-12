@@ -7,7 +7,7 @@ from typing import List, Dict, Any
 from datetime import datetime
 import asyncio
 
-from ai_service import ai_service
+from ai_service import get_ai_service
 from server import get_current_user, User
 
 api_router = APIRouter()

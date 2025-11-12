@@ -46,8 +46,8 @@ const RMSModule = ({ user, tenant, onLogout }) => {
     <Layout user={user} tenant={tenant} onLogout={onLogout} currentModule="rms">
       <div className="p-6 space-y-6">
         <div>
-          <h1 className="text-4xl font-bold mb-2" style={{ fontFamily: 'Space Grotesk' }}>Revenue Management</h1>
-          <p className="text-gray-600">AI-powered price optimization and analysis</p>
+          <h1 className="text-4xl font-bold mb-2" style={{ fontFamily: 'Space Grotesk' }}>{t('rms.title')}</h1>
+          <p className="text-gray-600">{t('rms.subtitle')}</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

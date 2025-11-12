@@ -286,8 +286,8 @@ const PMSModule = ({ user, tenant, onLogout }) => {
     <Layout user={user} tenant={tenant} onLogout={onLogout} currentModule="pms">
       <div className="p-6 space-y-6">
         <div>
-          <h1 className="text-4xl font-bold mb-2" style={{ fontFamily: 'Space Grotesk' }}>Property Management System</h1>
-          <p className="text-gray-600">Complete hotel operations management</p>
+          <h1 className="text-4xl font-bold mb-2" style={{ fontFamily: 'Space Grotesk' }}>{t('pms.title')}</h1>
+          <p className="text-gray-600">{t('pms.subtitle')}</p>
         </div>
 
         <Tabs defaultValue="frontdesk" className="w-full" onValueChange={(v) => {

@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import axios from 'axios';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Hotel, User } from 'lucide-react';
+import LanguageSelector from '@/components/LanguageSelector';
 
 const AuthPage = ({ onLogin }) => {
   const [activeTab, setActiveTab] = useState('hotel-login');

@@ -950,12 +950,12 @@ const InvoiceModule = ({ user, tenant, onLogout }) => {
         <Dialog open={showAdditionalTaxDialog} onOpenChange={setShowAdditionalTaxDialog}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Add Additional Tax</DialogTitle>
-              <DialogDescription>Add special taxes like ÖTV, withholding, or accommodation tax</DialogDescription>
+              <DialogTitle>{t('invoice.addAdditionalTax')}</DialogTitle>
+              <DialogDescription>{t('invoice.subtitle')}</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label>Tax Type</Label>
+                <Label>{t('invoice.taxType')}</Label>
                 <Select 
                   value={newAdditionalTax.tax_type} 
                   onValueChange={(v) => {

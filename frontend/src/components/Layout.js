@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -10,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Home, Hotel, FileText, TrendingUp, Award, ShoppingCart, User, LogOut, Menu } from 'lucide-react';
+import LanguageSelector from '@/components/LanguageSelector';
 
 const Layout = ({ children, user, tenant, onLogout, currentModule }) => {
   const navigate = useNavigate();

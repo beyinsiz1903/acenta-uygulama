@@ -911,9 +911,6 @@ async def get_orders(current_user: User = Depends(get_current_user)):
     orders = await db.orders.find({'tenant_id': current_user.tenant_id}, {'_id': 0}).to_list(1000)
     return orders
 
-# Include router
-app.include_router(api_router)
-
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,

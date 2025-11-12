@@ -78,13 +78,13 @@ const Dashboard = ({ user, tenant, onLogout }) => {
       <div className="p-6 space-y-6">
         <div>
           <h1 className="text-4xl font-bold mb-2" style={{ fontFamily: 'Space Grotesk' }}>
-            Welcome back, {user.name}
+            {t('dashboard.welcome')}, {user.name}
           </h1>
           <p className="text-lg text-gray-600">{tenant.property_name}</p>
         </div>
 
         {loading ? (
-          <div className="text-center py-12">Loading dashboard...</div>
+          <div className="text-center py-12">{t('common.loading')}</div>
         ) : (
           <>
             {/* Quick Stats */}

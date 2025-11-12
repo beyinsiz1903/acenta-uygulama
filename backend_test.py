@@ -445,6 +445,427 @@ class RoomOpsAPITester:
         
         return True
 
+    def test_accounting_invoice_with_taxes(self):
+        """Test Accounting Invoice creation with additional tax functionality"""
+        print("\n🧾 Testing Accounting Invoice with Additional Taxes...")
+        
+        # Test 1: Invoice with 10% VAT Rate
+        print("\n📋 Test 1: Invoice with 10% VAT Rate")
+        invoice_data_10_vat = {
+            "invoice_type": "sales",
+            "customer_name": "ABC Corporation",
+            "customer_email": "abc@corporation.com",
+            "items": [
+                {
+                    "description": "Premium Room Service",
+                    "quantity": 1,
+                    "unit_price": 100.0,
+                    "vat_rate": 10.0,
+                    "vat_amount": 10.0,
+                    "total": 110.0,
+                    "additional_taxes": []
+                }
+            ],
+            "due_date": "2025-12-31",
+            "notes": "Test invoice with 10% VAT"
+        }
+        
+        success, response = self.run_test(
+            "Create Invoice with 10% VAT",
+            "POST",
+            "accounting/invoices",
+            200,
+            data=invoice_data_10_vat
+        )
+        
+        if success:
+            # Verify calculations
+            expected_subtotal = 100.0
+            expected_total_vat = 10.0
+            expected_total = 110.0
+            
+            if (response.get('subtotal') == expected_subtotal and 
+                response.get('total_vat') == expected_total_vat and 
+                response.get('total') == expected_total):
+                print("✅ 10% VAT calculation verified")
+                self.tests_passed += 1
+            else:
+                print(f"❌ 10% VAT calculation failed - Expected: subtotal={expected_subtotal}, vat={expected_total_vat}, total={expected_total}")
+                print(f"   Got: subtotal={response.get('subtotal')}, vat={response.get('total_vat')}, total={response.get('total')}")
+            self.tests_run += 1
+        
+        # Test 2: Invoice with ÖTV (Special Consumption Tax) - Percentage
+        print("\n📋 Test 2: Invoice with ÖTV (Percentage)")
+        invoice_data_otv_percent = {
+            "invoice_type": "sales",
+            "customer_name": "XYZ Hotel",
+            "customer_email": "xyz@hotel.com",
+            "items": [
+                {
+                    "description": "Luxury Beverage Package",
+                    "quantity": 2,
+                    "unit_price": 50.0,
+                    "vat_rate": 18.0,
+                    "vat_amount": 18.0,
+                    "total": 118.0,
+                    "additional_taxes": [
+                        {
+                            "tax_type": "otv",
+                            "tax_name": "ÖTV (Special Consumption Tax)",
+                            "rate": 5.0,
+                            "is_percentage": True,
+                            "calculated_amount": 5.0
+                        }
+                    ]
+                }
+            ],
+            "due_date": "2025-12-31",
+            "notes": "Test invoice with ÖTV percentage"
+        }
+        
+        success, response = self.run_test(
+            "Create Invoice with ÖTV (Percentage)",
+            "POST",
+            "accounting/invoices",
+            200,
+            data=invoice_data_otv_percent
+        )
+        
+        if success:
+            # Verify calculations: subtotal=100, vat=18, otv=5% of 100=5, total=123
+            expected_subtotal = 100.0
+            expected_total_vat = 18.0
+            expected_additional_taxes = 5.0
+            expected_total = 123.0
+            
+            if (response.get('subtotal') == expected_subtotal and 
+                response.get('total_vat') == expected_total_vat and 
+                response.get('total_additional_taxes') == expected_additional_taxes and
+                response.get('total') == expected_total):
+                print("✅ ÖTV percentage calculation verified")
+                self.tests_passed += 1
+            else:
+                print(f"❌ ÖTV percentage calculation failed")
+                print(f"   Expected: subtotal={expected_subtotal}, vat={expected_total_vat}, additional_taxes={expected_additional_taxes}, total={expected_total}")
+                print(f"   Got: subtotal={response.get('subtotal')}, vat={response.get('total_vat')}, additional_taxes={response.get('total_additional_taxes')}, total={response.get('total')}")
+            self.tests_run += 1
+        
+        # Test 3: Invoice with ÖTV (Fixed Amount)
+        print("\n📋 Test 3: Invoice with ÖTV (Fixed Amount)")
+        invoice_data_otv_fixed = {
+            "invoice_type": "sales",
+            "customer_name": "DEF Resort",
+            "customer_email": "def@resort.com",
+            "items": [
+                {
+                    "description": "Tobacco Products",
+                    "quantity": 1,
+                    "unit_price": 80.0,
+                    "vat_rate": 18.0,
+                    "vat_amount": 14.4,
+                    "total": 94.4,
+                    "additional_taxes": [
+                        {
+                            "tax_type": "otv",
+                            "tax_name": "ÖTV (Fixed Amount)",
+                            "amount": 10.0,
+                            "is_percentage": False,
+                            "calculated_amount": 10.0
+                        }
+                    ]
+                }
+            ],
+            "due_date": "2025-12-31",
+            "notes": "Test invoice with ÖTV fixed amount"
+        }
+        
+        success, response = self.run_test(
+            "Create Invoice with ÖTV (Fixed Amount)",
+            "POST",
+            "accounting/invoices",
+            200,
+            data=invoice_data_otv_fixed
+        )
+        
+        if success:
+            # Verify calculations: subtotal=80, vat=14.4, otv=10, total=104.4
+            expected_subtotal = 80.0
+            expected_total_vat = 14.4
+            expected_additional_taxes = 10.0
+            expected_total = 104.4
+            
+            if (response.get('subtotal') == expected_subtotal and 
+                response.get('total_vat') == expected_total_vat and 
+                response.get('total_additional_taxes') == expected_additional_taxes and
+                response.get('total') == expected_total):
+                print("✅ ÖTV fixed amount calculation verified")
+                self.tests_passed += 1
+            else:
+                print(f"❌ ÖTV fixed amount calculation failed")
+                print(f"   Expected: subtotal={expected_subtotal}, vat={expected_total_vat}, additional_taxes={expected_additional_taxes}, total={expected_total}")
+                print(f"   Got: subtotal={response.get('subtotal')}, vat={response.get('total_vat')}, additional_taxes={response.get('total_additional_taxes')}, total={response.get('total')}")
+            self.tests_run += 1
+        
+        # Test 4: Invoice with Withholding Tax (Tevkifat) - 7/10
+        print("\n📋 Test 4: Invoice with Withholding Tax (7/10)")
+        invoice_data_withholding = {
+            "invoice_type": "sales",
+            "customer_name": "GHI Construction",
+            "customer_email": "ghi@construction.com",
+            "items": [
+                {
+                    "description": "Construction Services",
+                    "quantity": 1,
+                    "unit_price": 100.0,
+                    "vat_rate": 18.0,
+                    "vat_amount": 18.0,
+                    "total": 118.0,
+                    "additional_taxes": [
+                        {
+                            "tax_type": "withholding",
+                            "tax_name": "Tevkifat (7/10)",
+                            "withholding_rate": "7/10",
+                            "is_percentage": True,
+                            "calculated_amount": 12.6
+                        }
+                    ]
+                }
+            ],
+            "due_date": "2025-12-31",
+            "notes": "Test invoice with withholding tax 7/10"
+        }
+        
+        success, response = self.run_test(
+            "Create Invoice with Withholding Tax (7/10)",
+            "POST",
+            "accounting/invoices",
+            200,
+            data=invoice_data_withholding
+        )
+        
+        if success:
+            # Verify calculations: subtotal=100, vat=18, withholding=70% of 18=12.6, total=100+18-12.6=105.4
+            expected_subtotal = 100.0
+            expected_total_vat = 18.0
+            expected_vat_withholding = 12.6
+            expected_total = 105.4
+            
+            if (response.get('subtotal') == expected_subtotal and 
+                response.get('total_vat') == expected_total_vat and 
+                response.get('vat_withholding') == expected_vat_withholding and
+                response.get('total') == expected_total):
+                print("✅ Withholding tax (7/10) calculation verified")
+                self.tests_passed += 1
+            else:
+                print(f"❌ Withholding tax (7/10) calculation failed")
+                print(f"   Expected: subtotal={expected_subtotal}, vat={expected_total_vat}, withholding={expected_vat_withholding}, total={expected_total}")
+                print(f"   Got: subtotal={response.get('subtotal')}, vat={response.get('total_vat')}, withholding={response.get('vat_withholding')}, total={response.get('total')}")
+            self.tests_run += 1
+        
+        # Test 5: Invoice with Accommodation Tax
+        print("\n📋 Test 5: Invoice with Accommodation Tax")
+        invoice_data_accommodation = {
+            "invoice_type": "sales",
+            "customer_name": "JKL Tourism",
+            "customer_email": "jkl@tourism.com",
+            "items": [
+                {
+                    "description": "Hotel Accommodation",
+                    "quantity": 3,
+                    "unit_price": 120.0,
+                    "vat_rate": 8.0,
+                    "vat_amount": 28.8,
+                    "total": 388.8,
+                    "additional_taxes": [
+                        {
+                            "tax_type": "accommodation",
+                            "tax_name": "Konaklama Vergisi",
+                            "rate": 2.0,
+                            "is_percentage": True,
+                            "calculated_amount": 7.2
+                        }
+                    ]
+                }
+            ],
+            "due_date": "2025-12-31",
+            "notes": "Test invoice with accommodation tax"
+        }
+        
+        success, response = self.run_test(
+            "Create Invoice with Accommodation Tax",
+            "POST",
+            "accounting/invoices",
+            200,
+            data=invoice_data_accommodation
+        )
+        
+        if success:
+            # Verify calculations: subtotal=360, vat=28.8, accommodation=2% of 360=7.2, total=396
+            expected_subtotal = 360.0
+            expected_total_vat = 28.8
+            expected_additional_taxes = 7.2
+            expected_total = 396.0
+            
+            if (response.get('subtotal') == expected_subtotal and 
+                response.get('total_vat') == expected_total_vat and 
+                response.get('total_additional_taxes') == expected_additional_taxes and
+                response.get('total') == expected_total):
+                print("✅ Accommodation tax calculation verified")
+                self.tests_passed += 1
+            else:
+                print(f"❌ Accommodation tax calculation failed")
+                print(f"   Expected: subtotal={expected_subtotal}, vat={expected_total_vat}, additional_taxes={expected_additional_taxes}, total={expected_total}")
+                print(f"   Got: subtotal={response.get('subtotal')}, vat={response.get('total_vat')}, additional_taxes={response.get('total_additional_taxes')}, total={response.get('total')}")
+            self.tests_run += 1
+        
+        # Test 6: Complex Invoice with Multiple Taxes
+        print("\n📋 Test 6: Complex Invoice with Multiple Taxes")
+        invoice_data_complex = {
+            "invoice_type": "sales",
+            "customer_name": "MNO Enterprise",
+            "customer_email": "mno@enterprise.com",
+            "items": [
+                {
+                    "description": "Premium Service Package",
+                    "quantity": 1,
+                    "unit_price": 200.0,
+                    "vat_rate": 18.0,
+                    "vat_amount": 36.0,
+                    "total": 236.0,
+                    "additional_taxes": [
+                        {
+                            "tax_type": "otv",
+                            "tax_name": "ÖTV",
+                            "rate": 3.0,
+                            "is_percentage": True,
+                            "calculated_amount": 6.0
+                        },
+                        {
+                            "tax_type": "withholding",
+                            "tax_name": "Tevkifat (9/10)",
+                            "withholding_rate": "9/10",
+                            "is_percentage": True,
+                            "calculated_amount": 32.4
+                        }
+                    ]
+                },
+                {
+                    "description": "Additional Services",
+                    "quantity": 2,
+                    "unit_price": 50.0,
+                    "vat_rate": 10.0,
+                    "vat_amount": 10.0,
+                    "total": 110.0,
+                    "additional_taxes": [
+                        {
+                            "tax_type": "accommodation",
+                            "tax_name": "Konaklama Vergisi",
+                            "rate": 1.5,
+                            "is_percentage": True,
+                            "calculated_amount": 1.5
+                        }
+                    ]
+                }
+            ],
+            "due_date": "2025-12-31",
+            "notes": "Test invoice with multiple complex taxes"
+        }
+        
+        success, response = self.run_test(
+            "Create Invoice with Multiple Taxes",
+            "POST",
+            "accounting/invoices",
+            200,
+            data=invoice_data_complex
+        )
+        
+        if success:
+            # Verify calculations:
+            # Item 1: subtotal=200, vat=36, otv=6, withholding=90% of 36=32.4
+            # Item 2: subtotal=100, vat=10, accommodation=1.5% of 100=1.5
+            # Total: subtotal=300, vat=46, additional_taxes=7.5, withholding=32.4, total=321.1
+            expected_subtotal = 300.0
+            expected_total_vat = 46.0
+            expected_additional_taxes = 7.5
+            expected_vat_withholding = 32.4
+            expected_total = 321.1
+            
+            if (response.get('subtotal') == expected_subtotal and 
+                response.get('total_vat') == expected_total_vat and 
+                response.get('total_additional_taxes') == expected_additional_taxes and
+                response.get('vat_withholding') == expected_vat_withholding and
+                abs(response.get('total', 0) - expected_total) < 0.01):  # Allow small floating point differences
+                print("✅ Multiple taxes calculation verified")
+                self.tests_passed += 1
+            else:
+                print(f"❌ Multiple taxes calculation failed")
+                print(f"   Expected: subtotal={expected_subtotal}, vat={expected_total_vat}, additional_taxes={expected_additional_taxes}, withholding={expected_vat_withholding}, total={expected_total}")
+                print(f"   Got: subtotal={response.get('subtotal')}, vat={response.get('total_vat')}, additional_taxes={response.get('total_additional_taxes')}, withholding={response.get('vat_withholding')}, total={response.get('total')}")
+            self.tests_run += 1
+        
+        # Test 7: Different Withholding Rates
+        print("\n📋 Test 7: Different Withholding Rates (9/10, 5/10, 3/10)")
+        withholding_rates = [
+            {"rate": "9/10", "expected_percent": 90},
+            {"rate": "5/10", "expected_percent": 50},
+            {"rate": "3/10", "expected_percent": 30}
+        ]
+        
+        for rate_test in withholding_rates:
+            rate = rate_test["rate"]
+            expected_percent = rate_test["expected_percent"]
+            
+            invoice_data_rate = {
+                "invoice_type": "sales",
+                "customer_name": f"Test Company {rate}",
+                "customer_email": f"test{rate.replace('/', '')}@company.com",
+                "items": [
+                    {
+                        "description": f"Service with {rate} withholding",
+                        "quantity": 1,
+                        "unit_price": 100.0,
+                        "vat_rate": 18.0,
+                        "vat_amount": 18.0,
+                        "total": 118.0,
+                        "additional_taxes": [
+                            {
+                                "tax_type": "withholding",
+                                "tax_name": f"Tevkifat ({rate})",
+                                "withholding_rate": rate,
+                                "is_percentage": True,
+                                "calculated_amount": 18.0 * (expected_percent / 100)
+                            }
+                        ]
+                    }
+                ],
+                "due_date": "2025-12-31",
+                "notes": f"Test invoice with withholding tax {rate}"
+            }
+            
+            success, response = self.run_test(
+                f"Create Invoice with Withholding Tax ({rate})",
+                "POST",
+                "accounting/invoices",
+                200,
+                data=invoice_data_rate
+            )
+            
+            if success:
+                expected_withholding = 18.0 * (expected_percent / 100)
+                expected_total = 100.0 + 18.0 - expected_withholding
+                
+                if (abs(response.get('vat_withholding', 0) - expected_withholding) < 0.01 and
+                    abs(response.get('total', 0) - expected_total) < 0.01):
+                    print(f"✅ Withholding tax ({rate}) calculation verified")
+                    self.tests_passed += 1
+                else:
+                    print(f"❌ Withholding tax ({rate}) calculation failed")
+                    print(f"   Expected: withholding={expected_withholding}, total={expected_total}")
+                    print(f"   Got: withholding={response.get('vat_withholding')}, total={response.get('total')}")
+                self.tests_run += 1
+        
+        return True
+
     def test_multi_tenant_isolation(self):
         """Test that tenant isolation works properly"""
         print("\n🔒 Testing Multi-Tenant Isolation...")

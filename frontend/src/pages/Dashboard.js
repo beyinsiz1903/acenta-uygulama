@@ -104,7 +104,7 @@ const Dashboard = ({ user, tenant, onLogout }) => {
 
                 <Card>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-gray-600">Occupancy Rate</CardTitle>
+                    <CardTitle className="text-sm font-medium text-gray-600">{t('dashboard.occupancyRate')}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-center">
@@ -116,7 +116,7 @@ const Dashboard = ({ user, tenant, onLogout }) => {
 
                 <Card>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-gray-600">Today's Check-ins</CardTitle>
+                    <CardTitle className="text-sm font-medium text-gray-600">{t('dashboard.todayCheckins')}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-center">
@@ -128,7 +128,7 @@ const Dashboard = ({ user, tenant, onLogout }) => {
 
                 <Card>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-gray-600">Total Guests</CardTitle>
+                    <CardTitle className="text-sm font-medium text-gray-600">{t('dashboard.totalGuests')}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-center">
@@ -142,7 +142,7 @@ const Dashboard = ({ user, tenant, onLogout }) => {
 
             {/* Modules Grid */}
             <div>
-              <h2 className="text-2xl font-bold mb-4" style={{ fontFamily: 'Space Grotesk' }}>Your Modules</h2>
+              <h2 className="text-2xl font-bold mb-4" style={{ fontFamily: 'Space Grotesk' }}>{t('dashboard.yourModules')}</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {modules.map((module) => {
                   const Icon = module.icon;

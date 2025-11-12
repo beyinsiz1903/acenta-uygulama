@@ -54,9 +54,25 @@ class InvoiceType(str, Enum):
 class VATRate(str, Enum):
     RATE_1 = "1"
     RATE_8 = "8"
+    RATE_10 = "10"
     RATE_18 = "18"
     RATE_20 = "20"
     EXEMPT = "0"
+
+class AdditionalTaxType(str, Enum):
+    OTV = "otv"  # Özel Tüketim Vergisi (Special Consumption Tax)
+    WITHHOLDING = "withholding"  # Tevkifat (Withholding Tax)
+    ACCOMMODATION = "accommodation"  # Konaklama Vergisi (Accommodation Tax)
+    SPECIAL_COMMUNICATION = "special_communication"  # ÖİV (Special Communication Tax)
+
+class WithholdingRate(str, Enum):
+    ALL = "10/10"  # Tümüne Tevkifat Uygula
+    RATE_90 = "9/10"
+    RATE_70 = "7/10"
+    RATE_50 = "5/10"
+    RATE_40 = "4/10"
+    RATE_30 = "3/10"
+    RATE_20 = "2/10"
 
 # ============= ACCOUNTING MODELS =============
 

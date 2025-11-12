@@ -391,7 +391,7 @@ const InvoiceModule = ({ user, tenant, onLogout }) => {
             
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm text-gray-600">Pending</CardTitle>
+                <CardTitle className="text-sm text-gray-600">{t('invoice.pending')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-yellow-600">{dashboard.pending_invoices}</div>
@@ -400,7 +400,7 @@ const InvoiceModule = ({ user, tenant, onLogout }) => {
             
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm text-gray-600">Overdue</CardTitle>
+                <CardTitle className="text-sm text-gray-600">{t('dashboard.overdue')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-red-600">{dashboard.overdue_invoices}</div>

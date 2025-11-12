@@ -268,6 +268,11 @@ class Product(BaseModel):
     in_stock: bool = True
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
+class OrderCreate(BaseModel):
+    items: List[Dict[str, Any]]
+    total_amount: float
+    delivery_address: str
+
 class Order(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))

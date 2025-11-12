@@ -1719,10 +1719,6 @@ async def create_accounting_invoice(
         item_dict = {k: v for k, v in item_data.items() if k != 'additional_taxes'}
         item_dict['additional_taxes'] = additional_taxes
         
-        # Debug: print the model fields
-        print(f"AccountingInvoiceItem fields: {AccountingInvoiceItem.model_fields.keys()}")
-        print(f"Item dict keys: {item_dict.keys()}")
-        
         item = AccountingInvoiceItem(**item_dict)
         
         invoice_items.append(item)

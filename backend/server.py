@@ -1394,52 +1394,7 @@ class StockMovement(BaseModel):
     created_by: str
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
-class AccountingInvoiceItem(BaseModel):
-    description: str
-    quantity: float
-    unit_price: float
-    vat_rate: float
-    vat_amount: float
-    total: float
-
-class AccountingInvoice(BaseModel):
-    model_config = ConfigDict(extra="ignore")
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    tenant_id: str
-    invoice_number: str
-    invoice_type: InvoiceType
-    customer_name: str
-    customer_email: Optional[str] = None
-    customer_tax_office: Optional[str] = None
-    customer_tax_number: Optional[str] = None
-    customer_address: Optional[str] = None
-    items: List[AccountingInvoiceItem]
-    subtotal: float
-    total_vat: float
-    total: float
-    status: PaymentStatus = PaymentStatus.PENDING
-    issue_date: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    due_date: datetime
-    payment_date: Optional[datetime] = None
-    notes: Optional[str] = None
-    booking_id: Optional[str] = None
-    created_by: str
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-
-class CashFlow(BaseModel):
-    model_config = ConfigDict(extra="ignore")
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    tenant_id: str
-    transaction_type: TransactionType
-    category: str
-    amount: float
-    description: str
-    bank_account_id: Optional[str] = None
-    reference_id: Optional[str] = None
-    reference_type: Optional[str] = None  # invoice, expense, booking
-    date: datetime
-    created_by: str
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+# Accounting models are imported from accounting_models.py at the top of the file
 # Accounting Endpoints to be integrated into server.py
 
 # These endpoints will be added to server.py

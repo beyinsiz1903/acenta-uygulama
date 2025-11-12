@@ -598,8 +598,11 @@ async def get_loyalty_programs(current_user: User = Depends(get_current_user)):
     return programs
 
 @api_router.post("/loyalty/transactions", response_model=LoyaltyTransaction)
-async def create_loyalty_transaction(transaction: LoyaltyTransaction, current_user: User = Depends(get_current_user)):
-    transaction.tenant_id = current_user.tenant_id
+async def create_loyalty_transaction(transaction_data: LoyaltyTransactionCreate, current_user: User = Depends(get_current_user)):
+    transaction = LoyaltyTransaction(
+        tenant_id=current_user.tenant_id,
+        **transaction_data.model_dump()
+    )
     transaction_dict = transaction.model_dump()
     transaction_dict['created_at'] = transaction_dict['created_at'].isoformat()
     await db.loyalty_transactions.insert_one(transaction_dict)

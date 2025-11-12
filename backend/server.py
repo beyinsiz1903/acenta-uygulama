@@ -1731,14 +1731,39 @@ async def create_accounting_invoice(
     invoice_items = []
     subtotal = 0.0
     total_vat = 0.0
+    vat_withholding = 0.0
+    total_additional_taxes = 0.0
     
     for item_data in items:
         item = AccountingInvoiceItem(**item_data)
         invoice_items.append(item)
         subtotal += item.quantity * item.unit_price
         total_vat += item.vat_amount
+        
+        # Calculate additional taxes if present
+        if item.additional_taxes:
+            for tax in item.additional_taxes:
+                if tax.tax_type == 'withholding':
+                    # Withholding tax is deducted from VAT
+                    # Calculate based on withholding rate (e.g., "7/10" = 70%)
+                    if tax.withholding_rate:
+                        rate_parts = tax.withholding_rate.split('/')
+                        if len(rate_parts) == 2:
+                            rate_percent = (int(rate_parts[0]) / int(rate_parts[1])) * 100
+                            withholding_amount = item.vat_amount * (rate_percent / 100)
+                            vat_withholding += withholding_amount
+                            tax.calculated_amount = withholding_amount
+                else:
+                    # Other taxes (ÖTV, accommodation, etc.)
+                    if tax.is_percentage and tax.rate:
+                        tax_amount = (item.quantity * item.unit_price) * (tax.rate / 100)
+                        total_additional_taxes += tax_amount
+                        tax.calculated_amount = tax_amount
+                    elif tax.amount:
+                        total_additional_taxes += tax.amount
+                        tax.calculated_amount = tax.amount
     
-    total = subtotal + total_vat
+    total = subtotal + total_vat + total_additional_taxes - vat_withholding
     
     invoice = AccountingInvoice(
         tenant_id=current_user.tenant_id,
@@ -1752,9 +1777,12 @@ async def create_accounting_invoice(
         items=invoice_items,
         subtotal=subtotal,
         total_vat=total_vat,
+        vat_withholding=vat_withholding,
+        total_additional_taxes=total_additional_taxes,
         total=total,
         due_date=datetime.fromisoformat(due_date),
         booking_id=booking_id,
+        notes=notes,
         created_by=current_user.name
     )
     

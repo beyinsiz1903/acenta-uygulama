@@ -1757,7 +1757,7 @@ async def create_accounting_invoice(
     vat_withholding = 0.0
     total_additional_taxes = 0.0
     
-    for item_data in items:
+    for item_data in request.items:
         item = AccountingInvoiceItem(**item_data)
         invoice_items.append(item)
         subtotal += item.quantity * item.unit_price

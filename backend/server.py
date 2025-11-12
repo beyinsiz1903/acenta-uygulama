@@ -640,6 +640,13 @@ async def get_guest_loyalty(guest_id: str, current_user: User = Depends(get_curr
 
 # ============= MARKETPLACE ENDPOINTS =============
 
+@api_router.post("/marketplace/products", response_model=Product)
+async def create_product(product: Product):
+    product_dict = product.model_dump()
+    product_dict['created_at'] = product_dict['created_at'].isoformat()
+    await db.products.insert_one(product_dict)
+    return product
+
 @api_router.get("/marketplace/products", response_model=List[Product])
 async def get_products():
     products = await db.products.find({}, {'_id': 0}).to_list(1000)

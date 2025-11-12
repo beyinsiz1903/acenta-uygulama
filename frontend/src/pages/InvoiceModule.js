@@ -904,44 +904,44 @@ const InvoiceModule = ({ user, tenant, onLogout }) => {
               <div className="border-t pt-4">
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Ara Toplam (Subtotal):</span>
+                    <span className="text-gray-600">{t('invoice.subtotal')}:</span>
                     <span className="font-medium">${invoiceSubtotal.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Toplam KDV (Total VAT):</span>
+                    <span className="text-gray-600">{t('invoice.totalVAT')}:</span>
                     <span className="font-medium">${invoiceTotalVAT.toFixed(2)}</span>
                   </div>
                   {invoiceAdditionalTaxes > 0 && (
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Additional Taxes:</span>
+                      <span className="text-gray-600">{t('invoice.additionalTaxes')}:</span>
                       <span className="font-medium">${invoiceAdditionalTaxes.toFixed(2)}</span>
                     </div>
                   )}
                   {invoiceVATWithholding > 0 && (
                     <>
                       <div className="flex justify-between text-red-600">
-                        <span>KDV Tevkifat (VAT Withholding):</span>
+                        <span>{t('invoice.vatWithholding')}:</span>
                         <span className="font-medium">-${invoiceVATWithholding.toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between text-red-600">
-                        <span>Tevkifat Toplamı (Total Withholding):</span>
+                        <span>{t('invoice.totalWithholding')}:</span>
                         <span className="font-medium">-${invoiceVATWithholding.toFixed(2)}</span>
                       </div>
                     </>
                   )}
                   <div className="flex justify-between text-lg font-bold border-t pt-2">
-                    <span>Genel Toplam (Grand Total):</span>
+                    <span>{t('invoice.grandTotal')}:</span>
                     <span>${invoiceTotal.toFixed(2)}</span>
                   </div>
                 </div>
               </div>
 
               <div>
-                <Label>Due Date</Label>
+                <Label>{t('invoice.dueDate')}</Label>
                 <Input type="date" value={newInvoice.due_date} onChange={(e) => setNewInvoice({...newInvoice, due_date: e.target.value})} required />
               </div>
 
-              <Button type="submit" className="w-full" data-testid="submit-invoice-btn">Create Invoice</Button>
+              <Button type="submit" className="w-full" data-testid="submit-invoice-btn">{t('invoice.createInvoice')}</Button>
             </form>
           </DialogContent>
         </Dialog>

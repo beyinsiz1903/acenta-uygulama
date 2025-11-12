@@ -805,8 +805,8 @@ const InvoiceModule = ({ user, tenant, onLogout }) => {
         <Dialog open={openDialog === 'invoice'} onOpenChange={(open) => !open && setOpenDialog(null)}>
           <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Create Invoice</DialogTitle>
-              <DialogDescription>Generate a new sales invoice</DialogDescription>
+              <DialogTitle>{t('invoice.createInvoice')}</DialogTitle>
+              <DialogDescription>{t('invoice.subtitle')}</DialogDescription>
             </DialogHeader>
             <form onSubmit={handleCreateInvoice} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">

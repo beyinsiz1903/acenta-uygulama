@@ -1744,9 +1744,7 @@ async def create_accounting_invoice(
     notes: Optional[str] = None,
     current_user: User = Depends(get_current_user)
 ):
-    import sys
-    sys.path.append('/app/backend')
-    from accounting_models import AccountingInvoice, AccountingInvoiceItem
+    # Models are now imported at the top of the file
     
     count = await db.accounting_invoices.count_documents({'tenant_id': current_user.tenant_id})
     invoice_number = f"INV-{datetime.now().year}-{count + 1:05d}"

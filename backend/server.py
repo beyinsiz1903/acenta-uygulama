@@ -1587,7 +1587,7 @@ async def create_expense(
         )
     
     # Create cash flow entry
-    from accounting_models import CashFlow
+    # CashFlow model imported at top
     cash_flow = CashFlow(
         tenant_id=current_user.tenant_id,
         transaction_type='expense',
@@ -1814,7 +1814,7 @@ async def create_accounting_invoice(
     await db.accounting_invoices.insert_one(invoice_dict)
     
     # Create cash flow entry
-    from accounting_models import CashFlow
+    # CashFlow model imported at top
     cash_flow = CashFlow(
         tenant_id=current_user.tenant_id,
         transaction_type='income',

@@ -298,27 +298,27 @@ const PMSModule = ({ user, tenant, onLogout }) => {
           <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="frontdesk" data-testid="tab-frontdesk">
               <UserCheck className="w-4 h-4 mr-2" />
-              Front Desk
+              {t('pms.frontDesk')}
             </TabsTrigger>
             <TabsTrigger value="housekeeping" data-testid="tab-housekeeping">
               <ClipboardList className="w-4 h-4 mr-2" />
-              Housekeeping
+              {t('pms.housekeeping')}
             </TabsTrigger>
             <TabsTrigger value="rooms" data-testid="tab-rooms">
               <BedDouble className="w-4 h-4 mr-2" />
-              Rooms
+              {t('pms.rooms')}
             </TabsTrigger>
             <TabsTrigger value="guests" data-testid="tab-guests">
               <Users className="w-4 h-4 mr-2" />
-              Guests
+              {t('pms.guests')}
             </TabsTrigger>
             <TabsTrigger value="bookings" data-testid="tab-bookings">
               <Calendar className="w-4 h-4 mr-2" />
-              Bookings
+              {t('pms.bookings')}
             </TabsTrigger>
             <TabsTrigger value="reports" data-testid="tab-reports">
               <BarChart3 className="w-4 h-4 mr-2" />
-              Reports
+              {t('pms.reports')}
             </TabsTrigger>
           </TabsList>
 

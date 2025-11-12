@@ -1549,7 +1549,7 @@ async def create_expense(
     notes: Optional[str] = None,
     current_user: User = Depends(get_current_user)
 ):
-    from accounting_models import Expense
+    # Expense model imported at top
     
     count = await db.expenses.count_documents({'tenant_id': current_user.tenant_id})
     expense_number = f"EXP-{count + 1:05d}"

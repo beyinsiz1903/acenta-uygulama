@@ -106,6 +106,14 @@ class TokenResponse(BaseModel):
     tenant: Tenant
 
 # PMS Models
+class RoomCreate(BaseModel):
+    room_number: str
+    room_type: str
+    floor: int
+    capacity: int
+    base_price: float
+    amenities: List[str] = []
+
 class Room(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
@@ -119,6 +127,13 @@ class Room(BaseModel):
     amenities: List[str] = []
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
+class GuestCreate(BaseModel):
+    name: str
+    email: EmailStr
+    phone: str
+    id_number: str
+    address: Optional[str] = None
+
 class Guest(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
@@ -131,6 +146,16 @@ class Guest(BaseModel):
     loyalty_points: int = 0
     total_stays: int = 0
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class BookingCreate(BaseModel):
+    guest_id: str
+    room_id: str
+    check_in: str  # ISO format date string
+    check_out: str  # ISO format date string
+    guests_count: int
+    total_amount: float
+    channel: str = "direct"
+    special_requests: Optional[str] = None
 
 class Booking(BaseModel):
     model_config = ConfigDict(extra="ignore")

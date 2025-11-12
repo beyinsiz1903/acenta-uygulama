@@ -6,24 +6,77 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { FileText, Plus, DollarSign, Clock, CheckCircle } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { 
+  FileText, Plus, DollarSign, Clock, CheckCircle, Building2, 
+  Wallet, Package, TrendingUp, AlertCircle, Receipt, BarChart3 
+} from 'lucide-react';
 
 const InvoiceModule = ({ user, tenant, onLogout }) => {
   const [invoices, setInvoices] = useState([]);
-  const [stats, setStats] = useState(null);
+  const [expenses, setExpenses] = useState([]);
+  const [suppliers, setSuppliers] = useState([]);
+  const [bankAccounts, setBankAccounts] = useState([]);
+  const [inventory, setInventory] = useState([]);
+  const [cashFlow, setCashFlow] = useState(null);
+  const [dashboard, setDashboard] = useState(null);
+  const [reports, setReports] = useState({ profitLoss: null, vat: null, balanceSheet: null });
   const [loading, setLoading] = useState(true);
-  const [openDialog, setOpenDialog] = useState(false);
+  const [openDialog, setOpenDialog] = useState(null);
 
   const [newInvoice, setNewInvoice] = useState({
+    invoice_type: 'sales',
     customer_name: '',
     customer_email: '',
-    items: [{ description: '', quantity: 1, unit_price: 0, total: 0 }],
-    subtotal: 0,
-    tax: 0,
-    total: 0,
-    due_date: ''
+    customer_tax_office: '',
+    customer_tax_number: '',
+    customer_address: '',
+    items: [{ description: '', quantity: 1, unit_price: 0, vat_rate: 18, vat_amount: 0, total: 0 }],
+    due_date: '',
+    notes: ''
+  });
+
+  const [newExpense, setNewExpense] = useState({
+    category: 'supplies',
+    description: '',
+    amount: 0,
+    vat_rate: 18,
+    date: new Date().toISOString().split('T')[0],
+    supplier_id: '',
+    payment_method: 'cash',
+    notes: ''
+  });
+
+  const [newSupplier, setNewSupplier] = useState({
+    name: '',
+    tax_office: '',
+    tax_number: '',
+    email: '',
+    phone: '',
+    address: '',
+    category: 'general'
+  });
+
+  const [newBankAccount, setNewBankAccount] = useState({
+    name: '',
+    bank_name: '',
+    account_number: '',
+    iban: '',
+    currency: 'USD',
+    balance: 0
+  });
+
+  const [newInventoryItem, setNewInventoryItem] = useState({
+    name: '',
+    category: 'supplies',
+    unit: 'piece',
+    quantity: 0,
+    unit_cost: 0,
+    reorder_level: 10,
+    sku: ''
   });
 
   useEffect(() => {
@@ -32,69 +85,150 @@ const InvoiceModule = ({ user, tenant, onLogout }) => {
 
   const loadData = async () => {
     try {
-      const [invoicesRes, statsRes] = await Promise.all([
-        axios.get('/invoices'),
-        axios.get('/invoices/stats')
+      const [invoicesRes, expensesRes, suppliersRes, bankRes, inventoryRes, dashRes] = await Promise.all([
+        axios.get('/accounting/invoices'),
+        axios.get('/accounting/expenses'),
+        axios.get('/accounting/suppliers'),
+        axios.get('/accounting/bank-accounts'),
+        axios.get('/accounting/inventory'),
+        axios.get('/accounting/dashboard')
       ]);
+      
       setInvoices(invoicesRes.data);
-      setStats(statsRes.data);
+      setExpenses(expensesRes.data);
+      setSuppliers(suppliersRes.data);
+      setBankAccounts(bankRes.data);
+      setInventory(inventoryRes.data.items || []);
+      setDashboard(dashRes.data);
     } catch (error) {
-      toast.error('Failed to load invoices');
+      toast.error('Failed to load accounting data');
     } finally {
       setLoading(false);
     }
   };
 
-  const addInvoiceItem = () => {
-    setNewInvoice({
-      ...newInvoice,
-      items: [...newInvoice.items, { description: '', quantity: 1, unit_price: 0, total: 0 }]
-    });
+  const loadCashFlow = async () => {
+    try {
+      const response = await axios.get('/accounting/cash-flow');
+      setCashFlow(response.data);
+    } catch (error) {
+      toast.error('Failed to load cash flow');
+    }
   };
 
-  const updateInvoiceItem = (index, field, value) => {
+  const loadReports = async () => {
+    try {
+      const today = new Date();
+      const monthStart = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+      const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split('T')[0];
+      
+      const [plRes, vatRes, bsRes] = await Promise.all([
+        axios.get(`/accounting/reports/profit-loss?start_date=${monthStart}&end_date=${monthEnd}`),
+        axios.get(`/accounting/reports/vat-report?start_date=${monthStart}&end_date=${monthEnd}`),
+        axios.get('/accounting/reports/balance-sheet')
+      ]);
+      
+      setReports({
+        profitLoss: plRes.data,
+        vat: vatRes.data,
+        balanceSheet: bsRes.data
+      });
+    } catch (error) {
+      toast.error('Failed to load reports');
+    }
+  };
+
+  const calculateInvoiceItem = (index, field, value) => {
     const items = [...newInvoice.items];
     items[index][field] = value;
     
-    if (field === 'quantity' || field === 'unit_price') {
-      items[index].total = items[index].quantity * items[index].unit_price;
+    if (field === 'quantity' || field === 'unit_price' || field === 'vat_rate') {
+      const subtotal = items[index].quantity * items[index].unit_price;
+      items[index].vat_amount = subtotal * (items[index].vat_rate / 100);
+      items[index].total = subtotal + items[index].vat_amount;
     }
     
-    const subtotal = items.reduce((sum, item) => sum + item.total, 0);
-    const tax = subtotal * 0.1; // 10% tax
-    const total = subtotal + tax;
-    
-    setNewInvoice({ ...newInvoice, items, subtotal, tax, total });
+    setNewInvoice({ ...newInvoice, items });
+  };
+
+  const addInvoiceItem = () => {
+    setNewInvoice({
+      ...newInvoice,
+      items: [...newInvoice.items, { description: '', quantity: 1, unit_price: 0, vat_rate: 18, vat_amount: 0, total: 0 }]
+    });
   };
 
   const handleCreateInvoice = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('/invoices', newInvoice);
+      await axios.post('/accounting/invoices', null, { params: newInvoice });
       toast.success('Invoice created successfully');
-      setOpenDialog(false);
+      setOpenDialog(null);
       loadData();
-      setNewInvoice({
-        customer_name: '',
-        customer_email: '',
-        items: [{ description: '', quantity: 1, unit_price: 0, total: 0 }],
-        subtotal: 0,
-        tax: 0,
-        total: 0,
-        due_date: ''
-      });
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Failed to create invoice');
+      toast.error('Failed to create invoice');
+    }
+  };
+
+  const handleCreateExpense = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.post('/accounting/expenses', null, { params: newExpense });
+      toast.success('Expense recorded');
+      setOpenDialog(null);
+      loadData();
+      setNewExpense({ category: 'supplies', description: '', amount: 0, vat_rate: 18, date: new Date().toISOString().split('T')[0], supplier_id: '', payment_method: 'cash', notes: '' });
+    } catch (error) {
+      toast.error('Failed to create expense');
+    }
+  };
+
+  const handleCreateSupplier = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.post('/accounting/suppliers', null, { params: newSupplier });
+      toast.success('Supplier added');
+      setOpenDialog(null);
+      loadData();
+      setNewSupplier({ name: '', tax_office: '', tax_number: '', email: '', phone: '', address: '', category: 'general' });
+    } catch (error) {
+      toast.error('Failed to create supplier');
+    }
+  };
+
+  const handleCreateBankAccount = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.post('/accounting/bank-accounts', null, { params: newBankAccount });
+      toast.success('Bank account added');
+      setOpenDialog(null);
+      loadData();
+      setNewBankAccount({ name: '', bank_name: '', account_number: '', iban: '', currency: 'USD', balance: 0 });
+    } catch (error) {
+      toast.error('Failed to create bank account');
+    }
+  };
+
+  const handleCreateInventoryItem = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.post('/accounting/inventory', null, { params: newInventoryItem });
+      toast.success('Inventory item added');
+      setOpenDialog(null);
+      loadData();
+      setNewInventoryItem({ name: '', category: 'supplies', unit: 'piece', quantity: 0, unit_cost: 0, reorder_level: 10, sku: '' });
+    } catch (error) {
+      toast.error('Failed to create item');
     }
   };
 
   const updateInvoiceStatus = async (invoiceId, newStatus) => {
     try {
-      await axios.put(`/invoices/${invoiceId}`, { status: newStatus });
+      await axios.put(`/accounting/invoices/${invoiceId}`, { status: newStatus });
       toast.success('Invoice status updated');
       loadData();
     } catch (error) {
-      toast.error('Failed to update invoice');
+      toast.error('Failed to update');
     }
   };
 
@@ -106,215 +240,778 @@ const InvoiceModule = ({ user, tenant, onLogout }) => {
     );
   }
 
+  const invoiceSubtotal = newInvoice.items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0);
+  const invoiceTotalVAT = newInvoice.items.reduce((sum, item) => sum + item.vat_amount, 0);
+  const invoiceTotal = invoiceSubtotal + invoiceTotalVAT;
+
   return (
     <Layout user={user} tenant={tenant} onLogout={onLogout} currentModule="invoices">
       <div className="p-6 space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-4xl font-bold mb-2" style={{ fontFamily: 'Space Grotesk' }}>Invoicing & Reporting</h1>
-            <p className="text-gray-600">Manage invoices and track payments</p>
-          </div>
-          <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-            <DialogTrigger asChild>
-              <Button data-testid="create-invoice-btn">
-                <Plus className="w-4 h-4 mr-2" />
-                New Invoice
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Create New Invoice</DialogTitle>
-                <DialogDescription>Generate a new invoice for your customer</DialogDescription>
-              </DialogHeader>
-              <form onSubmit={handleCreateInvoice} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="customer-name">Customer Name</Label>
-                    <Input
-                      id="customer-name"
-                      data-testid="invoice-customer-name"
-                      value={newInvoice.customer_name}
-                      onChange={(e) => setNewInvoice({...newInvoice, customer_name: e.target.value})}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="customer-email">Customer Email</Label>
-                    <Input
-                      id="customer-email"
-                      type="email"
-                      value={newInvoice.customer_email}
-                      onChange={(e) => setNewInvoice({...newInvoice, customer_email: e.target.value})}
-                      required
-                    />
-                  </div>
-                </div>
-                
-                <div>
-                  <Label>Invoice Items</Label>
-                  <div className="space-y-2 mt-2">
-                    {newInvoice.items.map((item, index) => (
-                      <div key={index} className="grid grid-cols-4 gap-2">
-                        <Input
-                          placeholder="Description"
-                          value={item.description}
-                          onChange={(e) => updateInvoiceItem(index, 'description', e.target.value)}
-                          required
-                        />
-                        <Input
-                          type="number"
-                          placeholder="Qty"
-                          value={item.quantity}
-                          onChange={(e) => updateInvoiceItem(index, 'quantity', parseFloat(e.target.value))}
-                          required
-                        />
-                        <Input
-                          type="number"
-                          step="0.01"
-                          placeholder="Price"
-                          value={item.unit_price}
-                          onChange={(e) => updateInvoiceItem(index, 'unit_price', parseFloat(e.target.value))}
-                          required
-                        />
-                        <Input
-                          type="number"
-                          placeholder="Total"
-                          value={item.total.toFixed(2)}
-                          readOnly
-                        />
-                      </div>
-                    ))}
-                  </div>
-                  <Button type="button" variant="outline" size="sm" className="mt-2" onClick={addInvoiceItem}>
-                    <Plus className="w-4 h-4 mr-1" /> Add Item
-                  </Button>
-                </div>
-
-                <div className="border-t pt-4">
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span>Subtotal:</span>
-                      <span className="font-medium">${newInvoice.subtotal.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Tax (10%):</span>
-                      <span className="font-medium">${newInvoice.tax.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between text-lg font-bold">
-                      <span>Total:</span>
-                      <span>${newInvoice.total.toFixed(2)}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="due-date">Due Date</Label>
-                  <Input
-                    id="due-date"
-                    type="date"
-                    value={newInvoice.due_date}
-                    onChange={(e) => setNewInvoice({...newInvoice, due_date: e.target.value})}
-                    required
-                  />
-                </div>
-
-                <Button type="submit" className="w-full" data-testid="submit-invoice-btn">Create Invoice</Button>
-              </form>
-            </DialogContent>
-          </Dialog>
+        <div>
+          <h1 className="text-4xl font-bold mb-2" style={{ fontFamily: 'Space Grotesk' }}>Accounting & Invoicing</h1>
+          <p className="text-gray-600">Complete financial management system</p>
         </div>
 
-        {/* Stats Cards */}
-        {stats && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {/* Dashboard Cards */}
+        {dashboard && (
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-gray-600">Total Invoices</CardTitle>
+                <CardTitle className="text-sm text-gray-600">Monthly Income</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center">
-                  <FileText className="w-8 h-8 mr-3 text-blue-500" />
-                  <div className="text-3xl font-bold">{stats.total_invoices}</div>
-                </div>
+                <div className="text-2xl font-bold text-green-600">${dashboard.monthly_income}</div>
               </CardContent>
             </Card>
-
+            
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-gray-600">Total Revenue</CardTitle>
+                <CardTitle className="text-sm text-gray-600">Monthly Expenses</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center">
-                  <DollarSign className="w-8 h-8 mr-3 text-green-500" />
-                  <div className="text-3xl font-bold">${stats.total_revenue.toFixed(2)}</div>
-                </div>
+                <div className="text-2xl font-bold text-red-600">${dashboard.monthly_expenses}</div>
               </CardContent>
             </Card>
-
+            
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-gray-600">Pending</CardTitle>
+                <CardTitle className="text-sm text-gray-600">Net Income</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center">
-                  <Clock className="w-8 h-8 mr-3 text-yellow-500" />
-                  <div className="text-3xl font-bold">${stats.pending_amount.toFixed(2)}</div>
-                </div>
+                <div className="text-2xl font-bold text-blue-600">${dashboard.net_income}</div>
               </CardContent>
             </Card>
-
+            
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-gray-600">Overdue</CardTitle>
+                <CardTitle className="text-sm text-gray-600">Bank Balance</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center">
-                  <CheckCircle className="w-8 h-8 mr-3 text-red-500" />
-                  <div className="text-3xl font-bold">${stats.overdue_amount.toFixed(2)}</div>
-                </div>
+                <div className="text-2xl font-bold">${dashboard.total_bank_balance}</div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm text-gray-600">Pending</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-yellow-600">{dashboard.pending_invoices}</div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm text-gray-600">Overdue</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-red-600">{dashboard.overdue_invoices}</div>
               </CardContent>
             </Card>
           </div>
         )}
 
-        {/* Invoices List */}
-        <div className="space-y-4">
-          <h2 className="text-2xl font-semibold">Recent Invoices</h2>
-          {invoices.map((invoice) => (
-            <Card key={invoice.id} data-testid={`invoice-card-${invoice.invoice_number}`}>
-              <CardContent className="pt-6">
-                <div className="flex flex-wrap justify-between items-start gap-4">
-                  <div>
-                    <div className="font-bold text-lg mb-1">{invoice.invoice_number}</div>
-                    <div className="text-sm text-gray-600 space-y-1">
-                      <p>Customer: {invoice.customer_name}</p>
-                      <p>Email: {invoice.customer_email}</p>
-                      <p>Issue Date: {new Date(invoice.issue_date).toLocaleDateString()}</p>
-                      <p>Due Date: {new Date(invoice.due_date).toLocaleDateString()}</p>
-                      <p>Items: {invoice.items.length}</p>
+        <Tabs defaultValue="invoices" onValueChange={(v) => {
+          if (v === 'cashflow') loadCashFlow();
+          if (v === 'reports') loadReports();
+        }}>
+          <TabsList className="grid w-full grid-cols-6">
+            <TabsTrigger value="invoices" data-testid="tab-invoices">
+              <FileText className="w-4 h-4 mr-2" />
+              Invoices
+            </TabsTrigger>
+            <TabsTrigger value="expenses" data-testid="tab-expenses">
+              <Receipt className="w-4 h-4 mr-2" />
+              Expenses
+            </TabsTrigger>
+            <TabsTrigger value="suppliers" data-testid="tab-suppliers">
+              <Building2 className="w-4 h-4 mr-2" />
+              Suppliers
+            </TabsTrigger>
+            <TabsTrigger value="banks" data-testid="tab-banks">
+              <Wallet className="w-4 h-4 mr-2" />
+              Banks
+            </TabsTrigger>
+            <TabsTrigger value="inventory" data-testid="tab-inventory">
+              <Package className="w-4 h-4 mr-2" />
+              Inventory
+            </TabsTrigger>
+            <TabsTrigger value="reports" data-testid="tab-reports">
+              <BarChart3 className="w-4 h-4 mr-2" />
+              Reports
+            </TabsTrigger>
+          </TabsList>
+
+          {/* INVOICES TAB */}
+          <TabsContent value="invoices" className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-semibold">Invoices ({invoices.length})</h2>
+              <Button onClick={() => setOpenDialog('invoice')} data-testid="create-invoice-btn">
+                <Plus className="w-4 h-4 mr-2" />
+                New Invoice
+              </Button>
+            </div>
+
+            <div className="space-y-4">
+              {invoices.map((invoice) => (
+                <Card key={invoice.id} data-testid={`invoice-card-${invoice.invoice_number}`}>
+                  <CardContent className="pt-6">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <div className="font-bold text-lg">{invoice.invoice_number}</div>
+                        <div className="text-sm text-gray-600">{invoice.customer_name}</div>
+                        {invoice.customer_tax_number && (
+                          <div className="text-xs text-gray-500">Tax#: {invoice.customer_tax_number}</div>
+                        )}
+                        <div className="text-sm text-gray-500 mt-1">
+                          Issue: {new Date(invoice.issue_date).toLocaleDateString()} | 
+                          Due: {new Date(invoice.due_date).toLocaleDateString()}
+                        </div>
+                        <div className="text-xs text-gray-400 mt-1 capitalize">Type: {invoice.invoice_type}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-2xl font-bold text-blue-600">${invoice.total.toFixed(2)}</div>
+                        <div className="text-xs text-gray-500">VAT: ${invoice.total_vat.toFixed(2)}</div>
+                        <div className="mt-2">
+                          <Select value={invoice.status} onValueChange={(v) => updateInvoiceStatus(invoice.id, v)}>
+                            <SelectTrigger className="w-32 h-8">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="pending">Pending</SelectItem>
+                              <SelectItem value="paid">Paid</SelectItem>
+                              <SelectItem value="partial">Partial</SelectItem>
+                              <SelectItem value="overdue">Overdue</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </TabsContent>
+
+          {/* EXPENSES TAB */}
+          <TabsContent value="expenses" className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-semibold">Expenses ({expenses.length})</h2>
+              <Button onClick={() => setOpenDialog('expense')} data-testid="create-expense-btn">
+                <Plus className="w-4 h-4 mr-2" />
+                Add Expense
+              </Button>
+            </div>
+
+            <div className="space-y-4">
+              {expenses.map((expense) => (
+                <Card key={expense.id}>
+                  <CardContent className="pt-6">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <div className="font-bold">{expense.expense_number}</div>
+                        <div className="text-sm text-gray-600 capitalize">{expense.category} - {expense.description}</div>
+                        <div className="text-sm text-gray-500">Date: {new Date(expense.date).toLocaleDateString()}</div>
+                        {expense.payment_method && (
+                          <div className="text-xs text-gray-400 capitalize mt-1">Payment: {expense.payment_method}</div>
+                        )}
+                      </div>
+                      <div className="text-right">
+                        <div className="text-xl font-bold text-red-600">${expense.total_amount.toFixed(2)}</div>
+                        <div className="text-xs text-gray-500">VAT: ${expense.vat_amount.toFixed(2)}</div>
+                        <span className={`mt-2 inline-block px-2 py-1 rounded text-xs ${expense.payment_status === 'paid' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                          {expense.payment_status}
+                        </span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </TabsContent>
+
+          {/* SUPPLIERS TAB */}
+          <TabsContent value="suppliers" className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-semibold">Suppliers ({suppliers.length})</h2>
+              <Button onClick={() => setOpenDialog('supplier')}>
+                <Plus className="w-4 h-4 mr-2" />
+                Add Supplier
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {suppliers.map((supplier) => (
+                <Card key={supplier.id}>
+                  <CardHeader>
+                    <CardTitle className="text-lg">{supplier.name}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2 text-sm">
+                    {supplier.tax_number && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Tax Number:</span>
+                        <span className="font-medium">{supplier.tax_number}</span>
+                      </div>
+                    )}
+                    {supplier.email && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Email:</span>
+                        <span className="font-medium">{supplier.email}</span>
+                      </div>
+                    )}
+                    {supplier.phone && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Phone:</span>
+                        <span className="font-medium">{supplier.phone}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between pt-2 border-t">
+                      <span className="text-gray-600">Balance:</span>
+                      <span className="font-bold text-red-600">${supplier.account_balance.toFixed(2)}</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </TabsContent>
+
+          {/* BANKS TAB */}
+          <TabsContent value="banks" className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-semibold">Bank Accounts ({bankAccounts.length})</h2>
+              <Button onClick={() => setOpenDialog('bank')}>
+                <Plus className="w-4 h-4 mr-2" />
+                Add Account
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {bankAccounts.map((account) => (
+                <Card key={account.id}>
+                  <CardHeader>
+                    <CardTitle className="text-lg">{account.name}</CardTitle>
+                    <div className="text-sm text-gray-600">{account.bank_name}</div>
+                  </CardHeader>
+                  <CardContent className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Account:</span>
+                      <span className="font-medium">{account.account_number}</span>
+                    </div>
+                    {account.iban && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">IBAN:</span>
+                        <span className="font-medium text-xs">{account.iban}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between pt-2 border-t">
+                      <span className="text-gray-600">Balance:</span>
+                      <span className="text-xl font-bold text-green-600">${account.balance.toFixed(2)}</span>
+                    </div>
+                    <div className="text-xs text-gray-500">{account.currency}</div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </TabsContent>
+
+          {/* INVENTORY TAB */}
+          <TabsContent value="inventory" className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-semibold">Inventory ({inventory.length})</h2>
+              <Button onClick={() => setOpenDialog('inventory')}>
+                <Plus className="w-4 h-4 mr-2" />
+                Add Item
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {inventory.map((item) => (
+                <Card key={item.id}>
+                  <CardHeader>
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <CardTitle className="text-lg">{item.name}</CardTitle>
+                        <div className="text-sm text-gray-600 capitalize">{item.category}</div>
+                      </div>
+                      {item.quantity <= item.reorder_level && (
+                        <AlertCircle className="w-5 h-5 text-orange-500" />
+                      )}
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-2 text-sm">
+                    {item.sku && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">SKU:</span>
+                        <span className="font-medium">{item.sku}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Quantity:</span>
+                      <span className="font-bold">{item.quantity} {item.unit}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Unit Cost:</span>
+                      <span className="font-medium">${item.unit_cost}</span>
+                    </div>
+                    <div className="flex justify-between pt-2 border-t">
+                      <span className="text-gray-600">Total Value:</span>
+                      <span className="font-bold text-blue-600">${(item.quantity * item.unit_cost).toFixed(2)}</span>
+                    </div>
+                    {item.quantity <= item.reorder_level && (
+                      <div className="text-xs text-orange-600 font-medium">Low stock - Reorder needed</div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </TabsContent>
+
+          {/* REPORTS TAB */}
+          <TabsContent value="reports" className="space-y-6">
+            <h2 className="text-2xl font-bold">Financial Reports</h2>
+
+            {/* Profit & Loss */}
+            {reports.profitLoss && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Profit & Loss Statement</CardTitle>
+                  <div className="text-sm text-gray-500">This Month</div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <div className="text-sm text-gray-600">Total Revenue</div>
+                        <div className="text-3xl font-bold text-green-600">${reports.profitLoss.total_revenue}</div>
+                      </div>
+                      <div>
+                        <div className="text-sm text-gray-600">Total Expenses</div>
+                        <div className="text-3xl font-bold text-red-600">${reports.profitLoss.total_expenses}</div>
+                      </div>
+                      <div>
+                        <div className="text-sm text-gray-600">Gross Profit</div>
+                        <div className="text-3xl font-bold text-blue-600">${reports.profitLoss.gross_profit}</div>
+                      </div>
+                    </div>
+                    
+                    <div className="pt-4 border-t">
+                      <div className="text-sm font-medium mb-2">Profit Margin</div>
+                      <div className="text-2xl font-bold">{reports.profitLoss.profit_margin}%</div>
+                    </div>
+
+                    {reports.profitLoss.expense_breakdown && Object.keys(reports.profitLoss.expense_breakdown).length > 0 && (
+                      <div className="pt-4 border-t">
+                        <div className="text-sm font-medium mb-3">Expense Breakdown</div>
+                        <div className="space-y-2">
+                          {Object.entries(reports.profitLoss.expense_breakdown).map(([cat, amount]) => (
+                            <div key={cat} className="flex justify-between text-sm">
+                              <span className="capitalize text-gray-600">{cat.replace('_', ' ')}:</span>
+                              <span className="font-medium">${amount.toFixed(2)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* VAT Report */}
+            {reports.vat && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>VAT Report</CardTitle>
+                  <div className="text-sm text-gray-500">This Month</div>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <div className="text-sm text-gray-600">Sales VAT (Collected)</div>
+                      <div className="text-2xl font-bold text-green-600">${reports.vat.sales_vat}</div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-gray-600">Purchase VAT (Paid)</div>
+                      <div className="text-2xl font-bold text-blue-600">${reports.vat.purchase_vat}</div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-gray-600">VAT Payable</div>
+                      <div className="text-2xl font-bold text-red-600">${reports.vat.vat_payable}</div>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-3xl font-bold text-blue-600">${invoice.total.toFixed(2)}</div>
-                    <div className="mt-2">
-                      <Select value={invoice.status} onValueChange={(v) => updateInvoiceStatus(invoice.id, v)}>
-                        <SelectTrigger className="w-32">
-                          <SelectValue />
-                        </SelectTrigger>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Balance Sheet */}
+            {reports.balanceSheet && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Balance Sheet</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                      <div className="font-semibold mb-3">Assets</div>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Cash:</span>
+                          <span className="font-medium">${reports.balanceSheet.assets.cash}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Inventory:</span>
+                          <span className="font-medium">${reports.balanceSheet.assets.inventory}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Receivables:</span>
+                          <span className="font-medium">${reports.balanceSheet.assets.receivables}</span>
+                        </div>
+                        <div className="flex justify-between pt-2 border-t font-bold">
+                          <span>Total Assets:</span>
+                          <span className="text-blue-600">${reports.balanceSheet.assets.total}</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <div className="font-semibold mb-3">Liabilities</div>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Payables:</span>
+                          <span className="font-medium">${reports.balanceSheet.liabilities.payables}</span>
+                        </div>
+                        <div className="flex justify-between pt-2 border-t font-bold">
+                          <span>Total Liabilities:</span>
+                          <span className="text-red-600">${reports.balanceSheet.liabilities.total}</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <div className="font-semibold mb-3">Equity</div>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between pt-2 border-t font-bold">
+                          <span>Total Equity:</span>
+                          <span className="text-green-600">${reports.balanceSheet.equity.total}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+        </Tabs>
+
+        {/* Invoice Dialog */}
+        <Dialog open={openDialog === 'invoice'} onOpenChange={(open) => !open && setOpenDialog(null)}>
+          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Create Invoice</DialogTitle>
+              <DialogDescription>Generate a new sales invoice</DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleCreateInvoice} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Invoice Type</Label>
+                  <Select value={newInvoice.invoice_type} onValueChange={(v) => setNewInvoice({...newInvoice, invoice_type: v})}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="sales">Sales Invoice</SelectItem>
+                      <SelectItem value="e_invoice">E-Invoice</SelectItem>
+                      <SelectItem value="proforma">Proforma</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Customer Name *</Label>
+                  <Input value={newInvoice.customer_name} onChange={(e) => setNewInvoice({...newInvoice, customer_name: e.target.value})} required />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Email</Label>
+                  <Input type="email" value={newInvoice.customer_email} onChange={(e) => setNewInvoice({...newInvoice, customer_email: e.target.value})} />
+                </div>
+                <div>
+                  <Label>Tax Number</Label>
+                  <Input value={newInvoice.customer_tax_number} onChange={(e) => setNewInvoice({...newInvoice, customer_tax_number: e.target.value})} />
+                </div>
+              </div>
+              
+              <div>
+                <Label>Address</Label>
+                <Textarea value={newInvoice.customer_address} onChange={(e) => setNewInvoice({...newInvoice, customer_address: e.target.value})} rows={2} />
+              </div>
+
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <Label>Invoice Items</Label>
+                  <Button type="button" size="sm" variant="outline" onClick={addInvoiceItem}>
+                    <Plus className="w-4 h-4 mr-1" /> Add Item
+                  </Button>
+                </div>
+                <div className="space-y-2">
+                  {newInvoice.items.map((item, index) => (
+                    <div key={index} className="grid grid-cols-5 gap-2">
+                      <Input placeholder="Description" value={item.description} onChange={(e) => calculateInvoiceItem(index, 'description', e.target.value)} required />
+                      <Input type="number" placeholder="Qty" value={item.quantity} onChange={(e) => calculateInvoiceItem(index, 'quantity', parseFloat(e.target.value))} required />
+                      <Input type="number" step="0.01" placeholder="Price" value={item.unit_price} onChange={(e) => calculateInvoiceItem(index, 'unit_price', parseFloat(e.target.value))} required />
+                      <Select value={item.vat_rate.toString()} onValueChange={(v) => calculateInvoiceItem(index, 'vat_rate', parseFloat(v))}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="draft">Draft</SelectItem>
-                          <SelectItem value="sent">Sent</SelectItem>
-                          <SelectItem value="paid">Paid</SelectItem>
-                          <SelectItem value="overdue">Overdue</SelectItem>
+                          <SelectItem value="0">0% (Exempt)</SelectItem>
+                          <SelectItem value="1">1%</SelectItem>
+                          <SelectItem value="8">8%</SelectItem>
+                          <SelectItem value="18">18%</SelectItem>
+                          <SelectItem value="20">20%</SelectItem>
                         </SelectContent>
                       </Select>
+                      <Input type="number" placeholder="Total" value={item.total.toFixed(2)} readOnly />
                     </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="border-t pt-4">
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span>Subtotal:</span>
+                    <span className="font-medium">${invoiceSubtotal.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Total VAT:</span>
+                    <span className="font-medium">${invoiceTotalVAT.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-lg font-bold">
+                    <span>Total:</span>
+                    <span>${invoiceTotal.toFixed(2)}</span>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+              </div>
+
+              <div>
+                <Label>Due Date</Label>
+                <Input type="date" value={newInvoice.due_date} onChange={(e) => setNewInvoice({...newInvoice, due_date: e.target.value})} required />
+              </div>
+
+              <Button type="submit" className="w-full" data-testid="submit-invoice-btn">Create Invoice</Button>
+            </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Expense Dialog */}
+        <Dialog open={openDialog === 'expense'} onOpenChange={(open) => !open && setOpenDialog(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Record Expense</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleCreateExpense} className="space-y-4">
+              <div>
+                <Label>Category</Label>
+                <Select value={newExpense.category} onValueChange={(v) => setNewExpense({...newExpense, category: v})}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="salaries">Salaries</SelectItem>
+                    <SelectItem value="utilities">Utilities</SelectItem>
+                    <SelectItem value="supplies">Supplies</SelectItem>
+                    <SelectItem value="maintenance">Maintenance</SelectItem>
+                    <SelectItem value="marketing">Marketing</SelectItem>
+                    <SelectItem value="rent">Rent</SelectItem>
+                    <SelectItem value="insurance">Insurance</SelectItem>
+                    <SelectItem value="taxes">Taxes</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Description</Label>
+                <Input value={newExpense.description} onChange={(e) => setNewExpense({...newExpense, description: e.target.value})} required />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Amount (excl. VAT)</Label>
+                  <Input type="number" step="0.01" value={newExpense.amount} onChange={(e) => setNewExpense({...newExpense, amount: parseFloat(e.target.value)})} required />
+                </div>
+                <div>
+                  <Label>VAT Rate %</Label>
+                  <Select value={newExpense.vat_rate.toString()} onValueChange={(v) => setNewExpense({...newExpense, vat_rate: parseFloat(v)})}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="0">0%</SelectItem>
+                      <SelectItem value="1">1%</SelectItem>
+                      <SelectItem value="8">8%</SelectItem>
+                      <SelectItem value="18">18%</SelectItem>
+                      <SelectItem value="20">20%</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div>
+                <Label>Date</Label>
+                <Input type="date" value={newExpense.date} onChange={(e) => setNewExpense({...newExpense, date: e.target.value})} required />
+              </div>
+              <div>
+                <Label>Supplier (Optional)</Label>
+                <Select value={newExpense.supplier_id} onValueChange={(v) => setNewExpense({...newExpense, supplier_id: v})}>
+                  <SelectTrigger><SelectValue placeholder="Select supplier" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">None</SelectItem>
+                    {suppliers.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Payment Method</Label>
+                <Select value={newExpense.payment_method} onValueChange={(v) => setNewExpense({...newExpense, payment_method: v})}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="cash">Cash</SelectItem>
+                    <SelectItem value="card">Card</SelectItem>
+                    <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="pt-4 border-t">
+                <div className="flex justify-between text-lg font-bold">
+                  <span>Total (incl. VAT):</span>
+                  <span>${(newExpense.amount * (1 + newExpense.vat_rate / 100)).toFixed(2)}</span>
+                </div>
+              </div>
+              <Button type="submit" className="w-full">Record Expense</Button>
+            </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Supplier Dialog */}
+        <Dialog open={openDialog === 'supplier'} onOpenChange={(open) => !open && setOpenDialog(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add Supplier</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleCreateSupplier} className="space-y-4">
+              <div>
+                <Label>Name *</Label>
+                <Input value={newSupplier.name} onChange={(e) => setNewSupplier({...newSupplier, name: e.target.value})} required />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Tax Office</Label>
+                  <Input value={newSupplier.tax_office} onChange={(e) => setNewSupplier({...newSupplier, tax_office: e.target.value})} />
+                </div>
+                <div>
+                  <Label>Tax Number</Label>
+                  <Input value={newSupplier.tax_number} onChange={(e) => setNewSupplier({...newSupplier, tax_number: e.target.value})} />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Email</Label>
+                  <Input type="email" value={newSupplier.email} onChange={(e) => setNewSupplier({...newSupplier, email: e.target.value})} />
+                </div>
+                <div>
+                  <Label>Phone</Label>
+                  <Input value={newSupplier.phone} onChange={(e) => setNewSupplier({...newSupplier, phone: e.target.value})} />
+                </div>
+              </div>
+              <div>
+                <Label>Address</Label>
+                <Textarea value={newSupplier.address} onChange={(e) => setNewSupplier({...newSupplier, address: e.target.value})} rows={2} />
+              </div>
+              <Button type="submit" className="w-full">Add Supplier</Button>
+            </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Bank Account Dialog */}
+        <Dialog open={openDialog === 'bank'} onOpenChange={(open) => !open && setOpenDialog(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add Bank Account</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleCreateBankAccount} className="space-y-4">
+              <div>
+                <Label>Account Name *</Label>
+                <Input value={newBankAccount.name} onChange={(e) => setNewBankAccount({...newBankAccount, name: e.target.value})} required />
+              </div>
+              <div>
+                <Label>Bank Name *</Label>
+                <Input value={newBankAccount.bank_name} onChange={(e) => setNewBankAccount({...newBankAccount, bank_name: e.target.value})} required />
+              </div>
+              <div>
+                <Label>Account Number *</Label>
+                <Input value={newBankAccount.account_number} onChange={(e) => setNewBankAccount({...newBankAccount, account_number: e.target.value})} required />
+              </div>
+              <div>
+                <Label>IBAN</Label>
+                <Input value={newBankAccount.iban} onChange={(e) => setNewBankAccount({...newBankAccount, iban: e.target.value})} />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Currency</Label>
+                  <Select value={newBankAccount.currency} onValueChange={(v) => setNewBankAccount({...newBankAccount, currency: v})}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="USD">USD</SelectItem>
+                      <SelectItem value="EUR">EUR</SelectItem>
+                      <SelectItem value="TRY">TRY</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Initial Balance</Label>
+                  <Input type="number" step="0.01" value={newBankAccount.balance} onChange={(e) => setNewBankAccount({...newBankAccount, balance: parseFloat(e.target.value)})} />
+                </div>
+              </div>
+              <Button type="submit" className="w-full">Add Bank Account</Button>
+            </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Inventory Dialog */}
+        <Dialog open={openDialog === 'inventory'} onOpenChange={(open) => !open && setOpenDialog(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add Inventory Item</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleCreateInventoryItem} className="space-y-4">
+              <div>
+                <Label>Item Name *</Label>
+                <Input value={newInventoryItem.name} onChange={(e) => setNewInventoryItem({...newInventoryItem, name: e.target.value})} required />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Category</Label>
+                  <Input value={newInventoryItem.category} onChange={(e) => setNewInventoryItem({...newInventoryItem, category: e.target.value})} required />
+                </div>
+                <div>
+                  <Label>SKU</Label>
+                  <Input value={newInventoryItem.sku} onChange={(e) => setNewInventoryItem({...newInventoryItem, sku: e.target.value})} />
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <Label>Quantity</Label>
+                  <Input type="number" step="0.01" value={newInventoryItem.quantity} onChange={(e) => setNewInventoryItem({...newInventoryItem, quantity: parseFloat(e.target.value)})} required />
+                </div>
+                <div>
+                  <Label>Unit</Label>
+                  <Input value={newInventoryItem.unit} onChange={(e) => setNewInventoryItem({...newInventoryItem, unit: e.target.value})} required />
+                </div>
+                <div>
+                  <Label>Unit Cost</Label>
+                  <Input type="number" step="0.01" value={newInventoryItem.unit_cost} onChange={(e) => setNewInventoryItem({...newInventoryItem, unit_cost: parseFloat(e.target.value)})} required />
+                </div>
+              </div>
+              <div>
+                <Label>Reorder Level</Label>
+                <Input type="number" value={newInventoryItem.reorder_level} onChange={(e) => setNewInventoryItem({...newInventoryItem, reorder_level: parseFloat(e.target.value)})} />
+              </div>
+              <Button type="submit" className="w-full">Add Item</Button>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
     </Layout>
   );

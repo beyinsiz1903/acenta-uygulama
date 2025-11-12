@@ -1463,7 +1463,7 @@ async def create_supplier(
     category: str = "general",
     current_user: User = Depends(get_current_user)
 ):
-    from accounting_models import Supplier
+    # Supplier model imported at top
     supplier = Supplier(
         tenant_id=current_user.tenant_id,
         name=name,

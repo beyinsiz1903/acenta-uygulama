@@ -378,8 +378,11 @@ async def get_me(current_user: User = Depends(get_current_user)):
 
 # Rooms
 @api_router.post("/pms/rooms", response_model=Room)
-async def create_room(room: Room, current_user: User = Depends(get_current_user)):
-    room.tenant_id = current_user.tenant_id
+async def create_room(room_data: RoomCreate, current_user: User = Depends(get_current_user)):
+    room = Room(
+        tenant_id=current_user.tenant_id,
+        **room_data.model_dump()
+    )
     room_dict = room.model_dump()
     room_dict['created_at'] = room_dict['created_at'].isoformat()
     await db.rooms.insert_one(room_dict)

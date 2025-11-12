@@ -358,9 +358,9 @@ const PMSModule = ({ user, tenant, onLogout }) => {
 
             <Tabs defaultValue="arrivals">
               <TabsList>
-                <TabsTrigger value="arrivals">Arrivals</TabsTrigger>
-                <TabsTrigger value="departures">Departures</TabsTrigger>
-                <TabsTrigger value="inhouse">In-House</TabsTrigger>
+                <TabsTrigger value="arrivals">{t('pms.arrivals')}</TabsTrigger>
+                <TabsTrigger value="departures">{t('pms.departures')}</TabsTrigger>
+                <TabsTrigger value="inhouse">{t('pms.inHouse')}</TabsTrigger>
               </TabsList>
 
               <TabsContent value="arrivals" className="space-y-4">

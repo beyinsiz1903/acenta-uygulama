@@ -67,8 +67,13 @@ const Layout = ({ children, user, tenant, onLogout, currentModule }) => {
               })}
             </nav>
 
-            {/* User Menu */}
-            <div className="flex items-center space-x-2">
+            {/* User Menu and Language Selector */}
+            <div className="flex items-center space-x-3">
+              {/* Language Selector */}
+              <div className="hidden md:block">
+                <LanguageSelector />
+              </div>
+              
               <Button
                 variant="ghost"
                 className="md:hidden"
@@ -97,7 +102,7 @@ const Layout = ({ children, user, tenant, onLogout, currentModule }) => {
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={onLogout} data-testid="logout-btn">
                     <LogOut className="w-4 h-4 mr-2" />
-                    Logout
+                    {t('common.logout')}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

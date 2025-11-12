@@ -842,6 +842,20 @@ async def get_invoice_stats(current_user: User = Depends(get_current_user)):
 
 # ============= RMS =============
 
+@api_router.post("/rms/analysis", response_model=PriceAnalysis)
+async def create_price_analysis(analysis: PriceAnalysis, current_user: User = Depends(get_current_user)):
+    analysis.tenant_id = current_user.tenant_id
+    analysis_dict = analysis.model_dump()
+    analysis_dict['date'] = analysis_dict['date'].isoformat()
+    analysis_dict['created_at'] = analysis_dict['created_at'].isoformat()
+    await db.price_analysis.insert_one(analysis_dict)
+    return analysis
+
+@api_router.get("/rms/analysis", response_model=List[PriceAnalysis])
+async def get_price_analysis(current_user: User = Depends(get_current_user)):
+    analyses = await db.price_analysis.find({'tenant_id': current_user.tenant_id}, {'_id': 0}).to_list(1000)
+    return analyses
+
 @api_router.get("/rms/suggestions")
 async def get_price_suggestions(current_user: User = Depends(get_current_user)):
     rooms = await db.rooms.find({'tenant_id': current_user.tenant_id}, {'_id': 0}).to_list(1000)

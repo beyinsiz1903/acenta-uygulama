@@ -583,17 +583,8 @@ async def register_guest(data: GuestRegister):
 
 @api_router.post("/auth/login", response_model=TokenResponse)
 async def login(data: UserLogin):
-    import logging
-    logger = logging.getLogger("uvicorn")
-    logger.info(f"Login attempt for: {data.email}")
     user_doc = await db.users.find_one({'email': data.email}, {'_id': 0})
-    logger.info(f"User found: {user_doc is not None}")
-    if user_doc:
-        logger.info(f"User has password field: {'password' in user_doc}")
-        pwd_verify = verify_password(data.password, user_doc.get('password', ''))
-        logger.info(f"Password verification: {pwd_verify}")
     if not user_doc or not verify_password(data.password, user_doc.get('password', '')):
-        logger.warning(f"Login failed for {data.email}")
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
     user = User(**{k: v for k, v in user_doc.items() if k != 'password'})

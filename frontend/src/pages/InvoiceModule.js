@@ -998,39 +998,39 @@ const InvoiceModule = ({ user, tenant, onLogout }) => {
               ) : (
                 <>
                   <div>
-                    <Label>Calculation Method</Label>
+                    <Label>{t('invoice.calculationMethod')}</Label>
                     <Select 
                       value={newAdditionalTax.is_percentage ? 'percentage' : 'fixed'} 
                       onValueChange={(v) => setNewAdditionalTax({...newAdditionalTax, is_percentage: v === 'percentage'})}
                     >
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="percentage">Percentage (%)</SelectItem>
-                        <SelectItem value="fixed">Fixed Amount (₺)</SelectItem>
+                        <SelectItem value="percentage">{t('invoice.percentage')}</SelectItem>
+                        <SelectItem value="fixed">{t('invoice.fixedAmount')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   {newAdditionalTax.is_percentage ? (
                     <div>
-                      <Label>Tax Rate (%)</Label>
+                      <Label>{t('invoice.taxRate')}</Label>
                       <Input 
                         type="number" 
                         step="0.01" 
                         value={newAdditionalTax.rate} 
                         onChange={(e) => setNewAdditionalTax({...newAdditionalTax, rate: parseFloat(e.target.value)})} 
-                        placeholder="Enter percentage"
+                        placeholder={t('invoice.taxRate')}
                       />
                     </div>
                   ) : (
                     <div>
-                      <Label>Tax Amount ($)</Label>
+                      <Label>{t('invoice.taxAmount')}</Label>
                       <Input 
                         type="number" 
                         step="0.01" 
                         value={newAdditionalTax.amount} 
                         onChange={(e) => setNewAdditionalTax({...newAdditionalTax, amount: parseFloat(e.target.value)})} 
-                        placeholder="Enter amount"
+                        placeholder={t('invoice.taxAmount')}
                       />
                     </div>
                   )}
@@ -1039,10 +1039,10 @@ const InvoiceModule = ({ user, tenant, onLogout }) => {
 
               <div className="flex gap-2">
                 <Button type="button" variant="outline" onClick={() => setShowAdditionalTaxDialog(false)} className="flex-1">
-                  Cancel
+                  {t('common.cancel')}
                 </Button>
                 <Button type="button" onClick={addAdditionalTax} className="flex-1">
-                  Add Tax
+                  {t('invoice.addTax')}
                 </Button>
               </div>
             </div>

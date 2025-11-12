@@ -582,8 +582,11 @@ async def get_price_suggestions(current_user: User = Depends(get_current_user)):
 # ============= LOYALTY ENDPOINTS =============
 
 @api_router.post("/loyalty/programs", response_model=LoyaltyProgram)
-async def create_loyalty_program(program: LoyaltyProgram, current_user: User = Depends(get_current_user)):
-    program.tenant_id = current_user.tenant_id
+async def create_loyalty_program(program_data: LoyaltyProgramCreate, current_user: User = Depends(get_current_user)):
+    program = LoyaltyProgram(
+        tenant_id=current_user.tenant_id,
+        **program_data.model_dump()
+    )
     program_dict = program.model_dump()
     program_dict['last_activity'] = program_dict['last_activity'].isoformat()
     await db.loyalty_programs.insert_one(program_dict)

@@ -2019,5 +2019,13 @@ async def get_accounting_dashboard(current_user: User = Depends(get_current_user
         'total_bank_balance': round(total_bank_balance, 2)
     }
 
+# Import and include AI endpoints
+try:
+    from ai_endpoints import api_router as ai_router
+    api_router.include_router(ai_router, tags=["AI Intelligence"])
+    print("✅ AI endpoints loaded successfully")
+except ImportError as e:
+    print(f"⚠️ AI endpoints not loaded: {e}")
+
 # Include router at the very end after ALL endpoints are defined
 app.include_router(api_router)

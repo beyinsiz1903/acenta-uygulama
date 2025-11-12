@@ -223,9 +223,9 @@ const LoyaltyModule = ({ user, tenant, onLogout }) => {
 
         <Tabs defaultValue="enrolled" className="w-full">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="enrolled">Enrolled Members ({programs.length})</TabsTrigger>
-            <TabsTrigger value="unenrolled">Not Enrolled ({guests.filter(g => !programs.find(p => p.guest_id === g.id)).length})</TabsTrigger>
-            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="enrolled">{t('loyalty.enrolledMembers')} ({programs.length})</TabsTrigger>
+            <TabsTrigger value="unenrolled">{t('loyalty.notEnrolled')} ({guests.filter(g => !programs.find(p => p.guest_id === g.id)).length})</TabsTrigger>
+            <TabsTrigger value="overview">{t('loyalty.overview')}</TabsTrigger>
           </TabsList>
 
           {/* OVERVIEW TAB */}

@@ -646,8 +646,11 @@ async def get_products():
     return products
 
 @api_router.post("/marketplace/orders", response_model=Order)
-async def create_order(order: Order, current_user: User = Depends(get_current_user)):
-    order.tenant_id = current_user.tenant_id
+async def create_order(order_data: OrderCreate, current_user: User = Depends(get_current_user)):
+    order = Order(
+        tenant_id=current_user.tenant_id,
+        **order_data.model_dump()
+    )
     order_dict = order.model_dump()
     order_dict['created_at'] = order_dict['created_at'].isoformat()
     await db.orders.insert_one(order_dict)

@@ -34,9 +34,20 @@ const InvoiceModule = ({ user, tenant, onLogout }) => {
     customer_tax_office: '',
     customer_tax_number: '',
     customer_address: '',
-    items: [{ description: '', quantity: 1, unit_price: 0, vat_rate: 18, vat_amount: 0, total: 0 }],
+    items: [{ description: '', quantity: 1, unit_price: 0, vat_rate: 18, vat_amount: 0, total: 0, additional_taxes: [] }],
     due_date: '',
     notes: ''
+  });
+
+  const [showAdditionalTaxDialog, setShowAdditionalTaxDialog] = useState(false);
+  const [currentItemIndex, setCurrentItemIndex] = useState(null);
+  const [newAdditionalTax, setNewAdditionalTax] = useState({
+    tax_type: 'otv',
+    tax_name: 'ÖTV',
+    rate: 0,
+    amount: 0,
+    is_percentage: true,
+    withholding_rate: null
   });
 
   const [newExpense, setNewExpense] = useState({

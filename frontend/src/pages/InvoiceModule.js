@@ -165,8 +165,65 @@ const InvoiceModule = ({ user, tenant, onLogout }) => {
   const addInvoiceItem = () => {
     setNewInvoice({
       ...newInvoice,
-      items: [...newInvoice.items, { description: '', quantity: 1, unit_price: 0, vat_rate: 18, vat_amount: 0, total: 0 }]
+      items: [...newInvoice.items, { description: '', quantity: 1, unit_price: 0, vat_rate: 18, vat_amount: 0, total: 0, additional_taxes: [] }]
     });
+  };
+
+  const openAddTaxDialog = (index) => {
+    setCurrentItemIndex(index);
+    setShowAdditionalTaxDialog(true);
+  };
+
+  const addAdditionalTax = () => {
+    if (currentItemIndex === null) return;
+    
+    const items = [...newInvoice.items];
+    const item = items[currentItemIndex];
+    
+    // Calculate the tax amount
+    let calculatedAmount = 0;
+    const subtotal = item.quantity * item.unit_price;
+    
+    if (newAdditionalTax.tax_type === 'withholding' && newAdditionalTax.withholding_rate) {
+      // For withholding tax, calculate based on VAT amount
+      const rateParts = newAdditionalTax.withholding_rate.split('/');
+      const ratePercent = (parseInt(rateParts[0]) / parseInt(rateParts[1])) * 100;
+      calculatedAmount = item.vat_amount * (ratePercent / 100);
+    } else if (newAdditionalTax.is_percentage) {
+      calculatedAmount = subtotal * (newAdditionalTax.rate / 100);
+    } else {
+      calculatedAmount = newAdditionalTax.amount;
+    }
+
+    const taxToAdd = {
+      ...newAdditionalTax,
+      calculated_amount: calculatedAmount
+    };
+
+    if (!item.additional_taxes) {
+      item.additional_taxes = [];
+    }
+    item.additional_taxes.push(taxToAdd);
+    
+    items[currentItemIndex] = item;
+    setNewInvoice({ ...newInvoice, items });
+    
+    // Reset dialog
+    setShowAdditionalTaxDialog(false);
+    setNewAdditionalTax({
+      tax_type: 'otv',
+      tax_name: 'ÖTV',
+      rate: 0,
+      amount: 0,
+      is_percentage: true,
+      withholding_rate: null
+    });
+  };
+
+  const removeAdditionalTax = (itemIndex, taxIndex) => {
+    const items = [...newInvoice.items];
+    items[itemIndex].additional_taxes.splice(taxIndex, 1);
+    setNewInvoice({ ...newInvoice, items });
   };
 
   const handleCreateInvoice = async (e) => {

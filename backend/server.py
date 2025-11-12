@@ -421,8 +421,23 @@ async def get_guests(current_user: User = Depends(get_current_user)):
 
 # Bookings
 @api_router.post("/pms/bookings", response_model=Booking)
-async def create_booking(booking: Booking, current_user: User = Depends(get_current_user)):
-    booking.tenant_id = current_user.tenant_id
+async def create_booking(booking_data: BookingCreate, current_user: User = Depends(get_current_user)):
+    # Parse date strings to datetime
+    check_in_dt = datetime.fromisoformat(booking_data.check_in.replace('Z', '+00:00'))
+    check_out_dt = datetime.fromisoformat(booking_data.check_out.replace('Z', '+00:00'))
+    
+    booking = Booking(
+        tenant_id=current_user.tenant_id,
+        guest_id=booking_data.guest_id,
+        room_id=booking_data.room_id,
+        check_in=check_in_dt,
+        check_out=check_out_dt,
+        guests_count=booking_data.guests_count,
+        total_amount=booking_data.total_amount,
+        channel=booking_data.channel,
+        special_requests=booking_data.special_requests
+    )
+    
     booking_dict = booking.model_dump()
     booking_dict['check_in'] = booking_dict['check_in'].isoformat()
     booking_dict['check_out'] = booking_dict['check_out'].isoformat()

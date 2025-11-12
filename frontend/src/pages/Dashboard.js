@@ -35,16 +35,16 @@ const Dashboard = ({ user, tenant, onLogout }) => {
 
   const modules = [
     {
-      title: 'PMS',
-      description: 'Property Management System',
+      title: t('nav.pms'),
+      description: t('dashboard.propertyManagement'),
       icon: Hotel,
       path: '/pms',
       color: '#667eea',
       stats: stats?.pms
     },
     {
-      title: 'Invoices',
-      description: 'Billing & Reporting',
+      title: t('nav.invoices'),
+      description: t('dashboard.billingReporting'),
       icon: FileText,
       path: '/invoices',
       color: '#f093fb',

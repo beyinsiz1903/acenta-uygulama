@@ -17,6 +17,27 @@ import qrcode
 import io
 import base64
 import secrets
+import sys
+
+# Add current directory to path for accounting models
+sys.path.append(os.path.dirname(__file__))
+
+# Import accounting models
+try:
+    from accounting_models import (
+        AccountingInvoice, AccountingInvoiceItem, AdditionalTax,
+        Supplier, BankAccount, Expense, InventoryItem, StockMovement, CashFlow,
+        AccountType, TransactionType, ExpenseCategory, IncomeCategory,
+        PaymentStatus, InvoiceType, VATRate, AdditionalTaxType, WithholdingRate
+    )
+    print("✅ Accounting models imported successfully")
+except ImportError as e:
+    print(f"❌ Failed to import accounting models: {e}")
+    # Define minimal models to prevent server crash
+    class AccountingInvoice(BaseModel):
+        pass
+    class AccountingInvoiceItem(BaseModel):
+        pass
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')

@@ -75,8 +75,14 @@ def test_frontdesk_operations():
                     print('✅ Booking created successfully')
                     print(f'   QR Code generated: {"Yes" if booking.get("qr_code") else "No"}')
                     
+                    # First update booking status to confirmed
+                    booking_update = requests.put(f'{base_url}/pms/bookings/{booking_id}', 
+                                                json={'status': 'confirmed'}, headers=headers)
+                    print(f'Booking status update: {booking_update.status_code}')
+                    
                     # Test Front Desk Check-in
                     checkin_response = requests.post(f'{base_url}/frontdesk/checkin/{booking_id}', headers=headers)
+                    print(f'Check-in response: {checkin_response.status_code} - {checkin_response.text}')
                     if checkin_response.status_code == 200:
                         print('✅ Check-in completed successfully')
                         checkin_data = checkin_response.json()

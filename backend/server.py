@@ -1782,7 +1782,7 @@ async def create_accounting_invoice(
     cash_flow = CashFlow(
         tenant_id=current_user.tenant_id,
         transaction_type='income',
-        category='room_revenue' if booking_id else 'other_services',
+        category='room_revenue' if request.booking_id else 'other_services',
         amount=total,
         description=f"Invoice {invoice_number}",
         reference_id=invoice.id,

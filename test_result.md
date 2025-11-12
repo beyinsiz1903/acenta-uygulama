@@ -173,15 +173,18 @@ backend:
 
   - task: "Update invoice creation endpoint to calculate additional taxes"
     implemented: true
-    working: "NA"
-    file: "/app/backend/accounting_endpoints.py"
+    working: true
+    file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Updated create_accounting_invoice to calculate withholding tax and additional taxes, needs backend testing"
+      - working: true
+        agent: "testing"
+        comment: "✅ COMPREHENSIVE TESTING COMPLETED - All additional tax functionality working correctly. Tested: 10% VAT rate, ÖTV (percentage & fixed amount), Withholding tax (7/10, 9/10, 5/10, 3/10), Accommodation tax, and complex multi-tax scenarios. All calculations verified accurate including subtotal, VAT, withholding deductions, and additional taxes. Invoice creation endpoint fully functional at /api/accounting/invoices."
 
 frontend:
   - task: "Add 10% option to VAT rate dropdowns"

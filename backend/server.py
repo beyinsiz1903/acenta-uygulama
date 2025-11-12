@@ -9,7 +9,7 @@ from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict, EmailStr
 from typing import List, Optional, Dict, Any
 import uuid
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone, timedelta, date
 import bcrypt
 import jwt
 from enum import Enum
@@ -21,41 +21,66 @@ import secrets
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-# MongoDB connection
 mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
-# JWT Configuration
 JWT_SECRET = os.environ.get('JWT_SECRET', 'your-secret-key-change-in-production')
 JWT_ALGORITHM = 'HS256'
 JWT_EXPIRATION_HOURS = 24
 
-# Create the main app
 app = FastAPI(title="RoomOps Platform")
 api_router = APIRouter(prefix="/api")
 security = HTTPBearer()
 
-# ============= ENUMS & CONSTANTS =============
+# ============= ENUMS =============
 
 class UserRole(str, Enum):
     ADMIN = "admin"
     MANAGER = "manager"
+    FRONT_DESK = "front_desk"
+    HOUSEKEEPING = "housekeeping"
     STAFF = "staff"
-    GUEST = "guest"  # New role for guest users
+    GUEST = "guest"
 
 class RoomStatus(str, Enum):
     AVAILABLE = "available"
     OCCUPIED = "occupied"
-    MAINTENANCE = "maintenance"
+    DIRTY = "dirty"
     CLEANING = "cleaning"
+    INSPECTED = "inspected"
+    MAINTENANCE = "maintenance"
+    OUT_OF_ORDER = "out_of_order"
 
 class BookingStatus(str, Enum):
     PENDING = "pending"
     CONFIRMED = "confirmed"
     CHECKED_IN = "checked_in"
     CHECKED_OUT = "checked_out"
+    NO_SHOW = "no_show"
     CANCELLED = "cancelled"
+
+class PaymentStatus(str, Enum):
+    PENDING = "pending"
+    PARTIAL = "partial"
+    PAID = "paid"
+    REFUNDED = "refunded"
+
+class PaymentMethod(str, Enum):
+    CASH = "cash"
+    CARD = "card"
+    BANK_TRANSFER = "bank_transfer"
+    ONLINE = "online"
+
+class ChargeType(str, Enum):
+    ROOM = "room"
+    FOOD = "food"
+    BEVERAGE = "beverage"
+    LAUNDRY = "laundry"
+    MINIBAR = "minibar"
+    PHONE = "phone"
+    SPA = "spa"
+    OTHER = "other"
 
 class InvoiceStatus(str, Enum):
     DRAFT = "draft"
@@ -75,9 +100,16 @@ class RoomServiceStatus(str, Enum):
     COMPLETED = "completed"
     CANCELLED = "cancelled"
 
-# ============= PYDANTIC MODELS =============
+class ChannelType(str, Enum):
+    DIRECT = "direct"
+    BOOKING_COM = "booking_com"
+    EXPEDIA = "expedia"
+    AIRBNB = "airbnb"
+    AGODA = "agoda"
+    OWN_WEBSITE = "own_website"
 
-# Auth & Tenant Models
+# ============= MODELS =============
+
 class Tenant(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
@@ -91,12 +123,13 @@ class Tenant(BaseModel):
     amenities: List[str] = []
     images: List[str] = []
     description: Optional[str] = None
+    total_rooms: int = 0
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class User(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    tenant_id: Optional[str] = None  # None for guest users
+    tenant_id: Optional[str] = None
     email: EmailStr
     name: str
     role: UserRole
@@ -139,7 +172,7 @@ class NotificationPreferences(BaseModel):
     promotional: bool = True
     room_service_updates: bool = True
 
-# PMS Models
+# Room Models
 class RoomCreate(BaseModel):
     room_number: str
     room_type: str
@@ -159,14 +192,34 @@ class Room(BaseModel):
     base_price: float
     status: RoomStatus = RoomStatus.AVAILABLE
     amenities: List[str] = []
+    current_booking_id: Optional[str] = None
+    last_cleaned: Optional[datetime] = None
+    notes: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
+class HousekeepingTask(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    tenant_id: str
+    room_id: str
+    task_type: str  # cleaning, inspection, maintenance
+    assigned_to: Optional[str] = None
+    status: str = "pending"  # pending, in_progress, completed
+    priority: str = "normal"  # low, normal, high, urgent
+    notes: Optional[str] = None
+    started_at: Optional[datetime] = None
+    completed_at: Optional[datetime] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+# Guest & Booking Models
 class GuestCreate(BaseModel):
     name: str
     email: EmailStr
     phone: str
     id_number: str
+    nationality: Optional[str] = None
     address: Optional[str] = None
+    vip_status: bool = False
 
 class Guest(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -176,9 +229,13 @@ class Guest(BaseModel):
     email: EmailStr
     phone: str
     id_number: str
+    nationality: Optional[str] = None
     address: Optional[str] = None
+    vip_status: bool = False
     loyalty_points: int = 0
     total_stays: int = 0
+    total_spend: float = 0.0
+    notes: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class BookingCreate(BaseModel):
@@ -188,8 +245,9 @@ class BookingCreate(BaseModel):
     check_out: str
     guests_count: int
     total_amount: float
-    channel: str = "direct"
+    channel: ChannelType = ChannelType.DIRECT
     special_requests: Optional[str] = None
+    rate_plan: Optional[str] = None
 
 class Booking(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -201,12 +259,66 @@ class Booking(BaseModel):
     check_out: datetime
     guests_count: int
     total_amount: float
+    paid_amount: float = 0.0
     status: BookingStatus = BookingStatus.PENDING
-    channel: str = "direct"
+    channel: ChannelType = ChannelType.DIRECT
+    rate_plan: Optional[str] = "Standard"
     special_requests: Optional[str] = None
     qr_code: Optional[str] = None
     qr_code_data: Optional[str] = None
+    checked_in_at: Optional[datetime] = None
+    checked_out_at: Optional[datetime] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+# Folio & Payment Models
+class FolioCharge(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    tenant_id: str
+    booking_id: str
+    charge_type: ChargeType
+    description: str
+    amount: float
+    quantity: float = 1.0
+    total: float
+    date: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    posted_by: Optional[str] = None
+
+class Payment(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    tenant_id: str
+    booking_id: str
+    amount: float
+    method: PaymentMethod
+    status: PaymentStatus = PaymentStatus.PENDING
+    reference: Optional[str] = None
+    notes: Optional[str] = None
+    processed_by: Optional[str] = None
+    processed_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+# Channel Manager Models
+class ChannelRate(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    tenant_id: str
+    room_type: str
+    channel: ChannelType
+    date: date
+    rate: float
+    availability: int
+    min_stay: int = 1
+    max_stay: Optional[int] = None
+    last_updated: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class ChannelMapping(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    tenant_id: str
+    channel: ChannelType
+    room_type: str
+    channel_room_id: str
+    active: bool = True
 
 # Room Service Models
 class RoomServiceCreate(BaseModel):
@@ -228,7 +340,7 @@ class RoomService(BaseModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     completed_at: Optional[datetime] = None
 
-# Invoice Models
+# Invoice Models  
 class InvoiceItem(BaseModel):
     description: str
     quantity: float
@@ -262,20 +374,6 @@ class Invoice(BaseModel):
     issue_date: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     due_date: datetime
     notes: Optional[str] = None
-
-# RMS Models
-class PriceAnalysis(BaseModel):
-    model_config = ConfigDict(extra="ignore")
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    tenant_id: str
-    room_type: str
-    date: datetime
-    current_price: float
-    suggested_price: float
-    occupancy_rate: float
-    demand_score: float
-    competitor_avg: Optional[float] = None
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 # Loyalty Models
 class LoyaltyProgramCreate(BaseModel):
@@ -339,6 +437,20 @@ class Order(BaseModel):
     delivery_address: str
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
+# RMS Models
+class PriceAnalysis(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    tenant_id: str
+    room_type: str
+    date: datetime
+    current_price: float
+    suggested_price: float
+    occupancy_rate: float
+    demand_score: float
+    competitor_avg: Optional[float] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
 # ============= HELPER FUNCTIONS =============
 
 def hash_password(password: str) -> str:
@@ -372,7 +484,6 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
 
 def generate_qr_code(data: str) -> str:
-    """Generate QR code and return base64 encoded image"""
     qr = qrcode.QRCode(version=1, box_size=10, border=5)
     qr.add_data(data)
     qr.make(fit=True)
@@ -384,8 +495,7 @@ def generate_qr_code(data: str) -> str:
     img_base64 = base64.b64encode(buffer.getvalue()).decode()
     return f"data:image/png;base64,{img_base64}"
 
-def generate_time_based_qr_token(booking_id: str, expiry_hours: int = 24) -> str:
-    """Generate time-based token for QR codes"""
+def generate_time_based_qr_token(booking_id: str, expiry_hours: int = 72) -> str:
     expiry = datetime.now(timezone.utc) + timedelta(hours=expiry_hours)
     token = secrets.token_urlsafe(32)
     return jwt.encode({
@@ -432,7 +542,6 @@ async def register_tenant(data: TenantRegister):
 
 @api_router.post("/auth/register-guest", response_model=TokenResponse)
 async def register_guest(data: GuestRegister):
-    """Register a guest user account"""
     existing = await db.users.find_one({'email': data.email})
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered")
@@ -449,7 +558,6 @@ async def register_guest(data: GuestRegister):
     user_dict['created_at'] = user_dict['created_at'].isoformat()
     await db.users.insert_one(user_dict)
     
-    # Create notification preferences
     prefs = NotificationPreferences(user_id=user.id)
     await db.notification_preferences.insert_one(prefs.model_dump())
     
@@ -481,18 +589,15 @@ async def get_me(current_user: User = Depends(get_current_user)):
 
 @api_router.get("/guest/bookings")
 async def get_guest_bookings(current_user: User = Depends(get_current_user)):
-    """Get all bookings for the logged-in guest across all hotels"""
     if current_user.role != UserRole.GUEST:
         raise HTTPException(status_code=403, detail="Only guests can access this endpoint")
     
-    # Find all guest records with this email
     guest_records = await db.guests.find({'email': current_user.email}, {'_id': 0}).to_list(1000)
     guest_ids = [g['id'] for g in guest_records]
     
     if not guest_ids:
         return {'active_bookings': [], 'past_bookings': []}
     
-    # Get all bookings
     all_bookings = await db.bookings.find({'guest_id': {'$in': guest_ids}}, {'_id': 0}).to_list(1000)
     
     now = datetime.now(timezone.utc)
@@ -500,16 +605,10 @@ async def get_guest_bookings(current_user: User = Depends(get_current_user)):
     past_bookings = []
     
     for booking in all_bookings:
-        # Get hotel info
         tenant = await db.tenants.find_one({'id': booking['tenant_id']}, {'_id': 0})
-        # Get room info
         room = await db.rooms.find_one({'id': booking['room_id']}, {'_id': 0})
         
-        booking_data = {
-            **booking,
-            'hotel': tenant,
-            'room': room
-        }
+        booking_data = {**booking, 'hotel': tenant, 'room': room}
         
         checkout_date = datetime.fromisoformat(booking['check_out'].replace('Z', '+00:00')) if isinstance(booking['check_out'], str) else booking['check_out']
         
@@ -518,14 +617,10 @@ async def get_guest_bookings(current_user: User = Depends(get_current_user)):
         else:
             past_bookings.append(booking_data)
     
-    return {
-        'active_bookings': active_bookings,
-        'past_bookings': past_bookings
-    }
+    return {'active_bookings': active_bookings, 'past_bookings': past_bookings}
 
 @api_router.get("/guest/loyalty")
 async def get_guest_loyalty(current_user: User = Depends(get_current_user)):
-    """Get loyalty points from all hotels for the guest"""
     if current_user.role != UserRole.GUEST:
         raise HTTPException(status_code=403, detail="Only guests can access this endpoint")
     
@@ -537,28 +632,20 @@ async def get_guest_loyalty(current_user: User = Depends(get_current_user)):
     
     loyalty_programs = await db.loyalty_programs.find({'guest_id': {'$in': guest_ids}}, {'_id': 0}).to_list(1000)
     
-    # Enrich with hotel data
     enriched_programs = []
     total_points = 0
     
     for program in loyalty_programs:
         tenant = await db.tenants.find_one({'id': program['tenant_id']}, {'_id': 0})
-        enriched_programs.append({
-            **program,
-            'hotel': tenant
-        })
+        enriched_programs.append({**program, 'hotel': tenant})
         total_points += program['points']
     
-    return {
-        'loyalty_programs': enriched_programs,
-        'total_points': total_points
-    }
+    return {'loyalty_programs': enriched_programs, 'total_points': total_points}
 
 @api_router.get("/guest/notification-preferences")
 async def get_notification_preferences(current_user: User = Depends(get_current_user)):
     prefs = await db.notification_preferences.find_one({'user_id': current_user.id}, {'_id': 0})
     if not prefs:
-        # Create default preferences
         prefs = NotificationPreferences(user_id=current_user.id).model_dump()
         await db.notification_preferences.insert_one(prefs)
     return prefs
@@ -574,11 +661,9 @@ async def update_notification_preferences(preferences: Dict[str, bool], current_
 
 @api_router.post("/guest/room-service")
 async def create_room_service_request(request: RoomServiceCreate, current_user: User = Depends(get_current_user)):
-    """Guest creates a room service request"""
     if current_user.role != UserRole.GUEST:
         raise HTTPException(status_code=403, detail="Only guests can create room service requests")
     
-    # Verify booking exists and belongs to this guest
     booking = await db.bookings.find_one({'id': request.booking_id}, {'_id': 0})
     if not booking:
         raise HTTPException(status_code=404, detail="Booking not found")
@@ -604,344 +689,12 @@ async def create_room_service_request(request: RoomServiceCreate, current_user: 
 
 @api_router.get("/guest/room-service/{booking_id}")
 async def get_room_service_requests(booking_id: str, current_user: User = Depends(get_current_user)):
-    """Get room service requests for a booking"""
     services = await db.room_services.find({'booking_id': booking_id}, {'_id': 0}).to_list(1000)
     return services
 
 @api_router.get("/guest/hotels")
 async def browse_hotels(current_user: User = Depends(get_current_user)):
-    """Browse all hotels on platform (for future booking feature)"""
     hotels = await db.tenants.find({}, {'_id': 0}).to_list(1000)
     return hotels
 
-# ============= PMS ENDPOINTS =============
-
-@api_router.post("/pms/rooms", response_model=Room)
-async def create_room(room_data: RoomCreate, current_user: User = Depends(get_current_user)):
-    room = Room(
-        tenant_id=current_user.tenant_id,
-        **room_data.model_dump()
-    )
-    room_dict = room.model_dump()
-    room_dict['created_at'] = room_dict['created_at'].isoformat()
-    await db.rooms.insert_one(room_dict)
-    return room
-
-@api_router.get("/pms/rooms", response_model=List[Room])
-async def get_rooms(current_user: User = Depends(get_current_user)):
-    rooms = await db.rooms.find({'tenant_id': current_user.tenant_id}, {'_id': 0}).to_list(1000)
-    return rooms
-
-@api_router.put("/pms/rooms/{room_id}", response_model=Room)
-async def update_room(room_id: str, updates: Dict[str, Any], current_user: User = Depends(get_current_user)):
-    await db.rooms.update_one(
-        {'id': room_id, 'tenant_id': current_user.tenant_id},
-        {'$set': updates}
-    )
-    room_doc = await db.rooms.find_one({'id': room_id}, {'_id': 0})
-    return Room(**room_doc)
-
-@api_router.post("/pms/guests", response_model=Guest)
-async def create_guest(guest_data: GuestCreate, current_user: User = Depends(get_current_user)):
-    guest = Guest(
-        tenant_id=current_user.tenant_id,
-        **guest_data.model_dump()
-    )
-    guest_dict = guest.model_dump()
-    guest_dict['created_at'] = guest_dict['created_at'].isoformat()
-    await db.guests.insert_one(guest_dict)
-    return guest
-
-@api_router.get("/pms/guests", response_model=List[Guest])
-async def get_guests(current_user: User = Depends(get_current_user)):
-    guests = await db.guests.find({'tenant_id': current_user.tenant_id}, {'_id': 0}).to_list(1000)
-    return guests
-
-@api_router.post("/pms/bookings", response_model=Booking)
-async def create_booking(booking_data: BookingCreate, current_user: User = Depends(get_current_user)):
-    check_in_dt = datetime.fromisoformat(booking_data.check_in.replace('Z', '+00:00'))
-    check_out_dt = datetime.fromisoformat(booking_data.check_out.replace('Z', '+00:00'))
-    
-    booking = Booking(
-        tenant_id=current_user.tenant_id,
-        guest_id=booking_data.guest_id,
-        room_id=booking_data.room_id,
-        check_in=check_in_dt,
-        check_out=check_out_dt,
-        guests_count=booking_data.guests_count,
-        total_amount=booking_data.total_amount,
-        channel=booking_data.channel,
-        special_requests=booking_data.special_requests
-    )
-    
-    # Generate QR code for booking
-    qr_token = generate_time_based_qr_token(booking.id, expiry_hours=72)
-    qr_data = f"booking:{booking.id}:token:{qr_token}"
-    qr_code = generate_qr_code(qr_data)
-    
-    booking.qr_code = qr_code
-    booking.qr_code_data = qr_token
-    
-    booking_dict = booking.model_dump()
-    booking_dict['check_in'] = booking_dict['check_in'].isoformat()
-    booking_dict['check_out'] = booking_dict['check_out'].isoformat()
-    booking_dict['created_at'] = booking_dict['created_at'].isoformat()
-    await db.bookings.insert_one(booking_dict)
-    
-    await db.rooms.update_one(
-        {'id': booking.room_id},
-        {'$set': {'status': RoomStatus.OCCUPIED}}
-    )
-    
-    return booking
-
-@api_router.get("/pms/bookings", response_model=List[Booking])
-async def get_bookings(current_user: User = Depends(get_current_user)):
-    bookings = await db.bookings.find({'tenant_id': current_user.tenant_id}, {'_id': 0}).to_list(1000)
-    return bookings
-
-@api_router.get("/pms/dashboard")
-async def get_pms_dashboard(current_user: User = Depends(get_current_user)):
-    total_rooms = await db.rooms.count_documents({'tenant_id': current_user.tenant_id})
-    occupied_rooms = await db.rooms.count_documents({'tenant_id': current_user.tenant_id, 'status': 'occupied'})
-    today_checkins = await db.bookings.count_documents({
-        'tenant_id': current_user.tenant_id,
-        'check_in': {'$gte': datetime.now(timezone.utc).replace(hour=0, minute=0).isoformat()}
-    })
-    total_guests = await db.guests.count_documents({'tenant_id': current_user.tenant_id})
-    
-    return {
-        'total_rooms': total_rooms,
-        'occupied_rooms': occupied_rooms,
-        'available_rooms': total_rooms - occupied_rooms,
-        'occupancy_rate': (occupied_rooms / total_rooms * 100) if total_rooms > 0 else 0,
-        'today_checkins': today_checkins,
-        'total_guests': total_guests
-    }
-
-@api_router.get("/pms/room-services")
-async def get_hotel_room_services(current_user: User = Depends(get_current_user)):
-    """Hotel staff view room service requests"""
-    services = await db.room_services.find({'tenant_id': current_user.tenant_id}, {'_id': 0}).to_list(1000)
-    return services
-
-@api_router.put("/pms/room-services/{service_id}")
-async def update_room_service(service_id: str, updates: Dict[str, Any], current_user: User = Depends(get_current_user)):
-    """Hotel staff update room service status"""
-    if 'status' in updates and updates['status'] == 'completed':
-        updates['completed_at'] = datetime.now(timezone.utc).isoformat()
-    
-    await db.room_services.update_one(
-        {'id': service_id, 'tenant_id': current_user.tenant_id},
-        {'$set': updates}
-    )
-    
-    service = await db.room_services.find_one({'id': service_id}, {'_id': 0})
-    return service
-
-# ============= INVOICE ENDPOINTS =============
-
-@api_router.post("/invoices", response_model=Invoice)
-async def create_invoice(invoice_data: InvoiceCreate, current_user: User = Depends(get_current_user)):
-    count = await db.invoices.count_documents({'tenant_id': current_user.tenant_id})
-    invoice_number = f"INV-{count + 1:05d}"
-    
-    due_date_dt = datetime.fromisoformat(invoice_data.due_date.replace('Z', '+00:00'))
-    
-    invoice = Invoice(
-        tenant_id=current_user.tenant_id,
-        invoice_number=invoice_number,
-        due_date=due_date_dt,
-        **{k: v for k, v in invoice_data.model_dump().items() if k != 'due_date'}
-    )
-    
-    invoice_dict = invoice.model_dump()
-    invoice_dict['issue_date'] = invoice_dict['issue_date'].isoformat()
-    invoice_dict['due_date'] = invoice_dict['due_date'].isoformat()
-    await db.invoices.insert_one(invoice_dict)
-    return invoice
-
-@api_router.get("/invoices", response_model=List[Invoice])
-async def get_invoices(current_user: User = Depends(get_current_user)):
-    invoices = await db.invoices.find({'tenant_id': current_user.tenant_id}, {'_id': 0}).to_list(1000)
-    return invoices
-
-@api_router.put("/invoices/{invoice_id}", response_model=Invoice)
-async def update_invoice(invoice_id: str, updates: Dict[str, Any], current_user: User = Depends(get_current_user)):
-    await db.invoices.update_one(
-        {'id': invoice_id, 'tenant_id': current_user.tenant_id},
-        {'$set': updates}
-    )
-    invoice_doc = await db.invoices.find_one({'id': invoice_id}, {'_id': 0})
-    return Invoice(**invoice_doc)
-
-@api_router.get("/invoices/stats")
-async def get_invoice_stats(current_user: User = Depends(get_current_user)):
-    invoices = await db.invoices.find({'tenant_id': current_user.tenant_id}, {'_id': 0}).to_list(1000)
-    
-    total_revenue = sum(inv['total'] for inv in invoices if inv['status'] == 'paid')
-    pending_amount = sum(inv['total'] for inv in invoices if inv['status'] in ['draft', 'sent'])
-    overdue_amount = sum(inv['total'] for inv in invoices if inv['status'] == 'overdue')
-    
-    return {
-        'total_invoices': len(invoices),
-        'total_revenue': total_revenue,
-        'pending_amount': pending_amount,
-        'overdue_amount': overdue_amount
-    }
-
-# ============= RMS ENDPOINTS =============
-
-@api_router.post("/rms/analysis", response_model=PriceAnalysis)
-async def create_price_analysis(analysis: PriceAnalysis, current_user: User = Depends(get_current_user)):
-    analysis.tenant_id = current_user.tenant_id
-    analysis_dict = analysis.model_dump()
-    analysis_dict['date'] = analysis_dict['date'].isoformat()
-    analysis_dict['created_at'] = analysis_dict['created_at'].isoformat()
-    await db.price_analysis.insert_one(analysis_dict)
-    return analysis
-
-@api_router.get("/rms/analysis", response_model=List[PriceAnalysis])
-async def get_price_analysis(current_user: User = Depends(get_current_user)):
-    analyses = await db.price_analysis.find({'tenant_id': current_user.tenant_id}, {'_id': 0}).to_list(1000)
-    return analyses
-
-@api_router.get("/rms/suggestions")
-async def get_price_suggestions(current_user: User = Depends(get_current_user)):
-    rooms = await db.rooms.find({'tenant_id': current_user.tenant_id}, {'_id': 0}).to_list(1000)
-    
-    suggestions = []
-    for room in rooms:
-        total_bookings = await db.bookings.count_documents({
-            'tenant_id': current_user.tenant_id,
-            'room_id': room['id']
-        })
-        
-        occupancy_rate = min(total_bookings * 10, 100)
-        demand_score = occupancy_rate / 100
-        
-        suggested_price = room['base_price']
-        if occupancy_rate > 80:
-            suggested_price *= 1.2
-        elif occupancy_rate < 50:
-            suggested_price *= 0.9
-        
-        suggestions.append({
-            'room_type': room['room_type'],
-            'room_number': room['room_number'],
-            'current_price': room['base_price'],
-            'suggested_price': round(suggested_price, 2),
-            'occupancy_rate': occupancy_rate,
-            'demand_score': demand_score
-        })
-    
-    return suggestions
-
-# ============= LOYALTY ENDPOINTS =============
-
-@api_router.post("/loyalty/programs", response_model=LoyaltyProgram)
-async def create_loyalty_program(program_data: LoyaltyProgramCreate, current_user: User = Depends(get_current_user)):
-    program = LoyaltyProgram(
-        tenant_id=current_user.tenant_id,
-        **program_data.model_dump()
-    )
-    program_dict = program.model_dump()
-    program_dict['last_activity'] = program_dict['last_activity'].isoformat()
-    await db.loyalty_programs.insert_one(program_dict)
-    return program
-
-@api_router.get("/loyalty/programs", response_model=List[LoyaltyProgram])
-async def get_loyalty_programs(current_user: User = Depends(get_current_user)):
-    programs = await db.loyalty_programs.find({'tenant_id': current_user.tenant_id}, {'_id': 0}).to_list(1000)
-    return programs
-
-@api_router.post("/loyalty/transactions", response_model=LoyaltyTransaction)
-async def create_loyalty_transaction(transaction_data: LoyaltyTransactionCreate, current_user: User = Depends(get_current_user)):
-    transaction = LoyaltyTransaction(
-        tenant_id=current_user.tenant_id,
-        **transaction_data.model_dump()
-    )
-    transaction_dict = transaction.model_dump()
-    transaction_dict['created_at'] = transaction_dict['created_at'].isoformat()
-    await db.loyalty_transactions.insert_one(transaction_dict)
-    
-    if transaction.transaction_type == 'earned':
-        await db.loyalty_programs.update_one(
-            {'guest_id': transaction.guest_id, 'tenant_id': current_user.tenant_id},
-            {'$inc': {'points': transaction.points, 'lifetime_points': transaction.points}}
-        )
-    else:
-        await db.loyalty_programs.update_one(
-            {'guest_id': transaction.guest_id, 'tenant_id': current_user.tenant_id},
-            {'$inc': {'points': -transaction.points}}
-        )
-    
-    return transaction
-
-@api_router.get("/loyalty/guest/{guest_id}")
-async def get_guest_loyalty(guest_id: str, current_user: User = Depends(get_current_user)):
-    program = await db.loyalty_programs.find_one(
-        {'guest_id': guest_id, 'tenant_id': current_user.tenant_id},
-        {'_id': 0}
-    )
-    
-    transactions = await db.loyalty_transactions.find(
-        {'guest_id': guest_id, 'tenant_id': current_user.tenant_id},
-        {'_id': 0}
-    ).to_list(1000)
-    
-    return {
-        'program': program,
-        'transactions': transactions
-    }
-
-# ============= MARKETPLACE ENDPOINTS =============
-
-@api_router.post("/marketplace/products", response_model=Product)
-async def create_product(product: Product):
-    product_dict = product.model_dump()
-    product_dict['created_at'] = product_dict['created_at'].isoformat()
-    await db.products.insert_one(product_dict)
-    return product
-
-@api_router.get("/marketplace/products", response_model=List[Product])
-async def get_products():
-    products = await db.products.find({}, {'_id': 0}).to_list(1000)
-    return products
-
-@api_router.post("/marketplace/orders", response_model=Order)
-async def create_order(order_data: OrderCreate, current_user: User = Depends(get_current_user)):
-    order = Order(
-        tenant_id=current_user.tenant_id,
-        **order_data.model_dump()
-    )
-    order_dict = order.model_dump()
-    order_dict['created_at'] = order_dict['created_at'].isoformat()
-    await db.orders.insert_one(order_dict)
-    return order
-
-@api_router.get("/marketplace/orders", response_model=List[Order])
-async def get_orders(current_user: User = Depends(get_current_user)):
-    orders = await db.orders.find({'tenant_id': current_user.tenant_id}, {'_id': 0}).to_list(1000)
-    return orders
-
-# Include the router in the main app
-app.include_router(api_router)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
-
-@app.on_event("shutdown")
-async def shutdown_db_client():
-    client.close()
+# Continue in next message due to length...

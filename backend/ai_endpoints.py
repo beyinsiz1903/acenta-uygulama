@@ -52,7 +52,7 @@ async def get_daily_briefing(
         hotel_name = tenant.get('property_name', 'Hotel') if tenant else 'Hotel'
         
         # Generate briefing
-        briefing = await ai_service.generate_daily_briefing(
+        briefing = await get_ai_service().generate_daily_briefing(
             hotel_name=hotel_name,
             total_rooms=total_rooms,
             occupied_rooms=occupied_rooms,
@@ -106,7 +106,7 @@ async def predict_occupancy(
         # Get historical data (simplified)
         historical_data = []
         
-        prediction = await ai_service.predict_occupancy(
+        prediction = await get_ai_service().predict_occupancy(
             historical_data=historical_data,
             current_occupancy=current_occupancy,
             upcoming_bookings=upcoming_bookings,
@@ -139,7 +139,7 @@ async def analyze_guest_patterns(
         checkin_times = [b.get('check_in', '') for b in bookings if b.get('check_in')]
         checkout_times = [b.get('check_out', '') for b in bookings if b.get('check_out')]
         
-        analysis = await ai_service.analyze_guest_patterns(
+        analysis = await get_ai_service().analyze_guest_patterns(
             checkin_times=checkin_times,
             checkout_times=checkout_times,
             guest_count=len(bookings)
@@ -164,7 +164,7 @@ async def categorize_expense(
     AI-powered expense categorization
     """
     try:
-        result = await ai_service.categorize_expense(
+        result = await get_ai_service().categorize_expense(
             description=description,
             amount=amount,
             vendor=vendor
@@ -190,7 +190,7 @@ async def detect_invoice_anomalies(
         
         average_amount = sum(i.get('total', 0) for i in invoices) / len(invoices) if invoices else 0
         
-        anomalies = await ai_service.detect_invoice_anomalies(
+        anomalies = await get_ai_service().detect_invoice_anomalies(
             invoices=invoices,
             average_amount=average_amount
         )
@@ -223,7 +223,7 @@ async def segment_guests(
             "tenant_id": current_user.tenant_id
         }).to_list(None)
         
-        segments = await ai_service.segment_guests(guests=guests)
+        segments = await get_ai_service().segment_guests(guests=guests)
         
         return segments
     except Exception as e:
@@ -266,7 +266,7 @@ async def predict_churn_risk(
         total_visits = len(bookings)
         average_spend = sum(b.get('total_amount', 0) for b in bookings) / len(bookings)
         
-        risk = await ai_service.predict_churn_risk(
+        risk = await get_ai_service().predict_churn_risk(
             guest_id=guest_id,
             last_visit_days=last_visit_days,
             total_visits=total_visits,
@@ -296,7 +296,7 @@ async def get_product_recommendations(
             "tenant_id": current_user.tenant_id
         }).to_list(None)
         
-        recommendations = await ai_service.recommend_products(
+        recommendations = await get_ai_service().recommend_products(
             inventory=products,
             recent_orders=orders,
             season="normal"
@@ -339,7 +339,7 @@ async def analyze_revenue(
             if datetime.fromisoformat(i.get('created_at', datetime.now().isoformat())).month == last_month
         )
         
-        analysis = await ai_service.analyze_revenue_trends(
+        analysis = await get_ai_service().analyze_revenue_trends(
             revenue_data=invoices,
             current_month_revenue=current_month_revenue,
             last_month_revenue=last_month_revenue

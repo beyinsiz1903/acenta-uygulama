@@ -111,7 +111,12 @@ const Layout = ({ children, user, tenant, onLogout, currentModule }) => {
 
           {/* Mobile Navigation */}
           {mobileMenuOpen && (
-            <nav className="md:hidden mt-4 pb-2 space-y-1">
+            <nav className="md:hidden mt-4 pb-2 space-y-2">
+              {/* Language Selector for Mobile */}
+              <div className="px-2 py-2 border-b border-gray-200">
+                <LanguageSelector />
+              </div>
+              
               {navigation.map((item) => {
                 const Icon = item.icon;
                 const isActive = currentModule === item.id;

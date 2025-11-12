@@ -72,18 +72,45 @@ async def seed_data():
     # Get or create default tenant and user
     tenant = await db.tenants.find_one({"property_type": "hotel"})
     if not tenant:
-        print("❌ No tenant found. Please create a hotel account first.")
-        return
+        print("📝 Creating default hotel tenant...")
+        tenant_id = str(uuid.uuid4())
+        tenant = {
+            "id": tenant_id,
+            "property_name": "Grand Canyon Hotel",
+            "property_type": "hotel",
+            "address": "123 Main Street, Phoenix, AZ 85001",
+            "contact_email": "admin@grandcanyon.hotel",
+            "contact_phone": "+1-602-555-0100",
+            "total_rooms": 40,
+            "created_at": datetime.now().isoformat()
+        }
+        await db.tenants.insert_one(tenant)
+        print(f"✅ Created tenant: {tenant['property_name']}")
+    else:
+        tenant_id = tenant['id']
     
-    tenant_id = tenant['id']
-    
-    # Get admin user
+    # Get or create admin user
     user = await db.users.find_one({"tenant_id": tenant_id, "role": "admin"})
     if not user:
-        print("❌ No admin user found.")
-        return
+        print("📝 Creating default admin user...")
+        import bcrypt
+        password_hash = bcrypt.hashpw("admin123".encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        
+        user_id = str(uuid.uuid4())
+        user = {
+            "id": user_id,
+            "tenant_id": tenant_id,
+            "name": "Hotel Administrator",
+            "email": "admin@test.com",
+            "password_hash": password_hash,
+            "role": "admin",
+            "created_at": datetime.now().isoformat()
+        }
+        await db.users.insert_one(user)
+        print(f"✅ Created admin user: {user['email']} (password: admin123)")
+    else:
+        user_id = user['id']
     
-    user_id = user['id']
     user_name = user['name']
     
     print(f"✅ Using tenant: {tenant['property_name']} (ID: {tenant_id})")

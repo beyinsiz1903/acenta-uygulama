@@ -179,6 +179,17 @@ class InvoiceItem(BaseModel):
     unit_price: float
     total: float
 
+class InvoiceCreate(BaseModel):
+    booking_id: Optional[str] = None
+    customer_name: str
+    customer_email: str
+    items: List[InvoiceItem]
+    subtotal: float
+    tax: float
+    total: float
+    due_date: str  # ISO format date string
+    notes: Optional[str] = None
+
 class Invoice(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))

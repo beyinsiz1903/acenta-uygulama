@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Layout from '@/components/Layout';
@@ -8,6 +9,7 @@ import { Hotel, FileText, TrendingUp, Award, ShoppingCart, Users, BedDouble, Cal
 
 const Dashboard = ({ user, tenant, onLogout }) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 

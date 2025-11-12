@@ -222,6 +222,12 @@ class PriceAnalysis(BaseModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 # Loyalty Models
+class LoyaltyProgramCreate(BaseModel):
+    guest_id: str
+    tier: LoyaltyTier = LoyaltyTier.BRONZE
+    points: int = 0
+    lifetime_points: int = 0
+
 class LoyaltyProgram(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
@@ -231,6 +237,12 @@ class LoyaltyProgram(BaseModel):
     points: int = 0
     lifetime_points: int = 0
     last_activity: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class LoyaltyTransactionCreate(BaseModel):
+    guest_id: str
+    points: int
+    transaction_type: str  # earned, redeemed
+    description: str
 
 class LoyaltyTransaction(BaseModel):
     model_config = ConfigDict(extra="ignore")

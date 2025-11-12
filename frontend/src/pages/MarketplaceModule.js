@@ -202,7 +202,7 @@ const MarketplaceModule = ({ user, tenant, onLogout }) => {
                             disabled={!product.in_stock}
                             data-testid={`add-to-cart-${product.id}`}
                           >
-                            {product.in_stock ? 'Add to Cart' : 'Out of Stock'}
+                            {product.in_stock ? t('marketplace.addToCart') : 'Out of Stock'}
                           </Button>
                         </div>
                       </div>

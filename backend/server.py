@@ -404,8 +404,11 @@ async def update_room(room_id: str, updates: Dict[str, Any], current_user: User 
 
 # Guests
 @api_router.post("/pms/guests", response_model=Guest)
-async def create_guest(guest: Guest, current_user: User = Depends(get_current_user)):
-    guest.tenant_id = current_user.tenant_id
+async def create_guest(guest_data: GuestCreate, current_user: User = Depends(get_current_user)):
+    guest = Guest(
+        tenant_id=current_user.tenant_id,
+        **guest_data.model_dump()
+    )
     guest_dict = guest.model_dump()
     guest_dict['created_at'] = guest_dict['created_at'].isoformat()
     await db.guests.insert_one(guest_dict)

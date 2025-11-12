@@ -355,7 +355,7 @@ const InvoiceModule = ({ user, tenant, onLogout }) => {
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm text-gray-600">Monthly Income</CardTitle>
+                <CardTitle className="text-sm text-gray-600">{t('dashboard.monthlyIncome')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-green-600">${dashboard.monthly_income}</div>
@@ -364,7 +364,7 @@ const InvoiceModule = ({ user, tenant, onLogout }) => {
             
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm text-gray-600">Monthly Expenses</CardTitle>
+                <CardTitle className="text-sm text-gray-600">{t('dashboard.monthlyExpenses')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-red-600">${dashboard.monthly_expenses}</div>
@@ -373,7 +373,7 @@ const InvoiceModule = ({ user, tenant, onLogout }) => {
             
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm text-gray-600">Net Income</CardTitle>
+                <CardTitle className="text-sm text-gray-600">{t('dashboard.netIncome')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-blue-600">${dashboard.net_income}</div>
@@ -382,7 +382,7 @@ const InvoiceModule = ({ user, tenant, onLogout }) => {
             
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm text-gray-600">Bank Balance</CardTitle>
+                <CardTitle className="text-sm text-gray-600">{t('dashboard.bankBalance')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">${dashboard.total_bank_balance}</div>

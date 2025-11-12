@@ -101,3 +101,232 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+user_problem_statement: |
+  Add 10% VAT rate option and additional tax functionality to invoice system.
+  Requirements:
+  1. Include 10% in VAT rate options
+  2. Add separate "+" icon for adding additional taxes (ÖTV, Tevkifat/Withholding, Accommodation Tax)
+  3. Allow adding multiple tax types to the same invoice
+  4. Display tax breakdown in invoice summary (Ara Toplam, Toplam KDV, Tevkifat, Genel Toplam)
+
+backend:
+  - task: "Add 10% to VATRate enum"
+    implemented: true
+    working: true
+    file: "/app/backend/accounting_models.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Added RATE_10 = '10' to VATRate enum"
+
+  - task: "Create AdditionalTaxType and WithholdingRate enums"
+    implemented: true
+    working: true
+    file: "/app/backend/accounting_models.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Created enums for tax types (ÖTV, withholding, accommodation) and withholding rates (9/10, 7/10, etc.)"
+
+  - task: "Add AdditionalTax model"
+    implemented: true
+    working: true
+    file: "/app/backend/accounting_models.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Created AdditionalTax model with support for percentage and fixed amount taxes"
+
+  - task: "Update AccountingInvoiceItem to support additional taxes"
+    implemented: true
+    working: true
+    file: "/app/backend/accounting_models.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Added additional_taxes field to AccountingInvoiceItem"
+
+  - task: "Update AccountingInvoice model with tax breakdown fields"
+    implemented: true
+    working: true
+    file: "/app/backend/accounting_models.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Added vat_withholding and total_additional_taxes fields to invoice model"
+
+  - task: "Update invoice creation endpoint to calculate additional taxes"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/accounting_endpoints.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Updated create_accounting_invoice to calculate withholding tax and additional taxes, needs backend testing"
+
+frontend:
+  - task: "Add 10% option to VAT rate dropdowns"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/InvoiceModule.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added 10% to both invoice item and expense VAT rate selects"
+
+  - task: "Add additional_taxes field to invoice items state"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/InvoiceModule.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Updated newInvoice state to include additional_taxes array for each item"
+
+  - task: "Create additional tax dialog state and functions"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/InvoiceModule.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added state for showAdditionalTaxDialog, currentItemIndex, newAdditionalTax, and functions to add/remove taxes"
+
+  - task: "Add '+' button to invoice items for adding taxes"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/InvoiceModule.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added Plus button next to each invoice item with openAddTaxDialog handler"
+
+  - task: "Display additional taxes under each invoice item"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/InvoiceModule.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added UI to show added taxes with remove button for each item"
+
+  - task: "Update invoice total calculation with additional taxes"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/InvoiceModule.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Updated calculation to include VAT withholding (deduction) and additional taxes"
+
+  - task: "Update invoice summary display with tax breakdown"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/InvoiceModule.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added display for Ara Toplam, Toplam KDV, Additional Taxes, KDV Tevkifat, Tevkifat Toplamı, Genel Toplam"
+
+  - task: "Create Additional Tax Dialog UI"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/InvoiceModule.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Created dialog with tax type selection (ÖTV, Tevkifat, Konaklama, ÖİV) and rate/amount inputs"
+
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 0
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "Test invoice creation with 10% VAT rate"
+    - "Test adding ÖTV (Special Consumption Tax) to invoice items"
+    - "Test adding Tevkifat (Withholding Tax) with different rates (7/10, 9/10, etc.)"
+    - "Test adding Accommodation Tax"
+    - "Verify invoice totals calculate correctly with multiple taxes"
+    - "Verify tax breakdown displays correctly in invoice summary"
+  stuck_tasks: []
+  test_all: true
+  test_priority: "sequential"
+
+agent_communication:
+  - agent: "main"
+    message: |
+      Implementation complete for additional tax functionality:
+      
+      Backend Changes:
+      - Added 10% to VATRate enum
+      - Created AdditionalTaxType enum (ÖTV, withholding, accommodation, special_communication)
+      - Created WithholdingRate enum (10/10, 9/10, 7/10, 5/10, 4/10, 3/10, 2/10)
+      - Added AdditionalTax model with support for percentage and fixed amount
+      - Updated AccountingInvoiceItem to include additional_taxes list
+      - Updated AccountingInvoice model with vat_withholding and total_additional_taxes fields
+      - Modified invoice creation endpoint to calculate additional taxes correctly
+      
+      Frontend Changes:
+      - Added 10% to all VAT rate dropdowns
+      - Added "+" button next to each invoice line item
+      - Created Additional Tax Dialog with options for:
+        * ÖTV (Special Consumption Tax) - percentage or fixed amount
+        * Tevkifat (Withholding Tax) - with rate selection (9/10, 7/10, etc.)
+        * Konaklama Vergisi (Accommodation Tax)
+        * ÖİV (Special Communication Tax)
+      - Updated invoice calculation to include additional taxes and withholding deductions
+      - Enhanced invoice summary to show Turkish labels:
+        * Ara Toplam (Subtotal)
+        * Toplam KDV (Total VAT)
+        * Additional Taxes
+        * KDV Tevkifat (VAT Withholding) - shown as deduction
+        * Tevkifat Toplamı (Total Withholding)
+        * Genel Toplam (Grand Total)
+      
+      Ready for backend and frontend testing to verify all functionality works as expected.

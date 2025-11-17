@@ -30,6 +30,8 @@ const PMSModule = ({ user, tenant, onLogout }) => {
   const [dueOutRooms, setDueOutRooms] = useState([]);
   const [stayoverRooms, setStayoverRooms] = useState([]);
   const [arrivalRooms, setArrivalRooms] = useState([]);
+  const [auditLogs, setAuditLogs] = useState([]);
+  const [userPermissions, setUserPermissions] = useState({});
   const [loading, setLoading] = useState(true);
   const [aiPrediction, setAiPrediction] = useState(null);
   const [aiPatterns, setAiPatterns] = useState(null);

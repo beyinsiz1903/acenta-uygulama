@@ -711,27 +711,112 @@ class RateOverrideLog(BaseModel):
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 # Channel Manager Models
-class ChannelRate(BaseModel):
+class ChannelConnection(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     tenant_id: str
+    channel_type: ChannelType
+    channel_name: str
+    status: ChannelStatus = ChannelStatus.INACTIVE
+    api_endpoint: Optional[str] = None
+    api_key: Optional[str] = None
+    property_id: Optional[str] = None  # Channel's property ID
+    last_sync: Optional[datetime] = None
+    sync_rate_availability: bool = True
+    sync_reservations: bool = True
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class RoomMapping(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    tenant_id: str
+    channel_id: str
+    pms_room_type: str  # PMS room type
+    channel_room_type: str  # Channel's room type name
+    channel_room_id: Optional[str] = None
+    status: MappingStatus = MappingStatus.MAPPED
+    notes: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class RatePlan(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    tenant_id: str
+    name: str
+    description: Optional[str] = None
     room_type: str
-    channel: ChannelType
-    date: date
+    base_rate: float
+    pricing_strategy: PricingStrategy = PricingStrategy.STATIC
+    min_rate: Optional[float] = None
+    max_rate: Optional[float] = None
+    active_channels: List[ChannelType] = []
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class RateUpdate(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    tenant_id: str
+    rate_plan_id: str
+    date: str  # YYYY-MM-DD
     rate: float
     availability: int
     min_stay: int = 1
     max_stay: Optional[int] = None
-    last_updated: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    stop_sell: bool = False
+    pushed_to_channels: List[ChannelType] = []
+    push_status: dict = {}  # {channel: status}
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
-class ChannelMapping(BaseModel):
+class OTAReservation(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     tenant_id: str
-    channel: ChannelType
+    channel_type: ChannelType
+    channel_booking_id: str  # OTA's booking ID
+    pms_booking_id: Optional[str] = None  # Created PMS booking ID
+    guest_name: str
+    guest_email: Optional[str] = None
+    guest_phone: Optional[str] = None
     room_type: str
-    channel_room_id: str
-    active: bool = True
+    check_in: str
+    check_out: str
+    adults: int
+    children: int = 0
+    total_amount: float
+    commission_amount: Optional[float] = None
+    status: str = "pending"  # pending, imported, error
+    error_message: Optional[str] = None
+    raw_data: Optional[dict] = None
+    received_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    processed_at: Optional[datetime] = None
+
+class ExceptionQueue(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    tenant_id: str
+    exception_type: str  # "mapping_error", "rate_push_failed", "reservation_import_failed"
+    channel_type: ChannelType
+    entity_id: Optional[str] = None
+    error_message: str
+    details: Optional[dict] = None
+    status: str = "pending"  # pending, resolved, ignored
+    resolved_by: Optional[str] = None
+    resolved_at: Optional[datetime] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class RMSSuggestion(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    tenant_id: str
+    date: str  # YYYY-MM-DD
+    room_type: str
+    current_rate: float
+    suggested_rate: float
+    reason: str  # e.g., "High demand detected", "Competitor analysis"
+    confidence_score: float  # 0-100
+    based_on: dict  # {occupancy, pickup_pace, competitor_rates, etc.}
+    status: str = "pending"  # pending, applied, rejected
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 # Room Service Models
 class RoomServiceCreate(BaseModel):

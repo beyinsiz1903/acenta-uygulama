@@ -1625,6 +1625,183 @@ const PMSModule = ({ user, tenant, onLogout }) => {
                   )}
                 </CardContent>
               </Card>
+
+              {/* CHANNEL MANAGER & RMS */}
+              <div className="border-t pt-6 mt-6">
+                <h3 className="text-xl font-bold mb-4">🌐 Channel Manager & Revenue Management</h3>
+                
+                {/* OTA Reservations */}
+                <Card className="mb-6">
+                  <CardHeader>
+                    <CardTitle className="flex items-center justify-between">
+                      <span>📥 OTA Reservations (Pending Import)</span>
+                      <Button variant="outline" size="sm" onClick={loadChannelManagerData}>
+                        Refresh
+                      </Button>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {otaReservations.length === 0 ? (
+                      <div className="text-center text-gray-400 py-8">
+                        No pending OTA reservations
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {otaReservations.slice(0, 10).map((ota) => (
+                          <Card key={ota.id} className="bg-blue-50 border-blue-200">
+                            <CardContent className="p-4">
+                              <div className="flex justify-between items-start">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-bold">{ota.guest_name}</span>
+                                    <span className="px-2 py-0.5 bg-blue-600 text-white rounded text-xs">
+                                      {ota.channel_type.replace('_', '.')}
+                                    </span>
+                                  </div>
+                                  <div className="text-sm text-gray-600 mt-1">
+                                    {ota.room_type} • {ota.adults} adults {ota.children > 0 && `+ ${ota.children} children`}
+                                  </div>
+                                  <div className="text-sm text-gray-500">
+                                    {new Date(ota.check_in).toLocaleDateString()} - {new Date(ota.check_out).toLocaleDateString()}
+                                  </div>
+                                  <div className="text-sm font-semibold text-green-600 mt-1">
+                                    ${ota.total_amount.toFixed(2)}
+                                    {ota.commission_amount && <span className="text-gray-500 ml-2">(Commission: ${ota.commission_amount.toFixed(2)})</span>}
+                                  </div>
+                                  <div className="text-xs text-gray-400 mt-1">
+                                    Booking ID: {ota.channel_booking_id}
+                                  </div>
+                                </div>
+                                <Button 
+                                  size="sm" 
+                                  onClick={() => handleImportOTA(ota.id)}
+                                  className="ml-4"
+                                >
+                                  Import to PMS
+                                </Button>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                        {otaReservations.length > 10 && (
+                          <div className="text-center text-sm text-gray-500">
+                            Showing 10 of {otaReservations.length} reservations
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* RMS Suggestions */}
+                <Card className="mb-6">
+                  <CardHeader>
+                    <CardTitle className="flex items-center justify-between">
+                      <span>💡 Revenue Management Suggestions</span>
+                      <Button variant="outline" size="sm" onClick={handleGenerateRMSSuggestions}>
+                        Generate Suggestions
+                      </Button>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {rmsSuggestions.length === 0 ? (
+                      <div className="text-center text-gray-400 py-8">
+                        No pending rate suggestions
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {rmsSuggestions.slice(0, 15).map((suggestion) => (
+                          <Card key={suggestion.id} className={`${
+                            suggestion.suggested_rate > suggestion.current_rate 
+                              ? 'bg-green-50 border-green-200' 
+                              : 'bg-orange-50 border-orange-200'
+                          }`}>
+                            <CardContent className="p-4">
+                              <div className="flex justify-between items-start">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-3">
+                                    <span className="font-bold">{suggestion.room_type}</span>
+                                    <span className="text-sm text-gray-600">
+                                      {new Date(suggestion.date).toLocaleDateString()}
+                                    </span>
+                                  </div>
+                                  <div className="mt-2 flex items-center gap-4">
+                                    <div>
+                                      <div className="text-xs text-gray-500">Current Rate</div>
+                                      <div className="font-semibold">${suggestion.current_rate.toFixed(2)}</div>
+                                    </div>
+                                    <div className="text-2xl">→</div>
+                                    <div>
+                                      <div className="text-xs text-gray-500">Suggested Rate</div>
+                                      <div className={`font-bold text-lg ${
+                                        suggestion.suggested_rate > suggestion.current_rate 
+                                          ? 'text-green-600' 
+                                          : 'text-orange-600'
+                                      }`}>
+                                        ${suggestion.suggested_rate.toFixed(2)}
+                                        <span className="text-sm ml-2">
+                                          ({suggestion.suggested_rate > suggestion.current_rate ? '+' : ''}
+                                          {((suggestion.suggested_rate - suggestion.current_rate) / suggestion.current_rate * 100).toFixed(0)}%)
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="text-sm text-gray-600 mt-2">
+                                    {suggestion.reason}
+                                  </div>
+                                  <div className="text-xs text-gray-500 mt-1">
+                                    Confidence: {suggestion.confidence_score}% • 
+                                    Occupancy: {suggestion.based_on?.occupancy_rate}%
+                                  </div>
+                                </div>
+                                <Button 
+                                  size="sm" 
+                                  onClick={() => handleApplyRMSSuggestion(suggestion.id)}
+                                  className="ml-4"
+                                  variant={suggestion.suggested_rate > suggestion.current_rate ? "default" : "outline"}
+                                >
+                                  Apply
+                                </Button>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                        {rmsSuggestions.length > 15 && (
+                          <div className="text-center text-sm text-gray-500">
+                            Showing 15 of {rmsSuggestions.length} suggestions
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Exception Queue */}
+                {exceptions.length > 0 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>⚠️ Exception Queue ({exceptions.length})</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        {exceptions.slice(0, 5).map((exc) => (
+                          <div key={exc.id} className="border-l-4 border-red-400 bg-red-50 p-3 rounded">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <div className="font-semibold text-red-700">{exc.exception_type.replace('_', ' ').toUpperCase()}</div>
+                                <div className="text-sm text-gray-700 mt-1">{exc.error_message}</div>
+                                <div className="text-xs text-gray-500 mt-1">
+                                  {exc.channel_type} • {new Date(exc.created_at).toLocaleString()}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
             </div>
           </TabsContent>
         </Tabs>

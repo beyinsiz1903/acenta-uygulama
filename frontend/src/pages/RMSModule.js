@@ -218,7 +218,7 @@ const RMSModule = ({ user, tenant, onLogout }) => {
             Applied
           </Button>
           <Button
-            variant={filterStatus === 'rejected' ? 'default' ? 'outline'}
+            variant={filterStatus === 'rejected' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setFilterStatus('rejected')}
           >

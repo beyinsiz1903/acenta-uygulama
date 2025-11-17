@@ -793,7 +793,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "All housekeeping board tests completed"
+    - "Management reporting tests completed - all 4 key reports working"
   stuck_tasks: []
   test_all: true
   test_priority: "sequential"

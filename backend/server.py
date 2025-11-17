@@ -634,6 +634,21 @@ class CityTaxRule(BaseModel):
     active: bool = True
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
+# Audit Log Model
+class AuditLog(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    tenant_id: str
+    user_id: str
+    user_name: str
+    user_role: UserRole
+    action: str  # e.g., "CREATE_BOOKING", "POST_CHARGE", "OVERRIDE_RATE"
+    entity_type: str  # e.g., "booking", "folio", "charge", "payment"
+    entity_id: str
+    changes: Optional[dict] = None  # Old and new values
+    ip_address: Optional[str] = None
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
 # Rate Override Log Model
 class RateOverrideLog(BaseModel):
     model_config = ConfigDict(extra="ignore")

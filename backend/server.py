@@ -2979,6 +2979,342 @@ async def check_permission(
     except ValueError:
         raise HTTPException(status_code=400, detail=f"Invalid permission: {request.permission}")
 
+# ============= CHANNEL MANAGER & RMS =============
+
+@api_router.get("/channel-manager/connections")
+async def get_channel_connections(current_user: User = Depends(get_current_user)):
+    """Get all channel connections"""
+    connections = await db.channel_connections.find(
+        {'tenant_id': current_user.tenant_id},
+        {'_id': 0}
+    ).to_list(100)
+    return {'connections': connections, 'count': len(connections)}
+
+@api_router.post("/channel-manager/connections")
+async def create_channel_connection(
+    channel_type: ChannelType,
+    channel_name: str,
+    property_id: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Create a new channel connection"""
+    connection = ChannelConnection(
+        tenant_id=current_user.tenant_id,
+        channel_type=channel_type,
+        channel_name=channel_name,
+        property_id=property_id,
+        status=ChannelStatus.ACTIVE
+    )
+    
+    conn_dict = connection.model_dump()
+    conn_dict['created_at'] = conn_dict['created_at'].isoformat()
+    await db.channel_connections.insert_one(conn_dict)
+    
+    return {'message': f'Channel {channel_name} connected successfully', 'connection': connection}
+
+@api_router.get("/channel-manager/ota-reservations")
+async def get_ota_reservations(
+    status: Optional[str] = None,
+    channel: Optional[ChannelType] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Get OTA reservations with filters"""
+    query = {'tenant_id': current_user.tenant_id}
+    if status:
+        query['status'] = status
+    if channel:
+        query['channel_type'] = channel
+    
+    reservations = await db.ota_reservations.find(query, {'_id': 0}).sort('received_at', -1).to_list(100)
+    return {'reservations': reservations, 'count': len(reservations)}
+
+@api_router.post("/channel-manager/import-reservation/{ota_reservation_id}")
+async def import_ota_reservation(
+    ota_reservation_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Import OTA reservation into PMS"""
+    ota_res = await db.ota_reservations.find_one({
+        'id': ota_reservation_id,
+        'tenant_id': current_user.tenant_id
+    })
+    
+    if not ota_res:
+        raise HTTPException(status_code=404, detail="OTA reservation not found")
+    
+    if ota_res['status'] == 'imported':
+        raise HTTPException(status_code=400, detail="Reservation already imported")
+    
+    # Find or create guest
+    guest = await db.guests.find_one({
+        'tenant_id': current_user.tenant_id,
+        'email': ota_res['guest_email']
+    })
+    
+    if not guest:
+        # Create new guest
+        from pydantic import EmailStr
+        guest_create = GuestCreate(
+            name=ota_res['guest_name'],
+            email=ota_res.get('guest_email') or 'noemail@example.com',
+            phone=ota_res.get('guest_phone') or 'N/A',
+            id_number='OTA-' + ota_res['channel_booking_id']
+        )
+        guest = Guest(tenant_id=current_user.tenant_id, **guest_create.model_dump())
+        guest_dict = guest.model_dump()
+        guest_dict['created_at'] = guest_dict['created_at'].isoformat()
+        await db.guests.insert_one(guest_dict)
+    
+    # Find available room of matching type
+    rooms = await db.rooms.find({
+        'tenant_id': current_user.tenant_id,
+        'room_type': ota_res['room_type'],
+        'status': 'available'
+    }).to_list(10)
+    
+    if not rooms:
+        # Create exception
+        exception = ExceptionQueue(
+            tenant_id=current_user.tenant_id,
+            exception_type="reservation_import_failed",
+            channel_type=ota_res['channel_type'],
+            entity_id=ota_reservation_id,
+            error_message=f"No available rooms of type {ota_res['room_type']}",
+            details={'ota_booking_id': ota_res['channel_booking_id']}
+        )
+        exc_dict = exception.model_dump()
+        exc_dict['created_at'] = exc_dict['created_at'].isoformat()
+        await db.exception_queue.insert_one(exc_dict)
+        
+        raise HTTPException(status_code=400, detail=f"No available {ota_res['room_type']} rooms")
+    
+    room = rooms[0]
+    
+    # Create booking
+    booking_create = BookingCreate(
+        guest_id=guest['id'],
+        room_id=room['id'],
+        check_in=ota_res['check_in'],
+        check_out=ota_res['check_out'],
+        adults=ota_res['adults'],
+        children=ota_res['children'],
+        guests_count=ota_res['adults'] + ota_res['children'],
+        total_amount=ota_res['total_amount'],
+        channel=ota_res['channel_type']
+    )
+    
+    booking = Booking(
+        tenant_id=current_user.tenant_id,
+        **booking_create.model_dump(exclude={'check_in', 'check_out'}),
+        check_in=datetime.fromisoformat(ota_res['check_in']),
+        check_out=datetime.fromisoformat(ota_res['check_out'])
+    )
+    
+    booking_dict = booking.model_dump()
+    booking_dict['check_in'] = booking_dict['check_in'].isoformat()
+    booking_dict['check_out'] = booking_dict['check_out'].isoformat()
+    booking_dict['created_at'] = booking_dict['created_at'].isoformat()
+    await db.bookings.insert_one(booking_dict)
+    
+    # Update OTA reservation status
+    await db.ota_reservations.update_one(
+        {'id': ota_reservation_id},
+        {'$set': {
+            'status': 'imported',
+            'pms_booking_id': booking.id,
+            'processed_at': datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    return {
+        'message': 'OTA reservation imported successfully',
+        'pms_booking_id': booking.id,
+        'guest_id': guest['id'],
+        'room_number': room['room_number']
+    }
+
+@api_router.get("/channel-manager/exceptions")
+async def get_exception_queue(
+    status: Optional[str] = None,
+    exception_type: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Get exception queue with filters"""
+    query = {'tenant_id': current_user.tenant_id}
+    if status:
+        query['status'] = status
+    if exception_type:
+        query['exception_type'] = exception_type
+    
+    exceptions = await db.exception_queue.find(query, {'_id': 0}).sort('created_at', -1).to_list(100)
+    return {'exceptions': exceptions, 'count': len(exceptions)}
+
+@api_router.post("/rms/generate-suggestions")
+async def generate_rms_suggestions(
+    start_date: str,
+    end_date: str,
+    room_type: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Generate RMS rate suggestions based on occupancy and demand"""
+    start = datetime.fromisoformat(start_date).date()
+    end = datetime.fromisoformat(end_date).date()
+    
+    # Get all rooms or specific room type
+    room_query = {'tenant_id': current_user.tenant_id}
+    if room_type:
+        room_query['room_type'] = room_type
+    
+    rooms = await db.rooms.find(room_query, {'_id': 0}).to_list(1000)
+    room_types = list(set(r['room_type'] for r in rooms))
+    
+    suggestions = []
+    
+    for rt in room_types:
+        rt_rooms = [r for r in rooms if r['room_type'] == rt]
+        total_rooms = len(rt_rooms)
+        
+        # For each date in range
+        current_date = start
+        while current_date <= end:
+            date_str = current_date.isoformat()
+            
+            # Calculate occupancy for this date
+            start_of_day = datetime.combine(current_date, datetime.min.time())
+            end_of_day = datetime.combine(current_date, datetime.max.time())
+            
+            bookings = await db.bookings.count_documents({
+                'tenant_id': current_user.tenant_id,
+                'room_id': {'$in': [r['id'] for r in rt_rooms]},
+                'status': {'$in': ['confirmed', 'guaranteed', 'checked_in']},
+                'check_in': {'$lte': end_of_day.isoformat()},
+                'check_out': {'$gte': start_of_day.isoformat()}
+            })
+            
+            occupancy_rate = (bookings / total_rooms * 100) if total_rooms > 0 else 0
+            
+            # Get current rate (or use base rate)
+            base_rate = rt_rooms[0].get('base_price', 100)
+            
+            # Simple dynamic pricing logic
+            if occupancy_rate >= 90:
+                suggested_rate = base_rate * 1.3  # +30%
+                reason = "Very high demand (90%+ occupancy)"
+                confidence = 95
+            elif occupancy_rate >= 75:
+                suggested_rate = base_rate * 1.2  # +20%
+                reason = "High demand (75%+ occupancy)"
+                confidence = 85
+            elif occupancy_rate >= 60:
+                suggested_rate = base_rate * 1.1  # +10%
+                reason = "Good demand (60%+ occupancy)"
+                confidence = 75
+            elif occupancy_rate <= 30:
+                suggested_rate = base_rate * 0.85  # -15%
+                reason = "Low demand (< 30% occupancy)"
+                confidence = 80
+            else:
+                suggested_rate = base_rate
+                reason = "Normal demand (30-60% occupancy)"
+                confidence = 60
+            
+            # Create suggestion
+            suggestion = RMSSuggestion(
+                tenant_id=current_user.tenant_id,
+                date=date_str,
+                room_type=rt,
+                current_rate=base_rate,
+                suggested_rate=round(suggested_rate, 2),
+                reason=reason,
+                confidence_score=confidence,
+                based_on={
+                    'occupancy_rate': round(occupancy_rate, 2),
+                    'bookings': bookings,
+                    'total_rooms': total_rooms
+                }
+            )
+            
+            sugg_dict = suggestion.model_dump()
+            sugg_dict['created_at'] = sugg_dict['created_at'].isoformat()
+            await db.rms_suggestions.insert_one(sugg_dict)
+            
+            suggestions.append(suggestion)
+            
+            current_date += timedelta(days=1)
+    
+    return {
+        'message': f'Generated {len(suggestions)} rate suggestions',
+        'suggestions': suggestions[:20],  # Return first 20
+        'total_count': len(suggestions)
+    }
+
+@api_router.get("/rms/suggestions")
+async def get_rms_suggestions(
+    status: Optional[str] = None,
+    date: Optional[str] = None,
+    room_type: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Get RMS suggestions with filters"""
+    query = {'tenant_id': current_user.tenant_id}
+    if status:
+        query['status'] = status
+    if date:
+        query['date'] = date
+    if room_type:
+        query['room_type'] = room_type
+    
+    suggestions = await db.rms_suggestions.find(query, {'_id': 0}).sort('date', 1).to_list(100)
+    return {'suggestions': suggestions, 'count': len(suggestions)}
+
+@api_router.post("/rms/apply-suggestion/{suggestion_id}")
+async def apply_rms_suggestion(
+    suggestion_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Apply RMS suggestion to room rates"""
+    suggestion = await db.rms_suggestions.find_one({
+        'id': suggestion_id,
+        'tenant_id': current_user.tenant_id
+    })
+    
+    if not suggestion:
+        raise HTTPException(status_code=404, detail="Suggestion not found")
+    
+    if suggestion['status'] == 'applied':
+        raise HTTPException(status_code=400, detail="Suggestion already applied")
+    
+    # Update rooms of this type with new rate
+    await db.rooms.update_many(
+        {
+            'tenant_id': current_user.tenant_id,
+            'room_type': suggestion['room_type']
+        },
+        {'$set': {'base_price': suggestion['suggested_rate']}}
+    )
+    
+    # Mark suggestion as applied
+    await db.rms_suggestions.update_one(
+        {'id': suggestion_id},
+        {'$set': {'status': 'applied'}}
+    )
+    
+    # Audit log
+    await create_audit_log(
+        tenant_id=current_user.tenant_id,
+        user=current_user,
+        action="APPLY_RMS_SUGGESTION",
+        entity_type="rms_suggestion",
+        entity_id=suggestion_id,
+        changes={'old_rate': suggestion['current_rate'], 'new_rate': suggestion['suggested_rate'], 'room_type': suggestion['room_type']}
+    )
+    
+    return {
+        'message': f"Applied rate suggestion: {suggestion['room_type']} → ${suggestion['suggested_rate']}",
+        'room_type': suggestion['room_type'],
+        'new_rate': suggestion['suggested_rate']
+    }
+
 # Router will be included at the very end after ALL endpoints are defined
 
 logger = logging.getLogger(__name__)

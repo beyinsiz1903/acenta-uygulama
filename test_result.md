@@ -160,15 +160,18 @@ backend:
   
   - task: "Create charge posting endpoint"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "POST /api/folio/{id}/charge with auto city tax calculation, automatic balance update"
+      - working: true
+        agent: "testing"
+        comment: "✅ COMPREHENSIVE TESTING COMPLETED - Charge posting endpoint working perfectly. POST /api/folio/{id}/charge: Successfully posts charges with different categories (room, food, minibar). Tested amount calculation (unit_price * quantity), tax_amount calculation, total calculation (amount + tax_amount). Automatic balance update verified. Charge posting to closed folio properly rejected. All charge categories tested and functional."
   
   - task: "Create payment posting endpoint"
     implemented: true

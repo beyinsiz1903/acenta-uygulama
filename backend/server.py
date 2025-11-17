@@ -464,7 +464,6 @@ class Folio(BaseModel):
     closed_at: Optional[datetime] = None
 
 class ChargeCreate(BaseModel):
-    folio_id: str
     charge_category: ChargeCategory
     description: str
     amount: float

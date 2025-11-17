@@ -1203,7 +1203,7 @@ async def create_loyalty_transaction(transaction_data: LoyaltyTransactionCreate,
     return transaction
 
 @api_router.get("/loyalty/guest/{guest_id}")
-async def get_guest_loyalty(guest_id: str, current_user: User = Depends(get_current_user)):
+async def get_guest_loyalty_by_id(guest_id: str, current_user: User = Depends(get_current_user)):
     program = await db.loyalty_programs.find_one({'guest_id': guest_id, 'tenant_id': current_user.tenant_id}, {'_id': 0})
     transactions = await db.loyalty_transactions.find({'guest_id': guest_id, 'tenant_id': current_user.tenant_id}, {'_id': 0}).to_list(1000)
     return {'program': program, 'transactions': transactions}

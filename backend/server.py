@@ -1351,6 +1351,16 @@ async def post_charge_to_folio(
         {'$set': {'balance': balance}}
     )
     
+    # Audit log
+    await create_audit_log(
+        tenant_id=current_user.tenant_id,
+        user=current_user,
+        action="POST_CHARGE",
+        entity_type="folio_charge",
+        entity_id=charge.id,
+        changes={'charge_category': charge_data.charge_category, 'amount': total, 'folio_id': folio_id}
+    )
+    
     return charge
 
 @api_router.post("/folio/{folio_id}/payment", response_model=Payment)

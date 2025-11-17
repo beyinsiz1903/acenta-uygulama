@@ -2851,22 +2851,28 @@ async def export_folio_csv(folio_id: str, current_user: User = Depends(get_curre
         'content_type': 'text/csv'
     }
 
+class PermissionCheckRequest(BaseModel):
+    permission: str
+
 @api_router.post("/permissions/check")
 async def check_permission(
-    permission: str,
+    request: PermissionCheckRequest,
     current_user: User = Depends(get_current_user)
 ):
     """Check if current user has a specific permission"""
+    if not request.permission or request.permission.strip() == "":
+        raise HTTPException(status_code=400, detail="Permission field is required and cannot be empty")
+    
     try:
-        perm = Permission(permission)
+        perm = Permission(request.permission)
         has_perm = has_permission(current_user.role, perm)
         return {
             'user_role': current_user.role,
-            'permission': permission,
+            'permission': request.permission,
             'has_permission': has_perm
         }
     except ValueError:
-        raise HTTPException(status_code=400, detail=f"Invalid permission: {permission}")
+        raise HTTPException(status_code=400, detail=f"Invalid permission: {request.permission}")
 
 # Router will be included at the very end after ALL endpoints are defined
 

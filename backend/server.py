@@ -1765,30 +1765,71 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(level
 # ============= FRONT DESK OPERATIONS =============
 
 @api_router.post("/frontdesk/checkin/{booking_id}")
-async def check_in_guest(booking_id: str, current_user: User = Depends(get_current_user)):
+async def check_in_guest(booking_id: str, create_folio: bool = True, current_user: User = Depends(get_current_user)):
+    """Check-in guest with validations and auto-folio creation"""
     booking = await db.bookings.find_one({'id': booking_id, 'tenant_id': current_user.tenant_id}, {'_id': 0})
     if not booking:
         raise HTTPException(status_code=404, detail="Booking not found")
     
-    checked_in_time = datetime.now(timezone.utc)
-    await db.bookings.update_one({'id': booking_id}, {'$set': {'status': 'checked_in', 'checked_in_at': checked_in_time.isoformat()}})
-    await db.rooms.update_one({'id': booking['room_id']}, {'$set': {'status': 'occupied', 'current_booking_id': booking_id}})
+    if booking['status'] == 'checked_in':
+        raise HTTPException(status_code=400, detail="Guest already checked in")
     
-    nights = (datetime.fromisoformat(booking['check_out']) - datetime.fromisoformat(booking['check_in'])).days
+    # Validate room is available/clean
     room = await db.rooms.find_one({'id': booking['room_id']}, {'_id': 0})
+    if not room:
+        raise HTTPException(status_code=404, detail="Room not found")
     
-    folio_charge = FolioCharge(
-        tenant_id=current_user.tenant_id, booking_id=booking_id, charge_type='room',
-        description=f"Room {room['room_number']} - {nights} nights",
-        amount=room['base_price'], quantity=nights, total=room['base_price'] * nights, posted_by=current_user.name
+    if room['status'] not in ['available', 'inspected']:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Room not ready for check-in. Current status: {room['status']}"
+        )
+    
+    # Create guest folio if requested and doesn't exist
+    if create_folio:
+        existing_folio = await db.folios.find_one({
+            'booking_id': booking_id,
+            'folio_type': 'guest'
+        })
+        
+        if not existing_folio:
+            folio_number = await generate_folio_number(current_user.tenant_id)
+            folio = Folio(
+                tenant_id=current_user.tenant_id,
+                booking_id=booking_id,
+                folio_number=folio_number,
+                folio_type=FolioType.GUEST,
+                guest_id=booking['guest_id']
+            )
+            folio_dict = folio.model_dump()
+            folio_dict['created_at'] = folio_dict['created_at'].isoformat()
+            await db.folios.insert_one(folio_dict)
+    
+    # Update booking and room status
+    checked_in_time = datetime.now(timezone.utc)
+    await db.bookings.update_one(
+        {'id': booking_id},
+        {'$set': {
+            'status': 'checked_in',
+            'checked_in_at': checked_in_time.isoformat()
+        }}
+    )
+    await db.rooms.update_one(
+        {'id': booking['room_id']},
+        {'$set': {
+            'status': 'occupied',
+            'current_booking_id': booking_id
+        }}
     )
     
-    charge_dict = folio_charge.model_dump()
-    charge_dict['date'] = charge_dict['date'].isoformat()
-    await db.folio_charges.insert_one(charge_dict)
+    # Update guest total stays
     await db.guests.update_one({'id': booking['guest_id']}, {'$inc': {'total_stays': 1}})
     
-    return {'message': 'Check-in completed', 'checked_in_at': checked_in_time.isoformat()}
+    return {
+        'message': 'Check-in completed successfully',
+        'checked_in_at': checked_in_time.isoformat(),
+        'room_number': room['room_number']
+    }
 
 @api_router.post("/frontdesk/checkout/{booking_id}")
 async def check_out_guest(booking_id: str, current_user: User = Depends(get_current_user)):

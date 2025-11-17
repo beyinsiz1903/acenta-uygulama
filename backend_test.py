@@ -923,6 +923,115 @@ class RoomOpsAPITester:
         
         return False
 
+    def test_corporate_booking_features(self):
+        """Test comprehensive corporate booking and company management features"""
+        print("\n🏢 Testing Corporate Booking Features...")
+        
+        # Test 1: Create Company
+        print("\n📋 Test 1: Create Company")
+        company_data = {
+            "name": "Hilton Hotels Corp",
+            "corporate_code": "HILTON01",
+            "tax_number": "1234567890",
+            "billing_address": "123 Main St, Istanbul",
+            "contact_person": "John Doe",
+            "contact_email": "john@hilton.com",
+            "contact_phone": "+90-212-555-0123",
+            "contracted_rate": "corp_std",
+            "default_rate_type": "corporate",
+            "default_market_segment": "corporate",
+            "default_cancellation_policy": "h48",
+            "payment_terms": "Net 30",
+            "status": "active"
+        }
+        
+        success, response = self.run_test(
+            "Create Company",
+            "POST",
+            "companies",
+            200,
+            data=company_data
+        )
+        
+        company_id = None
+        if success and 'id' in response:
+            company_id = response['id']
+            self.created_resources['companies'].append(company_id)
+            print(f"   Created company: {response.get('name')} (ID: {company_id})")
+        
+        # Test 2: Get All Companies
+        print("\n📋 Test 2: Get All Companies")
+        success, companies = self.run_test(
+            "Get All Companies",
+            "GET",
+            "companies",
+            200
+        )
+        
+        if success and len(companies) > 0:
+            print(f"   Retrieved {len(companies)} companies")
+        
+        # Test 3: Search Companies
+        print("\n📋 Test 3: Search Companies")
+        success, search_results = self.run_test(
+            "Search Companies (Hilton)",
+            "GET",
+            "companies?search=Hilton",
+            200
+        )
+        
+        if success and len(search_results) > 0:
+            print(f"   Found {len(search_results)} companies matching 'Hilton'")
+        
+        # Test 4: Get Specific Company
+        if company_id:
+            print("\n📋 Test 4: Get Specific Company")
+            success, company_details = self.run_test(
+                "Get Specific Company",
+                "GET",
+                f"companies/{company_id}",
+                200
+            )
+            
+            if success:
+                print(f"   Retrieved company: {company_details.get('name')}")
+        
+        # Test 5: Update Company
+        if company_id:
+            print("\n📋 Test 5: Update Company")
+            update_data = {
+                "name": "Hilton Hotels Corp",
+                "corporate_code": "HILTON01",
+                "tax_number": "1234567890",
+                "billing_address": "123 Main St, Istanbul",
+                "contact_person": "John Doe",
+                "contact_email": "john@hilton.com",
+                "contact_phone": "+90-212-555-0123",
+                "contracted_rate": "corp_std",
+                "default_rate_type": "corporate",
+                "default_market_segment": "corporate",
+                "default_cancellation_policy": "h48",
+                "payment_terms": "Net 45",  # Changed from Net 30
+                "status": "active"
+            }
+            
+            success, updated_company = self.run_test(
+                "Update Company",
+                "PUT",
+                f"companies/{company_id}",
+                200,
+                data=update_data
+            )
+            
+            if success and updated_company.get('payment_terms') == 'Net 45':
+                print("   ✅ Company payment terms updated successfully")
+                self.tests_passed += 1
+            elif success:
+                print("   ❌ Company update failed - payment terms not updated")
+            self.tests_run += 1
+        
+        return company_id
+
 def main():
     print("🏨 Starting RoomOps Platform API Testing...")
     print("=" * 60)

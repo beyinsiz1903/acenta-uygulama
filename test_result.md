@@ -691,15 +691,18 @@ backend:
 frontend:
   - task: "Add Adults and Children count inputs to booking form"
     implemented: true
-    working: "NA"
+    working: false
     file: "/app/frontend/src/pages/PMSModule.js"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Added adults and children count inputs with automatic guests_count calculation"
+      - working: false
+        agent: "testing"
+        comment: "❌ CRITICAL: Cannot test booking form features due to authentication system failure. Users cannot register or login to access PMS module. Authentication blocks all functionality testing."
   
   - task: "Add Children Ages dynamic inputs (show only if children > 0)"
     implemented: true

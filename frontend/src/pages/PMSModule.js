@@ -21,6 +21,7 @@ const PMSModule = ({ user, tenant, onLogout }) => {
   const [rooms, setRooms] = useState([]);
   const [guests, setGuests] = useState([]);
   const [bookings, setBookings] = useState([]);
+  const [companies, setCompanies] = useState([]);
   const [arrivals, setArrivals] = useState([]);
   const [departures, setDepartures] = useState([]);
   const [inhouse, setInhouse] = useState([]);
@@ -31,6 +32,7 @@ const PMSModule = ({ user, tenant, onLogout }) => {
   const [aiPatterns, setAiPatterns] = useState(null);
   const [openDialog, setOpenDialog] = useState(null);
   const [selectedBooking, setSelectedBooking] = useState(null);
+  const [selectedCompany, setSelectedCompany] = useState(null);
   const [folio, setFolio] = useState(null);
   const [reports, setReports] = useState({
     occupancy: null,

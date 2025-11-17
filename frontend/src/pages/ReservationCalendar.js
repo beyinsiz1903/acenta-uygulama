@@ -446,6 +446,51 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
     return colors[status] || 'bg-gray-500';
   };
 
+  // Get color by market segment (more important for revenue management)
+  const getSegmentColor = (segment) => {
+    const colors = {
+      corporate: 'bg-blue-600',      // Corporate → Blue
+      'ota': 'bg-purple-600',        // OTA → Purple
+      'walk_in': 'bg-orange-500',    // Walk-in → Orange
+      'walk-in': 'bg-orange-500',    // Walk-in → Orange
+      group: 'bg-green-600',         // Group → Green
+      leisure: 'bg-pink-500',        // Leisure → Pink
+      government: 'bg-indigo-600',   // Government → Indigo
+      default: 'bg-blue-500'
+    };
+    return colors[segment?.toLowerCase()] || colors.default;
+  };
+
+  // Get rate type label with styling
+  const getRateTypeInfo = (booking) => {
+    const rateTypes = {
+      'corp_std': { label: 'CORP-STD', color: 'text-blue-300' },
+      'corp_pref': { label: 'CORP-PREF', color: 'text-blue-200' },
+      'gov': { label: 'GOV', color: 'text-indigo-300' },
+      'leisure': { label: 'RACK', color: 'text-pink-300' },
+      'ota': { label: 'OTA', color: 'text-purple-300' },
+      'group': { label: 'GROUP', color: 'text-green-300' }
+    };
+    
+    return rateTypes[booking.rate_type] || { label: booking.rate_type?.toUpperCase() || 'STD', color: 'text-gray-300' };
+  };
+
+  // Check if booking is arrival/stayover/departure for current date
+  const getBookingStatus = (booking, date) => {
+    const checkIn = new Date(booking.check_in);
+    const checkOut = new Date(booking.check_out);
+    const current = new Date(date);
+    
+    checkIn.setHours(0, 0, 0, 0);
+    checkOut.setHours(0, 0, 0, 0);
+    current.setHours(0, 0, 0, 0);
+    
+    if (checkIn.getTime() === current.getTime()) return 'arrival';
+    if (checkOut.getTime() === current.getTime()) return 'departure';
+    if (current > checkIn && current < checkOut) return 'stayover';
+    return null;
+  };
+
   const getStatusLabel = (status) => {
     const labels = {
       confirmed: 'Confirmed',

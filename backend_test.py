@@ -2045,6 +2045,817 @@ class RoomOpsAPITester:
             print("   ❌ Transfer of non-existent charge not handled properly")
         self.tests_run += 1
 
+    def test_enhanced_checkin_checkout_flow(self):
+        """Test comprehensive enhanced check-in/check-out flow with folio integration"""
+        print("\n🏨 Testing Enhanced Check-in / Check-out Flow...")
+        
+        # Prerequisites: Create test resources
+        test_guest_id = None
+        test_room_id = None
+        test_booking_id = None
+        test_company_id = None
+        
+        # Create test guest
+        guest_data = {
+            "name": "Check-in Test Guest",
+            "email": "checkin.guest@example.com",
+            "phone": "+1234567890",
+            "id_number": "CHECKIN123456",
+            "address": "123 Check-in Street"
+        }
+        
+        success, response = self.run_test(
+            "Create Test Guest for Check-in",
+            "POST",
+            "pms/guests",
+            200,
+            data=guest_data
+        )
+        
+        if success and 'id' in response:
+            test_guest_id = response['id']
+            self.created_resources['guests'].append(test_guest_id)
+        
+        # Create test room
+        room_data = {
+            "room_number": "201",
+            "room_type": "suite",
+            "floor": 2,
+            "capacity": 4,
+            "base_price": 200.00,
+            "amenities": ["wifi", "tv", "minibar", "balcony"]
+        }
+        
+        success, response = self.run_test(
+            "Create Test Room for Check-in",
+            "POST",
+            "pms/rooms",
+            200,
+            data=room_data
+        )
+        
+        if success and 'id' in response:
+            test_room_id = response['id']
+            self.created_resources['rooms'].append(test_room_id)
+        
+        # Create test company
+        company_data = {
+            "name": "Check-in Test Company",
+            "corporate_code": "CHECKIN01",
+            "tax_number": "1111111111",
+            "billing_address": "456 Company Street",
+            "contact_person": "Test Manager",
+            "contact_email": "manager@checkincompany.com",
+            "contact_phone": "+1234567892",
+            "status": "active"
+        }
+        
+        success, response = self.run_test(
+            "Create Test Company for Check-in",
+            "POST",
+            "companies",
+            200,
+            data=company_data
+        )
+        
+        if success and 'id' in response:
+            test_company_id = response['id']
+            self.created_resources['companies'].append(test_company_id)
+        
+        # Create test booking in confirmed status
+        if test_guest_id and test_room_id:
+            booking_data = {
+                "guest_id": test_guest_id,
+                "room_id": test_room_id,
+                "check_in": datetime.now().isoformat(),
+                "check_out": (datetime.now() + timedelta(days=2)).isoformat(),
+                "adults": 2,
+                "children": 1,
+                "children_ages": [8],
+                "guests_count": 3,
+                "total_amount": 400.0,
+                "channel": "direct"
+            }
+            
+            success, response = self.run_test(
+                "Create Test Booking for Check-in",
+                "POST",
+                "pms/bookings",
+                200,
+                data=booking_data
+            )
+            
+            if success and 'id' in response:
+                test_booking_id = response['id']
+                self.created_resources['bookings'].append(test_booking_id)
+        
+        if not (test_guest_id and test_room_id and test_booking_id and test_company_id):
+            print("   ⚠️ Skipping check-in/check-out tests - missing prerequisites")
+            return False
+        
+        # Now run the comprehensive check-in/check-out tests
+        self.test_checkin_validations(test_booking_id, test_room_id)
+        self.test_successful_checkin(test_booking_id, test_room_id, test_guest_id)
+        self.test_checkin_without_auto_folio(test_booking_id, test_room_id)
+        self.test_checkout_with_outstanding_balance(test_booking_id, test_company_id)
+        self.test_checkout_with_payment(test_booking_id)
+        self.test_force_checkout(test_booking_id)
+        self.test_multi_folio_checkout(test_booking_id, test_company_id)
+        self.test_checkout_already_checked_out(test_booking_id)
+        
+        return True
+
+    def test_checkin_validations(self, booking_id, room_id):
+        """Test 1: CHECK-IN VALIDATION scenarios"""
+        print("\n📋 Test 1: Check-in Validation Scenarios")
+        
+        # Test 1a: Try check-in with non-existent booking
+        fake_booking_id = "non-existent-booking-id"
+        success, response = self.run_test(
+            "Check-in Non-existent Booking",
+            "POST",
+            f"frontdesk/checkin/{fake_booking_id}",
+            404
+        )
+        
+        if success:
+            print("   ✅ Non-existent booking validation working")
+            self.tests_passed += 1
+        else:
+            print("   ❌ Non-existent booking validation failed")
+        self.tests_run += 1
+        
+        # Test 1b: Set room status to dirty and try check-in
+        # First update room status to dirty
+        success, response = self.run_test(
+            "Set Room Status to Dirty",
+            "PUT",
+            f"pms/rooms/{room_id}",
+            200,
+            data={"status": "dirty"}
+        )
+        
+        if success:
+            # Now try check-in with dirty room
+            success, response = self.run_test(
+                "Check-in with Dirty Room",
+                "POST",
+                f"frontdesk/checkin/{booking_id}",
+                400
+            )
+            
+            if success:
+                print("   ✅ Dirty room validation working")
+                self.tests_passed += 1
+            else:
+                print("   ❌ Dirty room validation failed")
+        else:
+            print("   ❌ Could not set room to dirty status")
+        self.tests_run += 1
+        
+        # Reset room status to available for next tests
+        self.run_test(
+            "Reset Room Status to Available",
+            "PUT",
+            f"pms/rooms/{room_id}",
+            200,
+            data={"status": "available"}
+        )
+
+    def test_successful_checkin(self, booking_id, room_id, guest_id):
+        """Test 2: SUCCESSFUL CHECK-IN with auto folio creation"""
+        print("\n📋 Test 2: Successful Check-in with Auto Folio Creation")
+        
+        # Ensure room is available
+        self.run_test(
+            "Set Room Status to Available",
+            "PUT",
+            f"pms/rooms/{room_id}",
+            200,
+            data={"status": "available"}
+        )
+        
+        # Perform check-in with auto folio creation
+        success, response = self.run_test(
+            "Successful Check-in with Auto Folio",
+            "POST",
+            f"frontdesk/checkin/{booking_id}?create_folio=true",
+            200
+        )
+        
+        if success:
+            # Verify response contains required fields
+            if ('message' in response and 
+                'checked_in_at' in response and 
+                'room_number' in response):
+                print("   ✅ Check-in response format correct")
+                self.tests_passed += 1
+            else:
+                print("   ❌ Check-in response format incorrect")
+            self.tests_run += 1
+            
+            # Verify booking status changed to checked_in
+            success, bookings = self.run_test(
+                "Verify Booking Status Changed",
+                "GET",
+                "pms/bookings",
+                200
+            )
+            
+            if success:
+                target_booking = None
+                for booking in bookings:
+                    if booking.get('id') == booking_id:
+                        target_booking = booking
+                        break
+                
+                if target_booking and target_booking.get('status') == 'checked_in':
+                    print("   ✅ Booking status changed to checked_in")
+                    self.tests_passed += 1
+                else:
+                    print("   ❌ Booking status not changed to checked_in")
+            else:
+                print("   ❌ Could not verify booking status")
+            self.tests_run += 1
+            
+            # Verify room status changed to occupied
+            success, rooms = self.run_test(
+                "Verify Room Status Changed",
+                "GET",
+                "pms/rooms",
+                200
+            )
+            
+            if success:
+                target_room = None
+                for room in rooms:
+                    if room.get('id') == room_id:
+                        target_room = room
+                        break
+                
+                if (target_room and 
+                    target_room.get('status') == 'occupied' and
+                    target_room.get('current_booking_id') == booking_id):
+                    print("   ✅ Room status changed to occupied with booking ID")
+                    self.tests_passed += 1
+                else:
+                    print("   ❌ Room status not properly updated")
+            else:
+                print("   ❌ Could not verify room status")
+            self.tests_run += 1
+            
+            # Verify guest folio was created
+            success, folios = self.run_test(
+                "Verify Guest Folio Created",
+                "GET",
+                f"folio/booking/{booking_id}",
+                200
+            )
+            
+            if success and len(folios) > 0:
+                guest_folio = None
+                for folio in folios:
+                    if folio.get('folio_type') == 'guest':
+                        guest_folio = folio
+                        break
+                
+                if guest_folio:
+                    print("   ✅ Guest folio created successfully")
+                    self.tests_passed += 1
+                else:
+                    print("   ❌ Guest folio not found")
+            else:
+                print("   ❌ Could not verify folio creation")
+            self.tests_run += 1
+            
+            # Verify guest total_stays incremented
+            success, guests = self.run_test(
+                "Verify Guest Total Stays Incremented",
+                "GET",
+                "pms/guests",
+                200
+            )
+            
+            if success:
+                target_guest = None
+                for guest in guests:
+                    if guest.get('id') == guest_id:
+                        target_guest = guest
+                        break
+                
+                if target_guest and target_guest.get('total_stays', 0) >= 1:
+                    print("   ✅ Guest total stays incremented")
+                    self.tests_passed += 1
+                else:
+                    print("   ❌ Guest total stays not incremented")
+            else:
+                print("   ❌ Could not verify guest total stays")
+            self.tests_run += 1
+
+    def test_checkin_without_auto_folio(self, booking_id, room_id):
+        """Test 3: CHECK-IN WITHOUT AUTO FOLIO creation"""
+        print("\n📋 Test 3: Check-in Without Auto Folio Creation")
+        
+        # Create another booking for this test
+        if self.created_resources['guests'] and self.created_resources['rooms']:
+            booking_data = {
+                "guest_id": self.created_resources['guests'][0],
+                "room_id": self.created_resources['rooms'][0],
+                "check_in": (datetime.now() + timedelta(days=1)).isoformat(),
+                "check_out": (datetime.now() + timedelta(days=3)).isoformat(),
+                "adults": 1,
+                "children": 0,
+                "children_ages": [],
+                "guests_count": 1,
+                "total_amount": 200.0,
+                "channel": "direct"
+            }
+            
+            success, response = self.run_test(
+                "Create Second Booking for No-Folio Test",
+                "POST",
+                "pms/bookings",
+                200,
+                data=booking_data
+            )
+            
+            if success and 'id' in response:
+                second_booking_id = response['id']
+                
+                # Perform check-in without auto folio creation
+                success, response = self.run_test(
+                    "Check-in Without Auto Folio",
+                    "POST",
+                    f"frontdesk/checkin/{second_booking_id}?create_folio=false",
+                    200
+                )
+                
+                if success:
+                    print("   ✅ Check-in without folio succeeded")
+                    self.tests_passed += 1
+                    
+                    # Verify no folio was created
+                    success, folios = self.run_test(
+                        "Verify No Folio Created",
+                        "GET",
+                        f"folio/booking/{second_booking_id}",
+                        200
+                    )
+                    
+                    if success and len(folios) == 0:
+                        print("   ✅ No folio created as expected")
+                        self.tests_passed += 1
+                    else:
+                        print("   ❌ Folio was created unexpectedly")
+                    self.tests_run += 1
+                else:
+                    print("   ❌ Check-in without folio failed")
+                self.tests_run += 1
+
+    def test_checkout_with_outstanding_balance(self, booking_id, company_id):
+        """Test 4: CHECK-OUT WITH OUTSTANDING BALANCE"""
+        print("\n📋 Test 4: Check-out with Outstanding Balance")
+        
+        # First create a guest folio if it doesn't exist
+        success, folios = self.run_test(
+            "Get Existing Folios",
+            "GET",
+            f"folio/booking/{booking_id}",
+            200
+        )
+        
+        guest_folio_id = None
+        if success and len(folios) > 0:
+            for folio in folios:
+                if folio.get('folio_type') == 'guest':
+                    guest_folio_id = folio['id']
+                    break
+        
+        if not guest_folio_id:
+            # Create guest folio
+            folio_data = {
+                "booking_id": booking_id,
+                "folio_type": "guest"
+            }
+            
+            success, response = self.run_test(
+                "Create Guest Folio for Balance Test",
+                "POST",
+                "folio/create",
+                200,
+                data=folio_data
+            )
+            
+            if success and 'id' in response:
+                guest_folio_id = response['id']
+        
+        if guest_folio_id:
+            # Add a charge to create outstanding balance
+            charge_data = {
+                "charge_category": "room",
+                "description": "Room Charge for Balance Test",
+                "amount": 100.0,
+                "quantity": 1,
+                "auto_calculate_tax": False
+            }
+            
+            success, response = self.run_test(
+                "Add Charge to Create Outstanding Balance",
+                "POST",
+                f"folio/{guest_folio_id}/charge",
+                200,
+                data=charge_data
+            )
+            
+            if success:
+                # Try checkout with outstanding balance (should fail)
+                success, response = self.run_test(
+                    "Checkout with Outstanding Balance",
+                    "POST",
+                    f"frontdesk/checkout/{booking_id}",
+                    400
+                )
+                
+                if success:
+                    print("   ✅ Checkout with outstanding balance properly rejected")
+                    self.tests_passed += 1
+                else:
+                    print("   ❌ Checkout with outstanding balance not properly rejected")
+                self.tests_run += 1
+
+    def test_checkout_with_payment(self, booking_id):
+        """Test 5: CHECK-OUT WITH PAYMENT"""
+        print("\n📋 Test 5: Check-out with Payment")
+        
+        # Get folio ID
+        success, folios = self.run_test(
+            "Get Folios for Payment Test",
+            "GET",
+            f"folio/booking/{booking_id}",
+            200
+        )
+        
+        guest_folio_id = None
+        if success and len(folios) > 0:
+            for folio in folios:
+                if folio.get('folio_type') == 'guest':
+                    guest_folio_id = folio['id']
+                    break
+        
+        if guest_folio_id:
+            # Add payment to cover the balance
+            payment_data = {
+                "amount": 100.0,
+                "method": "card",
+                "payment_type": "final"
+            }
+            
+            success, response = self.run_test(
+                "Add Payment to Cover Balance",
+                "POST",
+                f"folio/{guest_folio_id}/payment",
+                200,
+                data=payment_data
+            )
+            
+            if success:
+                # Now try checkout with auto close folios
+                success, response = self.run_test(
+                    "Checkout with Payment and Auto Close",
+                    "POST",
+                    f"frontdesk/checkout/{booking_id}?auto_close_folios=true",
+                    200
+                )
+                
+                if success:
+                    # Verify response contains required fields
+                    if ('message' in response and 
+                        'checked_out_at' in response and 
+                        'total_balance' in response and
+                        'folios_closed' in response):
+                        print("   ✅ Checkout response format correct")
+                        
+                        # Verify balance is 0 and folios were closed
+                        if (abs(response.get('total_balance', 1)) < 0.01 and
+                            response.get('folios_closed', 0) >= 1):
+                            print("   ✅ Balance cleared and folios closed")
+                            self.tests_passed += 1
+                        else:
+                            print("   ❌ Balance not cleared or folios not closed")
+                    else:
+                        print("   ❌ Checkout response format incorrect")
+                    self.tests_run += 1
+                    
+                    # Verify booking status changed to checked_out
+                    success, bookings = self.run_test(
+                        "Verify Booking Checked Out",
+                        "GET",
+                        "pms/bookings",
+                        200
+                    )
+                    
+                    if success:
+                        target_booking = None
+                        for booking in bookings:
+                            if booking.get('id') == booking_id:
+                                target_booking = booking
+                                break
+                        
+                        if target_booking and target_booking.get('status') == 'checked_out':
+                            print("   ✅ Booking status changed to checked_out")
+                            self.tests_passed += 1
+                        else:
+                            print("   ❌ Booking status not changed to checked_out")
+                    else:
+                        print("   ❌ Could not verify booking status")
+                    self.tests_run += 1
+                    
+                    # Verify room status changed to dirty
+                    success, rooms = self.run_test(
+                        "Verify Room Status Changed to Dirty",
+                        "GET",
+                        "pms/rooms",
+                        200
+                    )
+                    
+                    if success:
+                        target_room = None
+                        for room in rooms:
+                            if room.get('current_booking_id') is None:  # Should be cleared
+                                target_room = room
+                                break
+                        
+                        if target_room and target_room.get('status') == 'dirty':
+                            print("   ✅ Room status changed to dirty and booking ID cleared")
+                            self.tests_passed += 1
+                        else:
+                            print("   ❌ Room status not properly updated")
+                    else:
+                        print("   ❌ Could not verify room status")
+                    self.tests_run += 1
+                    
+                    # Verify housekeeping task was created
+                    # Note: This would require a housekeeping tasks endpoint to verify
+                    print("   ℹ️ Housekeeping task creation cannot be verified without endpoint")
+
+    def test_force_checkout(self, booking_id):
+        """Test 6: FORCE CHECK-OUT with outstanding balance"""
+        print("\n📋 Test 6: Force Check-out with Outstanding Balance")
+        
+        # Create new booking and check-in for force checkout test
+        if self.created_resources['guests'] and self.created_resources['rooms']:
+            booking_data = {
+                "guest_id": self.created_resources['guests'][0],
+                "room_id": self.created_resources['rooms'][0],
+                "check_in": (datetime.now() + timedelta(days=2)).isoformat(),
+                "check_out": (datetime.now() + timedelta(days=4)).isoformat(),
+                "adults": 2,
+                "children": 0,
+                "children_ages": [],
+                "guests_count": 2,
+                "total_amount": 300.0,
+                "channel": "direct"
+            }
+            
+            success, response = self.run_test(
+                "Create Booking for Force Checkout Test",
+                "POST",
+                "pms/bookings",
+                200,
+                data=booking_data
+            )
+            
+            if success and 'id' in response:
+                force_booking_id = response['id']
+                
+                # Check-in the guest
+                success, response = self.run_test(
+                    "Check-in for Force Checkout Test",
+                    "POST",
+                    f"frontdesk/checkin/{force_booking_id}?create_folio=true",
+                    200
+                )
+                
+                if success:
+                    # Get folio and add charges without payments
+                    success, folios = self.run_test(
+                        "Get Folios for Force Checkout",
+                        "GET",
+                        f"folio/booking/{force_booking_id}",
+                        200
+                    )
+                    
+                    if success and len(folios) > 0:
+                        folio_id = folios[0]['id']
+                        
+                        # Add charge without payment
+                        charge_data = {
+                            "charge_category": "room",
+                            "description": "Room Charge for Force Test",
+                            "amount": 150.0,
+                            "quantity": 1,
+                            "auto_calculate_tax": False
+                        }
+                        
+                        success, response = self.run_test(
+                            "Add Charge for Force Test",
+                            "POST",
+                            f"folio/{folio_id}/charge",
+                            200,
+                            data=charge_data
+                        )
+                        
+                        if success:
+                            # Force checkout with outstanding balance
+                            success, response = self.run_test(
+                                "Force Checkout with Outstanding Balance",
+                                "POST",
+                                f"frontdesk/checkout/{force_booking_id}?force=true",
+                                200
+                            )
+                            
+                            if success:
+                                print("   ✅ Force checkout succeeded with outstanding balance")
+                                self.tests_passed += 1
+                            else:
+                                print("   ❌ Force checkout failed")
+                            self.tests_run += 1
+
+    def test_multi_folio_checkout(self, booking_id, company_id):
+        """Test 7: MULTI-FOLIO CHECK-OUT"""
+        print("\n📋 Test 7: Multi-folio Check-out")
+        
+        # Create new booking for multi-folio test
+        if self.created_resources['guests'] and self.created_resources['rooms']:
+            booking_data = {
+                "guest_id": self.created_resources['guests'][0],
+                "room_id": self.created_resources['rooms'][0],
+                "check_in": (datetime.now() + timedelta(days=3)).isoformat(),
+                "check_out": (datetime.now() + timedelta(days=5)).isoformat(),
+                "adults": 2,
+                "children": 0,
+                "children_ages": [],
+                "guests_count": 2,
+                "total_amount": 400.0,
+                "channel": "direct"
+            }
+            
+            success, response = self.run_test(
+                "Create Booking for Multi-folio Test",
+                "POST",
+                "pms/bookings",
+                200,
+                data=booking_data
+            )
+            
+            if success and 'id' in response:
+                multi_booking_id = response['id']
+                
+                # Check-in
+                success, response = self.run_test(
+                    "Check-in for Multi-folio Test",
+                    "POST",
+                    f"frontdesk/checkin/{multi_booking_id}?create_folio=true",
+                    200
+                )
+                
+                if success:
+                    # Create company folio
+                    company_folio_data = {
+                        "booking_id": multi_booking_id,
+                        "folio_type": "company",
+                        "company_id": company_id
+                    }
+                    
+                    success, response = self.run_test(
+                        "Create Company Folio for Multi-folio Test",
+                        "POST",
+                        "folio/create",
+                        200,
+                        data=company_folio_data
+                    )
+                    
+                    if success:
+                        company_folio_id = response['id']
+                        
+                        # Get guest folio
+                        success, folios = self.run_test(
+                            "Get Folios for Multi-folio Test",
+                            "GET",
+                            f"folio/booking/{multi_booking_id}",
+                            200
+                        )
+                        
+                        if success and len(folios) >= 2:
+                            guest_folio_id = None
+                            for folio in folios:
+                                if folio.get('folio_type') == 'guest':
+                                    guest_folio_id = folio['id']
+                                    break
+                            
+                            if guest_folio_id:
+                                # Add charges to both folios
+                                guest_charge_data = {
+                                    "charge_category": "room",
+                                    "description": "Room Charge",
+                                    "amount": 200.0,
+                                    "quantity": 1,
+                                    "auto_calculate_tax": False
+                                }
+                                
+                                company_charge_data = {
+                                    "charge_category": "food",
+                                    "description": "Corporate Dinner",
+                                    "amount": 100.0,
+                                    "quantity": 1,
+                                    "auto_calculate_tax": False
+                                }
+                                
+                                # Add charges
+                                self.run_test(
+                                    "Add Guest Folio Charge",
+                                    "POST",
+                                    f"folio/{guest_folio_id}/charge",
+                                    200,
+                                    data=guest_charge_data
+                                )
+                                
+                                self.run_test(
+                                    "Add Company Folio Charge",
+                                    "POST",
+                                    f"folio/{company_folio_id}/charge",
+                                    200,
+                                    data=company_charge_data
+                                )
+                                
+                                # Add payments to cover both balances
+                                guest_payment_data = {
+                                    "amount": 200.0,
+                                    "method": "card",
+                                    "payment_type": "final"
+                                }
+                                
+                                company_payment_data = {
+                                    "amount": 100.0,
+                                    "method": "card",
+                                    "payment_type": "final"
+                                }
+                                
+                                self.run_test(
+                                    "Add Guest Folio Payment",
+                                    "POST",
+                                    f"folio/{guest_folio_id}/payment",
+                                    200,
+                                    data=guest_payment_data
+                                )
+                                
+                                self.run_test(
+                                    "Add Company Folio Payment",
+                                    "POST",
+                                    f"folio/{company_folio_id}/payment",
+                                    200,
+                                    data=company_payment_data
+                                )
+                                
+                                # Checkout with multi-folio
+                                success, response = self.run_test(
+                                    "Multi-folio Checkout",
+                                    "POST",
+                                    f"frontdesk/checkout/{multi_booking_id}",
+                                    200
+                                )
+                                
+                                if success:
+                                    # Verify both folios were handled
+                                    if (response.get('folios_closed', 0) >= 2 and
+                                        abs(response.get('total_balance', 1)) < 0.01):
+                                        print("   ✅ Multi-folio checkout successful")
+                                        self.tests_passed += 1
+                                    else:
+                                        print("   ❌ Multi-folio checkout verification failed")
+                                else:
+                                    print("   ❌ Multi-folio checkout failed")
+                                self.tests_run += 1
+
+    def test_checkout_already_checked_out(self, booking_id):
+        """Test 8: CHECK-OUT ALREADY CHECKED-OUT booking"""
+        print("\n📋 Test 8: Check-out Already Checked-out Booking")
+        
+        # Try to checkout the same booking again (should fail)
+        success, response = self.run_test(
+            "Checkout Already Checked-out Booking",
+            "POST",
+            f"frontdesk/checkout/{booking_id}",
+            400
+        )
+        
+        if success:
+            print("   ✅ Already checked-out validation working")
+            self.tests_passed += 1
+        else:
+            print("   ❌ Already checked-out validation failed")
+        self.tests_run += 1
+
 def main():
     print("🏨 Starting RoomOps Platform API Testing...")
     print("=" * 60)

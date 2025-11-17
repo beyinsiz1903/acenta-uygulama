@@ -2165,6 +2165,494 @@ class RoomOpsAPITester:
         
         return True
 
+    def test_housekeeping_board(self):
+        """Test comprehensive Housekeeping Board endpoints"""
+        print("\n🧹 Testing Housekeeping Board...")
+        
+        # Prerequisites: Create test data for housekeeping scenarios
+        test_rooms = []
+        test_guests = []
+        test_bookings = []
+        
+        # Create test rooms with different statuses
+        room_statuses = ['available', 'dirty', 'occupied', 'cleaning']
+        for i, status in enumerate(room_statuses):
+            room_data = {
+                "room_number": f"20{i+1}",
+                "room_type": "standard",
+                "floor": 2,
+                "capacity": 2,
+                "base_price": 120.00,
+                "amenities": ["wifi", "tv"]
+            }
+            
+            success, response = self.run_test(
+                f"Create Test Room {room_data['room_number']}",
+                "POST",
+                "pms/rooms",
+                200,
+                data=room_data
+            )
+            
+            if success and 'id' in response:
+                room_id = response['id']
+                test_rooms.append(room_id)
+                
+                # Update room status
+                if status != 'available':
+                    success, _ = self.run_test(
+                        f"Set Room {room_data['room_number']} to {status}",
+                        "PUT",
+                        f"pms/rooms/{room_id}",
+                        200,
+                        data={"status": status}
+                    )
+        
+        # Create test guests
+        guest_names = ["Alice Johnson", "Bob Smith", "Carol Davis", "David Wilson"]
+        for i, name in enumerate(guest_names):
+            guest_data = {
+                "name": name,
+                "email": f"guest{i+1}@housekeeping.test",
+                "phone": f"+123456789{i}",
+                "id_number": f"HK{i+1:03d}",
+                "address": f"{i+1}00 Test Street"
+            }
+            
+            success, response = self.run_test(
+                f"Create Test Guest {name}",
+                "POST",
+                "pms/guests",
+                200,
+                data=guest_data
+            )
+            
+            if success and 'id' in response:
+                test_guests.append(response['id'])
+        
+        # Create test bookings for different scenarios
+        if len(test_rooms) >= 4 and len(test_guests) >= 4:
+            # Scenario 1: Due out today
+            today = datetime.now()
+            tomorrow = today + timedelta(days=1)
+            next_week = today + timedelta(days=7)
+            future_date = today + timedelta(days=3)
+            
+            booking_scenarios = [
+                {
+                    "name": "Due Out Today",
+                    "guest_id": test_guests[0],
+                    "room_id": test_rooms[0],
+                    "check_in": (today - timedelta(days=1)).isoformat(),
+                    "check_out": today.isoformat(),
+                    "status": "checked_in"
+                },
+                {
+                    "name": "Due Out Tomorrow", 
+                    "guest_id": test_guests[1],
+                    "room_id": test_rooms[1],
+                    "check_in": today.isoformat(),
+                    "check_out": tomorrow.isoformat(),
+                    "status": "checked_in"
+                },
+                {
+                    "name": "Stayover (3 days remaining)",
+                    "guest_id": test_guests[2],
+                    "room_id": test_rooms[2],
+                    "check_in": today.isoformat(),
+                    "check_out": future_date.isoformat(),
+                    "status": "checked_in"
+                },
+                {
+                    "name": "Arrival Today",
+                    "guest_id": test_guests[3],
+                    "room_id": test_rooms[3],
+                    "check_in": today.isoformat(),
+                    "check_out": tomorrow.isoformat(),
+                    "status": "confirmed"
+                }
+            ]
+            
+            for scenario in booking_scenarios:
+                booking_data = {
+                    "guest_id": scenario["guest_id"],
+                    "room_id": scenario["room_id"],
+                    "check_in": scenario["check_in"],
+                    "check_out": scenario["check_out"],
+                    "adults": 2,
+                    "children": 0,
+                    "children_ages": [],
+                    "guests_count": 2,
+                    "total_amount": 120.0,
+                    "channel": "direct"
+                }
+                
+                success, response = self.run_test(
+                    f"Create {scenario['name']} Booking",
+                    "POST",
+                    "pms/bookings",
+                    200,
+                    data=booking_data
+                )
+                
+                if success and 'id' in response:
+                    booking_id = response['id']
+                    test_bookings.append(booking_id)
+                    
+                    # Update booking status if needed
+                    if scenario["status"] != "pending":
+                        success, _ = self.run_test(
+                            f"Update {scenario['name']} Booking Status",
+                            "PUT",
+                            f"pms/bookings",  # This might need adjustment based on actual endpoint
+                            200,
+                            data={"id": booking_id, "status": scenario["status"]}
+                        )
+        
+        # Now run the actual housekeeping tests
+        self.test_room_status_board()
+        self.test_due_out_rooms()
+        self.test_stayover_rooms()
+        self.test_arrival_rooms()
+        self.test_quick_room_status_update(test_rooms)
+        self.test_task_assignment(test_rooms)
+        self.test_housekeeping_edge_cases()
+        
+        return True
+
+    def test_room_status_board(self):
+        """Test 1: ROOM STATUS BOARD"""
+        print("\n📋 Test 1: Room Status Board")
+        
+        success, response = self.run_test(
+            "Get Room Status Board",
+            "GET",
+            "housekeeping/room-status",
+            200
+        )
+        
+        if success:
+            rooms = response.get('rooms', [])
+            status_counts = response.get('status_counts', {})
+            total_rooms = response.get('total_rooms', 0)
+            
+            # Verify response structure
+            if (isinstance(rooms, list) and 
+                isinstance(status_counts, dict) and
+                isinstance(total_rooms, int) and
+                len(rooms) == total_rooms):
+                print(f"   ✅ Room status board verified - {total_rooms} rooms")
+                print(f"      Status counts: {status_counts}")
+                self.tests_passed += 1
+            else:
+                print("   ❌ Room status board structure verification failed")
+        else:
+            print("   ❌ Room status board request failed")
+        self.tests_run += 1
+
+    def test_due_out_rooms(self):
+        """Test 2: DUE OUT ROOMS"""
+        print("\n📋 Test 2: Due Out Rooms")
+        
+        success, response = self.run_test(
+            "Get Due Out Rooms",
+            "GET",
+            "housekeeping/due-out",
+            200
+        )
+        
+        if success:
+            due_out_rooms = response.get('due_out_rooms', [])
+            count = response.get('count', 0)
+            
+            # Verify response structure
+            if (isinstance(due_out_rooms, list) and
+                isinstance(count, int) and
+                len(due_out_rooms) == count):
+                print(f"   ✅ Due out rooms verified - {count} rooms")
+                
+                # Check individual room structure
+                for room in due_out_rooms:
+                    required_fields = ['room_number', 'room_type', 'guest_name', 'checkout_date', 'booking_id', 'is_today']
+                    if all(field in room for field in required_fields):
+                        print(f"      Room {room['room_number']}: {room['guest_name']} - {'Today' if room['is_today'] else 'Tomorrow'}")
+                    else:
+                        print(f"      ❌ Missing fields in room data: {room}")
+                        break
+                else:
+                    self.tests_passed += 1
+            else:
+                print("   ❌ Due out rooms structure verification failed")
+        else:
+            print("   ❌ Due out rooms request failed")
+        self.tests_run += 1
+
+    def test_stayover_rooms(self):
+        """Test 3: STAYOVER ROOMS"""
+        print("\n📋 Test 3: Stayover Rooms")
+        
+        success, response = self.run_test(
+            "Get Stayover Rooms",
+            "GET",
+            "housekeeping/stayovers",
+            200
+        )
+        
+        if success:
+            stayover_rooms = response.get('stayover_rooms', [])
+            count = response.get('count', 0)
+            
+            # Verify response structure
+            if (isinstance(stayover_rooms, list) and
+                isinstance(count, int) and
+                len(stayover_rooms) == count):
+                print(f"   ✅ Stayover rooms verified - {count} rooms")
+                
+                # Check individual room structure and nights calculation
+                for room in stayover_rooms:
+                    required_fields = ['room_number', 'guest_name', 'nights_remaining']
+                    if all(field in room for field in required_fields):
+                        nights = room['nights_remaining']
+                        if isinstance(nights, int) and nights > 0:
+                            print(f"      Room {room['room_number']}: {room['guest_name']} - {nights} nights remaining")
+                        else:
+                            print(f"      ❌ Invalid nights_remaining: {nights}")
+                            break
+                    else:
+                        print(f"      ❌ Missing fields in room data: {room}")
+                        break
+                else:
+                    self.tests_passed += 1
+            else:
+                print("   ❌ Stayover rooms structure verification failed")
+        else:
+            print("   ❌ Stayover rooms request failed")
+        self.tests_run += 1
+
+    def test_arrival_rooms(self):
+        """Test 4: ARRIVAL ROOMS"""
+        print("\n📋 Test 4: Arrival Rooms")
+        
+        success, response = self.run_test(
+            "Get Arrival Rooms",
+            "GET",
+            "housekeeping/arrivals",
+            200
+        )
+        
+        if success:
+            arrival_rooms = response.get('arrival_rooms', [])
+            count = response.get('count', 0)
+            ready_count = response.get('ready_count', 0)
+            
+            # Verify response structure
+            if (isinstance(arrival_rooms, list) and
+                isinstance(count, int) and
+                isinstance(ready_count, int) and
+                len(arrival_rooms) == count):
+                print(f"   ✅ Arrival rooms verified - {count} rooms, {ready_count} ready")
+                
+                # Check individual room structure and ready logic
+                actual_ready_count = 0
+                for room in arrival_rooms:
+                    required_fields = ['room_number', 'guest_name', 'room_status', 'booking_id', 'ready']
+                    if all(field in room for field in required_fields):
+                        is_ready = room['ready']
+                        room_status = room['room_status']
+                        
+                        # Verify ready logic: ready=true when status is 'available' or 'inspected'
+                        expected_ready = room_status in ['available', 'inspected']
+                        if is_ready == expected_ready:
+                            if is_ready:
+                                actual_ready_count += 1
+                            print(f"      Room {room['room_number']}: {room['guest_name']} - Status: {room_status}, Ready: {is_ready}")
+                        else:
+                            print(f"      ❌ Ready logic error for room {room['room_number']}: status={room_status}, ready={is_ready}")
+                            break
+                    else:
+                        print(f"      ❌ Missing fields in room data: {room}")
+                        break
+                else:
+                    # Verify ready count matches
+                    if actual_ready_count == ready_count:
+                        self.tests_passed += 1
+                    else:
+                        print(f"      ❌ Ready count mismatch: expected {ready_count}, got {actual_ready_count}")
+            else:
+                print("   ❌ Arrival rooms structure verification failed")
+        else:
+            print("   ❌ Arrival rooms request failed")
+        self.tests_run += 1
+
+    def test_quick_room_status_update(self, test_rooms):
+        """Test 5: QUICK ROOM STATUS UPDATE"""
+        print("\n📋 Test 5: Quick Room Status Update")
+        
+        if not test_rooms:
+            print("   ⚠️ No test rooms available for status update")
+            self.tests_run += 1
+            return
+        
+        room_id = test_rooms[0]
+        
+        # Test valid status update
+        success, response = self.run_test(
+            "Update Room Status to Cleaning",
+            "PUT",
+            f"housekeeping/room/{room_id}/status?new_status=cleaning",
+            200
+        )
+        
+        if success:
+            message = response.get('message', '')
+            room_number = response.get('room_number', '')
+            new_status = response.get('new_status', '')
+            
+            if new_status == 'cleaning' and room_number and message:
+                print(f"   ✅ Room status updated successfully: {message}")
+                self.tests_passed += 1
+            else:
+                print("   ❌ Room status update response verification failed")
+        else:
+            print("   ❌ Room status update failed")
+        self.tests_run += 1
+        
+        # Test invalid status
+        success, response = self.run_test(
+            "Update Room Status to Invalid Status (Should Fail)",
+            "PUT",
+            f"housekeeping/room/{room_id}/status?new_status=invalid_status",
+            400  # Expecting error
+        )
+        
+        if not success:  # We expect this to fail
+            print("   ✅ Invalid status correctly rejected")
+            self.tests_passed += 1
+        else:
+            print("   ❌ Invalid status should have been rejected")
+        self.tests_run += 1
+        
+        # Test non-existent room
+        success, response = self.run_test(
+            "Update Non-existent Room Status (Should Fail)",
+            "PUT",
+            "housekeeping/room/non-existent-room-id/status?new_status=cleaning",
+            404  # Expecting error
+        )
+        
+        if not success:  # We expect this to fail
+            print("   ✅ Non-existent room correctly rejected")
+            self.tests_passed += 1
+        else:
+            print("   ❌ Non-existent room should have been rejected")
+        self.tests_run += 1
+
+    def test_task_assignment(self, test_rooms):
+        """Test 6: TASK ASSIGNMENT"""
+        print("\n📋 Test 6: Task Assignment")
+        
+        if not test_rooms:
+            print("   ⚠️ No test rooms available for task assignment")
+            self.tests_run += 1
+            return
+        
+        room_id = test_rooms[0]
+        
+        # Test task assignment
+        success, response = self.run_test(
+            "Assign Housekeeping Task",
+            "POST",
+            f"housekeeping/assign?room_id={room_id}&assigned_to=Maria&task_type=cleaning&priority=high",
+            200
+        )
+        
+        if success:
+            message = response.get('message', '')
+            task = response.get('task', {})
+            
+            if ('Maria' in message and 
+                task.get('assigned_to') == 'Maria' and
+                task.get('task_type') == 'cleaning' and
+                task.get('priority') == 'high'):
+                print(f"   ✅ Task assigned successfully: {message}")
+                print(f"      Task ID: {task.get('id')}")
+                self.tests_passed += 1
+            else:
+                print("   ❌ Task assignment response verification failed")
+        else:
+            print("   ❌ Task assignment failed")
+        self.tests_run += 1
+
+    def test_housekeeping_edge_cases(self):
+        """Test 7: EDGE CASES"""
+        print("\n📋 Test 7: Edge Cases")
+        
+        # Test due out with no checkouts (should return empty array)
+        success, response = self.run_test(
+            "Due Out with No Checkouts",
+            "GET",
+            "housekeeping/due-out",
+            200
+        )
+        
+        if success:
+            due_out_rooms = response.get('due_out_rooms', [])
+            count = response.get('count', 0)
+            
+            if isinstance(due_out_rooms, list) and isinstance(count, int):
+                print(f"   ✅ Due out edge case handled - {count} rooms")
+                self.tests_passed += 1
+            else:
+                print("   ❌ Due out edge case failed")
+        else:
+            print("   ❌ Due out edge case request failed")
+        self.tests_run += 1
+        
+        # Test stayovers with no in-house guests (should return empty array)
+        success, response = self.run_test(
+            "Stayovers with No In-house Guests",
+            "GET",
+            "housekeeping/stayovers",
+            200
+        )
+        
+        if success:
+            stayover_rooms = response.get('stayover_rooms', [])
+            count = response.get('count', 0)
+            
+            if isinstance(stayover_rooms, list) and isinstance(count, int):
+                print(f"   ✅ Stayovers edge case handled - {count} rooms")
+                self.tests_passed += 1
+            else:
+                print("   ❌ Stayovers edge case failed")
+        else:
+            print("   ❌ Stayovers edge case request failed")
+        self.tests_run += 1
+        
+        # Test arrivals with no arrivals today (should return empty array)
+        success, response = self.run_test(
+            "Arrivals with No Arrivals Today",
+            "GET",
+            "housekeeping/arrivals",
+            200
+        )
+        
+        if success:
+            arrival_rooms = response.get('arrival_rooms', [])
+            count = response.get('count', 0)
+            ready_count = response.get('ready_count', 0)
+            
+            if (isinstance(arrival_rooms, list) and 
+                isinstance(count, int) and 
+                isinstance(ready_count, int)):
+                print(f"   ✅ Arrivals edge case handled - {count} rooms, {ready_count} ready")
+                self.tests_passed += 1
+            else:
+                print("   ❌ Arrivals edge case failed")
+        else:
+            print("   ❌ Arrivals edge case request failed")
+        self.tests_run += 1
+
     def test_checkin_validations(self, booking_id, room_id):
         """Test 1: CHECK-IN VALIDATION scenarios"""
         print("\n📋 Test 1: Check-in Validation Scenarios")

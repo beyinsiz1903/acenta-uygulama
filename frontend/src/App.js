@@ -7,6 +7,7 @@ import Dashboard from "@/pages/Dashboard";
 import PMSModule from "@/pages/PMSModule";
 import InvoiceModule from "@/pages/InvoiceModule";
 import RMSModule from "@/pages/RMSModule";
+import ChannelManagerModule from "@/pages/ChannelManagerModule";
 import LoyaltyModule from "@/pages/LoyaltyModule";
 import MarketplaceModule from "@/pages/MarketplaceModule";
 import GuestPortal from "@/pages/GuestPortal";

@@ -372,25 +372,101 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
           </div>
         </div>
 
-        {/* Legend */}
+        {/* Occupancy Bar */}
+        <Card>
+          <CardContent className="py-4">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-700">Occupancy Overview</h3>
+                  <p className="text-xs text-gray-500">Hover over dates to see occupancy %</p>
+                </div>
+                <div className="flex items-center space-x-4">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-blue-600">{getOccupancyForDate(new Date())}%</div>
+                    <div className="text-xs text-gray-600">Today</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-green-600">{getForecastOccupancy()}%</div>
+                    <div className="text-xs text-gray-600 flex items-center">
+                      <TrendingUp className="w-3 h-3 mr-1" />
+                      14-Day Forecast
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Occupancy bars for visible dates */}
+              <div className="flex space-x-1">
+                {dateRange.map((date, idx) => {
+                  const occ = getOccupancyForDate(date);
+                  const isCurrentDate = isToday(date);
+                  
+                  return (
+                    <div
+                      key={idx}
+                      className="flex-1 relative group"
+                      title={`${formatDate(date)}: ${occ}% occupancy`}
+                    >
+                      <div className="h-8 bg-gray-200 rounded overflow-hidden">
+                        <div
+                          className={`h-full transition-all ${
+                            occ >= 90 ? 'bg-red-500' :
+                            occ >= 75 ? 'bg-orange-500' :
+                            occ >= 50 ? 'bg-yellow-500' :
+                            'bg-green-500'
+                          }`}
+                          style={{ width: `${occ}%` }}
+                        ></div>
+                      </div>
+                      {isCurrentDate && (
+                        <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-blue-600 rounded-full"></div>
+                      )}
+                      <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-xs text-gray-500 opacity-0 group-hover:opacity-100 whitespace-nowrap">
+                        {occ}%
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Legend & Quick Tips */}
         <Card>
           <CardContent className="py-3">
-            <div className="flex items-center space-x-6 text-sm">
-              <div className="flex items-center space-x-2">
-                <div className="w-4 h-4 bg-blue-500 rounded"></div>
-                <span>Confirmed</span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-6 text-sm">
+                <div className="flex items-center space-x-2">
+                  <div className="w-4 h-4 bg-blue-500 rounded"></div>
+                  <span>Confirmed</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-4 h-4 bg-green-500 rounded"></div>
+                  <span>In-House</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-4 h-4 bg-purple-500 rounded"></div>
+                  <span>Guaranteed</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-4 h-4 bg-gray-400 rounded"></div>
+                  <span>Departed</span>
+                </div>
               </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-4 h-4 bg-green-500 rounded"></div>
-                <span>In-House</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-4 h-4 bg-purple-500 rounded"></div>
-                <span>Guaranteed</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-4 h-4 bg-gray-400 rounded"></div>
-                <span>Departed</span>
+              <div className="flex items-center space-x-4 text-xs text-gray-600">
+                <div className="flex items-center space-x-1">
+                  <Plus className="w-3 h-3" />
+                  <span>Click cell = New booking</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <Info className="w-3 h-3" />
+                  <span>Double-click booking = Details</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <span>🖱️ Drag & drop = Move booking</span>
+                </div>
               </div>
             </div>
           </CardContent>

@@ -2034,7 +2034,8 @@ class RoomOpsAPITester:
             "Transfer Non-existent Charge (Should Handle Gracefully)",
             "POST",
             "folio/transfer",
-            200  # Should handle gracefully
+            200,  # Should handle gracefully
+            data=transfer_data
         )
         
         if success:

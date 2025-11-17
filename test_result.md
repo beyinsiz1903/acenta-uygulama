@@ -637,15 +637,13 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Test folio creation (guest, company, agency types)"
-    - "Test charge posting with different categories"
-    - "Test auto city tax calculation"
-    - "Test payment posting with different payment types"
-    - "Test charge transfer between folios"
-    - "Test void charge functionality"
-    - "Test folio closure with balance validation"
-    - "Test night audit room charge posting"
-    - "Test balance calculation accuracy"
+    - "Test check-in with room status validation"
+    - "Test check-in with auto folio creation"
+    - "Test check-in already checked-in validation"
+    - "Test check-out with balance validation"
+    - "Test check-out with auto folio closure"
+    - "Test check-out with outstanding balance error"
+    - "Test check-out housekeeping task creation"
   stuck_tasks: []
   test_all: true
   test_priority: "sequential"

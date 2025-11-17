@@ -23,6 +23,7 @@ const Layout = ({ children, user, tenant, onLogout, currentModule }) => {
     { name: t('nav.pms'), path: '/pms', icon: Hotel, id: 'pms' },
     { name: t('nav.invoices'), path: '/invoices', icon: FileText, id: 'invoices' },
     { name: t('nav.rms'), path: '/rms', icon: TrendingUp, id: 'rms' },
+    { name: 'Channel Manager', path: '/channel-manager', icon: Network, id: 'channel-manager' },
     { name: t('nav.loyalty'), path: '/loyalty', icon: Award, id: 'loyalty' },
     { name: t('nav.marketplace'), path: '/marketplace', icon: ShoppingCart, id: 'marketplace' },
   ];

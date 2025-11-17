@@ -2460,49 +2460,7 @@ async def assign_housekeeping_task(
         'task': task
     }
 
-# ============= CHANNEL MANAGER =============
-
-@api_router.post("/channel/rates")
-async def update_channel_rates(room_type: str, channel: str, start_date: str, end_date: str, rate: float, availability: int, current_user: User = Depends(get_current_user)):
-    start = datetime.fromisoformat(start_date).date()
-    end = datetime.fromisoformat(end_date).date()
-    current_date = start
-    while current_date <= end:
-        channel_rate = ChannelRate(tenant_id=current_user.tenant_id, room_type=room_type, channel=channel, date=current_date, rate=rate, availability=availability)
-        await db.channel_rates.update_one({'tenant_id': current_user.tenant_id, 'room_type': room_type, 'channel': channel, 'date': current_date.isoformat()},
-                                          {'$set': channel_rate.model_dump()}, upsert=True)
-        current_date += timedelta(days=1)
-    return {'message': f'Rates updated for {(end - start).days + 1} days'}
-
-@api_router.get("/channel/rates")
-async def get_channel_rates(room_type: Optional[str] = None, channel: Optional[str] = None, start_date: Optional[str] = None, current_user: User = Depends(get_current_user)):
-    query = {'tenant_id': current_user.tenant_id}
-    if room_type:
-        query['room_type'] = room_type
-    if channel:
-        query['channel'] = channel
-    if start_date:
-        query['date'] = {'$gte': start_date}
-    rates = await db.channel_rates.find(query, {'_id': 0}).to_list(1000)
-    return rates
-
-@api_router.get("/channel/performance")
-async def get_channel_performance(start_date: Optional[str] = None, end_date: Optional[str] = None, current_user: User = Depends(get_current_user)):
-    query = {'tenant_id': current_user.tenant_id}
-    if start_date and end_date:
-        query['check_in'] = {'$gte': start_date, '$lte': end_date}
-    bookings = await db.bookings.find(query, {'_id': 0}).to_list(1000)
-    channel_stats = {}
-    for booking in bookings:
-        channel = booking['channel']
-        if channel not in channel_stats:
-            channel_stats[channel] = {'bookings': 0, 'revenue': 0.0, 'avg_rate': 0.0}
-        channel_stats[channel]['bookings'] += 1
-        channel_stats[channel]['revenue'] += booking['total_amount']
-    for channel in channel_stats:
-        if channel_stats[channel]['bookings'] > 0:
-            channel_stats[channel]['avg_rate'] = channel_stats[channel]['revenue'] / channel_stats[channel]['bookings']
-    return channel_stats
+# ============= LOYALTY PROGRAM =============
 
 # ============= REPORTING =============
 

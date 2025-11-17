@@ -203,6 +203,29 @@ const PMSModule = ({ user, tenant, onLogout }) => {
     }
   };
 
+  const loadAuditLogs = async () => {
+    try {
+      const response = await axios.get('/audit-logs?limit=50');
+      setAuditLogs(response.data.logs || []);
+    } catch (error) {
+      // Permission denied is okay
+      if (error.response?.status !== 403) {
+        console.error('Failed to load audit logs:', error);
+      }
+    }
+  };
+
+  const checkPermission = async (permission) => {
+    try {
+      const response = await axios.post('/permissions/check', null, {
+        params: { permission }
+      });
+      return response.data.has_permission;
+    } catch (error) {
+      return false;
+    }
+  };
+
   const loadReports = async () => {
     try {
       const today = new Date().toISOString().split('T')[0];

@@ -1514,6 +1514,65 @@ const PMSModule = ({ user, tenant, onLogout }) => {
                   </CardContent>
                 </Card>
               )}
+
+              {/* Audit Logs */}
+              <Card className="mt-6">
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    <span>📋 Audit Trail</span>
+                    <Button variant="outline" size="sm" onClick={loadAuditLogs}>
+                      Refresh
+                    </Button>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {auditLogs.length === 0 ? (
+                    <div className="text-center text-gray-400 py-8">
+                      No audit logs available or insufficient permissions
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-3 py-2 text-left font-semibold">Timestamp</th>
+                            <th className="px-3 py-2 text-left font-semibold">User</th>
+                            <th className="px-3 py-2 text-left font-semibold">Role</th>
+                            <th className="px-3 py-2 text-left font-semibold">Action</th>
+                            <th className="px-3 py-2 text-left font-semibold">Entity</th>
+                            <th className="px-3 py-2 text-left font-semibold">Changes</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {auditLogs.slice(0, 20).map((log, idx) => (
+                            <tr key={idx} className="border-b hover:bg-gray-50">
+                              <td className="px-3 py-2 text-xs text-gray-600">
+                                {new Date(log.timestamp).toLocaleString()}
+                              </td>
+                              <td className="px-3 py-2">{log.user_name}</td>
+                              <td className="px-3 py-2">
+                                <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs">
+                                  {log.user_role}
+                                </span>
+                              </td>
+                              <td className="px-3 py-2 font-semibold">{log.action}</td>
+                              <td className="px-3 py-2 text-gray-600">{log.entity_type}</td>
+                              <td className="px-3 py-2 text-xs text-gray-500">
+                                {log.changes ? JSON.stringify(log.changes).substring(0, 50) + '...' : '-'}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                      {auditLogs.length > 20 && (
+                        <div className="text-center text-sm text-gray-500 mt-3">
+                          Showing 20 of {auditLogs.length} logs
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             </div>
           </TabsContent>
         </Tabs>

@@ -190,15 +190,18 @@ backend:
   
   - task: "Create folio transfer endpoint"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "POST /api/folio/transfer for transferring charges between folios, creates operation log"
+      - working: true
+        agent: "testing"
+        comment: "✅ COMPREHENSIVE TESTING COMPLETED - Folio transfer endpoint working perfectly. POST /api/folio/transfer: Successfully transfers charges between guest and company folios. Tested charge movement from source to destination folio, automatic balance updates for both folios, FolioOperation record creation for audit trail. Transfer validation (both folios exist, destination folio open) working correctly. Operation logging functional."
   
   - task: "Create void charge endpoint"
     implemented: true

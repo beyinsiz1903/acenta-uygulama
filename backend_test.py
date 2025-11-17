@@ -3388,6 +3388,9 @@ def main():
     # Test Housekeeping Board (NEW FUNCTIONALITY)
     tester.test_housekeeping_board()
     
+    # Test Management Reporting (NEW FUNCTIONALITY)
+    tester.test_management_reporting()
+    
     # Test multi-tenant isolation
     tester.test_multi_tenant_isolation()
     

@@ -964,11 +964,14 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Comprehensive end-to-end testing of entire application"
-    - "Testing all screens: Reservations, Payments, Check-ins, Check-outs, Folios, Invoices, RMS, Channel Manager"
-  stuck_tasks: []
-  test_all: true
-  test_priority: "comprehensive_e2e"
+    - "CRITICAL: Fix authentication system - users cannot register or login"
+    - "Fix backend date parsing error in daily flash report endpoint"
+    - "Verify API connectivity between frontend and backend"
+  stuck_tasks:
+    - "Authentication system completely non-functional"
+    - "All frontend features blocked by auth failure"
+  test_all: false
+  test_priority: "authentication_fix_required"
 
 agent_communication:
   - agent: "main"

@@ -1606,7 +1606,6 @@ class RoomOpsAPITester:
         
         # Post minibar charge
         minibar_charge_data = {
-            "folio_id": folio_id,
             "charge_category": "minibar",
             "description": "Coca Cola",
             "amount": 5.0,

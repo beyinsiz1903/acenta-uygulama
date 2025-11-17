@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Home, Hotel, FileText, TrendingUp, Award, ShoppingCart, User, LogOut, Menu } from 'lucide-react';
+import { Home, Hotel, FileText, TrendingUp, Award, ShoppingCart, User, LogOut, Menu, Network } from 'lucide-react';
 import LanguageSelector from '@/components/LanguageSelector';
 
 const Layout = ({ children, user, tenant, onLogout, currentModule }) => {

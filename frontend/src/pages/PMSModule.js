@@ -214,8 +214,8 @@ const PMSModule = ({ user, tenant, onLogout }) => {
 
   const handleCheckIn = async (bookingId) => {
     try {
-      await axios.post(`/frontdesk/checkin/${bookingId}`);
-      toast.success('Guest checked in successfully');
+      const response = await axios.post(`/frontdesk/checkin/${bookingId}?create_folio=true`);
+      toast.success(`✅ ${response.data.message} - Room ${response.data.room_number}`);
       loadData();
       loadFrontDeskData();
     } catch (error) {
@@ -225,8 +225,12 @@ const PMSModule = ({ user, tenant, onLogout }) => {
 
   const handleCheckOut = async (bookingId) => {
     try {
-      await axios.post(`/frontdesk/checkout/${bookingId}`);
-      toast.success('Guest checked out successfully');
+      const response = await axios.post(`/frontdesk/checkout/${bookingId}?auto_close_folios=true`);
+      if (response.data.total_balance > 0.01) {
+        toast.warning(`⚠️ Check-out with outstanding balance: $${response.data.total_balance.toFixed(2)}`);
+      } else {
+        toast.success(`✅ ${response.data.message} - ${response.data.folios_closed} folios closed`);
+      }
       loadData();
       loadFrontDeskData();
       loadHousekeepingData();

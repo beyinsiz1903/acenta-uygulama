@@ -228,6 +228,94 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
     return Math.round(avgOccupancy);
   };
 
+  // Detect conflicts (overbooking, overlaps)
+  const detectConflicts = () => {
+    const detectedConflicts = [];
+    
+    rooms.forEach(room => {
+      const roomBookings = bookings.filter(b => b.room_id === room.id);
+      
+      // Check for overlapping bookings
+      for (let i = 0; i < roomBookings.length; i++) {
+        for (let j = i + 1; j < roomBookings.length; j++) {
+          const booking1 = roomBookings[i];
+          const booking2 = roomBookings[j];
+          
+          const start1 = new Date(booking1.check_in);
+          const end1 = new Date(booking1.check_out);
+          const start2 = new Date(booking2.check_in);
+          const end2 = new Date(booking2.check_out);
+          
+          // Check if dates overlap
+          if (start1 < end2 && start2 < end1) {
+            detectedConflicts.push({
+              type: 'overbooking',
+              room_id: room.id,
+              room_number: room.room_number,
+              booking1_id: booking1.id,
+              booking2_id: booking2.id,
+              guest1: booking1.guest_name,
+              guest2: booking2.guest_name,
+              overlap_start: start1 > start2 ? start1 : start2,
+              overlap_end: end1 < end2 ? end1 : end2
+            });
+          }
+        }
+      }
+    });
+    
+    setConflicts(detectedConflicts);
+    return detectedConflicts;
+  };
+
+  useEffect(() => {
+    detectConflicts();
+  }, [bookings]);
+
+  // Check if a room/date has conflict
+  const hasConflict = (roomId, date) => {
+    return conflicts.some(c => 
+      c.room_id === roomId && 
+      date >= new Date(c.overlap_start) && 
+      date < new Date(c.overlap_end)
+    );
+  };
+
+  // Find available rooms
+  const handleFindRoom = async () => {
+    if (!findRoomCriteria.check_in || !findRoomCriteria.check_out) {
+      toast.error('Please select check-in and check-out dates');
+      return;
+    }
+    
+    const checkIn = new Date(findRoomCriteria.check_in);
+    const checkOut = new Date(findRoomCriteria.check_out);
+    
+    const available = rooms.filter(room => {
+      // Filter by room type if specified
+      if (findRoomCriteria.room_type !== 'all' && room.room_type !== findRoomCriteria.room_type) {
+        return false;
+      }
+      
+      // Filter by capacity
+      if (room.capacity < findRoomCriteria.guests_count) {
+        return false;
+      }
+      
+      // Check if room is available for the date range
+      const roomBookings = bookings.filter(b => b.room_id === room.id);
+      const isAvailable = !roomBookings.some(booking => {
+        const bStart = new Date(booking.check_in);
+        const bEnd = new Date(booking.check_out);
+        return checkIn < bEnd && checkOut > bStart;
+      });
+      
+      return isAvailable;
+    });
+    
+    setAvailableRooms(available);
+  };
+
   // Generate date range
   const getDateRange = () => {
     const dates = [];

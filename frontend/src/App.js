@@ -158,6 +158,26 @@ function App() {
             }
           />
           <Route
+            path="/reservation-calendar"
+            element={
+              isAuthenticated ? (
+                <ReservationCalendar user={user} tenant={tenant} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/auth" replace />
+              )
+            }
+          />
+          <Route
+            path="/pending-ar"
+            element={
+              isAuthenticated ? (
+                <PendingAR user={user} tenant={tenant} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/auth" replace />
+              )
+            }
+          />
+          <Route
             path="/loyalty"
             element={
               isAuthenticated ? (

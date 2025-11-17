@@ -331,30 +331,11 @@ const RMSModule = ({ user, tenant, onLogout }) => {
                         </Button>
                       </div>
                     )}
-
-                  <div className="pt-2">
-                    <div className={`text-xs px-3 py-2 rounded-lg ${
-                      suggestion.occupancy_rate > 80 ? 'bg-red-50 text-red-700' :
-                      suggestion.occupancy_rate > 60 ? 'bg-yellow-50 text-yellow-700' :
-                      'bg-green-50 text-green-700'
-                    }`}>
-                      {suggestion.occupancy_rate > 80 ? '🔥 High demand - Increase prices' :
-                       suggestion.occupancy_rate > 60 ? '📊 Moderate demand - Maintain prices' :
-                       '💡 Low demand - Consider discounts'}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-
-        {suggestions.length === 0 && (
-          <Card>
-            <CardContent className="py-12 text-center text-gray-500">
-              <p>No pricing suggestions available. Add rooms and bookings to get started.</p>
-            </CardContent>
-          </Card>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
         )}
       </div>
     </Layout>

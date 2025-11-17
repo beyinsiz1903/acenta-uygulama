@@ -939,18 +939,29 @@ const PMSModule = ({ user, tenant, onLogout }) => {
                   <Card key={booking.id}>
                     <CardContent className="pt-6">
                       <div className="flex justify-between items-start">
-                        <div>
+                        <div className="flex-1">
                           <div className="font-semibold text-lg">{guest?.name}</div>
                           <div className="text-sm text-gray-600">Room {room?.room_number} - {room?.room_type}</div>
                           <div className="text-sm text-gray-500">
                             {new Date(booking.check_in).toLocaleDateString()} - {new Date(booking.check_out).toLocaleDateString()}
                           </div>
                         </div>
-                        <div className="text-right">
-                          <div className="text-2xl font-bold">${booking.total_amount}</div>
-                          <span className={`px-3 py-1 rounded-full text-xs ${booking.status === 'confirmed' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
-                            {booking.status.toUpperCase()}
-                          </span>
+                        <div className="flex items-center gap-3">
+                          <div className="text-right">
+                            <div className="text-2xl font-bold">${booking.total_amount}</div>
+                            <span className={`px-3 py-1 rounded-full text-xs ${booking.status === 'confirmed' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
+                              {booking.status.toUpperCase()}
+                            </span>
+                          </div>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => loadBookingFolios(booking.id)}
+                            title="View charges & payments"
+                          >
+                            <DollarSign className="w-4 h-4 mr-1" />
+                            View Folio
+                          </Button>
                         </div>
                       </div>
                     </CardContent>

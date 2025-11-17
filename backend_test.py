@@ -1366,6 +1366,12 @@ def main():
     # Test accounting invoice with additional taxes (NEW FUNCTIONALITY)
     tester.test_accounting_invoice_with_taxes()
     
+    # Test corporate booking features (NEW FUNCTIONALITY)
+    company_id = tester.test_corporate_booking_features()
+    if company_id:
+        tester.test_corporate_bookings(company_id)
+        tester.test_edge_cases(company_id)
+    
     # Test multi-tenant isolation
     tester.test_multi_tenant_isolation()
     

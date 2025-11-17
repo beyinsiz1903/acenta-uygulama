@@ -106,14 +106,16 @@ const PMSModule = ({ user, tenant, onLogout }) => {
 
   const loadData = async () => {
     try {
-      const [roomsRes, guestsRes, bookingsRes] = await Promise.all([
+      const [roomsRes, guestsRes, bookingsRes, companiesRes] = await Promise.all([
         axios.get('/pms/rooms'),
         axios.get('/pms/guests'),
-        axios.get('/pms/bookings')
+        axios.get('/pms/bookings'),
+        axios.get('/companies')
       ]);
       setRooms(roomsRes.data);
       setGuests(guestsRes.data);
       setBookings(bookingsRes.data);
+      setCompanies(companiesRes.data);
     } catch (error) {
       toast.error('Failed to load data');
     } finally {

@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import axios from "axios";
 import AuthPage from "@/pages/AuthPage";
 import Dashboard from "@/pages/Dashboard";
+import GMDashboard from "@/pages/GMDashboard";
 import PMSModule from "@/pages/PMSModule";
 import InvoiceModule from "@/pages/InvoiceModule";
 import RMSModule from "@/pages/RMSModule";

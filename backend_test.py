@@ -2213,7 +2213,7 @@ class RoomOpsAPITester:
         for i, name in enumerate(guest_names):
             guest_data = {
                 "name": name,
-                "email": f"guest{i+1}@housekeeping.test",
+                "email": f"guest{i+1}@example.com",
                 "phone": f"+123456789{i}",
                 "id_number": f"HK{i+1:03d}",
                 "address": f"{i+1}00 Test Street"

@@ -273,27 +273,33 @@ backend:
   
   - task: "Enhanced check-in endpoint with validations"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "POST /api/frontdesk/checkin/{booking_id}: Room status validation (available/inspected), auto guest folio creation, already checked-in validation, guest total_stays increment"
+      - working: true
+        agent: "testing"
+        comment: "✅ COMPREHENSIVE CHECK-IN TESTING COMPLETED - Enhanced check-in endpoint working perfectly. Tested: Non-existent booking validation (404 error), Room status validation (dirty room rejected with 400 error), Successful check-in with auto folio creation (response contains message, checked_in_at, room_number), Booking status change to 'checked_in', Room status change to 'occupied' with current_booking_id set, Guest folio creation with proper folio_number, Guest total_stays increment. Check-in without auto folio creation also working (create_folio=false parameter). All validations and status transitions working correctly."
   
   - task: "Enhanced check-out endpoint with balance validation"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "POST /api/frontdesk/checkout/{booking_id}: Multi-folio balance check, auto folio closure, outstanding balance error, room status → dirty, auto housekeeping task creation"
+      - working: true
+        agent: "testing"
+        comment: "✅ COMPREHENSIVE CHECK-OUT TESTING COMPLETED - Enhanced check-out endpoint working perfectly. Tested: Outstanding balance validation (properly rejects checkout with 400 error and detailed balance info), Successful checkout with payment (response contains message, checked_out_at, total_balance, folios_closed), Booking status change to 'checked_out', Room status change to 'dirty' with current_booking_id cleared, Auto folio closure when balance is zero, Force checkout with outstanding balance (force=true parameter), Multi-folio balance calculation across guest and company folios, Already checked-out validation (400 error). Housekeeping task creation verified in code. All balance validations and status transitions working correctly."
   
   - task: "Create Company model and CompanyCreate pydantic model"
     implemented: true

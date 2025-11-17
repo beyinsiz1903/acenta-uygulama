@@ -428,6 +428,21 @@ class Payment(BaseModel):
     processed_by: Optional[str] = None
     processed_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
+# Rate Override Log Model
+class RateOverrideLog(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    tenant_id: str
+    booking_id: str
+    user_id: str
+    user_name: Optional[str] = None
+    base_rate: float
+    new_rate: float
+    override_reason: str
+    ip_address: Optional[str] = None
+    terminal: Optional[str] = None
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
 # Channel Manager Models
 class ChannelRate(BaseModel):
     model_config = ConfigDict(extra="ignore")

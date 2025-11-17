@@ -796,15 +796,18 @@ frontend:
 
   - task: "Add additional_taxes field to invoice items state"
     implemented: true
-    working: "NA"
+    working: false
     file: "/app/frontend/src/pages/InvoiceModule.js"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Updated newInvoice state to include additional_taxes array for each item"
+      - working: false
+        agent: "testing"
+        comment: "❌ CRITICAL: Cannot test invoice additional taxes functionality due to authentication system failure. Users cannot access Invoice module to test advanced tax features."
 
   - task: "Create additional tax dialog state and functions"
     implemented: true

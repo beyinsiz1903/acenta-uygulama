@@ -721,15 +721,18 @@ frontend:
   
   - task: "Add Company selection with autocomplete"
     implemented: true
-    working: "NA"
+    working: false
     file: "/app/frontend/src/pages/PMSModule.js"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Company select dropdown with filtering for active companies only"
+      - working: false
+        agent: "testing"
+        comment: "❌ CRITICAL: Cannot test company selection functionality due to authentication system failure. Users cannot access PMS module to test corporate booking features."
   
   - task: "Add Quick Company Create dialog"
     implemented: true

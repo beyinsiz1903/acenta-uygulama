@@ -1976,7 +1976,8 @@ class RoomOpsAPITester:
             "Post Charge to Closed Folio (May Fail)",
             "POST",
             f"folio/{folio_id}/charge",
-            404  # Expecting failure if folio is closed
+            404,  # Expecting failure if folio is closed
+            data=charge_data
         )
         
         if not success:

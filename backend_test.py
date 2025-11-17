@@ -18,7 +18,8 @@ class RoomOpsAPITester:
             'bookings': [],
             'invoices': [],
             'loyalty_programs': [],
-            'orders': []
+            'orders': [],
+            'companies': []
         }
 
     def run_test(self, name, method, endpoint, expected_status, data=None, headers=None):

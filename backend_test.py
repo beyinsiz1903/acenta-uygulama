@@ -2894,6 +2894,9 @@ def main():
     # Test Folio & Billing Engine (NEW FUNCTIONALITY)
     tester.test_folio_billing_engine()
     
+    # Test Enhanced Check-in/Check-out Flow (NEW FUNCTIONALITY)
+    tester.test_enhanced_checkin_checkout_flow()
+    
     # Test multi-tenant isolation
     tester.test_multi_tenant_isolation()
     

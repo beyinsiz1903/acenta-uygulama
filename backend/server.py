@@ -491,7 +491,6 @@ class FolioCharge(BaseModel):
     voided_at: Optional[datetime] = None
 
 class PaymentCreate(BaseModel):
-    folio_id: str
     amount: float
     method: PaymentMethod
     payment_type: PaymentType

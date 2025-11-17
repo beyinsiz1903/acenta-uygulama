@@ -103,12 +103,11 @@
 #====================================================================================================
 
 user_problem_statement: |
-  Add 10% VAT rate option and additional tax functionality to invoice system.
-  Requirements:
-  1. Include 10% in VAT rate options
-  2. Add separate "+" icon for adding additional taxes (ÖTV, Tevkifat/Withholding, Accommodation Tax)
-  3. Allow adding multiple tax types to the same invoice
-  4. Display tax breakdown in invoice summary (Ara Toplam, Toplam KDV, Tevkifat, Genel Toplam)
+  Enhanced Booking/Reservation System with Corporate Features:
+  1. Contracted Rate Auto-fill: When a contracted rate is selected, automatically set rate type, market segment, and cancellation policy
+  2. Rate Override Logging: Log all rate changes with user, timestamp, base rate, new rate, reason, and IP
+  3. Company Billing Auto-fill: When a company is selected, automatically populate billing address, tax number, and contact person
+  4. Children Ages Conditional Display: Show children ages input fields only when children count > 0
 
 backend:
   - task: "Add 10% to VATRate enum"

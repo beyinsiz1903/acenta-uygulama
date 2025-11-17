@@ -97,9 +97,46 @@ const RMSModule = ({ user, tenant, onLogout }) => {
 
   const getPriceTrend = (current, suggested) => {
     const diff = suggested - current;
-    if (diff > 0) return { icon: TrendingUp, color: 'text-green-600', label: '+' + diff.toFixed(2) };
-    if (diff < 0) return { icon: TrendingDown, color: 'text-red-600', label: diff.toFixed(2) };
-    return { icon: Minus, color: 'text-gray-600', label: '0.00' };
+    const percentChange = ((diff / current) * 100).toFixed(1);
+    if (diff > 0) return { 
+      icon: TrendingUp, 
+      color: 'text-green-600', 
+      bgColor: 'bg-green-50',
+      label: `+$${diff.toFixed(2)} (+${percentChange}%)` 
+    };
+    if (diff < 0) return { 
+      icon: TrendingDown, 
+      color: 'text-red-600',
+      bgColor: 'bg-red-50', 
+      label: `-$${Math.abs(diff).toFixed(2)} (${percentChange}%)` 
+    };
+    return { 
+      icon: Minus, 
+      color: 'text-gray-600',
+      bgColor: 'bg-gray-50', 
+      label: '$0.00 (0%)' 
+    };
+  };
+
+  const getStatusBadge = (status) => {
+    const config = {
+      pending: { color: 'bg-yellow-500', icon: Clock, label: 'Pending' },
+      applied: { color: 'bg-green-500', icon: CheckCircle, label: 'Applied' },
+      rejected: { color: 'bg-red-500', icon: XCircle, label: 'Rejected' }
+    };
+    const { color, icon: Icon, label } = config[status] || config.pending;
+    return (
+      <Badge className={`${color} flex items-center space-x-1`}>
+        <Icon className="w-3 h-3" />
+        <span>{label}</span>
+      </Badge>
+    );
+  };
+
+  const getConfidenceBadge = (score) => {
+    if (score >= 0.8) return <Badge className="bg-green-500">High Confidence</Badge>;
+    if (score >= 0.6) return <Badge className="bg-yellow-500">Medium Confidence</Badge>;
+    return <Badge className="bg-gray-500">Low Confidence</Badge>;
   };
 
   if (loading) {

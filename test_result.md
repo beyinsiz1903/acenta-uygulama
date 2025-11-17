@@ -235,15 +235,18 @@ backend:
   
   - task: "Create night audit endpoint"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "POST /api/night-audit/post-room-charges to post room charges to all checked-in bookings"
+      - working: true
+        agent: "testing"
+        comment: "✅ COMPREHENSIVE TESTING COMPLETED - Night audit endpoint working perfectly. POST /api/night-audit/post-room-charges: Successfully processes night audit for checked-in bookings. Tested automatic room charge posting to guest folios, charges_posted and bookings_processed counts, balance updates after charge posting. Night audit system functional and ready for production use."
   
   - task: "Implement balance calculation logic"
     implemented: true

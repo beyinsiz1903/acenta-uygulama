@@ -4,7 +4,7 @@ import json
 from datetime import datetime, timedelta
 
 class RoomOpsAPITester:
-    def __init__(self, base_url="https://tax-plus-helper.preview.emergentagent.com"):
+    def __init__(self, base_url="https://auto-corp-rates.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.token = None

@@ -499,12 +499,23 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-4xl font-bold" style={{ fontFamily: 'Space Grotesk' }}>
-              Reservation Calendar
-            </h1>
+            <div className="flex items-center space-x-3">
+              <h1 className="text-4xl font-bold" style={{ fontFamily: 'Space Grotesk' }}>
+                Reservation Calendar
+              </h1>
+              {conflicts.length > 0 && (
+                <Badge className="bg-red-500 animate-pulse">
+                  ⚠️ {conflicts.length} Conflict{conflicts.length > 1 ? 's' : ''}
+                </Badge>
+              )}
+            </div>
             <p className="text-gray-600 mt-1">Timeline view of all bookings</p>
           </div>
           <div className="flex items-center space-x-2">
+            <Button onClick={() => setShowFindRoomDialog(true)}>
+              <Search className="w-4 h-4 mr-2" />
+              Find Room
+            </Button>
             <select
               className="border rounded-md px-3 py-2"
               value={daysToShow}
@@ -526,6 +537,30 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
             </Button>
           </div>
         </div>
+
+        {/* Conflict Alert */}
+        {conflicts.length > 0 && (
+          <Card className="border-red-500 bg-red-50">
+            <CardContent className="py-4">
+              <div className="flex items-start space-x-3">
+                <AlertCircle className="w-6 h-6 text-red-600 flex-shrink-0" />
+                <div className="flex-1">
+                  <h3 className="font-bold text-red-900 mb-2">⚠️ Overbooking Detected!</h3>
+                  <div className="space-y-2">
+                    {conflicts.map((conflict, idx) => (
+                      <div key={idx} className="text-sm text-red-800 bg-white rounded p-2">
+                        <strong>Room {conflict.room_number}:</strong> {conflict.guest1} and {conflict.guest2} 
+                        {' '}have overlapping reservations from{' '}
+                        {new Date(conflict.overlap_start).toLocaleDateString()} to{' '}
+                        {new Date(conflict.overlap_end).toLocaleDateString()}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Occupancy Bar */}
         <Card>

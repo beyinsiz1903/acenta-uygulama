@@ -4435,6 +4435,9 @@ def main():
     # Test Security, Roles & Audit System (NEW FUNCTIONALITY)
     tester.test_security_roles_audit_system()
     
+    # Test Channel Manager & RMS System (NEW FUNCTIONALITY)
+    tester.test_channel_manager_rms_system()
+    
     # Test multi-tenant isolation
     tester.test_multi_tenant_isolation()
     

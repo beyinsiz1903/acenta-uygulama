@@ -250,15 +250,18 @@ backend:
   
   - task: "Implement balance calculation logic"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "calculate_folio_balance() function calculates charges - payments, excludes voided charges"
+      - working: true
+        agent: "testing"
+        comment: "✅ COMPREHENSIVE TESTING COMPLETED - Balance calculation logic working perfectly. calculate_folio_balance() function: Correctly calculates total charges - total payments, properly excludes voided charges from calculation, handles multiple charge categories and payment types. Tested scenarios: room charge (100) + food charge (50) + minibar charge (15) - prepayment (50) - interim payment (100) = 15.0 balance. Voided charges correctly excluded from balance. All balance calculations accurate."
   
   - task: "Create Company model and CompanyCreate pydantic model"
     implemented: true

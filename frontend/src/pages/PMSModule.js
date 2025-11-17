@@ -96,8 +96,24 @@ const PMSModule = ({ user, tenant, onLogout }) => {
     charge_type: 'food', description: '', amount: 0, quantity: 1
   });
 
+  const [newFolioCharge, setNewFolioCharge] = useState({
+    charge_category: 'room',
+    description: '',
+    amount: 0,
+    quantity: 1,
+    auto_calculate_tax: false
+  });
+
   const [newPayment, setNewPayment] = useState({
     amount: 0, method: 'card', reference: '', notes: ''
+  });
+
+  const [newFolioPayment, setNewFolioPayment] = useState({
+    amount: 0,
+    method: 'card',
+    payment_type: 'interim',
+    reference: '',
+    notes: ''
   });
 
   const [newHKTask, setNewHKTask] = useState({

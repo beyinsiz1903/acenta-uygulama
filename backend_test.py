@@ -1032,6 +1032,311 @@ class RoomOpsAPITester:
         
         return company_id
 
+    def test_corporate_bookings(self, company_id):
+        """Test corporate booking functionality with rate overrides"""
+        print("\n📋 Testing Corporate Bookings...")
+        
+        if not company_id or not self.created_resources['rooms'] or not self.created_resources['guests']:
+            print("   ⚠️ Skipping corporate booking tests - missing prerequisites")
+            return
+        
+        # Test 6: Create Booking with Corporate Features
+        print("\n📋 Test 6: Create Corporate Booking")
+        corporate_booking_data = {
+            "guest_id": self.created_resources['guests'][0],
+            "room_id": self.created_resources['rooms'][0],
+            "check_in": (datetime.now() + timedelta(days=1)).isoformat(),
+            "check_out": (datetime.now() + timedelta(days=3)).isoformat(),
+            "adults": 2,
+            "children": 1,
+            "children_ages": [5],
+            "guests_count": 3,
+            "company_id": company_id,
+            "contracted_rate": "corp_std",
+            "rate_type": "corporate",
+            "market_segment": "corporate",
+            "cancellation_policy": "h48",
+            "billing_address": "123 Main St, Istanbul",
+            "billing_tax_number": "1234567890",
+            "billing_contact_person": "John Doe",
+            "base_rate": 100.0,
+            "total_amount": 100.0,
+            "channel": "direct"
+        }
+        
+        success, booking_response = self.run_test(
+            "Create Corporate Booking",
+            "POST",
+            "pms/bookings",
+            200,
+            data=corporate_booking_data
+        )
+        
+        if success and 'id' in booking_response:
+            self.created_resources['bookings'].append(booking_response['id'])
+            
+            # Verify corporate fields
+            if (booking_response.get('adults') == 2 and 
+                booking_response.get('children') == 1 and 
+                booking_response.get('children_ages') == [5] and
+                booking_response.get('company_id') == company_id and
+                booking_response.get('contracted_rate') == 'corp_std'):
+                print("   ✅ Corporate booking fields verified")
+                self.tests_passed += 1
+            else:
+                print("   ❌ Corporate booking fields verification failed")
+            self.tests_run += 1
+        
+        # Test 7: Create Booking with Rate Override (Automatic Logging)
+        print("\n📋 Test 7: Create Booking with Rate Override")
+        override_booking_data = {
+            "guest_id": self.created_resources['guests'][0],
+            "room_id": self.created_resources['rooms'][0],
+            "check_in": (datetime.now() + timedelta(days=5)).isoformat(),
+            "check_out": (datetime.now() + timedelta(days=7)).isoformat(),
+            "adults": 2,
+            "children": 0,
+            "children_ages": [],
+            "guests_count": 2,
+            "company_id": company_id,
+            "contracted_rate": "corp_std",
+            "rate_type": "corporate",
+            "market_segment": "corporate",
+            "cancellation_policy": "h48",
+            "billing_address": "123 Main St, Istanbul",
+            "billing_tax_number": "1234567890",
+            "billing_contact_person": "John Doe",
+            "base_rate": 150.0,  # Base rate
+            "total_amount": 120.0,  # Discounted rate
+            "override_reason": "VIP customer discount",
+            "channel": "direct"
+        }
+        
+        success, override_booking_response = self.run_test(
+            "Create Booking with Rate Override",
+            "POST",
+            "pms/bookings",
+            200,
+            data=override_booking_data
+        )
+        
+        override_booking_id = None
+        if success and 'id' in override_booking_response:
+            override_booking_id = override_booking_response['id']
+            self.created_resources['bookings'].append(override_booking_id)
+            
+            # Test 8: Verify Override Log was Created
+            print("\n📋 Test 8: Verify Override Log Creation")
+            success, override_logs = self.run_test(
+                "Get Override Logs",
+                "GET",
+                f"bookings/{override_booking_id}/override-logs",
+                200
+            )
+            
+            if success and len(override_logs) > 0:
+                log = override_logs[0]
+                if (log.get('base_rate') == 150.0 and 
+                    log.get('new_rate') == 120.0 and 
+                    log.get('override_reason') == 'VIP customer discount'):
+                    print("   ✅ Override log created and verified")
+                    self.tests_passed += 1
+                else:
+                    print("   ❌ Override log data incorrect")
+                    print(f"      Expected: base_rate=150.0, new_rate=120.0, reason='VIP customer discount'")
+                    print(f"      Got: base_rate={log.get('base_rate')}, new_rate={log.get('new_rate')}, reason='{log.get('override_reason')}'")
+            else:
+                print("   ❌ Override log not found")
+            self.tests_run += 1
+            
+            # Test 9: Create Manual Rate Override
+            print("\n📋 Test 9: Create Manual Rate Override")
+            success, manual_override = self.run_test(
+                "Create Manual Rate Override",
+                "POST",
+                f"bookings/{override_booking_id}/override?new_rate=110.0&override_reason=Manager approval",
+                200
+            )
+            
+            if success:
+                # Verify booking total was updated
+                success, updated_booking = self.run_test(
+                    "Verify Booking Rate Updated",
+                    "GET",
+                    f"pms/bookings",
+                    200
+                )
+                
+                if success:
+                    # Find our booking in the list
+                    target_booking = None
+                    for booking in updated_booking:
+                        if booking.get('id') == override_booking_id:
+                            target_booking = booking
+                            break
+                    
+                    if target_booking and target_booking.get('total_amount') == 110.0:
+                        print("   ✅ Manual override applied and booking updated")
+                        self.tests_passed += 1
+                    else:
+                        print("   ❌ Manual override failed - booking not updated")
+                else:
+                    print("   ❌ Could not verify booking update")
+                self.tests_run += 1
+
+    def test_edge_cases(self, company_id):
+        """Test edge cases for corporate bookings"""
+        print("\n📋 Testing Edge Cases...")
+        
+        if not company_id or not self.created_resources['rooms'] or not self.created_resources['guests']:
+            print("   ⚠️ Skipping edge case tests - missing prerequisites")
+            return
+        
+        # Test 10: Edge Case - Children with Ages
+        print("\n📋 Test 10: Edge Case - Multiple Children with Ages")
+        children_booking_data = {
+            "guest_id": self.created_resources['guests'][0],
+            "room_id": self.created_resources['rooms'][0],
+            "check_in": (datetime.now() + timedelta(days=10)).isoformat(),
+            "check_out": (datetime.now() + timedelta(days=12)).isoformat(),
+            "adults": 2,
+            "children": 3,
+            "children_ages": [4, 7, 10],
+            "guests_count": 5,
+            "company_id": company_id,
+            "contracted_rate": "corp_std",
+            "rate_type": "corporate",
+            "market_segment": "corporate",
+            "cancellation_policy": "h48",
+            "billing_address": "123 Main St, Istanbul",
+            "billing_tax_number": "1234567890",
+            "billing_contact_person": "John Doe",
+            "base_rate": 200.0,
+            "total_amount": 200.0,
+            "channel": "direct"
+        }
+        
+        success, children_booking = self.run_test(
+            "Create Booking with Multiple Children",
+            "POST",
+            "pms/bookings",
+            200,
+            data=children_booking_data
+        )
+        
+        if success and 'id' in children_booking:
+            if (children_booking.get('children') == 3 and 
+                children_booking.get('children_ages') == [4, 7, 10] and
+                children_booking.get('guests_count') == 5):
+                print("   ✅ Multiple children booking verified")
+                self.tests_passed += 1
+            else:
+                print("   ❌ Multiple children booking verification failed")
+            self.tests_run += 1
+        
+        # Test 11: Edge Case - No Children
+        print("\n📋 Test 11: Edge Case - No Children")
+        no_children_booking_data = {
+            "guest_id": self.created_resources['guests'][0],
+            "room_id": self.created_resources['rooms'][0],
+            "check_in": (datetime.now() + timedelta(days=15)).isoformat(),
+            "check_out": (datetime.now() + timedelta(days=17)).isoformat(),
+            "adults": 2,
+            "children": 0,
+            "children_ages": [],
+            "guests_count": 2,
+            "company_id": company_id,
+            "contracted_rate": "corp_std",
+            "rate_type": "corporate",
+            "market_segment": "corporate",
+            "cancellation_policy": "h48",
+            "billing_address": "123 Main St, Istanbul",
+            "billing_tax_number": "1234567890",
+            "billing_contact_person": "John Doe",
+            "base_rate": 180.0,
+            "total_amount": 180.0,
+            "channel": "direct"
+        }
+        
+        success, no_children_booking = self.run_test(
+            "Create Booking with No Children",
+            "POST",
+            "pms/bookings",
+            200,
+            data=no_children_booking_data
+        )
+        
+        if success and 'id' in no_children_booking:
+            if (no_children_booking.get('children') == 0 and 
+                no_children_booking.get('children_ages') == [] and
+                no_children_booking.get('guests_count') == 2):
+                print("   ✅ No children booking verified")
+                self.tests_passed += 1
+            else:
+                print("   ❌ No children booking verification failed")
+            self.tests_run += 1
+        
+        # Test 12: Create Company with Pending Status (Quick-create scenario)
+        print("\n📋 Test 12: Create Company with Pending Status")
+        pending_company_data = {
+            "name": "Quick Created Corp",
+            "corporate_code": "QUICK01",
+            "status": "pending"
+        }
+        
+        success, pending_company = self.run_test(
+            "Create Pending Company",
+            "POST",
+            "companies",
+            200,
+            data=pending_company_data
+        )
+        
+        if success and 'id' in pending_company:
+            if pending_company.get('status') == 'pending':
+                print("   ✅ Pending company created successfully")
+                self.tests_passed += 1
+                self.created_resources['companies'].append(pending_company['id'])
+            else:
+                print("   ❌ Pending company status incorrect")
+        else:
+            print("   ❌ Pending company creation failed")
+        self.tests_run += 1
+        
+        # Test 13: Test Enum Values
+        print("\n📋 Test 13: Test Enum Values")
+        enum_test_data = {
+            "name": "Enum Test Corp",
+            "corporate_code": "ENUM01",
+            "contracted_rate": "corp_pref",  # Different contracted rate
+            "default_rate_type": "government",  # Different rate type
+            "default_market_segment": "mice",  # Different market segment
+            "default_cancellation_policy": "d7",  # Different cancellation policy
+            "status": "active"
+        }
+        
+        success, enum_company = self.run_test(
+            "Create Company with Different Enum Values",
+            "POST",
+            "companies",
+            200,
+            data=enum_test_data
+        )
+        
+        if success and 'id' in enum_company:
+            if (enum_company.get('contracted_rate') == 'corp_pref' and
+                enum_company.get('default_rate_type') == 'government' and
+                enum_company.get('default_market_segment') == 'mice' and
+                enum_company.get('default_cancellation_policy') == 'd7'):
+                print("   ✅ Enum values verified")
+                self.tests_passed += 1
+                self.created_resources['companies'].append(enum_company['id'])
+            else:
+                print("   ❌ Enum values verification failed")
+        else:
+            print("   ❌ Enum company creation failed")
+        self.tests_run += 1
+
 def main():
     print("🏨 Starting RoomOps Platform API Testing...")
     print("=" * 60)

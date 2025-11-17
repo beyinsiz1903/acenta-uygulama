@@ -2033,11 +2033,190 @@ async def update_housekeeping_task(task_id: str, status: Optional[str] = None, a
 
 @api_router.get("/housekeeping/room-status")
 async def get_room_status_board(current_user: User = Depends(get_current_user)):
+    """Get comprehensive room status board"""
     rooms = await db.rooms.find({'tenant_id': current_user.tenant_id}, {'_id': 0}).to_list(1000)
     status_counts = {s: 0 for s in ['available', 'occupied', 'dirty', 'cleaning', 'inspected', 'maintenance', 'out_of_order']}
     for room in rooms:
         status_counts[room['status']] += 1
     return {'rooms': rooms, 'status_counts': status_counts, 'total_rooms': len(rooms)}
+
+@api_router.get("/housekeeping/due-out")
+async def get_due_out_rooms(current_user: User = Depends(get_current_user)):
+    """Get rooms with guests checking out today"""
+    today = datetime.now(timezone.utc).date()
+    tomorrow = today + timedelta(days=1)
+    
+    # Find bookings checking out today
+    bookings = await db.bookings.find({
+        'tenant_id': current_user.tenant_id,
+        'status': 'checked_in'
+    }).to_list(1000)
+    
+    due_out_rooms = []
+    for booking in bookings:
+        checkout_date = datetime.fromisoformat(booking['check_out']).date()
+        if checkout_date == today or checkout_date == tomorrow:
+            room = await db.rooms.find_one({'id': booking['room_id']}, {'_id': 0})
+            guest = await db.guests.find_one({'id': booking['guest_id']}, {'_id': 0})
+            
+            due_out_rooms.append({
+                'room_number': room['room_number'] if room else 'N/A',
+                'room_type': room['room_type'] if room else 'N/A',
+                'guest_name': guest['name'] if guest else 'N/A',
+                'checkout_date': booking['check_out'],
+                'booking_id': booking['id'],
+                'is_today': checkout_date == today
+            })
+    
+    return {
+        'due_out_rooms': due_out_rooms,
+        'count': len(due_out_rooms)
+    }
+
+@api_router.get("/housekeeping/stayovers")
+async def get_stayover_rooms(current_user: User = Depends(get_current_user)):
+    """Get rooms with guests staying beyond today"""
+    today = datetime.now(timezone.utc).date()
+    
+    # Find checked-in bookings not checking out today
+    bookings = await db.bookings.find({
+        'tenant_id': current_user.tenant_id,
+        'status': 'checked_in'
+    }).to_list(1000)
+    
+    stayover_rooms = []
+    for booking in bookings:
+        checkout_date = datetime.fromisoformat(booking['check_out']).date()
+        if checkout_date > today:
+            room = await db.rooms.find_one({'id': booking['room_id']}, {'_id': 0})
+            guest = await db.guests.find_one({'id': booking['guest_id']}, {'_id': 0})
+            
+            nights_remaining = (checkout_date - today).days
+            
+            stayover_rooms.append({
+                'room_number': room['room_number'] if room else 'N/A',
+                'room_type': room['room_type'] if room else 'N/A',
+                'guest_name': guest['name'] if guest else 'N/A',
+                'checkout_date': booking['check_out'],
+                'nights_remaining': nights_remaining,
+                'booking_id': booking['id']
+            })
+    
+    return {
+        'stayover_rooms': stayover_rooms,
+        'count': len(stayover_rooms)
+    }
+
+@api_router.get("/housekeeping/arrivals")
+async def get_arrival_rooms(current_user: User = Depends(get_current_user)):
+    """Get rooms with guests arriving today"""
+    today = datetime.now(timezone.utc).date()
+    
+    # Find bookings checking in today
+    bookings = await db.bookings.find({
+        'tenant_id': current_user.tenant_id,
+        'status': {'$in': ['confirmed', 'guaranteed', 'pending']}
+    }).to_list(1000)
+    
+    arrival_rooms = []
+    for booking in bookings:
+        checkin_date = datetime.fromisoformat(booking['check_in']).date()
+        if checkin_date == today:
+            room = await db.rooms.find_one({'id': booking['room_id']}, {'_id': 0})
+            guest = await db.guests.find_one({'id': booking['guest_id']}, {'_id': 0})
+            
+            arrival_rooms.append({
+                'room_number': room['room_number'] if room else 'N/A',
+                'room_type': room['room_type'] if room else 'N/A',
+                'room_status': room['status'] if room else 'unknown',
+                'guest_name': guest['name'] if guest else 'N/A',
+                'checkin_time': booking.get('check_in'),
+                'booking_id': booking['id'],
+                'booking_status': booking['status'],
+                'ready': room['status'] in ['available', 'inspected'] if room else False
+            })
+    
+    return {
+        'arrival_rooms': arrival_rooms,
+        'count': len(arrival_rooms),
+        'ready_count': sum(1 for r in arrival_rooms if r['ready'])
+    }
+
+@api_router.put("/housekeeping/room/{room_id}/status")
+async def update_room_status_hk(
+    room_id: str,
+    new_status: str,
+    notes: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Quick room status update from housekeeping"""
+    valid_statuses = ['available', 'occupied', 'dirty', 'cleaning', 'inspected', 'maintenance', 'out_of_order']
+    
+    if new_status not in valid_statuses:
+        raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {valid_statuses}")
+    
+    room = await db.rooms.find_one({
+        'id': room_id,
+        'tenant_id': current_user.tenant_id
+    })
+    
+    if not room:
+        raise HTTPException(status_code=404, detail="Room not found")
+    
+    update_data = {
+        'status': new_status,
+        'updated_at': datetime.now(timezone.utc).isoformat()
+    }
+    
+    if notes:
+        update_data['hk_notes'] = notes
+    
+    await db.rooms.update_one(
+        {'id': room_id},
+        {'$set': update_data}
+    )
+    
+    return {
+        'message': f'Room {room["room_number"]} status updated to {new_status}',
+        'room_number': room['room_number'],
+        'new_status': new_status
+    }
+
+@api_router.post("/housekeeping/assign")
+async def assign_housekeeping_task(
+    room_id: str,
+    assigned_to: str,
+    task_type: str = 'cleaning',
+    priority: str = 'normal',
+    notes: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Assign housekeeping task to staff"""
+    room = await db.rooms.find_one({
+        'id': room_id,
+        'tenant_id': current_user.tenant_id
+    })
+    
+    if not room:
+        raise HTTPException(status_code=404, detail="Room not found")
+    
+    task = HousekeepingTask(
+        tenant_id=current_user.tenant_id,
+        room_id=room_id,
+        assigned_to=assigned_to,
+        task_type=task_type,
+        priority=priority,
+        notes=notes or f"{task_type.title()} for Room {room['room_number']}"
+    )
+    
+    task_dict = task.model_dump()
+    task_dict['created_at'] = task_dict['created_at'].isoformat()
+    await db.housekeeping_tasks.insert_one(task_dict)
+    
+    return {
+        'message': f'Task assigned to {assigned_to}',
+        'task': task
+    }
 
 # ============= CHANNEL MANAGER =============
 

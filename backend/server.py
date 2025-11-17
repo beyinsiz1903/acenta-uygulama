@@ -53,12 +53,52 @@ security = HTTPBearer()
 # ============= ENUMS =============
 
 class UserRole(str, Enum):
-    ADMIN = "admin"
-    MANAGER = "manager"
-    FRONT_DESK = "front_desk"
-    HOUSEKEEPING = "housekeeping"
-    STAFF = "staff"
-    GUEST = "guest"
+    ADMIN = "admin"  # Full access - Owner/IT
+    SUPERVISOR = "supervisor"  # Management oversight
+    FRONT_DESK = "front_desk"  # Reservations, check-in/out
+    HOUSEKEEPING = "housekeeping"  # Room status, tasks
+    SALES = "sales"  # Corporate accounts, contracts
+    FINANCE = "finance"  # Accounting, invoices, AR
+    STAFF = "staff"  # Limited access
+    GUEST = "guest"  # Guest portal
+
+class Permission(str, Enum):
+    # Booking permissions
+    VIEW_BOOKINGS = "view_bookings"
+    CREATE_BOOKING = "create_booking"
+    EDIT_BOOKING = "edit_booking"
+    DELETE_BOOKING = "delete_booking"
+    CHECKIN = "checkin"
+    CHECKOUT = "checkout"
+    
+    # Folio permissions
+    VIEW_FOLIO = "view_folio"
+    POST_CHARGE = "post_charge"
+    POST_PAYMENT = "post_payment"
+    VOID_CHARGE = "void_charge"
+    TRANSFER_FOLIO = "transfer_folio"
+    CLOSE_FOLIO = "close_folio"
+    OVERRIDE_RATE = "override_rate"
+    
+    # Company permissions
+    VIEW_COMPANIES = "view_companies"
+    CREATE_COMPANY = "create_company"
+    EDIT_COMPANY = "edit_company"
+    
+    # Housekeeping permissions
+    VIEW_HK_BOARD = "view_hk_board"
+    UPDATE_ROOM_STATUS = "update_room_status"
+    ASSIGN_TASK = "assign_task"
+    
+    # Reports permissions
+    VIEW_REPORTS = "view_reports"
+    VIEW_FINANCIAL_REPORTS = "view_financial_reports"
+    EXPORT_DATA = "export_data"
+    
+    # Admin permissions
+    MANAGE_USERS = "manage_users"
+    MANAGE_ROOMS = "manage_rooms"
+    SYSTEM_SETTINGS = "system_settings"
 
 class RoomStatus(str, Enum):
     AVAILABLE = "available"

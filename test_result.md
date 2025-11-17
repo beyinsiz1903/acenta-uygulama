@@ -871,15 +871,18 @@ frontend:
 
   - task: "Create Additional Tax Dialog UI"
     implemented: true
-    working: "NA"
+    working: false
     file: "/app/frontend/src/pages/InvoiceModule.js"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Created dialog with tax type selection (ÖTV, Tevkifat, Konaklama, ÖİV) and rate/amount inputs"
+      - working: false
+        agent: "testing"
+        comment: "❌ CRITICAL: Cannot test additional tax dialog UI due to authentication system failure. Users cannot access Invoice module to test Turkish tax system features (ÖTV, Tevkifat, etc.)."
 
   - task: "Channel Manager - Channel Connections"
     implemented: true

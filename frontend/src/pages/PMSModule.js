@@ -50,7 +50,42 @@ const PMSModule = ({ user, tenant, onLogout }) => {
   });
 
   const [newBooking, setNewBooking] = useState({
-    guest_id: '', room_id: '', check_in: '', check_out: '', guests_count: 1, total_amount: 0, channel: 'direct'
+    guest_id: '',
+    room_id: '',
+    check_in: '',
+    check_out: '',
+    adults: 1,
+    children: 0,
+    children_ages: [],
+    guests_count: 1,
+    total_amount: 0,
+    base_rate: 0,
+    channel: 'direct',
+    company_id: '',
+    contracted_rate: '',
+    rate_type: '',
+    market_segment: '',
+    cancellation_policy: '',
+    billing_address: '',
+    billing_tax_number: '',
+    billing_contact_person: '',
+    override_reason: ''
+  });
+
+  const [newCompany, setNewCompany] = useState({
+    name: '',
+    corporate_code: '',
+    tax_number: '',
+    billing_address: '',
+    contact_person: '',
+    contact_email: '',
+    contact_phone: '',
+    contracted_rate: '',
+    default_rate_type: '',
+    default_market_segment: '',
+    default_cancellation_policy: '',
+    payment_terms: '',
+    status: 'pending'
   });
 
   const [newCharge, setNewCharge] = useState({

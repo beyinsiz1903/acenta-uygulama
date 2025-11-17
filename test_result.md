@@ -105,8 +105,8 @@
 user_problem_statement: |
   Professional Hotel PMS - Complete Operational Suite:
   PHASE 1: Folio & Billing Engine (COMPLETED)
-  PHASE 2: Check-in / Check-out Flow (TESTING NOW)
-  PHASE 3: Housekeeping Board (PENDING)
+  PHASE 2: Check-in / Check-out Flow (COMPLETED)
+  PHASE 3: Housekeeping Board (COMPLETED)
 
 backend:
   - task: "Add Folio enums (FolioType, FolioStatus, ChargeCategory, FolioOperationType, PaymentType)"

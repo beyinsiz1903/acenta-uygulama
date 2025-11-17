@@ -17,7 +17,10 @@ import {
   Clock,
   Plus,
   TrendingUp,
-  Info
+  Info,
+  Search,
+  AlertCircle,
+  CheckCircle
 } from 'lucide-react';
 
 const ReservationCalendar = ({ user, tenant, onLogout }) => {

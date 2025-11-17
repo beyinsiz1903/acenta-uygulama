@@ -514,24 +514,44 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
                       {dateRange.map((date, idx) => {
                         const booking = getBookingForRoomOnDate(room.id, date);
                         const isStart = booking && isBookingStart(booking, date);
+                        const isDragOver = dragOverCell?.roomId === room.id && 
+                                          new Date(dragOverCell.date).toDateString() === date.toDateString();
 
                         return (
                           <div
                             key={idx}
-                            className={`w-24 flex-shrink-0 border-r relative ${
+                            className={`w-24 flex-shrink-0 border-r relative cursor-pointer hover:bg-gray-100 transition-colors ${
                               isToday(date) ? 'bg-blue-50' : ''
-                            }`}
+                            } ${isDragOver ? 'bg-green-100 border-2 border-green-500' : ''}`}
                             style={{ height: '80px' }}
+                            onClick={() => !booking && handleCellClick(room.id, date)}
+                            onDragOver={(e) => handleDragOver(e, room.id, date)}
+                            onDragLeave={handleDragLeave}
+                            onDrop={(e) => handleDrop(e, room.id, date)}
                           >
+                            {/* Empty cell indicator */}
+                            {!booking && (
+                              <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                                <Plus className="w-6 h-6 text-gray-400" />
+                              </div>
+                            )}
+                            
+                            {/* Booking bar */}
                             {isStart && booking && (
                               <div
+                                draggable
+                                onDragStart={(e) => handleDragStart(e, booking)}
+                                onDragEnd={handleDragEnd}
+                                onDoubleClick={() => handleBookingDoubleClick(booking)}
                                 className={`absolute top-2 left-1 h-16 rounded ${getStatusColor(
                                   booking.status
-                                )} text-white text-xs p-2 overflow-hidden shadow-md hover:shadow-lg transition-shadow cursor-pointer z-20`}
+                                )} text-white text-xs p-2 overflow-hidden shadow-md hover:shadow-lg transition-all cursor-move z-20 ${
+                                  draggingBooking?.id === booking.id ? 'opacity-50' : ''
+                                }`}
                                 style={{
                                   width: `${calculateBookingSpan(booking, currentDate) * 96 - 8}px`,
                                 }}
-                                title={`${booking.guest_name || 'Guest'} - ${getStatusLabel(booking.status)}`}
+                                title={`Double-click for details | Drag to move\n${booking.guest_name || 'Guest'} - ${getStatusLabel(booking.status)}`}
                               >
                                 <div className="font-semibold truncate">
                                   {booking.guest_name || 'Guest'}

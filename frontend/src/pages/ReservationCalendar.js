@@ -173,27 +173,76 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
     
     if (!draggingBooking) return;
     
+    // Check if actually moving to different room or date
+    const oldRoomId = draggingBooking.room_id;
+    const oldDate = new Date(draggingBooking.check_in);
+    const isSameRoom = oldRoomId === newRoomId;
+    const isSameDate = oldDate.toDateString() === newDate.toDateString();
+    
+    if (isSameRoom && isSameDate) {
+      setDraggingBooking(null);
+      return;
+    }
+    
     const daysDiff = Math.ceil((new Date(draggingBooking.check_out) - new Date(draggingBooking.check_in)) / (1000 * 60 * 60 * 24));
     
     const newCheckIn = new Date(newDate);
     const newCheckOut = new Date(newDate);
     newCheckOut.setDate(newCheckOut.getDate() + daysDiff);
     
+    // Store move data and show reason dialog
+    const oldRoom = rooms.find(r => r.id === oldRoomId);
+    const newRoom = rooms.find(r => r.id === newRoomId);
+    
+    setMoveData({
+      booking: draggingBooking,
+      oldRoom: oldRoom?.room_number,
+      newRoom: newRoom?.room_number,
+      oldCheckIn: draggingBooking.check_in,
+      newCheckIn: newCheckIn.toISOString().split('T')[0],
+      newCheckOut: newCheckOut.toISOString().split('T')[0],
+      newRoomId: newRoomId
+    });
+    
+    setShowMoveReasonDialog(true);
+    setDraggingBooking(null);
+  };
+
+  const handleConfirmMove = async () => {
+    if (!moveReason.trim()) {
+      toast.error('Please provide a reason for the room move');
+      return;
+    }
+    
     try {
-      await axios.put(`/pms/bookings/${draggingBooking.id}`, {
-        ...draggingBooking,
-        room_id: newRoomId,
-        check_in: newCheckIn.toISOString().split('T')[0],
-        check_out: newCheckOut.toISOString().split('T')[0]
+      // Update booking with new room and dates
+      await axios.put(`/pms/bookings/${moveData.booking.id}`, {
+        ...moveData.booking,
+        room_id: moveData.newRoomId,
+        check_in: moveData.newCheckIn,
+        check_out: moveData.newCheckOut
       });
       
-      toast.success('Booking moved successfully!');
+      // Log room move history
+      await axios.post('/pms/room-move-history', {
+        booking_id: moveData.booking.id,
+        old_room: moveData.oldRoom,
+        new_room: moveData.newRoom,
+        old_check_in: moveData.oldCheckIn,
+        new_check_in: moveData.newCheckIn,
+        reason: moveReason,
+        moved_by: user.name,
+        timestamp: new Date().toISOString()
+      }).catch(err => console.log('History logging failed:', err));
+      
+      toast.success(`Booking moved from ${moveData.oldRoom} to ${moveData.newRoom}!`);
+      setShowMoveReasonDialog(false);
+      setMoveReason('');
+      setMoveData(null);
       loadCalendarData();
     } catch (error) {
       toast.error('Failed to move booking');
     }
-    
-    setDraggingBooking(null);
   };
 
   const handleDragEnd = () => {

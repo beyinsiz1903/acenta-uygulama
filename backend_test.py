@@ -1642,7 +1642,6 @@ class RoomOpsAPITester:
         
         # Post prepayment
         prepayment_data = {
-            "folio_id": folio_id,
             "amount": 50.0,
             "method": "card",
             "payment_type": "prepayment"

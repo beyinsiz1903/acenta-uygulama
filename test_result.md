@@ -733,7 +733,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "All enhanced check-in/check-out flow tests completed"
+    - "All housekeeping board tests completed"
   stuck_tasks: []
   test_all: true
   test_priority: "sequential"

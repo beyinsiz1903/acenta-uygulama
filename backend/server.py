@@ -2371,13 +2371,7 @@ async def get_daily_flash_report(date_str: Optional[str] = None, current_user: U
         'check_out': {'$gte': start_of_day.isoformat(), '$lte': end_of_day.isoformat()}
     })
     
-    # Get all bookings for the day for revenue calculation
-    bookings = await db.bookings.find({
-        'tenant_id': current_user.tenant_id,
-        'status': {'$in': ['checked_in', 'checked_out']},
-        'check_in': {'$lte': end_of_day.isoformat()},
-        'check_out': {'$gte': start_of_day.isoformat()}
-    }).to_list(1000)
+    # Note: Revenue is calculated from folio charges, not bookings directly
     
     # Calculate revenue from folio charges posted today
     charges = await db.folio_charges.find({

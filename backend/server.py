@@ -165,6 +165,26 @@ class ChannelType(str, Enum):
     AIRBNB = "airbnb"
     AGODA = "agoda"
     OWN_WEBSITE = "own_website"
+    HOTELS_COM = "hotels_com"
+    TRIP_ADVISOR = "trip_advisor"
+
+class ChannelStatus(str, Enum):
+    ACTIVE = "active"
+    INACTIVE = "inactive"
+    ERROR = "error"
+    SYNCING = "syncing"
+
+class MappingStatus(str, Enum):
+    MAPPED = "mapped"
+    UNMAPPED = "unmapped"
+    CONFLICT = "conflict"
+    NEEDS_REVIEW = "needs_review"
+
+class PricingStrategy(str, Enum):
+    STATIC = "static"
+    DYNAMIC = "dynamic"
+    COMPETITIVE = "competitive"
+    OCCUPANCY_BASED = "occupancy_based"
 
 class ContractedRateType(str, Enum):
     CORP_STD = "corp_std"  # Standard Corporate

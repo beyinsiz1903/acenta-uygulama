@@ -643,13 +643,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Test check-in with room status validation"
-    - "Test check-in with auto folio creation"
-    - "Test check-in already checked-in validation"
-    - "Test check-out with balance validation"
-    - "Test check-out with auto folio closure"
-    - "Test check-out with outstanding balance error"
-    - "Test check-out housekeeping task creation"
+    - "All enhanced check-in/check-out flow tests completed"
   stuck_tasks: []
   test_all: true
   test_priority: "sequential"

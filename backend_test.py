@@ -1553,7 +1553,6 @@ class RoomOpsAPITester:
         
         # Post room charge
         room_charge_data = {
-            "folio_id": folio_id,
             "charge_category": "room",
             "description": "Room 101 - Night 1",
             "amount": 100.0,

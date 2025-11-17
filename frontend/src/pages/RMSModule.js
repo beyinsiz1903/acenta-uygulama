@@ -250,7 +250,9 @@ const RMSModule = ({ user, tenant, onLogout }) => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {suggestions.map((suggestion) => {
-              const trend = getPriceTrend(suggestion.current_rate, suggestion.suggested_rate);
+              const currentRate = suggestion.current_rate || suggestion.current_price || 0;
+              const suggestedRate = suggestion.suggested_rate || suggestion.suggested_price || 0;
+              const trend = getPriceTrend(currentRate, suggestedRate);
               const TrendIcon = trend.icon;
               
               return (

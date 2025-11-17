@@ -626,7 +626,7 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
         return User(**user_doc)
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired")
-    except Exception as e:
+    except Exception:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
 
 def generate_qr_code(data: str) -> str:
@@ -1544,9 +1544,8 @@ async def shutdown_db_client():
     client.close()
 from pydantic import BaseModel, Field, ConfigDict, EmailStr
 from typing import List, Optional
-from datetime import datetime, timezone
+from datetime import datetime
 from enum import Enum
-import uuid
 
 # ============= ACCOUNTING ENUMS =============
 

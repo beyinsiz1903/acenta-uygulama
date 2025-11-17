@@ -61,19 +61,153 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
   const loadCalendarData = async () => {
     setLoading(true);
     try {
-      const [roomsRes, bookingsRes] = await Promise.all([
+      const [roomsRes, bookingsRes, guestsRes, companiesRes] = await Promise.all([
         axios.get('/pms/rooms'),
-        axios.get('/pms/bookings')
+        axios.get('/pms/bookings'),
+        axios.get('/pms/guests').catch(() => ({ data: [] })),
+        axios.get('/companies').catch(() => ({ data: [] }))
       ]);
 
       setRooms(roomsRes.data || []);
       setBookings(bookingsRes.data || []);
+      setGuests(guestsRes.data || []);
+      setCompanies(companiesRes.data || []);
     } catch (error) {
       console.error('Failed to load calendar data:', error);
       toast.error('Failed to load calendar data');
     } finally {
       setLoading(false);
     }
+  };
+
+  // Handle cell click - Open new booking dialog
+  const handleCellClick = (roomId, date) => {
+    const room = rooms.find(r => r.id === roomId);
+    if (!room) return;
+    
+    setSelectedRoom(room);
+    setSelectedDate(date);
+    
+    const checkInDate = new Date(date);
+    const checkOutDate = new Date(date);
+    checkOutDate.setDate(checkOutDate.getDate() + 1);
+    
+    setNewBooking({
+      guest_id: '',
+      room_id: roomId,
+      check_in: checkInDate.toISOString().split('T')[0],
+      check_out: checkOutDate.toISOString().split('T')[0],
+      guests_count: 2,
+      adults: 2,
+      children: 0,
+      children_ages: [],
+      total_amount: room.base_price || 100,
+      status: 'confirmed'
+    });
+    
+    setShowNewBookingDialog(true);
+  };
+
+  // Handle booking double-click - Show details
+  const handleBookingDoubleClick = (booking) => {
+    setSelectedBooking(booking);
+    setShowDetailsDialog(true);
+  };
+
+  // Handle new booking submit
+  const handleCreateBooking = async (e) => {
+    e.preventDefault();
+    
+    if (!newBooking.guest_id) {
+      toast.error('Please select a guest');
+      return;
+    }
+    
+    try {
+      await axios.post('/pms/bookings', newBooking);
+      toast.success('Booking created successfully!');
+      setShowNewBookingDialog(false);
+      loadCalendarData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to create booking');
+    }
+  };
+
+  // Drag & Drop handlers
+  const handleDragStart = (e, booking) => {
+    setDraggingBooking(booking);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e, roomId, date) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDragOverCell({ roomId, date: date.toISOString() });
+  };
+
+  const handleDragLeave = () => {
+    setDragOverCell(null);
+  };
+
+  const handleDrop = async (e, newRoomId, newDate) => {
+    e.preventDefault();
+    setDragOverCell(null);
+    
+    if (!draggingBooking) return;
+    
+    const daysDiff = Math.ceil((new Date(draggingBooking.check_out) - new Date(draggingBooking.check_in)) / (1000 * 60 * 60 * 24));
+    
+    const newCheckIn = new Date(newDate);
+    const newCheckOut = new Date(newDate);
+    newCheckOut.setDate(newCheckOut.getDate() + daysDiff);
+    
+    try {
+      await axios.put(`/pms/bookings/${draggingBooking.id}`, {
+        ...draggingBooking,
+        room_id: newRoomId,
+        check_in: newCheckIn.toISOString().split('T')[0],
+        check_out: newCheckOut.toISOString().split('T')[0]
+      });
+      
+      toast.success('Booking moved successfully!');
+      loadCalendarData();
+    } catch (error) {
+      toast.error('Failed to move booking');
+    }
+    
+    setDraggingBooking(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggingBooking(null);
+    setDragOverCell(null);
+  };
+
+  // Calculate occupancy for each date
+  const getOccupancyForDate = (date) => {
+    const occupiedCount = bookings.filter(b => 
+      isBookingOnDate(b, date) && b.status === 'checked_in'
+    ).length;
+    
+    return rooms.length > 0 ? Math.round((occupiedCount / rooms.length) * 100) : 0;
+  };
+
+  // Calculate forecast occupancy (next 14 days avg)
+  const getForecastOccupancy = () => {
+    const forecastDates = [];
+    const today = new Date();
+    
+    for (let i = 0; i < 14; i++) {
+      const date = new Date(today);
+      date.setDate(today.getDate() + i);
+      forecastDates.push(date);
+    }
+    
+    const avgOccupancy = forecastDates.reduce((sum, date) => {
+      return sum + getOccupancyForDate(date);
+    }, 0) / forecastDates.length;
+    
+    return Math.round(avgOccupancy);
   };
 
   // Generate date range

@@ -1031,6 +1031,55 @@ async def get_bookings(current_user: User = Depends(get_current_user)):
     bookings = await db.bookings.find({'tenant_id': current_user.tenant_id}, {'_id': 0}).to_list(1000)
     return bookings
 
+@api_router.get("/bookings/{booking_id}/override-logs", response_model=List[RateOverrideLog])
+async def get_booking_override_logs(booking_id: str, current_user: User = Depends(get_current_user)):
+    """Get all rate override logs for a specific booking."""
+    logs = await db.rate_override_logs.find({
+        'booking_id': booking_id,
+        'tenant_id': current_user.tenant_id
+    }, {'_id': 0}).sort('timestamp', -1).to_list(100)
+    return logs
+
+@api_router.post("/bookings/{booking_id}/override")
+async def create_rate_override(
+    booking_id: str,
+    new_rate: float,
+    override_reason: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Create a rate override log for an existing booking."""
+    booking = await db.bookings.find_one({
+        'id': booking_id,
+        'tenant_id': current_user.tenant_id
+    })
+    
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    
+    base_rate = booking.get('base_rate') or booking.get('total_amount')
+    
+    override_log = RateOverrideLog(
+        tenant_id=current_user.tenant_id,
+        booking_id=booking_id,
+        user_id=current_user.id,
+        user_name=current_user.name,
+        base_rate=base_rate,
+        new_rate=new_rate,
+        override_reason=override_reason
+    )
+    
+    override_dict = override_log.model_dump()
+    override_dict['timestamp'] = override_dict['timestamp'].isoformat()
+    await db.rate_override_logs.insert_one(override_dict)
+    
+    # Update booking with new rate
+    await db.bookings.update_one(
+        {'id': booking_id, 'tenant_id': current_user.tenant_id},
+        {'$set': {'total_amount': new_rate}}
+    )
+    
+    return {"message": "Rate override logged successfully", "log": override_log}
+
 @api_router.get("/pms/dashboard")
 async def get_pms_dashboard(current_user: User = Depends(get_current_user)):
     total_rooms = await db.rooms.count_documents({'tenant_id': current_user.tenant_id})

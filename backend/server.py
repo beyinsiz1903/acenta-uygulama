@@ -300,6 +300,32 @@ def has_permission(user_role: UserRole, permission: Permission) -> bool:
     """Check if a role has a specific permission"""
     return permission.value in ROLE_PERMISSIONS.get(user_role, [])
 
+async def create_audit_log(
+    tenant_id: str,
+    user: User,
+    action: str,
+    entity_type: str,
+    entity_id: str,
+    changes: Optional[dict] = None,
+    ip_address: Optional[str] = None
+):
+    """Create an audit log entry"""
+    audit = AuditLog(
+        tenant_id=tenant_id,
+        user_id=user.id,
+        user_name=user.name,
+        user_role=user.role,
+        action=action,
+        entity_type=entity_type,
+        entity_id=entity_id,
+        changes=changes,
+        ip_address=ip_address
+    )
+    
+    audit_dict = audit.model_dump()
+    audit_dict['timestamp'] = audit_dict['timestamp'].isoformat()
+    await db.audit_logs.insert_one(audit_dict)
+
 # ============= MODELS =============
 
 class Tenant(BaseModel):

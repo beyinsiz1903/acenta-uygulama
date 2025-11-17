@@ -774,27 +774,27 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
                               </div>
                             )}
                             
-                            {/* Booking bar with rate overlay */}
+                            {/* Booking bar - segment color coded */}
                             {isStart && booking && (
                               <div
                                 draggable
                                 onDragStart={(e) => handleDragStart(e, booking)}
                                 onDragEnd={handleDragEnd}
                                 onDoubleClick={() => handleBookingDoubleClick(booking)}
-                                className={`absolute top-2 left-1 rounded ${getStatusColor(
-                                  booking.status
-                                )} text-white text-xs overflow-hidden shadow-md hover:shadow-lg transition-all cursor-move z-20 group ${
+                                className={`absolute top-2 left-1 rounded ${getSegmentColor(
+                                  booking.market_segment || booking.rate_type
+                                )} text-white text-xs overflow-hidden shadow-md hover:shadow-xl transition-all cursor-move z-20 group ${
                                   draggingBooking?.id === booking.id ? 'opacity-50' : ''
                                 } ${hasConflict(room.id, date) ? 'border-4 border-red-500 animate-pulse' : ''}`}
                                 style={{
                                   width: `${calculateBookingSpan(booking, currentDate) * 96 - 8}px`,
                                   height: '70px'
                                 }}
-                                title={`Double-click for details | Drag to move\n${booking.guest_name || 'Guest'} - ${getStatusLabel(booking.status)}`}
+                                title={`Double-click for details | Drag to move\n${booking.guest_name || 'Guest'} - ${booking.market_segment || 'Standard'}`}
                               >
                                 {/* Main booking info */}
-                                <div className="p-2 h-[48px]">
-                                  <div className="font-semibold truncate">
+                                <div className="p-2 h-[48px] relative">
+                                  <div className="font-semibold truncate pr-8">
                                     {booking.guest_name || 'Guest'}
                                   </div>
                                   <div className="text-xs opacity-90 flex items-center mt-1">
@@ -807,33 +807,69 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
                                       {booking.company_name}
                                     </div>
                                   )}
-                                </div>
-                                
-                                {/* Rate overlay - shown on hover */}
-                                <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-80 text-white text-[10px] px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                  <div className="flex justify-between items-center">
-                                    <div>
-                                      <span className="font-bold">
-                                        ${booking.total_amount ? (booking.total_amount / calculateBookingSpan(booking, currentDate)).toFixed(0) : '0'}
-                                      </span>
-                                      <span className="opacity-75 ml-1">ADR</span>
-                                    </div>
-                                    {booking.rate_type && (
-                                      <div className="text-yellow-300 font-semibold uppercase">
-                                        {booking.rate_type}
+                                  
+                                  {/* Status indicators - top right */}
+                                  <div className="absolute top-1 right-1 flex space-x-1">
+                                    {getBookingStatus(booking, date) === 'arrival' && (
+                                      <div className="bg-white text-green-600 rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-bold" title="Arrival">
+                                        ↓
                                       </div>
                                     )}
-                                    {booking.market_segment && (
-                                      <div className="text-blue-300 text-[9px]">
-                                        {booking.market_segment}
+                                    {getBookingStatus(booking, date) === 'departure' && (
+                                      <div className="bg-white text-red-600 rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-bold" title="Departure">
+                                        ↑
+                                      </div>
+                                    )}
+                                    {getBookingStatus(booking, date) === 'stayover' && (
+                                      <div className="bg-white text-blue-600 rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-bold" title="Stayover">
+                                        •
                                       </div>
                                     )}
                                   </div>
                                 </div>
                                 
+                                {/* Enhanced Rate overlay - shown on hover */}
+                                <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-90 text-white text-[10px] px-2 py-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <div className="flex justify-between items-center">
+                                    <div className="flex items-baseline space-x-2">
+                                      <div>
+                                        <span className="font-bold text-lg text-yellow-300">
+                                          ${booking.total_amount ? (booking.total_amount / calculateBookingSpan(booking, currentDate)).toFixed(0) : '0'}
+                                        </span>
+                                        <span className="opacity-75 ml-1 text-[9px]">ADR</span>
+                                      </div>
+                                      {booking.base_rate && booking.base_rate !== booking.total_amount && (
+                                        <div className="text-red-300 line-through text-[9px]">
+                                          ${(booking.base_rate / calculateBookingSpan(booking, currentDate)).toFixed(0)}
+                                        </div>
+                                      )}
+                                    </div>
+                                    <div className="flex flex-col items-end space-y-0.5">
+                                      {booking.rate_type && (
+                                        <div className={`${getRateTypeInfo(booking).color} font-bold text-[9px]`}>
+                                          {getRateTypeInfo(booking).label}
+                                        </div>
+                                      )}
+                                      {booking.market_segment && (
+                                        <div className="text-blue-200 text-[8px] uppercase">
+                                          {booking.market_segment}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                  {booking.contracted_rate && (
+                                    <div className="text-[8px] text-green-300 mt-0.5">
+                                      ✓ Contracted Rate
+                                    </div>
+                                  )}
+                                </div>
+                                
+                                {/* Left border - segment indicator */}
+                                <div className="absolute left-0 top-0 bottom-0 w-1 bg-white opacity-30"></div>
+                                
                                 {/* Conflict indicator */}
                                 {hasConflict(room.id, date) && (
-                                  <div className="absolute top-0 right-0 bg-red-600 text-white text-[8px] px-1 py-0.5 rounded-bl font-bold">
+                                  <div className="absolute top-0 right-0 bg-red-600 text-white text-[8px] px-1 py-0.5 rounded-bl font-bold animate-pulse">
                                     ⚠️ CONFLICT
                                   </div>
                                 )}

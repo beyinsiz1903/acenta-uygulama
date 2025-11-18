@@ -933,16 +933,19 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
                 <div className="w-32 flex-shrink-0 p-3 border-r font-semibold">
                   Room
                 </div>
-                {dateRange.map((date, idx) => (
+                {dateRange.map((date, idx) => {
+                  const intensity = getHeatmapIntensity(date);
+                  return (
                   <div
                     key={idx}
                     className={`w-24 flex-shrink-0 p-2 border-r text-center text-sm ${
-                      isToday(date) ? 'bg-blue-50 font-bold text-blue-600' : ''
+                      isToday(date) ? 'bg-blue-50 font-bold text-blue-600' : getHeatmapColor(intensity)
                     }`}
+                    title={`Occupancy intensity: ${intensity}`}
                   >
                     <div>{formatDateWithDay(date)}</div>
                   </div>
-                ))}
+                )}))}
               </div>
 
               {/* Room Rows */}

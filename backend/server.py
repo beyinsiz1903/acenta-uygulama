@@ -623,6 +623,15 @@ class Booking(BaseModel):
     billing_address: Optional[str] = None
     billing_tax_number: Optional[str] = None
     billing_contact_person: Optional[str] = None
+    # OTA Channel fields
+    ota_channel: Optional[OTAChannel] = None
+    ota_confirmation: Optional[str] = None
+    ota_reference_id: Optional[str] = None
+    commission_pct: Optional[float] = None
+    payment_model: Optional[OTAPaymentModel] = None
+    virtual_card_provided: bool = False
+    virtual_card_number: Optional[str] = None
+    virtual_card_expiry: Optional[str] = None
     # System fields
     qr_code: Optional[str] = None
     qr_code_data: Optional[str] = None

@@ -1,10 +1,32 @@
-import requests
-import sys
-import json
-import uuid
-from datetime import datetime, timedelta, timezone
+#!/usr/bin/env python3
+"""
+Messaging Throttling Test - RETRY
+Testing messaging system rate limiting functionality
 
-class RoomOpsAPITester:
+Test Scenarios:
+1. Single Message Send (email, SMS, WhatsApp)
+2. Rate Limit Thresholds (Email: 100/hr, SMS: 50/hr, WhatsApp: 80/hr)
+3. Rapid Fire Test (10 emails rapidly)
+4. Input Validation (invalid email, phone, empty message)
+5. SMS Character Warnings (>160 characters)
+6. Rate Limit Info in responses
+
+Base URL: https://error-kontrol.preview.emergentagent.com/api
+Login: test@hotel.com / test123
+"""
+
+import requests
+import json
+import time
+from datetime import datetime
+import sys
+
+# Configuration
+BASE_URL = "https://error-kontrol.preview.emergentagent.com/api"
+LOGIN_EMAIL = "test@hotel.com"
+LOGIN_PASSWORD = "test123"
+
+class MessagingThrottlingTester:
     def __init__(self, base_url="https://error-kontrol.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"

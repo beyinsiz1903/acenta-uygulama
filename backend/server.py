@@ -4063,6 +4063,293 @@ async def get_accounting_dashboard(current_user: User = Depends(get_current_user
         'total_bank_balance': round(total_bank_balance, 2)
     }
 
+# ============= ROOM BLOCK ENDPOINTS (Out of Order / Service) =============
+
+@api_router.get("/pms/room-blocks")
+async def get_room_blocks(
+    room_id: Optional[str] = None,
+    status: Optional[str] = None,
+    from_date: Optional[str] = None,
+    to_date: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Get room blocks with optional filters"""
+    query = {'tenant_id': current_user.tenant_id}
+    
+    if room_id:
+        query['room_id'] = room_id
+    
+    if status:
+        query['status'] = status
+    
+    if from_date or to_date:
+        date_query = {}
+        if from_date:
+            date_query['$gte'] = from_date
+        if to_date:
+            date_query['$lte'] = to_date
+        query['start_date'] = date_query
+    
+    blocks = await db.room_blocks.find(query, {'_id': 0}).to_list(1000)
+    
+    # Filter expired blocks
+    today = datetime.now(timezone.utc).date().isoformat()
+    for block in blocks:
+        if block.get('end_date') and block['end_date'] < today and block['status'] == 'active':
+            # Auto-expire
+            await db.room_blocks.update_one(
+                {'id': block['id']},
+                {'$set': {'status': 'expired'}}
+            )
+            block['status'] = 'expired'
+    
+    return blocks
+
+@api_router.post("/pms/room-blocks")
+async def create_room_block(
+    block_data: dict,
+    current_user: User = Depends(get_current_user)
+):
+    """Create a new room block"""
+    # Validate dates
+    start = datetime.fromisoformat(block_data['start_date']).date()
+    end_date = block_data.get('end_date')
+    
+    if end_date:
+        end = datetime.fromisoformat(end_date).date()
+        if end < start:
+            raise HTTPException(400, "End date must be after start date")
+    
+    # Check for conflicts with existing bookings
+    room = await db.rooms.find_one({
+        'tenant_id': current_user.tenant_id,
+        'id': block_data['room_id']
+    })
+    
+    if not room:
+        raise HTTPException(404, "Room not found")
+    
+    # Check existing bookings
+    query = {
+        'tenant_id': current_user.tenant_id,
+        'room_id': block_data['room_id'],
+        'status': {'$in': ['confirmed', 'checked_in', 'guaranteed']},
+        'check_in': {'$lt': end_date or '9999-12-31'},
+        'check_out': {'$gt': block_data['start_date']}
+    }
+    
+    conflicting_bookings = await db.bookings.find(query, {'_id': 0}).to_list(100)
+    
+    if conflicting_bookings and not block_data.get('force_override'):
+        return {
+            'status': 'conflict',
+            'message': f"Room has {len(conflicting_bookings)} active bookings during this period",
+            'conflicting_bookings': conflicting_bookings
+        }
+    
+    # Create block
+    block = {
+        'id': str(uuid.uuid4()),
+        'tenant_id': current_user.tenant_id,
+        'room_id': block_data['room_id'],
+        'type': block_data['type'],
+        'reason': block_data['reason'],
+        'details': block_data.get('details'),
+        'start_date': block_data['start_date'],
+        'end_date': end_date,
+        'allow_sell': block_data.get('allow_sell', False),
+        'created_by': current_user.name,
+        'created_at': datetime.now(timezone.utc).isoformat(),
+        'status': 'active'
+    }
+    
+    await db.room_blocks.insert_one(block)
+    
+    # Update room status
+    if block['type'] == 'out_of_order':
+        await db.rooms.update_one(
+            {'id': block_data['room_id']},
+            {'$set': {'status': 'out_of_order'}}
+        )
+    
+    # Audit log
+    await db.audit_logs.insert_one({
+        'id': str(uuid.uuid4()),
+        'tenant_id': current_user.tenant_id,
+        'action': 'room_block_created',
+        'entity_type': 'room_block',
+        'entity_id': block['id'],
+        'user': current_user.name,
+        'timestamp': datetime.now(timezone.utc).isoformat(),
+        'details': {
+            'room_id': block_data['room_id'],
+            'type': block_data['type'],
+            'reason': block_data['reason']
+        }
+    })
+    
+    return block
+
+@api_router.patch("/pms/room-blocks/{block_id}")
+async def update_room_block(
+    block_id: str,
+    updates: dict,
+    current_user: User = Depends(get_current_user)
+):
+    """Update a room block"""
+    existing = await db.room_blocks.find_one({
+        'tenant_id': current_user.tenant_id,
+        'id': block_id
+    })
+    
+    if not existing:
+        raise HTTPException(404, "Block not found")
+    
+    # Only allow updates to active blocks
+    if existing['status'] != 'active':
+        raise HTTPException(400, "Cannot update cancelled or expired blocks")
+    
+    update_data = {}
+    allowed_fields = ['reason', 'details', 'start_date', 'end_date', 'allow_sell']
+    
+    for field in allowed_fields:
+        if field in updates:
+            update_data[field] = updates[field]
+    
+    if update_data:
+        await db.room_blocks.update_one(
+            {'id': block_id},
+            {'$set': update_data}
+        )
+        
+        # Audit log
+        await db.audit_logs.insert_one({
+            'id': str(uuid.uuid4()),
+            'tenant_id': current_user.tenant_id,
+            'action': 'room_block_updated',
+            'entity_type': 'room_block',
+            'entity_id': block_id,
+            'user': current_user.name,
+            'timestamp': datetime.now(timezone.utc).isoformat(),
+            'details': update_data
+        })
+    
+    updated = await db.room_blocks.find_one({'id': block_id}, {'_id': 0})
+    return updated
+
+@api_router.post("/pms/room-blocks/{block_id}/cancel")
+async def cancel_room_block(
+    block_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Cancel a room block"""
+    existing = await db.room_blocks.find_one({
+        'tenant_id': current_user.tenant_id,
+        'id': block_id
+    })
+    
+    if not existing:
+        raise HTTPException(404, "Block not found")
+    
+    if existing['status'] == 'cancelled':
+        raise HTTPException(400, "Block already cancelled")
+    
+    await db.room_blocks.update_one(
+        {'id': block_id},
+        {'$set': {
+            'status': 'cancelled',
+            'cancelled_at': datetime.now(timezone.utc).isoformat(),
+            'cancelled_by': current_user.name
+        }}
+    )
+    
+    # If room was out_of_order, restore to available
+    if existing['type'] == 'out_of_order':
+        await db.rooms.update_one(
+            {'id': existing['room_id']},
+            {'$set': {'status': 'available'}}
+        )
+    
+    # Audit log
+    await db.audit_logs.insert_one({
+        'id': str(uuid.uuid4()),
+        'tenant_id': current_user.tenant_id,
+        'action': 'room_block_cancelled',
+        'entity_type': 'room_block',
+        'entity_id': block_id,
+        'user': current_user.name,
+        'timestamp': datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {'message': 'Block cancelled successfully', 'block_id': block_id}
+
+@api_router.get("/pms/rooms/availability")
+async def check_room_availability(
+    check_in: str,
+    check_out: str,
+    room_type: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Check room availability including blocks"""
+    query = {'tenant_id': current_user.tenant_id}
+    
+    if room_type:
+        query['room_type'] = room_type
+    
+    rooms = await db.rooms.find(query, {'_id': 0}).to_list(1000)
+    
+    # Get bookings
+    bookings = await db.bookings.find({
+        'tenant_id': current_user.tenant_id,
+        'status': {'$in': ['confirmed', 'checked_in', 'guaranteed']},
+        'check_in': {'$lt': check_out},
+        'check_out': {'$gt': check_in}
+    }, {'_id': 0}).to_list(1000)
+    
+    # Get blocks
+    blocks = await db.room_blocks.find({
+        'tenant_id': current_user.tenant_id,
+        'status': 'active',
+        'start_date': {'$lt': check_out},
+        '$or': [
+            {'end_date': {'$gt': check_in}},
+            {'end_date': None}  # Open-ended blocks
+        ]
+    }, {'_id': 0}).to_list(1000)
+    
+    # Filter available rooms
+    available = []
+    for room in rooms:
+        # Check bookings
+        is_booked = any(b['room_id'] == room['id'] for b in bookings)
+        
+        # Check blocks
+        room_blocks = [b for b in blocks if b['room_id'] == room['id']]
+        is_blocked = any(not b.get('allow_sell', False) for b in room_blocks)
+        
+        if not is_booked and not is_blocked:
+            available.append({
+                **room,
+                'available': True
+            })
+        else:
+            unavailable_reason = []
+            if is_booked:
+                unavailable_reason.append('booked')
+            if is_blocked:
+                block_info = [b for b in room_blocks if not b.get('allow_sell')]
+                if block_info:
+                    unavailable_reason.append(f"{block_info[0]['type']}")
+            
+            available.append({
+                **room,
+                'available': False,
+                'reason': ', '.join(unavailable_reason),
+                'blocks': room_blocks
+            })
+    
+    return available
+
 # Import and include AI endpoints
 try:
     from ai_endpoints import api_router as ai_router

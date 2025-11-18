@@ -1394,12 +1394,16 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
                                   booking.market_segment || booking.rate_type
                                 )} text-white text-xs overflow-hidden shadow-md hover:shadow-xl transition-all cursor-move z-20 group ${
                                   draggingBooking?.id === booking.id ? 'opacity-50' : ''
-                                } ${hasConflict(room.id, date) ? 'border-4 border-red-500 animate-pulse' : ''}`}
+                                } ${hasConflict(room.id, date) ? 'border-4 border-red-500 animate-pulse' : ''}
+                                ${showDeluxePanel && isGroupBooking(booking.id) ? 'border-2 border-amber-500' : ''}`}
                                 style={{
                                   width: `${calculateBookingSpan(booking, currentDate) * 96 - 8}px`,
-                                  height: '70px'
+                                  height: '70px',
+                                  backgroundImage: showDeluxePanel && isGroupBooking(booking.id) 
+                                    ? 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(251, 191, 36, 0.2) 10px, rgba(251, 191, 36, 0.2) 20px)' 
+                                    : 'none'
                                 }}
-                                title={`Double-click for details | Drag to move\n${booking.guest_name || 'Guest'} - ${booking.market_segment || 'Standard'}`}
+                                title={`Double-click for details | Drag to move\n${booking.guest_name || 'Guest'} - ${booking.market_segment || 'Standard'}${showDeluxePanel && isGroupBooking(booking.id) ? `\n👥 GROUP: ${getGroupInfo(booking.id)?.company_name}` : ''}`}
                               >
                                 {/* Main booking info */}
                                 <div className="p-2 h-[48px] relative">

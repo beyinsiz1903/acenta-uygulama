@@ -35,6 +35,26 @@ except ImportError as e:
     print(f"❌ Failed to import accounting models: {e}")
     raise e  # Don't continue if accounting models can't be imported
 
+# Import room block models
+try:
+    from room_block_models import (
+        RoomBlock, RoomBlockCreate, RoomBlockUpdate,
+        BlockType, BlockStatus
+    )
+    print("✅ Room block models imported successfully")
+except ImportError as e:
+    print(f"⚠️ Room block models not loaded: {e}")
+    # Create fallback models
+    class BlockType:
+        OUT_OF_ORDER = "out_of_order"
+        OUT_OF_SERVICE = "out_of_service"
+        MAINTENANCE = "maintenance"
+    
+    class BlockStatus:
+        ACTIVE = "active"
+        CANCELLED = "cancelled"
+        EXPIRED = "expired"
+
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 

@@ -27,23 +27,10 @@ LOGIN_EMAIL = "test@hotel.com"
 LOGIN_PASSWORD = "test123"
 
 class MessagingThrottlingTester:
-    def __init__(self, base_url="https://error-kontrol.preview.emergentagent.com"):
-        self.base_url = base_url
-        self.api_url = f"{base_url}/api"
+    def __init__(self):
+        self.session = requests.Session()
         self.token = None
-        self.user = None
-        self.tenant = None
-        self.tests_run = 0
-        self.tests_passed = 0
-        self.created_resources = {
-            'rooms': [],
-            'guests': [],
-            'bookings': [],
-            'invoices': [],
-            'loyalty_programs': [],
-            'orders': [],
-            'companies': []
-        }
+        self.test_results = []
 
     def run_test(self, name, method, endpoint, expected_status, data=None, headers=None):
         """Run a single API test"""

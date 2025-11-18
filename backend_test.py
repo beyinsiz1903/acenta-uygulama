@@ -204,7 +204,7 @@ class MessagingThrottlingTester:
     def test_rapid_fire_emails(self):
         """Test 5: Rapid Fire Test - Send 10 emails rapidly"""
         try:
-            initial_response = self.session.post(f"{BASE_URL}/messages/send-email", json={
+            initial_response = self.session.post(f"{BASE_URL}/messages/send-email", params={
                 "recipient": "test1@example.com",
                 "subject": "Rapid Fire Test",
                 "body": "Initial email to check starting count"

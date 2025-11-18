@@ -6572,6 +6572,157 @@ async def check_room_availability(
     
     return available
 
+# ============= STAFF TASKS & MAINTENANCE =============
+@api_router.get("/pms/staff-tasks")
+async def get_staff_tasks(
+    department: Optional[str] = None,
+    status: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Get staff tasks (engineering, housekeeping, maintenance)"""
+    query = {'tenant_id': current_user.tenant_id}
+    if department:
+        query['department'] = department
+    if status:
+        query['status'] = status
+    
+    tasks = await db.staff_tasks.find(query, {'_id': 0}).sort('created_at', -1).to_list(1000)
+    return tasks
+
+@api_router.post("/pms/staff-tasks")
+async def create_staff_task(
+    task_data: dict,
+    current_user: User = Depends(get_current_user)
+):
+    """Create a new staff task"""
+    task = {
+        'id': str(uuid.uuid4()),
+        'tenant_id': current_user.tenant_id,
+        'task_type': task_data.get('task_type', 'maintenance'),
+        'department': task_data.get('department', 'engineering'),
+        'room_id': task_data.get('room_id'),
+        'priority': task_data.get('priority', 'normal'),
+        'description': task_data.get('description'),
+        'assigned_to': task_data.get('assigned_to'),
+        'status': 'pending',
+        'created_by': current_user.id,
+        'created_at': datetime.now(timezone.utc).isoformat()
+    }
+    
+    # Get room number if room_id provided
+    if task['room_id']:
+        room = await db.rooms.find_one({'id': task['room_id']}, {'_id': 0, 'room_number': 1})
+        if room:
+            task['room_number'] = room['room_number']
+    
+    await db.staff_tasks.insert_one(task)
+    return task
+
+@api_router.put("/pms/staff-tasks/{task_id}")
+async def update_staff_task(
+    task_id: str,
+    update_data: dict,
+    current_user: User = Depends(get_current_user)
+):
+    """Update staff task status"""
+    await db.staff_tasks.update_one(
+        {'id': task_id, 'tenant_id': current_user.tenant_id},
+        {'$set': update_data}
+    )
+    return {"message": "Task updated successfully"}
+
+# ============= REVIEWS & FEEDBACK =============
+@api_router.get("/crm/reviews")
+async def get_reviews(
+    current_user: User = Depends(get_current_user)
+):
+    """Get guest reviews"""
+    reviews = await db.guest_reviews.find({
+        'tenant_id': current_user.tenant_id
+    }, {'_id': 0}).sort('created_at', -1).to_list(1000)
+    return {"reviews": reviews}
+
+@api_router.post("/crm/reviews/{review_id}/respond")
+async def respond_to_review(
+    review_id: str,
+    response_data: dict,
+    current_user: User = Depends(get_current_user)
+):
+    """Respond to a guest review"""
+    await db.guest_reviews.update_one(
+        {'id': review_id, 'tenant_id': current_user.tenant_id},
+        {'$set': {
+            'response': response_data.get('response'),
+            'responded_at': datetime.now(timezone.utc).isoformat(),
+            'responded_by': current_user.id
+        }}
+    )
+    return {"message": "Response sent successfully"}
+
+# ============= ALLOTMENT & TOUR OPERATORS =============
+@api_router.get("/pms/allotment-contracts")
+async def get_allotment_contracts(
+    current_user: User = Depends(get_current_user)
+):
+    """Get tour operator allotment contracts"""
+    contracts = await db.allotment_contracts.find({
+        'tenant_id': current_user.tenant_id
+    }, {'_id': 0}).to_list(1000)
+    return contracts
+
+@api_router.post("/pms/allotment-contracts")
+async def create_allotment_contract(
+    contract_data: dict,
+    current_user: User = Depends(get_current_user)
+):
+    """Create new allotment contract"""
+    contract = {
+        'id': str(uuid.uuid4()),
+        'tenant_id': current_user.tenant_id,
+        'tour_operator': contract_data.get('tour_operator'),
+        'room_type': contract_data.get('room_type'),
+        'allocated_rooms': contract_data.get('allocated_rooms'),
+        'used_rooms': 0,
+        'start_date': contract_data.get('start_date'),
+        'end_date': contract_data.get('end_date'),
+        'rate': contract_data.get('rate'),
+        'release_days': contract_data.get('release_days', 7),
+        'status': 'active',
+        'created_at': datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.allotment_contracts.insert_one(contract)
+    return contract
+
+@api_router.post("/pms/allotment-contracts/{contract_id}/release")
+async def release_allotment_rooms(
+    contract_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Release unused allotment rooms back to inventory"""
+    contract = await db.allotment_contracts.find_one({
+        'id': contract_id,
+        'tenant_id': current_user.tenant_id
+    })
+    
+    if not contract:
+        raise HTTPException(status_code=404, detail="Contract not found")
+    
+    available_rooms = contract['allocated_rooms'] - contract.get('used_rooms', 0)
+    
+    await db.allotment_contracts.update_one(
+        {'id': contract_id},
+        {'$set': {
+            'released_rooms': available_rooms,
+            'released_at': datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    return {
+        "message": f"Released {available_rooms} rooms",
+        "released_rooms": available_rooms
+    }
+
 # Import and include AI endpoints
 try:
     from ai_endpoints import api_router as ai_router

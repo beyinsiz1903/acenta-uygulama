@@ -974,22 +974,31 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
                                   )}
                                   
                                   {/* Status indicators - top right */}
-                                  <div className="absolute top-1 right-1 flex space-x-1">
-                                    {getBookingStatus(booking, date) === 'arrival' && (
-                                      <div className="bg-white text-green-600 rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-bold" title="Arrival">
-                                        ↓
+                                  <div className="absolute top-1 right-1 flex flex-col space-y-1 items-end">
+                                    {/* OTA Badge */}
+                                    {booking.ota_channel && (
+                                      <div className={`${getOTAInfo(booking.ota_channel).color} text-white text-[9px] font-bold px-1.5 py-0.5 rounded`} title={getOTAInfo(booking.ota_channel).name}>
+                                        {getOTAInfo(booking.ota_channel).label}
                                       </div>
                                     )}
-                                    {getBookingStatus(booking, date) === 'departure' && (
-                                      <div className="bg-white text-red-600 rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-bold" title="Departure">
-                                        ↑
-                                      </div>
-                                    )}
-                                    {getBookingStatus(booking, date) === 'stayover' && (
-                                      <div className="bg-white text-blue-600 rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-bold" title="Stayover">
-                                        •
-                                      </div>
-                                    )}
+                                    
+                                    <div className="flex space-x-1">
+                                      {getBookingStatus(booking, date) === 'arrival' && (
+                                        <div className="bg-white text-green-600 rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-bold" title="Arrival">
+                                          ↓
+                                        </div>
+                                      )}
+                                      {getBookingStatus(booking, date) === 'departure' && (
+                                        <div className="bg-white text-red-600 rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-bold" title="Departure">
+                                          ↑
+                                        </div>
+                                      )}
+                                      {getBookingStatus(booking, date) === 'stayover' && (
+                                        <div className="bg-white text-blue-600 rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-bold" title="Stayover">
+                                          •
+                                        </div>
+                                      )}
+                                    </div>
                                   </div>
                                 </div>
                                 

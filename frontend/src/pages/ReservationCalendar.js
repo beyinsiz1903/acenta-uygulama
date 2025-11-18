@@ -1405,6 +1405,28 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Reservation Details Sidebar - Opera Navigator Style */}
+      {showSidebar && (
+        <>
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50 z-40"
+            onClick={() => setShowSidebar(false)}
+          ></div>
+          
+          {/* Sidebar */}
+          <ReservationSidebar
+            booking={selectedBooking}
+            folio={selectedBookingFolio}
+            room={rooms.find(r => r.id === selectedBooking?.room_id)}
+            onClose={() => setShowSidebar(false)}
+            getSegmentColor={getSegmentColor}
+            getStatusLabel={getStatusLabel}
+            getRateTypeInfo={getRateTypeInfo}
+          />
+        </>
+      )}
     </Layout>
   );
 };

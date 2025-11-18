@@ -107,7 +107,7 @@ class MessagingThrottlingTester:
     def test_single_sms_send(self):
         """Test 2: Single SMS Send"""
         try:
-            response = self.session.post(f"{BASE_URL}/messages/send-sms", json={
+            response = self.session.post(f"{BASE_URL}/messages/send-sms", params={
                 "recipient": "+1234567890",
                 "body": "Test SMS message for rate limiting verification."
             })

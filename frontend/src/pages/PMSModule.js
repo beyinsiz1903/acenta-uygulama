@@ -880,7 +880,8 @@ const PMSModule = ({ user, tenant, onLogout }) => {
           <p className="text-gray-600">{t('pms.subtitle')}</p>
         </div>
 
-        <Tabs defaultValue="frontdesk" className="w-full" onValueChange={(v) => {
+        <Tabs value={activeTab} className="w-full" onValueChange={(v) => {
+          setActiveTab(v);
           if (v === 'frontdesk') loadFrontDeskData();
           if (v === 'housekeeping') loadHousekeepingData();
           if (v === 'reports') loadReports();

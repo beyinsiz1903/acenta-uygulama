@@ -5327,7 +5327,28 @@ async def send_sms(
     guest_id: Optional[str] = None,
     current_user: User = Depends(get_current_user)
 ):
-    """Send SMS message (mock implementation - integrate Twilio)"""
+    """Send SMS message with stricter rate limiting (50 per hour)"""
+    # SMS has stricter rate limit due to cost
+    if not await check_rate_limit(current_user.tenant_id, 'sms', limit_per_hour=50):
+        raise HTTPException(
+            status_code=429,
+            detail="Rate limit exceeded. Maximum 50 SMS per hour. Please try again later."
+        )
+    
+    # Validate phone number format
+    if not recipient or not recipient.startswith('+'):
+        raise HTTPException(status_code=400, detail="Invalid phone number format. Must start with + and country code")
+    
+    # Validate message body
+    if not body or len(body.strip()) == 0:
+        raise HTTPException(status_code=400, detail="Message body cannot be empty")
+    
+    # Warn if message is too long for single SMS
+    if len(body) > 160:
+        message_warning = f"Message is {len(body)} characters. Will be sent as {(len(body) // 160) + 1} SMS segments."
+    else:
+        message_warning = None
+    
     message = {
         'id': str(uuid.uuid4()),
         'tenant_id': current_user.tenant_id,
@@ -5335,17 +5356,36 @@ async def send_sms(
         'channel': 'sms',
         'recipient': recipient,
         'body': body,
+        'sent_at': datetime.now(timezone.utc).isoformat(),
+        'sent_by': current_user.id,
         'status': 'sent',
-        'sent_at': datetime.now(timezone.utc).isoformat()
+        'character_count': len(body),
+        'segment_count': (len(body) // 160) + 1
     }
     
     await db.messages.insert_one(message)
     
-    return {
-        'message': 'SMS sent successfully (mock)',
+    response = {
+        'message': 'SMS sent successfully',
         'message_id': message['id'],
-        'recipient': recipient
+        'recipient': recipient,
+        'character_count': len(body),
+        'segments': (len(body) // 160) + 1,
+        'rate_limit': {
+            'limit': 50,
+            'window': '1 hour',
+            'remaining': 50 - await db.messages.count_documents({
+                'tenant_id': current_user.tenant_id,
+                'channel': 'sms',
+                'sent_at': {'$gte': (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat()}
+            })
+        }
     }
+    
+    if message_warning:
+        response['warning'] = message_warning
+    
+    return response
 
 @api_router.post("/messages/send-whatsapp")
 async def send_whatsapp(

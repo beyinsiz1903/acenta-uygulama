@@ -3970,6 +3970,446 @@ async def get_availability_heatmap(
         'heatmap': heatmap_data
     }
 
+# ============= AI MODE - INTELLIGENT OPERATIONS =============
+
+@api_router.post("/ai/solve-overbooking")
+async def solve_overbooking(
+    date: str,
+    current_user: User = Depends(get_current_user)
+):
+    """AI-powered overbooking resolution suggestions"""
+    target_date = datetime.fromisoformat(date).date()
+    start_of_day = datetime.combine(target_date, datetime.min.time())
+    end_of_day = datetime.combine(target_date, datetime.max.time())
+    
+    # Get all rooms
+    rooms = await db.rooms.find({'tenant_id': current_user.tenant_id}, {'_id': 0}).to_list(1000)
+    
+    # Find overbookings (multiple bookings on same room same date)
+    conflicts = []
+    for room in rooms:
+        bookings = await db.bookings.find({
+            'tenant_id': current_user.tenant_id,
+            'room_id': room['id'],
+            'status': {'$in': ['confirmed', 'guaranteed']},
+            'check_in': {'$lte': end_of_day.isoformat()},
+            'check_out': {'$gte': start_of_day.isoformat()}
+        }, {'_id': 0}).to_list(100)
+        
+        if len(bookings) > 1:
+            conflicts.append({
+                'room': room,
+                'bookings': bookings
+            })
+    
+    # Generate AI solutions
+    solutions = []
+    for conflict in conflicts:
+        room = conflict['room']
+        bookings = conflict['bookings']
+        
+        # Find alternative rooms of same type
+        alt_rooms = [r for r in rooms if r['room_type'] == room['room_type'] and r['id'] != room['id']]
+        
+        for booking in bookings[1:]:  # Keep first booking, move others
+            # Find available alternative rooms
+            available_alts = []
+            for alt_room in alt_rooms:
+                # Check if alt room is available
+                existing = await db.bookings.count_documents({
+                    'tenant_id': current_user.tenant_id,
+                    'room_id': alt_room['id'],
+                    'status': {'$in': ['confirmed', 'guaranteed', 'checked_in']},
+                    'check_in': {'$lte': booking['check_out']},
+                    'check_out': {'$gte': booking['check_in']}
+                })
+                
+                if existing == 0:
+                    # Calculate guest priority score
+                    guest = await db.guests.find_one({'id': booking['guest_id'], 'tenant_id': current_user.tenant_id}, {'_id': 0})
+                    loyalty_tier = guest.get('loyalty_tier', 'standard') if guest else 'standard'
+                    priority_score = {
+                        'vip': 100,
+                        'gold': 80,
+                        'silver': 60,
+                        'standard': 40
+                    }.get(loyalty_tier, 40)
+                    
+                    # Add OTA channel penalty (harder to move OTA bookings)
+                    if booking.get('ota_channel'):
+                        priority_score -= 20
+                    
+                    available_alts.append({
+                        'room': alt_room,
+                        'priority_score': priority_score,
+                        'reason': f"Same type ({alt_room['room_type']}), Floor {alt_room['floor']}"
+                    })
+            
+            # Sort by priority score
+            available_alts.sort(key=lambda x: x['priority_score'], reverse=True)
+            
+            if available_alts:
+                best_option = available_alts[0]
+                solutions.append({
+                    'conflict_type': 'overbooking',
+                    'severity': 'high',
+                    'current_room': room['room_number'],
+                    'booking_id': booking['id'],
+                    'guest_name': booking.get('guest_name', 'Unknown'),
+                    'check_in': booking['check_in'],
+                    'check_out': booking['check_out'],
+                    'recommended_action': 'move',
+                    'recommended_room': best_option['room']['room_number'],
+                    'recommended_room_id': best_option['room']['id'],
+                    'confidence': 0.85,
+                    'reason': best_option['reason'],
+                    'impact': 'minimal',
+                    'auto_apply': False
+                })
+    
+    return {
+        'date': target_date.isoformat(),
+        'conflicts_found': len(conflicts),
+        'solutions': solutions,
+        'summary': f"Found {len(conflicts)} overbooking conflicts with {len(solutions)} AI-powered solutions"
+    }
+
+@api_router.post("/ai/recommend-room-moves")
+async def recommend_room_moves(
+    date: str,
+    current_user: User = Depends(get_current_user)
+):
+    """AI recommendations for optimal room moves (upgrades, VIP service)"""
+    target_date = datetime.fromisoformat(date).date()
+    start_of_day = datetime.combine(target_date, datetime.min.time())
+    end_of_day = datetime.combine(target_date, datetime.max.time())
+    
+    rooms = await db.rooms.find({'tenant_id': current_user.tenant_id}, {'_id': 0}).to_list(1000)
+    
+    # Get bookings for target date
+    bookings = await db.bookings.find({
+        'tenant_id': current_user.tenant_id,
+        'status': {'$in': ['confirmed', 'guaranteed']},
+        'check_in': {'$lte': end_of_day.isoformat()},
+        'check_out': {'$gte': start_of_day.isoformat()}
+    }, {'_id': 0}).to_list(1000)
+    
+    recommendations = []
+    
+    for booking in bookings:
+        guest = await db.guests.find_one({'id': booking['guest_id'], 'tenant_id': current_user.tenant_id}, {'_id': 0})
+        if not guest:
+            continue
+        
+        current_room = next((r for r in rooms if r['id'] == booking['room_id']), None)
+        if not current_room:
+            continue
+        
+        loyalty_tier = guest.get('loyalty_tier', 'standard')
+        
+        # VIP/Gold upgrade opportunities
+        if loyalty_tier in ['vip', 'gold']:
+            # Find better rooms available
+            better_rooms = [r for r in rooms 
+                          if r['room_type'] != current_room['room_type'] 
+                          and r['base_price'] > current_room['base_price']]
+            
+            for better_room in better_rooms:
+                # Check availability
+                existing = await db.bookings.count_documents({
+                    'tenant_id': current_user.tenant_id,
+                    'room_id': better_room['id'],
+                    'status': {'$in': ['confirmed', 'guaranteed', 'checked_in']},
+                    'check_in': {'$lte': booking['check_out']},
+                    'check_out': {'$gte': booking['check_in']}
+                })
+                
+                if existing == 0:
+                    recommendations.append({
+                        'type': 'upgrade',
+                        'priority': 'high' if loyalty_tier == 'vip' else 'medium',
+                        'booking_id': booking['id'],
+                        'guest_name': guest.get('name', 'Unknown'),
+                        'loyalty_tier': loyalty_tier,
+                        'current_room': current_room['room_number'],
+                        'recommended_room': better_room['room_number'],
+                        'recommended_room_id': better_room['id'],
+                        'reason': f"Complimentary upgrade for {loyalty_tier.upper()} guest",
+                        'revenue_impact': 0,  # Complimentary
+                        'confidence': 0.90
+                    })
+                    break  # One recommendation per booking
+        
+        # Room block avoidance
+        blocks = await db.room_blocks.find({
+            'tenant_id': current_user.tenant_id,
+            'room_id': current_room['id'],
+            'status': 'active',
+            'start_date': {'$lte': booking['check_out']},
+            '$or': [
+                {'end_date': {'$gte': booking['check_in']}},
+                {'end_date': None}
+            ]
+        }, {'_id': 0}).to_list(10)
+        
+        if blocks:
+            # Find alternative same-type room
+            alt_rooms = [r for r in rooms 
+                        if r['room_type'] == current_room['room_type'] 
+                        and r['id'] != current_room['id']]
+            
+            for alt_room in alt_rooms:
+                existing = await db.bookings.count_documents({
+                    'tenant_id': current_user.tenant_id,
+                    'room_id': alt_room['id'],
+                    'status': {'$in': ['confirmed', 'guaranteed', 'checked_in']},
+                    'check_in': {'$lte': booking['check_out']},
+                    'check_out': {'$gte': booking['check_in']}
+                })
+                
+                if existing == 0:
+                    recommendations.append({
+                        'type': 'block_avoidance',
+                        'priority': 'urgent',
+                        'booking_id': booking['id'],
+                        'guest_name': guest.get('name', 'Unknown'),
+                        'current_room': current_room['room_number'],
+                        'recommended_room': alt_room['room_number'],
+                        'recommended_room_id': alt_room['id'],
+                        'reason': f"Room {current_room['room_number']} is blocked ({blocks[0]['type']})",
+                        'revenue_impact': 0,
+                        'confidence': 0.95
+                    })
+                    break
+    
+    # Sort by priority
+    priority_order = {'urgent': 0, 'high': 1, 'medium': 2, 'low': 3}
+    recommendations.sort(key=lambda x: priority_order.get(x['priority'], 99))
+    
+    return {
+        'date': target_date.isoformat(),
+        'recommendations': recommendations,
+        'count': len(recommendations),
+        'summary': f"Generated {len(recommendations)} AI room move recommendations"
+    }
+
+@api_router.post("/ai/recommend-rates")
+async def recommend_rates(
+    start_date: str,
+    end_date: str,
+    current_user: User = Depends(get_current_user)
+):
+    """AI-powered dynamic rate recommendations"""
+    start = datetime.fromisoformat(start_date).date()
+    end = datetime.fromisoformat(end_date).date()
+    
+    rooms = await db.rooms.find({'tenant_id': current_user.tenant_id}, {'_id': 0}).to_list(1000)
+    room_types = list(set(r['room_type'] for r in rooms))
+    
+    recommendations = []
+    
+    for rt in room_types:
+        rt_rooms = [r for r in rooms if r['room_type'] == rt]
+        total_rt_rooms = len(rt_rooms)
+        base_rate = rt_rooms[0]['base_price'] if rt_rooms else 0
+        
+        current_date = start
+        while current_date <= end:
+            start_of_day = datetime.combine(current_date, datetime.min.time())
+            end_of_day = datetime.combine(current_date, datetime.max.time())
+            
+            # Calculate occupancy
+            occupied = await db.bookings.count_documents({
+                'tenant_id': current_user.tenant_id,
+                'room_id': {'$in': [r['id'] for r in rt_rooms]},
+                'status': {'$in': ['confirmed', 'guaranteed', 'checked_in']},
+                'check_in': {'$lte': end_of_day.isoformat()},
+                'check_out': {'$gte': start_of_day.isoformat()}
+            })
+            
+            occupancy_pct = (occupied / total_rt_rooms * 100) if total_rt_rooms > 0 else 0
+            
+            # AI pricing strategy
+            if occupancy_pct >= 90:
+                # High demand - increase rates
+                recommended_rate = base_rate * 1.25
+                strategy = 'demand_surge'
+                reason = f"High occupancy ({occupancy_pct:.0f}%) - capitalize on demand"
+                confidence = 0.88
+            elif occupancy_pct >= 75:
+                # Good demand - moderate increase
+                recommended_rate = base_rate * 1.15
+                strategy = 'optimize'
+                reason = f"Strong demand ({occupancy_pct:.0f}%) - optimize revenue"
+                confidence = 0.82
+            elif occupancy_pct >= 50:
+                # Moderate - maintain rates
+                recommended_rate = base_rate
+                strategy = 'maintain'
+                reason = f"Normal occupancy ({occupancy_pct:.0f}%) - maintain base rates"
+                confidence = 0.75
+            else:
+                # Low demand - discount to attract
+                recommended_rate = base_rate * 0.85
+                strategy = 'attract'
+                reason = f"Low occupancy ({occupancy_pct:.0f}%) - attract bookings with discount"
+                confidence = 0.80
+            
+            # Check day of week for adjustments
+            day_of_week = current_date.weekday()
+            if day_of_week in [4, 5]:  # Friday, Saturday
+                recommended_rate *= 1.10
+                reason += " + Weekend premium"
+            
+            recommendations.append({
+                'date': current_date.isoformat(),
+                'day_of_week': current_date.strftime('%A'),
+                'room_type': rt,
+                'current_rate': round(base_rate, 2),
+                'recommended_rate': round(recommended_rate, 2),
+                'difference': round(recommended_rate - base_rate, 2),
+                'difference_pct': round(((recommended_rate - base_rate) / base_rate * 100), 1),
+                'strategy': strategy,
+                'reason': reason,
+                'occupancy_pct': round(occupancy_pct, 1),
+                'confidence': confidence,
+                'revenue_impact': round((recommended_rate - base_rate) * (total_rt_rooms - occupied), 2)
+            })
+            
+            current_date += timedelta(days=1)
+    
+    # Calculate total potential revenue impact
+    total_impact = sum(r['revenue_impact'] for r in recommendations if r['revenue_impact'] > 0)
+    
+    return {
+        'period': {
+            'start_date': start.isoformat(),
+            'end_date': end.isoformat()
+        },
+        'recommendations': recommendations,
+        'summary': {
+            'total_recommendations': len(recommendations),
+            'increase_count': sum(1 for r in recommendations if r['difference'] > 0),
+            'decrease_count': sum(1 for r in recommendations if r['difference'] < 0),
+            'maintain_count': sum(1 for r in recommendations if r['difference'] == 0),
+            'potential_revenue_increase': round(total_impact, 2)
+        }
+    }
+
+@api_router.post("/ai/predict-no-shows")
+async def predict_no_shows(
+    date: str,
+    current_user: User = Depends(get_current_user)
+):
+    """AI prediction of high-risk no-show bookings"""
+    target_date = datetime.fromisoformat(date).date()
+    
+    # Get arrivals for target date
+    bookings = await db.bookings.find({
+        'tenant_id': current_user.tenant_id,
+        'check_in': target_date.isoformat(),
+        'status': {'$in': ['confirmed', 'guaranteed']}
+    }, {'_id': 0}).to_list(1000)
+    
+    predictions = []
+    
+    for booking in bookings:
+        risk_score = 0
+        risk_factors = []
+        
+        # Factor 1: Channel risk (OTA bookings higher risk)
+        if booking.get('ota_channel'):
+            risk_score += 25
+            risk_factors.append(f"OTA booking ({booking.get('ota_channel')})")
+        else:
+            risk_score += 5
+        
+        # Factor 2: Payment method
+        payment_model = booking.get('payment_model')
+        if payment_model == 'agency':
+            risk_score += 20
+            risk_factors.append("Agency payment (no prepayment)")
+        elif payment_model == 'hotel_collect':
+            risk_score += 15
+            risk_factors.append("Hotel collect (no prepayment)")
+        elif payment_model == 'virtual_card':
+            risk_score += 5
+            risk_factors.append("Virtual card")
+        
+        # Factor 3: Booking lead time (last-minute bookings higher risk)
+        created_at = datetime.fromisoformat(booking.get('created_at', datetime.now(timezone.utc).isoformat()))
+        lead_time = (target_date - created_at.date()).days
+        if lead_time < 2:
+            risk_score += 20
+            risk_factors.append(f"Last-minute booking ({lead_time} days)")
+        elif lead_time < 7:
+            risk_score += 10
+            risk_factors.append(f"Short lead time ({lead_time} days)")
+        
+        # Factor 4: Guest history (if available)
+        guest = await db.guests.find_one({'id': booking['guest_id'], 'tenant_id': current_user.tenant_id}, {'_id': 0})
+        if guest:
+            past_bookings = await db.bookings.count_documents({
+                'tenant_id': current_user.tenant_id,
+                'guest_id': booking['guest_id'],
+                'status': 'checked_in'
+            })
+            
+            if past_bookings == 0:
+                risk_score += 15
+                risk_factors.append("First-time guest")
+            elif past_bookings > 3:
+                risk_score -= 10
+                risk_factors.append(f"Repeat guest ({past_bookings} stays)")
+        
+        # Factor 5: Booking amount (lower rates = higher risk)
+        if booking.get('total_amount', 0) < 100:
+            risk_score += 10
+            risk_factors.append("Low booking value")
+        
+        # Normalize risk score (0-100)
+        risk_score = min(100, max(0, risk_score))
+        
+        # Classify risk level
+        if risk_score >= 70:
+            risk_level = 'high'
+            recommendation = 'Contact guest to confirm + Consider overbook strategy'
+        elif risk_score >= 50:
+            risk_level = 'medium'
+            recommendation = 'Send reminder SMS/email 24h before arrival'
+        else:
+            risk_level = 'low'
+            recommendation = 'Standard arrival preparation'
+        
+        predictions.append({
+            'booking_id': booking['id'],
+            'guest_name': booking.get('guest_name', 'Unknown'),
+            'room_number': booking.get('room_number', 'TBD'),
+            'check_in': booking['check_in'],
+            'risk_score': risk_score,
+            'risk_level': risk_level,
+            'risk_factors': risk_factors,
+            'confidence': 0.75,
+            'recommendation': recommendation,
+            'channel': booking.get('ota_channel') or 'direct',
+            'booking_value': booking.get('total_amount', 0)
+        })
+    
+    # Sort by risk score descending
+    predictions.sort(key=lambda x: x['risk_score'], reverse=True)
+    
+    return {
+        'date': target_date.isoformat(),
+        'total_arrivals': len(bookings),
+        'predictions': predictions,
+        'summary': {
+            'high_risk_count': sum(1 for p in predictions if p['risk_level'] == 'high'),
+            'medium_risk_count': sum(1 for p in predictions if p['risk_level'] == 'medium'),
+            'low_risk_count': sum(1 for p in predictions if p['risk_level'] == 'low'),
+            'avg_risk_score': round(sum(p['risk_score'] for p in predictions) / len(predictions), 1) if predictions else 0
+        }
+    }
+
 @api_router.post("/rms/generate-suggestions")
 async def generate_rms_suggestions(
     start_date: str,

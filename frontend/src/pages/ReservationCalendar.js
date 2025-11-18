@@ -810,6 +810,107 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
           </CardContent>
         </Card>
 
+        {/* Enterprise Mode Panel */}
+        {showEnterprisePanel && (
+          <Card className="border-2 border-purple-300 bg-purple-50">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-purple-600" />
+                Enterprise Intelligence
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Rate Leakage Alerts */}
+              {rateLeakages.length > 0 && (
+                <div>
+                  <div className="text-sm font-semibold text-red-700 mb-2">
+                    💸 Rate Leakage Detected ({rateLeakages.length} instances)
+                  </div>
+                  <div className="space-y-2 max-h-40 overflow-y-auto">
+                    {rateLeakages.slice(0, 5).map((leak, idx) => (
+                      <div key={idx} className="bg-white p-2 rounded border border-red-200 text-xs">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <span className="font-semibold">{leak.guest_name}</span>
+                            <span className="mx-2">•</span>
+                            <Badge className={getOTAInfo(leak.ota_channel).color + " text-white text-[9px]"}>
+                              {getOTAInfo(leak.ota_channel).label}
+                            </Badge>
+                          </div>
+                          <div className="text-red-600 font-bold">
+                            -${leak.difference_per_night}/nt
+                          </div>
+                        </div>
+                        <div className="text-gray-600 mt-1">
+                          {leak.room_type} • {new Date(leak.check_in).toLocaleDateString()} - {new Date(leak.check_out).toLocaleDateString()}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {rateLeakages.length > 5 && (
+                    <div className="text-xs text-gray-500 mt-2">
+                      +{rateLeakages.length - 5} more leakages
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Heatmap Legend */}
+              <div>
+                <div className="text-sm font-semibold text-gray-700 mb-2">
+                  📊 Availability Heatmap Legend
+                </div>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-4 bg-red-100 border border-red-300 rounded"></div>
+                    <span className="text-xs">Critical (95%+)</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-4 bg-orange-100 border border-orange-300 rounded"></div>
+                    <span className="text-xs">High (85-94%)</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-4 bg-yellow-100 border border-yellow-300 rounded"></div>
+                    <span className="text-xs">Moderate (70-84%)</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-4 bg-green-100 border border-green-300 rounded"></div>
+                    <span className="text-xs">Medium (50-69%)</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-4 bg-white border border-gray-300 rounded"></div>
+                    <span className="text-xs">Low (&lt;50%)</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick Stats */}
+              {availabilityHeatmap.length > 0 && (
+                <div className="grid grid-cols-3 gap-4 pt-3 border-t">
+                  <div className="text-center">
+                    <div className="text-xl font-bold text-red-600">
+                      {availabilityHeatmap.filter(h => h.intensity === 'critical').length}
+                    </div>
+                    <div className="text-xs text-gray-600">Critical Days</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-xl font-bold text-orange-600">
+                      {availabilityHeatmap.filter(h => h.intensity === 'high').length}
+                    </div>
+                    <div className="text-xs text-gray-600">High Demand</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-xl font-bold text-purple-600">
+                      {Math.round(availabilityHeatmap.reduce((sum, h) => sum + h.occupancy_pct, 0) / availabilityHeatmap.length)}%
+                    </div>
+                    <div className="text-xs text-gray-600">Avg Occupancy</div>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
         {/* Legend - Market Segments & Quick Tips */}
         <Card>
           <CardContent className="py-3">

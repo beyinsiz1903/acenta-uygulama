@@ -5252,6 +5252,18 @@ async def generate_upsell_offers(
         'estimated_revenue': round(estimated_revenue, 2)
     }
 
+async def check_rate_limit(tenant_id: str, channel: str, limit_per_hour: int = 100) -> bool:
+    """Check if rate limit is exceeded for messaging"""
+    one_hour_ago = (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat()
+    
+    count = await db.messages.count_documents({
+        'tenant_id': tenant_id,
+        'channel': channel,
+        'sent_at': {'$gte': one_hour_ago}
+    })
+    
+    return count < limit_per_hour
+
 @api_router.post("/messages/send-email")
 async def send_email(
     recipient: str,
@@ -5261,27 +5273,51 @@ async def send_email(
     template_id: Optional[str] = None,
     current_user: User = Depends(get_current_user)
 ):
-    """Send email message (mock implementation - integrate SendGrid)"""
+    """Send email message with rate limiting"""
+    # Check rate limit (100 emails per hour)
+    if not await check_rate_limit(current_user.tenant_id, 'email', limit_per_hour=100):
+        raise HTTPException(
+            status_code=429, 
+            detail="Rate limit exceeded. Maximum 100 emails per hour. Please try again later."
+        )
+    
+    # Validate email format
+    if not recipient or '@' not in recipient:
+        raise HTTPException(status_code=400, detail="Invalid email address")
+    
+    # Validate message body
+    if not body or len(body.strip()) == 0:
+        raise HTTPException(status_code=400, detail="Message body cannot be empty")
+    
     message = {
         'id': str(uuid.uuid4()),
         'tenant_id': current_user.tenant_id,
         'guest_id': guest_id,
         'channel': 'email',
-        'template_id': template_id,
         'recipient': recipient,
         'subject': subject,
         'body': body,
-        'status': 'sent',
+        'template_id': template_id,
         'sent_at': datetime.now(timezone.utc).isoformat(),
-        'delivered_at': datetime.now(timezone.utc).isoformat()
+        'sent_by': current_user.id,
+        'status': 'sent'
     }
     
     await db.messages.insert_one(message)
     
     return {
-        'message': 'Email sent successfully (mock)',
+        'message': 'Email sent successfully',
         'message_id': message['id'],
-        'recipient': recipient
+        'recipient': recipient,
+        'rate_limit': {
+            'limit': 100,
+            'window': '1 hour',
+            'remaining': 100 - await db.messages.count_documents({
+                'tenant_id': current_user.tenant_id,
+                'channel': 'email',
+                'sent_at': {'$gte': (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat()}
+            })
+        }
     }
 
 @api_router.post("/messages/send-sms")

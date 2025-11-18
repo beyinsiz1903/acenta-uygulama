@@ -235,7 +235,7 @@ class MessagingThrottlingTester:
                 time.sleep(0.1)
             
             # Check final count
-            final_response = self.session.post(f"{BASE_URL}/messages/send-email", json={
+            final_response = self.session.post(f"{BASE_URL}/messages/send-email", params={
                 "recipient": "final@example.com",
                 "subject": "Final Check",
                 "body": "Final email to check remaining count"

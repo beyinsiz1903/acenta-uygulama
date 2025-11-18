@@ -204,6 +204,16 @@ function App() {
               )
             }
           />
+          <Route
+            path="/templates"
+            element={
+              isAuthenticated ? (
+                <TemplateManager user={user} tenant={tenant} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/auth" replace />
+              )
+            }
+          />
         </Routes>
       </BrowserRouter>
     </div>

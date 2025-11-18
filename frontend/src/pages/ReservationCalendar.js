@@ -569,6 +569,21 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
     return labels[status] || status;
   };
 
+  // OTA Helper Functions
+  const getOTAInfo = (channel) => {
+    const otaData = {
+      'booking_com': { label: 'BKG', name: 'Booking.com', color: 'bg-indigo-600' },
+      'expedia': { label: 'EXP', name: 'Expedia', color: 'bg-blue-600' },
+      'airbnb': { label: 'ABNB', name: 'Airbnb', color: 'bg-red-600' },
+      'agoda': { label: 'AGD', name: 'Agoda', color: 'bg-purple-600' },
+      'hotels_com': { label: 'HTL', name: 'Hotels.com', color: 'bg-rose-600' },
+      'direct': { label: 'DIR', name: 'Direct', color: 'bg-green-600' },
+      'phone': { label: 'TEL', name: 'Phone', color: 'bg-gray-600' },
+      'walk_in': { label: 'WLK', name: 'Walk-in', color: 'bg-orange-600' }
+    };
+    return otaData[channel] || { label: 'OTA', name: 'OTA', color: 'bg-gray-600' };
+  };
+
   const navigatePrevious = () => {
     const newDate = new Date(currentDate);
     newDate.setDate(newDate.getDate() - daysToShow);

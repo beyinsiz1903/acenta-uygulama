@@ -689,6 +689,43 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
     }
   };
 
+  const toggleDeluxeMode = () => {
+    const newState = !showDeluxePanel;
+    setShowDeluxePanel(newState);
+    if (newState) {
+      loadDeluxeFeatures();
+    }
+  };
+
+  const loadDeluxeFeatures = async () => {
+    try {
+      const startDate = currentDate.toISOString().split('T')[0];
+      const endDate = new Date(currentDate.getTime() + daysToShow * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      const today = new Date().toISOString().split('T')[0];
+      
+      const [groupsRes, oversellRes, channelRes] = await Promise.all([
+        axios.get(`/deluxe/group-bookings?start_date=${startDate}&end_date=${endDate}&min_rooms=5`).catch(() => ({ data: { groups: [] } })),
+        axios.get(`/deluxe/oversell-protection?start_date=${startDate}&end_date=${endDate}`).catch(() => ({ data: { protection_map: [] } })),
+        axios.post(`/deluxe/optimize-channel-mix`, { start_date: startDate, end_date: endDate }).catch(() => ({ data: null }))
+      ]);
+      
+      setGroupBookings(groupsRes.data.groups || []);
+      setOversellProtection(oversellRes.data.protection_map || []);
+      setChannelMixData(channelRes.data);
+    } catch (error) {
+      console.error('Failed to load deluxe features:', error);
+    }
+  };
+
+  // Check if booking is part of a group
+  const isGroupBooking = (bookingId) => {
+    return groupBookings.some(g => g.booking_ids.includes(bookingId));
+  };
+
+  const getGroupInfo = (bookingId) => {
+    return groupBookings.find(g => g.booking_ids.includes(bookingId));
+  };
+
   const navigatePrevious = () => {
     const newDate = new Date(currentDate);
     newDate.setDate(newDate.getDate() - daysToShow);

@@ -1221,6 +1221,20 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
                                   
                                   {/* Status indicators - top right */}
                                   <div className="absolute top-1 right-1 flex flex-col space-y-1 items-end">
+                                    {/* AI Recommendation Badge */}
+                                    {showAIPanel && getAIRecommendation(booking.id) && (
+                                      <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white text-[8px] font-bold px-1 py-0.5 rounded animate-pulse" title="AI Recommendation Available">
+                                        🤖 AI
+                                      </div>
+                                    )}
+                                    
+                                    {/* No-Show Risk Badge */}
+                                    {showAIPanel && getNoShowRisk(booking.id) && getNoShowRisk(booking.id).risk_level === 'high' && (
+                                      <div className="bg-red-600 text-white text-[8px] font-bold px-1 py-0.5 rounded" title={`High No-Show Risk: ${getNoShowRisk(booking.id).risk_score}%`}>
+                                        ⚠️ RISK
+                                      </div>
+                                    )}
+                                    
                                     {/* OTA Badge */}
                                     {booking.ota_channel && (
                                       <div className={`${getOTAInfo(booking.ota_channel).color} text-white text-[9px] font-bold px-1.5 py-0.5 rounded`} title={getOTAInfo(booking.ota_channel).name}>

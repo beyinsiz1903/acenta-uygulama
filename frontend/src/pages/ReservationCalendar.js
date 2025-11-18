@@ -305,14 +305,23 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
       return;
     }
     
+    console.log('🔄 Moving booking:', {
+      bookingId: moveData.booking.id,
+      from: `${moveData.oldRoom} (${moveData.oldCheckIn})`,
+      to: `${moveData.newRoom} (${moveData.newCheckIn})`,
+      currentDateView: currentDate.toISOString().split('T')[0]
+    });
+    
     try {
       // Update booking with new room and dates
-      await axios.put(`/pms/bookings/${moveData.booking.id}`, {
+      const updateResponse = await axios.put(`/pms/bookings/${moveData.booking.id}`, {
         ...moveData.booking,
         room_id: moveData.newRoomId,
         check_in: moveData.newCheckIn,
         check_out: moveData.newCheckOut
       });
+      
+      console.log('✅ Booking updated:', updateResponse.data);
       
       // Log room move history
       await axios.post('/pms/room-move-history', {

@@ -65,6 +65,14 @@ const PMSModule = ({ user, tenant, onLogout }) => {
   const [guestNote, setGuestNote] = useState('');
   const [upsellOffers, setUpsellOffers] = useState([]);
   const [messageTemplates, setMessageTemplates] = useState([]);
+  const [newMessage, setNewMessage] = useState({
+    channel: 'email',
+    recipient: '',
+    subject: '',
+    body: '',
+    template_id: null
+  });
+  const [sentMessages, setSentMessages] = useState([]);
   const [reports, setReports] = useState({
     occupancy: null,
     revenue: null,

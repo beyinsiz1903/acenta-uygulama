@@ -836,7 +836,10 @@ const PMSModule = ({ user, tenant, onLogout }) => {
             </TabsTrigger>
             <TabsTrigger value="upsell" data-testid="tab-upsell">
               <TrendingUp className="w-4 h-4 mr-2" />
-              🤖 Upsell AI
+              🤖 Upsell
+            </TabsTrigger>
+            <TabsTrigger value="messaging" data-testid="tab-messaging">
+              💬 Messages
             </TabsTrigger>
             <TabsTrigger value="reports" data-testid="tab-reports">
               <FileText className="w-4 h-4 mr-2" />

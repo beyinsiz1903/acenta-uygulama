@@ -96,7 +96,7 @@ const GMDashboard = ({ user, tenant, onLogout }) => {
               <Activity className="w-4 h-4 mr-2" />
               Refresh
             </Button>
-            <Button onClick={() => navigate('/reports')}>
+            <Button onClick={() => navigate('/pms#reports')}>
               <BarChart3 className="w-4 h-4 mr-2" />
               View Reports
             </Button>

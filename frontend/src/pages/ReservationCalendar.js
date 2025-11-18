@@ -104,11 +104,31 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
       setGuests(guestsRes.data || []);
       setCompanies(companiesRes.data || []);
       setRoomBlocks(blocksRes.data.blocks || []);
+      
+      // Load Enterprise Mode data
+      loadEnterpriseData();
     } catch (error) {
       console.error('Failed to load calendar data:', error);
       toast.error('Failed to load calendar data');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadEnterpriseData = async () => {
+    try {
+      const startDate = currentDate.toISOString().split('T')[0];
+      const endDate = new Date(currentDate.getTime() + daysToShow * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      
+      const [leakageRes, heatmapRes] = await Promise.all([
+        axios.get(`/enterprise/rate-leakage?start_date=${startDate}&end_date=${endDate}`).catch(() => ({ data: { leakages: [] } })),
+        axios.get(`/enterprise/availability-heatmap?start_date=${startDate}&end_date=${endDate}`).catch(() => ({ data: { heatmap: [] } }))
+      ]);
+      
+      setRateLeakages(leakageRes.data.leakages || []);
+      setAvailabilityHeatmap(heatmapRes.data.heatmap || []);
+    } catch (error) {
+      console.error('Failed to load enterprise data:', error);
     }
   };
 

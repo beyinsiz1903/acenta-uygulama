@@ -585,6 +585,15 @@ class BookingCreate(BaseModel):
     billing_contact_person: Optional[str] = None
     # Override tracking
     override_reason: Optional[str] = None
+    # OTA Channel fields
+    ota_channel: Optional[OTAChannel] = None
+    ota_confirmation: Optional[str] = None
+    ota_reference_id: Optional[str] = None
+    commission_pct: Optional[float] = None
+    payment_model: Optional[OTAPaymentModel] = None
+    virtual_card_provided: bool = False
+    virtual_card_number: Optional[str] = None
+    virtual_card_expiry: Optional[str] = None
 
 class Booking(BaseModel):
     model_config = ConfigDict(extra="ignore")

@@ -1706,6 +1706,20 @@ const PMSModule = ({ user, tenant, onLogout }) => {
           <TabsContent value="reports" className="space-y-6">
             <h2 className="text-2xl font-bold">Hotel Analytics & Reports</h2>
             
+            {/* Visualization Charts */}
+            <div className="grid grid-cols-2 gap-6">
+              <Card>
+                <CardContent className="pt-6">
+                  <PickupPaceChart data={reports.pickupPace} />
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="pt-6">
+                  <LeadTimeCurve data={reports.leadTime} />
+                </CardContent>
+              </Card>
+            </div>
+            
             {/* Show message if no reports loaded yet */}
             {!reports.daily && !reports.revenue && !reports.occupancy && (
               <Card>

@@ -338,7 +338,7 @@ class MessagingThrottlingTester:
             long_message = "This is a very long SMS message that exceeds 160 characters to test the segment count and warning functionality. " + \
                           "It should trigger a warning about multiple SMS segments being required for delivery. This message is intentionally long."
             
-            response = self.session.post(f"{BASE_URL}/messages/send-sms", json={
+            response = self.session.post(f"{BASE_URL}/messages/send-sms", params={
                 "recipient": "+1234567890",
                 "body": long_message
             })

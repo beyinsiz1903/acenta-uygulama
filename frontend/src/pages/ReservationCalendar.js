@@ -661,6 +661,26 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
     return colors[intensity] || colors.low;
   };
 
+  // AI Mode: Check if booking has AI recommendation
+  const getAIRecommendation = (bookingId) => {
+    const roomMove = aiRoomMoves.find(r => r.booking_id === bookingId);
+    const overbooking = aiOverbookingSolutions.find(s => s.booking_id === bookingId);
+    return roomMove || overbooking;
+  };
+
+  // AI Mode: Check no-show risk
+  const getNoShowRisk = (bookingId) => {
+    return aiNoShowPredictions.find(p => p.booking_id === bookingId);
+  };
+
+  const toggleAIMode = () => {
+    const newState = !showAIPanel;
+    setShowAIPanel(newState);
+    if (newState) {
+      loadAIRecommendations();
+    }
+  };
+
   const navigatePrevious = () => {
     const newDate = new Date(currentDate);
     newDate.setDate(newDate.getDate() - daysToShow);

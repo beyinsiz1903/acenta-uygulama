@@ -3102,6 +3102,191 @@ const PMSModule = ({ user, tenant, onLogout }) => {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Guest 360° Profile Dialog */}
+        <Dialog open={openDialog === 'guest360'} onOpenChange={(open) => !open && setOpenDialog(null)}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-2xl">🌟 Guest 360° Profile</DialogTitle>
+              <DialogDescription>Complete guest intelligence and relationship data</DialogDescription>
+            </DialogHeader>
+            
+            {loadingGuest360 ? (
+              <div className="text-center py-12">
+                <div className="text-4xl mb-4">⏳</div>
+                <div>Loading guest profile...</div>
+              </div>
+            ) : guest360Data ? (
+              <div className="space-y-4">
+                {/* Identity Card */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Identity & Contact</CardTitle>
+                  </CardHeader>
+                  <CardContent className="grid grid-cols-2 gap-4">
+                    <div>
+                      <div className="text-sm text-gray-600">Name</div>
+                      <div className="font-semibold">{guest360Data.guest?.name}</div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-gray-600">Email</div>
+                      <div className="font-semibold">{guest360Data.guest?.email}</div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-gray-600">Phone</div>
+                      <div className="font-semibold">{guest360Data.guest?.phone}</div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-gray-600">Country</div>
+                      <div className="font-semibold">{guest360Data.guest?.country || 'N/A'}</div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-gray-600">Loyalty Status</div>
+                      <div className={`inline-block px-2 py-1 rounded text-sm font-bold ${
+                        guest360Data.profile?.loyalty_status === 'vip' ? 'bg-purple-600 text-white' :
+                        guest360Data.profile?.loyalty_status === 'gold' ? 'bg-yellow-500 text-white' :
+                        guest360Data.profile?.loyalty_status === 'silver' ? 'bg-gray-400 text-white' :
+                        'bg-blue-500 text-white'
+                      }`}>
+                        {guest360Data.profile?.loyalty_status?.toUpperCase() || 'STANDARD'}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-gray-600">Last Seen</div>
+                      <div className="font-semibold">
+                        {guest360Data.profile?.last_seen_date ? new Date(guest360Data.profile.last_seen_date).toLocaleDateString() : 'N/A'}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Stats Dashboard */}
+                <div className="grid grid-cols-4 gap-4">
+                  <Card>
+                    <CardContent className="pt-4 text-center">
+                      <div className="text-3xl font-bold text-blue-600">{guest360Data.stats?.total_stays || 0}</div>
+                      <div className="text-sm text-gray-600">Total Stays</div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="pt-4 text-center">
+                      <div className="text-3xl font-bold text-green-600">{guest360Data.stats?.total_nights || 0}</div>
+                      <div className="text-sm text-gray-600">Total Nights</div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="pt-4 text-center">
+                      <div className="text-3xl font-bold text-purple-600">${guest360Data.stats?.lifetime_value || 0}</div>
+                      <div className="text-sm text-gray-600">Lifetime Value</div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="pt-4 text-center">
+                      <div className="text-3xl font-bold text-orange-600">${guest360Data.stats?.average_adr || 0}</div>
+                      <div className="text-sm text-gray-600">Avg ADR</div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Tags & Notes */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Tags & Notes</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div>
+                      <div className="text-sm text-gray-600 mb-2">Tags:</div>
+                      <div className="flex flex-wrap gap-2">
+                        {guest360Data.guest?.tags?.map((tag, idx) => (
+                          <span key={idx} className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs">
+                            {tag}
+                          </span>
+                        ))}
+                        <div className="flex gap-2">
+                          <Input 
+                            placeholder="Add tag..."
+                            value={guestTag}
+                            onChange={(e) => setGuestTag(e.target.value)}
+                            className="h-8 w-32"
+                          />
+                          <Button size="sm" onClick={addGuestTag}>Add</Button>
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-gray-600 mb-2">Notes:</div>
+                      <div className="space-y-2 max-h-32 overflow-y-auto mb-2">
+                        {guest360Data.guest?.notes?.map((note, idx) => (
+                          <div key={idx} className="text-xs bg-gray-50 p-2 rounded">
+                            <div className="font-semibold">{note.created_by} - {new Date(note.created_at).toLocaleString()}</div>
+                            <div>{note.text}</div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="flex gap-2">
+                        <Textarea 
+                          placeholder="Add note..."
+                          value={guestNote}
+                          onChange={(e) => setGuestNote(e.target.value)}
+                          className="h-16"
+                        />
+                        <Button size="sm" onClick={addGuestNote}>Add Note</Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Booking History */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Recent Bookings</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                      {guest360Data.recent_bookings?.map((booking, idx) => (
+                        <div key={idx} className="flex justify-between items-center p-2 bg-gray-50 rounded text-sm">
+                          <div>
+                            <div className="font-semibold">
+                              {new Date(booking.check_in).toLocaleDateString()} - {new Date(booking.check_out).toLocaleDateString()}
+                            </div>
+                            <div className="text-xs text-gray-600">Status: {booking.status}</div>
+                          </div>
+                          <div className="text-right">
+                            <div className="font-bold text-green-600">${booking.total_amount}</div>
+                            <div className="text-xs text-gray-600">{booking.ota_channel || 'Direct'}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Channel Distribution */}
+                {guest360Data.stats?.channel_distribution && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg">Channel Distribution</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex gap-4 flex-wrap">
+                        {Object.entries(guest360Data.stats.channel_distribution).map(([channel, count]) => (
+                          <div key={channel} className="text-center">
+                            <div className="text-2xl font-bold">{count}</div>
+                            <div className="text-xs text-gray-600 capitalize">{channel}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-12 text-gray-500">
+                Select a guest to view their 360° profile
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </Layout>
   );

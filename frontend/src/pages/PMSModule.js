@@ -1354,7 +1354,19 @@ const PMSModule = ({ user, tenant, onLogout }) => {
               {guests.map((guest) => (
                 <Card key={guest.id}>
                   <CardHeader>
-                    <CardTitle>{guest.name}</CardTitle>
+                    <CardTitle className="flex justify-between items-center">
+                      <span>{guest.name}</span>
+                      {guest.loyalty_tier && guest.loyalty_tier !== 'standard' && (
+                        <span className={`px-2 py-1 text-xs rounded ${
+                          guest.loyalty_tier === 'vip' ? 'bg-purple-600 text-white' :
+                          guest.loyalty_tier === 'gold' ? 'bg-yellow-500 text-white' :
+                          guest.loyalty_tier === 'silver' ? 'bg-gray-400 text-white' :
+                          'bg-blue-500 text-white'
+                        }`}>
+                          {guest.loyalty_tier?.toUpperCase()}
+                        </span>
+                      )}
+                    </CardTitle>
                     <CardDescription>{guest.email}</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-2 text-sm">
@@ -1370,6 +1382,16 @@ const PMSModule = ({ user, tenant, onLogout }) => {
                       <span>Loyalty Points:</span>
                       <span className="font-medium">{guest.loyalty_points}</span>
                     </div>
+                    <Button 
+                      className="w-full mt-3" 
+                      variant="outline"
+                      onClick={() => {
+                        setSelectedGuest360(guest.id);
+                        loadGuest360(guest.id);
+                      }}
+                    >
+                      🌟 View 360° Profile
+                    </Button>
                   </CardContent>
                 </Card>
               ))}

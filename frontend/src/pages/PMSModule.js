@@ -1676,6 +1676,17 @@ const PMSModule = ({ user, tenant, onLogout }) => {
           <TabsContent value="reports" className="space-y-6">
             <h2 className="text-2xl font-bold">Hotel Analytics & Reports</h2>
             
+            {/* Show message if no reports loaded yet */}
+            {!reports.daily && !reports.revenue && !reports.occupancy && (
+              <Card>
+                <CardContent className="py-12 text-center">
+                  <FileText className="w-16 h-16 mx-auto text-gray-400 mb-4" />
+                  <p className="text-gray-600 mb-2">Loading reports...</p>
+                  <p className="text-sm text-gray-500">If reports don't load, please check console for errors</p>
+                </CardContent>
+              </Card>
+            )}
+            
             {/* Quick Stats */}
             {reports.daily && (
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

@@ -255,6 +255,34 @@ class CompanyStatus(str, Enum):
     PENDING = "pending"  # Quick-created from booking form
     INACTIVE = "inactive"
 
+class OTAChannel(str, Enum):
+    BOOKING_COM = "booking_com"
+    EXPEDIA = "expedia"
+    AIRBNB = "airbnb"
+    AGODA = "agoda"
+    HOTELS_COM = "hotels_com"
+    DIRECT = "direct"  # Direct booking
+    PHONE = "phone"  # Phone booking
+    WALK_IN = "walk_in"
+
+class OTAPaymentModel(str, Enum):
+    AGENCY = "agency"  # OTA collects, pays hotel
+    HOTEL_COLLECT = "hotel_collect"  # Hotel collects from guest
+    VIRTUAL_CARD = "virtual_card"  # OTA provides virtual card
+    PREPAID = "prepaid"  # Guest prepaid to OTA
+
+class ParityStatus(str, Enum):
+    NEGATIVE = "negative"  # OTA cheaper (bad)
+    POSITIVE = "positive"  # Direct cheaper (good)
+    EQUAL = "equal"  # Same rate
+    UNKNOWN = "unknown"
+
+class ChannelHealth(str, Enum):
+    HEALTHY = "healthy"
+    DELAYED = "delayed"
+    ERROR = "error"
+    OFFLINE = "offline"
+
 class FolioType(str, Enum):
     GUEST = "guest"
     COMPANY = "company"

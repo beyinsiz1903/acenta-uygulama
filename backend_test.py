@@ -383,7 +383,7 @@ class MessagingThrottlingTester:
         all_passed = True
         for endpoint, payload, expected_limit in endpoints:
             try:
-                response = self.session.post(f"{BASE_URL}{endpoint}", json=payload)
+                response = self.session.post(f"{BASE_URL}{endpoint}", params=payload)
                 if response.status_code == 200:
                     data = response.json()
                     rate_limit = data.get('rate_limit', {})

@@ -2480,6 +2480,291 @@ async def assign_housekeeping_task(
         'task': task
     }
 
+# ============= ROOM BLOCKS (OUT OF ORDER / OUT OF SERVICE) =============
+
+@api_router.get("/pms/room-blocks")
+async def get_room_blocks(
+    room_id: Optional[str] = None,
+    status: Optional[str] = None,
+    from_date: Optional[str] = None,
+    to_date: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Get room blocks with optional filters"""
+    query = {'tenant_id': current_user.tenant_id}
+    
+    if room_id:
+        query['room_id'] = room_id
+    
+    if status:
+        query['status'] = status
+    
+    # Date range filtering
+    if from_date or to_date:
+        date_query = {}
+        if from_date:
+            # Block overlaps if: block_start <= to_date AND (block_end >= from_date OR block_end is null)
+            date_query['start_date'] = {'$lte': to_date if to_date else from_date}
+        if to_date:
+            # Also check end_date or open-ended blocks
+            query['$or'] = [
+                {'end_date': {'$gte': from_date if from_date else to_date}},
+                {'end_date': None}
+            ]
+    
+    blocks = await db.room_blocks.find(query, {'_id': 0}).to_list(1000)
+    
+    # Enrich with room information
+    for block in blocks:
+        room = await db.rooms.find_one({'id': block['room_id'], 'tenant_id': current_user.tenant_id}, {'_id': 0})
+        if room:
+            block['room_number'] = room['room_number']
+            block['room_type'] = room['room_type']
+    
+    return {
+        'blocks': blocks,
+        'count': len(blocks)
+    }
+
+@api_router.post("/pms/room-blocks")
+async def create_room_block(
+    block_data: RoomBlockCreate,
+    current_user: User = Depends(get_current_user)
+):
+    """Create a new room block"""
+    # Verify room exists
+    room = await db.rooms.find_one({
+        'id': block_data.room_id,
+        'tenant_id': current_user.tenant_id
+    }, {'_id': 0})
+    
+    if not room:
+        raise HTTPException(status_code=404, detail="Room not found")
+    
+    # Check for existing active reservations that conflict
+    start_date = datetime.fromisoformat(block_data.start_date)
+    end_date = datetime.fromisoformat(block_data.end_date) if block_data.end_date else None
+    
+    # Query for overlapping bookings
+    booking_query = {
+        'tenant_id': current_user.tenant_id,
+        'room_id': block_data.room_id,
+        'status': {'$in': ['confirmed', 'guaranteed', 'checked_in']},
+        'check_in': {'$lt': block_data.end_date if block_data.end_date else '9999-12-31'},
+        'check_out': {'$gt': block_data.start_date}
+    }
+    
+    conflicting_bookings = await db.bookings.find(booking_query, {'_id': 0}).to_list(100)
+    
+    # Create the block
+    block = RoomBlock(
+        id=str(uuid.uuid4()),
+        room_id=block_data.room_id,
+        type=block_data.type,
+        reason=block_data.reason,
+        details=block_data.details,
+        start_date=block_data.start_date,
+        end_date=block_data.end_date,
+        allow_sell=block_data.allow_sell,
+        created_by=current_user.id,
+        created_at=datetime.now(timezone.utc).isoformat(),
+        status=BlockStatus.ACTIVE
+    )
+    
+    block_dict = block.model_dump()
+    await db.room_blocks.insert_one({**block_dict, 'tenant_id': current_user.tenant_id})
+    
+    # Create audit log
+    await db.audit_logs.insert_one({
+        'id': str(uuid.uuid4()),
+        'tenant_id': current_user.tenant_id,
+        'user_id': current_user.id,
+        'user_name': current_user.name,
+        'user_role': current_user.role,
+        'action': 'CREATE_ROOM_BLOCK',
+        'entity_type': 'room_block',
+        'entity_id': block.id,
+        'changes': {
+            'room_id': block.room_id,
+            'type': block.type,
+            'reason': block.reason,
+            'start_date': block.start_date,
+            'end_date': block.end_date,
+            'allow_sell': block.allow_sell
+        },
+        'timestamp': datetime.now(timezone.utc).isoformat()
+    })
+    
+    # If there are conflicting bookings, create exception queue items
+    if conflicting_bookings and not block_data.allow_sell:
+        for booking in conflicting_bookings:
+            await db.exceptions.insert_one({
+                'id': str(uuid.uuid4()),
+                'tenant_id': current_user.tenant_id,
+                'exception_type': 'room_blocked_with_reservation',
+                'entity_type': 'booking',
+                'entity_id': booking['id'],
+                'severity': 'high',
+                'message': f"Room {room['room_number']} blocked ({block.type}) but has active reservation",
+                'details': {
+                    'room_id': block_data.room_id,
+                    'room_number': room['room_number'],
+                    'block_id': block.id,
+                    'block_type': block.type,
+                    'block_reason': block.reason,
+                    'booking_id': booking['id'],
+                    'guest_name': booking.get('guest_name', 'Unknown'),
+                    'check_in': booking['check_in'],
+                    'check_out': booking['check_out']
+                },
+                'status': 'pending',
+                'created_at': datetime.now(timezone.utc).isoformat()
+            })
+    
+    response = {
+        'message': 'Room block created successfully',
+        'block': block,
+        'room_number': room['room_number'],
+        'warnings': []
+    }
+    
+    if conflicting_bookings and not block_data.allow_sell:
+        response['warnings'].append({
+            'type': 'conflicting_reservations',
+            'count': len(conflicting_bookings),
+            'message': f"{len(conflicting_bookings)} active reservation(s) conflict with this block. Move or cancel required."
+        })
+    
+    return response
+
+@api_router.patch("/pms/room-blocks/{block_id}")
+async def update_room_block(
+    block_id: str,
+    block_data: RoomBlockUpdate,
+    current_user: User = Depends(get_current_user)
+):
+    """Update an existing room block"""
+    block = await db.room_blocks.find_one({
+        'id': block_id,
+        'tenant_id': current_user.tenant_id
+    }, {'_id': 0})
+    
+    if not block:
+        raise HTTPException(status_code=404, detail="Room block not found")
+    
+    # Build update dict
+    update_data = {}
+    changes = {}
+    
+    if block_data.reason is not None:
+        update_data['reason'] = block_data.reason
+        changes['reason'] = {'old': block.get('reason'), 'new': block_data.reason}
+    
+    if block_data.details is not None:
+        update_data['details'] = block_data.details
+        changes['details'] = {'old': block.get('details'), 'new': block_data.details}
+    
+    if block_data.start_date is not None:
+        update_data['start_date'] = block_data.start_date
+        changes['start_date'] = {'old': block.get('start_date'), 'new': block_data.start_date}
+    
+    if block_data.end_date is not None:
+        update_data['end_date'] = block_data.end_date
+        changes['end_date'] = {'old': block.get('end_date'), 'new': block_data.end_date}
+    
+    if block_data.allow_sell is not None:
+        update_data['allow_sell'] = block_data.allow_sell
+        changes['allow_sell'] = {'old': block.get('allow_sell'), 'new': block_data.allow_sell}
+    
+    if block_data.status is not None:
+        update_data['status'] = block_data.status
+        changes['status'] = {'old': block.get('status'), 'new': block_data.status}
+    
+    if not update_data:
+        raise HTTPException(status_code=400, detail="No fields to update")
+    
+    # Update block
+    await db.room_blocks.update_one(
+        {'id': block_id, 'tenant_id': current_user.tenant_id},
+        {'$set': update_data}
+    )
+    
+    # Create audit log
+    await db.audit_logs.insert_one({
+        'id': str(uuid.uuid4()),
+        'tenant_id': current_user.tenant_id,
+        'user_id': current_user.id,
+        'user_name': current_user.name,
+        'user_role': current_user.role,
+        'action': 'UPDATE_ROOM_BLOCK',
+        'entity_type': 'room_block',
+        'entity_id': block_id,
+        'changes': changes,
+        'timestamp': datetime.now(timezone.utc).isoformat()
+    })
+    
+    # Get updated block
+    updated_block = await db.room_blocks.find_one({
+        'id': block_id,
+        'tenant_id': current_user.tenant_id
+    }, {'_id': 0})
+    
+    return {
+        'message': 'Room block updated successfully',
+        'block': updated_block
+    }
+
+@api_router.post("/pms/room-blocks/{block_id}/cancel")
+async def cancel_room_block(
+    block_id: str,
+    reason: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Cancel a room block"""
+    block = await db.room_blocks.find_one({
+        'id': block_id,
+        'tenant_id': current_user.tenant_id
+    }, {'_id': 0})
+    
+    if not block:
+        raise HTTPException(status_code=404, detail="Room block not found")
+    
+    if block['status'] == 'cancelled':
+        raise HTTPException(status_code=400, detail="Block is already cancelled")
+    
+    # Update status to cancelled
+    await db.room_blocks.update_one(
+        {'id': block_id, 'tenant_id': current_user.tenant_id},
+        {'$set': {
+            'status': 'cancelled',
+            'cancelled_at': datetime.now(timezone.utc).isoformat(),
+            'cancelled_by': current_user.id,
+            'cancellation_reason': reason or 'Cancelled by user'
+        }}
+    )
+    
+    # Create audit log
+    await db.audit_logs.insert_one({
+        'id': str(uuid.uuid4()),
+        'tenant_id': current_user.tenant_id,
+        'user_id': current_user.id,
+        'user_name': current_user.name,
+        'user_role': current_user.role,
+        'action': 'CANCEL_ROOM_BLOCK',
+        'entity_type': 'room_block',
+        'entity_id': block_id,
+        'changes': {
+            'status': {'old': block['status'], 'new': 'cancelled'},
+            'reason': reason or 'Cancelled by user'
+        },
+        'timestamp': datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {
+        'message': 'Room block cancelled successfully',
+        'block_id': block_id
+    }
+
 # ============= LOYALTY PROGRAM =============
 
 # ============= REPORTING =============

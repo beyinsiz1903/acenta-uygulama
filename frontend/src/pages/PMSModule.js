@@ -56,6 +56,15 @@ const PMSModule = ({ user, tenant, onLogout }) => {
     end_date: '',
     allow_sell: false
   });
+  
+  // Phase H - CRM & Upsell states
+  const [selectedGuest360, setSelectedGuest360] = useState(null);
+  const [guest360Data, setGuest360Data] = useState(null);
+  const [loadingGuest360, setLoadingGuest360] = useState(false);
+  const [guestTag, setGuestTag] = useState('');
+  const [guestNote, setGuestNote] = useState('');
+  const [upsellOffers, setUpsellOffers] = useState([]);
+  const [messageTemplates, setMessageTemplates] = useState([]);
   const [reports, setReports] = useState({
     occupancy: null,
     revenue: null,

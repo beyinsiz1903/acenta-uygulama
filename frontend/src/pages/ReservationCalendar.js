@@ -806,7 +806,15 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
                     className="flex items-center gap-2"
                   >
                     <TrendingUp className="w-4 h-4" />
-                    Enterprise Mode
+                    Enterprise
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={showAIPanel ? "default" : "outline"}
+                    onClick={toggleAIMode}
+                    className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700"
+                  >
+                    🤖 AI Mode
                   </Button>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-blue-600">{getOccupancyForDate(new Date())}%</div>

@@ -859,7 +859,15 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
                     onClick={toggleAIMode}
                     className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700"
                   >
-                    🤖 AI Mode
+                    🤖 AI
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={showDeluxePanel ? "default" : "outline"}
+                    onClick={toggleDeluxeMode}
+                    className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:from-amber-600 hover:to-orange-700"
+                  >
+                    💎 Deluxe+
                   </Button>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-blue-600">{getOccupancyForDate(new Date())}%</div>

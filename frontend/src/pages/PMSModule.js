@@ -2247,6 +2247,149 @@ const PMSModule = ({ user, tenant, onLogout }) => {
               </div>
             </div>
           </TabsContent>
+
+          {/* MESSAGING CENTER TAB */}
+          <TabsContent value="messaging" className="space-y-6">
+            <h2 className="text-2xl font-bold">💬 Messaging Center</h2>
+            
+            <div className="grid grid-cols-3 gap-6">
+              {/* Message Composer */}
+              <div className="col-span-2">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Compose Message</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {/* Channel Selector */}
+                    <div>
+                      <Label>Channel</Label>
+                      <Select value={newMessage.channel} onValueChange={(v) => setNewMessage({...newMessage, channel: v})}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="email">📧 Email</SelectItem>
+                          <SelectItem value="sms">📱 SMS</SelectItem>
+                          <SelectItem value="whatsapp">💬 WhatsApp</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Recipient */}
+                    <div>
+                      <Label>Recipient {newMessage.channel === 'email' ? '(Email)' : '(Phone)'}</Label>
+                      <Input 
+                        value={newMessage.recipient}
+                        onChange={(e) => setNewMessage({...newMessage, recipient: e.target.value})}
+                        placeholder={newMessage.channel === 'email' ? 'guest@example.com' : '+1234567890'}
+                      />
+                    </div>
+
+                    {/* Subject (Email only) */}
+                    {newMessage.channel === 'email' && (
+                      <div>
+                        <Label>Subject</Label>
+                        <Input 
+                          value={newMessage.subject}
+                          onChange={(e) => setNewMessage({...newMessage, subject: e.target.value})}
+                          placeholder="Welcome to our hotel!"
+                        />
+                      </div>
+                    )}
+
+                    {/* Message Body */}
+                    <div>
+                      <Label>Message</Label>
+                      <Textarea 
+                        value={newMessage.body}
+                        onChange={(e) => setNewMessage({...newMessage, body: e.target.value})}
+                        rows={8}
+                        placeholder="Dear guest, we're excited to welcome you..."
+                      />
+                    </div>
+
+                    {/* Send Button */}
+                    <Button className="w-full" onClick={sendMessage}>
+                      Send Message
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Templates & History */}
+              <div className="space-y-4">
+                {/* Quick Templates */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Quick Templates</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <Button 
+                        variant="outline" 
+                        className="w-full justify-start"
+                        onClick={() => setNewMessage({
+                          ...newMessage,
+                          subject: 'Welcome to Our Hotel',
+                          body: 'Dear Guest,\n\nWe are thrilled to welcome you! Your room will be ready for check-in at 3:00 PM.\n\nBest regards,\nHotel Team'
+                        })}
+                      >
+                        📧 Welcome Email
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        className="w-full justify-start"
+                        onClick={() => setNewMessage({
+                          ...newMessage,
+                          subject: 'Special Upgrade Offer',
+                          body: 'Hello! We have a special room upgrade offer for you at just $45. Would you like to upgrade to a Deluxe room?'
+                        })}
+                      >
+                        ⬆️ Upgrade Offer
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        className="w-full justify-start"
+                        onClick={() => setNewMessage({
+                          ...newMessage,
+                          subject: 'Thank You',
+                          body: 'Thank you for choosing our hotel! We hope you enjoyed your stay. We would love to hear your feedback.'
+                        })}
+                      >
+                        🙏 Thank You
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Sent Messages */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Recent Messages ({sentMessages.length})</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                      {sentMessages.length === 0 ? (
+                        <div className="text-center text-gray-400 py-4 text-sm">
+                          No messages sent yet
+                        </div>
+                      ) : (
+                        sentMessages.map((msg, idx) => (
+                          <div key={idx} className="p-2 bg-gray-50 rounded text-xs">
+                            <div className="font-semibold flex justify-between">
+                              <span>{msg.recipient}</span>
+                              <span className="text-green-600">✓ Sent</span>
+                            </div>
+                            <div className="text-gray-600 mt-1 truncate">{msg.body || msg.subject}</div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </TabsContent>
         </Tabs>
 
         {/* Folio Dialog */}

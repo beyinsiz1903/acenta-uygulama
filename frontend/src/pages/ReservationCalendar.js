@@ -826,6 +826,33 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
                 </div>
               </div>
 
+              {/* OTA Channels */}
+              <div>
+                <div className="text-xs font-semibold text-gray-700 mb-2">OTA Channels:</div>
+                <div className="flex items-center space-x-3 text-sm flex-wrap gap-y-1">
+                  <div className="flex items-center space-x-1">
+                    <Badge className="bg-indigo-600 text-white text-[9px] px-1.5">BKG</Badge>
+                    <span className="text-xs">Booking.com</span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <Badge className="bg-blue-600 text-white text-[9px] px-1.5">EXP</Badge>
+                    <span className="text-xs">Expedia</span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <Badge className="bg-red-600 text-white text-[9px] px-1.5">ABNB</Badge>
+                    <span className="text-xs">Airbnb</span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <Badge className="bg-purple-600 text-white text-[9px] px-1.5">AGD</Badge>
+                    <span className="text-xs">Agoda</span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <Badge className="bg-rose-600 text-white text-[9px] px-1.5">HTL</Badge>
+                    <span className="text-xs">Hotels.com</span>
+                  </div>
+                </div>
+              </div>
+
               {/* Quick Tips */}
               <div className="flex items-center justify-between pt-2 border-t">
                 <div className="flex items-center space-x-4 text-xs text-gray-600">

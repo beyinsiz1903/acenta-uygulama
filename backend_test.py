@@ -498,7 +498,6 @@ def main():
 
 if __name__ == "__main__":
     main()
-        """Run a single API test"""
         url = f"{self.api_url}/{endpoint}"
         test_headers = {'Content-Type': 'application/json'}
         if self.token:

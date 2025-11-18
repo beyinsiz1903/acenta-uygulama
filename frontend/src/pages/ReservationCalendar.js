@@ -920,6 +920,137 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
           </CardContent>
         </Card>
 
+        {/* Deluxe+ Panel */}
+        {showDeluxePanel && (
+          <Card className="border-2 border-amber-500 bg-gradient-to-br from-amber-50 to-orange-50">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                💎 Deluxe+ Features
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Group Bookings */}
+              {groupBookings.length > 0 && (
+                <div className="bg-white p-3 rounded-lg border-2 border-amber-300">
+                  <div className="text-sm font-semibold text-amber-700 mb-2">
+                    👥 Group Bookings ({groupBookings.length})
+                  </div>
+                  <div className="space-y-2 max-h-48 overflow-y-auto">
+                    {groupBookings.slice(0, 5).map((group, idx) => (
+                      <div key={idx} className="bg-amber-50 p-2 rounded border border-amber-200 text-xs">
+                        <div className="flex justify-between items-start mb-1">
+                          <div>
+                            <span className="font-semibold">{group.company_name}</span>
+                            {group.is_large_group && (
+                              <Badge className="ml-2 bg-orange-600 text-white text-[8px]">LARGE</Badge>
+                            )}
+                          </div>
+                          <Badge className="bg-amber-600 text-white text-[9px]">
+                            {group.room_count} rooms
+                          </Badge>
+                        </div>
+                        <div className="text-gray-600">
+                          {new Date(group.check_in).toLocaleDateString()} - {new Date(group.check_out).toLocaleDateString()}
+                        </div>
+                        <div className="flex justify-between mt-1">
+                          <span className="text-gray-500">Revenue:</span>
+                          <span className="font-semibold text-green-600">${group.total_revenue}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Oversell Protection Map */}
+              {oversellProtection.length > 0 && (
+                <div className="bg-white p-3 rounded-lg border-2 border-red-300">
+                  <div className="text-sm font-semibold text-red-700 mb-2">
+                    🛡️ Oversell Protection Status
+                  </div>
+                  <div className="grid grid-cols-4 gap-2">
+                    <div className="text-center">
+                      <div className="text-xl font-bold text-red-600">
+                        {oversellProtection.filter(d => d.risk_level === 'danger').length}
+                      </div>
+                      <div className="text-[10px] text-gray-600">DANGER</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-xl font-bold text-yellow-600">
+                        {oversellProtection.filter(d => d.risk_level === 'caution').length}
+                      </div>
+                      <div className="text-[10px] text-gray-600">CAUTION</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-xl font-bold text-blue-600">
+                        {oversellProtection.filter(d => d.risk_level === 'moderate').length}
+                      </div>
+                      <div className="text-[10px] text-gray-600">MODERATE</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-xl font-bold text-green-600">
+                        {oversellProtection.filter(d => d.risk_level === 'safe').length}
+                      </div>
+                      <div className="text-[10px] text-gray-600">SAFE</div>
+                    </div>
+                  </div>
+                  <div className="mt-2 text-xs text-gray-600 space-y-1">
+                    {oversellProtection.filter(d => d.risk_level === 'danger').slice(0, 2).map((day, idx) => (
+                      <div key={idx} className="flex justify-between bg-red-50 p-1 rounded">
+                        <span>{new Date(day.date).toLocaleDateString()}</span>
+                        <span className="font-semibold text-red-600">{day.recommendation}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Channel Mix Optimization */}
+              {channelMixData && (
+                <div className="bg-white p-3 rounded-lg border-2 border-blue-300">
+                  <div className="text-sm font-semibold text-blue-700 mb-2">
+                    📊 Channel Mix Analysis
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-gray-600">Direct Booking Gap:</span>
+                      <span className="font-bold text-orange-600">
+                        {channelMixData.analysis?.direct_booking_gap}%
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-gray-600">Commission Rate:</span>
+                      <span className="font-bold text-red-600">
+                        {channelMixData.analysis?.current_commission_rate}%
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-gray-600">Potential Annual Savings:</span>
+                      <span className="font-bold text-green-600">
+                        ${Math.round(channelMixData.analysis?.potential_annual_savings || 0)}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="mt-2 pt-2 border-t">
+                    <div className="text-xs font-semibold text-gray-700 mb-1">Top Recommendation:</div>
+                    <div className="text-xs text-gray-600 bg-blue-50 p-2 rounded">
+                      {channelMixData.recommendations?.[0]}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Empty State */}
+              {groupBookings.length === 0 && oversellProtection.length === 0 && !channelMixData && (
+                <div className="text-center py-8 text-gray-500">
+                  <div className="text-4xl mb-2">💎</div>
+                  <div className="text-sm">Deluxe+ analytics loading...</div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
         {/* AI Mode Panel */}
         {showAIPanel && (
           <Card className="border-2 border-purple-500 bg-gradient-to-br from-purple-50 to-blue-50">

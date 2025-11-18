@@ -35,7 +35,9 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
   // Dialog states
   const [showNewBookingDialog, setShowNewBookingDialog] = useState(false);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
+  const [showSidebar, setShowSidebar] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState(null);
+  const [selectedBookingFolio, setSelectedBookingFolio] = useState(null);
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedRoom, setSelectedRoom] = useState(null);
   

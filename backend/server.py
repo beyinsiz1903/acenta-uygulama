@@ -1742,6 +1742,42 @@ async def close_folio(
     
     return {"message": "Folio closed successfully"}
 
+@api_router.get("/folio/dashboard-stats")
+async def get_folio_dashboard_stats(current_user: User = Depends(get_current_user)):
+    """Get folio statistics for dashboard"""
+    # Get all open folios
+    open_folios = await db.folios.find({
+        'tenant_id': current_user.tenant_id,
+        'status': 'open'
+    }, {'_id': 0}).to_list(1000)
+    
+    # Calculate total outstanding balance
+    total_outstanding = 0.0
+    for folio in open_folios:
+        balance = await calculate_folio_balance(folio['id'], current_user.tenant_id)
+        total_outstanding += balance
+    
+    # Get recent charges (last 24 hours)
+    yesterday = (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()
+    recent_charges = await db.folio_charges.count_documents({
+        'tenant_id': current_user.tenant_id,
+        'posted_at': {'$gte': yesterday},
+        'voided': False
+    })
+    
+    # Get recent payments (last 24 hours)
+    recent_payments = await db.payments.count_documents({
+        'tenant_id': current_user.tenant_id,
+        'payment_date': {'$gte': yesterday}
+    })
+    
+    return {
+        'total_open_folios': len(open_folios),
+        'total_outstanding_balance': round(total_outstanding, 2),
+        'recent_charges_24h': recent_charges,
+        'recent_payments_24h': recent_payments
+    }
+
 @api_router.post("/night-audit/post-room-charges")
 async def post_room_charges(current_user: User = Depends(get_current_user)):
     """Night audit: Post room charges to all active bookings"""

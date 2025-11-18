@@ -3458,6 +3458,257 @@ async def get_exception_queue(
     exceptions = await db.exception_queue.find(query, {'_id': 0}).sort('created_at', -1).to_list(100)
     return {'exceptions': exceptions, 'count': len(exceptions)}
 
+# ============= OTA OVERLAY & RATE PARITY =============
+
+@api_router.get("/channel/parity/check")
+async def check_rate_parity(
+    date: Optional[str] = None,
+    room_type: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Check rate parity between OTA and direct rates"""
+    target_date = datetime.fromisoformat(date).date() if date else datetime.now(timezone.utc).date()
+    
+    # Get rooms
+    room_query = {'tenant_id': current_user.tenant_id}
+    if room_type:
+        room_query['room_type'] = room_type
+    
+    rooms = await db.rooms.find(room_query, {'_id': 0}).to_list(1000)
+    room_types = list(set(r['room_type'] for r in rooms))
+    
+    parity_results = []
+    
+    for rt in room_types:
+        # Get direct rate (base_price from room)
+        rt_rooms = [r for r in rooms if r['room_type'] == rt]
+        if not rt_rooms:
+            continue
+        
+        direct_rate = rt_rooms[0]['base_price']
+        
+        # Get OTA rates from recent bookings
+        start_of_day = datetime.combine(target_date, datetime.min.time())
+        end_of_day = datetime.combine(target_date, datetime.max.time())
+        
+        # Find bookings on this date by channel
+        ota_bookings = await db.bookings.find({
+            'tenant_id': current_user.tenant_id,
+            'room_id': {'$in': [r['id'] for r in rt_rooms]},
+            'check_in': {'$gte': start_of_day.isoformat(), '$lte': end_of_day.isoformat()},
+            'ota_channel': {'$ne': None}
+        }, {'_id': 0}).to_list(100)
+        
+        # Group by OTA channel
+        ota_rates = {}
+        for booking in ota_bookings:
+            if booking.get('ota_channel'):
+                nights = (datetime.fromisoformat(booking['check_out']) - datetime.fromisoformat(booking['check_in'])).days
+                if nights > 0:
+                    avg_rate = booking['total_amount'] / nights
+                    channel = booking['ota_channel']
+                    if channel not in ota_rates:
+                        ota_rates[channel] = []
+                    ota_rates[channel].append(avg_rate)
+        
+        # Calculate average OTA rate per channel
+        for channel, rates in ota_rates.items():
+            avg_ota_rate = sum(rates) / len(rates)
+            diff = direct_rate - avg_ota_rate
+            
+            if abs(diff) < 1:
+                parity = ParityStatus.EQUAL
+            elif diff > 0:
+                parity = ParityStatus.POSITIVE  # Direct more expensive (good)
+            else:
+                parity = ParityStatus.NEGATIVE  # OTA more expensive (bad)
+            
+            parity_results.append({
+                'date': target_date.isoformat(),
+                'room_type': rt,
+                'channel': channel,
+                'direct_rate': round(direct_rate, 2),
+                'ota_rate': round(avg_ota_rate, 2),
+                'difference': round(diff, 2),
+                'parity_status': parity,
+                'sample_size': len(rates)
+            })
+    
+    return {
+        'date': target_date.isoformat(),
+        'parity_checks': parity_results,
+        'total_checks': len(parity_results)
+    }
+
+@api_router.get("/channel/status")
+async def get_channel_status(current_user: User = Depends(get_current_user)):
+    """Get health status of all channel connections"""
+    # Get all connections
+    connections = await db.channel_connections.find(
+        {'tenant_id': current_user.tenant_id},
+        {'_id': 0}
+    ).to_list(100)
+    
+    # Check exception queue for issues
+    recent_exceptions = await db.exception_queue.find({
+        'tenant_id': current_user.tenant_id,
+        'status': 'pending',
+        'created_at': {'$gte': (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat()}
+    }, {'_id': 0}).to_list(100)
+    
+    channel_statuses = []
+    
+    for conn in connections:
+        # Check for recent exceptions
+        conn_exceptions = [e for e in recent_exceptions if e.get('channel_type') == conn.get('channel_type')]
+        
+        if len(conn_exceptions) > 10:
+            health = ChannelHealth.ERROR
+            message = f"{len(conn_exceptions)} pending exceptions"
+        elif len(conn_exceptions) > 3:
+            health = ChannelHealth.DELAYED
+            message = f"{len(conn_exceptions)} pending exceptions"
+        elif conn.get('status') != 'active':
+            health = ChannelHealth.OFFLINE
+            message = "Connection inactive"
+        else:
+            health = ChannelHealth.HEALTHY
+            message = "All systems operational"
+        
+        # Calculate delay if any
+        delay_minutes = 0
+        if conn_exceptions:
+            oldest = min(conn_exceptions, key=lambda x: x['created_at'])
+            delay_minutes = int((datetime.now(timezone.utc) - datetime.fromisoformat(oldest['created_at'])).total_seconds() / 60)
+        
+        channel_statuses.append({
+            'channel_type': conn.get('channel_type'),
+            'channel_name': conn.get('channel_name'),
+            'health': health,
+            'message': message,
+            'pending_exceptions': len(conn_exceptions),
+            'delay_minutes': delay_minutes,
+            'last_sync': conn.get('last_sync_at', 'Never')
+        })
+    
+    return {
+        'channels': channel_statuses,
+        'total_channels': len(channel_statuses),
+        'healthy_count': sum(1 for c in channel_statuses if c['health'] == ChannelHealth.HEALTHY),
+        'warning_count': sum(1 for c in channel_statuses if c['health'] == ChannelHealth.DELAYED),
+        'error_count': sum(1 for c in channel_statuses if c['health'] == ChannelHealth.ERROR)
+    }
+
+@api_router.post("/channel/insights/analyze")
+async def analyze_ota_insights(
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """AI-powered OTA channel analysis (Phase E preparation)"""
+    # Default to last 30 days
+    end = datetime.fromisoformat(end_date).date() if end_date else datetime.now(timezone.utc).date()
+    start = datetime.fromisoformat(start_date).date() if start_date else (end - timedelta(days=30))
+    
+    # Get all bookings in date range
+    bookings = await db.bookings.find({
+        'tenant_id': current_user.tenant_id,
+        'check_in': {'$gte': start.isoformat(), '$lte': end.isoformat()}
+    }, {'_id': 0}).to_list(10000)
+    
+    # Channel performance analysis
+    channel_performance = {}
+    total_revenue = 0
+    total_commission_cost = 0
+    
+    for booking in bookings:
+        channel = booking.get('ota_channel') or 'direct'
+        amount = booking.get('total_amount', 0)
+        commission = booking.get('commission_pct', 0)
+        
+        if channel not in channel_performance:
+            channel_performance[channel] = {
+                'bookings': 0,
+                'revenue': 0,
+                'commission_cost': 0,
+                'avg_rate': 0
+            }
+        
+        channel_performance[channel]['bookings'] += 1
+        channel_performance[channel]['revenue'] += amount
+        
+        if commission > 0:
+            commission_amount = amount * (commission / 100)
+            channel_performance[channel]['commission_cost'] += commission_amount
+            total_commission_cost += commission_amount
+        
+        total_revenue += amount
+    
+    # Calculate averages and net revenue
+    for channel, data in channel_performance.items():
+        if data['bookings'] > 0:
+            data['avg_rate'] = round(data['revenue'] / data['bookings'], 2)
+            data['net_revenue'] = round(data['revenue'] - data['commission_cost'], 2)
+            data['revenue_share_pct'] = round((data['revenue'] / total_revenue * 100) if total_revenue > 0 else 0, 2)
+            data['commission_cost'] = round(data['commission_cost'], 2)
+    
+    # Sort by revenue
+    sorted_channels = sorted(
+        channel_performance.items(),
+        key=lambda x: x[1]['revenue'],
+        reverse=True
+    )
+    
+    # Generate insights
+    insights = []
+    
+    # Best performing channel
+    if sorted_channels:
+        best_channel = sorted_channels[0]
+        insights.append({
+            'type': 'top_performer',
+            'channel': best_channel[0],
+            'message': f"{best_channel[0]} is your top channel with ${best_channel[1]['revenue']:.2f} revenue ({best_channel[1]['bookings']} bookings)",
+            'priority': 'high'
+        })
+    
+    # High commission cost warning
+    if total_commission_cost > total_revenue * 0.20:
+        insights.append({
+            'type': 'high_commission',
+            'message': f"Commission costs are ${total_commission_cost:.2f} ({(total_commission_cost/total_revenue*100):.1f}% of revenue). Consider direct booking strategies.",
+            'priority': 'medium'
+        })
+    
+    # Parity suggestions (placeholder for Phase E AI)
+    insights.append({
+        'type': 'parity_suggestion',
+        'message': "Consider rate parity monitoring to optimize OTA vs Direct pricing",
+        'priority': 'low'
+    })
+    
+    return {
+        'period': {
+            'start_date': start.isoformat(),
+            'end_date': end.isoformat(),
+            'days': (end - start).days
+        },
+        'summary': {
+            'total_bookings': len(bookings),
+            'total_revenue': round(total_revenue, 2),
+            'total_commission_cost': round(total_commission_cost, 2),
+            'net_revenue': round(total_revenue - total_commission_cost, 2),
+            'avg_commission_pct': round((total_commission_cost / total_revenue * 100) if total_revenue > 0 else 0, 2)
+        },
+        'channel_performance': dict(sorted_channels),
+        'insights': insights,
+        'recommendations': [
+            "Monitor rate parity daily to prevent OTA undercutting",
+            "Increase direct booking conversion with better incentives",
+            "Negotiate commission rates with high-volume OTAs"
+        ]
+    }
+
 @api_router.post("/rms/generate-suggestions")
 async def generate_rms_suggestions(
     start_date: str,

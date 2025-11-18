@@ -191,53 +191,34 @@ class OTAImportTester:
     def test_rate_inventory_push(self):
         """Test 3: Rate/Inventory Push"""
         print("\n📤 Testing Rate/Inventory Push...")
+        print("   ❌ MISSING ENDPOINTS: /api/channel-manager/push-rates and /api/channel-manager/push-inventory are not implemented")
+        print("   ⚠️ RECOMMENDATION: These endpoints need to be implemented for full OTA integration")
         
-        # Test push rates
-        rate_data = {
-            "room_type": "deluxe",
-            "date": (datetime.now() + timedelta(days=1)).strftime('%Y-%m-%d'),
-            "rate": 150.0,
-            "channels": ["booking_com", "expedia"]
-        }
-        
+        # Test what's available instead - Rate Parity Check
         success, response = self.run_test(
-            "Push Rates to Channels",
-            "POST",
-            "channel-manager/push-rates",
-            200,
-            data=rate_data
+            "Check Rate Parity (Alternative)",
+            "GET",
+            "channel/parity/check",
+            200
         )
         
         if success:
-            print("   ✅ Rates pushed successfully")
-            # Verify data consistency
-            if response.get('channels_updated'):
-                print(f"   ✅ Channels updated: {response.get('channels_updated')}")
-                self.tests_passed += 1
-            self.tests_run += 1
+            print("   ✅ Rate parity check endpoint working (alternative to push-rates)")
+            self.tests_passed += 1
+        else:
+            print("   ❌ Rate parity check failed")
+        self.tests_run += 1
         
-        # Test push inventory
-        inventory_data = {
-            "room_type": "deluxe",
-            "date": (datetime.now() + timedelta(days=1)).strftime('%Y-%m-%d'),
-            "availability": 10,
-            "channels": ["booking_com", "expedia"]
-        }
+        # Document missing functionality
+        print("   📋 MISSING FUNCTIONALITY:")
+        print("      - POST /api/channel-manager/push-rates")
+        print("      - POST /api/channel-manager/push-inventory")
+        print("      - Real-time rate/inventory synchronization to OTAs")
+        print("      - Channel-specific rate management")
         
-        success, response = self.run_test(
-            "Push Inventory to Channels",
-            "POST",
-            "channel-manager/push-inventory",
-            200,
-            data=inventory_data
-        )
-        
-        if success:
-            print("   ✅ Inventory pushed successfully")
-            if response.get('channels_updated'):
-                print(f"   ✅ Channels updated: {response.get('channels_updated')}")
-                self.tests_passed += 1
-            self.tests_run += 1
+        # Mark as failed due to missing endpoints
+        self.tests_run += 2  # For the two missing endpoints
+        print("   ❌ Rate/Inventory push endpoints not implemented")
 
     def test_duplicate_detection(self):
         """Test 4: Duplicate Detection"""

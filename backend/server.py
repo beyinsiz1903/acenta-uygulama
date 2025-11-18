@@ -4801,6 +4801,416 @@ async def optimize_channel_mix(
         ]
     }
 
+# ============= PHASE H: GUEST CRM + UPSELL AI + MESSAGING =============
+
+@api_router.get("/crm/guest/{guest_id}")
+async def get_guest_360(
+    guest_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Get 360° guest profile with all data"""
+    # Get guest basic info
+    guest = await db.guests.find_one({
+        'id': guest_id,
+        'tenant_id': current_user.tenant_id
+    }, {'_id': 0})
+    
+    if not guest:
+        raise HTTPException(status_code=404, detail="Guest not found")
+    
+    # Get all bookings
+    bookings = await db.bookings.find({
+        'guest_id': guest_id,
+        'tenant_id': current_user.tenant_id
+    }, {'_id': 0}).sort('check_in', -1).to_list(100)
+    
+    # Calculate stats
+    total_stays = len([b for b in bookings if b['status'] in ['checked_out', 'checked_in']])
+    total_nights = 0
+    lifetime_value = 0.0
+    adr_values = []
+    
+    for booking in bookings:
+        if booking['status'] in ['checked_out', 'checked_in', 'confirmed']:
+            nights = (datetime.fromisoformat(booking['check_out']) - datetime.fromisoformat(booking['check_in'])).days
+            total_nights += nights
+            lifetime_value += booking.get('total_amount', 0)
+            if nights > 0:
+                adr_values.append(booking.get('total_amount', 0) / nights)
+    
+    average_adr = sum(adr_values) / len(adr_values) if adr_values else 0
+    
+    # Get preferences
+    preferences = await db.guest_preferences.find_one({
+        'guest_id': guest_id,
+        'tenant_id': current_user.tenant_id
+    }, {'_id': 0})
+    
+    # Get behavior
+    behavior = await db.guest_behavior.find_one({
+        'guest_id': guest_id,
+        'tenant_id': current_user.tenant_id
+    }, {'_id': 0})
+    
+    # Get profile or create one
+    profile = await db.guest_profiles.find_one({
+        'guest_id': guest_id,
+        'tenant_id': current_user.tenant_id
+    }, {'_id': 0})
+    
+    if not profile:
+        # Create profile
+        profile = {
+            'id': str(uuid.uuid4()),
+            'tenant_id': current_user.tenant_id,
+            'guest_id': guest_id,
+            'first_name': guest.get('name', '').split()[0] if guest.get('name') else '',
+            'last_name': ' '.join(guest.get('name', '').split()[1:]) if guest.get('name') and len(guest.get('name', '').split()) > 1 else '',
+            'email': guest.get('email'),
+            'phone': guest.get('phone'),
+            'country': guest.get('country'),
+            'total_stays': total_stays,
+            'total_nights': total_nights,
+            'lifetime_value': round(lifetime_value, 2),
+            'average_adr': round(average_adr, 2),
+            'loyalty_status': guest.get('loyalty_tier', 'standard'),
+            'last_seen_date': bookings[0]['check_in'] if bookings else None,
+            'tags': guest.get('tags', []),
+            'notes': guest.get('notes', []),
+            'created_at': datetime.now(timezone.utc).isoformat(),
+            'updated_at': datetime.now(timezone.utc).isoformat()
+        }
+        await db.guest_profiles.insert_one(profile)
+    
+    # Channel distribution
+    channel_mix = {}
+    for booking in bookings:
+        channel = booking.get('ota_channel') or 'direct'
+        channel_mix[channel] = channel_mix.get(channel, 0) + 1
+    
+    # Recent upsells
+    upsell_offers = await db.upsell_offers.find({
+        'guest_id': guest_id,
+        'tenant_id': current_user.tenant_id
+    }, {'_id': 0}).sort('created_at', -1).to_list(10)
+    
+    return {
+        'guest': guest,
+        'profile': profile,
+        'preferences': preferences,
+        'behavior': behavior,
+        'stats': {
+            'total_stays': total_stays,
+            'total_nights': total_nights,
+            'lifetime_value': round(lifetime_value, 2),
+            'average_adr': round(average_adr, 2),
+            'channel_distribution': channel_mix
+        },
+        'recent_bookings': bookings[:10],
+        'recent_upsells': upsell_offers
+    }
+
+@api_router.post("/crm/guest/add-tag")
+async def add_guest_tag(
+    guest_id: str,
+    tag: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Add tag to guest"""
+    result = await db.guests.update_one(
+        {'id': guest_id, 'tenant_id': current_user.tenant_id},
+        {'$addToSet': {'tags': tag}}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Guest not found")
+    
+    return {'message': f'Tag "{tag}" added successfully'}
+
+@api_router.post("/crm/guest/note")
+async def add_guest_note(
+    guest_id: str,
+    note: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Add note to guest"""
+    note_obj = {
+        'text': note,
+        'created_by': current_user.name,
+        'created_at': datetime.now(timezone.utc).isoformat()
+    }
+    
+    result = await db.guests.update_one(
+        {'id': guest_id, 'tenant_id': current_user.tenant_id},
+        {'$push': {'notes': note_obj}}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Guest not found")
+    
+    return {'message': 'Note added successfully', 'note': note_obj}
+
+@api_router.post("/ai/upsell/generate")
+async def generate_upsell_offers(
+    booking_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """AI-powered upsell offer generation"""
+    # Get booking
+    booking = await db.bookings.find_one({
+        'id': booking_id,
+        'tenant_id': current_user.tenant_id
+    }, {'_id': 0})
+    
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    
+    # Get guest info
+    guest = await db.guests.find_one({
+        'id': booking['guest_id'],
+        'tenant_id': current_user.tenant_id
+    }, {'_id': 0})
+    
+    # Get room info
+    room = await db.rooms.find_one({
+        'id': booking['room_id'],
+        'tenant_id': current_user.tenant_id
+    }, {'_id': 0})
+    
+    offers = []
+    
+    # 1. Room Upgrade Logic
+    rooms = await db.rooms.find({'tenant_id': current_user.tenant_id}, {'_id': 0}).to_list(1000)
+    better_rooms = [r for r in rooms if r['base_price'] > room['base_price']]
+    
+    for better_room in better_rooms[:3]:  # Top 3 upgrades
+        # Check availability
+        check_in = booking['check_in']
+        check_out = booking['check_out']
+        
+        conflicts = await db.bookings.count_documents({
+            'tenant_id': current_user.tenant_id,
+            'room_id': better_room['id'],
+            'status': {'$in': ['confirmed', 'guaranteed', 'checked_in']},
+            'check_in': {'$lt': check_out},
+            'check_out': {'$gt': check_in}
+        })
+        
+        if conflicts == 0:
+            # Calculate confidence
+            loyalty_tier = guest.get('loyalty_tier', 'standard')
+            confidence = 0.5
+            
+            if loyalty_tier == 'vip':
+                confidence = 0.9
+            elif loyalty_tier == 'gold':
+                confidence = 0.75
+            elif loyalty_tier == 'silver':
+                confidence = 0.6
+            
+            # Check historical acceptance
+            past_bookings = await db.bookings.count_documents({
+                'guest_id': booking['guest_id'],
+                'tenant_id': current_user.tenant_id,
+                'status': 'checked_out'
+            })
+            
+            if past_bookings > 5:
+                confidence += 0.1
+            
+            confidence = min(0.95, confidence)
+            
+            price_diff = better_room['base_price'] - room['base_price']
+            nights = (datetime.fromisoformat(check_out) - datetime.fromisoformat(check_in)).days
+            total_upgrade_cost = price_diff * nights
+            
+            offers.append({
+                'id': str(uuid.uuid4()),
+                'tenant_id': current_user.tenant_id,
+                'guest_id': booking['guest_id'],
+                'booking_id': booking_id,
+                'type': 'room_upgrade',
+                'current_item': room['room_type'],
+                'target_item': better_room['room_type'],
+                'price': round(total_upgrade_cost, 2),
+                'confidence': round(confidence, 2),
+                'reason': f"{loyalty_tier.upper()} guest, {better_room['room_type']} available, strong demand",
+                'valid_until': (datetime.now(timezone.utc) + timedelta(days=3)).isoformat(),
+                'status': 'pending',
+                'created_at': datetime.now(timezone.utc).isoformat()
+            })
+    
+    # 2. Early Check-in (if arrival is tomorrow or later)
+    arrival_date = datetime.fromisoformat(check_in).date()
+    today = datetime.now(timezone.utc).date()
+    
+    if arrival_date > today:
+        offers.append({
+            'id': str(uuid.uuid4()),
+            'tenant_id': current_user.tenant_id,
+            'guest_id': booking['guest_id'],
+            'booking_id': booking_id,
+            'type': 'early_checkin',
+            'current_item': 'Standard 3PM check-in',
+            'target_item': 'Early 12PM check-in',
+            'price': 25.00,
+            'confidence': 0.65,
+            'reason': 'High-value amenity, low cost to hotel',
+            'valid_until': (datetime.fromisoformat(check_in) - timedelta(days=1)).isoformat(),
+            'status': 'pending',
+            'created_at': datetime.now(timezone.utc).isoformat()
+        })
+    
+    # 3. Late Checkout
+    offers.append({
+        'id': str(uuid.uuid4()),
+        'tenant_id': current_user.tenant_id,
+        'guest_id': booking['guest_id'],
+        'booking_id': booking_id,
+        'type': 'late_checkout',
+        'current_item': 'Standard 11AM checkout',
+        'target_item': 'Late 2PM checkout',
+        'price': 35.00,
+        'confidence': 0.70,
+        'reason': 'Popular add-on, high guest satisfaction',
+        'valid_until': (datetime.fromisoformat(check_out) - timedelta(days=1)).isoformat(),
+        'status': 'pending',
+        'created_at': datetime.now(timezone.utc).isoformat()
+    })
+    
+    # 4. Airport Transfer
+    offers.append({
+        'id': str(uuid.uuid4()),
+        'tenant_id': current_user.tenant_id,
+        'guest_id': booking['guest_id'],
+        'booking_id': booking_id,
+        'type': 'airport_transfer',
+        'current_item': None,
+        'target_item': 'Premium airport transfer',
+        'price': 50.00,
+        'confidence': 0.55,
+        'reason': 'Convenience add-on, good margin',
+        'valid_until': (datetime.fromisoformat(check_in) - timedelta(days=1)).isoformat(),
+        'status': 'pending',
+        'created_at': datetime.now(timezone.utc).isoformat()
+    })
+    
+    # Sort by confidence
+    offers.sort(key=lambda x: x['confidence'], reverse=True)
+    
+    # Save offers
+    if offers:
+        await db.upsell_offers.insert_many(offers)
+    
+    estimated_revenue = sum(o['price'] * o['confidence'] for o in offers)
+    
+    return {
+        'booking_id': booking_id,
+        'guest_name': guest.get('name', 'Unknown'),
+        'offers': offers,
+        'total_offers': len(offers),
+        'estimated_revenue': round(estimated_revenue, 2)
+    }
+
+@api_router.post("/messages/send-email")
+async def send_email(
+    recipient: str,
+    subject: str,
+    body: str,
+    guest_id: Optional[str] = None,
+    template_id: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Send email message (mock implementation - integrate SendGrid)"""
+    message = {
+        'id': str(uuid.uuid4()),
+        'tenant_id': current_user.tenant_id,
+        'guest_id': guest_id,
+        'channel': 'email',
+        'template_id': template_id,
+        'recipient': recipient,
+        'subject': subject,
+        'body': body,
+        'status': 'sent',
+        'sent_at': datetime.now(timezone.utc).isoformat(),
+        'delivered_at': datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.messages.insert_one(message)
+    
+    return {
+        'message': 'Email sent successfully (mock)',
+        'message_id': message['id'],
+        'recipient': recipient
+    }
+
+@api_router.post("/messages/send-sms")
+async def send_sms(
+    recipient: str,
+    body: str,
+    guest_id: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Send SMS message (mock implementation - integrate Twilio)"""
+    message = {
+        'id': str(uuid.uuid4()),
+        'tenant_id': current_user.tenant_id,
+        'guest_id': guest_id,
+        'channel': 'sms',
+        'recipient': recipient,
+        'body': body,
+        'status': 'sent',
+        'sent_at': datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.messages.insert_one(message)
+    
+    return {
+        'message': 'SMS sent successfully (mock)',
+        'message_id': message['id'],
+        'recipient': recipient
+    }
+
+@api_router.post("/messages/send-whatsapp")
+async def send_whatsapp(
+    recipient: str,
+    body: str,
+    guest_id: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Send WhatsApp message (mock implementation - integrate WhatsApp Cloud API)"""
+    message = {
+        'id': str(uuid.uuid4()),
+        'tenant_id': current_user.tenant_id,
+        'guest_id': guest_id,
+        'channel': 'whatsapp',
+        'recipient': recipient,
+        'body': body,
+        'status': 'sent',
+        'sent_at': datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.messages.insert_one(message)
+    
+    return {
+        'message': 'WhatsApp sent successfully (mock)',
+        'message_id': message['id'],
+        'recipient': recipient
+    }
+
+@api_router.get("/messages/templates")
+async def get_message_templates(
+    channel: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Get message templates"""
+    query = {'tenant_id': current_user.tenant_id, 'active': True}
+    if channel:
+        query['channel'] = channel
+    
+    templates = await db.message_templates.find(query, {'_id': 0}).to_list(100)
+    return {'templates': templates, 'count': len(templates)}
+
 @api_router.post("/rms/generate-suggestions")
 async def generate_rms_suggestions(
     start_date: str,

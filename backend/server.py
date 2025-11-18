@@ -3709,6 +3709,267 @@ async def analyze_ota_insights(
         ]
     }
 
+# ============= ENTERPRISE MODE FEATURES =============
+
+@api_router.get("/enterprise/rate-leakage")
+async def detect_rate_leakage(
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Detect rate leakage where OTA rates are lower than direct rates"""
+    # Default to next 30 days
+    start = datetime.fromisoformat(start_date).date() if start_date else datetime.now(timezone.utc).date()
+    end = datetime.fromisoformat(end_date).date() if end_date else (start + timedelta(days=30))
+    
+    # Get rooms
+    rooms = await db.rooms.find({'tenant_id': current_user.tenant_id}, {'_id': 0}).to_list(1000)
+    room_types = list(set(r['room_type'] for r in rooms))
+    
+    leakages = []
+    total_leakage_amount = 0
+    
+    for rt in room_types:
+        rt_rooms = [r for r in rooms if r['room_type'] == rt]
+        direct_rate = rt_rooms[0]['base_price'] if rt_rooms else 0
+        
+        # Get OTA bookings in date range
+        ota_bookings = await db.bookings.find({
+            'tenant_id': current_user.tenant_id,
+            'room_id': {'$in': [r['id'] for r in rt_rooms]},
+            'check_in': {'$gte': start.isoformat(), '$lte': end.isoformat()},
+            'ota_channel': {'$ne': None},
+            'status': {'$in': ['confirmed', 'guaranteed', 'checked_in']}
+        }, {'_id': 0}).to_list(1000)
+        
+        for booking in ota_bookings:
+            nights = (datetime.fromisoformat(booking['check_out']) - datetime.fromisoformat(booking['check_in'])).days
+            if nights > 0:
+                ota_rate = booking['total_amount'] / nights
+                
+                # Rate leakage = OTA rate < Direct rate
+                if ota_rate < direct_rate:
+                    leakage_amount = (direct_rate - ota_rate) * nights
+                    total_leakage_amount += leakage_amount
+                    
+                    leakages.append({
+                        'booking_id': booking['id'],
+                        'guest_name': booking.get('guest_name', 'Unknown'),
+                        'room_type': rt,
+                        'ota_channel': booking['ota_channel'],
+                        'check_in': booking['check_in'],
+                        'check_out': booking['check_out'],
+                        'nights': nights,
+                        'direct_rate': round(direct_rate, 2),
+                        'ota_rate': round(ota_rate, 2),
+                        'difference_per_night': round(direct_rate - ota_rate, 2),
+                        'total_leakage': round(leakage_amount, 2),
+                        'commission_pct': booking.get('commission_pct', 0),
+                        'severity': 'high' if (direct_rate - ota_rate) > 20 else 'medium' if (direct_rate - ota_rate) > 10 else 'low'
+                    })
+    
+    # Sort by total leakage descending
+    leakages.sort(key=lambda x: x['total_leakage'], reverse=True)
+    
+    return {
+        'period': {
+            'start_date': start.isoformat(),
+            'end_date': end.isoformat()
+        },
+        'summary': {
+            'total_leakage_instances': len(leakages),
+            'total_leakage_amount': round(total_leakage_amount, 2),
+            'high_severity_count': sum(1 for l in leakages if l['severity'] == 'high'),
+            'medium_severity_count': sum(1 for l in leakages if l['severity'] == 'medium')
+        },
+        'leakages': leakages[:50],  # Top 50 worst leakages
+        'recommendations': [
+            "Update OTA rate parity to match or exceed direct rates",
+            "Review commission structures with high-leakage OTAs",
+            "Consider restricting inventory on channels with severe leakage"
+        ]
+    }
+
+@api_router.get("/enterprise/pickup-pace")
+async def get_pickup_pace(
+    target_date: str,
+    lookback_days: int = 30,
+    current_user: User = Depends(get_current_user)
+):
+    """Analyze booking pickup pace for a target date"""
+    target = datetime.fromisoformat(target_date).date()
+    today = datetime.now(timezone.utc).date()
+    
+    # Get bookings for target date created in last lookback_days
+    bookings = await db.bookings.find({
+        'tenant_id': current_user.tenant_id,
+        'check_in': target.isoformat(),
+        'status': {'$in': ['confirmed', 'guaranteed', 'checked_in']},
+        'created_at': {'$gte': (today - timedelta(days=lookback_days)).isoformat()}
+    }, {'_id': 0}).to_list(1000)
+    
+    # Group by creation date
+    pickup_by_date = {}
+    for booking in bookings:
+        created_date = datetime.fromisoformat(booking['created_at']).date()
+        days_before_arrival = (target - created_date).days
+        
+        if days_before_arrival >= 0:
+            if days_before_arrival not in pickup_by_date:
+                pickup_by_date[days_before_arrival] = {
+                    'count': 0,
+                    'revenue': 0,
+                    'channels': {}
+                }
+            
+            pickup_by_date[days_before_arrival]['count'] += 1
+            pickup_by_date[days_before_arrival]['revenue'] += booking.get('total_amount', 0)
+            
+            channel = booking.get('ota_channel') or 'direct'
+            pickup_by_date[days_before_arrival]['channels'][channel] = \
+                pickup_by_date[days_before_arrival]['channels'].get(channel, 0) + 1
+    
+    # Create timeline
+    pickup_timeline = []
+    cumulative_bookings = 0
+    cumulative_revenue = 0
+    
+    for days_before in range(lookback_days, -1, -1):
+        if days_before in pickup_by_date:
+            data = pickup_by_date[days_before]
+            cumulative_bookings += data['count']
+            cumulative_revenue += data['revenue']
+        
+        pickup_timeline.append({
+            'days_before_arrival': days_before,
+            'date': (target - timedelta(days=days_before)).isoformat(),
+            'daily_bookings': pickup_by_date.get(days_before, {}).get('count', 0),
+            'daily_revenue': round(pickup_by_date.get(days_before, {}).get('revenue', 0), 2),
+            'cumulative_bookings': cumulative_bookings,
+            'cumulative_revenue': round(cumulative_revenue, 2)
+        })
+    
+    # Calculate velocity (bookings per day)
+    recent_7_days = sum(pickup_by_date.get(i, {}).get('count', 0) for i in range(7))
+    velocity = round(recent_7_days / 7, 2)
+    
+    return {
+        'target_date': target.isoformat(),
+        'days_until_arrival': (target - today).days,
+        'total_bookings': cumulative_bookings,
+        'total_revenue': round(cumulative_revenue, 2),
+        'velocity_7day': velocity,
+        'pickup_timeline': pickup_timeline,
+        'insights': [
+            f"Current pace: {velocity} bookings/day",
+            f"Total bookings to date: {cumulative_bookings}",
+            f"Days until arrival: {(target - today).days}"
+        ]
+    }
+
+@api_router.get("/enterprise/availability-heatmap")
+async def get_availability_heatmap(
+    start_date: str,
+    end_date: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Generate availability heatmap showing occupancy intensity"""
+    start = datetime.fromisoformat(start_date).date()
+    end = datetime.fromisoformat(end_date).date()
+    
+    # Get all rooms
+    rooms = await db.rooms.find({'tenant_id': current_user.tenant_id}, {'_id': 0}).to_list(1000)
+    total_rooms = len(rooms)
+    room_types = list(set(r['room_type'] for r in rooms))
+    
+    heatmap_data = []
+    
+    current_date = start
+    while current_date <= end:
+        start_of_day = datetime.combine(current_date, datetime.min.time())
+        end_of_day = datetime.combine(current_date, datetime.max.time())
+        
+        # Get bookings for this date
+        occupied = await db.bookings.count_documents({
+            'tenant_id': current_user.tenant_id,
+            'status': {'$in': ['confirmed', 'guaranteed', 'checked_in']},
+            'check_in': {'$lte': end_of_day.isoformat()},
+            'check_out': {'$gte': start_of_day.isoformat()}
+        })
+        
+        # Get blocks for this date
+        blocks = await db.room_blocks.count_documents({
+            'tenant_id': current_user.tenant_id,
+            'status': 'active',
+            'start_date': {'$lte': current_date.isoformat()},
+            '$or': [
+                {'end_date': {'$gte': current_date.isoformat()}},
+                {'end_date': None}
+            ]
+        })
+        
+        available = total_rooms - occupied - blocks
+        occupancy_pct = round((occupied / total_rooms * 100) if total_rooms > 0 else 0, 1)
+        
+        # Determine intensity
+        if occupancy_pct >= 95:
+            intensity = 'critical'  # Red
+        elif occupancy_pct >= 85:
+            intensity = 'high'  # Orange
+        elif occupancy_pct >= 70:
+            intensity = 'moderate'  # Yellow
+        elif occupancy_pct >= 50:
+            intensity = 'medium'  # Light green
+        else:
+            intensity = 'low'  # Green
+        
+        # Get room type breakdown
+        rt_breakdown = {}
+        for rt in room_types:
+            rt_rooms = [r for r in rooms if r['room_type'] == rt]
+            rt_occupied = await db.bookings.count_documents({
+                'tenant_id': current_user.tenant_id,
+                'room_id': {'$in': [r['id'] for r in rt_rooms]},
+                'status': {'$in': ['confirmed', 'guaranteed', 'checked_in']},
+                'check_in': {'$lte': end_of_day.isoformat()},
+                'check_out': {'$gte': start_of_day.isoformat()}
+            })
+            rt_breakdown[rt] = {
+                'occupied': rt_occupied,
+                'total': len(rt_rooms),
+                'occupancy_pct': round((rt_occupied / len(rt_rooms) * 100) if len(rt_rooms) > 0 else 0, 1)
+            }
+        
+        heatmap_data.append({
+            'date': current_date.isoformat(),
+            'day_of_week': current_date.strftime('%a'),
+            'occupied': occupied,
+            'available': available,
+            'blocked': blocks,
+            'total': total_rooms,
+            'occupancy_pct': occupancy_pct,
+            'intensity': intensity,
+            'room_types': rt_breakdown
+        })
+        
+        current_date += timedelta(days=1)
+    
+    return {
+        'period': {
+            'start_date': start.isoformat(),
+            'end_date': end.isoformat(),
+            'days': len(heatmap_data)
+        },
+        'summary': {
+            'avg_occupancy': round(sum(d['occupancy_pct'] for d in heatmap_data) / len(heatmap_data), 1),
+            'peak_date': max(heatmap_data, key=lambda x: x['occupancy_pct'])['date'],
+            'peak_occupancy': max(d['occupancy_pct'] for d in heatmap_data),
+            'critical_days': sum(1 for d in heatmap_data if d['intensity'] == 'critical'),
+            'high_days': sum(1 for d in heatmap_data if d['intensity'] == 'high')
+        },
+        'heatmap': heatmap_data
+    }
+
 @api_router.post("/rms/generate-suggestions")
 async def generate_rms_suggestions(
     start_date: str,

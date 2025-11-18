@@ -157,7 +157,11 @@ class POSChargeTester:
                 self.log_test("Setup - Create Booking", "FAIL", f"Failed to create booking: {booking_response.text}")
                 return False
             
-            self.test_data['booking_id'] = booking_response.json()['id']
+            booking_data = booking_response.json()
+            self.test_data['booking_id'] = booking_data['id']
+            
+            # Small delay to ensure booking is processed
+            time.sleep(1)
             
             # Check-in the guest
             checkin_response = self.session.post(f"{BASE_URL}/frontdesk/checkin/{self.test_data['booking_id']}", json={

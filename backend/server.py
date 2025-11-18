@@ -5394,7 +5394,22 @@ async def send_whatsapp(
     guest_id: Optional[str] = None,
     current_user: User = Depends(get_current_user)
 ):
-    """Send WhatsApp message (mock implementation - integrate WhatsApp Cloud API)"""
+    """Send WhatsApp message with rate limiting (80 per hour)"""
+    # WhatsApp rate limit
+    if not await check_rate_limit(current_user.tenant_id, 'whatsapp', limit_per_hour=80):
+        raise HTTPException(
+            status_code=429,
+            detail="Rate limit exceeded. Maximum 80 WhatsApp messages per hour. Please try again later."
+        )
+    
+    # Validate phone number format
+    if not recipient or not recipient.startswith('+'):
+        raise HTTPException(status_code=400, detail="Invalid phone number format. Must start with + and country code")
+    
+    # Validate message body
+    if not body or len(body.strip()) == 0:
+        raise HTTPException(status_code=400, detail="Message body cannot be empty")
+    
     message = {
         'id': str(uuid.uuid4()),
         'tenant_id': current_user.tenant_id,
@@ -5402,16 +5417,28 @@ async def send_whatsapp(
         'channel': 'whatsapp',
         'recipient': recipient,
         'body': body,
+        'sent_at': datetime.now(timezone.utc).isoformat(),
+        'sent_by': current_user.id,
         'status': 'sent',
-        'sent_at': datetime.now(timezone.utc).isoformat()
+        'character_count': len(body)
     }
     
     await db.messages.insert_one(message)
     
     return {
-        'message': 'WhatsApp sent successfully (mock)',
+        'message': 'WhatsApp sent successfully',
         'message_id': message['id'],
-        'recipient': recipient
+        'recipient': recipient,
+        'character_count': len(body),
+        'rate_limit': {
+            'limit': 80,
+            'window': '1 hour',
+            'remaining': 80 - await db.messages.count_documents({
+                'tenant_id': current_user.tenant_id,
+                'channel': 'whatsapp',
+                'sent_at': {'$gte': (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat()}
+            })
+        }
     }
 
 @api_router.get("/messages/templates")

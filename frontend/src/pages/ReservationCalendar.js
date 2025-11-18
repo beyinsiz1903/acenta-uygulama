@@ -86,17 +86,19 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
   const loadCalendarData = async () => {
     setLoading(true);
     try {
-      const [roomsRes, bookingsRes, guestsRes, companiesRes] = await Promise.all([
+      const [roomsRes, bookingsRes, guestsRes, companiesRes, blocksRes] = await Promise.all([
         axios.get('/pms/rooms'),
         axios.get('/pms/bookings'),
         axios.get('/pms/guests').catch(() => ({ data: [] })),
-        axios.get('/companies').catch(() => ({ data: [] }))
+        axios.get('/companies').catch(() => ({ data: [] })),
+        axios.get('/pms/room-blocks?status=active').catch(() => ({ data: { blocks: [] } }))
       ]);
 
       setRooms(roomsRes.data || []);
       setBookings(bookingsRes.data || []);
       setGuests(guestsRes.data || []);
       setCompanies(companiesRes.data || []);
+      setRoomBlocks(blocksRes.data.blocks || []);
     } catch (error) {
       console.error('Failed to load calendar data:', error);
       toast.error('Failed to load calendar data');

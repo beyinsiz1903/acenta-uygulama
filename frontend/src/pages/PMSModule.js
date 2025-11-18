@@ -890,9 +890,17 @@ const PMSModule = ({ user, tenant, onLogout }) => {
   return (
     <Layout user={user} tenant={tenant} onLogout={onLogout} currentModule="pms">
       <div className="p-6 space-y-6">
-        <div>
-          <h1 className="text-4xl font-bold mb-2" style={{ fontFamily: 'Space Grotesk' }}>{t('pms.title')}</h1>
-          <p className="text-gray-600">{t('pms.subtitle')}</p>
+        <div className="mb-6 flex justify-between items-start gap-4">
+          <div>
+            <h1 className="text-4xl font-bold mb-2" style={{ fontFamily: 'Space Grotesk' }}>{t('pms.title')}</h1>
+            <p className="text-gray-600">{t('pms.subtitle')}</p>
+          </div>
+          <div className="w-96">
+            <GlobalSearch onSelectResult={(result) => {
+              console.log('Search result selected:', result);
+              toast.success(`Selected ${result.type}: ${result.data.name || result.data.room_number || result.data.id}`);
+            }} />
+          </div>
         </div>
 
         <Tabs value={activeTab} className="w-full" onValueChange={(v) => {

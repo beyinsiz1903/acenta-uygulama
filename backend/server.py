@@ -55,6 +55,17 @@ except ImportError as e:
         CANCELLED = "cancelled"
         EXPIRED = "expired"
 
+# Import CRM models
+try:
+    from crm_models import (
+        GuestProfile, GuestPreferences, GuestBehavior,
+        UpsellOffer, MessageTemplate, Message,
+        LoyaltyStatus, UpsellType, MessageChannel, MessageStatus
+    )
+    print("✅ CRM models imported successfully")
+except Exception as e:
+    print(f"⚠️ CRM models not loaded: {e}")
+
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 

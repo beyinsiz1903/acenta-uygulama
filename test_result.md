@@ -976,6 +976,105 @@ test_plan:
 agent_communication:
   - agent: "testing"
     message: |
+      🧮 FOLIO CALCULATIONS REGRESSION TESTING COMPLETED - COMPREHENSIVE ANALYSIS
+      
+      ✅ OVERALL RESULTS (88.2% Success Rate - 15/17 tests passed):
+      
+      🏨 BASIC CALCULATIONS (100% Working):
+      - Room charge calculation: 3 nights @ $100/night = $300 ✓
+      - Charge posting with different categories (room, food, minibar) ✓
+      - Quantity-based calculations working correctly ✓
+      
+      💰 TAX CALCULATIONS (100% Working):
+      - VAT calculations (18% VAT on $100 = $18) ✓
+      - Tourism tax calculations ($5 x 3 nights = $15) ✓
+      - Service charge calculations (10% service charge) ✓
+      - All tax amounts calculated and applied correctly ✓
+      
+      💳 PAYMENT APPLICATION (100% Working):
+      - Partial payments: Balance correctly reduced from $476.30 to $276.30 ✓
+      - Overpayment scenario: Created proper credit balance of -$223.70 ✓
+      - Payment types (interim, final) working correctly ✓
+      - Balance calculations accurate after payments ✓
+      
+      🚫 VOIDED CHARGES (100% Working):
+      - Charge voiding functionality working correctly ✓
+      - Voided charges properly excluded from balance calculations ✓
+      - Balance adjusted correctly after voiding (from -$223.70 to -$323.70) ✓
+      - Void reason tracking and audit trail functional ✓
+      
+      📊 MULTIPLE FOLIOS (100% Working):
+      - Guest and company folio creation working ✓
+      - Separate balance tracking for each folio type ✓
+      - Charge transfer between folios functional ✓
+      - Multi-folio balance calculations accurate ✓
+      
+      🏢 COMMISSION CALCULATIONS (100% Working):
+      - OTA booking with 15% commission working ✓
+      - Net amount calculation correct: $200 - $30 commission = $170 ✓
+      - Commission deduction properly applied ✓
+      
+      🎯 COMPLEX SCENARIO (100% Working):
+      - Room ($300) + Minibar ($50) + Restaurant ($120) + Tax ($47) - Payment ($200) = $317 ✓
+      - Multi-component calculation accuracy verified ✓
+      - All charge categories and payment types integrated correctly ✓
+      
+      ⚠️ EDGE CASES (75% Working):
+      - Negative charges (refunds): Working correctly ✓
+      - Zero amount transactions: Working correctly ✓
+      - Very large amounts (>$10,000): Working correctly ✓
+      - Closed folio validation: ISSUE - Should reject charges but doesn't ❌
+      
+      ❌ CRITICAL ISSUES IDENTIFIED (2 issues):
+      
+      1. **Currency Rounding Precision Issue**:
+         - Problem: Amounts not properly rounded to 2 decimal places
+         - Example: $33.33333333 x 3 = $99.99999999 (should be $100.00)
+         - Impact: Financial accuracy and reporting issues
+         - Priority: HIGH - Affects all monetary calculations
+      
+      2. **Closed Folio Validation Insufficient**:
+         - Problem: System allows posting charges to closed folios
+         - Expected: Should return 404/400 error when attempting to post to closed folio
+         - Impact: Data integrity and business rule violations
+         - Priority: MEDIUM - Business logic enforcement
+      
+      🔍 DETAILED TEST COVERAGE:
+      - Basic room charge calculations: PASSED
+      - Tax calculations (VAT, tourism, service): PASSED
+      - Payment application (partial, overpayment): PASSED
+      - Voided charges balance impact: PASSED
+      - Multiple folio management: PASSED
+      - Commission calculations: PASSED
+      - Complex multi-component scenarios: PASSED
+      - Currency rounding: FAILED (precision issue)
+      - Edge cases: MOSTLY PASSED (closed folio validation failed)
+      
+      📈 PERFORMANCE OBSERVATIONS:
+      - All API endpoints responding within acceptable timeframes
+      - Balance calculations performed efficiently
+      - Folio operations (create, charge, payment, void, transfer) working smoothly
+      - Database consistency maintained across operations
+      
+      🎯 BUSINESS LOGIC VERIFICATION:
+      - Folio balance = Total Charges - Total Payments: CORRECT
+      - Voided charges excluded from balance: CORRECT
+      - Multi-folio charge transfers: CORRECT
+      - Commission deductions: CORRECT
+      - Tax calculations: CORRECT
+      - Payment application: CORRECT
+      
+      ✅ CONCLUSION:
+      The folio calculation system is fundamentally sound with 88.2% test success rate. Core financial calculations, balance management, and business logic are working correctly. Two specific issues need attention: currency rounding precision and closed folio validation. All critical folio operations (charge posting, payments, voids, transfers) are functional and accurate.
+      
+      🔧 RECOMMENDATIONS:
+      1. Implement proper currency rounding to 2 decimal places in all monetary calculations
+      2. Strengthen closed folio validation to prevent charge posting
+      3. Consider adding automated rounding tests to prevent regression
+      4. Review and enhance business rule validations for edge cases
+  
+  - agent: "testing"
+    message: |
       🌐 OTA IMPORT CONSISTENCY TESTING COMPLETED - DETAILED ANALYSIS
       
       ✅ CHANNEL MANAGER CORE FUNCTIONALITY (89.1% Success Rate - 41/46 tests passed):

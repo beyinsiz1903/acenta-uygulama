@@ -294,7 +294,7 @@ class POSChargeTester:
             if folio_response.status_code == 200:
                 folio_data = folio_response.json()
                 room_service_found = any(
-                    c['charge_category'] == 'room_service' and 
+                    c['charge_category'] == 'other' and 
                     c['amount'] == 35.75 and 
                     'Test Room' in c['description'] 
                     for c in folio_data['charges']

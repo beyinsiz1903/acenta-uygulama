@@ -609,6 +609,29 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
     return otaData[channel] || { label: 'OTA', name: 'OTA', color: 'bg-gray-600' };
   };
 
+  // Enterprise Mode: Check if booking has rate leakage
+  const hasRateLeakage = (bookingId) => {
+    return rateLeakages.find(l => l.booking_id === bookingId);
+  };
+
+  // Enterprise Mode: Get heatmap intensity for date
+  const getHeatmapIntensity = (date) => {
+    const dateStr = date.toISOString().split('T')[0];
+    const heatmapDay = availabilityHeatmap.find(h => h.date === dateStr);
+    return heatmapDay?.intensity || 'low';
+  };
+
+  const getHeatmapColor = (intensity) => {
+    const colors = {
+      'critical': 'bg-red-100 border-red-300',
+      'high': 'bg-orange-100 border-orange-300',
+      'moderate': 'bg-yellow-100 border-yellow-300',
+      'medium': 'bg-green-100 border-green-300',
+      'low': 'bg-white'
+    };
+    return colors[intensity] || colors.low;
+  };
+
   const navigatePrevious = () => {
     const newDate = new Date(currentDate);
     newDate.setDate(newDate.getDate() - daysToShow);

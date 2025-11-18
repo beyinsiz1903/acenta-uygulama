@@ -703,6 +703,21 @@ backend:
         agent: "testing"
         comment: "✅ FOLIO CALCULATIONS REGRESSION TESTING COMPLETED (88.2% Success Rate - 15/17 tests passed). WORKING: Basic room charge calculation (3 nights @ $100 = $300), Tax calculations (VAT 18%, tourism tax, service charge), Payment application (partial payments, overpayment scenarios), Voided charges (properly excluded from balance), Multiple folios (guest/company folio management, charge transfers), Commission calculations (15% OTA commission = $170 net), Complex scenario (Room $300 + Minibar $50 + Restaurant $120 + Tax $47 - Payment $200 = $317 balance). ISSUES IDENTIFIED: Currency rounding not enforcing 2 decimal places ($99.99999999 instead of $100.00), Closed folio validation insufficient (allows charge posting when should reject). All core folio operations functional and accurate."
 
+  - task: "Staff Tasks Workflow Management System"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Implemented staff task management endpoints: GET /pms/staff-tasks (with department and status filtering), POST /pms/staff-tasks (task creation), PUT /pms/staff-tasks/{task_id} (task updates)"
+      - working: true
+        agent: "testing"
+        comment: "✅ COMPREHENSIVE STAFF TASKS TESTING COMPLETED (100% Success Rate - 10/10 tests passed). TASK CREATION: Engineering maintenance tasks, housekeeping cleaning tasks, urgent repair tasks - ALL WORKING PERFECTLY. TASK FILTERING: Department filtering (engineering, housekeeping), status filtering (pending, completed) - FULLY FUNCTIONAL. STATUS UPDATES: Pending → in_progress → completed workflow - WORKING CORRECTLY. PRIORITY LEVELS: All priority levels (urgent, high, normal, low) created and stored properly - VERIFIED. ROOM ASSOCIATION: Tasks with room_id (room number lookup working), general tasks without room association - BOTH SCENARIOS WORKING. TASK ASSIGNMENT: Initial assignment and reassignment functionality - WORKING PERFECTLY. All staff task management workflows verified and operational."
+
 frontend:
   - task: "Add Adults and Children count inputs to booking form"
     implemented: true

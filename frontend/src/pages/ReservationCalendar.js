@@ -422,6 +422,47 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
     );
   };
 
+  // Get room block for room on specific date
+  const getRoomBlockForDate = (roomId, date) => {
+    return roomBlocks.find(block => {
+      if (block.room_id !== roomId || block.status !== 'active') return false;
+      
+      const blockStart = new Date(block.start_date);
+      const blockEnd = block.end_date ? new Date(block.end_date) : new Date('9999-12-31');
+      const current = new Date(date);
+      
+      blockStart.setHours(0, 0, 0, 0);
+      blockEnd.setHours(0, 0, 0, 0);
+      current.setHours(0, 0, 0, 0);
+      
+      return current >= blockStart && current <= blockEnd;
+    });
+  };
+
+  // Check if block starts on this date
+  const isBlockStart = (block, date) => {
+    const blockStart = new Date(block.start_date);
+    const current = new Date(date);
+    blockStart.setHours(0, 0, 0, 0);
+    current.setHours(0, 0, 0, 0);
+    return blockStart.getTime() === current.getTime();
+  };
+
+  // Calculate block span (how many days visible)
+  const calculateBlockSpan = (block, startDate) => {
+    const blockStart = new Date(block.start_date);
+    const blockEnd = block.end_date ? new Date(block.end_date) : null;
+    const rangeStart = new Date(startDate);
+    const rangeEnd = new Date(rangeStart);
+    rangeEnd.setDate(rangeEnd.getDate() + daysToShow);
+    
+    const visibleStart = blockStart > rangeStart ? blockStart : rangeStart;
+    const visibleEnd = blockEnd && blockEnd < rangeEnd ? blockEnd : rangeEnd;
+    
+    const days = Math.ceil((visibleEnd - visibleStart) / (1000 * 60 * 60 * 24));
+    return Math.max(1, Math.min(days, daysToShow));
+  };
+
   // Calculate booking span width (how many days)
   const calculateBookingSpan = (booking, startDate) => {
     const checkIn = new Date(booking.check_in);

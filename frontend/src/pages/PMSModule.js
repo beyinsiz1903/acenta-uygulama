@@ -800,6 +800,55 @@ const PMSModule = ({ user, tenant, onLogout }) => {
     }
   };
 
+  const loadMessageTemplates = async () => {
+    try {
+      const response = await axios.get('/messages/templates');
+      setMessageTemplates(response.data.templates || []);
+    } catch (error) {
+      console.error('Failed to load templates');
+    }
+  };
+
+  const sendMessage = async () => {
+    if (!newMessage.recipient || !newMessage.body) {
+      toast.error('Please fill in all fields');
+      return;
+    }
+
+    try {
+      let response;
+      if (newMessage.channel === 'email') {
+        response = await axios.post('/messages/send-email', {
+          recipient: newMessage.recipient,
+          subject: newMessage.subject,
+          body: newMessage.body
+        });
+      } else if (newMessage.channel === 'sms') {
+        response = await axios.post('/messages/send-sms', {
+          recipient: newMessage.recipient,
+          body: newMessage.body
+        });
+      } else if (newMessage.channel === 'whatsapp') {
+        response = await axios.post('/messages/send-whatsapp', {
+          recipient: newMessage.recipient,
+          body: newMessage.body
+        });
+      }
+
+      toast.success('Message sent successfully!');
+      setSentMessages([response.data, ...sentMessages]);
+      setNewMessage({
+        channel: 'email',
+        recipient: '',
+        subject: '',
+        body: '',
+        template_id: null
+      });
+    } catch (error) {
+      toast.error('Failed to send message');
+    }
+  };
+
   if (loading) {
     return (
       <Layout user={user} tenant={tenant} onLogout={onLogout} currentModule="pms">

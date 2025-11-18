@@ -83,6 +83,12 @@ const PMSModule = ({ user, tenant, onLogout }) => {
     companyAging: null,
     hkEfficiency: null
   });
+  
+  // Active tab state - check URL hash on mount
+  const [activeTab, setActiveTab] = useState(() => {
+    const hash = window.location.hash.replace('#', '');
+    return hash || 'frontdesk';
+  });
 
   const [newRoom, setNewRoom] = useState({
     room_number: '', room_type: 'standard', floor: 1, capacity: 2, base_price: 100, amenities: []

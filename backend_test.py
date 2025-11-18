@@ -219,7 +219,7 @@ class MessagingThrottlingTester:
             # Send 10 emails rapidly
             success_count = 0
             for i in range(10):
-                response = self.session.post(f"{BASE_URL}/messages/send-email", json={
+                response = self.session.post(f"{BASE_URL}/messages/send-email", params={
                     "recipient": f"rapidfire{i}@example.com",
                     "subject": f"Rapid Fire Test {i+1}",
                     "body": f"This is rapid fire email number {i+1}"

@@ -14,6 +14,7 @@ import PendingAR from "@/pages/PendingAR";
 import LoyaltyModule from "@/pages/LoyaltyModule";
 import MarketplaceModule from "@/pages/MarketplaceModule";
 import GuestPortal from "@/pages/GuestPortal";
+import TemplateManager from "@/pages/TemplateManager";
 import { Toaster } from "@/components/ui/sonner";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;

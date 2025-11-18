@@ -129,7 +129,7 @@ const PendingAR = ({ user, tenant, onLogout }) => {
 
   if (loading) {
     return (
-      <Layout user={user} tenant={tenant} onLogout={onLogout} currentModule="invoices">
+      <Layout user={user} tenant={tenant} onLogout={onLogout} currentModule="pending-ar">
         <div className="flex items-center justify-center h-screen">
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600"></div>
         </div>
@@ -138,7 +138,7 @@ const PendingAR = ({ user, tenant, onLogout }) => {
   }
 
   return (
-    <Layout user={user} tenant={tenant} onLogout={onLogout} currentModule="invoices">
+    <Layout user={user} tenant={tenant} onLogout={onLogout} currentModule="pending-ar">
       <div className="p-6 space-y-6">
         {/* Header */}
         <div className="flex justify-between items-center">

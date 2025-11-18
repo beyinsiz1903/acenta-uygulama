@@ -1106,8 +1106,10 @@ const PMSModule = ({ user, tenant, onLogout }) => {
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                    {roomStatusBoard.rooms.map((room) => (
-                      <Card key={room.id} className={`cursor-pointer hover:shadow-lg transition-shadow ${
+                    {roomStatusBoard.rooms.map((room) => {
+                      const roomBlock = roomBlocks.find(b => b.room_id === room.id && b.status === 'active');
+                      return (
+                      <Card key={room.id} className={`cursor-pointer hover:shadow-lg transition-shadow relative ${
                         room.status === 'dirty' ? 'bg-red-100 border-red-300' :
                         room.status === 'cleaning' ? 'bg-yellow-100 border-yellow-300' :
                         room.status === 'inspected' ? 'bg-green-100 border-green-300' :
@@ -1115,10 +1117,28 @@ const PMSModule = ({ user, tenant, onLogout }) => {
                         room.status === 'occupied' ? 'bg-purple-100 border-purple-300' :
                         'bg-gray-100 border-gray-300'
                       }`}>
+                        {roomBlock && (
+                          <div className="absolute top-1 right-1">
+                            {roomBlock.type === 'out_of_order' && (
+                              <span className="px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded" title={roomBlock.reason}>OOO</span>
+                            )}
+                            {roomBlock.type === 'out_of_service' && (
+                              <span className="px-1.5 py-0.5 text-[10px] font-bold bg-orange-500 text-white rounded" title={roomBlock.reason}>OOS</span>
+                            )}
+                            {roomBlock.type === 'maintenance' && (
+                              <span className="px-1.5 py-0.5 text-[10px] font-bold bg-yellow-600 text-white rounded" title={roomBlock.reason}>MNT</span>
+                            )}
+                          </div>
+                        )}
                         <CardContent className="p-3">
                           <div className="font-bold text-lg">{room.room_number}</div>
                           <div className="text-xs capitalize">{room.room_type}</div>
                           <div className="text-xs font-semibold mt-1 capitalize">{room.status.replace('_', ' ')}</div>
+                          {roomBlock && (
+                            <div className="text-[10px] text-gray-600 mt-1 truncate" title={roomBlock.reason}>
+                              {roomBlock.reason}
+                            </div>
+                          )}
                           <div className="flex gap-1 mt-2">
                             {room.status === 'dirty' && (
                               <Button size="sm" variant="outline" className="h-6 text-xs" onClick={() => quickUpdateRoomStatus(room.id, 'cleaning')}>
@@ -1138,7 +1158,7 @@ const PMSModule = ({ user, tenant, onLogout }) => {
                           </div>
                         </CardContent>
                       </Card>
-                    ))}
+                    )})}
                   </div>
                 </CardContent>
               </Card>

@@ -163,6 +163,14 @@ class POSChargeTester:
             # Small delay to ensure booking is processed
             time.sleep(1)
             
+            # Set room status to available for check-in (booking creation sets it to occupied)
+            status_response = self.session.put(f"{BASE_URL}/housekeeping/room/{self.test_data['room_id']}/status", 
+                                             params={"new_status": "available"})
+            
+            if status_response.status_code != 200:
+                self.log_test("Setup - Room Status Update", "FAIL", f"Failed to update room status: {status_response.text}")
+                return False
+            
             # Check-in the guest
             checkin_response = self.session.post(f"{BASE_URL}/frontdesk/checkin/{self.test_data['booking_id']}", json={
                 "create_folio": True

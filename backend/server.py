@@ -1994,6 +1994,30 @@ async def update_booking(
     updated_booking = await db.bookings.find_one({'id': booking_id}, {'_id': 0})
     return updated_booking
 
+@api_router.post("/pms/room-move-history")
+async def create_room_move_history(
+    move_data: dict,
+    current_user: User = Depends(get_current_user)
+):
+    """Log room move history for audit trail"""
+    history = RoomMoveHistory(
+        tenant_id=current_user.tenant_id,
+        booking_id=move_data.get('booking_id'),
+        old_room=move_data.get('old_room'),
+        new_room=move_data.get('new_room'),
+        old_check_in=move_data.get('old_check_in'),
+        new_check_in=move_data.get('new_check_in'),
+        reason=move_data.get('reason'),
+        moved_by=move_data.get('moved_by', current_user.name)
+    )
+    
+    history_dict = history.model_dump()
+    history_dict['timestamp'] = history_dict['timestamp'].isoformat()
+    
+    await db.room_move_history.insert_one(history_dict)
+    
+    return {"message": "Room move logged successfully", "history": history}
+
 @api_router.get("/pms/dashboard")
 async def get_pms_dashboard(current_user: User = Depends(get_current_user)):
     total_rooms = await db.rooms.count_documents({'tenant_id': current_user.tenant_id})

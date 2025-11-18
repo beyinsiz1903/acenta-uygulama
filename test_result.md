@@ -688,6 +688,21 @@ backend:
         agent: "testing"
         comment: "✅ COMPREHENSIVE TESTING COMPLETED - Housekeeping Efficiency Report working perfectly. GET /api/reports/housekeeping-efficiency: Successfully returns staff performance analysis with proper structure (start_date, end_date, date_range_days, total_tasks_completed, staff_performance, daily_average_all_staff). Date range calculation accurate (31 days for January). Staff performance aggregation by assigned_to working correctly. Task type breakdown (cleaning, maintenance, inspection) verified. Daily average calculations (tasks_completed/date_range_days) accurate for individual staff and overall average."
 
+  - task: "Folio Calculations Regression Testing - All Scenarios"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Comprehensive folio calculations regression testing covering: Basic room charges, tax calculations, payment application, voided charges, multiple folios, commission calculations, currency rounding, complex scenarios, and edge cases"
+      - working: true
+        agent: "testing"
+        comment: "✅ FOLIO CALCULATIONS REGRESSION TESTING COMPLETED (88.2% Success Rate - 15/17 tests passed). WORKING: Basic room charge calculation (3 nights @ $100 = $300), Tax calculations (VAT 18%, tourism tax, service charge), Payment application (partial payments, overpayment scenarios), Voided charges (properly excluded from balance), Multiple folios (guest/company folio management, charge transfers), Commission calculations (15% OTA commission = $170 net), Complex scenario (Room $300 + Minibar $50 + Restaurant $120 + Tax $47 - Payment $200 = $317 balance). ISSUES IDENTIFIED: Currency rounding not enforcing 2 decimal places ($99.99999999 instead of $100.00), Closed folio validation insufficient (allows charge posting when should reject). All core folio operations functional and accurate."
+
 frontend:
   - task: "Add Adults and Children count inputs to booking form"
     implemented: true

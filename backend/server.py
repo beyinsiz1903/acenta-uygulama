@@ -16555,5 +16555,609 @@ async def get_market_compression(
     }
 
 
+# ============= MAINTENANCE ENHANCEMENTS =============
+
+@api_router.post("/maintenance/mobile/technician-task")
+async def technician_submit_task(
+    task_id: str,
+    status: str,  # started, completed, needs_parts
+    notes: Optional[str] = None,
+    time_spent_minutes: Optional[int] = None,
+    parts_used: Optional[List[Dict]] = None,
+    photo_urls: Optional[List[str]] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Mobile technician app - submit task update"""
+    task = await db.maintenance_tasks.find_one({
+        'id': task_id,
+        'tenant_id': current_user.tenant_id
+    })
+    
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    updates = {
+        'status': status,
+        'updated_at': datetime.now(timezone.utc).isoformat()
+    }
+    
+    if status == 'completed':
+        updates['completed_at'] = datetime.now(timezone.utc).isoformat()
+        updates['completed_by'] = current_user.name
+    
+    if time_spent_minutes:
+        updates['time_spent_minutes'] = time_spent_minutes
+    
+    if notes:
+        updates['technician_notes'] = notes
+    
+    if parts_used:
+        updates['parts_used'] = parts_used
+    
+    if photo_urls:
+        updates['photo_urls'] = photo_urls
+    
+    await db.maintenance_tasks.update_one(
+        {'id': task_id},
+        {'$set': updates}
+    )
+    
+    return {
+        'success': True,
+        'task_id': task_id,
+        'message': f'Task {status}',
+        'updates': updates
+    }
+
+
+@api_router.get("/maintenance/repeat-issues")
+async def get_repeat_issues(
+    days: int = 90,
+    min_occurrences: int = 3,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Detect repeat issues
+    - Same room, same issue type multiple times
+    - Preventive maintenance needed
+    """
+    end_dt = datetime.now(timezone.utc)
+    start_dt = end_dt - timedelta(days=days)
+    
+    # Get all maintenance tasks in period
+    tasks = []
+    async for task in db.maintenance_tasks.find({
+        'tenant_id': current_user.tenant_id,
+        'created_at': {
+            '$gte': start_dt.isoformat(),
+            '$lte': end_dt.isoformat()
+        }
+    }):
+        tasks.append(task)
+    
+    # Group by room + issue type
+    issue_groups = {}
+    for task in tasks:
+        room_id = task.get('room_id')
+        issue_type = task.get('issue_type', 'general')
+        key = f"{room_id}_{issue_type}"
+        
+        if key not in issue_groups:
+            issue_groups[key] = {
+                'room_id': room_id,
+                'issue_type': issue_type,
+                'occurrences': [],
+                'total_cost': 0
+            }
+        
+        issue_groups[key]['occurrences'].append({
+            'date': task.get('created_at'),
+            'description': task.get('description')
+        })
+        issue_groups[key]['total_cost'] += task.get('cost', 0)
+    
+    # Filter repeat issues
+    repeat_issues = []
+    for key, data in issue_groups.items():
+        if len(data['occurrences']) >= min_occurrences:
+            # Get room details
+            room = await db.rooms.find_one({'id': data['room_id']})
+            
+            repeat_issues.append({
+                'room_number': room.get('room_number') if room else 'Unknown',
+                'room_id': data['room_id'],
+                'issue_type': data['issue_type'],
+                'occurrence_count': len(data['occurrences']),
+                'total_cost': round(data['total_cost'], 2),
+                'avg_cost_per_occurrence': round(data['total_cost'] / len(data['occurrences']), 2),
+                'first_occurrence': data['occurrences'][0]['date'],
+                'last_occurrence': data['occurrences'][-1]['date'],
+                'recommendation': 'Schedule preventive maintenance or consider equipment replacement'
+            })
+    
+    # Sort by occurrence count
+    repeat_issues.sort(key=lambda x: x['occurrence_count'], reverse=True)
+    
+    return {
+        'period_days': days,
+        'min_occurrences': min_occurrences,
+        'total_repeat_issues': len(repeat_issues),
+        'repeat_issues': repeat_issues,
+        'total_cost_all_repeats': round(sum(r['total_cost'] for r in repeat_issues), 2)
+    }
+
+
+@api_router.get("/maintenance/sla-metrics")
+async def get_maintenance_sla(
+    days: int = 30,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    SLA measurement for maintenance
+    - Average completion time
+    - SLA compliance rate
+    - By priority level
+    """
+    end_dt = datetime.now(timezone.utc)
+    start_dt = end_dt - timedelta(days=days)
+    
+    # SLA targets (in hours)
+    sla_targets = {
+        'urgent': 2,
+        'high': 4,
+        'normal': 24,
+        'low': 72
+    }
+    
+    # Get completed tasks
+    tasks = []
+    async for task in db.maintenance_tasks.find({
+        'tenant_id': current_user.tenant_id,
+        'status': 'completed',
+        'completed_at': {
+            '$gte': start_dt.isoformat(),
+            '$lte': end_dt.isoformat()
+        }
+    }):
+        tasks.append(task)
+    
+    # Calculate SLA metrics by priority
+    sla_by_priority = {}
+    for priority in ['urgent', 'high', 'normal', 'low']:
+        priority_tasks = [t for t in tasks if t.get('priority') == priority]
+        
+        if not priority_tasks:
+            continue
+        
+        completion_times = []
+        sla_met_count = 0
+        
+        for task in priority_tasks:
+            created = datetime.fromisoformat(task.get('created_at'))
+            completed = datetime.fromisoformat(task.get('completed_at'))
+            hours = (completed - created).total_seconds() / 3600
+            completion_times.append(hours)
+            
+            if hours <= sla_targets[priority]:
+                sla_met_count += 1
+        
+        avg_completion = sum(completion_times) / len(completion_times) if completion_times else 0
+        sla_compliance = (sla_met_count / len(priority_tasks) * 100) if priority_tasks else 0
+        
+        sla_by_priority[priority] = {
+            'priority': priority,
+            'sla_target_hours': sla_targets[priority],
+            'total_tasks': len(priority_tasks),
+            'avg_completion_hours': round(avg_completion, 1),
+            'sla_met_count': sla_met_count,
+            'sla_compliance_pct': round(sla_compliance, 1),
+            'status': '✅ Good' if sla_compliance >= 90 else '⚠️ Needs Improvement' if sla_compliance >= 70 else '❌ Poor'
+        }
+    
+    # Overall metrics
+    total_tasks = len(tasks)
+    total_sla_met = sum(m['sla_met_count'] for m in sla_by_priority.values())
+    overall_compliance = (total_sla_met / total_tasks * 100) if total_tasks > 0 else 0
+    
+    return {
+        'period_days': days,
+        'start_date': start_dt.date().isoformat(),
+        'end_date': end_dt.date().isoformat(),
+        'overall_metrics': {
+            'total_tasks': total_tasks,
+            'sla_met': total_sla_met,
+            'sla_compliance_pct': round(overall_compliance, 1)
+        },
+        'by_priority': list(sla_by_priority.values())
+    }
+
+
+# ============= REVIEW MANAGEMENT ENHANCEMENTS =============
+
+@api_router.post("/feedback/ai-sentiment-analysis")
+async def analyze_review_sentiment_ai(
+    review_text: str,
+    source: str = "manual",
+    current_user: User = Depends(get_current_user)
+):
+    """
+    AI-powered sentiment analysis for reviews
+    - Overall sentiment (positive/neutral/negative)
+    - Department-specific insights
+    - Key topics extraction
+    """
+    # In production, integrate with:
+    # - OpenAI GPT-4
+    # - Google Cloud Natural Language API
+    # - Azure Text Analytics
+    
+    # Simulated AI analysis
+    review_lower = review_text.lower()
+    
+    # Simple sentiment detection
+    positive_words = ['great', 'excellent', 'amazing', 'wonderful', 'perfect', 'love', 'best', 'fantastic']
+    negative_words = ['bad', 'terrible', 'awful', 'poor', 'worst', 'dirty', 'rude', 'disappointed']
+    
+    positive_count = sum(1 for word in positive_words if word in review_lower)
+    negative_count = sum(1 for word in negative_words if word in review_lower)
+    
+    if positive_count > negative_count:
+        sentiment = 'positive'
+        sentiment_score = 0.8
+    elif negative_count > positive_count:
+        sentiment = 'negative'
+        sentiment_score = 0.2
+    else:
+        sentiment = 'neutral'
+        sentiment_score = 0.5
+    
+    # Department detection
+    departments_mentioned = []
+    if any(word in review_lower for word in ['room', 'bed', 'clean', 'housekeeping']):
+        departments_mentioned.append('housekeeping')
+    if any(word in review_lower for word in ['reception', 'check-in', 'front desk', 'staff']):
+        departments_mentioned.append('front_desk')
+    if any(word in review_lower for word in ['food', 'restaurant', 'breakfast', 'dinner']):
+        departments_mentioned.append('fnb')
+    if any(word in review_lower for word in ['spa', 'massage', 'wellness']):
+        departments_mentioned.append('spa')
+    
+    # Key topics (simulated)
+    topics = ['service', 'cleanliness'] if sentiment == 'positive' else ['maintenance', 'noise']
+    
+    return {
+        'review_text': review_text,
+        'sentiment': sentiment,
+        'sentiment_score': sentiment_score,
+        'departments_mentioned': departments_mentioned,
+        'key_topics': topics,
+        'ai_summary': f"Review expresses {sentiment} sentiment about {', '.join(departments_mentioned) if departments_mentioned else 'general experience'}",
+        'note': 'In production, use OpenAI GPT-4 or Google NLP for advanced analysis'
+    }
+
+
+@api_router.post("/feedback/auto-reply")
+async def generate_auto_reply(
+    review_id: str,
+    template_type: str = "standard",  # standard, apology, thank_you
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Generate auto-reply for reviews using templates
+    - Thank you for positive reviews
+    - Apology for negative reviews
+    - Customizable templates
+    """
+    review = await db.external_reviews.find_one({
+        'id': review_id,
+        'tenant_id': current_user.tenant_id
+    })
+    
+    if not review:
+        raise HTTPException(status_code=404, detail="Review not found")
+    
+    guest_name = review.get('guest_name', 'Guest')
+    sentiment = review.get('sentiment', 'neutral')
+    
+    # Generate reply based on sentiment
+    if sentiment == 'positive' or template_type == 'thank_you':
+        reply = f"Dear {guest_name},\n\nThank you for taking the time to share your wonderful feedback! We're thrilled to hear that you enjoyed your stay with us. Your kind words mean a lot to our team, and we look forward to welcoming you back soon.\n\nWarm regards,\n{current_user.name}\nGuest Relations Manager"
+    
+    elif sentiment == 'negative' or template_type == 'apology':
+        reply = f"Dear {guest_name},\n\nThank you for sharing your feedback with us. We sincerely apologize that your experience did not meet your expectations. Your comments are very important to us, and we are taking immediate steps to address the issues you've raised.\n\nWe would appreciate the opportunity to discuss this further and make things right. Please contact me directly at your convenience.\n\nSincerely,\n{current_user.name}\nGuest Relations Manager"
+    
+    else:
+        reply = f"Dear {guest_name},\n\nThank you for your feedback regarding your recent stay. We appreciate you taking the time to share your thoughts with us. Your input helps us continuously improve our services.\n\nWe hope to have the pleasure of welcoming you back in the future.\n\nBest regards,\n{current_user.name}\nGuest Relations Manager"
+    
+    return {
+        'review_id': review_id,
+        'generated_reply': reply,
+        'template_type': template_type,
+        'sentiment': sentiment,
+        'can_edit': True,
+        'note': 'Review and edit before sending'
+    }
+
+
+@api_router.get("/feedback/source-filtering")
+async def get_reviews_by_source(
+    source: str,  # google, booking, tripadvisor, in_house
+    days: int = 30,
+    sentiment: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Filter reviews by source
+    - Google Reviews
+    - Booking.com
+    - TripAdvisor
+    - In-house surveys
+    """
+    end_dt = datetime.now(timezone.utc)
+    start_dt = end_dt - timedelta(days=days)
+    
+    match_criteria = {
+        'tenant_id': current_user.tenant_id,
+        'created_at': {
+            '$gte': start_dt.isoformat(),
+            '$lte': end_dt.isoformat()
+        }
+    }
+    
+    # Determine collection based on source
+    if source == 'in_house':
+        collection = db.survey_responses
+        match_criteria.pop('created_at')
+        match_criteria['submitted_at'] = {
+            '$gte': start_dt.isoformat(),
+            '$lte': end_dt.isoformat()
+        }
+    else:
+        collection = db.external_reviews
+        match_criteria['platform'] = source
+    
+    if sentiment:
+        match_criteria['sentiment'] = sentiment
+    
+    reviews = []
+    async for review in collection.find(match_criteria).sort('created_at', -1):
+        reviews.append({
+            'id': review.get('id'),
+            'guest_name': review.get('guest_name'),
+            'rating': review.get('rating') or review.get('overall_rating'),
+            'review_text': review.get('review_text') or review.get('comments'),
+            'sentiment': review.get('sentiment'),
+            'date': review.get('created_at') or review.get('submitted_at'),
+            'source': source
+        })
+    
+    # Calculate summary
+    total_reviews = len(reviews)
+    avg_rating = sum(r['rating'] for r in reviews) / total_reviews if total_reviews > 0 else 0
+    
+    return {
+        'source': source,
+        'period_days': days,
+        'sentiment_filter': sentiment,
+        'total_reviews': total_reviews,
+        'avg_rating': round(avg_rating, 2),
+        'reviews': reviews
+    }
+
+
+# ============= LOYALTY PROGRAM ENHANCEMENTS =============
+
+@api_router.get("/loyalty/{guest_id}/benefits")
+async def get_loyalty_benefits(
+    guest_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get loyalty perks and benefits
+    - Late checkout
+    - Free breakfast
+    - Upgrade priority
+    - Points balance and expiration
+    """
+    guest = await db.guests.find_one({
+        'id': guest_id,
+        'tenant_id': current_user.tenant_id
+    })
+    
+    if not guest:
+        raise HTTPException(status_code=404, detail="Guest not found")
+    
+    points = guest.get('loyalty_points', 0)
+    total_stays = guest.get('total_stays', 0)
+    total_spend = guest.get('total_spend', 0)
+    
+    # Determine tier
+    if points >= 10000:
+        tier = 'Platinum'
+        tier_benefits = ['Late checkout (2pm)', 'Free breakfast', 'Priority upgrade', 'Welcome amenity', 'Free Wi-Fi', 'Room upgrade (subject to availability)']
+    elif points >= 5000:
+        tier = 'Gold'
+        tier_benefits = ['Late checkout (1pm)', 'Free breakfast', 'Priority upgrade', 'Welcome amenity', 'Free Wi-Fi']
+    elif points >= 1000:
+        tier = 'Silver'
+        tier_benefits = ['Late checkout (12pm)', 'Free breakfast', 'Free Wi-Fi']
+    else:
+        tier = 'Bronze'
+        tier_benefits = ['Free Wi-Fi', 'Welcome drink']
+    
+    # Points to next tier
+    if tier == 'Bronze':
+        next_tier = 'Silver'
+        points_needed = 1000 - points
+    elif tier == 'Silver':
+        next_tier = 'Gold'
+        points_needed = 5000 - points
+    elif tier == 'Gold':
+        next_tier = 'Platinum'
+        points_needed = 10000 - points
+    else:
+        next_tier = None
+        points_needed = 0
+    
+    # Points expiration (1 year from last activity)
+    points_expiry = (datetime.now(timezone.utc) + timedelta(days=365)).date().isoformat()
+    
+    # Calculate Lifetime Value
+    ltv = total_spend
+    
+    return {
+        'guest_id': guest_id,
+        'guest_name': guest.get('name'),
+        'loyalty_tier': tier,
+        'points_balance': points,
+        'points_expiry_date': points_expiry,
+        'next_tier': next_tier,
+        'points_to_next_tier': points_needed if next_tier else None,
+        'tier_benefits': tier_benefits,
+        'total_stays': total_stays,
+        'lifetime_value': round(ltv, 2),
+        'member_since': guest.get('created_at')
+    }
+
+
+@api_router.post("/loyalty/{guest_id}/redeem-points")
+async def redeem_loyalty_points(
+    guest_id: str,
+    points_to_redeem: int,
+    redemption_type: str,  # free_night, upgrade, fnb_credit, spa_credit
+    current_user: User = Depends(get_current_user)
+):
+    """Redeem loyalty points"""
+    guest = await db.guests.find_one({
+        'id': guest_id,
+        'tenant_id': current_user.tenant_id
+    })
+    
+    if not guest:
+        raise HTTPException(status_code=404, detail="Guest not found")
+    
+    current_points = guest.get('loyalty_points', 0)
+    
+    if current_points < points_to_redeem:
+        raise HTTPException(status_code=400, detail="Insufficient points")
+    
+    # Update points
+    new_balance = current_points - points_to_redeem
+    await db.guests.update_one(
+        {'id': guest_id},
+        {'$set': {'loyalty_points': new_balance}}
+    )
+    
+    # Create redemption record
+    redemption = {
+        'id': str(uuid.uuid4()),
+        'tenant_id': current_user.tenant_id,
+        'guest_id': guest_id,
+        'points_redeemed': points_to_redeem,
+        'redemption_type': redemption_type,
+        'processed_by': current_user.name,
+        'created_at': datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.loyalty_redemptions.insert_one(redemption)
+    
+    return {
+        'success': True,
+        'points_redeemed': points_to_redeem,
+        'redemption_type': redemption_type,
+        'new_points_balance': new_balance,
+        'redemption_id': redemption['id']
+    }
+
+
+# ============= PROCUREMENT ENHANCEMENTS =============
+
+@api_router.get("/procurement/auto-purchase-suggestions")
+async def get_auto_purchase_suggestions(
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Automatic purchase suggestions based on consumption rate analysis
+    - Items below reorder level
+    - Predicted stock-out date
+    - Recommended order quantity
+    """
+    suggestions = []
+    
+    # Get all inventory items
+    async for item in db.inventory.find({
+        'tenant_id': current_user.tenant_id
+    }):
+        current_stock = item.get('quantity', 0)
+        reorder_level = item.get('reorder_level', 50)
+        
+        if current_stock <= reorder_level:
+            # Calculate consumption rate (last 30 days)
+            # In production, analyze actual usage data
+            avg_daily_consumption = 5  # Simulated
+            
+            days_until_stockout = current_stock / avg_daily_consumption if avg_daily_consumption > 0 else 999
+            
+            # Recommended order quantity (30 days supply)
+            recommended_qty = int(avg_daily_consumption * 30)
+            
+            suggestions.append({
+                'item_id': item.get('id'),
+                'item_name': item.get('name'),
+                'category': item.get('category'),
+                'current_stock': current_stock,
+                'reorder_level': reorder_level,
+                'avg_daily_consumption': avg_daily_consumption,
+                'days_until_stockout': int(days_until_stockout),
+                'recommended_order_qty': recommended_qty,
+                'unit_cost': item.get('unit_cost', 0),
+                'estimated_cost': round(recommended_qty * item.get('unit_cost', 0), 2),
+                'priority': 'urgent' if days_until_stockout < 7 else 'high' if days_until_stockout < 14 else 'normal',
+                'supplier': item.get('preferred_supplier')
+            })
+    
+    # Sort by priority
+    suggestions.sort(key=lambda x: x['days_until_stockout'])
+    
+    return {
+        'total_suggestions': len(suggestions),
+        'urgent_count': sum(1 for s in suggestions if s['priority'] == 'urgent'),
+        'total_estimated_cost': round(sum(s['estimated_cost'] for s in suggestions), 2),
+        'suggestions': suggestions
+    }
+
+
+@api_router.post("/procurement/minimum-stock-alert")
+async def set_minimum_stock_alert(
+    item_id: str,
+    min_stock_level: int,
+    alert_recipients: List[str] = [],
+    current_user: User = Depends(get_current_user)
+):
+    """Set minimum stock alert for an item"""
+    item = await db.inventory.find_one({
+        'id': item_id,
+        'tenant_id': current_user.tenant_id
+    })
+    
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+    
+    await db.inventory.update_one(
+        {'id': item_id},
+        {'$set': {
+            'reorder_level': min_stock_level,
+            'alert_recipients': alert_recipients
+        }}
+    )
+    
+    return {
+        'success': True,
+        'item_id': item_id,
+        'min_stock_level': min_stock_level,
+        'message': 'Minimum stock alert configured'
+    }
+
+
 # Include router at the very end after ALL endpoints are defined
 app.include_router(api_router)

@@ -934,6 +934,21 @@ backend:
         agent: "testing"
         comment: "✅ COMPREHENSIVE TASK MANAGEMENT TESTING COMPLETED (85% Success Rate - 17/20 tests passed). WORKING PERFECTLY: CORE TASK CREATION - All 3 department tasks created successfully (Engineering: urgent repair, Housekeeping: high priority deep clean, F&B: normal catering) with correct priority_order mapping (urgent:4, high:3, normal:2, low:1). TASK FILTERING - All 5 filters working: department (engineering ✓), status (new ✓), priority (urgent ✓), assigned_to (Maria ✓), all tasks (✓). TASK WORKFLOW - Assignment workflow functional (new → assigned ✓), status updates working (assigned → in_progress → completed ✓), history tracking operational (2 entries ✓), completion photos supported. DEPARTMENT TASKS - Department-specific endpoints working: GET /tasks/department/{dept} with statistics (by_status, by_priority, overdue counts ✓). DEPARTMENT REQUESTS - All 3 department-specific request endpoints working: Engineering maintenance (repair task ✓), Housekeeping cleaning (with room validation ✓), F&B service (room_service type ✓). ❌ CRITICAL ROUTING ISSUE: 3 endpoints failing due to FastAPI route order conflict - /tasks/{task_id} defined before /tasks/my-tasks and /tasks/dashboard, causing 'my-tasks' and 'dashboard' to be treated as task IDs (404 errors). This is a backend code structure issue requiring route reordering. All core task management functionality is working correctly, only routing order needs fixing."
 
+  - task: "Finance Snapshot Endpoint for GM Dashboard"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Implemented GET /api/reports/finance-snapshot endpoint returning comprehensive financial snapshot with pending AR, overdue breakdown, today's collections, MTD collections, and accounting invoices"
+      - working: true
+        agent: "testing"
+        comment: "✅ FINANCE SNAPSHOT ENDPOINT TESTING COMPLETED (100% Success Rate - 8/8 tests passed). COMPREHENSIVE TESTING: All test cases from review request passed successfully. RESPONSE STRUCTURE: All required fields present with correct types (report_date, pending_ar with overdue_breakdown, todays_collections, mtd_collections, accounting_invoices). DATA ACCURACY: All numerical values properly rounded to 2 decimal places, overdue breakdown calculations correct, collection rate percentage valid (56.24%). EDGE CASES: Non-negative values validation passed, report date format correct (YYYY-MM-DD). EXPECTED BEHAVIOR: Endpoint returns comprehensive financial snapshot, all calculations accurate, response properly formatted for dashboard display. BUG FIXED: Corrected payment_date vs processed_at field mismatch in collections calculation. Endpoint fully functional and ready for GM Dashboard integration."
+
 frontend:
   - task: "OTA Messaging Hub - Complete Frontend Implementation"
     implemented: true

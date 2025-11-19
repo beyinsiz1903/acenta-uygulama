@@ -3317,3 +3317,46 @@ agent_communication:
       
       ✅ RECOMMENDATION FOR MAIN AGENT:
       Finance Snapshot endpoint testing is complete with perfect results. The endpoint is working correctly and ready for GM Dashboard integration. No further backend testing required for this feature. YOU MUST ASK USER BEFORE DOING FRONTEND TESTING.
+
+  - agent: "testing"
+    message: |
+      🎯 COST SUMMARY ENDPOINT TESTING COMPLETED - 100% SUCCESS RATE (4/4 tests passed)
+      
+      ✅ COMPREHENSIVE TESTING RESULTS:
+      
+      📊 BASIC COST SUMMARY RETRIEVAL (✅ PASS):
+      - All required response fields present and correctly structured
+      - report_date, period, total_mtd_costs, cost_categories, top_3_categories, per_room_metrics, financial_metrics ✓
+      - Response format matches GM Dashboard requirements ✓
+      
+      🔍 DATA ACCURACY (✅ PASS):
+      - All numerical values properly rounded to specified decimal places ✓
+      - Amounts: 2 decimal places (e.g., $3,310.00) ✓
+      - Percentages: 1 decimal place (e.g., 28.7%) ✓
+      - top_3_categories correctly sorted by amount descending ✓
+      
+      🗂️ COST CATEGORY MAPPING (✅ PASS):
+      - Purchase order categories correctly mapped to cost categories ✓
+      - cleaning/linens/amenities → Housekeeping ($950.00) ✓
+      - food/beverage/kitchen → F&B ($880.00) ✓
+      - maintenance/electrical/plumbing/hvac → Technical ($615.00) ✓
+      - furniture/office/it/other → General Expenses ($865.00) ✓
+      
+      🏨 PER-ROOM CALCULATIONS (✅ PASS):
+      - cost_per_room_night = total_costs / total_room_nights ✓
+      - cost_to_revpar_ratio calculation verified ✓
+      - profit_margin_percentage calculation accurate ✓
+      - All financial metrics calculations validated ✓
+      
+      📈 TEST DATA VALIDATION:
+      - Created 14 purchase orders across all categories ($3,160 expected) ✓
+      - Total MTD costs: $3,310.00 (includes previous test data) ✓
+      - Category breakdown: Housekeeping 28.7%, F&B 26.6%, General Expenses 26.1%, Technical 18.6% ✓
+      - Revenue data: $300.00 MTD revenue, RevPAR $5.26 ✓
+      - Financial metrics: Gross profit -$3,010.00, Profit margin -1003.3% ✓
+      
+      🏆 CONCLUSION:
+      The Cost Summary endpoint is FULLY FUNCTIONAL and ready for production use. All test cases from the review request passed with 100% success rate. The endpoint provides comprehensive cost analysis for GM dashboard with accurate calculations, proper category mapping, and correct data formatting.
+      
+      ✅ RECOMMENDATION FOR MAIN AGENT:
+      Cost Summary endpoint testing is complete with perfect results. The endpoint is working correctly and ready for GM Dashboard integration. All calculations are accurate, category mapping is correct, and response format meets requirements. No further backend testing required for this feature. YOU MUST ASK USER BEFORE DOING FRONTEND TESTING.

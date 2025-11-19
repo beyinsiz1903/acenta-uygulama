@@ -7499,7 +7499,7 @@ async def create_purchase_order(
         'status': 'pending',
         'created_at': datetime.now(timezone.utc).isoformat()
     }
-    await db.purchase_orders.insert_one(order)
+    await db.purchase_orders.insert_one(order.copy())
     return order
 
 @api_router.get("/marketplace/deliveries")

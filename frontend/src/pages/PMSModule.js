@@ -1331,14 +1331,18 @@ const PMSModule = ({ user, tenant, onLogout }) => {
                         priorityTitle = 'Arrival Today';
                       }
                       
+                      // Global color system: green=available, red=dirty/risk, yellow=pending, purple=occupied
+                      const statusColors = {
+                        'dirty': 'bg-red-100 border-red-300', // RISK
+                        'cleaning': 'bg-yellow-100 border-yellow-300', // PENDING
+                        'inspected': 'bg-green-100 border-green-300', // AVAILABLE (ready for occupancy)
+                        'available': 'bg-green-100 border-green-300', // AVAILABLE
+                        'occupied': 'bg-purple-100 border-purple-300' // OCCUPIED
+                      };
+                      
                       return (
                       <Card key={room.id} className={`cursor-pointer hover:shadow-lg transition-shadow relative ${
-                        room.status === 'dirty' ? 'bg-red-100 border-red-300' :
-                        room.status === 'cleaning' ? 'bg-yellow-100 border-yellow-300' :
-                        room.status === 'inspected' ? 'bg-green-100 border-green-300' :
-                        room.status === 'available' ? 'bg-blue-100 border-blue-300' :
-                        room.status === 'occupied' ? 'bg-purple-100 border-purple-300' :
-                        'bg-gray-100 border-gray-300'
+                        statusColors[room.status] || 'bg-gray-100 border-gray-300'
                       } ${priorityColor ? 'ring-2 ring-offset-1 ' + (priorityColor === 'bg-red-600' ? 'ring-red-500' : priorityColor === 'bg-orange-600' ? 'ring-orange-500' : 'ring-blue-500') : ''}`}>
                         <div className="absolute top-1 right-1 flex gap-1">
                           {priorityIcon && (

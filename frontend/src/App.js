@@ -218,6 +218,46 @@ function App() {
               )
             }
           />
+          <Route
+            path="/guest/checkin/:bookingId"
+            element={
+              isAuthenticated ? (
+                <SelfCheckin bookingId={window.location.pathname.split('/').pop()} onComplete={() => window.location.href = '/guest/portal'} />
+              ) : (
+                <Navigate to="/auth" replace />
+              )
+            }
+          />
+          <Route
+            path="/guest/digital-key/:bookingId"
+            element={
+              isAuthenticated ? (
+                <DigitalKey bookingId={window.location.pathname.split('/').pop()} />
+              ) : (
+                <Navigate to="/auth" replace />
+              )
+            }
+          />
+          <Route
+            path="/guest/upsell/:bookingId"
+            element={
+              isAuthenticated ? (
+                <UpsellStore bookingId={window.location.pathname.split('/').pop()} />
+              ) : (
+                <Navigate to="/auth" replace />
+              )
+            }
+          />
+          <Route
+            path="/staff/mobile"
+            element={
+              isAuthenticated ? (
+                <StaffMobileApp user={user} />
+              ) : (
+                <Navigate to="/auth" replace />
+              )
+            }
+          />
         </Routes>
       </BrowserRouter>
     </div>

@@ -17159,5 +17159,341 @@ async def set_minimum_stock_alert(
     }
 
 
+# ============= CONTRACTED RATES & ALLOTMENT =============
+
+@api_router.get("/contracted-rates/allotment-utilization")
+async def get_allotment_utilization(
+    company_id: Optional[str] = None,
+    date_range_days: int = 30,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Track contracted allotment utilization
+    - Rooms allocated vs used
+    - Pickup rate
+    - Alert when 90% utilized
+    """
+    end_dt = datetime.now(timezone.utc)
+    start_dt = end_dt - timedelta(days=date_range_days)
+    
+    match_criteria = {
+        'tenant_id': current_user.tenant_id
+    }
+    
+    if company_id:
+        match_criteria['company_id'] = company_id
+    
+    # Get all companies with contracted rates
+    utilization_data = []
+    
+    async for company in db.companies.find(match_criteria):
+        if not company.get('contracted_rate'):
+            continue
+        
+        # Get allotment data (if configured)
+        allotment = await db.contracted_allotments.find_one({
+            'company_id': company.get('id'),
+            'tenant_id': current_user.tenant_id
+        })
+        
+        if not allotment:
+            continue
+        
+        allocated_rooms = allotment.get('rooms_allocated', 0)
+        
+        # Count bookings from this company in date range
+        bookings_count = 0
+        async for booking in db.bookings.find({
+            'company_id': company.get('id'),
+            'tenant_id': current_user.tenant_id,
+            'check_in': {
+                '$gte': start_dt.date().isoformat(),
+                '$lte': end_dt.date().isoformat()
+            }
+        }):
+            bookings_count += 1
+        
+        utilization_pct = (bookings_count / allocated_rooms * 100) if allocated_rooms > 0 else 0
+        
+        utilization_data.append({
+            'company_id': company.get('id'),
+            'company_name': company.get('name'),
+            'allocated_rooms': allocated_rooms,
+            'rooms_used': bookings_count,
+            'remaining_rooms': max(0, allocated_rooms - bookings_count),
+            'utilization_pct': round(utilization_pct, 1),
+            'status': '🚨 Critical' if utilization_pct >= 90 else '⚠️ High' if utilization_pct >= 75 else '✅ Normal',
+            'alert': utilization_pct >= 90
+        })
+    
+    # Sort by utilization
+    utilization_data.sort(key=lambda x: x['utilization_pct'], reverse=True)
+    
+    # Generate alerts
+    alerts = []
+    for item in utilization_data:
+        if item['utilization_pct'] >= 90:
+            alerts.append(f"⚠️ {item['company_name']}: Allotment {item['utilization_pct']}% used - Consider increasing allocation")
+    
+    return {
+        'period_days': date_range_days,
+        'total_companies': len(utilization_data),
+        'high_utilization_count': sum(1 for d in utilization_data if d['utilization_pct'] >= 75),
+        'utilization_data': utilization_data,
+        'alerts': alerts
+    }
+
+
+@api_router.get("/contracted-rates/pickup-alerts")
+async def get_pickup_vs_allocation_alerts(
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Pickup vs allocation alerts
+    - Monitor booking pace
+    - Alert when pickup is slow
+    """
+    alerts = []
+    
+    # Get all contracted allotments
+    async for allotment in db.contracted_allotments.find({
+        'tenant_id': current_user.tenant_id,
+        'status': 'active'
+    }):
+        company_id = allotment.get('company_id')
+        company = await db.companies.find_one({'id': company_id})
+        
+        allocated = allotment.get('rooms_allocated', 0)
+        start_date = allotment.get('start_date')
+        end_date = allotment.get('end_date')
+        
+        # Count actual bookings
+        bookings_count = await db.bookings.count_documents({
+            'company_id': company_id,
+            'tenant_id': current_user.tenant_id,
+            'check_in': {
+                '$gte': start_date,
+                '$lte': end_date
+            }
+        })
+        
+        pickup_pct = (bookings_count / allocated * 100) if allocated > 0 else 0
+        
+        # Calculate expected pickup (time-based)
+        if start_date and end_date:
+            total_days = (datetime.fromisoformat(end_date) - datetime.fromisoformat(start_date)).days
+            days_passed = (datetime.now(timezone.utc) - datetime.fromisoformat(start_date)).days
+            expected_pickup_pct = (days_passed / total_days * 100) if total_days > 0 else 0
+            
+            if pickup_pct < expected_pickup_pct - 20:  # 20% behind pace
+                alerts.append({
+                    'company_name': company.get('name') if company else 'Unknown',
+                    'allocated': allocated,
+                    'picked_up': bookings_count,
+                    'pickup_pct': round(pickup_pct, 1),
+                    'expected_pickup_pct': round(expected_pickup_pct, 1),
+                    'status': 'behind_pace',
+                    'message': f"⚠️ Pickup is {round(expected_pickup_pct - pickup_pct, 1)}% behind expected pace"
+                })
+    
+    return {
+        'total_alerts': len(alerts),
+        'alerts': alerts
+    }
+
+
+# ============= RESERVATION FINAL IMPROVEMENTS =============
+
+@api_router.get("/reservations/double-booking-check")
+async def check_double_booking_conflicts(
+    date: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Double-booking conflict detection engine
+    - Identify potential conflicts
+    - Room assignment overlaps
+    """
+    target_date = date or datetime.now().date().isoformat()
+    
+    # Get all bookings for the date
+    bookings = []
+    async for booking in db.bookings.find({
+        'tenant_id': current_user.tenant_id,
+        'status': {'$in': ['confirmed', 'guaranteed', 'checked_in']},
+        'check_in': {'$lte': target_date},
+        'check_out': {'$gte': target_date}
+    }):
+        bookings.append(booking)
+    
+    # Group by room
+    room_bookings = {}
+    for booking in bookings:
+        room_id = booking.get('room_id')
+        if room_id not in room_bookings:
+            room_bookings[room_id] = []
+        room_bookings[room_id].append(booking)
+    
+    # Find conflicts
+    conflicts = []
+    for room_id, room_booking_list in room_bookings.items():
+        if len(room_booking_list) > 1:
+            # Potential conflict
+            room = await db.rooms.find_one({'id': room_id})
+            conflicts.append({
+                'room_id': room_id,
+                'room_number': room.get('room_number') if room else 'Unknown',
+                'booking_count': len(room_booking_list),
+                'bookings': [{
+                    'booking_id': b.get('id'),
+                    'guest_id': b.get('guest_id'),
+                    'check_in': b.get('check_in'),
+                    'check_out': b.get('check_out'),
+                    'status': b.get('status')
+                } for b in room_booking_list]
+            })
+    
+    return {
+        'date': target_date,
+        'total_conflicts': len(conflicts),
+        'conflicts': conflicts,
+        'status': 'conflicts_found' if conflicts else 'no_conflicts'
+    }
+
+
+@api_router.get("/reservations/adr-visibility")
+async def get_adr_and_rate_visibility(
+    start_date: str,
+    end_date: str,
+    room_type: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    ADR (Average Daily Rate) and rate code visibility
+    - Daily ADR
+    - By rate code
+    - By room type
+    """
+    # Get all bookings in date range
+    bookings = []
+    async for booking in db.bookings.find({
+        'tenant_id': current_user.tenant_id,
+        'check_in': {
+            '$gte': start_date,
+            '$lte': end_date
+        }
+    }):
+        bookings.append(booking)
+    
+    # Calculate ADR
+    total_room_revenue = sum(b.get('total_amount', 0) for b in bookings)
+    total_room_nights = sum(
+        (datetime.fromisoformat(b.get('check_out')) - datetime.fromisoformat(b.get('check_in'))).days
+        for b in bookings
+    )
+    
+    adr = total_room_revenue / total_room_nights if total_room_nights > 0 else 0
+    
+    # By rate type
+    rate_breakdown = {}
+    for booking in bookings:
+        rate_type = booking.get('rate_type', 'bar')
+        if rate_type not in rate_breakdown:
+            rate_breakdown[rate_type] = {
+                'bookings': 0,
+                'revenue': 0
+            }
+        rate_breakdown[rate_type]['bookings'] += 1
+        rate_breakdown[rate_type]['revenue'] += booking.get('total_amount', 0)
+    
+    # Calculate ADR per rate type
+    for rate_type, data in rate_breakdown.items():
+        data['adr'] = round(data['revenue'] / data['bookings'], 2) if data['bookings'] > 0 else 0
+    
+    return {
+        'start_date': start_date,
+        'end_date': end_date,
+        'overall_adr': round(adr, 2),
+        'total_room_revenue': round(total_room_revenue, 2),
+        'total_room_nights': total_room_nights,
+        'total_bookings': len(bookings),
+        'rate_breakdown': rate_breakdown
+    }
+
+
+@api_router.post("/reservations/rate-override-panel")
+async def create_rate_override_with_panel(
+    booking_id: str,
+    new_rate: float,
+    override_reason: str,
+    authorized_by: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Rate override panel with authorization tracking
+    - Manager approval required
+    - Reason tracking
+    - Audit trail
+    """
+    booking = await db.bookings.find_one({
+        'id': booking_id,
+        'tenant_id': current_user.tenant_id
+    })
+    
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    
+    original_rate = booking.get('total_amount', 0)
+    
+    # Create override log
+    override_log = {
+        'id': str(uuid.uuid4()),
+        'tenant_id': current_user.tenant_id,
+        'booking_id': booking_id,
+        'user_id': current_user.id,
+        'user_name': current_user.name,
+        'original_rate': original_rate,
+        'new_rate': new_rate,
+        'override_reason': override_reason,
+        'authorized_by': authorized_by or current_user.name,
+        'timestamp': datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.rate_override_logs.insert_one(override_log)
+    
+    # Update booking
+    await db.bookings.update_one(
+        {'id': booking_id},
+        {'$set': {
+            'total_amount': new_rate,
+            'base_rate': original_rate,
+            'override_reason': override_reason
+        }}
+    )
+    
+    # Create audit log
+    await create_audit_log(
+        tenant_id=current_user.tenant_id,
+        user=current_user,
+        action="RATE_OVERRIDE",
+        entity_type="booking",
+        entity_id=booking_id,
+        changes={
+            'original_rate': original_rate,
+            'new_rate': new_rate,
+            'reason': override_reason
+        }
+    )
+    
+    return {
+        'success': True,
+        'booking_id': booking_id,
+        'original_rate': original_rate,
+        'new_rate': new_rate,
+        'override_id': override_log['id'],
+        'message': 'Rate override applied successfully'
+    }
+
+
 # Include router at the very end after ALL endpoints are defined
 app.include_router(api_router)

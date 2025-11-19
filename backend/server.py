@@ -7828,7 +7828,7 @@ async def generate_auto_pricing(
     request: AutoPricingRequest,
     current_user: User = Depends(get_current_user)
 ):
-    """Generate automatic pricing recommendations"""
+    """Generate automatic pricing recommendations with advanced confidence scoring"""
     # Parse dates
     start = datetime.fromisoformat(request.start_date)
     end = datetime.fromisoformat(request.end_date)
@@ -7842,9 +7842,24 @@ async def generate_auto_pricing(
     
     room_types = await db.room_types.find(room_types_query, {'_id': 0}).to_list(100)
     
+    # Get competitor pricing for comparison
+    comp_avg_prices = {}
+    comp_pricing = await db.comp_pricing.find(
+        {'tenant_id': current_user.tenant_id},
+        {'_id': 0}
+    ).to_list(1000)
+    
+    for price in comp_pricing:
+        date = price.get('date')
+        if date:
+            if date not in comp_avg_prices:
+                comp_avg_prices[date] = []
+            comp_avg_prices[date].append(price.get('standard_rate', 0))
+    
     recommendations = []
     for day in range(days):
         current_date = (start + timedelta(days=day)).date().isoformat()
+        date_obj = datetime.fromisoformat(current_date)
         
         for rt in room_types:
             # Get bookings for this date
@@ -7865,22 +7880,142 @@ async def generate_auto_pricing(
             occupancy = (bookings / total_rooms * 100) if total_rooms > 0 else 0
             base_rate = rt.get('base_rate', 100.0)
             
-            # Pricing algorithm
+            # Get booking pace (bookings in last 7 days for this date)
+            recent_bookings = await db.bookings.count_documents({
+                'tenant_id': current_user.tenant_id,
+                'room_type': rt['name'],
+                'check_in_date': {'$lte': current_date},
+                'check_out_date': {'$gt': current_date},
+                'created_at': {'$gte': (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()}
+            })
+            
+            booking_pace = recent_bookings / 7 if recent_bookings > 0 else 0
+            
+            # Get competitor average price for this date
+            comp_avg = sum(comp_avg_prices.get(current_date, [])) / len(comp_avg_prices.get(current_date, [1])) if comp_avg_prices.get(current_date) else base_rate
+            
+            # Day of week factor
+            day_of_week = date_obj.weekday()
+            is_weekend = day_of_week in [4, 5]  # Friday, Saturday
+            
+            # Seasonal factor
+            month = date_obj.month
+            is_peak_season = month in [6, 7, 8, 12]
+            
+            # ENHANCED PRICING ALGORITHM with multiple factors
+            price_multiplier = 1.0
+            reasoning_factors = []
+            
+            # Factor 1: Current Occupancy (40% weight)
             if occupancy > 90:
-                suggested_rate = base_rate * 1.25  # +25% premium
-                strategy = 'High demand pricing'
+                price_multiplier *= 1.25
+                reasoning_factors.append(f"Very high occupancy ({occupancy:.0f}%): +25%")
             elif occupancy > 75:
-                suggested_rate = base_rate * 1.15  # +15% premium
-                strategy = 'Demand-based pricing'
+                price_multiplier *= 1.15
+                reasoning_factors.append(f"High occupancy ({occupancy:.0f}%): +15%")
             elif occupancy > 50:
-                suggested_rate = base_rate * 1.05  # +5% premium
-                strategy = 'Standard pricing'
+                price_multiplier *= 1.05
+                reasoning_factors.append(f"Moderate occupancy ({occupancy:.0f}%): +5%")
             elif occupancy > 30:
-                suggested_rate = base_rate * 0.95  # -5% discount
-                strategy = 'Competitive pricing'
+                price_multiplier *= 0.95
+                reasoning_factors.append(f"Low occupancy ({occupancy:.0f}%): -5%")
             else:
-                suggested_rate = base_rate * 0.85  # -15% discount
-                strategy = 'Promotional pricing'
+                price_multiplier *= 0.85
+                reasoning_factors.append(f"Very low occupancy ({occupancy:.0f}%): -15%")
+            
+            # Factor 2: Booking Pace (20% weight)
+            if booking_pace > 2:
+                price_multiplier *= 1.08
+                reasoning_factors.append(f"Strong booking pace ({booking_pace:.1f}/day): +8%")
+            elif booking_pace > 1:
+                price_multiplier *= 1.03
+                reasoning_factors.append(f"Good booking pace ({booking_pace:.1f}/day): +3%")
+            elif booking_pace < 0.5 and occupancy < 60:
+                price_multiplier *= 0.95
+                reasoning_factors.append(f"Slow booking pace ({booking_pace:.1f}/day): -5%")
+            
+            # Factor 3: Day of Week (15% weight)
+            if is_weekend:
+                price_multiplier *= 1.10
+                reasoning_factors.append("Weekend demand: +10%")
+            
+            # Factor 4: Seasonality (15% weight)
+            if is_peak_season:
+                price_multiplier *= 1.12
+                reasoning_factors.append("Peak season: +12%")
+            
+            # Factor 5: Competitor Pricing (10% weight)
+            if comp_avg > 0:
+                price_position = (base_rate / comp_avg) * 100
+                if price_position < 85:
+                    price_multiplier *= 1.05
+                    reasoning_factors.append(f"Below market (${comp_avg:.0f}): +5%")
+                elif price_position > 115:
+                    price_multiplier *= 0.97
+                    reasoning_factors.append(f"Above market (${comp_avg:.0f}): -3%")
+                else:
+                    reasoning_factors.append(f"Market aligned (${comp_avg:.0f})")
+            
+            suggested_rate = base_rate * price_multiplier
+            
+            # DYNAMIC CONFIDENCE SCORING
+            confidence_factors = []
+            confidence_score = 0.0
+            
+            # Historical data availability
+            if bookings > 0:
+                confidence_score += 0.25
+                confidence_factors.append("Has booking history")
+            
+            # Booking pace reliability
+            if booking_pace > 0.5:
+                confidence_score += 0.20
+                confidence_factors.append("Active booking pace")
+            
+            # Competitor data availability
+            if comp_avg > 0 and len(comp_avg_prices.get(current_date, [])) >= 2:
+                confidence_score += 0.25
+                confidence_factors.append("Multiple competitor prices")
+            elif comp_avg > 0:
+                confidence_score += 0.15
+                confidence_factors.append("Limited competitor data")
+            
+            # Time to arrival
+            days_to_arrival = (date_obj - datetime.now(timezone.utc)).days
+            if days_to_arrival < 30:
+                confidence_score += 0.20
+                confidence_factors.append("Near-term forecast")
+            elif days_to_arrival < 90:
+                confidence_score += 0.10
+                confidence_factors.append("Medium-term forecast")
+            
+            # Room type data quality
+            if total_rooms >= 5:
+                confidence_score += 0.10
+                confidence_factors.append("Adequate room inventory")
+            
+            # Cap confidence at 0.95
+            confidence_score = min(confidence_score, 0.95)
+            
+            # Determine confidence level
+            if confidence_score >= 0.75:
+                confidence_level = "High"
+            elif confidence_score >= 0.50:
+                confidence_level = "Medium"
+            else:
+                confidence_level = "Low"
+            
+            # Determine strategy
+            if price_multiplier >= 1.15:
+                strategy = 'Premium Pricing'
+            elif price_multiplier >= 1.05:
+                strategy = 'Demand-Based Pricing'
+            elif price_multiplier >= 0.95:
+                strategy = 'Market Rate'
+            elif price_multiplier >= 0.85:
+                strategy = 'Competitive Pricing'
+            else:
+                strategy = 'Promotional Pricing'
             
             recommendation = {
                 'id': str(uuid.uuid4()),
@@ -7890,19 +8025,34 @@ async def generate_auto_pricing(
                 'current_rate': base_rate,
                 'suggested_rate': round(suggested_rate, 2),
                 'occupancy': round(occupancy, 1),
+                'booking_pace': round(booking_pace, 2),
+                'competitor_avg': round(comp_avg, 2) if comp_avg > 0 else None,
                 'strategy': strategy,
-                'confidence': 0.85,
+                'confidence': round(confidence_score, 2),
+                'confidence_level': confidence_level,
+                'confidence_factors': confidence_factors,
+                'reasoning': ' | '.join(reasoning_factors),
+                'reasoning_breakdown': reasoning_factors,
+                'is_weekend': is_weekend,
+                'is_peak_season': is_peak_season,
+                'price_change_pct': round((price_multiplier - 1) * 100, 1),
                 'generated_at': datetime.now(timezone.utc).isoformat()
             }
             recommendations.append(recommendation)
     
     # Save recommendations
     if recommendations:
-        await db.rms_pricing_recommendations.insert_many(recommendations)
+        await db.rms_pricing_recommendations.insert_many([r.copy() for r in recommendations])
     
     return {
         'message': f'Generated {len(recommendations)} pricing recommendations',
-        'recommendations': recommendations
+        'recommendations': recommendations,
+        'summary': {
+            'total_recommendations': len(recommendations),
+            'avg_confidence': round(sum(r['confidence'] for r in recommendations) / len(recommendations), 2) if recommendations else 0,
+            'high_confidence_count': sum(1 for r in recommendations if r['confidence_level'] == 'High'),
+            'date_range': f"{request.start_date} to {request.end_date}"
+        }
     }
 
 @api_router.get("/rms/demand-forecast")

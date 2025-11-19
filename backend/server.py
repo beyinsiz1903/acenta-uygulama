@@ -7596,10 +7596,7 @@ async def send_whatsapp_message(
 
 @api_router.post("/messaging/send-email")
 async def send_email_message(
-    to: str,
-    subject: str,
-    message: str,
-    booking_id: str = None,
+    request: SendEmailRequest,
     current_user: User = Depends(get_current_user)
 ):
     """Send email to guest"""
@@ -7607,10 +7604,10 @@ async def send_email_message(
         'id': str(uuid.uuid4()),
         'tenant_id': current_user.tenant_id,
         'channel': 'email',
-        'to': to,
-        'subject': subject,
-        'message': message,
-        'booking_id': booking_id,
+        'to': request.to,
+        'subject': request.subject,
+        'message': request.message,
+        'booking_id': request.booking_id,
         'status': 'sent',
         'sent_at': datetime.now(timezone.utc).isoformat(),
         'sent_by': current_user.id

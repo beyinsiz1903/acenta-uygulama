@@ -8125,22 +8125,18 @@ async def complete_housekeeping_task(
 
 @api_router.post("/housekeeping/mobile/report-issue")
 async def report_housekeeping_issue(
-    room_id: str,
-    issue_type: str,
-    description: str,
-    priority: str = 'normal',
-    photos: list = [],
+    request: ReportIssueRequest,
     current_user: User = Depends(get_current_user)
 ):
     """Report maintenance or cleaning issue"""
     issue = {
         'id': str(uuid.uuid4()),
         'tenant_id': current_user.tenant_id,
-        'room_id': room_id,
-        'issue_type': issue_type,
-        'description': description,
-        'priority': priority,
-        'photos': photos,
+        'room_id': request.room_id,
+        'issue_type': request.issue_type,
+        'description': request.description,
+        'priority': request.priority,
+        'photos': request.photos,
         'status': 'open',
         'reported_by': current_user.name,
         'reported_at': datetime.now(timezone.utc).isoformat()

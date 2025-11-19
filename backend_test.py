@@ -1389,7 +1389,7 @@ class HotelPMSBackendTester:
     def run_all_tests(self):
         """Run all backend tests"""
         print("🚀 Starting Comprehensive Backend Testing for Hotel PMS")
-        print("Testing 57 endpoints across 7 major features...")
+        print("Testing 77 endpoints across 8 major features (including 20 NEW Marketplace Extensions)...")
         
         if not self.authenticate():
             print("❌ Authentication failed. Cannot proceed with testing.")

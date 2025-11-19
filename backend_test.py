@@ -23,6 +23,7 @@ class HotelPMSBackendTester:
         self.tenant_id = None
         self.user_id = None
         self.test_results = {
+            "pos": {"passed": 0, "failed": 0, "details": []},
             "calendar": {"passed": 0, "failed": 0, "details": []},
             "rms": {"passed": 0, "failed": 0, "details": []}
         }

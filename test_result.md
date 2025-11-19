@@ -832,6 +832,18 @@ backend:
         agent: "testing"
         comment: "✅ MARKETPLACE EXTENSIONS TESTING COMPLETED (100% Success Rate - 20/20 endpoints passed). All 4 new wholesale management features working perfectly: 1) SUPPLIER MANAGEMENT (6/6): POST/GET /marketplace/suppliers, PUT/GET credit limits, supplier filtering by status. 2) GM APPROVAL WORKFLOW (5/5): PO submit-for-approval, pending approvals retrieval, approve/reject with notes, workflow state verification. 3) WAREHOUSE TRACKING (5/5): POST/GET warehouses, warehouse inventory tracking, stock summary across all locations. 4) SHIPPING & DELIVERY TRACKING (4/4): delivery status updates (in_transit→delivered), tracking history, in-transit deliveries filtering. Credit limit calculations working (limit - outstanding = available), approval workflow transitions (pending→awaiting_approval→approved/rejected), warehouse inventory aggregation accurate, delivery tracking with complete history. All CRUD operations, validation, filtering, and business logic fully functional."
 
+  - task: "Enhanced RMS with Advanced Confidence & Insights (4 enhanced endpoints)"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "✅ ENHANCED RMS TESTING COMPLETED (83.3% Success Rate - 5/6 tests passed). WORKING PERFECTLY: 1) POST /rms/auto-pricing (Enhanced) - Returns proper response structure with recommendations, summary, avg_confidence, high_confidence_count fields. 2) GET /rms/comp-set-comparison - NEW endpoint working with daily comparison data (31 days), proper market position analysis (At Market, Above/Below), price index calculations, and summary statistics. 3) GET /rms/comp-set-comparison (Date Range) - Date filtering working correctly (28 days for February). 4) GET /rms/pricing-insights - NEW endpoint returning insights array with proper structure. 5) GET /rms/pricing-insights (Specific Date) - Date-specific filtering functional. ❌ CRITICAL ISSUE: POST /rms/demand-forecast (90-day) - 500 Internal Server Error due to 'TypeError: can't subtract offset-naive and offset-aware datetimes' in line 8120. This prevents 90-day demand forecasting capability. All other enhanced features (dynamic confidence scoring, competitor comparison, pricing insights) are fully operational."
+
 frontend:
   - task: "OTA Messaging Hub - Complete Frontend Implementation"
     implemented: true

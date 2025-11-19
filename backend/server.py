@@ -7889,13 +7889,12 @@ async def get_demand_forecast(
 
 @api_router.post("/rms/demand-forecast")
 async def generate_demand_forecast(
-    start_date: str,
-    end_date: str,
+    request: DemandForecastRequest,
     current_user: User = Depends(get_current_user)
 ):
     """Generate demand forecast using historical data"""
-    start = datetime.fromisoformat(start_date)
-    end = datetime.fromisoformat(end_date)
+    start = datetime.fromisoformat(request.start_date)
+    end = datetime.fromisoformat(request.end_date)
     days = (end - start).days + 1
     
     forecasts = []

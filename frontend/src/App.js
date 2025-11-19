@@ -15,6 +15,10 @@ import LoyaltyModule from "@/pages/LoyaltyModule";
 import MarketplaceModule from "@/pages/MarketplaceModule";
 import GuestPortal from "@/pages/GuestPortal";
 import TemplateManager from "@/pages/TemplateManager";
+import SelfCheckin from "@/pages/SelfCheckin";
+import DigitalKey from "@/pages/DigitalKey";
+import UpsellStore from "@/pages/UpsellStore";
+import StaffMobileApp from "@/pages/StaffMobileApp";
 import { Toaster } from "@/components/ui/sonner";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;

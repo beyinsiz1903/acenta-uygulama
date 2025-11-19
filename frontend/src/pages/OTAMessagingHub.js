@@ -15,6 +15,9 @@ const OTAMessagingHub = () => {
   const [newMessage, setNewMessage] = useState('');
   const [filter, setFilter] = useState('all'); // all, booking.com, airbnb, expedia
   const [loading, setLoading] = useState(false);
+  const [templates, setTemplates] = useState([]);
+  const [showTemplates, setShowTemplates] = useState(false);
+  const [upsellData, setUpsellData] = useState(null);
 
   useEffect(() => {
     loadConversations();

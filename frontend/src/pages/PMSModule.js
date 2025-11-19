@@ -1612,7 +1612,16 @@ const PMSModule = ({ user, tenant, onLogout }) => {
                 const guest = guests.find(g => g.id === booking.guest_id);
                 const room = rooms.find(r => r.id === booking.room_id);
                 return (
-                  <Card key={booking.id}>
+                  <Card 
+                    key={booking.id}
+                    className="cursor-pointer hover:shadow-lg transition-shadow"
+                    onDoubleClick={() => {
+                      setSelectedBookingDetail(booking);
+                      setOpenDialog('bookingDetail');
+                      toast.info('Opening booking details...');
+                    }}
+                    title="Double-click to view full details"
+                  >
                     <CardContent className="pt-6">
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
@@ -1632,7 +1641,10 @@ const PMSModule = ({ user, tenant, onLogout }) => {
                           <Button 
                             variant="outline" 
                             size="sm"
-                            onClick={() => loadBookingFolios(booking.id)}
+                            onClick={(e) => {
+                              e.stopPropagation(); // Prevent double-click trigger
+                              loadBookingFolios(booking.id);
+                            }}
                             title="View charges & payments"
                           >
                             <DollarSign className="w-4 h-4 mr-1" />

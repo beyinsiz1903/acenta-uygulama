@@ -10690,5 +10690,401 @@ async def get_in_transit_deliveries(current_user: User = Depends(get_current_use
     return {'deliveries': deliveries, 'count': len(deliveries)}
 
 
+# ========================================
+# CALENDAR ENHANCEMENTS - 3 New Features
+# ========================================
+
+# 1. RATE CODES MANAGEMENT (BB, HB, FB, AI, RO, Non-refundable)
+@api_router.get("/calendar/rate-codes")
+async def get_rate_codes(current_user: User = Depends(get_current_user)):
+    """Get all rate codes"""
+    rate_codes = await db.rate_codes.find(
+        {'tenant_id': current_user.tenant_id},
+        {'_id': 0}
+    ).to_list(100)
+    
+    # Default rate codes if none exist
+    if not rate_codes:
+        default_codes = [
+            {
+                'id': str(uuid.uuid4()),
+                'tenant_id': current_user.tenant_id,
+                'code': 'RO',
+                'name': 'Room Only',
+                'description': 'Room only, no meals included',
+                'includes_breakfast': False,
+                'includes_lunch': False,
+                'includes_dinner': False,
+                'is_refundable': True,
+                'cancellation_policy': 'Free cancellation up to 24h before arrival',
+                'price_modifier': 1.0
+            },
+            {
+                'id': str(uuid.uuid4()),
+                'tenant_id': current_user.tenant_id,
+                'code': 'BB',
+                'name': 'Bed & Breakfast',
+                'description': 'Room with breakfast included',
+                'includes_breakfast': True,
+                'includes_lunch': False,
+                'includes_dinner': False,
+                'is_refundable': True,
+                'cancellation_policy': 'Free cancellation up to 48h before arrival',
+                'price_modifier': 1.15
+            },
+            {
+                'id': str(uuid.uuid4()),
+                'tenant_id': current_user.tenant_id,
+                'code': 'HB',
+                'name': 'Half Board',
+                'description': 'Room with breakfast and dinner',
+                'includes_breakfast': True,
+                'includes_lunch': False,
+                'includes_dinner': True,
+                'is_refundable': True,
+                'cancellation_policy': 'Free cancellation up to 72h before arrival',
+                'price_modifier': 1.30
+            },
+            {
+                'id': str(uuid.uuid4()),
+                'tenant_id': current_user.tenant_id,
+                'code': 'FB',
+                'name': 'Full Board',
+                'description': 'Room with all meals (breakfast, lunch, dinner)',
+                'includes_breakfast': True,
+                'includes_lunch': True,
+                'includes_dinner': True,
+                'is_refundable': True,
+                'cancellation_policy': 'Free cancellation up to 72h before arrival',
+                'price_modifier': 1.45
+            },
+            {
+                'id': str(uuid.uuid4()),
+                'tenant_id': current_user.tenant_id,
+                'code': 'AI',
+                'name': 'All Inclusive',
+                'description': 'All meals and drinks included',
+                'includes_breakfast': True,
+                'includes_lunch': True,
+                'includes_dinner': True,
+                'is_refundable': True,
+                'cancellation_policy': 'Free cancellation up to 7 days before arrival',
+                'price_modifier': 1.75
+            },
+            {
+                'id': str(uuid.uuid4()),
+                'tenant_id': current_user.tenant_id,
+                'code': 'NR',
+                'name': 'Non-Refundable',
+                'description': 'Best price, non-refundable rate',
+                'includes_breakfast': False,
+                'includes_lunch': False,
+                'includes_dinner': False,
+                'is_refundable': False,
+                'cancellation_policy': 'Non-refundable - no cancellation allowed',
+                'price_modifier': 0.85
+            }
+        ]
+        rate_codes = default_codes
+    
+    return {'rate_codes': rate_codes, 'count': len(rate_codes)}
+
+@api_router.post("/calendar/rate-codes")
+async def create_rate_code(
+    request: CreateRateCodeRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """Create custom rate code"""
+    rate_code = {
+        'id': str(uuid.uuid4()),
+        'tenant_id': current_user.tenant_id,
+        'code': request.code.upper(),
+        'name': request.name,
+        'description': request.description,
+        'includes_breakfast': request.includes_breakfast,
+        'includes_lunch': request.includes_lunch,
+        'includes_dinner': request.includes_dinner,
+        'is_refundable': request.is_refundable,
+        'cancellation_policy': request.cancellation_policy,
+        'price_modifier': request.price_modifier,
+        'created_at': datetime.now(timezone.utc).isoformat()
+    }
+    
+    rate_copy = rate_code.copy()
+    await db.rate_codes.insert_one(rate_copy)
+    return rate_code
+
+
+# 2. ENHANCED CALENDAR TOOLTIP DATA
+@api_router.post("/calendar/tooltip")
+async def get_calendar_tooltip(
+    request: GetCalendarTooltipRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """Get enriched data for calendar tooltip hover"""
+    date = request.date
+    room_type_filter = request.room_type
+    
+    # Get bookings for this date
+    bookings_query = {
+        'tenant_id': current_user.tenant_id,
+        'check_in_date': {'$lte': date},
+        'check_out_date': {'$gt': date},
+        'status': {'$in': ['confirmed', 'guaranteed', 'checked_in']}
+    }
+    
+    if room_type_filter:
+        bookings_query['room_type'] = room_type_filter
+    
+    bookings = await db.bookings.find(bookings_query, {'_id': 0}).to_list(1000)
+    
+    # Get total rooms
+    rooms_query = {'tenant_id': current_user.tenant_id}
+    if room_type_filter:
+        rooms_query['room_type'] = room_type_filter
+    
+    total_rooms = await db.rooms.count_documents(rooms_query)
+    occupied_rooms = len(bookings)
+    occupancy_pct = (occupied_rooms / total_rooms * 100) if total_rooms > 0 else 0
+    
+    # Calculate revenue for the day
+    folio_charges = await db.folio_charges.find({
+        'tenant_id': current_user.tenant_id,
+        'charge_date': date,
+        'voided': False
+    }, {'_id': 0}).to_list(1000)
+    
+    total_revenue = sum(charge.get('total', 0) for charge in folio_charges)
+    adr = (total_revenue / occupied_rooms) if occupied_rooms > 0 else 0
+    
+    # Segment breakdown
+    segment_counts = {}
+    for booking in bookings:
+        segment = booking.get('booking_source', 'direct')
+        segment_counts[segment] = segment_counts.get(segment, 0) + 1
+    
+    # Rate code breakdown
+    rate_code_counts = {}
+    rate_code_revenue = {}
+    for booking in bookings:
+        rate_code = booking.get('rate_code', 'BB')
+        rate_code_counts[rate_code] = rate_code_counts.get(rate_code, 0) + 1
+        
+        # Get booking rate
+        booking_charges = [c for c in folio_charges if c.get('booking_id') == booking.get('id')]
+        if booking_charges:
+            rate_code_revenue[rate_code] = rate_code_revenue.get(rate_code, 0) + sum(c.get('total', 0) for c in booking_charges)
+    
+    # Room type breakdown (if no filter)
+    room_type_occupancy = {}
+    if not room_type_filter:
+        room_types = await db.room_types.find({'tenant_id': current_user.tenant_id}, {'_id': 0}).to_list(100)
+        for rt in room_types:
+            rt_bookings = [b for b in bookings if b.get('room_type') == rt['name']]
+            rt_total = await db.rooms.count_documents({
+                'tenant_id': current_user.tenant_id,
+                'room_type': rt['name']
+            })
+            rt_occ = (len(rt_bookings) / rt_total * 100) if rt_total > 0 else 0
+            room_type_occupancy[rt['name']] = {
+                'occupied': len(rt_bookings),
+                'total': rt_total,
+                'occupancy_pct': round(rt_occ, 1)
+            }
+    
+    # Group reservations for this date
+    group_bookings = [b for b in bookings if b.get('group_id')]
+    group_ids = list(set([b['group_id'] for b in group_bookings if b.get('group_id')]))
+    
+    groups_info = []
+    for group_id in group_ids:
+        group = await db.group_reservations.find_one({'id': group_id}, {'_id': 0})
+        if group:
+            group_rooms = len([b for b in group_bookings if b.get('group_id') == group_id])
+            groups_info.append({
+                'group_name': group.get('group_name'),
+                'total_rooms': group.get('total_rooms'),
+                'rooms_today': group_rooms
+            })
+    
+    return {
+        'date': date,
+        'occupancy': {
+            'occupied_rooms': occupied_rooms,
+            'total_rooms': total_rooms,
+            'occupancy_pct': round(occupancy_pct, 1),
+            'available_rooms': total_rooms - occupied_rooms
+        },
+        'revenue': {
+            'total_revenue': round(total_revenue, 2),
+            'adr': round(adr, 2),
+            'revpar': round((total_revenue / total_rooms), 2) if total_rooms > 0 else 0
+        },
+        'segments': segment_counts,
+        'rate_codes': {
+            'breakdown': rate_code_counts,
+            'revenue_by_code': {k: round(v, 2) for k, v in rate_code_revenue.items()}
+        },
+        'room_types': room_type_occupancy,
+        'groups': {
+            'count': len(groups_info),
+            'details': groups_info
+        }
+    }
+
+
+# 3. GROUP RESERVATION CALENDAR VIEW
+@api_router.get("/calendar/group-view")
+async def get_calendar_group_view(
+    start_date: str,
+    end_date: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Get calendar view optimized for group reservations"""
+    # Get all group reservations that overlap with date range
+    groups = await db.group_reservations.find({
+        'tenant_id': current_user.tenant_id,
+        'check_in_date': {'$lte': end_date},
+        'check_out_date': {'$gte': start_date}
+    }, {'_id': 0}).to_list(100)
+    
+    calendar_data = []
+    start = datetime.fromisoformat(start_date)
+    end = datetime.fromisoformat(end_date)
+    days = (end - start).days + 1
+    
+    for day in range(days):
+        current_date = (start + timedelta(days=day)).date().isoformat()
+        
+        # Get groups active on this date
+        active_groups = []
+        for group in groups:
+            if group.get('check_in_date') <= current_date <= group.get('check_out_date'):
+                # Get bookings for this group on this date
+                group_bookings = await db.bookings.find({
+                    'tenant_id': current_user.tenant_id,
+                    'group_id': group['id'],
+                    'check_in_date': {'$lte': current_date},
+                    'check_out_date': {'$gt': current_date}
+                }, {'_id': 0}).to_list(1000)
+                
+                active_groups.append({
+                    'group_id': group['id'],
+                    'group_name': group.get('group_name'),
+                    'group_type': group.get('group_type'),
+                    'total_rooms': group.get('total_rooms'),
+                    'rooms_active_today': len(group_bookings),
+                    'contact_person': group.get('contact_person')
+                })
+        
+        # Get regular (non-group) bookings
+        regular_bookings = await db.bookings.count_documents({
+            'tenant_id': current_user.tenant_id,
+            'check_in_date': {'$lte': current_date},
+            'check_out_date': {'$gt': current_date},
+            'group_id': None,
+            'status': {'$in': ['confirmed', 'guaranteed', 'checked_in']}
+        })
+        
+        total_rooms = await db.rooms.count_documents({'tenant_id': current_user.tenant_id})
+        group_rooms = sum(g['rooms_active_today'] for g in active_groups)
+        
+        calendar_data.append({
+            'date': current_date,
+            'total_rooms': total_rooms,
+            'group_rooms': group_rooms,
+            'regular_rooms': regular_bookings,
+            'available_rooms': total_rooms - group_rooms - regular_bookings,
+            'groups': active_groups
+        })
+    
+    return {
+        'calendar': calendar_data,
+        'summary': {
+            'total_days': days,
+            'total_groups': len(groups),
+            'date_range': f"{start_date} to {end_date}"
+        }
+    }
+
+@api_router.get("/calendar/rate-code-breakdown")
+async def get_rate_code_breakdown(
+    start_date: str,
+    end_date: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Get rate code breakdown for date range"""
+    # Get all bookings in date range
+    bookings = await db.bookings.find({
+        'tenant_id': current_user.tenant_id,
+        'check_in_date': {'$lte': end_date},
+        'check_out_date': {'$gte': start_date},
+        'status': {'$in': ['confirmed', 'guaranteed', 'checked_in']}
+    }, {'_id': 0}).to_list(10000)
+    
+    # Get rate codes
+    rate_codes = await db.rate_codes.find({'tenant_id': current_user.tenant_id}, {'_id': 0}).to_list(100)
+    rate_code_map = {rc['code']: rc['name'] for rc in rate_codes}
+    
+    # Aggregate by date and rate code
+    breakdown_by_date = {}
+    
+    start = datetime.fromisoformat(start_date)
+    end = datetime.fromisoformat(end_date)
+    days = (end - start).days + 1
+    
+    for day in range(days):
+        current_date = (start + timedelta(days=day)).date().isoformat()
+        
+        # Get bookings for this date
+        date_bookings = [
+            b for b in bookings
+            if b.get('check_in_date') <= current_date < b.get('check_out_date')
+        ]
+        
+        # Count by rate code
+        rate_counts = {}
+        for booking in date_bookings:
+            rate_code = booking.get('rate_code', 'BB')
+            rate_counts[rate_code] = rate_counts.get(rate_code, 0) + 1
+        
+        breakdown_by_date[current_date] = {
+            'date': current_date,
+            'total_bookings': len(date_bookings),
+            'rate_codes': [
+                {
+                    'code': code,
+                    'name': rate_code_map.get(code, code),
+                    'count': count,
+                    'percentage': round((count / len(date_bookings) * 100), 1) if date_bookings else 0
+                }
+                for code, count in rate_counts.items()
+            ]
+        }
+    
+    # Overall summary
+    total_rate_counts = {}
+    for booking in bookings:
+        rate_code = booking.get('rate_code', 'BB')
+        total_rate_counts[rate_code] = total_rate_counts.get(rate_code, 0) + 1
+    
+    return {
+        'breakdown': list(breakdown_by_date.values()),
+        'summary': {
+            'date_range': f"{start_date} to {end_date}",
+            'total_bookings': len(bookings),
+            'rate_code_distribution': [
+                {
+                    'code': code,
+                    'name': rate_code_map.get(code, code),
+                    'count': count,
+                    'percentage': round((count / len(bookings) * 100), 1) if bookings else 0
+                }
+                for code, count in total_rate_counts.items()
+            ]
+        }
+    }
+
+
 # Include router at the very end after ALL endpoints are defined
 app.include_router(api_router)

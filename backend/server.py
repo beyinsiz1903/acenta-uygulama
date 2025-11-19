@@ -8552,24 +8552,18 @@ async def get_block_reservations(current_user: User = Depends(get_current_user))
 
 @api_router.post("/block-reservations")
 async def create_block_reservation(
-    block_name: str,
-    room_type: str,
-    start_date: str,
-    end_date: str,
-    total_rooms: int,
-    block_type: str = 'tentative',
-    release_date: str = None,
+    request: CreateBlockReservationRequest,
     current_user: User = Depends(get_current_user)
 ):
     """Create room block reservation"""
     block = {
         'id': str(uuid.uuid4()),
         'tenant_id': current_user.tenant_id,
-        'block_name': block_name,
-        'room_type': room_type,
-        'start_date': start_date,
-        'end_date': end_date,
-        'total_rooms': total_rooms,
+        'block_name': request.block_name,
+        'room_type': request.room_type,
+        'start_date': request.start_date,
+        'end_date': request.end_date,
+        'total_rooms': request.total_rooms,
         'rooms_used': 0,
         'rooms_available': total_rooms,
         'block_type': block_type,

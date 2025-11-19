@@ -1104,7 +1104,7 @@ const PMSModule = ({ user, tenant, onLogout }) => {
                             disabled={booking.balance > 0}
                             data-testid={`checkout-${booking.id}`}
                           >
-                            <LogOutIcon className="w-4 h-4 mr-2" />
+                            <LogOut className="w-4 h-4 mr-2" />
                             Check Out
                           </Button>
                         </div>

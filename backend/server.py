@@ -9066,10 +9066,11 @@ async def approve_purchase_order(
 @api_router.post("/marketplace/purchase-orders/{po_id}/receive")
 async def receive_purchase_order(
     po_id: str,
-    received_items: list,
+    request: ReceivePurchaseOrderRequest,
     current_user: User = Depends(get_current_user)
 ):
     """Receive purchase order and update inventory"""
+    received_items = request.received_items
     po = await db.purchase_orders.find_one({
         'id': po_id,
         'tenant_id': current_user.tenant_id

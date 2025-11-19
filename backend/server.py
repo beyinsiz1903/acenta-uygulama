@@ -3642,7 +3642,7 @@ async def get_finance_snapshot(current_user: User = Depends(get_current_user)):
     # 4. Calculate Collection Rate (MTD Collections / MTD Revenue)
     mtd_charges = await db.folio_charges.find({
         'tenant_id': current_user.tenant_id,
-        'charge_date': {
+        'date': {
             '$gte': month_start_dt.isoformat(),
             '$lte': today_end.isoformat()
         },

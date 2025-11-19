@@ -3387,21 +3387,21 @@ async def get_daily_flash_pdf(current_user: User = Depends(get_current_user)):
             
             <div class="metric">
                 <h3>Occupancy</h3>
-                <p>Occupied Rooms: {flash_data.get('occupancy', {{}})).get('occupied', 0)}</p>
-                <p>Total Rooms: {flash_data.get('occupancy', {{}}).get('total', 0)}</p>
-                <p>Occupancy %: {flash_data.get('occupancy', {{}}).get('percentage', 0):.1f}%</p>
+                <p>Occupied Rooms: {flash_data['occupancy']['occupied']}</p>
+                <p>Total Rooms: {flash_data['occupancy']['total']}</p>
+                <p>Occupancy %: {flash_data['occupancy']['percentage']:.1f}%</p>
             </div>
             
             <div class="metric">
                 <h3>Revenue</h3>
-                <p>Room Revenue: ${flash_data.get('revenue', {{}}).get('room_revenue', 0):.2f}</p>
-                <p>Total Revenue: ${flash_data.get('revenue', {{}}).get('total_revenue', 0):.2f}</p>
+                <p>Room Revenue: ${flash_data['revenue']['room_revenue']:.2f}</p>
+                <p>Total Revenue: ${flash_data['revenue']['total_revenue']:.2f}</p>
             </div>
             
             <div class="metric">
                 <h3>Arrivals & Departures</h3>
-                <p>Arrivals: {flash_data.get('movements', {{}}).get('arrivals', 0)}</p>
-                <p>Departures: {flash_data.get('movements', {{}}).get('departures', 0)}</p>
+                <p>Arrivals: {flash_data['movements']['arrivals']}</p>
+                <p>Departures: {flash_data['movements']['departures']}</p>
             </div>
         </body>
         </html>

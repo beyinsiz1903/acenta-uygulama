@@ -488,7 +488,8 @@ class Room(BaseModel):
     room_type: str
     floor: int
     capacity: int
-    base_price: float
+    base_price: Optional[float] = None
+    price_per_night: Optional[float] = None
     status: RoomStatus = RoomStatus.AVAILABLE
     amenities: List[str] = []
     current_booking_id: Optional[str] = None

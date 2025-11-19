@@ -3744,6 +3744,63 @@ const PMSModule = ({ user, tenant, onLogout }) => {
               </div>
             ) : guest360Data ? (
               <div className="space-y-4">
+                {/* Quick Action Buttons - NEW */}
+                <div className="flex gap-2 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
+                  <Button 
+                    onClick={() => {
+                      toast.success('Opening offer creation for ' + guest360Data.guest?.name);
+                      // TODO: Navigate to offer creation or open offer dialog
+                    }}
+                    className="flex-1 bg-green-600 hover:bg-green-700"
+                  >
+                    <Send className="w-4 h-4 mr-2" />
+                    Send Offer
+                  </Button>
+                  <Button 
+                    onClick={() => {
+                      // Scroll to notes section or auto-focus note input
+                      const noteInput = document.querySelector('textarea[placeholder*="note"]');
+                      if (noteInput) noteInput.focus();
+                      toast.info('Note section ready - add your note below');
+                    }}
+                    variant="outline"
+                    className="flex-1 border-blue-400 hover:bg-blue-50"
+                  >
+                    <FileText className="w-4 h-4 mr-2" />
+                    Add Note
+                  </Button>
+                  <Button 
+                    onClick={async () => {
+                      try {
+                        const preference = prompt('Enter room preference (e.g., High Floor, Sea View, Quiet Room):');
+                        if (preference) {
+                          await axios.post(`/crm/guest/add-tag?guest_id=${selectedGuest360}&tag=PREF: ${preference}`);
+                          toast.success('Room preference saved!');
+                          loadGuest360(selectedGuest360);
+                        }
+                      } catch (error) {
+                        toast.error('Failed to save preference');
+                      }
+                    }}
+                    variant="outline"
+                    className="flex-1 border-purple-400 hover:bg-purple-50"
+                  >
+                    <Star className="w-4 h-4 mr-2" />
+                    Block Room Preference
+                  </Button>
+                  <Button 
+                    onClick={() => {
+                      // Navigate to messaging center with pre-filled guest
+                      window.location.href = `/ota-messaging-hub?guest=${guest360Data.guest?.id}&name=${guest360Data.guest?.name}`;
+                    }}
+                    variant="outline"
+                    className="flex-1 border-orange-400 hover:bg-orange-50"
+                  >
+                    <MessageSquare className="w-4 h-4 mr-2" />
+                    Message Guest
+                  </Button>
+                </div>
+
                 {/* Identity Card */}
                 <Card>
                   <CardHeader>

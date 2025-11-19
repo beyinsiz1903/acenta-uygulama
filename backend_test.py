@@ -2435,19 +2435,19 @@ class HotelPMSBackendTester:
         print("\n" + "="*80)
 
     def run_all_tests(self):
-        """Run Enhanced POS Integration Backend Tests"""
-        print("🚀 Testing Enhanced POS Integration with Multi-Outlet, Menu Breakdown & Z Reports")
-        print("Testing 9+ NEW POS enhancement endpoints...")
+        """Run Enhanced Feedback & Reviews System Backend Tests"""
+        print("🚀 Testing Enhanced Feedback & Reviews System with External APIs, Surveys & Department Tracking")
+        print("Testing 12+ NEW feedback and review endpoints...")
         
         if not self.authenticate():
             print("❌ Authentication failed. Cannot proceed with testing.")
             return False
         
-        # Run Enhanced POS test suite
-        self.test_enhanced_pos_integration()     # 9+ POS endpoints
+        # Run Enhanced Feedback & Reviews test suite
+        self.test_enhanced_feedback_reviews_system()     # 12+ feedback endpoints
         
         # Print comprehensive summary
-        self.print_pos_summary()
+        self.print_feedback_summary()
         
         return True
 

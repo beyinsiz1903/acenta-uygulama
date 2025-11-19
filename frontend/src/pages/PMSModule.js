@@ -1282,12 +1282,54 @@ const PMSModule = ({ user, tenant, onLogout }) => {
             {roomStatusBoard && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Room Status Board</CardTitle>
+                  <CardTitle className="flex items-center justify-between">
+                    <span>Room Status Board</span>
+                    <div className="flex gap-2 text-xs">
+                      <span className="flex items-center gap-1">
+                        <span className="w-3 h-3 rounded-full bg-red-500"></span> Urgent
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <span className="w-3 h-3 rounded-full bg-orange-500"></span> High Priority
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <span className="w-3 h-3 rounded-full bg-blue-500"></span> Normal
+                      </span>
+                    </div>
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
                     {roomStatusBoard.rooms.map((room) => {
                       const roomBlock = roomBlocks.find(b => b.room_id === room.id && b.status === 'active');
+                      
+                      // Priority calculation
+                      const isDueOutToday = dueOutRooms.some(r => r.room_number === room.room_number && r.is_today);
+                      const isArrivalToday = arrivalRooms.some(r => r.room_number === room.room_number && r.ready === false);
+                      const needsCleaning = room.status === 'dirty' && (isDueOutToday || isArrivalToday);
+                      
+                      // Priority badge color
+                      let priorityColor = '';
+                      let priorityIcon = null;
+                      let priorityTitle = '';
+                      
+                      if (needsCleaning && isDueOutToday) {
+                        priorityColor = 'bg-red-600';
+                        priorityIcon = '🔥';
+                        priorityTitle = 'URGENT: Due Out Today - Needs Cleaning';
+                      } else if (needsCleaning && isArrivalToday) {
+                        priorityColor = 'bg-orange-600';
+                        priorityIcon = '⚡';
+                        priorityTitle = 'HIGH: Arrival Today - Needs Cleaning';
+                      } else if (isDueOutToday) {
+                        priorityColor = 'bg-orange-500';
+                        priorityIcon = '📤';
+                        priorityTitle = 'Due Out Today';
+                      } else if (isArrivalToday) {
+                        priorityColor = 'bg-blue-600';
+                        priorityIcon = '📥';
+                        priorityTitle = 'Arrival Today';
+                      }
+                      
                       return (
                       <Card key={room.id} className={`cursor-pointer hover:shadow-lg transition-shadow relative ${
                         room.status === 'dirty' ? 'bg-red-100 border-red-300' :
@@ -1296,24 +1338,36 @@ const PMSModule = ({ user, tenant, onLogout }) => {
                         room.status === 'available' ? 'bg-blue-100 border-blue-300' :
                         room.status === 'occupied' ? 'bg-purple-100 border-purple-300' :
                         'bg-gray-100 border-gray-300'
-                      }`}>
-                        {roomBlock && (
-                          <div className="absolute top-1 right-1">
-                            {roomBlock.type === 'out_of_order' && (
-                              <span className="px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded" title={roomBlock.reason}>OOO</span>
-                            )}
-                            {roomBlock.type === 'out_of_service' && (
-                              <span className="px-1.5 py-0.5 text-[10px] font-bold bg-orange-500 text-white rounded" title={roomBlock.reason}>OOS</span>
-                            )}
-                            {roomBlock.type === 'maintenance' && (
-                              <span className="px-1.5 py-0.5 text-[10px] font-bold bg-yellow-600 text-white rounded" title={roomBlock.reason}>MNT</span>
-                            )}
-                          </div>
-                        )}
+                      } ${priorityColor ? 'ring-2 ring-offset-1 ' + (priorityColor === 'bg-red-600' ? 'ring-red-500' : priorityColor === 'bg-orange-600' ? 'ring-orange-500' : 'ring-blue-500') : ''}`}>
+                        <div className="absolute top-1 right-1 flex gap-1">
+                          {priorityIcon && (
+                            <span className={`px-1.5 py-0.5 text-[10px] font-bold ${priorityColor} text-white rounded flex items-center`} title={priorityTitle}>
+                              {priorityIcon}
+                            </span>
+                          )}
+                          {roomBlock && (
+                            <>
+                              {roomBlock.type === 'out_of_order' && (
+                                <span className="px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded" title={roomBlock.reason}>OOO</span>
+                              )}
+                              {roomBlock.type === 'out_of_service' && (
+                                <span className="px-1.5 py-0.5 text-[10px] font-bold bg-orange-500 text-white rounded" title={roomBlock.reason}>OOS</span>
+                              )}
+                              {roomBlock.type === 'maintenance' && (
+                                <span className="px-1.5 py-0.5 text-[10px] font-bold bg-yellow-600 text-white rounded" title={roomBlock.reason}>MNT</span>
+                              )}
+                            </>
+                          )}
+                        </div>
                         <CardContent className="p-3">
                           <div className="font-bold text-lg">{room.room_number}</div>
                           <div className="text-xs capitalize">{room.room_type}</div>
                           <div className="text-xs font-semibold mt-1 capitalize">{room.status.replace('_', ' ')}</div>
+                          {priorityTitle && (
+                            <div className="text-[10px] font-semibold mt-1 truncate" style={{color: priorityColor.replace('bg-', '').replace('-600', '-700').replace('-500', '-600')}}>
+                              {priorityTitle.replace('URGENT: ', '').replace('HIGH: ', '')}
+                            </div>
+                          )}
                           {roomBlock && (
                             <div className="text-[10px] text-gray-600 mt-1 truncate" title={roomBlock.reason}>
                               {roomBlock.reason}
@@ -1321,8 +1375,8 @@ const PMSModule = ({ user, tenant, onLogout }) => {
                           )}
                           <div className="flex gap-1 mt-2">
                             {room.status === 'dirty' && (
-                              <Button size="sm" variant="outline" className="h-6 text-xs" onClick={() => quickUpdateRoomStatus(room.id, 'cleaning')}>
-                                Clean
+                              <Button size="sm" variant="outline" className={`h-6 text-xs ${needsCleaning ? 'bg-red-50 border-red-400 text-red-700 hover:bg-red-100' : ''}`} onClick={() => quickUpdateRoomStatus(room.id, 'cleaning')}>
+                                Clean {needsCleaning && '⚡'}
                               </Button>
                             )}
                             {room.status === 'cleaning' && (

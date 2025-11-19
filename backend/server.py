@@ -7719,20 +7719,17 @@ async def get_comp_set(current_user: User = Depends(get_current_user)):
 
 @api_router.post("/rms/comp-set")
 async def add_competitor(
-    name: str,
-    location: str,
-    star_rating: float,
-    url: str = None,
+    request: AddCompetitorRequest,
     current_user: User = Depends(get_current_user)
 ):
     """Add competitor to comp set"""
     competitor = {
         'id': str(uuid.uuid4()),
         'tenant_id': current_user.tenant_id,
-        'name': name,
-        'location': location,
-        'star_rating': star_rating,
-        'url': url,
+        'name': request.name,
+        'location': request.location,
+        'star_rating': request.star_rating,
+        'url': request.url,
         'status': 'active',
         'created_at': datetime.now(timezone.utc).isoformat()
     }

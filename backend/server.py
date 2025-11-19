@@ -8578,7 +8578,8 @@ async def create_block_reservation(
         'created_by': current_user.id
     }
     
-    await db.block_reservations.insert_one(block)
+    block_copy = block.copy()
+    await db.block_reservations.insert_one(block_copy)
     return block
 
 @api_router.post("/block-reservations/{block_id}/use-room")

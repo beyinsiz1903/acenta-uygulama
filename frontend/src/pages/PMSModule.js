@@ -1286,16 +1286,33 @@ const PMSModule = ({ user, tenant, onLogout }) => {
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
                     <span>Room Status Board</span>
-                    <div className="flex gap-2 text-xs">
-                      <span className="flex items-center gap-1">
-                        <span className="w-3 h-3 rounded-full bg-red-500"></span> Urgent
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <span className="w-3 h-3 rounded-full bg-orange-500"></span> High Priority
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <span className="w-3 h-3 rounded-full bg-blue-500"></span> Normal
-                      </span>
+                    <div className="flex gap-3 text-xs">
+                      {/* Priority Indicators */}
+                      <div className="flex gap-2 items-center border-r pr-3">
+                        <span className="text-gray-600 font-semibold">Priority:</span>
+                        <span className="flex items-center gap-1">
+                          <span className="w-3 h-3 rounded-full bg-red-500"></span> Urgent
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <span className="w-3 h-3 rounded-full bg-orange-500"></span> High
+                        </span>
+                      </div>
+                      {/* Status Colors (Global System) */}
+                      <div className="flex gap-2 items-center">
+                        <span className="text-gray-600 font-semibold">Status:</span>
+                        <span className="flex items-center gap-1">
+                          <span className="w-3 h-3 rounded-full bg-green-500"></span> Available
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <span className="w-3 h-3 rounded-full bg-red-500"></span> Dirty
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <span className="w-3 h-3 rounded-full bg-yellow-500"></span> Cleaning
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <span className="w-3 h-3 rounded-full bg-purple-500"></span> Occupied
+                        </span>
+                      </div>
                     </div>
                   </CardTitle>
                 </CardHeader>

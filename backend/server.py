@@ -6855,6 +6855,63 @@ async def release_allotment_rooms(
         "released_rooms": available_rooms
     }
 
+# ============= AI ACTIVITY LOG =============
+@api_router.get("/ai/activity-log")
+async def get_ai_activity_log(
+    limit: int = 50,
+    activity_type: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Get AI activity log for dashboard visualization"""
+    query = {'tenant_id': current_user.tenant_id}
+    if activity_type:
+        query['type'] = activity_type
+    
+    activities = await db.ai_activity_log.find(
+        query,
+        {'_id': 0}
+    ).sort('timestamp', -1).limit(limit).to_list(limit)
+    
+    # Calculate stats
+    total = await db.ai_activity_log.count_documents({'tenant_id': current_user.tenant_id})
+    successful = await db.ai_activity_log.count_documents({
+        'tenant_id': current_user.tenant_id,
+        'status': 'success'
+    })
+    
+    return {
+        'activities': activities,
+        'stats': {
+            'total': total,
+            'successful': successful,
+            'failed': total - successful
+        }
+    }
+
+@api_router.post("/ai/log-activity")
+async def log_ai_activity(
+    activity_data: dict,
+    current_user: User = Depends(get_current_user)
+):
+    """Log AI activity for tracking and analytics"""
+    activity = {
+        'id': str(uuid.uuid4()),
+        'tenant_id': current_user.tenant_id,
+        'user_id': current_user.id,
+        'type': activity_data.get('type'),  # upsell_prediction, message_generation, demand_forecast
+        'title': activity_data.get('title'),
+        'description': activity_data.get('description'),
+        'model': activity_data.get('model'),
+        'status': activity_data.get('status', 'success'),
+        'result': activity_data.get('result'),
+        'execution_time': activity_data.get('execution_time'),  # in milliseconds
+        'timestamp': datetime.now(timezone.utc).isoformat(),
+        'metadata': activity_data.get('metadata', {})
+    }
+    
+    await db.ai_activity_log.insert_one(activity)
+    return {'message': 'Activity logged successfully', 'activity_id': activity['id']}
+
 # Import and include AI endpoints
 try:
     from ai_endpoints import api_router as ai_router

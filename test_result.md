@@ -1326,6 +1326,28 @@ test_plan:
 agent_communication:
   - agent: "testing"
     message: |
+      🎯 TASK MANAGEMENT SYSTEM TESTING COMPLETED - 85% SUCCESS RATE (17/20 tests passed)
+      
+      ❌ CRITICAL BACKEND ROUTING ISSUE IDENTIFIED:
+      FastAPI route order conflict in /app/backend/server.py causes 3 endpoint failures:
+      - GET /tasks/my-tasks (404 error)
+      - GET /tasks/dashboard (404 error)
+      
+      ROOT CAUSE: The parameterized route @api_router.get("/tasks/{task_id}") at line 12170 is defined BEFORE the specific routes @api_router.get("/tasks/my-tasks") at line 12346 and @api_router.get("/tasks/dashboard") at line 12364. FastAPI treats "my-tasks" and "dashboard" as task_id parameters.
+      
+      SOLUTION: Move /tasks/my-tasks and /tasks/dashboard routes BEFORE /tasks/{task_id} in the code.
+      
+      ✅ ALL OTHER FUNCTIONALITY WORKING PERFECTLY:
+      - Task creation across all departments (Engineering, Housekeeping, F&B) ✓
+      - Priority order mapping (urgent:4, high:3, normal:2, low:1) ✓
+      - Task filtering (department, status, priority, assigned_to) ✓
+      - Assignment workflow (new → assigned → in_progress → completed) ✓
+      - History tracking and completion photos ✓
+      - Department statistics and overdue detection ✓
+      - Department-specific request endpoints ✓
+      
+  - agent: "testing"
+    message: |
       🎯 COMPREHENSIVE FRONTEND TESTING COMPLETED - 100% SUCCESS RATE FOR ALL 7 NEW FEATURES!
       
       ✅ OVERALL RESULTS (100% Success Rate - 7/7 features working perfectly):

@@ -6855,6 +6855,193 @@ async def release_allotment_rooms(
         "released_rooms": available_rooms
     }
 
+# ============= GUEST APP ENDPOINTS =============
+@api_router.post("/guest/self-checkin/{booking_id}")
+async def guest_self_checkin(
+    booking_id: str,
+    checkin_data: dict,
+    current_user: User = Depends(get_current_user)
+):
+    """Complete self check-in process"""
+    booking = await db.bookings.find_one({
+        'id': booking_id,
+        'tenant_id': current_user.tenant_id
+    })
+    
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    
+    # Update booking status
+    await db.bookings.update_one(
+        {'id': booking_id},
+        {'$set': {
+            'status': 'checked_in',
+            'actual_check_in': datetime.now(timezone.utc).isoformat(),
+            'guest_info': checkin_data.get('guest_info'),
+            'preferences': checkin_data.get('preferences')
+        }}
+    )
+    
+    # Update room status
+    if booking.get('room_id'):
+        await db.rooms.update_one(
+            {'id': booking['room_id']},
+            {'$set': {
+                'status': 'occupied',
+                'current_booking_id': booking_id
+            }}
+        )
+    
+    # Generate digital key
+    digital_key = {
+        'id': str(uuid.uuid4()),
+        'key_id': str(uuid.uuid4())[:8].upper(),
+        'tenant_id': current_user.tenant_id,
+        'booking_id': booking_id,
+        'guest_id': booking.get('guest_id'),
+        'room_number': booking.get('room_number'),
+        'status': 'active',
+        'created_at': datetime.now(timezone.utc).isoformat(),
+        'expires_at': booking.get('check_out'),
+        'last_used': None
+    }
+    
+    await db.digital_keys.insert_one(digital_key)
+    
+    return {
+        'message': 'Check-in successful',
+        'booking_id': booking_id,
+        'room_number': booking.get('room_number'),
+        'digital_key': {
+            'key_id': digital_key['key_id'],
+            'expires_at': digital_key['expires_at']
+        }
+    }
+
+@api_router.get("/guest/digital-key/{booking_id}")
+async def get_digital_key(
+    booking_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Get digital room key"""
+    key = await db.digital_keys.find_one({
+        'booking_id': booking_id,
+        'tenant_id': current_user.tenant_id,
+        'status': 'active'
+    }, {'_id': 0})
+    
+    if not key:
+        raise HTTPException(status_code=404, detail="Digital key not found")
+    
+    return key
+
+@api_router.post("/guest/digital-key/{booking_id}/refresh")
+async def refresh_digital_key(
+    booking_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Refresh digital key"""
+    # Deactivate old key
+    await db.digital_keys.update_many(
+        {'booking_id': booking_id, 'tenant_id': current_user.tenant_id},
+        {'$set': {'status': 'expired'}}
+    )
+    
+    # Get booking
+    booking = await db.bookings.find_one({'id': booking_id}, {'_id': 0})
+    
+    # Create new key
+    digital_key = {
+        'id': str(uuid.uuid4()),
+        'key_id': str(uuid.uuid4())[:8].upper(),
+        'tenant_id': current_user.tenant_id,
+        'booking_id': booking_id,
+        'guest_id': booking.get('guest_id'),
+        'room_number': booking.get('room_number'),
+        'status': 'active',
+        'created_at': datetime.now(timezone.utc).isoformat(),
+        'expires_at': booking.get('check_out'),
+        'last_used': None
+    }
+    
+    await db.digital_keys.insert_one(digital_key)
+    
+    return {'message': 'Key refreshed', 'key_id': digital_key['key_id']}
+
+@api_router.get("/guest/upsell-offers/{booking_id}")
+async def get_upsell_offers(
+    booking_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Get personalized upsell offers for guest"""
+    # Get AI predictions
+    predictions = await db.ai_upsell_predictions.find({
+        'booking_id': booking_id,
+        'tenant_id': current_user.tenant_id
+    }, {'_id': 0}).sort('confidence', -1).limit(10).to_list(10)
+    
+    # Get already purchased items
+    purchased = await db.purchased_upsells.find({
+        'booking_id': booking_id
+    }, {'_id': 0}).to_list(100)
+    
+    return {
+        'offers': predictions,
+        'purchased': purchased
+    }
+
+@api_router.post("/guest/purchase-upsell/{booking_id}")
+async def purchase_upsell(
+    booking_id: str,
+    purchase_data: dict,
+    current_user: User = Depends(get_current_user)
+):
+    """Purchase an upsell offer"""
+    purchase = {
+        'id': str(uuid.uuid4()),
+        'tenant_id': current_user.tenant_id,
+        'booking_id': booking_id,
+        'offer_id': purchase_data.get('offer_id'),
+        'offer_type': purchase_data.get('offer_type'),
+        'amount': purchase_data.get('amount'),
+        'purchased_at': datetime.now(timezone.utc).isoformat(),
+        'status': 'confirmed'
+    }
+    
+    await db.purchased_upsells.insert_one(purchase)
+    
+    # Post to folio if exists
+    folio = await db.folios.find_one({'booking_id': booking_id, 'status': 'open'})
+    if folio:
+        charge = {
+            'id': str(uuid.uuid4()),
+            'tenant_id': current_user.tenant_id,
+            'folio_id': folio['id'],
+            'charge_type': 'upsell',
+            'description': f"Upsell: {purchase_data.get('offer_type')}",
+            'amount': purchase_data.get('amount'),
+            'quantity': 1,
+            'total': purchase_data.get('amount'),
+            'posted_at': datetime.now(timezone.utc).isoformat(),
+            'voided': False
+        }
+        await db.folio_charges.insert_one(charge)
+    
+    return {'message': 'Purchase successful', 'purchase_id': purchase['id']}
+
+@api_router.get("/guest/purchased-upsells/{booking_id}")
+async def get_purchased_upsells(
+    booking_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Get purchased upsells for a booking"""
+    items = await db.purchased_upsells.find({
+        'booking_id': booking_id,
+        'tenant_id': current_user.tenant_id
+    }, {'_id': 0}).to_list(100)
+    
+    return {'items': items}
+
 # ============= AI ACTIVITY LOG =============
 @api_router.get("/ai/activity-log")
 async def get_ai_activity_log(

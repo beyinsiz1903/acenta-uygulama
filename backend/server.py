@@ -8355,6 +8355,161 @@ async def apply_pricing_recommendation(
     return {'message': 'Pricing recommendation applied successfully'}
 
 
+# ENHANCED RMS ENDPOINTS FOR VISUALIZATION
+@api_router.get("/rms/comp-set-comparison")
+async def get_comp_set_price_comparison(
+    start_date: str = None,
+    end_date: str = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Get competitor pricing comparison with your hotel rates"""
+    # Default to next 30 days if not specified
+    if not start_date:
+        start_date = datetime.now(timezone.utc).date().isoformat()
+    if not end_date:
+        end_date = (datetime.now(timezone.utc) + timedelta(days=30)).date().isoformat()
+    
+    # Get all competitors
+    competitors = await db.comp_set.find({
+        'tenant_id': current_user.tenant_id,
+        'status': 'active'
+    }, {'_id': 0}).to_list(100)
+    
+    # Get competitor pricing
+    comp_pricing = await db.comp_pricing.find({
+        'tenant_id': current_user.tenant_id,
+        'date': {'$gte': start_date, '$lte': end_date}
+    }, {'_id': 0}).to_list(1000)
+    
+    # Get your hotel's rates
+    room_types = await db.room_types.find({
+        'tenant_id': current_user.tenant_id
+    }, {'_id': 0}).to_list(100)
+    
+    # Organize data by date
+    comparison_data = {}
+    
+    # Process each date
+    start = datetime.fromisoformat(start_date)
+    end = datetime.fromisoformat(end_date)
+    days = (end - start).days + 1
+    
+    for day in range(days):
+        current_date = (start + timedelta(days=day)).date().isoformat()
+        
+        # Get competitor prices for this date
+        date_comp_prices = [p for p in comp_pricing if p.get('date') == current_date]
+        
+        comp_data = []
+        for comp in competitors:
+            comp_price = next((p for p in date_comp_prices if p.get('competitor_id') == comp['id']), None)
+            if comp_price:
+                comp_data.append({
+                    'competitor_name': comp['name'],
+                    'rate': comp_price.get('standard_rate', 0),
+                    'star_rating': comp.get('star_rating', 0)
+                })
+        
+        # Get your hotel's average rate
+        your_avg_rate = sum(rt.get('base_rate', 0) for rt in room_types) / len(room_types) if room_types else 100
+        
+        comp_avg = sum(c['rate'] for c in comp_data) / len(comp_data) if comp_data else 0
+        comp_min = min([c['rate'] for c in comp_data]) if comp_data else 0
+        comp_max = max([c['rate'] for c in comp_data]) if comp_data else 0
+        
+        comparison_data[current_date] = {
+            'date': current_date,
+            'your_rate': round(your_avg_rate, 2),
+            'comp_avg': round(comp_avg, 2),
+            'comp_min': round(comp_min, 2),
+            'comp_max': round(comp_max, 2),
+            'competitors': comp_data,
+            'price_index': round((your_avg_rate / comp_avg * 100), 1) if comp_avg > 0 else 100,
+            'position': 'Above Market' if your_avg_rate > comp_avg and comp_avg > 0 else ('Below Market' if your_avg_rate < comp_avg and comp_avg > 0 else 'At Market')
+        }
+    
+    # Convert to list
+    comparison_list = list(comparison_data.values())
+    
+    # Calculate summary
+    avg_price_index = sum(d['price_index'] for d in comparison_list) / len(comparison_list) if comparison_list else 100
+    days_above_market = sum(1 for d in comparison_list if d['position'] == 'Above Market')
+    days_below_market = sum(1 for d in comparison_list if d['position'] == 'Below Market')
+    
+    return {
+        'comparison': comparison_list,
+        'summary': {
+            'total_days': len(comparison_list),
+            'competitor_count': len(competitors),
+            'avg_price_index': round(avg_price_index, 1),
+            'days_above_market': days_above_market,
+            'days_at_market': len(comparison_list) - days_above_market - days_below_market,
+            'days_below_market': days_below_market,
+            'date_range': f"{start_date} to {end_date}"
+        }
+    }
+
+@api_router.get("/rms/pricing-insights")
+async def get_pricing_insights(
+    date: str = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Get detailed pricing insights and breakdown for specific date"""
+    if not date:
+        date = datetime.now(timezone.utc).date().isoformat()
+    
+    # Get recommendations for this date
+    recommendations = await db.rms_pricing_recommendations.find({
+        'tenant_id': current_user.tenant_id,
+        'date': date
+    }, {'_id': 0}).to_list(100)
+    
+    if not recommendations:
+        return {
+            'date': date,
+            'message': 'No pricing recommendations available for this date',
+            'insights': []
+        }
+    
+    # Aggregate insights
+    insights = []
+    for rec in recommendations:
+        insight = {
+            'room_type': rec.get('room_type'),
+            'current_rate': rec.get('current_rate'),
+            'suggested_rate': rec.get('suggested_rate'),
+            'price_change': rec.get('suggested_rate', 0) - rec.get('current_rate', 0),
+            'price_change_pct': rec.get('price_change_pct', 0),
+            'occupancy': rec.get('occupancy'),
+            'booking_pace': rec.get('booking_pace'),
+            'competitor_avg': rec.get('competitor_avg'),
+            'confidence': rec.get('confidence'),
+            'confidence_level': rec.get('confidence_level'),
+            'strategy': rec.get('strategy'),
+            'reasoning': rec.get('reasoning'),
+            'reasoning_breakdown': rec.get('reasoning_breakdown', []),
+            'confidence_factors': rec.get('confidence_factors', [])
+        }
+        insights.append(insight)
+    
+    # Calculate aggregate metrics
+    avg_confidence = sum(i['confidence'] for i in insights) / len(insights) if insights else 0
+    total_price_change = sum(i['price_change'] for i in insights)
+    
+    return {
+        'date': date,
+        'insights': insights,
+        'summary': {
+            'total_recommendations': len(insights),
+            'avg_confidence': round(avg_confidence, 2),
+            'total_rate_adjustment': round(total_price_change, 2),
+            'high_confidence_count': sum(1 for i in insights if i['confidence_level'] == 'High'),
+            'recommended_increase': sum(1 for i in insights if i['price_change'] > 0),
+            'recommended_decrease': sum(1 for i in insights if i['price_change'] < 0)
+        }
+    }
+
+
 # ========================================
 # 3. Mobile Housekeeping App
 # ========================================

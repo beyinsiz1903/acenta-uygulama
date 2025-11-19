@@ -1325,6 +1325,24 @@ agent_communication:
       ✅ Backend tests completed successfully
       User approved frontend testing
       Starting comprehensive frontend UI testing with auto_frontend_testing_agent
+  
+  - agent: "main"
+    message: |
+      🚀 7 YENİ ÖZELLİK BACKEND ENDPOINT'LERİ EKLENDİ
+      
+      Backend'e 57 yeni endpoint eklendi:
+      1. WhatsApp & OTA Messaging Hub (7 endpoints)
+      2. Full RMS - Revenue Management (10 endpoints) 
+      3. Mobile Housekeeping App (7 endpoints)
+      4. E-Fatura & POS Integration (7 endpoints)
+      5. Group & Block Reservations (9 endpoints)
+      6. Multi-Property Management (5 endpoints)
+      7. Marketplace - Procurement & Inventory (12 endpoints)
+      
+      Tüm endpoint'ler authentication ile korunuyor ve multi-tenant destekli.
+      Backend server başarıyla restart edildi ve çalışıyor.
+      
+      Şimdi bu 7 yeni özelliği backend testing agent ile test edeceğim.
   - agent: "testing"
     message: |
       🎯 COMPREHENSIVE BACKEND TESTING COMPLETED - DETAILED ANALYSIS

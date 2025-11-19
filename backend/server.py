@@ -8434,32 +8434,23 @@ async def get_group_reservations(current_user: User = Depends(get_current_user))
 
 @api_router.post("/group-reservations")
 async def create_group_reservation(
-    group_name: str,
-    group_type: str,
-    contact_person: str,
-    contact_email: str,
-    contact_phone: str,
-    check_in_date: str,
-    check_out_date: str,
-    total_rooms: int,
-    adults_per_room: int = 2,
-    special_requests: str = None,
+    request: CreateGroupReservationRequest,
     current_user: User = Depends(get_current_user)
 ):
     """Create new group reservation"""
     group = {
         'id': str(uuid.uuid4()),
         'tenant_id': current_user.tenant_id,
-        'group_name': group_name,
-        'group_type': group_type,
-        'contact_person': contact_person,
-        'contact_email': contact_email,
-        'contact_phone': contact_phone,
-        'check_in_date': check_in_date,
-        'check_out_date': check_out_date,
-        'total_rooms': total_rooms,
-        'adults_per_room': adults_per_room,
-        'special_requests': special_requests,
+        'group_name': request.group_name,
+        'group_type': request.group_type,
+        'contact_person': request.contact_person,
+        'contact_email': request.contact_email,
+        'contact_phone': request.contact_phone,
+        'check_in_date': request.check_in_date,
+        'check_out_date': request.check_out_date,
+        'total_rooms': request.total_rooms,
+        'adults_per_room': request.adults_per_room,
+        'special_requests': request.special_requests,
         'status': 'pending',
         'rooms_assigned': 0,
         'created_at': datetime.now(timezone.utc).isoformat(),

@@ -30,8 +30,12 @@ import {
   Printer,
   Phone,
   Send,
-  Building2
+  Building2,
+  Settings,
+  RefreshCw,
+  Plus
 } from 'lucide-react';
+import FloatingActionButton from '@/components/FloatingActionButton';
 
 const GMDashboard = ({ user, tenant, onLogout }) => {
   const navigate = useNavigate();

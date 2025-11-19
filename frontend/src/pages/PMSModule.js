@@ -3407,9 +3407,9 @@ const PMSModule = ({ user, tenant, onLogout }) => {
                               )}
                             </CardContent>
                           </Card>
-                        )}
-                        ))
-                      )}
+                        );
+                        })
+                      }
                     </div>
                     <div className="mt-4 pt-4 border-t">
                       <div className="flex justify-between font-semibold">

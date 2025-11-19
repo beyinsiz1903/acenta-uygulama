@@ -959,6 +959,11 @@ backend:
     status_history:
       - working: "NA"
         agent: "main"
+        comment: "Implemented GET /api/reports/cost-summary endpoint returning comprehensive cost analysis with: MTD costs by category (Housekeeping, F&B, Technical, General Expenses), top 3 cost categories with percentages, per-room metrics (cost per room night, RevPAR, cost-to-RevPAR ratio), financial metrics (revenue, costs, gross profit, profit margin). Purchase order categories mapped to cost categories. Integrated with Marketplace purchase orders."
+      - working: true
+        agent: "testing"
+        comment: "✅ COST SUMMARY ENDPOINT TESTING COMPLETED (100% Success Rate - 4/4 tests passed). BASIC RETRIEVAL: All required response fields present and correctly structured. DATA ACCURACY: All numerical values properly rounded (amounts: 2 decimals, percentages: 1 decimal), top_3_categories correctly sorted by amount descending. COST CATEGORY MAPPING: Purchase orders correctly mapped - cleaning/linens/amenities→Housekeeping ($950), food/beverage/kitchen→F&B ($880), maintenance/electrical/plumbing/hvac→Technical ($615), furniture/office/it/other→General Expenses ($865). PER-ROOM CALCULATIONS: All calculations verified accurate - cost_per_room_night, cost_to_revpar_ratio, profit_margin. Test data: 14 purchase orders created, total MTD costs $3,310, proper category distribution (Housekeeping 28.7%, F&B 26.6%, General Expenses 26.1%, Technical 18.6%). Endpoint fully functional and ready for GM Dashboard integration."
+        agent: "main"
         comment: "Implemented GET /api/reports/cost-summary endpoint returning comprehensive cost analysis with MTD costs by category, top cost categories, per-room cost metrics, and financial performance indicators"
       - working: true
         agent: "testing"

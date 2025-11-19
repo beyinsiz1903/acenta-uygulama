@@ -1818,6 +1818,50 @@ class HotelPMSBackendTester:
         
         print("\n" + "="*80)
 
+    def print_calendar_summary(self):
+        """Print comprehensive calendar testing summary"""
+        print("\n" + "="*80)
+        print("📅 ENHANCED CALENDAR TESTING SUMMARY")
+        print("="*80)
+        
+        calendar_results = self.test_results["calendar"]
+        total_passed = calendar_results["passed"]
+        total_failed = calendar_results["failed"]
+        total_tests = total_passed + total_failed
+        
+        if total_tests > 0:
+            success_rate = (total_passed / total_tests) * 100
+        else:
+            success_rate = 0
+        
+        print(f"\n📊 OVERALL RESULTS:")
+        print(f"   Total Tests: {total_tests}")
+        print(f"   Passed: {total_passed}")
+        print(f"   Failed: {total_failed}")
+        print(f"   Success Rate: {success_rate:.1f}%")
+        
+        print(f"\n📅 ENHANCED CALENDAR FEATURES TESTED:")
+        print(f"   ✓ Rate Codes Management (BB, HB, FB, AI, RO, NR)")
+        print(f"   ✓ Enhanced Calendar Tooltip with ADR, Occupancy, Segments")
+        print(f"   ✓ Group Reservation Calendar View")
+        print(f"   ✓ Rate Code Breakdown with Distribution Analysis")
+        
+        # Detailed results
+        print(f"\n📋 DETAILED TEST RESULTS:")
+        for result in calendar_results["details"]:
+            print(f"   {result['status']}: {result['endpoint']} - {result['details']}")
+        
+        if success_rate >= 90:
+            print("   Status: 🟢 EXCELLENT - Enhanced Calendar fully operational")
+        elif success_rate >= 80:
+            print("   Status: 🟡 GOOD - Enhanced Calendar mostly working")
+        elif success_rate >= 60:
+            print("   Status: 🟠 FAIR - Enhanced Calendar needs attention")
+        else:
+            print("   Status: 🔴 POOR - Enhanced Calendar has major issues")
+        
+        print("\n" + "="*80)
+
     def run_all_tests(self):
         """Run Enhanced Calendar Backend Tests"""
         print("🚀 Testing Enhanced Reservation Calendar with Rate Codes & Group View")

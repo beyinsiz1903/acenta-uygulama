@@ -8149,10 +8149,10 @@ async def report_housekeeping_issue(
         maintenance_task = {
             'id': str(uuid.uuid4()),
             'tenant_id': current_user.tenant_id,
-            'room_id': room_id,
+            'room_id': request.room_id,
             'task_type': 'maintenance',
-            'description': description,
-            'priority': priority,
+            'description': request.description,
+            'priority': request.priority,
             'status': 'pending',
             'assigned_to': 'Engineering',
             'created_at': datetime.now(timezone.utc).isoformat()

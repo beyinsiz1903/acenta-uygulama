@@ -802,7 +802,7 @@ class HotelPMSBackendTester:
                 prod_id = response.json().get('id')
                 if prod_id:
                     self.created_resources["product_ids"].append(prod_id)
-                details += f" - Product created: {response.json().get('product_name', 'N/A')}"
+                details += f" - Product created: {response.json().get('name', 'N/A')}"
             self.log_test_result("marketplace", "/marketplace/products (Shampoo)", "POST", success, details)
         except Exception as e:
             self.log_test_result("marketplace", "/marketplace/products (Shampoo)", "POST", False, f"Error: {str(e)}")

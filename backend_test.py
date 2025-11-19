@@ -2432,19 +2432,19 @@ class HotelPMSBackendTester:
         print("\n" + "="*80)
 
     def run_all_tests(self):
-        """Run Enhanced Calendar Backend Tests"""
-        print("🚀 Testing Enhanced Reservation Calendar with Rate Codes & Group View")
-        print("Testing 5 NEW calendar enhancement endpoints...")
+        """Run Enhanced POS Integration Backend Tests"""
+        print("🚀 Testing Enhanced POS Integration with Multi-Outlet, Menu Breakdown & Z Reports")
+        print("Testing 9+ NEW POS enhancement endpoints...")
         
         if not self.authenticate():
             print("❌ Authentication failed. Cannot proceed with testing.")
             return False
         
-        # Run Enhanced Calendar test suite
-        self.test_enhanced_calendar_features()     # 5 calendar endpoints
+        # Run Enhanced POS test suite
+        self.test_enhanced_pos_integration()     # 9+ POS endpoints
         
         # Print comprehensive summary
-        self.print_calendar_summary()
+        self.print_pos_summary()
         
         return True
 

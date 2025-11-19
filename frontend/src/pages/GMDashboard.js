@@ -134,6 +134,14 @@ const GMDashboard = ({ user, tenant, onLogout }) => {
             </p>
           </div>
           <div className="flex space-x-2">
+            <Button variant="outline" onClick={handleEmailReport} className="bg-blue-50 hover:bg-blue-100">
+              <Mail className="w-4 h-4 mr-2" />
+              Email Report
+            </Button>
+            <Button variant="outline" onClick={handleExportPDF}>
+              <Download className="w-4 h-4 mr-2" />
+              Export PDF
+            </Button>
             <Button variant="outline" onClick={() => loadDashboardData()}>
               <Activity className="w-4 h-4 mr-2" />
               Refresh

@@ -687,7 +687,7 @@ class TaskManagementTester:
         
         # C.1 POST /api/tasks/fnb/service-request
         try:
-            response = self.session.post(f"{BACKEND_URL}/tasks/fnb/service-request", json={
+            response = self.session.post(f"{BACKEND_URL}/tasks/fnb/service-request", params={
                 "request_type": "room_service",
                 "title": "VIP Room Service",
                 "description": "Suite 1001 - Special dinner setup",

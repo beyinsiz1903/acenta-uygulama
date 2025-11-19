@@ -1078,14 +1078,15 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Folio Calculations Regression Testing - COMPLETED"
-    - "Currency rounding precision issue identified"
-    - "Closed folio validation needs improvement"
+    - "7 New Hotel PMS Features Backend Testing - COMPLETED"
+    - "57 endpoints tested across messaging, RMS, housekeeping, e-fatura, groups, multi-property, marketplace"
+    - "Validation errors in POST endpoints need fixing"
   stuck_tasks:
-    - "Currency rounding not enforcing 2 decimal places"
-    - "Closed folio charge posting validation insufficient"
+    - "POST endpoint validation errors (422 status codes)"
+    - "Marketplace products endpoint response format issues"
+    - "Purchase orders server errors (500 status codes)"
   test_all: false
-  test_priority: "folio_calculations_regression"
+  test_priority: "new_features_validation_fixes"
 
 agent_communication:
   - agent: "testing"

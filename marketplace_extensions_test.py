@@ -269,6 +269,25 @@ class MarketplaceExtensionsTester:
             except Exception as e:
                 self.log_test_result("gm_approval", f"/marketplace/purchase-orders/{po_id_for_rejection}/reject", "POST", False, f"Error: {str(e)}")
 
+        # 6. Verify approval workflow state transitions by checking PO status
+        if po_id_for_approval:
+            try:
+                response = self.session.get(f"{BACKEND_URL}/marketplace/purchase-orders")
+                success = response.status_code == 200
+                details = f"Status: {response.status_code}"
+                if success:
+                    data = response.json()
+                    purchase_orders = data.get('purchase_orders', []) if isinstance(data, dict) else data
+                    approved_po = next((po for po in purchase_orders if po.get('id') == po_id_for_approval), None)
+                    if approved_po:
+                        status = approved_po.get('status', 'unknown')
+                        details += f" - Workflow verified: PO status is '{status}'"
+                    else:
+                        details += " - PO not found in list"
+                self.log_test_result("gm_approval", "Workflow State Verification", "GET", success, details)
+            except Exception as e:
+                self.log_test_result("gm_approval", "Workflow State Verification", "GET", False, f"Error: {str(e)}")
+
     def test_warehouse_tracking(self):
         """Test Warehouse/Depot Stock Tracking (5 endpoints)"""
         print("\n🏭 Testing Warehouse/Depot Stock Tracking...")

@@ -263,6 +263,66 @@ function App() {
               )
             }
           />
+          <Route
+            path="/ota-messaging-hub"
+            element={
+              isAuthenticated ? (
+                <OTAMessagingHub user={user} tenant={tenant} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/auth" replace />
+              )
+            }
+          />
+          <Route
+            path="/efatura"
+            element={
+              isAuthenticated ? (
+                <EFaturaModule user={user} tenant={tenant} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/auth" replace />
+              )
+            }
+          />
+          <Route
+            path="/e-fatura"
+            element={
+              isAuthenticated ? (
+                <EFaturaModule user={user} tenant={tenant} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/auth" replace />
+              )
+            }
+          />
+          <Route
+            path="/group-reservations"
+            element={
+              isAuthenticated ? (
+                <GroupReservations user={user} tenant={tenant} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/auth" replace />
+              )
+            }
+          />
+          <Route
+            path="/multi-property-dashboard"
+            element={
+              isAuthenticated ? (
+                <MultiPropertyDashboard user={user} tenant={tenant} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/auth" replace />
+              )
+            }
+          />
+          <Route
+            path="/housekeeping-mobile-app"
+            element={
+              isAuthenticated ? (
+                <HousekeepingMobileApp user={user} tenant={tenant} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/auth" replace />
+              )
+            }
+          />
         </Routes>
       </BrowserRouter>
     </div>

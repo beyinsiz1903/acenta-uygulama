@@ -276,6 +276,26 @@ function App() {
             }
           />
           <Route
+            path="/messaging-center"
+            element={
+              isAuthenticated ? (
+                <MessagingCenter user={user} tenant={tenant} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/auth" replace />
+              )
+            }
+          />
+          <Route
+            path="/sales"
+            element={
+              isAuthenticated ? (
+                <SalesModule user={user} tenant={tenant} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/auth" replace />
+              )
+            }
+          />
+          <Route
             path="/efatura"
             element={
               isAuthenticated ? (

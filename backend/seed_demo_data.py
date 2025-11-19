@@ -93,8 +93,9 @@ async def seed_data():
     user = await db.users.find_one({"tenant_id": tenant_id, "role": "admin"})
     if not user:
         print("📝 Creating default admin user...")
-        import bcrypt
-        password_hash = bcrypt.hashpw("admin123".encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        from passlib.context import CryptContext
+        pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+        password_hash = pwd_context.hash("admin123")
         
         user_id = str(uuid.uuid4())
         user = {

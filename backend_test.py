@@ -768,12 +768,11 @@ class HotelPMSBackendTester:
         # 1. POST /api/marketplace/products (Bath Towels)
         try:
             response = self.session.post(f"{BACKEND_URL}/marketplace/products", json={
-                "product_name": "Bath Towels Premium",
+                "name": "Bath Towels Premium",
                 "category": "linens",
-                "unit_price": 15.50,
-                "unit_of_measure": "piece",
+                "price": 15.50,
+                "unit": "piece",
                 "supplier": "Linen Supply Co",
-                "min_order_qty": 50,
                 "description": "High quality cotton bath towels"
             })
             success = response.status_code in [200, 201]

@@ -8182,7 +8182,8 @@ async def upload_housekeeping_photo(
         'uploaded_at': datetime.now(timezone.utc).isoformat()
     }
     
-    await db.housekeeping_photos.insert_one(photo_record)
+    photo_copy = photo_record.copy()
+    await db.housekeeping_photos.insert_one(photo_copy)
     
     return {'message': 'Photo uploaded successfully', 'photo_id': photo_record['id']}
 

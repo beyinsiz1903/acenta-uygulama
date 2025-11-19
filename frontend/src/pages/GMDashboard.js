@@ -1231,6 +1231,57 @@ const GMDashboard = ({ user, tenant, onLogout }) => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Floating Action Button - GM Quick Actions */}
+        <FloatingActionButton
+          actions={[
+            {
+              label: 'New Booking',
+              icon: <Plus className="w-5 h-5" />,
+              color: 'bg-blue-600 hover:bg-blue-700',
+              onClick: () => {
+                navigate('/pms');
+                toast.info('Opening PMS for new booking...');
+              }
+            },
+            {
+              label: 'Check-in Guest',
+              icon: <Users className="w-5 h-5" />,
+              color: 'bg-green-600 hover:bg-green-700',
+              onClick: () => {
+                navigate('/pms');
+                toast.info('Opening Front Desk for check-in...');
+              }
+            },
+            {
+              label: 'RMS Suggestions',
+              icon: <TrendingUp className="w-5 h-5" />,
+              color: 'bg-purple-600 hover:bg-purple-700',
+              onClick: () => {
+                navigate('/revenue-management');
+                toast.info('Opening RMS suggestions...');
+              }
+            },
+            {
+              label: 'View Reports',
+              icon: <FileText className="w-5 h-5" />,
+              color: 'bg-orange-600 hover:bg-orange-700',
+              onClick: () => {
+                navigate('/reports');
+                toast.info('Opening reports dashboard...');
+              }
+            },
+            {
+              label: 'Refresh Dashboard',
+              icon: <RefreshCw className="w-5 h-5" />,
+              color: 'bg-gray-600 hover:bg-gray-700',
+              onClick: () => {
+                loadDashboardData();
+                toast.success('Dashboard refreshed!');
+              }
+            }
+          ]}
+        />
       </div>
     </Layout>
   );

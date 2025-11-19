@@ -645,11 +645,19 @@ const GMDashboard = ({ user, tenant, onLogout }) => {
               <div className="space-y-3">
                 {/* Sample Arrival Cards */}
                 {[
-                  { name: 'Richard Anderson', room: '116', type: 'Deluxe Double', vip: false },
-                  { name: 'Amelia Gonzalez', room: '102', type: 'Standard Single', vip: false },
-                  { name: 'William Lee', room: '113', type: 'Family Room', vip: true }
+                  { name: 'Richard Anderson', room: '116', type: 'Deluxe Double', vip: false, upsellAvailable: true, upsellType: 'Suite Upgrade' },
+                  { name: 'Amelia Gonzalez', room: '102', type: 'Standard Single', vip: false, upsellAvailable: false },
+                  { name: 'William Lee', room: '113', type: 'Family Room', vip: true, upsellAvailable: true, upsellType: 'Late Checkout' }
                 ].map((guest, idx) => (
-                  <div key={idx} className={`p-3 rounded-lg border-2 ${guest.vip ? 'border-yellow-400 bg-yellow-50' : 'border-gray-200 bg-gray-50'}`}>
+                  <div key={idx} className={`p-3 rounded-lg border-2 ${guest.vip ? 'border-yellow-400 bg-yellow-50' : 'border-gray-200 bg-gray-50'} relative`}>
+                    {/* Upsell Available Badge - NEW */}
+                    {guest.upsellAvailable && (
+                      <div className="absolute -top-2 -right-2">
+                        <Badge className="bg-gradient-to-r from-green-500 to-emerald-600 text-white text-[10px] px-2 py-1 shadow-md border-2 border-white">
+                          💰 Upsell Available
+                        </Badge>
+                      </div>
+                    )}
                     <div className="flex items-start justify-between mb-2">
                       <div>
                         <div className="flex items-center space-x-2">
@@ -659,6 +667,13 @@ const GMDashboard = ({ user, tenant, onLogout }) => {
                         <div className="text-xs text-gray-600">
                           Room {guest.room} • {guest.type}
                         </div>
+                        {/* Upsell Type - NEW */}
+                        {guest.upsellAvailable && (
+                          <div className="text-[10px] text-green-700 font-semibold mt-1 flex items-center">
+                            <ArrowUpCircle className="w-3 h-3 mr-1" />
+                            {guest.upsellType}
+                          </div>
+                        )}
                       </div>
                     </div>
                     

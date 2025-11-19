@@ -2084,7 +2084,7 @@ async def get_folio_dashboard_stats(current_user: User = Depends(get_current_use
     # Get recent payments (last 24 hours)
     recent_payments = await db.payments.count_documents({
         'tenant_id': current_user.tenant_id,
-        'payment_date': {'$gte': yesterday}
+        'processed_at': {'$gte': yesterday}
     })
     
     return {

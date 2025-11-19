@@ -1470,13 +1470,7 @@ async def register_guest(data: GuestRegister):
 
 @api_router.post("/auth/login", response_model=TokenResponse)
 async def login(data: UserLogin):
-    print(f"🔐 Login attempt for: {data.email}")
     user_doc = await db.users.find_one({'email': data.email}, {'_id': 0})
-    print(f"   User found: {user_doc is not None}")
-    if user_doc:
-        print(f"   Has password: {'password' in user_doc}")
-        password_valid = verify_password(data.password, user_doc.get('password', ''))
-        print(f"   Password valid: {password_valid}")
     if not user_doc or not verify_password(data.password, user_doc.get('password', '')):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     

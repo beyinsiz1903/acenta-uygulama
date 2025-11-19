@@ -8460,7 +8460,8 @@ async def create_group_reservation(
         'created_by': current_user.id
     }
     
-    await db.group_reservations.insert_one(group)
+    group_copy = group.copy()
+    await db.group_reservations.insert_one(group_copy)
     return group
 
 @api_router.get("/group-reservations/{group_id}")

@@ -6584,6 +6584,488 @@ async def get_accounting_dashboard(current_user: User = Depends(get_current_user
         'total_bank_balance': round(total_bank_balance, 2)
     }
 
+
+# ========================================
+# ACCOUNTING ENHANCEMENTS - 3 New Features
+# ========================================
+
+# 1. MULTI-CURRENCY SUPPORT
+@api_router.get("/accounting/currencies")
+async def get_currencies(current_user: User = Depends(get_current_user)):
+    """Get all supported currencies"""
+    currencies = [
+        {'code': 'TRY', 'name': 'Turkish Lira', 'symbol': '₺'},
+        {'code': 'USD', 'name': 'US Dollar', 'symbol': '$'},
+        {'code': 'EUR', 'name': 'Euro', 'symbol': '€'},
+        {'code': 'GBP', 'name': 'British Pound', 'symbol': '£'}
+    ]
+    return {'currencies': currencies}
+
+@api_router.post("/accounting/currency-rates")
+async def create_currency_rate(
+    request: CreateCurrencyRateRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """Create or update currency exchange rate"""
+    rate = {
+        'id': str(uuid.uuid4()),
+        'tenant_id': current_user.tenant_id,
+        'from_currency': request.from_currency,
+        'to_currency': request.to_currency,
+        'rate': request.rate,
+        'effective_date': request.effective_date,
+        'created_at': datetime.now(timezone.utc).isoformat(),
+        'created_by': current_user.id
+    }
+    
+    rate_copy = rate.copy()
+    await db.currency_rates.insert_one(rate_copy)
+    return rate
+
+@api_router.get("/accounting/currency-rates")
+async def get_currency_rates(
+    from_currency: str = None,
+    to_currency: str = None,
+    date: str = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Get currency exchange rates"""
+    query = {'tenant_id': current_user.tenant_id}
+    
+    if from_currency:
+        query['from_currency'] = from_currency
+    if to_currency:
+        query['to_currency'] = to_currency
+    if date:
+        query['effective_date'] = {'$lte': date}
+    
+    rates = await db.currency_rates.find(
+        query,
+        {'_id': 0}
+    ).sort('effective_date', -1).to_list(100)
+    
+    return {'rates': rates, 'count': len(rates)}
+
+@api_router.post("/accounting/convert-currency")
+async def convert_currency(
+    request: ConvertCurrencyRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """Convert amount between currencies"""
+    # If same currency, no conversion needed
+    if request.from_currency == request.to_currency:
+        return {
+            'amount': request.amount,
+            'from_currency': request.from_currency,
+            'to_currency': request.to_currency,
+            'rate': 1.0,
+            'converted_amount': request.amount
+        }
+    
+    # Get exchange rate
+    query = {
+        'tenant_id': current_user.tenant_id,
+        'from_currency': request.from_currency,
+        'to_currency': request.to_currency
+    }
+    
+    if request.date:
+        query['effective_date'] = {'$lte': request.date}
+    
+    rate_record = await db.currency_rates.find_one(
+        query,
+        {'_id': 0},
+        sort=[('effective_date', -1)]
+    )
+    
+    if not rate_record:
+        # Try reverse rate
+        reverse_query = {
+            'tenant_id': current_user.tenant_id,
+            'from_currency': request.to_currency,
+            'to_currency': request.from_currency
+        }
+        if request.date:
+            reverse_query['effective_date'] = {'$lte': request.date}
+        
+        reverse_rate = await db.currency_rates.find_one(
+            reverse_query,
+            {'_id': 0},
+            sort=[('effective_date', -1)]
+        )
+        
+        if reverse_rate:
+            rate = 1.0 / reverse_rate['rate']
+        else:
+            # Default rates if not found
+            default_rates = {
+                ('TRY', 'USD'): 0.037,
+                ('TRY', 'EUR'): 0.034,
+                ('USD', 'TRY'): 27.0,
+                ('EUR', 'TRY'): 29.5,
+                ('USD', 'EUR'): 0.92,
+                ('EUR', 'USD'): 1.09
+            }
+            rate = default_rates.get((request.from_currency, request.to_currency), 1.0)
+    else:
+        rate = rate_record['rate']
+    
+    converted_amount = request.amount * rate
+    
+    return {
+        'amount': request.amount,
+        'from_currency': request.from_currency,
+        'to_currency': request.to_currency,
+        'rate': round(rate, 4),
+        'converted_amount': round(converted_amount, 2),
+        'date': request.date or datetime.now(timezone.utc).date().isoformat()
+    }
+
+@api_router.post("/accounting/invoices/multi-currency")
+async def create_multi_currency_invoice(
+    request: CreateMultiCurrencyInvoiceRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """Create invoice in any currency with auto-conversion to TRY"""
+    # Calculate totals in invoice currency
+    subtotal = sum(item.get('quantity', 0) * item.get('unit_price', 0) for item in request.items)
+    
+    # Calculate VAT
+    total_vat = 0
+    for item in request.items:
+        item_total = item.get('quantity', 0) * item.get('unit_price', 0)
+        vat_rate = item.get('vat_rate', 18) / 100
+        item['vat_amount'] = round(item_total * vat_rate, 2)
+        total_vat += item['vat_amount']
+    
+    total = subtotal + total_vat
+    
+    # Convert to TRY if needed
+    if request.currency != 'TRY':
+        if request.exchange_rate:
+            rate = request.exchange_rate
+        else:
+            # Get current rate
+            conversion = await convert_currency(
+                ConvertCurrencyRequest(
+                    amount=1.0,
+                    from_currency=request.currency,
+                    to_currency='TRY'
+                ),
+                current_user
+            )
+            rate = conversion['rate']
+        
+        subtotal_try = subtotal * rate
+        total_vat_try = total_vat * rate
+        total_try = total * rate
+    else:
+        rate = 1.0
+        subtotal_try = subtotal
+        total_vat_try = total_vat
+        total_try = total
+    
+    invoice_number = f"INV-{datetime.now().strftime('%Y%m%d')}-{str(uuid.uuid4())[:8].upper()}"
+    
+    invoice = {
+        'id': str(uuid.uuid4()),
+        'tenant_id': current_user.tenant_id,
+        'invoice_number': invoice_number,
+        'customer_name': request.customer_name,
+        'customer_email': request.customer_email,
+        'customer_address': request.customer_address,
+        'items': request.items,
+        'currency': request.currency,
+        'exchange_rate': rate,
+        'subtotal': round(subtotal, 2),
+        'total_vat': round(total_vat, 2),
+        'total': round(total, 2),
+        'subtotal_try': round(subtotal_try, 2),
+        'total_vat_try': round(total_vat_try, 2),
+        'total_try': round(total_try, 2),
+        'payment_terms': request.payment_terms,
+        'notes': request.notes,
+        'issue_date': datetime.now(timezone.utc).date().isoformat(),
+        'due_date': (datetime.now(timezone.utc) + timedelta(days=30)).date().isoformat(),
+        'status': 'pending',
+        'created_at': datetime.now(timezone.utc).isoformat(),
+        'created_by': current_user.id
+    }
+    
+    invoice_copy = invoice.copy()
+    await db.accounting_invoices.insert_one(invoice_copy)
+    
+    return invoice
+
+
+# 2. INVOICE → FOLIO → PMS INTEGRATION
+@api_router.post("/accounting/invoices/from-folio")
+async def generate_invoice_from_folio(
+    request: GenerateInvoiceFromFolioRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """Generate accounting invoice from PMS folio"""
+    # Get folio
+    folio = await db.folios.find_one({
+        'id': request.folio_id,
+        'tenant_id': current_user.tenant_id
+    }, {'_id': 0})
+    
+    if not folio:
+        raise HTTPException(status_code=404, detail="Folio not found")
+    
+    # Get folio charges
+    charges = await db.folio_charges.find({
+        'folio_id': request.folio_id,
+        'tenant_id': current_user.tenant_id,
+        'voided': False
+    }, {'_id': 0}).to_list(1000)
+    
+    # Get booking info
+    booking = await db.bookings.find_one({
+        'folio_id': request.folio_id,
+        'tenant_id': current_user.tenant_id
+    }, {'_id': 0})
+    
+    # Convert charges to invoice items
+    invoice_items = []
+    for charge in charges:
+        item = {
+            'description': charge.get('description', 'Hotel Charge'),
+            'quantity': 1,
+            'unit_price': charge.get('amount', 0),
+            'vat_rate': charge.get('vat_rate', 18),
+            'total': charge.get('total', 0)
+        }
+        invoice_items.append(item)
+    
+    # Get customer info from booking or folio
+    customer_name = booking.get('guest_name') if booking else folio.get('guest_name', 'Guest')
+    customer_email = booking.get('guest_email') if booking else folio.get('guest_email', '')
+    
+    # Create invoice
+    invoice_number = f"INV-{datetime.now().strftime('%Y%m%d')}-{str(uuid.uuid4())[:8].upper()}"
+    
+    # Calculate totals
+    subtotal = sum(item['unit_price'] * item['quantity'] for item in invoice_items)
+    total_vat = sum(item['unit_price'] * item['quantity'] * (item['vat_rate'] / 100) for item in invoice_items)
+    
+    # Currency conversion if needed
+    if request.invoice_currency != 'TRY':
+        conversion = await convert_currency(
+            ConvertCurrencyRequest(
+                amount=subtotal + total_vat,
+                from_currency='TRY',
+                to_currency=request.invoice_currency
+            ),
+            current_user
+        )
+        exchange_rate = conversion['rate']
+        total_foreign = conversion['converted_amount']
+    else:
+        exchange_rate = 1.0
+        total_foreign = subtotal + total_vat
+    
+    invoice = {
+        'id': str(uuid.uuid4()),
+        'tenant_id': current_user.tenant_id,
+        'invoice_number': invoice_number,
+        'folio_id': request.folio_id,
+        'booking_id': booking['id'] if booking else None,
+        'customer_name': customer_name,
+        'customer_email': customer_email,
+        'customer_address': booking.get('guest_address', '') if booking else '',
+        'items': invoice_items,
+        'currency': request.invoice_currency,
+        'exchange_rate': exchange_rate,
+        'subtotal': round(subtotal, 2),
+        'total_vat': round(total_vat, 2),
+        'total': round(subtotal + total_vat, 2),
+        'total_foreign_currency': round(total_foreign, 2),
+        'payment_terms': 'Due on checkout',
+        'issue_date': datetime.now(timezone.utc).date().isoformat(),
+        'due_date': datetime.now(timezone.utc).date().isoformat(),
+        'status': 'pending',
+        'source': 'pms_folio',
+        'created_at': datetime.now(timezone.utc).isoformat(),
+        'created_by': current_user.id
+    }
+    
+    invoice_copy = invoice.copy()
+    await db.accounting_invoices.insert_one(invoice_copy)
+    
+    # Update folio with invoice reference
+    await db.folios.update_one(
+        {'id': request.folio_id},
+        {'$set': {'invoice_id': invoice['id'], 'invoice_number': invoice_number}}
+    )
+    
+    # Generate E-Fatura if requested
+    if request.include_efatura:
+        efatura_xml = f"""<?xml version="1.0" encoding="UTF-8"?>
+<Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2">
+    <ID>{invoice_number}</ID>
+    <IssueDate>{invoice['issue_date']}</IssueDate>
+    <InvoiceTypeCode>SATIS</InvoiceTypeCode>
+    <DocumentCurrencyCode>{request.invoice_currency}</DocumentCurrencyCode>
+    <LineCountNumeric>{len(invoice_items)}</LineCountNumeric>
+    <LegalMonetaryTotal>
+        <TaxExclusiveAmount currencyID="{request.invoice_currency}">{invoice['subtotal']}</TaxExclusiveAmount>
+        <TaxInclusiveAmount currencyID="{request.invoice_currency}">{invoice['total']}</TaxInclusiveAmount>
+    </LegalMonetaryTotal>
+</Invoice>"""
+        
+        efatura_record = {
+            'id': str(uuid.uuid4()),
+            'tenant_id': current_user.tenant_id,
+            'invoice_id': invoice['id'],
+            'invoice_number': invoice_number,
+            'efatura_uuid': str(uuid.uuid4()),
+            'xml_content': efatura_xml,
+            'status': 'generated',
+            'generated_at': datetime.now(timezone.utc).isoformat()
+        }
+        
+        efatura_copy = efatura_record.copy()
+        await db.efatura_records.insert_one(efatura_copy)
+        
+        invoice['efatura_uuid'] = efatura_record['efatura_uuid']
+        invoice['efatura_status'] = 'generated'
+    
+    return {
+        'invoice': invoice,
+        'message': 'Invoice generated from folio successfully',
+        'efatura_generated': request.include_efatura
+    }
+
+
+# 3. E-FATURA INTEGRATION WITH ACCOUNTING
+@api_router.get("/accounting/invoices/{invoice_id}/efatura-status")
+async def get_invoice_efatura_status(
+    invoice_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Get E-Fatura status for accounting invoice"""
+    invoice = await db.accounting_invoices.find_one({
+        'id': invoice_id,
+        'tenant_id': current_user.tenant_id
+    }, {'_id': 0})
+    
+    if not invoice:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+    
+    # Get E-Fatura record
+    efatura = await db.efatura_records.find_one({
+        'invoice_id': invoice_id,
+        'tenant_id': current_user.tenant_id
+    }, {'_id': 0})
+    
+    if not efatura:
+        return {
+            'invoice_id': invoice_id,
+            'invoice_number': invoice.get('invoice_number'),
+            'efatura_status': 'not_generated',
+            'message': 'E-Fatura has not been generated for this invoice'
+        }
+    
+    return {
+        'invoice_id': invoice_id,
+        'invoice_number': invoice.get('invoice_number'),
+        'efatura_uuid': efatura.get('efatura_uuid'),
+        'efatura_status': efatura.get('status'),
+        'generated_at': efatura.get('generated_at'),
+        'sent_at': efatura.get('sent_at'),
+        'gib_response': efatura.get('gib_response')
+    }
+
+@api_router.post("/accounting/invoices/{invoice_id}/generate-efatura")
+async def generate_efatura_for_invoice(
+    invoice_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Generate E-Fatura for existing accounting invoice"""
+    invoice = await db.accounting_invoices.find_one({
+        'id': invoice_id,
+        'tenant_id': current_user.tenant_id
+    }, {'_id': 0})
+    
+    if not invoice:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+    
+    # Check if E-Fatura already exists
+    existing_efatura = await db.efatura_records.find_one({
+        'invoice_id': invoice_id,
+        'tenant_id': current_user.tenant_id
+    })
+    
+    if existing_efatura:
+        return {
+            'message': 'E-Fatura already exists for this invoice',
+            'efatura_uuid': existing_efatura.get('efatura_uuid'),
+            'status': existing_efatura.get('status')
+        }
+    
+    # Generate E-Fatura XML
+    currency = invoice.get('currency', 'TRY')
+    efatura_xml = f"""<?xml version="1.0" encoding="UTF-8"?>
+<Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2">
+    <ID>{invoice.get('invoice_number')}</ID>
+    <IssueDate>{invoice.get('issue_date')}</IssueDate>
+    <InvoiceTypeCode>SATIS</InvoiceTypeCode>
+    <DocumentCurrencyCode>{currency}</DocumentCurrencyCode>
+    <LineCountNumeric>{len(invoice.get('items', []))}</LineCountNumeric>
+    <AccountingSupplierParty>
+        <Party>
+            <PartyName>
+                <Name>Hotel Name</Name>
+            </PartyName>
+        </Party>
+    </AccountingSupplierParty>
+    <AccountingCustomerParty>
+        <Party>
+            <PartyName>
+                <Name>{invoice.get('customer_name', 'N/A')}</Name>
+            </PartyName>
+        </Party>
+    </AccountingCustomerParty>
+    <LegalMonetaryTotal>
+        <TaxExclusiveAmount currencyID="{currency}">{invoice.get('subtotal', 0)}</TaxExclusiveAmount>
+        <TaxInclusiveAmount currencyID="{currency}">{invoice.get('total', 0)}</TaxInclusiveAmount>
+    </LegalMonetaryTotal>
+</Invoice>"""
+    
+    efatura_record = {
+        'id': str(uuid.uuid4()),
+        'tenant_id': current_user.tenant_id,
+        'invoice_id': invoice_id,
+        'invoice_number': invoice.get('invoice_number'),
+        'efatura_uuid': str(uuid.uuid4()),
+        'xml_content': efatura_xml,
+        'status': 'generated',
+        'generated_at': datetime.now(timezone.utc).isoformat()
+    }
+    
+    efatura_copy = efatura_record.copy()
+    await db.efatura_records.insert_one(efatura_copy)
+    
+    # Update invoice with E-Fatura reference
+    await db.accounting_invoices.update_one(
+        {'id': invoice_id},
+        {
+            '$set': {
+                'efatura_uuid': efatura_record['efatura_uuid'],
+                'efatura_status': 'generated'
+            }
+        }
+    )
+    
+    return {
+        'message': 'E-Fatura generated successfully',
+        'efatura_uuid': efatura_record['efatura_uuid'],
+        'invoice_number': invoice.get('invoice_number')
+    }
+
+
 # ============= ROOM BLOCK ENDPOINTS (Out of Order / Service) =============
 
 @api_router.get("/pms/room-blocks")

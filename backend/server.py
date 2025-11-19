@@ -7735,7 +7735,8 @@ async def add_competitor(
         'created_at': datetime.now(timezone.utc).isoformat()
     }
     
-    await db.comp_set.insert_one(competitor)
+    competitor_copy = competitor.copy()
+    await db.comp_set.insert_one(competitor_copy)
     return competitor
 
 @api_router.get("/rms/comp-pricing")

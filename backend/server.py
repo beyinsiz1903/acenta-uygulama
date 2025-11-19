@@ -9472,6 +9472,483 @@ async def get_pos_daily_summary(
 
 
 # ========================================
+# POS ENHANCEMENTS - 3 New Features
+# ========================================
+
+# 1. MULTI-OUTLET SUPPORT (Restaurant 1, Restaurant 2, Bar, etc.)
+@api_router.get("/pos/outlets")
+async def get_outlets(current_user: User = Depends(get_current_user)):
+    """Get all F&B outlets"""
+    outlets = await db.pos_outlets.find(
+        {'tenant_id': current_user.tenant_id},
+        {'_id': 0}
+    ).to_list(100)
+    
+    # Get transaction counts per outlet
+    for outlet in outlets:
+        today_trans = await db.pos_menu_transactions.count_documents({
+            'tenant_id': current_user.tenant_id,
+            'outlet_id': outlet['id'],
+            'transaction_date': datetime.now(timezone.utc).date().isoformat()
+        })
+        outlet['today_transactions'] = today_trans
+    
+    return {'outlets': outlets, 'count': len(outlets)}
+
+@api_router.post("/pos/outlets")
+async def create_outlet(
+    request: CreateOutletRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """Create new F&B outlet"""
+    outlet = {
+        'id': str(uuid.uuid4()),
+        'tenant_id': current_user.tenant_id,
+        'outlet_name': request.outlet_name,
+        'outlet_type': request.outlet_type,
+        'location': request.location,
+        'capacity': request.capacity,
+        'opening_hours': request.opening_hours,
+        'status': 'active',
+        'created_at': datetime.now(timezone.utc).isoformat()
+    }
+    
+    outlet_copy = outlet.copy()
+    await db.pos_outlets.insert_one(outlet_copy)
+    return outlet
+
+@api_router.get("/pos/outlets/{outlet_id}")
+async def get_outlet_details(
+    outlet_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Get outlet details with menu and stats"""
+    outlet = await db.pos_outlets.find_one({
+        'id': outlet_id,
+        'tenant_id': current_user.tenant_id
+    }, {'_id': 0})
+    
+    if not outlet:
+        raise HTTPException(status_code=404, detail="Outlet not found")
+    
+    # Get menu items
+    menu_items = await db.pos_menu_items.find({
+        'tenant_id': current_user.tenant_id,
+        'outlet_id': outlet_id
+    }, {'_id': 0}).to_list(1000)
+    
+    # Get today's stats
+    today = datetime.now(timezone.utc).date().isoformat()
+    today_transactions = await db.pos_menu_transactions.find({
+        'tenant_id': current_user.tenant_id,
+        'outlet_id': outlet_id,
+        'transaction_date': today
+    }, {'_id': 0}).to_list(1000)
+    
+    today_revenue = sum(t.get('total_amount', 0) for t in today_transactions)
+    
+    return {
+        'outlet': outlet,
+        'menu_items': menu_items,
+        'menu_items_count': len(menu_items),
+        'today_stats': {
+            'transactions': len(today_transactions),
+            'revenue': round(today_revenue, 2)
+        }
+    }
+
+
+# 2. MENU-BASED TRANSACTION BREAKDOWN
+@api_router.get("/pos/menu-items")
+async def get_menu_items(
+    outlet_id: str = None,
+    category: str = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Get menu items with optional filters"""
+    query = {'tenant_id': current_user.tenant_id}
+    
+    if outlet_id:
+        query['outlet_id'] = outlet_id
+    if category:
+        query['category'] = category
+    
+    menu_items = await db.pos_menu_items.find(query, {'_id': 0}).to_list(1000)
+    
+    return {'menu_items': menu_items, 'count': len(menu_items)}
+
+@api_router.post("/pos/menu-items")
+async def create_menu_item(
+    request: CreateMenuItemRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """Create menu item for outlet"""
+    # Verify outlet exists
+    outlet = await db.pos_outlets.find_one({
+        'id': request.outlet_id,
+        'tenant_id': current_user.tenant_id
+    })
+    
+    if not outlet:
+        raise HTTPException(status_code=404, detail="Outlet not found")
+    
+    menu_item = {
+        'id': str(uuid.uuid4()),
+        'tenant_id': current_user.tenant_id,
+        'outlet_id': request.outlet_id,
+        'item_name': request.item_name,
+        'category': request.category,
+        'price': request.price,
+        'cost': request.cost,
+        'description': request.description,
+        'status': 'active',
+        'created_at': datetime.now(timezone.utc).isoformat()
+    }
+    
+    menu_copy = menu_item.copy()
+    await db.pos_menu_items.insert_one(menu_copy)
+    return menu_item
+
+@api_router.post("/pos/transactions/with-menu")
+async def create_pos_transaction_with_menu(
+    request: CreatePOSTransactionWithMenuRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """Create POS transaction with menu item breakdown"""
+    # Verify outlet
+    outlet = await db.pos_outlets.find_one({
+        'id': request.outlet_id,
+        'tenant_id': current_user.tenant_id
+    })
+    
+    if not outlet:
+        raise HTTPException(status_code=404, detail="Outlet not found")
+    
+    # Calculate totals
+    subtotal = sum(item.get('quantity', 0) * item.get('price', 0) for item in request.items)
+    
+    # Get menu item details and calculate costs
+    enriched_items = []
+    total_cost = 0
+    
+    for item in request.items:
+        menu_item = await db.pos_menu_items.find_one({
+            'id': item.get('menu_item_id'),
+            'tenant_id': current_user.tenant_id
+        }, {'_id': 0})
+        
+        if menu_item:
+            item_cost = menu_item.get('cost', 0) * item.get('quantity', 0)
+            total_cost += item_cost
+            
+            enriched_items.append({
+                'menu_item_id': item.get('menu_item_id'),
+                'item_name': menu_item.get('item_name'),
+                'category': menu_item.get('category'),
+                'quantity': item.get('quantity'),
+                'unit_price': item.get('price'),
+                'unit_cost': menu_item.get('cost', 0),
+                'total_price': item.get('quantity') * item.get('price'),
+                'total_cost': item_cost
+            })
+    
+    # Create transaction
+    transaction = {
+        'id': str(uuid.uuid4()),
+        'tenant_id': current_user.tenant_id,
+        'outlet_id': request.outlet_id,
+        'outlet_name': outlet.get('outlet_name'),
+        'transaction_date': datetime.now(timezone.utc).date().isoformat(),
+        'transaction_time': datetime.now(timezone.utc).time().isoformat(),
+        'items': enriched_items,
+        'subtotal': round(subtotal, 2),
+        'total_amount': round(subtotal, 2),  # Can add tax/service charge
+        'total_cost': round(total_cost, 2),
+        'gross_profit': round(subtotal - total_cost, 2),
+        'payment_method': request.payment_method,
+        'folio_id': request.folio_id,
+        'table_number': request.table_number,
+        'server_name': request.server_name,
+        'status': 'completed',
+        'processed_by': current_user.id,
+        'created_at': datetime.now(timezone.utc).isoformat()
+    }
+    
+    trans_copy = transaction.copy()
+    await db.pos_menu_transactions.insert_one(trans_copy)
+    
+    # Post to folio if folio_id provided
+    if request.folio_id:
+        folio_charge = {
+            'id': str(uuid.uuid4()),
+            'tenant_id': current_user.tenant_id,
+            'folio_id': request.folio_id,
+            'charge_date': datetime.now(timezone.utc).date().isoformat(),
+            'description': f"F&B - {outlet.get('outlet_name')}",
+            'category': 'fnb',
+            'amount': subtotal,
+            'quantity': 1,
+            'total': subtotal,
+            'voided': False,
+            'posted_at': datetime.now(timezone.utc).isoformat(),
+            'posted_by': current_user.id
+        }
+        folio_copy = folio_charge.copy()
+        await db.folio_charges.insert_one(folio_copy)
+    
+    return transaction
+
+@api_router.get("/pos/menu-sales-breakdown")
+async def get_menu_sales_breakdown(
+    outlet_id: str = None,
+    start_date: str = None,
+    end_date: str = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Get menu item sales breakdown"""
+    if not start_date:
+        start_date = datetime.now(timezone.utc).date().isoformat()
+    if not end_date:
+        end_date = start_date
+    
+    # Get transactions
+    query = {
+        'tenant_id': current_user.tenant_id,
+        'transaction_date': {'$gte': start_date, '$lte': end_date}
+    }
+    
+    if outlet_id:
+        query['outlet_id'] = outlet_id
+    
+    transactions = await db.pos_menu_transactions.find(query, {'_id': 0}).to_list(10000)
+    
+    # Aggregate by menu item
+    menu_sales = {}
+    category_sales = {}
+    outlet_sales = {}
+    
+    for trans in transactions:
+        outlet_name = trans.get('outlet_name', 'Unknown')
+        outlet_sales[outlet_name] = outlet_sales.get(outlet_name, 0) + trans.get('total_amount', 0)
+        
+        for item in trans.get('items', []):
+            item_name = item.get('item_name')
+            category = item.get('category', 'Other')
+            
+            if item_name not in menu_sales:
+                menu_sales[item_name] = {
+                    'item_name': item_name,
+                    'category': category,
+                    'quantity_sold': 0,
+                    'total_revenue': 0,
+                    'total_cost': 0,
+                    'gross_profit': 0
+                }
+            
+            menu_sales[item_name]['quantity_sold'] += item.get('quantity', 0)
+            menu_sales[item_name]['total_revenue'] += item.get('total_price', 0)
+            menu_sales[item_name]['total_cost'] += item.get('total_cost', 0)
+            menu_sales[item_name]['gross_profit'] += (item.get('total_price', 0) - item.get('total_cost', 0))
+            
+            category_sales[category] = category_sales.get(category, 0) + item.get('total_price', 0)
+    
+    # Sort by revenue
+    sorted_menu_sales = sorted(menu_sales.values(), key=lambda x: x['total_revenue'], reverse=True)
+    
+    # Calculate totals
+    total_revenue = sum(item['total_revenue'] for item in sorted_menu_sales)
+    total_cost = sum(item['total_cost'] for item in sorted_menu_sales)
+    
+    return {
+        'date_range': f"{start_date} to {end_date}",
+        'menu_items': sorted_menu_sales,
+        'by_category': [
+            {'category': cat, 'revenue': round(rev, 2)}
+            for cat, rev in sorted(category_sales.items(), key=lambda x: x[1], reverse=True)
+        ],
+        'by_outlet': [
+            {'outlet_name': name, 'revenue': round(rev, 2)}
+            for name, rev in sorted(outlet_sales.items(), key=lambda x: x[1], reverse=True)
+        ],
+        'summary': {
+            'total_transactions': len(transactions),
+            'total_revenue': round(total_revenue, 2),
+            'total_cost': round(total_cost, 2),
+            'gross_profit': round(total_revenue - total_cost, 2),
+            'profit_margin': round((total_revenue - total_cost) / total_revenue * 100, 1) if total_revenue > 0 else 0
+        }
+    }
+
+
+# 3. Z REPORT / GÜNLÜK KAPANIŞ
+@api_router.post("/pos/z-report")
+async def generate_z_report(
+    request: GenerateZReportRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """Generate Z Report (End of Day report)"""
+    date = request.date or datetime.now(timezone.utc).date().isoformat()
+    outlet_id = request.outlet_id
+    
+    # Get transactions for the day
+    query = {
+        'tenant_id': current_user.tenant_id,
+        'transaction_date': date
+    }
+    
+    if outlet_id:
+        query['outlet_id'] = outlet_id
+        outlet = await db.pos_outlets.find_one({'id': outlet_id}, {'_id': 0})
+        outlet_name = outlet.get('outlet_name') if outlet else 'Unknown'
+    else:
+        outlet_name = 'All Outlets'
+    
+    transactions = await db.pos_menu_transactions.find(query, {'_id': 0}).to_list(10000)
+    
+    if not transactions:
+        return {
+            'message': 'No transactions found for this date',
+            'date': date,
+            'outlet': outlet_name
+        }
+    
+    # Calculate totals
+    total_transactions = len(transactions)
+    gross_sales = sum(t.get('total_amount', 0) for t in transactions)
+    total_cost = sum(t.get('total_cost', 0) for t in transactions)
+    gross_profit = gross_sales - total_cost
+    
+    # Payment method breakdown
+    payment_methods = {}
+    for trans in transactions:
+        method = trans.get('payment_method', 'cash')
+        payment_methods[method] = payment_methods.get(method, 0) + trans.get('total_amount', 0)
+    
+    # Category breakdown
+    category_sales = {}
+    menu_item_sales = {}
+    
+    for trans in transactions:
+        for item in trans.get('items', []):
+            category = item.get('category', 'Other')
+            item_name = item.get('item_name')
+            
+            category_sales[category] = category_sales.get(category, 0) + item.get('total_price', 0)
+            
+            if item_name not in menu_item_sales:
+                menu_item_sales[item_name] = {
+                    'quantity': 0,
+                    'revenue': 0
+                }
+            menu_item_sales[item_name]['quantity'] += item.get('quantity', 0)
+            menu_item_sales[item_name]['revenue'] += item.get('total_price', 0)
+    
+    # Server breakdown
+    server_sales = {}
+    for trans in transactions:
+        server = trans.get('server_name', 'Unknown')
+        server_sales[server] = server_sales.get(server, 0) + trans.get('total_amount', 0)
+    
+    # Hourly breakdown
+    hourly_sales = {}
+    for trans in transactions:
+        hour = trans.get('transaction_time', '00:00:00')[:2]
+        hourly_sales[hour] = hourly_sales.get(hour, 0) + trans.get('total_amount', 0)
+    
+    # Top selling items
+    top_items = sorted(
+        [{'item': k, **v} for k, v in menu_item_sales.items()],
+        key=lambda x: x['revenue'],
+        reverse=True
+    )[:10]
+    
+    # Create Z Report
+    z_report = {
+        'id': str(uuid.uuid4()),
+        'tenant_id': current_user.tenant_id,
+        'report_date': date,
+        'outlet_id': outlet_id,
+        'outlet_name': outlet_name,
+        'report_type': 'Z-Report',
+        'generated_at': datetime.now(timezone.utc).isoformat(),
+        'generated_by': current_user.id,
+        
+        # Summary
+        'summary': {
+            'total_transactions': total_transactions,
+            'gross_sales': round(gross_sales, 2),
+            'total_cost': round(total_cost, 2),
+            'gross_profit': round(gross_profit, 2),
+            'profit_margin': round((gross_profit / gross_sales * 100), 1) if gross_sales > 0 else 0,
+            'average_check': round(gross_sales / total_transactions, 2) if total_transactions > 0 else 0
+        },
+        
+        # Payment methods
+        'payment_methods': [
+            {'method': method, 'amount': round(amount, 2), 'count': sum(1 for t in transactions if t.get('payment_method') == method)}
+            for method, amount in payment_methods.items()
+        ],
+        
+        # Category breakdown
+        'categories': [
+            {'category': cat, 'revenue': round(rev, 2)}
+            for cat, rev in sorted(category_sales.items(), key=lambda x: x[1], reverse=True)
+        ],
+        
+        # Server performance
+        'servers': [
+            {'server_name': server, 'revenue': round(rev, 2)}
+            for server, rev in sorted(server_sales.items(), key=lambda x: x[1], reverse=True)
+        ],
+        
+        # Hourly sales
+        'hourly_breakdown': [
+            {'hour': f"{hour}:00", 'revenue': round(rev, 2)}
+            for hour, rev in sorted(hourly_sales.items())
+        ],
+        
+        # Top selling items
+        'top_items': [
+            {
+                'item_name': item['item'],
+                'quantity_sold': item['quantity'],
+                'revenue': round(item['revenue'], 2)
+            }
+            for item in top_items
+        ]
+    }
+    
+    # Save Z Report
+    z_copy = z_report.copy()
+    await db.z_reports.insert_one(z_copy)
+    
+    return z_report
+
+@api_router.get("/pos/z-reports")
+async def get_z_reports(
+    outlet_id: str = None,
+    start_date: str = None,
+    end_date: str = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Get Z Reports history"""
+    query = {'tenant_id': current_user.tenant_id}
+    
+    if outlet_id:
+        query['outlet_id'] = outlet_id
+    
+    if start_date and end_date:
+        query['report_date'] = {'$gte': start_date, '$lte': end_date}
+    
+    reports = await db.z_reports.find(
+        query,
+        {'_id': 0}
+    ).sort('report_date', -1).to_list(100)
+    
+    return {'reports': reports, 'count': len(reports)}
+
+
+# ========================================
 # 5. Group Reservations & Block Reservations
 # ========================================
 

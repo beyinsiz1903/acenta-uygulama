@@ -336,36 +336,87 @@ const GMDashboard = ({ user, tenant, onLogout }) => {
 
         {/* Second Row - Arrivals, Departures, In-House */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Arrivals */}
-          <Card>
+          {/* Arrivals - Enhanced with Quick Actions */}
+          <Card className="hover:shadow-lg transition-shadow">
             <CardHeader>
               <CardTitle className="text-lg flex items-center justify-between">
-                <span>Arrivals</span>
+                <span>Today's Arrivals</span>
                 <Badge className="bg-green-500">
                   <CheckCircle className="w-3 h-3 mr-1" />
                   {movements.arrivals || 0}
                 </Badge>
               </CardTitle>
-              <CardDescription>Expected check-ins today</CardDescription>
+              <CardDescription>Expected check-ins with quick actions</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Confirmed</span>
-                  <span className="font-semibold">{movements.arrivals || 0}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Checked-in</span>
-                  <span className="font-semibold text-green-600">
-                    {Math.floor((movements.arrivals || 0) * 0.7)}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Pending</span>
-                  <span className="font-semibold text-yellow-600">
-                    {Math.floor((movements.arrivals || 0) * 0.3)}
-                  </span>
-                </div>
+              <div className="space-y-3">
+                {/* Sample Arrival Cards */}
+                {[
+                  { name: 'Richard Anderson', room: '116', type: 'Deluxe Double', vip: false },
+                  { name: 'Amelia Gonzalez', room: '102', type: 'Standard Single', vip: false },
+                  { name: 'William Lee', room: '113', type: 'Family Room', vip: true }
+                ].map((guest, idx) => (
+                  <div key={idx} className={`p-3 rounded-lg border-2 ${guest.vip ? 'border-yellow-400 bg-yellow-50' : 'border-gray-200 bg-gray-50'}`}>
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <div className="flex items-center space-x-2">
+                          <span className="font-semibold text-sm">{guest.name}</span>
+                          {guest.vip && <Badge className="bg-yellow-500 text-xs">VIP</Badge>}
+                        </div>
+                        <div className="text-xs text-gray-600">
+                          Room {guest.room} • {guest.type}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Quick Action Buttons */}
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      <Button 
+                        size="sm" 
+                        className="h-7 text-xs bg-green-600 hover:bg-green-700"
+                        onClick={() => navigate('/pms?action=checkin&guest=' + guest.name)}
+                      >
+                        <LogIn className="w-3 h-3 mr-1" />
+                        Check-in
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="h-7 text-xs"
+                        onClick={() => alert('Upgrade options: Suite ($50), Deluxe Sea View ($30)')}
+                      >
+                        <ArrowUpCircle className="w-3 h-3 mr-1" />
+                        Upgrade
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="h-7 text-xs"
+                        onClick={() => navigate('/ota-messaging-hub?guest=' + guest.name)}
+                      >
+                        <MessageSquare className="w-3 h-3 mr-1" />
+                        Message
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="h-7 text-xs"
+                        onClick={() => alert('Print: Registration Form, Key Card Envelope')}
+                      >
+                        <Printer className="w-3 h-3 mr-1" />
+                        Print
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+
+                <Button 
+                  variant="outline" 
+                  className="w-full mt-2"
+                  onClick={() => navigate('/pms?tab=arrivals')}
+                >
+                  View All Arrivals ({movements.arrivals || 0})
+                </Button>
               </div>
             </CardContent>
           </Card>

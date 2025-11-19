@@ -8360,9 +8360,7 @@ async def get_pos_transactions(
 
 @api_router.post("/pos/transaction")
 async def create_pos_transaction(
-    amount: float,
-    payment_method: str,
-    folio_id: str = None,
+    request: CreatePOSTransactionRequest,
     current_user: User = Depends(get_current_user)
 ):
     """Create POS transaction"""
@@ -8371,9 +8369,9 @@ async def create_pos_transaction(
         'tenant_id': current_user.tenant_id,
         'transaction_date': datetime.now(timezone.utc).date().isoformat(),
         'transaction_time': datetime.now(timezone.utc).time().isoformat(),
-        'amount': amount,
-        'payment_method': payment_method,
-        'folio_id': folio_id,
+        'amount': request.amount,
+        'payment_method': request.payment_method,
+        'folio_id': request.folio_id,
         'status': 'completed',
         'processed_by': current_user.id,
         'created_at': datetime.now(timezone.utc).isoformat()

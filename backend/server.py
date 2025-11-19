@@ -8579,11 +8579,12 @@ async def create_block_reservation(
 @api_router.post("/block-reservations/{block_id}/use-room")
 async def use_block_room(
     block_id: str,
-    guest_name: str,
-    guest_email: str,
+    request: UseBlockRoomRequest,
     current_user: User = Depends(get_current_user)
 ):
     """Use a room from block reservation"""
+    guest_name = request.guest_name
+    guest_email = request.guest_email
     block = await db.block_reservations.find_one(
         {'id': block_id, 'tenant_id': current_user.tenant_id}
     )

@@ -653,7 +653,7 @@ class TaskManagementTester:
                 # Create a mock room_id for testing
                 request_data["room_id"] = "room_test_001"
             
-            response = self.session.post(f"{BACKEND_URL}/tasks/housekeeping/cleaning-request", json=request_data)
+            response = self.session.post(f"{BACKEND_URL}/tasks/housekeeping/cleaning-request", params=request_data)
             success = response.status_code in [200, 201]
             details = f"Status: {response.status_code}"
             

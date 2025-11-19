@@ -1403,6 +1403,7 @@ class HotelPMSBackendTester:
         self.test_group_block_reservations() # 9 endpoints
         self.test_multi_property()          # 5 endpoints
         self.test_marketplace()             # 12 endpoints
+        self.test_marketplace_extensions()  # 20 NEW endpoints
         
         # Print comprehensive summary
         self.print_summary()

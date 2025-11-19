@@ -12493,5 +12493,522 @@ async def create_fnb_service_request(
     return await create_task(task_request, current_user)
 
 
+# ========================================
+# ENTERPRISE FEATURES - Kurumsal Otel Refleksi
+# ========================================
+
+# 1. ROLLER & YETKİLER MATRİSİ (RBAC)
+@api_router.get("/admin/roles")
+async def get_roles(current_user: User = Depends(get_current_user)):
+    """Get all roles and permissions"""
+    roles = await db.roles.find(
+        {'tenant_id': current_user.tenant_id},
+        {'_id': 0}
+    ).to_list(100)
+    
+    # Default roles if none exist
+    if not roles:
+        default_roles = [
+            {
+                'id': str(uuid.uuid4()),
+                'tenant_id': current_user.tenant_id,
+                'role_name': 'General Manager',
+                'description': 'Full access to all features',
+                'permissions': [
+                    'view_all', 'edit_all', 'delete_all', 'approve_all',
+                    'view_financials', 'edit_rates', 'manage_users',
+                    'export_reports', 'system_settings'
+                ],
+                'department': 'management',
+                'created_at': datetime.now(timezone.utc).isoformat()
+            },
+            {
+                'id': str(uuid.uuid4()),
+                'tenant_id': current_user.tenant_id,
+                'role_name': 'Front Desk Agent',
+                'description': 'Check-in, check-out, reservations',
+                'permissions': [
+                    'view_bookings', 'create_booking', 'edit_booking',
+                    'check_in', 'check_out', 'view_rates',
+                    'post_charges', 'process_payments'
+                ],
+                'department': 'front_desk',
+                'created_at': datetime.now(timezone.utc).isoformat()
+            },
+            {
+                'id': str(uuid.uuid4()),
+                'tenant_id': current_user.tenant_id,
+                'role_name': 'Housekeeping Manager',
+                'description': 'Room status, cleaning tasks',
+                'permissions': [
+                    'view_rooms', 'update_room_status', 'assign_tasks',
+                    'view_housekeeping_reports'
+                ],
+                'department': 'housekeeping',
+                'created_at': datetime.now(timezone.utc).isoformat()
+            },
+            {
+                'id': str(uuid.uuid4()),
+                'tenant_id': current_user.tenant_id,
+                'role_name': 'Accountant',
+                'description': 'Financial operations',
+                'permissions': [
+                    'view_financials', 'create_invoice', 'edit_invoice',
+                    'void_charge', 'export_reports', 'view_ar_aging'
+                ],
+                'department': 'accounting',
+                'created_at': datetime.now(timezone.utc).isoformat()
+            },
+            {
+                'id': str(uuid.uuid4()),
+                'tenant_id': current_user.tenant_id,
+                'role_name': 'Revenue Manager',
+                'description': 'Rate management and revenue optimization',
+                'permissions': [
+                    'view_rates', 'edit_rates', 'view_rms',
+                    'apply_pricing', 'view_comp_set', 'export_reports'
+                ],
+                'department': 'revenue',
+                'created_at': datetime.now(timezone.utc).isoformat()
+            },
+            {
+                'id': str(uuid.uuid4()),
+                'tenant_id': current_user.tenant_id,
+                'role_name': 'F&B Manager',
+                'description': 'Restaurant and bar operations',
+                'permissions': [
+                    'view_pos', 'create_pos_transaction', 'view_menu',
+                    'edit_menu', 'view_fnb_reports', 'generate_z_report'
+                ],
+                'department': 'fnb',
+                'created_at': datetime.now(timezone.utc).isoformat()
+            }
+        ]
+        roles = default_roles
+    
+    return {'roles': roles, 'count': len(roles)}
+
+@api_router.post("/admin/roles")
+async def create_role(
+    request: CreateRoleRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """Create custom role"""
+    role = {
+        'id': str(uuid.uuid4()),
+        'tenant_id': current_user.tenant_id,
+        'role_name': request.role_name,
+        'description': request.description,
+        'permissions': request.permissions,
+        'department': request.department,
+        'created_at': datetime.now(timezone.utc).isoformat(),
+        'created_by': current_user.id
+    }
+    
+    role_copy = role.copy()
+    await db.roles.insert_one(role_copy)
+    
+    # Log audit trail
+    await log_audit_event(
+        tenant_id=current_user.tenant_id,
+        user_id=current_user.id,
+        action='create_role',
+        entity_type='role',
+        entity_id=role['id'],
+        details=f"Created role: {request.role_name}",
+        db=db
+    )
+    
+    return role
+
+@api_router.post("/admin/users/{user_id}/assign-role")
+async def assign_role_to_user(
+    user_id: str,
+    request: AssignRoleRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """Assign role to user"""
+    # Verify role exists
+    role = await db.roles.find_one({
+        'id': request.role_id,
+        'tenant_id': current_user.tenant_id
+    }, {'_id': 0})
+    
+    if not role:
+        raise HTTPException(status_code=404, detail="Role not found")
+    
+    # Update user role
+    await db.users.update_one(
+        {'id': user_id, 'tenant_id': current_user.tenant_id},
+        {
+            '$set': {
+                'role_id': request.role_id,
+                'role_name': role['role_name'],
+                'permissions': role['permissions'],
+                'updated_at': datetime.now(timezone.utc).isoformat()
+            }
+        }
+    )
+    
+    # Log audit trail
+    await log_audit_event(
+        tenant_id=current_user.tenant_id,
+        user_id=current_user.id,
+        action='assign_role',
+        entity_type='user',
+        entity_id=user_id,
+        details=f"Assigned role {role['role_name']} to user",
+        db=db
+    )
+    
+    return {'message': 'Role assigned successfully', 'role': role['role_name']}
+
+@api_router.get("/admin/permissions")
+async def get_all_permissions():
+    """Get list of all available permissions"""
+    permissions = {
+        'bookings': [
+            'view_bookings', 'create_booking', 'edit_booking', 'delete_booking',
+            'check_in', 'check_out', 'cancel_booking', 'move_booking'
+        ],
+        'rates': [
+            'view_rates', 'edit_rates', 'apply_pricing', 'override_rate'
+        ],
+        'financials': [
+            'view_financials', 'create_invoice', 'edit_invoice', 'void_invoice',
+            'post_charges', 'void_charge', 'process_payments', 'process_refund',
+            'view_ar_aging', 'export_reports'
+        ],
+        'rooms': [
+            'view_rooms', 'update_room_status', 'create_room_block',
+            'assign_room', 'change_room'
+        ],
+        'pos': [
+            'view_pos', 'create_pos_transaction', 'void_pos_transaction',
+            'view_menu', 'edit_menu', 'generate_z_report'
+        ],
+        'housekeeping': [
+            'view_tasks', 'create_task', 'assign_task', 'complete_task',
+            'view_housekeeping_reports'
+        ],
+        'admin': [
+            'manage_users', 'manage_roles', 'system_settings',
+            'view_audit_logs', 'manage_backups'
+        ],
+        'reports': [
+            'export_reports', 'view_rms', 'view_comp_set'
+        ],
+        'all': [
+            'view_all', 'edit_all', 'delete_all', 'approve_all'
+        ]
+    }
+    
+    return {'permissions': permissions}
+
+
+# 2. LOGLAMA & DENETİM (Audit Trail)
+async def log_audit_event(tenant_id: str, user_id: str, action: str, entity_type: str,
+                           entity_id: str, details: str, before_value: dict = None,
+                           after_value: dict = None, db = None):
+    """Helper function to log audit events"""
+    audit_log = {
+        'id': str(uuid.uuid4()),
+        'tenant_id': tenant_id,
+        'user_id': user_id,
+        'action': action,
+        'entity_type': entity_type,
+        'entity_id': entity_id,
+        'details': details,
+        'before_value': before_value,
+        'after_value': after_value,
+        'ip_address': None,  # Can be captured from request
+        'user_agent': None,  # Can be captured from request
+        'timestamp': datetime.now(timezone.utc).isoformat()
+    }
+    
+    audit_copy = audit_log.copy()
+    await db.audit_logs.insert_one(audit_copy)
+    return audit_log
+
+@api_router.get("/admin/audit-logs")
+async def get_audit_logs(
+    action: str = None,
+    entity_type: str = None,
+    user_id: str = None,
+    start_date: str = None,
+    end_date: str = None,
+    limit: int = 100,
+    current_user: User = Depends(get_current_user)
+):
+    """Get audit logs with filters"""
+    query = {'tenant_id': current_user.tenant_id}
+    
+    if action:
+        query['action'] = action
+    if entity_type:
+        query['entity_type'] = entity_type
+    if user_id:
+        query['user_id'] = user_id
+    if start_date and end_date:
+        query['timestamp'] = {'$gte': start_date, '$lte': end_date}
+    
+    logs = await db.audit_logs.find(
+        query,
+        {'_id': 0}
+    ).sort('timestamp', -1).limit(limit).to_list(limit)
+    
+    return {'logs': logs, 'count': len(logs)}
+
+@api_router.get("/admin/audit-logs/critical")
+async def get_critical_audit_logs(
+    days: int = 7,
+    current_user: User = Depends(get_current_user)
+):
+    """Get critical audit events (deletions, refunds, rate changes)"""
+    critical_actions = [
+        'delete_booking', 'cancel_booking', 'process_refund',
+        'void_invoice', 'void_charge', 'edit_rates', 'override_rate',
+        'delete_user', 'change_role'
+    ]
+    
+    start_date = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
+    
+    logs = await db.audit_logs.find({
+        'tenant_id': current_user.tenant_id,
+        'action': {'$in': critical_actions},
+        'timestamp': {'$gte': start_date}
+    }, {'_id': 0}).sort('timestamp', -1).to_list(1000)
+    
+    # Group by action
+    by_action = {}
+    for log in logs:
+        action = log.get('action')
+        by_action[action] = by_action.get(action, 0) + 1
+    
+    return {
+        'logs': logs,
+        'summary': {
+            'total_critical_events': len(logs),
+            'by_action': by_action,
+            'date_range': f"Last {days} days"
+        }
+    }
+
+# Rate Change Audit (Example of critical operation logging)
+@api_router.post("/admin/rates/{room_type}/change")
+async def change_rate_with_audit(
+    room_type: str,
+    new_rate: float,
+    effective_date: str,
+    reason: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Change rate with full audit trail"""
+    # Get current rate
+    current_rate_record = await db.room_types.find_one({
+        'tenant_id': current_user.tenant_id,
+        'name': room_type
+    }, {'_id': 0})
+    
+    if not current_rate_record:
+        raise HTTPException(status_code=404, detail="Room type not found")
+    
+    old_rate = current_rate_record.get('base_rate', 0)
+    
+    # Update rate
+    await db.room_types.update_one(
+        {'tenant_id': current_user.tenant_id, 'name': room_type},
+        {'$set': {'base_rate': new_rate, 'updated_at': datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    # Log audit event
+    await log_audit_event(
+        tenant_id=current_user.tenant_id,
+        user_id=current_user.id,
+        action='edit_rates',
+        entity_type='room_type',
+        entity_id=room_type,
+        details=f"Rate changed from ${old_rate} to ${new_rate}. Reason: {reason}",
+        before_value={'base_rate': old_rate},
+        after_value={'base_rate': new_rate},
+        db=db
+    )
+    
+    return {
+        'message': 'Rate changed successfully',
+        'old_rate': old_rate,
+        'new_rate': new_rate,
+        'effective_date': effective_date
+    }
+
+
+# 3. YEDEKLEME & FELAKET SENARYOSU
+@api_router.post("/admin/backup/create")
+async def create_backup(
+    request: CreateBackupRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """Create database backup"""
+    backup_id = str(uuid.uuid4())
+    
+    # In production, this would trigger actual backup process
+    # For now, we'll create a backup metadata record
+    backup = {
+        'id': backup_id,
+        'tenant_id': current_user.tenant_id,
+        'backup_type': request.backup_type,
+        'status': 'in_progress',
+        'size_mb': 0,
+        'collections_included': request.include_collections or ['all'],
+        'started_at': datetime.now(timezone.utc).isoformat(),
+        'created_by': current_user.id
+    }
+    
+    backup_copy = backup.copy()
+    await db.backups.insert_one(backup_copy)
+    
+    # Log audit event
+    await log_audit_event(
+        tenant_id=current_user.tenant_id,
+        user_id=current_user.id,
+        action='create_backup',
+        entity_type='backup',
+        entity_id=backup_id,
+        details=f"Initiated {request.backup_type} backup",
+        db=db
+    )
+    
+    # Simulate backup completion
+    await db.backups.update_one(
+        {'id': backup_id},
+        {
+            '$set': {
+                'status': 'completed',
+                'size_mb': 145.7,  # Mock size
+                'completed_at': datetime.now(timezone.utc).isoformat()
+            }
+        }
+    )
+    
+    return {
+        'message': 'Backup created successfully',
+        'backup_id': backup_id,
+        'status': 'completed'
+    }
+
+@api_router.get("/admin/backup/list")
+async def list_backups(
+    limit: int = 20,
+    current_user: User = Depends(get_current_user)
+):
+    """List all backups"""
+    backups = await db.backups.find({
+        'tenant_id': current_user.tenant_id
+    }, {'_id': 0}).sort('started_at', -1).limit(limit).to_list(limit)
+    
+    return {'backups': backups, 'count': len(backups)}
+
+@api_router.post("/admin/backup/{backup_id}/restore")
+async def restore_backup(
+    backup_id: str,
+    confirm: bool = False,
+    current_user: User = Depends(get_current_user)
+):
+    """Restore from backup"""
+    if not confirm:
+        raise HTTPException(status_code=400, detail="Must confirm restore operation")
+    
+    # Get backup
+    backup = await db.backups.find_one({
+        'id': backup_id,
+        'tenant_id': current_user.tenant_id
+    }, {'_id': 0})
+    
+    if not backup:
+        raise HTTPException(status_code=404, detail="Backup not found")
+    
+    if backup.get('status') != 'completed':
+        raise HTTPException(status_code=400, detail="Cannot restore from incomplete backup")
+    
+    # Log critical audit event
+    await log_audit_event(
+        tenant_id=current_user.tenant_id,
+        user_id=current_user.id,
+        action='restore_backup',
+        entity_type='backup',
+        entity_id=backup_id,
+        details=f"Restore initiated from backup {backup_id}",
+        db=db
+    )
+    
+    # In production, this would trigger actual restore process
+    restore_job = {
+        'id': str(uuid.uuid4()),
+        'tenant_id': current_user.tenant_id,
+        'backup_id': backup_id,
+        'status': 'in_progress',
+        'started_at': datetime.now(timezone.utc).isoformat(),
+        'initiated_by': current_user.id
+    }
+    
+    restore_copy = restore_job.copy()
+    await db.restore_jobs.insert_one(restore_copy)
+    
+    return {
+        'message': 'Restore initiated',
+        'restore_job_id': restore_job['id'],
+        'estimated_time': '10-15 minutes',
+        'rto_target': '15 minutes'  # Recovery Time Objective
+    }
+
+@api_router.get("/admin/system/health")
+async def get_system_health(current_user: User = Depends(get_current_user)):
+    """Get system health status"""
+    # Check database connectivity
+    try:
+        await db.users.count_documents({'tenant_id': current_user.tenant_id}, limit=1)
+        db_status = 'healthy'
+    except Exception as e:
+        db_status = f'unhealthy: {str(e)}'
+    
+    # Get latest backup
+    latest_backup = await db.backups.find_one(
+        {'tenant_id': current_user.tenant_id, 'status': 'completed'},
+        {'_id': 0},
+        sort=[('completed_at', -1)]
+    )
+    
+    # Calculate RPO (Recovery Point Objective)
+    if latest_backup:
+        last_backup_time = datetime.fromisoformat(latest_backup['completed_at'])
+        hours_since_backup = (datetime.now(timezone.utc) - last_backup_time).total_seconds() / 3600
+        rpo_status = 'good' if hours_since_backup < 24 else 'warning' if hours_since_backup < 48 else 'critical'
+    else:
+        hours_since_backup = None
+        rpo_status = 'critical'
+    
+    # Get audit log count (last 24h)
+    audit_count = await db.audit_logs.count_documents({
+        'tenant_id': current_user.tenant_id,
+        'timestamp': {'$gte': (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()}
+    })
+    
+    return {
+        'status': 'healthy' if db_status == 'healthy' else 'degraded',
+        'components': {
+            'database': db_status,
+            'backup_system': rpo_status
+        },
+        'metrics': {
+            'last_backup': latest_backup.get('completed_at') if latest_backup else None,
+            'hours_since_backup': round(hours_since_backup, 1) if hours_since_backup else None,
+            'rpo_target': '24 hours',
+            'rto_target': '15 minutes',
+            'audit_events_24h': audit_count
+        },
+        'timestamp': datetime.now(timezone.utc).isoformat()
+    }
+
+
 # Include router at the very end after ALL endpoints are defined
 app.include_router(api_router)

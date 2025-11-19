@@ -1200,6 +1200,69 @@ const GMDashboard = ({ user, tenant, onLogout }) => {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
+                {/* Overbooking Alert with Action Buttons - NEW */}
+                <div className="p-3 bg-red-50 rounded-lg border-2 border-red-300">
+                  <div className="flex items-start space-x-3 mb-3">
+                    <AlertTriangle className="w-5 h-5 text-red-600 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-red-900">
+                        2 Overbooking Conflicts Detected
+                      </p>
+                      <p className="text-xs text-red-700">Room 105, Room 112 - Immediate action required</p>
+                    </div>
+                  </div>
+                  {/* Quick Action Buttons */}
+                  <div className="grid grid-cols-2 gap-2 mt-3">
+                    <Button 
+                      size="sm" 
+                      className="bg-blue-600 hover:bg-blue-700 text-xs h-8"
+                      onClick={() => {
+                        navigate('/pms');
+                        toast.info('Opening room availability for alternatives...');
+                      }}
+                    >
+                      <Building2 className="w-3 h-3 mr-1" />
+                      Find Alternate Room
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      className="border-purple-400 text-purple-700 hover:bg-purple-50 text-xs h-8"
+                      onClick={() => {
+                        toast.info('Opening date change dialog...');
+                        // TODO: Open move date dialog
+                      }}
+                    >
+                      <Calendar className="w-3 h-3 mr-1" />
+                      Move to Another Date
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      className="border-green-400 text-green-700 hover:bg-green-50 text-xs h-8"
+                      onClick={() => {
+                        toast.success('Overbooking marked as resolved!');
+                        // TODO: Call mark resolved API
+                      }}
+                    >
+                      <CheckCircle className="w-3 h-3 mr-1" />
+                      Mark Resolved
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      className="border-orange-400 text-orange-700 hover:bg-orange-50 text-xs h-8"
+                      onClick={() => {
+                        navigate('/pms');
+                        toast.info('Opening upgrade offer creation...');
+                      }}
+                    >
+                      <ArrowUpCircle className="w-3 h-3 mr-1" />
+                      Offer Upgrade
+                    </Button>
+                  </div>
+                </div>
+
                 <div className="flex items-start space-x-3 p-3 bg-red-50 rounded-lg border border-red-200">
                   <AlertTriangle className="w-5 h-5 text-red-600 mt-0.5" />
                   <div>

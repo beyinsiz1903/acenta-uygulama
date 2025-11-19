@@ -8924,7 +8924,8 @@ async def create_marketplace_product(
         'created_at': datetime.now(timezone.utc).isoformat()
     }
     
-    await db.marketplace_products.insert_one(product)
+    product_copy = product.copy()
+    await db.marketplace_products.insert_one(product_copy)
     return product
 
 @api_router.get("/marketplace/inventory")

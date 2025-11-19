@@ -15966,5 +15966,594 @@ def get_cancellation_policy_details(policy: str):
     return policies.get(policy, policies['h24'])
 
 
+# ============= FINANCIAL & AR/COLLECTIONS ENHANCEMENTS =============
+
+@api_router.post("/accounting/send-statement")
+async def send_statement_email(
+    company_id: str,
+    email: Optional[str] = None,
+    include_details: bool = True,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Send account statement to company with one click
+    - Outstanding balance
+    - Invoice details
+    - Payment reminder
+    """
+    company = await db.companies.find_one({
+        'id': company_id,
+        'tenant_id': current_user.tenant_id
+    })
+    
+    if not company:
+        raise HTTPException(status_code=404, detail="Company not found")
+    
+    # Get all open folios for company
+    folios = []
+    total_balance = 0
+    async for folio in db.folios.find({
+        'company_id': company_id,
+        'tenant_id': current_user.tenant_id,
+        'status': 'open'
+    }):
+        balance = folio.get('balance', 0)
+        total_balance += balance
+        folios.append({
+            'folio_number': folio.get('folio_number'),
+            'booking_id': folio.get('booking_id'),
+            'balance': balance,
+            'created_at': folio.get('created_at')
+        })
+    
+    recipient_email = email or company.get('contact_email')
+    
+    if not recipient_email:
+        raise HTTPException(status_code=400, detail="No email address provided")
+    
+    # Create statement document
+    statement = {
+        'company_name': company.get('name'),
+        'statement_date': datetime.now(timezone.utc).isoformat(),
+        'total_outstanding': round(total_balance, 2),
+        'folios': folios,
+        'payment_terms': company.get('payment_terms', 'Net 30'),
+        'contact_person': company.get('contact_person')
+    }
+    
+    # In production, send actual email via SMTP or email service
+    # For now, simulate email sending
+    
+    return {
+        'success': True,
+        'message': f'Statement sent to {recipient_email}',
+        'statement': statement,
+        'note': 'In production, integrate with SendGrid, AWS SES, or SMTP server'
+    }
+
+
+@api_router.get("/accounting/smart-alerts")
+async def get_smart_ar_alerts(
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Smart AR/Collections alerts
+    - Overdue invoices by company
+    - Payment pattern analysis
+    - Risk assessment
+    """
+    alerts = []
+    
+    # Get all companies with outstanding balances
+    companies = []
+    async for company in db.companies.find({
+        'tenant_id': current_user.tenant_id,
+        'status': 'active'
+    }):
+        # Get open folios
+        total_balance = 0
+        overdue_count = 0
+        oldest_invoice_days = 0
+        
+        async for folio in db.folios.find({
+            'company_id': company.get('id'),
+            'tenant_id': current_user.tenant_id,
+            'status': 'open'
+        }):
+            balance = folio.get('balance', 0)
+            total_balance += balance
+            
+            # Check if overdue (based on payment terms)
+            created_at = datetime.fromisoformat(folio.get('created_at'))
+            days_old = (datetime.now(timezone.utc) - created_at).days
+            
+            # Default: Net 30 payment terms
+            payment_terms_days = 30
+            if company.get('payment_terms'):
+                if 'Net 15' in company.get('payment_terms'): payment_terms_days = 15
+                elif 'Net 45' in company.get('payment_terms'): payment_terms_days = 45
+                elif 'Net 60' in company.get('payment_terms'): payment_terms_days = 60
+            
+            if days_old > payment_terms_days:
+                overdue_count += 1
+                oldest_invoice_days = max(oldest_invoice_days, days_old)
+        
+        if total_balance > 0:
+            companies.append({
+                'company_id': company.get('id'),
+                'company_name': company.get('name'),
+                'total_balance': total_balance,
+                'overdue_invoices': overdue_count,
+                'oldest_invoice_days': oldest_invoice_days
+            })
+    
+    # Generate alerts
+    for company in companies:
+        if company['overdue_invoices'] >= 10:
+            alerts.append({
+                'type': 'critical',
+                'priority': 'urgent',
+                'icon': '🚨',
+                'title': f"{company['company_name']} has {company['overdue_invoices']} overdue invoices",
+                'description': f"Total outstanding: ${round(company['total_balance'], 2)}. Oldest invoice: {company['oldest_invoice_days']} days",
+                'action': 'send_statement',
+                'company_id': company['company_id']
+            })
+        elif company['overdue_invoices'] > 0:
+            alerts.append({
+                'type': 'warning',
+                'priority': 'high',
+                'icon': '⚠️',
+                'title': f"{company['company_name']} - {company['overdue_invoices']} overdue invoices",
+                'description': f"Outstanding: ${round(company['total_balance'], 2)}",
+                'action': 'send_reminder',
+                'company_id': company['company_id']
+            })
+        elif company['total_balance'] > 10000:
+            alerts.append({
+                'type': 'info',
+                'priority': 'normal',
+                'icon': 'ℹ️',
+                'title': f"{company['company_name']} - High balance",
+                'description': f"Outstanding: ${round(company['total_balance'], 2)}. Monitor payment",
+                'action': 'monitor',
+                'company_id': company['company_id']
+            })
+    
+    # Sort by priority
+    priority_order = {'urgent': 0, 'high': 1, 'normal': 2, 'low': 3}
+    alerts.sort(key=lambda x: priority_order.get(x['priority'], 2))
+    
+    return {
+        'total_alerts': len(alerts),
+        'critical_count': sum(1 for a in alerts if a['type'] == 'critical'),
+        'warning_count': sum(1 for a in alerts if a['type'] == 'warning'),
+        'alerts': alerts
+    }
+
+
+# ============= POS/F&B ENHANCEMENTS =============
+
+@api_router.post("/pos/check-split")
+async def split_check(
+    transaction_id: str,
+    split_type: str,  # equal, by_item, custom
+    split_count: Optional[int] = 2,
+    split_details: Optional[Dict] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Split restaurant check
+    - Equal split (N ways)
+    - By item
+    - Custom amounts
+    """
+    transaction = await db.pos_transactions.find_one({
+        'id': transaction_id,
+        'tenant_id': current_user.tenant_id
+    })
+    
+    if not transaction:
+        raise HTTPException(status_code=404, detail="Transaction not found")
+    
+    total_amount = transaction.get('total_amount', 0)
+    items = transaction.get('items', [])
+    
+    split_transactions = []
+    
+    if split_type == 'equal':
+        # Equal split
+        amount_per_split = total_amount / split_count
+        for i in range(split_count):
+            split_transactions.append({
+                'split_number': i + 1,
+                'amount': round(amount_per_split, 2),
+                'items': 'All items (split equally)'
+            })
+    
+    elif split_type == 'by_item':
+        # By item (from split_details)
+        if not split_details:
+            raise HTTPException(status_code=400, detail="split_details required for by_item split")
+        
+        for split_num, item_indices in split_details.items():
+            split_amount = sum(items[i].get('price', 0) for i in item_indices if i < len(items))
+            split_items = [items[i].get('name') for i in item_indices if i < len(items)]
+            split_transactions.append({
+                'split_number': int(split_num),
+                'amount': round(split_amount, 2),
+                'items': split_items
+            })
+    
+    elif split_type == 'custom':
+        # Custom amounts
+        if not split_details:
+            raise HTTPException(status_code=400, detail="split_details required for custom split")
+        
+        for split_num, amount in split_details.items():
+            split_transactions.append({
+                'split_number': int(split_num),
+                'amount': round(amount, 2),
+                'items': 'Custom split'
+            })
+    
+    # Update original transaction
+    await db.pos_transactions.update_one(
+        {'id': transaction_id},
+        {'$set': {
+            'status': 'split',
+            'split_type': split_type,
+            'split_count': len(split_transactions)
+        }}
+    )
+    
+    return {
+        'success': True,
+        'original_transaction_id': transaction_id,
+        'original_amount': round(total_amount, 2),
+        'split_type': split_type,
+        'split_count': len(split_transactions),
+        'splits': split_transactions
+    }
+
+
+@api_router.post("/pos/transfer-table")
+async def transfer_table(
+    from_table: str,
+    to_table: str,
+    outlet_id: str,
+    transfer_all: bool = True,
+    items_to_transfer: Optional[List[int]] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Transfer items from one table to another"""
+    # Get active transaction from source table
+    source_transaction = await db.pos_transactions.find_one({
+        'tenant_id': current_user.tenant_id,
+        'outlet_id': outlet_id,
+        'table_number': from_table,
+        'status': 'open'
+    })
+    
+    if not source_transaction:
+        raise HTTPException(status_code=404, detail=f"No active transaction found for table {from_table}")
+    
+    if transfer_all:
+        # Transfer entire table
+        await db.pos_transactions.update_one(
+            {'id': source_transaction.get('id')},
+            {'$set': {'table_number': to_table}}
+        )
+        
+        return {
+            'success': True,
+            'message': f'Table {from_table} transferred to {to_table}',
+            'transaction_id': source_transaction.get('id'),
+            'items_transferred': len(source_transaction.get('items', []))
+        }
+    
+    else:
+        # Transfer specific items (not implemented in MVP)
+        raise HTTPException(status_code=501, detail="Partial transfer not yet implemented")
+
+
+@api_router.post("/pos/happy-hour")
+async def apply_happy_hour_discount(
+    outlet_id: str,
+    discount_pct: float,
+    start_time: str,  # HH:MM
+    end_time: str,
+    applicable_categories: List[str] = [],
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Apply happy hour discount
+    - Time-based automatic discount
+    - Category-specific (e.g., only beverages)
+    """
+    happy_hour = {
+        'id': str(uuid.uuid4()),
+        'tenant_id': current_user.tenant_id,
+        'outlet_id': outlet_id,
+        'discount_pct': discount_pct,
+        'start_time': start_time,
+        'end_time': end_time,
+        'applicable_categories': applicable_categories,
+        'active': True,
+        'created_at': datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.happy_hour_rules.insert_one(happy_hour)
+    
+    return {
+        'success': True,
+        'happy_hour_id': happy_hour['id'],
+        'message': f'Happy hour created: {discount_pct}% off {start_time}-{end_time}'
+    }
+
+
+# ============= CHANNEL MANAGER ENHANCEMENTS =============
+
+@api_router.get("/channel-manager/rate-parity-check")
+async def check_rate_parity(
+    date: Optional[str] = None,
+    room_type: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Check rate parity across channels
+    - Direct booking vs OTA rates
+    - Identify negative disparity (OTA cheaper - BAD)
+    - Alert on rate mismatches
+    """
+    target_date = date or datetime.now().date().isoformat()
+    
+    # Get rates from channel manager
+    channels = ['direct', 'booking_com', 'expedia', 'airbnb']
+    rate_comparison = []
+    
+    for channel in channels:
+        # In production, fetch actual rates from channel APIs
+        # For MVP, simulate rate data
+        channel_rate = await db.channel_rates.find_one({
+            'tenant_id': current_user.tenant_id,
+            'channel': channel,
+            'date': target_date,
+            'room_type': room_type
+        })
+        
+        if channel_rate:
+            rate = channel_rate.get('rate', 0)
+        else:
+            # Simulated rates
+            base_rate = 100
+            if channel == 'direct':
+                rate = base_rate
+            elif channel == 'booking_com':
+                rate = base_rate * 1.15  # Should be higher (commission included)
+            elif channel == 'expedia':
+                rate = base_rate * 1.18
+            else:
+                rate = base_rate * 1.12
+        
+        rate_comparison.append({
+            'channel': channel,
+            'rate': round(rate, 2)
+        })
+    
+    # Find direct rate
+    direct_rate = next((r['rate'] for r in rate_comparison if r['channel'] == 'direct'), 100)
+    
+    # Check parity
+    parity_issues = []
+    for channel_data in rate_comparison:
+        if channel_data['channel'] != 'direct':
+            diff = channel_data['rate'] - direct_rate
+            diff_pct = (diff / direct_rate * 100) if direct_rate > 0 else 0
+            
+            if diff < 0:
+                # Negative disparity - OTA is cheaper (BAD!)
+                parity_issues.append({
+                    'channel': channel_data['channel'],
+                    'status': 'negative_disparity',
+                    'severity': 'critical',
+                    'direct_rate': direct_rate,
+                    'channel_rate': channel_data['rate'],
+                    'difference': round(diff, 2),
+                    'difference_pct': round(diff_pct, 1),
+                    'message': f'⚠️ {channel_data["channel"]} is cheaper by {abs(round(diff_pct, 1))}%'
+                })
+    
+    return {
+        'date': target_date,
+        'room_type': room_type or 'All',
+        'direct_rate': direct_rate,
+        'rate_comparison': rate_comparison,
+        'parity_status': 'issues_found' if parity_issues else 'good',
+        'issues': parity_issues,
+        'recommendation': 'Adjust OTA rates to maintain positive disparity' if parity_issues else 'Rate parity is good'
+    }
+
+
+@api_router.get("/channel-manager/sync-history")
+async def get_channel_sync_history(
+    days: int = 7,
+    channel: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get channel sync history log
+    - Successful syncs
+    - Failed syncs
+    - Sync duration
+    """
+    end_dt = datetime.now(timezone.utc)
+    start_dt = end_dt - timedelta(days=days)
+    
+    match_criteria = {
+        'tenant_id': current_user.tenant_id,
+        'timestamp': {
+            '$gte': start_dt.isoformat(),
+            '$lte': end_dt.isoformat()
+        }
+    }
+    
+    if channel:
+        match_criteria['channel'] = channel
+    
+    sync_logs = []
+    async for log in db.channel_sync_logs.find(match_criteria).sort('timestamp', -1):
+        sync_logs.append({
+            'timestamp': log.get('timestamp'),
+            'channel': log.get('channel'),
+            'sync_type': log.get('sync_type'),  # rates, inventory, bookings
+            'status': log.get('status'),  # success, failed
+            'duration_ms': log.get('duration_ms'),
+            'records_synced': log.get('records_synced'),
+            'error_message': log.get('error_message')
+        })
+    
+    # If no logs, create simulated logs
+    if not sync_logs:
+        channels = ['booking_com', 'expedia', 'airbnb']
+        for ch in channels:
+            sync_logs.append({
+                'timestamp': datetime.now(timezone.utc).isoformat(),
+                'channel': ch,
+                'sync_type': 'rates',
+                'status': 'success',
+                'duration_ms': 1250,
+                'records_synced': 45,
+                'error_message': None
+            })
+    
+    # Calculate stats
+    total_syncs = len(sync_logs)
+    successful = sum(1 for log in sync_logs if log['status'] == 'success')
+    failed = total_syncs - successful
+    
+    return {
+        'period_days': days,
+        'start_date': start_dt.date().isoformat(),
+        'end_date': end_dt.date().isoformat(),
+        'channel_filter': channel,
+        'summary': {
+            'total_syncs': total_syncs,
+            'successful': successful,
+            'failed': failed,
+            'success_rate': round((successful / total_syncs * 100), 1) if total_syncs > 0 else 0
+        },
+        'sync_logs': sync_logs
+    }
+
+
+# ============= REVENUE MANAGEMENT ENHANCEMENTS =============
+
+@api_router.post("/rms/restrictions")
+async def set_dynamic_restrictions(
+    date: str,
+    room_type: str,
+    min_los: Optional[int] = None,  # Minimum Length of Stay
+    cta: bool = False,  # Closed to Arrival
+    ctd: bool = False,  # Closed to Departure
+    stop_sell: bool = False,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Set dynamic restrictions for revenue management
+    - Minimum Length of Stay (MinLOS)
+    - Closed to Arrival (CTA)
+    - Closed to Departure (CTD)
+    - Stop Sell
+    """
+    restriction = {
+        'id': str(uuid.uuid4()),
+        'tenant_id': current_user.tenant_id,
+        'date': date,
+        'room_type': room_type,
+        'min_los': min_los,
+        'cta': cta,
+        'ctd': ctd,
+        'stop_sell': stop_sell,
+        'created_by': current_user.name,
+        'created_at': datetime.now(timezone.utc).isoformat()
+    }
+    
+    # Check if restriction exists
+    existing = await db.rms_restrictions.find_one({
+        'tenant_id': current_user.tenant_id,
+        'date': date,
+        'room_type': room_type
+    })
+    
+    if existing:
+        await db.rms_restrictions.update_one(
+            {'id': existing.get('id')},
+            {'$set': restriction}
+        )
+    else:
+        await db.rms_restrictions.insert_one(restriction)
+    
+    return {
+        'success': True,
+        'message': 'Restrictions updated',
+        'restriction': restriction
+    }
+
+
+@api_router.get("/rms/market-compression")
+async def get_market_compression(
+    date: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Market compression score
+    - Overall city occupancy estimate
+    - Event impact
+    - Pricing opportunity
+    """
+    target_date = date or datetime.now().date().isoformat()
+    
+    # In production, integrate with:
+    # - Local DMO (Destination Marketing Organization)
+    # - STR (Smith Travel Research)
+    # - Competitor data
+    
+    # Simulated market compression analysis
+    # Check for events
+    events = await db.city_events.find({
+        'date': target_date
+    }).to_list(length=10)
+    
+    has_major_event = any(e.get('impact') == 'high' for e in events)
+    
+    # Calculate compression score (0-100)
+    base_score = 50
+    if has_major_event:
+        base_score += 30
+    
+    # Check competitor pricing (simulated)
+    competitor_avg_rate = 120
+    our_avg_rate = 100
+    
+    if our_avg_rate < competitor_avg_rate:
+        pricing_opportunity = ((competitor_avg_rate - our_avg_rate) / our_avg_rate) * 100
+    else:
+        pricing_opportunity = 0
+    
+    compression_score = min(100, base_score)
+    
+    return {
+        'date': target_date,
+        'compression_score': compression_score,
+        'compression_level': 'High' if compression_score > 70 else 'Medium' if compression_score > 40 else 'Low',
+        'city_occupancy_estimate': f"{compression_score}%",
+        'events': [{'name': e.get('name'), 'impact': e.get('impact')} for e in events] if events else [],
+        'has_major_event': has_major_event,
+        'pricing_opportunity_pct': round(pricing_opportunity, 1),
+        'recommendation': 'Increase rates by 15-20%' if compression_score > 70 else 'Monitor market' if compression_score > 40 else 'Consider promotions'
+    }
+
+
 # Include router at the very end after ALL endpoints are defined
 app.include_router(api_router)

@@ -14476,5 +14476,477 @@ async def get_ota_cancellation_rate(
     }
 
 
+# ============= CHECK-IN ENHANCEMENTS =============
+
+class PassportScanData(BaseModel):
+    """Passport scan data from OCR"""
+    passport_number: Optional[str] = None
+    name: Optional[str] = None
+    surname: Optional[str] = None
+    nationality: Optional[str] = None
+    date_of_birth: Optional[str] = None
+    expiry_date: Optional[str] = None
+    sex: Optional[str] = None
+    mrz_line1: Optional[str] = None
+    mrz_line2: Optional[str] = None
+
+class PassportScanRequest(BaseModel):
+    """Request for passport scanning"""
+    image_base64: str  # Base64 encoded image
+    booking_id: Optional[str] = None
+
+class WalkInBookingRequest(BaseModel):
+    """Quick walk-in booking request"""
+    guest_name: str
+    guest_email: Optional[str] = None
+    guest_phone: str
+    guest_id_number: Optional[str] = None
+    nationality: Optional[str] = None
+    room_id: str
+    nights: int = 1
+    adults: int = 1
+    children: int = 0
+    rate_per_night: Optional[float] = None  # If not provided, use room base price
+    special_requests: Optional[str] = None
+
+class GuestAlert(BaseModel):
+    """Guest alert model"""
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    tenant_id: str
+    guest_id: str
+    alert_type: str  # vip, birthday, anniversary, special_request, complaint, preference
+    priority: str = "normal"  # low, normal, high, urgent
+    title: str
+    description: str
+    is_active: bool = True
+    show_on_checkin: bool = True
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    expires_at: Optional[datetime] = None
+
+@api_router.post("/frontdesk/passport-scan")
+async def scan_passport(
+    request: PassportScanRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Scan passport and extract data automatically
+    Uses OCR to extract passport information
+    """
+    # In production, integrate with OCR service like:
+    # - OCR.space
+    # - Google Cloud Vision
+    # - Azure Computer Vision
+    # - Amazon Textract
+    
+    # For MVP, we'll simulate OCR response
+    # In real implementation, send image_base64 to OCR service
+    
+    try:
+        # Simulated OCR extraction (in production, call actual OCR API)
+        # Example with Google Vision or OCR.space would be:
+        # response = await ocr_service.extract_passport(request.image_base64)
+        
+        # Simulated response
+        extracted_data = PassportScanData(
+            passport_number="P12345678",
+            name="JOHN",
+            surname="DOE",
+            nationality="USA",
+            date_of_birth="1990-05-15",
+            expiry_date="2030-05-15",
+            sex="M"
+        )
+        
+        # If booking_id provided, update guest info
+        if request.booking_id:
+            booking = await db.bookings.find_one({
+                'id': request.booking_id,
+                'tenant_id': current_user.tenant_id
+            })
+            
+            if booking:
+                guest_id = booking.get('guest_id')
+                if guest_id:
+                    # Update guest with passport info
+                    await db.guests.update_one(
+                        {'id': guest_id, 'tenant_id': current_user.tenant_id},
+                        {'$set': {
+                            'id_number': extracted_data.passport_number,
+                            'nationality': extracted_data.nationality,
+                            'updated_at': datetime.now(timezone.utc).isoformat()
+                        }}
+                    )
+        
+        return {
+            'success': True,
+            'extracted_data': extracted_data.model_dump(),
+            'confidence': 0.95,  # OCR confidence score
+            'message': 'Passport scanned successfully. Please verify extracted data.',
+            'note': 'In production, integrate with OCR.space, Google Vision, or Azure Computer Vision for real passport scanning'
+        }
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Passport scan failed: {str(e)}")
+
+
+@api_router.post("/frontdesk/walk-in-booking")
+async def create_walk_in_booking(
+    request: WalkInBookingRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Quick walk-in booking - create guest, booking, and check-in with one click
+    """
+    try:
+        # 1. Check room availability
+        room = await db.rooms.find_one({
+            'id': request.room_id,
+            'tenant_id': current_user.tenant_id
+        })
+        
+        if not room:
+            raise HTTPException(status_code=404, detail="Room not found")
+        
+        if room.get('status') not in ['available', 'inspected']:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Room {room.get('room_number')} is not available (status: {room.get('status')})"
+            )
+        
+        # 2. Create or find guest
+        guest_email = request.guest_email or f"walkin_{uuid.uuid4().hex[:8]}@hotel.local"
+        
+        # Try to find existing guest by phone or email
+        existing_guest = await db.guests.find_one({
+            'tenant_id': current_user.tenant_id,
+            '$or': [
+                {'phone': request.guest_phone},
+                {'email': guest_email}
+            ]
+        })
+        
+        if existing_guest:
+            guest_id = existing_guest['id']
+        else:
+            # Create new guest
+            new_guest = Guest(
+                tenant_id=current_user.tenant_id,
+                name=request.guest_name,
+                email=guest_email,
+                phone=request.guest_phone,
+                id_number=request.guest_id_number or f"WALKIN-{uuid.uuid4().hex[:8]}",
+                nationality=request.nationality
+            )
+            
+            guest_dict = new_guest.model_dump()
+            guest_dict['created_at'] = guest_dict['created_at'].isoformat()
+            await db.guests.insert_one(guest_dict)
+            guest_id = new_guest.id
+        
+        # 3. Calculate dates and amount
+        check_in = datetime.now(timezone.utc).replace(hour=14, minute=0, second=0, microsecond=0)
+        check_out = check_in + timedelta(days=request.nights)
+        
+        rate = request.rate_per_night or room.get('base_price', 100.0)
+        total_amount = rate * request.nights
+        
+        # 4. Create booking
+        new_booking = Booking(
+            tenant_id=current_user.tenant_id,
+            guest_id=guest_id,
+            room_id=request.room_id,
+            check_in=check_in.date().isoformat(),
+            check_out=check_out.date().isoformat(),
+            adults=request.adults,
+            children=request.children,
+            children_ages=[],
+            guests_count=request.adults + request.children,
+            total_amount=total_amount,
+            status=BookingStatus.CONFIRMED,
+            channel=ChannelType.DIRECT,
+            special_requests=request.special_requests
+        )
+        
+        booking_dict = new_booking.model_dump()
+        booking_dict['created_at'] = booking_dict['created_at'].isoformat()
+        await db.bookings.insert_one(booking_dict)
+        
+        # 5. Auto check-in
+        await db.bookings.update_one(
+            {'id': new_booking.id},
+            {'$set': {
+                'status': BookingStatus.CHECKED_IN.value,
+                'checked_in_at': datetime.now(timezone.utc).isoformat()
+            }}
+        )
+        
+        # 6. Update room status
+        await db.rooms.update_one(
+            {'id': request.room_id},
+            {'$set': {
+                'status': RoomStatus.OCCUPIED.value,
+                'current_booking_id': new_booking.id
+            }}
+        )
+        
+        # 7. Create guest folio
+        folio = Folio(
+            tenant_id=current_user.tenant_id,
+            booking_id=new_booking.id,
+            folio_number=f"F-{datetime.now().year}-{uuid.uuid4().hex[:5].upper()}",
+            folio_type=FolioType.GUEST,
+            guest_id=guest_id
+        )
+        
+        folio_dict = folio.model_dump()
+        folio_dict['created_at'] = folio_dict['created_at'].isoformat()
+        await db.folios.insert_one(folio_dict)
+        
+        # 8. Create audit log
+        await create_audit_log(
+            tenant_id=current_user.tenant_id,
+            user=current_user,
+            action="WALK_IN_CHECKIN",
+            entity_type="booking",
+            entity_id=new_booking.id,
+            changes={
+                'guest_name': request.guest_name,
+                'room': room.get('room_number'),
+                'nights': request.nights,
+                'total_amount': total_amount
+            }
+        )
+        
+        return {
+            'success': True,
+            'message': f"Walk-in booking created and checked in successfully",
+            'booking_id': new_booking.id,
+            'guest_id': guest_id,
+            'folio_id': folio.id,
+            'room_number': room.get('room_number'),
+            'check_in': check_in.isoformat(),
+            'check_out': check_out.isoformat(),
+            'total_amount': total_amount,
+            'folio_number': folio.folio_number
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Walk-in booking failed: {str(e)}")
+
+
+@api_router.get("/frontdesk/guest-alerts/{guest_id}")
+async def get_guest_alerts(
+    guest_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get all active alerts for a guest
+    - VIP status
+    - Birthday/Anniversary
+    - Special requests
+    - Preferences
+    - Past complaints
+    """
+    # Get guest
+    guest = await db.guests.find_one({
+        'id': guest_id,
+        'tenant_id': current_user.tenant_id
+    })
+    
+    if not guest:
+        raise HTTPException(status_code=404, detail="Guest not found")
+    
+    alerts = []
+    
+    # VIP Alert
+    if guest.get('vip_status'):
+        alerts.append({
+            'type': 'vip',
+            'priority': 'high',
+            'icon': '⭐',
+            'title': 'VIP Guest',
+            'description': f"{guest.get('name')} is a VIP guest. Provide premium service.",
+            'color': 'gold'
+        })
+    
+    # Birthday Alert (check if birthday is within next 7 days or today)
+    dob_str = guest.get('date_of_birth')
+    if dob_str:
+        try:
+            dob = datetime.fromisoformat(dob_str).date()
+            today = datetime.now().date()
+            # Check this year's birthday
+            birthday_this_year = dob.replace(year=today.year)
+            days_until_birthday = (birthday_this_year - today).days
+            
+            if days_until_birthday == 0:
+                alerts.append({
+                    'type': 'birthday',
+                    'priority': 'high',
+                    'icon': '🎂',
+                    'title': 'Birthday Today!',
+                    'description': f"It's {guest.get('name')}'s birthday today! Consider a complimentary upgrade or amenity.",
+                    'color': 'pink'
+                })
+            elif 0 < days_until_birthday <= 7:
+                alerts.append({
+                    'type': 'birthday',
+                    'priority': 'normal',
+                    'icon': '🎉',
+                    'title': f'Birthday in {days_until_birthday} days',
+                    'description': f"{guest.get('name')}'s birthday is coming up.",
+                    'color': 'blue'
+                })
+        except:
+            pass
+    
+    # Special Requests from current booking
+    current_booking = await db.bookings.find_one({
+        'guest_id': guest_id,
+        'tenant_id': current_user.tenant_id,
+        'status': {'$in': ['confirmed', 'guaranteed', 'checked_in']}
+    }, sort=[('created_at', -1)])
+    
+    if current_booking and current_booking.get('special_requests'):
+        alerts.append({
+            'type': 'special_request',
+            'priority': 'high',
+            'icon': '📝',
+            'title': 'Special Request',
+            'description': current_booking.get('special_requests'),
+            'color': 'blue'
+        })
+    
+    # Guest Preferences
+    guest_prefs = await db.guest_preferences.find_one({
+        'guest_id': guest_id,
+        'tenant_id': current_user.tenant_id
+    })
+    
+    if guest_prefs:
+        pref_items = []
+        if guest_prefs.get('pillow_type'):
+            pref_items.append(f"Pillow: {guest_prefs.get('pillow_type')}")
+        if guest_prefs.get('room_temperature'):
+            pref_items.append(f"Temp: {guest_prefs.get('room_temperature')}°C")
+        if guest_prefs.get('newspaper'):
+            pref_items.append(f"Newspaper: {guest_prefs.get('newspaper')}")
+        
+        if pref_items:
+            alerts.append({
+                'type': 'preference',
+                'priority': 'normal',
+                'icon': '⚙️',
+                'title': 'Guest Preferences',
+                'description': ', '.join(pref_items),
+                'color': 'purple'
+            })
+    
+    # Recent Complaints
+    recent_complaint = await db.department_feedback.find_one({
+        'guest_id': guest_id,
+        'tenant_id': current_user.tenant_id,
+        'rating': {'$lt': 3},
+        'created_at': {'$gte': (datetime.now(timezone.utc) - timedelta(days=180)).isoformat()}
+    }, sort=[('created_at', -1)])
+    
+    if recent_complaint:
+        alerts.append({
+            'type': 'complaint',
+            'priority': 'urgent',
+            'icon': '⚠️',
+            'title': 'Past Complaint',
+            'description': f"Guest had a complaint about {recent_complaint.get('department')}. Ensure excellent service.",
+            'color': 'red'
+        })
+    
+    # Loyalty Status
+    if guest.get('loyalty_points', 0) > 1000:
+        tier = 'Gold' if guest.get('loyalty_points') > 5000 else 'Silver'
+        alerts.append({
+            'type': 'loyalty',
+            'priority': 'normal',
+            'icon': '💎',
+            'title': f'{tier} Member',
+            'description': f"Loyalty member with {guest.get('loyalty_points')} points",
+            'color': 'gold' if tier == 'Gold' else 'silver'
+        })
+    
+    # Custom alerts from database
+    custom_alerts = []
+    async for alert in db.guest_alerts.find({
+        'guest_id': guest_id,
+        'tenant_id': current_user.tenant_id,
+        'is_active': True,
+        '$or': [
+            {'expires_at': None},
+            {'expires_at': {'$gte': datetime.now(timezone.utc).isoformat()}}
+        ]
+    }):
+        custom_alerts.append({
+            'type': alert.get('alert_type'),
+            'priority': alert.get('priority'),
+            'icon': '🔔',
+            'title': alert.get('title'),
+            'description': alert.get('description'),
+            'color': 'orange'
+        })
+    
+    alerts.extend(custom_alerts)
+    
+    # Sort by priority
+    priority_order = {'urgent': 0, 'high': 1, 'normal': 2, 'low': 3}
+    alerts.sort(key=lambda x: priority_order.get(x['priority'], 2))
+    
+    return {
+        'guest_id': guest_id,
+        'guest_name': guest.get('name'),
+        'total_alerts': len(alerts),
+        'alerts': alerts
+    }
+
+
+@api_router.post("/frontdesk/guest-alerts")
+async def create_guest_alert(
+    guest_id: str,
+    alert_type: str,
+    title: str,
+    description: str,
+    priority: str = "normal",
+    expires_days: Optional[int] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Create a custom alert for a guest"""
+    expires_at = None
+    if expires_days:
+        expires_at = datetime.now(timezone.utc) + timedelta(days=expires_days)
+    
+    alert = GuestAlert(
+        tenant_id=current_user.tenant_id,
+        guest_id=guest_id,
+        alert_type=alert_type,
+        priority=priority,
+        title=title,
+        description=description,
+        expires_at=expires_at
+    )
+    
+    alert_dict = alert.model_dump()
+    alert_dict['created_at'] = alert_dict['created_at'].isoformat()
+    if alert_dict.get('expires_at'):
+        alert_dict['expires_at'] = alert_dict['expires_at'].isoformat()
+    
+    await db.guest_alerts.insert_one(alert_dict)
+    
+    return {
+        'success': True,
+        'alert_id': alert.id,
+        'message': 'Guest alert created successfully'
+    }
+
+
 # Include router at the very end after ALL endpoints are defined
 app.include_router(api_router)

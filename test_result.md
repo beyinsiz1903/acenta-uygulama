@@ -1057,6 +1057,42 @@ frontend:
         agent: "main"
         comment: "Enhanced Room Status Board with priority/urgency visual indicators. Added priority calculation logic: URGENT (🔥 red badge) for due out today + needs cleaning, HIGH (⚡ orange badge) for arrival today + needs cleaning, MEDIUM (📤 orange) for due out today, NORMAL (📥 blue) for arrival today. Room cards get colored ring borders matching priority level. Clean button gets highlighted for urgent rooms. Added priority legend in board header (Urgent: red dot, High Priority: orange dot, Normal: blue dot). Priority tooltips show detailed status (e.g., 'URGENT: Due Out Today - Needs Cleaning'). Integrates dueOutRooms, arrivalRooms data for real-time priority updates."
 
+  - task: "Multi-Period Rate Management System"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/components/MultiPeriodRateManager.js, /app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Implemented multi-period rate management for operators (TUI, HolidayCheck, etc). MultiPeriodRateManager Component: Card UI with period list (sortable), 'Dönem Ekle' button. Period Editor: Start/End date inputs (Turkish calendar), Rate input with currency selector (USD/EUR/TRY/GBP), Period display (DD.MM.YYYY format), Delete button per period. Period Examples Section: Shows use cases (01.05-31.05 Düşük Sezon €120, 01.06-15.06 Orta Sezon €150, 16.06-30.06 Yüksek Sezon €200). Backend Endpoints: GET /rates/periods (returns periods sorted by start_date), POST /rates/periods/bulk-update (deletes existing, inserts new periods). Data Structure: operator_id, room_type_id, start_date, end_date, rate, currency. Addresses feedback: 'Dönem bazlı tarife yok. Operatörlerin fiyatları 01.05-31.05, 01.06-15.06 gibi olur' → DONE!"
+
+  - task: "Stop-Sale Manager - One-Click Toggle"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/components/StopSaleManager.js, /app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Implemented stop-sale management with one-click toggle per operator. StopSaleManager Component: Orange border card (warning theme), operator list (TUI, HolidayCheck, Expedia, Booking.com). Visual States: Stop-Sale Active (red-50 bg, Ban icon, 'Satışlar Durdu' message), Active (green-50 bg, CheckCircle icon, 'Satışlar Devam' message). Toggle Button: Color changes per state (red='Stop-Sale Aktif Et', green='Satışları Başlat'), Loading spinner during API call. Warning Banner: 'Dikkat: Stop-sale aktif olduğunda yeni rezervasyon alınamaz'. Timestamp Display: Shows last change time (Turkish format). Summary Section: Shows total active vs stop-sale count. Backend Endpoints: GET /rates/stop-sale/status (returns all operators' status), POST /rates/stop-sale/toggle (updates stop_sales collection). Toast Notifications: Success messages (🛑/✅). Addresses feedback: 'Stop-sale özelliği yok. TUI stop-sale verdiğinde tek tıkla kapatmak isterim' → DONE!"
+
+  - task: "Allotment Consumption Chart & Visualization"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/components/AllotmentConsumptionChart.js, /app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Implemented allotment consumption visualization for demo pitch. AllotmentConsumptionChart Component: Purple border card, 3 summary cards (Total Allocated, Total Sold, Total Remaining). Operator Breakdown Cards: Color-coded per status (critical=red, warning=yellow, good=green), Status icons (AlertCircle/Clock/CheckCircle), Utilization badge (percentage). Visual Progress Bar: Dual-color bar (Green=Sold, Orange=Remaining), Percentage-based width, Text labels inside bars. Stats Grid: 3 columns (Allocated/Sold/Remaining) per operator. Status Messages: Critical='Allotment doldu - Acil aksiyon', Warning='Düşük stok - Takibe alın', Good='Sağlıklı seviyede'. Demo Pitch Banner: Gradient purple-pink, TrendingUp icon, 'Allotment Kaosunu Tek Tuşla Yönetin' message. Example Data: TUI (10/7/3, 70%), HolidayCheck (15/12/3, 80%), Expedia (8/8/0, 100% critical), Booking.com (20/5/15, 25% warning). Backend Endpoint: GET /allotment/consumption (calculates allocated/sold/remaining per operator, determines status automatically). Addresses feedback: 'Allotment consumption chart eklenebilir - Bu ekran sunumda çok etkili olur' → DONE!"
+
   - task: "POS Charge Line Items Detail View"
     implemented: true
     working: true

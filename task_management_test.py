@@ -359,18 +359,21 @@ class TaskManagementTester:
                 
                 if success and response.json():
                     data = response.json()
-                    details += f" - Assigned to: {data.get('assigned_to')}"
-                    details += f" - Status: {data.get('status')}"
+                    details += f" - Response: {data.get('message', 'Task assigned')}"
                     
-                    # Verify status changed to 'assigned'
-                    if data.get('status') == 'assigned':
-                        details += " - Status change: ✓"
-                    else:
-                        details += f" - Status change issue: {data.get('status')} (expected: assigned)"
-                    
-                    # Check if notification was created (if response includes it)
-                    if 'notification_created' in data:
-                        details += f" - Notification: {data.get('notification_created')}"
+                    # The endpoint returns a message, not the task data
+                    # Let's verify by fetching the task details
+                    task_response = self.session.get(f"{BACKEND_URL}/tasks/{task_id}")
+                    if task_response.status_code == 200:
+                        task_data = task_response.json()
+                        details += f" - Assigned to: {task_data.get('assigned_to')}"
+                        details += f" - Status: {task_data.get('status')}"
+                        
+                        # Verify status changed to 'assigned'
+                        if task_data.get('status') == 'assigned':
+                            details += " - Status change: ✓"
+                        else:
+                            details += f" - Status change issue: {task_data.get('status')} (expected: assigned)"
                 
                 self.log_test_result("core_tasks", f"/tasks/{task_id}/assign", "POST", success, details)
             except Exception as e:

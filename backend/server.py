@@ -8163,16 +8163,15 @@ async def report_housekeeping_issue(
 
 @api_router.post("/housekeeping/mobile/upload-photo")
 async def upload_housekeeping_photo(
-    task_id: str,
-    photo_base64: str,
+    request: UploadPhotoRequest,
     current_user: User = Depends(get_current_user)
 ):
     """Upload photo for housekeeping task"""
     photo_record = {
         'id': str(uuid.uuid4()),
         'tenant_id': current_user.tenant_id,
-        'task_id': task_id,
-        'photo_data': photo_base64[:100] + '...',  # Store truncated for demo
+        'task_id': request.task_id,
+        'photo_data': request.photo_base64[:100] + '...',  # Store truncated for demo
         'uploaded_by': current_user.name,
         'uploaded_at': datetime.now(timezone.utc).isoformat()
     }

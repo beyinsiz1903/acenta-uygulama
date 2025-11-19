@@ -14964,15 +14964,7 @@ class LinenInventoryItem(BaseModel):
     reorder_level: int = 50
     unit_cost: float = 0.0
     last_restocked: Optional[datetime] = None
-    created_at: datetime = Field(default_factory=lambda: str(uuid.uuid4()))
-    tenant_id: str
-    room_id: str
-    assigned_to: str
-    task_type: str
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
-    duration_minutes: Optional[float] = None  # Auto-calculated
-    notes: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 @api_router.get("/housekeeping/task-timing")
 async def get_task_timing_analysis(

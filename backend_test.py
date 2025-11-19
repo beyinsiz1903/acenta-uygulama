@@ -325,15 +325,15 @@ class HotelPMSBackendTester:
             if success and response.json():
                 data = response.json()
                 
-                # Check response structure
-                required_fields = ['daily_comparison', 'summary']
+                # Check response structure (actual field is 'comparison', not 'daily_comparison')
+                required_fields = ['comparison', 'summary']
                 missing_fields = [field for field in required_fields if field not in data]
                 
                 if missing_fields:
                     details += f" - Missing fields: {missing_fields}"
                     success = False
                 else:
-                    daily_data = data.get('daily_comparison', [])
+                    daily_data = data.get('comparison', [])
                     details += f" - Daily comparisons: {len(daily_data)}"
                     
                     # Check daily comparison structure

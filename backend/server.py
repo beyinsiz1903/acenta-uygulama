@@ -9225,5 +9225,485 @@ async def get_stock_alerts(current_user: User = Depends(get_current_user)):
     return {'alerts': alerts, 'count': len(alerts)}
 
 
+# ========================================
+# MARKETPLACE EXTENSIONS - 4 New Features
+# ========================================
+
+# 1. SUPPLIER MANAGEMENT WITH CREDIT LIMITS
+@api_router.get("/marketplace/suppliers")
+async def get_suppliers(
+    status: str = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Get all suppliers with credit limit info"""
+    query = {'tenant_id': current_user.tenant_id}
+    if status:
+        query['status'] = status
+    
+    suppliers = await db.suppliers.find(
+        query,
+        {'_id': 0}
+    ).to_list(100)
+    
+    return {'suppliers': suppliers, 'count': len(suppliers)}
+
+@api_router.post("/marketplace/suppliers")
+async def create_supplier(
+    request: CreateSupplierRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """Create new supplier with credit limit"""
+    supplier = {
+        'id': str(uuid.uuid4()),
+        'tenant_id': current_user.tenant_id,
+        'supplier_name': request.supplier_name,
+        'contact_person': request.contact_person,
+        'contact_email': request.contact_email,
+        'contact_phone': request.contact_phone,
+        'credit_limit': request.credit_limit,
+        'current_outstanding': 0.0,
+        'available_credit': request.credit_limit,
+        'payment_terms': request.payment_terms,
+        'status': request.status,
+        'created_at': datetime.now(timezone.utc).isoformat()
+    }
+    
+    supplier_copy = supplier.copy()
+    await db.suppliers.insert_one(supplier_copy)
+    return supplier
+
+@api_router.put("/marketplace/suppliers/{supplier_id}/credit")
+async def update_supplier_credit(
+    supplier_id: str,
+    request: UpdateSupplierCreditRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """Update supplier credit limit and payment terms"""
+    supplier = await db.suppliers.find_one({
+        'id': supplier_id,
+        'tenant_id': current_user.tenant_id
+    })
+    
+    if not supplier:
+        raise HTTPException(status_code=404, detail="Supplier not found")
+    
+    # Update available credit based on outstanding
+    available_credit = request.credit_limit - supplier.get('current_outstanding', 0.0)
+    
+    await db.suppliers.update_one(
+        {'id': supplier_id},
+        {
+            '$set': {
+                'credit_limit': request.credit_limit,
+                'available_credit': available_credit,
+                'payment_terms': request.payment_terms,
+                'updated_at': datetime.now(timezone.utc).isoformat()
+            }
+        }
+    )
+    
+    return {
+        'message': 'Supplier credit updated successfully',
+        'credit_limit': request.credit_limit,
+        'available_credit': available_credit
+    }
+
+@api_router.get("/marketplace/suppliers/{supplier_id}/credit-status")
+async def get_supplier_credit_status(
+    supplier_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Get supplier credit status and outstanding balance"""
+    supplier = await db.suppliers.find_one(
+        {'id': supplier_id, 'tenant_id': current_user.tenant_id},
+        {'_id': 0}
+    )
+    
+    if not supplier:
+        raise HTTPException(status_code=404, detail="Supplier not found")
+    
+    # Get all outstanding purchase orders
+    outstanding_pos = await db.purchase_orders.find({
+        'tenant_id': current_user.tenant_id,
+        'supplier': supplier['supplier_name'],
+        'status': {'$in': ['approved', 'received']},
+        'payment_status': {'$ne': 'paid'}
+    }, {'_id': 0}).to_list(100)
+    
+    total_outstanding = sum(po.get('total_amount', 0) for po in outstanding_pos)
+    
+    return {
+        'supplier_id': supplier_id,
+        'supplier_name': supplier['supplier_name'],
+        'credit_limit': supplier.get('credit_limit', 0.0),
+        'current_outstanding': total_outstanding,
+        'available_credit': supplier.get('credit_limit', 0.0) - total_outstanding,
+        'payment_terms': supplier.get('payment_terms', 'Net 30'),
+        'outstanding_orders': len(outstanding_pos)
+    }
+
+
+# 2. GM APPROVAL WORKFLOW FOR PURCHASE ORDERS
+@api_router.post("/marketplace/purchase-orders/{po_id}/submit-for-approval")
+async def submit_po_for_approval(
+    po_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Submit purchase order for GM approval"""
+    po = await db.purchase_orders.find_one({
+        'id': po_id,
+        'tenant_id': current_user.tenant_id
+    })
+    
+    if not po:
+        raise HTTPException(status_code=404, detail="Purchase order not found")
+    
+    if po.get('status') != 'pending':
+        raise HTTPException(status_code=400, detail="Only pending orders can be submitted for approval")
+    
+    # Update PO status to awaiting_approval
+    await db.purchase_orders.update_one(
+        {'id': po_id},
+        {
+            '$set': {
+                'status': 'awaiting_approval',
+                'submitted_for_approval_at': datetime.now(timezone.utc).isoformat(),
+                'submitted_by': current_user.id
+            }
+        }
+    )
+    
+    # Create approval request record
+    approval_request = {
+        'id': str(uuid.uuid4()),
+        'tenant_id': current_user.tenant_id,
+        'po_id': po_id,
+        'po_number': po.get('po_number'),
+        'total_amount': po.get('total_amount'),
+        'supplier': po.get('supplier'),
+        'status': 'pending',
+        'requested_by': current_user.id,
+        'requested_at': datetime.now(timezone.utc).isoformat()
+    }
+    
+    approval_copy = approval_request.copy()
+    await db.approval_requests.insert_one(approval_copy)
+    
+    return {
+        'message': 'Purchase order submitted for GM approval',
+        'approval_request_id': approval_request['id']
+    }
+
+@api_router.get("/marketplace/approvals/pending")
+async def get_pending_approvals(current_user: User = Depends(get_current_user)):
+    """Get all pending approval requests (for GM)"""
+    approvals = await db.approval_requests.find({
+        'tenant_id': current_user.tenant_id,
+        'status': 'pending'
+    }, {'_id': 0}).sort('requested_at', -1).to_list(100)
+    
+    return {'approvals': approvals, 'count': len(approvals)}
+
+@api_router.post("/marketplace/purchase-orders/{po_id}/approve")
+async def approve_purchase_order_by_gm(
+    po_id: str,
+    request: ApprovePurchaseOrderRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """GM approves purchase order"""
+    po = await db.purchase_orders.find_one({
+        'id': po_id,
+        'tenant_id': current_user.tenant_id
+    })
+    
+    if not po:
+        raise HTTPException(status_code=404, detail="Purchase order not found")
+    
+    # Check user has GM/approval permission
+    # (In production, add proper permission check here)
+    
+    # Update PO status
+    await db.purchase_orders.update_one(
+        {'id': po_id},
+        {
+            '$set': {
+                'status': 'approved',
+                'approved_at': datetime.now(timezone.utc).isoformat(),
+                'approved_by': current_user.id,
+                'approval_notes': request.approval_notes
+            }
+        }
+    )
+    
+    # Update approval request
+    await db.approval_requests.update_one(
+        {'po_id': po_id, 'tenant_id': current_user.tenant_id},
+        {
+            '$set': {
+                'status': 'approved',
+                'approved_by': current_user.id,
+                'approved_at': datetime.now(timezone.utc).isoformat(),
+                'notes': request.approval_notes
+            }
+        }
+    )
+    
+    # Update supplier outstanding balance
+    supplier = await db.suppliers.find_one({
+        'tenant_id': current_user.tenant_id,
+        'supplier_name': po.get('supplier')
+    })
+    
+    if supplier:
+        new_outstanding = supplier.get('current_outstanding', 0.0) + po.get('total_amount', 0.0)
+        await db.suppliers.update_one(
+            {'id': supplier['id']},
+            {
+                '$set': {
+                    'current_outstanding': new_outstanding,
+                    'available_credit': supplier.get('credit_limit', 0.0) - new_outstanding
+                }
+            }
+        )
+    
+    return {'message': 'Purchase order approved successfully'}
+
+@api_router.post("/marketplace/purchase-orders/{po_id}/reject")
+async def reject_purchase_order(
+    po_id: str,
+    request: RejectPurchaseOrderRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """GM rejects purchase order"""
+    po = await db.purchase_orders.find_one({
+        'id': po_id,
+        'tenant_id': current_user.tenant_id
+    })
+    
+    if not po:
+        raise HTTPException(status_code=404, detail="Purchase order not found")
+    
+    await db.purchase_orders.update_one(
+        {'id': po_id},
+        {
+            '$set': {
+                'status': 'rejected',
+                'rejected_at': datetime.now(timezone.utc).isoformat(),
+                'rejected_by': current_user.id,
+                'rejection_reason': request.rejection_reason
+            }
+        }
+    )
+    
+    await db.approval_requests.update_one(
+        {'po_id': po_id, 'tenant_id': current_user.tenant_id},
+        {
+            '$set': {
+                'status': 'rejected',
+                'rejected_by': current_user.id,
+                'rejected_at': datetime.now(timezone.utc).isoformat(),
+                'rejection_reason': request.rejection_reason
+            }
+        }
+    )
+    
+    return {'message': 'Purchase order rejected', 'reason': request.rejection_reason}
+
+
+# 3. WAREHOUSE / DEPOT STOCK TRACKING
+@api_router.get("/marketplace/warehouses")
+async def get_warehouses(current_user: User = Depends(get_current_user)):
+    """Get all warehouses/depots"""
+    warehouses = await db.warehouses.find(
+        {'tenant_id': current_user.tenant_id},
+        {'_id': 0}
+    ).to_list(100)
+    
+    return {'warehouses': warehouses, 'count': len(warehouses)}
+
+@api_router.post("/marketplace/warehouses")
+async def create_warehouse(
+    request: CreateWarehouseRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """Create new warehouse/depot"""
+    warehouse = {
+        'id': str(uuid.uuid4()),
+        'tenant_id': current_user.tenant_id,
+        'warehouse_name': request.warehouse_name,
+        'location': request.location,
+        'capacity': request.capacity,
+        'warehouse_type': request.warehouse_type,
+        'current_stock_count': 0,
+        'status': 'active',
+        'created_at': datetime.now(timezone.utc).isoformat()
+    }
+    
+    warehouse_copy = warehouse.copy()
+    await db.warehouses.insert_one(warehouse_copy)
+    return warehouse
+
+@api_router.get("/marketplace/warehouses/{warehouse_id}/inventory")
+async def get_warehouse_inventory(
+    warehouse_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Get inventory for specific warehouse"""
+    warehouse = await db.warehouses.find_one({
+        'id': warehouse_id,
+        'tenant_id': current_user.tenant_id
+    }, {'_id': 0})
+    
+    if not warehouse:
+        raise HTTPException(status_code=404, detail="Warehouse not found")
+    
+    # Get all inventory items for this warehouse
+    inventory = await db.inventory.find({
+        'tenant_id': current_user.tenant_id,
+        'location': warehouse['warehouse_name']
+    }, {'_id': 0}).to_list(1000)
+    
+    # Enrich with product details
+    for item in inventory:
+        product = await db.marketplace_products.find_one(
+            {'id': item['product_id']},
+            {'_id': 0}
+        )
+        if product:
+            item['product_name'] = product.get('product_name')
+            item['category'] = product.get('category')
+            item['unit_of_measure'] = product.get('unit_of_measure')
+    
+    total_items = sum(item.get('quantity', 0) for item in inventory)
+    
+    return {
+        'warehouse': warehouse,
+        'inventory': inventory,
+        'total_items': total_items,
+        'item_count': len(inventory)
+    }
+
+@api_router.get("/marketplace/stock-summary")
+async def get_stock_summary_by_warehouse(current_user: User = Depends(get_current_user)):
+    """Get stock summary across all warehouses"""
+    warehouses = await db.warehouses.find(
+        {'tenant_id': current_user.tenant_id},
+        {'_id': 0}
+    ).to_list(100)
+    
+    summary = []
+    for warehouse in warehouses:
+        inventory = await db.inventory.find({
+            'tenant_id': current_user.tenant_id,
+            'location': warehouse['warehouse_name']
+        }, {'_id': 0}).to_list(1000)
+        
+        total_items = sum(item.get('quantity', 0) for item in inventory)
+        unique_products = len(inventory)
+        
+        summary.append({
+            'warehouse_id': warehouse['id'],
+            'warehouse_name': warehouse['warehouse_name'],
+            'location': warehouse['location'],
+            'total_items': total_items,
+            'unique_products': unique_products,
+            'capacity': warehouse.get('capacity', 0),
+            'utilization': round((total_items / warehouse.get('capacity', 1)) * 100, 1) if warehouse.get('capacity') else 0
+        })
+    
+    return {'summary': summary, 'warehouse_count': len(warehouses)}
+
+
+# 4. SHIPPING & DELIVERY TRACKING WITH CARRIER
+@api_router.put("/marketplace/deliveries/{delivery_id}/update-status")
+async def update_delivery_status(
+    delivery_id: str,
+    request: UpdateDeliveryStatusRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """Update delivery status with location tracking"""
+    delivery = await db.deliveries.find_one({
+        'id': delivery_id,
+        'tenant_id': current_user.tenant_id
+    })
+    
+    if not delivery:
+        raise HTTPException(status_code=404, detail="Delivery not found")
+    
+    # Create tracking event
+    tracking_event = {
+        'status': request.status,
+        'location': request.location,
+        'notes': request.notes,
+        'timestamp': datetime.now(timezone.utc).isoformat(),
+        'updated_by': current_user.id
+    }
+    
+    # Update delivery
+    await db.deliveries.update_one(
+        {'id': delivery_id},
+        {
+            '$set': {
+                'status': request.status,
+                'current_location': request.location,
+                'updated_at': datetime.now(timezone.utc).isoformat()
+            },
+            '$push': {
+                'tracking_history': tracking_event
+            }
+        }
+    )
+    
+    # If delivered, update PO status
+    if request.status == 'delivered':
+        await db.deliveries.update_one(
+            {'id': delivery_id},
+            {'$set': {'delivered_at': datetime.now(timezone.utc).isoformat()}}
+        )
+    
+    return {
+        'message': 'Delivery status updated successfully',
+        'new_status': request.status,
+        'tracking_event': tracking_event
+    }
+
+@api_router.get("/marketplace/deliveries/{delivery_id}/tracking")
+async def get_delivery_tracking(
+    delivery_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Get full tracking history for delivery"""
+    delivery = await db.deliveries.find_one({
+        'id': delivery_id,
+        'tenant_id': current_user.tenant_id
+    }, {'_id': 0})
+    
+    if not delivery:
+        raise HTTPException(status_code=404, detail="Delivery not found")
+    
+    # Get associated PO
+    po = await db.purchase_orders.find_one({
+        'id': delivery.get('po_id')
+    }, {'_id': 0})
+    
+    return {
+        'delivery': delivery,
+        'purchase_order': po,
+        'tracking_history': delivery.get('tracking_history', []),
+        'current_status': delivery.get('status'),
+        'estimated_delivery': delivery.get('estimated_delivery')
+    }
+
+@api_router.get("/marketplace/deliveries/in-transit")
+async def get_in_transit_deliveries(current_user: User = Depends(get_current_user)):
+    """Get all in-transit deliveries"""
+    deliveries = await db.deliveries.find({
+        'tenant_id': current_user.tenant_id,
+        'status': 'in_transit'
+    }, {'_id': 0}).sort('estimated_delivery', 1).to_list(100)
+    
+    return {'deliveries': deliveries, 'count': len(deliveries)}
+
+
 # Include router at the very end after ALL endpoints are defined
 app.include_router(api_router)

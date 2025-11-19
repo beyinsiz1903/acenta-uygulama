@@ -7636,7 +7636,8 @@ async def send_sms_message(
         'sent_by': current_user.id
     }
     
-    await db.messages.insert_one(msg_record)
+    msg_copy = msg_record.copy()
+    await db.messages.insert_one(msg_copy)
     return {'message': 'SMS sent successfully', 'message_id': msg_record['id']}
 
 @api_router.get("/messaging/conversations")

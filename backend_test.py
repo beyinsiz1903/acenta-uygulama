@@ -982,6 +982,355 @@ class HotelPMSBackendTester:
         except Exception as e:
             self.log_test_result("marketplace", "/marketplace/stock-alerts", "GET", False, f"Error: {str(e)}")
 
+    def test_marketplace_extensions(self):
+        """Test 4 New Marketplace Extensions for Wholesale Management (20 endpoints)"""
+        print("\n🏪 Testing 4 New Marketplace Extensions for Wholesale Management...")
+        
+        # ============= 1. SUPPLIER MANAGEMENT WITH CREDIT LIMITS (6 endpoints) =============
+        print("\n📋 Testing Supplier Management with Credit Limits...")
+        
+        supplier_ids = []
+        
+        # 1.1 POST /api/marketplace/suppliers (First supplier)
+        try:
+            response = self.session.post(f"{BACKEND_URL}/marketplace/suppliers", json={
+                "supplier_name": "Hotel Supplies Ltd",
+                "contact_person": "John Manager",
+                "contact_email": "john@supplies.com",
+                "contact_phone": "+1234567890",
+                "credit_limit": 50000.0,
+                "payment_terms": "Net 30",
+                "status": "active"
+            })
+            success = response.status_code in [200, 201]
+            details = f"Status: {response.status_code}"
+            if success and response.json():
+                supplier_id = response.json().get('id')
+                if supplier_id:
+                    supplier_ids.append(supplier_id)
+                details += f" - Supplier created: {response.json().get('supplier_name', 'N/A')}"
+            self.log_test_result("marketplace", "/marketplace/suppliers", "POST", success, details)
+        except Exception as e:
+            self.log_test_result("marketplace", "/marketplace/suppliers", "POST", False, f"Error: {str(e)}")
+
+        # 1.2 POST /api/marketplace/suppliers (Second supplier)
+        try:
+            response = self.session.post(f"{BACKEND_URL}/marketplace/suppliers", json={
+                "supplier_name": "Linen Company",
+                "contact_person": "Sarah Sales",
+                "contact_email": "sarah@linen.com",
+                "contact_phone": "+0987654321",
+                "credit_limit": 25000.0,
+                "payment_terms": "Net 15",
+                "status": "active"
+            })
+            success = response.status_code in [200, 201]
+            details = f"Status: {response.status_code}"
+            if success and response.json():
+                supplier_id = response.json().get('id')
+                if supplier_id:
+                    supplier_ids.append(supplier_id)
+                details += f" - Supplier created: {response.json().get('supplier_name', 'N/A')}"
+            self.log_test_result("marketplace", "/marketplace/suppliers (Linen)", "POST", success, details)
+        except Exception as e:
+            self.log_test_result("marketplace", "/marketplace/suppliers (Linen)", "POST", False, f"Error: {str(e)}")
+
+        # 1.3 GET /api/marketplace/suppliers (all suppliers)
+        try:
+            response = self.session.get(f"{BACKEND_URL}/marketplace/suppliers")
+            success = response.status_code == 200
+            details = f"Status: {response.status_code}"
+            if success:
+                data = response.json()
+                suppliers = data.get('suppliers', []) if isinstance(data, dict) else data
+                details += f" - Total suppliers: {len(suppliers)}"
+            self.log_test_result("marketplace", "/marketplace/suppliers", "GET", success, details)
+        except Exception as e:
+            self.log_test_result("marketplace", "/marketplace/suppliers", "GET", False, f"Error: {str(e)}")
+
+        # 1.4 GET /api/marketplace/suppliers?status=active (filtered)
+        try:
+            response = self.session.get(f"{BACKEND_URL}/marketplace/suppliers?status=active")
+            success = response.status_code == 200
+            details = f"Status: {response.status_code} - Active filter"
+            if success:
+                data = response.json()
+                suppliers = data.get('suppliers', []) if isinstance(data, dict) else data
+                details += f" - Active suppliers: {len(suppliers)}"
+            self.log_test_result("marketplace", "/marketplace/suppliers?status=active", "GET", success, details)
+        except Exception as e:
+            self.log_test_result("marketplace", "/marketplace/suppliers?status=active", "GET", False, f"Error: {str(e)}")
+
+        # 1.5 PUT /api/marketplace/suppliers/{supplier_id}/credit
+        if supplier_ids:
+            supplier_id = supplier_ids[0]
+            try:
+                response = self.session.put(f"{BACKEND_URL}/marketplace/suppliers/{supplier_id}/credit", json={
+                    "credit_limit": 75000.0,
+                    "payment_terms": "Net 45"
+                })
+                success = response.status_code in [200, 201]
+                details = f"Status: {response.status_code}"
+                if success:
+                    details += " - Credit limit updated to $75,000"
+                self.log_test_result("marketplace", f"/marketplace/suppliers/{supplier_id}/credit", "PUT", success, details)
+            except Exception as e:
+                self.log_test_result("marketplace", f"/marketplace/suppliers/{supplier_id}/credit", "PUT", False, f"Error: {str(e)}")
+
+            # 1.6 GET /api/marketplace/suppliers/{supplier_id}/credit-status
+            try:
+                response = self.session.get(f"{BACKEND_URL}/marketplace/suppliers/{supplier_id}/credit-status")
+                success = response.status_code == 200
+                details = f"Status: {response.status_code}"
+                if success:
+                    data = response.json()
+                    credit_limit = data.get('credit_limit', 0)
+                    available_credit = data.get('available_credit', 0)
+                    details += f" - Credit limit: ${credit_limit}, Available: ${available_credit}"
+                self.log_test_result("marketplace", f"/marketplace/suppliers/{supplier_id}/credit-status", "GET", success, details)
+            except Exception as e:
+                self.log_test_result("marketplace", f"/marketplace/suppliers/{supplier_id}/credit-status", "GET", False, f"Error: {str(e)}")
+
+        # ============= 2. GM APPROVAL WORKFLOW (5 endpoints) =============
+        print("\n✅ Testing GM Approval Workflow...")
+        
+        # First, we need a PO to work with - use existing PO or create one
+        po_id_for_approval = None
+        if self.created_resources["po_ids"]:
+            po_id_for_approval = self.created_resources["po_ids"][0]
+        
+        # 2.1 POST /api/marketplace/purchase-orders/{po_id}/submit-for-approval
+        if po_id_for_approval:
+            try:
+                response = self.session.post(f"{BACKEND_URL}/marketplace/purchase-orders/{po_id_for_approval}/submit-for-approval")
+                success = response.status_code in [200, 201]
+                details = f"Status: {response.status_code}"
+                if success:
+                    details += " - PO submitted for GM approval"
+                self.log_test_result("marketplace", f"/marketplace/purchase-orders/{po_id_for_approval}/submit-for-approval", "POST", success, details)
+            except Exception as e:
+                self.log_test_result("marketplace", f"/marketplace/purchase-orders/{po_id_for_approval}/submit-for-approval", "POST", False, f"Error: {str(e)}")
+
+        # 2.2 GET /api/marketplace/approvals/pending
+        try:
+            response = self.session.get(f"{BACKEND_URL}/marketplace/approvals/pending")
+            success = response.status_code == 200
+            details = f"Status: {response.status_code}"
+            if success:
+                data = response.json()
+                pending_approvals = data.get('pending_approvals', []) if isinstance(data, dict) else data
+                details += f" - Pending approvals: {len(pending_approvals)}"
+            self.log_test_result("marketplace", "/marketplace/approvals/pending", "GET", success, details)
+        except Exception as e:
+            self.log_test_result("marketplace", "/marketplace/approvals/pending", "GET", False, f"Error: {str(e)}")
+
+        # 2.3 POST /api/marketplace/purchase-orders/{po_id}/approve
+        if po_id_for_approval:
+            try:
+                response = self.session.post(f"{BACKEND_URL}/marketplace/purchase-orders/{po_id_for_approval}/approve", json={
+                    "approval_notes": "Approved by GM - urgent supplies needed"
+                })
+                success = response.status_code in [200, 201]
+                details = f"Status: {response.status_code}"
+                if success:
+                    details += " - PO approved by GM"
+                self.log_test_result("marketplace", f"/marketplace/purchase-orders/{po_id_for_approval}/approve", "POST", success, details)
+            except Exception as e:
+                self.log_test_result("marketplace", f"/marketplace/purchase-orders/{po_id_for_approval}/approve", "POST", False, f"Error: {str(e)}")
+
+        # 2.4 POST /api/marketplace/purchase-orders/{po_id}/reject (using a different PO if available)
+        po_id_for_rejection = None
+        if len(self.created_resources["po_ids"]) > 1:
+            po_id_for_rejection = self.created_resources["po_ids"][1]
+        elif po_id_for_approval:
+            # Create another PO for rejection testing
+            try:
+                items = []
+                if len(self.created_resources["product_ids"]) >= 1:
+                    items = [{"product_id": self.created_resources["product_ids"][0], "quantity": 50, "unit_price": 10.0}]
+                
+                po_response = self.session.post(f"{BACKEND_URL}/marketplace/purchase-orders", json={
+                    "supplier": "Test Supplier for Rejection",
+                    "items": items,
+                    "delivery_location": "test_warehouse",
+                    "expected_delivery_date": "2025-02-15"
+                })
+                if po_response.status_code in [200, 201] and po_response.json():
+                    po_id_for_rejection = po_response.json().get('id')
+            except:
+                pass
+        
+        if po_id_for_rejection:
+            try:
+                response = self.session.post(f"{BACKEND_URL}/marketplace/purchase-orders/{po_id_for_rejection}/reject", json={
+                    "rejection_reason": "Budget exceeded for this quarter"
+                })
+                success = response.status_code in [200, 201]
+                details = f"Status: {response.status_code}"
+                if success:
+                    details += " - PO rejected by GM"
+                self.log_test_result("marketplace", f"/marketplace/purchase-orders/{po_id_for_rejection}/reject", "POST", success, details)
+            except Exception as e:
+                self.log_test_result("marketplace", f"/marketplace/purchase-orders/{po_id_for_rejection}/reject", "POST", False, f"Error: {str(e)}")
+
+        # ============= 3. WAREHOUSE / DEPOT STOCK TRACKING (5 endpoints) =============
+        print("\n🏭 Testing Warehouse/Depot Stock Tracking...")
+        
+        warehouse_ids = []
+        
+        # 3.1 POST /api/marketplace/warehouses (Central Warehouse)
+        try:
+            response = self.session.post(f"{BACKEND_URL}/marketplace/warehouses", json={
+                "warehouse_name": "Central Warehouse",
+                "location": "Main Building",
+                "capacity": 10000,
+                "warehouse_type": "central"
+            })
+            success = response.status_code in [200, 201]
+            details = f"Status: {response.status_code}"
+            if success and response.json():
+                warehouse_id = response.json().get('id')
+                if warehouse_id:
+                    warehouse_ids.append(warehouse_id)
+                details += f" - Warehouse created: {response.json().get('warehouse_name', 'N/A')}"
+            self.log_test_result("marketplace", "/marketplace/warehouses", "POST", success, details)
+        except Exception as e:
+            self.log_test_result("marketplace", "/marketplace/warehouses", "POST", False, f"Error: {str(e)}")
+
+        # 3.2 POST /api/marketplace/warehouses (Floor 3 Storage)
+        try:
+            response = self.session.post(f"{BACKEND_URL}/marketplace/warehouses", json={
+                "warehouse_name": "Floor 3 Storage",
+                "location": "Floor 3",
+                "capacity": 5000,
+                "warehouse_type": "regional"
+            })
+            success = response.status_code in [200, 201]
+            details = f"Status: {response.status_code}"
+            if success and response.json():
+                warehouse_id = response.json().get('id')
+                if warehouse_id:
+                    warehouse_ids.append(warehouse_id)
+                details += f" - Warehouse created: {response.json().get('warehouse_name', 'N/A')}"
+            self.log_test_result("marketplace", "/marketplace/warehouses (Floor 3)", "POST", success, details)
+        except Exception as e:
+            self.log_test_result("marketplace", "/marketplace/warehouses (Floor 3)", "POST", False, f"Error: {str(e)}")
+
+        # 3.3 GET /api/marketplace/warehouses
+        try:
+            response = self.session.get(f"{BACKEND_URL}/marketplace/warehouses")
+            success = response.status_code == 200
+            details = f"Status: {response.status_code}"
+            if success:
+                data = response.json()
+                warehouses = data.get('warehouses', []) if isinstance(data, dict) else data
+                details += f" - Total warehouses: {len(warehouses)}"
+            self.log_test_result("marketplace", "/marketplace/warehouses", "GET", success, details)
+        except Exception as e:
+            self.log_test_result("marketplace", "/marketplace/warehouses", "GET", False, f"Error: {str(e)}")
+
+        # 3.4 GET /api/marketplace/warehouses/{warehouse_id}/inventory
+        if warehouse_ids:
+            warehouse_id = warehouse_ids[0]
+            try:
+                response = self.session.get(f"{BACKEND_URL}/marketplace/warehouses/{warehouse_id}/inventory")
+                success = response.status_code == 200
+                details = f"Status: {response.status_code}"
+                if success:
+                    data = response.json()
+                    inventory_items = data.get('inventory', []) if isinstance(data, dict) else data
+                    details += f" - Inventory items in warehouse: {len(inventory_items)}"
+                self.log_test_result("marketplace", f"/marketplace/warehouses/{warehouse_id}/inventory", "GET", success, details)
+            except Exception as e:
+                self.log_test_result("marketplace", f"/marketplace/warehouses/{warehouse_id}/inventory", "GET", False, f"Error: {str(e)}")
+
+        # 3.5 GET /api/marketplace/stock-summary
+        try:
+            response = self.session.get(f"{BACKEND_URL}/marketplace/stock-summary")
+            success = response.status_code == 200
+            details = f"Status: {response.status_code}"
+            if success:
+                data = response.json()
+                total_items = data.get('total_items', 0)
+                total_value = data.get('total_value', 0)
+                details += f" - Stock summary: {total_items} items, ${total_value} value"
+            self.log_test_result("marketplace", "/marketplace/stock-summary", "GET", success, details)
+        except Exception as e:
+            self.log_test_result("marketplace", "/marketplace/stock-summary", "GET", False, f"Error: {str(e)}")
+
+        # ============= 4. SHIPPING & DELIVERY TRACKING (4 endpoints) =============
+        print("\n🚚 Testing Shipping & Delivery Tracking...")
+        
+        # First, get existing deliveries to work with
+        delivery_id = None
+        try:
+            deliveries_response = self.session.get(f"{BACKEND_URL}/marketplace/deliveries")
+            if deliveries_response.status_code == 200:
+                deliveries_data = deliveries_response.json()
+                deliveries = deliveries_data.get('deliveries', []) if isinstance(deliveries_data, dict) else deliveries_data
+                if deliveries:
+                    delivery_id = deliveries[0].get('id')
+        except:
+            pass
+
+        # 4.1 PUT /api/marketplace/deliveries/{delivery_id}/update-status (first update)
+        if delivery_id:
+            try:
+                response = self.session.put(f"{BACKEND_URL}/marketplace/deliveries/{delivery_id}/update-status", json={
+                    "status": "in_transit",
+                    "location": "Distribution Center",
+                    "notes": "Departed from supplier"
+                })
+                success = response.status_code in [200, 201]
+                details = f"Status: {response.status_code}"
+                if success:
+                    details += " - Delivery status updated to 'in_transit'"
+                self.log_test_result("marketplace", f"/marketplace/deliveries/{delivery_id}/update-status", "PUT", success, details)
+            except Exception as e:
+                self.log_test_result("marketplace", f"/marketplace/deliveries/{delivery_id}/update-status", "PUT", False, f"Error: {str(e)}")
+
+            # 4.2 PUT /api/marketplace/deliveries/{delivery_id}/update-status (second update)
+            try:
+                response = self.session.put(f"{BACKEND_URL}/marketplace/deliveries/{delivery_id}/update-status", json={
+                    "status": "delivered",
+                    "location": "Central Warehouse",
+                    "notes": "Successfully delivered and signed"
+                })
+                success = response.status_code in [200, 201]
+                details = f"Status: {response.status_code}"
+                if success:
+                    details += " - Delivery status updated to 'delivered'"
+                self.log_test_result("marketplace", f"/marketplace/deliveries/{delivery_id}/update-status (delivered)", "PUT", success, details)
+            except Exception as e:
+                self.log_test_result("marketplace", f"/marketplace/deliveries/{delivery_id}/update-status (delivered)", "PUT", False, f"Error: {str(e)}")
+
+            # 4.3 GET /api/marketplace/deliveries/{delivery_id}/tracking
+            try:
+                response = self.session.get(f"{BACKEND_URL}/marketplace/deliveries/{delivery_id}/tracking")
+                success = response.status_code == 200
+                details = f"Status: {response.status_code}"
+                if success:
+                    data = response.json()
+                    tracking_history = data.get('tracking_history', [])
+                    current_status = data.get('current_status', 'unknown')
+                    details += f" - Current status: {current_status}, History: {len(tracking_history)} events"
+                self.log_test_result("marketplace", f"/marketplace/deliveries/{delivery_id}/tracking", "GET", success, details)
+            except Exception as e:
+                self.log_test_result("marketplace", f"/marketplace/deliveries/{delivery_id}/tracking", "GET", False, f"Error: {str(e)}")
+
+        # 4.4 GET /api/marketplace/deliveries/in-transit
+        try:
+            response = self.session.get(f"{BACKEND_URL}/marketplace/deliveries/in-transit")
+            success = response.status_code == 200
+            details = f"Status: {response.status_code}"
+            if success:
+                data = response.json()
+                in_transit_deliveries = data.get('deliveries', []) if isinstance(data, dict) else data
+                details += f" - In-transit deliveries: {len(in_transit_deliveries)}"
+            self.log_test_result("marketplace", "/marketplace/deliveries/in-transit", "GET", success, details)
+        except Exception as e:
+            self.log_test_result("marketplace", "/marketplace/deliveries/in-transit", "GET", False, f"Error: {str(e)}")
+
     def print_summary(self):
         """Print comprehensive test summary"""
         print("\n" + "="*80)

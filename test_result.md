@@ -1279,12 +1279,12 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Enhanced RMS with Advanced Confidence & Insights - TESTING COMPLETED ✅"
-    - "4 enhanced RMS endpoints tested: Auto-Pricing (✓), Demand Forecast (✅ FIXED), Competitor Comparison (✓), Pricing Insights (✓)"
-    - "100% success rate - 6/6 tests passed, timezone issue resolved"
+    - "Enhanced Reservation Calendar with Rate Codes & Group View - TESTING COMPLETED ✅"
+    - "5 calendar endpoints tested: Rate Codes Management (✓), Enhanced Tooltip (✓), Group View (✓), Rate Code Breakdown (✓)"
+    - "100% success rate - 6/6 tests passed, all calendar enhancements working perfectly"
   stuck_tasks: []
   test_all: false
-  test_priority: "rms_90_day_forecast_fix_verified"
+  test_priority: "calendar_enhancements_verified"
 
 agent_communication:
   - agent: "testing"

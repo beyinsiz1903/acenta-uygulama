@@ -1468,9 +1468,9 @@ class HotelPMSBackendTester:
             self.log_test_result("marketplace", "/marketplace/deliveries/in-transit", "GET", False, f"Error: {str(e)}")
 
     def print_summary(self):
-        """Print comprehensive test summary"""
+        """Print Enhanced RMS test summary"""
         print("\n" + "="*80)
-        print("🎯 COMPREHENSIVE BACKEND TESTING SUMMARY")
+        print("🎯 ENHANCED RMS TESTING SUMMARY")
         print("="*80)
         
         total_passed = 0
@@ -1487,34 +1487,37 @@ class HotelPMSBackendTester:
             success_rate = (passed / total * 100) if total > 0 else 0
             status_icon = "✅" if success_rate >= 80 else "⚠️" if success_rate >= 60 else "❌"
             
-            print(f"\n{status_icon} {category.upper().replace('_', ' ')}: {passed}/{total} ({success_rate:.1f}%)")
+            print(f"\n{status_icon} ENHANCED RMS: {passed}/{total} ({success_rate:.1f}%)")
             
-            # Show failed tests
-            failed_tests = [detail for detail in results["details"] if "❌ FAIL" in detail["status"]]
-            if failed_tests:
-                print("   Failed endpoints:")
-                for test in failed_tests[:3]:  # Show first 3 failures
-                    print(f"     • {test['endpoint']} - {test['details']}")
-                if len(failed_tests) > 3:
-                    print(f"     • ... and {len(failed_tests) - 3} more")
+            # Show all test details for RMS
+            print("   Test Details:")
+            for detail in results["details"]:
+                status_icon = "✅" if "✅ PASS" in detail["status"] else "❌"
+                print(f"     {status_icon} {detail['endpoint']} - {detail['details']}")
         
         grand_total = total_passed + total_failed
         overall_success_rate = (total_passed / grand_total * 100) if grand_total > 0 else 0
         
-        print(f"\n🎯 OVERALL RESULTS:")
-        print(f"   Total Endpoints Tested: {grand_total}")
+        print(f"\n🎯 ENHANCED RMS RESULTS:")
+        print(f"   Total Enhanced Endpoints: {grand_total}")
         print(f"   Passed: {total_passed}")
         print(f"   Failed: {total_failed}")
         print(f"   Success Rate: {overall_success_rate:.1f}%")
         
+        print(f"\n📊 ENHANCED FEATURES TESTED:")
+        print(f"   ✓ Advanced Auto-Pricing with Dynamic Confidence")
+        print(f"   ✓ 90-Day Demand Forecasting")
+        print(f"   ✓ Competitor Price Comparison (NEW)")
+        print(f"   ✓ Pricing Insights with Multi-Factor Analysis (NEW)")
+        
         if overall_success_rate >= 90:
-            print("   Status: 🟢 EXCELLENT - All systems operational")
+            print("   Status: 🟢 EXCELLENT - Enhanced RMS fully operational")
         elif overall_success_rate >= 80:
-            print("   Status: 🟡 GOOD - Minor issues detected")
+            print("   Status: 🟡 GOOD - Enhanced RMS mostly working")
         elif overall_success_rate >= 60:
-            print("   Status: 🟠 FAIR - Several issues need attention")
+            print("   Status: 🟠 FAIR - Enhanced RMS needs attention")
         else:
-            print("   Status: 🔴 POOR - Major issues require immediate attention")
+            print("   Status: 🔴 POOR - Enhanced RMS has major issues")
         
         print("\n" + "="*80)
 

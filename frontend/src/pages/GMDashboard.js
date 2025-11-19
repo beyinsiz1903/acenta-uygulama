@@ -250,6 +250,138 @@ const GMDashboard = ({ user, tenant, onLogout }) => {
           </Card>
         </div>
 
+        {/* Finance Snapshot - NEW */}
+        <Card className="border-2 border-emerald-400 bg-gradient-to-r from-emerald-50 to-teal-50">
+          <CardHeader>
+            <CardTitle className="text-xl flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <DollarSign className="w-6 h-6 text-emerald-600" />
+                <span>Finance Snapshot</span>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => navigate('/accounting')}
+                className="bg-white hover:bg-emerald-50"
+              >
+                <FileText className="w-4 h-4 mr-2" />
+                View Details
+              </Button>
+            </CardTitle>
+            <CardDescription>Accounts Receivable & Collections Overview</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Column 1: Pending AR */}
+              <div className="space-y-3">
+                <h3 className="font-semibold text-gray-700 flex items-center space-x-2">
+                  <Building2 className="w-4 h-4 text-emerald-600" />
+                  <span>Pending AR Total</span>
+                </h3>
+                <div className="bg-white p-4 rounded-lg shadow-sm border-l-4 border-emerald-500">
+                  <div className="text-3xl font-bold text-gray-900">
+                    ${((dashboardData?.finance?.pending_ar?.total || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}))}
+                  </div>
+                  <div className="text-sm text-gray-600 mt-1">
+                    {dashboardData?.finance?.pending_ar?.overdue_invoices_count || 0} company folios
+                  </div>
+                  <div className="text-xs text-gray-500 mt-2">
+                    Total Accounts Receivable
+                  </div>
+                </div>
+              </div>
+
+              {/* Column 2: Overdue Invoices */}
+              <div className="space-y-3">
+                <h3 className="font-semibold text-gray-700 flex items-center space-x-2">
+                  <AlertTriangle className="w-4 h-4 text-orange-600" />
+                  <span>Overdue Breakdown</span>
+                </h3>
+                <div className="bg-white p-4 rounded-lg shadow-sm space-y-2">
+                  <div className="flex justify-between items-center pb-2 border-b">
+                    <span className="text-xs text-gray-600">0-30 days (Warning)</span>
+                    <span className="text-sm font-semibold text-yellow-600">
+                      ${(dashboardData?.finance?.pending_ar?.overdue_breakdown?.['0-30_days'] || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center pb-2 border-b">
+                    <span className="text-xs text-gray-600">30-60 days (Critical)</span>
+                    <span className="text-sm font-semibold text-orange-600">
+                      ${(dashboardData?.finance?.pending_ar?.overdue_breakdown?.['30-60_days'] || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-gray-600">60+ days (Very Critical)</span>
+                    <span className="text-sm font-semibold text-red-600">
+                      ${(dashboardData?.finance?.pending_ar?.overdue_breakdown?.['60_plus_days'] || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                    </span>
+                  </div>
+                  <div className="mt-2 pt-2 border-t">
+                    <div className="text-xs text-gray-500">
+                      {dashboardData?.finance?.pending_ar?.overdue_invoices_count || 0} overdue invoices
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Column 3: Today's Collections */}
+              <div className="space-y-3">
+                <h3 className="font-semibold text-gray-700 flex items-center space-x-2">
+                  <CheckCircle className="w-4 h-4 text-green-600" />
+                  <span>Today's Collections</span>
+                </h3>
+                <div className="bg-white p-4 rounded-lg shadow-sm border-l-4 border-green-500">
+                  <div className="text-3xl font-bold text-green-600">
+                    ${(dashboardData?.finance?.todays_collections?.amount || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                  </div>
+                  <div className="text-sm text-gray-600 mt-1">
+                    {dashboardData?.finance?.todays_collections?.payment_count || 0} payments received
+                  </div>
+                  <div className="text-xs text-gray-500 mt-3 pt-2 border-t">
+                    MTD: ${(dashboardData?.finance?.mtd_collections?.amount || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    Collection Rate: {(dashboardData?.finance?.mtd_collections?.collection_rate_percentage || 0).toFixed(1)}%
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Accounting Integration Info */}
+            <div className="mt-4 p-3 bg-blue-50 border-l-4 border-blue-500 rounded">
+              <div className="flex items-start space-x-2">
+                <FileText className="w-5 h-5 text-blue-600 mt-0.5" />
+                <div className="flex-1">
+                  <h4 className="font-semibold text-sm text-blue-900">Accounting Integration Ready</h4>
+                  <p className="text-xs text-blue-700 mt-1">
+                    ✓ E-Fatura & E-Arşiv Support • ✓ Export to Logo, Mikro, SAP (Excel, CSV, XML) • ✓ GIB Compliant Reporting
+                  </p>
+                  <div className="flex space-x-2 mt-2">
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      className="h-7 text-xs bg-white hover:bg-blue-100"
+                      onClick={() => navigate('/accounting')}
+                    >
+                      <Download className="w-3 h-3 mr-1" />
+                      Export Data
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      className="h-7 text-xs bg-white hover:bg-blue-100"
+                      onClick={() => navigate('/e-fatura')}
+                    >
+                      <Send className="w-3 h-3 mr-1" />
+                      E-Fatura
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Owner Summary / Snapshot */}
         <Card className="border-2 border-yellow-400 bg-gradient-to-r from-yellow-50 to-orange-50">
           <CardHeader>

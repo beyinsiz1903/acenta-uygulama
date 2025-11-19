@@ -7689,7 +7689,8 @@ async def create_message_template(
         'created_by': current_user.id
     }
     
-    await db.message_templates.insert_one(template)
+    template_copy = template.copy()
+    await db.message_templates.insert_one(template_copy)
     return template
 
 @api_router.get("/messaging/ota-integrations")

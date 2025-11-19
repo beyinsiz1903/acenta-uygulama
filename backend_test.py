@@ -25,7 +25,8 @@ class HotelPMSBackendTester:
         self.test_results = {
             "pos": {"passed": 0, "failed": 0, "details": []},
             "calendar": {"passed": 0, "failed": 0, "details": []},
-            "rms": {"passed": 0, "failed": 0, "details": []}
+            "rms": {"passed": 0, "failed": 0, "details": []},
+            "feedback": {"passed": 0, "failed": 0, "details": []}
         }
         self.created_resources = {
             "comp_set_ids": [],

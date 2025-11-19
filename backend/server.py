@@ -3687,6 +3687,188 @@ async def get_finance_snapshot(current_user: User = Depends(get_current_user)):
     }
 
 
+@api_router.get("/pos/auto-post-settings")
+async def get_pos_auto_post_settings(current_user: User = Depends(get_current_user)):
+    """
+    Get POS auto-post settings for the tenant
+    """
+    settings = await db.pos_settings.find_one({
+        'tenant_id': current_user.tenant_id,
+        'type': 'auto_post'
+    })
+    
+    if not settings:
+        # Default settings
+        return {
+            'mode': 'realtime',
+            'batch_interval': 15,
+            'last_sync': None
+        }
+    
+    return {
+        'mode': settings.get('mode', 'realtime'),
+        'batch_interval': settings.get('batch_interval', 15),
+        'last_sync': settings.get('last_sync')
+    }
+
+@api_router.post("/pos/auto-post-settings")
+async def update_pos_auto_post_settings(
+    settings_data: dict,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Update POS auto-post settings
+    """
+    await db.pos_settings.update_one(
+        {
+            'tenant_id': current_user.tenant_id,
+            'type': 'auto_post'
+        },
+        {
+            '$set': {
+                'mode': settings_data.get('mode', 'realtime'),
+                'batch_interval': settings_data.get('batch_interval', 15),
+                'updated_at': datetime.now(timezone.utc).isoformat(),
+                'updated_by': current_user.id
+            }
+        },
+        upsert=True
+    )
+    
+    return {'message': 'Settings updated successfully'}
+
+@api_router.post("/pos/manual-sync")
+async def manual_pos_sync(current_user: User = Depends(get_current_user)):
+    """
+    Manually trigger POS charges sync to folios
+    """
+    # Get all pending POS charges
+    pending_charges = await db.pos_charges.find({
+        'tenant_id': current_user.tenant_id,
+        'posted_to_folio': False,
+        'status': 'closed'
+    }).to_list(1000)
+    
+    posted_count = 0
+    
+    for charge in pending_charges:
+        try:
+            # Post to folio
+            folio_charge = {
+                'id': str(uuid.uuid4()),
+                'folio_id': charge['folio_id'],
+                'tenant_id': current_user.tenant_id,
+                'description': charge.get('description', 'POS Charge'),
+                'charge_category': charge.get('outlet', 'restaurant'),
+                'date': charge['charge_date'],
+                'quantity': 1,
+                'unit_price': charge['total'],
+                'total': charge['total'],
+                'tax_amount': charge.get('tax', 0),
+                'voided': False,
+                'line_items': charge.get('items', []),  # Include POS line items
+                'created_at': datetime.now(timezone.utc).isoformat(),
+                'created_by': current_user.id
+            }
+            
+            await db.folio_charges.insert_one(folio_charge)
+            
+            # Mark as posted
+            await db.pos_charges.update_one(
+                {'_id': charge['_id']},
+                {'$set': {'posted_to_folio': True, 'posted_at': datetime.now(timezone.utc).isoformat()}}
+            )
+            
+            posted_count += 1
+        except Exception as e:
+            print(f"Failed to post POS charge {charge.get('id')}: {str(e)}")
+            continue
+    
+    # Update last sync time
+    await db.pos_settings.update_one(
+        {
+            'tenant_id': current_user.tenant_id,
+            'type': 'auto_post'
+        },
+        {
+            '$set': {'last_sync': datetime.now(timezone.utc).isoformat()}
+        },
+        upsert=True
+    )
+    
+    return {
+        'posted_count': posted_count,
+        'message': f'Successfully posted {posted_count} POS charges to folios'
+    }
+
+@api_router.post("/pos/manual-post")
+async def manual_pos_post(
+    post_data: dict,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Manual post of POS charge via QR/barcode (fallback when integration fails)
+    """
+    charge_id = post_data.get('charge_id')
+    folio_id = post_data.get('folio_id')
+    method = post_data.get('method', 'manual')
+    
+    # Get POS charge
+    charge = await db.pos_charges.find_one({
+        'id': charge_id,
+        'tenant_id': current_user.tenant_id
+    })
+    
+    if not charge:
+        raise HTTPException(status_code=404, detail='POS charge not found')
+    
+    # Check if already posted
+    if charge.get('posted_to_folio'):
+        raise HTTPException(status_code=409, detail='Charge already posted to folio')
+    
+    # Post to folio
+    folio_charge = {
+        'id': str(uuid.uuid4()),
+        'folio_id': folio_id,
+        'tenant_id': current_user.tenant_id,
+        'description': charge.get('description', 'POS Charge - Manual Post'),
+        'charge_category': charge.get('outlet', 'restaurant'),
+        'date': charge['charge_date'],
+        'quantity': 1,
+        'unit_price': charge['total'],
+        'total': charge['total'],
+        'tax_amount': charge.get('tax', 0),
+        'voided': False,
+        'line_items': charge.get('items', []),
+        'manual_post': True,
+        'post_method': method,
+        'created_at': datetime.now(timezone.utc).isoformat(),
+        'created_by': current_user.id
+    }
+    
+    await db.folio_charges.insert_one(folio_charge)
+    
+    # Mark as posted
+    await db.pos_charges.update_one(
+        {'_id': charge['_id']},
+        {
+            '$set': {
+                'posted_to_folio': True,
+                'posted_at': datetime.now(timezone.utc).isoformat(),
+                'post_method': method
+            }
+        }
+    )
+    
+    return {
+        'total': charge['total'],
+        'description': charge.get('description'),
+        'folio_id': folio_id,
+        'posted_at': datetime.now(timezone.utc).isoformat()
+    }
+
+
+
 @api_router.get("/reports/cost-summary")
 async def get_cost_summary(current_user: User = Depends(get_current_user)):
     """

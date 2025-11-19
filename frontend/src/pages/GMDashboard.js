@@ -18,7 +18,11 @@ import {
   Activity,
   Home,
   CheckCircle,
-  AlertTriangle
+  AlertTriangle,
+  FileText,
+  Mail,
+  Download,
+  Zap
 } from 'lucide-react';
 
 const GMDashboard = ({ user, tenant, onLogout }) => {

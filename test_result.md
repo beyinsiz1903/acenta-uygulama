@@ -167,15 +167,18 @@ backend:
 
   - task: "Check-in - Passport Scan Endpoint"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Added POST /api/frontdesk/passport-scan - OCR-ready endpoint for passport data extraction (MVP with simulated response, ready for OCR.space/Google Vision integration)"
+      - working: true
+        agent: "testing"
+        comment: "✅ ENDPOINT WORKING - POST /api/frontdesk/passport-scan successfully processes base64 image input and returns extracted_data (passport_number, name, surname, nationality, date_of_birth, expiry_date, sex), confidence score (0.95), success flag, and integration note for production OCR services. MVP implementation working correctly with simulated data extraction."
 
   - task: "Check-in - Walk-in Booking Endpoint"
     implemented: true

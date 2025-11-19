@@ -8147,7 +8147,8 @@ async def report_housekeeping_issue(
         'reported_at': datetime.now(timezone.utc).isoformat()
     }
     
-    await db.housekeeping_issues.insert_one(issue)
+    issue_copy = issue.copy()
+    await db.housekeeping_issues.insert_one(issue_copy)
     
     # If maintenance issue, create maintenance task
     if request.issue_type == 'maintenance':

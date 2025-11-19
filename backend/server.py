@@ -8112,7 +8112,7 @@ async def generate_demand_forecast(
     forecasts = []
     for day in range(days):
         current_date = (start + timedelta(days=day)).date().isoformat()
-        date_obj = datetime.fromisoformat(current_date)
+        date_obj = datetime.fromisoformat(current_date).replace(tzinfo=timezone.utc)
         
         # Advanced forecast model with multiple factors
         day_of_week = date_obj.weekday()

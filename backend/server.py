@@ -7673,22 +7673,18 @@ async def get_message_templates(
 
 @api_router.post("/messaging/templates")
 async def create_message_template(
-    name: str,
-    channel: str,
-    subject: str = None,
-    content: str = "",
-    variables: list = [],
+    request: CreateMessageTemplateRequest,
     current_user: User = Depends(get_current_user)
 ):
     """Create message template"""
     template = {
         'id': str(uuid.uuid4()),
         'tenant_id': current_user.tenant_id,
-        'name': name,
-        'channel': channel,
-        'subject': subject,
-        'content': content,
-        'variables': variables,
+        'name': request.name,
+        'channel': request.channel,
+        'subject': request.subject,
+        'content': request.content,
+        'variables': request.variables,
         'created_at': datetime.now(timezone.utc).isoformat(),
         'created_by': current_user.id
     }

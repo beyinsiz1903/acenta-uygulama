@@ -834,15 +834,18 @@ backend:
 
   - task: "Enhanced RMS with Advanced Confidence & Insights (4 enhanced endpoints)"
     implemented: true
-    working: false
+    working: true
     file: "/app/backend/server.py"
-    stuck_count: 1
+    stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
       - working: false
         agent: "testing"
         comment: "✅ ENHANCED RMS TESTING COMPLETED (83.3% Success Rate - 5/6 tests passed). WORKING PERFECTLY: 1) POST /rms/auto-pricing (Enhanced) - Returns proper response structure with recommendations, summary, avg_confidence, high_confidence_count fields. 2) GET /rms/comp-set-comparison - NEW endpoint working with daily comparison data (31 days), proper market position analysis (At Market, Above/Below), price index calculations, and summary statistics. 3) GET /rms/comp-set-comparison (Date Range) - Date filtering working correctly (28 days for February). 4) GET /rms/pricing-insights - NEW endpoint returning insights array with proper structure. 5) GET /rms/pricing-insights (Specific Date) - Date-specific filtering functional. ❌ CRITICAL ISSUE: POST /rms/demand-forecast (90-day) - 500 Internal Server Error due to 'TypeError: can't subtract offset-naive and offset-aware datetimes' in line 8120. This prevents 90-day demand forecasting capability. All other enhanced features (dynamic confidence scoring, competitor comparison, pricing insights) are fully operational."
+      - working: true
+        agent: "testing"
+        comment: "✅ TIMEZONE FIX SUCCESSFUL - 90-DAY DEMAND FORECAST NOW WORKING PERFECTLY! Fixed the datetime timezone issue on line 8120 by adding .replace(tzinfo=timezone.utc) to make date_obj timezone-aware. COMPREHENSIVE TESTING COMPLETED (100% Success Rate - 6/6 tests passed): 1) POST /rms/demand-forecast (30-day) - Returns 30 forecasts with proper structure, model version 2.0-advanced, dynamic confidence scoring. 2) POST /rms/demand-forecast (60-day) - Returns 60 forecasts correctly. 3) POST /rms/demand-forecast (90-day) - Returns 89 forecasts (Feb 1 - Apr 30) with all required fields: forecasted_occupancy, confidence with dynamic scoring (0.4), confidence_level (High/Medium/Low), trend field, model_version: '2.0-advanced'. Summary contains high/moderate/low demand day counts (H:0, M:73, L:16). All date ranges from review request working perfectly. No more timezone errors. Enhanced RMS system fully operational."
 
 frontend:
   - task: "OTA Messaging Hub - Complete Frontend Implementation"

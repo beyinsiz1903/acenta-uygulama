@@ -51,13 +51,17 @@ const HousekeepingMobileApp = ({ user }) => {
 
     setLoading(true);
     try {
+      // Update room status to 'inspected' via quick update endpoint
+      await axios.put(`/housekeeping/room/${selectedRoom.id}/status?new_status=inspected`);
+      
+      // Complete the cleaning task
       await axios.post(`/housekeeping/rooms/${selectedRoom.id}/complete`, {
         checklist: checklistItems,
         cleaned_by: user?.id,
         cleaned_at: new Date().toISOString()
       });
 
-      toast.success(`Room ${selectedRoom.room_number} cleaned successfully!`);
+      toast.success(`✅ Room ${selectedRoom.room_number} cleaned & marked as inspected!`);
       setSelectedRoom(null);
       setChecklistItems([]);
       loadRooms();
@@ -65,6 +69,16 @@ const HousekeepingMobileApp = ({ user }) => {
       toast.error('Failed to complete cleaning');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleQuickStatusUpdate = async (roomId, roomNumber, newStatus) => {
+    try {
+      await axios.put(`/housekeeping/room/${roomId}/status?new_status=${newStatus}`);
+      toast.success(`Room ${roomNumber} status updated to ${newStatus}!`);
+      loadRooms();
+    } catch (error) {
+      toast.error('Failed to update room status');
     }
   };
 

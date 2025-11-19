@@ -3569,6 +3569,124 @@ async def get_company_aging_report(current_user: User = Depends(get_current_user
         'companies': sorted_companies
     }
 
+
+@api_router.get("/reports/finance-snapshot")
+async def get_finance_snapshot(current_user: User = Depends(get_current_user)):
+    """
+    Finance Snapshot for GM Dashboard
+    Returns: Total Pending AR, Overdue Invoices (categorized), Today's Collections
+    """
+    today = datetime.now(timezone.utc).date()
+    today_start = datetime.combine(today, datetime.min.time()).replace(tzinfo=timezone.utc)
+    today_end = datetime.combine(today, datetime.max.time()).replace(tzinfo=timezone.utc)
+    
+    # 1. Calculate Total Pending AR from company folios
+    company_folios = await db.folios.find({
+        'tenant_id': current_user.tenant_id,
+        'folio_type': 'company',
+        'status': 'open'
+    }).to_list(10000)
+    
+    total_pending_ar = 0
+    overdue_0_30 = 0
+    overdue_30_60 = 0
+    overdue_60_plus = 0
+    overdue_invoices_count = 0
+    
+    for folio in company_folios:
+        balance = await calculate_folio_balance(folio['id'], current_user.tenant_id)
+        
+        if balance > 0:
+            total_pending_ar += balance
+            
+            # Calculate aging
+            folio_created = datetime.fromisoformat(folio['created_at']).date()
+            age_days = (today - folio_created).days
+            
+            if age_days > 0:  # Any overdue
+                overdue_invoices_count += 1
+                
+                if age_days <= 30:
+                    overdue_0_30 += balance
+                elif age_days <= 60:
+                    overdue_30_60 += balance
+                else:
+                    overdue_60_plus += balance
+    
+    # 2. Calculate Today's Collections (payments received today)
+    todays_payments = await db.payments.find({
+        'tenant_id': current_user.tenant_id,
+        'payment_date': {
+            '$gte': today_start.isoformat(),
+            '$lte': today_end.isoformat()
+        }
+    }).to_list(10000)
+    
+    todays_collections = sum(payment.get('amount', 0) for payment in todays_payments)
+    todays_payment_count = len(todays_payments)
+    
+    # 3. Calculate MTD (Month-to-Date) Collections
+    month_start = today.replace(day=1)
+    month_start_dt = datetime.combine(month_start, datetime.min.time()).replace(tzinfo=timezone.utc)
+    
+    mtd_payments = await db.payments.find({
+        'tenant_id': current_user.tenant_id,
+        'payment_date': {
+            '$gte': month_start_dt.isoformat(),
+            '$lte': today_end.isoformat()
+        }
+    }).to_list(10000)
+    
+    mtd_collections = sum(payment.get('amount', 0) for payment in mtd_payments)
+    
+    # 4. Calculate Collection Rate (MTD Collections / MTD Revenue)
+    mtd_charges = await db.folio_charges.find({
+        'tenant_id': current_user.tenant_id,
+        'charge_date': {
+            '$gte': month_start_dt.isoformat(),
+            '$lte': today_end.isoformat()
+        },
+        'voided': False
+    }).to_list(10000)
+    
+    mtd_revenue = sum(charge.get('total', 0) for charge in mtd_charges)
+    collection_rate = (mtd_collections / mtd_revenue * 100) if mtd_revenue > 0 else 0
+    
+    # 5. Get Accounting Invoices (E-Fatura ready)
+    pending_invoices = await db.accounting_invoices.find({
+        'tenant_id': current_user.tenant_id,
+        'status': {'$in': ['pending', 'partial']}
+    }).to_list(1000)
+    
+    pending_invoice_total = sum(inv.get('total', 0) for inv in pending_invoices)
+    pending_invoice_count = len(pending_invoices)
+    
+    return {
+        'report_date': today.isoformat(),
+        'pending_ar': {
+            'total': round(total_pending_ar, 2),
+            'overdue_breakdown': {
+                '0-30_days': round(overdue_0_30, 2),
+                '30-60_days': round(overdue_30_60, 2),
+                '60_plus_days': round(overdue_60_plus, 2)
+            },
+            'overdue_invoices_count': overdue_invoices_count
+        },
+        'todays_collections': {
+            'amount': round(todays_collections, 2),
+            'payment_count': todays_payment_count
+        },
+        'mtd_collections': {
+            'amount': round(mtd_collections, 2),
+            'collection_rate_percentage': round(collection_rate, 2)
+        },
+        'accounting_invoices': {
+            'pending_count': pending_invoice_count,
+            'pending_total': round(pending_invoice_total, 2)
+        }
+    }
+
+
 @api_router.get("/reports/housekeeping-efficiency")
 async def get_housekeeping_efficiency_report(
     start_date: str,

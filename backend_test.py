@@ -1015,7 +1015,7 @@ class HotelPMSBackendTester:
                 details += f" - Supplier created: {response.json().get('supplier_name', 'N/A')}"
             self.log_test_result("marketplace_extensions", "/marketplace/suppliers", "POST", success, details)
         except Exception as e:
-            self.log_test_result("marketplace", "/marketplace/suppliers", "POST", False, f"Error: {str(e)}")
+            self.log_test_result("marketplace_extensions", "/marketplace/suppliers", "POST", False, f"Error: {str(e)}")
 
         # 1.2 POST /api/marketplace/suppliers (Second supplier)
         try:

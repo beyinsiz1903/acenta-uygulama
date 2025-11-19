@@ -568,21 +568,21 @@ class TaskManagementTester:
             if success and response.json():
                 data = response.json()
                 
-                # Check summary statistics
+                # Check summary statistics (the actual field names from the server)
                 summary = data.get('summary', {})
-                required_summary_fields = ['total', 'new', 'in_progress', 'completed_today', 'urgent_pending', 'overdue']
+                required_summary_fields = ['total_tasks', 'new', 'in_progress', 'completed_today', 'urgent_pending', 'overdue']
                 missing_summary = [field for field in required_summary_fields if field not in summary]
                 
                 if missing_summary:
                     details += f" - Missing summary fields: {missing_summary}"
                     success = False
                 else:
-                    details += f" - Total: {summary.get('total')}, New: {summary.get('new')}"
+                    details += f" - Total: {summary.get('total_tasks')}, New: {summary.get('new')}"
                     details += f" - In Progress: {summary.get('in_progress')}, Completed Today: {summary.get('completed_today')}"
                     details += f" - Urgent Pending: {summary.get('urgent_pending')}, Overdue: {summary.get('overdue')}"
                 
-                # Check department breakdown
-                department_breakdown = data.get('department_breakdown', {})
+                # Check department breakdown (the actual field name is 'departments')
+                department_breakdown = data.get('departments', {})
                 expected_departments = ['engineering', 'housekeeping', 'fnb', 'maintenance', 'front_desk']
                 
                 for dept in expected_departments:

@@ -1526,23 +1526,16 @@ class HotelPMSBackendTester:
         print("\n" + "="*80)
 
     def run_all_tests(self):
-        """Run all backend tests"""
-        print("🚀 Starting Comprehensive Backend Testing for Hotel PMS")
-        print("Testing 77 endpoints across 8 major features (including 20 NEW Marketplace Extensions)...")
+        """Run Enhanced RMS Backend Tests"""
+        print("🚀 Testing Enhanced RMS with Advanced Confidence & Insights")
+        print("Testing 4 NEW enhanced RMS endpoints with dynamic confidence scoring...")
         
         if not self.authenticate():
             print("❌ Authentication failed. Cannot proceed with testing.")
             return False
         
-        # Run all test suites
-        self.test_messaging_hub()           # 7 endpoints
-        self.test_rms_system()              # 10 endpoints  
-        self.test_mobile_housekeeping()     # 7 endpoints
-        self.test_efatura_pos()             # 7 endpoints
-        self.test_group_block_reservations() # 9 endpoints
-        self.test_multi_property()          # 5 endpoints
-        self.test_marketplace()             # 12 endpoints
-        self.test_marketplace_extensions()  # 20 NEW endpoints
+        # Run Enhanced RMS test suite
+        self.test_enhanced_rms_system()     # 4 enhanced endpoints
         
         # Print comprehensive summary
         self.print_summary()

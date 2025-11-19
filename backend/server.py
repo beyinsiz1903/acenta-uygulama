@@ -7591,7 +7591,8 @@ async def send_whatsapp_message(
         'sent_by': current_user.id
     }
     
-    await db.messages.insert_one(msg_record)
+    msg_copy = msg_record.copy()
+    await db.messages.insert_one(msg_copy)
     return {'message': 'WhatsApp message sent successfully', 'message_id': msg_record['id']}
 
 @api_router.post("/messaging/send-email")

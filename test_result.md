@@ -1225,12 +1225,13 @@ metadata:
 
 test_plan:
   current_focus:
-    - "4 New Marketplace Extensions for Wholesale Management - COMPLETED"
-    - "All 20 new endpoints tested and working: Supplier Management (6), GM Approval Workflow (5), Warehouse Stock Tracking (5), Shipping & Delivery Tracking (4)"
-    - "100% success rate achieved for all wholesale management features"
-  stuck_tasks: []
+    - "Enhanced RMS with Advanced Confidence & Insights - TESTING COMPLETED"
+    - "4 enhanced RMS endpoints tested: Auto-Pricing (✓), Demand Forecast (❌), Competitor Comparison (✓), Pricing Insights (✓)"
+    - "83.3% success rate - 5/6 tests passed, 1 critical datetime timezone issue in demand forecast"
+  stuck_tasks:
+    - "POST /rms/demand-forecast (90-day) - TypeError: can't subtract offset-naive and offset-aware datetimes"
   test_all: false
-  test_priority: "marketplace_extensions_testing_complete"
+  test_priority: "enhanced_rms_testing_complete"
 
 agent_communication:
   - agent: "testing"

@@ -432,18 +432,24 @@ class TaskManagementTester:
                 
                 if success and response.json():
                     data = response.json()
-                    details += f" - Status: {data.get('status')}"
-                    details += f" - Completed at: {data.get('completed_at', 'N/A')}"
+                    details += f" - Response: {data.get('message', 'Status updated')}"
                     
-                    # Verify completion workflow (in_progress → completed)
-                    if data.get('status') == 'completed':
-                        details += " - Completion workflow: ✓"
-                    else:
-                        details += f" - Completion workflow issue: {data.get('status')}"
-                    
-                    # Check completion photos
-                    photos = data.get('completion_photos', [])
-                    details += f" - Photos: {len(photos)}"
+                    # The endpoint returns a message, let's fetch task details
+                    task_response = self.session.get(f"{BACKEND_URL}/tasks/{task_id}")
+                    if task_response.status_code == 200:
+                        task_data = task_response.json()
+                        details += f" - Status: {task_data.get('status')}"
+                        details += f" - Completed at: {task_data.get('completed_at', 'N/A')}"
+                        
+                        # Verify completion workflow (in_progress → completed)
+                        if task_data.get('status') == 'completed':
+                            details += " - Completion workflow: ✓"
+                        else:
+                            details += f" - Completion workflow issue: {task_data.get('status')}"
+                        
+                        # Check completion photos
+                        photos = task_data.get('completion_photos', [])
+                        details += f" - Photos: {len(photos)}"
                 
                 self.log_test_result("core_tasks", f"/tasks/{task_id}/status (completed)", "POST", success, details)
             except Exception as e:

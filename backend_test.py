@@ -1013,7 +1013,7 @@ class HotelPMSBackendTester:
                 if supplier_id:
                     supplier_ids.append(supplier_id)
                 details += f" - Supplier created: {response.json().get('supplier_name', 'N/A')}"
-            self.log_test_result("marketplace", "/marketplace/suppliers", "POST", success, details)
+            self.log_test_result("marketplace_extensions", "/marketplace/suppliers", "POST", success, details)
         except Exception as e:
             self.log_test_result("marketplace", "/marketplace/suppliers", "POST", False, f"Error: {str(e)}")
 

@@ -47,6 +47,10 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
   const [draggingBooking, setDraggingBooking] = useState(null);
   const [dragOverCell, setDragOverCell] = useState(null);
   
+  // Hover tooltip state for ADR/BAR display
+  const [hoveredCell, setHoveredCell] = useState(null);
+  const [cellRates, setCellRates] = useState({});
+  
   // Room Move state
   const [showMoveReasonDialog, setShowMoveReasonDialog] = useState(false);
   const [moveData, setMoveData] = useState(null);

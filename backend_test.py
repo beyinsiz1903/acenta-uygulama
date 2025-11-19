@@ -1819,19 +1819,19 @@ class HotelPMSBackendTester:
         print("\n" + "="*80)
 
     def run_all_tests(self):
-        """Run Enhanced RMS Backend Tests"""
-        print("🚀 Testing Enhanced RMS with Advanced Confidence & Insights")
-        print("Testing 4 NEW enhanced RMS endpoints with dynamic confidence scoring...")
+        """Run Enhanced Calendar Backend Tests"""
+        print("🚀 Testing Enhanced Reservation Calendar with Rate Codes & Group View")
+        print("Testing 5 NEW calendar enhancement endpoints...")
         
         if not self.authenticate():
             print("❌ Authentication failed. Cannot proceed with testing.")
             return False
         
-        # Run Enhanced RMS test suite
-        self.test_enhanced_rms_system()     # 4 enhanced endpoints
+        # Run Enhanced Calendar test suite
+        self.test_enhanced_calendar_features()     # 5 calendar endpoints
         
         # Print comprehensive summary
-        self.print_summary()
+        self.print_calendar_summary()
         
         return True
 

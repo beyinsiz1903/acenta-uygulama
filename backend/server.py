@@ -4048,6 +4048,184 @@ async def get_cost_summary(current_user: User = Depends(get_current_user)):
         }
     }).to_list(10000)
     
+
+@api_router.post("/reviews/ai-sentiment-analysis")
+async def ai_sentiment_analysis(
+    data: dict,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    AI Sentiment Analysis for guest reviews
+    Returns: sentiment, confidence, issues, highlights, recommendations
+    """
+    review_text = data.get('review_text', '')
+    
+    if not review_text:
+        raise HTTPException(status_code=400, detail='Review text is required')
+    
+    # Simple keyword-based sentiment analysis (can be replaced with actual AI API)
+    review_lower = review_text.lower()
+    
+    # Negative keywords
+    negative_keywords = ['dirty', 'broken', 'bad', 'terrible', 'awful', 'poor', 'noise', 'smell', 'rude', 'slow']
+    # Positive keywords
+    positive_keywords = ['great', 'excellent', 'amazing', 'wonderful', 'clean', 'friendly', 'helpful', 'perfect', 'love']
+    
+    negative_count = sum(1 for keyword in negative_keywords if keyword in review_lower)
+    positive_count = sum(1 for keyword in positive_keywords if keyword in review_lower)
+    
+    # Determine sentiment
+    if negative_count > positive_count:
+        sentiment = 'negative'
+        confidence = min(0.6 + (negative_count * 0.1), 0.95)
+    elif positive_count > negative_count:
+        sentiment = 'positive'
+        confidence = min(0.6 + (positive_count * 0.1), 0.95)
+    else:
+        sentiment = 'neutral'
+        confidence = 0.5
+    
+    # Detect issues
+    issues = []
+    if 'dirty' in review_lower or 'clean' in review_lower:
+        issues.append({
+            'category': 'Cleanliness',
+            'description': 'Guest mentioned cleanliness concerns',
+            'severity': 'high' if 'dirty' in review_lower else 'medium'
+        })
+    if 'broken' in review_lower or 'repair' in review_lower:
+        issues.append({
+            'category': 'Maintenance',
+            'description': 'Equipment or room maintenance issue',
+            'severity': 'high'
+        })
+    if 'noise' in review_lower:
+        issues.append({
+            'category': 'Noise',
+            'description': 'Noise complaint detected',
+            'severity': 'medium'
+        })
+    if 'rude' in review_lower or 'unfriendly' in review_lower:
+        issues.append({
+            'category': 'Staff Behavior',
+            'description': 'Staff attitude issue mentioned',
+            'severity': 'high'
+        })
+    
+    # Detect highlights
+    highlights = []
+    if 'friendly' in review_lower or 'helpful' in review_lower:
+        highlights.append({
+            'category': 'Staff Friendliness',
+            'description': 'Guest praised staff attitude'
+        })
+    if 'clean' in review_lower and 'dirty' not in review_lower:
+        highlights.append({
+            'category': 'Cleanliness',
+            'description': 'Guest appreciated room cleanliness'
+        })
+    if 'location' in review_lower and ('great' in review_lower or 'perfect' in review_lower):
+        highlights.append({
+            'category': 'Location',
+            'description': 'Guest loved the location'
+        })
+    
+    # Generate recommendations
+    recommendations = []
+    if sentiment == 'negative':
+        recommendations.append('Contact guest immediately for service recovery')
+        recommendations.append('Assign compensation (points/discount) if appropriate')
+        if issues:
+            recommendations.append(f'Create maintenance task for {issues[0]["category"]}')
+    elif sentiment == 'positive':
+        recommendations.append('Thank guest and encourage loyalty program enrollment')
+        recommendations.append('Share review on social media (with permission)')
+    
+    return {
+        'sentiment': sentiment,
+        'confidence': confidence,
+        'issues': issues,
+        'highlights': highlights,
+        'recommendations': recommendations
+    }
+
+@api_router.get("/tasks/kanban")
+async def get_tasks_kanban(current_user: User = Depends(get_current_user)):
+    """
+    Get tasks organized by kanban columns: new, in_progress, waiting_parts, completed
+    """
+    tasks = await db.tasks.find({
+        'tenant_id': current_user.tenant_id
+    }).to_list(1000)
+    
+    kanban = {
+        'new': [],
+        'in_progress': [],
+        'waiting_parts': [],
+        'completed': []
+    }
+    
+    for task in tasks:
+        status = task.get('status', 'new')
+        kanban[status].append(task)
+    
+    return {'tasks': kanban}
+
+@api_router.post("/tasks/move")
+async def move_task(
+    data: dict,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Move task between kanban columns
+    """
+    task_id = data.get('task_id')
+    to_status = data.get('to_status')
+    
+    await db.tasks.update_one(
+        {
+            'id': task_id,
+            'tenant_id': current_user.tenant_id
+        },
+        {
+            '$set': {
+                'status': to_status,
+                'updated_at': datetime.now(timezone.utc).isoformat()
+            }
+        }
+    )
+    
+    return {'message': f'Task moved to {to_status}'}
+
+@api_router.post("/loyalty/tier-benefits/update")
+async def update_loyalty_tier_benefits(
+    data: dict,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Update loyalty tier benefits configuration
+    """
+    tiers = data.get('tiers', [])
+    
+    for tier in tiers:
+        await db.loyalty_tier_benefits.update_one(
+            {
+                'tenant_id': current_user.tenant_id,
+                'tier_name': tier['name']
+            },
+            {
+                '$set': {
+                    'benefits': tier['benefits'],
+                    'updated_at': datetime.now(timezone.utc).isoformat(),
+                    'updated_by': current_user.id
+                }
+            },
+            upsert=True
+        )
+    
+    return {'message': f'{len(tiers)} tier benefits updated successfully'}
+
+
     # Map purchase order categories to cost categories
     category_mapping = {
         'cleaning': 'Housekeeping',

@@ -123,6 +123,271 @@ user_problem_statement: |
   17. Reservation Improvements - Double-booking check, ADR visibility, Rate override panel
 
 backend:
+  - task: "Dashboard - Employee Performance Endpoint"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added GET /api/dashboard/employee-performance - Returns HK staff avg cleaning time, FD staff avg check-in duration, performance ratings, efficiency scores"
+
+  - task: "Dashboard - Guest Satisfaction Trends Endpoint"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added GET /api/dashboard/guest-satisfaction-trends - Returns NPS score, avg rating, promoters/detractors breakdown, 7-day vs 30-day comparison, trend data"
+
+  - task: "Dashboard - OTA Cancellation Rate Endpoint"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added GET /api/dashboard/ota-cancellation-rate - Returns overall/OTA cancellation rates, by-channel breakdown, revenue impact, cancellation patterns"
+
+  - task: "Check-in - Passport Scan Endpoint"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added POST /api/frontdesk/passport-scan - OCR-ready endpoint for passport data extraction (MVP with simulated response, ready for OCR.space/Google Vision integration)"
+
+  - task: "Check-in - Walk-in Booking Endpoint"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added POST /api/frontdesk/walk-in-booking - One-click walk-in: creates guest, booking, checks in, creates folio. Validates room availability"
+
+  - task: "Check-in - Guest Alerts Endpoints"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added GET /api/frontdesk/guest-alerts/{guest_id} and POST /api/frontdesk/guest-alerts - Returns VIP, birthday, special requests, preferences, complaints, loyalty status alerts"
+
+  - task: "Housekeeping - Task Timing Analysis"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added GET /api/housekeeping/task-timing - Returns avg/min/max duration, staff performance, task type analysis, efficiency ratings"
+
+  - task: "Housekeeping - Staff Performance Table"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added GET /api/housekeeping/staff-performance-table - Returns detailed staff performance with quality scores, overall performance ratings, tasks per day"
+
+  - task: "Housekeeping - Linen Inventory"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added GET /api/housekeeping/linen-inventory and POST /api/housekeeping/linen-inventory/adjust - Track stock/in-use/laundry/damaged quantities, low stock alerts"
+
+  - task: "Room Details - Enhanced Room Details"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added GET /api/rooms/{room_id}/details-enhanced, POST /api/rooms/{room_id}/notes, POST /api/rooms/{room_id}/minibar-update - Room notes, mini-bar tracking, next maintenance due"
+
+  - task: "Guest Profile - Enhanced Profile"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added GET /api/guests/{guest_id}/profile-enhanced, POST /api/guests/{guest_id}/preferences, POST /api/guests/{guest_id}/tags - Stay history, preferences (pillow, temp, smoking), tags (VIP, Honeymoon), LTV calculation"
+
+  - task: "Reservation - Enhanced Details"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added GET /api/reservations/{booking_id}/details-enhanced - Cancellation policy details, OTA commission breakdown (gross/net revenue), rate breakdown"
+
+  - task: "Financial - AR/Collections Endpoints"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added POST /api/accounting/send-statement and GET /api/accounting/smart-alerts - One-click statement sending, smart AR alerts with overdue detection"
+
+  - task: "POS/F&B - Enhancements"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added POST /api/pos/check-split (equal/by-item/custom), POST /api/pos/transfer-table, POST /api/pos/happy-hour - Check splitting, table transfers, happy hour discounts"
+
+  - task: "Channel Manager - Rate Parity & Sync"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added GET /api/channel-manager/rate-parity-check and GET /api/channel-manager/sync-history - Rate parity detection, negative disparity alerts, sync history logs"
+
+  - task: "Revenue Management - Restrictions & Compression"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added POST /api/rms/restrictions and GET /api/rms/market-compression - Dynamic restrictions (MinLOS, CTA, CTD), market compression scoring, pricing recommendations"
+
+  - task: "Maintenance - Mobile App & Analysis"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added POST /api/maintenance/mobile/technician-task, GET /api/maintenance/repeat-issues, GET /api/maintenance/sla-metrics - Mobile technician updates, repeat issue detection, SLA measurement"
+
+  - task: "Review Management - AI & Auto-reply"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added POST /api/feedback/ai-sentiment-analysis, POST /api/feedback/auto-reply, GET /api/feedback/source-filtering - AI sentiment analysis (ready for OpenAI/Google NLP), auto-reply templates, source filtering"
+
+  - task: "Loyalty Program - Benefits & Redemption"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added GET /api/loyalty/{guest_id}/benefits and POST /api/loyalty/{guest_id}/redeem-points - Tier benefits (Bronze/Silver/Gold/Platinum), points expiration, LTV calculation, redemption"
+
+  - task: "Procurement - Auto-suggestions & Alerts"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added GET /api/procurement/auto-purchase-suggestions and POST /api/procurement/minimum-stock-alert - Consumption rate analysis, auto-purchase recommendations, stock alerts"
+
+  - task: "Contracted Rates - Allotment & Pickup"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added GET /api/contracted-rates/allotment-utilization and GET /api/contracted-rates/pickup-alerts - Allotment utilization tracking (90% alert), pickup vs allocation monitoring"
+
+  - task: "Reservation - Final Improvements"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added GET /api/reservations/double-booking-check, GET /api/reservations/adr-visibility, POST /api/reservations/rate-override-panel - Double-booking conflict engine, ADR by rate code, rate override with authorization"
+
+backend:
   - task: "Add Folio enums (FolioType, FolioStatus, ChargeCategory, FolioOperationType, PaymentType)"
     implemented: true
     working: true

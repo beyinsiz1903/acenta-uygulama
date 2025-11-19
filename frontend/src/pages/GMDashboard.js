@@ -29,7 +29,8 @@ import {
   Key,
   Printer,
   Phone,
-  Send
+  Send,
+  Building2
 } from 'lucide-react';
 
 const GMDashboard = ({ user, tenant, onLogout }) => {

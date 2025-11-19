@@ -2557,7 +2557,101 @@ agent_communication:
       🔧 RECOMMENDATION FOR MAIN AGENT:
       Fix booking data validation errors to enable folio integration testing. The endpoint implementation is correct but requires valid booking/folio data structure. Consider cleaning up existing booking records or creating proper test data with all required fields.
       
-      ✅ OVERALL STATUS: Enhanced Accounting with Multi-Currency & E-Fatura Integration is HIGHLY FUNCTIONAL and ready for production use with minor data cleanup needed.ficiency reports is fully functional and thoroughly tested!
+      ✅ OVERALL STATUS: Enhanced Accounting with Multi-Currency & E-Fatura Integration is HIGHLY FUNCTIONAL and ready for production use with minor data cleanup needed.
+
+  - agent: "testing"
+    message: |
+      🎯 ENHANCED RESERVATION CALENDAR WITH RATE CODES & GROUP VIEW TESTING COMPLETED - 100% SUCCESS RATE!
+      
+      ✅ COMPREHENSIVE TESTING RESULTS (100% Success Rate - 6/6 tests passed):
+      
+      🏷️ RATE CODES MANAGEMENT (100% Success - 2/2 endpoints):
+      ✅ GET /api/calendar/rate-codes:
+      - Returns all 6 default rate codes with correct configurations ✓
+      - RO (Room Only): price_modifier 1.0 ✓
+      - BB (Bed & Breakfast): price_modifier 1.15, includes_breakfast: true ✓
+      - HB (Half Board): price_modifier 1.30, includes breakfast+dinner ✓
+      - FB (Full Board): price_modifier 1.45, includes all meals (breakfast, lunch, dinner) ✓
+      - AI (All Inclusive): price_modifier 1.75 ✓
+      - NR (Non-Refundable): price_modifier 0.85, is_refundable: false ✓
+      
+      ✅ POST /api/calendar/rate-codes:
+      - Successfully creates custom rate codes ✓
+      - Tested EP (Early Bird Special): modifier 0.8, includes breakfast, non-refundable ✓
+      - All rate code fields properly stored and returned ✓
+      
+      💡 ENHANCED CALENDAR TOOLTIP (100% Success - 2/2 tests):
+      ✅ POST /api/calendar/tooltip (without room type filter):
+      - Returns complete tooltip data structure ✓
+      - Occupancy fields: occupied_rooms, total_rooms, occupancy_pct, available_rooms ✓
+      - Revenue fields: total_revenue, adr, revpar ✓
+      - Rate codes breakdown with revenue_by_code ✓
+      - Segments breakdown by booking source ✓
+      - Room types occupancy data ✓
+      - Groups count and details ✓
+      
+      ✅ POST /api/calendar/tooltip (with room type filter):
+      - Room type filtering working correctly (deluxe filter) ✓
+      - Filtered occupancy data returned properly ✓
+      
+      👥 GROUP RESERVATION CALENDAR VIEW (100% Success - 2/2 tests):
+      ✅ GET /api/calendar/group-view:
+      - Returns 14-day calendar with proper daily data structure ✓
+      - Daily fields: date, total_rooms, group_rooms, regular_rooms, available_rooms, groups ✓
+      - Groups array with active groups per date ✓
+      - Summary with total_days (14), total_groups, date_range ✓
+      - Group details: group_id, group_name, total_rooms, rooms_active_today ✓
+      
+      ✅ GET /api/calendar/rate-code-breakdown:
+      - Returns 28-day breakdown for February date range ✓
+      - Daily breakdown fields: date, total_bookings, rate_codes ✓
+      - Rate code fields: code, name, count, percentage ✓
+      - Summary with date_range, total_bookings, rate_code_distribution ✓
+      - Percentage calculations working correctly ✓
+      
+      🎯 VALIDATION CRITERIA MET (100%):
+      - Rate codes returned with correct meal inclusions ✓
+      - Price modifiers properly set (0.80-1.75 range) ✓
+      - Tooltip data includes all required metrics (occupancy, ADR, RevPAR) ✓
+      - Rate code breakdown shows percentage distribution ✓
+      - Group view shows group rooms vs regular rooms ✓
+      - All calculations accurate (percentages, averages) ✓
+      
+      📊 BUSINESS LOGIC VERIFICATION (100% Working):
+      - Rate code price modifiers: RO (1.0), BB (1.15), HB (1.30), FB (1.45), AI (1.75), NR (0.85) ✓
+      - Meal inclusions: BB (breakfast), HB (breakfast+dinner), FB (all meals), AI (all meals) ✓
+      - Refundability: All refundable except NR (non-refundable) ✓
+      - Calendar tooltip aggregations: occupancy, revenue, segments, rate codes ✓
+      - Group calendar separation: group rooms vs regular rooms ✓
+      - Rate code distribution: daily breakdown with percentages ✓
+      
+      🔍 TESTING METHODOLOGY:
+      - Used realistic hotel data and date ranges (Jan 25, Feb 1-14, Feb 1-28)
+      - Tested all endpoint variations (with/without filters)
+      - Verified response structures match specifications
+      - Validated business logic and calculations
+      - Confirmed data relationships and aggregations
+      - Tested edge cases (empty data, filtering)
+      
+      ✅ SUCCESS CRITERIA MET (100%):
+      - All 5 endpoints return 200 status codes ✓
+      - Rate codes include default 6 codes with correct configurations ✓
+      - Tooltip provides enriched hover data with all metrics ✓
+      - Group calendar view separates group vs regular bookings ✓
+      - Rate code breakdown shows distribution over time ✓
+      - All calculations accurate and response structures complete ✓
+      
+      🎉 CONCLUSION:
+      Enhanced Reservation Calendar with Rate Codes & Group View is FULLY FUNCTIONAL and ready for production use. All calendar enhancements are working perfectly with accurate calculations, proper data structures, and comprehensive business logic. The system provides hotel managers with enriched calendar data including rate code management, detailed tooltip information, and specialized group reservation views.
+      
+      🚀 RECOMMENDATION:
+      All calendar enhancement features are production-ready. The system successfully provides:
+      - Complete rate codes management with meal inclusions and price modifiers
+      - Enhanced calendar tooltips with occupancy, revenue, and segment data
+      - Group reservation calendar view with room allocation tracking
+      - Rate code breakdown analysis with percentage distributions
+      
+      ✅ FINAL STATUS: Enhanced Reservation Calendar with Rate Codes & Group View - 100% WORKING
   
   - agent: "testing"
     message: |

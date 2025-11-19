@@ -9012,15 +9012,12 @@ async def get_purchase_orders(
 
 @api_router.post("/marketplace/purchase-orders")
 async def create_purchase_order(
-    supplier: str,
-    items: list,
-    delivery_location: str,
-    expected_delivery_date: str = None,
+    request: CreatePurchaseOrderRequest,
     current_user: User = Depends(get_current_user)
 ):
     """Create purchase order"""
     # Calculate total
-    total_amount = sum(item['quantity'] * item['unit_price'] for item in items)
+    total_amount = sum(item.get('quantity', 0) * item.get('unit_price', 0) for item in request.items)
     
     po = {
         'id': str(uuid.uuid4()),

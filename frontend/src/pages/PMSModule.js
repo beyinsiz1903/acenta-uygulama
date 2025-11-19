@@ -3325,12 +3325,35 @@ const PMSModule = ({ user, tenant, onLogout }) => {
                       {folioCharges.length === 0 ? (
                         <div className="text-center text-gray-400 py-8">No charges posted</div>
                       ) : (
-                        folioCharges.map((charge) => (
+                        folioCharges.map((charge) => {
+                          // Check if this is a POS charge with line items
+                          const isPOSCharge = charge.charge_category === 'restaurant' || charge.charge_category === 'bar' || charge.charge_category === 'room_service';
+                          const hasLineItems = charge.line_items && charge.line_items.length > 0;
+                          const isExpanded = expandedChargeItems[charge.id];
+                          
+                          return (
                           <Card key={charge.id} className={charge.voided ? 'opacity-50 bg-gray-50' : ''}>
                             <CardContent className="p-4">
-                              <div className="flex justify-between items-start">
+                              <div 
+                                className={`flex justify-between items-start ${isPOSCharge && hasLineItems ? 'cursor-pointer hover:bg-gray-50' : ''}`}
+                                onClick={() => {
+                                  if (isPOSCharge && hasLineItems) {
+                                    setExpandedChargeItems(prev => ({
+                                      ...prev,
+                                      [charge.id]: !prev[charge.id]
+                                    }));
+                                  }
+                                }}
+                              >
                                 <div className="flex-1">
-                                  <div className="font-semibold">{charge.description}</div>
+                                  <div className="flex items-center gap-2">
+                                    <div className="font-semibold">{charge.description}</div>
+                                    {isPOSCharge && hasLineItems && (
+                                      <button className="text-blue-600 text-xs">
+                                        {isExpanded ? '▼ Hide Items' : '▶ Show Items'}
+                                      </button>
+                                    )}
+                                  </div>
                                   <div className="text-sm text-gray-600">
                                     {charge.charge_category.replace('_', ' ').toUpperCase()}
                                   </div>
@@ -3352,8 +3375,39 @@ const PMSModule = ({ user, tenant, onLogout }) => {
                                   )}
                                 </div>
                               </div>
+
+                              {/* POS Line Items Breakdown - NEW */}
+                              {isPOSCharge && hasLineItems && isExpanded && (
+                                <div className="mt-3 pt-3 border-t bg-blue-50/50 rounded p-3">
+                                  <div className="text-xs font-semibold text-gray-700 mb-2">POS Fiş Detayı:</div>
+                                  <div className="space-y-1.5">
+                                    {charge.line_items.map((item, idx) => (
+                                      <div key={idx} className="flex justify-between items-center text-sm">
+                                        <div className="flex-1">
+                                          <span className="font-medium text-gray-700">
+                                            {item.quantity} x {item.item_name}
+                                          </span>
+                                          {item.modifiers && item.modifiers.length > 0 && (
+                                            <div className="text-xs text-gray-500 ml-4">
+                                              ({item.modifiers.join(', ')})
+                                            </div>
+                                          )}
+                                        </div>
+                                        <span className="font-semibold text-gray-800">
+                                          ${(item.unit_price * item.quantity).toFixed(2)}
+                                        </span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                  <div className="mt-2 pt-2 border-t flex justify-between text-sm">
+                                    <span className="font-semibold">Subtotal:</span>
+                                    <span className="font-bold">${charge.total.toFixed(2)}</span>
+                                  </div>
+                                </div>
+                              )}
                             </CardContent>
                           </Card>
+                        )}
                         ))
                       )}
                     </div>

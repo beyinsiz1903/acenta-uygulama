@@ -24731,10 +24731,13 @@ async def update_guest_preferences(
         'preferences': preference_data
     }
 
+class GuestTagsUpdate(BaseModel):
+    tags: List[str]
+
 @api_router.post("/guests/{guest_id}/tags")
 async def update_guest_tags(
     guest_id: str,
-    tags: List[str],
+    data: GuestTagsUpdate,
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
     """Update guest tags (VIP, Blacklist, etc.)"""

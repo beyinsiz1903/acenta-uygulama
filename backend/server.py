@@ -4277,6 +4277,218 @@ async def get_vip_notes(current_user: User = Depends(get_current_user)):
         }
     }
 
+@api_router.get("/ai/activity-feed")
+async def get_ai_activity_feed(
+    limit: int = 10,
+    current_user: User = Depends(get_current_user)
+):
+    """AI Activity Feed - Real-time AI suggestions and insights"""
+    today = datetime.now(timezone.utc)
+    
+    activities = []
+    
+    # 1. Price Optimization Suggestions
+    total_rooms = await db.rooms.count_documents({'tenant_id': current_user.tenant_id})
+    occupied = await db.bookings.count_documents({
+        'tenant_id': current_user.tenant_id,
+        'status': 'checked_in'
+    })
+    occupancy = (occupied / total_rooms * 100) if total_rooms > 0 else 0
+    
+    if occupancy > 85:
+        activities.append({
+            'id': str(uuid.uuid4()),
+            'type': 'price_suggestion',
+            'priority': 'high',
+            'title': '💰 Price Optimization Opportunity',
+            'message': f'High occupancy detected ({occupancy:.1f}%). Recommend increasing rates by 15-20% for next 3 days.',
+            'action': 'adjust_pricing',
+            'confidence': 0.89,
+            'potential_revenue': round(total_rooms * 50 * 0.15, 2),
+            'created_at': today.isoformat(),
+            'status': 'active'
+        })
+    elif occupancy < 50:
+        activities.append({
+            'id': str(uuid.uuid4()),
+            'type': 'price_suggestion',
+            'priority': 'high',
+            'title': '📉 Low Occupancy Alert',
+            'message': f'Occupancy at {occupancy:.1f}%. Recommend promotional rates (-10%) and special packages.',
+            'action': 'create_promotion',
+            'confidence': 0.85,
+            'potential_bookings': round(total_rooms * 0.2),
+            'created_at': today.isoformat(),
+            'status': 'active'
+        })
+    
+    # 2. Overbooking Detection
+    next_7_days = today + timedelta(days=7)
+    room_dates = {}
+    async for booking in db.bookings.find({
+        'tenant_id': current_user.tenant_id,
+        'status': {'$in': ['confirmed', 'guaranteed']},
+        'check_in': {'$lte': next_7_days.isoformat()}
+    }):
+        room_id = booking.get('room_id')
+        check_in = datetime.fromisoformat(booking.get('check_in')).date()
+        check_out = datetime.fromisoformat(booking.get('check_out')).date()
+        
+        current = check_in
+        while current < check_out:
+            key = f"{room_id}_{current}"
+            if key not in room_dates:
+                room_dates[key] = []
+            room_dates[key].append(booking)
+            current += timedelta(days=1)
+    
+    overbooking_count = sum(1 for bookings in room_dates.values() if len(bookings) > 1)
+    if overbooking_count > 0:
+        activities.append({
+            'id': str(uuid.uuid4()),
+            'type': 'overbooking_alert',
+            'priority': 'critical',
+            'title': '🚨 Overbooking Detected',
+            'message': f'{overbooking_count} room conflicts found in next 7 days. Immediate action required.',
+            'action': 'resolve_conflicts',
+            'conflicts': overbooking_count,
+            'confidence': 1.0,
+            'created_at': today.isoformat(),
+            'status': 'active'
+        })
+    
+    # 3. VIP Visitor Insights
+    vip_arrivals = []
+    today_start = datetime.combine(today.date(), datetime.min.time()).replace(tzinfo=timezone.utc)
+    today_end = datetime.combine(today.date(), datetime.max.time()).replace(tzinfo=timezone.utc)
+    
+    async for booking in db.bookings.find({
+        'tenant_id': current_user.tenant_id,
+        'check_in': {'$gte': today_start.isoformat(), '$lte': today_end.isoformat()},
+        'status': {'$in': ['confirmed', 'guaranteed']}
+    }):
+        guest = await db.guests.find_one({'id': booking.get('guest_id')})
+        if guest and guest.get('vip'):
+            vip_arrivals.append({
+                'name': guest.get('name'),
+                'room': booking.get('room_number'),
+                'tier': guest.get('loyalty_tier', 'gold'),
+                'preferences': guest.get('preferences')
+            })
+    
+    if vip_arrivals:
+        activities.append({
+            'id': str(uuid.uuid4()),
+            'type': 'vip_insight',
+            'priority': 'high',
+            'title': f'⭐ {len(vip_arrivals)} VIP Arrivals Today',
+            'message': f'Special attention required. Ensure welcome amenities and room preferences are prepared.',
+            'action': 'review_vip_list',
+            'vip_count': len(vip_arrivals),
+            'vips': vip_arrivals[:3],
+            'confidence': 1.0,
+            'created_at': today.isoformat(),
+            'status': 'active'
+        })
+    
+    # 4. Revenue Anomaly Detection
+    today_revenue = 0
+    charges = await db.folio_charges.find({
+        'tenant_id': current_user.tenant_id,
+        'date': {'$gte': today_start.isoformat(), '$lte': today_end.isoformat()},
+        'voided': False
+    }).to_list(10000)
+    today_revenue = sum(c.get('total', 0) for c in charges)
+    
+    # Get average daily revenue (last 30 days)
+    thirty_days_ago = today - timedelta(days=30)
+    all_charges = await db.folio_charges.find({
+        'tenant_id': current_user.tenant_id,
+        'date': {'$gte': thirty_days_ago.isoformat()},
+        'voided': False
+    }).to_list(100000)
+    
+    if all_charges:
+        avg_daily_revenue = sum(c.get('total', 0) for c in all_charges) / 30
+        variance = ((today_revenue - avg_daily_revenue) / avg_daily_revenue * 100) if avg_daily_revenue > 0 else 0
+        
+        if abs(variance) > 20:
+            activities.append({
+                'id': str(uuid.uuid4()),
+                'type': 'revenue_anomaly',
+                'priority': 'medium' if variance > 0 else 'high',
+                'title': '📊 Revenue Anomaly Detected',
+                'message': f"Today's revenue {'↗️ +' if variance > 0 else '↘️ '}{abs(variance):.1f}% vs 30-day average. {'Investigate positive spike.' if variance > 0 else 'Review for potential issues.'}",
+                'action': 'analyze_revenue',
+                'variance': round(variance, 1),
+                'today_revenue': round(today_revenue, 2),
+                'avg_revenue': round(avg_daily_revenue, 2),
+                'confidence': 0.92,
+                'created_at': today.isoformat(),
+                'status': 'active'
+            })
+    
+    # 5. Predictive Maintenance
+    maintenance_due = await db.rooms.count_documents({
+        'tenant_id': current_user.tenant_id,
+        'last_maintenance': {'$lt': (today - timedelta(days=90)).isoformat()}
+    })
+    
+    if maintenance_due > 0:
+        activities.append({
+            'id': str(uuid.uuid4()),
+            'type': 'maintenance_alert',
+            'priority': 'medium',
+            'title': '🔧 Predictive Maintenance Alert',
+            'message': f'{maintenance_due} rooms require scheduled maintenance. Prevent future issues with proactive maintenance.',
+            'action': 'schedule_maintenance',
+            'rooms_count': maintenance_due,
+            'confidence': 0.88,
+            'created_at': today.isoformat(),
+            'status': 'active'
+        })
+    
+    # 6. Booking Trend Insight
+    week_bookings = await db.bookings.count_documents({
+        'tenant_id': current_user.tenant_id,
+        'created_at': {'$gte': (today - timedelta(days=7)).isoformat()}
+    })
+    prev_week_bookings = await db.bookings.count_documents({
+        'tenant_id': current_user.tenant_id,
+        'created_at': {
+            '$gte': (today - timedelta(days=14)).isoformat(),
+            '$lt': (today - timedelta(days=7)).isoformat()
+        }
+    })
+    
+    if week_bookings > 0 and prev_week_bookings > 0:
+        booking_trend = ((week_bookings - prev_week_bookings) / prev_week_bookings * 100)
+        if abs(booking_trend) > 15:
+            activities.append({
+                'id': str(uuid.uuid4()),
+                'type': 'booking_trend',
+                'priority': 'low',
+                'title': '📈 Booking Trend Analysis',
+                'message': f"Booking velocity {'↗️ +' if booking_trend > 0 else '↘️ '}{abs(booking_trend):.1f}% this week vs last week.",
+                'action': 'view_trends',
+                'trend': round(booking_trend, 1),
+                'this_week': week_bookings,
+                'last_week': prev_week_bookings,
+                'confidence': 0.83,
+                'created_at': today.isoformat(),
+                'status': 'active'
+            })
+    
+    # Sort by priority and limit
+    priority_order = {'critical': 0, 'high': 1, 'medium': 2, 'low': 3}
+    activities.sort(key=lambda x: priority_order.get(x['priority'], 4))
+    
+    return {
+        'activities': activities[:limit],
+        'total_count': len(activities),
+        'last_updated': today.isoformat()
+    }
+
 @api_router.get("/reports/market-segment")
 async def get_market_segment_report(
     start_date: str,

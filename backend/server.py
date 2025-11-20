@@ -1699,7 +1699,28 @@ async def create_room(room_data: RoomCreate, current_user: User = Depends(get_cu
 
 @api_router.get("/pms/rooms", response_model=List[Room])
 async def get_rooms(current_user: User = Depends(get_current_user)):
-    rooms = await db.rooms.find({'tenant_id': current_user.tenant_id}, {'_id': 0}).to_list(1000)
+    rooms_raw = await db.rooms.find({'tenant_id': current_user.tenant_id}, {'_id': 0}).to_list(1000)
+    
+    # Fix field mapping
+    rooms = []
+    for room in rooms_raw:
+        # Convert floor to int if it's string
+        if 'floor' in room and isinstance(room['floor'], str):
+            try:
+                room['floor'] = int(room['floor'])
+            except:
+                room['floor'] = 1
+        elif 'floor' not in room:
+            room['floor'] = 1
+        
+        # Map max_occupancy to capacity if needed
+        if 'capacity' not in room and 'max_occupancy' in room:
+            room['capacity'] = room['max_occupancy']
+        elif 'capacity' not in room:
+            room['capacity'] = 2
+        
+        rooms.append(room)
+    
     return rooms
 
 @api_router.put("/pms/rooms/{room_id}")

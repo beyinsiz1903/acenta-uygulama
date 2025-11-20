@@ -83,7 +83,18 @@ const MessagingCenter = () => {
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Tabs */}
+        <Tabs defaultValue="compose" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 max-w-md">
+            <TabsTrigger value="compose">Compose Message</TabsTrigger>
+            <TabsTrigger value="templates">
+              <MessageSquare className="w-4 h-4 mr-2" />
+              WhatsApp/SMS Templates
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="compose" className="mt-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left: Compose Message */}
           <div className="lg:col-span-2 space-y-6">
             {/* Channel Selection */}

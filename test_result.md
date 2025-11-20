@@ -368,15 +368,18 @@ user_problem_statement: |
 
   - task: "POS Module - Order History"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Added GET /api/pos/orders - Get POS order history with booking_id and date range filtering"
+      - working: true
+        agent: "testing"
+        comment: "✅ ENDPOINT WORKING - GET /api/pos/orders returns proper response with orders array and count. Filtering with booking_id and date range (start_date, end_date) parameters functional. Response structure verified. Minor: Expected total_revenue field not present but core functionality works with orders and count."
 
   20. Housekeeping Mobile View - Room assignment (staff tracking), Cleaning time statistics
   21. Guest Profile Complete - Guest history (all stays), Preferences (pillow/floor/temperature), Blacklist/VIP tagging

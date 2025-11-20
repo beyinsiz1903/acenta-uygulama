@@ -75,6 +75,14 @@ try:
 except Exception as e:
     print(f"⚠️ CRM models not loaded: {e}")
 
+# Import desktop enhancements
+try:
+    from desktop_enhancements_endpoints import desktop_router
+    print("✅ Desktop enhancements imported successfully")
+except ImportError as e:
+    print(f"⚠️ Desktop enhancements not available: {e}")
+    desktop_router = None
+
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 

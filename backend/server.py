@@ -17072,11 +17072,14 @@ async def get_loyalty_benefits(
     }
 
 
+class RedeemPointsRequest(BaseModel):
+    points_to_redeem: int
+    reward_type: str  # free_night, upgrade, fnb_credit, spa_credit
+
 @api_router.post("/loyalty/{guest_id}/redeem-points")
 async def redeem_loyalty_points(
     guest_id: str,
-    points_to_redeem: int,
-    redemption_type: str,  # free_night, upgrade, fnb_credit, spa_credit
+    request: RedeemPointsRequest,
     current_user: User = Depends(get_current_user)
 ):
     """Redeem loyalty points"""
@@ -17090,11 +17093,11 @@ async def redeem_loyalty_points(
     
     current_points = guest.get('loyalty_points', 0)
     
-    if current_points < points_to_redeem:
+    if current_points < request.points_to_redeem:
         raise HTTPException(status_code=400, detail="Insufficient points")
     
     # Update points
-    new_balance = current_points - points_to_redeem
+    new_balance = current_points - request.points_to_redeem
     await db.guests.update_one(
         {'id': guest_id},
         {'$set': {'loyalty_points': new_balance}}
@@ -17105,8 +17108,8 @@ async def redeem_loyalty_points(
         'id': str(uuid.uuid4()),
         'tenant_id': current_user.tenant_id,
         'guest_id': guest_id,
-        'points_redeemed': points_to_redeem,
-        'redemption_type': redemption_type,
+        'points_redeemed': request.points_to_redeem,
+        'redemption_type': request.reward_type,
         'processed_by': current_user.name,
         'created_at': datetime.now(timezone.utc).isoformat()
     }
@@ -17115,8 +17118,8 @@ async def redeem_loyalty_points(
     
     return {
         'success': True,
-        'points_redeemed': points_to_redeem,
-        'redemption_type': redemption_type,
+        'points_redeemed': request.points_to_redeem,
+        'redemption_type': request.reward_type,
         'new_points_balance': new_balance,
         'redemption_id': redemption['id']
     }

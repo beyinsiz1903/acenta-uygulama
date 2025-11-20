@@ -480,6 +480,26 @@ function App() {
               )
             }
           />
+          <Route
+            path="/housekeeping"
+            element={
+              isAuthenticated ? (
+                <HousekeepingDashboard user={user} tenant={tenant} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/auth" replace />
+              )
+            }
+          />
+          <Route
+            path="/pos"
+            element={
+              isAuthenticated ? (
+                <POSDashboard user={user} tenant={tenant} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/auth" replace />
+              )
+            }
+          />
         </Routes>
       </BrowserRouter>
     </div>

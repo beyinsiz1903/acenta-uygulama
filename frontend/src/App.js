@@ -385,6 +385,77 @@ function App() {
               )
             }
           />
+          {/* Mobile Department Routes */}
+          <Route
+            path="/mobile"
+            element={
+              isAuthenticated ? (
+                <MobileDashboard user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/auth" replace />
+              )
+            }
+          />
+          <Route
+            path="/mobile/housekeeping"
+            element={
+              isAuthenticated ? (
+                <MobileHousekeeping user={user} />
+              ) : (
+                <Navigate to="/auth" replace />
+              )
+            }
+          />
+          <Route
+            path="/mobile/frontdesk"
+            element={
+              isAuthenticated ? (
+                <MobileFrontDesk user={user} />
+              ) : (
+                <Navigate to="/auth" replace />
+              )
+            }
+          />
+          <Route
+            path="/mobile/fnb"
+            element={
+              isAuthenticated ? (
+                <MobileFnB user={user} />
+              ) : (
+                <Navigate to="/auth" replace />
+              )
+            }
+          />
+          <Route
+            path="/mobile/maintenance"
+            element={
+              isAuthenticated ? (
+                <MobileMaintenance user={user} />
+              ) : (
+                <Navigate to="/auth" replace />
+              )
+            }
+          />
+          <Route
+            path="/mobile/finance"
+            element={
+              isAuthenticated ? (
+                <MobileFinance user={user} />
+              ) : (
+                <Navigate to="/auth" replace />
+              )
+            }
+          />
+          <Route
+            path="/mobile/gm"
+            element={
+              isAuthenticated ? (
+                <MobileGM user={user} />
+              ) : (
+                <Navigate to="/auth" replace />
+              )
+            }
+          />
         </Routes>
       </BrowserRouter>
     </div>

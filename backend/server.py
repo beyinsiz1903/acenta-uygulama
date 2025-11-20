@@ -21234,6 +21234,21 @@ async def get_guest_bookings(
         # Get tenant/hotel details for THIS booking
         tenant = await db.tenants.find_one({'id': booking.get('tenant_id')})
         
+        # Helper to make datetime timezone-aware
+        def make_aware(dt_str):
+            if not dt_str:
+                return None
+            try:
+                dt = datetime.fromisoformat(dt_str)
+                if dt.tzinfo is None:
+                    dt = dt.replace(tzinfo=timezone.utc)
+                return dt
+            except:
+                return None
+        
+        check_in_dt = make_aware(booking.get('check_in'))
+        now_utc = datetime.now(timezone.utc)
+        
         booking_data = {
             'id': booking.get('id'),
             'tenant_id': booking.get('tenant_id'),
@@ -21245,7 +21260,7 @@ async def get_guest_bookings(
             'total_amount': booking.get('total_amount', 0),
             'guest_name': guest.get('name') if guest else current_user.name,
             'qr_code_data': booking.get('qr_code_data'),
-            'can_checkin': booking.get('status') == 'confirmed' and datetime.fromisoformat(booking.get('check_in')) <= datetime.now(timezone.utc),
+            'can_checkin': booking.get('status') == 'confirmed' and check_in_dt and check_in_dt <= now_utc,
             'can_communicate': booking.get('status') in ['confirmed', 'checked_in'],
             'can_order_services': booking.get('status') == 'checked_in',
             # Nested hotel data for frontend

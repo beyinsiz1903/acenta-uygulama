@@ -158,15 +158,18 @@ user_problem_statement: |
 
   - task: "OTA Reservation - Multi-Room Reservation"
     implemented: true
-    working: "NA"
+    working: false
     file: "/app/backend/server.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Added POST /api/reservations/multi-room - Link multiple bookings as group reservation with group_name, primary_booking_id, related_booking_ids"
+      - working: false
+        agent: "testing"
+        comment: "❌ ENDPOINT FAILING - POST /api/reservations/multi-room returns HTTP 422 error. Request body validation failing. Tested with group_name, primary_booking_id, related_booking_ids fields but endpoint expects different request structure. Endpoint implementation exists but request validation needs review."
 
   - task: "Housekeeping Mobile - Room Assignments"
     implemented: true

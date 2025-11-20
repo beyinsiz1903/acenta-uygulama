@@ -25310,8 +25310,8 @@ async def create_pos_order(
     
     # Get booking and guest info
     guest_id = None
-    if booking_id:
-        booking = await db.bookings.find_one({'id': booking_id, 'tenant_id': current_user.tenant_id})
+    if data.booking_id:
+        booking = await db.bookings.find_one({'id': data.booking_id, 'tenant_id': current_user.tenant_id})
         if booking:
             guest_id = booking['guest_id']
     
@@ -25319,7 +25319,7 @@ async def create_pos_order(
     order_items_list = []
     subtotal = 0.0
     
-    for item_data in order_items:
+    for item_data in data.order_items:
         # Get menu item
         menu_item = await db.pos_menu_items.find_one({
             'id': item_data['item_id'],

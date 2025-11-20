@@ -21163,6 +21163,8 @@ async def get_demo_status(
             'rooms': rooms_count,
             'guests': guests_count,
             'bookings': bookings_count
+        }
+    }
 
 
 # ============= GUEST MOBILE APP ENDPOINTS =============

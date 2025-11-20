@@ -294,6 +294,185 @@ const ChannelManagerModule = ({ user, tenant, onLogout }) => {
             </Card>
           </TabsContent>
 
+
+          {/* Rate & Availability Tab */}
+          <TabsContent value="rates" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Rate & Availability Management</CardTitle>
+                <CardDescription>
+                  Update room rates, availability, and restrictions across all channels
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Room Type Selector */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label>Room Type</Label>
+                    <select className="w-full border rounded-md p-2 mt-1">
+                      <option value="standard">Standard Room</option>
+                      <option value="deluxe">Deluxe Room</option>
+                      <option value="suite">Suite</option>
+                    </select>
+                  </div>
+                  <div>
+                    <Label>Date Range</Label>
+                    <div className="flex space-x-2 mt-1">
+                      <Input type="date" />
+                      <Input type="date" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Rate Settings */}
+                <Card className="border-blue-200">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg">Rate Settings</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <Label>Base Rate (₺)</Label>
+                        <Input
+                          type="number"
+                          placeholder="0.00"
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label>Discount (%)</Label>
+                        <Input
+                          type="number"
+                          placeholder="0"
+                          min="0"
+                          max="100"
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label>Final Rate (₺)</Label>
+                        <Input
+                          type="number"
+                          placeholder="0.00"
+                          className="mt-1"
+                          disabled
+                        />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Availability Settings */}
+                <Card className="border-green-200">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg">Availability Settings</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <Label>Available Rooms</Label>
+                        <Input
+                          type="number"
+                          placeholder="0"
+                          min="0"
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label>Stop Sell</Label>
+                        <select className="w-full border rounded-md p-2 mt-1">
+                          <option value="open">Open</option>
+                          <option value="closed">Closed</option>
+                        </select>
+                      </div>
+                      <div>
+                        <Label>Closed to Arrival</Label>
+                        <select className="w-full border rounded-md p-2 mt-1">
+                          <option value="no">No</option>
+                          <option value="yes">Yes</option>
+                        </select>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Restrictions */}
+                <Card className="border-purple-200">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg">Restrictions</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <Label>Minimum Stay</Label>
+                        <Input
+                          type="number"
+                          placeholder="1"
+                          min="1"
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label>Maximum Stay</Label>
+                        <Input
+                          type="number"
+                          placeholder="30"
+                          min="1"
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label>Closed to Departure</Label>
+                        <select className="w-full border rounded-md p-2 mt-1">
+                          <option value="no">No</option>
+                          <option value="yes">Yes</option>
+                        </select>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Channel Selection */}
+                <Card className="border-orange-200">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg">Apply to Channels</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <label className="flex items-center space-x-2">
+                        <input type="checkbox" className="rounded" defaultChecked />
+                        <span>All Channels</span>
+                      </label>
+                      <label className="flex items-center space-x-2">
+                        <input type="checkbox" className="rounded" />
+                        <span>Booking.com</span>
+                      </label>
+                      <label className="flex items-center space-x-2">
+                        <input type="checkbox" className="rounded" />
+                        <span>Expedia</span>
+                      </label>
+                      <label className="flex items-center space-x-2">
+                        <input type="checkbox" className="rounded" />
+                        <span>Airbnb</span>
+                      </label>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Action Buttons */}
+                <div className="flex justify-end space-x-3 pt-4">
+                  <Button variant="outline">
+                    Preview Changes
+                  </Button>
+                  <Button className="bg-blue-600 hover:bg-blue-700">
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Update All Channels
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           {/* OTA Reservations Tab */}
           <TabsContent value="reservations" className="space-y-4">
             <Card>

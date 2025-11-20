@@ -21209,12 +21209,24 @@ async def get_guest_bookings(
     current_user: User = Depends(get_current_user)
 ):
     """Get guest's bookings (active and past)"""
-    # Get all bookings for this guest
-    all_bookings = []
-    async for booking in db.bookings.find({
+    # Find guest by email (guest might be logged in as user or have guest record)
+    guest = await db.guests.find_one({
         'tenant_id': current_user.tenant_id,
-        'guest_id': current_user.id  # Assuming guest is logged in
-    }).sort('check_in', -1):
+        'email': current_user.email
+    })
+    
+    guest_id = guest['id'] if guest else None
+    
+    # Get all bookings for this guest
+    query = {'tenant_id': current_user.tenant_id}
+    if guest_id:
+        query['guest_id'] = guest_id
+    else:
+        # If no guest record, return empty (new user)
+        return {'active_bookings': [], 'past_bookings': []}
+    
+    all_bookings = []
+    async for booking in db.bookings.find(query).sort('check_in', -1):
         # Get room details
         room = await db.rooms.find_one({'id': booking.get('room_id')})
         

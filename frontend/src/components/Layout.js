@@ -61,7 +61,7 @@ const Layout = ({ children, user, tenant, onLogout, currentModule }) => {
                     key={item.path}
                     variant={isActive ? 'default' : 'ghost'}
                     onClick={() => navigate(item.path)}
-                    className="flex items-center space-x-2"
+                    className={`flex items-center space-x-2 ${item.highlight ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:from-blue-600 hover:to-purple-600' : ''}`}
                     data-testid={`nav-${item.id}`}
                   >
                     <Icon className="w-4 h-4" />

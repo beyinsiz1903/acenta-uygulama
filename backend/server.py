@@ -24683,16 +24683,19 @@ async def get_complete_guest_profile(
         'blacklist_status': 'blacklist' in tags
     }
 
+class GuestPreferenceUpdate(BaseModel):
+    pillow_type: Optional[str] = None
+    floor_preference: Optional[str] = None
+    room_temperature: Optional[str] = None
+    smoking: bool = False
+    special_needs: Optional[str] = None
+    dietary_restrictions: Optional[str] = None
+    newspaper_preference: Optional[str] = None
+
 @api_router.post("/guests/{guest_id}/preferences")
 async def update_guest_preferences(
     guest_id: str,
-    pillow_type: Optional[str] = None,
-    floor_preference: Optional[str] = None,
-    room_temperature: Optional[str] = None,
-    smoking: bool = False,
-    special_needs: Optional[str] = None,
-    dietary_restrictions: Optional[str] = None,
-    newspaper_preference: Optional[str] = None,
+    data: GuestPreferenceUpdate,
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
     """Update or create guest preferences"""
@@ -24707,13 +24710,13 @@ async def update_guest_preferences(
     preference_data = {
         'guest_id': guest_id,
         'tenant_id': current_user.tenant_id,
-        'pillow_type': pillow_type,
-        'floor_preference': floor_preference,
-        'room_temperature': room_temperature,
-        'smoking': smoking,
-        'special_needs': special_needs,
-        'dietary_restrictions': dietary_restrictions,
-        'newspaper_preference': newspaper_preference
+        'pillow_type': data.pillow_type,
+        'floor_preference': data.floor_preference,
+        'room_temperature': data.room_temperature,
+        'smoking': data.smoking,
+        'special_needs': data.special_needs,
+        'dietary_restrictions': data.dietary_restrictions,
+        'newspaper_preference': data.newspaper_preference
     }
     
     await db.guest_preferences.update_one(

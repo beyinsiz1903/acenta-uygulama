@@ -4489,6 +4489,96 @@ async def get_ai_activity_feed(
         'last_updated': today.isoformat()
     }
 
+@api_router.get("/revenue/by-department")
+async def get_revenue_by_department(
+    start_date: str = None,
+    end_date: str = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Revenue breakdown by department (Rooms, F&B, Other)"""
+    today = datetime.now(timezone.utc)
+    
+    if not start_date:
+        start_date = datetime.combine(today.date(), datetime.min.time()).replace(tzinfo=timezone.utc).isoformat()
+    if not end_date:
+        end_date = datetime.combine(today.date(), datetime.max.time()).replace(tzinfo=timezone.utc).isoformat()
+    
+    # Get all charges
+    charges = await db.folio_charges.find({
+        'tenant_id': current_user.tenant_id,
+        'date': {'$gte': start_date, '$lte': end_date},
+        'voided': False
+    }).to_list(100000)
+    
+    # Categorize by department
+    departments = {
+        'rooms': {'name': 'Rooms', 'revenue': 0, 'count': 0, 'icon': '🛏️'},
+        'fnb': {'name': 'Food & Beverage', 'revenue': 0, 'count': 0, 'icon': '🍽️'},
+        'spa': {'name': 'Spa & Wellness', 'revenue': 0, 'count': 0, 'icon': '💆'},
+        'minibar': {'name': 'Minibar', 'revenue': 0, 'count': 0, 'icon': '🍷'},
+        'laundry': {'name': 'Laundry', 'revenue': 0, 'count': 0, 'icon': '👔'},
+        'parking': {'name': 'Parking', 'revenue': 0, 'count': 0, 'icon': '🚗'},
+        'telephone': {'name': 'Telephone', 'revenue': 0, 'count': 0, 'icon': '📞'},
+        'other': {'name': 'Other Services', 'revenue': 0, 'count': 0, 'icon': '🎯'}
+    }
+    
+    for charge in charges:
+        charge_type = charge.get('charge_type', 'other').lower()
+        amount = charge.get('total', 0)
+        
+        if charge_type in ['room', 'accommodation', 'room_charge']:
+            departments['rooms']['revenue'] += amount
+            departments['rooms']['count'] += 1
+        elif charge_type in ['food', 'beverage', 'restaurant', 'bar', 'fnb']:
+            departments['fnb']['revenue'] += amount
+            departments['fnb']['count'] += 1
+        elif charge_type in ['spa', 'massage', 'wellness']:
+            departments['spa']['revenue'] += amount
+            departments['spa']['count'] += 1
+        elif charge_type in ['minibar', 'mini_bar']:
+            departments['minibar']['revenue'] += amount
+            departments['minibar']['count'] += 1
+        elif charge_type in ['laundry', 'dry_cleaning']:
+            departments['laundry']['revenue'] += amount
+            departments['laundry']['count'] += 1
+        elif charge_type in ['parking', 'valet']:
+            departments['parking']['revenue'] += amount
+            departments['parking']['count'] += 1
+        elif charge_type in ['telephone', 'phone']:
+            departments['telephone']['revenue'] += amount
+            departments['telephone']['count'] += 1
+        else:
+            departments['other']['revenue'] += amount
+            departments['other']['count'] += 1
+    
+    # Calculate totals and percentages
+    total_revenue = sum(dept['revenue'] for dept in departments.values())
+    
+    for dept in departments.values():
+        dept['percentage'] = round((dept['revenue'] / total_revenue * 100) if total_revenue > 0 else 0, 1)
+        dept['revenue'] = round(dept['revenue'], 2)
+    
+    # Sort by revenue
+    sorted_departments = sorted(
+        [{'key': k, **v} for k, v in departments.items()],
+        key=lambda x: x['revenue'],
+        reverse=True
+    )
+    
+    return {
+        'departments': sorted_departments,
+        'total_revenue': round(total_revenue, 2),
+        'period': {
+            'start': start_date,
+            'end': end_date
+        },
+        'summary': {
+            'rooms_percentage': departments['rooms']['percentage'],
+            'fnb_percentage': departments['fnb']['percentage'],
+            'other_percentage': sum(d['percentage'] for k, d in departments.items() if k not in ['rooms', 'fnb'])
+        }
+    }
+
 @api_router.get("/reports/market-segment")
 async def get_market_segment_report(
     start_date: str,

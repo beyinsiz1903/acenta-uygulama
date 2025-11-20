@@ -173,15 +173,18 @@ user_problem_statement: |
 
   - task: "Housekeeping Mobile - Room Assignments"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Added GET /api/housekeeping/mobile/room-assignments - Shows who is cleaning which room, with optional staff_name filter, includes duration tracking"
+      - working: true
+        agent: "testing"
+        comment: "✅ ENDPOINT WORKING - GET /api/housekeeping/mobile/room-assignments returns proper response with assignments array and total_count. Staff filtering with staff_name parameter functional. Response structure verified. Minor: Expected staff_summary field not present but core functionality works with assignments and total_count."
 
   - task: "Housekeeping Mobile - Cleaning Time Statistics"
     implemented: true

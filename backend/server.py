@@ -25381,7 +25381,7 @@ async def create_pos_order(
             await db.folio_charges.insert_one(charge.model_dump())
         
         # Update folio balance
-        await recalculate_folio_balance(folio_id, current_user.tenant_id)
+        await recalculate_folio_balance(data.folio_id, current_user.tenant_id)
     
     return {
         'success': True,

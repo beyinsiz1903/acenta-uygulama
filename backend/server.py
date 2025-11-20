@@ -1553,23 +1553,12 @@ async def register_guest(data: GuestRegister):
 
 @api_router.post("/auth/login", response_model=TokenResponse)
 async def login(data: UserLogin):
-    print(f"🔍 DEBUG: Login attempt for email: {data.email}")
     user_doc = await db.users.find_one({'email': data.email})
-    print(f"🔍 DEBUG: User found in DB: {user_doc is not None}")
-    
     if user_doc:
         user_doc.pop('_id', None)  # Remove _id field
-        print(f"🔍 DEBUG: Has hashed_password field: {'hashed_password' in user_doc}")
-        if 'hashed_password' in user_doc:
-            print(f"🔍 DEBUG: Hash starts with: {user_doc['hashed_password'][:20]}")
-        verify_result = verify_password(data.password, user_doc.get('hashed_password', ''))
-        print(f"🔍 DEBUG: Password verification result: {verify_result}")
     
     if not user_doc or not verify_password(data.password, user_doc.get('hashed_password', '')):
-        print(f"🔍 DEBUG: Login FAILED - Raising 401")
         raise HTTPException(status_code=401, detail="Invalid credentials")
-    
-    print(f"🔍 DEBUG: Login SUCCESS - Creating token")
     
     user_data = {k: v for k, v in user_doc.items() if k not in ['password', 'hashed_password']}
     user = User(**user_data)

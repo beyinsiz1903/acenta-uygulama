@@ -24433,11 +24433,14 @@ async def add_extra_charge(
         'extra_charge': extra_charge.model_dump()
     }
 
+class MultiRoomReservationCreate(BaseModel):
+    group_name: str
+    primary_booking_id: str
+    related_booking_ids: List[str]
+
 @api_router.post("/reservations/multi-room")
 async def create_multi_room_reservation(
-    group_name: str,
-    primary_booking_id: str,
-    related_booking_ids: List[str],
+    data: MultiRoomReservationCreate,
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
     """Link multiple bookings as a multi-room reservation"""

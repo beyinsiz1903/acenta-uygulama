@@ -21740,11 +21740,11 @@ async def web_checkin(
         'instructions': 'Show this QR code at the front desk or use it with smart lock'
     }
 
-        }
-    }
+
+# ============= CONTINUATION OF OTHER ENDPOINTS =============
 
     
-    logs = []
+logs = []
     async for log in db.maintenance_prediction_logs.find(query).sort('timestamp', -1).skip(skip).limit(limit):
         logs.append(log)
     

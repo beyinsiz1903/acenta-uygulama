@@ -177,7 +177,7 @@ const MobileMaintenance = ({ user }) => {
                   <p className="text-xs text-blue-600 font-medium">TOPLAM</p>
                   <p className="text-3xl font-bold text-blue-700">{tasks.length}</p>
                 </div>
-                <Tool className="w-10 h-10 text-blue-300" />
+                <Settings className="w-10 h-10 text-blue-300" />
               </div>
             </CardContent>
           </Card>

@@ -84,6 +84,29 @@ const FeaturesShowcase = ({ user, tenant, onLogout }) => {
             </div>
           </TabsContent>
 
+          {/* Menu Items Tab */}
+          <TabsContent value="menu" className="mt-6">
+            <div className="space-y-4">
+              <Card className="bg-orange-50 border-orange-200">
+                <CardContent className="p-4">
+                  <div className="flex items-start space-x-3">
+                    <div className="bg-orange-100 p-2 rounded-full">
+                      <Menu className="w-5 h-5 text-orange-600" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-900 mb-1">📋 Menu Items Management</h4>
+                      <p className="text-sm text-gray-600">
+                        Browse menu items by category, check prices, costs, and profit margins.
+                        13 items across 4 categories with availability tracking.
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <POSMenuItems outletId="main_restaurant" />
+            </div>
+          </TabsContent>
+
           {/* Staff Assignment Tab */}
           <TabsContent value="staff" className="mt-6">
             <div className="space-y-4">

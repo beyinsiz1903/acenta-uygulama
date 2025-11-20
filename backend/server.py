@@ -25367,7 +25367,7 @@ async def create_pos_order(
         for order_item in order_items_list:
             charge = FolioCharge(
                 tenant_id=current_user.tenant_id,
-                folio_id=folio_id,
+                folio_id=data.folio_id,
                 charge_category=ChargeCategory.FOOD if order_item.category in ['food', 'dessert', 'appetizer'] else ChargeCategory.BEVERAGE,
                 description=f"POS: {order_item.item_name} x {order_item.quantity}",
                 quantity=order_item.quantity,

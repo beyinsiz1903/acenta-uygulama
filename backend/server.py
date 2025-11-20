@@ -1889,6 +1889,106 @@ async def get_folio_details(folio_id: str, current_user: User = Depends(get_curr
         'balance': balance
     }
 
+
+@api_router.get("/folio/{folio_id}/excel")
+async def export_folio_excel(folio_id: str, current_user: User = Depends(get_current_user)):
+    """Export Folio to Excel"""
+    folio_data = await get_folio_details(folio_id, current_user)
+    
+    folio = folio_data['folio']
+    charges = folio_data['charges']
+    payments = folio_data['payments']
+    balance = folio_data['balance']
+    
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Folio"
+    
+    # Folio header
+    ws['A1'] = "GUEST FOLIO"
+    ws['A1'].font = Font(size=16, bold=True)
+    ws.merge_cells('A1:E1')
+    
+    ws['A3'] = "Folio Number:"
+    ws['B3'] = folio.get('folio_number', 'N/A')
+    ws['A4'] = "Type:"
+    ws['B4'] = folio.get('folio_type', 'guest').title()
+    ws['A5'] = "Status:"
+    ws['B5'] = folio.get('status', 'open').upper()
+    ws['A6'] = "Created:"
+    ws['B6'] = folio.get('created_at', '')[:10]
+    
+    # Charges section
+    ws['A9'] = "CHARGES"
+    ws['A9'].font = Font(size=14, bold=True)
+    
+    charge_headers = ["Date", "Description", "Qty", "Amount", "Tax", "Total"]
+    for col_num, header in enumerate(charge_headers, 1):
+        cell = ws.cell(row=10, column=col_num)
+        cell.value = header
+        cell.font = Font(bold=True)
+        cell.fill = PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid")
+        cell.font = Font(bold=True, color="FFFFFF")
+    
+    row = 11
+    total_charges = 0
+    for charge in charges:
+        if not charge.get('voided', False):
+            ws.cell(row=row, column=1, value=charge.get('posted_at', '')[:10])
+            ws.cell(row=row, column=2, value=charge.get('description', ''))
+            ws.cell(row=row, column=3, value=charge.get('quantity', 1))
+            ws.cell(row=row, column=4, value=f"${charge.get('amount', 0):,.2f}")
+            ws.cell(row=row, column=5, value=f"${charge.get('tax_amount', 0):,.2f}")
+            ws.cell(row=row, column=6, value=f"${charge.get('total', 0):,.2f}")
+            total_charges += charge.get('total', 0)
+            row += 1
+    
+    ws.cell(row=row, column=5, value="Total Charges:")
+    ws.cell(row=row, column=5).font = Font(bold=True)
+    ws.cell(row=row, column=6, value=f"${total_charges:,.2f}")
+    ws.cell(row=row, column=6).font = Font(bold=True)
+    
+    # Payments section
+    row += 2
+    ws.cell(row=row, column=1, value="PAYMENTS")
+    ws.cell(row=row, column=1).font = Font(size=14, bold=True)
+    row += 1
+    
+    payment_headers = ["Date", "Method", "Type", "Amount"]
+    for col_num, header in enumerate(payment_headers, 1):
+        cell = ws.cell(row=row, column=col_num)
+        cell.value = header
+        cell.font = Font(bold=True)
+        cell.fill = PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid")
+        cell.font = Font(bold=True, color="FFFFFF")
+    
+    row += 1
+    total_payments = 0
+    for payment in payments:
+        ws.cell(row=row, column=1, value=payment.get('processed_at', '')[:10])
+        ws.cell(row=row, column=2, value=payment.get('payment_method', '').title())
+        ws.cell(row=row, column=3, value=payment.get('payment_type', '').title())
+        ws.cell(row=row, column=4, value=f"${payment.get('amount', 0):,.2f}")
+        total_payments += payment.get('amount', 0)
+        row += 1
+    
+    ws.cell(row=row, column=3, value="Total Payments:")
+    ws.cell(row=row, column=3).font = Font(bold=True)
+    ws.cell(row=row, column=4, value=f"${total_payments:,.2f}")
+    ws.cell(row=row, column=4).font = Font(bold=True)
+    
+    # Balance
+    row += 2
+    ws.cell(row=row, column=5, value="BALANCE DUE:")
+    ws.cell(row=row, column=5).font = Font(size=14, bold=True)
+    ws.cell(row=row, column=6, value=f"${balance:,.2f}")
+    ws.cell(row=row, column=6).font = Font(size=14, bold=True)
+    ws.cell(row=row, column=6).fill = PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid")
+    
+    filename = f"folio_{folio.get('folio_number', folio_id)}.xlsx"
+    return excel_response(wb, filename)
+
+
 @api_router.post("/folio/{folio_id}/charge", response_model=FolioCharge)
 async def post_charge_to_folio(
     folio_id: str,

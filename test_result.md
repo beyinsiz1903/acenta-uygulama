@@ -248,15 +248,18 @@ user_problem_statement: |
 
   - task: "Revenue Management - Price Recommendation Slider"
     implemented: true
-    working: "NA"
+    working: false
     file: "/app/backend/server.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Added GET /api/rms/price-recommendation-slider - Returns min_price, recommended_price, max_price based on occupancy analysis, with current/historical occupancy comparison"
+      - working: false
+        agent: "testing"
+        comment: "❌ ENDPOINT FAILING - GET /api/rms/price-recommendation-slider returns HTTP 422 error. Query parameter validation failing. Tested with and without date parameter but endpoint expects different parameter structure or has validation issues."
 
   - task: "Revenue Management - Demand Heatmap"
     implemented: true

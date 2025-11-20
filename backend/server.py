@@ -3677,6 +3677,153 @@ async def get_daily_flash_report(date_str: Optional[str] = None, current_user: U
         }
     }
 
+@api_router.get("/dashboard/role-based")
+async def get_role_based_dashboard(current_user: User = Depends(get_current_user)):
+    """Role-based dashboard data - GM, Owner, Front Desk, Housekeeping"""
+    today = datetime.now(timezone.utc)
+    today_start = datetime.combine(today.date(), datetime.min.time()).replace(tzinfo=timezone.utc)
+    today_end = datetime.combine(today.date(), datetime.max.time()).replace(tzinfo=timezone.utc)
+    
+    # Base data for all roles
+    total_rooms = await db.rooms.count_documents({'tenant_id': current_user.tenant_id})
+    occupied_rooms = await db.bookings.count_documents({
+        'tenant_id': current_user.tenant_id,
+        'status': 'checked_in'
+    })
+    
+    # Role-specific data
+    if current_user.role in ['admin', 'supervisor']:  # GM/Manager
+        # Get comprehensive data
+        arrivals_today = await db.bookings.count_documents({
+            'tenant_id': current_user.tenant_id,
+            'check_in': {'$gte': today_start.isoformat(), '$lte': today_end.isoformat()}
+        })
+        
+        departures_today = await db.bookings.count_documents({
+            'tenant_id': current_user.tenant_id,
+            'check_out': {'$gte': today_start.isoformat(), '$lte': today_end.isoformat()}
+        })
+        
+        # Get VIP arrivals
+        vip_arrivals = []
+        async for booking in db.bookings.find({
+            'tenant_id': current_user.tenant_id,
+            'check_in': {'$gte': today_start.isoformat(), '$lte': today_end.isoformat()},
+            'status': {'$in': ['confirmed', 'guaranteed']}
+        }).limit(10):
+            guest = await db.guests.find_one({'id': booking.get('guest_id')})
+            if guest and guest.get('vip'):
+                vip_arrivals.append({
+                    'guest_name': guest.get('name'),
+                    'room_number': booking.get('room_number'),
+                    'check_in': booking.get('check_in'),
+                    'preferences': guest.get('preferences', 'None')
+                })
+        
+        # Revenue today
+        charges = await db.folio_charges.find({
+            'tenant_id': current_user.tenant_id,
+            'date': {'$gte': today_start.isoformat(), '$lte': today_end.isoformat()},
+            'voided': False
+        }).to_list(10000)
+        
+        revenue_today = sum(c.get('total', 0) for c in charges)
+        
+        # Staff performance snapshot
+        hk_tasks_completed = await db.housekeeping_tasks.count_documents({
+            'tenant_id': current_user.tenant_id,
+            'completed_at': {'$gte': today_start.isoformat(), '$lte': today_end.isoformat()}
+        })
+        
+        return {
+            'role': current_user.role,
+            'dashboard_type': 'gm',
+            'occupancy': {
+                'current': round((occupied_rooms / total_rooms * 100) if total_rooms > 0 else 0, 1),
+                'occupied_rooms': occupied_rooms,
+                'total_rooms': total_rooms
+            },
+            'today_movements': {
+                'arrivals': arrivals_today,
+                'departures': departures_today,
+                'stayovers': occupied_rooms - arrivals_today
+            },
+            'revenue_today': round(revenue_today, 2),
+            'vip_arrivals': vip_arrivals[:5],
+            'priorities': {
+                'pending_checkins': arrivals_today,
+                'pending_checkouts': departures_today,
+                'housekeeping_completed': hk_tasks_completed
+            }
+        }
+    
+    elif current_user.role == 'front_desk':
+        # Front desk specific
+        arrivals = []
+        async for booking in db.bookings.find({
+            'tenant_id': current_user.tenant_id,
+            'check_in': {'$gte': today_start.isoformat(), '$lte': today_end.isoformat()},
+            'status': {'$in': ['confirmed', 'guaranteed']}
+        }).limit(20):
+            room = await db.rooms.find_one({'id': booking.get('room_id')})
+            arrivals.append({
+                'id': booking.get('id'),
+                'guest_name': booking.get('guest_name'),
+                'room_number': booking.get('room_number'),
+                'check_in_time': booking.get('check_in'),
+                'status': booking.get('status'),
+                'room_ready': room.get('status') in ['available', 'inspected'] if room else False
+            })
+        
+        return {
+            'role': current_user.role,
+            'dashboard_type': 'front_desk',
+            'occupancy': round((occupied_rooms / total_rooms * 100) if total_rooms > 0 else 0, 1),
+            'arrivals_today': arrivals,
+            'in_house_guests': occupied_rooms
+        }
+    
+    elif current_user.role == 'housekeeping':
+        # Housekeeping specific
+        dirty_rooms = await db.rooms.count_documents({
+            'tenant_id': current_user.tenant_id,
+            'status': 'dirty'
+        })
+        
+        cleaning_rooms = await db.rooms.count_documents({
+            'tenant_id': current_user.tenant_id,
+            'status': 'cleaning'
+        })
+        
+        inspected_rooms = await db.rooms.count_documents({
+            'tenant_id': current_user.tenant_id,
+            'status': 'inspected'
+        })
+        
+        return {
+            'role': current_user.role,
+            'dashboard_type': 'housekeeping',
+            'room_status': {
+                'dirty': dirty_rooms,
+                'cleaning': cleaning_rooms,
+                'inspected': inspected_rooms,
+                'ready': inspected_rooms
+            },
+            'occupancy': occupied_rooms,
+            'departures_today': await db.bookings.count_documents({
+                'tenant_id': current_user.tenant_id,
+                'check_out': {'$gte': today_start.isoformat(), '$lte': today_end.isoformat()}
+            })
+        }
+    
+    else:
+        # Default minimal data
+        return {
+            'role': current_user.role,
+            'dashboard_type': 'basic',
+            'occupancy': round((occupied_rooms / total_rooms * 100) if total_rooms > 0 else 0, 1)
+        }
+
 @api_router.get("/reports/market-segment")
 async def get_market_segment_report(
     start_date: str,

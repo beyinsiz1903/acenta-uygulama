@@ -24279,3 +24279,11 @@ app.include_router(api_router)
 # Include desktop enhancements router
 if desktop_router:
     app.include_router(desktop_router, prefix="/api", tags=["desktop-enhancements"])
+
+# Include advanced features router
+try:
+    from advanced_features_endpoints import advanced_router
+    app.include_router(advanced_router, prefix="/api", tags=["advanced-features"])
+    print("✅ Advanced features router included")
+except ImportError as e:
+    print(f"⚠️ Advanced features not available: {e}")

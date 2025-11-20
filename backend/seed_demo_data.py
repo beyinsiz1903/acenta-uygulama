@@ -181,6 +181,28 @@ async def seed_data():
     # 2. Create Guests
     print("\n👥 Creating guest records...")
     guests = []
+    
+    # First, create demo guest record linked to demo user
+    demo_guest_record = {
+        "id": str(uuid.uuid4()),
+        "tenant_id": tenant_id,
+        "name": "Demo Guest",
+        "email": "guest@demo.com",  # Same email as user account
+        "phone": "+1-555-GUEST",
+        "country": "USA",
+        "id_number": "DEMO123456",
+        "preferences": "City view, Late checkout, Non-smoking",
+        "vip": True,
+        "loyalty_points": 2500,  # Give demo guest some points
+        "loyalty_tier": "gold",  # Gold tier
+        "total_stays": 8,
+        "total_spend": 3200.00,
+        "created_at": random_date(365, 180).isoformat()
+    }
+    guests.append(demo_guest_record)
+    print(f"✅ Added demo guest record with 2500 loyalty points (Gold tier)")
+    
+    # Then create other random guests
     for i in range(50):
         first_name = random.choice(FIRST_NAMES)
         last_name = random.choice(LAST_NAMES)
@@ -201,12 +223,16 @@ async def seed_data():
                 "Early check-in, Airport transfer"
             ]),
             "vip": random.random() > 0.85,
+            "loyalty_points": random.randint(0, 1500),
+            "loyalty_tier": random.choice(["bronze", "bronze", "silver", "silver", "gold"]),
+            "total_stays": random.randint(0, 10),
+            "total_spend": round(random.uniform(0, 5000), 2),
             "created_at": random_date(365, 180).isoformat()
         }
         guests.append(guest)
     
     await db.guests.insert_many(guests)
-    print(f"✅ Created {len(guests)} guests")
+    print(f"✅ Created {len(guests)} guests (including demo guest)")
     
     # 3. Create Bookings (Past, Current, Future)
     print("\n📅 Creating bookings...")

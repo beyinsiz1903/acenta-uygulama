@@ -8814,15 +8814,46 @@ async def get_digital_key(
     booking_id: str,
     current_user: User = Depends(get_current_user)
 ):
-    """Get digital room key"""
+    """Get digital room key for guest"""
+    # Find guest's booking (multi-tenant support)
+    guest_records = []
+    async for guest in db.guests.find({'email': current_user.email}):
+        guest_records.append(guest)
+    
+    guest_ids = [g['id'] for g in guest_records]
+    
+    booking = await db.bookings.find_one({
+        'id': booking_id,
+        'guest_id': {'$in': guest_ids}
+    })
+    
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    
+    # Get or create digital key
     key = await db.digital_keys.find_one({
         'booking_id': booking_id,
-        'tenant_id': current_user.tenant_id,
         'status': 'active'
     }, {'_id': 0})
     
     if not key:
-        raise HTTPException(status_code=404, detail="Digital key not found")
+        # Auto-generate key if booking is checked-in
+        if booking.get('status') == 'checked_in':
+            key = {
+                'id': str(uuid.uuid4()),
+                'key_id': str(uuid.uuid4())[:8].upper(),
+                'tenant_id': booking.get('tenant_id'),
+                'booking_id': booking_id,
+                'guest_id': booking.get('guest_id'),
+                'room_number': booking.get('room_number'),
+                'status': 'active',
+                'created_at': datetime.now(timezone.utc).isoformat(),
+                'expires_at': booking.get('check_out'),
+                'last_used': None
+            }
+            await db.digital_keys.insert_one(key)
+        else:
+            raise HTTPException(status_code=404, detail="Digital key not available - booking not checked in")
     
     return key
 

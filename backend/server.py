@@ -21090,7 +21090,7 @@ async def populate_demo_data(
     hotel_type: str = 'boutique',  # boutique, resort, city
     current_user: User = Depends(get_current_user)
 ):
-    \"\"\"Populate account with realistic demo data\"\"\"
+    """Populate account with realistic demo data"""
     
     # Check if already has data
     existing_rooms = await db.rooms.count_documents({'tenant_id': current_user.tenant_id})

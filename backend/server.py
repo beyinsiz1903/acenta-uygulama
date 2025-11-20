@@ -21776,45 +21776,6 @@ async def web_checkin(
     }
 
 
-# ============= CONTINUATION OF OTHER ENDPOINTS =============
-
-    
-logs = []
-    async for log in db.maintenance_prediction_logs.find(query).sort('timestamp', -1).skip(skip).limit(limit):
-        logs.append(log)
-    
-    total_count = await db.maintenance_prediction_logs.count_documents(query)
-    
-    # Risk distribution
-    risk_stats = {}
-    async for doc in db.maintenance_prediction_logs.aggregate([
-        {'$match': {'tenant_id': current_user.tenant_id}},
-        {'$group': {
-            '_id': '$prediction_result',
-            'count': {'$sum': 1},
-            'avg_confidence': {'$avg': '$confidence_score'},
-            'tasks_created': {
-                '$sum': {'$cond': ['$auto_task_created', 1, 0]}
-            }
-        }}
-    ]):
-        risk_level = doc['_id']
-        risk_stats[risk_level] = {
-            'count': doc['count'],
-            'avg_confidence': round(doc['avg_confidence'], 3),
-            'tasks_created': doc['tasks_created']
-        }
-    
-    return {
-        'logs': logs,
-        'total_count': total_count,
-        'returned_count': len(logs),
-        'skip': skip,
-        'limit': limit,
-        'risk_stats': risk_stats
-    }
-
-
 @api_router.get("/logs/alerts-history")
 async def get_alert_history(
     start_date: Optional[str] = None,

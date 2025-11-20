@@ -479,10 +479,10 @@ const LoyaltyModule = ({ user, tenant, onLogout }) => {
                 <div>
                   <h4 className="font-semibold mb-3">Transaction History</h4>
                   <div className="space-y-2 max-h-64 overflow-y-auto">
-                    {transactions.length === 0 ? (
+                    {!transactions || transactions.length === 0 ? (
                       <p className="text-sm text-gray-500 text-center py-4">No transactions yet</p>
                     ) : (
-                      transactions.map((txn, idx) => (
+                      transactions.map((txn, idx) => txn && (
                         <div key={idx} className="flex justify-between items-center py-2 px-3 bg-gray-50 rounded">
                           <div className="flex-1">
                             <div className="font-medium text-sm">{txn.description || 'Transaction'}</div>

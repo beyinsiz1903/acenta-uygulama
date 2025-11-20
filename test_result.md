@@ -1290,6 +1290,21 @@ backend:
         agent: "testing"
         comment: "✅ COST SUMMARY ENDPOINT TESTING COMPLETED (100% Success Rate - 4/4 tests passed). COMPREHENSIVE TESTING: All test cases from review request passed successfully. BASIC COST SUMMARY RETRIEVAL: All required fields present (report_date, period, total_mtd_costs, cost_categories, top_3_categories, per_room_metrics, financial_metrics). DATA ACCURACY: All numerical values properly rounded to 2 decimal places (amounts) and 1 decimal place (percentages), top_3_categories correctly sorted by amount descending. COST CATEGORY MAPPING: Purchase orders correctly mapped to cost categories - cleaning/linens/amenities→Housekeeping ($950), food/beverage/kitchen→F&B ($880), maintenance/electrical/plumbing/hvac→Technical ($615), furniture/office/it/other→General Expenses ($865). PER-ROOM CALCULATIONS: All calculations verified accurate including cost_per_room_night, cost_to_revpar_ratio, profit_margin calculations. EXPECTED BEHAVIOR: Endpoint returns comprehensive cost analysis with $3,310 total MTD costs across all categories, proper percentage calculations (28.7%, 26.6%, 26.1% for top 3), accurate financial metrics. Endpoint fully functional and ready for GM Dashboard integration."
 
+  - task: "ML Training Endpoints - Comprehensive Testing (6 endpoints)"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Implemented 6 ML training endpoints: POST /api/ml/rms/train (Revenue Management System training with 730 days data, XGBoost models for occupancy and pricing), POST /api/ml/persona/train (Guest Persona classification with 400 guest profiles, Random Forest classifier), POST /api/ml/predictive-maintenance/train (Equipment failure prediction with 1000 IoT samples, XGBoost classifier and Gradient Boosting regressor), POST /api/ml/hk-scheduler/train (Housekeeping staffing optimization with 365 days data, Random Forest regressors), POST /api/ml/train-all (Train all models in sequence), GET /api/ml/models/status (Check model status and metrics)"
+      - working: true
+        agent: "testing"
+        comment: "✅ ML TRAINING ENDPOINTS TESTING COMPLETED (100% Success Rate - 7/7 tests passed). PHASE 1 - INDIVIDUAL MODEL TRAINING: All 4 individual training endpoints working perfectly. RMS Training: Successfully generates 730 days of training data, trains occupancy and pricing models with excellent performance metrics (R² > 0.7), saves models to ml_models/ directory. Persona Training: Generates 400 guest profiles, trains classification model with 97.5% accuracy, creates 6 persona types with proper distribution. Predictive Maintenance: Generates 1000 IoT sensor samples, trains risk classifier (99.0% accuracy) and days regressor, handles 4 equipment types. HK Scheduler: Generates 365 days of scheduling data, trains staff and hours prediction models, calculates optimal staffing (avg 7.1, peak 11). PHASE 2 - BULK TRAINING: POST /api/ml/train-all successfully trains all 4 models in sequence (1.7s total), returns comprehensive results with success/failure status for each model, proper error handling. PHASE 3 - MODEL STATUS: GET /api/ml/models/status correctly reports model training status before (0/4 trained) and after (4/4 trained) training, includes metrics and file status verification. All model files created on disk with proper sizes (RMS: 2.3MB, Persona: 1.3MB, Maintenance: 5.1MB, HK: 3.3MB). Training times excellent (0.2-1.1s individual, 1.7s bulk). All success criteria met: ✅ All training endpoints work ✅ Models saved to disk ✅ Metrics show good performance (>80% accuracy, R² >0.7) ✅ Training completes within reasonable time ✅ Status endpoint accurately reports state. ML training system fully functional and production-ready."
+
 frontend:
   - task: "OTA Messaging Hub - Complete Frontend Implementation"
     implemented: true

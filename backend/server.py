@@ -3208,19 +3208,31 @@ async def get_due_out_rooms(current_user: User = Depends(get_current_user)):
     
     due_out_rooms = []
     for booking in bookings:
-        checkout_date = datetime.fromisoformat(booking['check_out']).date()
-        if checkout_date == today or checkout_date == tomorrow:
-            room = await db.rooms.find_one({'id': booking['room_id']}, {'_id': 0})
-            guest = await db.guests.find_one({'id': booking['guest_id']}, {'_id': 0})
+        try:
+            # Handle both datetime and string formats
+            checkout = booking.get('check_out')
+            if isinstance(checkout, datetime):
+                checkout_date = checkout.date()
+            elif isinstance(checkout, str):
+                checkout_date = datetime.fromisoformat(checkout.replace('Z', '+00:00')).date()
+            else:
+                continue
             
-            due_out_rooms.append({
-                'room_number': room['room_number'] if room else 'N/A',
-                'room_type': room['room_type'] if room else 'N/A',
-                'guest_name': guest['name'] if guest else 'N/A',
-                'checkout_date': booking['check_out'],
-                'booking_id': booking['id'],
-                'is_today': checkout_date == today
-            })
+            if checkout_date == today or checkout_date == tomorrow:
+                room = await db.rooms.find_one({'id': booking['room_id']}, {'_id': 0})
+                guest = await db.guests.find_one({'id': booking['guest_id']}, {'_id': 0})
+                
+                due_out_rooms.append({
+                    'room_number': room['room_number'] if room else 'N/A',
+                    'room_type': room['room_type'] if room else 'N/A',
+                    'guest_name': guest['name'] if guest else 'N/A',
+                    'checkout_date': checkout.isoformat() if isinstance(checkout, datetime) else checkout,
+                    'booking_id': booking['id'],
+                    'is_today': checkout_date == today
+                })
+        except Exception as e:
+            print(f"Error processing booking {booking.get('id')}: {e}")
+            continue
     
     return {
         'due_out_rooms': due_out_rooms,

@@ -21233,19 +21233,31 @@ async def get_guest_bookings(
         # Get guest details
         guest = await db.guests.find_one({'id': booking.get('guest_id')})
         
+        # Get tenant/hotel details
+        tenant = await db.tenants.find_one({'id': current_user.tenant_id})
+        
         booking_data = {
             'id': booking.get('id'),
-            'confirmation_number': booking.get('confirmation_number', booking.get('id')[:8]),
+            'confirmation_number': booking.get('confirmation_number', booking.get('id')[:8].upper()),
             'check_in': booking.get('check_in'),
             'check_out': booking.get('check_out'),
             'status': booking.get('status'),
-            'room_number': room.get('room_number') if room else 'TBA',
-            'room_type': room.get('room_type') if room else 'Standard',
             'guests_count': booking.get('adults', 1) + booking.get('children', 0),
             'total_amount': booking.get('total_amount', 0),
             'guest_name': guest.get('name') if guest else current_user.name,
             'qr_code_data': booking.get('qr_code_data'),
-            'can_checkin': booking.get('status') == 'confirmed' and datetime.fromisoformat(booking.get('check_in')) <= datetime.now(timezone.utc)
+            'can_checkin': booking.get('status') == 'confirmed' and datetime.fromisoformat(booking.get('check_in')) <= datetime.now(timezone.utc),
+            # Nested hotel data for frontend
+            'hotel': {
+                'property_name': tenant.get('hotel_name', 'Hotel') if tenant else 'Hotel',
+                'address': tenant.get('address', 'City Center') if tenant else 'City Center'
+            },
+            # Nested room data for frontend
+            'room': {
+                'room_number': room.get('room_number', 'TBA') if room else 'TBA',
+                'room_type': room.get('room_type', 'Standard') if room else 'Standard',
+                'floor': room.get('floor', 1) if room else 1
+            }
         }
         
         all_bookings.append(booking_data)

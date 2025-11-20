@@ -238,7 +238,85 @@ async def seed_data():
     print("\n📅 Creating bookings...")
     bookings = []
     
-    # Past bookings (completed)
+    # Create specific bookings for demo guest
+    print("📝 Creating demo guest bookings...")
+    demo_guest_obj = guests[0]  # First guest is our demo guest
+    
+    # Demo guest: 1 past booking (checked out)
+    demo_room_past = random.choice(rooms)
+    demo_check_in_past = datetime.now() - timedelta(days=60)
+    demo_booking_past = {
+        "id": str(uuid.uuid4()),
+        "tenant_id": tenant_id,
+        "guest_id": demo_guest_obj["id"],
+        "guest_name": demo_guest_obj["name"],
+        "guest_email": demo_guest_obj["email"],
+        "room_id": demo_room_past["id"],
+        "room_number": demo_room_past["room_number"],
+        "room_type": demo_room_past["room_type"],
+        "check_in": demo_check_in_past.isoformat(),
+        "check_out": (demo_check_in_past + timedelta(days=3)).isoformat(),
+        "nights": 3,
+        "adults": 2,
+        "children": 0,
+        "total_amount": demo_room_past["price_per_night"] * 3,
+        "status": "checked_out",
+        "booking_source": "direct",
+        "created_at": (demo_check_in_past - timedelta(days=15)).isoformat()
+    }
+    bookings.append(demo_booking_past)
+    
+    # Demo guest: 1 active booking (checked in)
+    demo_room_active = random.choice(rooms)
+    demo_check_in_active = datetime.now() - timedelta(days=1)
+    demo_booking_active = {
+        "id": str(uuid.uuid4()),
+        "tenant_id": tenant_id,
+        "guest_id": demo_guest_obj["id"],
+        "guest_name": demo_guest_obj["name"],
+        "guest_email": demo_guest_obj["email"],
+        "room_id": demo_room_active["id"],
+        "room_number": demo_room_active["room_number"],
+        "room_type": demo_room_active["room_type"],
+        "check_in": demo_check_in_active.isoformat(),
+        "check_out": (demo_check_in_active + timedelta(days=4)).isoformat(),
+        "nights": 4,
+        "adults": 1,
+        "children": 0,
+        "total_amount": demo_room_active["price_per_night"] * 4,
+        "status": "checked_in",
+        "booking_source": "booking.com",
+        "created_at": (demo_check_in_active - timedelta(days=20)).isoformat()
+    }
+    bookings.append(demo_booking_active)
+    
+    # Demo guest: 1 future booking (confirmed)
+    demo_room_future = random.choice(rooms)
+    demo_check_in_future = datetime.now() + timedelta(days=15)
+    demo_booking_future = {
+        "id": str(uuid.uuid4()),
+        "tenant_id": tenant_id,
+        "guest_id": demo_guest_obj["id"],
+        "guest_name": demo_guest_obj["name"],
+        "guest_email": demo_guest_obj["email"],
+        "room_id": demo_room_future["id"],
+        "room_number": demo_room_future["room_number"],
+        "room_type": demo_room_future["room_type"],
+        "check_in": demo_check_in_future.isoformat(),
+        "check_out": (demo_check_in_future + timedelta(days=2)).isoformat(),
+        "nights": 2,
+        "adults": 2,
+        "children": 1,
+        "total_amount": demo_room_future["price_per_night"] * 2,
+        "status": "confirmed",
+        "booking_source": "direct",
+        "created_at": (datetime.now() - timedelta(days=3)).isoformat()
+    }
+    bookings.append(demo_booking_future)
+    
+    print(f"✅ Created 3 demo guest bookings (1 past, 1 active, 1 future)")
+    
+    # Past bookings (completed) - for other guests
     for i in range(80):
         guest = random.choice(guests)
         room = random.choice(rooms)

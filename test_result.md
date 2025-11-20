@@ -293,15 +293,18 @@ user_problem_statement: |
 
   - task: "Messaging Module - Send Message (WhatsApp/SMS/Email)"
     implemented: true
-    working: "NA"
+    working: false
     file: "/app/backend/server.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Added POST /api/messaging/send-message - Send WhatsApp/SMS/Email to guests. Note: Production integration with Twilio/WhatsApp Business API required"
+      - working: false
+        agent: "testing"
+        comment: "❌ ENDPOINT FAILING - POST /api/messaging/send-message returns HTTP 422 error. Request body validation failing. Tested with channel, to, message, subject fields but endpoint expects different request structure. All message types (WhatsApp, SMS, Email) failing validation."
 
   - task: "Messaging Module - Message Templates"
     implemented: true

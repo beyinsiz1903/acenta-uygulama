@@ -127,11 +127,11 @@ const LoyaltyModule = ({ user, tenant, onLogout }) => {
   };
 
   const getTotalPoints = () => {
-    return programs.reduce((sum, p) => sum + p.points, 0);
+    return programs.reduce((sum, p) => sum + (p?.points || 0), 0);
   };
 
   const getTotalLifetimePoints = () => {
-    return programs.reduce((sum, p) => sum + p.lifetime_points, 0);
+    return programs.reduce((sum, p) => sum + (p?.lifetime_points || 0), 0);
   };
 
   const viewProgramDetails = async (program) => {

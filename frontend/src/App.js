@@ -38,6 +38,8 @@ import MobileFinance from "@/pages/MobileFinance";
 import MobileGM from "@/pages/MobileGM";
 import CostManagement from "@/pages/CostManagement";
 import FeaturesShowcase from "@/pages/FeaturesShowcase";
+import HousekeepingDashboard from "@/pages/HousekeepingDashboard";
+import POSDashboard from "@/pages/POSDashboard";
 import { Toaster } from "@/components/ui/sonner";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;

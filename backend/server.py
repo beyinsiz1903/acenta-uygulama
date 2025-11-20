@@ -21398,15 +21398,15 @@ async def get_guest_loyalty(
 async def get_notification_preferences(
     current_user: User = Depends(get_current_user)
 ):
-    """Get guest notification preferences"""
+    """Get guest notification preferences (user-level, not tenant-specific)"""
     prefs = await db.guest_notification_preferences.find_one({
-        'tenant_id': current_user.tenant_id,
         'user_id': current_user.id
     })
     
     if not prefs:
         # Default preferences
         return {
+            'user_id': current_user.id,
             'email_notifications': True,
             'sms_notifications': False,
             'push_notifications': True,

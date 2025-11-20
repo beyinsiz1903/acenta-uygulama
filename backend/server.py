@@ -21210,36 +21210,33 @@ async def get_demo_status(
 async def get_guest_bookings(
     current_user: User = Depends(get_current_user)
 ):
-    """Get guest's bookings (active and past)"""
-    # Find guest by email (guest might be logged in as user or have guest record)
-    guest = await db.guests.find_one({
-        'tenant_id': current_user.tenant_id,
-        'email': current_user.email
-    })
+    """Get guest's bookings across ALL hotels (multi-tenant support)"""
+    # Find ALL guest records across all tenants with this email
+    guest_records = []
+    async for guest in db.guests.find({'email': current_user.email}):
+        guest_records.append(guest)
     
-    guest_id = guest['id'] if guest else None
+    guest_ids = [g['id'] for g in guest_records]
     
-    # Get all bookings for this guest
-    query = {'tenant_id': current_user.tenant_id}
-    if guest_id:
-        query['guest_id'] = guest_id
-    else:
-        # If no guest record, return empty (new user)
+    if not guest_ids:
+        # No guest records found, return empty
         return {'active_bookings': [], 'past_bookings': []}
     
+    # Get ALL bookings across all tenants for these guest IDs
     all_bookings = []
-    async for booking in db.bookings.find(query).sort('check_in', -1):
+    async for booking in db.bookings.find({'guest_id': {'$in': guest_ids}}).sort('check_in', -1):
         # Get room details
         room = await db.rooms.find_one({'id': booking.get('room_id')})
         
         # Get guest details
         guest = await db.guests.find_one({'id': booking.get('guest_id')})
         
-        # Get tenant/hotel details
-        tenant = await db.tenants.find_one({'id': current_user.tenant_id})
+        # Get tenant/hotel details for THIS booking
+        tenant = await db.tenants.find_one({'id': booking.get('tenant_id')})
         
         booking_data = {
             'id': booking.get('id'),
+            'tenant_id': booking.get('tenant_id'),
             'confirmation_number': booking.get('confirmation_number', booking.get('id')[:8].upper()),
             'check_in': booking.get('check_in'),
             'check_out': booking.get('check_out'),
@@ -21249,9 +21246,13 @@ async def get_guest_bookings(
             'guest_name': guest.get('name') if guest else current_user.name,
             'qr_code_data': booking.get('qr_code_data'),
             'can_checkin': booking.get('status') == 'confirmed' and datetime.fromisoformat(booking.get('check_in')) <= datetime.now(timezone.utc),
+            'can_communicate': booking.get('status') in ['confirmed', 'checked_in'],
+            'can_order_services': booking.get('status') == 'checked_in',
             # Nested hotel data for frontend
             'hotel': {
-                'property_name': tenant.get('hotel_name', 'Hotel') if tenant else 'Hotel',
+                'id': tenant.get('id') if tenant else None,
+                'property_name': tenant.get('property_name', 'Hotel') if tenant else 'Hotel',
+                'hotel_name': tenant.get('hotel_name', tenant.get('property_name', 'Hotel')) if tenant else 'Hotel',
                 'address': tenant.get('address', 'City Center') if tenant else 'City Center'
             },
             # Nested room data for frontend
@@ -21268,14 +21269,14 @@ async def get_guest_bookings(
     now = datetime.now(timezone.utc)
     active_bookings = [
         b for b in all_bookings 
-        if b['status'] in ['confirmed', 'checked_in'] and 
+        if b['status'] in ['confirmed', 'checked_in', 'guaranteed'] and 
         datetime.fromisoformat(b['check_out']) >= now
     ]
     
     past_bookings = [
         b for b in all_bookings
         if b['status'] == 'checked_out' or
-        (datetime.fromisoformat(b['check_out']) < now and b['status'] != 'checked_in')
+        (datetime.fromisoformat(b['check_out']) < now and b['status'] not in ['checked_in', 'confirmed', 'guaranteed'])
     ]
     
     return {

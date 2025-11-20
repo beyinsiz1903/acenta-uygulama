@@ -16,8 +16,9 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # MongoDB connection
 MONGO_URL = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
+DB_NAME = os.environ.get('DB_NAME', 'roomops')
 client = AsyncIOMotorClient(MONGO_URL)
-db = client.hotel_pms
+db = client[DB_NAME]
 
 # Demo data constants
 DEMO_TENANT_ID = "demo-tenant-001"

@@ -347,6 +347,14 @@ const FolioManagementPage = () => {
                     <FileText className="w-4 h-4 mr-2" />
                     Registration Card
                   </Button>
+                  <Button
+                    onClick={() => setShowPrintableFolio(true)}
+                    variant="outline"
+                    size="sm"
+                  >
+                    <Printer className="w-4 h-4 mr-2" />
+                    Print Folio
+                  </Button>
                   <Button onClick={() => setShowChargeModal(true)} size="sm">
                     <Plus className="w-4 h-4 mr-2" />
                     Add Charge

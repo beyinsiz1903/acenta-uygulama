@@ -1368,6 +1368,84 @@ def verify_password(password: str, hashed: str) -> bool:
     except Exception:
         return False
 
+# ============= EXCEL EXPORT UTILITY FUNCTIONS =============
+
+def create_excel_workbook(title: str, headers: List[str], data: List[List[Any]], sheet_name: str = "Report") -> Workbook:
+    """Create a formatted Excel workbook with data"""
+    wb = Workbook()
+    ws = wb.active
+    ws.title = sheet_name
+    
+    # Title styling
+    ws.merge_cells('A1:' + get_column_letter(len(headers)) + '1')
+    title_cell = ws['A1']
+    title_cell.value = title
+    title_cell.font = Font(size=16, bold=True, color="FFFFFF")
+    title_cell.fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+    title_cell.alignment = Alignment(horizontal="center", vertical="center")
+    ws.row_dimensions[1].height = 30
+    
+    # Headers styling
+    header_fill = PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid")
+    header_font = Font(bold=True, color="FFFFFF")
+    border = Border(
+        left=Side(style='thin'),
+        right=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin')
+    )
+    
+    for col_num, header in enumerate(headers, 1):
+        cell = ws.cell(row=2, column=col_num)
+        cell.value = header
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = Alignment(horizontal="center", vertical="center")
+        cell.border = border
+        ws.column_dimensions[get_column_letter(col_num)].width = 15
+    
+    # Data rows
+    for row_num, row_data in enumerate(data, 3):
+        for col_num, value in enumerate(row_data, 1):
+            cell = ws.cell(row=row_num, column=col_num)
+            cell.value = value
+            cell.border = border
+            cell.alignment = Alignment(horizontal="left", vertical="center")
+            
+            # Alternate row colors
+            if row_num % 2 == 0:
+                cell.fill = PatternFill(start_color="D9E1F2", end_color="D9E1F2", fill_type="solid")
+    
+    # Auto-adjust column widths
+    for col in ws.columns:
+        max_length = 0
+        column = col[0].column_letter
+        for cell in col:
+            try:
+                if len(str(cell.value)) > max_length:
+                    max_length = len(str(cell.value))
+            except:
+                pass
+        adjusted_width = min(max_length + 2, 50)
+        ws.column_dimensions[column].width = adjusted_width
+    
+    return wb
+
+
+def excel_response(workbook: Workbook, filename: str) -> StreamingResponse:
+    """Convert workbook to StreamingResponse for download"""
+    output = io.BytesIO()
+    workbook.save(output)
+    output.seek(0)
+    
+    return StreamingResponse(
+        output,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
+
+
+
 def create_token(user_id: str, tenant_id: Optional[str] = None) -> str:
     payload = {
         'user_id': user_id,

@@ -21425,24 +21425,17 @@ async def update_notification_preferences(
     preferences: dict,
     current_user: User = Depends(get_current_user)
 ):
-    """Update guest notification preferences"""
-    preferences['tenant_id'] = current_user.tenant_id
-    preferences['user_id'] = current_user.id
-    preferences['updated_at'] = datetime.now(timezone.utc).isoformat()
+    """Update guest notification preferences (user-level, applies to all hotels)"""
+    # Add user_id to the update
+    update_data = {**preferences, 'user_id': current_user.id}
     
     await db.guest_notification_preferences.update_one(
-        {
-            'tenant_id': current_user.tenant_id,
-            'user_id': current_user.id
-        },
-        {'$set': preferences},
+        {'user_id': current_user.id},
+        {'$set': update_data},
         upsert=True
     )
     
-    return {
-        'success': True,
-        'message': 'Notification preferences updated'
-    }
+    return {'message': 'Preferences updated successfully', 'preferences': update_data}
 
 
 @api_router.post("/guest/device-token")

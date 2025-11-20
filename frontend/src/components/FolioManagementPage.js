@@ -4,8 +4,9 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Input } from './ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Search, FileText, CreditCard, Plus, DollarSign, Receipt, Eye } from 'lucide-react';
+import { Search, FileText, CreditCard, Plus, DollarSign, Receipt, Eye, Printer } from 'lucide-react';
 import RegistrationCard from './RegistrationCard';
+import PrintableFolio from './PrintableFolio';
 
 const FolioManagementPage = () => {
   const [folios, setFolios] = useState([]);
@@ -17,6 +18,7 @@ const FolioManagementPage = () => {
   const [showChargeModal, setShowChargeModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showRegistrationCard, setShowRegistrationCard] = useState(false);
+  const [showPrintableFolio, setShowPrintableFolio] = useState(false);
   const [selectedBookingId, setSelectedBookingId] = useState(null);
 
   useEffect(() => {

@@ -2576,7 +2576,30 @@ async def create_booking(booking_data: BookingCreate, current_user: User = Depen
 
 @api_router.get("/pms/bookings", response_model=List[Booking])
 async def get_bookings(current_user: User = Depends(get_current_user)):
-    bookings = await db.bookings.find({'tenant_id': current_user.tenant_id}, {'_id': 0}).to_list(1000)
+    bookings_raw = await db.bookings.find({'tenant_id': current_user.tenant_id}, {'_id': 0}).to_list(1000)
+    
+    # Fix enum mismatches
+    bookings = []
+    for booking in bookings_raw:
+        # Map rate_type values
+        if 'rate_type' in booking:
+            rate_map = {
+                'advance_purchase': 'promotional',
+                'member': 'promotional'
+            }
+            if booking['rate_type'] in rate_map:
+                booking['rate_type'] = rate_map[booking['rate_type']]
+        
+        # Map market_segment values  
+        if 'market_segment' in booking:
+            segment_map = {
+                'business': 'corporate'
+            }
+            if booking['market_segment'] in segment_map:
+                booking['market_segment'] = segment_map[booking['market_segment']]
+        
+        bookings.append(booking)
+    
     return bookings
 
 @api_router.get("/bookings/{booking_id}/override-logs", response_model=List[RateOverrideLog])

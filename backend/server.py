@@ -24309,6 +24309,131 @@ async def get_logs_dashboard(
     }
 
 
+# ============= AI/ML ENDPOINTS FOR PREDICTIONS =============
+
+@api_router.get("/ai/pms/occupancy-prediction")
+async def get_occupancy_prediction(
+    days: int = 30,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Get AI-powered occupancy prediction for next N days"""
+    current_user = await get_current_user(credentials)
+    
+    # Get total rooms
+    total_rooms = await db.rooms.count_documents({'tenant_id': current_user.tenant_id})
+    
+    # Get bookings for next N days
+    start_date = datetime.now(timezone.utc)
+    end_date = start_date + timedelta(days=days)
+    
+    predictions = []
+    for day_offset in range(days):
+        pred_date = start_date + timedelta(days=day_offset)
+        
+        # Count bookings for this date
+        bookings_count = await db.bookings.count_documents({
+            'tenant_id': current_user.tenant_id,
+            'check_in': {'$lte': pred_date},
+            'check_out': {'$gt': pred_date},
+            'status': {'$in': ['confirmed', 'guaranteed', 'checked_in']}
+        })
+        
+        occupancy_pct = (bookings_count / total_rooms * 100) if total_rooms > 0 else 0
+        
+        # Simple prediction model (can be enhanced with ML)
+        # Add some variance based on day of week
+        day_of_week = pred_date.weekday()
+        if day_of_week in [4, 5]:  # Friday, Saturday
+            predicted_pct = min(occupancy_pct * 1.15, 100)
+        elif day_of_week in [0, 6]:  # Monday, Sunday
+            predicted_pct = occupancy_pct * 0.85
+        else:
+            predicted_pct = occupancy_pct
+        
+        predictions.append({
+            'date': pred_date.strftime('%Y-%m-%d'),
+            'day_of_week': pred_date.strftime('%A'),
+            'current_bookings': bookings_count,
+            'current_occupancy_pct': round(occupancy_pct, 1),
+            'predicted_occupancy_pct': round(predicted_pct, 1),
+            'confidence': 'high' if day_offset < 7 else 'medium' if day_offset < 14 else 'low'
+        })
+    
+    return {
+        'predictions': predictions,
+        'total_rooms': total_rooms,
+        'prediction_period_days': days
+    }
+
+@api_router.get("/ai/pms/guest-patterns")
+async def get_guest_patterns(
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Get AI-analyzed guest behavior patterns"""
+    current_user = await get_current_user(credentials)
+    
+    # Analyze booking patterns
+    bookings = await db.bookings.find({
+        'tenant_id': current_user.tenant_id,
+        'status': {'$in': ['checked_out', 'checked_in']}
+    }).limit(500).to_list(500)
+    
+    # Calculate average length of stay
+    total_nights = 0
+    total_bookings = len(bookings)
+    
+    for booking in bookings:
+        try:
+            checkin = booking.get('check_in')
+            checkout = booking.get('check_out')
+            
+            if isinstance(checkin, datetime) and isinstance(checkout, datetime):
+                nights = (checkout - checkin).days
+            elif isinstance(checkin, str) and isinstance(checkout, str):
+                checkin_dt = datetime.fromisoformat(checkin.replace('Z', '+00:00'))
+                checkout_dt = datetime.fromisoformat(checkout.replace('Z', '+00:00'))
+                nights = (checkout_dt - checkin_dt).days
+            else:
+                nights = 0
+            
+            total_nights += nights
+        except:
+            continue
+    
+    avg_los = total_nights / total_bookings if total_bookings > 0 else 0
+    
+    # Analyze guest preferences
+    preferences_count = await db.guest_preferences.count_documents({'tenant_id': current_user.tenant_id})
+    
+    # Analyze VIP guests
+    vip_count = await db.guests.count_documents({
+        'tenant_id': current_user.tenant_id,
+        'vip_status': True
+    })
+    
+    # Analyze repeat guests
+    guests = await db.guests.find({
+        'tenant_id': current_user.tenant_id
+    }).to_list(1000)
+    
+    repeat_guests = sum(1 for g in guests if g.get('total_stays', 0) > 1)
+    
+    return {
+        'patterns': {
+            'average_length_of_stay': round(avg_los, 1),
+            'total_bookings_analyzed': total_bookings,
+            'repeat_guest_ratio': round((repeat_guests / len(guests) * 100), 1) if guests else 0,
+            'vip_guest_count': vip_count,
+            'guests_with_preferences': preferences_count
+        },
+        'insights': [
+            f"Average stay: {round(avg_los, 1)} nights",
+            f"{repeat_guests} repeat guests out of {len(guests)} total",
+            f"{vip_count} VIP guests identified",
+            f"{preferences_count} guests have recorded preferences"
+        ]
+    }
+
 # ============= NEW ENHANCEMENTS: OTA, GUEST PROFILE, HK MOBILE, RMS, MESSAGING, POS =============
 
 # ===== 1. OTA RESERVATION DETAILS ENHANCEMENTS =====

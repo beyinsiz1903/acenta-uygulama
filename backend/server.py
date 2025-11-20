@@ -5509,6 +5509,87 @@ async def get_market_segment_report(
         'rate_types': rate_type_data
     }
 
+
+@api_router.get("/reports/market-segment/excel")
+async def export_market_segment_excel(
+    start_date: str,
+    end_date: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Export Market Segment Report to Excel"""
+    report_data = await get_market_segment_report(start_date, end_date, current_user)
+    
+    # Create workbook with multiple sheets
+    wb = Workbook()
+    
+    # Sheet 1: Market Segments
+    ws1 = wb.active
+    ws1.title = "Market Segments"
+    
+    headers1 = ["Segment", "Bookings", "Nights", "Revenue", "ADR"]
+    data1 = []
+    for segment, stats in report_data['market_segments'].items():
+        data1.append([
+            segment.title(),
+            stats['bookings'],
+            stats['nights'],
+            f"${stats['revenue']:,.2f}",
+            f"${stats['adr']:,.2f}"
+        ])
+    
+    # Add title and headers
+    ws1.merge_cells('A1:E1')
+    title_cell = ws1['A1']
+    title_cell.value = f"Market Segment Report ({start_date} to {end_date})"
+    title_cell.font = Font(size=14, bold=True)
+    title_cell.alignment = Alignment(horizontal="center")
+    
+    for col_num, header in enumerate(headers1, 1):
+        cell = ws1.cell(row=2, column=col_num)
+        cell.value = header
+        cell.font = Font(bold=True)
+        cell.fill = PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid")
+        cell.font = Font(bold=True, color="FFFFFF")
+    
+    for row_num, row_data in enumerate(data1, 3):
+        for col_num, value in enumerate(row_data, 1):
+            ws1.cell(row=row_num, column=col_num, value=value)
+    
+    # Sheet 2: Rate Types
+    ws2 = wb.create_sheet("Rate Types")
+    
+    headers2 = ["Rate Type", "Bookings", "Nights", "Revenue", "ADR"]
+    data2 = []
+    for rate_type, stats in report_data['rate_types'].items():
+        data2.append([
+            rate_type.upper(),
+            stats['bookings'],
+            stats['nights'],
+            f"${stats['revenue']:,.2f}",
+            f"${stats['adr']:,.2f}"
+        ])
+    
+    ws2.merge_cells('A1:E1')
+    title_cell = ws2['A1']
+    title_cell.value = f"Rate Type Report ({start_date} to {end_date})"
+    title_cell.font = Font(size=14, bold=True)
+    title_cell.alignment = Alignment(horizontal="center")
+    
+    for col_num, header in enumerate(headers2, 1):
+        cell = ws2.cell(row=2, column=col_num)
+        cell.value = header
+        cell.font = Font(bold=True)
+        cell.fill = PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid")
+        cell.font = Font(bold=True, color="FFFFFF")
+    
+    for row_num, row_data in enumerate(data2, 3):
+        for col_num, value in enumerate(row_data, 1):
+            ws2.cell(row=row_num, column=col_num, value=value)
+    
+    filename = f"market_segment_report_{start_date}_to_{end_date}.xlsx"
+    return excel_response(wb, filename)
+
+
 @api_router.get("/reports/company-aging")
 async def get_company_aging_report(current_user: User = Depends(get_current_user)):
     """Company Accounts Receivable Aging Report"""

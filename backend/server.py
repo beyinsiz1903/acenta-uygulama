@@ -3252,21 +3252,33 @@ async def get_stayover_rooms(current_user: User = Depends(get_current_user)):
     
     stayover_rooms = []
     for booking in bookings:
-        checkout_date = datetime.fromisoformat(booking['check_out']).date()
-        if checkout_date > today:
-            room = await db.rooms.find_one({'id': booking['room_id']}, {'_id': 0})
-            guest = await db.guests.find_one({'id': booking['guest_id']}, {'_id': 0})
+        try:
+            # Handle both datetime and string formats
+            checkout = booking.get('check_out')
+            if isinstance(checkout, datetime):
+                checkout_date = checkout.date()
+            elif isinstance(checkout, str):
+                checkout_date = datetime.fromisoformat(checkout.replace('Z', '+00:00')).date()
+            else:
+                continue
             
-            nights_remaining = (checkout_date - today).days
-            
-            stayover_rooms.append({
-                'room_number': room['room_number'] if room else 'N/A',
-                'room_type': room['room_type'] if room else 'N/A',
-                'guest_name': guest['name'] if guest else 'N/A',
-                'checkout_date': booking['check_out'],
-                'nights_remaining': nights_remaining,
-                'booking_id': booking['id']
-            })
+            if checkout_date > today:
+                room = await db.rooms.find_one({'id': booking['room_id']}, {'_id': 0})
+                guest = await db.guests.find_one({'id': booking['guest_id']}, {'_id': 0})
+                
+                nights_remaining = (checkout_date - today).days
+                
+                stayover_rooms.append({
+                    'room_number': room['room_number'] if room else 'N/A',
+                    'room_type': room['room_type'] if room else 'N/A',
+                    'guest_name': guest['name'] if guest else 'N/A',
+                    'checkout_date': checkout.isoformat() if isinstance(checkout, datetime) else checkout,
+                    'nights_remaining': nights_remaining,
+                    'booking_id': booking['id']
+                })
+        except Exception as e:
+            print(f"Error processing stayover booking {booking.get('id')}: {e}")
+            continue
     
     return {
         'stayover_rooms': stayover_rooms,

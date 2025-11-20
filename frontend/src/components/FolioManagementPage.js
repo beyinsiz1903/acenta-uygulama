@@ -612,6 +612,19 @@ const FolioManagementPage = () => {
           }}
         />
       )}
+
+      {/* Printable Folio Modal */}
+      {showPrintableFolio && selectedFolio && (
+        <PrintableFolio
+          folioData={{
+            folio_number: selectedFolio.folio_number,
+            booking: selectedFolio.booking,
+            charges: charges,
+            payments: payments
+          }}
+          onClose={() => setShowPrintableFolio(false)}
+        />
+      )}
     </div>
   );
 };

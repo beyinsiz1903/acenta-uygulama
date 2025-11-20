@@ -24643,21 +24643,38 @@ async def get_complete_guest_profile(
         'tenant_id': current_user.tenant_id,
         'status': {'$in': ['checked_out', 'checked_in']}
     }).sort('check_in', -1):
-        room = await db.rooms.find_one({'id': booking['room_id'], 'tenant_id': current_user.tenant_id})
-        
-        # Calculate nights
-        nights = (booking['check_out'] - booking['check_in']).days if isinstance(booking['check_in'], datetime) else 0
-        
-        stay_history.append({
-            'booking_id': booking['id'],
-            'check_in': booking['check_in'].isoformat() if isinstance(booking['check_in'], datetime) else booking['check_in'],
-            'check_out': booking['check_out'].isoformat() if isinstance(booking['check_out'], datetime) else booking['check_out'],
-            'room_number': room.get('room_number') if room else 'N/A',
-            'room_type': room.get('room_type') if room else 'N/A',
-            'nights': nights,
-            'total_amount': booking.get('total_amount', 0),
-            'status': booking['status']
-        })
+        try:
+            room = await db.rooms.find_one({'id': booking['room_id'], 'tenant_id': current_user.tenant_id})
+            
+            # Calculate nights - handle both datetime and string
+            check_in = booking.get('check_in')
+            check_out = booking.get('check_out')
+            nights = 0
+            
+            if isinstance(check_in, datetime) and isinstance(check_out, datetime):
+                nights = (check_out - check_in).days
+            elif isinstance(check_in, str) and isinstance(check_out, str):
+                try:
+                    check_in_dt = datetime.fromisoformat(check_in.replace('Z', '+00:00'))
+                    check_out_dt = datetime.fromisoformat(check_out.replace('Z', '+00:00'))
+                    nights = (check_out_dt - check_in_dt).days
+                except:
+                    nights = 0
+            
+            stay_history.append({
+                'booking_id': booking['id'],
+                'check_in': check_in.isoformat() if isinstance(check_in, datetime) else str(check_in),
+                'check_out': check_out.isoformat() if isinstance(check_out, datetime) else str(check_out),
+                'room_number': room.get('room_number') if room else 'N/A',
+                'room_type': room.get('room_type') if room else 'N/A',
+                'nights': nights,
+                'total_amount': booking.get('total_amount', 0),
+                'status': booking['status']
+            })
+        except Exception as e:
+            # Skip bookings that cause errors
+            print(f"Error processing booking {booking.get('id')}: {e}")
+            continue
     
     # Get preferences
     preferences = await db.guest_preferences.find_one({

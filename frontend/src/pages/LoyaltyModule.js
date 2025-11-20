@@ -492,7 +492,7 @@ const LoyaltyModule = ({ user, tenant, onLogout }) => {
                           </div>
                           <div className="flex items-center space-x-2">
                             <span className={`text-lg font-bold ${txn.transaction_type === 'earned' ? 'text-green-600' : 'text-red-600'}`}>
-                              {txn.transaction_type === 'earned' ? '+' : '-'}{txn.points}
+                              {txn.transaction_type === 'earned' ? '+' : '-'}{txn.points || 0}
                             </span>
                             {txn.transaction_type === 'earned' ? (
                               <TrendingUp className="w-4 h-4 text-green-600" />

@@ -1523,8 +1523,8 @@ async def get_guest_bookings_old(current_user: User = Depends(get_current_user))
     
     return {'active_bookings': active_bookings, 'past_bookings': past_bookings}
 
-@api_router.get("/guest/loyalty")
-async def get_guest_loyalty(current_user: User = Depends(get_current_user)):
+@api_router.get("/guest/loyalty-old")
+async def get_guest_loyalty_old(current_user: User = Depends(get_current_user)):
     if current_user.role != UserRole.GUEST:
         raise HTTPException(status_code=403, detail="Only guests can access this endpoint")
     

@@ -227,10 +227,14 @@ const ChannelManagerModule = ({ user, tenant, onLogout }) => {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="connections">
               <Network className="w-4 h-4 mr-2" />
               Connections
+            </TabsTrigger>
+            <TabsTrigger value="rates">
+              <Settings className="w-4 h-4 mr-2" />
+              Rate & Availability
             </TabsTrigger>
             <TabsTrigger value="reservations">
               <Download className="w-4 h-4 mr-2" />

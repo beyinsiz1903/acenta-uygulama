@@ -1471,10 +1471,10 @@ async def register_guest(data: GuestRegister):
 @api_router.post("/auth/login", response_model=TokenResponse)
 async def login(data: UserLogin):
     user_doc = await db.users.find_one({'email': data.email}, {'_id': 0})
-    if not user_doc or not verify_password(data.password, user_doc.get('password', '')):
+    if not user_doc or not verify_password(data.password, user_doc.get('hashed_password', '')):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
-    user_data = {k: v for k, v in user_doc.items() if k != 'password'}
+    user_data = {k: v for k, v in user_doc.items() if k not in ['password', 'hashed_password']}
     user = User(**user_data)
     
     tenant = None

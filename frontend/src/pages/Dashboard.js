@@ -239,7 +239,7 @@ const Dashboard = ({ user, tenant, onLogout }) => {
                   return (
                     <Card 
                       key={module.path} 
-                      className="card-hover cursor-pointer"
+                      className={`card-hover cursor-pointer ${module.badge === 'NEW' ? 'border-2 border-purple-400 shadow-lg' : ''}`}
                       onClick={() => navigate(module.path)}
                       data-testid={`module-${module.title.toLowerCase()}`}
                     >
@@ -254,8 +254,15 @@ const Dashboard = ({ user, tenant, onLogout }) => {
                           >
                             <Icon className="w-6 h-6 text-white" />
                           </div>
-                          <div>
-                            <CardTitle>{module.title}</CardTitle>
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between">
+                              <CardTitle>{module.title}</CardTitle>
+                              {module.badge && (
+                                <span className="px-2 py-1 text-xs font-bold bg-purple-100 text-purple-700 rounded">
+                                  {module.badge}
+                                </span>
+                              )}
+                            </div>
                             <CardDescription>{module.description}</CardDescription>
                           </div>
                         </div>

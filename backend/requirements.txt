@@ -51,7 +51,7 @@ python-jose==3.5.0
 python-multipart==0.0.20
 pytokens==0.3.0
 pytz==2025.2
-qrcode==8.2
+qrcode==7.4.2
 requests==2.32.5
 requests-oauthlib==2.0.0
 rich==14.2.0
@@ -71,7 +71,6 @@ uvicorn==0.25.0
 watchfiles==1.1.1
 litellm
 emergentintegrations
-qrcode==7.4.2
 scikit-learn==1.5.0
 xgboost==2.1.0
 joblib==1.4.2

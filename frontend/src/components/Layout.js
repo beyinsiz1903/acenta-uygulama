@@ -28,6 +28,7 @@ const Layout = ({ children, user, tenant, onLogout, currentModule }) => {
     { name: 'Channel Manager', path: '/channel-manager', icon: Network, id: 'channel-manager' },
     { name: t('nav.loyalty'), path: '/loyalty', icon: Award, id: 'loyalty' },
     { name: t('nav.marketplace'), path: '/marketplace', icon: ShoppingCart, id: 'marketplace' },
+    { name: '📱 Mobile App', path: '/mobile', icon: Smartphone, id: 'mobile', highlight: true },
   ];
 
   return (

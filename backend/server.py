@@ -5120,6 +5120,136 @@ async def apply_rate_recommendation(
         'message': f'Rates updated for {updated_rooms} rooms'
     }
 
+@api_router.get("/housekeeping/staff/{staff_id}/detailed-stats")
+async def get_staff_detailed_statistics(
+    staff_id: str,
+    days: int = 30,
+    current_user: User = Depends(get_current_user)
+):
+    """Detailed staff performance by room type, shift, and speed"""
+    since = datetime.now(timezone.utc) - timedelta(days=days)
+    
+    # Get all tasks for this staff member
+    tasks = await db.housekeeping_tasks.find({
+        'tenant_id': current_user.tenant_id,
+        'assigned_id': staff_id,
+        'status': 'completed',
+        'completed_at': {'$gte': since.isoformat()}
+    }).to_list(10000)
+    
+    if not tasks:
+        return {'error': 'No data for this staff member'}
+    
+    # Get staff info
+    staff = await db.users.find_one({'id': staff_id}) or await db.staff.find_one({'id': staff_id})
+    
+    # BY ROOM TYPE
+    by_room_type = {}
+    for task in tasks:
+        room = await db.rooms.find_one({'id': task['room_id']})
+        room_type = room.get('room_type', 'unknown') if room else 'unknown'
+        
+        if room_type not in by_room_type:
+            by_room_type[room_type] = {
+                'count': 0,
+                'total_duration': 0,
+                'avg_duration': 0,
+                'fastest': 999,
+                'slowest': 0
+            }
+        
+        duration = task.get('duration_minutes', 0)
+        by_room_type[room_type]['count'] += 1
+        by_room_type[room_type]['total_duration'] += duration
+        by_room_type[room_type]['fastest'] = min(by_room_type[room_type]['fastest'], duration)
+        by_room_type[room_type]['slowest'] = max(by_room_type[room_type]['slowest'], duration)
+    
+    for stats in by_room_type.values():
+        stats['avg_duration'] = round(stats['total_duration'] / stats['count'], 1) if stats['count'] > 0 else 0
+    
+    # BY SHIFT (Morning / Afternoon / Night)
+    by_shift = {'morning': [], 'afternoon': [], 'evening': []}
+    for task in tasks:
+        started_at = datetime.fromisoformat(task['started_at'])
+        hour = started_at.hour
+        
+        if 6 <= hour < 14:
+            by_shift['morning'].append(task)
+        elif 14 <= hour < 22:
+            by_shift['afternoon'].append(task)
+        else:
+            by_shift['evening'].append(task)
+    
+    shift_stats = {}
+    for shift, shift_tasks in by_shift.items():
+        if shift_tasks:
+            durations = [t.get('duration_minutes', 0) for t in shift_tasks]
+            shift_stats[shift] = {
+                'rooms_cleaned': len(shift_tasks),
+                'avg_duration': round(sum(durations) / len(durations), 1),
+                'total_hours': round(sum(durations) / 60, 1)
+            }
+        else:
+            shift_stats[shift] = {'rooms_cleaned': 0, 'avg_duration': 0, 'total_hours': 0}
+    
+    # SPEED ANALYSIS
+    all_durations = [t.get('duration_minutes', 0) for t in tasks]
+    avg_duration = sum(all_durations) / len(all_durations)
+    
+    # Compare to hotel average
+    hotel_tasks = await db.housekeeping_tasks.find({
+        'tenant_id': current_user.tenant_id,
+        'status': 'completed',
+        'completed_at': {'$gte': since.isoformat()}
+    }).to_list(100000)
+    
+    hotel_durations = [t.get('duration_minutes', 0) for t in hotel_tasks]
+    hotel_avg = sum(hotel_durations) / len(hotel_durations) if hotel_durations else 0
+    
+    speed_rating = 'average'
+    if avg_duration < hotel_avg * 0.85:
+        speed_rating = 'fast'
+    elif avg_duration > hotel_avg * 1.15:
+        speed_rating = 'slow'
+    
+    # QUALITY SCORES
+    quality_scores = [t.get('quality_score', 5) for t in tasks if t.get('quality_score')]
+    avg_quality = sum(quality_scores) / len(quality_scores) if quality_scores else 5
+    
+    # DAY-by-DAY PERFORMANCE
+    daily_performance = {}
+    for task in tasks:
+        date = task['started_at'][:10]
+        if date not in daily_performance:
+            daily_performance[date] = {'rooms': 0, 'total_time': 0}
+        daily_performance[date]['rooms'] += 1
+        daily_performance[date]['total_time'] += task.get('duration_minutes', 0)
+    
+    return {
+        'staff_info': {
+            'id': staff_id,
+            'name': staff.get('name', 'Unknown') if staff else 'Unknown',
+            'email': staff.get('email', '') if staff else ''
+        },
+        'period': {
+            'days': days,
+            'start_date': since.isoformat(),
+            'end_date': datetime.now(timezone.utc).isoformat()
+        },
+        'overall': {
+            'total_rooms_cleaned': len(tasks),
+            'avg_duration': round(avg_duration, 1),
+            'fastest_cleaning': round(min(all_durations), 1),
+            'slowest_cleaning': round(max(all_durations), 1),
+            'avg_quality_score': round(avg_quality, 1),
+            'speed_rating': speed_rating,
+            'vs_hotel_avg': round(((avg_duration - hotel_avg) / hotel_avg * 100) if hotel_avg > 0 else 0, 1)
+        },
+        'by_room_type': by_room_type,
+        'by_shift': shift_stats,
+        'daily_performance': daily_performance
+    }
+
 @api_router.get("/reports/market-segment")
 async def get_market_segment_report(
     start_date: str,

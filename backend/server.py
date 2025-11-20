@@ -25322,14 +25322,14 @@ async def create_pos_order(
     for item_data in data.order_items:
         # Get menu item
         menu_item = await db.pos_menu_items.find_one({
-            'id': item_data['item_id'],
+            'id': item_data.item_id,
             'tenant_id': current_user.tenant_id
         })
         
         if not menu_item:
             continue
         
-        quantity = item_data.get('quantity', 1)
+        quantity = item_data.quantity
         total_price = menu_item['unit_price'] * quantity
         subtotal += total_price
         

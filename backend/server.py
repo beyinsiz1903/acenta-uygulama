@@ -20254,5 +20254,336 @@ def get_tier_benefits(tier):
     return benefits.get(tier, [])
 
 
+
+# ============= ML TRAINING ENDPOINTS =============
+
+@api_router.post("/ml/rms/train")
+async def train_rms_model(
+    historical_days: int = 730,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Train RMS (Revenue Management System) ML Model
+    - Generates 2 years of synthetic training data
+    - Trains XGBoost models for occupancy prediction and dynamic pricing
+    - Saves models to disk for production use
+    """
+    try:
+        from ml_data_generators import RMSDataGenerator
+        from ml_trainers import RMSModelTrainer
+        
+        # Generate training data
+        print(f"Generating {historical_days} days of RMS training data...")
+        data_df = RMSDataGenerator.generate(days=historical_days)
+        
+        # Train models
+        trainer = RMSModelTrainer(model_dir='ml_models')
+        metrics = trainer.train(data_df)
+        
+        return {
+            'success': True,
+            'message': 'RMS models trained successfully',
+            'metrics': metrics,
+            'data_summary': {
+                'total_samples': len(data_df),
+                'date_range': {
+                    'start': data_df['date'].min(),
+                    'end': data_df['date'].max()
+                },
+                'occupancy_range': {
+                    'min': float(data_df['occupancy_rate'].min()),
+                    'max': float(data_df['occupancy_rate'].max()),
+                    'mean': float(data_df['occupancy_rate'].mean())
+                },
+                'price_range': {
+                    'min': float(data_df['optimal_price'].min()),
+                    'max': float(data_df['optimal_price'].max()),
+                    'mean': float(data_df['optimal_price'].mean())
+                }
+            }
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Training failed: {str(e)}")
+
+
+@api_router.post("/ml/persona/train")
+async def train_persona_model(
+    num_guests: int = 400,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Train Guest Persona ML Model
+    - Generates 300-500 synthetic guest profiles
+    - Trains Random Forest classifier for persona segmentation
+    - Saves model to disk for production use
+    """
+    try:
+        from ml_data_generators import PersonaDataGenerator
+        from ml_trainers import PersonaModelTrainer
+        
+        # Generate training data
+        print(f"Generating {num_guests} guest persona training samples...")
+        data_df = PersonaDataGenerator.generate(num_guests=num_guests)
+        
+        # Train model
+        trainer = PersonaModelTrainer(model_dir='ml_models')
+        metrics = trainer.train(data_df)
+        
+        return {
+            'success': True,
+            'message': 'Persona model trained successfully',
+            'metrics': metrics,
+            'data_summary': {
+                'total_guests': len(data_df),
+                'persona_distribution': data_df['persona_type'].value_counts().to_dict(),
+                'avg_stays': float(data_df['total_stays'].mean()),
+                'avg_spend': float(data_df['avg_spend'].mean())
+            }
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Training failed: {str(e)}")
+
+
+@api_router.post("/ml/predictive-maintenance/train")
+async def train_predictive_maintenance_model(
+    num_samples: int = 1000,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Train Predictive Maintenance ML Model
+    - Generates IoT sensor simulation data
+    - Trains XGBoost classifier for failure risk prediction
+    - Trains Gradient Boosting for days-until-failure prediction
+    - Saves models to disk for production use
+    """
+    try:
+        from ml_data_generators import PredictiveMaintenanceDataGenerator
+        from ml_trainers import PredictiveMaintenanceModelTrainer
+        
+        # Generate training data
+        print(f"Generating {num_samples} predictive maintenance training samples...")
+        data_df = PredictiveMaintenanceDataGenerator.generate(num_samples=num_samples)
+        
+        # Train models
+        trainer = PredictiveMaintenanceModelTrainer(model_dir='ml_models')
+        metrics = trainer.train(data_df)
+        
+        return {
+            'success': True,
+            'message': 'Predictive maintenance models trained successfully',
+            'metrics': metrics,
+            'data_summary': {
+                'total_samples': len(data_df),
+                'equipment_distribution': data_df['equipment_type'].value_counts().to_dict(),
+                'risk_distribution': data_df['failure_risk'].value_counts().to_dict(),
+                'avg_days_until_failure': float(data_df['days_until_failure'].mean())
+            }
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Training failed: {str(e)}")
+
+
+@api_router.post("/ml/hk-scheduler/train")
+async def train_hk_scheduler_model(
+    num_days: int = 365,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Train Housekeeping Scheduler ML Model
+    - Generates occupancy-based staffing data
+    - Trains Random Forest regressors for staff and hours prediction
+    - Saves models to disk for production use
+    """
+    try:
+        from ml_data_generators import HKSchedulerDataGenerator
+        from ml_trainers import HKSchedulerModelTrainer
+        
+        # Generate training data
+        print(f"Generating {num_days} days of HK scheduler training data...")
+        data_df = HKSchedulerDataGenerator.generate(num_days=num_days)
+        
+        # Train models
+        trainer = HKSchedulerModelTrainer(model_dir='ml_models')
+        metrics = trainer.train(data_df)
+        
+        return {
+            'success': True,
+            'message': 'HK scheduler models trained successfully',
+            'metrics': metrics,
+            'data_summary': {
+                'total_days': len(data_df),
+                'avg_occupancy': float(data_df['occupancy_rate'].mean()),
+                'avg_staff_needed': float(data_df['staff_needed'].mean()),
+                'avg_hours': float(data_df['estimated_hours'].mean()),
+                'peak_staff_needed': int(data_df['staff_needed'].max())
+            }
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Training failed: {str(e)}")
+
+
+@api_router.post("/ml/train-all")
+async def train_all_models(
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Train ALL ML Models in sequence
+    - RMS (Revenue Management)
+    - Persona (Guest Segmentation)
+    - Predictive Maintenance
+    - HK Scheduler
+    """
+    results = {}
+    errors = []
+    
+    try:
+        # Import all required modules
+        from ml_data_generators import (
+            RMSDataGenerator,
+            PersonaDataGenerator,
+            PredictiveMaintenanceDataGenerator,
+            HKSchedulerDataGenerator
+        )
+        from ml_trainers import (
+            RMSModelTrainer,
+            PersonaModelTrainer,
+            PredictiveMaintenanceModelTrainer,
+            HKSchedulerModelTrainer
+        )
+        
+        # 1. Train RMS Model
+        try:
+            print("\n=== Training RMS Model ===")
+            data_df = RMSDataGenerator.generate(days=730)
+            trainer = RMSModelTrainer(model_dir='ml_models')
+            results['rms'] = trainer.train(data_df)
+            results['rms']['status'] = 'success'
+        except Exception as e:
+            results['rms'] = {'status': 'failed', 'error': str(e)}
+            errors.append(f"RMS: {str(e)}")
+        
+        # 2. Train Persona Model
+        try:
+            print("\n=== Training Persona Model ===")
+            data_df = PersonaDataGenerator.generate(num_guests=400)
+            trainer = PersonaModelTrainer(model_dir='ml_models')
+            results['persona'] = trainer.train(data_df)
+            results['persona']['status'] = 'success'
+        except Exception as e:
+            results['persona'] = {'status': 'failed', 'error': str(e)}
+            errors.append(f"Persona: {str(e)}")
+        
+        # 3. Train Predictive Maintenance Model
+        try:
+            print("\n=== Training Predictive Maintenance Model ===")
+            data_df = PredictiveMaintenanceDataGenerator.generate(num_samples=1000)
+            trainer = PredictiveMaintenanceModelTrainer(model_dir='ml_models')
+            results['predictive_maintenance'] = trainer.train(data_df)
+            results['predictive_maintenance']['status'] = 'success'
+        except Exception as e:
+            results['predictive_maintenance'] = {'status': 'failed', 'error': str(e)}
+            errors.append(f"Predictive Maintenance: {str(e)}")
+        
+        # 4. Train HK Scheduler Model
+        try:
+            print("\n=== Training HK Scheduler Model ===")
+            data_df = HKSchedulerDataGenerator.generate(num_days=365)
+            trainer = HKSchedulerModelTrainer(model_dir='ml_models')
+            results['hk_scheduler'] = trainer.train(data_df)
+            results['hk_scheduler']['status'] = 'success'
+        except Exception as e:
+            results['hk_scheduler'] = {'status': 'failed', 'error': str(e)}
+            errors.append(f"HK Scheduler: {str(e)}")
+        
+        # Summary
+        successful = sum(1 for r in results.values() if r.get('status') == 'success')
+        total = len(results)
+        
+        return {
+            'success': len(errors) == 0,
+            'message': f'Training complete: {successful}/{total} models trained successfully',
+            'results': results,
+            'errors': errors if errors else None,
+            'summary': {
+                'total_models': total,
+                'successful': successful,
+                'failed': len(errors)
+            }
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Bulk training failed: {str(e)}")
+
+
+@api_router.get("/ml/models/status")
+async def get_ml_models_status(
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get status of all ML models
+    - Check if models are trained and available
+    - Return training metrics if available
+    """
+    import os
+    import json
+    
+    model_dir = 'ml_models'
+    
+    models_status = {
+        'rms': {
+            'trained': False,
+            'files': ['rms_occupancy_model.pkl', 'rms_pricing_model.pkl', 'rms_metrics.json']
+        },
+        'persona': {
+            'trained': False,
+            'files': ['persona_model.pkl', 'persona_label_encoder.pkl', 'persona_metrics.json']
+        },
+        'predictive_maintenance': {
+            'trained': False,
+            'files': ['maintenance_risk_model.pkl', 'maintenance_days_model.pkl', 'maintenance_label_encoder.pkl', 'maintenance_equipment_encoder.pkl', 'maintenance_metrics.json']
+        },
+        'hk_scheduler': {
+            'trained': False,
+            'files': ['hk_staff_model.pkl', 'hk_hours_model.pkl', 'hk_scheduler_metrics.json']
+        }
+    }
+    
+    # Check each model
+    for model_name, info in models_status.items():
+        all_files_exist = all(
+            os.path.exists(os.path.join(model_dir, file))
+            for file in info['files']
+        )
+        
+        info['trained'] = all_files_exist
+        info['files_status'] = {
+            file: os.path.exists(os.path.join(model_dir, file))
+            for file in info['files']
+        }
+        
+        # Load metrics if available
+        metrics_file = [f for f in info['files'] if f.endswith('_metrics.json')]
+        if metrics_file and all_files_exist:
+            try:
+                with open(os.path.join(model_dir, metrics_file[0]), 'r') as f:
+                    info['metrics'] = json.load(f)
+            except:
+                info['metrics'] = None
+    
+    # Overall summary
+    trained_count = sum(1 for info in models_status.values() if info['trained'])
+    total_count = len(models_status)
+    
+    return {
+        'models': models_status,
+        'summary': {
+            'total_models': total_count,
+            'trained_models': trained_count,
+            'untrained_models': total_count - trained_count,
+            'all_ready': trained_count == total_count
+        }
+    }
+
+
 # Include router at the very end after ALL endpoints are defined
 app.include_router(api_router)

@@ -2796,8 +2796,9 @@ async def create_loyalty_program(program_data: LoyaltyProgramCreate, current_use
     await db.loyalty_programs.insert_one(program_dict)
     return program
 
-@api_router.get("/loyalty/programs", response_model=List[LoyaltyProgram])
+@api_router.get("/loyalty/programs")
 async def get_loyalty_programs(current_user: User = Depends(get_current_user)):
+    """Get loyalty program definitions (not guest memberships)"""
     programs = await db.loyalty_programs.find({'tenant_id': current_user.tenant_id}, {'_id': 0}).to_list(1000)
     return programs
 

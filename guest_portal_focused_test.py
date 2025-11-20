@@ -352,8 +352,10 @@ class FocusedGuestPortalTester:
                     
                     # Check for default preferences structure
                     expected_fields = [
-                        "user_id", "email_notifications", "push_notifications", 
-                        "booking_confirmations", "promotional_offers"
+                        "user_id", "email_notifications", "sms_notifications", 
+                        "push_notifications", "whatsapp_notifications",
+                        "booking_confirmations", "check_in_reminders",
+                        "promotional_offers", "loyalty_updates"
                     ]
                     missing_fields = [field for field in expected_fields if field not in data]
                     

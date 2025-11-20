@@ -7,7 +7,7 @@ import requests
 import json
 
 # Configuration
-BACKEND_URL = "https://fix-attempt-1.preview.emergentagent.com/api"
+BACKEND_URL = "https://mobile-facility-mgmt.preview.emergentagent.com/api"
 TEST_EMAIL = "test@hotel.com"
 TEST_PASSWORD = "test123"
 

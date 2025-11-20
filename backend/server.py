@@ -2275,7 +2275,8 @@ async def create_booking(booking_data: BookingCreate, current_user: User = Depen
     booking_dict['created_at'] = booking_dict['created_at'].isoformat()
     await db.bookings.insert_one(booking_dict)
     
-    await db.rooms.update_one({'id': booking.room_id}, {'$set': {'status': 'occupied'}})
+    # Note: Room status should be updated during check-in, not booking creation
+    # Room remains in its current status (available/dirty/etc.) until guest checks in
     
     return booking
 

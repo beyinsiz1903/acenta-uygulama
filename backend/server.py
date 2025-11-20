@@ -2097,56 +2097,107 @@ async def get_folio_dashboard_stats(current_user: User = Depends(get_current_use
 @api_router.post("/night-audit/post-room-charges")
 async def post_room_charges(current_user: User = Depends(get_current_user)):
     """Night audit: Post room charges to all active bookings"""
-    # Get all checked-in bookings
-    bookings = await db.bookings.find({
-        'tenant_id': current_user.tenant_id,
-        'status': 'checked_in'
-    }).to_list(1000)
+    import time
+    start_time = time.time()
     
-    charges_posted = 0
+    logging_service = get_logging_service(db)
+    audit_date = datetime.now(timezone.utc).date().isoformat()
+    errors = []
     
-    for booking in bookings:
-        # Get guest folio for this booking
-        folio = await db.folios.find_one({
-            'booking_id': booking['id'],
-            'folio_type': 'guest',
-            'status': 'open'
-        })
+    try:
+        # Get all checked-in bookings
+        bookings = await db.bookings.find({
+            'tenant_id': current_user.tenant_id,
+            'status': 'checked_in'
+        }).to_list(1000)
         
-        if folio:
-            # Post room charge
-            charge = FolioCharge(
-                tenant_id=current_user.tenant_id,
-                folio_id=folio['id'],
-                booking_id=booking['id'],
-                charge_category=ChargeCategory.ROOM,
-                description=f"Room {booking.get('room_id', 'N/A')} - Night Charge",
-                unit_price=booking.get('base_rate', booking.get('total_amount', 0)),
-                quantity=1.0,
-                amount=booking.get('base_rate', booking.get('total_amount', 0)),
-                tax_amount=0.0,
-                total=booking.get('base_rate', booking.get('total_amount', 0)),
-                posted_by="SYSTEM"
-            )
-            
-            charge_dict = charge.model_dump()
-            charge_dict['date'] = charge_dict['date'].isoformat()
-            await db.folio_charges.insert_one(charge_dict)
-            
-            # Update folio balance
-            balance = await calculate_folio_balance(folio['id'], current_user.tenant_id)
-            await db.folios.update_one(
-                {'id': folio['id']},
-                {'$set': {'balance': balance}}
-            )
-            
-            charges_posted += 1
-    
-    return {
-        "message": "Night audit completed",
-        "charges_posted": charges_posted,
-        "bookings_processed": len(bookings)
-    }
+        charges_posted = 0
+        total_amount = 0.0
+        
+        for booking in bookings:
+            try:
+                # Get guest folio for this booking
+                folio = await db.folios.find_one({
+                    'booking_id': booking['id'],
+                    'folio_type': 'guest',
+                    'status': 'open'
+                })
+                
+                if folio:
+                    # Post room charge
+                    charge_amount = booking.get('base_rate', booking.get('total_amount', 0))
+                    charge = FolioCharge(
+                        tenant_id=current_user.tenant_id,
+                        folio_id=folio['id'],
+                        booking_id=booking['id'],
+                        charge_category=ChargeCategory.ROOM,
+                        description=f"Room {booking.get('room_id', 'N/A')} - Night Charge",
+                        unit_price=charge_amount,
+                        quantity=1.0,
+                        amount=charge_amount,
+                        tax_amount=0.0,
+                        total=charge_amount,
+                        posted_by="SYSTEM"
+                    )
+                    
+                    charge_dict = charge.model_dump()
+                    charge_dict['date'] = charge_dict['date'].isoformat()
+                    await db.folio_charges.insert_one(charge_dict)
+                    
+                    # Update folio balance
+                    balance = await calculate_folio_balance(folio['id'], current_user.tenant_id)
+                    await db.folios.update_one(
+                        {'id': folio['id']},
+                        {'$set': {'balance': balance}}
+                    )
+                    
+                    charges_posted += 1
+                    total_amount += charge_amount
+            except Exception as e:
+                errors.append(f"Booking {booking.get('id')}: {str(e)}")
+        
+        duration = time.time() - start_time
+        status = 'completed' if len(errors) == 0 else 'partial' if charges_posted > 0 else 'failed'
+        
+        # Log night audit
+        await logging_service.log_night_audit(
+            tenant_id=current_user.tenant_id,
+            audit_date=audit_date,
+            user_id=current_user.id,
+            user_name=current_user.name,
+            status=status,
+            rooms_processed=len(bookings),
+            charges_posted=charges_posted,
+            total_amount=total_amount,
+            duration_seconds=duration,
+            errors=errors if errors else None
+        )
+        
+        return {
+            "message": "Night audit completed",
+            "charges_posted": charges_posted,
+            "bookings_processed": len(bookings),
+            "status": status,
+            "errors": errors if errors else None
+        }
+    except Exception as e:
+        duration = time.time() - start_time
+        
+        # Log failed audit
+        await logging_service.log_night_audit(
+            tenant_id=current_user.tenant_id,
+            audit_date=audit_date,
+            user_id=current_user.id,
+            user_name=current_user.name,
+            status='failed',
+            rooms_processed=0,
+            charges_posted=0,
+            total_amount=0.0,
+            duration_seconds=duration,
+            errors=[str(e)]
+        )
+        
+        raise HTTPException(status_code=500, detail=f"Night audit failed: {str(e)}")
 
 # ============= GUEST MANAGEMENT =============
 

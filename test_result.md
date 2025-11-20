@@ -1472,6 +1472,21 @@ backend:
         agent: "testing"
         comment: "✅ LOGGING SERVICE CORE WORKING PERFECTLY - LoggingService class fully functional with all 6 logging methods tested. Error logging supports multiple severity levels (error, warning, critical) with automatic alert creation for critical errors. Night audit logging tracks success/failure with comprehensive metrics. OTA sync logging supports multi-channel tracking with statistics. RMS publish logging includes automation rate tracking. Maintenance prediction logging supports risk assessment with confidence scores. Alert system creates and categorizes alerts across multiple modules. All logging methods create proper database entries with full metadata and statistics support."
 
+  - task: "Critical Bug Fixes - 5 Priority Issues"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Fixed 5 critical validation errors: 1) Room status bug - Removed automatic 'occupied' status on booking creation (now only set during check-in), 2) Procurement stock alert - Fixed to use request body (MinimumStockAlertRequest model), 3) Loyalty points redemption - Fixed to use request body (RedeemPointsRequest model), 4) RMS dynamic restrictions - Fixed to use request body (DynamicRestrictionsRequest model), 5) Marketplace product creation - Already using correct model (CreateMarketplaceProductRequest)"
+      - working: true
+        agent: "testing"
+        comment: "✅ CRITICAL BUG FIXES TESTING COMPLETED (100% Success Rate - 7/7 tests passed). PHASE 1 - ROOM STATUS BUG FIX (CRITICAL): ✅ Booking creation does NOT set room to 'occupied' (room remains 'available'), ✅ Check-in correctly sets room to 'occupied', ✅ Complete workflow verified (booking→available, check-in→occupied). PHASE 2 - PROCUREMENT STOCK ALERT: ✅ POST /api/procurement/minimum-stock-alert accepts request body format, returns 404 (item doesn't exist - acceptable), no 422 validation error. PHASE 3 - LOYALTY POINTS REDEMPTION: ✅ POST /api/loyalty/{guest_id}/redeem-points accepts request body format, returns 400 (insufficient points - acceptable business logic), no 422 validation error. PHASE 4 - RMS DYNAMIC RESTRICTIONS: ✅ POST /api/rms/restrictions accepts request body format, returns 200 success with proper restriction creation, no 422 validation error. PHASE 5 - MARKETPLACE PRODUCT CREATION: ✅ POST /api/marketplace/products accepts request body format with correct field mapping (name, description, price, unit), returns 200 success with product creation, no 422 validation error. ALL SUCCESS CRITERIA MET: No 422 validation errors ✅, Room status bug fixed ✅, Check-in workflow works ✅, All endpoints accept JSON ✅. Critical beta test issue resolved - check-in now works correctly!"
+
 frontend:
   - task: "OTA Messaging Hub - Complete Frontend Implementation"
     implemented: true

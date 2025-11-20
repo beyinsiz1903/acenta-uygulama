@@ -16501,14 +16501,17 @@ async def get_channel_sync_history(
 
 # ============= REVENUE MANAGEMENT ENHANCEMENTS =============
 
+class DynamicRestrictionsRequest(BaseModel):
+    date: str
+    room_type: str
+    min_los: Optional[int] = None  # Minimum Length of Stay
+    cta: bool = False  # Closed to Arrival
+    ctd: bool = False  # Closed to Departure
+    stop_sell: bool = False
+
 @api_router.post("/rms/restrictions")
 async def set_dynamic_restrictions(
-    date: str,
-    room_type: str,
-    min_los: Optional[int] = None,  # Minimum Length of Stay
-    cta: bool = False,  # Closed to Arrival
-    ctd: bool = False,  # Closed to Departure
-    stop_sell: bool = False,
+    request: DynamicRestrictionsRequest,
     current_user: User = Depends(get_current_user)
 ):
     """
@@ -16521,12 +16524,12 @@ async def set_dynamic_restrictions(
     restriction = {
         'id': str(uuid.uuid4()),
         'tenant_id': current_user.tenant_id,
-        'date': date,
-        'room_type': room_type,
-        'min_los': min_los,
-        'cta': cta,
-        'ctd': ctd,
-        'stop_sell': stop_sell,
+        'date': request.date,
+        'room_type': request.room_type,
+        'min_los': request.min_los,
+        'cta': request.cta,
+        'ctd': request.ctd,
+        'stop_sell': request.stop_sell,
         'created_by': current_user.name,
         'created_at': datetime.now(timezone.utc).isoformat()
     }
@@ -16534,8 +16537,8 @@ async def set_dynamic_restrictions(
     # Check if restriction exists
     existing = await db.rms_restrictions.find_one({
         'tenant_id': current_user.tenant_id,
-        'date': date,
-        'room_type': room_type
+        'date': request.date,
+        'room_type': request.room_type
     })
     
     if existing:

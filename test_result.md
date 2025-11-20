@@ -233,15 +233,18 @@ user_problem_statement: |
 
   - task: "Guest Profile - Tags Management (VIP/Blacklist)"
     implemented: true
-    working: "NA"
+    working: false
     file: "/app/backend/server.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Added POST /api/guests/{guest_id}/tags - Update guest tags: vip, blacklist, honeymoon, anniversary, business_traveler, frequent_guest, complainer, high_spender"
+      - working: false
+        agent: "testing"
+        comment: "❌ ENDPOINT FAILING - POST /api/guests/{guest_id}/tags returns HTTP 422 error. Request body validation failing. Tested with array of tags [vip, honeymoon, frequent_guest, high_spender] but endpoint expects different request structure."
 
   - task: "Revenue Management - Price Recommendation Slider"
     implemented: true

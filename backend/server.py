@@ -21148,7 +21148,7 @@ async def populate_demo_data(
 async def get_demo_status(
     current_user: User = Depends(get_current_user)
 ):
-    \"\"\"Check if account is using demo data\"\"\"
+    """Check if account is using demo data"""
     
     rooms_count = await db.rooms.count_documents({'tenant_id': current_user.tenant_id})
     guests_count = await db.guests.count_documents({'tenant_id': current_user.tenant_id})

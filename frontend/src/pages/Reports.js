@@ -118,9 +118,44 @@ const Reports = ({ user, tenant, onLogout }) => {
     <Layout user={user} tenant={tenant} onLogout={onLogout} currentModule="reports">
       <div className="p-6 max-w-7xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Reports</h1>
-          <p className="text-gray-600">Generate and download hotel management reports</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            <FileSpreadsheet className="inline-block w-8 h-8 mr-2 text-green-600" />
+            Reports - Excel Export
+          </h1>
+          <p className="text-gray-600">Download comprehensive reports in Excel format</p>
         </div>
+
+        {/* Date Range Selector */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-blue-600" />
+              Date Range (for reports that need dates)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label>Start Date</Label>
+                <Input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label>End Date</Label>
+                <Input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
           {reportCategories.map((category, idx) => (

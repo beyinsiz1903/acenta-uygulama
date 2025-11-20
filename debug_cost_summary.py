@@ -3,7 +3,7 @@ import requests
 import json
 from datetime import datetime
 
-BACKEND_URL = 'https://hotel-dash-upgrade.preview.emergentagent.com/api'
+BACKEND_URL = 'https://rms-forecast.preview.emergentagent.com/api'
 
 # Login
 response = requests.post(f'{BACKEND_URL}/auth/login', json={

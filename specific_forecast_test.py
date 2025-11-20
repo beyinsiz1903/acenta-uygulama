@@ -7,7 +7,7 @@ import requests
 import json
 
 # Configuration
-BACKEND_URL = "https://hotel-dash-upgrade.preview.emergentagent.com/api"
+BACKEND_URL = "https://rms-forecast.preview.emergentagent.com/api"
 TEST_EMAIL = "test@hotel.com"
 TEST_PASSWORD = "test123"
 

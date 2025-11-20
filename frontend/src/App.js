@@ -112,7 +112,7 @@ function App() {
             path="/"
             element={
               isAuthenticated ? (
-                <EnhancedGMDashboard user={user} tenant={tenant} onLogout={handleLogout} />
+                <GMDashboard user={user} tenant={tenant} onLogout={handleLogout} />
               ) : (
                 <Navigate to="/auth" replace />
               )

@@ -13,8 +13,7 @@ import {
   Clock,
   TrendingUp,
   RefreshCw,
-  Settings,
-  Tool
+  Settings
 } from 'lucide-react';
 
 const MobileMaintenance = ({ user }) => {

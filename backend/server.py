@@ -24449,10 +24449,10 @@ async def create_multi_room_reservation(
     # Create multi-room booking record
     multi_room = MultiRoomBooking(
         tenant_id=current_user.tenant_id,
-        group_name=group_name,
-        primary_booking_id=primary_booking_id,
-        related_booking_ids=related_booking_ids,
-        total_rooms=len(related_booking_ids) + 1
+        group_name=data.group_name,
+        primary_booking_id=data.primary_booking_id,
+        related_booking_ids=data.related_booking_ids,
+        total_rooms=len(data.related_booking_ids) + 1
     )
     
     await db.multi_room_bookings.insert_one(multi_room.model_dump())

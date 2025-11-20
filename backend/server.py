@@ -3829,6 +3829,50 @@ async def get_daily_flash_report(date_str: Optional[str] = None, current_user: U
         }
     }
 
+
+@api_router.get("/reports/daily-flash/excel")
+async def export_daily_flash_excel(date_str: Optional[str] = None, current_user: User = Depends(get_current_user)):
+    """Export Daily Flash Report to Excel"""
+    # Get the report data
+    report_data = await get_daily_flash_report(date_str, current_user)
+    
+    target_date = report_data['date']
+    
+    # Prepare data for Excel
+    headers = ["Metric", "Value"]
+    data = [
+        ["Report Date", target_date],
+        ["", ""],
+        ["OCCUPANCY", ""],
+        ["Total Rooms", report_data['occupancy']['total_rooms']],
+        ["Occupied Rooms", report_data['occupancy']['occupied_rooms']],
+        ["Occupancy Rate", f"{report_data['occupancy']['occupancy_rate']}%"],
+        ["", ""],
+        ["MOVEMENTS", ""],
+        ["Arrivals", report_data['movements']['arrivals']],
+        ["Departures", report_data['movements']['departures']],
+        ["Stayovers", report_data['movements']['stayovers']],
+        ["", ""],
+        ["REVENUE", ""],
+        ["Total Revenue", f"${report_data['revenue']['total_revenue']:,.2f}"],
+        ["Room Revenue", f"${report_data['revenue']['room_revenue']:,.2f}"],
+        ["F&B Revenue", f"${report_data['revenue']['fb_revenue']:,.2f}"],
+        ["Other Revenue", f"${report_data['revenue']['other_revenue']:,.2f}"],
+        ["ADR (Average Daily Rate)", f"${report_data['revenue']['adr']:,.2f}"],
+        ["RevPAR (Revenue Per Available Room)", f"${report_data['revenue']['rev_par']:,.2f}"],
+    ]
+    
+    wb = create_excel_workbook(
+        title=f"Daily Flash Report - {target_date}",
+        headers=headers,
+        data=data,
+        sheet_name="Daily Flash"
+    )
+    
+    filename = f"daily_flash_report_{target_date}.xlsx"
+    return excel_response(wb, filename)
+
+
 @api_router.get("/dashboard/role-based")
 async def get_role_based_dashboard(current_user: User = Depends(get_current_user)):
     """Role-based dashboard data - GM, Owner, Front Desk, Housekeeping"""

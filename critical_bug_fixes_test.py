@@ -462,12 +462,12 @@ class CriticalBugFixesTester:
         try:
             # Test data for marketplace product creation
             product_data = {
-                "product_name": "Premium Coffee Beans",
+                "name": "Premium Coffee Beans",
                 "category": "F&B Supplies",
-                "unit_price": 25.50,
-                "unit_of_measure": "kg",
-                "supplier": "Coffee Co.",
-                "min_order_qty": 10
+                "description": "High-quality coffee beans for hotel restaurant",
+                "price": 25.50,
+                "unit": "kg",
+                "supplier": "Coffee Co."
             }
             
             async with self.session.post(f"{BACKEND_URL}/marketplace/products", 

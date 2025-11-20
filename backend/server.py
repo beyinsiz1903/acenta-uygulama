@@ -434,6 +434,7 @@ class User(BaseModel):
     name: str
     role: UserRole
     phone: Optional[str] = None
+    is_active: bool = True
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class TenantRegister(BaseModel):

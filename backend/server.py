@@ -24393,12 +24393,15 @@ async def get_guest_name(guest_id: str, tenant_id: str) -> str:
     guest = await db.guests.find_one({'id': guest_id, 'tenant_id': tenant_id})
     return guest.get('name', 'Unknown') if guest else 'Unknown'
 
+class ExtraChargeCreate(BaseModel):
+    charge_name: str
+    charge_amount: float
+    notes: Optional[str] = None
+
 @api_router.post("/reservations/{booking_id}/extra-charges")
 async def add_extra_charge(
     booking_id: str,
-    charge_name: str,
-    charge_amount: float,
-    notes: Optional[str] = None,
+    data: ExtraChargeCreate,
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
     """Add an extra charge to a reservation"""

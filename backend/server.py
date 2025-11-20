@@ -3298,21 +3298,33 @@ async def get_arrival_rooms(current_user: User = Depends(get_current_user)):
     
     arrival_rooms = []
     for booking in bookings:
-        checkin_date = datetime.fromisoformat(booking['check_in']).date()
-        if checkin_date == today:
-            room = await db.rooms.find_one({'id': booking['room_id']}, {'_id': 0})
-            guest = await db.guests.find_one({'id': booking['guest_id']}, {'_id': 0})
+        try:
+            # Handle both datetime and string formats
+            checkin = booking.get('check_in')
+            if isinstance(checkin, datetime):
+                checkin_date = checkin.date()
+            elif isinstance(checkin, str):
+                checkin_date = datetime.fromisoformat(checkin.replace('Z', '+00:00')).date()
+            else:
+                continue
             
-            arrival_rooms.append({
-                'room_number': room['room_number'] if room else 'N/A',
-                'room_type': room['room_type'] if room else 'N/A',
-                'room_status': room['status'] if room else 'unknown',
-                'guest_name': guest['name'] if guest else 'N/A',
-                'checkin_time': booking.get('check_in'),
-                'booking_id': booking['id'],
-                'booking_status': booking['status'],
-                'ready': room['status'] in ['available', 'inspected'] if room else False
-            })
+            if checkin_date == today:
+                room = await db.rooms.find_one({'id': booking['room_id']}, {'_id': 0})
+                guest = await db.guests.find_one({'id': booking['guest_id']}, {'_id': 0})
+                
+                arrival_rooms.append({
+                    'room_number': room['room_number'] if room else 'N/A',
+                    'room_type': room['room_type'] if room else 'N/A',
+                    'room_status': room['status'] if room else 'unknown',
+                    'guest_name': guest['name'] if guest else 'N/A',
+                    'checkin_time': checkin.isoformat() if isinstance(checkin, datetime) else checkin,
+                    'booking_id': booking['id'],
+                    'booking_status': booking['status'],
+                    'ready': room['status'] in ['available', 'inspected'] if room else False
+                })
+        except Exception as e:
+            print(f"Error processing arrival booking {booking.get('id')}: {e}")
+            continue
     
     return {
         'arrival_rooms': arrival_rooms,

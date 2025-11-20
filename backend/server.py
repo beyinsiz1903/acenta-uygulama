@@ -4929,6 +4929,197 @@ async def get_housekeeping_performance_stats(
         'staff_performance': sorted(staff_stats.values(), key=lambda x: x['rooms_cleaned'], reverse=True)
     }
 
+@api_router.get("/rms/rate-recommendations")
+async def get_rate_recommendations(
+    days_ahead: int = 14,
+    current_user: User = Depends(get_current_user)
+):
+    """AI-powered rate recommendations based on demand forecast"""
+    today = datetime.now(timezone.utc).date()
+    
+    # Get current base rates
+    room_types = await db.rooms.aggregate([
+        {'$match': {'tenant_id': current_user.tenant_id}},
+        {'$group': {
+            '_id': '$room_type',
+            'avg_price': {'$avg': '$price_per_night'},
+            'count': {'$sum': 1}
+        }}
+    ]).to_list(100)
+    
+    base_rates = {rt['_id']: rt['avg_price'] for rt in room_types}
+    if not base_rates:
+        base_rates = {'standard': 100, 'deluxe': 150, 'suite': 250}
+    
+    recommendations = []
+    
+    for days in range(days_ahead):
+        target_date = today + timedelta(days=days)
+        
+        # Forecast occupancy
+        base_occ = 65
+        weekend_boost = 15 if target_date.weekday() in [4, 5] else 0
+        seasonal = 10 if target_date.month in [6, 7, 8, 12] else 0
+        variation = random.randint(-5, 8)
+        forecasted_occ = min(98, base_occ + weekend_boost + seasonal + variation)
+        
+        # Get historical bookings for this date range
+        same_date_last_year = target_date.replace(year=target_date.year - 1)
+        historical = await db.bookings.count_documents({
+            'tenant_id': current_user.tenant_id,
+            'check_in': {
+                '$gte': same_date_last_year.isoformat(),
+                '$lte': (same_date_last_year + timedelta(days=1)).isoformat()
+            }
+        })
+        
+        # Rate recommendation logic
+        rate_adjustments = {}
+        strategy = {}
+        
+        if forecasted_occ >= 90:
+            # Very high demand
+            for room_type, base_rate in base_rates.items():
+                adjustment = 25
+                rate_adjustments[room_type] = {
+                    'current_rate': base_rate,
+                    'recommended_rate': round(base_rate * (1 + adjustment/100), 2),
+                    'adjustment_pct': adjustment,
+                    'adjustment_amount': round(base_rate * adjustment/100, 2)
+                }
+            strategy = {
+                'action': 'maximize',
+                'min_stay': 2,
+                'close_to_arrival': True,
+                'stop_sell': forecasted_occ > 95,
+                'reason': 'Peak demand - maximize revenue'
+            }
+        elif forecasted_occ >= 75:
+            # Good demand
+            for room_type, base_rate in base_rates.items():
+                adjustment = 10
+                rate_adjustments[room_type] = {
+                    'current_rate': base_rate,
+                    'recommended_rate': round(base_rate * (1 + adjustment/100), 2),
+                    'adjustment_pct': adjustment,
+                    'adjustment_amount': round(base_rate * adjustment/100, 2)
+                }
+            strategy = {
+                'action': 'optimize',
+                'min_stay': 1,
+                'close_to_arrival': False,
+                'stop_sell': False,
+                'reason': 'Strong demand - optimize rates'
+            }
+        elif forecasted_occ >= 50:
+            # Moderate demand
+            for room_type, base_rate in base_rates.items():
+                adjustment = 0
+                rate_adjustments[room_type] = {
+                    'current_rate': base_rate,
+                    'recommended_rate': base_rate,
+                    'adjustment_pct': adjustment,
+                    'adjustment_amount': 0
+                }
+            strategy = {
+                'action': 'maintain',
+                'min_stay': 1,
+                'close_to_arrival': False,
+                'stop_sell': False,
+                'reason': 'Balanced demand - maintain rates'
+            }
+        else:
+            # Low demand
+            for room_type, base_rate in base_rates.items():
+                adjustment = -15
+                rate_adjustments[room_type] = {
+                    'current_rate': base_rate,
+                    'recommended_rate': round(base_rate * (1 + adjustment/100), 2),
+                    'adjustment_pct': adjustment,
+                    'adjustment_amount': round(base_rate * adjustment/100, 2)
+                }
+            strategy = {
+                'action': 'stimulate',
+                'min_stay': 1,
+                'close_to_arrival': False,
+                'stop_sell': False,
+                'reason': 'Low demand - stimulate bookings',
+                'suggested_promotions': ['Weekend getaway', 'Extended stay discount']
+            }
+        
+        # Calculate potential revenue impact
+        total_rooms = await db.rooms.count_documents({'tenant_id': current_user.tenant_id})
+        potential_revenue_impact = sum(
+            adj['adjustment_amount'] * total_rooms * (forecasted_occ / 100)
+            for adj in rate_adjustments.values()
+        ) / len(rate_adjustments) if rate_adjustments else 0
+        
+        recommendations.append({
+            'date': target_date.isoformat(),
+            'day_of_week': target_date.strftime('%A'),
+            'forecasted_occupancy': forecasted_occ,
+            'historical_bookings': historical,
+            'rate_adjustments': rate_adjustments,
+            'strategy': strategy,
+            'potential_revenue_impact': round(potential_revenue_impact, 2),
+            'confidence': 0.85 if days < 7 else 0.75,
+            'priority': 'high' if abs(strategy.get('action') in ['maximize', 'stimulate']) else 'medium'
+        })
+    
+    return {
+        'recommendations': recommendations,
+        'total_days': len(recommendations),
+        'summary': {
+            'high_demand_days': sum(1 for r in recommendations if r['forecasted_occupancy'] >= 85),
+            'low_demand_days': sum(1 for r in recommendations if r['forecasted_occupancy'] < 50),
+            'total_potential_impact': round(sum(r['potential_revenue_impact'] for r in recommendations), 2)
+        }
+    }
+
+@api_router.post("/rms/apply-recommendation")
+async def apply_rate_recommendation(
+    recommendation_data: dict,
+    current_user: User = Depends(get_current_user)
+):
+    """Apply recommended rates to room inventory"""
+    target_date = recommendation_data.get('date')
+    rate_adjustments = recommendation_data.get('rate_adjustments', {})
+    
+    updated_rooms = 0
+    for room_type, adjustment in rate_adjustments.items():
+        result = await db.rooms.update_many(
+            {
+                'tenant_id': current_user.tenant_id,
+                'room_type': room_type
+            },
+            {
+                '$set': {
+                    'price_per_night': adjustment['recommended_rate'],
+                    'last_rate_update': datetime.now(timezone.utc).isoformat(),
+                    'rate_update_reason': f"RMS recommendation for {target_date}"
+                }
+            }
+        )
+        updated_rooms += result.modified_count
+    
+    # Log the rate change
+    await db.rate_change_log.insert_one({
+        'id': str(uuid.uuid4()),
+        'tenant_id': current_user.tenant_id,
+        'date': target_date,
+        'rate_adjustments': rate_adjustments,
+        'applied_by': current_user.email,
+        'applied_at': datetime.now(timezone.utc).isoformat(),
+        'source': 'rms_recommendation'
+    })
+    
+    return {
+        'success': True,
+        'rooms_updated': updated_rooms,
+        'date': target_date,
+        'message': f'Rates updated for {updated_rooms} rooms'
+    }
+
 @api_router.get("/reports/market-segment")
 async def get_market_segment_report(
     start_date: str,

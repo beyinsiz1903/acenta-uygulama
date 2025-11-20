@@ -125,6 +125,211 @@ user_problem_statement: |
 
   NEW ENHANCEMENTS (Current Task):
   19. OTA Reservation Details - Special requests/remarks (expandable), Multi-room reservation, Extra charges, Source of booking
+
+  - task: "OTA Reservation Details - Complete Endpoint"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added GET /api/reservations/{booking_id}/ota-details - Returns special requests (expandable), multi-room info, extra charges, source of booking (OTA/Website/Corporate), OTA channel details, commission"
+
+  - task: "OTA Reservation - Extra Charges Endpoint"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added POST /api/reservations/{booking_id}/extra-charges - Add extra charges to reservations with charge_name, charge_amount, notes"
+
+  - task: "OTA Reservation - Multi-Room Reservation"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added POST /api/reservations/multi-room - Link multiple bookings as group reservation with group_name, primary_booking_id, related_booking_ids"
+
+  - task: "Housekeeping Mobile - Room Assignments"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added GET /api/housekeeping/mobile/room-assignments - Shows who is cleaning which room, with optional staff_name filter, includes duration tracking"
+
+  - task: "Housekeeping Mobile - Cleaning Time Statistics"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added GET /api/housekeeping/cleaning-time-statistics - Returns staff performance stats with avg cleaning time by staff member and task type, date range filtering"
+
+  - task: "Guest Profile - Complete Profile Endpoint"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added GET /api/guests/{guest_id}/profile-complete - Returns stay history (all bookings), preferences, tags (VIP/Blacklist), total stays, vip_status, blacklist_status"
+
+  - task: "Guest Profile - Preferences Management"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added POST /api/guests/{guest_id}/preferences - Update guest preferences: pillow_type, floor_preference, room_temperature, smoking, special_needs, dietary_restrictions, newspaper_preference"
+
+  - task: "Guest Profile - Tags Management (VIP/Blacklist)"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added POST /api/guests/{guest_id}/tags - Update guest tags: vip, blacklist, honeymoon, anniversary, business_traveler, frequent_guest, complainer, high_spender"
+
+  - task: "Revenue Management - Price Recommendation Slider"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added GET /api/rms/price-recommendation-slider - Returns min_price, recommended_price, max_price based on occupancy analysis, with current/historical occupancy comparison"
+
+  - task: "Revenue Management - Demand Heatmap"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added GET /api/rms/demand-heatmap - Returns historical demand heatmap for next 90 days with occupancy_pct, demand_level (low/medium/high/very_high), bookings_count per day"
+
+  - task: "Revenue Management - CompSet Analysis"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added GET /api/rms/compset-analysis - Returns competitive set analysis with most_wanted_features, competitor pricing/occupancy/ratings, feature gap analysis"
+
+  - task: "Messaging Module - Send Message (WhatsApp/SMS/Email)"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added POST /api/messaging/send-message - Send WhatsApp/SMS/Email to guests. Note: Production integration with Twilio/WhatsApp Business API required"
+
+  - task: "Messaging Module - Message Templates"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added GET /api/messaging/templates and POST /api/messaging/templates - Manage message templates with variables (guest_name, room_number, check_in_date), support for different triggers"
+
+  - task: "Messaging Module - Auto Message Triggers"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added GET /api/messaging/auto-messages/trigger - Trigger automatic messages for pre_arrival, check_in_reminder, post_checkout, birthday, anniversary"
+
+  - task: "POS Module - Menu Items Management"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added GET /api/pos/menu-items - Get POS menu items with category filtering (food, beverage, alcohol, dessert, appetizer)"
+
+  - task: "POS Module - Create Detailed Order"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added POST /api/pos/create-order - Create detailed POS orders with multiple items, quantities, automatic tax calculation, optional folio posting"
+
+  - task: "POS Module - Order History"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added GET /api/pos/orders - Get POS order history with booking_id and date range filtering"
+
   20. Housekeeping Mobile View - Room assignment (staff tracking), Cleaning time statistics
   21. Guest Profile Complete - Guest history (all stays), Preferences (pillow/floor/temperature), Blacklist/VIP tagging
   22. Revenue Management Advanced - Price recommendation slider (min/recommended/max), Historical demand heatmap, CompSet analysis

@@ -18498,5 +18498,927 @@ async def get_inbox_summary(
     }
 
 
+# ============= ENHANCED POS MODULE =============
+
+class TableLayout(BaseModel):
+    """Table layout for restaurant floor plan"""
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    tenant_id: str
+    outlet_id: str
+    table_number: str
+    seats: int
+    position_x: float  # X coordinate on floor plan
+    position_y: float  # Y coordinate on floor plan
+    shape: str = "rectangle"  # rectangle, circle, square
+    width: float = 100
+    height: float = 100
+    status: str = "available"  # available, occupied, reserved, dirty
+    current_transaction_id: Optional[str] = None
+    server_assigned: Optional[str] = None
+
+class KitchenOrderItem(BaseModel):
+    """Kitchen order item for KDS"""
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    tenant_id: str
+    transaction_id: str
+    table_number: str
+    item_name: str
+    quantity: int
+    special_instructions: Optional[str] = None
+    station: str  # hot_kitchen, cold_kitchen, bar, pastry
+    status: str = "pending"  # pending, preparing, ready, served
+    priority: str = "normal"  # urgent, high, normal
+    ordered_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    ready_at: Optional[datetime] = None
+    served_at: Optional[datetime] = None
+
+@api_router.get("/pos/table-layout/{outlet_id}")
+async def get_table_layout(
+    outlet_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get restaurant floor plan with table layout
+    - Visual table arrangement
+    - Table status (available, occupied, reserved, dirty)
+    - Current transactions
+    """
+    tables = []
+    async for table in db.table_layouts.find({
+        'tenant_id': current_user.tenant_id,
+        'outlet_id': outlet_id
+    }):
+        # Get current transaction if occupied
+        transaction = None
+        if table.get('current_transaction_id'):
+            transaction = await db.pos_transactions.find_one({
+                'id': table.get('current_transaction_id')
+            })
+        
+        tables.append({
+            'id': table.get('id'),
+            'table_number': table.get('table_number'),
+            'seats': table.get('seats'),
+            'position': {
+                'x': table.get('position_x'),
+                'y': table.get('position_y')
+            },
+            'shape': table.get('shape'),
+            'width': table.get('width'),
+            'height': table.get('height'),
+            'status': table.get('status'),
+            'server_assigned': table.get('server_assigned'),
+            'current_bill': round(transaction.get('total_amount', 0), 2) if transaction else 0,
+            'guest_count': transaction.get('guests', 0) if transaction else 0,
+            'duration_minutes': calculate_table_duration(table) if table.get('status') == 'occupied' else 0
+        })
+    
+    # If no tables exist, create default layout
+    if not tables:
+        default_tables = create_default_table_layout(current_user.tenant_id, outlet_id)
+        for table_data in default_tables:
+            await db.table_layouts.insert_one(table_data)
+            tables.append({
+                'id': table_data['id'],
+                'table_number': table_data['table_number'],
+                'seats': table_data['seats'],
+                'position': {'x': table_data['position_x'], 'y': table_data['position_y']},
+                'shape': table_data['shape'],
+                'width': table_data['width'],
+                'height': table_data['height'],
+                'status': 'available',
+                'server_assigned': None,
+                'current_bill': 0,
+                'guest_count': 0,
+                'duration_minutes': 0
+            })
+    
+    return {
+        'outlet_id': outlet_id,
+        'total_tables': len(tables),
+        'available': sum(1 for t in tables if t['status'] == 'available'),
+        'occupied': sum(1 for t in tables if t['status'] == 'occupied'),
+        'reserved': sum(1 for t in tables if t['status'] == 'reserved'),
+        'tables': tables
+    }
+
+
+def create_default_table_layout(tenant_id: str, outlet_id: str):
+    """Create default table layout (4x4 grid)"""
+    tables = []
+    table_num = 1
+    for row in range(4):
+        for col in range(4):
+            tables.append({
+                'id': str(uuid.uuid4()),
+                'tenant_id': tenant_id,
+                'outlet_id': outlet_id,
+                'table_number': str(table_num),
+                'seats': 4,
+                'position_x': col * 150 + 50,
+                'position_y': row * 150 + 50,
+                'shape': 'rectangle',
+                'width': 100,
+                'height': 100,
+                'status': 'available'
+            })
+            table_num += 1
+    return tables
+
+
+def calculate_table_duration(table):
+    """Calculate how long table has been occupied"""
+    # Would track from transaction start time
+    return 45  # Simulated
+
+
+@api_router.post("/pos/table-layout/update")
+async def update_table_layout(
+    table_id: str,
+    position_x: Optional[float] = None,
+    position_y: Optional[float] = None,
+    seats: Optional[int] = None,
+    server_assigned: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Update table layout - drag & drop positioning"""
+    updates = {}
+    if position_x is not None:
+        updates['position_x'] = position_x
+    if position_y is not None:
+        updates['position_y'] = position_y
+    if seats is not None:
+        updates['seats'] = seats
+    if server_assigned is not None:
+        updates['server_assigned'] = server_assigned
+    
+    await db.table_layouts.update_one(
+        {'id': table_id, 'tenant_id': current_user.tenant_id},
+        {'$set': updates}
+    )
+    
+    return {'success': True, 'message': 'Table layout updated'}
+
+
+@api_router.get("/pos/split-bill-ui/{transaction_id}")
+async def get_split_bill_ui_data(
+    transaction_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get transaction data formatted for split bill UI
+    - Line items with selection
+    - Multiple payment methods
+    - Split strategies
+    """
+    transaction = await db.pos_transactions.find_one({
+        'id': transaction_id,
+        'tenant_id': current_user.tenant_id
+    })
+    
+    if not transaction:
+        raise HTTPException(status_code=404, detail="Transaction not found")
+    
+    items = transaction.get('items', [])
+    
+    # Format items for split UI
+    formatted_items = []
+    for idx, item in enumerate(items):
+        formatted_items.append({
+            'index': idx,
+            'name': item.get('name'),
+            'quantity': item.get('quantity', 1),
+            'unit_price': item.get('price', 0),
+            'total': item.get('price', 0) * item.get('quantity', 1),
+            'selected_for_split': False,
+            'split_assignee': None  # Which guest (1, 2, 3, etc.)
+        })
+    
+    return {
+        'transaction_id': transaction_id,
+        'table_number': transaction.get('table_number'),
+        'total_amount': transaction.get('total_amount', 0),
+        'items': formatted_items,
+        'split_strategies': [
+            {'id': 'equal', 'name': 'Equal Split', 'description': 'Split bill equally among N people'},
+            {'id': 'by_item', 'name': 'By Item', 'description': 'Assign items to specific people'},
+            {'id': 'percentage', 'name': 'By Percentage', 'description': 'Split by custom percentages'},
+            {'id': 'custom', 'name': 'Custom Amount', 'description': 'Enter custom amounts for each person'}
+        ],
+        'payment_methods': ['cash', 'card', 'mobile', 'room_charge']
+    }
+
+
+@api_router.get("/pos/kds/kitchen-display")
+async def get_kitchen_display_orders(
+    station: Optional[str] = None,  # hot_kitchen, cold_kitchen, bar, pastry
+    status: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Kitchen Display System (KDS)
+    - Real-time order display
+    - Station-specific filtering
+    - Order timing and prioritization
+    """
+    match_criteria = {
+        'tenant_id': current_user.tenant_id,
+        'status': {'$in': ['pending', 'preparing']}
+    }
+    
+    if station:
+        match_criteria['station'] = station
+    if status:
+        match_criteria['status'] = status
+    
+    orders = []
+    async for order in db.kitchen_orders.find(match_criteria).sort('ordered_at', 1):
+        # Calculate wait time
+        ordered_at = datetime.fromisoformat(order.get('ordered_at'))
+        wait_minutes = (datetime.now(timezone.utc) - ordered_at).total_seconds() / 60
+        
+        # Determine priority color
+        if wait_minutes > 15:
+            priority_color = 'red'
+            priority = 'urgent'
+        elif wait_minutes > 10:
+            priority_color = 'orange'
+            priority = 'high'
+        else:
+            priority_color = 'green'
+            priority = 'normal'
+        
+        orders.append({
+            'id': order.get('id'),
+            'table_number': order.get('table_number'),
+            'item_name': order.get('item_name'),
+            'quantity': order.get('quantity'),
+            'special_instructions': order.get('special_instructions'),
+            'station': order.get('station'),
+            'status': order.get('status'),
+            'wait_minutes': int(wait_minutes),
+            'priority': priority,
+            'priority_color': priority_color,
+            'ordered_at': order.get('ordered_at')
+        })
+    
+    return {
+        'station': station or 'all',
+        'total_orders': len(orders),
+        'pending': sum(1 for o in orders if o['status'] == 'pending'),
+        'preparing': sum(1 for o in orders if o['status'] == 'preparing'),
+        'urgent_count': sum(1 for o in orders if o['priority'] == 'urgent'),
+        'orders': orders
+    }
+
+
+@api_router.post("/pos/kds/update-order-status")
+async def update_kitchen_order_status(
+    order_id: str,
+    new_status: str,  # preparing, ready, served
+    current_user: User = Depends(get_current_user)
+):
+    """Update kitchen order status from KDS"""
+    updates = {'status': new_status}
+    
+    if new_status == 'ready':
+        updates['ready_at'] = datetime.now(timezone.utc).isoformat()
+    elif new_status == 'served':
+        updates['served_at'] = datetime.now(timezone.utc).isoformat()
+    
+    await db.kitchen_orders.update_one(
+        {'id': order_id, 'tenant_id': current_user.tenant_id},
+        {'$set': updates}
+    )
+    
+    return {'success': True, 'order_id': order_id, 'new_status': new_status}
+
+
+@api_router.post("/pos/room-charge-restrictions")
+async def set_room_charge_restrictions(
+    max_daily_charge: Optional[float] = None,
+    require_supervisor_approval: bool = False,
+    allowed_categories: Optional[List[str]] = None,
+    restricted_hours: Optional[Dict[str, str]] = None,  # {"start": "02:00", "end": "06:00"}
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Room charge restrictions
+    - Max daily charge limit
+    - Supervisor approval required
+    - Category restrictions (e.g., no alcohol)
+    - Time restrictions (e.g., no charges 2am-6am)
+    """
+    restrictions = {
+        'id': str(uuid.uuid4()),
+        'tenant_id': current_user.tenant_id,
+        'max_daily_charge': max_daily_charge,
+        'require_supervisor_approval': require_supervisor_approval,
+        'allowed_categories': allowed_categories or ['food', 'beverage', 'minibar'],
+        'restricted_hours': restricted_hours,
+        'created_at': datetime.now(timezone.utc).isoformat(),
+        'created_by': current_user.name
+    }
+    
+    # Store or update restrictions
+    existing = await db.pos_room_charge_restrictions.find_one({
+        'tenant_id': current_user.tenant_id
+    })
+    
+    if existing:
+        await db.pos_room_charge_restrictions.update_one(
+            {'tenant_id': current_user.tenant_id},
+            {'$set': restrictions}
+        )
+    else:
+        await db.pos_room_charge_restrictions.insert_one(restrictions)
+    
+    return {
+        'success': True,
+        'message': 'Room charge restrictions updated',
+        'restrictions': restrictions
+    }
+
+
+@api_router.post("/pos/validate-room-charge")
+async def validate_room_charge(
+    booking_id: str,
+    amount: float,
+    category: str,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Validate if room charge is allowed
+    - Check against restrictions
+    - Return validation result
+    """
+    # Get restrictions
+    restrictions = await db.pos_room_charge_restrictions.find_one({
+        'tenant_id': current_user.tenant_id
+    })
+    
+    validation_result = {
+        'allowed': True,
+        'reason': None,
+        'requires_approval': False
+    }
+    
+    if restrictions:
+        # Check max daily charge
+        if restrictions.get('max_daily_charge'):
+            # Get today's charges
+            today = datetime.now().date().isoformat()
+            daily_total = 0
+            async for charge in db.folio_charges.find({
+                'booking_id': booking_id,
+                'date': {'$gte': today}
+            }):
+                daily_total += charge.get('total', 0)
+            
+            if daily_total + amount > restrictions['max_daily_charge']:
+                validation_result['allowed'] = False
+                validation_result['reason'] = f"Exceeds daily limit of ${restrictions['max_daily_charge']}"
+                return validation_result
+        
+        # Check allowed categories
+        if restrictions.get('allowed_categories'):
+            if category not in restrictions['allowed_categories']:
+                validation_result['allowed'] = False
+                validation_result['reason'] = f"Category '{category}' not allowed for room charge"
+                return validation_result
+        
+        # Check restricted hours
+        if restrictions.get('restricted_hours'):
+            current_time = datetime.now().time()
+            start_time = datetime.strptime(restrictions['restricted_hours']['start'], '%H:%M').time()
+            end_time = datetime.strptime(restrictions['restricted_hours']['end'], '%H:%M').time()
+            
+            if start_time <= current_time <= end_time:
+                validation_result['allowed'] = False
+                validation_result['reason'] = f"Room charges restricted between {restrictions['restricted_hours']['start']}-{restrictions['restricted_hours']['end']}"
+                return validation_result
+        
+        # Check if approval required
+        if restrictions.get('require_supervisor_approval'):
+            validation_result['requires_approval'] = True
+    
+    return validation_result
+
+
+# ============= HOTEL INTERNAL MESSAGING =============
+
+class InternalMessage(BaseModel):
+    """Internal messaging between departments"""
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    tenant_id: str
+    from_user_id: str
+    from_user_name: str
+    from_department: str
+    to_user_id: Optional[str] = None  # None = broadcast to department
+    to_user_name: Optional[str] = None
+    to_department: Optional[str] = None  # None = all departments
+    message: str
+    priority: str = "normal"  # low, normal, high, urgent
+    message_type: str = "text"  # text, task, alert, announcement
+    attachments: List[str] = []
+    read: bool = False
+    read_at: Optional[datetime] = None
+    replied_to: Optional[str] = None  # Original message ID if this is a reply
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+@api_router.post("/messaging/internal/send")
+async def send_internal_message(
+    to_department: Optional[str] = None,
+    to_user_id: Optional[str] = None,
+    message: str,
+    priority: str = "normal",
+    message_type: str = "text",
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Send internal message
+    - Department to department (e.g., Reception → HK)
+    - Department to specific user (e.g., HK → Maintenance tech)
+    - Broadcast to all (e.g., GM → All departments)
+    """
+    # Get to_user info if specified
+    to_user_name = None
+    if to_user_id:
+        to_user = await db.users.find_one({'id': to_user_id})
+        to_user_name = to_user.get('name') if to_user else None
+    
+    # Determine from_department based on user role
+    department_mapping = {
+        'front_desk': 'Reception',
+        'housekeeping': 'Housekeeping',
+        'maintenance': 'Maintenance',
+        'finance': 'Finance',
+        'supervisor': 'Management',
+        'admin': 'Management'
+    }
+    from_department = department_mapping.get(current_user.role.value, 'General')
+    
+    message_obj = InternalMessage(
+        tenant_id=current_user.tenant_id,
+        from_user_id=current_user.id,
+        from_user_name=current_user.name,
+        from_department=from_department,
+        to_user_id=to_user_id,
+        to_user_name=to_user_name,
+        to_department=to_department,
+        message=message,
+        priority=priority,
+        message_type=message_type
+    )
+    
+    msg_dict = message_obj.model_dump()
+    msg_dict['created_at'] = msg_dict['created_at'].isoformat()
+    await db.internal_messages.insert_one(msg_dict)
+    
+    # Create alert for urgent messages
+    if priority == 'urgent':
+        await db.alerts.insert_one({
+            'id': str(uuid.uuid4()),
+            'tenant_id': current_user.tenant_id,
+            'alert_type': 'internal_message',
+            'priority': 'urgent',
+            'title': f'Urgent message from {from_department}',
+            'description': message[:100],
+            'source_module': 'messaging',
+            'source_id': message_obj.id,
+            'assigned_to': to_user_name,
+            'status': 'unread',
+            'created_at': datetime.now(timezone.utc).isoformat()
+        })
+    
+    return {
+        'success': True,
+        'message_id': message_obj.id,
+        'delivered_to': to_user_name or to_department or 'All departments'
+    }
+
+
+@api_router.get("/messaging/internal/inbox")
+async def get_internal_messages_inbox(
+    department: Optional[str] = None,
+    unread_only: bool = False,
+    limit: int = 50,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get internal messages inbox
+    - Messages sent to me
+    - Messages sent to my department
+    - Broadcast messages
+    """
+    # Determine user's department
+    department_mapping = {
+        'front_desk': 'Reception',
+        'housekeeping': 'Housekeeping',
+        'maintenance': 'Maintenance',
+        'finance': 'Finance',
+        'supervisor': 'Management',
+        'admin': 'Management'
+    }
+    my_department = department_mapping.get(current_user.role.value, 'General')
+    
+    match_criteria = {
+        'tenant_id': current_user.tenant_id,
+        '$or': [
+            {'to_user_id': current_user.id},  # Direct to me
+            {'to_department': my_department},  # To my department
+            {'to_department': None}  # Broadcast
+        ]
+    }
+    
+    if unread_only:
+        match_criteria['read'] = False
+    
+    if department:
+        match_criteria['from_department'] = department
+    
+    messages = []
+    async for msg in db.internal_messages.find(match_criteria).sort('created_at', -1).limit(limit):
+        messages.append({
+            'id': msg.get('id'),
+            'from_user_name': msg.get('from_user_name'),
+            'from_department': msg.get('from_department'),
+            'to_user_name': msg.get('to_user_name'),
+            'to_department': msg.get('to_department') or 'All',
+            'message': msg.get('message'),
+            'priority': msg.get('priority'),
+            'message_type': msg.get('message_type'),
+            'read': msg.get('read'),
+            'created_at': msg.get('created_at'),
+            'time_ago': calculate_time_ago(msg.get('created_at'))
+        })
+    
+    unread_count = await db.internal_messages.count_documents({
+        **match_criteria,
+        'read': False
+    })
+    
+    return {
+        'messages': messages,
+        'total_count': len(messages),
+        'unread_count': unread_count,
+        'my_department': my_department
+    }
+
+
+def calculate_time_ago(timestamp_str):
+    """Calculate time ago from timestamp"""
+    try:
+        timestamp = datetime.fromisoformat(timestamp_str)
+        delta = datetime.now(timezone.utc) - timestamp
+        
+        if delta.days > 0:
+            return f"{delta.days}d ago"
+        elif delta.seconds >= 3600:
+            return f"{delta.seconds // 3600}h ago"
+        elif delta.seconds >= 60:
+            return f"{delta.seconds // 60}m ago"
+        else:
+            return "Just now"
+    except:
+        return "Unknown"
+
+
+@api_router.put("/messaging/internal/{message_id}/mark-read")
+async def mark_internal_message_read(
+    message_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Mark internal message as read"""
+    await db.internal_messages.update_one(
+        {'id': message_id, 'tenant_id': current_user.tenant_id},
+        {'$set': {
+            'read': True,
+            'read_at': datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    return {'success': True, 'message': 'Message marked as read'}
+
+
+@api_router.get("/messaging/internal/conversation/{user_id}")
+async def get_conversation_thread(
+    user_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Get conversation thread with specific user"""
+    messages = []
+    async for msg in db.internal_messages.find({
+        'tenant_id': current_user.tenant_id,
+        '$or': [
+            {'from_user_id': current_user.id, 'to_user_id': user_id},
+            {'from_user_id': user_id, 'to_user_id': current_user.id}
+        ]
+    }).sort('created_at', 1):
+        messages.append({
+            'id': msg.get('id'),
+            'from_user_id': msg.get('from_user_id'),
+            'from_user_name': msg.get('from_user_name'),
+            'message': msg.get('message'),
+            'priority': msg.get('priority'),
+            'created_at': msg.get('created_at'),
+            'is_from_me': msg.get('from_user_id') == current_user.id
+        })
+    
+    return {
+        'user_id': user_id,
+        'message_count': len(messages),
+        'messages': messages
+    }
+
+
+# ============= CONTRACTING & ALLOTMENT REPORTING =============
+
+@api_router.get("/contracting/pickup-graph")
+async def get_pickup_graph_data(
+    contract_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Tour operator pickup graph
+    - Daily/weekly/monthly pickup progress
+    - Comparison with allocated rooms
+    - Forecast vs actual
+    """
+    # Get contract/allotment details
+    allotment = await db.contracted_allotments.find_one({
+        'id': contract_id,
+        'tenant_id': current_user.tenant_id
+    })
+    
+    if not allotment:
+        raise HTTPException(status_code=404, detail="Contract not found")
+    
+    start_date = datetime.fromisoformat(allotment.get('start_date'))
+    end_date = datetime.fromisoformat(allotment.get('end_date'))
+    company_id = allotment.get('company_id')
+    allocated_total = allotment.get('rooms_allocated', 0)
+    
+    # Get daily pickup data
+    current_date = start_date
+    pickup_data = []
+    cumulative_pickup = 0
+    cumulative_allocation = 0
+    
+    days_total = (end_date - start_date).days
+    daily_allocation = allocated_total / days_total if days_total > 0 else 0
+    
+    while current_date <= end_date:
+        date_str = current_date.date().isoformat()
+        
+        # Count bookings for this date
+        bookings_count = await db.bookings.count_documents({
+            'company_id': company_id,
+            'tenant_id': current_user.tenant_id,
+            'check_in': date_str
+        })
+        
+        cumulative_pickup += bookings_count
+        cumulative_allocation += daily_allocation
+        
+        pickup_data.append({
+            'date': date_str,
+            'daily_pickup': bookings_count,
+            'cumulative_pickup': int(cumulative_pickup),
+            'cumulative_allocation': int(cumulative_allocation),
+            'pickup_pct': round((cumulative_pickup / cumulative_allocation * 100), 1) if cumulative_allocation > 0 else 0,
+            'on_track': cumulative_pickup >= cumulative_allocation * 0.8  # 80% threshold
+        })
+        
+        current_date += timedelta(days=1)
+    
+    return {
+        'contract_id': contract_id,
+        'company_id': company_id,
+        'period': {
+            'start_date': start_date.date().isoformat(),
+            'end_date': end_date.date().isoformat(),
+            'total_days': days_total
+        },
+        'allocation': {
+            'total_allocated': allocated_total,
+            'total_picked_up': cumulative_pickup,
+            'remaining': allocated_total - cumulative_pickup,
+            'utilization_pct': round((cumulative_pickup / allocated_total * 100), 1) if allocated_total > 0 else 0
+        },
+        'pickup_graph_data': pickup_data,
+        'forecast': {
+            'projected_final_pickup': int(cumulative_pickup * (days_total / max(1, (datetime.now().date() - start_date.date()).days))),
+            'on_track': cumulative_pickup >= allocated_total * 0.5  # At midpoint, should be 50%+
+        }
+    }
+
+
+@api_router.get("/contracting/realization-report")
+async def get_realization_report(
+    start_date: str,
+    end_date: str,
+    company_id: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Contract realization report
+    - Allocated vs realized rooms
+    - Realization percentage
+    - Revenue impact
+    """
+    match_criteria = {
+        'tenant_id': current_user.tenant_id
+    }
+    
+    if company_id:
+        match_criteria['company_id'] = company_id
+    
+    # Get all active allotments in period
+    allotments = []
+    async for allot in db.contracted_allotments.find(match_criteria):
+        allot_start = allot.get('start_date')
+        allot_end = allot.get('end_date')
+        
+        # Check if allotment overlaps with requested period
+        if allot_start <= end_date and allot_end >= start_date:
+            # Count realized bookings
+            realized = await db.bookings.count_documents({
+                'company_id': allot.get('company_id'),
+                'tenant_id': current_user.tenant_id,
+                'check_in': {'$gte': start_date, '$lte': end_date}
+            })
+            
+            allocated = allot.get('rooms_allocated', 0)
+            realization_pct = (realized / allocated * 100) if allocated > 0 else 0
+            
+            # Calculate revenue
+            revenue = 0
+            async for booking in db.bookings.find({
+                'company_id': allot.get('company_id'),
+                'tenant_id': current_user.tenant_id,
+                'check_in': {'$gte': start_date, '$lte': end_date}
+            }):
+                revenue += booking.get('total_amount', 0)
+            
+            # Get company details
+            company = await db.companies.find_one({'id': allot.get('company_id')})
+            
+            allotments.append({
+                'company_name': company.get('name') if company else 'Unknown',
+                'company_id': allot.get('company_id'),
+                'contract_id': allot.get('id'),
+                'allocated_rooms': allocated,
+                'realized_rooms': realized,
+                'unrealized_rooms': max(0, allocated - realized),
+                'realization_pct': round(realization_pct, 1),
+                'revenue': round(revenue, 2),
+                'avg_rate': round(revenue / realized, 2) if realized > 0 else 0,
+                'status': 'Excellent' if realization_pct >= 90 else 'Good' if realization_pct >= 70 else 'Poor' if realization_pct >= 50 else 'Critical'
+            })
+    
+    # Sort by realization percentage
+    allotments.sort(key=lambda x: x['realization_pct'], reverse=True)
+    
+    # Calculate totals
+    total_allocated = sum(a['allocated_rooms'] for a in allotments)
+    total_realized = sum(a['realized_rooms'] for a in allotments)
+    total_revenue = sum(a['revenue'] for a in allotments)
+    overall_realization = (total_realized / total_allocated * 100) if total_allocated > 0 else 0
+    
+    return {
+        'period': {
+            'start_date': start_date,
+            'end_date': end_date
+        },
+        'summary': {
+            'total_allocated': total_allocated,
+            'total_realized': total_realized,
+            'overall_realization_pct': round(overall_realization, 1),
+            'total_revenue': round(total_revenue, 2),
+            'avg_rate': round(total_revenue / total_realized, 2) if total_realized > 0 else 0
+        },
+        'allotments': allotments,
+        'performance_breakdown': {
+            'excellent': sum(1 for a in allotments if a['realization_pct'] >= 90),
+            'good': sum(1 for a in allotments if 70 <= a['realization_pct'] < 90),
+            'poor': sum(1 for a in allotments if 50 <= a['realization_pct'] < 70),
+            'critical': sum(1 for a in allotments if a['realization_pct'] < 50)
+        }
+    }
+
+
+@api_router.post("/contracting/free-sale-control")
+async def set_free_sale_control(
+    company_id: str,
+    enable_free_sale: bool,
+    min_lead_time_days: Optional[int] = None,
+    release_period_days: Optional[int] = None,
+    max_free_sale_rooms: Optional[int] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Free-sale control mechanism
+    - Enable/disable free sale for tour operator
+    - Minimum lead time (e.g., 7 days before arrival)
+    - Release period (e.g., release unsold rooms 14 days before)
+    - Maximum free sale rooms
+    """
+    control = {
+        'id': str(uuid.uuid4()),
+        'tenant_id': current_user.tenant_id,
+        'company_id': company_id,
+        'enable_free_sale': enable_free_sale,
+        'min_lead_time_days': min_lead_time_days or 7,
+        'release_period_days': release_period_days or 14,
+        'max_free_sale_rooms': max_free_sale_rooms or 10,
+        'created_at': datetime.now(timezone.utc).isoformat(),
+        'created_by': current_user.name
+    }
+    
+    # Store or update
+    existing = await db.free_sale_controls.find_one({
+        'tenant_id': current_user.tenant_id,
+        'company_id': company_id
+    })
+    
+    if existing:
+        await db.free_sale_controls.update_one(
+            {'company_id': company_id, 'tenant_id': current_user.tenant_id},
+            {'$set': control}
+        )
+    else:
+        await db.free_sale_controls.insert_one(control)
+    
+    return {
+        'success': True,
+        'message': 'Free-sale control configured',
+        'control': control
+    }
+
+
+@api_router.get("/contracting/free-sale-availability")
+async def check_free_sale_availability(
+    company_id: str,
+    check_in_date: str,
+    rooms_requested: int,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Check if free-sale booking is allowed
+    - Validate against control rules
+    - Return availability decision
+    """
+    # Get free-sale control
+    control = await db.free_sale_controls.find_one({
+        'tenant_id': current_user.tenant_id,
+        'company_id': company_id
+    })
+    
+    if not control or not control.get('enable_free_sale'):
+        return {
+            'allowed': False,
+            'reason': 'Free-sale not enabled for this tour operator'
+        }
+    
+    # Check lead time
+    check_in = datetime.fromisoformat(check_in_date).date()
+    today = datetime.now().date()
+    lead_time_days = (check_in - today).days
+    
+    if lead_time_days < control.get('min_lead_time_days', 7):
+        return {
+            'allowed': False,
+            'reason': f"Minimum lead time is {control['min_lead_time_days']} days"
+        }
+    
+    # Check max free-sale rooms
+    if rooms_requested > control.get('max_free_sale_rooms', 10):
+        return {
+            'allowed': False,
+            'reason': f"Maximum free-sale rooms is {control['max_free_sale_rooms']}"
+        }
+    
+    # Check release period (if within release period, check allotment)
+    release_period = control.get('release_period_days', 14)
+    if lead_time_days <= release_period:
+        # Check if rooms were released
+        # In production: Check actual inventory release
+        return {
+            'allowed': True,
+            'reason': 'Within release period - check inventory',
+            'note': 'Inventory check required'
+        }
+    
+    return {
+        'allowed': True,
+        'rooms_requested': rooms_requested,
+        'lead_time_days': lead_time_days
+    }
+
+
 # Include router at the very end after ALL endpoints are defined
 app.include_router(api_router)

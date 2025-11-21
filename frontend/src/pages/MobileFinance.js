@@ -296,7 +296,7 @@ const MobileFinance = ({ user }) => {
             <div className="grid grid-cols-2 gap-3">
               <Button
                 className="h-20 flex flex-col items-center justify-center bg-indigo-600 hover:bg-indigo-700"
-                onClick={() => navigate('/reports')}
+                onClick={() => setReportsModalOpen(true)}
               >
                 <TrendingUp className="w-6 h-6 mb-1" />
                 <span className="text-xs">Finansal Raporlar</span>
@@ -304,7 +304,7 @@ const MobileFinance = ({ user }) => {
               <Button
                 className="h-20 flex flex-col items-center justify-center"
                 variant="outline"
-                onClick={() => navigate('/invoice')}
+                onClick={() => setInvoicesModalOpen(true)}
               >
                 <Receipt className="w-6 h-6 mb-1" />
                 <span className="text-xs">Faturalar</span>

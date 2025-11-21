@@ -30,6 +30,13 @@ const MobileGM = ({ user }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [dashboardModalOpen, setDashboardModalOpen] = useState(false);
   const [reportsModalOpen, setReportsModalOpen] = useState(false);
+  const [pickupModalOpen, setPickupModalOpen] = useState(false);
+  const [anomalyModalOpen, setAnomalyModalOpen] = useState(false);
+  const [forecastModalOpen, setForecastModalOpen] = useState(false);
+  const [pickupData, setPickupData] = useState(null);
+  const [anomalies, setAnomalies] = useState([]);
+  const [weeklyForecast, setWeeklyForecast] = useState([]);
+  const [monthlyForecast, setMonthlyForecast] = useState([]);
 
   useEffect(() => {
     loadData();

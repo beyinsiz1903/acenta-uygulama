@@ -26042,13 +26042,14 @@ async def process_no_show_mobile(
 
 @api_router.post("/frontdesk/mobile/change-room")
 async def change_room_mobile(
-    booking_id: str,
-    new_room_id: str,
-    reason: Optional[str] = None,
+    request: ChangeRoomRequest,
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
     """Change room for a booking"""
     current_user = await get_current_user(credentials)
+    booking_id = request.booking_id
+    new_room_id = request.new_room_id
+    reason = request.reason
     
     # Find booking
     booking = await db.bookings.find_one({

@@ -293,9 +293,20 @@ const MobileMaintenance = ({ user }) => {
                       </Badge>
                     </div>
                     <div className="flex items-center justify-between">
-                      <Badge className={getStatusColor(task.status)}>
-                        {task.status}
-                      </Badge>
+                      <div className="flex items-center space-x-2">
+                        <Badge className={getStatusColor(task.status)}>
+                          {task.status}
+                        </Badge>
+                        {task.room_id && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => loadAssetHistory(task.room_id, task.room_number || task.room_id)}
+                          >
+                            <History className="w-3 h-3" />
+                          </Button>
+                        )}
+                      </div>
                       {task.status !== 'completed' && (
                         <Button
                           size="sm"

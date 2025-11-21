@@ -343,6 +343,30 @@ const MobileFrontDesk = ({ user }) => {
                 <Bed className="w-6 h-6 mb-1" />
                 <span className="text-xs">Oda Durumu</span>
               </Button>
+              <Button
+                className="h-20 flex flex-col items-center justify-center bg-orange-600 hover:bg-orange-700"
+                onClick={loadGuestAlerts}
+              >
+                <Star className="w-6 h-6 mb-1" />
+                <span className="text-xs">Misafir Uyarıları</span>
+              </Button>
+              <Button
+                className="h-20 flex flex-col items-center justify-center bg-blue-600 hover:bg-blue-700"
+                onClick={() => setFeeCalculatorModalOpen(true)}
+              >
+                <DollarSign className="w-6 h-6 mb-1" />
+                <span className="text-xs">Ücret Hesapla</span>
+              </Button>
+              <Button
+                className="h-20 flex flex-col items-center justify-center bg-purple-600 hover:bg-purple-700"
+                onClick={() => {
+                  setRoomFilterModalOpen(true);
+                  loadFilteredRooms(roomFilters);
+                }}
+              >
+                <Filter className="w-6 h-6 mb-1" />
+                <span className="text-xs">Oda Filtrele</span>
+              </Button>
             </div>
           </CardContent>
         </Card>

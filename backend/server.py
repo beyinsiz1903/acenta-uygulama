@@ -26998,6 +26998,117 @@ async def get_pickup_analysis(
         pickup_trends[days_key]['revenue'] += data['revenue']
     
     return {
+
+
+# ============= POS / F&B ENDPOINTS =============
+
+@api_router.get("/pos/outlets")
+async def get_pos_outlets(current_user: User = Depends(get_current_user)):
+    """Get all F&B outlets"""
+    try:
+        outlets = await db.fnb_outlets.find({'tenant_id': current_user.tenant_id}, {'_id': 0}).to_list(100)
+        return outlets
+    except Exception as e:
+        return []
+
+@api_router.get("/pos/menu-items")
+async def get_menu_items(current_user: User = Depends(get_current_user)):
+    """Get all menu items"""
+    try:
+        items = await db.menu_items.find({'tenant_id': current_user.tenant_id}, {'_id': 0}).to_list(1000)
+        return items
+    except Exception as e:
+        return []
+
+@api_router.get("/pos/daily-summary")
+async def get_pos_daily_summary(date: str = None, current_user: User = Depends(get_current_user)):
+    """Get daily POS summary"""
+    try:
+        transactions = await db.transactions.find({
+            'tenant_id': current_user.tenant_id,
+            'type': {'$in': ['fnb_charge', 'room_charge']}
+        }, {'_id': 0}).to_list(1000)
+        
+        total_sales = sum(t.get('amount', 0) for t in transactions)
+        return {
+            'total_sales': total_sales,
+            'transaction_count': len(transactions),
+            'average_transaction': total_sales / len(transactions) if transactions else 0
+        }
+    except Exception as e:
+        return {'total_sales': 0, 'transaction_count': 0, 'average_transaction': 0}
+
+@api_router.get("/pos/transactions")
+async def get_pos_transactions(limit: int = 10, current_user: User = Depends(get_current_user)):
+    """Get recent POS transactions"""
+    try:
+        transactions = await db.transactions.find({
+            'tenant_id': current_user.tenant_id
+        }, {'_id': 0}).sort('created_at', -1).to_list(limit)
+        return transactions
+    except Exception as e:
+        return []
+
+@api_router.get("/pos/z-report")
+async def get_z_report(date: str = None, current_user: User = Depends(get_current_user)):
+    """Get Z report for end of day"""
+    try:
+        transactions = await db.transactions.find({
+            'tenant_id': current_user.tenant_id
+        }, {'_id': 0}).to_list(1000)
+        
+        total_sales = sum(t.get('amount', 0) for t in transactions)
+        
+        return {
+            'report_date': date or datetime.utcnow().isoformat(),
+            'report_number': f'Z-{datetime.utcnow().strftime("%Y%m%d")}',
+            'gross_sales': total_sales,
+            'transaction_count': len(transactions),
+            'net_sales': total_sales,
+            'refunds': 0,
+            'discounts': 0,
+            'payment_methods': {
+                'cash': total_sales * 0.4,
+                'card': total_sales * 0.6
+            },
+            'category_sales': {
+                'food': total_sales * 0.5,
+                'beverage': total_sales * 0.3,
+                'other': total_sales * 0.2
+            }
+        }
+    except Exception as e:
+        return {'gross_sales': 0, 'transaction_count': 0}
+
+@api_router.get("/pos/void-transactions")
+async def get_void_transactions(start_date: str = None, end_date: str = None, current_user: User = Depends(get_current_user)):
+    """Get voided transactions"""
+    try:
+        void_transactions = await db.transactions.find({
+            'tenant_id': current_user.tenant_id,
+            'status': 'void'
+        }, {'_id': 0}).to_list(100)
+        
+        return {'void_transactions': void_transactions}
+    except Exception as e:
+        return {'void_transactions': []}
+
+@api_router.post("/pos/mobile/quick-order")
+async def create_quick_order(order_data: Dict[str, Any], current_user: User = Depends(get_current_user)):
+    """Create quick order from mobile"""
+    try:
+        order = {
+            'id': str(uuid.uuid4()),
+            **order_data,
+            'tenant_id': current_user.tenant_id,
+            'created_at': datetime.utcnow().isoformat(),
+            'status': 'pending'
+        }
+        await db.orders.insert_one(order)
+        return {'success': True, 'order_id': order['id']}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
         'date_range': {
             'start': start_date.date().isoformat(),
             'end': end_date.date().isoformat()

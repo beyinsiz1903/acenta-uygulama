@@ -35,6 +35,14 @@ const MobileHousekeeping = ({ user }) => {
   const [arrivals, setArrivals] = useState([]);
   const [staffPerformance, setStaffPerformance] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [lostFoundModalOpen, setLostFoundModalOpen] = useState(false);
+  const [inventoryModalOpen, setInventoryModalOpen] = useState(false);
+  const [taskAssignmentsModalOpen, setTaskAssignmentsModalOpen] = useState(false);
+  const [statusLogsModalOpen, setStatusLogsModalOpen] = useState(false);
+  const [lostFoundItems, setLostFoundItems] = useState([]);
+  const [inventoryItems, setInventoryItems] = useState([]);
+  const [taskAssignments, setTaskAssignments] = useState([]);
+  const [statusLogs, setStatusLogs] = useState([]);
 
   useEffect(() => {
     loadData();

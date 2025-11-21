@@ -463,10 +463,10 @@ const MobileMaintenance = ({ user }) => {
           
           <Button
             className="h-20 flex flex-col items-center justify-center space-y-1 bg-green-600 hover:bg-green-700"
-            onClick={() => toast.info('Tekrarlayan sorunlar yukarıda gösteriliyor')}
+            onClick={loadPartsInventory}
           >
-            <AlertTriangle className="w-6 h-6" />
-            <span className="text-xs">Tekrar Eden</span>
+            <Package className="w-6 h-6" />
+            <span className="text-xs">Parça Stok</span>
           </Button>
         </div>
       </div>

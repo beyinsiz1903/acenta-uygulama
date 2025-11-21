@@ -12,6 +12,7 @@ import LanguageSelector from '@/components/LanguageSelector';
 
 const AuthPage = ({ onLogin }) => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('hotel-login');
   const [loading, setLoading] = useState(false);
   const [isMobile, setIsMobile] = useState(false);

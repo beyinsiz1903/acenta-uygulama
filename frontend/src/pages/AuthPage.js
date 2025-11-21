@@ -174,7 +174,17 @@ const AuthPage = ({ onLogin }) => {
                   </TabsList>
                   
                   <TabsContent value="login">
-                    <form onSubmit={handleHotelLogin} className="space-y-4">
+                    <form onSubmit={handleHotelLogin} className="space-y-4" style={{ paddingTop: '1rem' }}>
+                      {isMobile && (
+                        <div className="bg-blue-50 p-3 rounded-lg mb-4">
+                          <p className="text-sm text-blue-800 font-medium">
+                            📱 Mobile Quick Access
+                          </p>
+                          <p className="text-xs text-blue-600 mt-1">
+                            Manage your hotel from anywhere
+                          </p>
+                        </div>
+                      )}
                       <div>
                         <Label>{t('common.email')}</Label>
                         <Input
@@ -183,6 +193,8 @@ const AuthPage = ({ onLogin }) => {
                           onChange={(e) => setHotelLoginData({...hotelLoginData, email: e.target.value})}
                           required
                           data-testid="hotel-login-email"
+                          placeholder={isMobile ? "your@email.com" : ""}
+                          style={isMobile ? { fontSize: '16px' } : {}}
                         />
                       </div>
                       <div>
@@ -193,9 +205,17 @@ const AuthPage = ({ onLogin }) => {
                           onChange={(e) => setHotelLoginData({...hotelLoginData, password: e.target.value})}
                           required
                           data-testid="hotel-login-password"
+                          placeholder={isMobile ? "••••••••" : ""}
+                          style={isMobile ? { fontSize: '16px' } : {}}
                         />
                       </div>
-                      <Button type="submit" className="w-full" disabled={loading} data-testid="hotel-login-btn">
+                      <Button 
+                        type="submit" 
+                        className="w-full" 
+                        disabled={loading} 
+                        data-testid="hotel-login-btn"
+                        style={isMobile ? { height: '48px', fontSize: '16px' } : {}}
+                      >
                         {loading ? t('common.loading') : t('common.login')}
                       </Button>
                     </form>

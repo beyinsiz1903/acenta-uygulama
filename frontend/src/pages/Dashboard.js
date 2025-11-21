@@ -123,12 +123,12 @@ const Dashboard = ({ user, tenant, onLogout }) => {
 
   return (
     <Layout user={user} tenant={tenant} onLogout={onLogout} currentModule="dashboard">
-      <div className="p-6 space-y-6">
+      <div className="p-4 md:p-6 space-y-4">
         <div>
-          <h1 className="text-4xl font-bold mb-2" style={{ fontFamily: 'Space Grotesk' }}>
+          <h1 className="text-2xl md:text-3xl font-bold mb-1" style={{ fontFamily: 'Space Grotesk' }}>
             {t('dashboard.welcome')}, {user.name}
           </h1>
-          <p className="text-lg text-gray-600">{tenant?.property_name || 'Hotel Management System'}</p>
+          <p className="text-sm md:text-base text-gray-600">{tenant?.property_name || 'Hotel Management System'}</p>
         </div>
 
         {loading ? (

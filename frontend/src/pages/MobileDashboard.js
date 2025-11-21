@@ -12,7 +12,8 @@ import {
   BarChart3,
   ArrowLeft,
   Menu,
-  Smartphone
+  Smartphone,
+  Shield
 } from 'lucide-react';
 
 const MobileDashboard = ({ user, onLogout }) => {

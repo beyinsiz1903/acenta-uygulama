@@ -529,6 +529,183 @@ const MobileGM = ({ user }) => {
         </DialogContent>
       </Dialog>
 
+      {/* Pickup Analysis Modal */}
+      <Dialog open={pickupModalOpen} onOpenChange={setPickupModalOpen}>
+        <DialogContent className="max-w-full w-[95vw] max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>📊 Pickup Analizi</DialogTitle>
+          </DialogHeader>
+          {pickupData && (
+            <div className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Özet</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Toplam Rezervasyon:</span>
+                    <span className="font-bold">{pickupData.summary?.total_rooms || 0}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Toplam Gelir:</span>
+                    <span className="font-bold">₺{pickupData.summary?.total_revenue?.toFixed(0) || 0}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Ort. Rezervasyon Zamanı:</span>
+                    <span className="font-bold">{pickupData.summary?.avg_days_before?.toFixed(0) || 0} gün önce</span>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Booking Window Analizi</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {pickupData.pickup_trends && Object.entries(pickupData.pickup_trends).map(([days, data]) => (
+                    <div key={days} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                      <span className="text-sm">{days} gün önce:</span>
+                      <div className="text-right">
+                        <p className="text-sm font-bold">{data.rooms} oda</p>
+                        <p className="text-xs text-gray-500">₺{data.revenue?.toFixed(0)}</p>
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Anomaly Detection Modal */}
+      <Dialog open={anomalyModalOpen} onOpenChange={setAnomalyModalOpen}>
+        <DialogContent className="max-w-full w-[95vw] max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>⚠️ Anomali Tespiti</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            {anomalies.length === 0 ? (
+              <div className="text-center py-8">
+                <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-2" />
+                <p className="text-gray-600">Hiç anomali tespit edilmedi! ✨</p>
+              </div>
+            ) : (
+              anomalies.map((anomaly, idx) => (
+                <Card key={idx} className={`border-2 ${
+                  anomaly.severity === 'high' ? 'border-red-300 bg-red-50' :
+                  anomaly.severity === 'medium' ? 'border-yellow-300 bg-yellow-50' :
+                  'border-blue-300 bg-blue-50'
+                }`}>
+                  <CardContent className="p-3">
+                    <div className="flex items-start space-x-2">
+                      <AlertCircle className={`w-5 h-5 flex-shrink-0 mt-0.5 ${
+                        anomaly.severity === 'high' ? 'text-red-600' :
+                        anomaly.severity === 'medium' ? 'text-yellow-600' :
+                        'text-blue-600'
+                      }`} />
+                      <div className="flex-1">
+                        <p className="font-bold text-sm mb-1">{anomaly.message}</p>
+                        <div className="flex items-center space-x-2 text-xs text-gray-600">
+                          <Badge className={
+                            anomaly.severity === 'high' ? 'bg-red-500' :
+                            anomaly.severity === 'medium' ? 'bg-yellow-500' :
+                            'bg-blue-500'
+                          }>
+                            {anomaly.type}
+                          </Badge>
+                          {anomaly.room_number && (
+                            <span>Oda: {anomaly.room_number}</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Forecast Modal */}
+      <Dialog open={forecastModalOpen} onOpenChange={setForecastModalOpen}>
+        <DialogContent className="max-w-full w-[95vw] max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>📅 Tahminler</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Haftalık Tahmin (4 Hafta)</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {weeklyForecast.map((week) => (
+                  <div key={week.week_number} className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="font-bold text-gray-900">Hafta {week.week_number}</p>
+                      <Badge className="bg-blue-500">{week.expected_occupancy?.toFixed(0) || 0}% Doluluk</Badge>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div>
+                        <p className="text-gray-600">Rezervasyon:</p>
+                        <p className="font-bold">{week.bookings}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-600">Gelir:</p>
+                        <p className="font-bold">₺{week.expected_revenue?.toFixed(0) || 0}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-600">ADR:</p>
+                        <p className="font-bold">₺{week.avg_rate?.toFixed(0) || 0}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-600">Tarih:</p>
+                        <p className="text-xs">{week.start_date}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Aylık Tahmin (3 Ay)</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {monthlyForecast.map((month) => (
+                  <div key={month.month_number} className="p-3 bg-green-50 rounded-lg border border-green-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="font-bold text-gray-900">{month.month}</p>
+                      <Badge className="bg-green-500">{month.expected_occupancy?.toFixed(0) || 0}% Doluluk</Badge>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div>
+                        <p className="text-gray-600">Rezervasyon:</p>
+                        <p className="font-bold">{month.bookings}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-600">Gelir:</p>
+                        <p className="font-bold">₺{month.expected_revenue?.toFixed(0) || 0}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-600">ADR:</p>
+                        <p className="font-bold">₺{month.avg_rate?.toFixed(0) || 0}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-600">RevPAR:</p>
+                        <p className="font-bold">₺{month.revpar?.toFixed(0) || 0}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Reports Modal */}
       <Dialog open={reportsModalOpen} onOpenChange={setReportsModalOpen}>
         <DialogContent className="max-w-full w-[95vw] max-h-[80vh] overflow-y-auto">

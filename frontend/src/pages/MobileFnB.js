@@ -48,10 +48,20 @@ const MobileFnB = ({ user }) => {
   const [menuManagementModalOpen, setMenuManagementModalOpen] = useState(false);
   const [zReportData, setZReportData] = useState(null);
   const [voidTransactions, setVoidTransactions] = useState([]);
+  const [outletSelectorOpen, setOutletSelectorOpen] = useState(false);
+  const [activeOutlet, setActiveOutlet] = useState(null);
 
   useEffect(() => {
     loadData();
   }, []);
+
+  useEffect(() => {
+    // Set first active outlet as default
+    if (outlets.length > 0 && !activeOutlet) {
+      const firstActive = outlets.find(o => o.status === 'active') || outlets[0];
+      setActiveOutlet(firstActive);
+    }
+  }, [outlets]);
 
   const loadData = async () => {
     try {

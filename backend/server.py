@@ -1468,15 +1468,29 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
         payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
         user_id = payload.get('user_id')
         
-        user_doc = await db.users.find_one({'id': user_id}, {'_id': 0})
+        if not user_id:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token: missing user_id")
+        
+        # Try to find by 'id' field first, then 'user_id' for backwards compatibility
+        user_doc = await db.users.find_one({'$or': [{'id': user_id}, {'user_id': user_id}]}, {'_id': 0})
+        
         if not user_doc:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
         
+        # Ensure both 'id' and 'user_id' fields exist
+        if 'id' not in user_doc:
+            user_doc['id'] = user_doc.get('user_id', user_id)
+        if 'user_id' not in user_doc:
+            user_doc['user_id'] = user_doc.get('id', user_id)
+        
         return User(**user_doc)
     except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired")
-    except Exception:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired - please login again")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token - please login again")
+    except Exception as e:
+        print(f"Auth error: {str(e)}")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication failed")
 
 def generate_qr_code(data: str) -> str:
     qr = qrcode.QRCode(version=1, box_size=10, border=5)

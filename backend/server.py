@@ -1579,7 +1579,9 @@ async def login(data: UserLogin):
     if user_doc:
         user_doc.pop('_id', None)  # Remove _id field
     
-    if not user_doc or not verify_password(data.password, user_doc.get('hashed_password', '')):
+    # Support both 'password' and 'hashed_password' field names
+    hashed_pwd = user_doc.get('hashed_password') or user_doc.get('password', '') if user_doc else ''
+    if not user_doc or not verify_password(data.password, hashed_pwd):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
     user_data = {k: v for k, v in user_doc.items() if k not in ['password', 'hashed_password']}

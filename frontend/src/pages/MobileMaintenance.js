@@ -41,6 +41,8 @@ const MobileMaintenance = ({ user }) => {
   const [assetHistoryModalOpen, setAssetHistoryModalOpen] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState(null);
   const [assetHistory, setAssetHistory] = useState(null);
+  const [partsInventoryModalOpen, setPartsInventoryModalOpen] = useState(false);
+  const [partsInventory, setPartsInventory] = useState([]);
 
   useEffect(() => {
     loadData();

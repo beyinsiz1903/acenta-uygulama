@@ -29858,3 +29858,11 @@ try:
     print("✅ Comprehensive modules router included")
 except ImportError as e:
     print(f"⚠️ Comprehensive modules not available: {e}")
+
+# Include finance endpoints
+try:
+    from finance_endpoints import finance_router
+    app.include_router(finance_router, prefix="/api", tags=["finance"])
+    print("✅ Finance endpoints included")
+except ImportError as e:
+    print(f"⚠️ Finance endpoints not available: {e}")

@@ -30,6 +30,9 @@ const MobileMaintenance = ({ user }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [newTaskModalOpen, setNewTaskModalOpen] = useState(false);
   const [allRooms, setAllRooms] = useState([]);
+  const [assetHistoryModalOpen, setAssetHistoryModalOpen] = useState(false);
+  const [selectedAsset, setSelectedAsset] = useState(null);
+  const [assetHistory, setAssetHistory] = useState(null);
 
   useEffect(() => {
     loadData();

@@ -496,6 +496,16 @@ function App() {
             }
           />
           <Route
+            path="/mobile/security"
+            element={
+              isAuthenticated ? (
+                <MobileSecurity user={user} />
+              ) : (
+                <Navigate to="/auth" replace />
+              )
+            }
+          />
+          <Route
             path="/cost-management"
             element={
               isAuthenticated ? (

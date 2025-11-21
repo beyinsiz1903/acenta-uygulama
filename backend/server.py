@@ -26737,12 +26737,13 @@ async def create_quick_order_mobile(
 @api_router.put("/pos/mobile/menu-items/{item_id}/price")
 async def update_menu_item_price_mobile(
     item_id: str,
-    new_price: float,
-    reason: Optional[str] = None,
+    request: MenuPriceUpdateRequest,
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
     """Update menu item price from mobile"""
     current_user = await get_current_user(credentials)
+    new_price = request.new_price
+    reason = request.reason
     
     # Find menu item
     menu_item = await db.pos_menu_items.find_one({

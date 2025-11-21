@@ -290,7 +290,17 @@ const AuthPage = ({ onLogin }) => {
                   </TabsList>
                   
                   <TabsContent value="login">
-                    <form onSubmit={handleGuestLogin} className="space-y-4">
+                    <form onSubmit={handleGuestLogin} className="space-y-4" style={{ paddingTop: '1rem' }}>
+                      {isMobile && (
+                        <div className="bg-purple-50 p-3 rounded-lg mb-4">
+                          <p className="text-sm text-purple-800 font-medium">
+                            👤 Guest Mobile Access
+                          </p>
+                          <p className="text-xs text-purple-600 mt-1">
+                            View bookings and manage your stay
+                          </p>
+                        </div>
+                      )}
                       <div>
                         <Label>Email</Label>
                         <Input
@@ -299,6 +309,8 @@ const AuthPage = ({ onLogin }) => {
                           onChange={(e) => setGuestLoginData({...guestLoginData, email: e.target.value})}
                           required
                           data-testid="guest-login-email"
+                          placeholder={isMobile ? "your@email.com" : ""}
+                          style={isMobile ? { fontSize: '16px' } : {}}
                         />
                       </div>
                       <div>
@@ -309,9 +321,17 @@ const AuthPage = ({ onLogin }) => {
                           onChange={(e) => setGuestLoginData({...guestLoginData, password: e.target.value})}
                           required
                           data-testid="guest-login-password"
+                          placeholder={isMobile ? "••••••••" : ""}
+                          style={isMobile ? { fontSize: '16px' } : {}}
                         />
                       </div>
-                      <Button type="submit" className="w-full" disabled={loading} data-testid="guest-login-btn">
+                      <Button 
+                        type="submit" 
+                        className="w-full" 
+                        disabled={loading} 
+                        data-testid="guest-login-btn"
+                        style={isMobile ? { height: '48px', fontSize: '16px' } : {}}
+                      >
                         {loading ? 'Logging in...' : 'Login as Guest'}
                       </Button>
                     </form>

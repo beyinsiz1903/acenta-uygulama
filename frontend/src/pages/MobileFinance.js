@@ -101,6 +101,27 @@ const MobileFinance = ({ user }) => {
     return `${parseFloat(value || 0).toFixed(1)}%`;
   };
 
+  const loadPLDetail = async () => {
+    try {
+      const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
+      const res = await axios.get(`/finance/pl-detail?month=${currentMonth}`);
+      setPlData(res.data);
+      setPlDetailModalOpen(true);
+    } catch (error) {
+      toast.error('P&L raporu yüklenemedi');
+    }
+  };
+
+  const loadCashierShiftReport = async () => {
+    try {
+      const res = await axios.get('/finance/cashier-shift-report');
+      setShiftReportData(res.data);
+      setCashierShiftModalOpen(true);
+    } catch (error) {
+      toast.error('Vardiya raporu yüklenemedi');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">

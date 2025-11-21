@@ -335,27 +335,39 @@ const MobileFnB = ({ user }) => {
         </Card>
 
         {/* Quick Actions */}
-        <Card className="bg-gradient-to-r from-orange-50 to-red-50">
-          <CardContent className="p-4">
-            <div className="grid grid-cols-2 gap-3">
-              <Button
-                className="h-20 flex flex-col items-center justify-center bg-orange-600 hover:bg-orange-700"
-                onClick={() => setOrderModalOpen(true)}
-              >
-                <ShoppingBag className="w-6 h-6 mb-1" />
-                <span className="text-xs">Yeni Sipariş</span>
-              </Button>
-              <Button
-                className="h-20 flex flex-col items-center justify-center"
-                variant="outline"
-                onClick={() => setReportsModalOpen(true)}
-              >
-                <BarChart3 className="w-6 h-6 mb-1" />
-                <span className="text-xs">Raporlar</span>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="grid grid-cols-2 gap-3">
+          <Button
+            className="h-20 flex flex-col items-center justify-center bg-orange-600 hover:bg-orange-700"
+            onClick={() => setOrderModalOpen(true)}
+          >
+            <ShoppingBag className="w-6 h-6 mb-1" />
+            <span className="text-xs">Yeni Sipariş</span>
+          </Button>
+          
+          <Button
+            className="h-20 flex flex-col items-center justify-center bg-green-600 hover:bg-green-700"
+            onClick={loadZReport}
+          >
+            <Calculator className="w-6 h-6 mb-1" />
+            <span className="text-xs">Z Raporu</span>
+          </Button>
+          
+          <Button
+            className="h-20 flex flex-col items-center justify-center bg-red-600 hover:bg-red-700"
+            onClick={loadVoidReport}
+          >
+            <XCircle className="w-6 h-6 mb-1" />
+            <span className="text-xs">İptal Raporu</span>
+          </Button>
+          
+          <Button
+            className="h-20 flex flex-col items-center justify-center bg-purple-600 hover:bg-purple-700"
+            onClick={() => setMenuManagementModalOpen(true)}
+          >
+            <MenuIcon className="w-6 h-6 mb-1" />
+            <span className="text-xs">Menü Yönetimi</span>
+          </Button>
+        </div>
       </div>
 
       {/* Order Modal */}

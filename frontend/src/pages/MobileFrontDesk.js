@@ -16,8 +16,14 @@ import {
   RefreshCw,
   UserPlus,
   Calendar,
-  Search
+  Search,
+  AlertCircle,
+  DollarSign,
+  Filter,
+  Star
 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 const MobileFrontDesk = ({ user }) => {
   const navigate = useNavigate();

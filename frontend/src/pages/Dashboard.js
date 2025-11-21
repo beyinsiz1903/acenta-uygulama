@@ -248,8 +248,8 @@ const Dashboard = ({ user, tenant, onLogout }) => {
 
             {/* Modules Grid */}
             <div>
-              <h2 className="text-2xl font-bold mb-4" style={{ fontFamily: 'Space Grotesk' }}>{t('dashboard.yourModules')}</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <h2 className="text-xl md:text-2xl font-bold mb-3" style={{ fontFamily: 'Space Grotesk' }}>{t('dashboard.yourModules')}</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {modules.map((module) => {
                   const Icon = module.icon;
                   return (

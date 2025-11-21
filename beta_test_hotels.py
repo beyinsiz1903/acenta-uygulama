@@ -13,7 +13,7 @@ import random
 from typing import Dict, List, Optional
 
 # Configuration
-BACKEND_URL = "https://content-localizer-2.preview.emergentagent.com/api"
+BACKEND_URL = "https://bug-fixer-47.preview.emergentagent.com/api"
 
 class Color:
     """Terminal colors"""

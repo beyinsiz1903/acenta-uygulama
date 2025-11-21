@@ -13,7 +13,7 @@ import os
 from datetime import datetime, timedelta
 
 # Configuration
-BACKEND_URL = "https://content-localizer-2.preview.emergentagent.com/api"
+BACKEND_URL = "https://bug-fixer-47.preview.emergentagent.com/api"
 TEST_EMAIL = "test@hotel.com"
 TEST_PASSWORD = "test123"
 

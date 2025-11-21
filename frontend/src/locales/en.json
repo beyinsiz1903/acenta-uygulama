@@ -23,7 +23,27 @@
     "confirm": "Confirm",
     "back": "Back",
     "next": "Next",
-    "previous": "Previous"
+    "previous": "Previous",
+    "view": "View",
+    "print": "Print",
+    "download": "Download",
+    "refresh": "Refresh",
+    "export": "Export",
+    "import": "Import",
+    "status": "Status",
+    "actions": "Actions",
+    "total": "Total",
+    "date": "Date",
+    "time": "Time",
+    "name": "Name",
+    "phone": "Phone",
+    "address": "Address",
+    "description": "Description",
+    "notes": "Notes",
+    "success": "Success",
+    "error": "Error",
+    "warning": "Warning",
+    "info": "Info"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -31,13 +51,27 @@
     "invoices": "Invoices",
     "rms": "RMS",
     "loyalty": "Loyalty",
-    "marketplace": "Marketplace"
+    "marketplace": "Marketplace",
+    "frontDesk": "Front Desk",
+    "housekeeping": "Housekeeping",
+    "maintenance": "Maintenance",
+    "reports": "Reports",
+    "nightAudit": "Night Audit",
+    "folio": "Folio",
+    "corporate": "Corporate Rates",
+    "security": "Security & GDPR",
+    "channelManager": "Channel Manager"
   },
   "auth": {
     "signIn": "Sign in to your account or create a new one",
     "hotel": "Hotel",
     "guest": "Guest",
-    "invalidCredentials": "Invalid credentials"
+    "invalidCredentials": "Invalid credentials",
+    "loginSuccess": "Login successful",
+    "loginFailed": "Login failed",
+    "logoutSuccess": "Logged out successfully",
+    "registerSuccess": "Registration successful",
+    "registerFailed": "Registration failed"
   },
   "invoice": {
     "title": "Accounting & Invoicing",
@@ -83,7 +117,11 @@
     "status": "Status",
     "pending": "Pending",
     "paid": "Paid",
-    "overdue": "Overdue"
+    "overdue": "Overdue",
+    "invoiceNumber": "Invoice Number",
+    "invoiceDate": "Invoice Date",
+    "paymentMethod": "Payment Method",
+    "generateEInvoice": "Generate E-Invoice"
   },
   "dashboard": {
     "monthlyIncome": "Monthly Income",
@@ -105,7 +143,12 @@
     "guestRewards": "Guest Rewards Program",
     "wholesalePurchasing": "Wholesale Purchasing",
     "totalInvoices": "Total Invoices",
-    "totalRevenue": "Total Revenue"
+    "totalRevenue": "Total Revenue",
+    "availableRooms": "Available Rooms",
+    "dirtyRooms": "Dirty Rooms",
+    "maintenanceRooms": "Maintenance Rooms",
+    "averageDailyRate": "Average Daily Rate",
+    "revPAR": "RevPAR"
   },
   "pms": {
     "title": "Property Management System",
@@ -124,7 +167,78 @@
     "currentlyStaying": "Currently staying",
     "arrivals": "Arrivals",
     "departures": "Departures",
-    "inHouse": "In-House"
+    "inHouse": "In-House",
+    "checkIn": "Check-In",
+    "checkOut": "Check-Out",
+    "reservation": "Reservation",
+    "walkIn": "Walk-In",
+    "guestName": "Guest Name",
+    "roomNumber": "Room Number",
+    "roomType": "Room Type",
+    "nightsStaying": "Nights Staying",
+    "totalAmount": "Total Amount"
+  },
+  "folio": {
+    "title": "Folio Management",
+    "folioNumber": "Folio Number",
+    "postCharge": "Post Charge",
+    "postPayment": "Post Payment",
+    "splitFolio": "Split Folio",
+    "checkout": "Checkout",
+    "totalCharges": "Total Charges",
+    "totalPayments": "Total Payments",
+    "balance": "Balance",
+    "loadingFolio": "Loading folio...",
+    "chargePostedSuccess": "Charge posted successfully",
+    "chargePostedFailed": "Failed to post charge",
+    "paymentPostedSuccess": "Payment posted successfully",
+    "paymentPostedFailed": "Failed to post payment",
+    "checkoutConfirm": "Are you sure you want to checkout this guest?",
+    "checkoutSuccess": "Guest checked out successfully",
+    "checkoutFailed": "Failed to checkout",
+    "chargeCategory": "Charge Category",
+    "chargeAmount": "Charge Amount",
+    "paymentAmount": "Payment Amount",
+    "paymentType": "Payment Type",
+    "paymentMethod": "Payment Method",
+    "room": "Room",
+    "food": "Food & Beverage",
+    "minibar": "Minibar",
+    "laundry": "Laundry",
+    "telephone": "Telephone",
+    "internet": "Internet",
+    "spa": "Spa",
+    "parking": "Parking",
+    "other": "Other",
+    "cash": "Cash",
+    "card": "Credit Card",
+    "bankTransfer": "Bank Transfer",
+    "voucher": "Voucher"
+  },
+  "housekeeping": {
+    "title": "Housekeeping Management",
+    "roomStatus": "Room Status",
+    "dueOutRooms": "Due Out Rooms",
+    "stayoverRooms": "Stayover Rooms",
+    "arrivalRooms": "Arrival Rooms",
+    "assignTask": "Assign Task",
+    "updateStatus": "Update Status",
+    "available": "Available",
+    "occupied": "Occupied",
+    "dirty": "Dirty",
+    "cleaning": "Cleaning",
+    "inspected": "Inspected",
+    "maintenance": "Maintenance",
+    "outOfOrder": "Out of Order",
+    "taskType": "Task Type",
+    "assignedTo": "Assigned To",
+    "priority": "Priority",
+    "high": "High",
+    "medium": "Medium",
+    "low": "Low",
+    "cleaningTime": "Cleaning Time",
+    "taskCompleted": "Task Completed",
+    "staffPerformance": "Staff Performance"
   },
   "loyalty": {
     "title": "Guest Loyalty Program",
@@ -134,7 +248,16 @@
     "notEnrolled": "Not Enrolled",
     "overview": "Overview",
     "noMembers": "No enrolled members yet",
-    "startEnrolling": "Start enrolling guests to build your loyalty program"
+    "startEnrolling": "Start enrolling guests to build your loyalty program",
+    "points": "Points",
+    "tier": "Tier",
+    "bronze": "Bronze",
+    "silver": "Silver",
+    "gold": "Gold",
+    "platinum": "Platinum",
+    "redeemPoints": "Redeem Points",
+    "pointsHistory": "Points History",
+    "benefits": "Benefits"
   },
   "marketplace": {
     "title": "Wholesale Marketplace",
@@ -151,11 +274,24 @@
     "cleaning": "Cleaning",
     "piece": "Piece",
     "set": "Set",
-    "gallon": "Gallon"
+    "gallon": "Gallon",
+    "category": "Category",
+    "stockQuantity": "Stock Quantity"
   },
   "rms": {
     "title": "Revenue Management System",
-    "subtitle": "Optimize pricing and maximize revenue"
+    "subtitle": "Optimize pricing and maximize revenue",
+    "priceRecommendation": "Price Recommendation",
+    "demandHeatmap": "Demand Heatmap",
+    "compsetAnalysis": "Compset Analysis",
+    "restrictions": "Restrictions",
+    "marketCompression": "Market Compression",
+    "minPrice": "Min Price",
+    "maxPrice": "Max Price",
+    "recommendedPrice": "Recommended Price",
+    "occupancyForecast": "Occupancy Forecast",
+    "rateParity": "Rate Parity",
+    "dynamicPricing": "Dynamic Pricing"
   },
   "ai": {
     "dailyBriefing": "Daily Briefing",
@@ -174,5 +310,53 @@
     "loading": "Generating AI insights...",
     "refreshInsights": "Refresh Insights",
     "poweredBy": "Powered by AI"
+  },
+  "messages": {
+    "success": {
+      "saved": "Saved successfully",
+      "created": "Created successfully",
+      "updated": "Updated successfully",
+      "deleted": "Deleted successfully",
+      "sent": "Sent successfully"
+    },
+    "error": {
+      "generic": "An error occurred",
+      "saveFailed": "Failed to save",
+      "loadFailed": "Failed to load data",
+      "deleteFailed": "Failed to delete",
+      "networkError": "Network error occurred",
+      "validationError": "Please check your input"
+    },
+    "validation": {
+      "required": "This field is required",
+      "invalidEmail": "Invalid email address",
+      "invalidPhone": "Invalid phone number",
+      "minLength": "Minimum {{min}} characters required",
+      "maxLength": "Maximum {{max}} characters allowed",
+      "mustBeNumber": "Must be a number",
+      "mustBePositive": "Must be a positive number"
+    }
+  },
+  "reports": {
+    "title": "Reports & Analytics",
+    "dailyFlash": "Daily Flash Report",
+    "monthlyReport": "Monthly Report",
+    "occupancyReport": "Occupancy Report",
+    "revenueReport": "Revenue Report",
+    "guestReport": "Guest Report",
+    "financialReport": "Financial Report",
+    "generateReport": "Generate Report",
+    "dateRange": "Date Range",
+    "startDate": "Start Date",
+    "endDate": "End Date"
+  },
+  "nightAudit": {
+    "title": "Night Audit",
+    "postRoomCharges": "Post Room Charges",
+    "runAudit": "Run Night Audit",
+    "auditDate": "Audit Date",
+    "roomChargesPosted": "Room charges posted",
+    "bookingsProcessed": "Bookings processed",
+    "auditComplete": "Night audit completed successfully"
   }
 }

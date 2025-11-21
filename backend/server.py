@@ -26655,14 +26655,15 @@ async def get_maintenance_notifications_mobile(
 
 @api_router.post("/pos/mobile/quick-order")
 async def create_quick_order_mobile(
-    outlet_id: str,
-    table_number: Optional[str] = None,
-    items: List[Dict[str, Any]] = [],
-    notes: Optional[str] = None,
+    request: QuickOrderRequest,
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
     """Create a quick POS order from mobile"""
     current_user = await get_current_user(credentials)
+    outlet_id = request.outlet_id
+    table_number = request.table_number
+    items = [item.dict() for item in request.items]
+    notes = request.notes
     
     # Validate outlet
     outlet = await db.pos_outlets.find_one({

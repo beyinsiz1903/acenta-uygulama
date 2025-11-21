@@ -76,10 +76,14 @@ const AuthPage = ({ onLogin }) => {
     e.preventDefault();
     setLoading(true);
     try {
+      console.log('📝 Register data being sent:', hotelRegisterData);
       const response = await axios.post('/auth/register', hotelRegisterData);
+      console.log('✅ Register response:', response.data);
       toast.success('Registration successful!');
       onLogin(response.data.access_token, response.data.user, response.data.tenant);
     } catch (error) {
+      console.error('❌ Registration error:', error);
+      console.error('❌ Error response:', error.response?.data);
       toast.error(error.response?.data?.detail || 'Registration failed');
     } finally {
       setLoading(false);

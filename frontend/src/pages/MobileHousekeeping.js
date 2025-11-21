@@ -14,8 +14,17 @@ import {
   AlertCircle,
   TrendingUp,
   BarChart3,
-  RefreshCw
+  RefreshCw,
+  Package,
+  Search,
+  MapPin,
+  History,
+  Plus
 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 
 const MobileHousekeeping = ({ user }) => {
   const navigate = useNavigate();

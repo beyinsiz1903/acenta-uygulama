@@ -412,17 +412,39 @@ const MobileMaintenance = ({ user }) => {
         )}
 
         {/* Quick Actions */}
-        <Card className="bg-gradient-to-r from-purple-50 to-indigo-50">
-          <CardContent className="p-4">
-            <Button
-              className="w-full h-16 flex items-center justify-center space-x-2 bg-purple-600 hover:bg-purple-700"
-              onClick={() => setNewTaskModalOpen(true)}
-            >
-              <Wrench className="w-6 h-6" />
-              <span>Yeni Bakım Görevi Oluştur</span>
-            </Button>
-          </CardContent>
-        </Card>
+        <div className="grid grid-cols-2 gap-3">
+          <Button
+            className="h-20 flex flex-col items-center justify-center space-y-1 bg-purple-600 hover:bg-purple-700"
+            onClick={() => setNewTaskModalOpen(true)}
+          >
+            <Wrench className="w-6 h-6" />
+            <span className="text-xs">Yeni Görev</span>
+          </Button>
+          
+          <Button
+            className="h-20 flex flex-col items-center justify-center space-y-1 bg-blue-600 hover:bg-blue-700"
+            onClick={() => setAssetHistoryModalOpen(true)}
+          >
+            <History className="w-6 h-6" />
+            <span className="text-xs">Bakım Geçmişi</span>
+          </Button>
+          
+          <Button
+            className="h-20 flex flex-col items-center justify-center space-y-1 bg-orange-600 hover:bg-orange-700"
+            onClick={() => navigate('/mobile/maintenance/priority-visual')}
+          >
+            <BarChart3 className="w-6 h-6" />
+            <span className="text-xs">Öncelik Görseli</span>
+          </Button>
+          
+          <Button
+            className="h-20 flex flex-col items-center justify-center space-y-1 bg-green-600 hover:bg-green-700"
+            onClick={() => toast.info('Tekrarlayan sorunlar yukarıda gösteriliyor')}
+          >
+            <AlertTriangle className="w-6 h-6" />
+            <span className="text-xs">Tekrar Eden</span>
+          </Button>
+        </div>
       </div>
 
       {/* New Task Modal */}

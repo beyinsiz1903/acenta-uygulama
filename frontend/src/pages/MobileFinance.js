@@ -18,7 +18,12 @@ import {
   Receipt,
   CreditCard,
   RefreshCw,
-  Plus
+  Plus,
+  BarChart3,
+  User,
+  FileText,
+  Clock,
+  CheckCircle
 } from 'lucide-react';
 
 const MobileFinance = ({ user }) => {

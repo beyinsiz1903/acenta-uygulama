@@ -23,7 +23,6 @@ import {
   BarChart3,
   Eye,
   Calendar,
-  Tool,
   Package,
   ShoppingCart
 } from 'lucide-react';

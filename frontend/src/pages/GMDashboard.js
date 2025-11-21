@@ -169,8 +169,8 @@ const GMDashboard = ({ user, tenant, onLogout }) => {
           </div>
         </div>
 
-        {/* Simple Metrics - Vertical Layout - HARDCODED FOR TESTING */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+        {/* UNIQUE_TEST_STRING_XYZ123 - Simple Metrics - Vertical Layout - HARDCODED FOR TESTING */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6" data-testid="vertical-cards-container">
           {/* Total Rooms */}
           <Card className="hover:shadow-md transition-all p-4 text-center border-2 border-blue-200">
             <CardContent className="p-0 space-y-2">

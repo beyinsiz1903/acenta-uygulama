@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
@@ -7,13 +7,26 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Hotel, User } from 'lucide-react';
+import { Hotel, User, Smartphone } from 'lucide-react';
 import LanguageSelector from '@/components/LanguageSelector';
 
 const AuthPage = ({ onLogin }) => {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('hotel-login');
   const [loading, setLoading] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  
+  // Detect if device is mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobile = window.innerWidth < 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      setIsMobile(mobile);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
   
   const [hotelLoginData, setHotelLoginData] = useState({ email: '', password: '' });
   const [guestLoginData, setGuestLoginData] = useState({ email: '', password: '' });

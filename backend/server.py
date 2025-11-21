@@ -1846,24 +1846,27 @@ async def generate_folio_number(tenant_id: str) -> str:
 
 async def calculate_folio_balance(folio_id: str, tenant_id: str) -> float:
     """Calculate folio balance (charges - payments) with proper 2-decimal rounding"""
-    charges = await db.folio_charges.find({
-        'folio_id': folio_id,
-        'tenant_id': tenant_id,
-        'voided': False
-    }).to_list(1000)
-    
-    payments = await db.payments.find({
-        'folio_id': folio_id,
-        'tenant_id': tenant_id,
-        'status': 'paid'
-    }).to_list(1000)
-    
-    total_charges = sum(c['total'] for c in charges)
-    total_payments = sum(p['amount'] for p in payments)
-    
-    balance = total_charges - total_payments
-    # Round to 2 decimal places for currency precision
-    return round(balance, 2)
+    try:
+        charges = await db.folio_charges.find({
+            'folio_id': folio_id,
+            'tenant_id': tenant_id,
+            'voided': False
+        }).to_list(1000)
+        
+        payments = await db.folio_payments.find({
+            'folio_id': folio_id,
+            'tenant_id': tenant_id
+        }).to_list(1000)
+        
+        total_charges = sum(float(c.get('total', 0)) for c in charges)
+        total_payments = sum(float(p.get('amount', 0)) for p in payments)
+        
+        balance = total_charges - total_payments
+        # Round to 2 decimal places for currency precision
+        return round(balance, 2)
+    except Exception as e:
+        print(f"Error calculating folio balance: {str(e)}")
+        return 0.0
 
 @api_router.post("/folio/create", response_model=Folio)
 async def create_folio(folio_data: FolioCreate, current_user: User = Depends(get_current_user)):

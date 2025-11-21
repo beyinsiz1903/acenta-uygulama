@@ -169,6 +169,77 @@ const GMDashboard = ({ user, tenant, onLogout }) => {
           </div>
         </div>
 
+        {/* Simple Metrics - Vertical Layout */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {/* Total Rooms */}
+          <Card className="hover:shadow-md transition-all p-4 text-center">
+            <CardContent className="p-0 space-y-2">
+              <div className="flex justify-center mb-2">
+                <div className="bg-blue-100 p-2 rounded-lg">
+                  <Bed className="w-6 h-6 text-blue-500" />
+                </div>
+              </div>
+              <div className="text-2xl font-bold text-gray-900">
+                {occupancy.total_rooms || 0}
+              </div>
+              <div className="text-xs font-medium text-gray-600">
+                Total Rooms
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Occupancy Rate */}
+          <Card className="hover:shadow-md transition-all p-4 text-center">
+            <CardContent className="p-0 space-y-2">
+              <div className="flex justify-center mb-2">
+                <div className="bg-green-100 p-2 rounded-lg">
+                  <Activity className="w-6 h-6 text-green-500" />
+                </div>
+              </div>
+              <div className="text-2xl font-bold text-gray-900">
+                {(occupancy.occupancy_percentage || 0).toFixed(1)}%
+              </div>
+              <div className="text-xs font-medium text-gray-600">
+                Occupancy Rate
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Today's Check-ins */}
+          <Card className="hover:shadow-md transition-all p-4 text-center">
+            <CardContent className="p-0 space-y-2">
+              <div className="flex justify-center mb-2">
+                <div className="bg-purple-100 p-2 rounded-lg">
+                  <LogIn className="w-6 h-6 text-purple-500" />
+                </div>
+              </div>
+              <div className="text-2xl font-bold text-gray-900">
+                {movements.arrivals || 0}
+              </div>
+              <div className="text-xs font-medium text-gray-600">
+                Today's Check-ins
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Total Guests */}
+          <Card className="hover:shadow-md transition-all p-4 text-center">
+            <CardContent className="p-0 space-y-2">
+              <div className="flex justify-center mb-2">
+                <div className="bg-orange-100 p-2 rounded-lg">
+                  <Users className="w-6 h-6 text-orange-500" />
+                </div>
+              </div>
+              <div className="text-2xl font-bold text-gray-900">
+                {Math.round((occupancy.occupied_rooms || 0) * 1.5)}
+              </div>
+              <div className="text-xs font-medium text-gray-600">
+                Total Guests
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Key Metrics - Top Row */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {/* Occupancy */}

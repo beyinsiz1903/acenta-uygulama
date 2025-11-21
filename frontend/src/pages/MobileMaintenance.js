@@ -28,6 +28,8 @@ const MobileMaintenance = ({ user }) => {
   const [slaMetrics, setSlaMetrics] = useState(null);
   const [repeatIssues, setRepeatIssues] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [newTaskModalOpen, setNewTaskModalOpen] = useState(false);
+  const [allRooms, setAllRooms] = useState([]);
 
   useEffect(() => {
     loadData();

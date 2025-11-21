@@ -5,27 +5,33 @@ import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { 
   ArrowLeft, 
   DollarSign, 
   TrendingUp, 
-  TrendingDown,
-  Clock,
+  Calendar,
   AlertCircle,
-  RefreshCw,
-  FileText,
+  Receipt,
   CreditCard,
-  BarChart3
+  RefreshCw,
+  Plus
 } from 'lucide-react';
 
 const MobileFinance = ({ user }) => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [financeSnapshot, setFinanceSnapshot] = useState(null);
-  const [costSummary, setCostSummary] = useState(null);
-  const [pendingAR, setPendingAR] = useState([]);
-  const [recentInvoices, setRecentInvoices] = useState([]);
+  const [dailyCollections, setDailyCollections] = useState(null);
+  const [monthlyCollections, setMonthlyCollections] = useState(null);
+  const [pendingReceivables, setPendingReceivables] = useState(null);
+  const [monthlyCosts, setMonthlyCosts] = useState(null);
+  const [notifications, setNotifications] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [selectedFolio, setSelectedFolio] = useState(null);
 
   useEffect(() => {
     loadData();
@@ -35,23 +41,19 @@ const MobileFinance = ({ user }) => {
     try {
       setLoading(true);
       
-      const [snapshotRes, costRes, invoicesRes] = await Promise.all([
-        axios.get('/reports/finance-snapshot'),
-        axios.get('/reports/cost-summary'),
-        axios.get('/accounting/invoices?limit=10')
+      const [dailyRes, monthlyRes, receivablesRes, costsRes, notifRes] = await Promise.all([
+        axios.get('/finance/mobile/daily-collections'),
+        axios.get('/finance/mobile/monthly-collections'),
+        axios.get('/finance/mobile/pending-receivables'),
+        axios.get('/finance/mobile/monthly-costs'),
+        axios.get('/notifications/mobile/finance')
       ]);
 
-      setFinanceSnapshot(snapshotRes.data);
-      setCostSummary(costRes.data);
-      setRecentInvoices(invoicesRes.data.invoices || []);
-
-      // Try to get pending AR
-      try {
-        const arRes = await axios.get('/reports/company-aging');
-        setPendingAR(arRes.data.companies || []);
-      } catch (error) {
-        console.log('AR data not available');
-      }
+      setDailyCollections(dailyRes.data);
+      setMonthlyCollections(monthlyRes.data);
+      setPendingReceivables(receivablesRes.data);
+      setMonthlyCosts(costsRes.data);
+      setNotifications(notifRes.data.notifications || []);
     } catch (error) {
       console.error('Failed to load finance data:', error);
       toast.error('Veri yüklenemedi');
@@ -66,15 +68,30 @@ const MobileFinance = ({ user }) => {
     loadData();
   };
 
+  const handleRecordPayment = async (formData) => {
+    try {
+      await axios.post('/finance/mobile/record-payment', formData);
+      toast.success('Ödeme kaydedildi!');
+      setPaymentModalOpen(false);
+      loadData();
+    } catch (error) {
+      toast.error('Ödeme kaydedilemedi: ' + (error.response?.data?.detail || 'Hata'));
+    }
+  };
+
   const formatCurrency = (amount) => {
     return `₺${parseFloat(amount || 0).toFixed(2)}`;
+  };
+
+  const formatPercent = (value) => {
+    return `${parseFloat(value || 0).toFixed(1)}%`;
   };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <RefreshCw className="w-8 h-8 animate-spin text-teal-600 mx-auto mb-2" />
+          <RefreshCw className="w-8 h-8 animate-spin text-indigo-600 mx-auto mb-2" />
           <p className="text-gray-600">Yükleniyor...</p>
         </div>
       </div>
@@ -84,7 +101,7 @@ const MobileFinance = ({ user }) => {
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       {/* Header */}
-      <div className="bg-gradient-to-r from-teal-600 to-teal-500 text-white p-4 sticky top-0 z-50 shadow-lg">
+      <div className="bg-gradient-to-r from-indigo-600 to-indigo-500 text-white p-4 sticky top-0 z-50 shadow-lg">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <Button
@@ -96,49 +113,64 @@ const MobileFinance = ({ user }) => {
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div>
-              <h1 className="text-xl font-bold">Finans Yönetimi</h1>
-              <p className="text-xs text-teal-100">Finance Dashboard</p>
+              <h1 className="text-xl font-bold">Finans Dashboard</h1>
+              <p className="text-xs text-indigo-100">Finance & AR/AP</p>
             </div>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleRefresh}
-            disabled={refreshing}
-            className="text-white hover:bg-white/20 p-2"
-          >
-            <RefreshCw className={`w-5 h-5 ${refreshing ? 'animate-spin' : ''}`} />
-          </Button>
+          <div className="flex items-center space-x-2">
+            {notifications.length > 0 && (
+              <div className="relative">
+                <Badge className="bg-red-500 text-white">{notifications.length}</Badge>
+              </div>
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className="text-white hover:bg-white/20 p-2"
+            >
+              <RefreshCw className={`w-5 h-5 ${refreshing ? 'animate-spin' : ''}`} />
+            </Button>
+          </div>
         </div>
       </div>
 
       <div className="p-4 space-y-4">
+        {/* Notifications */}
+        {notifications.length > 0 && (
+          <Card className="bg-gradient-to-r from-red-50 to-orange-50 border-red-200">
+            <CardContent className="p-3">
+              <div className="flex items-start space-x-2">
+                <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-gray-900">Bildirimler ({notifications.length})</p>
+                  {notifications.slice(0, 3).map((notif, idx) => (
+                    <p key={idx} className="text-xs text-gray-700 mt-1">
+                      • {notif.title}: {notif.message}
+                    </p>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Quick Stats */}
         <div className="grid grid-cols-2 gap-3">
           <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-green-600 font-medium">BUGÜNKÜ TAH.</p>
+                  <p className="text-xs text-green-600 font-medium">BUGÜN TAHSİLAT</p>
                   <p className="text-2xl font-bold text-green-700">
-                    {formatCurrency(financeSnapshot?.todays_collections?.total_collected || 0)}
+                    {formatCurrency(dailyCollections?.total_collected || 0)}
+                  </p>
+                  <p className="text-xs text-green-600 mt-1">
+                    {dailyCollections?.payment_count || 0} işlem
                   </p>
                 </div>
-                <TrendingUp className="w-10 h-10 text-green-300" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-red-50 to-red-100 border-red-200">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-red-600 font-medium">BEKLEYEN ALACAK</p>
-                  <p className="text-2xl font-bold text-red-700">
-                    {formatCurrency(financeSnapshot?.pending_ar?.total_pending || 0)}
-                  </p>
-                </div>
-                <Clock className="w-10 h-10 text-red-300" />
+                <DollarSign className="w-10 h-10 text-green-300" />
               </div>
             </CardContent>
           </Card>
@@ -147,12 +179,32 @@ const MobileFinance = ({ user }) => {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-blue-600 font-medium">AYLIK TAH.</p>
+                  <p className="text-xs text-blue-600 font-medium">AYLIK TAHSİLAT</p>
                   <p className="text-2xl font-bold text-blue-700">
-                    {formatCurrency(financeSnapshot?.mtd_collections?.total_collected || 0)}
+                    {formatCurrency(monthlyCollections?.total_collected || 0)}
+                  </p>
+                  <p className="text-xs text-blue-600 mt-1">
+                    Oran: {formatPercent(monthlyCollections?.collection_rate || 0)}
                   </p>
                 </div>
-                <BarChart3 className="w-10 h-10 text-blue-300" />
+                <TrendingUp className="w-10 h-10 text-blue-300" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-orange-600 font-medium">BEKLEYEN ALACAK</p>
+                  <p className="text-2xl font-bold text-orange-700">
+                    {formatCurrency(pendingReceivables?.total_pending || 0)}
+                  </p>
+                  <p className="text-xs text-orange-600 mt-1">
+                    {pendingReceivables?.receivables_count || 0} fatura
+                  </p>
+                </div>
+                <Receipt className="w-10 h-10 text-orange-300" />
               </div>
             </CardContent>
           </Card>
@@ -161,113 +213,164 @@ const MobileFinance = ({ user }) => {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-purple-600 font-medium">AYLIK MALİYET</p>
+                  <p className="text-xs text-purple-600 font-medium">AYIN MALİYETİ</p>
                   <p className="text-2xl font-bold text-purple-700">
-                    {formatCurrency(costSummary?.total_mtd_costs || 0)}
+                    {formatCurrency(monthlyCosts?.total_costs || 0)}
                   </p>
                 </div>
-                <TrendingDown className="w-10 h-10 text-purple-300" />
+                <Calendar className="w-10 h-10 text-purple-300" />
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Financial Metrics */}
-        {costSummary?.financial_metrics && (
+        {/* Pending Receivables */}
+        {pendingReceivables?.receivables && pendingReceivables.receivables.length > 0 && (
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-lg flex items-center">
-                <TrendingUp className="w-5 h-5 mr-2 text-green-600" />
-                Finansal Metrikler
+                <Receipt className="w-5 h-5 mr-2 text-orange-600" />
+                Bekleyen Alacaklar ({pendingReceivables.receivables_count})
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {pendingReceivables.receivables.slice(0, 10).map((receivable) => (
+                <div 
+                  key={receivable.folio_id} 
+                  className={`flex items-center justify-between p-3 rounded-lg border ${
+                    receivable.is_overdue ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-gray-200'
+                  }`}
+                >
+                  <div className="flex-1">
+                    <p className="font-bold text-gray-900">{receivable.guest_name}</p>
+                    <p className="text-sm text-gray-600">Folio: {receivable.folio_number}</p>
+                    {receivable.is_overdue && (
+                      <Badge className="bg-red-500 text-xs mt-1">Vadesi Geçmiş</Badge>
+                    )}
+                  </div>
+                  <div className="text-right">
+                    <p className="font-bold text-orange-700">{formatCurrency(receivable.balance)}</p>
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        setSelectedFolio(receivable);
+                        setPaymentModalOpen(true);
+                      }}
+                      className="bg-green-600 hover:bg-green-700 mt-1"
+                    >
+                      <CreditCard className="w-3 h-3 mr-1" />
+                      Tahsilat
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Payment Methods Summary */}
+        {dailyCollections?.payment_methods && Object.keys(dailyCollections.payment_methods).length > 0 && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center">
+                <CreditCard className="w-5 h-5 mr-2 text-green-600" />
+                Bugün Ödeme Yöntemleri
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="text-center p-3 bg-green-50 rounded-lg">
-                  <p className="text-xs text-green-600 mb-1">Gelir</p>
-                  <p className="text-xl font-bold text-green-700">
-                    {formatCurrency(costSummary.financial_metrics.revenue)}
-                  </p>
-                </div>
-                <div className="text-center p-3 bg-red-50 rounded-lg">
-                  <p className="text-xs text-red-600 mb-1">Maliyet</p>
-                  <p className="text-xl font-bold text-red-700">
-                    {formatCurrency(costSummary.financial_metrics.costs)}
-                  </p>
-                </div>
-                <div className="text-center p-3 bg-blue-50 rounded-lg">
-                  <p className="text-xs text-blue-600 mb-1">Brüt Kar</p>
-                  <p className="text-xl font-bold text-blue-700">
-                    {formatCurrency(costSummary.financial_metrics.gross_profit)}
-                  </p>
-                </div>
-                <div className="text-center p-3 bg-purple-50 rounded-lg">
-                  <p className="text-xs text-purple-600 mb-1">Kar Marjı</p>
-                  <p className="text-xl font-bold text-purple-700">
-                    {costSummary.financial_metrics.profit_margin?.toFixed(1)}%
-                  </p>
-                </div>
+              <div className="space-y-2">
+                {Object.entries(dailyCollections.payment_methods).map(([method, amount]) => (
+                  <div key={method} className="flex items-center justify-between p-2 bg-green-50 rounded-lg">
+                    <span className="text-sm font-medium text-gray-700 capitalize">{method}</span>
+                    <span className="text-sm font-bold text-green-700">{formatCurrency(amount)}</span>
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>
         )}
 
-        {/* Recent Invoices */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center">
-              <FileText className="w-5 h-5 mr-2 text-blue-600" />
-              Son Faturalar
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {recentInvoices.length === 0 ? (
-              <p className="text-gray-500 text-center py-4">Henüz fatura yok</p>
-            ) : (
-              recentInvoices.slice(0, 5).map((invoice) => (
-                <div key={invoice.id} className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200">
-                  <div className="flex-1">
-                    <p className="font-bold text-gray-900">{invoice.invoice_number || 'N/A'}</p>
-                    <p className="text-sm text-gray-600">{invoice.customer_name || 'Müşteri'}</p>
-                    <p className="text-xs text-gray-500">
-                      {new Date(invoice.invoice_date).toLocaleDateString('tr-TR')}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-bold text-blue-700">{formatCurrency(invoice.total_amount)}</p>
-                    <Badge variant="outline" className="mt-1">
-                      {invoice.status || 'pending'}
-                    </Badge>
-                  </div>
-                </div>
-              ))
-            )}
-          </CardContent>
-        </Card>
-
         {/* Quick Actions */}
-        <Card className="bg-gradient-to-r from-teal-50 to-blue-50">
+        <Card className="bg-gradient-to-r from-indigo-50 to-purple-50">
           <CardContent className="p-4">
             <div className="grid grid-cols-2 gap-3">
               <Button
-                className="h-20 flex flex-col items-center justify-center bg-teal-600 hover:bg-teal-700"
-                onClick={() => navigate('/invoice')}
+                className="h-20 flex flex-col items-center justify-center bg-indigo-600 hover:bg-indigo-700"
+                onClick={() => navigate('/reports')}
               >
-                <FileText className="w-6 h-6 mb-1" />
-                <span className="text-xs">Faturalar</span>
+                <TrendingUp className="w-6 h-6 mb-1" />
+                <span className="text-xs">Finansal Raporlar</span>
               </Button>
               <Button
                 className="h-20 flex flex-col items-center justify-center"
                 variant="outline"
-                onClick={() => navigate('/reports')}
+                onClick={() => navigate('/invoice')}
               >
-                <BarChart3 className="w-6 h-6 mb-1" />
-                <span className="text-xs">Raporlar</span>
+                <Receipt className="w-6 h-6 mb-1" />
+                <span className="text-xs">Faturalar</span>
               </Button>
             </div>
           </CardContent>
         </Card>
       </div>
+
+      {/* Payment Modal */}
+      <Dialog open={paymentModalOpen} onOpenChange={setPaymentModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Tahsilat Kaydı</DialogTitle>
+          </DialogHeader>
+          {selectedFolio && (
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              const formData = new FormData(e.target);
+              handleRecordPayment({
+                folio_id: selectedFolio.folio_id,
+                amount: parseFloat(formData.get('amount')),
+                payment_method: formData.get('payment_method'),
+                notes: formData.get('notes')
+              });
+            }}>
+              <div className="space-y-4">
+                <div>
+                  <Label>Misafir</Label>
+                  <Input value={selectedFolio.guest_name} disabled />
+                </div>
+                <div>
+                  <Label>Kalan Bakiye</Label>
+                  <Input value={formatCurrency(selectedFolio.balance)} disabled />
+                </div>
+                <div>
+                  <Label>Tahsilat Tutarı *</Label>
+                  <Input 
+                    name="amount" 
+                    type="number" 
+                    step="0.01" 
+                    max={selectedFolio.balance}
+                    required 
+                  />
+                </div>
+                <div>
+                  <Label>Ödeme Yöntemi *</Label>
+                  <select name="payment_method" className="w-full p-2 border rounded" required>
+                    <option value="cash">Nakit</option>
+                    <option value="card">Kredi Kartı</option>
+                    <option value="transfer">Havale</option>
+                    <option value="check">Çek</option>
+                  </select>
+                </div>
+                <div>
+                  <Label>Notlar</Label>
+                  <Textarea name="notes" rows={3} />
+                </div>
+                <Button type="submit" className="w-full bg-green-600 hover:bg-green-700">
+                  Tahsilat Kaydet
+                </Button>
+              </div>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

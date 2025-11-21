@@ -111,6 +111,7 @@ function App() {
   }, []);
 
   const handleLogin = (token, userData, tenantData) => {
+    console.log('🔐 handleLogin called with:', { token: token?.substring(0, 20) + '...', userData, tenantData });
     localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(userData));
     localStorage.setItem('tenant', tenantData ? JSON.stringify(tenantData) : 'null');
@@ -118,6 +119,7 @@ function App() {
     setUser(userData);
     setTenant(tenantData);
     setIsAuthenticated(true);
+    console.log('✅ Auth state updated:', { isAuthenticated: true, user: userData?.email });
   };
 
   const handleLogout = () => {

@@ -132,7 +132,7 @@ const GMDashboard = ({ user, tenant, onLogout }) => {
   }
 
   const flash = dashboardData?.flash || {};
-  const occupancy = flash.occupancy || {};
+  const occupancy = dashboardData?.occupancy || {};
   const movements = flash.movements || {};
   const revenue = flash.revenue || {};
 

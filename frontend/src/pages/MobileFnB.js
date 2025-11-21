@@ -24,7 +24,9 @@ import {
   XCircle,
   MenuIcon,
   Calculator,
-  Download
+  Download,
+  Store,
+  ChevronDown
 } from 'lucide-react';
 
 const MobileFnB = ({ user }) => {

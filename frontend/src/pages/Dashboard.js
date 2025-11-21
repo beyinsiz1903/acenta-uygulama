@@ -137,45 +137,45 @@ const Dashboard = ({ user, tenant, onLogout }) => {
           <>
             {/* AI Daily Briefing Card */}
             {aiBriefing && (
-              <Card className="bg-gradient-to-r from-blue-500 to-purple-600 text-white mb-6">
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
+              <Card className="bg-gradient-to-r from-blue-500 to-purple-600 text-white mb-4">
+                <CardHeader className="p-4">
+                  <CardTitle className="flex items-center justify-between text-base md:text-lg">
                     <span className="flex items-center">
-                      <span className="text-2xl mr-2">🤖</span>
+                      <span className="text-xl mr-2">🤖</span>
                       {t('ai.dailyBriefing')}
                     </span>
                     <Button 
                       variant="ghost" 
                       size="sm" 
                       onClick={loadAIBriefing}
-                      className="text-white hover:bg-white/20"
+                      className="text-white hover:bg-white/20 text-xs"
                       disabled={loadingAI}
                     >
                       {loadingAI ? t('ai.loading') : t('ai.refreshInsights')}
                     </Button>
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-lg leading-relaxed mb-4">{aiBriefing.briefing}</p>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm bg-white/10 rounded-lg p-4">
+                <CardContent className="p-4 pt-0">
+                  <p className="text-sm md:text-base leading-relaxed mb-3">{aiBriefing.briefing}</p>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs bg-white/10 rounded-lg p-3">
                     <div>
-                      <div className="opacity-75">Occupancy</div>
-                      <div className="text-xl font-bold">{aiBriefing.metrics?.occupancy_rate?.toFixed(1)}%</div>
+                      <div className="opacity-75 text-xs">Occupancy</div>
+                      <div className="text-lg font-bold">{aiBriefing.metrics?.occupancy_rate?.toFixed(1)}%</div>
                     </div>
                     <div>
-                      <div className="opacity-75">Check-ins Today</div>
-                      <div className="text-xl font-bold">{aiBriefing.metrics?.today_checkins}</div>
+                      <div className="opacity-75 text-xs">Check-ins Today</div>
+                      <div className="text-lg font-bold">{aiBriefing.metrics?.today_checkins}</div>
                     </div>
                     <div>
-                      <div className="opacity-75">Check-outs Today</div>
-                      <div className="text-xl font-bold">{aiBriefing.metrics?.today_checkouts}</div>
+                      <div className="opacity-75 text-xs">Check-outs Today</div>
+                      <div className="text-lg font-bold">{aiBriefing.metrics?.today_checkouts}</div>
                     </div>
                     <div>
-                      <div className="opacity-75">Monthly Revenue</div>
-                      <div className="text-xl font-bold">${(aiBriefing.metrics?.monthly_revenue || 0).toFixed(0)}</div>
+                      <div className="opacity-75 text-xs">Monthly Revenue</div>
+                      <div className="text-lg font-bold">${(aiBriefing.metrics?.monthly_revenue || 0).toFixed(0)}</div>
                     </div>
                   </div>
-                  <div className="text-xs opacity-75 mt-3 text-right">
+                  <div className="text-xs opacity-75 mt-2 text-right">
                     {t('ai.poweredBy')} • Generated: {new Date(aiBriefing.generated_at).toLocaleTimeString()}
                   </div>
                 </CardContent>

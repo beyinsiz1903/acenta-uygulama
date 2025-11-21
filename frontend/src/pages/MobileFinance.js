@@ -23,7 +23,9 @@ import {
   User,
   FileText,
   Clock,
-  CheckCircle
+  CheckCircle,
+  Download,
+  FileDown
 } from 'lucide-react';
 
 const MobileFinance = ({ user }) => {

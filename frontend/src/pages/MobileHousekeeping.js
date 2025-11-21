@@ -391,7 +391,239 @@ const MobileHousekeeping = ({ user }) => {
             </CardContent>
           </Card>
         )}
+
+        {/* Quick Actions */}
+        <Card className="bg-gradient-to-r from-blue-50 to-purple-50">
+          <CardContent className="p-4">
+            <div className="grid grid-cols-2 gap-3">
+              <Button
+                className="h-20 flex flex-col items-center justify-center bg-orange-600 hover:bg-orange-700"
+                onClick={loadLostFound}
+              >
+                <Search className="w-6 h-6 mb-1" />
+                <span className="text-xs">Kayıp Eşya</span>
+              </Button>
+              <Button
+                className="h-20 flex flex-col items-center justify-center bg-green-600 hover:bg-green-700"
+                onClick={loadInventory}
+              >
+                <Package className="w-6 h-6 mb-1" />
+                <span className="text-xs">Envanter</span>
+              </Button>
+              <Button
+                className="h-20 flex flex-col items-center justify-center bg-purple-600 hover:bg-purple-700"
+                onClick={loadTaskAssignments}
+              >
+                <MapPin className="w-6 h-6 mb-1" />
+                <span className="text-xs">Görev Dağılımı</span>
+              </Button>
+              <Button
+                className="h-20 flex flex-col items-center justify-center"
+                variant="outline"
+                onClick={loadStatusLogs}
+              >
+                <History className="w-6 h-6 mb-1" />
+                <span className="text-xs">Durum Kayıtları</span>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
+
+      {/* Lost & Found Modal */}
+      <Dialog open={lostFoundModalOpen} onOpenChange={setLostFoundModalOpen}>
+        <DialogContent className="max-w-full w-[95vw] max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-between">
+              <span>🔍 Kayıp Eşya ({lostFoundItems.length})</span>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button size="sm" className="bg-orange-600">
+                    <Plus className="w-4 h-4 mr-1" />
+                    Yeni Kayıt
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Kayıp Eşya Kaydı</DialogTitle>
+                  </DialogHeader>
+                  <form onSubmit={(e) => {
+                    e.preventDefault();
+                    handleCreateLostFound(new FormData(e.target));
+                  }}>
+                    <div className="space-y-3">
+                      <div>
+                        <Label>Eşya Tanımı *</Label>
+                        <Input name="item_description" required />
+                      </div>
+                      <div>
+                        <Label>Bulunduğu Yer *</Label>
+                        <Input name="location_found" required />
+                      </div>
+                      <div>
+                        <Label>Bulan Kişi *</Label>
+                        <Input name="found_by" required />
+                      </div>
+                      <div>
+                        <Label>Kategori</Label>
+                        <select name="category" className="w-full p-2 border rounded">
+                          <option value="electronics">Elektronik</option>
+                          <option value="jewelry">Takı</option>
+                          <option value="clothing">Giysi</option>
+                          <option value="documents">Evrak</option>
+                          <option value="other">Diğer</option>
+                        </select>
+                      </div>
+                      <div>
+                        <Label>Oda Numarası</Label>
+                        <Input name="room_number" />
+                      </div>
+                      <div>
+                        <Label>Notlar</Label>
+                        <Textarea name="notes" rows={3} />
+                      </div>
+                      <Button type="submit" className="w-full">Kaydet</Button>
+                    </div>
+                  </form>
+                </DialogContent>
+              </Dialog>
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            {lostFoundItems.map((item) => (
+              <Card key={item.id} className="border">
+                <CardContent className="p-3">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <p className="font-bold text-gray-900">{item.item_description}</p>
+                      <p className="text-sm text-gray-600">
+                        📍 {item.location_found} • Oda {item.room_number || 'N/A'}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        Bulan: {item.found_by} • {new Date(item.found_date).toLocaleDateString('tr-TR')}
+                      </p>
+                    </div>
+                    <Badge className={{
+                      'unclaimed': 'bg-orange-500',
+                      'claimed': 'bg-green-500',
+                      'disposed': 'bg-gray-500'
+                    }[item.status]}>
+                      {item.status}
+                    </Badge>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Inventory Modal */}
+      <Dialog open={inventoryModalOpen} onOpenChange={setInventoryModalOpen}>
+        <DialogContent className="max-w-full w-[95vw] max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>📦 Envanter ({inventoryItems.length})</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            {inventoryItems.map((item) => (
+              <Card key={item.id} className={`border ${item.is_low_stock ? 'border-red-300 bg-red-50' : ''}`}>
+                <CardContent className="p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="font-bold text-gray-900">{item.name}</p>
+                    <Badge>{item.category}</Badge>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 text-sm">
+                    <div>
+                      <p className="text-gray-600">Stok:</p>
+                      <p className={`font-bold ${item.is_low_stock ? 'text-red-600' : 'text-green-600'}`}>
+                        {item.current_stock} {item.unit}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-gray-600">Minimum:</p>
+                      <p className="font-bold">{item.minimum_stock}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-600">Birim Fiyat:</p>
+                      <p className="font-bold">₺{item.unit_cost}</p>
+                    </div>
+                  </div>
+                  {item.is_low_stock && (
+                    <div className="mt-2 p-2 bg-red-100 rounded text-xs text-red-700">
+                      ⚠️ Düşük stok uyarısı! Yeniden sipariş gerekli.
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Task Assignments Modal */}
+      <Dialog open={taskAssignmentsModalOpen} onOpenChange={setTaskAssignmentsModalOpen}>
+        <DialogContent className="max-w-full w-[95vw] max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>🗺️ Görev Dağılımı ({taskAssignments.length} Personel)</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            {taskAssignments.map((staff, idx) => (
+              <Card key={idx} className="border">
+                <CardContent className="p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="font-bold text-gray-900">{staff.staff_name}</p>
+                    <div className="flex space-x-2">
+                      <Badge className="bg-green-500">{staff.completed} ✓</Badge>
+                      <Badge className="bg-yellow-500">{staff.in_progress} ⏳</Badge>
+                      <Badge className="bg-gray-500">{staff.pending} ⏸</Badge>
+                    </div>
+                  </div>
+                  <div className="text-xs text-gray-600 mb-2">
+                    Rota: {staff.route.join(' → ')}
+                  </div>
+                  <div className="space-y-1">
+                    {staff.tasks.slice(0, 3).map((task, tidx) => (
+                      <div key={tidx} className="flex items-center justify-between text-xs p-1 bg-gray-50 rounded">
+                        <span>Oda {task.room_number}</span>
+                        <Badge variant="outline" className="text-xs">{task.status}</Badge>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Status Change Logs Modal */}
+      <Dialog open={statusLogsModalOpen} onOpenChange={setStatusLogsModalOpen}>
+        <DialogContent className="max-w-full w-[95vw] max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>📝 Durum Değişim Kayıtları ({statusLogs.length})</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            {statusLogs.map((log) => (
+              <Card key={log.log_id} className="border">
+                <CardContent className="p-3">
+                  <div className="flex items-center justify-between mb-1">
+                    <p className="font-bold text-gray-900">Oda {log.room_number}</p>
+                    <p className="text-xs text-gray-500">{new Date(log.timestamp).toLocaleString('tr-TR')}</p>
+                  </div>
+                  <div className="flex items-center space-x-2 text-sm">
+                    <Badge variant="outline">{log.old_status}</Badge>
+                    <span>→</span>
+                    <Badge className="bg-blue-500">{log.new_status}</Badge>
+                  </div>
+                  <p className="text-xs text-gray-600 mt-1">
+                    Değiştiren: {log.changed_by}
+                  </p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

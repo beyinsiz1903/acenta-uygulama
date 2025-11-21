@@ -31,6 +31,14 @@ const MobileFrontDesk = ({ user }) => {
   const [roomStatusModalOpen, setRoomStatusModalOpen] = useState(false);
   const [allBookings, setAllBookings] = useState([]);
   const [allRooms, setAllRooms] = useState([]);
+  const [guestAlertsModalOpen, setGuestAlertsModalOpen] = useState(false);
+  const [feeCalculatorModalOpen, setFeeCalculatorModalOpen] = useState(false);
+  const [roomFilterModalOpen, setRoomFilterModalOpen] = useState(false);
+  const [guestAlerts, setGuestAlerts] = useState([]);
+  const [selectedBookingForFee, setSelectedBookingForFee] = useState(null);
+  const [calculatedFees, setCalculatedFees] = useState(null);
+  const [roomFilters, setRoomFilters] = useState({ bed_type: '', floor: '', status: '' });
+  const [filteredRooms, setFilteredRooms] = useState([]);
 
   useEffect(() => {
     loadData();

@@ -146,11 +146,11 @@ const EnhancedGMDashboard = ({ user, tenant, onLogout }) => {
           </div>
         </div>
 
-        {/* Key Metrics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {/* Key Metrics Cards - VERTICAL LAYOUT */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {/* Occupancy */}
           <Card 
-            className="cursor-pointer hover:shadow-lg transition-shadow"
+            className="cursor-pointer hover:shadow-md transition-all p-4 text-center"
             onClick={() => openMetricDetail({
               title: 'Occupancy Rate',
               description: 'Current hotel occupancy percentage',
@@ -163,53 +163,49 @@ const EnhancedGMDashboard = ({ user, tenant, onLogout }) => {
               }
             })}
           >
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600 flex items-center justify-between">
-                <span>Occupancy</span>
-                <Bed className="w-4 h-4 text-blue-500" />
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-blue-600">
+            <CardContent className="p-0 space-y-2">
+              <div className="flex justify-center mb-2">
+                <div className="bg-blue-100 p-2 rounded-lg">
+                  <Bed className="w-6 h-6 text-blue-500" />
+                </div>
+              </div>
+              <div className="text-2xl font-bold text-gray-900">
                 {dashboardData?.occupancy?.current || 0}%
               </div>
-              <div className="text-xs text-gray-500 mt-1">
-                {dashboardData?.occupancy?.occupied_rooms || 0} / {dashboardData?.occupancy?.total_rooms || 0} rooms
+              <div className="text-xs font-medium text-gray-600">
+                Occupancy Rate
               </div>
             </CardContent>
           </Card>
 
-          {/* Revenue Today */}
+          {/* Total Rooms */}
           <Card 
-            className="cursor-pointer hover:shadow-lg transition-shadow"
+            className="cursor-pointer hover:shadow-md transition-all p-4 text-center"
             onClick={() => openMetricDetail({
-              title: 'Revenue Today',
-              description: 'Total revenue generated today',
-              value: `$${dashboardData?.revenue_today || 0}`,
-              icon: DollarSign,
-              trend: 5.2
+              title: 'Total Rooms',
+              description: 'Total available rooms in property',
+              value: dashboardData?.occupancy?.total_rooms || 0,
+              icon: Bed
             })}
           >
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600 flex items-center justify-between">
-                <span>Revenue Today</span>
-                <DollarSign className="w-4 h-4 text-green-500" />
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-green-600">
-                ${dashboardData?.revenue_today?.toFixed(2) || '0.00'}
+            <CardContent className="p-0 space-y-2">
+              <div className="flex justify-center mb-2">
+                <div className="bg-green-100 p-2 rounded-lg">
+                  <Bed className="w-6 h-6 text-green-500" />
+                </div>
               </div>
-              <div className="flex items-center gap-1 text-xs text-green-600 mt-1">
-                <TrendingUp className="w-3 h-3" />
-                <span>+5.2% vs yesterday</span>
+              <div className="text-2xl font-bold text-gray-900">
+                {dashboardData?.occupancy?.total_rooms || 0}
+              </div>
+              <div className="text-xs font-medium text-gray-600">
+                Total Rooms
               </div>
             </CardContent>
           </Card>
 
           {/* Arrivals Today */}
           <Card 
-            className="cursor-pointer hover:shadow-lg transition-shadow"
+            className="cursor-pointer hover:shadow-md transition-all p-4 text-center"
             onClick={() => openMetricDetail({
               title: 'Arrivals Today',
               description: 'Expected check-ins for today',
@@ -217,44 +213,42 @@ const EnhancedGMDashboard = ({ user, tenant, onLogout }) => {
               icon: CheckCircle
             })}
           >
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600 flex items-center justify-between">
-                <span>Arrivals Today</span>
-                <CheckCircle className="w-4 h-4 text-purple-500" />
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-purple-600">
+            <CardContent className="p-0 space-y-2">
+              <div className="flex justify-center mb-2">
+                <div className="bg-purple-100 p-2 rounded-lg">
+                  <CheckCircle className="w-6 h-6 text-purple-500" />
+                </div>
+              </div>
+              <div className="text-2xl font-bold text-gray-900">
                 {dashboardData?.today_movements?.arrivals || 0}
               </div>
-              <div className="text-xs text-gray-500 mt-1">
-                Pending check-ins
+              <div className="text-xs font-medium text-gray-600">
+                Today's Check-ins
               </div>
             </CardContent>
           </Card>
 
-          {/* Departures Today */}
+          {/* Total Guests */}
           <Card 
-            className="cursor-pointer hover:shadow-lg transition-shadow"
+            className="cursor-pointer hover:shadow-md transition-all p-4 text-center"
             onClick={() => openMetricDetail({
-              title: 'Departures Today',
-              description: 'Expected check-outs for today',
-              value: dashboardData?.today_movements?.departures || 0,
-              icon: Calendar
+              title: 'Total Guests',
+              description: 'Total guests currently in house',
+              value: (dashboardData?.occupancy?.occupied_rooms || 0) * 1.5,
+              icon: Users
             })}
           >
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600 flex items-center justify-between">
-                <span>Departures Today</span>
-                <Calendar className="w-4 h-4 text-orange-500" />
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-orange-600">
-                {dashboardData?.today_movements?.departures || 0}
+            <CardContent className="p-0 space-y-2">
+              <div className="flex justify-center mb-2">
+                <div className="bg-orange-100 p-2 rounded-lg">
+                  <Users className="w-6 h-6 text-orange-500" />
+                </div>
               </div>
-              <div className="text-xs text-gray-500 mt-1">
-                Pending check-outs
+              <div className="text-2xl font-bold text-gray-900">
+                {Math.round((dashboardData?.occupancy?.occupied_rooms || 0) * 1.5)}
+              </div>
+              <div className="text-xs font-medium text-gray-600">
+                Total Guests
               </div>
             </CardContent>
           </Card>

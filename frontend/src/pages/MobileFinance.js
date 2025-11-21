@@ -739,6 +739,25 @@ const MobileFinance = ({ user }) => {
                   </CardContent>
                 </Card>
               )}
+
+              {/* Download Buttons */}
+              <div className="grid grid-cols-2 gap-3">
+                <Button 
+                  className="w-full bg-green-600 hover:bg-green-700"
+                  onClick={downloadPLReport}
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  PDF İndir
+                </Button>
+                <Button 
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => window.print()}
+                >
+                  <FileDown className="w-4 h-4 mr-2" />
+                  Yazdır
+                </Button>
+              </div>
             </div>
           ) : (
             <div className="text-center py-8">

@@ -27850,38 +27850,6 @@ async def get_asset_maintenance_history(
         }
     }
 
-        target_date = datetime.now(timezone.utc)
-    
-    start_of_day = target_date.replace(hour=0, minute=0, second=0, microsecond=0)
-    end_of_day = target_date.replace(hour=23, minute=59, second=59, microsecond=999999)
-    
-    # Get payments for the day
-    total_collected = 0.0
-    payment_count = 0
-    payment_methods = {}
-    
-    async for payment in db.payments.find({
-        'tenant_id': current_user.tenant_id,
-        'created_at': {
-            '$gte': start_of_day,
-            '$lte': end_of_day
-        }
-    }):
-        amount = payment.get('amount', 0)
-        total_collected += amount
-        payment_count += 1
-        
-        method = payment.get('payment_method', 'unknown')
-        payment_methods[method] = payment_methods.get(method, 0) + amount
-    
-    return {
-        'date': target_date.date().isoformat(),
-        'total_collected': total_collected,
-        'payment_count': payment_count,
-        'payment_methods': payment_methods,
-        'average_transaction': total_collected / payment_count if payment_count > 0 else 0
-    }
-
 
 @api_router.get("/finance/mobile/monthly-collections")
 async def get_monthly_collections_mobile(

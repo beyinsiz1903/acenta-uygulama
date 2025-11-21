@@ -2365,13 +2365,18 @@ async def get_pending_ar(current_user: User = Depends(get_current_user)):
             total_outstanding = 0.0
             
             for folio in company_folios:
-                balance = await calculate_folio_balance(folio['id'], current_user.tenant_id)
-                if balance > 0:
-                    folios_with_balance.append({
-                        **folio,
-                        'balance': balance
-                    })
-                    total_outstanding += balance
+                folio_id = folio.get('folio_id') or folio.get('id')
+                if folio_id:
+                    try:
+                        balance = await calculate_folio_balance(folio_id, current_user.tenant_id)
+                        if balance > 0:
+                            folios_with_balance.append({
+                                **folio,
+                                'balance': balance
+                            })
+                            total_outstanding += balance
+                    except:
+                        pass
             
             if total_outstanding > 0 and folios_with_balance:
                 # Find oldest folio

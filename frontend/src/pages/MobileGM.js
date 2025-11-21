@@ -831,6 +831,112 @@ const MobileGM = ({ user }) => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Property Selector Modal */}
+      <Dialog open={propertyModalOpen} onOpenChange={setPropertyModalOpen}>
+        <DialogContent className="max-w-full w-[95vw] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              <Building2 className="w-5 h-5 text-red-600" />
+              <span>Tesis Seçimi</span>
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-3">
+            {/* Selected Property Info */}
+            {selectedProperty && (
+              <Card className="bg-gradient-to-r from-red-50 to-pink-50 border-red-200">
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-3">
+                    <CheckCircle className="w-8 h-8 text-red-600" />
+                    <div className="flex-1">
+                      <p className="text-sm text-gray-600">Şu anda görüntülenen:</p>
+                      <p className="font-bold text-gray-900">{selectedProperty.name}</p>
+                      <p className="text-xs text-gray-500">{selectedProperty.location} • {selectedProperty.rooms} oda</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Property List */}
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-gray-700 mb-2">Tüm Tesisler:</p>
+              {properties.map((property) => (
+                <Button
+                  key={property.id}
+                  variant={selectedProperty?.id === property.id ? "default" : "outline"}
+                  className={`w-full justify-start h-auto p-4 ${
+                    selectedProperty?.id === property.id 
+                      ? 'bg-red-600 hover:bg-red-700 text-white border-red-600' 
+                      : 'bg-white hover:bg-gray-50'
+                  }`}
+                  onClick={() => {
+                    setSelectedProperty(property);
+                    setPropertyModalOpen(false);
+                    toast.success(`${property.name} tesisine geçildi!`);
+                    loadData(); // Reload data for new property
+                  }}
+                >
+                  <div className="flex items-center space-x-3 w-full">
+                    <Building2 className={`w-8 h-8 ${
+                      selectedProperty?.id === property.id ? 'text-white' : 'text-red-600'
+                    }`} />
+                    <div className="flex-1 text-left">
+                      <p className={`font-bold ${
+                        selectedProperty?.id === property.id ? 'text-white' : 'text-gray-900'
+                      }`}>
+                        {property.name}
+                      </p>
+                      <p className={`text-sm ${
+                        selectedProperty?.id === property.id ? 'text-red-100' : 'text-gray-600'
+                      }`}>
+                        📍 {property.location}
+                      </p>
+                      <div className="flex items-center space-x-3 mt-1">
+                        <span className={`text-xs ${
+                          selectedProperty?.id === property.id ? 'text-red-100' : 'text-gray-500'
+                        }`}>
+                          🛏️ {property.rooms} oda
+                        </span>
+                        <Badge className={
+                          property.status === 'active' 
+                            ? 'bg-green-500' 
+                            : 'bg-gray-500'
+                        }>
+                          {property.status === 'active' ? 'Aktif' : 'Pasif'}
+                        </Badge>
+                      </div>
+                    </div>
+                    {selectedProperty?.id === property.id && (
+                      <CheckCircle className="w-6 h-6 text-white" />
+                    )}
+                  </div>
+                </Button>
+              ))}
+            </div>
+
+            {/* Portfolio Summary */}
+            <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 mt-4">
+              <CardContent className="p-4">
+                <p className="text-sm font-bold text-gray-900 mb-2">📊 Portföy Özeti</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="text-center p-2 bg-white rounded">
+                    <p className="text-xs text-gray-600">Toplam Tesis</p>
+                    <p className="text-2xl font-bold text-blue-700">{properties.length}</p>
+                  </div>
+                  <div className="text-center p-2 bg-white rounded">
+                    <p className="text-xs text-gray-600">Toplam Oda</p>
+                    <p className="text-2xl font-bold text-green-700">
+                      {properties.reduce((sum, p) => sum + p.rooms, 0)}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

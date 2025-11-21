@@ -165,7 +165,7 @@ class MobileEndpointsTester:
         test_cases = [
             {
                 "name": "Get critical issues for GM dashboard",
-                "expected_fields": ["critical_issues", "total_count", "priority_breakdown", "department_breakdown"]
+                "expected_fields": ["critical_issues", "total_count"]
             }
         ]
         

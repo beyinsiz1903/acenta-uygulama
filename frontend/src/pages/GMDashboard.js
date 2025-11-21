@@ -146,7 +146,7 @@ const GMDashboard = ({ user, tenant, onLogout }) => {
               GM Dashboard
             </h1>
             <p className="text-gray-600">
-              {flash.date || 'Today'} • {tenant?.property_name}
+              {String(flash.date || 'Today')} • {String(tenant?.property_name || '')}
             </p>
           </div>
           <div className="flex space-x-2">

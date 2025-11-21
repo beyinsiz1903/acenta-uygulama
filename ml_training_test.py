@@ -12,7 +12,7 @@ import time
 from datetime import datetime
 
 # Configuration
-BACKEND_URL = "https://hotelops-central-1.preview.emergentagent.com/api"
+BACKEND_URL = "https://content-localizer-2.preview.emergentagent.com/api"
 TEST_EMAIL = "test@hotel.com"
 TEST_PASSWORD = "test123"
 

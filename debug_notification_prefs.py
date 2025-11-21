@@ -8,7 +8,7 @@ import aiohttp
 import json
 import uuid
 
-BACKEND_URL = "https://hotelops-central-1.preview.emergentagent.com/api"
+BACKEND_URL = "https://content-localizer-2.preview.emergentagent.com/api"
 
 async def debug_notification_prefs():
     session = aiohttp.ClientSession()

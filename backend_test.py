@@ -20,7 +20,7 @@ from typing import Dict, List, Any, Optional
 import uuid
 
 # Configuration
-BACKEND_URL = "https://hotelops-central-1.preview.emergentagent.com/api"
+BACKEND_URL = "https://content-localizer-2.preview.emergentagent.com/api"
 TEST_EMAIL = "admin@hotel.com"
 TEST_PASSWORD = "admin123"
 

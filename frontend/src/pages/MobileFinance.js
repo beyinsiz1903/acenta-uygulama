@@ -376,6 +376,118 @@ const MobileFinance = ({ user }) => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Reports Modal */}
+      <Dialog open={reportsModalOpen} onOpenChange={setReportsModalOpen}>
+        <DialogContent className="max-w-full w-[95vw] max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Finansal Raporlar</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Günlük Özet</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Bugün Tahsilat:</span>
+                  <span className="font-bold text-green-700">{formatCurrency(dailyCollections?.total_collected || 0)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">İşlem Sayısı:</span>
+                  <span className="font-bold">{dailyCollections?.payment_count || 0}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Ortalama İşlem:</span>
+                  <span className="font-bold">{formatCurrency(dailyCollections?.average_transaction || 0)}</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Aylık Özet</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Toplam Tahsilat:</span>
+                  <span className="font-bold text-green-700">{formatCurrency(monthlyCollections?.total_collected || 0)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Beklenen Tutar:</span>
+                  <span className="font-bold">{formatCurrency(monthlyCollections?.total_expected || 0)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Tahsilat Oranı:</span>
+                  <span className="font-bold text-blue-700">{formatPercent(monthlyCollections?.collection_rate || 0)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Kalan Alacak:</span>
+                  <span className="font-bold text-orange-700">{formatCurrency(monthlyCollections?.outstanding || 0)}</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Maliyet Özeti</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Aylık Maliyet:</span>
+                  <span className="font-bold text-red-700">{formatCurrency(monthlyCosts?.total_costs || 0)}</span>
+                </div>
+                {monthlyCosts?.costs_by_category && Object.entries(monthlyCosts.costs_by_category).map(([category, amount]) => (
+                  <div key={category} className="flex justify-between pl-4">
+                    <span className="text-sm text-gray-500 capitalize">{category}:</span>
+                    <span className="text-sm">{formatCurrency(amount)}</span>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Invoices Modal */}
+      <Dialog open={invoicesModalOpen} onOpenChange={setInvoicesModalOpen}>
+        <DialogContent className="max-w-full w-[95vw] max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Faturalar ({allInvoices.length})</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            {allInvoices.length === 0 ? (
+              <p className="text-center text-gray-500 py-8">Henüz fatura yok</p>
+            ) : (
+              allInvoices.map((invoice) => (
+                <div key={invoice.id} className="p-3 bg-gray-50 rounded-lg border">
+                  <div className="flex items-center justify-between mb-2">
+                    <div>
+                      <p className="font-bold text-gray-900">Fatura #{invoice.invoice_number}</p>
+                      <p className="text-sm text-gray-600">{invoice.guest_name || invoice.company_name}</p>
+                    </div>
+                    <Badge className={{
+                      'paid': 'bg-green-500',
+                      'pending': 'bg-yellow-500',
+                      'overdue': 'bg-red-500',
+                      'cancelled': 'bg-gray-500'
+                    }[invoice.status] || 'bg-gray-500'}>
+                      {invoice.status}
+                    </Badge>
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    <p>Tutar: {formatCurrency(invoice.total_amount)}</p>
+                    <p>Tarih: {invoice.invoice_date ? new Date(invoice.invoice_date).toLocaleDateString('tr-TR') : 'N/A'}</p>
+                    {invoice.due_date && (
+                      <p>Vade: {new Date(invoice.due_date).toLocaleDateString('tr-TR')}</p>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

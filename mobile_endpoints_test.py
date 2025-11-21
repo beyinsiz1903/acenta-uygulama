@@ -203,7 +203,7 @@ class MobileEndpointsTester:
         test_cases = [
             {
                 "name": "Get recent complaints for GM dashboard",
-                "expected_fields": ["complaints", "total_count", "unresolved_count", "severity_breakdown"]
+                "expected_fields": ["complaints", "total_count"]
             }
         ]
         

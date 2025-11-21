@@ -40,6 +40,10 @@ const MobileFinance = ({ user }) => {
   const [reportsModalOpen, setReportsModalOpen] = useState(false);
   const [invoicesModalOpen, setInvoicesModalOpen] = useState(false);
   const [allInvoices, setAllInvoices] = useState([]);
+  const [plDetailModalOpen, setPlDetailModalOpen] = useState(false);
+  const [cashierShiftModalOpen, setCashierShiftModalOpen] = useState(false);
+  const [plData, setPlData] = useState(null);
+  const [shiftReportData, setShiftReportData] = useState(null);
 
   useEffect(() => {
     loadData();

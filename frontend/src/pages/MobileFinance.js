@@ -326,27 +326,39 @@ const MobileFinance = ({ user }) => {
         )}
 
         {/* Quick Actions */}
-        <Card className="bg-gradient-to-r from-indigo-50 to-purple-50">
-          <CardContent className="p-4">
-            <div className="grid grid-cols-2 gap-3">
-              <Button
-                className="h-20 flex flex-col items-center justify-center bg-indigo-600 hover:bg-indigo-700"
-                onClick={() => setReportsModalOpen(true)}
-              >
-                <TrendingUp className="w-6 h-6 mb-1" />
-                <span className="text-xs">Finansal Raporlar</span>
-              </Button>
-              <Button
-                className="h-20 flex flex-col items-center justify-center"
-                variant="outline"
-                onClick={() => setInvoicesModalOpen(true)}
-              >
-                <Receipt className="w-6 h-6 mb-1" />
-                <span className="text-xs">Faturalar</span>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="grid grid-cols-2 gap-3">
+          <Button
+            className="h-20 flex flex-col items-center justify-center bg-indigo-600 hover:bg-indigo-700"
+            onClick={() => setReportsModalOpen(true)}
+          >
+            <TrendingUp className="w-6 h-6 mb-1" />
+            <span className="text-xs">Finansal Raporlar</span>
+          </Button>
+          
+          <Button
+            className="h-20 flex flex-col items-center justify-center bg-green-600 hover:bg-green-700"
+            onClick={loadPLDetail}
+          >
+            <BarChart3 className="w-6 h-6 mb-1" />
+            <span className="text-xs">P&L Detayı</span>
+          </Button>
+          
+          <Button
+            className="h-20 flex flex-col items-center justify-center bg-purple-600 hover:bg-purple-700"
+            onClick={loadCashierShiftReport}
+          >
+            <User className="w-6 h-6 mb-1" />
+            <span className="text-xs">Vardiya Raporu</span>
+          </Button>
+          
+          <Button
+            className="h-20 flex flex-col items-center justify-center bg-orange-600 hover:bg-orange-700"
+            onClick={() => setInvoicesModalOpen(true)}
+          >
+            <Receipt className="w-6 h-6 mb-1" />
+            <span className="text-xs">Faturalar</span>
+          </Button>
+        </div>
       </div>
 
       {/* Payment Modal */}

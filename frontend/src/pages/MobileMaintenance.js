@@ -39,10 +39,11 @@ const MobileMaintenance = ({ user }) => {
     try {
       setLoading(true);
       
-      const [tasksRes, slaRes, repeatRes] = await Promise.all([
+      const [tasksRes, slaRes, repeatRes, roomsRes] = await Promise.all([
         axios.get('/tasks/department/maintenance'),
         axios.get('/maintenance/sla-metrics'),
-        axios.get('/maintenance/repeat-issues')
+        axios.get('/maintenance/repeat-issues'),
+        axios.get('/housekeeping/room-status')
       ]);
 
       const allTasks = tasksRes.data.tasks || [];
@@ -50,6 +51,7 @@ const MobileMaintenance = ({ user }) => {
       setStats(tasksRes.data.statistics);
       setSlaMetrics(slaRes.data);
       setRepeatIssues(repeatRes.data.repeat_issues || []);
+      setAllRooms(roomsRes.data.rooms || []);
     } catch (error) {
       console.error('Failed to load maintenance data:', error);
       toast.error('Veri yüklenemedi');

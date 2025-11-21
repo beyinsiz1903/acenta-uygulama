@@ -820,6 +820,132 @@ const MobileFnB = ({ user }) => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Outlet Selector Modal */}
+      <Dialog open={outletSelectorOpen} onOpenChange={setOutletSelectorOpen}>
+        <DialogContent className="max-w-full w-[95vw] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              <Store className="w-5 h-5 text-orange-600" />
+              <span>Outlet Seçimi</span>
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-3">
+            {/* Active Outlet Info */}
+            {activeOutlet && (
+              <Card className="bg-gradient-to-r from-orange-50 to-red-50 border-orange-200">
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-3">
+                    <CheckCircle className="w-8 h-8 text-orange-600" />
+                    <div className="flex-1">
+                      <p className="text-sm text-gray-600">Şu anda görüntülenen:</p>
+                      <p className="font-bold text-gray-900">{activeOutlet.name}</p>
+                      <p className="text-xs text-gray-500">
+                        📍 {activeOutlet.location} • 🪑 {activeOutlet.capacity} kişi
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Outlet List */}
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-gray-700 mb-2">Tüm Outlet'ler:</p>
+              {outlets.map((outlet) => (
+                <Button
+                  key={outlet.id}
+                  variant={activeOutlet?.id === outlet.id ? "default" : "outline"}
+                  className={`w-full justify-start h-auto p-4 ${
+                    activeOutlet?.id === outlet.id 
+                      ? 'bg-orange-600 hover:bg-orange-700 text-white border-orange-600' 
+                      : 'bg-white hover:bg-gray-50'
+                  }`}
+                  onClick={() => {
+                    setActiveOutlet(outlet);
+                    setOutletSelectorOpen(false);
+                    toast.success(`${outlet.name} outlet'ine geçildi!`);
+                    loadData(); // Reload data for new outlet
+                  }}
+                >
+                  <div className="flex items-center space-x-3 w-full">
+                    <Store className={`w-8 h-8 ${
+                      activeOutlet?.id === outlet.id ? 'text-white' : 'text-orange-600'
+                    }`} />
+                    <div className="flex-1 text-left">
+                      <p className={`font-bold ${
+                        activeOutlet?.id === outlet.id ? 'text-white' : 'text-gray-900'
+                      }`}>
+                        {outlet.name}
+                      </p>
+                      <p className={`text-sm ${
+                        activeOutlet?.id === outlet.id ? 'text-orange-100' : 'text-gray-600'
+                      }`}>
+                        📍 {outlet.location}
+                      </p>
+                      <div className="flex items-center space-x-3 mt-1">
+                        <span className={`text-xs ${
+                          activeOutlet?.id === outlet.id ? 'text-orange-100' : 'text-gray-500'
+                        }`}>
+                          🪑 {outlet.capacity} kişi
+                        </span>
+                        <span className={`text-xs ${
+                          activeOutlet?.id === outlet.id ? 'text-orange-100' : 'text-gray-500'
+                        }`}>
+                          {outlet.type}
+                        </span>
+                        <Badge className={
+                          outlet.status === 'active' 
+                            ? 'bg-green-500' 
+                            : 'bg-gray-500'
+                        }>
+                          {outlet.status === 'active' ? 'Açık' : 'Kapalı'}
+                        </Badge>
+                      </div>
+                      {outlet.operating_hours && (
+                        <p className={`text-xs mt-1 ${
+                          activeOutlet?.id === outlet.id ? 'text-orange-100' : 'text-gray-500'
+                        }`}>
+                          🕐 {outlet.operating_hours}
+                        </p>
+                      )}
+                    </div>
+                    {activeOutlet?.id === outlet.id && (
+                      <CheckCircle className="w-6 h-6 text-white" />
+                    )}
+                  </div>
+                </Button>
+              ))}
+            </div>
+
+            {/* Outlets Summary */}
+            <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 mt-4">
+              <CardContent className="p-4">
+                <p className="text-sm font-bold text-gray-900 mb-2">📊 F&B Özeti</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="text-center p-2 bg-white rounded">
+                    <p className="text-xs text-gray-600">Toplam Outlet</p>
+                    <p className="text-2xl font-bold text-blue-700">{outlets.length}</p>
+                  </div>
+                  <div className="text-center p-2 bg-white rounded">
+                    <p className="text-xs text-gray-600">Aktif</p>
+                    <p className="text-2xl font-bold text-green-700">
+                      {outlets.filter(o => o.status === 'active').length}
+                    </p>
+                  </div>
+                  <div className="text-center p-2 bg-white rounded col-span-2">
+                    <p className="text-xs text-gray-600">Toplam Kapasite</p>
+                    <p className="text-2xl font-bold text-orange-700">
+                      {outlets.reduce((sum, o) => sum + (o.capacity || 0), 0)} kişi
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

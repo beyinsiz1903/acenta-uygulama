@@ -385,7 +385,7 @@ const MobileMaintenance = ({ user }) => {
           <CardContent className="p-4">
             <Button
               className="w-full h-16 flex items-center justify-center space-x-2 bg-purple-600 hover:bg-purple-700"
-              onClick={() => toast.info('Yeni görev oluşturma ekranı...')}
+              onClick={() => setNewTaskModalOpen(true)}
             >
               <Wrench className="w-6 h-6" />
               <span>Yeni Bakım Görevi Oluştur</span>
@@ -393,6 +393,70 @@ const MobileMaintenance = ({ user }) => {
           </CardContent>
         </Card>
       </div>
+
+      {/* New Task Modal */}
+      <Dialog open={newTaskModalOpen} onOpenChange={setNewTaskModalOpen}>
+        <DialogContent className="max-w-full w-[95vw]">
+          <DialogHeader>
+            <DialogTitle>Yeni Bakım Görevi Oluştur</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            handleCreateTask(new FormData(e.target));
+          }}>
+            <div className="space-y-4">
+              <div>
+                <Label>Oda Seçin *</Label>
+                <select name="room_id" className="w-full p-2 border rounded mt-1" required>
+                  <option value="">Seçin...</option>
+                  {allRooms.map(room => (
+                    <option key={room.id} value={room.id}>
+                      Oda {room.room_number} - {room.room_type}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <Label>Arıza Tipi *</Label>
+                <select name="issue_type" className="w-full p-2 border rounded mt-1" required>
+                  <option value="">Seçin...</option>
+                  <option value="electrical">Elektrik</option>
+                  <option value="plumbing">Tesisat</option>
+                  <option value="hvac">HVAC / Klima</option>
+                  <option value="furniture">Mobilya</option>
+                  <option value="appliance">Cihaz</option>
+                  <option value="structural">Yapısal</option>
+                  <option value="other">Diğer</option>
+                </select>
+              </div>
+
+              <div>
+                <Label>Açıklama *</Label>
+                <Textarea 
+                  name="description" 
+                  rows={4}
+                  placeholder="Arıza detaylarını yazın..."
+                  required
+                />
+              </div>
+
+              <div>
+                <Label>Öncelik *</Label>
+                <select name="priority" className="w-full p-2 border rounded mt-1" required>
+                  <option value="normal">Normal</option>
+                  <option value="high">Yüksek</option>
+                  <option value="urgent">Acil</option>
+                </select>
+              </div>
+
+              <Button type="submit" className="w-full bg-purple-600 hover:bg-purple-700">
+                Görev Oluştur
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -338,7 +338,7 @@ const MobileGM = ({ user }) => {
             <div className="grid grid-cols-2 gap-3">
               <Button
                 className="h-20 flex flex-col items-center justify-center bg-red-600 hover:bg-red-700"
-                onClick={() => navigate('/gm-dashboard')}
+                onClick={() => setDashboardModalOpen(true)}
               >
                 <BarChart3 className="w-6 h-6 mb-1" />
                 <span className="text-xs">Tam Dashboard</span>
@@ -346,7 +346,7 @@ const MobileGM = ({ user }) => {
               <Button
                 className="h-20 flex flex-col items-center justify-center"
                 variant="outline"
-                onClick={() => navigate('/reports')}
+                onClick={() => setReportsModalOpen(true)}
               >
                 <TrendingUp className="w-6 h-6 mb-1" />
                 <span className="text-xs">Raporlar</span>

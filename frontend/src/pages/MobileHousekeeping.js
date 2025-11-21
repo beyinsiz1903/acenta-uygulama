@@ -88,6 +88,63 @@ const MobileHousekeeping = ({ user }) => {
     }
   };
 
+  const loadLostFound = async () => {
+    try {
+      const res = await axios.get('/housekeeping/lost-found/items');
+      setLostFoundItems(res.data.items || []);
+      setLostFoundModalOpen(true);
+    } catch (error) {
+      toast.error('Kayıp eşya listesi yüklenemedi');
+    }
+  };
+
+  const loadInventory = async () => {
+    try {
+      const res = await axios.get('/housekeeping/inventory');
+      setInventoryItems(res.data.inventory_items || []);
+      setInventoryModalOpen(true);
+    } catch (error) {
+      toast.error('Envanter yüklenemedi');
+    }
+  };
+
+  const loadTaskAssignments = async () => {
+    try {
+      const res = await axios.get('/housekeeping/task-assignments');
+      setTaskAssignments(res.data.assignments || []);
+      setTaskAssignmentsModalOpen(true);
+    } catch (error) {
+      toast.error('Görev dağılımı yüklenemedi');
+    }
+  };
+
+  const loadStatusLogs = async () => {
+    try {
+      const res = await axios.get('/housekeeping/status-change-logs');
+      setStatusLogs(res.data.logs || []);
+      setStatusLogsModalOpen(true);
+    } catch (error) {
+      toast.error('Durum kayıtları yüklenemedi');
+    }
+  };
+
+  const handleCreateLostFound = async (formData) => {
+    try {
+      await axios.post('/housekeeping/lost-found/item', {
+        item_description: formData.get('item_description'),
+        location_found: formData.get('location_found'),
+        found_by: formData.get('found_by'),
+        category: formData.get('category'),
+        room_number: formData.get('room_number'),
+        notes: formData.get('notes')
+      });
+      toast.success('Kayıp eşya kaydedildi!');
+      loadLostFound();
+    } catch (error) {
+      toast.error('Kayıt oluşturulamadı');
+    }
+  };
+
   const getStatusColor = (status) => {
     const colors = {
       dirty: 'bg-red-100 text-red-700 border-red-300',

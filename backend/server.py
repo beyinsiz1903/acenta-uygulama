@@ -36400,79 +36400,89 @@ async def network_ping_test(
     Perform ping test to measure latency
     """
     try:
-        import subprocess
-        import re
+        import socket
+        import time
         
-        # Perform ping (works on both Linux and Windows)
-        try:
-            if os.name == 'nt':  # Windows
-                output = subprocess.check_output(
-                    ['ping', '-n', str(request.count), request.target],
-                    universal_newlines=True,
-                    timeout=10
-                )
-            else:  # Linux/Mac
-                output = subprocess.check_output(
-                    ['ping', '-c', str(request.count), request.target],
-                    universal_newlines=True,
-                    timeout=10
-                )
-            
-            # Parse ping output
-            lines = output.split('\n')
-            ping_times = []
-            
-            for line in lines:
-                # Look for time= pattern
-                match = re.search(r'time[=<](\d+\.?\d*)', line)
-                if match:
-                    ping_times.append(float(match.group(1)))
-            
-            if ping_times:
-                avg_latency = sum(ping_times) / len(ping_times)
-                min_latency = min(ping_times)
-                max_latency = max(ping_times)
-                packet_loss = ((request.count - len(ping_times)) / request.count) * 100
-            else:
-                avg_latency = 0
-                min_latency = 0
-                max_latency = 0
-                packet_loss = 100
-            
-            # Determine connection quality
-            if avg_latency < 50:
-                quality = 'excellent'
-            elif avg_latency < 100:
-                quality = 'good'
-            elif avg_latency < 200:
-                quality = 'fair'
-            else:
-                quality = 'poor'
-            
-            return {
-                'target': request.target,
-                'packets_sent': request.count,
-                'packets_received': len(ping_times),
-                'packet_loss_percent': round(packet_loss, 2),
-                'latency': {
-                    'min_ms': round(min_latency, 2),
-                    'avg_ms': round(avg_latency, 2),
-                    'max_ms': round(max_latency, 2)
-                },
-                'quality': quality,
-                'ping_times': ping_times,
-                'timestamp': datetime.now(timezone.utc).isoformat(),
-                'status': 'success' if packet_loss < 100 else 'failed'
-            }
-            
-        except subprocess.CalledProcessError as e:
-            return {
-                'target': request.target,
-                'status': 'failed',
-                'error': 'Ping command failed',
-                'quality': 'no_connection',
-                'timestamp': datetime.now(timezone.utc).isoformat()
-            }
+        # Use TCP connection test instead of ICMP ping (which requires root)
+        ping_times = []
+        successful_pings = 0
+        
+        for i in range(request.count):
+            try:
+                start_time = time.time()
+                
+                # Try to connect to port 80 (HTTP) or 443 (HTTPS) for web connectivity test
+                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                sock.settimeout(3)  # 3 second timeout
+                
+                # For IP addresses, use port 80. For domain names, try 80 first, then 443
+                port = 80
+                if not request.target.replace('.', '').isdigit():  # Not an IP address
+                    try:
+                        result = sock.connect_ex((request.target, 443))  # Try HTTPS first
+                        if result != 0:
+                            sock.close()
+                            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                            sock.settimeout(3)
+                            port = 80
+                    except:
+                        port = 80
+                
+                result = sock.connect_ex((request.target, port))
+                end_time = time.time()
+                
+                if result == 0:
+                    latency_ms = (end_time - start_time) * 1000
+                    ping_times.append(latency_ms)
+                    successful_pings += 1
+                
+                sock.close()
+                
+                # Small delay between pings
+                if i < request.count - 1:
+                    time.sleep(0.5)
+                    
+            except Exception as e:
+                # Connection failed for this attempt
+                pass
+        
+        if ping_times:
+            avg_latency = sum(ping_times) / len(ping_times)
+            min_latency = min(ping_times)
+            max_latency = max(ping_times)
+            packet_loss = ((request.count - successful_pings) / request.count) * 100
+        else:
+            avg_latency = 0
+            min_latency = 0
+            max_latency = 0
+            packet_loss = 100
+        
+        # Determine connection quality
+        if avg_latency < 50:
+            quality = 'excellent'
+        elif avg_latency < 100:
+            quality = 'good'
+        elif avg_latency < 200:
+            quality = 'fair'
+        else:
+            quality = 'poor'
+        
+        return {
+            'target': request.target,
+            'packets_sent': request.count,
+            'packets_received': successful_pings,
+            'packet_loss_percent': round(packet_loss, 2),
+            'latency': {
+                'min_ms': round(min_latency, 2),
+                'avg_ms': round(avg_latency, 2),
+                'max_ms': round(max_latency, 2)
+            },
+            'quality': quality,
+            'ping_times': [round(t, 2) for t in ping_times],
+            'timestamp': datetime.now(timezone.utc).isoformat(),
+            'status': 'success' if packet_loss < 100 else 'failed',
+            'note': 'Using TCP connectivity test (port 80/443) instead of ICMP ping'
+        }
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Ping test failed: {str(e)}")

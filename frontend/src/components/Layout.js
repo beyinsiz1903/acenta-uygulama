@@ -66,8 +66,12 @@ const Layout = ({ children, user, tenant, onLogout, currentModule }) => {
               </div>
             </div>
 
-            {/* Desktop Navigation - Compact & Beautiful */}
-            <nav className="hidden md:flex items-center space-x-1 max-w-4xl overflow-x-auto">
+            {/* Desktop Navigation - Compact & Beautiful with Scroll Preservation */}
+            <nav 
+              ref={navScrollRef}
+              className="hidden md:flex items-center space-x-1 max-w-4xl overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100"
+              style={{ scrollBehavior: 'smooth' }}
+            >
               {navigation.map((item) => {
                 const Icon = item.icon;
                 const isActive = currentModule === item.id;

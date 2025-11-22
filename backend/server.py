@@ -27016,6 +27016,236 @@ async def get_maintenance_tasks(current_user: User = Depends(get_current_user)):
         return tasks
     except Exception as e:
         print(f"Maintenance tasks error: {str(e)}")
+
+
+# ============= GM DASHBOARD ENDPOINTS =============
+
+@api_router.get("/dashboard/gm/anomaly-detection")
+async def get_anomaly_detection(current_user: User = Depends(get_current_user)):
+    """Detect anomalies in hotel operations"""
+    try:
+        # Get rooms data
+        rooms = await db.rooms.find({'tenant_id': current_user.tenant_id}, {'_id': 0}).to_list(1000)
+        
+        # Get bookings data
+        bookings = await db.bookings.find({
+            'tenant_id': current_user.tenant_id,
+            'status': {'$in': ['confirmed', 'checked_in']}
+        }, {'_id': 0}).to_list(1000)
+        
+        # Get transactions
+        transactions = await db.transactions.find({
+            'tenant_id': current_user.tenant_id
+        }, {'_id': 0}).to_list(1000)
+        
+        anomalies = []
+        
+        # 1. Check occupancy vs bookings mismatch
+        occupied_rooms = len([r for r in rooms if r.get('status') == 'occupied'])
+        checked_in_bookings = len([b for b in bookings if b.get('status') == 'checked_in'])
+        
+        if abs(occupied_rooms - checked_in_bookings) > 3:
+            anomalies.append({
+                'type': 'occupancy_mismatch',
+                'severity': 'high',
+                'title': 'Oda Durumu Uyumsuzluğu',
+                'description': f'{occupied_rooms} oda dolu görünüyor ama {checked_in_bookings} aktif check-in var',
+                'metric': f'Fark: {abs(occupied_rooms - checked_in_bookings)} oda',
+                'detected_at': datetime.utcnow().isoformat()
+            })
+        
+        # 2. Check for rooms in cleaning for too long
+        cleaning_rooms = [r for r in rooms if r.get('status') == 'cleaning']
+        if len(cleaning_rooms) > 10:
+            anomalies.append({
+                'type': 'cleaning_backlog',
+                'severity': 'medium',
+                'title': 'Temizlik Gecikmesi',
+                'description': f'{len(cleaning_rooms)} oda uzun süredir temizleniyor',
+                'metric': f'{len(cleaning_rooms)} oda',
+                'detected_at': datetime.utcnow().isoformat()
+            })
+        
+        # 3. Check maintenance tasks
+        maintenance_tasks = await db.maintenance_tasks.find({
+            'tenant_id': current_user.tenant_id,
+            'status': {'$ne': 'completed'}
+        }, {'_id': 0}).to_list(1000)
+        
+        urgent_tasks = [t for t in maintenance_tasks if t.get('priority') == 'urgent']
+        if len(urgent_tasks) > 5:
+            anomalies.append({
+                'type': 'maintenance_overload',
+                'severity': 'high',
+                'title': 'Acil Bakım Yoğunluğu',
+                'description': f'{len(urgent_tasks)} acil bakım görevi bekliyor',
+                'metric': f'{len(urgent_tasks)} acil görev',
+                'detected_at': datetime.utcnow().isoformat()
+            })
+        
+        # 4. Check revenue anomalies
+        if transactions:
+            avg_transaction = sum(t.get('amount', 0) for t in transactions) / len(transactions)
+            recent_transactions = [t for t in transactions[-10:]]
+            
+            if recent_transactions:
+                recent_avg = sum(t.get('amount', 0) for t in recent_transactions) / len(recent_transactions)
+                
+                if recent_avg < avg_transaction * 0.5:
+                    anomalies.append({
+                        'type': 'revenue_drop',
+                        'severity': 'high',
+                        'title': 'Gelir Düşüşü',
+                        'description': 'Son işlemler ortalamanın %50 altında',
+                        'metric': f'Ort: {avg_transaction:.2f}₺ → Son: {recent_avg:.2f}₺',
+                        'detected_at': datetime.utcnow().isoformat()
+                    })
+        
+        # 5. Check for out of order rooms
+        oo_rooms = [r for r in rooms if r.get('status') == 'out_of_order']
+        if len(oo_rooms) > 0:
+            anomalies.append({
+                'type': 'out_of_order',
+                'severity': 'medium',
+                'title': 'Servis Dışı Odalar',
+                'description': f'{len(oo_rooms)} oda servis dışı',
+                'metric': f'{len(oo_rooms)} oda',
+                'detected_at': datetime.utcnow().isoformat()
+            })
+        
+        return {
+            'anomalies': anomalies,
+            'total_detected': len(anomalies),
+            'scan_time': datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        print(f"Anomaly detection error: {str(e)}")
+        return {
+            'anomalies': [],
+            'total_detected': 0,
+            'error': str(e)
+        }
+
+@api_router.get("/dashboard/gm/pickup-analysis")
+async def get_pickup_analysis(current_user: User = Depends(get_current_user)):
+    """Get pickup analysis for bookings"""
+    try:
+        # Get bookings from last 30 days
+        thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+        
+        bookings = await db.bookings.find({
+            'tenant_id': current_user.tenant_id,
+            'created_at': {'$gte': thirty_days_ago.isoformat()}
+        }, {'_id': 0}).to_list(10000)
+        
+        pickup_data = []
+        
+        for booking in bookings:
+            created = datetime.fromisoformat(booking.get('created_at', datetime.utcnow().isoformat()))
+            checkin = datetime.fromisoformat(booking.get('check_in', datetime.utcnow().isoformat()))
+            
+            days_before = (checkin - created).days
+            
+            pickup_data.append({
+                'days_before_arrival': days_before,
+                'rooms': 1,
+                'revenue': booking.get('total_amount', 0)
+            })
+        
+        # Group by days_before_arrival
+        pickup_trends = {}
+        for data in pickup_data:
+            days_key = data['days_before_arrival']
+            if days_key not in pickup_trends:
+                pickup_trends[days_key] = {'rooms': 0, 'revenue': 0}
+            pickup_trends[days_key]['rooms'] += data['rooms']
+            pickup_trends[days_key]['revenue'] += data['revenue']
+        
+        return {
+            'pickup_data': pickup_data,
+            'pickup_trends': pickup_trends,
+            'total_bookings': len(bookings),
+            'avg_days_before': sum(d['days_before_arrival'] for d in pickup_data) / len(pickup_data) if pickup_data else 0
+        }
+        
+    except Exception as e:
+        print(f"Pickup analysis error: {str(e)}")
+        return {
+            'pickup_data': [],
+            'pickup_trends': {},
+            'total_bookings': 0
+        }
+
+@api_router.get("/dashboard/gm/forecast-weekly")
+async def get_weekly_forecast(current_user: User = Depends(get_current_user)):
+    """Get weekly revenue forecast"""
+    try:
+        # Get future bookings
+        today = datetime.utcnow()
+        future_bookings = await db.bookings.find({
+            'tenant_id': current_user.tenant_id,
+            'check_in': {'$gte': today.isoformat()},
+            'status': {'$in': ['confirmed', 'checked_in']}
+        }, {'_id': 0}).to_list(10000)
+        
+        weekly_forecast = []
+        for i in range(7):
+            date = today + timedelta(days=i)
+            date_str = date.date().isoformat()
+            
+            day_bookings = [
+                b for b in future_bookings 
+                if b.get('check_in', '').startswith(date_str)
+            ]
+            
+            weekly_forecast.append({
+                'date': date_str,
+                'day_name': date.strftime('%A'),
+                'expected_arrivals': len(day_bookings),
+                'expected_revenue': sum(b.get('total_amount', 0) for b in day_bookings)
+            })
+        
+        return weekly_forecast
+        
+    except Exception as e:
+        print(f"Weekly forecast error: {str(e)}")
+        return []
+
+@api_router.get("/dashboard/gm/forecast-monthly")
+async def get_monthly_forecast(current_user: User = Depends(get_current_user)):
+    """Get monthly revenue forecast"""
+    try:
+        # Get future bookings for next 30 days
+        today = datetime.utcnow()
+        thirty_days_later = today + timedelta(days=30)
+        
+        future_bookings = await db.bookings.find({
+            'tenant_id': current_user.tenant_id,
+            'check_in': {
+                '$gte': today.isoformat(),
+                '$lte': thirty_days_later.isoformat()
+            },
+            'status': {'$in': ['confirmed', 'checked_in']}
+        }, {'_id': 0}).to_list(10000)
+        
+        total_revenue = sum(b.get('total_amount', 0) for b in future_bookings)
+        
+        return {
+            'forecast_period': f'{today.date()} to {thirty_days_later.date()}',
+            'expected_bookings': len(future_bookings),
+            'expected_revenue': total_revenue,
+            'avg_daily_revenue': total_revenue / 30
+        }
+        
+    except Exception as e:
+        print(f"Monthly forecast error: {str(e)}")
+        return {
+            'expected_bookings': 0,
+            'expected_revenue': 0,
+            'avg_daily_revenue': 0
+        }
+
         return []
 
 # ============= POS / F&B ENDPOINTS =============

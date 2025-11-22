@@ -15,7 +15,7 @@ import uuid
 import base64
 
 # Configuration
-BACKEND_URL = "https://revenue-tracker-82.preview.emergentagent.com/api"
+BACKEND_URL = "https://testing-dashboard-2.preview.emergentagent.com/api"
 TEST_EMAIL = "test@hotel.com"
 TEST_PASSWORD = "test123"
 

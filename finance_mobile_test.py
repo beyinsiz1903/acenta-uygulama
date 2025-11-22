@@ -11,7 +11,7 @@ from datetime import datetime, timezone
 import uuid
 
 # Configuration
-BACKEND_URL = "https://revenue-tracker-82.preview.emergentagent.com/api"
+BACKEND_URL = "https://testing-dashboard-2.preview.emergentagent.com/api"
 TEST_USER_EMAIL = "admin@hotel.com"
 TEST_USER_PASSWORD = "admin123"
 

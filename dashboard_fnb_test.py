@@ -20,7 +20,7 @@ class DashboardFnBTester:
                         self.base_url = line.split('=')[1].strip() + '/api'
                         break
         except:
-            self.base_url = "https://revenue-tracker-82.preview.emergentagent.com/api"
+            self.base_url = "https://testing-dashboard-2.preview.emergentagent.com/api"
         
         self.token = None
         self.tenant_id = None

@@ -36484,13 +36484,13 @@ async def update_cleaning_request_status(
         
         await db.cleaning_requests.update_one(
             {'id': request_id},
-            {'$set': update_data}
+            {'$set': update_fields}
         )
         
         return {
-            'message': f'Temizlik talebi {status} olarak güncellendi',
+            'message': f'Temizlik talebi {update_data.status} olarak güncellendi',
             'request_id': request_id,
-            'status': status,
+            'status': update_data.status,
             'room_number': request['room_number']
         }
         

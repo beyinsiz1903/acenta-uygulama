@@ -7121,15 +7121,18 @@ backend:
 
   - task: "F&B - Sales Report"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Added GET /api/fnb/sales-report - Returns daily sales breakdown for food and beverage categories with date range support. Includes category totals and percentages."
+      - working: true
+        agent: "testing"
+        comment: "✅ ENDPOINT WORKING - GET /api/fnb/sales-report returns proper response with period, summary, and daily_sales. Period includes start_date and end_date. Summary includes total_sales, food_sales, beverage_sales, food_percentage, beverage_percentage. Daily sales array with date, food, beverage, total fields. Default date range (30 days) and custom date range parameters both functional."
 
   - task: "F&B - Menu Performance"
     implemented: true

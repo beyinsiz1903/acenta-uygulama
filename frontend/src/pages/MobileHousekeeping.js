@@ -504,31 +504,44 @@ const MobileHousekeeping = ({ user }) => {
           </Collapsible>
         )}
 
-        {/* Arrivals Today */}
+        {/* Arrivals Today - Collapsible */}
         {arrivals.length > 0 && (
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center">
-                <Users className="w-5 h-5 mr-2 text-green-600" />
-                Bugün Gelenler - Hazır Odalar ({arrivals.filter(r => r.ready).length}/{arrivals.length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {arrivals.slice(0, 5).map((room) => (
-                <div key={room.booking_id} className={`flex items-center justify-between p-3 rounded-lg border ${
-                  room.ready ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
-                }`}>
-                  <div>
-                    <p className="font-bold text-gray-900">Oda {room.room_number}</p>
-                    <p className="text-sm text-gray-600">{room.guest_name}</p>
-                  </div>
-                  <Badge className={room.ready ? 'bg-green-500' : 'bg-red-500'}>
-                    {room.ready ? '✓ Hazır' : '✗ Hazır Değil'}
-                  </Badge>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+          <Collapsible open={openCategories.arrivals} onOpenChange={() => setOpenCategories({...openCategories, arrivals: !openCategories.arrivals})}>
+            <Card>
+              <CollapsibleTrigger className="w-full">
+                <CardHeader className="pb-3 cursor-pointer hover:bg-gray-50 transition-colors">
+                  <CardTitle className="text-lg flex items-center justify-between">
+                    <div className="flex items-center">
+                      <Users className="w-5 h-5 mr-2 text-green-600" />
+                      Bugün Gelenler - Hazır Odalar ({arrivals.filter(r => r.ready).length}/{arrivals.length})
+                    </div>
+                    {openCategories.arrivals ? (
+                      <ChevronDown className="w-5 h-5 text-gray-400" />
+                    ) : (
+                      <ChevronRight className="w-5 h-5 text-gray-400" />
+                    )}
+                  </CardTitle>
+                </CardHeader>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <CardContent className="space-y-2">
+                  {arrivals.map((room) => (
+                    <div key={room.booking_id} className={`flex items-center justify-between p-3 rounded-lg border ${
+                      room.ready ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
+                    }`}>
+                      <div>
+                        <p className="font-bold text-gray-900">Oda {room.room_number}</p>
+                        <p className="text-sm text-gray-600">{room.guest_name}</p>
+                      </div>
+                      <Badge className={room.ready ? 'bg-green-500' : 'bg-red-500'}>
+                        {room.ready ? '✓ Hazır' : '✗ Hazır Değil'}
+                      </Badge>
+                    </div>
+                  ))}
+                </CardContent>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
         )}
 
         {/* All Rooms - Categorized with Collapsible */}

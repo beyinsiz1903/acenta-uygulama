@@ -255,20 +255,31 @@ const PMSModule = ({ user, tenant, onLogout }) => {
 
   const loadHousekeepingData = async () => {
     try {
-      const [tasksRes, boardRes, dueOutRes, stayoverRes, arrivalsRes, blocksRes] = await Promise.all([
+      // Load essential data first
+      const [tasksRes, boardRes] = await Promise.all([
         axios.get('/housekeeping/tasks'),
-        axios.get('/housekeeping/room-status'),
-        axios.get('/housekeeping/due-out'),
-        axios.get('/housekeeping/stayovers'),
-        axios.get('/housekeeping/arrivals'),
-        axios.get('/pms/room-blocks?status=active')
+        axios.get('/housekeeping/room-status')
       ]);
       setHousekeepingTasks(tasksRes.data);
       setRoomStatusBoard(boardRes.data);
-      setDueOutRooms(dueOutRes.data.due_out_rooms || []);
-      setStayoverRooms(stayoverRes.data.stayover_rooms || []);
-      setArrivalRooms(arrivalsRes.data.arrival_rooms || []);
-      setRoomBlocks(blocksRes.data.blocks || []);
+      
+      // Load additional data in background
+      setTimeout(async () => {
+        try {
+          const [dueOutRes, stayoverRes, arrivalsRes, blocksRes] = await Promise.all([
+            axios.get('/housekeeping/due-out'),
+            axios.get('/housekeeping/stayovers'),
+            axios.get('/housekeeping/arrivals'),
+            axios.get('/pms/room-blocks?status=active')
+          ]);
+          setDueOutRooms(dueOutRes.data.due_out_rooms || []);
+          setStayoverRooms(stayoverRes.data.stayover_rooms || []);
+          setArrivalRooms(arrivalsRes.data.arrival_rooms || []);
+          setRoomBlocks(blocksRes.data.blocks || []);
+        } catch (error) {
+          console.error('Failed to load additional housekeeping data:', error);
+        }
+      }, 500);
     } catch (error) {
       toast.error('Failed to load housekeeping data');
     }

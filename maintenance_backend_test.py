@@ -574,13 +574,14 @@ class MaintenanceEndpointTester:
                             missing_fields = [field for field in test_case["expected_fields"] if field not in data]
                             if not missing_fields:
                                 # Verify MTBF calculations
-                                mtbf_hours = data.get("mtbf_hours", 0)
-                                mtbf_days = data.get("mtbf_days", 0)
-                                total_cost = data.get("total_cost", 0)
+                                summary = data.get("summary", {})
+                                mtbf_hours = summary.get("mtbf_hours", 0)
+                                mtbf_days = summary.get("mtbf_days", 0)
+                                total_cost = summary.get("total_cost", 0)
                                 
                                 # Verify history structure if history exists
-                                if data.get("history"):
-                                    history_item = data["history"][0]
+                                if data.get("maintenance_history"):
+                                    history_item = data["maintenance_history"][0]
                                     required_history_fields = ["id", "maintenance_type", "description", "total_cost", "completed_at"]
                                     missing_history_fields = [field for field in required_history_fields if field not in history_item]
                                     if not missing_history_fields:

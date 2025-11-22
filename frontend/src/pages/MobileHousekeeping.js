@@ -415,20 +415,18 @@ const MobileHousekeeping = ({ user }) => {
                     <Badge className={getStatusColor(room.status)}>
                       {room.status}
                     </Badge>
-                    {room.status !== 'occupied' && (
+                    {room.status !== 'occupied' && room.status !== 'inspected' && (
                       <Button
                         size="sm"
                         className={`h-7 text-xs px-3 ${
                           room.status === 'dirty' ? 'bg-yellow-600 hover:bg-yellow-700' :
                           room.status === 'cleaning' ? 'bg-blue-600 hover:bg-blue-700' :
-                          room.status === 'inspected' ? 'bg-green-600 hover:bg-green-700' :
                           'bg-red-600 hover:bg-red-700'
                         }`}
                         onClick={() => handleStatusChange(room.id, getNextStatus(room.status))}
                       >
                         {room.status === 'dirty' && '🧹 Başla'}
                         {room.status === 'cleaning' && '✓ Hazır'}
-                        {room.status === 'inspected' && '✓ Aç'}
                         {room.status === 'available' && '🧹 Kirli'}
                       </Button>
                     )}

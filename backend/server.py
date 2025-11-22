@@ -34474,56 +34474,6 @@ async def get_rate_overrides_mobile(
         'overrides': overrides,
         'count': len(overrides)
     }
-    
-    if not booking:
-        raise HTTPException(status_code=404, detail="Booking not found")
-    
-    room_rate = booking.get('room_rate', 0)
-    fees = {}
-    
-    # Early check-in fee calculation
-    if early_checkin_time:
-        # Standard check-in is 14:00
-        early_hour = int(early_checkin_time.split(':')[0])
-        
-        if early_hour < 12:
-            # Before 12:00 - charge 50% of room rate
-            fees['early_checkin_fee'] = room_rate * 0.5
-            fees['early_checkin_reason'] = 'Before 12:00 - Half day charge'
-        elif early_hour < 14:
-            # 12:00-14:00 - charge 25% of room rate
-            fees['early_checkin_fee'] = room_rate * 0.25
-            fees['early_checkin_reason'] = '12:00-14:00 - Quarter day charge'
-        else:
-            fees['early_checkin_fee'] = 0
-            fees['early_checkin_reason'] = 'Within standard check-in time'
-    
-    # Late checkout fee calculation
-    if late_checkout_time:
-        # Standard checkout is 12:00
-        late_hour = int(late_checkout_time.split(':')[0])
-        
-        if late_hour >= 18:
-            # After 18:00 - charge full room rate
-            fees['late_checkout_fee'] = room_rate
-            fees['late_checkout_reason'] = 'After 18:00 - Full day charge'
-        elif late_hour > 14:
-            # 14:00-18:00 - charge 50% of room rate
-            fees['late_checkout_fee'] = room_rate * 0.5
-            fees['late_checkout_reason'] = '14:00-18:00 - Half day charge'
-        elif late_hour > 12:
-            # 12:00-14:00 - charge 25% of room rate
-            fees['late_checkout_fee'] = room_rate * 0.25
-            fees['late_checkout_reason'] = '12:00-14:00 - Quarter day charge'
-        else:
-            fees['late_checkout_fee'] = 0
-            fees['late_checkout_reason'] = 'Within standard checkout time'
-    
-    fees['total_additional_fees'] = fees.get('early_checkin_fee', 0) + fees.get('late_checkout_fee', 0)
-    fees['room_rate'] = room_rate
-    fees['booking_id'] = booking_id
-    
-    return fees
 
 
 @api_router.get("/frontdesk/guest-alerts")

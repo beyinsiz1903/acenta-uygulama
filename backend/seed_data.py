@@ -15,6 +15,7 @@ class HotelSeeder:
     def __init__(self):
         self.client = AsyncIOMotorClient('mongodb://localhost:27017')
         self.db = self.client.hotel_pms
+        self.tenant_id = "hotel-demo-tenant"
         
     async def clear_database(self):
         """Clear all collections"""

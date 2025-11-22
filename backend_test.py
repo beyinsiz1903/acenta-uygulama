@@ -1,17 +1,27 @@
 #!/usr/bin/env python3
 """
-Comprehensive Backend Testing for F&B Mobile Order Tracking and Inventory Mobile Endpoints
-Testing 8 NEW F&B MOBILE ENDPOINTS:
-1. F&B Mobile Order Tracking (4 endpoints)
-   - GET /api/pos/mobile/active-orders
-   - GET /api/pos/mobile/order/{order_id}
-   - PUT /api/pos/mobile/order/{order_id}/status
-   - GET /api/pos/mobile/order-history
-2. Inventory Mobile (4 endpoints)
-   - GET /api/pos/mobile/inventory-movements
-   - GET /api/pos/mobile/stock-levels
-   - GET /api/pos/mobile/low-stock-alerts
-   - POST /api/pos/mobile/stock-adjust
+Comprehensive Backend Testing for NEW Approval System, Executive Dashboard, and Notification System
+Testing 14 NEW ENDPOINTS:
+
+APPROVALS MODULE (6 endpoints):
+1. POST /api/approvals/create
+2. GET /api/approvals/pending
+3. GET /api/approvals/my-requests
+4. PUT /api/approvals/{id}/approve
+5. PUT /api/approvals/{id}/reject
+6. GET /api/approvals/history
+
+EXECUTIVE DASHBOARD (3 endpoints):
+7. GET /api/executive/kpi-snapshot
+8. GET /api/executive/performance-alerts
+9. GET /api/executive/daily-summary
+
+NOTIFICATION SYSTEM (5 endpoints):
+10. GET /api/notifications/preferences
+11. PUT /api/notifications/preferences
+12. GET /api/notifications/list
+13. PUT /api/notifications/{id}/mark-read
+14. POST /api/notifications/send-system-alert
 """
 
 import asyncio

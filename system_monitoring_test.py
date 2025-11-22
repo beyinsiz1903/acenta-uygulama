@@ -184,12 +184,12 @@ class SystemMonitoringTester:
                 data = response.json()
                 logs = data.get('logs', [])
                 
-                # Check if all returned logs are ERROR level
+                # Check if all returned logs are ERROR level (empty is valid if no ERROR logs exist)
                 all_error = all(log.get('level') == 'ERROR' for log in logs) if logs else True
                 
                 if all_error:
                     self.test_results['log_viewer']['passed'] += 1
-                    self.test_results['log_viewer']['details'].append(f"✅ ERROR level filter working - {len(logs)} logs")
+                    self.test_results['log_viewer']['details'].append(f"✅ ERROR level filter working - {len(logs)} logs (empty is valid)")
                 else:
                     self.test_results['log_viewer']['failed'] += 1
                     self.test_results['log_viewer']['details'].append("❌ ERROR level filter not working properly")

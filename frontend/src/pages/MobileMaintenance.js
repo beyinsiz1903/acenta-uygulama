@@ -657,7 +657,7 @@ const MobileMaintenance = ({ user }) => {
           </Card>
         )}
 
-        {/* Quick Actions */}
+        {/* Quick Actions - Enhanced */}
         <div className="grid grid-cols-2 gap-3">
           <Button
             className="h-20 flex flex-col items-center justify-center space-y-1 bg-purple-600 hover:bg-purple-700"
@@ -665,6 +665,30 @@ const MobileMaintenance = ({ user }) => {
           >
             <Wrench className="w-6 h-6" />
             <span className="text-xs">Yeni Görev</span>
+          </Button>
+          
+          <Button
+            className="h-20 flex flex-col items-center justify-center space-y-1 bg-cyan-600 hover:bg-cyan-700"
+            onClick={loadSlaConfigurations}
+          >
+            <Settings className="w-6 h-6" />
+            <span className="text-xs">SLA Ayarları</span>
+          </Button>
+          
+          <Button
+            className="h-20 flex flex-col items-center justify-center space-y-1 bg-green-600 hover:bg-green-700"
+            onClick={loadPartsInventory}
+          >
+            <Package className="w-6 h-6" />
+            <span className="text-xs">Parça Stok</span>
+          </Button>
+          
+          <Button
+            className="h-20 flex flex-col items-center justify-center space-y-1 bg-indigo-600 hover:bg-indigo-700"
+            onClick={loadPlannedMaintenanceDetail}
+          >
+            <Calendar className="w-6 h-6" />
+            <span className="text-xs">Planlı Bakım</span>
           </Button>
           
           <Button
@@ -677,18 +701,10 @@ const MobileMaintenance = ({ user }) => {
           
           <Button
             className="h-20 flex flex-col items-center justify-center space-y-1 bg-orange-600 hover:bg-orange-700"
-            onClick={() => navigate('/mobile/maintenance/priority-visual')}
+            onClick={() => setFilterModalOpen(true)}
           >
-            <BarChart3 className="w-6 h-6" />
-            <span className="text-xs">Öncelik Görseli</span>
-          </Button>
-          
-          <Button
-            className="h-20 flex flex-col items-center justify-center space-y-1 bg-green-600 hover:bg-green-700"
-            onClick={loadPartsInventory}
-          >
-            <Package className="w-6 h-6" />
-            <span className="text-xs">Parça Stok</span>
+            <Filter className="w-6 h-6" />
+            <span className="text-xs">Filtreleme</span>
           </Button>
         </div>
       </div>

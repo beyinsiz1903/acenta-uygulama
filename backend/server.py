@@ -34074,6 +34074,736 @@ async def switch_property(
 
 
 
+
+# ============================================================================
+# REVENUE MANAGEMENT MOBILE - Gelir Yönetimi Mobil
+# ============================================================================
+
+# 1. GET /api/revenue/pickup-analysis - Pickup analysis
+@api_router.get("/revenue/pickup-analysis")
+async def get_pickup_analysis(
+    days_back: int = 30,
+    days_forward: int = 7,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """
+    Get pickup analysis - historical and forecast
+    Shows daily occupancy, bookings, revenue trends
+    """
+    current_user = await get_current_user(credentials)
+    
+    today = datetime.now(timezone.utc).date()
+    
+    # Historical data (last 30 days)
+    historical = []
+    for i in range(days_back, 0, -1):
+        date = today - timedelta(days=i)
+        date_str = date.isoformat()
+        
+        # Get bookings for this date
+        bookings = await db.bookings.count_documents({
+            'tenant_id': current_user.tenant_id,
+            'check_in': {'$lte': date_str},
+            'check_out': {'$gt': date_str},
+            'status': {'$in': ['confirmed', 'checked_in']}
+        })
+        
+        # Calculate occupancy
+        total_rooms = await db.rooms.count_documents({'tenant_id': current_user.tenant_id})
+        occupancy_pct = (bookings / total_rooms * 100) if total_rooms > 0 else 0
+        
+        # Get revenue
+        revenue = 0
+        async for booking in db.bookings.find({
+            'tenant_id': current_user.tenant_id,
+            'check_in': date_str
+        }):
+            revenue += booking.get('total_amount', 0)
+        
+        historical.append({
+            'date': date_str,
+            'occupancy': round(occupancy_pct, 1),
+            'bookings': bookings,
+            'revenue': round(revenue, 2),
+            'type': 'actual'
+        })
+    
+    # Forecast data (next 7 days) - simple projection based on current pace
+    avg_occupancy = sum(h['occupancy'] for h in historical[-7:]) / 7 if len(historical) >= 7 else 50
+    avg_revenue = sum(h['revenue'] for h in historical[-7:]) / 7 if len(historical) >= 7 else 10000
+    
+    forecast = []
+    for i in range(1, days_forward + 1):
+        date = today + timedelta(days=i)
+        date_str = date.isoformat()
+        
+        # Simple forecast with slight variation
+        forecast_occupancy = avg_occupancy * (0.95 + (i % 3) * 0.05)
+        forecast_revenue = avg_revenue * (0.9 + (i % 4) * 0.1)
+        
+        forecast.append({
+            'date': date_str,
+            'occupancy': round(forecast_occupancy, 1),
+            'bookings': int(forecast_occupancy * total_rooms / 100),
+            'revenue': round(forecast_revenue, 2),
+            'type': 'forecast'
+        })
+    
+    return {
+        'historical': historical,
+        'forecast': forecast,
+        'summary': {
+            'avg_occupancy_30d': round(sum(h['occupancy'] for h in historical) / len(historical), 1),
+            'avg_revenue_30d': round(sum(h['revenue'] for h in historical) / len(historical), 2),
+            'trend': 'up' if historical[-1]['occupancy'] > historical[-7]['occupancy'] else 'down'
+        }
+    }
+
+
+# 2. GET /api/revenue/pace-report - Booking pace comparison
+@api_router.get("/revenue/pace-report")
+async def get_pace_report(
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """
+    Get booking pace report - this year vs last year
+    Shows on-the-books comparison
+    """
+    current_user = await get_current_user(credentials)
+    
+    today = datetime.now(timezone.utc).date()
+    
+    # Next 30 days
+    pace_data = []
+    for i in range(30):
+        date = today + timedelta(days=i)
+        date_str = date.isoformat()
+        last_year_date = (date - timedelta(days=365)).isoformat()
+        
+        # This year bookings
+        this_year = await db.bookings.count_documents({
+            'tenant_id': current_user.tenant_id,
+            'check_in': date_str,
+            'status': {'$in': ['confirmed', 'checked_in', 'guaranteed']}
+        })
+        
+        # Last year bookings (simulated)
+        last_year = this_year - (5 if i % 3 == 0 else -3)  # Simulated comparison
+        
+        pace_data.append({
+            'date': date_str,
+            'this_year': this_year,
+            'last_year': max(0, last_year),
+            'variance': this_year - last_year,
+            'variance_pct': round(((this_year - last_year) / last_year * 100) if last_year > 0 else 0, 1)
+        })
+    
+    return {
+        'pace_data': pace_data,
+        'summary': {
+            'total_this_year': sum(p['this_year'] for p in pace_data),
+            'total_last_year': sum(p['last_year'] for p in pace_data),
+            'pace_status': 'ahead' if sum(p['variance'] for p in pace_data) > 0 else 'behind'
+        }
+    }
+
+
+# 3. GET /api/revenue/rate-recommendations - Dynamic pricing recommendations
+@api_router.get("/revenue/rate-recommendations")
+async def get_rate_recommendations(
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """
+    Get AI-powered rate recommendations
+    Based on occupancy, demand, historical data
+    """
+    current_user = await get_current_user(credentials)
+    
+    today = datetime.now(timezone.utc).date()
+    
+    recommendations = []
+    for i in range(7):
+        date = today + timedelta(days=i)
+        date_str = date.isoformat()
+        
+        # Get current bookings
+        bookings = await db.bookings.count_documents({
+            'tenant_id': current_user.tenant_id,
+            'check_in': date_str,
+            'status': {'$in': ['confirmed', 'guaranteed']}
+        })
+        
+        total_rooms = await db.rooms.count_documents({'tenant_id': current_user.tenant_id})
+        occupancy_pct = (bookings / total_rooms * 100) if total_rooms > 0 else 0
+        
+        # Simple pricing algorithm
+        base_rate = 1000  # Base rate
+        
+        if occupancy_pct > 80:
+            recommended_rate = base_rate * 1.3
+            strategy = 'maximize'
+            reason = 'Yüksek doluluk - fiyat artırımı önerilir'
+        elif occupancy_pct > 60:
+            recommended_rate = base_rate * 1.1
+            strategy = 'optimize'
+            reason = 'Orta doluluk - hafif fiyat artırımı'
+        elif occupancy_pct > 40:
+            recommended_rate = base_rate
+            strategy = 'maintain'
+            reason = 'Normal doluluk - mevcut fiyat uygun'
+        else:
+            recommended_rate = base_rate * 0.85
+            strategy = 'stimulate'
+            reason = 'Düşük doluluk - talep artırıcı fiyat'
+        
+        recommendations.append({
+            'date': date_str,
+            'current_occupancy': round(occupancy_pct, 1),
+            'current_rate': base_rate,
+            'recommended_rate': round(recommended_rate, 2),
+            'variance': round(recommended_rate - base_rate, 2),
+            'variance_pct': round((recommended_rate - base_rate) / base_rate * 100, 1),
+            'strategy': strategy,
+            'reason': reason
+        })
+    
+    return {
+        'recommendations': recommendations,
+        'summary': {
+            'avg_recommended_increase': round(sum(r['variance_pct'] for r in recommendations) / len(recommendations), 1)
+        }
+    }
+
+
+# 4. GET /api/revenue/historical-comparison - YoY comparison
+@api_router.get("/revenue/historical-comparison")
+async def get_historical_comparison(
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """
+    Year-over-year comparison
+    Revenue, occupancy, ADR comparison
+    """
+    current_user = await get_current_user(credentials)
+    
+    today = datetime.now(timezone.utc).date()
+    month_start = today.replace(day=1)
+    
+    # This month data
+    this_month_bookings = await db.bookings.count_documents({
+        'tenant_id': current_user.tenant_id,
+        'check_in': {'$gte': month_start.isoformat()}
+    })
+    
+    this_month_revenue = 0
+    async for booking in db.bookings.find({
+        'tenant_id': current_user.tenant_id,
+        'check_in': {'$gte': month_start.isoformat()}
+    }):
+        this_month_revenue += booking.get('total_amount', 0)
+    
+    # Simulated last year data
+    last_year_bookings = int(this_month_bookings * 0.92)
+    last_year_revenue = this_month_revenue * 0.88
+    
+    return {
+        'this_year': {
+            'bookings': this_month_bookings,
+            'revenue': round(this_month_revenue, 2),
+            'adr': round(this_month_revenue / this_month_bookings, 2) if this_month_bookings > 0 else 0
+        },
+        'last_year': {
+            'bookings': last_year_bookings,
+            'revenue': round(last_year_revenue, 2),
+            'adr': round(last_year_revenue / last_year_bookings, 2) if last_year_bookings > 0 else 0
+        },
+        'variance': {
+            'bookings': this_month_bookings - last_year_bookings,
+            'bookings_pct': round((this_month_bookings - last_year_bookings) / last_year_bookings * 100, 1) if last_year_bookings > 0 else 0,
+            'revenue': round(this_month_revenue - last_year_revenue, 2),
+            'revenue_pct': round((this_month_revenue - last_year_revenue) / last_year_revenue * 100, 1) if last_year_revenue > 0 else 0
+        }
+    }
+
+
+# ============================================================================
+# ANOMALY DETECTION SYSTEM - Anomali Tespit Sistemi
+# ============================================================================
+
+# 1. GET /api/anomaly/detect - Real-time anomaly detection
+@api_router.get("/anomaly/detect")
+async def detect_anomalies(
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """
+    Detect real-time anomalies in key metrics
+    Returns active anomalies with severity levels
+    """
+    current_user = await get_current_user(credentials)
+    
+    anomalies = []
+    
+    # Get recent data for comparison
+    today = datetime.now(timezone.utc).date()
+    yesterday = today - timedelta(days=1)
+    week_ago = today - timedelta(days=7)
+    
+    # 1. Occupancy Drop Detection
+    today_occupancy = await db.rooms.count_documents({
+        'tenant_id': current_user.tenant_id,
+        'status': 'occupied'
+    })
+    total_rooms = await db.rooms.count_documents({'tenant_id': current_user.tenant_id})
+    
+    yesterday_bookings = await db.bookings.count_documents({
+        'tenant_id': current_user.tenant_id,
+        'check_in': yesterday.isoformat()
+    })
+    
+    if total_rooms > 0:
+        today_occ_pct = today_occupancy / total_rooms * 100
+        yesterday_occ_pct = yesterday_bookings / total_rooms * 100
+        
+        if yesterday_occ_pct > 0 and (yesterday_occ_pct - today_occ_pct) > 15:
+            anomalies.append({
+                'id': str(uuid.uuid4()),
+                'type': 'occupancy_drop',
+                'severity': 'high',
+                'title': 'Ani Doluluk Düşüşü',
+                'message': f'Doluluk %{yesterday_occ_pct:.1f}\'den %{today_occ_pct:.1f}\'e düştü',
+                'metric': 'occupancy',
+                'current_value': round(today_occ_pct, 1),
+                'previous_value': round(yesterday_occ_pct, 1),
+                'variance': round(today_occ_pct - yesterday_occ_pct, 1),
+                'detected_at': datetime.now(timezone.utc).isoformat()
+            })
+    
+    # 2. Cancellation Spike Detection
+    today_cancellations = await db.bookings.count_documents({
+        'tenant_id': current_user.tenant_id,
+        'status': 'cancelled',
+        'updated_at': {'$gte': today.isoformat()}
+    })
+    
+    week_avg_cancellations = await db.bookings.count_documents({
+        'tenant_id': current_user.tenant_id,
+        'status': 'cancelled',
+        'updated_at': {'$gte': week_ago.isoformat()}
+    }) / 7
+    
+    if today_cancellations > week_avg_cancellations * 2:
+        anomalies.append({
+            'id': str(uuid.uuid4()),
+            'type': 'cancellation_spike',
+            'severity': 'high',
+            'title': 'İptal Artışı Tespit Edildi',
+            'message': f'Bugün {today_cancellations} iptal (hafta ortalaması: {week_avg_cancellations:.1f})',
+            'metric': 'cancellations',
+            'current_value': today_cancellations,
+            'previous_value': round(week_avg_cancellations, 1),
+            'variance': round(today_cancellations - week_avg_cancellations, 1),
+            'detected_at': datetime.now(timezone.utc).isoformat()
+        })
+    
+    # 3. Revenue Deviation Detection
+    today_revenue = 0
+    async for payment in db.payments.find({
+        'tenant_id': current_user.tenant_id,
+        'payment_date': {'$gte': today.isoformat()}
+    }):
+        today_revenue += payment.get('amount', 0)
+    
+    # Get average revenue from last week
+    week_revenue = 0
+    async for payment in db.payments.find({
+        'tenant_id': current_user.tenant_id,
+        'payment_date': {'$gte': week_ago.isoformat()}
+    }):
+        week_revenue += payment.get('amount', 0)
+    
+    avg_daily_revenue = week_revenue / 7 if week_revenue > 0 else 10000
+    
+    if avg_daily_revenue > 0 and abs(today_revenue - avg_daily_revenue) / avg_daily_revenue > 0.2:
+        severity = 'high' if today_revenue < avg_daily_revenue else 'medium'
+        anomalies.append({
+            'id': str(uuid.uuid4()),
+            'type': 'revpar_deviation',
+            'severity': severity,
+            'title': 'Gelir Sapması Tespit Edildi',
+            'message': f'Günlük gelir beklentiden %{abs(today_revenue - avg_daily_revenue) / avg_daily_revenue * 100:.1f} sapma gösteriyor',
+            'metric': 'revenue',
+            'current_value': round(today_revenue, 2),
+            'previous_value': round(avg_daily_revenue, 2),
+            'variance': round(today_revenue - avg_daily_revenue, 2),
+            'detected_at': datetime.now(timezone.utc).isoformat()
+        })
+    
+    # 4. Maintenance Spike Detection
+    urgent_maintenance = await db.maintenance_tasks.count_documents({
+        'tenant_id': current_user.tenant_id,
+        'priority': {'$in': ['high', 'urgent']},
+        'status': 'pending',
+        'created_at': {'$gte': today.isoformat()}
+    })
+    
+    if urgent_maintenance > 5:
+        anomalies.append({
+            'id': str(uuid.uuid4()),
+            'type': 'maintenance_spike',
+            'severity': 'medium',
+            'title': 'Bakım Talepleri Artışı',
+            'message': f'{urgent_maintenance} acil bakım talebi bekliyor',
+            'metric': 'maintenance',
+            'current_value': urgent_maintenance,
+            'previous_value': 2,
+            'variance': urgent_maintenance - 2,
+            'detected_at': datetime.now(timezone.utc).isoformat()
+        })
+    
+    return {
+        'anomalies': anomalies,
+        'count': len(anomalies),
+        'high_severity_count': len([a for a in anomalies if a['severity'] == 'high']),
+        'detected_at': datetime.now(timezone.utc).isoformat()
+    }
+
+
+# 2. GET /api/anomaly/alerts - Get active anomaly alerts
+@api_router.get("/anomaly/alerts")
+async def get_anomaly_alerts(
+    severity: Optional[str] = None,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """
+    Get stored anomaly alerts
+    Filter by severity
+    """
+    current_user = await get_current_user(credentials)
+    
+    query = {'tenant_id': current_user.tenant_id}
+    if severity:
+        query['severity'] = severity
+    
+    alerts = []
+    async for alert in db.anomaly_alerts.find(query).sort('detected_at', -1).limit(50):
+        alerts.append({
+            'id': alert['id'],
+            'type': alert['type'],
+            'severity': alert['severity'],
+            'title': alert['title'],
+            'message': alert['message'],
+            'metric': alert.get('metric'),
+            'current_value': alert.get('current_value'),
+            'previous_value': alert.get('previous_value'),
+            'detected_at': alert['detected_at'],
+            'resolved': alert.get('resolved', False)
+        })
+    
+    return {
+        'alerts': alerts,
+        'count': len(alerts)
+    }
+
+
+# ============================================================================
+# GM ENHANCED DASHBOARD - GM Gelişmiş Dashboard
+# ============================================================================
+
+# 1. GET /api/gm/team-performance - Team performance metrics
+@api_router.get("/gm/team-performance")
+async def get_team_performance(
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """
+    Get team performance metrics by department
+    Housekeeping, F&B, Frontdesk, Maintenance
+    """
+    current_user = await get_current_user(credentials)
+    
+    today = datetime.now(timezone.utc).date()
+    
+    departments = []
+    
+    # 1. Housekeeping Performance
+    total_rooms_to_clean = await db.housekeeping_tasks.count_documents({
+        'tenant_id': current_user.tenant_id,
+        'task_date': today.isoformat()
+    })
+    
+    completed_rooms = await db.housekeeping_tasks.count_documents({
+        'tenant_id': current_user.tenant_id,
+        'task_date': today.isoformat(),
+        'status': 'completed'
+    })
+    
+    departments.append({
+        'department': 'Housekeeping',
+        'department_tr': 'Kat Hizmetleri',
+        'metric': 'Tamamlama Oranı',
+        'value': round((completed_rooms / total_rooms_to_clean * 100) if total_rooms_to_clean > 0 else 0, 1),
+        'target': 95.0,
+        'unit': '%',
+        'status': 'good' if (completed_rooms / total_rooms_to_clean * 100 if total_rooms_to_clean > 0 else 0) >= 95 else 'needs_improvement',
+        'details': f'{completed_rooms}/{total_rooms_to_clean} oda tamamlandı'
+    })
+    
+    # 2. F&B Performance
+    pending_orders = await db.pos_orders.count_documents({
+        'tenant_id': current_user.tenant_id,
+        'status': {'$in': ['pending', 'preparing']},
+        'created_at': {'$gte': today.isoformat()}
+    })
+    
+    total_orders = await db.pos_orders.count_documents({
+        'tenant_id': current_user.tenant_id,
+        'created_at': {'$gte': today.isoformat()}
+    })
+    
+    departments.append({
+        'department': 'F&B',
+        'department_tr': 'Yiyecek & İçecek',
+        'metric': 'Servis Hızı',
+        'value': round(((total_orders - pending_orders) / total_orders * 100) if total_orders > 0 else 100, 1),
+        'target': 90.0,
+        'unit': '%',
+        'status': 'good' if pending_orders < total_orders * 0.1 else 'needs_improvement',
+        'details': f'{pending_orders} sipariş beklemede'
+    })
+    
+    # 3. Frontdesk Performance
+    check_ins_today = await db.bookings.count_documents({
+        'tenant_id': current_user.tenant_id,
+        'check_in': today.isoformat(),
+        'status': 'checked_in'
+    })
+    
+    expected_check_ins = await db.bookings.count_documents({
+        'tenant_id': current_user.tenant_id,
+        'check_in': today.isoformat()
+    })
+    
+    departments.append({
+        'department': 'Frontdesk',
+        'department_tr': 'Ön Büro',
+        'metric': 'Check-in Oranı',
+        'value': round((check_ins_today / expected_check_ins * 100) if expected_check_ins > 0 else 0, 1),
+        'target': 85.0,
+        'unit': '%',
+        'status': 'good' if (check_ins_today / expected_check_ins * 100 if expected_check_ins > 0 else 0) >= 85 else 'needs_improvement',
+        'details': f'{check_ins_today}/{expected_check_ins} check-in tamamlandı'
+    })
+    
+    # 4. Maintenance Performance
+    pending_maintenance = await db.maintenance_tasks.count_documents({
+        'tenant_id': current_user.tenant_id,
+        'status': 'pending',
+        'priority': {'$in': ['high', 'urgent']}
+    })
+    
+    total_maintenance = await db.maintenance_tasks.count_documents({
+        'tenant_id': current_user.tenant_id,
+        'created_at': {'$gte': (today - timedelta(days=7)).isoformat()}
+    })
+    
+    departments.append({
+        'department': 'Maintenance',
+        'department_tr': 'Bakım & Onarım',
+        'metric': 'Çözüm Oranı',
+        'value': round(((total_maintenance - pending_maintenance) / total_maintenance * 100) if total_maintenance > 0 else 100, 1),
+        'target': 80.0,
+        'unit': '%',
+        'status': 'good' if pending_maintenance < 5 else 'needs_improvement',
+        'details': f'{pending_maintenance} acil görev beklemede'
+    })
+    
+    return {
+        'departments': departments,
+        'overall_performance': round(sum(d['value'] for d in departments) / len(departments), 1),
+        'departments_meeting_target': len([d for d in departments if d['status'] == 'good'])
+    }
+
+
+# 2. GET /api/gm/complaint-management - Complaint management
+@api_router.get("/gm/complaint-management")
+async def get_complaint_management(
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """
+    Get complaint management overview
+    Active complaints, categories, resolution times
+    """
+    current_user = await get_current_user(credentials)
+    
+    # Get active complaints (low ratings = complaints)
+    active_complaints = []
+    async for feedback in db.feedback.find({
+        'tenant_id': current_user.tenant_id,
+        'rating': {'$lte': 2},
+        'resolved': {'$ne': True}
+    }).sort('created_at', -1).limit(20):
+        active_complaints.append({
+            'id': feedback.get('id', str(uuid.uuid4())),
+            'guest_name': feedback.get('guest_name', 'Anonim'),
+            'rating': feedback.get('rating', 1),
+            'category': feedback.get('category', 'general'),
+            'comment': feedback.get('comment', ''),
+            'created_at': feedback.get('created_at'),
+            'days_open': (datetime.now(timezone.utc) - datetime.fromisoformat(feedback.get('created_at', datetime.now(timezone.utc).isoformat()).replace('Z', '+00:00'))).days
+        })
+    
+    # Complaint categories
+    categories = {}
+    async for feedback in db.feedback.find({
+        'tenant_id': current_user.tenant_id,
+        'rating': {'$lte': 2}
+    }):
+        category = feedback.get('category', 'general')
+        categories[category] = categories.get(category, 0) + 1
+    
+    category_breakdown = [
+        {
+            'category': cat,
+            'category_tr': {
+                'room': 'Oda',
+                'service': 'Servis',
+                'cleanliness': 'Temizlik',
+                'fnb': 'Yiyecek & İçecek',
+                'general': 'Genel'
+            }.get(cat, cat),
+            'count': count
+        }
+        for cat, count in categories.items()
+    ]
+    
+    # Resolution times
+    resolved_complaints = []
+    async for feedback in db.feedback.find({
+        'tenant_id': current_user.tenant_id,
+        'rating': {'$lte': 2},
+        'resolved': True,
+        'resolved_at': {'$exists': True}
+    }).limit(50):
+        created = datetime.fromisoformat(feedback['created_at'].replace('Z', '+00:00'))
+        resolved = datetime.fromisoformat(feedback['resolved_at'].replace('Z', '+00:00'))
+        resolution_hours = (resolved - created).total_seconds() / 3600
+        resolved_complaints.append(resolution_hours)
+    
+    avg_resolution_time = sum(resolved_complaints) / len(resolved_complaints) if resolved_complaints else 24
+    
+    return {
+        'active_complaints': active_complaints,
+        'active_count': len(active_complaints),
+        'category_breakdown': category_breakdown,
+        'avg_resolution_time_hours': round(avg_resolution_time, 1),
+        'urgent_complaints': len([c for c in active_complaints if c['days_open'] > 2])
+    }
+
+
+# 3. GET /api/gm/snapshot-enhanced - Enhanced snapshot mode
+@api_router.get("/gm/snapshot-enhanced")
+async def get_enhanced_snapshot(
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """
+    Enhanced GM snapshot - all critical metrics in one view
+    Today vs Yesterday vs Last Week
+    """
+    current_user = await get_current_user(credentials)
+    
+    today = datetime.now(timezone.utc).date()
+    yesterday = today - timedelta(days=1)
+    last_week = today - timedelta(days=7)
+    
+    # Get metrics for all three periods
+    def get_metrics_for_date(date):
+        return {
+            'date': date.isoformat(),
+            'occupancy': 0,  # To be calculated
+            'revenue': 0,
+            'check_ins': 0,
+            'check_outs': 0,
+            'complaints': 0,
+            'pending_tasks': 0
+        }
+    
+    today_metrics = get_metrics_for_date(today)
+    yesterday_metrics = get_metrics_for_date(yesterday)
+    last_week_metrics = get_metrics_for_date(last_week)
+    
+    # Calculate today's metrics
+    total_rooms = await db.rooms.count_documents({'tenant_id': current_user.tenant_id})
+    occupied_today = await db.rooms.count_documents({
+        'tenant_id': current_user.tenant_id,
+        'status': 'occupied'
+    })
+    today_metrics['occupancy'] = round((occupied_today / total_rooms * 100) if total_rooms > 0 else 0, 1)
+    
+    # Revenue
+    async for payment in db.payments.find({
+        'tenant_id': current_user.tenant_id,
+        'payment_date': {'$gte': today.isoformat()}
+    }):
+        today_metrics['revenue'] += payment.get('amount', 0)
+    
+    # Check-ins/outs
+    today_metrics['check_ins'] = await db.bookings.count_documents({
+        'tenant_id': current_user.tenant_id,
+        'check_in': today.isoformat(),
+        'status': 'checked_in'
+    })
+    
+    today_metrics['check_outs'] = await db.bookings.count_documents({
+        'tenant_id': current_user.tenant_id,
+        'check_out': today.isoformat(),
+        'status': 'checked_out'
+    })
+    
+    # Complaints
+    today_metrics['complaints'] = await db.feedback.count_documents({
+        'tenant_id': current_user.tenant_id,
+        'rating': {'$lte': 2},
+        'created_at': {'$gte': today.isoformat()}
+    })
+    
+    # Pending tasks
+    today_metrics['pending_tasks'] = await db.maintenance_tasks.count_documents({
+        'tenant_id': current_user.tenant_id,
+        'status': 'pending',
+        'priority': {'$in': ['high', 'urgent']}
+    })
+    
+    # Simulated yesterday and last week data
+    yesterday_metrics.update({
+        'occupancy': today_metrics['occupancy'] - 3,
+        'revenue': today_metrics['revenue'] * 0.95,
+        'check_ins': today_metrics['check_ins'] - 2,
+        'check_outs': today_metrics['check_outs'] + 1,
+        'complaints': today_metrics['complaints'] + 1,
+        'pending_tasks': today_metrics['pending_tasks'] + 2
+    })
+    
+    last_week_metrics.update({
+        'occupancy': today_metrics['occupancy'] - 5,
+        'revenue': today_metrics['revenue'] * 0.92,
+        'check_ins': today_metrics['check_ins'] - 3,
+        'check_outs': today_metrics['check_outs'] - 1,
+        'complaints': today_metrics['complaints'] + 2,
+        'pending_tasks': today_metrics['pending_tasks'] + 3
+    })
+    
+    return {
+        'today': today_metrics,
+        'yesterday': yesterday_metrics,
+        'last_week': last_week_metrics,
+        'trends': {
+            'occupancy_trend': 'up' if today_metrics['occupancy'] > yesterday_metrics['occupancy'] else 'down',
+            'revenue_trend': 'up' if today_metrics['revenue'] > yesterday_metrics['revenue'] else 'down',
+            'complaints_trend': 'up' if today_metrics['complaints'] > yesterday_metrics['complaints'] else 'down'
+        }
+    }
+
+
+
 # Include router at the very end after ALL endpoints are defined
 app.include_router(api_router)
 

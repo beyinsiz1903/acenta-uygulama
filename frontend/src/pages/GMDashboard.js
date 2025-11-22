@@ -53,12 +53,16 @@ const GMDashboard = ({ user, tenant, onLogout }) => {
   const loadDashboardData = async () => {
     try {
       // Load daily flash report and other key metrics
-      const [flashResponse, occupancyRes, folioRes, financeRes, costRes] = await Promise.all([
+      const [flashResponse, occupancyRes, folioRes, financeRes, costRes, expenseRes, trendRes, slaRes, delayedRes] = await Promise.all([
         axios.get('/reports/daily-flash').catch(() => ({ data: {} })),
         axios.get('/pms/dashboard').catch(() => ({ data: {} })),
         axios.get('/folio/dashboard-stats').catch(() => ({ data: {} })),
         axios.get('/reports/finance-snapshot').catch(() => ({ data: {} })),
-        axios.get('/reports/cost-summary').catch(() => ({ data: {} }))
+        axios.get('/reports/cost-summary').catch(() => ({ data: {} })),
+        axios.get('/finance/expense-summary?period=today').catch(() => ({ data: {} })),
+        axios.get('/analytics/7day-trend').catch(() => ({ data: { trend: [] } })),
+        axios.get('/settings/sla').catch(() => ({ data: { configs: [] } })),
+        axios.get('/tasks/delayed').catch(() => ({ data: { delayed_tasks: [] } }))
       ]);
 
       setDashboardData({
@@ -68,6 +72,11 @@ const GMDashboard = ({ user, tenant, onLogout }) => {
         finance: financeRes.data,
         costs: costRes.data
       });
+      
+      setExpenseSummary(expenseRes.data);
+      setTrendData(trendRes.data);
+      setSlaConfigs(slaRes.data.configs || []);
+      setDelayedTasks(delayedRes.data.delayed_tasks || []);
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
     } finally {

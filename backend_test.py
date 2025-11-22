@@ -1012,9 +1012,10 @@ class ApprovalSystemRetester:
     # ============= MAIN TEST EXECUTION =============
 
     async def run_all_tests(self):
-        """Run all Approval, Executive Dashboard, and Notification endpoint tests"""
-        print("🚀 Starting Approval System, Executive Dashboard, and Notification System Testing")
-        print("Testing 14 NEW ENDPOINTS")
+        """Run focused re-testing of Approval System after bug fixes"""
+        print("🚀 APPROVAL SYSTEM RE-TESTING AFTER BUG FIXES")
+        print("Focus on endpoints that previously failed due to current_user.username → current_user.name bug")
+        print("Testing 11 ENDPOINTS (6 Approval + 3 Executive + 2 Notification)")
         print("=" * 80)
         
         # Setup

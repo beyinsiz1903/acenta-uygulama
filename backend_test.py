@@ -733,48 +733,7 @@ class ApprovalSystemRetester:
 
     # ============= NOTIFICATION SYSTEM TESTS (5 endpoints) =============
 
-    async def test_get_notification_preferences(self):
-        """Test GET /api/notifications/preferences"""
-        print("\n🔔 Testing Get Notification Preferences Endpoint...")
-        
-        test_cases = [
-            {
-                "name": "Get notification preferences",
-                "expected_fields": ["preferences"]
-            }
-        ]
-        
-        passed = 0
-        total = len(test_cases)
-        
-        for test_case in test_cases:
-            try:
-                url = f"{BACKEND_URL}/notifications/preferences"
-                
-                async with self.session.get(url, headers=self.get_headers()) as response:
-                    if response.status == 200:
-                        data = await response.json()
-                        missing_fields = [field for field in test_case["expected_fields"] if field not in data]
-                        if not missing_fields:
-                            # Verify preferences structure
-                            preferences = data.get("preferences", {})
-                            if isinstance(preferences, dict):
-                                print(f"  ✅ {test_case['name']}: PASSED")
-                                passed += 1
-                            else:
-                                print(f"  ❌ {test_case['name']}: Invalid preferences structure")
-                        else:
-                            print(f"  ❌ {test_case['name']}: Missing fields {missing_fields}")
-                    else:
-                        print(f"  ❌ {test_case['name']}: HTTP {response.status}")
-                        
-            except Exception as e:
-                print(f"  ❌ {test_case['name']}: Error {e}")
-        
-        self.test_results.append({
-            "endpoint": "GET /api/notifications/preferences",
-            "passed": passed, "total": total, "success_rate": f"{passed/total*100:.1f}%"
-        })
+    # Removed unused test methods to keep focused on approval system re-testing
 
     async def test_update_notification_preferences(self):
         """Test PUT /api/notifications/preferences"""

@@ -33,7 +33,7 @@ class HotelSeeder:
                 'name': 'Hotel Admin',
                 'role': 'admin',
                 'hashed_password': pwd_context.hash("admin123"),
-                'tenant_id': None,
+                'tenant_id': self.tenant_id,
                 'created_at': datetime.now(timezone.utc).isoformat(),
                 'is_active': True
             },
@@ -43,7 +43,7 @@ class HotelSeeder:
                 'name': 'Ayşe Yılmaz',
                 'role': 'front_desk',
                 'hashed_password': pwd_context.hash("frontdesk123"),
-                'tenant_id': None,
+                'tenant_id': self.tenant_id,
                 'created_at': datetime.now(timezone.utc).isoformat(),
                 'is_active': True
             },
@@ -53,7 +53,7 @@ class HotelSeeder:
                 'name': 'Fatma Demir',
                 'role': 'housekeeping',
                 'hashed_password': pwd_context.hash("housekeeping123"),
-                'tenant_id': None,
+                'tenant_id': self.tenant_id,
                 'created_at': datetime.now(timezone.utc).isoformat(),
                 'is_active': True
             },
@@ -63,7 +63,7 @@ class HotelSeeder:
                 'name': 'Mehmet Kaya',
                 'role': 'finance',
                 'hashed_password': pwd_context.hash("finance123"),
-                'tenant_id': None,
+                'tenant_id': self.tenant_id,
                 'created_at': datetime.now(timezone.utc).isoformat(),
                 'is_active': True
             }

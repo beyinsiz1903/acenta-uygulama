@@ -141,7 +141,7 @@ const MobileHousekeeping = ({ user }) => {
       setLostFoundItems(res.data.items || []);
       setLostFoundModalOpen(true);
     } catch (error) {
-      toast.error('Kayıp eşya listesi yüklenemedi');
+      toast.error('✗ Kayıp Eşya');
     }
   };
 
@@ -151,7 +151,7 @@ const MobileHousekeeping = ({ user }) => {
       setInventoryItems(res.data.inventory_items || []);
       setInventoryModalOpen(true);
     } catch (error) {
-      toast.error('Envanter yüklenemedi');
+      toast.error('✗ Envanter');
     }
   };
 
@@ -161,7 +161,7 @@ const MobileHousekeeping = ({ user }) => {
       setTaskAssignments(res.data.assignments || []);
       setTaskAssignmentsModalOpen(true);
     } catch (error) {
-      toast.error('Görev dağılımı yüklenemedi');
+      toast.error('✗ Görev');
     }
   };
 
@@ -171,7 +171,7 @@ const MobileHousekeeping = ({ user }) => {
       setStatusLogs(res.data.logs || []);
       setStatusLogsModalOpen(true);
     } catch (error) {
-      toast.error('Durum kayıtları yüklenemedi');
+      toast.error('✗ Kayıt');
     }
   };
 
@@ -185,10 +185,10 @@ const MobileHousekeeping = ({ user }) => {
         room_number: formData.get('room_number'),
         notes: formData.get('notes')
       });
-      toast.success('Kayıp eşya kaydedildi!');
+      toast.success('✓ Kaydedildi');
       loadLostFound();
     } catch (error) {
-      toast.error('Kayıt oluşturulamadı');
+      toast.error('✗ Hata');
     }
   };
 

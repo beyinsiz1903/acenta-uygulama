@@ -24,8 +24,19 @@ import {
   Eye,
   Calendar,
   Package,
-  ShoppingCart
+  ShoppingCart,
+  Camera,
+  Upload,
+  Filter,
+  X,
+  Plus,
+  Minus,
+  QrCode,
+  Tool,
+  Activity
 } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const MobileMaintenance = ({ user }) => {
   const navigate = useNavigate();

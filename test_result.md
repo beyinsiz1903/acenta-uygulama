@@ -7038,3 +7038,129 @@ agent_communication:
   - agent: "testing"
     message: "✅ REVENUE MOBILE ENDPOINTS TESTING COMPLETED (100% Success Rate - 9/9 tests passed). Successfully tested all 9 Revenue Mobile endpoints as requested in the review. AUTHENTICATION: Successfully registered new test tenant and authenticated. ENDPOINTS TESTED: 1) GET /api/revenue-mobile/adr - ADR calculation with period comparison and trend analysis ✅, 2) GET /api/revenue-mobile/revpar - RevPAR with occupancy metrics and room nights ✅, 3) GET /api/revenue-mobile/total-revenue - Revenue breakdown by 8 categories with daily data ✅, 4) GET /api/revenue-mobile/segment-distribution - Market segment analysis with percentages ✅, 5) GET /api/revenue-mobile/pickup-graph - Booking pace analysis at 8 key intervals (90/60/30/14/7/3/1/0 days) with YoY comparison ✅, 6) GET /api/revenue-mobile/forecast - Daily revenue projections with variance analysis ✅, 7) GET /api/revenue-mobile/channel-distribution - Channel analysis with gross/net revenue and commission breakdown ✅, 8) GET /api/revenue-mobile/cancellation-report - Cancellation analysis with lead time breakdown ✅, 9) POST /api/revenue-mobile/rate-override - Rate override with approval workflow (>15% changes require approval) ✅. PARAMETER TESTING: Default parameters (last 30 days), custom date ranges, days_ahead, target_date all working ✅. RESPONSE STRUCTURES: All endpoints return proper JSON with required fields, period information, comparison metrics, and trend analysis ✅. VALIDATION: Request validation working (400 errors for missing fields) ✅. APPROVAL WORKFLOW: Rate override approval system functional (small changes auto-approved, large changes require approval) ✅. All Revenue Mobile endpoints are production-ready and working correctly. Main agent should summarize completion."
 
+
+
+  22. Dashboard Enhancements - Revenue-Expense Chart, Budget vs Actual, Monthly Profitability, Trend KPIs
+  23. F&B Module - Dashboard, Sales Report, Menu Performance, Revenue Chart
+
+backend:
+  - task: "Dashboard - Revenue-Expense Chart"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added GET /api/dashboard/revenue-expense-chart - Returns revenue vs expense chart with daily/weekly/monthly intervals, profit calculations, profit margins. Supports 30days, 90days, 12months periods."
+
+  - task: "Dashboard - Budget vs Actual"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added GET /api/dashboard/budget-vs-actual - Compares budget vs actual for Revenue, Expense, Occupancy, ADR. Returns variance percentages and status (above/below/on_target) for each category."
+
+  - task: "Dashboard - Monthly Profitability"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added GET /api/dashboard/monthly-profitability - Returns last N months profitability with revenue, expense, profit, profit margin for each month. Includes averages and current month highlight."
+
+  - task: "Dashboard - Trend KPIs"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added GET /api/dashboard/trend-kpis - Returns trending KPIs (Revenue, Bookings, Occupancy, ADR, RevPAR, Guest Rating) with period comparison (7days, 30days, 90days). Shows current vs previous values with trend percentages."
+
+  - task: "F&B - Dashboard"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added GET /api/fnb/dashboard - Returns F&B overview with total/food/beverage revenue, orders count, avg order value, tables used, revenue change vs previous day."
+
+  - task: "F&B - Sales Report"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added GET /api/fnb/sales-report - Returns daily sales breakdown for food and beverage categories with date range support. Includes category totals and percentages."
+
+  - task: "F&B - Menu Performance"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added GET /api/fnb/menu-performance - Returns menu item performance with quantity sold, revenue, orders count, avg price. Shows top 10 performers and bottom 5 performers."
+
+  - task: "F&B - Revenue Chart"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added GET /api/fnb/revenue-chart - Returns daily F&B revenue chart data with food/beverage breakdown. Supports 7days, 30days, 90days periods."
+
+metadata:
+  created_by: "main_agent"
+  version: "3.0"
+  test_sequence: 10
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "Dashboard - Revenue-Expense Chart"
+    - "Dashboard - Budget vs Actual"
+    - "Dashboard - Monthly Profitability"
+    - "Dashboard - Trend KPIs"
+    - "F&B - Dashboard"
+    - "F&B - Sales Report"
+    - "F&B - Menu Performance"
+    - "F&B - Revenue Chart"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+  - agent: "main"
+    message: "✅ DASHBOARD & F&B ENHANCEMENTS IMPLEMENTED - Added 8 comprehensive endpoints for patron requirements. Dashboard enhancements: 1) Revenue-Expense Chart with profit analysis and multiple time periods, 2) Budget vs Actual comparison with variance tracking, 3) Monthly Profitability showing trend over 6 months, 4) Trend KPIs with 6 key metrics and period comparisons. F&B enhancements: 1) F&B Dashboard overview, 2) Sales Report with daily breakdown, 3) Menu Performance analysis with top/bottom performers, 4) Revenue Chart with food/beverage split. All endpoints support date range filtering and include comparison metrics. Ready for backend testing."
+

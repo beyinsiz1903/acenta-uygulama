@@ -6250,3 +6250,369 @@ agent_communication:
 agent_communication:
     -agent: "testing"
     -message: "UNIFIED ENDPOINTS AND CLEANING REQUEST SYSTEM TESTING COMPLETED - Overall Success Rate: 92.9% (13/14 tests passed). ✅ ALL UNIFIED ENDPOINTS WORKING PERFECTLY (100% success): Today arrivals, departures, and in-house endpoints all functional with proper data enrichment (guest + room info), accurate date filtering (2025-11-22), and correct count fields. ✅ CLEANING REQUEST SYSTEM MOSTLY WORKING (90.9% success): Guest request creation, housekeeping request management, status updates, and guest request viewing all functional. Cleaning workflow operational with proper notifications. Minor issue: One error handling test case in status update endpoint needs refinement but core functionality works. KEY FEATURES VERIFIED: Data enrichment working, today's date filtering accurate, count field accuracy confirmed, cleaning request workflow functional, status updates working, notifications created, error handling (404 for missing resources) working. RECOMMENDATION: System ready for production use with excellent functionality across all tested endpoints."
+
+#====================================================================================================
+# NEW FINANCE MOBILE ENHANCEMENTS - Added by Main Agent
+#====================================================================================================
+
+user_problem_statement: |
+  Finance Mobile Dashboard Enhancements - Finance Director Requirements:
+  
+  1. Cash Flow Dashboard (Nakit Akışı):
+     - Today's cash inflow (bugünkü nakit girişi)
+     - Today's cash outflow (bugünkü nakit çıkışı)
+     - Weekly collection/payment plan (haftalık tahsilat/ödeme planı)
+     - Bank balance summaries (banka bakiye özetleri)
+  
+  2. Risk Management (Risk Limitleri):
+     - Accounts overdue by 7+ days (7+ gün vadesi geçmiş hesaplar)
+     - Companies exceeding credit limits (limit üstü borçlanan firmalar)
+     - Suspicious receivables list (şüpheli alacaklar listesi)
+     - Mobile risk alerts (mobil uyarı sistemi)
+  
+  3. Enhanced Invoicing:
+     - Invoice filtering (date/unpaid/department) (tarih/ödenmemiş/departman filtreleme)
+     - PDF invoice viewing (PDF fatura görüntüleme)
+     - Full folio extract (folio tam ekstresi)
+  
+  4. Expense & Cost Management:
+     - Daily expense summaries (günlük gider özetleri)
+     - Cost breakdown by department (departman bazlı maliyet dağılımı)
+     - Consumption summary (tüketim özeti)
+  
+  5. Filtering & Grouping:
+     - Customer group filtering (müşteri grubu filtreleme)
+     - Room number filtering (oda numarası filtreleme)
+
+backend:
+  - task: "Add DepartmentType enum (11 types)"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added DepartmentType enum: ROOMS, FNB, SPA, LAUNDRY, MINIBAR, TELEPHONE, TRANSPORTATION, TECHNICAL, HOUSEKEEPING_CHARGES, OTHER"
+
+  - task: "Add RiskLevel enum (4 levels)"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added RiskLevel enum: NORMAL (0-7 days), WARNING (8-14 days), CRITICAL (15-30 days), SUSPICIOUS (30+ days)"
+
+  - task: "Add BankAccount model (manual + API-ready)"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added BankAccount model with fields: bank_name, account_number, iban, currency, current_balance, available_balance, account_type, is_active, api_enabled, api_credentials, last_sync. Ready for Open Banking integration"
+
+  - task: "Add CreditLimit model (company-based limits)"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added CreditLimit model with fields: company_id, company_name, credit_limit, monthly_limit, current_debt, available_credit, payment_terms_days, risk_level, notes"
+
+  - task: "Add Expense model (detailed expense tracking)"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added Expense model with fields: expense_number, date, amount, category, department, vendor, description, payment_method, paid, approved_by, notes"
+
+  - task: "Add CashFlow model (transaction tracking)"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added CashFlow model with fields: transaction_type (inflow/outflow), amount, currency, date, category, reference_id, reference_type, bank_account_id, description"
+
+  - task: "Cash Flow Summary Endpoint"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "GET /api/finance/mobile/cash-flow-summary - Returns today's cash inflow/outflow, weekly plan, bank balances"
+
+  - task: "Overdue Accounts Endpoint"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "GET /api/finance/mobile/overdue-accounts?min_days=7 - Returns accounts overdue with risk level classification (normal/warning/critical/suspicious)"
+
+  - task: "Credit Limit Violations Endpoint"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "GET /api/finance/mobile/credit-limit-violations - Returns companies exceeding credit limits or near limit (90%+)"
+
+  - task: "Suspicious Receivables Endpoint"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "GET /api/finance/mobile/suspicious-receivables - Returns suspicious receivables (30+ days OR 15+ days with >5000 balance)"
+
+  - task: "Risk Alerts Endpoint"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "GET /api/finance/mobile/risk-alerts - Comprehensive risk alerts with severity levels (critical/high/medium/low)"
+
+  - task: "Daily Expenses Endpoint"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "GET /api/finance/mobile/daily-expenses?date=YYYY-MM-DD - Returns daily expenses by category and department"
+
+  - task: "Folio Full Extract Endpoint"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "GET /api/finance/mobile/folio-full-extract/{folio_id} - Returns complete folio with all charges, payments, guest/booking details"
+
+  - task: "Enhanced Invoices Endpoint with Filtering"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "GET /api/finance/mobile/invoices?start_date=&end_date=&unpaid_only=true&department= - Advanced invoice filtering"
+
+  - task: "Invoice PDF Generation Endpoint"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "GET /api/finance/mobile/invoice-pdf/{invoice_id} - Returns invoice data for PDF generation (frontend rendering for MVP)"
+
+  - task: "Bank Balance Update Endpoint"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "POST /api/finance/mobile/bank-balance-update - Manual bank balance update (until Open Banking API integration)"
+
+  - task: "Bank Balances List Endpoint"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "GET /api/finance/mobile/bank-balances - Returns all active bank accounts with balances"
+
+frontend:
+  - task: "Enhanced MobileFinance.js with new state management"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/MobileFinance.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added state for: cashFlowData, riskAlerts, overdueAccounts, creditViolations, suspiciousReceivables, dailyExpenses, bankBalances, and multiple modal states"
+
+  - task: "Cash Flow Summary Card"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/MobileFinance.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added cash flow summary card showing today's inflow/outflow with color-coded net flow"
+
+  - task: "Risk Alerts Card"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/MobileFinance.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added risk alerts card with severity icons and quick view of top 3 alerts"
+
+  - task: "Bank Balances Card"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/MobileFinance.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added bank balances card showing all accounts with last sync time and total TRY balance"
+
+  - task: "Daily Expenses Card"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/MobileFinance.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added daily expenses card with department breakdown"
+
+  - task: "Cash Flow Detail Modal"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/MobileFinance.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added comprehensive cash flow modal with today's summary, weekly plan (7 days), and bank balances"
+
+  - task: "Risk Management Modal with Tabs"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/MobileFinance.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added risk management modal with 4 tabs: Overdue Accounts, Credit Limits, Suspicious Receivables, Alerts. Each with color-coded risk levels"
+
+  - task: "Folio Extract Modal"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/MobileFinance.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added full folio extract modal showing guest info, booking details, all charges, all payments, and summary"
+
+  - task: "Enhanced Quick Actions Grid"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/MobileFinance.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Updated quick actions to 6 buttons: Cash Flow, Risk Management, Invoices, P&L, Reports, Shift Report"
+
+metadata:
+  created_by: "main_agent"
+  version: "2.0"
+  test_sequence: 1
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "Cash Flow Summary Endpoint"
+    - "Risk Management Endpoints (Overdue, Credit Limits, Suspicious)"
+    - "Enhanced Invoices with Filtering"
+    - "Folio Full Extract"
+    - "Daily Expenses"
+    - "Bank Balances"
+    - "Frontend Integration"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"

@@ -29685,9 +29685,19 @@ async def get_finance_notifications_mobile(
         
         if booking:
             checkout = booking.get('check_out')
-            if checkout and checkout < today - timedelta(days=7):
-                overdue_count += 1
-                overdue_amount += folio.get('balance', 0)
+            if checkout:
+                # Convert string date to datetime for comparison
+                try:
+                    if isinstance(checkout, str):
+                        checkout_date = datetime.fromisoformat(checkout).replace(tzinfo=timezone.utc)
+                    else:
+                        checkout_date = checkout if checkout.tzinfo else checkout.replace(tzinfo=timezone.utc)
+                    
+                    if checkout_date < today - timedelta(days=7):
+                        overdue_count += 1
+                        overdue_amount += folio.get('balance', 0)
+                except (ValueError, AttributeError):
+                    pass  # Skip invalid dates
     
     if overdue_count > 0:
         notifications.append({

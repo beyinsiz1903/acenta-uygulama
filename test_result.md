@@ -5913,6 +5913,79 @@ frontend:
         agent: "main"
         comment: "Added routes to App.js: /mobile/approvals (MobileApprovals), /executive (ExecutiveDashboard), both protected with authentication"
 
+backend:
+  - task: "NEW FEATURE 1: Reservation Search Endpoint"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "❌ ENDPOINT FAILING - GET /api/reservations/search returns HTTP 500 error. Root cause: Code tries to call 'get_database()' function which doesn't exist. Should use existing 'db' variable instead. All search filters (guest_name, booking_id, phone, email, status, date ranges) failing with same error. Endpoint implementation exists but has critical database connection bug."
+
+  - task: "NEW FEATURE 2: Room Assignment Endpoint (Verify existing)"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "❌ ENDPOINT NOT FOUND - GET /api/frontdesk/available-rooms-for-assignment returns HTTP 404 error. Root cause: Endpoint exists at different URL '/frontdesk/available-rooms' not '/frontdesk/available-rooms-for-assignment'. URL mismatch between expected and actual implementation. Endpoint functionality exists but URL needs correction."
+
+  - task: "NEW FEATURE 3: Passport Scan Endpoint (Verify existing)"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "❌ ENDPOINT FAILING - POST /api/frontdesk/passport-scan returns HTTP 422 validation error. Root cause: Request body validation failing for image_data field. Tested with base64 image data but endpoint expects different request structure. Only invalid data test passes (422 as expected). Request validation needs review."
+
+  - task: "NEW FEATURE 4A: Keycard Issue Endpoint"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "❌ ENDPOINT FAILING - POST /api/keycard/issue returns HTTP 422 validation error. Root cause: Request body validation failing for all keycard types (physical, mobile, QR). Tested with booking_id, card_type, guest_name fields but endpoint expects different request structure. Only invalid card_type test passes (422 as expected). Request validation needs review."
+
+  - task: "NEW FEATURE 4B: Keycard Deactivate Endpoint"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "❌ ENDPOINT FAILING - PUT /api/keycard/{keycard_id}/deactivate returns HTTP 500 server error. Root cause: Server-side error in endpoint implementation. All deactivation reasons (checkout, lost, damaged) failing with same error. Endpoint exists but has runtime error that needs debugging."
+
+  - task: "NEW FEATURE 4C: Get Booking Keycards Endpoint"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "❌ ENDPOINT FAILING - GET /api/keycard/booking/{booking_id} returns HTTP 500 server error. Root cause: Server-side error in endpoint implementation. All booking ID tests (valid, invalid, non-existent) failing with same error. Endpoint exists but has runtime error that needs debugging."
+
 agent_communication:
     -agent: "main"
     -message: "PHASE 1 COMPLETED: Implemented F&B mobile order tracking (4 endpoints) and inventory mobile management (4 endpoints). All 8 backend endpoints tested and working (100% success rate). Created 2 full-featured mobile UI pages. PHASE 2 COMPLETED: Implemented Approvals Module (6 endpoints), Executive KPI Dashboard (3 endpoints), and Notification System (5 endpoints). Total 14 new backend endpoints added. Created 2 new frontend pages (MobileApprovals.js and ExecutiveDashboard.js). All routes added to App.js. Ready for comprehensive backend testing of Phase 2 features."

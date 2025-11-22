@@ -487,6 +487,174 @@ const MobileFinance = ({ user }) => {
           </Card>
         )}
 
+
+
+        {/* Risk Alerts - NEW */}
+        {riskAlerts && riskAlerts.alerts && riskAlerts.alerts.length > 0 && (
+          <Card className="bg-gradient-to-r from-red-50 to-orange-50 border-red-300">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center justify-between">
+                <div className="flex items-center">
+                  <AlertTriangle className="w-5 h-5 mr-2 text-red-600" />
+                  Risk Uyarıları ({riskAlerts.summary.total_alerts})
+                </div>
+                <Button size="sm" variant="ghost" onClick={loadRiskDetails}>
+                  <Eye className="w-4 h-4" />
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {riskAlerts.alerts.slice(0, 3).map((alert) => (
+                <div key={alert.id} className="flex items-start space-x-2 p-2 bg-white rounded-lg border">
+                  {getRiskIcon(alert.severity)}
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-gray-900">{alert.title}</p>
+                    <p className="text-xs text-gray-600">{alert.message}</p>
+                    {alert.amount && (
+                      <p className="text-xs font-bold text-red-600 mt-1">{formatCurrency(alert.amount)}</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+              {riskAlerts.alerts.length > 3 && (
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={loadRiskDetails}
+                >
+                  Tümünü Gör ({riskAlerts.alerts.length})
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Cash Flow Summary - NEW */}
+        {cashFlowData && (
+          <Card className="bg-gradient-to-br from-cyan-50 to-blue-50 border-cyan-200">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center justify-between">
+                <div className="flex items-center">
+                  <Wallet className="w-5 h-5 mr-2 text-cyan-600" />
+                  Bugünkü Nakit Akışı
+                </div>
+                <Button size="sm" variant="ghost" onClick={loadCashFlowDetail}>
+                  <ArrowUpCircle className="w-4 h-4" />
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                <div className="flex items-center space-x-2">
+                  <ArrowUpCircle className="w-5 h-5 text-green-600" />
+                  <div>
+                    <p className="text-xs text-green-600">Giriş (Tahsilat)</p>
+                    <p className="text-sm text-gray-600">{cashFlowData.today?.inflow_count || 0} işlem</p>
+                  </div>
+                </div>
+                <p className="font-bold text-green-700 text-lg">
+                  {formatCurrency(cashFlowData.today?.cash_inflow || 0)}
+                </p>
+              </div>
+              
+              <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
+                <div className="flex items-center space-x-2">
+                  <ArrowDownCircle className="w-5 h-5 text-red-600" />
+                  <div>
+                    <p className="text-xs text-red-600">Çıkış (Gider)</p>
+                    <p className="text-sm text-gray-600">{cashFlowData.today?.outflow_count || 0} işlem</p>
+                  </div>
+                </div>
+                <p className="font-bold text-red-700 text-lg">
+                  {formatCurrency(cashFlowData.today?.cash_outflow || 0)}
+                </p>
+              </div>
+
+              <div className="flex items-center justify-between p-3 bg-cyan-100 rounded-lg border-2 border-cyan-300">
+                <div>
+                  <p className="text-xs text-cyan-700 font-medium">NET NAKİT AKIŞI</p>
+                </div>
+                <p className={`font-bold text-xl ${
+                  (cashFlowData.today?.net_flow || 0) >= 0 ? 'text-green-700' : 'text-red-700'
+                }`}>
+                  {formatCurrency(cashFlowData.today?.net_flow || 0)}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Bank Balances - NEW */}
+        {bankBalances && bankBalances.bank_accounts && bankBalances.bank_accounts.length > 0 && (
+          <Card className="bg-gradient-to-br from-indigo-50 to-purple-50 border-indigo-200">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center">
+                <Building2 className="w-5 h-5 mr-2 text-indigo-600" />
+                Banka Bakiyeleri
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {bankBalances.bank_accounts.map((bank) => (
+                <div key={bank.id} className="flex items-center justify-between p-2 bg-white rounded-lg border">
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900">{bank.bank_name}</p>
+                    <p className="text-xs text-gray-500">****{bank.account_number}</p>
+                    {bank.last_sync && (
+                      <p className="text-xs text-gray-400">
+                        Güncelleme: {new Date(bank.last_sync).toLocaleString('tr-TR')}
+                      </p>
+                    )}
+                  </div>
+                  <div className="text-right">
+                    <p className="font-bold text-indigo-700">{formatCurrency(bank.current_balance)}</p>
+                    <p className="text-xs text-gray-500">{bank.currency}</p>
+                  </div>
+                </div>
+              ))}
+              <div className="mt-3 pt-3 border-t border-gray-200">
+                <div className="flex justify-between">
+                  <span className="font-semibold text-gray-700">Toplam (TRY):</span>
+                  <span className="font-bold text-lg text-indigo-700">
+                    {formatCurrency(bankBalances.total_balance_try || 0)}
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Daily Expenses - NEW */}
+        {dailyExpenses && dailyExpenses.total_expenses > 0 && (
+          <Card className="bg-gradient-to-br from-rose-50 to-pink-50 border-rose-200">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center">
+                <TrendingDown className="w-5 h-5 mr-2 text-rose-600" />
+                Bugünkü Giderler
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <div className="flex justify-between p-2 bg-rose-100 rounded-lg">
+                <span className="font-semibold text-rose-800">Toplam Gider:</span>
+                <span className="font-bold text-rose-800">{formatCurrency(dailyExpenses.total_expenses)}</span>
+              </div>
+              <p className="text-xs text-gray-600">{dailyExpenses.expense_count} işlem</p>
+              
+              {dailyExpenses.expenses_by_department && Object.keys(dailyExpenses.expenses_by_department).length > 0 && (
+                <div className="mt-2 space-y-1">
+                  <p className="text-xs font-semibold text-gray-700">Departman Bazlı:</p>
+                  {Object.entries(dailyExpenses.expenses_by_department).map(([dept, amount]) => (
+                    <div key={dept} className="flex justify-between text-xs pl-2">
+                      <span className="text-gray-600 capitalize">{dept}:</span>
+                      <span className="font-medium">{formatCurrency(amount)}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
         {/* Quick Actions */}
         <div className="grid grid-cols-2 gap-3">
           <Button

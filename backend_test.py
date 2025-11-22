@@ -1,13 +1,17 @@
 #!/usr/bin/env python3
 """
-Comprehensive Backend Testing for Hotel PMS Enhancements
-Testing 17 NEW ENDPOINTS across 6 categories:
-1. OTA Reservation Details (3 endpoints)
-2. Housekeeping Mobile View (2 endpoints) 
-3. Guest Profile Complete (3 endpoints)
-4. Revenue Management Advanced (3 endpoints)
-5. Messaging Module (3 endpoints)
-6. POS Improvements (3 endpoints)
+Comprehensive Backend Testing for F&B Mobile Order Tracking and Inventory Mobile Endpoints
+Testing 8 NEW F&B MOBILE ENDPOINTS:
+1. F&B Mobile Order Tracking (4 endpoints)
+   - GET /api/pos/mobile/active-orders
+   - GET /api/pos/mobile/order/{order_id}
+   - PUT /api/pos/mobile/order/{order_id}/status
+   - GET /api/pos/mobile/order-history
+2. Inventory Mobile (4 endpoints)
+   - GET /api/pos/mobile/inventory-movements
+   - GET /api/pos/mobile/stock-levels
+   - GET /api/pos/mobile/low-stock-alerts
+   - POST /api/pos/mobile/stock-adjust
 """
 
 import asyncio

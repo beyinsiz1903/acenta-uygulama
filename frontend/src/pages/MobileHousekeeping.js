@@ -145,6 +145,17 @@ const MobileHousekeeping = ({ user }) => {
     }
   };
 
+  const handleStatusChange = async (roomId, newStatus) => {
+    try {
+      await axios.put(`/housekeeping/room/${roomId}/status?new_status=${newStatus}`);
+      toast.success('Oda durumu güncellendi!');
+      loadData(); // Reload data
+    } catch (error) {
+      console.error('Status update error:', error);
+      toast.error('Durum güncellenemedi');
+    }
+  };
+
   const getStatusColor = (status) => {
     const colors = {
       dirty: 'bg-red-100 text-red-700 border-red-300',

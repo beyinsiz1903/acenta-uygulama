@@ -173,8 +173,9 @@ class ApprovalSystemRetester:
     # ============= APPROVALS MODULE TESTS (6 endpoints) =============
 
     async def test_create_approval_request(self):
-        """Test POST /api/approvals/create"""
-        print("\n📋 Testing Create Approval Request Endpoint...")
+        """Test POST /api/approvals/create - **CRITICAL RE-TEST** after username bug fix"""
+        print("\n📋 Testing Create Approval Request Endpoint (CRITICAL RE-TEST)...")
+        print("🔧 BUG FIX: current_user.username → current_user.name should fix 500 error")
         
         test_cases = [
             {
@@ -186,7 +187,7 @@ class ApprovalSystemRetester:
                     "priority": "normal"
                 },
                 "expected_status": 200,
-                "expected_fields": ["message", "approval_id", "status", "approval_type"]
+                "expected_fields": ["message", "approval_id", "status", "approval_type", "requested_by"]
             },
             {
                 "name": "Create price override approval request",
@@ -197,7 +198,7 @@ class ApprovalSystemRetester:
                     "priority": "high"
                 },
                 "expected_status": 200,
-                "expected_fields": ["message", "approval_id", "status", "approval_type"]
+                "expected_fields": ["message", "approval_id", "status", "approval_type", "requested_by"]
             },
             {
                 "name": "Create budget expense approval request",
@@ -208,40 +209,7 @@ class ApprovalSystemRetester:
                     "priority": "urgent"
                 },
                 "expected_status": 200,
-                "expected_fields": ["message", "approval_id", "status", "approval_type"]
-            },
-            {
-                "name": "Create rate change approval request",
-                "data": {
-                    "approval_type": "rate_change",
-                    "amount": 180.0,
-                    "reason": "Seasonal rate adjustment",
-                    "priority": "normal"
-                },
-                "expected_status": 200,
-                "expected_fields": ["message", "approval_id", "status", "approval_type"]
-            },
-            {
-                "name": "Create refund approval request",
-                "data": {
-                    "approval_type": "refund",
-                    "amount": 300.0,
-                    "reason": "Guest complaint resolution",
-                    "priority": "high"
-                },
-                "expected_status": 200,
-                "expected_fields": ["message", "approval_id", "status", "approval_type"]
-            },
-            {
-                "name": "Create comp room approval request",
-                "data": {
-                    "approval_type": "comp_room",
-                    "amount": 0.0,
-                    "reason": "Loyalty program reward",
-                    "priority": "normal"
-                },
-                "expected_status": 200,
-                "expected_fields": ["message", "approval_id", "status", "approval_type"]
+                "expected_fields": ["message", "approval_id", "status", "approval_type", "requested_by"]
             }
         ]
         

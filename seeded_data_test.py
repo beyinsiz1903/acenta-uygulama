@@ -267,6 +267,8 @@ class SeededDataTester:
                     
                 else:
                     print(f"  ❌ Failed to fetch guests: HTTP {response.status}")
+                    error_text = await response.text()
+                    print(f"  Error details: {error_text[:200]}")
                     passed, total = 0, 1
                     
         except Exception as e:

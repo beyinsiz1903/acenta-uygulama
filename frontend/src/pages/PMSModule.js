@@ -1491,9 +1491,13 @@ const PMSModule = ({ user, tenant, onLogout }) => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {rooms.map((room) => {
                 const roomBlock = roomBlocks.find(b => b.room_id === room.id && b.status === 'active');
+                // Find current booking for this room
+                const currentBooking = bookings.find(b => b.room_id === room.id && b.status === 'checked_in');
+                const currentGuest = currentBooking ? guests.find(g => g.id === currentBooking.guest_id) : null;
+                
                 return (
-                <Card key={room.id} className={roomBlock ? 'border-2 border-red-400' : ''}>
-                  <CardHeader className="relative">
+                <Card key={room.id} className={`${roomBlock ? 'border-2 border-red-400' : ''} ${currentBooking ? 'border-l-4 border-l-blue-500' : ''}`}>
+                  <CardHeader className="relative pb-2">
                     {roomBlock && (
                       <div className="absolute top-2 right-2 flex gap-1">
                         {roomBlock.type === 'out_of_order' && (
@@ -1507,26 +1511,124 @@ const PMSModule = ({ user, tenant, onLogout }) => {
                         )}
                       </div>
                     )}
-                    <CardTitle>Room {room.room_number}</CardTitle>
-                    <CardDescription className="capitalize">{room.room_type}</CardDescription>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-lg">Room {room.room_number}</CardTitle>
+                      <Badge variant={room.status === 'occupied' ? 'default' : room.status === 'available' ? 'secondary' : 'outline'}>
+                        {room.status}
+                      </Badge>
+                    </div>
+                    <CardDescription className="capitalize text-xs">{room.room_type} • Floor {room.floor} • ${room.base_price}/night</CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span>Floor:</span>
-                      <span className="font-medium">{room.floor}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Capacity:</span>
-                      <span className="font-medium">{room.capacity} guests</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Price:</span>
-                      <span className="font-medium">${room.base_price}/night</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span>Status:</span>
+                  <CardContent className="space-y-3 text-sm">
+                    
+                    {/* Current Guest Information */}
+                    {currentBooking && currentGuest && (
+                      <div className="bg-blue-50 rounded-lg p-3 space-y-2 border border-blue-200">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-semibold text-blue-900 flex items-center gap-1">
+                            <User className="w-3 h-3" />
+                            Current Guest
+                          </span>
+                          <Button 
+                            size="sm" 
+                            variant="ghost" 
+                            className="h-6 px-2 text-xs"
+                            onClick={() => {
+                              setSelectedGuest(currentGuest);
+                              setOpenDialog('guestinfo');
+                            }}
+                          >
+                            View Profile
+                          </Button>
+                        </div>
+                        <div className="space-y-1">
+                          <div className="font-medium text-sm text-gray-900">{currentGuest.name || currentGuest.email}</div>
+                          <div className="flex items-center gap-2 text-xs text-gray-600">
+                            <LogIn className="w-3 h-3" />
+                            Check-in: {new Date(currentBooking.check_in).toLocaleDateString()}
+                          </div>
+                          <div className="flex items-center gap-2 text-xs text-gray-600">
+                            <LogOut className="w-3 h-3" />
+                            Check-out: {new Date(currentBooking.check_out).toLocaleDateString()}
+                          </div>
+                        </div>
+                        
+                        {/* Quick Actions */}
+                        <div className="grid grid-cols-2 gap-2 pt-2 border-t border-blue-200">
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="h-8 text-xs"
+                            onClick={async () => {
+                              try {
+                                const folioRes = await axios.get(`/folio/booking/${currentBooking.id}`);
+                                if (folioRes.data && folioRes.data.length > 0) {
+                                  setSelectedFolio(folioRes.data[0]);
+                                  setOpenDialog('folio');
+                                  toast.success('Folio açıldı');
+                                } else {
+                                  toast.error('Folio bulunamadı');
+                                }
+                              } catch (error) {
+                                toast.error('Folio yüklenemedi');
+                              }
+                            }}
+                          >
+                            <FileText className="w-3 h-3 mr-1" />
+                            Folio
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="h-8 text-xs"
+                            onClick={() => {
+                              setSelectedBooking(currentBooking);
+                              setOpenDialog('payment');
+                            }}
+                          >
+                            <DollarSign className="w-3 h-3 mr-1" />
+                            Payment
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="h-8 text-xs"
+                            onClick={async () => {
+                              if (confirm('Check-out yapmak istediğinize emin misiniz?')) {
+                                try {
+                                  await axios.post(`/frontdesk/checkout/${currentBooking.id}`);
+                                  toast.success('Check-out başarılı');
+                                  loadData();
+                                } catch (error) {
+                                  toast.error(error.response?.data?.detail || 'Check-out başarısız');
+                                }
+                              }
+                            }}
+                          >
+                            <LogOut className="w-3 h-3 mr-1" />
+                            Check-out
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="h-8 text-xs"
+                            onClick={() => {
+                              setSelectedGuest(currentGuest);
+                              setOpenDialog('guestinfo');
+                            }}
+                          >
+                            <User className="w-3 h-3 mr-1" />
+                            Guest Info
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Room Status Controls */}
+                    <div className="flex justify-between items-center pt-2">
+                      <span className="text-xs text-gray-600">Room Status:</span>
                       <Select value={room.status} onValueChange={(v) => updateRoomStatus(room.id, v)}>
-                        <SelectTrigger className="w-32 h-8">
+                        <SelectTrigger className="w-32 h-8 text-xs">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -1539,6 +1641,8 @@ const PMSModule = ({ user, tenant, onLogout }) => {
                         </SelectContent>
                       </Select>
                     </div>
+
+                    {/* Room Block Info */}
                     {roomBlock && (
                       <div className="pt-2 border-t">
                         <div className="text-xs font-semibold text-red-600 mb-1">Blocked</div>

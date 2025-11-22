@@ -220,24 +220,28 @@ const MobileHousekeeping = ({ user }) => {
 
   const getActionText = (currentStatus, newStatus) => {
     if (currentStatus === 'dirty' && newStatus === 'cleaning') {
-      return 'Temizliğe Başlıyorum';
+      return 'Temizliğe Başla';
     } else if (currentStatus === 'cleaning' && newStatus === 'inspected') {
       return 'Temizlik Tamamlandı';
+    } else if (currentStatus === 'inspected' && newStatus === 'available') {
+      return 'Müsait Yap';
     } else if (currentStatus === 'available' && newStatus === 'dirty') {
-      return 'Odayı Kirliye Alıyorum';
+      return 'Kirliye Al';
     }
     return 'Durum Değiştir';
   };
 
   const getActionDescription = (roomNumber, currentStatus, newStatus) => {
     if (currentStatus === 'available' && newStatus === 'dirty') {
-      return `Oda ${roomNumber} müsait durumdan kirli duruma alınacak. Bu işlemi onaylıyor musunuz?`;
+      return `Oda ${roomNumber} kirliye alınacak.`;
     } else if (currentStatus === 'dirty' && newStatus === 'cleaning') {
-      return `Oda ${roomNumber} temizliğine başlayacaksınız. Onaylıyor musunuz?`;
+      return `Oda ${roomNumber} temizliğe başlanacak.`;
     } else if (currentStatus === 'cleaning' && newStatus === 'inspected') {
-      return `Oda ${roomNumber} temizliği tamamlandı olarak işaretlenecek. Onaylıyor musunuz?`;
+      return `Oda ${roomNumber} temizlik tamamlandı.`;
+    } else if (currentStatus === 'inspected' && newStatus === 'available') {
+      return `Oda ${roomNumber} müsaite açılacak.`;
     }
-    return `Oda ${roomNumber} durumu değiştirilecek. Onaylıyor musunuz?`;
+    return `Oda ${roomNumber} durumu değişecek.`;
   };
 
   const getStatusColor = (status) => {

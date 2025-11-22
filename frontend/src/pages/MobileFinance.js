@@ -57,6 +57,26 @@ const MobileFinance = ({ user }) => {
   const [cashierShiftModalOpen, setCashierShiftModalOpen] = useState(false);
   const [plData, setPlData] = useState(null);
   const [shiftReportData, setShiftReportData] = useState(null);
+  
+  // New state for enhanced features
+  const [cashFlowData, setCashFlowData] = useState(null);
+  const [riskAlerts, setRiskAlerts] = useState(null);
+  const [overdueAccounts, setOverdueAccounts] = useState(null);
+  const [creditViolations, setCreditViolations] = useState(null);
+  const [suspiciousReceivables, setSuspiciousReceivables] = useState(null);
+  const [dailyExpenses, setDailyExpenses] = useState(null);
+  const [bankBalances, setBankBalances] = useState(null);
+  const [cashFlowModalOpen, setCashFlowModalOpen] = useState(false);
+  const [riskModalOpen, setRiskModalOpen] = useState(false);
+  const [folioExtractModalOpen, setFolioExtractModalOpen] = useState(false);
+  const [selectedFolioExtract, setSelectedFolioExtract] = useState(null);
+  const [enhancedInvoices, setEnhancedInvoices] = useState([]);
+  const [invoiceFilters, setInvoiceFilters] = useState({
+    startDate: '',
+    endDate: '',
+    unpaidOnly: false,
+    department: ''
+  });
 
   useEffect(() => {
     loadData();

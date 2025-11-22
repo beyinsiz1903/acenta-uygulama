@@ -28201,11 +28201,12 @@ async def send_weekly_management_email(
         total_revenue += booking.get('total_amount', 0)
     
     # Create email record
+    date_str = today.strftime("%B %d, %Y")
     email_record = {
         'id': str(uuid.uuid4()),
         'tenant_id': current_user.tenant_id,
         'recipient_email': email_config.get('email', current_user.email),
-        'subject': f'Weekly Management Summary - {today.strftime(\"%B %d, %Y\")}',
+        'subject': f'Weekly Management Summary - {date_str}',
         'report_type': 'weekly_summary',
         'report_data': {
             'week_ending': today.date().isoformat(),

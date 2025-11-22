@@ -350,6 +350,26 @@ class PaymentType(str, Enum):
     FINAL = "final"
     REFUND = "refund"
 
+# Finance Mobile Enhancements - Department & Risk Management
+class DepartmentType(str, Enum):
+    ROOMS = "rooms"  # Konaklama
+    FNB = "fnb"  # Restaurant, Bar, Room Service
+    SPA = "spa"  # SPA & Wellness
+    LAUNDRY = "laundry"  # Laundry / Dry Cleaning
+    MINIBAR = "minibar"  # Mini Bar
+    TELEPHONE = "telephone"  # Telephone / Communication
+    TRANSPORTATION = "transportation"  # VIP Transfer
+    TECHNICAL = "technical"  # Technical Charges
+    HOUSEKEEPING_CHARGES = "housekeeping_charges"  # Lost&Found Compensation
+    OTHER = "other"  # Other Services
+
+class RiskLevel(str, Enum):
+    NORMAL = "normal"  # 0-7 days - Green
+    WARNING = "warning"  # 8-14 days - Yellow
+    CRITICAL = "critical"  # 15-30 days - Red
+    SUSPICIOUS = "suspicious"  # 30+ days - Black
+
+
 # Role-Permission Mapping
 ROLE_PERMISSIONS = {
     UserRole.ADMIN: [p.value for p in Permission],  # All permissions

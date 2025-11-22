@@ -71,10 +71,10 @@ const RevenueMobile = ({ user }) => {
       setCancellationData(cancellation.data);
 
       // Load pickup and forecast separately (different parameters)
-      const pickup = await axios.get('/revenue-mobile/pickup-graph');
+      const pickup = await axios.get('/api/revenue-mobile/pickup-graph');
       setPickupData(pickup.data);
 
-      const forecast = await axios.get('/revenue-mobile/forecast', { params: { days_ahead: 30 } });
+      const forecast = await axios.get('/api/revenue-mobile/forecast', { params: { days_ahead: 30 } });
       setForecastData(forecast.data);
 
       toast.success('Veriler güncellendi');

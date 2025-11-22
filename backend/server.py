@@ -35987,9 +35987,7 @@ async def search_reservations(
 # 2. KEYCARD MANAGEMENT - Oda kartı basma sistemi
 @api_router.post("/keycard/issue")
 async def issue_keycard(
-    booking_id: str,
-    card_type: str = "physical",  # physical, mobile, qr
-    validity_hours: int = 48,
+    request: KeycardIssueRequest,
     current_user: User = Depends(get_current_user)
 ):
     """
@@ -35998,7 +35996,7 @@ async def issue_keycard(
     """
     try:
         # Find booking
-        booking = await db.bookings.find_one({'id': booking_id, 'tenant_id': current_user.tenant_id})
+        booking = await db.bookings.find_one({'id': request.booking_id, 'tenant_id': current_user.tenant_id})
         if not booking:
             raise HTTPException(status_code=404, detail="Booking not found")
         

@@ -35990,8 +35990,6 @@ async def issue_keycard(
     Supports: physical cards, mobile keys, QR codes
     """
     try:
-        db = await get_database()
-        
         # Find booking
         booking = await db.bookings.find_one({'id': booking_id, 'tenant_id': current_user.tenant_id})
         if not booking:

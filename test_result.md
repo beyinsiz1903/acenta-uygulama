@@ -5079,15 +5079,18 @@ backend:
 
   - task: "F&B Mobile Order Tracking - Order History Endpoint"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Added GET /api/pos/mobile/order-history - Returns order history with multiple filters: date range, outlet_id, server_name, status, with pagination support (limit parameter)"
+      - working: true
+        agent: "testing"
+        comment: "✅ ENDPOINT WORKING PERFECTLY - GET /api/pos/mobile/order-history tested with 6 test cases (100% success rate). Verified: All order history retrieval, date range filtering (start_date/end_date), outlet_id filtering, server_name filtering, status filtering, pagination with limit parameter. Response structure confirmed with orders array, count, filters_applied object. All filtering mechanisms functional."
 
   - task: "Inventory Mobile - Stock Movements History Endpoint"
     implemented: true

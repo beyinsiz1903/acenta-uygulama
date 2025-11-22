@@ -1055,6 +1055,544 @@ const MobileMaintenance = ({ user }) => {
           </div>
         </DialogContent>
       </Dialog>
+
+
+      {/* SLA Configuration Modal - NEW */}
+      <Dialog open={slaConfigModalOpen} onOpenChange={setSlaConfigModalOpen}>
+        <DialogContent className="max-w-full w-[95vw] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              <Settings className="w-5 h-5" />
+              <span>SLA Ayarları</span>
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600">
+              Her öncelik seviyesi için yanıt ve çözüm sürelerini ayarlayın (dakika cinsinden)
+            </p>
+            
+            {slaConfigurations.map((config) => (
+              <Card key={config.priority} className="border-2">
+                <CardContent className="p-4">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <Badge className={getPriorityColor(config.priority)}>
+                        {config.priority.toUpperCase()}
+                      </Badge>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label className="text-xs">Yanıt Süresi (dk)</Label>
+                        <Input
+                          type="number"
+                          defaultValue={config.response_time_minutes}
+                          id={`response-${config.priority}`}
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs">Çözüm Süresi (dk)</Label>
+                        <Input
+                          type="number"
+                          defaultValue={config.resolution_time_minutes}
+                          id={`resolution-${config.priority}`}
+                          className="mt-1"
+                        />
+                      </div>
+                    </div>
+                    
+                    <Button 
+                      size="sm" 
+                      className="w-full"
+                      onClick={() => {
+                        const response = document.getElementById(`response-${config.priority}`).value;
+                        const resolution = document.getElementById(`resolution-${config.priority}`).value;
+                        handleSlaUpdate(config.priority, response, resolution);
+                      }}
+                    >
+                      Kaydet
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Task Detail Modal with Photos and Parts - NEW */}
+      <Dialog open={taskDetailModalOpen} onOpenChange={setTaskDetailModalOpen}>
+        <DialogContent className="max-w-full w-[95vw] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Görev Detayı</DialogTitle>
+          </DialogHeader>
+          
+          {selectedTask && (
+            <div className="space-y-4">
+              {/* Task Info */}
+              <Card className="bg-gradient-to-r from-indigo-50 to-purple-50">
+                <CardContent className="p-4">
+                  <h3 className="font-bold text-lg mb-2">{selectedTask.title}</h3>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div>
+                      <span className="text-gray-600">Oda:</span>
+                      <span className="font-semibold ml-2">{selectedTask.room_number}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Öncelik:</span>
+                      <Badge className={`ml-2 ${getPriorityColor(selectedTask.priority)}`}>
+                        {selectedTask.priority}
+                      </Badge>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Durum:</span>
+                      <Badge className={`ml-2 ${getStatusColor(selectedTask.status)}`}>
+                        {selectedTask.status}
+                      </Badge>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Atanan:</span>
+                      <span className="font-semibold ml-2">{selectedTask.assigned_to || 'Atanmadı'}</span>
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-700 mt-3">{selectedTask.description}</p>
+                </CardContent>
+              </Card>
+
+              {/* Status Actions */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base">Durum Değiştir</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      size="sm"
+                      className="bg-blue-600"
+                      onClick={() => handleTaskStatusUpdate(selectedTask.id, 'in_progress')}
+                    >
+                      Başla
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="bg-orange-600"
+                      onClick={() => handleTaskStatusUpdate(selectedTask.id, 'on_hold', 'Beklemede')}
+                    >
+                      Beklet
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="bg-purple-600"
+                      onClick={() => handleTaskStatusUpdate(selectedTask.id, 'waiting_parts', 'Parça bekleniyor')}
+                    >
+                      Parça Bekliyor
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="bg-green-600"
+                      onClick={() => handleTaskStatusUpdate(selectedTask.id, 'completed')}
+                    >
+                      Tamamla
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Photos */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Camera className="w-4 h-4" />
+                      <span>Fotoğraflar ({taskPhotos.length})</span>
+                    </div>
+                    <Button
+                      size="sm"
+                      onClick={() => setPhotoUploadModalOpen(true)}
+                    >
+                      <Upload className="w-4 h-4 mr-1" />
+                      Yükle
+                    </Button>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {taskPhotos.length > 0 ? (
+                    <div className="grid grid-cols-2 gap-2">
+                      {taskPhotos.map((photo) => (
+                        <div key={photo.id} className="relative">
+                          <img
+                            src={photo.photo_url}
+                            alt={photo.photo_type}
+                            className="w-full h-32 object-cover rounded border"
+                          />
+                          <Badge className="absolute top-1 left-1 text-xs">
+                            {photo.photo_type}
+                          </Badge>
+                          <p className="text-xs text-gray-600 mt-1">
+                            {new Date(photo.uploaded_at).toLocaleString('tr-TR')}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-center text-gray-500 py-4">Henüz fotoğraf eklenmemiş</p>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Spare Parts Usage */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Tool className="w-4 h-4" />
+                      <span>Kullanılan Parçalar</span>
+                    </div>
+                    <Button
+                      size="sm"
+                      onClick={() => setPartsUsageModalOpen(true)}
+                    >
+                      <Plus className="w-4 h-4 mr-1" />
+                      Ekle
+                    </Button>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {selectedTask.parts_list && selectedTask.parts_list.length > 0 ? (
+                    <div className="space-y-1">
+                      {selectedTask.parts_list.map((part, idx) => (
+                        <div key={idx} className="flex items-center justify-between p-2 bg-gray-50 rounded text-sm">
+                          <span>{part}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-center text-gray-500 py-4">Henüz parça kullanılmamış</p>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Photo Upload Modal - NEW */}
+      <Dialog open={photoUploadModalOpen} onOpenChange={setPhotoUploadModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Fotoğraf Yükle</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div>
+              <Label>Fotoğraf Türü</Label>
+              <Select value={photoType} onValueChange={setPhotoType}>
+                <SelectTrigger className="mt-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="before">Öncesi</SelectItem>
+                  <SelectItem value="during">Süreç</SelectItem>
+                  <SelectItem value="after">Sonrası</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label>Fotoğraf Seç</Label>
+              <Input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={(e) => setPhotoFile(e.target.files[0])}
+                className="mt-1"
+              />
+            </div>
+            
+            {photoFile && (
+              <div className="p-2 bg-green-50 rounded text-sm">
+                <p className="font-semibold">Seçilen dosya:</p>
+                <p>{photoFile.name}</p>
+              </div>
+            )}
+            
+            <Button 
+              className="w-full" 
+              onClick={handlePhotoUpload}
+              disabled={!photoFile}
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              Yükle
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Parts Usage Modal - NEW */}
+      <Dialog open={partsUsageModalOpen} onOpenChange={setPartsUsageModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Parça Kullanımı</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div>
+              <Label>Parça Seçin</Label>
+              <select
+                className="w-full p-2 border rounded mt-1"
+                onChange={(e) => {
+                  const part = partsInventory.find(p => p.id === e.target.value);
+                  setSelectedPart(part);
+                }}
+              >
+                <option value="">Seçin...</option>
+                {partsInventory.filter(p => p.current_stock > 0).map(part => (
+                  <option key={part.id} value={part.id}>
+                    {part.part_name} - Stok: {part.current_stock}
+                  </option>
+                ))}
+              </select>
+            </div>
+            
+            {selectedPart && (
+              <>
+                <Card className="bg-blue-50">
+                  <CardContent className="p-3 text-sm">
+                    <p><strong>Parça:</strong> {selectedPart.part_name}</p>
+                    <p><strong>Kategori:</strong> {selectedPart.category}</p>
+                    <p><strong>Mevcut Stok:</strong> {selectedPart.current_stock}</p>
+                    <p><strong>Birim Fiyat:</strong> {selectedPart.unit_price} ₺</p>
+                    <p><strong>Depo:</strong> {selectedPart.warehouse_location}</p>
+                  </CardContent>
+                </Card>
+                
+                <div>
+                  <Label>Miktar</Label>
+                  <div className="flex items-center space-x-2 mt-1">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setUsageQuantity(Math.max(1, usageQuantity - 1))}
+                    >
+                      <Minus className="w-4 h-4" />
+                    </Button>
+                    <Input
+                      type="number"
+                      value={usageQuantity}
+                      onChange={(e) => setUsageQuantity(parseInt(e.target.value) || 1)}
+                      min="1"
+                      max={selectedPart.current_stock}
+                      className="text-center"
+                    />
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setUsageQuantity(Math.min(selectedPart.current_stock, usageQuantity + 1))}
+                    >
+                      <Plus className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+                
+                <div className="p-3 bg-gray-100 rounded">
+                  <p className="text-sm">
+                    <strong>Toplam Maliyet:</strong> {(selectedPart.unit_price * usageQuantity).toFixed(2)} ₺
+                  </p>
+                </div>
+              </>
+            )}
+            
+            <Button 
+              className="w-full" 
+              onClick={handlePartUsage}
+              disabled={!selectedPart || usageQuantity < 1}
+            >
+              Parça Kullan
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Planned Maintenance Modal - NEW */}
+      <Dialog open={plannedMaintenanceModalOpen} onOpenChange={setPlannedMaintenanceModalOpen}>
+        <DialogContent className="max-w-full w-[95vw] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              <Calendar className="w-5 h-5" />
+              <span>Planlı Bakım Takvimi (30 Gün)</span>
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {plannedMaintenance.length > 0 ? (
+              <>
+                <div className="grid grid-cols-3 gap-2 text-sm">
+                  <Card className="bg-red-50">
+                    <CardContent className="p-3 text-center">
+                      <p className="text-2xl font-bold text-red-700">
+                        {plannedMaintenance.filter(p => p.is_overdue).length}
+                      </p>
+                      <p className="text-xs text-red-600">Gecikmiş</p>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-yellow-50">
+                    <CardContent className="p-3 text-center">
+                      <p className="text-2xl font-bold text-yellow-700">
+                        {plannedMaintenance.filter(p => !p.is_overdue && p.days_until <= 7).length}
+                      </p>
+                      <p className="text-xs text-yellow-600">Bu Hafta</p>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-blue-50">
+                    <CardContent className="p-3 text-center">
+                      <p className="text-2xl font-bold text-blue-700">
+                        {plannedMaintenance.filter(p => p.days_until > 7 && p.days_until <= 30).length}
+                      </p>
+                      <p className="text-xs text-blue-600">Bu Ay</p>
+                    </CardContent>
+                  </Card>
+                </div>
+                
+                <div className="space-y-2">
+                  {plannedMaintenance.map((item) => (
+                    <Card key={item.id} className={`border-2 ${
+                      item.is_overdue ? 'bg-red-50 border-red-300' :
+                      item.days_until <= 7 ? 'bg-yellow-50 border-yellow-300' :
+                      'bg-white border-gray-200'
+                    }`}>
+                      <CardContent className="p-3">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <p className="font-bold text-gray-900">{item.asset_name}</p>
+                            <p className="text-sm text-gray-600">{item.maintenance_type}</p>
+                            <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
+                              <div>
+                                <span className="text-gray-500">Sonraki Bakım:</span>
+                                <p className="font-semibold">
+                                  {new Date(item.next_maintenance).toLocaleDateString('tr-TR')}
+                                </p>
+                              </div>
+                              <div>
+                                <span className="text-gray-500">Periyot:</span>
+                                <p className="font-semibold">{item.frequency_days} gün</p>
+                              </div>
+                              <div>
+                                <span className="text-gray-500">Süre:</span>
+                                <p className="font-semibold">{item.estimated_duration_minutes} dk</p>
+                              </div>
+                              <div>
+                                <span className="text-gray-500">Atanan:</span>
+                                <p className="font-semibold">{item.assigned_to || '-'}</p>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            {item.is_overdue ? (
+                              <Badge className="bg-red-600">
+                                {Math.abs(item.days_until)} gün gecikti
+                              </Badge>
+                            ) : (
+                              <Badge className={
+                                item.days_until <= 7 ? 'bg-yellow-500' : 'bg-blue-500'
+                              }>
+                                {item.days_until} gün kaldı
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <p className="text-center text-gray-500 py-8">Planlı bakım bulunamadı</p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Filter Modal - NEW */}
+      <Dialog open={filterModalOpen} onOpenChange={setFilterModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              <Filter className="w-5 h-5" />
+              <span>Görev Filtreleme</span>
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div>
+              <Label>Durum</Label>
+              <Select value={filters.status} onValueChange={(val) => setFilters({...filters, status: val})}>
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Tümü" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Tümü</SelectItem>
+                  <SelectItem value="open">Açık</SelectItem>
+                  <SelectItem value="in_progress">Devam Ediyor</SelectItem>
+                  <SelectItem value="on_hold">Beklemede</SelectItem>
+                  <SelectItem value="waiting_parts">Parça Bekliyor</SelectItem>
+                  <SelectItem value="completed">Tamamlandı</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label>Öncelik</Label>
+              <Select value={filters.priority} onValueChange={(val) => setFilters({...filters, priority: val})}>
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Tümü" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Tümü</SelectItem>
+                  <SelectItem value="emergency">Acil</SelectItem>
+                  <SelectItem value="urgent">Çok Acil</SelectItem>
+                  <SelectItem value="high">Yüksek</SelectItem>
+                  <SelectItem value="normal">Normal</SelectItem>
+                  <SelectItem value="low">Düşük</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label>Başlangıç Tarihi</Label>
+              <Input
+                type="date"
+                value={filters.start_date}
+                onChange={(e) => setFilters({...filters, start_date: e.target.value})}
+                className="mt-1"
+              />
+            </div>
+            
+            <div>
+              <Label>Bitiş Tarihi</Label>
+              <Input
+                type="date"
+                value={filters.end_date}
+                onChange={(e) => setFilters({...filters, end_date: e.target.value})}
+                className="mt-1"
+              />
+            </div>
+            
+            <div className="flex space-x-2">
+              <Button className="flex-1" onClick={applyFilters}>
+                <Filter className="w-4 h-4 mr-2" />
+                Uygula
+              </Button>
+              <Button variant="outline" onClick={clearFilters}>
+                <X className="w-4 h-4 mr-2" />
+                Temizle
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 };

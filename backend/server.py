@@ -36084,8 +36084,6 @@ async def deactivate_keycard(
     Reasons: checkout, lost, stolen, replaced
     """
     try:
-        db = await get_database()
-        
         keycard = await db.keycards.find_one({'id': keycard_id, 'tenant_id': current_user.tenant_id})
         if not keycard:
             raise HTTPException(status_code=404, detail="Keycard not found")

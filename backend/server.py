@@ -27183,6 +27183,758 @@ async def create_rate_override_mobile(
     }
 
 
+
+
+# ===== DASHBOARD ENHANCEMENTS (REVENUE-EXPENSE, BUDGET, PROFITABILITY, TRENDS) =====
+
+@api_router.get("/dashboard/revenue-expense-chart")
+async def get_revenue_expense_chart(
+    period: str = "30days",  # 30days, 90days, 12months
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Get revenue vs expense chart data for dashboard"""
+    current_user = await get_current_user(credentials)
+    
+    # Calculate date range based on period
+    end = datetime.now(timezone.utc)
+    if period == "30days":
+        start = end - timedelta(days=30)
+        interval = "daily"
+    elif period == "90days":
+        start = end - timedelta(days=90)
+        interval = "weekly"
+    else:  # 12months
+        start = end - timedelta(days=365)
+        interval = "monthly"
+    
+    # Get revenue from folio charges
+    charges = await db.folio_charges.find({
+        'tenant_id': current_user.tenant_id,
+        'voided': False,
+        'date': {
+            '$gte': start.isoformat(),
+            '$lte': end.isoformat()
+        }
+    }).to_list(10000)
+    
+    # Get expenses (simplified - from procurement, maintenance, etc.)
+    expenses = await db.expenses.find({
+        'tenant_id': current_user.tenant_id,
+        'date': {
+            '$gte': start.isoformat(),
+            '$lte': end.isoformat()
+        }
+    }).to_list(10000)
+    
+    # Group data by interval
+    revenue_data = {}
+    expense_data = {}
+    
+    for charge in charges:
+        date_str = charge.get('date', '')[:10]
+        if interval == "daily":
+            key = date_str
+        elif interval == "weekly":
+            week = datetime.fromisoformat(date_str).isocalendar()[1]
+            key = f"W{week}"
+        else:  # monthly
+            key = date_str[:7]  # YYYY-MM
+        
+        revenue_data[key] = revenue_data.get(key, 0) + charge.get('total', 0)
+    
+    for expense in expenses:
+        date_str = expense.get('date', '')[:10]
+        if interval == "daily":
+            key = date_str
+        elif interval == "weekly":
+            week = datetime.fromisoformat(date_str).isocalendar()[1]
+            key = f"W{week}"
+        else:  # monthly
+            key = date_str[:7]
+        
+        expense_data[key] = expense_data.get(key, 0) + expense.get('amount', 0)
+    
+    # Prepare chart data
+    all_keys = sorted(set(list(revenue_data.keys()) + list(expense_data.keys())))
+    chart_data = []
+    
+    for key in all_keys:
+        revenue = revenue_data.get(key, 0)
+        expense = expense_data.get(key, 0)
+        profit = revenue - expense
+        
+        chart_data.append({
+            'period': key,
+            'revenue': round(revenue, 2),
+            'expense': round(expense, 2),
+            'profit': round(profit, 2),
+            'profit_margin': round((profit / revenue * 100), 2) if revenue > 0 else 0
+        })
+    
+    # Calculate totals
+    total_revenue = sum(d['revenue'] for d in chart_data)
+    total_expense = sum(d['expense'] for d in chart_data)
+    total_profit = total_revenue - total_expense
+    avg_profit_margin = round((total_profit / total_revenue * 100), 2) if total_revenue > 0 else 0
+    
+    return {
+        'period': period,
+        'interval': interval,
+        'chart_data': chart_data,
+        'summary': {
+            'total_revenue': round(total_revenue, 2),
+            'total_expense': round(total_expense, 2),
+            'total_profit': round(total_profit, 2),
+            'avg_profit_margin': avg_profit_margin
+        }
+    }
+
+@api_router.get("/dashboard/budget-vs-actual")
+async def get_budget_vs_actual(
+    month: Optional[str] = None,  # YYYY-MM format
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Get budget vs actual comparison for dashboard"""
+    current_user = await get_current_user(credentials)
+    
+    # Default to current month
+    if not month:
+        month = datetime.now(timezone.utc).strftime('%Y-%m')
+    
+    start = datetime.fromisoformat(f"{month}-01")
+    # Last day of month
+    if start.month == 12:
+        end = start.replace(year=start.year + 1, month=1, day=1) - timedelta(days=1)
+    else:
+        end = start.replace(month=start.month + 1, day=1) - timedelta(days=1)
+    
+    # Get budget data
+    budget = await db.budgets.find_one({
+        'tenant_id': current_user.tenant_id,
+        'month': month
+    })
+    
+    # If no budget, create default
+    if not budget:
+        budget = {
+            'revenue_budget': 100000,
+            'expense_budget': 70000,
+            'occupancy_budget': 75,
+            'adr_budget': 150
+        }
+    
+    # Get actual revenue
+    charges = await db.folio_charges.find({
+        'tenant_id': current_user.tenant_id,
+        'voided': False,
+        'date': {
+            '$gte': start.isoformat(),
+            '$lte': end.isoformat()
+        }
+    }).to_list(10000)
+    
+    actual_revenue = sum(c.get('total', 0) for c in charges)
+    
+    # Get actual expenses
+    expenses = await db.expenses.find({
+        'tenant_id': current_user.tenant_id,
+        'date': {
+            '$gte': start.isoformat(),
+            '$lte': end.isoformat()
+        }
+    }).to_list(10000)
+    
+    actual_expense = sum(e.get('amount', 0) for e in expenses)
+    
+    # Get actual occupancy
+    total_rooms = await db.rooms.count_documents({'tenant_id': current_user.tenant_id})
+    days_in_month = (end - start).days + 1
+    available_room_nights = total_rooms * days_in_month
+    
+    bookings = await db.bookings.find({
+        'tenant_id': current_user.tenant_id,
+        'status': {'$in': ['checked_in', 'checked_out']},
+        'check_in': {
+            '$gte': start.isoformat(),
+            '$lte': end.isoformat()
+        }
+    }).to_list(10000)
+    
+    occupied_room_nights = 0
+    for booking in bookings:
+        check_in = max(datetime.fromisoformat(booking['check_in']), start)
+        check_out = min(datetime.fromisoformat(booking['check_out']), end)
+        nights = (check_out - check_in).days
+        occupied_room_nights += max(nights, 1)
+    
+    actual_occupancy = round((occupied_room_nights / available_room_nights * 100), 2) if available_room_nights > 0 else 0
+    
+    # Calculate ADR
+    room_charges = [c for c in charges if c.get('charge_category') == 'room']
+    room_revenue = sum(c.get('total', 0) for c in room_charges)
+    actual_adr = round(room_revenue / occupied_room_nights, 2) if occupied_room_nights > 0 else 0
+    
+    # Calculate variances
+    revenue_variance = round(((actual_revenue - budget['revenue_budget']) / budget['revenue_budget'] * 100), 2) if budget['revenue_budget'] > 0 else 0
+    expense_variance = round(((actual_expense - budget['expense_budget']) / budget['expense_budget'] * 100), 2) if budget['expense_budget'] > 0 else 0
+    occupancy_variance = round(actual_occupancy - budget['occupancy_budget'], 2)
+    adr_variance = round(((actual_adr - budget['adr_budget']) / budget['adr_budget'] * 100), 2) if budget['adr_budget'] > 0 else 0
+    
+    return {
+        'month': month,
+        'categories': [
+            {
+                'name': 'Revenue',
+                'budget': round(budget['revenue_budget'], 2),
+                'actual': round(actual_revenue, 2),
+                'variance': revenue_variance,
+                'status': 'above' if revenue_variance > 0 else 'below' if revenue_variance < 0 else 'on_target'
+            },
+            {
+                'name': 'Expense',
+                'budget': round(budget['expense_budget'], 2),
+                'actual': round(actual_expense, 2),
+                'variance': expense_variance,
+                'status': 'above' if expense_variance > 0 else 'below' if expense_variance < 0 else 'on_target'
+            },
+            {
+                'name': 'Occupancy (%)',
+                'budget': budget['occupancy_budget'],
+                'actual': actual_occupancy,
+                'variance': occupancy_variance,
+                'status': 'above' if occupancy_variance > 0 else 'below' if occupancy_variance < 0 else 'on_target'
+            },
+            {
+                'name': 'ADR',
+                'budget': round(budget['adr_budget'], 2),
+                'actual': actual_adr,
+                'variance': adr_variance,
+                'status': 'above' if adr_variance > 0 else 'below' if adr_variance < 0 else 'on_target'
+            }
+        ]
+    }
+
+@api_router.get("/dashboard/monthly-profitability")
+async def get_monthly_profitability(
+    months: int = 6,  # Last N months
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Get monthly profitability for dashboard"""
+    current_user = await get_current_user(credentials)
+    
+    profitability_data = []
+    
+    for i in range(months, 0, -1):
+        # Calculate month
+        target_date = datetime.now(timezone.utc) - timedelta(days=30*i)
+        month_str = target_date.strftime('%Y-%m')
+        
+        start = datetime.fromisoformat(f"{month_str}-01")
+        if start.month == 12:
+            end = start.replace(year=start.year + 1, month=1, day=1) - timedelta(days=1)
+        else:
+            end = start.replace(month=start.month + 1, day=1) - timedelta(days=1)
+        
+        # Get revenue
+        charges = await db.folio_charges.find({
+            'tenant_id': current_user.tenant_id,
+            'voided': False,
+            'date': {
+                '$gte': start.isoformat(),
+                '$lte': end.isoformat()
+            }
+        }).to_list(10000)
+        
+        revenue = sum(c.get('total', 0) for c in charges)
+        
+        # Get expenses
+        expenses = await db.expenses.find({
+            'tenant_id': current_user.tenant_id,
+            'date': {
+                '$gte': start.isoformat(),
+                '$lte': end.isoformat()
+            }
+        }).to_list(10000)
+        
+        expense = sum(e.get('amount', 0) for e in expenses)
+        
+        # Calculate profitability
+        profit = revenue - expense
+        profit_margin = round((profit / revenue * 100), 2) if revenue > 0 else 0
+        
+        profitability_data.append({
+            'month': month_str,
+            'month_name': target_date.strftime('%B %Y'),
+            'revenue': round(revenue, 2),
+            'expense': round(expense, 2),
+            'profit': round(profit, 2),
+            'profit_margin': profit_margin
+        })
+    
+    # Calculate averages
+    avg_revenue = sum(d['revenue'] for d in profitability_data) / len(profitability_data) if profitability_data else 0
+    avg_expense = sum(d['expense'] for d in profitability_data) / len(profitability_data) if profitability_data else 0
+    avg_profit = sum(d['profit'] for d in profitability_data) / len(profitability_data) if profitability_data else 0
+    avg_profit_margin = sum(d['profit_margin'] for d in profitability_data) / len(profitability_data) if profitability_data else 0
+    
+    # Get current month
+    current_month = profitability_data[-1] if profitability_data else None
+    
+    return {
+        'months_data': profitability_data,
+        'current_month': current_month,
+        'averages': {
+            'avg_revenue': round(avg_revenue, 2),
+            'avg_expense': round(avg_expense, 2),
+            'avg_profit': round(avg_profit, 2),
+            'avg_profit_margin': round(avg_profit_margin, 2)
+        }
+    }
+
+@api_router.get("/dashboard/trend-kpis")
+async def get_trend_kpis(
+    period: str = "7days",  # 7days, 30days, 90days
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Get trending KPIs with comparison for dashboard"""
+    current_user = await get_current_user(credentials)
+    
+    # Calculate periods
+    days = int(period.replace('days', ''))
+    current_end = datetime.now(timezone.utc)
+    current_start = current_end - timedelta(days=days)
+    
+    previous_end = current_start
+    previous_start = previous_end - timedelta(days=days)
+    
+    # Helper function to get metrics for a period
+    async def get_period_metrics(start, end):
+        # Revenue
+        charges = await db.folio_charges.find({
+            'tenant_id': current_user.tenant_id,
+            'voided': False,
+            'date': {
+                '$gte': start.isoformat(),
+                '$lte': end.isoformat()
+            }
+        }).to_list(10000)
+        
+        revenue = sum(c.get('total', 0) for c in charges)
+        room_revenue = sum(c.get('total', 0) for c in charges if c.get('charge_category') == 'room')
+        
+        # Bookings
+        bookings = await db.bookings.find({
+            'tenant_id': current_user.tenant_id,
+            'created_at': {
+                '$gte': start.isoformat(),
+                '$lte': end.isoformat()
+            }
+        }).to_list(10000)
+        
+        bookings_count = len(bookings)
+        
+        # Occupancy
+        total_rooms = await db.rooms.count_documents({'tenant_id': current_user.tenant_id})
+        days_in_period = (end - start).days + 1
+        available_room_nights = total_rooms * days_in_period
+        
+        occupied_bookings = await db.bookings.find({
+            'tenant_id': current_user.tenant_id,
+            'status': {'$in': ['checked_in', 'checked_out']},
+            'check_in': {
+                '$gte': start.isoformat(),
+                '$lte': end.isoformat()
+            }
+        }).to_list(10000)
+        
+        occupied_room_nights = 0
+        for booking in occupied_bookings:
+            check_in = max(datetime.fromisoformat(booking['check_in']), start)
+            check_out = min(datetime.fromisoformat(booking['check_out']), end)
+            nights = (check_out - check_in).days
+            occupied_room_nights += max(nights, 1)
+        
+        occupancy = round((occupied_room_nights / available_room_nights * 100), 2) if available_room_nights > 0 else 0
+        
+        # ADR
+        adr = round(room_revenue / occupied_room_nights, 2) if occupied_room_nights > 0 else 0
+        
+        # RevPAR
+        revpar = round(room_revenue / available_room_nights, 2) if available_room_nights > 0 else 0
+        
+        # Guest satisfaction (from reviews)
+        reviews = await db.reviews.find({
+            'tenant_id': current_user.tenant_id,
+            'created_at': {
+                '$gte': start.isoformat(),
+                '$lte': end.isoformat()
+            }
+        }).to_list(1000)
+        
+        avg_rating = sum(r.get('rating', 0) for r in reviews) / len(reviews) if reviews else 0
+        
+        return {
+            'revenue': revenue,
+            'bookings': bookings_count,
+            'occupancy': occupancy,
+            'adr': adr,
+            'revpar': revpar,
+            'avg_rating': round(avg_rating, 2)
+        }
+    
+    current_metrics = await get_period_metrics(current_start, current_end)
+    previous_metrics = await get_period_metrics(previous_start, previous_end)
+    
+    # Calculate trends
+    def calculate_trend(current, previous):
+        if previous == 0:
+            return 0
+        return round(((current - previous) / previous * 100), 2)
+    
+    kpis = [
+        {
+            'name': 'Revenue',
+            'current': round(current_metrics['revenue'], 2),
+            'previous': round(previous_metrics['revenue'], 2),
+            'trend': calculate_trend(current_metrics['revenue'], previous_metrics['revenue']),
+            'unit': 'currency',
+            'icon': 'dollar'
+        },
+        {
+            'name': 'Bookings',
+            'current': current_metrics['bookings'],
+            'previous': previous_metrics['bookings'],
+            'trend': calculate_trend(current_metrics['bookings'], previous_metrics['bookings']),
+            'unit': 'count',
+            'icon': 'calendar'
+        },
+        {
+            'name': 'Occupancy',
+            'current': current_metrics['occupancy'],
+            'previous': previous_metrics['occupancy'],
+            'trend': calculate_trend(current_metrics['occupancy'], previous_metrics['occupancy']),
+            'unit': 'percentage',
+            'icon': 'users'
+        },
+        {
+            'name': 'ADR',
+            'current': round(current_metrics['adr'], 2),
+            'previous': round(previous_metrics['adr'], 2),
+            'trend': calculate_trend(current_metrics['adr'], previous_metrics['adr']),
+            'unit': 'currency',
+            'icon': 'trending'
+        },
+        {
+            'name': 'RevPAR',
+            'current': round(current_metrics['revpar'], 2),
+            'previous': round(previous_metrics['revpar'], 2),
+            'trend': calculate_trend(current_metrics['revpar'], previous_metrics['revpar']),
+            'unit': 'currency',
+            'icon': 'chart'
+        },
+        {
+            'name': 'Guest Rating',
+            'current': current_metrics['avg_rating'],
+            'previous': previous_metrics['avg_rating'],
+            'trend': calculate_trend(current_metrics['avg_rating'], previous_metrics['avg_rating']),
+            'unit': 'rating',
+            'icon': 'star'
+        }
+    ]
+    
+    return {
+        'period': period,
+        'kpis': kpis
+    }
+
+# ===== F&B MODULE ENHANCEMENTS =====
+
+@api_router.get("/fnb/dashboard")
+async def get_fnb_dashboard(
+    date: Optional[str] = None,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Get F&B dashboard overview"""
+    current_user = await get_current_user(credentials)
+    
+    # Default to today
+    if not date:
+        date = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+    
+    target_date = datetime.fromisoformat(date)
+    start = target_date.replace(hour=0, minute=0, second=0, microsecond=0)
+    end = start + timedelta(days=1)
+    
+    # Get F&B charges
+    charges = await db.folio_charges.find({
+        'tenant_id': current_user.tenant_id,
+        'voided': False,
+        'charge_category': {'$in': ['food', 'beverage']},
+        'date': {
+            '$gte': start.isoformat(),
+            '$lte': end.isoformat()
+        }
+    }).to_list(10000)
+    
+    food_revenue = sum(c.get('total', 0) for c in charges if c.get('charge_category') == 'food')
+    beverage_revenue = sum(c.get('total', 0) for c in charges if c.get('charge_category') == 'beverage')
+    total_revenue = food_revenue + beverage_revenue
+    
+    # Get POS orders
+    orders = await db.pos_orders.find({
+        'tenant_id': current_user.tenant_id,
+        'created_at': {
+            '$gte': start.isoformat(),
+            '$lte': end.isoformat()
+        }
+    }).to_list(10000)
+    
+    orders_count = len(orders)
+    avg_order_value = round(total_revenue / orders_count, 2) if orders_count > 0 else 0
+    
+    # Get table turnover (simplified)
+    tables_used = len(set(o.get('table_number') for o in orders if o.get('table_number')))
+    
+    # Previous day comparison
+    prev_start = start - timedelta(days=1)
+    prev_end = start
+    
+    prev_charges = await db.folio_charges.find({
+        'tenant_id': current_user.tenant_id,
+        'voided': False,
+        'charge_category': {'$in': ['food', 'beverage']},
+        'date': {
+            '$gte': prev_start.isoformat(),
+            '$lte': prev_end.isoformat()
+        }
+    }).to_list(10000)
+    
+    prev_revenue = sum(c.get('total', 0) for c in prev_charges)
+    revenue_change = round(((total_revenue - prev_revenue) / prev_revenue * 100), 2) if prev_revenue > 0 else 0
+    
+    return {
+        'date': date,
+        'summary': {
+            'total_revenue': round(total_revenue, 2),
+            'food_revenue': round(food_revenue, 2),
+            'beverage_revenue': round(beverage_revenue, 2),
+            'orders_count': orders_count,
+            'avg_order_value': avg_order_value,
+            'tables_used': tables_used,
+            'revenue_change': revenue_change
+        }
+    }
+
+@api_router.get("/fnb/sales-report")
+async def get_fnb_sales_report(
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Get F&B sales report"""
+    current_user = await get_current_user(credentials)
+    
+    # Default to last 30 days
+    if start_date and end_date:
+        start = datetime.fromisoformat(start_date)
+        end = datetime.fromisoformat(end_date)
+    else:
+        end = datetime.now(timezone.utc)
+        start = end - timedelta(days=30)
+    
+    # Get charges
+    charges = await db.folio_charges.find({
+        'tenant_id': current_user.tenant_id,
+        'voided': False,
+        'charge_category': {'$in': ['food', 'beverage']},
+        'date': {
+            '$gte': start.isoformat(),
+            '$lte': end.isoformat()
+        }
+    }).to_list(10000)
+    
+    # Daily breakdown
+    daily_sales = {}
+    for charge in charges:
+        date_str = charge.get('date', '')[:10]
+        if date_str not in daily_sales:
+            daily_sales[date_str] = {'food': 0, 'beverage': 0}
+        
+        category = charge.get('charge_category')
+        daily_sales[date_str][category] += charge.get('total', 0)
+    
+    daily_data = []
+    for date_str in sorted(daily_sales.keys()):
+        daily_data.append({
+            'date': date_str,
+            'food': round(daily_sales[date_str]['food'], 2),
+            'beverage': round(daily_sales[date_str]['beverage'], 2),
+            'total': round(daily_sales[date_str]['food'] + daily_sales[date_str]['beverage'], 2)
+        })
+    
+    # Category totals
+    total_food = sum(d['food'] for d in daily_data)
+    total_beverage = sum(d['beverage'] for d in daily_data)
+    total_sales = total_food + total_beverage
+    
+    return {
+        'period': {
+            'start_date': start.strftime('%Y-%m-%d'),
+            'end_date': end.strftime('%Y-%m-%d')
+        },
+        'summary': {
+            'total_sales': round(total_sales, 2),
+            'food_sales': round(total_food, 2),
+            'beverage_sales': round(total_beverage, 2),
+            'food_percentage': round((total_food / total_sales * 100), 2) if total_sales > 0 else 0,
+            'beverage_percentage': round((total_beverage / total_sales * 100), 2) if total_sales > 0 else 0
+        },
+        'daily_sales': daily_data
+    }
+
+@api_router.get("/fnb/menu-performance")
+async def get_fnb_menu_performance(
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Get menu item performance analysis"""
+    current_user = await get_current_user(credentials)
+    
+    # Default to last 30 days
+    if start_date and end_date:
+        start = datetime.fromisoformat(start_date)
+        end = datetime.fromisoformat(end_date)
+    else:
+        end = datetime.now(timezone.utc)
+        start = end - timedelta(days=30)
+    
+    # Get POS orders with item details
+    orders = await db.pos_orders.find({
+        'tenant_id': current_user.tenant_id,
+        'created_at': {
+            '$gte': start.isoformat(),
+            '$lte': end.isoformat()
+        }
+    }).to_list(10000)
+    
+    # Aggregate by menu item
+    menu_stats = {}
+    for order in orders:
+        items = order.get('items', [])
+        for item in items:
+            item_name = item.get('item_name', 'Unknown')
+            quantity = item.get('quantity', 1)
+            price = item.get('price', 0)
+            
+            if item_name not in menu_stats:
+                menu_stats[item_name] = {
+                    'quantity_sold': 0,
+                    'revenue': 0,
+                    'orders_count': 0
+                }
+            
+            menu_stats[item_name]['quantity_sold'] += quantity
+            menu_stats[item_name]['revenue'] += price * quantity
+            menu_stats[item_name]['orders_count'] += 1
+    
+    # Format and sort
+    menu_items = []
+    for item_name, stats in menu_stats.items():
+        menu_items.append({
+            'item_name': item_name,
+            'quantity_sold': stats['quantity_sold'],
+            'revenue': round(stats['revenue'], 2),
+            'orders_count': stats['orders_count'],
+            'avg_price': round(stats['revenue'] / stats['quantity_sold'], 2) if stats['quantity_sold'] > 0 else 0
+        })
+    
+    # Sort by revenue
+    menu_items.sort(key=lambda x: x['revenue'], reverse=True)
+    
+    # Get top 10 and bottom 5
+    top_items = menu_items[:10]
+    bottom_items = menu_items[-5:] if len(menu_items) > 5 else []
+    
+    total_revenue = sum(item['revenue'] for item in menu_items)
+    
+    return {
+        'period': {
+            'start_date': start.strftime('%Y-%m-%d'),
+            'end_date': end.strftime('%Y-%m-%d')
+        },
+        'total_items': len(menu_items),
+        'total_revenue': round(total_revenue, 2),
+        'top_performers': top_items,
+        'bottom_performers': bottom_items
+    }
+
+@api_router.get("/fnb/revenue-chart")
+async def get_fnb_revenue_chart(
+    period: str = "30days",  # 7days, 30days, 90days
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Get F&B revenue chart data"""
+    current_user = await get_current_user(credentials)
+    
+    # Calculate date range
+    days = int(period.replace('days', ''))
+    end = datetime.now(timezone.utc)
+    start = end - timedelta(days=days)
+    
+    # Get charges
+    charges = await db.folio_charges.find({
+        'tenant_id': current_user.tenant_id,
+        'voided': False,
+        'charge_category': {'$in': ['food', 'beverage']},
+        'date': {
+            '$gte': start.isoformat(),
+            '$lte': end.isoformat()
+        }
+    }).to_list(10000)
+    
+    # Group by date
+    daily_revenue = {}
+    for charge in charges:
+        date_str = charge.get('date', '')[:10]
+        category = charge.get('charge_category')
+        
+        if date_str not in daily_revenue:
+            daily_revenue[date_str] = {'food': 0, 'beverage': 0}
+        
+        daily_revenue[date_str][category] += charge.get('total', 0)
+    
+    # Prepare chart data
+    chart_data = []
+    current_date = start
+    while current_date <= end:
+        date_str = current_date.strftime('%Y-%m-%d')
+        food = daily_revenue.get(date_str, {}).get('food', 0)
+        beverage = daily_revenue.get(date_str, {}).get('beverage', 0)
+        
+        chart_data.append({
+            'date': date_str,
+            'food': round(food, 2),
+            'beverage': round(beverage, 2),
+            'total': round(food + beverage, 2)
+        })
+        
+        current_date += timedelta(days=1)
+    
+    total_food = sum(d['food'] for d in chart_data)
+    total_beverage = sum(d['beverage'] for d in chart_data)
+    
+    return {
+        'period': period,
+        'chart_data': chart_data,
+        'summary': {
+            'total_food': round(total_food, 2),
+            'total_beverage': round(total_beverage, 2),
+            'total_revenue': round(total_food + total_beverage, 2)
+        }
+    }
+
+
 # ===== 5. MESSAGING MODULE (WHATSAPP / SMS / AUTO MESSAGES) =====
 
 class MessageType(str, Enum):

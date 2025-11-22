@@ -37,6 +37,8 @@ import MobileMaintenance from "@/pages/MobileMaintenance";
 import MobileFinance from "@/pages/MobileFinance";
 import MobileSecurity from "@/pages/MobileSecurity";
 import MobileGM from "@/pages/MobileGM";
+import MobileOrderTracking from "@/pages/MobileOrderTracking";
+import MobileInventory from "@/pages/MobileInventory";
 import MaintenancePriorityVisual from "@/pages/MaintenancePriorityVisual";
 import CostManagement from "@/pages/CostManagement";
 import FeaturesShowcase from "@/pages/FeaturesShowcase";

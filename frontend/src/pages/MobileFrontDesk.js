@@ -80,36 +80,30 @@ const MobileFrontDesk = ({ user }) => {
   const loadData = async () => {
     try {
       setLoading(true);
-      const today = new Date().toISOString().split('T')[0];
       
-      const [bookingsRes, roomsRes] = await Promise.all([
-        axios.get('/pms/bookings'),
-        axios.get('/housekeeping/room-status')
+      const [arrivalsRes, departuresRes, inHouseRes, roomsRes, bookingsRes] = await Promise.all([
+        axios.get('/unified/today-arrivals'),
+        axios.get('/unified/today-departures'),
+        axios.get('/unified/in-house'),
+        axios.get('/housekeeping/room-status'),
+        axios.get('/pms/bookings').catch(() => ({ data: { bookings: [] } }))
       ]);
 
       const allBookings = bookingsRes.data.bookings || [];
       setAllBookings(allBookings);
       
-      // Filter arrivals
-      const arrivals = allBookings.filter(b => 
-        b.check_in?.startsWith(today) && 
-        ['confirmed', 'guaranteed'].includes(b.status)
-      );
-      
-      // Filter departures
-      const departures = allBookings.filter(b => 
-        b.check_out?.startsWith(today) && 
-        b.status === 'checked_in'
-      );
-      
-      // In-house guests
-      const inHouseGuests = allBookings.filter(b => b.status === 'checked_in');
-
-      setTodayArrivals(arrivals);
-      setTodayDepartures(departures);
-      setInHouse(inHouseGuests);
+      // Use unified endpoints
+      setTodayArrivals(arrivalsRes.data.arrivals || []);
+      setTodayDepartures(departuresRes.data.departures || []);
+      setInHouse(inHouseRes.data.in_house || []);
       setRoomAvailability(roomsRes.data);
       setAllRooms(roomsRes.data.rooms || []);
+      
+      console.log('🔍 Front Desk Data Loaded:', {
+        arrivals: arrivalsRes.data.count,
+        departures: departuresRes.data.count,
+        inHouse: inHouseRes.data.count
+      });
     } catch (error) {
       console.error('Failed to load front desk data:', error);
       toast.error('✗ Yükleme');

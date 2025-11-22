@@ -456,6 +456,9 @@ const MobileApprovals = ({ user }) => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Property Switcher */}
+      <PropertySwitcher onPropertyChange={() => loadData()} />
     </div>
   );
 };

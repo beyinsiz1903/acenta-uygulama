@@ -6880,3 +6880,141 @@ agent_communication:
     message: "✅ FINANCE MOBILE ENDPOINTS TESTING COMPLETED (100% Success Rate - 20/20 tests passed). Successfully tested all 9 Turkish Finance Mobile Development endpoints requested in the review. AUTHENTICATION: Successfully registered new tenant and authenticated. ENDPOINTS TESTED: 1) Cash Flow Summary - Today's inflow/outflow, weekly plan, bank balances ✅, 2) Overdue Accounts - Risk classification (normal/warning/critical/suspicious) with min_days parameter ✅, 3) Credit Limit Violations - Over-limit and near-limit (90%+) detection ✅, 4) Suspicious Receivables - 30+ days or high amount criteria ✅, 5) Risk Alerts - Comprehensive alerts with severity levels ✅, 6) Daily Expenses - Category and department breakdown with date filtering ✅, 7) Folio Full Extract - Complete folio details with charges/payments ✅, 8) Invoices - Advanced filtering (unpaid_only, date range) ✅, 9) Bank Balances - Multi-currency support ✅. ERROR HANDLING: Proper 404/422 responses for invalid inputs ✅. RESPONSE STRUCTURES: All endpoints return proper JSON with required fields ✅. TURKISH CONTEXT: All endpoints designed for Turkish finance operations (TRY currency, Turkish business logic) ✅. All finance mobile endpoints are production-ready and working correctly. Main agent can proceed with frontend integration or summarize completion."
   - agent: "testing"
     message: "✅ MAINTENANCE MOBILE ENDPOINTS TESTING COMPLETED (100% Success Rate - 13/13 tests passed). Successfully tested all 7 new maintenance endpoint categories as requested in the review. AUTHENTICATION: Successfully authenticated with existing tenant. ENDPOINTS TESTED: 1) SLA Configurations - GET returns 5 priority levels, POST updates urgent priority (25min response, 200min resolution) ✅, 2) Task Status Management - Status updates with started_at timestamp tracking ✅, 3) Task Photos - Upload (base64 data) and retrieval with before/during/after types ✅, 4) Spare Parts - Inventory management with 6 total parts, 2 low stock items, filtering working ✅, 5) Asset History & MTBF - Maintenance history with MTBF calculations (hours/days), cost tracking ✅, 6) Planned Maintenance - Calendar with 1 overdue item, upcoming counts (7days/30days) ✅, 7) Task Filtering - Multi-criteria filtering (status, priority, combinations) ✅. DEMO DATA VERIFIED: 5 SLA configurations ✅, 2 low stock spare parts ✅, 1 overdue planned maintenance ✅. RESPONSE STRUCTURES: All endpoints return HTTP 200 with proper JSON structures ✅. ERROR HANDLING: Proper 404 responses for non-existent resources ✅. All maintenance mobile endpoints are production-ready and working correctly. Main agent should summarize completion."
+
+
+  21. Revenue Mobile Module - Mobile revenue management endpoints (ADR, RevPAR, Total Revenue, Segment Distribution, Pickup Graph, Forecast, Channel Distribution, Cancellation Report, Rate Override)
+
+backend:
+  - task: "Revenue Mobile - ADR Endpoint"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added GET /api/revenue-mobile/adr - Returns ADR (Average Daily Rate) with period comparison, room nights, room revenue, trend analysis. Supports custom date ranges, defaults to last 30 days."
+
+  - task: "Revenue Mobile - RevPAR Endpoint"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added GET /api/revenue-mobile/revpar - Returns RevPAR (Revenue Per Available Room) with occupancy percentage, available/occupied room nights, period comparison, trend analysis."
+
+  - task: "Revenue Mobile - Total Revenue Endpoint"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added GET /api/revenue-mobile/total-revenue - Returns total revenue breakdown by category (room, food, beverage, minibar, spa, laundry, parking, other), daily breakdown, period comparison."
+
+  - task: "Revenue Mobile - Segment Distribution Endpoint"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added GET /api/revenue-mobile/segment-distribution - Returns revenue distribution by market segment (corporate, leisure, group, etc.) with percentage, bookings count, room nights, avg booking value."
+
+  - task: "Revenue Mobile - Pickup Graph Endpoint"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added GET /api/revenue-mobile/pickup-graph - Returns booking pace analysis showing pickup data at 90/60/30/14/7/3/1/0 days out, pickup velocity (last 7 days), year-over-year comparison."
+
+  - task: "Revenue Mobile - Forecast Endpoint"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added GET /api/revenue-mobile/forecast - Returns revenue forecast for next N days (default 30) with daily breakdown, estimated room/total revenue, occupancy projections, year-over-year variance."
+
+  - task: "Revenue Mobile - Channel Distribution Endpoint"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added GET /api/revenue-mobile/channel-distribution - Returns revenue by booking channel (OTA, direct, corporate, etc.) with gross/net revenue, commission breakdown, bookings count, avg booking value."
+
+  - task: "Revenue Mobile - Cancellation Report Endpoint"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added GET /api/revenue-mobile/cancellation-report - Returns cancellation and no-show analysis with rates, lost revenue, cancellation fees collected, by-channel breakdown, lead time analysis."
+
+  - task: "Revenue Mobile - Rate Override Endpoint"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added POST /api/revenue-mobile/rate-override - Rate override with approval workflow. Requires approval for >15% changes. Creates approval request for significant changes. Tracks change percentage, reason, created by."
+
+metadata:
+  created_by: "main_agent"
+  version: "2.0"
+  test_sequence: 9
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "Revenue Mobile - ADR Endpoint"
+    - "Revenue Mobile - RevPAR Endpoint"
+    - "Revenue Mobile - Total Revenue Endpoint"
+    - "Revenue Mobile - Segment Distribution Endpoint"
+    - "Revenue Mobile - Pickup Graph Endpoint"
+    - "Revenue Mobile - Forecast Endpoint"
+    - "Revenue Mobile - Channel Distribution Endpoint"
+    - "Revenue Mobile - Cancellation Report Endpoint"
+    - "Revenue Mobile - Rate Override Endpoint"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+  - agent: "main"
+    message: "✅ REVENUE MOBILE MODULE IMPLEMENTED - Added 9 comprehensive revenue management endpoints optimized for mobile apps. Endpoints include: 1) ADR with period comparison and trend analysis, 2) RevPAR with occupancy metrics, 3) Total Revenue with category breakdown and daily data, 4) Segment Distribution by market segment with percentages, 5) Pickup Graph showing booking pace at key intervals, 6) Forecast with daily projections and YoY variance, 7) Channel Distribution with gross/net revenue and commission breakdown, 8) Cancellation Report with lost revenue and lead time analysis, 9) Rate Override with approval workflow for significant changes. All endpoints support date range filtering and include comparison metrics. Ready for backend testing."
+

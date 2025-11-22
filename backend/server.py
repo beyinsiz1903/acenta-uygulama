@@ -36294,9 +36294,10 @@ async def get_in_house_unified(
 # ============================================================================
 
 class CleaningRequestCreate(BaseModel):
-    room_number: str
-    request_type: str = "regular"  # regular, urgent, turndown, do_not_disturb
-    notes: str = ""
+    booking_id: Optional[str] = None
+    room_number: Optional[str] = None
+    type: str = "regular"  # regular, urgent, turndown, do_not_disturb
+    notes: Optional[str] = ""
 
 # 1. GUEST REQUESTS CLEANING
 @api_router.post("/guest/request-cleaning")

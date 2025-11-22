@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
@@ -17,6 +17,17 @@ const Layout = ({ children, user, tenant, onLogout, currentModule }) => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const navScrollRef = useRef(null);
+
+  // Scroll active item into view when currentModule changes
+  useEffect(() => {
+    if (navScrollRef.current && currentModule) {
+      const activeButton = navScrollRef.current.querySelector(`[data-testid="nav-${currentModule}"]`);
+      if (activeButton) {
+        activeButton.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      }
+    }
+  }, [currentModule]);
 
   const navigation = [
     { name: t('nav.dashboard'), path: '/', icon: Home, id: 'dashboard' },

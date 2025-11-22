@@ -36012,16 +36012,16 @@ async def issue_keycard(
         # Generate keycard data
         keycard_id = str(uuid.uuid4())
         issue_time = datetime.now(timezone.utc)
-        expiry_time = issue_time + timedelta(hours=validity_hours)
+        expiry_time = issue_time + timedelta(hours=request.validity_hours)
         
         keycard_data = {
             'id': keycard_id,
-            'booking_id': booking_id,
+            'booking_id': request.booking_id,
             'room_id': booking['room_id'],
             'room_number': room['room_number'],
             'guest_id': booking['guest_id'],
             'guest_name': booking['guest_name'],
-            'card_type': card_type,
+            'card_type': request.card_type,
             'issued_at': issue_time.isoformat(),
             'expires_at': expiry_time.isoformat(),
             'issued_by': current_user.id,

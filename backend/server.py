@@ -36526,6 +36526,404 @@ async def get_my_cleaning_requests(
 
 
 # ============================================================================
+# FINANCIAL OVERVIEW EXPANSION - EXPENSE CATEGORIES
+# ============================================================================
+
+@api_router.get("/finance/expense-summary")
+async def get_expense_summary(
+    date: Optional[str] = None,  # YYYY-MM-DD
+    period: str = "today",  # today, week, month
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get expense summary with categories
+    Categories: F&B costs, housekeeping, maintenance, staff, utilities, procurement
+    """
+    try:
+        if date:
+            target_date = datetime.fromisoformat(date).date()
+        else:
+            target_date = datetime.now(timezone.utc).date()
+        
+        # Calculate date range
+        if period == "today":
+            start_date = target_date
+            end_date = target_date
+        elif period == "week":
+            start_date = target_date - timedelta(days=7)
+            end_date = target_date
+        else:  # month
+            start_date = target_date.replace(day=1)
+            end_date = target_date
+        
+        # Sample expense data (in production, fetch from expenses collection)
+        expenses = {
+            'fnb_costs': {
+                'amount': 15420.50,
+                'category': 'F&B Maliyetleri',
+                'breakdown': {
+                    'food_purchases': 8500.00,
+                    'beverages': 4200.50,
+                    'supplies': 2720.00
+                }
+            },
+            'housekeeping_expenses': {
+                'amount': 8750.00,
+                'category': 'Temizlik Giderleri',
+                'breakdown': {
+                    'cleaning_supplies': 3200.00,
+                    'laundry': 4050.00,
+                    'equipment': 1500.00
+                }
+            },
+            'maintenance_costs': {
+                'amount': 5600.00,
+                'category': 'Teknik Maliyetler',
+                'breakdown': {
+                    'repairs': 3200.00,
+                    'parts': 1800.00,
+                    'preventive': 600.00
+                }
+            },
+            'staff_costs': {
+                'amount': 45800.00,
+                'category': 'Personel Maliyetleri',
+                'breakdown': {
+                    'hourly_wages': 28500.00,
+                    'overtime': 8200.00,
+                    'benefits': 9100.00
+                },
+                'hourly_rate_avg': 85.50
+            },
+            'utilities': {
+                'amount': 12300.00,
+                'category': 'Enerji & Utilities',
+                'breakdown': {
+                    'electricity': 7200.00,
+                    'water': 2800.00,
+                    'gas': 2300.00
+                }
+            },
+            'procurement': {
+                'amount': 9850.00,
+                'category': 'Satın Alma',
+                'breakdown': {
+                    'supplies': 5200.00,
+                    'equipment': 3150.00,
+                    'other': 1500.00
+                }
+            }
+        }
+        
+        # Calculate totals
+        total_expenses = sum(cat['amount'] for cat in expenses.values())
+        
+        # Calculate daily average for the period
+        days_in_period = (end_date - start_date).days + 1
+        daily_avg = total_expenses / days_in_period if days_in_period > 0 else 0
+        
+        return {
+            'period': period,
+            'start_date': start_date.isoformat(),
+            'end_date': end_date.isoformat(),
+            'total_expenses': round(total_expenses, 2),
+            'daily_average': round(daily_avg, 2),
+            'categories': expenses,
+            'top_expense': max(expenses.items(), key=lambda x: x[1]['amount'])[1]['category']
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get expense summary: {str(e)}")
+
+
+# ============================================================================
+# 7-DAY TREND ANALYTICS
+# ============================================================================
+
+@api_router.get("/analytics/7day-trend")
+async def get_7day_trend(
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get 7-day trend for arrivals, departures, revenue, occupancy
+    """
+    try:
+        today = datetime.now(timezone.utc).date()
+        trend_data = []
+        
+        for i in range(6, -1, -1):  # Last 7 days
+            date = today - timedelta(days=i)
+            date_str = date.isoformat()
+            
+            # Get arrivals for this date
+            arrivals = await db.bookings.count_documents({
+                'check_in': date_str,
+                'tenant_id': current_user.tenant_id
+            })
+            
+            # Get departures for this date
+            departures = await db.bookings.count_documents({
+                'check_out': date_str,
+                'tenant_id': current_user.tenant_id
+            })
+            
+            # Get occupancy (checked in bookings)
+            occupancy = await db.bookings.count_documents({
+                'check_in': {'$lte': date_str},
+                'check_out': {'$gt': date_str},
+                'status': 'checked_in',
+                'tenant_id': current_user.tenant_id
+            })
+            
+            # Calculate revenue for the day (simplified)
+            daily_bookings = await db.bookings.find({
+                'check_in': {'$lte': date_str},
+                'check_out': {'$gt': date_str},
+                'status': {'$in': ['checked_in', 'checked_out']},
+                'tenant_id': current_user.tenant_id
+            }, {'_id': 0, 'total_amount': 1}).to_list(500)
+            
+            daily_revenue = sum(b.get('total_amount', 0) for b in daily_bookings)
+            
+            trend_data.append({
+                'date': date_str,
+                'day_name': date.strftime('%a'),
+                'arrivals': arrivals,
+                'departures': departures,
+                'occupancy': occupancy,
+                'revenue': round(daily_revenue, 2)
+            })
+        
+        # Calculate changes
+        if len(trend_data) >= 2:
+            latest = trend_data[-1]
+            previous = trend_data[-2]
+            
+            changes = {
+                'arrivals_change': latest['arrivals'] - previous['arrivals'],
+                'departures_change': latest['departures'] - previous['departures'],
+                'occupancy_change': latest['occupancy'] - previous['occupancy'],
+                'revenue_change': round(latest['revenue'] - previous['revenue'], 2)
+            }
+        else:
+            changes = {}
+        
+        return {
+            'trend': trend_data,
+            'changes': changes,
+            'period': '7 days',
+            'generated_at': datetime.now(timezone.utc).isoformat()
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get 7-day trend: {str(e)}")
+
+
+# ============================================================================
+# SLA CONFIGURATION & TRACKING
+# ============================================================================
+
+class SLAConfig(BaseModel):
+    category: str  # maintenance, housekeeping, guest_request
+    response_time_minutes: int
+    resolution_time_minutes: int
+    priority: str = "normal"  # low, normal, high, urgent
+
+@api_router.post("/settings/sla")
+async def create_sla_config(
+    config: SLAConfig,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Create or update SLA configuration for property
+    """
+    try:
+        sla_id = str(uuid.uuid4())
+        
+        # Check if SLA exists for this category
+        existing = await db.sla_configs.find_one({
+            'tenant_id': current_user.tenant_id,
+            'category': config.category,
+            'priority': config.priority
+        }, {'_id': 0})
+        
+        if existing:
+            # Update existing
+            await db.sla_configs.update_one(
+                {
+                    'tenant_id': current_user.tenant_id,
+                    'category': config.category,
+                    'priority': config.priority
+                },
+                {
+                    '$set': {
+                        'response_time_minutes': config.response_time_minutes,
+                        'resolution_time_minutes': config.resolution_time_minutes,
+                        'updated_at': datetime.now(timezone.utc).isoformat(),
+                        'updated_by': current_user.name
+                    }
+                }
+            )
+            sla_id = existing['id']
+        else:
+            # Create new
+            await db.sla_configs.insert_one({
+                'id': sla_id,
+                'tenant_id': current_user.tenant_id,
+                'category': config.category,
+                'priority': config.priority,
+                'response_time_minutes': config.response_time_minutes,
+                'resolution_time_minutes': config.resolution_time_minutes,
+                'created_at': datetime.now(timezone.utc).isoformat(),
+                'created_by': current_user.name
+            })
+        
+        return {
+            'message': 'SLA yapılandırması kaydedildi',
+            'sla_id': sla_id,
+            'category': config.category,
+            'priority': config.priority,
+            'response_time': f'{config.response_time_minutes} dakika',
+            'resolution_time': f'{config.resolution_time_minutes} dakika'
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to save SLA config: {str(e)}")
+
+
+@api_router.get("/settings/sla")
+async def get_sla_configs(
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get all SLA configurations
+    """
+    try:
+        configs = await db.sla_configs.find({
+            'tenant_id': current_user.tenant_id
+        }, {'_id': 0}).to_list(100)
+        
+        # If no configs, return defaults
+        if not configs:
+            configs = [
+                {
+                    'category': 'maintenance',
+                    'priority': 'urgent',
+                    'response_time_minutes': 30,
+                    'resolution_time_minutes': 120
+                },
+                {
+                    'category': 'housekeeping',
+                    'priority': 'normal',
+                    'response_time_minutes': 60,
+                    'resolution_time_minutes': 180
+                },
+                {
+                    'category': 'guest_request',
+                    'priority': 'normal',
+                    'response_time_minutes': 15,
+                    'resolution_time_minutes': 60
+                }
+            ]
+        
+        return {
+            'configs': configs,
+            'count': len(configs)
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get SLA configs: {str(e)}")
+
+
+# ============================================================================
+# DELAYED TASKS MONITORING & PUSH NOTIFICATIONS
+# ============================================================================
+
+@api_router.get("/tasks/delayed")
+async def get_delayed_tasks(
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get all delayed tasks (exceeding SLA)
+    Automatically creates notifications for overdue tasks
+    """
+    try:
+        now = datetime.now(timezone.utc)
+        
+        # Get SLA configs
+        sla_configs = await db.sla_configs.find({
+            'tenant_id': current_user.tenant_id
+        }, {'_id': 0}).to_list(100)
+        
+        # Create SLA lookup
+        sla_lookup = {}
+        for sla in sla_configs:
+            key = f"{sla['category']}_{sla.get('priority', 'normal')}"
+            sla_lookup[key] = sla
+        
+        delayed_tasks = []
+        
+        # Check cleaning requests
+        cleaning_requests = await db.cleaning_requests.find({
+            'status': {'$in': ['pending', 'in_progress']},
+            'tenant_id': current_user.tenant_id
+        }, {'_id': 0}).to_list(100)
+        
+        for req in cleaning_requests:
+            requested_at = datetime.fromisoformat(req['requested_at'])
+            elapsed_minutes = (now - requested_at).total_seconds() / 60
+            
+            sla_key = f"guest_request_{req.get('priority', 'normal')}"
+            sla = sla_lookup.get(sla_key, {'resolution_time_minutes': 120})
+            
+            if elapsed_minutes > sla['resolution_time_minutes']:
+                delay_minutes = elapsed_minutes - sla['resolution_time_minutes']
+                delayed_tasks.append({
+                    'id': req['id'],
+                    'type': 'cleaning_request',
+                    'room_number': req['room_number'],
+                    'guest_name': req.get('guest_name'),
+                    'requested_at': req['requested_at'],
+                    'elapsed_minutes': round(elapsed_minutes),
+                    'sla_minutes': sla['resolution_time_minutes'],
+                    'delay_minutes': round(delay_minutes),
+                    'priority': req.get('priority', 'normal'),
+                    'status': req['status']
+                })
+                
+                # Create notification if not already sent
+                existing_notif = await db.notifications.find_one({
+                    'related_id': req['id'],
+                    'type': 'sla_breach',
+                    'tenant_id': current_user.tenant_id
+                }, {'_id': 0})
+                
+                if not existing_notif:
+                    await db.notifications.insert_one({
+                        'id': str(uuid.uuid4()),
+                        'tenant_id': current_user.tenant_id,
+                        'user_role': 'housekeeping',
+                        'title': f'⚠️ SLA İhlali - Oda {req["room_number"]}',
+                        'message': f'{round(delay_minutes)} dakika gecikmeli temizlik talebi',
+                        'type': 'sla_breach',
+                        'priority': 'urgent',
+                        'related_id': req['id'],
+                        'read': False,
+                        'created_at': now.isoformat()
+                    })
+        
+        return {
+            'delayed_tasks': delayed_tasks,
+            'count': len(delayed_tasks),
+            'critical_count': len([t for t in delayed_tasks if t['delay_minutes'] > 60]),
+            'generated_at': now.isoformat()
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get delayed tasks: {str(e)}")
+
+
+# ============================================================================
 # SYSTEM MONITORING & PERFORMANCE - NEW FEATURES
 # ============================================================================
 

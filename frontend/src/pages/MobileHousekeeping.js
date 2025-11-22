@@ -420,100 +420,174 @@ const MobileHousekeeping = ({ user }) => {
           </Card>
         )}
 
-        {/* All Rooms List with Quick Status Change */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center justify-between">
-              <div className="flex items-center">
-                <BarChart3 className="w-5 h-5 mr-2 text-gray-600" />
-                Tüm Odalar ({getFilteredRooms().length})
-              </div>
-            </CardTitle>
-            
-            {/* Filter Buttons */}
-            <div className="flex flex-wrap gap-2 mt-3">
-              <Button
-                size="sm"
-                variant={filterStatus === 'all' ? 'default' : 'outline'}
-                onClick={() => setFilterStatus('all')}
-              >
-                Tümü
-              </Button>
-              <Button
-                size="sm"
-                variant={filterStatus === 'dirty' ? 'default' : 'outline'}
-                onClick={() => setFilterStatus('dirty')}
-                className={filterStatus === 'dirty' ? 'bg-red-600' : ''}
-              >
-                🟥 Kirli
-              </Button>
-              <Button
-                size="sm"
-                variant={filterStatus === 'cleaning' ? 'default' : 'outline'}
-                onClick={() => setFilterStatus('cleaning')}
-                className={filterStatus === 'cleaning' ? 'bg-yellow-600' : ''}
-              >
-                🟨 Temizleniyor
-              </Button>
-              <Button
-                size="sm"
-                variant={filterStatus === 'inspected' ? 'default' : 'outline'}
-                onClick={() => setFilterStatus('inspected')}
-                className={filterStatus === 'inspected' ? 'bg-blue-600' : ''}
-              >
-                🟦 Kontrol Edildi
-              </Button>
-              <Button
-                size="sm"
-                variant={filterStatus === 'available' ? 'default' : 'outline'}
-                onClick={() => setFilterStatus('available')}
-                className={filterStatus === 'available' ? 'bg-green-600' : ''}
-              >
-                🟩 Müsait
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {getFilteredRooms().map((room) => (
-              <div key={room.id} className="p-3 bg-gray-50 rounded-lg border">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <p className="font-bold text-gray-900 flex items-center">
-                      <span className="text-xl mr-2">{getStatusIcon(room.status)}</span>
-                      Oda {room.room_number}
-                    </p>
-                    <p className="text-xs text-gray-500">{room.room_type}</p>
-                  </div>
-                  <div className="flex flex-col items-end space-y-1">
-                    <Badge className={getStatusColor(room.status)}>
-                      {room.status}
-                    </Badge>
-                    {room.status !== 'occupied' && room.status !== 'inspected' && (
-                      <Button
-                        size="sm"
-                        className={`h-7 text-xs px-3 ${
-                          room.status === 'dirty' ? 'bg-yellow-600 hover:bg-yellow-700' :
-                          room.status === 'cleaning' ? 'bg-blue-600 hover:bg-blue-700' :
-                          'bg-red-600 hover:bg-red-700'
-                        }`}
-                        onClick={() => handleStatusChangeRequest(
-                          room.id, 
-                          room.room_number, 
-                          room.status, 
-                          getNextStatus(room.status)
-                        )}
-                      >
-                        {room.status === 'dirty' && '🧹 Başla'}
-                        {room.status === 'cleaning' && '✓ Hazır'}
-                        {room.status === 'available' && '🧹 Kirli'}
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+        {/* All Rooms - Categorized with Collapsible */}
+        <div className="space-y-3">
+          {/* Dirty Rooms */}
+          {getRoomsByStatus('dirty').length > 0 && (
+            <Collapsible open={openCategories.dirty} onOpenChange={() => toggleCategory('dirty')}>
+              <Card>
+                <CollapsibleTrigger className="w-full">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between w-full">
+                      <div className="flex items-center">
+                        <span className="text-2xl mr-2">🔴</span>
+                        <div className="text-left">
+                          <p className="font-bold text-gray-900">Kirli Odalar</p>
+                          <p className="text-xs text-gray-500">{getRoomsByStatus('dirty').length} oda</p>
+                        </div>
+                      </div>
+                      {openCategories.dirty ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+                    </div>
+                  </CardHeader>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <CardContent className="space-y-2 pt-0">
+                    {getRoomsByStatus('dirty').map((room) => (
+                      <div key={room.id} className="p-2 bg-red-50 rounded-lg border border-red-200">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <p className="font-bold text-sm">Oda {room.room_number}</p>
+                            <p className="text-xs text-gray-500">{room.room_type}</p>
+                          </div>
+                          <Button
+                            size="sm"
+                            className="h-7 text-xs px-3 bg-yellow-600 hover:bg-yellow-700"
+                            onClick={() => handleStatusChangeRequest(room.id, room.room_number, room.status, getNextStatus(room.status))}
+                          >
+                            🧹 Başla
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </CardContent>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
+          )}
+
+          {/* Cleaning Rooms */}
+          {getRoomsByStatus('cleaning').length > 0 && (
+            <Collapsible open={openCategories.cleaning} onOpenChange={() => toggleCategory('cleaning')}>
+              <Card>
+                <CollapsibleTrigger className="w-full">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between w-full">
+                      <div className="flex items-center">
+                        <span className="text-2xl mr-2">🟡</span>
+                        <div className="text-left">
+                          <p className="font-bold text-gray-900">Temizleniyor</p>
+                          <p className="text-xs text-gray-500">{getRoomsByStatus('cleaning').length} oda</p>
+                        </div>
+                      </div>
+                      {openCategories.cleaning ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+                    </div>
+                  </CardHeader>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <CardContent className="space-y-2 pt-0">
+                    {getRoomsByStatus('cleaning').map((room) => (
+                      <div key={room.id} className="p-2 bg-yellow-50 rounded-lg border border-yellow-200">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <p className="font-bold text-sm">Oda {room.room_number}</p>
+                            <p className="text-xs text-gray-500">{room.room_type}</p>
+                          </div>
+                          <Button
+                            size="sm"
+                            className="h-7 text-xs px-3 bg-blue-600 hover:bg-blue-700"
+                            onClick={() => handleStatusChangeRequest(room.id, room.room_number, room.status, getNextStatus(room.status))}
+                          >
+                            ✓ Hazır
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </CardContent>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
+          )}
+
+          {/* Inspected Rooms */}
+          {getRoomsByStatus('inspected').length > 0 && (
+            <Collapsible open={openCategories.inspected} onOpenChange={() => toggleCategory('inspected')}>
+              <Card>
+                <CollapsibleTrigger className="w-full">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between w-full">
+                      <div className="flex items-center">
+                        <span className="text-2xl mr-2">🔵</span>
+                        <div className="text-left">
+                          <p className="font-bold text-gray-900">Kontrol Edildi</p>
+                          <p className="text-xs text-gray-500">{getRoomsByStatus('inspected').length} oda</p>
+                        </div>
+                      </div>
+                      {openCategories.inspected ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+                    </div>
+                  </CardHeader>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <CardContent className="space-y-2 pt-0">
+                    {getRoomsByStatus('inspected').map((room) => (
+                      <div key={room.id} className="p-2 bg-blue-50 rounded-lg border border-blue-200">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <p className="font-bold text-sm">Oda {room.room_number}</p>
+                            <p className="text-xs text-gray-500">{room.room_type}</p>
+                          </div>
+                          <Badge className="bg-blue-500">✓ Hazır</Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </CardContent>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
+          )}
+
+          {/* Available Rooms */}
+          {getRoomsByStatus('available').length > 0 && (
+            <Collapsible open={openCategories.available} onOpenChange={() => toggleCategory('available')}>
+              <Card>
+                <CollapsibleTrigger className="w-full">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between w-full">
+                      <div className="flex items-center">
+                        <span className="text-2xl mr-2">🟢</span>
+                        <div className="text-left">
+                          <p className="font-bold text-gray-900">Müsait Odalar</p>
+                          <p className="text-xs text-gray-500">{getRoomsByStatus('available').length} oda</p>
+                        </div>
+                      </div>
+                      {openCategories.available ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+                    </div>
+                  </CardHeader>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <CardContent className="space-y-2 pt-0">
+                    {getRoomsByStatus('available').map((room) => (
+                      <div key={room.id} className="p-2 bg-green-50 rounded-lg border border-green-200">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <p className="font-bold text-sm">Oda {room.room_number}</p>
+                            <p className="text-xs text-gray-500">{room.room_type}</p>
+                          </div>
+                          <Button
+                            size="sm"
+                            className="h-7 text-xs px-3 bg-red-600 hover:bg-red-700"
+                            onClick={() => handleStatusChangeRequest(room.id, room.room_number, room.status, getNextStatus(room.status))}
+                          >
+                            🧹 Kirli
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </CardContent>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
+          )}
+        </div>
 
         {/* Staff Performance */}
         {staffPerformance?.staff_performance && staffPerformance.staff_performance.length > 0 && (

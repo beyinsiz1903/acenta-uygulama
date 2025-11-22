@@ -365,29 +365,34 @@ class FnBMobileEndpointsTester:
     # ============= F&B MOBILE ORDER TRACKING TESTS (4 endpoints) =============
 
     async def test_mobile_active_orders(self):
-        """Test GET /api/reservations/{booking_id}/ota-details"""
-        print("\n📋 Testing OTA Reservation Details Endpoint...")
-        
-        if not self.created_test_data['bookings']:
-            print("❌ No test bookings available")
-            self.test_results.append({
-                "endpoint": "GET /api/reservations/{booking_id}/ota-details",
-                "passed": 0, "total": 1, "success_rate": "0.0%"
-            })
-            return
-
-        booking_id = self.created_test_data['bookings'][0]
+        """Test GET /api/pos/mobile/active-orders"""
+        print("\n📋 Testing F&B Mobile Active Orders Endpoint...")
         
         test_cases = [
             {
-                "name": "Get OTA reservation details",
-                "booking_id": booking_id,
-                "expected_fields": ["booking_id", "ota_details", "special_requests", "multi_room_info", "extra_charges", "source_info"]
+                "name": "Get all active orders",
+                "params": {},
+                "expected_fields": ["orders", "count", "delayed_count"]
             },
             {
-                "name": "Test non-existent booking",
-                "booking_id": str(uuid.uuid4()),
-                "expected_status": 404
+                "name": "Filter by status - pending",
+                "params": {"status": "pending"},
+                "expected_fields": ["orders", "count", "delayed_count"]
+            },
+            {
+                "name": "Filter by status - preparing",
+                "params": {"status": "preparing"},
+                "expected_fields": ["orders", "count", "delayed_count"]
+            },
+            {
+                "name": "Filter by status - ready",
+                "params": {"status": "ready"},
+                "expected_fields": ["orders", "count", "delayed_count"]
+            },
+            {
+                "name": "Filter by outlet_id",
+                "params": {"outlet_id": "main_restaurant"},
+                "expected_fields": ["orders", "count", "delayed_count"]
             }
         ]
         
@@ -396,32 +401,39 @@ class FnBMobileEndpointsTester:
         
         for test_case in test_cases:
             try:
-                url = f"{BACKEND_URL}/reservations/{test_case['booking_id']}/ota-details"
+                url = f"{BACKEND_URL}/pos/mobile/active-orders"
+                if test_case["params"]:
+                    params = "&".join([f"{k}={v}" for k, v in test_case["params"].items()])
+                    url += f"?{params}"
                 
                 async with self.session.get(url, headers=self.get_headers()) as response:
-                    if test_case.get("expected_status"):
-                        if response.status == test_case["expected_status"]:
-                            print(f"  ✅ {test_case['name']}: PASSED")
-                            passed += 1
-                        else:
-                            print(f"  ❌ {test_case['name']}: Expected {test_case['expected_status']}, got {response.status}")
-                    else:
-                        if response.status == 200:
-                            data = await response.json()
-                            missing_fields = [field for field in test_case["expected_fields"] if field not in data]
-                            if not missing_fields:
-                                print(f"  ✅ {test_case['name']}: PASSED")
-                                passed += 1
+                    if response.status == 200:
+                        data = await response.json()
+                        missing_fields = [field for field in test_case["expected_fields"] if field not in data]
+                        if not missing_fields:
+                            # Verify order structure if orders exist
+                            if data.get("orders"):
+                                order = data["orders"][0]
+                                required_order_fields = ["id", "order_number", "status", "outlet_name", "guest_name", "items_count", "total_amount", "time_elapsed_minutes", "is_delayed"]
+                                missing_order_fields = [field for field in required_order_fields if field not in order]
+                                if not missing_order_fields:
+                                    print(f"  ✅ {test_case['name']}: PASSED")
+                                    passed += 1
+                                else:
+                                    print(f"  ❌ {test_case['name']}: Missing order fields {missing_order_fields}")
                             else:
-                                print(f"  ❌ {test_case['name']}: Missing fields {missing_fields}")
+                                print(f"  ✅ {test_case['name']}: PASSED (no orders)")
+                                passed += 1
                         else:
-                            print(f"  ❌ {test_case['name']}: HTTP {response.status}")
+                            print(f"  ❌ {test_case['name']}: Missing fields {missing_fields}")
+                    else:
+                        print(f"  ❌ {test_case['name']}: HTTP {response.status}")
                         
             except Exception as e:
                 print(f"  ❌ {test_case['name']}: Error {e}")
         
         self.test_results.append({
-            "endpoint": "GET /api/reservations/{booking_id}/ota-details",
+            "endpoint": "GET /api/pos/mobile/active-orders",
             "passed": passed, "total": total, "success_rate": f"{passed/total*100:.1f}%"
         })
 

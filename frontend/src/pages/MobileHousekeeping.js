@@ -68,7 +68,9 @@ const MobileHousekeeping = ({ user }) => {
     dirty: false,
     cleaning: false,
     inspected: false,
-    available: false
+    available: false,
+    dueOut: false,
+    arrivals: false
   });
   const [selectedRooms, setSelectedRooms] = useState([]);
   const [bulkUpdateMode, setBulkUpdateMode] = useState(false);

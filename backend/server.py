@@ -370,6 +370,36 @@ class RiskLevel(str, Enum):
     SUSPICIOUS = "suspicious"  # 30+ days - Black
 
 
+
+# Maintenance & Technical Service Enums
+class MaintenanceTaskStatus(str, Enum):
+    OPEN = "open"
+    IN_PROGRESS = "in_progress"
+    ON_HOLD = "on_hold"
+    WAITING_PARTS = "waiting_parts"
+    COMPLETED = "completed"
+    CANCELLED = "cancelled"
+
+class MaintenancePriority(str, Enum):
+    LOW = "low"
+    NORMAL = "normal"
+    HIGH = "high"
+    URGENT = "urgent"
+    EMERGENCY = "emergency"
+
+class WarehouseLocation(str, Enum):
+    MAIN_WAREHOUSE = "main_warehouse"
+    FLOOR_STORAGE = "floor_storage"
+    WORKSHOP = "workshop"
+    EXTERNAL = "external"
+
+class MaintenanceType(str, Enum):
+    CORRECTIVE = "corrective"  # Arıza onarımı
+    PREVENTIVE = "preventive"  # Önleyici bakım
+    PLANNED = "planned"  # Planlı bakım
+    EMERGENCY = "emergency"  # Acil müdahale
+
+
 # Role-Permission Mapping
 ROLE_PERMISSIONS = {
     UserRole.ADMIN: [p.value for p in Permission],  # All permissions

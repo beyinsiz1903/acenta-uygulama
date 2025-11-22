@@ -179,9 +179,13 @@ const PMSModule = ({ user, tenant, onLogout }) => {
   });
 
   useEffect(() => {
+    // Only load essential data on initial mount
     loadData();
-    loadAuditLogs();
-    loadChannelManagerData();
+    // Load audit logs and channel manager data lazily (after 1 second)
+    setTimeout(() => {
+      loadAuditLogs();
+      loadChannelManagerData();
+    }, 1000);
   }, []);
   
   // Load data when tab changes

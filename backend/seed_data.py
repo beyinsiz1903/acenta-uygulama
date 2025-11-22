@@ -397,6 +397,7 @@ class HotelSeeder:
         for item_data in menu_items:
             items.append({
                 'id': str(uuid.uuid4()),
+                'tenant_id': self.tenant_id,
                 'name': item_data['name'],
                 'category': item_data['category'],
                 'price': item_data['price'],

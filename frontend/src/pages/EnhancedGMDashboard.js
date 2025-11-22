@@ -60,7 +60,7 @@ const EnhancedGMDashboard = ({ user, tenant, onLogout }) => {
     refresh 
   } = useRealTimeData(
     async () => {
-      const response = await axios.get('/dashboard/role-based');
+      const response = await axios.get('/dashboard/role-based', { timeout: 15000 });
       return response.data;
     },
     30000, // 30 seconds

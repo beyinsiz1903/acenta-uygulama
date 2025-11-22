@@ -470,6 +470,7 @@ class MarketSegment(str, Enum):
     CORPORATE = "corporate"
     LEISURE = "leisure"
     GROUP = "group"
+    MICE = "mice"
     GOVERNMENT = "government"
     WHOLESALE = "wholesale"
     NEGOTIATED = "negotiated"

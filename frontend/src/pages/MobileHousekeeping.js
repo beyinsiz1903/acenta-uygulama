@@ -128,10 +128,10 @@ const MobileHousekeeping = ({ user }) => {
   const handleQuickStatusUpdate = async (roomId, newStatus) => {
     try {
       await axios.put(`/housekeeping/room/${roomId}/status`, { new_status: newStatus });
-      toast.success(`Oda durumu güncellendi: ${newStatus}`);
+      toast.success('✓ Güncellendi');
       loadData();
     } catch (error) {
-      toast.error('Durum güncellenemedi');
+      toast.error('✗ Hata');
     }
   };
 

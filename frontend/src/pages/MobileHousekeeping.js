@@ -466,29 +466,42 @@ const MobileHousekeeping = ({ user }) => {
           </Card>
         </div>
 
-        {/* Due Out Today */}
+        {/* Due Out Today - Collapsible */}
         {dueOut.length > 0 && (
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center">
-                <AlertCircle className="w-5 h-5 mr-2 text-orange-600" />
-                Bugün Çıkış Yapacaklar ({dueOut.filter(r => r.is_today).length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {dueOut.filter(r => r.is_today).slice(0, 5).map((room) => (
-                <div key={room.booking_id} className="flex items-center justify-between p-3 bg-orange-50 rounded-lg border border-orange-200">
-                  <div>
-                    <p className="font-bold text-gray-900">Oda {room.room_number}</p>
-                    <p className="text-sm text-gray-600">{room.guest_name}</p>
-                  </div>
-                  <Badge variant="outline" className="bg-white">
-                    {new Date(room.checkout_date).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
-                  </Badge>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+          <Collapsible open={openCategories.dueOut} onOpenChange={() => setOpenCategories({...openCategories, dueOut: !openCategories.dueOut})}>
+            <Card>
+              <CollapsibleTrigger className="w-full">
+                <CardHeader className="pb-3 cursor-pointer hover:bg-gray-50 transition-colors">
+                  <CardTitle className="text-lg flex items-center justify-between">
+                    <div className="flex items-center">
+                      <AlertCircle className="w-5 h-5 mr-2 text-orange-600" />
+                      Bugün Çıkış Yapacaklar ({dueOut.filter(r => r.is_today).length})
+                    </div>
+                    {openCategories.dueOut ? (
+                      <ChevronDown className="w-5 h-5 text-gray-400" />
+                    ) : (
+                      <ChevronRight className="w-5 h-5 text-gray-400" />
+                    )}
+                  </CardTitle>
+                </CardHeader>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <CardContent className="space-y-2">
+                  {dueOut.filter(r => r.is_today).map((room) => (
+                    <div key={room.booking_id} className="flex items-center justify-between p-3 bg-orange-50 rounded-lg border border-orange-200">
+                      <div>
+                        <p className="font-bold text-gray-900">Oda {room.room_number}</p>
+                        <p className="text-sm text-gray-600">{room.guest_name}</p>
+                      </div>
+                      <Badge variant="outline" className="bg-white">
+                        {new Date(room.checkout_date).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
+                      </Badge>
+                    </div>
+                  ))}
+                </CardContent>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
         )}
 
         {/* Arrivals Today */}

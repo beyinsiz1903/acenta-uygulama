@@ -258,8 +258,8 @@ class HotelSeeder:
         # 4. 2-3 GÜN SONRA GİRİŞ YAPACAK REZERVASYONLAR (5 adet)
         print("  → 2-3 gün sonra giriş yapacak rezervasyonlar oluşturuluyor...")
         for i in range(5):
-            guest = guests[15 + i]
-            room = rooms[15 + i]
+            guest = guests[15 + i] if 15 + i < len(guests) else random.choice(guests)
+            room = rooms[15 + i] if 15 + i < len(rooms) else random.choice(rooms)
             check_in = today + timedelta(days=random.randint(2, 3))
             check_out = check_in + timedelta(days=random.randint(2, 5))
             nights = (check_out - check_in).days

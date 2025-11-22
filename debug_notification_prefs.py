@@ -8,7 +8,7 @@ import aiohttp
 import json
 import uuid
 
-BACKEND_URL = "https://financeplus-26.preview.emergentagent.com/api"
+BACKEND_URL = "https://revenue-tracker-82.preview.emergentagent.com/api"
 
 async def debug_notification_prefs():
     session = aiohttp.ClientSession()

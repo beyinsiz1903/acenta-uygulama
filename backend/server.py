@@ -36163,21 +36163,22 @@ async def get_today_arrivals_unified(
             'check_in': today,
             'status': {'$in': ['confirmed', 'guaranteed']},
             'tenant_id': current_user.tenant_id
-        }).to_list(100)
+        }, {'_id': 0}).to_list(100)
         
         # Enrich with guest and room data
         enriched_bookings = []
         for booking in bookings:
             # Get guest info
             if booking.get('guest_id'):
-                guest = await db.guests.find_one({'id': booking['guest_id']})
+                guest = await db.guests.find_one({'id': booking['guest_id']}, {'_id': 0})
                 if guest:
+                    booking['guest_name'] = guest.get('name')
                     booking['guest_phone'] = guest.get('phone')
                     booking['guest_email'] = guest.get('email')
             
             # Get room info
             if booking.get('room_id'):
-                room = await db.rooms.find_one({'id': booking['room_id']})
+                room = await db.rooms.find_one({'id': booking['room_id']}, {'_id': 0})
                 if room:
                     booking['room_number'] = room.get('room_number')
                     booking['room_type'] = room.get('room_type')

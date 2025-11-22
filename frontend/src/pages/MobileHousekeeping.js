@@ -221,6 +221,33 @@ const MobileHousekeeping = ({ user }) => {
     setPendingStatusChange(null);
   };
 
+  const toggleRoomSelection = (roomId) => {
+    setSelectedRooms(prev => 
+      prev.includes(roomId) ? prev.filter(id => id !== roomId) : [...prev, roomId]
+    );
+  };
+
+  const handleBulkStatusUpdate = async (newStatus) => {
+    if (selectedRooms.length === 0) {
+      toast.error('⚠️ Oda seçin');
+      return;
+    }
+
+    try {
+      await Promise.all(
+        selectedRooms.map(roomId => 
+          axios.put(`/housekeeping/room/${roomId}/status?new_status=${newStatus}`)
+        )
+      );
+      toast.success(`✓ ${selectedRooms.length} oda güncellendi`);
+      setSelectedRooms([]);
+      setBulkUpdateMode(false);
+      loadData();
+    } catch (error) {
+      toast.error('✗ Toplu güncelleme hatası');
+    }
+  };
+
   const getActionText = (currentStatus, newStatus) => {
     if (currentStatus === 'dirty' && newStatus === 'cleaning') {
       return 'Başla';

@@ -349,7 +349,7 @@ class SystemMonitoringTester:
         # Test 3: Invalid target handling
         try:
             response = self.session.post(f"{BACKEND_URL}/network/ping", json={
-                "target": "invalid.nonexistent.domain.xyz",
+                "target": "192.168.255.255",  # Unreachable private IP
                 "count": 2
             })
             

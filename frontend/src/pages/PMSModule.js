@@ -202,11 +202,12 @@ const PMSModule = ({ user, tenant, onLogout }) => {
 
   const loadData = async () => {
     try {
+      // Load only essential data in parallel for faster initial load
       const [roomsRes, guestsRes, bookingsRes, companiesRes] = await Promise.all([
         axios.get('/pms/rooms', { timeout: 15000 }),
-        axios.get('/pms/guests', { timeout: 15000 }),
+        axios.get('/pms/guests?limit=100', { timeout: 15000 }), // Limit guests to 100
         axios.get('/pms/bookings?limit=100', { timeout: 15000 }),
-        axios.get('/companies', { timeout: 15000 })
+        axios.get('/companies?limit=50', { timeout: 15000 }) // Limit companies to 50
       ]);
       setRooms(roomsRes.data);
       setGuests(guestsRes.data);
@@ -214,6 +215,7 @@ const PMSModule = ({ user, tenant, onLogout }) => {
       setCompanies(companiesRes.data);
     } catch (error) {
       toast.error('Failed to load data');
+      console.error('PMS data load error:', error);
     } finally {
       setLoading(false);
     }

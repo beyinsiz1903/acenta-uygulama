@@ -3287,10 +3287,10 @@ async def get_bookings(
             date_filter['$lte'] = end_date
         query['check_in'] = date_filter
     else:
-        # Default: last 30 days to next 30 days
+        # Default: last 7 days to next 7 days (for performance)
         today = datetime.now(timezone.utc)
-        start_default = (today - timedelta(days=30)).isoformat()
-        end_default = (today + timedelta(days=30)).isoformat()
+        start_default = (today - timedelta(days=7)).isoformat()
+        end_default = (today + timedelta(days=7)).isoformat()
         query['check_in'] = {'$gte': start_default, '$lte': end_default}
     
     # Status filter

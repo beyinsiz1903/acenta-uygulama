@@ -33002,7 +33002,7 @@ async def adjust_stock(
         'quantity_changed': request.quantity,
         'previous_quantity': current_qty,
         'new_quantity': new_qty,
-        'adjusted_by': current_user.username,
+        'adjusted_by': current_user.name,
         'timestamp': movement['timestamp']
     }
 

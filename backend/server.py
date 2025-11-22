@@ -31476,6 +31476,769 @@ async def get_rooms_with_filters(
     }
 
 
+
+# --------------------------------------------------------------------------
+# Front Office Mobile - Check-in, ID Scan, Guest Requests, Folio Operations
+# --------------------------------------------------------------------------
+
+@api_router.get("/frontoffice/mobile/available-rooms")
+async def get_available_rooms_mobile(
+    check_in: str,
+    check_out: str,
+    room_type: Optional[str] = None,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Get available rooms for check-in"""
+    current_user = await get_current_user(credentials)
+    
+    query = {
+        'tenant_id': current_user.tenant_id,
+        'status': {'$in': ['available', 'clean']}
+    }
+    
+    if room_type:
+        query['room_type'] = room_type
+    
+    available_rooms = []
+    async for room in db.rooms.find(query).sort('room_number', 1):
+        # Check if room is not booked for the dates
+        booking_conflict = await db.bookings.find_one({
+            'tenant_id': current_user.tenant_id,
+            'room_id': room.get('id'),
+            'status': {'$in': ['confirmed', 'guaranteed', 'checked_in']},
+            '$or': [
+                {
+                    'check_in': {'$lte': check_out},
+                    'check_out': {'$gte': check_in}
+                }
+            ]
+        })
+        
+        if not booking_conflict:
+            available_rooms.append({
+                'id': room.get('id'),
+                'room_number': room.get('room_number'),
+                'room_type': room.get('room_type'),
+                'bed_type': room.get('bed_type', 'unknown'),
+                'floor': room.get('floor', 0),
+                'status': room.get('status'),
+                'max_occupancy': room.get('max_occupancy', 2),
+                'features': room.get('features', []),
+                'rate': room.get('rate', 0)
+            })
+    
+    return {
+        'available_rooms': available_rooms,
+        'count': len(available_rooms),
+        'check_in': check_in,
+        'check_out': check_out
+    }
+
+
+@api_router.post("/frontoffice/mobile/scan-id")
+async def scan_id_mobile(
+    scan_type: str,
+    first_name: str,
+    last_name: str,
+    nationality: str,
+    id_number: str,
+    date_of_birth: Optional[str] = None,
+    issue_date: Optional[str] = None,
+    expiry_date: Optional[str] = None,
+    scan_image: Optional[str] = None,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Scan and save ID/Passport information"""
+    current_user = await get_current_user(credentials)
+    
+    scan_id = str(uuid.uuid4())
+    scan_result = {
+        'id': scan_id,
+        'tenant_id': current_user.tenant_id,
+        'scan_type': scan_type,
+        'first_name': first_name,
+        'last_name': last_name,
+        'nationality': nationality,
+        'id_number': id_number,
+        'date_of_birth': date_of_birth,
+        'issue_date': issue_date,
+        'expiry_date': expiry_date,
+        'scan_image': scan_image,
+        'scanned_at': datetime.now(timezone.utc),
+        'scanned_by': current_user.username
+    }
+    
+    await db.id_scans.insert_one(scan_result)
+    
+    return {
+        'message': 'ID scan saved successfully',
+        'scan_id': scan_id,
+        'data': {
+            'first_name': first_name,
+            'last_name': last_name,
+            'nationality': nationality,
+            'id_number': id_number,
+            'date_of_birth': date_of_birth
+        }
+    }
+
+
+@api_router.post("/frontoffice/mobile/checkin")
+async def mobile_checkin(
+    booking_id: str,
+    room_id: str,
+    id_scan_id: Optional[str] = None,
+    signature: Optional[str] = None,
+    notes: Optional[str] = None,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Perform mobile check-in"""
+    current_user = await get_current_user(credentials)
+    
+    # Get booking
+    booking = await db.bookings.find_one({
+        'id': booking_id,
+        'tenant_id': current_user.tenant_id
+    })
+    
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    
+    # Get room
+    room = await db.rooms.find_one({
+        'id': room_id,
+        'tenant_id': current_user.tenant_id
+    })
+    
+    if not room:
+        raise HTTPException(status_code=404, detail="Room not found")
+    
+    # Check room availability
+    if room.get('status') not in ['available', 'clean']:
+        raise HTTPException(status_code=400, detail=f"Room {room.get('room_number')} is not available")
+    
+    # Create check-in record
+    checkin_id = str(uuid.uuid4())
+    checkin_record = {
+        'id': checkin_id,
+        'tenant_id': current_user.tenant_id,
+        'booking_id': booking_id,
+        'guest_id': booking.get('guest_id'),
+        'room_id': room_id,
+        'room_number': room.get('room_number'),
+        'check_in_status': 'checked_in',
+        'id_scan_id': id_scan_id,
+        'signature': signature,
+        'registration_card_signed': True if signature else False,
+        'keys_issued': True,
+        'welcome_package_given': True,
+        'check_in_time': datetime.now(timezone.utc),
+        'checked_in_by': current_user.username,
+        'notes': notes,
+        'created_at': datetime.now(timezone.utc),
+        'updated_at': datetime.now(timezone.utc)
+    }
+    
+    await db.mobile_checkins.insert_one(checkin_record)
+    
+    # Update booking status
+    await db.bookings.update_one(
+        {'id': booking_id, 'tenant_id': current_user.tenant_id},
+        {'$set': {
+            'status': 'checked_in',
+            'room_id': room_id,
+            'room_number': room.get('room_number'),
+            'actual_check_in': datetime.now(timezone.utc),
+            'updated_at': datetime.now(timezone.utc)
+        }}
+    )
+    
+    # Update room status
+    await db.rooms.update_one(
+        {'id': room_id, 'tenant_id': current_user.tenant_id},
+        {'$set': {
+            'status': 'occupied',
+            'updated_at': datetime.now(timezone.utc)
+        }}
+    )
+    
+    # Get guest info
+    guest = await db.guests.find_one({
+        'id': booking.get('guest_id'),
+        'tenant_id': current_user.tenant_id
+    })
+    
+    return {
+        'message': 'Check-in completed successfully',
+        'checkin_id': checkin_id,
+        'booking_id': booking_id,
+        'room_number': room.get('room_number'),
+        'guest_name': guest.get('name') if guest else 'Unknown',
+        'check_in_time': datetime.now(timezone.utc).isoformat()
+    }
+
+
+@api_router.post("/frontoffice/mobile/room-assignment")
+async def assign_room_mobile(
+    booking_id: str,
+    room_id: str,
+    notes: Optional[str] = None,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Assign room to booking (pre-checkin)"""
+    current_user = await get_current_user(credentials)
+    
+    booking = await db.bookings.find_one({
+        'id': booking_id,
+        'tenant_id': current_user.tenant_id
+    })
+    
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    
+    room = await db.rooms.find_one({
+        'id': room_id,
+        'tenant_id': current_user.tenant_id
+    })
+    
+    if not room:
+        raise HTTPException(status_code=404, detail="Room not found")
+    
+    # Update booking with room assignment
+    await db.bookings.update_one(
+        {'id': booking_id, 'tenant_id': current_user.tenant_id},
+        {'$set': {
+            'room_id': room_id,
+            'room_number': room.get('room_number'),
+            'room_assigned': True,
+            'room_assigned_at': datetime.now(timezone.utc),
+            'room_assigned_by': current_user.username,
+            'updated_at': datetime.now(timezone.utc)
+        }}
+    )
+    
+    # Update room status to blocked
+    await db.rooms.update_one(
+        {'id': room_id, 'tenant_id': current_user.tenant_id},
+        {'$set': {
+            'status': 'blocked',
+            'updated_at': datetime.now(timezone.utc)
+        }}
+    )
+    
+    return {
+        'message': 'Room assigned successfully',
+        'booking_id': booking_id,
+        'room_id': room_id,
+        'room_number': room.get('room_number')
+    }
+
+
+@api_router.get("/frontoffice/mobile/reservation/{booking_id}/detail")
+async def get_reservation_detail_mobile(
+    booking_id: str,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Get detailed reservation information"""
+    current_user = await get_current_user(credentials)
+    
+    booking = await db.bookings.find_one({
+        'id': booking_id,
+        'tenant_id': current_user.tenant_id
+    })
+    
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    
+    # Get guest
+    guest = await db.guests.find_one({
+        'id': booking.get('guest_id'),
+        'tenant_id': current_user.tenant_id
+    })
+    
+    # Get room if assigned
+    room = None
+    if booking.get('room_id'):
+        room = await db.rooms.find_one({
+            'id': booking.get('room_id'),
+            'tenant_id': current_user.tenant_id
+        })
+    
+    # Get folio
+    folio = await db.folios.find_one({
+        'booking_id': booking_id,
+        'tenant_id': current_user.tenant_id
+    })
+    
+    # Get guest preferences
+    preferences = await db.guest_preferences.find_one({
+        'guest_id': booking.get('guest_id'),
+        'tenant_id': current_user.tenant_id
+    })
+    
+    # Get previous stays
+    previous_stays = []
+    async for prev_booking in db.bookings.find({
+        'guest_id': booking.get('guest_id'),
+        'tenant_id': current_user.tenant_id,
+        'status': 'checked_out'
+    }).sort('check_out', -1).limit(5):
+        previous_stays.append({
+            'booking_id': prev_booking.get('id'),
+            'check_in': prev_booking.get('check_in'),
+            'check_out': prev_booking.get('check_out'),
+            'room_number': prev_booking.get('room_number'),
+            'total_amount': prev_booking.get('total_amount', 0)
+        })
+    
+    return {
+        'booking': {
+            'id': booking.get('id'),
+            'confirmation_number': booking.get('confirmation_number'),
+            'status': booking.get('status'),
+            'check_in': booking.get('check_in'),
+            'check_out': booking.get('check_out'),
+            'nights': booking.get('nights', 0),
+            'adults': booking.get('adults', 1),
+            'children': booking.get('children', 0),
+            'room_type': booking.get('room_type'),
+            'rate_plan': booking.get('rate_plan'),
+            'total_amount': booking.get('total_amount', 0),
+            'channel': booking.get('channel'),
+            'special_requests': booking.get('special_requests'),
+            'created_at': booking.get('created_at').isoformat() if booking.get('created_at') else None
+        },
+        'guest': {
+            'id': guest.get('id') if guest else None,
+            'name': guest.get('name') if guest else 'Unknown',
+            'email': guest.get('email') if guest else None,
+            'phone': guest.get('phone') if guest else None,
+            'nationality': guest.get('nationality') if guest else None,
+            'id_number': guest.get('id_number') if guest else None,
+            'vip_status': guest.get('vip_status', False) if guest else False,
+            'loyalty_tier': guest.get('loyalty_tier') if guest else None
+        } if guest else None,
+        'room': {
+            'id': room.get('id') if room else None,
+            'room_number': room.get('room_number') if room else None,
+            'room_type': room.get('room_type') if room else None,
+            'floor': room.get('floor') if room else None,
+            'status': room.get('status') if room else None
+        } if room else None,
+        'folio': {
+            'id': folio.get('id') if folio else None,
+            'folio_number': folio.get('folio_number') if folio else None,
+            'balance': folio.get('balance', 0) if folio else 0,
+            'status': folio.get('status') if folio else None
+        } if folio else None,
+        'preferences': {
+            'room_preferences': preferences.get('room_preferences', {}) if preferences else {},
+            'dietary_restrictions': preferences.get('dietary_restrictions', []) if preferences else [],
+            'special_occasions': preferences.get('special_occasions', []) if preferences else []
+        } if preferences else None,
+        'previous_stays': previous_stays
+    }
+
+
+@api_router.get("/frontoffice/mobile/guest/{guest_id}/history")
+async def get_guest_history_mobile(
+    guest_id: str,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Get guest stay history"""
+    current_user = await get_current_user(credentials)
+    
+    guest = await db.guests.find_one({
+        'id': guest_id,
+        'tenant_id': current_user.tenant_id
+    })
+    
+    if not guest:
+        raise HTTPException(status_code=404, detail="Guest not found")
+    
+    # Get all bookings
+    bookings = []
+    total_spent = 0.0
+    total_nights = 0
+    
+    async for booking in db.bookings.find({
+        'guest_id': guest_id,
+        'tenant_id': current_user.tenant_id
+    }).sort('check_in', -1):
+        total_spent += booking.get('total_amount', 0)
+        total_nights += booking.get('nights', 0)
+        
+        bookings.append({
+            'booking_id': booking.get('id'),
+            'confirmation_number': booking.get('confirmation_number'),
+            'check_in': booking.get('check_in'),
+            'check_out': booking.get('check_out'),
+            'nights': booking.get('nights', 0),
+            'room_number': booking.get('room_number'),
+            'room_type': booking.get('room_type'),
+            'status': booking.get('status'),
+            'total_amount': booking.get('total_amount', 0)
+        })
+    
+    return {
+        'guest': {
+            'id': guest.get('id'),
+            'name': guest.get('name'),
+            'email': guest.get('email'),
+            'phone': guest.get('phone'),
+            'vip_status': guest.get('vip_status', False),
+            'loyalty_tier': guest.get('loyalty_tier')
+        },
+        'statistics': {
+            'total_stays': len(bookings),
+            'total_nights': total_nights,
+            'total_spent': total_spent,
+            'average_spend_per_stay': total_spent / len(bookings) if bookings else 0
+        },
+        'bookings': bookings
+    }
+
+
+@api_router.post("/frontoffice/mobile/guest-request")
+async def create_guest_request_mobile(
+    booking_id: Optional[str] = None,
+    guest_id: Optional[str] = None,
+    room_number: Optional[str] = None,
+    request_type: str = "other",
+    description: str = "",
+    priority: str = "normal",
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Create guest request"""
+    current_user = await get_current_user(credentials)
+    
+    request_id = str(uuid.uuid4())
+    request = {
+        'id': request_id,
+        'tenant_id': current_user.tenant_id,
+        'booking_id': booking_id,
+        'guest_id': guest_id,
+        'room_number': room_number,
+        'request_type': request_type,
+        'status': 'pending',
+        'priority': priority,
+        'description': description,
+        'requested_at': datetime.now(timezone.utc),
+        'created_by': current_user.username,
+        'updated_at': datetime.now(timezone.utc)
+    }
+    
+    await db.guest_requests.insert_one(request)
+    
+    return {
+        'message': 'Guest request created successfully',
+        'request_id': request_id,
+        'request_type': request_type,
+        'status': 'pending'
+    }
+
+
+@api_router.get("/frontoffice/mobile/guest-requests")
+async def get_guest_requests_mobile(
+    status: Optional[str] = None,
+    room_number: Optional[str] = None,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Get guest requests"""
+    current_user = await get_current_user(credentials)
+    
+    query = {'tenant_id': current_user.tenant_id}
+    
+    if status:
+        query['status'] = status
+    if room_number:
+        query['room_number'] = room_number
+    
+    requests = []
+    async for request in db.guest_requests.find(query).sort('requested_at', -1).limit(100):
+        requests.append({
+            'id': request.get('id'),
+            'booking_id': request.get('booking_id'),
+            'room_number': request.get('room_number'),
+            'request_type': request.get('request_type'),
+            'status': request.get('status'),
+            'priority': request.get('priority'),
+            'description': request.get('description'),
+            'assigned_to': request.get('assigned_to'),
+            'requested_at': request.get('requested_at').isoformat() if request.get('requested_at') else None,
+            'completed_at': request.get('completed_at').isoformat() if request.get('completed_at') else None
+        })
+    
+    # Summary by status
+    summary = {
+        'pending': len([r for r in requests if r['status'] == 'pending']),
+        'in_progress': len([r for r in requests if r['status'] == 'in_progress']),
+        'completed': len([r for r in requests if r['status'] == 'completed']),
+        'total': len(requests)
+    }
+    
+    return {
+        'requests': requests,
+        'summary': summary
+    }
+
+
+@api_router.put("/frontoffice/mobile/guest-request/{request_id}/status")
+async def update_guest_request_status_mobile(
+    request_id: str,
+    new_status: str,
+    assigned_to: Optional[str] = None,
+    notes: Optional[str] = None,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Update guest request status"""
+    current_user = await get_current_user(credentials)
+    
+    request = await db.guest_requests.find_one({
+        'id': request_id,
+        'tenant_id': current_user.tenant_id
+    })
+    
+    if not request:
+        raise HTTPException(status_code=404, detail="Request not found")
+    
+    update_data = {
+        'status': new_status,
+        'updated_at': datetime.now(timezone.utc)
+    }
+    
+    if assigned_to:
+        update_data['assigned_to'] = assigned_to
+        if new_status == 'assigned':
+            update_data['assigned_at'] = datetime.now(timezone.utc)
+    
+    if new_status == 'completed':
+        update_data['completed_at'] = datetime.now(timezone.utc)
+    
+    if notes:
+        update_data['notes'] = notes
+    
+    await db.guest_requests.update_one(
+        {'id': request_id, 'tenant_id': current_user.tenant_id},
+        {'$set': update_data}
+    )
+    
+    return {
+        'message': f'Request status updated to {new_status}',
+        'request_id': request_id,
+        'new_status': new_status
+    }
+
+
+@api_router.post("/frontoffice/mobile/folio/charge")
+async def add_folio_charge_mobile(
+    folio_id: str,
+    category: str,
+    description: str,
+    quantity: float,
+    unit_price: float,
+    tax_rate: float = 0.18,
+    department: Optional[str] = None,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Add charge to folio"""
+    current_user = await get_current_user(credentials)
+    
+    folio = await db.folios.find_one({
+        'id': folio_id,
+        'tenant_id': current_user.tenant_id
+    })
+    
+    if not folio:
+        raise HTTPException(status_code=404, detail="Folio not found")
+    
+    # Calculate amounts
+    amount = quantity * unit_price
+    tax_amount = amount * tax_rate
+    total = amount + tax_amount
+    
+    # Create charge
+    charge_id = str(uuid.uuid4())
+    charge = {
+        'id': charge_id,
+        'tenant_id': current_user.tenant_id,
+        'folio_id': folio_id,
+        'category': category,
+        'description': description,
+        'quantity': quantity,
+        'unit_price': unit_price,
+        'amount': amount,
+        'tax_rate': tax_rate,
+        'tax_amount': tax_amount,
+        'total': total,
+        'posted_by': current_user.username,
+        'posted_at': datetime.now(timezone.utc),
+        'voided': False,
+        'department': department
+    }
+    
+    await db.folio_charges.insert_one(charge)
+    
+    # Update folio balance
+    new_balance = folio.get('balance', 0) + total
+    await db.folios.update_one(
+        {'id': folio_id, 'tenant_id': current_user.tenant_id},
+        {'$set': {
+            'balance': new_balance,
+            'updated_at': datetime.now(timezone.utc)
+        }}
+    )
+    
+    return {
+        'message': 'Charge added successfully',
+        'charge_id': charge_id,
+        'amount': amount,
+        'tax_amount': tax_amount,
+        'total': total,
+        'new_folio_balance': new_balance
+    }
+
+
+@api_router.post("/frontoffice/mobile/folio/void")
+async def void_folio_charge_mobile(
+    charge_id: str,
+    void_reason: str,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Void a folio charge"""
+    current_user = await get_current_user(credentials)
+    
+    charge = await db.folio_charges.find_one({
+        'id': charge_id,
+        'tenant_id': current_user.tenant_id
+    })
+    
+    if not charge:
+        raise HTTPException(status_code=404, detail="Charge not found")
+    
+    if charge.get('voided'):
+        raise HTTPException(status_code=400, detail="Charge already voided")
+    
+    # Mark charge as voided
+    await db.folio_charges.update_one(
+        {'id': charge_id, 'tenant_id': current_user.tenant_id},
+        {'$set': {
+            'voided': True,
+            'voided_by': current_user.username,
+            'voided_at': datetime.now(timezone.utc),
+            'void_reason': void_reason
+        }}
+    )
+    
+    # Update folio balance
+    folio = await db.folios.find_one({
+        'id': charge.get('folio_id'),
+        'tenant_id': current_user.tenant_id
+    })
+    
+    if folio:
+        new_balance = folio.get('balance', 0) - charge.get('total', 0)
+        await db.folios.update_one(
+            {'id': charge.get('folio_id'), 'tenant_id': current_user.tenant_id},
+            {'$set': {
+                'balance': new_balance,
+                'updated_at': datetime.now(timezone.utc)
+            }}
+        )
+    
+    return {
+        'message': 'Charge voided successfully',
+        'charge_id': charge_id,
+        'voided_amount': charge.get('total', 0),
+        'new_folio_balance': new_balance if folio else 0
+    }
+
+
+@api_router.get("/frontoffice/mobile/folio/{folio_id}/transactions")
+async def get_folio_transactions_mobile(
+    folio_id: str,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Get folio transactions (charges and payments)"""
+    current_user = await get_current_user(credentials)
+    
+    folio = await db.folios.find_one({
+        'id': folio_id,
+        'tenant_id': current_user.tenant_id
+    })
+    
+    if not folio:
+        raise HTTPException(status_code=404, detail="Folio not found")
+    
+    # Get charges
+    charges = []
+    total_charges = 0.0
+    async for charge in db.folio_charges.find({
+        'folio_id': folio_id,
+        'tenant_id': current_user.tenant_id
+    }).sort('posted_at', 1):
+        if not charge.get('voided'):
+            total_charges += charge.get('total', 0)
+        
+        charges.append({
+            'id': charge.get('id'),
+            'type': 'charge',
+            'category': charge.get('category'),
+            'description': charge.get('description'),
+            'quantity': charge.get('quantity'),
+            'unit_price': charge.get('unit_price'),
+            'amount': charge.get('amount'),
+            'tax_amount': charge.get('tax_amount'),
+            'total': charge.get('total'),
+            'voided': charge.get('voided', False),
+            'void_reason': charge.get('void_reason'),
+            'posted_by': charge.get('posted_by'),
+            'posted_at': charge.get('posted_at').isoformat() if charge.get('posted_at') else None
+        })
+    
+    # Get payments
+    payments = []
+    total_payments = 0.0
+    async for payment in db.payments.find({
+        'folio_id': folio_id,
+        'tenant_id': current_user.tenant_id
+    }).sort('created_at', 1):
+        total_payments += payment.get('amount', 0)
+        
+        payments.append({
+            'id': payment.get('id'),
+            'type': 'payment',
+            'amount': payment.get('amount'),
+            'payment_method': payment.get('payment_method'),
+            'payment_type': payment.get('payment_type'),
+            'notes': payment.get('notes'),
+            'posted_by': payment.get('created_by'),
+            'posted_at': payment.get('created_at').isoformat() if payment.get('created_at') else None
+        })
+    
+    # Combine and sort by date
+    all_transactions = charges + payments
+    all_transactions.sort(key=lambda x: x['posted_at'] if x['posted_at'] else '')
+    
+    return {
+        'folio': {
+            'id': folio.get('id'),
+            'folio_number': folio.get('folio_number'),
+            'balance': folio.get('balance', 0),
+            'status': folio.get('status')
+        },
+        'transactions': all_transactions,
+        'summary': {
+            'total_charges': total_charges,
+            'total_payments': total_payments,
+            'current_balance': total_charges - total_payments,
+            'charge_count': len(charges),
+            'payment_count': len(payments)
+        }
+    }
+
+
+
 @api_router.post("/frontdesk/calculate-early-late-fees")
 async def calculate_early_late_fees(
     booking_id: str,

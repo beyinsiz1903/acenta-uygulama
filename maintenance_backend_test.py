@@ -179,13 +179,13 @@ class MaintenanceEndpointTester:
         test_cases = [
             {
                 "name": "Update SLA configuration for urgent priority",
-                "data": {
+                "params": {
                     "priority": "urgent",
                     "response_time_minutes": 25,
                     "resolution_time_minutes": 200
                 },
                 "expected_status": 200,
-                "expected_fields": ["message", "sla_configuration"]
+                "expected_fields": ["message", "config_id", "priority"]
             }
         ]
         
@@ -195,8 +195,10 @@ class MaintenanceEndpointTester:
         for test_case in test_cases:
             try:
                 url = f"{BACKEND_URL}/maintenance/mobile/sla-configurations"
+                params = "&".join([f"{k}={v}" for k, v in test_case["params"].items()])
+                url += f"?{params}"
                 
-                async with self.session.post(url, json=test_case["data"], headers=self.get_headers()) as response:
+                async with self.session.post(url, headers=self.get_headers()) as response:
                     if response.status == test_case["expected_status"]:
                         data = await response.json()
                         missing_fields = [field for field in test_case["expected_fields"] if field not in data]

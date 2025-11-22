@@ -35205,6 +35205,13 @@ class RateOverrideRequest(BaseModel):
     requires_approval: bool = True
 
 
+# NEW FRONTEND ENHANCEMENTS - REQUEST MODELS
+class KeycardIssueRequest(BaseModel):
+    booking_id: str
+    card_type: str = "physical"  # physical, mobile, qr
+    validity_hours: int = 48
+
+
 # 1. GET /api/rates/campaigns - Active campaigns
 @api_router.get("/rates/campaigns")
 async def get_active_campaigns(

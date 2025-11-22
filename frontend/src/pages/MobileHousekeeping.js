@@ -97,7 +97,7 @@ const MobileHousekeeping = ({ user }) => {
       setAllRooms(roomsRes.data || []);
     } catch (error) {
       console.error('Failed to load housekeeping data:', error);
-      toast.error('Veri yüklenemedi');
+      toast.error('✗ Yükleme');
     } finally {
       setLoading(false);
       setRefreshing(false);

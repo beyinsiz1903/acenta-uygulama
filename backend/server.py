@@ -26992,8 +26992,18 @@ async def get_cancellation_report_mobile(
     no_show_rate = round((no_show_count / total_bookings * 100), 2) if total_bookings > 0 else 0
     
     # Calculate lost revenue
-    cancelled_revenue = sum(b.get('total_amount', 0) for b in cancelled_bookings)
-    no_show_revenue = sum(b.get('total_amount', 0) for b in no_show_bookings)
+    def calculate_booking_revenue(booking):
+        if 'total_amount' in booking:
+            return booking['total_amount']
+        # Calculate from rate and nights
+        check_in = datetime.fromisoformat(booking.get('check_in', start.isoformat()))
+        check_out = datetime.fromisoformat(booking.get('check_out', (start + timedelta(days=1)).isoformat()))
+        nights = max((check_out - check_in).days, 1)
+        rate = booking.get('rate_per_night', 0)
+        return rate * nights
+    
+    cancelled_revenue = sum(calculate_booking_revenue(b) for b in cancelled_bookings)
+    no_show_revenue = sum(calculate_booking_revenue(b) for b in no_show_bookings)
     total_lost_revenue = cancelled_revenue + no_show_revenue
     
     # Calculate cancellation fees collected

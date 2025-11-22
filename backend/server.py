@@ -33249,7 +33249,7 @@ async def approve_request(
     return {
         'message': 'Onay isteği onaylandı',
         'approval_id': approval_id,
-        'approved_by': current_user.username,
+        'approved_by': current_user.name,
         'approval_date': datetime.now(timezone.utc).isoformat()
     }
 

@@ -548,6 +548,26 @@ function App() {
             }
           />
           <Route
+            path="/mobile/order-tracking"
+            element={
+              isAuthenticated ? (
+                <MobileOrderTracking user={user} />
+              ) : (
+                <Navigate to="/auth" replace />
+              )
+            }
+          />
+          <Route
+            path="/mobile/inventory"
+            element={
+              isAuthenticated ? (
+                <MobileInventory user={user} />
+              ) : (
+                <Navigate to="/auth" replace />
+              )
+            }
+          />
+          <Route
             path="/cost-management"
             element={
               isAuthenticated ? (

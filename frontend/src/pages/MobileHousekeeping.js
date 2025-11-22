@@ -869,15 +869,15 @@ const MobileHousekeeping = ({ user }) => {
               )}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="flex-col space-y-2 sm:flex-row sm:space-y-0">
-            <AlertDialogCancel onClick={cancelStatusChange} className="w-full sm:w-auto">
-              İptal
+          <AlertDialogFooter className="flex space-x-2">
+            <AlertDialogCancel onClick={cancelStatusChange} className="flex-1">
+              ✕ Hayır
             </AlertDialogCancel>
             <AlertDialogAction 
               onClick={confirmStatusChange}
-              className="w-full sm:w-auto bg-green-600 hover:bg-green-700"
+              className="flex-1 bg-green-600 hover:bg-green-700"
             >
-              ✓ Onaylıyorum
+              ✓ Evet
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

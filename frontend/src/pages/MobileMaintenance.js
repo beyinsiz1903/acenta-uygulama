@@ -85,13 +85,13 @@ const MobileMaintenance = ({ user }) => {
       setLoading(true);
       
       const [tasksRes, slaRes, repeatRes, roomsRes, slaConfigRes, partsRes, plannedRes] = await Promise.all([
-        axios.get('/api/tasks/department/maintenance'),
-        axios.get('/api/maintenance/sla-metrics'),
-        axios.get('/api/maintenance/repeat-issues'),
-        axios.get('/api/housekeeping/room-status'),
-        axios.get('/api/maintenance/mobile/sla-configurations').catch(() => ({ data: { sla_configurations: [] } })),
-        axios.get('/api/maintenance/mobile/spare-parts').catch(() => ({ data: { spare_parts: [] } })),
-        axios.get('/api/maintenance/mobile/planned-maintenance').catch(() => ({ data: { planned_maintenance: [] } }))
+        axios.get('/tasks/department/maintenance'),
+        axios.get('/maintenance/sla-metrics'),
+        axios.get('/maintenance/repeat-issues'),
+        axios.get('/housekeeping/room-status'),
+        axios.get('/maintenance/mobile/sla-configurations').catch(() => ({ data: { sla_configurations: [] } })),
+        axios.get('/maintenance/mobile/spare-parts').catch(() => ({ data: { spare_parts: [] } })),
+        axios.get('/maintenance/mobile/planned-maintenance').catch(() => ({ data: { planned_maintenance: [] } }))
       ]);
 
       const allTasks = tasksRes.data.tasks || [];
@@ -129,7 +129,7 @@ const MobileMaintenance = ({ user }) => {
 
   const handleCreateTask = async (formData) => {
     try {
-      await axios.post('/api/maintenance/mobile/quick-issue', {
+      await axios.post('/maintenance/mobile/quick-issue', {
         room_id: formData.get('room_id'),
         issue_type: formData.get('issue_type'),
         description: formData.get('description'),
@@ -237,7 +237,7 @@ const MobileMaintenance = ({ user }) => {
 
   const loadPlannedMaintenanceDetail = async () => {
     try {
-      const res = await axios.get('/api/maintenance/mobile/planned-maintenance', {
+      const res = await axios.get('/maintenance/mobile/planned-maintenance', {
         params: { upcoming_days: 30 }
       });
       setPlannedMaintenance(res.data.planned_maintenance || []);
@@ -249,7 +249,7 @@ const MobileMaintenance = ({ user }) => {
 
   const loadSlaConfigurations = async () => {
     try {
-      const res = await axios.get('/api/maintenance/mobile/sla-configurations');
+      const res = await axios.get('/maintenance/mobile/sla-configurations');
       setSlaConfigurations(res.data.sla_configurations || []);
       setSlaConfigModalOpen(true);
     } catch (error) {
@@ -259,7 +259,7 @@ const MobileMaintenance = ({ user }) => {
 
   const handleSlaUpdate = async (priority, responseTime, resolutionTime) => {
     try {
-      await axios.post('/api/maintenance/mobile/sla-configurations', null, {
+      await axios.post('/maintenance/mobile/sla-configurations', null, {
         params: {
           priority,
           response_time_minutes: parseInt(responseTime),
@@ -339,7 +339,7 @@ const MobileMaintenance = ({ user }) => {
 
   const loadPartsInventory = async () => {
     try {
-      const res = await axios.get('/api/maintenance/parts-inventory');
+      const res = await axios.get('/maintenance/parts-inventory');
       setPartsInventory(res.data.parts || []);
       setPartsInventoryModalOpen(true);
     } catch (error) {

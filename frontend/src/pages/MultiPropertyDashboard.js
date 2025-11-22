@@ -19,7 +19,7 @@ const MultiPropertyDashboard = () => {
 
   const loadProperties = async () => {
     try {
-      const response = await axios.get('/api/multi-property/properties');
+      const response = await axios.get('/multi-property/properties');
       setProperties(response.data.properties || []);
     } catch (error) {
       console.error('Failed to load properties:', error);
@@ -29,7 +29,7 @@ const MultiPropertyDashboard = () => {
   const loadDashboardData = async () => {
     try {
       const params = selectedProperty !== 'all' ? { property_id: selectedProperty } : {};
-      const response = await axios.get('/api/multi-property/dashboard', { params });
+      const response = await axios.get('/multi-property/dashboard', { params });
       setDashboardData(response.data);
     } catch (error) {
       console.error('Failed to load dashboard data:', error);

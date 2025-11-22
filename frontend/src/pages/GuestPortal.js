@@ -71,10 +71,10 @@ const GuestPortal = ({ user, onLogout }) => {
   const loadData = async () => {
     try {
       const [bookingsRes, loyaltyRes, prefsRes, cleaningRes] = await Promise.all([
-        axios.get('/api/guest/bookings'),
-        axios.get('/api/guest/loyalty'),
-        axios.get('/api/guest/notification-preferences'),
-        axios.get('/api/guest/my-cleaning-requests').catch(() => ({ data: { requests: [] } }))
+        axios.get('/guest/bookings'),
+        axios.get('/guest/loyalty'),
+        axios.get('/guest/notification-preferences'),
+        axios.get('/guest/my-cleaning-requests').catch(() => ({ data: { requests: [] } }))
       ]);
 
       setActiveBookings(bookingsRes.data.active_bookings);
@@ -97,7 +97,7 @@ const GuestPortal = ({ user, onLogout }) => {
         return;
       }
 
-      const response = await axios.post('/api/guest/request-cleaning', {
+      const response = await axios.post('/guest/request-cleaning', {
         room_number: activeBookings[0].room_number,
         request_type: cleaningRequestType,
         notes: cleaningNotes
@@ -108,7 +108,7 @@ const GuestPortal = ({ user, onLogout }) => {
       setCleaningNotes('');
       
       // Reload cleaning requests
-      const cleaningRes = await axios.get('/api/guest/my-cleaning-requests');
+      const cleaningRes = await axios.get('/guest/my-cleaning-requests');
       setCleaningRequests(cleaningRes.data.requests || []);
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Temizlik talebi gönderilemedi');
@@ -127,7 +127,7 @@ const GuestPortal = ({ user, onLogout }) => {
   const handleRoomServiceRequest = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('/api/guest/room-service', roomServiceRequest);
+      await axios.post('/guest/room-service', roomServiceRequest);
       toast.success('Room service request submitted');
       setOpenDialog(null);
       loadRoomServices(roomServiceRequest.booking_id);
@@ -139,7 +139,7 @@ const GuestPortal = ({ user, onLogout }) => {
 
   const updateNotificationPref = async (key, value) => {
     try {
-      await axios.put('/api/guest/notification-preferences', { [key]: value });
+      await axios.put('/guest/notification-preferences', { [key]: value });
       setNotificationPrefs(prev => ({ ...prev, [key]: value }));
       toast.success('Preference updated');
     } catch (error) {

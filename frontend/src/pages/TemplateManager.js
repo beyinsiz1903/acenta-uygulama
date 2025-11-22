@@ -30,7 +30,7 @@ const TemplateManager = ({ user, tenant, onLogout }) => {
 
   const loadTemplates = async () => {
     try {
-      const response = await axios.get('/api/messages/templates');
+      const response = await axios.get('/messages/templates');
       setTemplates(response.data);
     } catch (error) {
       console.error('Failed to load templates:', error);
@@ -44,7 +44,7 @@ const TemplateManager = ({ user, tenant, onLogout }) => {
         await axios.put(`/messages/templates/${editingTemplate.id}`, formData);
         toast.success('Template updated successfully');
       } else {
-        await axios.post('/api/messages/templates', formData);
+        await axios.post('/messages/templates', formData);
         toast.success('Template created successfully');
       }
       loadTemplates();

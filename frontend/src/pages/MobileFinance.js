@@ -98,16 +98,16 @@ const MobileFinance = ({ user }) => {
         dailyExpensesRes,
         bankBalancesRes
       ] = await Promise.all([
-        axios.get('/api/finance/mobile/daily-collections'),
-        axios.get('/api/finance/mobile/monthly-collections'),
-        axios.get('/api/finance/mobile/pending-receivables'),
-        axios.get('/api/finance/mobile/monthly-costs'),
-        axios.get('/api/notifications/mobile/finance'),
-        axios.get('/api/invoice/list').catch(() => ({ data: { invoices: [] } })),
-        axios.get('/api/finance/mobile/cash-flow-summary').catch(() => ({ data: null })),
-        axios.get('/api/finance/mobile/risk-alerts').catch(() => ({ data: null })),
-        axios.get('/api/finance/mobile/daily-expenses').catch(() => ({ data: null })),
-        axios.get('/api/finance/mobile/bank-balances').catch(() => ({ data: null }))
+        axios.get('/finance/mobile/daily-collections'),
+        axios.get('/finance/mobile/monthly-collections'),
+        axios.get('/finance/mobile/pending-receivables'),
+        axios.get('/finance/mobile/monthly-costs'),
+        axios.get('/notifications/mobile/finance'),
+        axios.get('/invoice/list').catch(() => ({ data: { invoices: [] } })),
+        axios.get('/finance/mobile/cash-flow-summary').catch(() => ({ data: null })),
+        axios.get('/finance/mobile/risk-alerts').catch(() => ({ data: null })),
+        axios.get('/finance/mobile/daily-expenses').catch(() => ({ data: null })),
+        axios.get('/finance/mobile/bank-balances').catch(() => ({ data: null }))
       ]);
 
       setDailyCollections(dailyRes.data);
@@ -136,7 +136,7 @@ const MobileFinance = ({ user }) => {
 
   const handleRecordPayment = async (formData) => {
     try {
-      await axios.post('/api/finance/mobile/record-payment', formData);
+      await axios.post('/finance/mobile/record-payment', formData);
       toast.success('✓ Ödeme');
       setPaymentModalOpen(false);
       loadData();
@@ -166,7 +166,7 @@ const MobileFinance = ({ user }) => {
 
   const loadCashierShiftReport = async () => {
     try {
-      const res = await axios.get('/api/finance/cashier-shift-report');
+      const res = await axios.get('/finance/cashier-shift-report');
       setShiftReportData(res.data);
       setCashierShiftModalOpen(true);
     } catch (error) {
@@ -177,7 +177,7 @@ const MobileFinance = ({ user }) => {
 
   const loadCashFlowDetail = async () => {
     try {
-      const res = await axios.get('/api/finance/mobile/cash-flow-summary');
+      const res = await axios.get('/finance/mobile/cash-flow-summary');
       setCashFlowData(res.data);
       setCashFlowModalOpen(true);
     } catch (error) {
@@ -188,10 +188,10 @@ const MobileFinance = ({ user }) => {
   const loadRiskDetails = async () => {
     try {
       const [alertsRes, overdueRes, violationsRes, suspiciousRes] = await Promise.all([
-        axios.get('/api/finance/mobile/risk-alerts'),
-        axios.get('/api/finance/mobile/overdue-accounts?min_days=7'),
-        axios.get('/api/finance/mobile/credit-limit-violations'),
-        axios.get('/api/finance/mobile/suspicious-receivables')
+        axios.get('/finance/mobile/risk-alerts'),
+        axios.get('/finance/mobile/overdue-accounts?min_days=7'),
+        axios.get('/finance/mobile/credit-limit-violations'),
+        axios.get('/finance/mobile/suspicious-receivables')
       ]);
       
       setRiskAlerts(alertsRes.data);

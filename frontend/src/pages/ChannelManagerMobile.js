@@ -23,9 +23,9 @@ const ChannelManagerMobile = ({ user }) => {
     try {
       setLoading(true);
       const [statusRes, parityRes, perfRes] = await Promise.all([
-        axios.get('/api/channels/status'),
-        axios.get('/api/channels/rate-parity'),
-        axios.get('/api/channels/performance')
+        axios.get('/channels/status'),
+        axios.get('/channels/rate-parity'),
+        axios.get('/channels/performance')
       ]);
       setChannels(statusRes.data.channels || []);
       setParity(parityRes.data.parity_data || []);

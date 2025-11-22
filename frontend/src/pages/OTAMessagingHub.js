@@ -33,7 +33,7 @@ const OTAMessagingHub = () => {
 
   const loadTemplates = async () => {
     try {
-      const response = await axios.get('/api/messaging/templates');
+      const response = await axios.get('/messaging/templates');
       setTemplates(response.data);
     } catch (error) {
       console.error('Failed to load templates:', error);
@@ -79,7 +79,7 @@ const OTAMessagingHub = () => {
   const loadConversations = async () => {
     try {
       const params = filter !== 'all' ? { ota: filter } : {};
-      const response = await axios.get('/api/ota/conversations', { params });
+      const response = await axios.get('/ota/conversations', { params });
       setConversations(response.data.conversations || []);
     } catch (error) {
       console.error('Failed to load conversations:', error);

@@ -32,7 +32,7 @@ const CostManagement = ({ user, tenant, onLogout }) => {
   const loadCostData = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('/api/costs/summary');
+      const response = await axios.get('/costs/summary');
       setCostData(response.data);
     } catch (error) {
       console.error('Failed to load cost data:', error);

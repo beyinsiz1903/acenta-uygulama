@@ -35,7 +35,7 @@ const MarketplaceInventory = () => {
 
   const loadInventory = async () => {
     try {
-      const response = await axios.get('/api/marketplace/inventory');
+      const response = await axios.get('/marketplace/inventory');
       setInventory(response.data.products || []);
     } catch (error) {
       console.error('Failed to load inventory:', error);
@@ -44,7 +44,7 @@ const MarketplaceInventory = () => {
 
   const loadPurchaseOrders = async () => {
     try {
-      const response = await axios.get('/api/marketplace/purchase-orders');
+      const response = await axios.get('/marketplace/purchase-orders');
       setPurchaseOrders(response.data.orders || []);
     } catch (error) {
       console.error('Failed to load orders:', error);
@@ -53,7 +53,7 @@ const MarketplaceInventory = () => {
 
   const loadDeliveries = async () => {
     try {
-      const response = await axios.get('/api/marketplace/deliveries');
+      const response = await axios.get('/marketplace/deliveries');
       setDeliveries(response.data.deliveries || []);
     } catch (error) {
       console.error('Failed to load deliveries:', error);
@@ -62,7 +62,7 @@ const MarketplaceInventory = () => {
 
   const handleCreateProduct = async () => {
     try {
-      await axios.post('/api/marketplace/inventory', formData);
+      await axios.post('/marketplace/inventory', formData);
       toast.success('Product added to inventory');
       setShowDialog(false);
       loadInventory();
@@ -76,7 +76,7 @@ const MarketplaceInventory = () => {
       const quantity = prompt(`Enter quantity to order for ${product.product_name}:`);
       if (!quantity) return;
 
-      await axios.post('/api/marketplace/purchase-orders', {
+      await axios.post('/marketplace/purchase-orders', {
         product_id: product.id,
         quantity: parseInt(quantity),
         unit_price: product.unit_price,

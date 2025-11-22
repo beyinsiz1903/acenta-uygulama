@@ -50,7 +50,7 @@ const MobileOrderTracking = ({ user }) => {
       if (statusFilter !== 'all') params.status = statusFilter;
       if (outletFilter !== 'all') params.outlet_id = outletFilter;
       
-      const response = await axios.get('/api/pos/mobile/active-orders', { params });
+      const response = await axios.get('/pos/mobile/active-orders', { params });
       setActiveOrders(response.data.orders || []);
     } catch (error) {
       console.error('Failed to load orders:', error);
@@ -97,7 +97,7 @@ const MobileOrderTracking = ({ user }) => {
       const today = new Date();
       const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
       
-      const response = await axios.get('/api/pos/mobile/order-history', {
+      const response = await axios.get('/pos/mobile/order-history', {
         params: {
           start_date: weekAgo.toISOString().split('T')[0],
           end_date: today.toISOString().split('T')[0],

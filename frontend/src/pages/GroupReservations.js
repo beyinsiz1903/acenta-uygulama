@@ -34,7 +34,7 @@ const GroupReservations = () => {
 
   const loadGroups = async () => {
     try {
-      const response = await axios.get('/api/pms/group-reservations');
+      const response = await axios.get('/pms/group-reservations');
       setGroups(response.data.groups || []);
     } catch (error) {
       console.error('Failed to load groups:', error);
@@ -43,7 +43,7 @@ const GroupReservations = () => {
 
   const loadBlocks = async () => {
     try {
-      const response = await axios.get('/api/pms/room-blocks');
+      const response = await axios.get('/pms/room-blocks');
       setBlocks(response.data.blocks || []);
     } catch (error) {
       console.error('Failed to load blocks:', error);
@@ -52,7 +52,7 @@ const GroupReservations = () => {
 
   const handleCreateGroup = async () => {
     try {
-      await axios.post('/api/pms/group-reservations', formData);
+      await axios.post('/pms/group-reservations', formData);
       toast.success('Group reservation created');
       setShowDialog(false);
       resetForm();
@@ -64,7 +64,7 @@ const GroupReservations = () => {
 
   const handleCreateBlock = async () => {
     try {
-      await axios.post('/api/pms/room-blocks', formData);
+      await axios.post('/pms/room-blocks', formData);
       toast.success('Room block created');
       setShowDialog(false);
       resetForm();

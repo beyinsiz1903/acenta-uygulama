@@ -87,12 +87,12 @@ const MobileHousekeeping = ({ user }) => {
     try {
       setLoading(true);
       const [statusRes, departuresRes, stayoverRes, arrivalsRes, perfRes, cleaningReqRes] = await Promise.all([
-        axios.get('/api/housekeeping/room-status'),
-        axios.get('/api/unified/today-departures'),
-        axios.get('/api/housekeeping/stayovers'),
-        axios.get('/api/unified/today-arrivals'),
-        axios.get('/api/housekeeping/staff-performance-table'),
-        axios.get('/api/housekeeping/cleaning-requests?status=pending').catch(() => ({ data: { requests: [] } }))
+        axios.get('/housekeeping/room-status'),
+        axios.get('/unified/today-departures'),
+        axios.get('/housekeeping/stayovers'),
+        axios.get('/unified/today-arrivals'),
+        axios.get('/housekeeping/staff-performance-table'),
+        axios.get('/housekeeping/cleaning-requests?status=pending').catch(() => ({ data: { requests: [] } }))
       ]);
 
       setRoomStatus(statusRes.data);
@@ -131,7 +131,7 @@ const MobileHousekeeping = ({ user }) => {
       });
       
       // Get all rooms for filtering
-      const roomsRes = await axios.get('/api/pms/rooms');
+      const roomsRes = await axios.get('/pms/rooms');
       setAllRooms(roomsRes.data || []);
     } catch (error) {
       console.error('Failed to load housekeeping data:', error);
@@ -187,7 +187,7 @@ const MobileHousekeeping = ({ user }) => {
 
   const loadLostFound = async () => {
     try {
-      const res = await axios.get('/api/housekeeping/lost-found/items');
+      const res = await axios.get('/housekeeping/lost-found/items');
       setLostFoundItems(res.data.items || []);
       setLostFoundModalOpen(true);
     } catch (error) {
@@ -197,7 +197,7 @@ const MobileHousekeeping = ({ user }) => {
 
   const loadInventory = async () => {
     try {
-      const res = await axios.get('/api/housekeeping/inventory');
+      const res = await axios.get('/housekeeping/inventory');
       setInventoryItems(res.data.inventory_items || []);
       setInventoryModalOpen(true);
     } catch (error) {
@@ -207,7 +207,7 @@ const MobileHousekeeping = ({ user }) => {
 
   const loadTaskAssignments = async () => {
     try {
-      const res = await axios.get('/api/housekeeping/task-assignments');
+      const res = await axios.get('/housekeeping/task-assignments');
       setTaskAssignments(res.data.assignments || []);
       setTaskAssignmentsModalOpen(true);
     } catch (error) {
@@ -217,7 +217,7 @@ const MobileHousekeeping = ({ user }) => {
 
   const loadStatusLogs = async () => {
     try {
-      const res = await axios.get('/api/housekeeping/status-change-logs');
+      const res = await axios.get('/housekeeping/status-change-logs');
       setStatusLogs(res.data.logs || []);
       setStatusLogsModalOpen(true);
     } catch (error) {
@@ -227,7 +227,7 @@ const MobileHousekeeping = ({ user }) => {
 
   const handleCreateLostFound = async (formData) => {
     try {
-      await axios.post('/api/housekeeping/lost-found/item', {
+      await axios.post('/housekeeping/lost-found/item', {
         item_description: formData.get('item_description'),
         location_found: formData.get('location_found'),
         found_by: formData.get('found_by'),

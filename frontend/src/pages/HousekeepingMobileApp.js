@@ -31,7 +31,7 @@ const HousekeepingMobileApp = ({ user }) => {
     try {
       await axios.post(`/housekeeping/rooms/${room.id}/start`);
       setSelectedRoom(room);
-      const checklistRes = await axios.get('/api/housekeeping/checklist');
+      const checklistRes = await axios.get('/housekeeping/checklist');
       setChecklistItems(checklistRes.data.items || []);
       toast.success(`Started cleaning Room ${room.room_number}`);
     } catch (error) {

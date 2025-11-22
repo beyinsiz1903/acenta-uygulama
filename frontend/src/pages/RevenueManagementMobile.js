@@ -37,10 +37,10 @@ const RevenueManagementMobile = ({ user }) => {
       setLoading(true);
       
       const [pickupRes, paceRes, ratesRes, comparisonRes] = await Promise.all([
-        axios.get('/api/revenue/pickup-analysis'),
-        axios.get('/api/revenue/pace-report'),
-        axios.get('/api/revenue/rate-recommendations'),
-        axios.get('/api/revenue/historical-comparison')
+        axios.get('/revenue/pickup-analysis'),
+        axios.get('/revenue/pace-report'),
+        axios.get('/revenue/rate-recommendations'),
+        axios.get('/revenue/historical-comparison')
       ]);
       
       setPickupData(pickupRes.data);

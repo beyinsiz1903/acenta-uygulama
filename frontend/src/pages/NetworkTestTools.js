@@ -18,7 +18,7 @@ const NetworkTestTools = ({ user }) => {
   const runPingTest = async () => {
     try {
       setTesting(true);
-      const res = await axios.post('/api/network/ping', {
+      const res = await axios.post('/network/ping', {
         target: pingTarget,
         count: 4
       });
@@ -35,7 +35,7 @@ const NetworkTestTools = ({ user }) => {
   const runHealthCheck = async () => {
     try {
       setTesting(true);
-      const res = await axios.get('/api/system/health');
+      const res = await axios.get('/system/health');
       setHealthResult(res.data);
       toast.success('Sağlık kontrolü tamamlandı');
     } catch (error) {

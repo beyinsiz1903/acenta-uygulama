@@ -60,7 +60,7 @@ const EnhancedGMDashboard = ({ user, tenant, onLogout }) => {
     refresh 
   } = useRealTimeData(
     async () => {
-      const response = await axios.get('/api/dashboard/role-based');
+      const response = await axios.get('/dashboard/role-based');
       return response.data;
     },
     30000, // 30 seconds
@@ -74,7 +74,7 @@ const EnhancedGMDashboard = ({ user, tenant, onLogout }) => {
 
   const loadForecast = async () => {
     try {
-      const response = await axios.get('/api/dashboard/gm-forecast');
+      const response = await axios.get('/dashboard/gm-forecast');
       setForecastData(response.data);
     } catch (error) {
       console.error('Failed to load forecast:', error);

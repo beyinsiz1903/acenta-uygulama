@@ -31,13 +31,13 @@ const PendingAR = ({ user, tenant, onLogout }) => {
     setLoading(true);
     try {
       // Get all company folios with outstanding balances
-      const response = await axios.get('/api/folio/pending-ar');
+      const response = await axios.get('/folio/pending-ar');
       setArData(response.data || []);
     } catch (error) {
       console.error('Failed to load AR data:', error);
       // Fallback: try to get from companies and calculate
       try {
-        const companiesRes = await axios.get('/api/companies');
+        const companiesRes = await axios.get('/companies');
         const companies = companiesRes.data || [];
         
         // For each company, get their folios and calculate outstanding balance

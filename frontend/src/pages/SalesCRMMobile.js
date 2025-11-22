@@ -25,10 +25,10 @@ const SalesCRMMobile = ({ user }) => {
     try {
       setLoading(true);
       const [customersRes, leadsRes, otaRes, followUpsRes] = await Promise.all([
-        axios.get('/api/sales/customers'),
-        axios.get('/api/sales/leads'),
-        axios.get('/api/sales/ota-pricing'),
-        axios.get('/api/sales/follow-ups')
+        axios.get('/sales/customers'),
+        axios.get('/sales/leads'),
+        axios.get('/sales/ota-pricing'),
+        axios.get('/sales/follow-ups')
       ]);
       setCustomers(customersRes.data.customers || []);
       setLeads(leadsRes.data.leads || []);

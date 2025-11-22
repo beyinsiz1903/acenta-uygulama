@@ -57,15 +57,15 @@ const GMDashboard = ({ user, tenant, onLogout }) => {
     try {
       // Load daily flash report and other key metrics
       const [flashResponse, occupancyRes, folioRes, financeRes, costRes, expenseRes, trendRes, slaRes, delayedRes] = await Promise.all([
-        axios.get('/api/reports/daily-flash').catch(() => ({ data: {} })),
-        axios.get('/api/pms/dashboard').catch(() => ({ data: {} })),
-        axios.get('/api/folio/dashboard-stats').catch(() => ({ data: {} })),
-        axios.get('/api/reports/finance-snapshot').catch(() => ({ data: {} })),
-        axios.get('/api/reports/cost-summary').catch(() => ({ data: {} })),
-        axios.get('/api/finance/expense-summary?period=today').catch(() => ({ data: {} })),
-        axios.get('/api/analytics/7day-trend').catch(() => ({ data: { trend: [] } })),
-        axios.get('/api/settings/sla').catch(() => ({ data: { configs: [] } })),
-        axios.get('/api/tasks/delayed').catch(() => ({ data: { delayed_tasks: [] } }))
+        axios.get('/reports/daily-flash').catch(() => ({ data: {} })),
+        axios.get('/pms/dashboard').catch(() => ({ data: {} })),
+        axios.get('/folio/dashboard-stats').catch(() => ({ data: {} })),
+        axios.get('/reports/finance-snapshot').catch(() => ({ data: {} })),
+        axios.get('/reports/cost-summary').catch(() => ({ data: {} })),
+        axios.get('/finance/expense-summary?period=today').catch(() => ({ data: {} })),
+        axios.get('/analytics/7day-trend').catch(() => ({ data: { trend: [] } })),
+        axios.get('/settings/sla').catch(() => ({ data: { configs: [] } })),
+        axios.get('/tasks/delayed').catch(() => ({ data: { delayed_tasks: [] } }))
       ]);
 
       setDashboardData({
@@ -101,7 +101,7 @@ const GMDashboard = ({ user, tenant, onLogout }) => {
 
   const handleExportPDF = async () => {
     try {
-      const response = await axios.get('/api/reports/daily-flash-pdf', {
+      const response = await axios.get('/reports/daily-flash-pdf', {
         responseType: 'blob'
       });
       
@@ -122,7 +122,7 @@ const GMDashboard = ({ user, tenant, onLogout }) => {
 
   const handleEmailReport = async () => {
     try {
-      await axios.post('/api/reports/email-daily-flash', {
+      await axios.post('/reports/email-daily-flash', {
         recipients: ['owner@hotel.com', 'family@hotel.com']
       });
       alert('Daily report sent successfully!');

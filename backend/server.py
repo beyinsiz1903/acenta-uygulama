@@ -10586,7 +10586,11 @@ async def get_balance_sheet(current_user: User = Depends(get_current_user)):
 
 
 @api_router.get("/accounting/dashboard")
-async def get_accounting_dashboard(current_user: User = Depends(get_current_user)):
+async def get_accounting_dashboard(
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    current_user = await get_current_user(credentials)
+    
     # Get current month data
     today = datetime.now(timezone.utc)
     month_start = today.replace(day=1, hour=0, minute=0, second=0).isoformat()
@@ -10602,10 +10606,10 @@ async def get_accounting_dashboard(current_user: User = Depends(get_current_user
         'date': {'$gte': month_start, '$lte': month_end}
     }, {'_id': 0}).to_list(1000)
     
-    total_income = sum(inv['total'] for inv in invoices if inv['status'] == 'paid')
-    total_expenses = sum(exp['total_amount'] for exp in expenses)
-    pending_invoices = len([inv for inv in invoices if inv['status'] == 'pending'])
-    overdue_invoices = len([inv for inv in invoices if inv['status'] == 'overdue'])
+    total_income = sum(inv.get('total', 0) for inv in invoices if inv.get('status') == 'paid')
+    total_expenses = sum(exp.get('amount', 0) for exp in expenses)
+    pending_invoices = len([inv for inv in invoices if inv.get('status') == 'pending'])
+    overdue_invoices = len([inv for inv in invoices if inv.get('status') == 'overdue'])
     
     # Get bank balances
     bank_accounts = await db.bank_accounts.find({'tenant_id': current_user.tenant_id}, {'_id': 0}).to_list(1000)

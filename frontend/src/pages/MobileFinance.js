@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   ArrowLeft, 
   DollarSign, 
@@ -25,7 +26,17 @@ import {
   Clock,
   CheckCircle,
   Download,
-  FileDown
+  FileDown,
+  TrendingDown,
+  Building2,
+  Banknote,
+  Filter,
+  Eye,
+  AlertTriangle,
+  XCircle,
+  ArrowUpCircle,
+  ArrowDownCircle,
+  Wallet
 } from 'lucide-react';
 
 const MobileFinance = ({ user }) => {

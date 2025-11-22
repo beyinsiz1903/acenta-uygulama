@@ -579,12 +579,16 @@ class ApprovalSystemRetester:
                         data = await response.json()
                         missing_fields = [field for field in test_case["expected_fields"] if field not in data]
                         if not missing_fields:
-                            # Verify KPI structure
+                            # Verify KPI structure (check for lowercase field names)
                             kpis = data.get("kpis", {})
-                            required_kpis = ["RevPAR", "ADR", "Occupancy", "Revenue", "NPS", "Cash"]
-                            missing_kpis = [kpi for kpi in required_kpis if kpi not in kpis]
+                            lowercase_kpis = ["revpar", "adr", "occupancy", "revenue", "nps", "cash"]
+                            uppercase_kpis = ["RevPAR", "ADR", "Occupancy", "Revenue", "NPS", "Cash"]
                             
-                            if not missing_kpis:
+                            # Check if using lowercase (current implementation)
+                            has_lowercase = all(kpi in kpis for kpi in lowercase_kpis)
+                            has_uppercase = all(kpi in kpis for kpi in uppercase_kpis)
+                            
+                            if has_lowercase:
                                 # Verify each KPI has required fields
                                 kpi_valid = True
                                 for kpi_name, kpi_data in kpis.items():

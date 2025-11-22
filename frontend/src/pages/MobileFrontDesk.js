@@ -123,7 +123,7 @@ const MobileFrontDesk = ({ user }) => {
       setGuestAlerts(res.data.alerts || []);
       setGuestAlertsModalOpen(true);
     } catch (error) {
-      toast.error('Misafir uyarıları yüklenemedi');
+      toast.error('✗ Uyarılar');
     }
   };
 
@@ -136,7 +136,7 @@ const MobileFrontDesk = ({ user }) => {
       });
       setCalculatedFees(res.data);
     } catch (error) {
-      toast.error('Ücret hesaplanamadı');
+      toast.error('✗ Hesaplama');
     }
   };
 
@@ -150,7 +150,7 @@ const MobileFrontDesk = ({ user }) => {
       const res = await axios.get(`/frontdesk/rooms-with-filters?${params.toString()}`);
       setFilteredRooms(res.data.rooms || []);
     } catch (error) {
-      toast.error('Odalar yüklenemedi');
+      toast.error('✗ Filtre');
     }
   };
 

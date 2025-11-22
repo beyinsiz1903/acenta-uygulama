@@ -101,7 +101,7 @@ const GMDashboard = ({ user, tenant, onLogout }) => {
 
   const handleExportPDF = async () => {
     try {
-      const response = await axios.get('/reports/daily-flash-pdf', {
+      const response = await axios.get('/api/reports/daily-flash-pdf', {
         responseType: 'blob'
       });
       

@@ -454,14 +454,18 @@ class MaintenanceEndpointTester:
                                 if not missing_part_fields:
                                     # Check low stock count if specified
                                     if "expected_low_stock" in test_case:
-                                        if data["low_stock_count"] == test_case["expected_low_stock"]:
-                                            print(f"  ✅ {test_case['name']}: PASSED - Found {data['low_stock_count']} low stock parts")
+                                        summary = data.get("summary", {})
+                                        low_stock_count = summary.get("low_stock_count", 0)
+                                        if low_stock_count == test_case["expected_low_stock"]:
+                                            print(f"  ✅ {test_case['name']}: PASSED - Found {low_stock_count} low stock parts")
                                             passed += 1
                                         else:
-                                            print(f"  ⚠️ {test_case['name']}: Expected {test_case['expected_low_stock']} low stock parts, found {data['low_stock_count']}")
+                                            print(f"  ⚠️ {test_case['name']}: Expected {test_case['expected_low_stock']} low stock parts, found {low_stock_count}")
                                             passed += 1  # Still pass as endpoint works
                                     else:
-                                        print(f"  ✅ {test_case['name']}: PASSED - Found {data['count']} spare parts")
+                                        summary = data.get("summary", {})
+                                        total_count = summary.get("total_count", 0)
+                                        print(f"  ✅ {test_case['name']}: PASSED - Found {total_count} spare parts")
                                         passed += 1
                                 else:
                                     print(f"  ❌ {test_case['name']}: Missing spare part fields {missing_part_fields}")

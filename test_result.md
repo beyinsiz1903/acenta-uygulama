@@ -5049,15 +5049,18 @@ backend:
 
   - task: "F&B Mobile Order Tracking - Order Details Endpoint"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Added GET /api/pos/mobile/order/{order_id} - Returns detailed order information including full order items with special instructions, payment status, server name, notes, time elapsed, status history"
+      - working: true
+        agent: "testing"
+        comment: "✅ ENDPOINT WORKING CORRECTLY - GET /api/pos/mobile/order/{order_id} tested with valid and invalid order IDs. Verified: Proper 404 response for non-existent orders, correct response structure when order exists with required fields: id, order_number, status, outlet_name, guest_name, order_items array, subtotal, tax_amount, total_amount, time_elapsed_minutes, status_history. Error handling working as expected."
 
   - task: "F&B Mobile Order Tracking - Update Order Status Endpoint"
     implemented: true

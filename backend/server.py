@@ -1148,6 +1148,47 @@ class CleaningTimer(BaseModel):
     status: str = "in_progress"  # in_progress, completed, paused
     notes: Optional[str] = None
 
+
+
+# Revenue Management Models
+class RateOverride(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    tenant_id: str
+    room_type: str
+    date: datetime
+    original_rate: float
+    override_rate: float
+    reason: str
+    approved_by: str
+    created_by: str
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class RevenueForecast(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    tenant_id: str
+    forecast_date: datetime
+    forecast_period: str  # daily, weekly, monthly
+    projected_occupancy: float
+    projected_adr: float
+    projected_revpar: float
+    projected_revenue: float
+    confidence_level: float = 0.0
+    created_by: str
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class DemandData(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    tenant_id: str
+    date: datetime
+    demand_level: str  # low, medium, high, very_high
+    booking_count: int
+    search_count: int = 0
+    competitor_rate_avg: float = 0.0
+    notes: Optional[str] = None
+
     unit: MeasurementUnit
     order_id: Optional[str] = None
     recipe_id: Optional[str] = None

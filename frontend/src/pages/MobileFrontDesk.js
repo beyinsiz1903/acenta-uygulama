@@ -82,11 +82,11 @@ const MobileFrontDesk = ({ user }) => {
       setLoading(true);
       
       const [arrivalsRes, departuresRes, inHouseRes, roomsRes, bookingsRes] = await Promise.all([
-        axios.get('/unified/today-arrivals'),
-        axios.get('/unified/today-departures'),
-        axios.get('/unified/in-house'),
-        axios.get('/housekeeping/room-status'),
-        axios.get('/pms/bookings').catch(() => ({ data: { bookings: [] } }))
+        axios.get('/api/unified/today-arrivals'),
+        axios.get('/api/unified/today-departures'),
+        axios.get('/api/unified/in-house'),
+        axios.get('/api/housekeeping/room-status'),
+        axios.get('/api/pms/bookings').catch(() => ({ data: { bookings: [] } }))
       ]);
 
       const allBookings = bookingsRes.data.bookings || [];
@@ -140,7 +140,7 @@ const MobileFrontDesk = ({ user }) => {
 
   const loadGuestAlerts = async () => {
     try {
-      const res = await axios.get('/frontdesk/guest-alerts');
+      const res = await axios.get('/api/frontdesk/guest-alerts');
       setGuestAlerts(res.data.alerts || []);
       setGuestAlertsModalOpen(true);
     } catch (error) {
@@ -150,7 +150,7 @@ const MobileFrontDesk = ({ user }) => {
 
   const calculateFees = async (booking, earlyTime, lateTime) => {
     try {
-      const res = await axios.post('/frontdesk/calculate-early-late-fees', {
+      const res = await axios.post('/api/frontdesk/calculate-early-late-fees', {
         booking_id: booking.id,
         early_checkin_time: earlyTime,
         late_checkout_time: lateTime
@@ -204,7 +204,7 @@ const MobileFrontDesk = ({ user }) => {
 
   const assignRoom = async (roomId) => {
     try {
-      await axios.post('/frontdesk/assign-room', {
+      await axios.post('/api/frontdesk/assign-room', {
         booking_id: selectedBookingForRoom.id,
         room_id: roomId
       });
@@ -224,7 +224,7 @@ const MobileFrontDesk = ({ user }) => {
 
   const handlePassportScan = async (imageData) => {
     try {
-      const res = await axios.post('/frontdesk/passport-scan', {
+      const res = await axios.post('/api/frontdesk/passport-scan', {
         image_data: imageData
       });
       toast.success('✓ Kimlik okundu');
@@ -258,7 +258,7 @@ const MobileFrontDesk = ({ user }) => {
 
   const issueKeycard = async () => {
     try {
-      const res = await axios.post('/keycard/issue', {
+      const res = await axios.post('/api/keycard/issue', {
         booking_id: selectedBookingForKeycard.id,
         card_type: keycardType,
         validity_hours: 48

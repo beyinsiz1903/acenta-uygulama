@@ -99,12 +99,12 @@ const InvoiceModule = ({ user, tenant, onLogout }) => {
   const loadData = async () => {
     try {
       const [invoicesRes, expensesRes, suppliersRes, bankRes, inventoryRes, dashRes] = await Promise.all([
-        axios.get('/accounting/invoices'),
-        axios.get('/accounting/expenses'),
-        axios.get('/accounting/suppliers'),
-        axios.get('/accounting/bank-accounts'),
-        axios.get('/accounting/inventory'),
-        axios.get('/accounting/dashboard')
+        axios.get('/api/accounting/invoices'),
+        axios.get('/api/accounting/expenses'),
+        axios.get('/api/accounting/suppliers'),
+        axios.get('/api/accounting/bank-accounts'),
+        axios.get('/api/accounting/inventory'),
+        axios.get('/api/accounting/dashboard')
       ]);
       
       setInvoices(invoicesRes.data);
@@ -122,7 +122,7 @@ const InvoiceModule = ({ user, tenant, onLogout }) => {
 
   const loadCashFlow = async () => {
     try {
-      const response = await axios.get('/accounting/cash-flow');
+      const response = await axios.get('/api/accounting/cash-flow');
       setCashFlow(response.data);
     } catch (error) {
       toast.error('Failed to load cash flow');
@@ -138,7 +138,7 @@ const InvoiceModule = ({ user, tenant, onLogout }) => {
       const [plRes, vatRes, bsRes] = await Promise.all([
         axios.get(`/accounting/reports/profit-loss?start_date=${monthStart}&end_date=${monthEnd}`),
         axios.get(`/accounting/reports/vat-report?start_date=${monthStart}&end_date=${monthEnd}`),
-        axios.get('/accounting/reports/balance-sheet')
+        axios.get('/api/accounting/reports/balance-sheet')
       ]);
       
       setReports({
@@ -231,7 +231,7 @@ const InvoiceModule = ({ user, tenant, onLogout }) => {
   const handleCreateInvoice = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('/accounting/invoices', null, { params: newInvoice });
+      await axios.post('/api/accounting/invoices', null, { params: newInvoice });
       toast.success('Invoice created successfully');
       setOpenDialog(null);
       loadData();
@@ -243,7 +243,7 @@ const InvoiceModule = ({ user, tenant, onLogout }) => {
   const handleCreateExpense = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('/accounting/expenses', null, { params: newExpense });
+      await axios.post('/api/accounting/expenses', null, { params: newExpense });
       toast.success('Expense recorded');
       setOpenDialog(null);
       loadData();
@@ -256,7 +256,7 @@ const InvoiceModule = ({ user, tenant, onLogout }) => {
   const handleCreateSupplier = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('/accounting/suppliers', null, { params: newSupplier });
+      await axios.post('/api/accounting/suppliers', null, { params: newSupplier });
       toast.success('Supplier added');
       setOpenDialog(null);
       loadData();
@@ -269,7 +269,7 @@ const InvoiceModule = ({ user, tenant, onLogout }) => {
   const handleCreateBankAccount = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('/accounting/bank-accounts', null, { params: newBankAccount });
+      await axios.post('/api/accounting/bank-accounts', null, { params: newBankAccount });
       toast.success('Bank account added');
       setOpenDialog(null);
       loadData();
@@ -282,7 +282,7 @@ const InvoiceModule = ({ user, tenant, onLogout }) => {
   const handleCreateInventoryItem = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('/accounting/inventory', null, { params: newInventoryItem });
+      await axios.post('/api/accounting/inventory', null, { params: newInventoryItem });
       toast.success('Inventory item added');
       setOpenDialog(null);
       loadData();

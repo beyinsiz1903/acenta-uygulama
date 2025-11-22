@@ -35,8 +35,8 @@ const LoyaltyModule = ({ user, tenant, onLogout }) => {
   const loadData = async () => {
     try {
       const [programsRes, guestsRes] = await Promise.all([
-        axios.get('/loyalty/programs'),
-        axios.get('/pms/guests')
+        axios.get('/api/loyalty/programs'),
+        axios.get('/api/pms/guests')
       ]);
       setPrograms(programsRes.data);
       setGuests(guestsRes.data);
@@ -59,7 +59,7 @@ const LoyaltyModule = ({ user, tenant, onLogout }) => {
   const handleCreateTransaction = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('/loyalty/transactions', newTransaction);
+      await axios.post('/api/loyalty/transactions', newTransaction);
       toast.success('Transaction successful');
       setOpenDialog(null);
       loadData();
@@ -71,7 +71,7 @@ const LoyaltyModule = ({ user, tenant, onLogout }) => {
 
   const createLoyaltyProgram = async (guestId) => {
     try {
-      await axios.post('/loyalty/programs', {
+      await axios.post('/api/loyalty/programs', {
         guest_id: guestId,
         tier: 'bronze',
         points: 0,

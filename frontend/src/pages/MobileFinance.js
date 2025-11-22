@@ -136,7 +136,7 @@ const MobileFinance = ({ user }) => {
 
   const handleRecordPayment = async (formData) => {
     try {
-      await axios.post('/finance/mobile/record-payment', formData);
+      await axios.post('/api/finance/mobile/record-payment', formData);
       toast.success('✓ Ödeme');
       setPaymentModalOpen(false);
       loadData();
@@ -166,7 +166,7 @@ const MobileFinance = ({ user }) => {
 
   const loadCashierShiftReport = async () => {
     try {
-      const res = await axios.get('/finance/cashier-shift-report');
+      const res = await axios.get('/api/finance/cashier-shift-report');
       setShiftReportData(res.data);
       setCashierShiftModalOpen(true);
     } catch (error) {

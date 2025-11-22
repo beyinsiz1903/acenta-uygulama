@@ -38,9 +38,9 @@ const GMEnhancedDashboard = ({ user }) => {
       setLoading(true);
       
       const [teamRes, complaintsRes, snapshotRes] = await Promise.all([
-        axios.get('/gm/team-performance'),
-        axios.get('/gm/complaint-management'),
-        axios.get('/gm/snapshot-enhanced')
+        axios.get('/api/gm/team-performance'),
+        axios.get('/api/gm/complaint-management'),
+        axios.get('/api/gm/snapshot-enhanced')
       ]);
       
       setTeamPerformance(teamRes.data);

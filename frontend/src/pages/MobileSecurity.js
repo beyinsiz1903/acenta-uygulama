@@ -41,10 +41,10 @@ const MobileSecurity = ({ user }) => {
       setLoading(true);
       
       const [statusRes, connectionRes, alertsRes, notifRes] = await Promise.all([
-        axios.get('/security/mobile/system-status'),
-        axios.get('/security/mobile/connection-status'),
-        axios.get('/security/mobile/security-alerts'),
-        axios.get('/notifications/mobile/security')
+        axios.get('/api/security/mobile/system-status'),
+        axios.get('/api/security/mobile/connection-status'),
+        axios.get('/api/security/mobile/security-alerts'),
+        axios.get('/api/notifications/mobile/security')
       ]);
 
       setSystemStatus(statusRes.data);

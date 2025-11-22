@@ -71,9 +71,9 @@ const MobileFnB = ({ user }) => {
       
       const [summaryRes, transactionsRes, outletsRes, menuRes] = await Promise.all([
         axios.get(`/pos/daily-summary?date=${today}`),
-        axios.get('/pos/transactions?limit=10'),
-        axios.get('/pos/outlets'),
-        axios.get('/pos/menu-items')
+        axios.get('/api/pos/transactions?limit=10'),
+        axios.get('/api/pos/outlets'),
+        axios.get('/api/pos/menu-items')
       ]);
 
       setDailySummary(summaryRes.data);
@@ -132,7 +132,7 @@ const MobileFnB = ({ user }) => {
         return;
       }
 
-      await axios.post('/pos/mobile/quick-order', {
+      await axios.post('/api/pos/mobile/quick-order', {
         outlet_id: selectedOutlet,
         table_number: tableNumber,
         items: orderItems,

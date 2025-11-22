@@ -60,10 +60,10 @@ const MobileInventory = ({ user }) => {
       setLoading(true);
       
       const [stockRes, alertsRes] = await Promise.all([
-        axios.get('/pos/mobile/stock-levels', {
+        axios.get('/api/pos/mobile/stock-levels', {
           params: { low_stock_only: showLowStockOnly }
         }),
-        axios.get('/pos/mobile/low-stock-alerts')
+        axios.get('/api/pos/mobile/low-stock-alerts')
       ]);
       
       setStockItems(stockRes.data.stock_items || []);
@@ -82,7 +82,7 @@ const MobileInventory = ({ user }) => {
       const today = new Date();
       const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
       
-      const response = await axios.get('/pos/mobile/inventory-movements', {
+      const response = await axios.get('/api/pos/mobile/inventory-movements', {
         params: {
           start_date: weekAgo.toISOString().split('T')[0],
           end_date: today.toISOString().split('T')[0],
@@ -105,7 +105,7 @@ const MobileInventory = ({ user }) => {
     }
 
     try {
-      await axios.post('/pos/mobile/stock-adjust', {
+      await axios.post('/api/pos/mobile/stock-adjust', {
         product_id: selectedItem.product_id || selectedItem.id,
         adjustment_type: adjustType,
         quantity: parseInt(adjustQuantity),

@@ -199,10 +199,10 @@ const PMSModule = ({ user, tenant, onLogout }) => {
   const loadData = async () => {
     try {
       const [roomsRes, guestsRes, bookingsRes, companiesRes] = await Promise.all([
-        axios.get('/pms/rooms'),
-        axios.get('/pms/guests'),
-        axios.get('/pms/bookings'),
-        axios.get('/companies')
+        axios.get('/api/pms/rooms'),
+        axios.get('/api/pms/guests'),
+        axios.get('/api/pms/bookings'),
+        axios.get('/api/companies')
       ]);
       setRooms(roomsRes.data);
       setGuests(guestsRes.data);
@@ -218,9 +218,9 @@ const PMSModule = ({ user, tenant, onLogout }) => {
   const loadFrontDeskData = async () => {
     try {
       const [arrivalsRes, departuresRes, inhouseRes] = await Promise.all([
-        axios.get('/frontdesk/arrivals'),
-        axios.get('/frontdesk/departures'),
-        axios.get('/frontdesk/inhouse')
+        axios.get('/api/frontdesk/arrivals'),
+        axios.get('/api/frontdesk/departures'),
+        axios.get('/api/frontdesk/inhouse')
       ]);
       setArrivals(arrivalsRes.data);
       setDepartures(departuresRes.data);
@@ -236,8 +236,8 @@ const PMSModule = ({ user, tenant, onLogout }) => {
   const loadAIInsights = async () => {
     try {
       const [predictionRes, patternsRes] = await Promise.all([
-        axios.get('/ai/pms/occupancy-prediction').catch(() => null),
-        axios.get('/ai/pms/guest-patterns').catch(() => null)
+        axios.get('/api/ai/pms/occupancy-prediction').catch(() => null),
+        axios.get('/api/ai/pms/guest-patterns').catch(() => null)
       ]);
       if (predictionRes) setAiPrediction(predictionRes.data);
       if (patternsRes) setAiPatterns(patternsRes.data);
@@ -250,12 +250,12 @@ const PMSModule = ({ user, tenant, onLogout }) => {
   const loadHousekeepingData = async () => {
     try {
       const [tasksRes, boardRes, dueOutRes, stayoverRes, arrivalsRes, blocksRes] = await Promise.all([
-        axios.get('/housekeeping/tasks'),
-        axios.get('/housekeeping/room-status'),
-        axios.get('/housekeeping/due-out'),
-        axios.get('/housekeeping/stayovers'),
-        axios.get('/housekeeping/arrivals'),
-        axios.get('/pms/room-blocks?status=active')
+        axios.get('/api/housekeeping/tasks'),
+        axios.get('/api/housekeeping/room-status'),
+        axios.get('/api/housekeeping/due-out'),
+        axios.get('/api/housekeeping/stayovers'),
+        axios.get('/api/housekeeping/arrivals'),
+        axios.get('/api/pms/room-blocks?status=active')
       ]);
       setHousekeepingTasks(tasksRes.data);
       setRoomStatusBoard(boardRes.data);
@@ -270,7 +270,7 @@ const PMSModule = ({ user, tenant, onLogout }) => {
 
   const loadAuditLogs = async () => {
     try {
-      const response = await axios.get('/audit-logs?limit=50');
+      const response = await axios.get('/api/audit-logs?limit=50');
       setAuditLogs(response.data.logs || []);
     } catch (error) {
       // Permission denied is okay
@@ -283,9 +283,9 @@ const PMSModule = ({ user, tenant, onLogout }) => {
   const loadChannelManagerData = async () => {
     try {
       const [otaRes, suggestionsRes, exceptionsRes] = await Promise.all([
-        axios.get('/channel-manager/ota-reservations?status=pending'),
-        axios.get('/rms/suggestions?status=pending'),
-        axios.get('/channel-manager/exceptions?status=pending')
+        axios.get('/api/channel-manager/ota-reservations?status=pending'),
+        axios.get('/api/rms/suggestions?status=pending'),
+        axios.get('/api/channel-manager/exceptions?status=pending')
       ]);
       setOtaReservations(otaRes.data.reservations || []);
       setRmsSuggestions(suggestionsRes.data.suggestions || []);
@@ -330,7 +330,7 @@ const PMSModule = ({ user, tenant, onLogout }) => {
 
   const checkPermission = async (permission) => {
     try {
-      const response = await axios.post('/permissions/check', null, {
+      const response = await axios.post('/api/permissions/check', null, {
         params: { permission }
       });
       return response.data.has_permission;
@@ -350,12 +350,12 @@ const PMSModule = ({ user, tenant, onLogout }) => {
       const [occupancyRes, revenueRes, dailyRes, forecastRes, forecast30Res, dailyFlashRes, marketSegmentRes, companyAgingRes, hkEfficiencyRes] = await Promise.all([
         axios.get(`/reports/occupancy?start_date=${monthStart}&end_date=${monthEnd}`).catch(e => { console.error('Occupancy report failed:', e); return { data: null }; }),
         axios.get(`/reports/revenue?start_date=${monthStart}&end_date=${monthEnd}`).catch(e => { console.error('Revenue report failed:', e); return { data: null }; }),
-        axios.get('/reports/daily-summary').catch(e => { console.error('Daily summary failed:', e); return { data: null }; }),
-        axios.get('/reports/forecast?days=7').catch(e => { console.error('Forecast failed:', e); return { data: null }; }),
-        axios.get('/reports/forecast?days=30').catch(e => { console.error('30-day forecast failed:', e); return { data: null }; }),
-        axios.get('/reports/daily-flash').catch(e => { console.error('Daily flash failed:', e); return { data: null }; }),
+        axios.get('/api/reports/daily-summary').catch(e => { console.error('Daily summary failed:', e); return { data: null }; }),
+        axios.get('/api/reports/forecast?days=7').catch(e => { console.error('Forecast failed:', e); return { data: null }; }),
+        axios.get('/api/reports/forecast?days=30').catch(e => { console.error('30-day forecast failed:', e); return { data: null }; }),
+        axios.get('/api/reports/daily-flash').catch(e => { console.error('Daily flash failed:', e); return { data: null }; }),
         axios.get(`/reports/market-segment?start_date=${monthStart}&end_date=${monthEnd}`).catch(e => { console.error('Market segment failed:', e); return { data: null }; }),
-        axios.get('/reports/company-aging').catch(e => { console.error('Company aging failed:', e); return { data: null }; }),
+        axios.get('/api/reports/company-aging').catch(e => { console.error('Company aging failed:', e); return { data: null }; }),
         axios.get(`/reports/housekeeping-efficiency?start_date=${monthStart}&end_date=${monthEnd}`).catch(e => { console.error('HK efficiency failed:', e); return { data: null }; })
       ]);
       
@@ -455,7 +455,7 @@ const PMSModule = ({ user, tenant, onLogout }) => {
   const handleCreateHKTask = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('/housekeeping/tasks', null, { params: newHKTask });
+      await axios.post('/api/housekeeping/tasks', null, { params: newHKTask });
       toast.success('Task created');
       setOpenDialog(null);
       loadHousekeepingData();
@@ -479,7 +479,7 @@ const PMSModule = ({ user, tenant, onLogout }) => {
   const handleCreateRoom = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('/pms/rooms', newRoom);
+      await axios.post('/api/pms/rooms', newRoom);
       toast.success('Room created');
       setOpenDialog(null);
       loadData();
@@ -492,7 +492,7 @@ const PMSModule = ({ user, tenant, onLogout }) => {
   const handleCreateGuest = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('/pms/guests', newGuest);
+      await axios.post('/api/pms/guests', newGuest);
       toast.success('Guest created');
       setOpenDialog(null);
       loadData();
@@ -505,7 +505,7 @@ const PMSModule = ({ user, tenant, onLogout }) => {
   const handleCreateCompany = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('/companies', newCompany);
+      const response = await axios.post('/api/companies', newCompany);
       toast.success('Company created successfully');
       setOpenDialog(null);
       loadData();
@@ -618,7 +618,7 @@ const PMSModule = ({ user, tenant, onLogout }) => {
     }
     
     try {
-      await axios.post('/pms/bookings', newBooking);
+      await axios.post('/api/pms/bookings', newBooking);
       toast.success('Booking created successfully');
       setOpenDialog(null);
       loadData();
@@ -754,7 +754,7 @@ const PMSModule = ({ user, tenant, onLogout }) => {
     }
     
     try {
-      const response = await axios.post('/pms/room-blocks', {
+      const response = await axios.post('/api/pms/room-blocks', {
         room_id: selectedRoom.id,
         ...newRoomBlock
       });
@@ -844,7 +844,7 @@ const PMSModule = ({ user, tenant, onLogout }) => {
 
   const loadMessageTemplates = async () => {
     try {
-      const response = await axios.get('/messages/templates');
+      const response = await axios.get('/api/messages/templates');
       setMessageTemplates(response.data.templates || []);
     } catch (error) {
       console.error('Failed to load templates');
@@ -860,18 +860,18 @@ const PMSModule = ({ user, tenant, onLogout }) => {
     try {
       let response;
       if (newMessage.channel === 'email') {
-        response = await axios.post('/messages/send-email', {
+        response = await axios.post('/api/messages/send-email', {
           recipient: newMessage.recipient,
           subject: newMessage.subject,
           body: newMessage.body
         });
       } else if (newMessage.channel === 'sms') {
-        response = await axios.post('/messages/send-sms', {
+        response = await axios.post('/api/messages/send-sms', {
           recipient: newMessage.recipient,
           body: newMessage.body
         });
       } else if (newMessage.channel === 'whatsapp') {
-        response = await axios.post('/messages/send-whatsapp', {
+        response = await axios.post('/api/messages/send-whatsapp', {
           recipient: newMessage.recipient,
           body: newMessage.body
         });

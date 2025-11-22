@@ -22,7 +22,7 @@ const SystemPerformanceMonitor = ({ user }) => {
 
   const loadData = async () => {
     try {
-      const res = await axios.get('/system/performance');
+      const res = await axios.get('/api/system/performance');
       setPerformance(res.data);
       setLoading(false);
       setRefreshing(false);

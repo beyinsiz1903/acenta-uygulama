@@ -44,10 +44,10 @@ const MobileApprovals = ({ user }) => {
       setLoading(true);
       
       if (activeTab === 'pending') {
-        const response = await axios.get('/approvals/pending');
+        const response = await axios.get('/api/approvals/pending');
         setPendingApprovals(response.data.approvals || []);
       } else {
-        const response = await axios.get('/approvals/my-requests');
+        const response = await axios.get('/api/approvals/my-requests');
         setMyRequests(response.data.requests || []);
       }
     } catch (error) {

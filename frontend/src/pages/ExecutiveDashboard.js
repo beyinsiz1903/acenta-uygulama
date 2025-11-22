@@ -46,9 +46,9 @@ const ExecutiveDashboard = ({ user }) => {
       setLoading(true);
       
       const [kpiRes, alertsRes, summaryRes] = await Promise.all([
-        axios.get('/executive/kpi-snapshot'),
-        axios.get('/executive/performance-alerts'),
-        axios.get('/executive/daily-summary')
+        axios.get('/api/executive/kpi-snapshot'),
+        axios.get('/api/executive/performance-alerts'),
+        axios.get('/api/executive/daily-summary')
       ]);
       
       setKpiSnapshot(kpiRes.data);

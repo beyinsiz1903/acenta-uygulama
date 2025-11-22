@@ -20,7 +20,7 @@ const UpsellStore = ({ bookingId }) => {
     try {
       // First try new AI upsell products endpoint
       try {
-        const response = await axios.get('/upsell/products');
+        const response = await axios.get('/api/upsell/products');
         const products = response.data.products || [];
         // Convert to offer format
         const converted = products.map(p => ({

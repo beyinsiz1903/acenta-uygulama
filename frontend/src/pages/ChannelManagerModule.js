@@ -56,7 +56,7 @@ const ChannelManagerModule = ({ user, tenant, onLogout }) => {
 
   const loadConnections = async () => {
     try {
-      const response = await axios.get('/channel-manager/connections');
+      const response = await axios.get('/api/channel-manager/connections');
       setConnections(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error('Failed to load connections:', error);
@@ -91,7 +91,7 @@ const ChannelManagerModule = ({ user, tenant, onLogout }) => {
     e.preventDefault();
     setLoading(true);
     try {
-      await axios.post('/channel-manager/connections', newConnection);
+      await axios.post('/api/channel-manager/connections', newConnection);
       toast.success('Channel connection added successfully!');
       setShowAddConnection(false);
       setNewConnection({

@@ -23,9 +23,9 @@ const CorporateContractsMobile = ({ user }) => {
     try {
       setLoading(true);
       const [contractsRes, customersRes, alertsRes] = await Promise.all([
-        axios.get('/corporate/contracts'),
-        axios.get('/corporate/customers'),
-        axios.get('/corporate/alerts')
+        axios.get('/api/corporate/contracts'),
+        axios.get('/api/corporate/customers'),
+        axios.get('/api/corporate/alerts')
       ]);
       setContracts(contractsRes.data.contracts || []);
       setCustomers(customersRes.data.corporate_customers || []);

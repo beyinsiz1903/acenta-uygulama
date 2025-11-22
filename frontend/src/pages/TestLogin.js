@@ -24,7 +24,7 @@ function TestLogin() {
     try {
       console.log('Attempting login with:', { email, password });
       
-      const response = await axios.post('/auth/login', {
+      const response = await axios.post('/api/auth/login', {
         email: email,
         password: password
       });

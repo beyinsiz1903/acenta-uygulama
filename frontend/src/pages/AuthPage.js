@@ -47,7 +47,7 @@ const AuthPage = ({ onLogin }) => {
     try {
       console.log('🔐 Attempting login with:', hotelLoginData);
       console.log('📡 Axios baseURL:', axios.defaults.baseURL);
-      const response = await axios.post('/auth/login', hotelLoginData);
+      const response = await axios.post('/api/auth/login', hotelLoginData);
       console.log('✅ Login successful:', response.data);
       toast.success('Login successful!');
       onLogin(response.data.access_token, response.data.user, response.data.tenant);
@@ -68,7 +68,7 @@ const AuthPage = ({ onLogin }) => {
     e.preventDefault();
     setLoading(true);
     try {
-      const response = await axios.post('/auth/login', guestLoginData);
+      const response = await axios.post('/api/auth/login', guestLoginData);
       toast.success('Welcome back!');
       onLogin(response.data.access_token, response.data.user, response.data.tenant);
       // Force navigation after successful login
@@ -87,7 +87,7 @@ const AuthPage = ({ onLogin }) => {
     setLoading(true);
     try {
       console.log('📝 Register data being sent:', hotelRegisterData);
-      const response = await axios.post('/auth/register', hotelRegisterData);
+      const response = await axios.post('/api/auth/register', hotelRegisterData);
       console.log('✅ Register response:', response.data);
       toast.success('Registration successful!');
       onLogin(response.data.access_token, response.data.user, response.data.tenant);
@@ -104,7 +104,7 @@ const AuthPage = ({ onLogin }) => {
     e.preventDefault();
     setLoading(true);
     try {
-      const response = await axios.post('/auth/register-guest', guestRegisterData);
+      const response = await axios.post('/api/auth/register-guest', guestRegisterData);
       toast.success('Account created! Welcome!');
       onLogin(response.data.access_token, response.data.user, response.data.tenant);
     } catch (error) {

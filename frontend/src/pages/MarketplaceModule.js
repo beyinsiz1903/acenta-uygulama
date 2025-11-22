@@ -24,14 +24,14 @@ const MarketplaceModule = ({ user, tenant, onLogout }) => {
     try {
       // Load products and orders
       const [productsRes, ordersRes] = await Promise.all([
-        axios.get('/marketplace/products'),
-        axios.get('/marketplace/orders')
+        axios.get('/api/marketplace/products'),
+        axios.get('/api/marketplace/orders')
       ]);
       
       // If no products exist, seed with sample data
       if (productsRes.data.length === 0) {
         await seedProducts();
-        const newProductsRes = await axios.get('/marketplace/products');
+        const newProductsRes = await axios.get('/api/marketplace/products');
         setProducts(newProductsRes.data);
       } else {
         setProducts(productsRes.data);
@@ -57,7 +57,7 @@ const MarketplaceModule = ({ user, tenant, onLogout }) => {
 
     for (const product of sampleProducts) {
       try {
-        await axios.post('/marketplace/products', product);
+        await axios.post('/api/marketplace/products', product);
       } catch (error) {
         console.error('Failed to seed product:', error);
       }
@@ -112,7 +112,7 @@ const MarketplaceModule = ({ user, tenant, onLogout }) => {
     };
 
     try {
-      await axios.post('/marketplace/orders', orderData);
+      await axios.post('/api/marketplace/orders', orderData);
       toast.success('Order placed successfully');
       setCart([]);
       loadData();

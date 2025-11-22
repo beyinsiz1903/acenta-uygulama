@@ -129,7 +129,7 @@ const MobileMaintenance = ({ user }) => {
 
   const handleCreateTask = async (formData) => {
     try {
-      await axios.post('/maintenance/mobile/quick-issue', {
+      await axios.post('/api/maintenance/mobile/quick-issue', {
         room_id: formData.get('room_id'),
         issue_type: formData.get('issue_type'),
         description: formData.get('description'),
@@ -339,7 +339,7 @@ const MobileMaintenance = ({ user }) => {
 
   const loadPartsInventory = async () => {
     try {
-      const res = await axios.get('/maintenance/parts-inventory');
+      const res = await axios.get('/api/maintenance/parts-inventory');
       setPartsInventory(res.data.parts || []);
       setPartsInventoryModalOpen(true);
     } catch (error) {

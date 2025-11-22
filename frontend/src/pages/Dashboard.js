@@ -23,7 +23,7 @@ const Dashboard = ({ user, tenant, onLogout }) => {
   const loadAIBriefing = async () => {
     setLoadingAI(true);
     try {
-      const response = await axios.get('/ai/dashboard/briefing');
+      const response = await axios.get('/api/ai/dashboard/briefing');
       setAiBriefing(response.data);
     } catch (error) {
       console.error('Failed to load AI briefing:', error);
@@ -35,8 +35,8 @@ const Dashboard = ({ user, tenant, onLogout }) => {
 
   const loadDashboardStats = async () => {
     try {
-      const pmsResponse = await axios.get('/pms/dashboard');
-      const invoiceResponse = await axios.get('/invoices/stats');
+      const pmsResponse = await axios.get('/api/pms/dashboard');
+      const invoiceResponse = await axios.get('/api/invoices/stats');
       
       setStats({
         pms: pmsResponse.data,

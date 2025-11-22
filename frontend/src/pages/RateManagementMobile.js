@@ -24,10 +24,10 @@ const RateManagementMobile = ({ user }) => {
     try {
       setLoading(true);
       const [campaignsRes, codesRes, packagesRes, promoRes] = await Promise.all([
-        axios.get('/rates/campaigns'),
-        axios.get('/rates/discount-codes'),
-        axios.get('/rates/packages'),
-        axios.get('/rates/promotional')
+        axios.get('/api/rates/campaigns'),
+        axios.get('/api/rates/discount-codes'),
+        axios.get('/api/rates/packages'),
+        axios.get('/api/rates/promotional')
       ]);
       setCampaigns(campaignsRes.data.campaigns || []);
       setDiscountCodes(codesRes.data.discount_codes || []);

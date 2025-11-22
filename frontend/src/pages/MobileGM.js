@@ -62,10 +62,10 @@ const MobileGM = ({ user }) => {
       setLoading(true);
       
       const [flashRes, financeRes, roomsRes, tasksRes] = await Promise.all([
-        axios.get('/reports/daily-flash'),
-        axios.get('/reports/finance-snapshot'),
-        axios.get('/housekeeping/room-status'),
-        axios.get('/pms/staff-tasks?limit=5')
+        axios.get('/api/reports/daily-flash'),
+        axios.get('/api/reports/finance-snapshot'),
+        axios.get('/api/housekeeping/room-status'),
+        axios.get('/api/pms/staff-tasks?limit=5')
       ]);
 
       setDailyFlash(flashRes.data);
@@ -88,7 +88,7 @@ const MobileGM = ({ user }) => {
 
   const loadPickupAnalysis = async () => {
     try {
-      const res = await axios.get('/dashboard/gm/pickup-analysis');
+      const res = await axios.get('/api/dashboard/gm/pickup-analysis');
       setPickupData(res.data);
       setPickupModalOpen(true);
     } catch (error) {
@@ -98,7 +98,7 @@ const MobileGM = ({ user }) => {
 
   const loadAnomalyDetection = async () => {
     try {
-      const res = await axios.get('/dashboard/gm/anomaly-detection');
+      const res = await axios.get('/api/dashboard/gm/anomaly-detection');
       setAnomalies(res.data.anomalies || []);
       setAnomalyModalOpen(true);
     } catch (error) {
@@ -109,8 +109,8 @@ const MobileGM = ({ user }) => {
   const loadForecast = async () => {
     try {
       const [weeklyRes, monthlyRes] = await Promise.all([
-        axios.get('/dashboard/gm/forecast-weekly'),
-        axios.get('/dashboard/gm/forecast-monthly')
+        axios.get('/api/dashboard/gm/forecast-weekly'),
+        axios.get('/api/dashboard/gm/forecast-monthly')
       ]);
       setWeeklyForecast(weeklyRes.data.weeks || []);
       setMonthlyForecast(monthlyRes.data.months || []);

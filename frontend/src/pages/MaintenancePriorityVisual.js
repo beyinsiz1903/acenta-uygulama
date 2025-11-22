@@ -24,7 +24,7 @@ const MaintenancePriorityVisual = () => {
 
   const loadData = async () => {
     try {
-      const res = await axios.get('/maintenance/tasks');
+      const res = await axios.get('/api/maintenance/tasks');
       const tasksData = res.data || [];
       setTasks(tasksData);
       

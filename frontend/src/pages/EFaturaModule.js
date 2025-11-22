@@ -21,9 +21,9 @@ const EFaturaModule = () => {
   const loadData = async () => {
     try {
       const [invoicesRes, posRes, settingsRes] = await Promise.all([
-        axios.get('/efatura/invoices'),
-        axios.get('/pos/daily-closures'),
-        axios.get('/efatura/settings')
+        axios.get('/api/efatura/invoices'),
+        axios.get('/api/pos/daily-closures'),
+        axios.get('/api/efatura/settings')
       ]);
 
       setInvoices(invoicesRes.data.invoices || []);
@@ -48,7 +48,7 @@ const EFaturaModule = () => {
 
   const handlePOSClosure = async () => {
     try {
-      const response = await axios.post('/pos/daily-closure');
+      const response = await axios.post('/api/pos/daily-closure');
       toast.success(`Daily closure completed: ${response.data.total_sales} TL`);
       loadData();
     } catch (error) {

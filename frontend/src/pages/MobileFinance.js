@@ -110,7 +110,7 @@ const MobileFinance = ({ user }) => {
       setPlData(res.data);
       setPlDetailModalOpen(true);
     } catch (error) {
-      toast.error('P&L raporu yüklenemedi');
+      toast.error('✗ P&L');
     }
   };
 
@@ -120,7 +120,7 @@ const MobileFinance = ({ user }) => {
       setShiftReportData(res.data);
       setCashierShiftModalOpen(true);
     } catch (error) {
-      toast.error('Vardiya raporu yüklenemedi');
+      toast.error('✗ Vardiya');
     }
   };
 
@@ -141,10 +141,10 @@ const MobileFinance = ({ user }) => {
       link.remove();
       window.URL.revokeObjectURL(url);
       
-      toast.success('P&L raporu indirildi!');
+      toast.success('✓ İndirildi');
     } catch (error) {
       // Fallback: Create a simple HTML print version
-      toast.info('PDF oluşturuluyor... Yazdırma ekranı açılıyor.');
+      toast.info('⏳ Yazdırılıyor...');
       setTimeout(() => {
         window.print();
       }, 500);

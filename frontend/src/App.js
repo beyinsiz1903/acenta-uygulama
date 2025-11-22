@@ -570,6 +570,26 @@ function App() {
             }
           />
           <Route
+            path="/mobile/approvals"
+            element={
+              isAuthenticated ? (
+                <MobileApprovals user={user} />
+              ) : (
+                <Navigate to="/auth" replace />
+              )
+            }
+          />
+          <Route
+            path="/executive"
+            element={
+              isAuthenticated ? (
+                <ExecutiveDashboard user={user} />
+              ) : (
+                <Navigate to="/auth" replace />
+              )
+            }
+          />
+          <Route
             path="/cost-management"
             element={
               isAuthenticated ? (

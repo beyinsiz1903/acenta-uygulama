@@ -363,7 +363,7 @@ const MobileHousekeeping = ({ user }) => {
                   <Button
                     size="sm"
                     className="w-full mt-2"
-                    onClick={() => handleQuickStatusUpdate(room.id, getNextStatus(room.status))}
+                    onClick={() => handleStatusChange(room.id, getNextStatus(room.status))}
                   >
                     {room.status === 'dirty' && '🧹 Temizliğe Başla'}
                     {room.status === 'cleaning' && '✅ Kontrol için Hazır'}

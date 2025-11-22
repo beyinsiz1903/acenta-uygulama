@@ -222,7 +222,7 @@ const MobileHousekeeping = ({ user }) => {
     if (currentStatus === 'dirty' && newStatus === 'cleaning') {
       return 'Temizliğe Başlıyorum';
     } else if (currentStatus === 'cleaning' && newStatus === 'inspected') {
-      return 'Oda Hazır - Kontrol Edilebilir';
+      return 'Temizlik Tamamlandı';
     } else if (currentStatus === 'available' && newStatus === 'dirty') {
       return 'Odayı Kirliye Alıyorum';
     }

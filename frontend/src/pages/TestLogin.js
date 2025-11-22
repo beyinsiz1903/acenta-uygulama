@@ -2,10 +2,19 @@ import React, { useState } from 'react';
 import axios from 'axios';
 
 function TestLogin() {
-  const [email, setEmail] = useState('admin@testhotel.com');
-  const [password, setPassword] = useState('admin123');
+  const [email, setEmail] = useState('test@test.com');
+  const [password, setPassword] = useState('test123');
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
+  
+  // Test kullanıcıları
+  const testUsers = [
+    { email: 'test@test.com', password: 'test123', name: 'Test Kullanıcı' },
+    { email: 'demo@demo.com', password: 'demo123', name: 'Demo User' },
+    { email: 'patron@hotel.com', password: 'patron123', name: 'Patron' },
+    { email: 'admin@hoteltest.com', password: 'admin123', name: 'Admin' },
+    { email: 'dashboard@testhotel.com', password: 'testpass123', name: 'Dashboard Tester' }
+  ];
 
   const handleLogin = async (e) => {
     e.preventDefault();

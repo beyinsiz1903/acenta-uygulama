@@ -592,6 +592,26 @@ function App() {
             }
           />
           <Route
+            path="/mobile/revenue"
+            element={
+              isAuthenticated ? (
+                <RevenueManagementMobile user={user} />
+              ) : (
+                <Navigate to="/auth" replace />
+              )
+            }
+          />
+          <Route
+            path="/gm/enhanced"
+            element={
+              isAuthenticated ? (
+                <GMEnhancedDashboard user={user} />
+              ) : (
+                <Navigate to="/auth" replace />
+              )
+            }
+          />
+          <Route
             path="/cost-management"
             element={
               isAuthenticated ? (

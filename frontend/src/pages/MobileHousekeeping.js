@@ -194,6 +194,28 @@ const MobileHousekeeping = ({ user }) => {
     setPendingStatusChange(null);
   };
 
+  const getActionText = (currentStatus, newStatus) => {
+    if (currentStatus === 'dirty' && newStatus === 'cleaning') {
+      return 'Temizliğe Başlıyorum';
+    } else if (currentStatus === 'cleaning' && newStatus === 'inspected') {
+      return 'Oda Hazır - Kontrol Edilebilir';
+    } else if (currentStatus === 'available' && newStatus === 'dirty') {
+      return 'Odayı Kirliye Alıyorum';
+    }
+    return 'Durum Değiştir';
+  };
+
+  const getActionDescription = (roomNumber, currentStatus, newStatus) => {
+    if (currentStatus === 'available' && newStatus === 'dirty') {
+      return `Oda ${roomNumber} müsait durumdan kirli duruma alınacak. Bu işlemi onaylıyor musunuz?`;
+    } else if (currentStatus === 'dirty' && newStatus === 'cleaning') {
+      return `Oda ${roomNumber} temizliğine başlayacaksınız. Onaylıyor musunuz?`;
+    } else if (currentStatus === 'cleaning' && newStatus === 'inspected') {
+      return `Oda ${roomNumber} temizliği tamamlandı olarak işaretlenecek. Onaylıyor musunuz?`;
+    }
+    return `Oda ${roomNumber} durumu değiştirilecek. Onaylıyor musunuz?`;
+  };
+
   const getStatusColor = (status) => {
     const colors = {
       dirty: 'bg-red-100 text-red-700 border-red-300',

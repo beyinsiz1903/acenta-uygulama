@@ -5031,9 +5031,143 @@ backend:
         agent: "testing"
         comment: "✅ AUTOMATIC DATABASE SEEDING WORKING EXCELLENTLY (91.7% Success Rate - 22/24 tests passed). ✅ WORKING PERFECTLY: Authentication (3/3) - admin@hotel.com, frontdesk@hotel.com, housekeeping@hotel.com all login successfully with valid JWT tokens. Rooms Data (4/4) - 24 rooms with Standard/Deluxe/Suite/Presidential types and available/occupied/dirty/cleaning/inspected statuses. Bookings Data (4/4) - 30 bookings with checked_in/checked_out/confirmed/guaranteed statuses, valid dates and amounts. Guests Data (4/4) - 15 guests with Turkish names (Ahmet, Ayşe, Fatma, etc.), complete structure, VIP status. Folios (2/2) - Folios exist for checked-in bookings with proper charges (room, F&B, minibar). POS/Menu (4/4) - 12 Turkish menu items (Türk Kahvesi, Menemen, Baklava, Rakı) with beverage/food/dessert/alcohol categories. ⚠️ MINOR ISSUES: Housekeeping task assignments endpoint returns empty tasks (1/2), Feedback data exists in database but no direct API endpoint (0/1). CRITICAL SUCCESS: All core seeded data (users, rooms, bookings, guests, folios, menu) is properly accessible via APIs with correct tenant_id fields and realistic Turkish hotel context. Database seeding script working perfectly for production use."
 
+backend:
+  - task: "F&B Mobile Order Tracking - Active Orders Endpoint"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added GET /api/pos/mobile/active-orders - Returns active F&B orders with status filtering (pending, preparing, ready, served), outlet filtering, time elapsed calculation, delayed orders detection (>30min), order details including table/room, guest info, items count, total amount"
+
+  - task: "F&B Mobile Order Tracking - Order Details Endpoint"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added GET /api/pos/mobile/order/{order_id} - Returns detailed order information including full order items with special instructions, payment status, server name, notes, time elapsed, status history"
+
+  - task: "F&B Mobile Order Tracking - Update Order Status Endpoint"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added PUT /api/pos/mobile/order/{order_id}/status - Updates order status (pending → preparing → ready → served), tracks status change history with user info and timestamps, validates status transitions"
+
+  - task: "F&B Mobile Order Tracking - Order History Endpoint"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added GET /api/pos/mobile/order-history - Returns order history with multiple filters: date range, outlet_id, server_name, status, with pagination support (limit parameter)"
+
+  - task: "Inventory Mobile - Stock Movements History Endpoint"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added GET /api/pos/mobile/inventory-movements - Returns stock movement history with date filtering, product filtering, movement type filtering (in/out/adjustment), shows product name, quantity, reason, performed by, timestamp. Includes sample data for empty database"
+
+  - task: "Inventory Mobile - Current Stock Levels Endpoint"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added GET /api/pos/mobile/stock-levels - Returns current stock levels for all products with category filtering, low_stock_only filter, calculates stock status (good/medium/low/out_of_stock) with color coding, shows current vs minimum quantity. Includes sample Turkish beverage data for empty database"
+
+  - task: "Inventory Mobile - Low Stock Alerts Endpoint"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added GET /api/pos/mobile/low-stock-alerts - Returns products with low stock levels, calculates urgency (critical/high/medium), shows shortage amount, provides recommended order quantities, sorted by urgency level. Includes Turkish alert messages"
+
+  - task: "Inventory Mobile - Stock Adjustment Endpoint (Role-Based)"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added POST /api/pos/mobile/stock-adjust - Adjusts stock levels (in/out/adjustment) with role-based access control (only admin/warehouse/fnb_manager/supervisor), validates adjustment types, updates inventory quantity, logs all movements with reason/notes/performed_by, prevents negative stock"
+
+frontend:
+  - task: "F&B Mobile Order Tracking UI - MobileOrderTracking.js"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/MobileOrderTracking.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Created MobileOrderTracking.js - Full-featured mobile order tracking page with: Active orders list with status badges (pending/preparing/ready/served), delayed order alerts (>30min), quick stats dashboard, order detail modal with items/notes/totals, status update buttons with role-based permissions (Kitchen staff: pending→preparing→ready, Service: ready→served), order history modal with filtering, Turkish language UI"
+
+  - task: "Inventory Mobile UI - MobileInventory.js"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/MobileInventory.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Created MobileInventory.js - Full-featured mobile inventory management page with: Stock levels list with color-coded status (good/medium/low/out_of_stock), low stock alerts banner with urgency levels (critical/high/medium), stock movements history modal (last 7 days), stock adjustment modal with role-based access (warehouse/fnb_manager only), adjustment types (in/out/adjustment) with reason selection, Turkish language UI with quick access floating buttons"
+
+  - task: "Mobile Routes Configuration"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added routes to App.js: /mobile/order-tracking (MobileOrderTracking), /mobile/inventory (MobileInventory), both protected with authentication"
+
 agent_communication:
     -agent: "main"
-    -message: "Communication message between agents"
+    -message: "Implemented F&B mobile order tracking (4 endpoints) and inventory mobile management (4 endpoints). All 8 backend endpoints created with proper filtering, role-based access control, and Turkish language support. Created 2 full-featured mobile UI pages (MobileOrderTracking.js and MobileInventory.js) with comprehensive features. Added routes to App.js. Ready for backend testing."
     -agent: "testing"
     -message: "COMPREHENSIVE BETA TEST COMPLETED - 8 Major Modules Tested. CRITICAL MODULES (Check-in/Checkout, Folio/Billing) are FULLY FUNCTIONAL and ready for production. SUCCESS RATE: Check-in/Checkout 100%, Folio/Billing 100%, Housekeeping 71.4%, Maintenance 100%, RMS Pricing 80%, Channel Manager 100%, Marketplace/Procurement 50%, Loyalty Program 75%. OVERALL SYSTEM HEALTH: 73.7%. Key Issues: Room status bug in booking creation (sets room to occupied), some 422 validation errors in marketplace and loyalty endpoints, ML models not available. Core PMS operations working perfectly with accurate folio calculations, payment processing, and complete check-in/checkout workflow. RECOMMENDATION: Fix room status bug and validation errors, then system is ready for production deployment."
     -agent: "testing"

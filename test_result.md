@@ -5189,9 +5189,215 @@ frontend:
         agent: "main"
         comment: "Added routes to App.js: /mobile/order-tracking (MobileOrderTracking), /mobile/inventory (MobileInventory), both protected with authentication"
 
+backend:
+  - task: "Approvals Module - Create Approval Request"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added POST /api/approvals/create - Create approval requests for discount, price_override, budget_expense, rate_change, refund, comp_room. Tracks requester info, amount, reason, priority, status"
+
+  - task: "Approvals Module - Get Pending Approvals"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added GET /api/approvals/pending - Returns pending approvals with filtering by approval_type and priority. Calculates time_waiting_hours, detects urgent requests (>24h or priority=urgent)"
+
+  - task: "Approvals Module - Get My Requests"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added GET /api/approvals/my-requests - Returns approval requests created by current user with status filtering (pending/approved/rejected)"
+
+  - task: "Approvals Module - Approve Request"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added PUT /api/approvals/{id}/approve - Approve approval request with role-based access control (admin/supervisor/fnb_manager/gm/finance_manager only). Creates notification for requester"
+
+  - task: "Approvals Module - Reject Request"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added PUT /api/approvals/{id}/reject - Reject approval request with rejection_reason required. Role-based access control. Creates notification for requester"
+
+  - task: "Approvals Module - Approval History"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added GET /api/approvals/history - Returns approval history with filtering by status and approval_type, pagination with limit"
+
+  - task: "Executive Dashboard - KPI Snapshot"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added GET /api/executive/kpi-snapshot - Returns critical KPIs (RevPAR, ADR, Occupancy, Revenue, NPS, Cash Position) with trend calculations, room summary. Designed for owner/CEO quick overview"
+
+  - task: "Executive Dashboard - Performance Alerts"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added GET /api/executive/performance-alerts - Returns critical performance alerts: revenue_drop (>10% decline), low_occupancy (<50%), overbooking_risk, maintenance_backlog, cash_flow_warning. Sorted by severity (urgent/high/medium)"
+
+  - task: "Executive Dashboard - Daily Summary"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added GET /api/executive/daily-summary - Returns daily summary: new bookings, check-ins, check-outs, cancellations, revenue, complaints, incidents. Includes highlights (cancellation rate, avg revenue per booking)"
+
+  - task: "Notification System - Get Preferences"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added GET /api/notifications/preferences - Returns user notification preferences with default preferences for approval_request, approval_approved, low_stock_alert, revenue_alert, overbooking_risk, maintenance_urgent, cash_flow_warning"
+
+  - task: "Notification System - Update Preferences"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added PUT /api/notifications/preferences - Update notification preferences for specific notification types with enabled flag and channels (in_app, email, sms, push)"
+
+  - task: "Notification System - Get Notifications List"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added GET /api/notifications/list - Returns notifications for current user with unread_only filter. Supports user-specific and system-wide notifications"
+
+  - task: "Notification System - Mark as Read"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added PUT /api/notifications/{id}/mark-read - Mark notification as read with timestamp tracking"
+
+  - task: "Notification System - Send System Alert"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added POST /api/notifications/send-system-alert - Send system-wide alerts to specific roles. Admin only. Creates notifications for all users matching target_roles"
+
+frontend:
+  - task: "Mobile Approvals UI - MobileApprovals.js"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/MobileApprovals.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Created MobileApprovals.js - Full approval management page with: Pending approvals tab with urgent alerts, My requests tab, Approval/Reject modals with notes, Role-based approve/reject buttons (manager roles only), Priority badges (urgent/high), Time waiting calculations, Turkish language UI"
+
+  - task: "Executive Dashboard UI - ExecutiveDashboard.js"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/ExecutiveDashboard.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Created ExecutiveDashboard.js - Executive/Owner dashboard with: Large KPI cards (RevPAR, ADR, Occupancy, Revenue, NPS, Cash) with trend indicators, Critical alerts banner with severity colors (urgent/high/medium), Daily summary card, Room status summary, Auto-refresh every 60 seconds, Dark gradient theme, Mobile-optimized"
+
+  - task: "Routes Configuration for New Features"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Added routes to App.js: /mobile/approvals (MobileApprovals), /executive (ExecutiveDashboard), both protected with authentication"
+
 agent_communication:
     -agent: "main"
-    -message: "Implemented F&B mobile order tracking (4 endpoints) and inventory mobile management (4 endpoints). All 8 backend endpoints created with proper filtering, role-based access control, and Turkish language support. Created 2 full-featured mobile UI pages (MobileOrderTracking.js and MobileInventory.js) with comprehensive features. Added routes to App.js. Ready for backend testing."
+    -message: "PHASE 1 COMPLETED: Implemented F&B mobile order tracking (4 endpoints) and inventory mobile management (4 endpoints). All 8 backend endpoints tested and working (100% success rate). Created 2 full-featured mobile UI pages. PHASE 2 COMPLETED: Implemented Approvals Module (6 endpoints), Executive KPI Dashboard (3 endpoints), and Notification System (5 endpoints). Total 14 new backend endpoints added. Created 2 new frontend pages (MobileApprovals.js and ExecutiveDashboard.js). All routes added to App.js. Ready for comprehensive backend testing of Phase 2 features."
     -agent: "testing"
     -message: "COMPREHENSIVE BETA TEST COMPLETED - 8 Major Modules Tested. CRITICAL MODULES (Check-in/Checkout, Folio/Billing) are FULLY FUNCTIONAL and ready for production. SUCCESS RATE: Check-in/Checkout 100%, Folio/Billing 100%, Housekeeping 71.4%, Maintenance 100%, RMS Pricing 80%, Channel Manager 100%, Marketplace/Procurement 50%, Loyalty Program 75%. OVERALL SYSTEM HEALTH: 73.7%. Key Issues: Room status bug in booking creation (sets room to occupied), some 422 validation errors in marketplace and loyalty endpoints, ML models not available. Core PMS operations working perfectly with accurate folio calculations, payment processing, and complete check-in/checkout workflow. RECOMMENDATION: Fix room status bug and validation errors, then system is ready for production deployment."
     -agent: "testing"

@@ -41,6 +41,8 @@ import MobileOrderTracking from "@/pages/MobileOrderTracking";
 import MobileInventory from "@/pages/MobileInventory";
 import MobileApprovals from "@/pages/MobileApprovals";
 import ExecutiveDashboard from "@/pages/ExecutiveDashboard";
+import RevenueManagementMobile from "@/pages/RevenueManagementMobile";
+import GMEnhancedDashboard from "@/pages/GMEnhancedDashboard";
 import MaintenancePriorityVisual from "@/pages/MaintenancePriorityVisual";
 import CostManagement from "@/pages/CostManagement";
 import FeaturesShowcase from "@/pages/FeaturesShowcase";

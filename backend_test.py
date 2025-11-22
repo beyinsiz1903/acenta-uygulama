@@ -1,27 +1,28 @@
 #!/usr/bin/env python3
 """
-Comprehensive Backend Testing for NEW Approval System, Executive Dashboard, and Notification System
-Testing 14 NEW ENDPOINTS:
+APPROVAL SYSTEM RE-TESTING AFTER BUG FIXES
+Focus on endpoints that previously failed due to current_user.username → current_user.name bug fix
 
-APPROVALS MODULE (6 endpoints):
-1. POST /api/approvals/create
-2. GET /api/approvals/pending
-3. GET /api/approvals/my-requests
-4. PUT /api/approvals/{id}/approve
-5. PUT /api/approvals/{id}/reject
-6. GET /api/approvals/history
+BUG FIXES APPLIED:
+- Fixed current_user.username → current_user.name in all approval endpoints
+- This should fix the 500 error in POST /api/approvals/create
 
-EXECUTIVE DASHBOARD (3 endpoints):
-7. GET /api/executive/kpi-snapshot
-8. GET /api/executive/performance-alerts
-9. GET /api/executive/daily-summary
+APPROVAL SYSTEM RE-TESTING (6 endpoints):
+1. POST /api/approvals/create - **CRITICAL RE-TEST** (was failing with 500 error)
+2. GET /api/approvals/pending - **RE-TEST RESPONSE STRUCTURE** (urgent_count was missing)
+3. GET /api/approvals/my-requests - **RE-TEST RESPONSE STRUCTURE** (should return 'requests' not 'approvals')
+4. PUT /api/approvals/{id}/approve - Quick validation test
+5. PUT /api/approvals/{id}/reject - Quick validation test  
+6. GET /api/approvals/history - Quick validation test
 
-NOTIFICATION SYSTEM (5 endpoints):
-10. GET /api/notifications/preferences
-11. PUT /api/notifications/preferences
-12. GET /api/notifications/list
-13. PUT /api/notifications/{id}/mark-read
-14. POST /api/notifications/send-system-alert
+EXECUTIVE DASHBOARD - QUICK SPOT CHECKS (3 endpoints):
+7. GET /api/executive/kpi-snapshot - Verify KPI structure (lowercase field names)
+8. GET /api/executive/performance-alerts - Quick validation
+9. GET /api/executive/daily-summary - Quick validation
+
+NOTIFICATION SYSTEM - QUICK SPOT CHECKS (2 endpoints):
+10. GET /api/notifications/list - Quick validation
+11. PUT /api/notifications/{id}/mark-read - Quick validation
 """
 
 import asyncio

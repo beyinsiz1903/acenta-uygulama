@@ -541,17 +541,27 @@ const MobileHousekeeping = ({ user }) => {
                     {getRoomsByStatus('dirty').map((room) => (
                       <div key={room.id} className="p-2 bg-red-50 rounded-lg border border-red-200">
                         <div className="flex items-center justify-between">
+                          {bulkUpdateMode && (
+                            <input
+                              type="checkbox"
+                              checked={selectedRooms.includes(room.id)}
+                              onChange={() => toggleRoomSelection(room.id)}
+                              className="mr-2 w-5 h-5"
+                            />
+                          )}
                           <div className="flex-1">
                             <p className="font-bold text-sm">Oda {room.room_number}</p>
                             <p className="text-xs text-gray-500">{room.room_type}</p>
                           </div>
-                          <Button
-                            size="sm"
-                            className="h-7 text-xs px-3 bg-yellow-600 hover:bg-yellow-700"
-                            onClick={() => handleStatusChangeRequest(room.id, room.room_number, room.status, getNextStatus(room.status))}
-                          >
-                            🧹 Başla
-                          </Button>
+                          {!bulkUpdateMode && (
+                            <Button
+                              size="sm"
+                              className="h-7 text-xs px-3 bg-yellow-600 hover:bg-yellow-700"
+                              onClick={() => handleStatusChangeRequest(room.id, room.room_number, room.status, getNextStatus(room.status))}
+                            >
+                              🧹 Başla
+                            </Button>
+                          )}
                         </div>
                       </div>
                     ))}

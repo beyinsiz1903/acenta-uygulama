@@ -2949,17 +2949,17 @@ async def get_folio_dashboard_stats(
             total_outstanding += folio.get('balance', 0)
         
         # Get recent charges (last 24 hours)
-        yesterday = datetime.now(timezone.utc) - timedelta(days=1)
+        yesterday = (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()
         recent_charges = await db.folio_charges.count_documents({
             'tenant_id': current_user.tenant_id,
-            'charge_date': {'$gte': yesterday},
+            'date': {'$gte': yesterday},
             'voided': False
         })
         
         # Get recent payments (last 24 hours)
-        recent_payments = await db.folio_payments.count_documents({
+        recent_payments = await db.payments.count_documents({
             'tenant_id': current_user.tenant_id,
-            'payment_date': {'$gte': yesterday}
+            'date': {'$gte': yesterday}
         })
         
         return {

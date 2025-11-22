@@ -407,7 +407,7 @@ class HotelSeeder:
                 'created_at': datetime.now(timezone.utc).isoformat()
             })
         
-        await self.db.menu_items.insert_many(items)
+        await self.db.pos_menu_items.insert_many(items)
         print(f"✓ Created {len(items)} menu items")
         return items
     

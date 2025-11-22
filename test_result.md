@@ -57,8 +57,48 @@
 ##   test_priority: "high_first"  # or "sequential" or "stuck_first"
 ##
 ## agent_communication:
-##     -agent: "main"  # or "testing" or "user"
-##     -message: "Communication message between agents"
+##     - agent: "main"
+##       message: |
+##         ✅ PERFORMANCE OPTIMIZATION COMPLETED - Ready for Comprehensive Testing
+##         
+##         **FIXES IMPLEMENTED:**
+##         
+##         1. Backend (/api/pms/bookings):
+##            - Default date range reduced: 30 days → 7 days
+##            - This reduces records from 47,015 to manageable amount
+##            
+##         2. Frontend - PMS Module:
+##            - Added limit=100 parameter to /pms/bookings call
+##            - Increased timeout to 15000ms (was causing timeout)
+##            
+##         3. Frontend - GM Dashboard:
+##            - Increased timeout to 15000ms for all 9 parallel API calls
+##            - Prevents timeout on slow connections
+##            
+##         4. Frontend - Enhanced GM Dashboard:
+##            - Increased timeout to 15000ms for dashboard API calls
+##         
+##         **TESTING INSTRUCTIONS:**
+##         Please test ALL pages comprehensively to verify 100% functionality:
+##         
+##         CRITICAL PAGES TO TEST (Previously Failed):
+##         1. /gm-dashboard - Should load without timeout now (9 API calls with 15s timeout)
+##         2. /pms - Should load quickly with limit=100 and 7-day default range
+##         
+##         PAGES TO RETEST (Previously Working):
+##         3. /mobile/dashboard
+##         4. /mobile/revenue
+##         5. /mobile/fnb
+##         6. /mobile/housekeeping
+##         7. /mobile/maintenance
+##         8. /mobile/frontdesk
+##         9. /mobile/gm
+##         10. /executive-dashboard
+##         11. /mobile/channels
+##         12. /mobile/contracts
+##         13. /mobile/rate-management
+##         
+##         Expected Result: 100% success rate (13/13 pages working)
 
 # Protocol Guidelines for Main agent
 #

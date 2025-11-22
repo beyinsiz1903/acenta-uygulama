@@ -5034,15 +5034,18 @@ backend:
 backend:
   - task: "F&B Mobile Order Tracking - Active Orders Endpoint"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Added GET /api/pos/mobile/active-orders - Returns active F&B orders with status filtering (pending, preparing, ready, served), outlet filtering, time elapsed calculation, delayed orders detection (>30min), order details including table/room, guest info, items count, total amount"
+      - working: true
+        agent: "testing"
+        comment: "✅ ENDPOINT WORKING PERFECTLY - GET /api/pos/mobile/active-orders tested with 5 test cases (100% success rate). Verified: All active orders retrieval, status filtering (pending/preparing/ready), outlet_id filtering, response structure with orders array, count, delayed_count. Order structure validation confirmed with required fields: id, order_number, status, outlet_name, guest_name, items_count, total_amount, time_elapsed_minutes, is_delayed. Sample data provided for empty database scenario."
 
   - task: "F&B Mobile Order Tracking - Order Details Endpoint"
     implemented: true

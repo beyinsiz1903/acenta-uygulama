@@ -53,6 +53,29 @@ const MobileMaintenance = ({ user }) => {
   const [assetHistory, setAssetHistory] = useState(null);
   const [partsInventoryModalOpen, setPartsInventoryModalOpen] = useState(false);
   const [partsInventory, setPartsInventory] = useState([]);
+  
+  // New state for enhanced features
+  const [slaConfigModalOpen, setSlaConfigModalOpen] = useState(false);
+  const [slaConfigurations, setSlaConfigurations] = useState([]);
+  const [taskDetailModalOpen, setTaskDetailModalOpen] = useState(false);
+  const [selectedTask, setSelectedTask] = useState(null);
+  const [taskPhotos, setTaskPhotos] = useState([]);
+  const [photoUploadModalOpen, setPhotoUploadModalOpen] = useState(false);
+  const [photoType, setPhotoType] = useState('before');
+  const [photoFile, setPhotoFile] = useState(null);
+  const [partsUsageModalOpen, setPartsUsageModalOpen] = useState(false);
+  const [selectedPart, setSelectedPart] = useState(null);
+  const [usageQuantity, setUsageQuantity] = useState(1);
+  const [plannedMaintenanceModalOpen, setPlannedMaintenanceModalOpen] = useState(false);
+  const [plannedMaintenance, setPlannedMaintenance] = useState([]);
+  const [filterModalOpen, setFilterModalOpen] = useState(false);
+  const [filters, setFilters] = useState({
+    status: '',
+    priority: '',
+    assigned_to: '',
+    start_date: '',
+    end_date: ''
+  });
 
   useEffect(() => {
     loadData();

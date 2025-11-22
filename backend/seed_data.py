@@ -300,14 +300,15 @@ class HotelSeeder:
             if random.random() > 0.5:
                 folio_charges.append({
                     'id': str(uuid.uuid4()),
+                    'tenant_id': self.tenant_id,
                     'folio_id': folio_id,
+                    'booking_id': booking['id'],
                     'charge_date': datetime.now().date().isoformat(),
                     'charge_category': 'food',
                     'description': 'Restaurant - Breakfast',
                     'quantity': 2,
                     'unit_price': 25.0,
                     'amount': 50.0,
-                    'tax_percentage': 18.0,
                     'tax_amount': 9.0,
                     'total': 59.0,
                     'voided': False,

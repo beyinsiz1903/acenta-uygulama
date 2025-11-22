@@ -27131,12 +27131,9 @@ async def get_anomaly_detection(current_user: User = Depends(get_current_user)):
 async def get_pickup_analysis(current_user: User = Depends(get_current_user)):
     """Get pickup analysis for bookings"""
     try:
-        # Get bookings from last 30 days
-        thirty_days_ago = datetime.utcnow() - timedelta(days=30)
-        
+        # Get all bookings (simplified)
         bookings = await db.bookings.find({
-            'tenant_id': current_user.tenant_id,
-            'created_at': {'$gte': thirty_days_ago.isoformat()}
+            'tenant_id': current_user.tenant_id
         }, {'_id': 0}).to_list(10000)
         
         pickup_data = []

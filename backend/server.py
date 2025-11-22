@@ -36450,25 +36450,23 @@ async def update_cleaning_request_status(
         request = await db.cleaning_requests.find_one({
             'id': request_id,
             'tenant_id': current_user.tenant_id
-        })
+        }, {'_id': 0})
         
         if not request:
             raise HTTPException(status_code=404, detail="Cleaning request not found")
         
-        update_data = {
-            'status': status,
+        update_fields = {
+            'status': update_data.status,
             'updated_at': datetime.now(timezone.utc).isoformat()
         }
         
-        if status == 'in_progress':
-            update_data['assigned_to'] = current_user.id
-            update_data['assigned_to_name'] = current_user.name
-            update_data['started_at'] = datetime.now(timezone.utc).isoformat()
+        if update_data.status == 'in_progress':
+            update_fields['assigned_to'] = update_data.assigned_to or current_user.name
+            update_fields['started_at'] = datetime.now(timezone.utc).isoformat()
         
-        if status == 'completed':
-            update_data['completed_at'] = datetime.now(timezone.utc).isoformat()
-            update_data['completed_by'] = current_user.id
-            update_data['completed_by_name'] = current_user.name
+        if update_data.status == 'completed':
+            update_fields['completed_at'] = datetime.now(timezone.utc).isoformat()
+            update_fields['completed_by'] = update_data.completed_by or current_user.name
             
             # Notify guest
             await db.notifications.insert_one({

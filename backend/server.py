@@ -43207,8 +43207,9 @@ async def process_mobile_payment(
 
 @api_router.get("/tasks/delayed")
 async def get_delayed_tasks(
-    current_user: User = Depends(get_current_user)
+    credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
+    current_user = await get_current_user(credentials)
     """
     Get all delayed tasks (exceeding SLA)
     Automatically creates notifications for overdue tasks

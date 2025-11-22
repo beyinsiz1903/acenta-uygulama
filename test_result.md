@@ -2569,15 +2569,14 @@ metadata:
 
 test_plan:
   current_focus:
-    - "MOBILE PAGES UI TESTING - 4 NEW MOBILE PAGES CREATED"
-    - "Mobile Order Tracking Page (/mobile/order-tracking): Order list, status updates, filtering, history"
-    - "Mobile Inventory Page (/mobile/inventory): Stock levels, low stock alerts, stock adjustments, movements"
-    - "Mobile Approvals Page (/mobile/approvals): Pending approvals, my requests, approve/reject actions"
-    - "Executive Dashboard Page (/executive): KPI cards, alerts, daily summary, auto-refresh"
-    - "All pages require comprehensive UI testing with Turkish language support"
+    - "NEW REVENUE MANAGEMENT, ANOMALY DETECTION, AND GM ENHANCED DASHBOARD ENDPOINTS"
+    - "Revenue Management Module (4 endpoints): pickup-analysis, pace-report, rate-recommendations, historical-comparison"
+    - "Anomaly Detection Module (2 endpoints): detect, alerts"
+    - "GM Enhanced Dashboard Module (3 endpoints): team-performance, complaint-management, snapshot-enhanced"
+    - "All endpoints tested for response structure, calculations, Turkish language support, and date handling"
   stuck_tasks: []
   test_all: false
-  test_priority: "mobile_ui_testing"
+  test_priority: "new_endpoints_testing"
 
 agent_communication:
   - agent: "testing"

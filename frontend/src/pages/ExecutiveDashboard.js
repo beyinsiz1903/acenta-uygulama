@@ -1,0 +1,395 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { toast } from 'sonner';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { 
+  ArrowLeft, 
+  TrendingUp,
+  TrendingDown,
+  DollarSign,
+  Users,
+  Home,
+  Star,
+  Wallet,
+  AlertTriangle,
+  RefreshCw,
+  Calendar,
+  ChevronRight,
+  Activity
+} from 'lucide-react';
+
+const ExecutiveDashboard = ({ user }) => {
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [kpiSnapshot, setKpiSnapshot] = useState(null);
+  const [alerts, setAlerts] = useState([]);
+  const [dailySummary, setDailySummary] = useState(null);
+
+  useEffect(() => {
+    loadData();
+    
+    // Auto refresh every 60 seconds
+    const interval = setInterval(() => {
+      loadData();
+    }, 60000);
+    
+    return () => clearInterval(interval);
+  }, []);
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      
+      const [kpiRes, alertsRes, summaryRes] = await Promise.all([
+        axios.get('/executive/kpi-snapshot'),
+        axios.get('/executive/performance-alerts'),
+        axios.get('/executive/daily-summary')
+      ]);
+      
+      setKpiSnapshot(kpiRes.data);
+      setAlerts(alertsRes.data.alerts || []);
+      setDailySummary(summaryRes.data);
+    } catch (error) {
+      console.error('Failed to load executive data:', error);
+      toast.error('Veriler yüklenemedi');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  const handleRefresh = () => {
+    setRefreshing(true);
+    loadData();
+  };
+
+  const getTrendIcon = (trend) => {
+    if (trend > 0) return <TrendingUp className="h-4 w-4 text-green-500" />;
+    if (trend < 0) return <TrendingDown className="h-4 w-4 text-red-500" />;
+    return null;
+  };
+
+  const getTrendColor = (trend) => {
+    if (trend > 0) return 'text-green-600';
+    if (trend < 0) return 'text-red-600';
+    return 'text-gray-600';
+  };
+
+  const getSeverityColor = (severity) => {
+    switch (severity) {
+      case 'urgent':
+        return 'bg-red-500';
+      case 'high':
+        return 'bg-orange-500';
+      case 'medium':
+        return 'bg-yellow-500';
+      default:
+        return 'bg-blue-500';
+    }
+  };
+
+  const getSeverityIcon = (severity) => {
+    if (severity === 'urgent' || severity === 'high') {
+      return <AlertTriangle className="h-5 w-5" />;
+    }
+    return <Activity className="h-5 w-5" />;
+  };
+
+  if (loading && !refreshing) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
+        <div className="text-center text-white">
+          <RefreshCw className="h-12 w-12 animate-spin mx-auto mb-4" />
+          <p>Dashboard yükleniyor...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 pb-20">
+      {/* Header */}
+      <div className="bg-black/30 backdrop-blur-sm text-white p-4 sticky top-0 z-10 shadow-lg border-b border-white/10">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <button onClick={() => navigate(-1)} className="p-2 hover:bg-white/10 rounded-lg transition">
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+            <div>
+              <h1 className="text-xl font-bold">Executive Dashboard</h1>
+              <p className="text-gray-300 text-sm">
+                {new Date().toLocaleDateString('tr-TR', { 
+                  weekday: 'long', 
+                  year: 'numeric', 
+                  month: 'long', 
+                  day: 'numeric' 
+                })}
+              </p>
+            </div>
+          </div>
+          
+          <button
+            onClick={handleRefresh}
+            className="p-2 hover:bg-white/10 rounded-lg transition"
+            disabled={refreshing}
+          >
+            <RefreshCw className={`h-5 w-5 ${refreshing ? 'animate-spin' : ''}`} />
+          </button>
+        </div>
+      </div>
+
+      {/* Critical Alerts */}
+      {alerts.length > 0 && (
+        <div className="p-4 space-y-2">
+          {alerts.slice(0, 3).map((alert) => (
+            <div 
+              key={alert.id}
+              className={`${getSeverityColor(alert.severity)} text-white p-4 rounded-lg flex items-center gap-3 shadow-lg ${
+                alert.severity === 'urgent' ? 'animate-pulse' : ''
+              }`}
+            >
+              {getSeverityIcon(alert.severity)}
+              <div className="flex-1">
+                <div className="font-bold">{alert.title}</div>
+                <div className="text-sm opacity-90">{alert.message}</div>
+              </div>
+              <ChevronRight className="h-5 w-5" />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* KPI Cards */}
+      <div className="p-4 space-y-3">
+        {kpiSnapshot && (
+          <>
+            {/* RevPAR */}
+            <Card className="bg-gradient-to-br from-emerald-500 to-teal-600 text-white border-0 shadow-xl">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <DollarSign className="h-6 w-6" />
+                    <span className="text-sm font-medium opacity-90">{kpiSnapshot.kpis.revpar.label}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    {getTrendIcon(kpiSnapshot.kpis.revpar.trend)}
+                    <span className="text-sm font-semibold">
+                      {kpiSnapshot.kpis.revpar.trend > 0 ? '+' : ''}
+                      {kpiSnapshot.kpis.revpar.trend.toFixed(1)}%
+                    </span>
+                  </div>
+                </div>
+                <div className="text-4xl font-bold">
+                  {kpiSnapshot.kpis.revpar.currency}{kpiSnapshot.kpis.revpar.value.toFixed(0)}
+                </div>
+                <div className="text-sm opacity-75 mt-1">Revenue Per Available Room</div>
+              </CardContent>
+            </Card>
+
+            {/* ADR & Occupancy */}
+            <div className="grid grid-cols-2 gap-3">
+              <Card className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white border-0 shadow-xl">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Home className="h-5 w-5" />
+                    <span className="text-xs font-medium opacity-90">{kpiSnapshot.kpis.adr.label}</span>
+                  </div>
+                  <div className="text-3xl font-bold mb-1">
+                    {kpiSnapshot.kpis.adr.currency}{kpiSnapshot.kpis.adr.value.toFixed(0)}
+                  </div>
+                  <div className="flex items-center gap-1 text-sm">
+                    {getTrendIcon(kpiSnapshot.kpis.adr.trend)}
+                    <span>{kpiSnapshot.kpis.adr.trend > 0 ? '+' : ''}{kpiSnapshot.kpis.adr.trend.toFixed(1)}%</span>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-to-br from-purple-500 to-pink-600 text-white border-0 shadow-xl">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Users className="h-5 w-5" />
+                    <span className="text-xs font-medium opacity-90">{kpiSnapshot.kpis.occupancy.label}</span>
+                  </div>
+                  <div className="text-3xl font-bold mb-1">
+                    {kpiSnapshot.kpis.occupancy.value.toFixed(0)}{kpiSnapshot.kpis.occupancy.unit}
+                  </div>
+                  <div className="flex items-center gap-1 text-sm">
+                    {getTrendIcon(kpiSnapshot.kpis.occupancy.trend)}
+                    <span>{kpiSnapshot.kpis.occupancy.trend > 0 ? '+' : ''}{kpiSnapshot.kpis.occupancy.trend.toFixed(1)}%</span>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Revenue */}
+            <Card className="bg-gradient-to-br from-amber-500 to-orange-600 text-white border-0 shadow-xl">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <TrendingUp className="h-6 w-6" />
+                    <span className="text-sm font-medium opacity-90">{kpiSnapshot.kpis.revenue.label}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    {getTrendIcon(kpiSnapshot.kpis.revenue.trend)}
+                    <span className="text-sm font-semibold">
+                      {kpiSnapshot.kpis.revenue.trend > 0 ? '+' : ''}
+                      {kpiSnapshot.kpis.revenue.trend.toFixed(1)}%
+                    </span>
+                  </div>
+                </div>
+                <div className="text-4xl font-bold">
+                  {kpiSnapshot.kpis.revenue.currency}{kpiSnapshot.kpis.revenue.value.toLocaleString()}
+                </div>
+                <div className="text-sm opacity-75 mt-1">Son 24 Saat</div>
+              </CardContent>
+            </Card>
+
+            {/* NPS & Cash */}
+            <div className="grid grid-cols-2 gap-3">
+              <Card className="bg-gradient-to-br from-green-500 to-emerald-600 text-white border-0 shadow-xl">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Star className="h-5 w-5" />
+                    <span className="text-xs font-medium opacity-90">{kpiSnapshot.kpis.nps.label}</span>
+                  </div>
+                  <div className="text-3xl font-bold mb-1">
+                    {kpiSnapshot.kpis.nps.value}{kpiSnapshot.kpis.nps.unit}
+                  </div>
+                  <div className="flex items-center gap-1 text-sm">
+                    {getTrendIcon(kpiSnapshot.kpis.nps.trend)}
+                    <span>{kpiSnapshot.kpis.nps.trend > 0 ? '+' : ''}{kpiSnapshot.kpis.nps.trend.toFixed(1)}%</span>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-to-br from-slate-600 to-gray-700 text-white border-0 shadow-xl">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Wallet className="h-5 w-5" />
+                    <span className="text-xs font-medium opacity-90">{kpiSnapshot.kpis.cash.label}</span>
+                  </div>
+                  <div className="text-2xl font-bold mb-1">
+                    {kpiSnapshot.kpis.cash.currency}{(kpiSnapshot.kpis.cash.value / 1000).toFixed(0)}K
+                  </div>
+                  <div className="flex items-center gap-1 text-sm">
+                    {getTrendIcon(kpiSnapshot.kpis.cash.trend)}
+                    <span>{kpiSnapshot.kpis.cash.trend > 0 ? '+' : ''}{kpiSnapshot.kpis.cash.trend.toFixed(1)}%</span>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </>
+        )}
+
+        {/* Daily Summary */}
+        {dailySummary && (
+          <Card className="bg-white/10 backdrop-blur-sm text-white border border-white/20 shadow-xl">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 mb-4">
+                <Calendar className="h-5 w-5" />
+                <h3 className="font-bold">Günlük Özet</h3>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <div className="text-gray-300 mb-1">Yeni Rezervasyon</div>
+                  <div className="text-2xl font-bold">{dailySummary.summary.new_bookings}</div>
+                </div>
+                <div>
+                  <div className="text-gray-300 mb-1">Check-in</div>
+                  <div className="text-2xl font-bold text-green-400">{dailySummary.summary.check_ins}</div>
+                </div>
+                <div>
+                  <div className="text-gray-300 mb-1">Check-out</div>
+                  <div className="text-2xl font-bold text-blue-400">{dailySummary.summary.check_outs}</div>
+                </div>
+                <div>
+                  <div className="text-gray-300 mb-1">İptal</div>
+                  <div className="text-2xl font-bold text-red-400">{dailySummary.summary.cancellations}</div>
+                </div>
+                <div>
+                  <div className="text-gray-300 mb-1">Şikayet</div>
+                  <div className="text-2xl font-bold text-orange-400">{dailySummary.summary.complaints}</div>
+                </div>
+                <div>
+                  <div className="text-gray-300 mb-1">Gelir</div>
+                  <div className="text-2xl font-bold text-emerald-400">
+                    ₺{(dailySummary.summary.revenue / 1000).toFixed(0)}K
+                  </div>
+                </div>
+              </div>
+
+              {dailySummary.highlights && (
+                <div className="mt-4 pt-4 border-t border-white/20 space-y-2 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-gray-300">İptal Oranı:</span>
+                    <span className={dailySummary.highlights.cancellation_rate > 10 ? 'text-red-400' : 'text-green-400'}>
+                      %{dailySummary.highlights.cancellation_rate}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-300">Ort. Rezervasyon Geliri:</span>
+                    <span className="text-blue-400">₺{dailySummary.highlights.avg_revenue_per_booking.toFixed(0)}</span>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Room Summary */}
+        {kpiSnapshot && kpiSnapshot.summary && (
+          <Card className="bg-white/10 backdrop-blur-sm text-white border border-white/20 shadow-xl">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 mb-4">
+                <Home className="h-5 w-5" />
+                <h3 className="font-bold">Oda Durumu</h3>
+              </div>
+              
+              <div className="grid grid-cols-3 gap-4 text-center">
+                <div>
+                  <div className="text-3xl font-bold text-blue-400">{kpiSnapshot.summary.total_rooms}</div>
+                  <div className="text-xs text-gray-300 mt-1">Toplam</div>
+                </div>
+                <div>
+                  <div className="text-3xl font-bold text-green-400">{kpiSnapshot.summary.occupied_rooms}</div>
+                  <div className="text-xs text-gray-300 mt-1">Dolu</div>
+                </div>
+                <div>
+                  <div className="text-3xl font-bold text-orange-400">{kpiSnapshot.summary.available_rooms}</div>
+                  <div className="text-xs text-gray-300 mt-1">Boş</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* All Alerts Link */}
+        {alerts.length > 3 && (
+          <Button
+            variant="outline"
+            className="w-full border-white/20 text-white hover:bg-white/10"
+            onClick={() => navigate('/alerts')}
+          >
+            Tüm Uyarıları Gör ({alerts.length})
+            <ChevronRight className="h-4 w-4 ml-2" />
+          </Button>
+        )}
+      </div>
+
+      {/* Auto Refresh Indicator */}
+      <div className="fixed bottom-4 left-4 right-4 text-center">
+        <div className="bg-black/50 backdrop-blur-sm text-white text-xs py-2 px-4 rounded-full inline-block">
+          <RefreshCw className="h-3 w-3 inline mr-2" />
+          Otomatik yenileme aktif (60 sn)
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ExecutiveDashboard;

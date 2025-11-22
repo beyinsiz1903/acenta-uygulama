@@ -281,7 +281,7 @@ class NewEndpointsTester:
         )
         
         # Verify department structure if we got data
-        if response and 'departments' in response and response['departments']:
+        if response and 'departments' in response and len(response['departments']) > 0:
             dept = response['departments'][0]
             expected_dept_fields = ['department', 'department_tr', 'metric', 'value', 'target', 'unit', 'status', 'details']
             missing_dept_fields = [f for f in expected_dept_fields if f not in dept]

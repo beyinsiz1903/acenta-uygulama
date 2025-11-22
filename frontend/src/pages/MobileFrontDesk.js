@@ -85,7 +85,7 @@ const MobileFrontDesk = ({ user }) => {
       setAllRooms(roomsRes.data.rooms || []);
     } catch (error) {
       console.error('Failed to load front desk data:', error);
-      toast.error('Veri yüklenemedi');
+      toast.error('✗ Yükleme');
     } finally {
       setLoading(false);
       setRefreshing(false);

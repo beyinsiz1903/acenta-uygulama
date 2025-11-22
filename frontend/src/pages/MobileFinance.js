@@ -72,7 +72,7 @@ const MobileFinance = ({ user }) => {
       setAllInvoices(invoicesRes.data.invoices || []);
     } catch (error) {
       console.error('Failed to load finance data:', error);
-      toast.error('Veri yüklenemedi');
+      toast.error('✗ Yükleme');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -87,11 +87,11 @@ const MobileFinance = ({ user }) => {
   const handleRecordPayment = async (formData) => {
     try {
       await axios.post('/finance/mobile/record-payment', formData);
-      toast.success('Ödeme kaydedildi!');
+      toast.success('✓ Ödeme');
       setPaymentModalOpen(false);
       loadData();
     } catch (error) {
-      toast.error('Ödeme kaydedilemedi: ' + (error.response?.data?.detail || 'Hata'));
+      toast.error('✗ Ödeme');
     }
   };
 

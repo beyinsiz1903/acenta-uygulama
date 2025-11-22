@@ -45,6 +45,7 @@ class FinanceMobileEndpointTester:
         """Authenticate and get token"""
         print("🔐 Authenticating...")
         
+        # First try to register a tenant if login fails
         login_data = {
             "email": TEST_USER_EMAIL,
             "password": TEST_USER_PASSWORD
@@ -61,6 +62,33 @@ class FinanceMobileEndpointTester:
                 })
                 self.log_result("Authentication", True, f"Logged in as {data.get('user', {}).get('name', 'Unknown')}")
                 return True
+            elif response.status_code == 401:
+                # Try to register a new tenant
+                print("🔐 Login failed, attempting to register new tenant...")
+                register_data = {
+                    "property_name": "Test Hotel",
+                    "email": TEST_USER_EMAIL,
+                    "password": TEST_USER_PASSWORD,
+                    "name": "Test Admin",
+                    "phone": "+90 555 123 4567",
+                    "address": "Test Address, Istanbul, Turkey",
+                    "location": "Istanbul",
+                    "description": "Test hotel for finance mobile endpoints"
+                }
+                
+                register_response = self.session.post(f"{BACKEND_URL}/auth/register", json=register_data)
+                
+                if register_response.status_code == 200:
+                    data = register_response.json()
+                    self.auth_token = data.get('access_token')
+                    self.session.headers.update({
+                        'Authorization': f'Bearer {self.auth_token}'
+                    })
+                    self.log_result("Authentication", True, f"Registered and logged in as {data.get('user', {}).get('name', 'Unknown')}")
+                    return True
+                else:
+                    self.log_result("Authentication", False, f"Registration failed: HTTP {register_response.status_code}: {register_response.text}")
+                    return False
             else:
                 self.log_result("Authentication", False, f"HTTP {response.status_code}: {response.text}")
                 return False

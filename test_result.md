@@ -2569,17 +2569,15 @@ metadata:
 
 test_plan:
   current_focus:
-    - "NEW ENHANCEMENTS IMPLEMENTATION - 6 Major Modules Added"
-    - "OTA Reservation Details (3 endpoints): Special requests, Multi-room, Extra charges"
-    - "Housekeeping Mobile View (2 endpoints): Room assignments, Cleaning time statistics"
-    - "Guest Profile Complete (3 endpoints): Stay history, Preferences, Tags (VIP/Blacklist)"
-    - "Revenue Management Advanced (3 endpoints): Price slider, Demand heatmap, CompSet analysis"
-    - "Messaging Module (3 endpoints): Send messages (WhatsApp/SMS/Email), Templates, Auto-triggers"
-    - "POS Improvements (3 endpoints): Menu items, Create detailed orders, Order history"
-    - "Total: 17 new endpoints implemented and ready for testing"
+    - "MOBILE PAGES UI TESTING - 4 NEW MOBILE PAGES CREATED"
+    - "Mobile Order Tracking Page (/mobile/order-tracking): Order list, status updates, filtering, history"
+    - "Mobile Inventory Page (/mobile/inventory): Stock levels, low stock alerts, stock adjustments, movements"
+    - "Mobile Approvals Page (/mobile/approvals): Pending approvals, my requests, approve/reject actions"
+    - "Executive Dashboard Page (/executive): KPI cards, alerts, daily summary, auto-refresh"
+    - "All pages require comprehensive UI testing with Turkish language support"
   stuck_tasks: []
   test_all: false
-  test_priority: "new_enhancements"
+  test_priority: "mobile_ui_testing"
 
 agent_communication:
   - agent: "testing"

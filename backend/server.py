@@ -36144,6 +36144,223 @@ async def get_booking_keycards(
 
 
 # ============================================================================
+# CLEANING REQUESTS - GUEST TO HOUSEKEEPING INTEGRATION
+# ============================================================================
+
+class CleaningRequestCreate(BaseModel):
+    room_number: str
+    request_type: str = "regular"  # regular, urgent, turndown, do_not_disturb
+    notes: str = ""
+
+# 1. GUEST REQUESTS CLEANING
+@api_router.post("/guest/request-cleaning")
+async def guest_request_cleaning(
+    request: CleaningRequestCreate,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Guest requests room cleaning
+    Types: regular, urgent, turndown, do_not_disturb
+    """
+    try:
+        # Find guest's current booking
+        booking = await db.bookings.find_one({
+            'guest_id': current_user.id,
+            'status': 'checked_in',
+            'tenant_id': current_user.tenant_id
+        })
+        
+        if not booking:
+            raise HTTPException(status_code=404, detail="No active booking found")
+        
+        # Create cleaning request
+        cleaning_request_id = str(uuid.uuid4())
+        cleaning_request = {
+            'id': cleaning_request_id,
+            'tenant_id': current_user.tenant_id,
+            'booking_id': booking['id'],
+            'room_id': booking['room_id'],
+            'room_number': booking.get('room_number', request.room_number),
+            'guest_id': current_user.id,
+            'guest_name': booking.get('guest_name', current_user.name),
+            'request_type': request.request_type,
+            'notes': request.notes,
+            'status': 'pending',  # pending, in_progress, completed, cancelled
+            'priority': 'urgent' if request.request_type == 'urgent' else 'normal',
+            'requested_at': datetime.now(timezone.utc).isoformat(),
+            'completed_at': None,
+            'assigned_to': None,
+            'completed_by': None
+        }
+        
+        await db.cleaning_requests.insert_one(cleaning_request)
+        
+        # Create notification for housekeeping
+        await db.notifications.insert_one({
+            'id': str(uuid.uuid4()),
+            'tenant_id': current_user.tenant_id,
+            'user_role': 'housekeeping',
+            'title': f'Yeni Temizlik Talebi - Oda {cleaning_request["room_number"]}',
+            'message': f'{cleaning_request["guest_name"]} oda temizliği talep etti',
+            'type': 'cleaning_request',
+            'priority': cleaning_request['priority'],
+            'related_id': cleaning_request_id,
+            'read': False,
+            'created_at': datetime.now(timezone.utc).isoformat()
+        })
+        
+        return {
+            'message': 'Temizlik talebiniz alındı',
+            'request_id': cleaning_request_id,
+            'room_number': cleaning_request['room_number'],
+            'request_type': request.request_type,
+            'estimated_time': '30-60 dakika' if request.request_type == 'urgent' else '2-3 saat',
+            'status': 'pending'
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to create cleaning request: {str(e)}")
+
+
+# 2. GET CLEANING REQUESTS (HOUSEKEEPING)
+@api_router.get("/housekeeping/cleaning-requests")
+async def get_cleaning_requests(
+    status: Optional[str] = None,  # pending, in_progress, completed
+    priority: Optional[str] = None,  # normal, urgent
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get all cleaning requests for housekeeping staff
+    """
+    try:
+        filter_dict = {'tenant_id': current_user.tenant_id}
+        
+        if status:
+            filter_dict['status'] = status
+        
+        if priority:
+            filter_dict['priority'] = priority
+        
+        # Get cleaning requests
+        requests = await db.cleaning_requests.find(filter_dict).sort('requested_at', -1).to_list(100)
+        
+        # Categorize by status
+        pending = [r for r in requests if r['status'] == 'pending']
+        in_progress = [r for r in requests if r['status'] == 'in_progress']
+        completed_today = [r for r in requests if r['status'] == 'completed' and r.get('completed_at', '').startswith(datetime.now(timezone.utc).date().isoformat())]
+        
+        return {
+            'requests': requests,
+            'count': len(requests),
+            'pending_count': len(pending),
+            'in_progress_count': len(in_progress),
+            'completed_today_count': len(completed_today),
+            'urgent_count': len([r for r in pending if r.get('priority') == 'urgent']),
+            'categories': {
+                'pending': pending,
+                'in_progress': in_progress,
+                'completed_today': completed_today
+            }
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve cleaning requests: {str(e)}")
+
+
+# 3. UPDATE CLEANING REQUEST STATUS
+@api_router.put("/housekeeping/cleaning-request/{request_id}/status")
+async def update_cleaning_request_status(
+    request_id: str,
+    status: str,  # in_progress, completed, cancelled
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Update cleaning request status
+    """
+    try:
+        request = await db.cleaning_requests.find_one({
+            'id': request_id,
+            'tenant_id': current_user.tenant_id
+        })
+        
+        if not request:
+            raise HTTPException(status_code=404, detail="Cleaning request not found")
+        
+        update_data = {
+            'status': status,
+            'updated_at': datetime.now(timezone.utc).isoformat()
+        }
+        
+        if status == 'in_progress':
+            update_data['assigned_to'] = current_user.id
+            update_data['assigned_to_name'] = current_user.name
+            update_data['started_at'] = datetime.now(timezone.utc).isoformat()
+        
+        if status == 'completed':
+            update_data['completed_at'] = datetime.now(timezone.utc).isoformat()
+            update_data['completed_by'] = current_user.id
+            update_data['completed_by_name'] = current_user.name
+            
+            # Notify guest
+            await db.notifications.insert_one({
+                'id': str(uuid.uuid4()),
+                'tenant_id': current_user.tenant_id,
+                'user_id': request['guest_id'],
+                'title': 'Oda Temizliği Tamamlandı',
+                'message': f'Oda {request["room_number"]} temizliği tamamlandı',
+                'type': 'cleaning_completed',
+                'priority': 'normal',
+                'related_id': request_id,
+                'read': False,
+                'created_at': datetime.now(timezone.utc).isoformat()
+            })
+        
+        await db.cleaning_requests.update_one(
+            {'id': request_id},
+            {'$set': update_data}
+        )
+        
+        return {
+            'message': f'Temizlik talebi {status} olarak güncellendi',
+            'request_id': request_id,
+            'status': status,
+            'room_number': request['room_number']
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to update cleaning request: {str(e)}")
+
+
+# 4. GET GUEST'S CLEANING REQUESTS
+@api_router.get("/guest/my-cleaning-requests")
+async def get_my_cleaning_requests(
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get current guest's cleaning requests
+    """
+    try:
+        requests = await db.cleaning_requests.find({
+            'guest_id': current_user.id,
+            'tenant_id': current_user.tenant_id
+        }).sort('requested_at', -1).limit(10).to_list(10)
+        
+        return {
+            'requests': requests,
+            'count': len(requests),
+            'pending_count': len([r for r in requests if r['status'] == 'pending']),
+            'in_progress_count': len([r for r in requests if r['status'] == 'in_progress'])
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve your cleaning requests: {str(e)}")
+
+
+# ============================================================================
 # SYSTEM MONITORING & PERFORMANCE - NEW FEATURES
 # ============================================================================
 

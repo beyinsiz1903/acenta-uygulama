@@ -33890,8 +33890,31 @@ async def calculate_early_late_fees(
     early_checkin_time: Optional[str] = None,
     late_checkout_time: Optional[str] = None,
     credentials: HTTPAuthorizationCredentials = Depends(security)
-
-
+):
+    """Calculate early check-in and late checkout fees"""
+    current_user = await get_current_user(credentials)
+    
+    # Get booking
+    booking = await db.bookings.find_one({
+        'id': booking_id,
+        'tenant_id': current_user.tenant_id
+    })
+    
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    
+    # Calculate fees (simplified implementation)
+    early_checkin_fee = 50.0 if early_checkin_time else 0.0
+    late_checkout_fee = 75.0 if late_checkout_time else 0.0
+    total_fees = early_checkin_fee + late_checkout_fee
+    
+    return {
+        'booking_id': booking_id,
+        'early_checkin_fee': early_checkin_fee,
+        'late_checkout_fee': late_checkout_fee,
+        'total_fees': total_fees,
+        'currency': 'USD'
+    }
 
 # --------------------------------------------------------------------------
 # Revenue Management - ADR, RevPAR, Forecasting, Rate Override, Analytics

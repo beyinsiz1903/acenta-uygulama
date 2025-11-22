@@ -75,6 +75,8 @@ const MobileHousekeeping = ({ user }) => {
   const [selectedRooms, setSelectedRooms] = useState([]);
   const [bulkUpdateMode, setBulkUpdateMode] = useState(false);
   const [filterStaff, setFilterStaff] = useState('all');
+  const [cleaningRequests, setCleaningRequests] = useState([]);
+  const [cleaningRequestsExpanded, setCleaningRequestsExpanded] = useState(true);
 
   useEffect(() => {
     loadData();

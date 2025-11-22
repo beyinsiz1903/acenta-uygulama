@@ -280,16 +280,17 @@ class HotelSeeder:
             for night in range(max(1, nights_stayed)):
                 folio_charges.append({
                     'id': str(uuid.uuid4()),
+                    'tenant_id': self.tenant_id,
                     'folio_id': folio_id,
+                    'booking_id': booking['id'],
                     'charge_date': (datetime.now() - timedelta(days=nights_stayed - night)).date().isoformat(),
                     'charge_category': 'room',
                     'description': f"Room Charge - Night {night + 1}",
                     'quantity': 1,
                     'unit_price': booking['total_amount'] / max(1, (datetime.fromisoformat(booking['check_out']).date() - datetime.fromisoformat(booking['check_in']).date()).days),
                     'amount': booking['total_amount'] / max(1, (datetime.fromisoformat(booking['check_out']).date() - datetime.fromisoformat(booking['check_in']).date()).days),
-                    'tax_percentage': 18.0,
                     'tax_amount': 0.0,
-                    'total': 0.0,
+                    'total': booking['total_amount'] / max(1, (datetime.fromisoformat(booking['check_out']).date() - datetime.fromisoformat(booking['check_in']).date()).days),
                     'voided': False,
                     'posted_by': 'System',
                     'created_at': datetime.now(timezone.utc).isoformat()

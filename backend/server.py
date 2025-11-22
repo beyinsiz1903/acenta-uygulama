@@ -34474,15 +34474,6 @@ async def get_rate_overrides_mobile(
         'overrides': overrides,
         'count': len(overrides)
     }
-
-):
-    """Calculate fees for early check-in or late checkout"""
-    current_user = await get_current_user(credentials)
-    
-    booking = await db.bookings.find_one({
-        'id': booking_id,
-        'tenant_id': current_user.tenant_id
-    })
     
     if not booking:
         raise HTTPException(status_code=404, detail="Booking not found")

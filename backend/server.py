@@ -27489,6 +27489,108 @@ async def get_shift_metrics(
     
     return {'shifts': shift_data, 'date': date}
 
+@api_router.post("/housekeeping/room/{room_id}/photo")
+async def upload_room_photo(
+    room_id: str,
+    photo_data: dict,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Upload a photo for room inspection"""
+    current_user = await get_current_user(credentials)
+    
+    photo = {
+        'id': str(uuid.uuid4()),
+        'tenant_id': current_user.tenant_id,
+        'room_id': room_id,
+        'photo_url': photo_data.get('photo_url'),  # Base64 or URL
+        'photo_type': photo_data.get('photo_type', 'inspection'),  # inspection, damage, before, after
+        'notes': photo_data.get('notes', ''),
+        'uploaded_by': current_user.name,
+        'uploaded_at': datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.room_photos.insert_one(photo)
+    
+    return {
+        'message': 'Photo uploaded',
+        'photo_id': photo['id']
+    }
+
+@api_router.get("/housekeeping/room/{room_id}/photos")
+async def get_room_photos(
+    room_id: str,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Get all photos for a room"""
+    current_user = await get_current_user(credentials)
+    
+    photos = []
+    async for photo in db.room_photos.find({
+        'tenant_id': current_user.tenant_id,
+        'room_id': room_id
+    }).sort('uploaded_at', -1):
+        photo.pop('_id', None)
+        photos.append(photo)
+    
+    return {'photos': photos, 'count': len(photos)}
+
+@api_router.post("/housekeeping/room/{room_id}/checklist")
+async def complete_room_checklist(
+    room_id: str,
+    checklist_data: dict,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Complete room cleaning checklist"""
+    current_user = await get_current_user(credentials)
+    
+    checklist = {
+        'id': str(uuid.uuid4()),
+        'tenant_id': current_user.tenant_id,
+        'room_id': room_id,
+        'items': checklist_data.get('items', []),  # List of checklist items with status
+        'completed_by': current_user.name,
+        'completed_at': datetime.now(timezone.utc).isoformat(),
+        'total_items': len(checklist_data.get('items', [])),
+        'completed_items': sum(1 for item in checklist_data.get('items', []) if item.get('checked')),
+        'notes': checklist_data.get('notes', '')
+    }
+    
+    await db.room_checklists.insert_one(checklist)
+    
+    return {
+        'message': 'Checklist completed',
+        'checklist_id': checklist['id'],
+        'completion_rate': f"{checklist['completed_items']}/{checklist['total_items']}"
+    }
+
+@api_router.get("/housekeeping/checklist-template")
+async def get_checklist_template(
+    room_type: Optional[str] = None,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Get standard cleaning checklist template"""
+    current_user = await get_current_user(credentials)
+    
+    standard_template = [
+        {'id': '1', 'category': 'bedroom', 'item': 'Yatak takımları değiştirildi', 'required': True},
+        {'id': '2', 'category': 'bedroom', 'item': 'Yastıklar kontrol edildi', 'required': True},
+        {'id': '3', 'category': 'bedroom', 'item': 'Mobilyalar silindi', 'required': True},
+        {'id': '4', 'category': 'bathroom', 'item': 'Banyo temizlendi', 'required': True},
+        {'id': '5', 'category': 'bathroom', 'item': 'Havlular yenilendi', 'required': True},
+        {'id': '6', 'category': 'bathroom', 'item': 'Sıhhi tesisat kontrol edildi', 'required': False},
+        {'id': '7', 'category': 'general', 'item': 'Zemin süpürüldü/silindi', 'required': True},
+        {'id': '8', 'category': 'general', 'item': 'Çöpler toplandı', 'required': True},
+        {'id': '9', 'category': 'general', 'item': 'Minibar kontrol edildi', 'required': False},
+        {'id': '10', 'category': 'general', 'item': 'Klima çalışıyor', 'required': True},
+        {'id': '11', 'category': 'general', 'item': 'TV ve kumanda çalışıyor', 'required': False},
+        {'id': '12', 'category': 'general', 'item': 'Pencereler temiz', 'required': False}
+    ]
+    
+    return {
+        'template': standard_template,
+        'room_type': room_type or 'Standard'
+    }
+
 @api_router.get("/crm/guest/{guest_id}/notes")
 async def get_guest_notes(
     guest_id: str,

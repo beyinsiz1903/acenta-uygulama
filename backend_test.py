@@ -362,9 +362,9 @@ class FnBMobileEndpointsTester:
             self.created_test_data['inventory_items'].append(item['id'])
             print(f"✅ Test inventory item: {item['product_name']} ({item['quantity']} {item['unit_of_measure']})")
 
-    # ============= OTA RESERVATION DETAILS TESTS (3 endpoints) =============
+    # ============= F&B MOBILE ORDER TRACKING TESTS (4 endpoints) =============
 
-    async def test_ota_reservation_details(self):
+    async def test_mobile_active_orders(self):
         """Test GET /api/reservations/{booking_id}/ota-details"""
         print("\n📋 Testing OTA Reservation Details Endpoint...")
         

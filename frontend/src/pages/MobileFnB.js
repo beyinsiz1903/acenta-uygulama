@@ -160,7 +160,7 @@ const MobileFnB = ({ user }) => {
       setZReportData(res.data);
       setZReportModalOpen(true);
     } catch (error) {
-      toast.error('Z raporu yüklenemedi');
+      toast.error('✗ Z Raporu');
     }
   };
 
@@ -171,7 +171,7 @@ const MobileFnB = ({ user }) => {
       setVoidTransactions(res.data.void_transactions || []);
       setVoidReportModalOpen(true);
     } catch (error) {
-      toast.error('İptal raporu yüklenemedi');
+      toast.error('✗ İptal Raporu');
     }
   };
 

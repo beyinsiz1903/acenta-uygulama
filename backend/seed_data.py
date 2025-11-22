@@ -227,6 +227,7 @@ class HotelSeeder:
             
             bookings.append({
                 'id': str(uuid.uuid4()),
+                'tenant_id': self.tenant_id,
                 'booking_number': f'BK{now.year}{random.randint(1000, 9999)}',
                 'guest_id': guest['id'],
                 'room_id': room['id'],
@@ -236,7 +237,7 @@ class HotelSeeder:
                 'adults': random.randint(1, 2),
                 'children': random.randint(0, 2),
                 'guests_count': random.randint(1, 3),
-                'total_amount': room['base_rate'] * nights,
+                'total_amount': room['base_price'] * nights,
                 'paid_amount': 0.0,
                 'rate_code': random.choice(['BAR', 'ADVANCE', 'CORPORATE']),
                 'source': random.choice(['Direct', 'Booking.com', 'Expedia', 'Phone']),

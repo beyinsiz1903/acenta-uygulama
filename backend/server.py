@@ -27808,6 +27808,203 @@ async def reject_request(
         'status': 'rejected'
     }
 
+@api_router.get("/gm/team-performance")
+async def get_team_performance(
+    department: Optional[str] = None,
+    period: str = 'month',
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Get team performance metrics"""
+    current_user = await get_current_user(credentials)
+    
+    # Mock team performance data
+    team_data = {
+        'front_desk': {
+            'department': 'Front Desk',
+            'staff_count': 8,
+            'avg_performance_score': 92.5,
+            'tasks_completed': 245,
+            'guest_satisfaction': 4.6,
+            'top_performer': {'name': 'Ayşe Yılmaz', 'score': 98},
+            'metrics': {
+                'check_ins': 156,
+                'check_outs': 148,
+                'avg_time': '4.2 min'
+            }
+        },
+        'housekeeping': {
+            'department': 'Housekeeping',
+            'staff_count': 12,
+            'avg_performance_score': 88.3,
+            'tasks_completed': 612,
+            'guest_satisfaction': 4.4,
+            'top_performer': {'name': 'Fatma Demir', 'score': 95},
+            'metrics': {
+                'rooms_cleaned': 612,
+                'avg_time': '28 min',
+                'quality_score': 4.5
+            }
+        },
+        'maintenance': {
+            'department': 'Maintenance',
+            'staff_count': 6,
+            'avg_performance_score': 91.2,
+            'tasks_completed': 89,
+            'guest_satisfaction': 4.5,
+            'top_performer': {'name': 'Mehmet Koç', 'score': 96},
+            'metrics': {
+                'tasks_completed': 89,
+                'avg_response_time': '18 min',
+                'sla_compliance': 94
+            }
+        },
+        'fnb': {
+            'department': 'F&B',
+            'staff_count': 15,
+            'avg_performance_score': 87.8,
+            'tasks_completed': 1240,
+            'guest_satisfaction': 4.3,
+            'top_performer': {'name': 'Ali Şahin', 'score': 93},
+            'metrics': {
+                'orders_served': 1240,
+                'avg_time': '12 min',
+                'quality_score': 4.3
+            }
+        }
+    }
+    
+    if department:
+        return team_data.get(department, {})
+    
+    return {
+        'departments': team_data,
+        'period': period,
+        'overall_performance': round(sum(d['avg_performance_score'] for d in team_data.values()) / len(team_data), 1)
+    }
+
+@api_router.get("/gm/complaints")
+async def get_complaints(
+    status: Optional[str] = None,
+    priority: Optional[str] = None,
+    limit: int = 50,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Get guest complaints"""
+    current_user = await get_current_user(credentials)
+    
+    query = {'tenant_id': current_user.tenant_id}
+    
+    if status:
+        query['status'] = status
+    if priority:
+        query['priority'] = priority
+    
+    complaints = []
+    async for complaint in db.complaints.find(query).sort('created_at', -1).limit(limit):
+        complaint.pop('_id', None)
+        complaints.append(complaint)
+    
+    # If no complaints, create mock data
+    if len(complaints) == 0:
+        mock_complaints = [
+            {
+                'id': str(uuid.uuid4()),
+                'tenant_id': current_user.tenant_id,
+                'guest_name': 'Ahmet Yılmaz',
+                'room_number': '205',
+                'category': 'cleanliness',
+                'subject': 'Oda temizliği yetersiz',
+                'description': 'Banyoda havlu eksikliği var',
+                'priority': 'normal',
+                'status': 'open',
+                'created_at': (datetime.now(timezone.utc) - timedelta(hours=2)).isoformat(),
+                'assigned_to': 'Housekeeping',
+                'resolution': None
+            },
+            {
+                'id': str(uuid.uuid4()),
+                'tenant_id': current_user.tenant_id,
+                'guest_name': 'Zeynep Kaya',
+                'room_number': '312',
+                'category': 'noise',
+                'subject': 'Gürültü şikayeti',
+                'description': 'Yan odadan yüksek ses geliyor',
+                'priority': 'high',
+                'status': 'in_progress',
+                'created_at': (datetime.now(timezone.utc) - timedelta(hours=5)).isoformat(),
+                'assigned_to': 'Front Desk',
+                'resolution': None
+            }
+        ]
+        complaints = mock_complaints
+    
+    return {
+        'complaints': complaints,
+        'count': len(complaints),
+        'by_status': {
+            'open': sum(1 for c in complaints if c['status'] == 'open'),
+            'in_progress': sum(1 for c in complaints if c['status'] == 'in_progress'),
+            'resolved': sum(1 for c in complaints if c['status'] == 'resolved')
+        }
+    }
+
+@api_router.post("/gm/complaint")
+async def create_complaint(
+    complaint_data: dict,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Create a new complaint"""
+    current_user = await get_current_user(credentials)
+    
+    complaint = {
+        'id': str(uuid.uuid4()),
+        'tenant_id': current_user.tenant_id,
+        'guest_name': complaint_data.get('guest_name'),
+        'room_number': complaint_data.get('room_number'),
+        'category': complaint_data.get('category'),
+        'subject': complaint_data.get('subject'),
+        'description': complaint_data.get('description'),
+        'priority': complaint_data.get('priority', 'normal'),
+        'status': 'open',
+        'created_at': datetime.now(timezone.utc).isoformat(),
+        'created_by': current_user.name,
+        'assigned_to': complaint_data.get('assigned_to'),
+        'resolution': None
+    }
+    
+    await db.complaints.insert_one(complaint)
+    
+    return {
+        'message': 'Complaint created',
+        'complaint_id': complaint['id']
+    }
+
+@api_router.post("/gm/complaint/{complaint_id}/resolve")
+async def resolve_complaint(
+    complaint_id: str,
+    resolution_data: dict,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Resolve a complaint"""
+    current_user = await get_current_user(credentials)
+    
+    await db.complaints.update_one(
+        {'id': complaint_id, 'tenant_id': current_user.tenant_id},
+        {
+            '$set': {
+                'status': 'resolved',
+                'resolution': resolution_data.get('resolution'),
+                'resolved_by': current_user.name,
+                'resolved_at': datetime.now(timezone.utc).isoformat()
+            }
+        }
+    )
+    
+    return {
+        'message': 'Complaint resolved',
+        'complaint_id': complaint_id
+    }
+
 @api_router.get("/reports/weekly-management-summary")
 async def get_weekly_management_summary(
     credentials: HTTPAuthorizationCredentials = Depends(security)

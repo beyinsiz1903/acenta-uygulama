@@ -85,11 +85,14 @@ const MobileMaintenance = ({ user }) => {
     try {
       setLoading(true);
       
-      const [tasksRes, slaRes, repeatRes, roomsRes] = await Promise.all([
-        axios.get('/tasks/department/maintenance'),
-        axios.get('/maintenance/sla-metrics'),
-        axios.get('/maintenance/repeat-issues'),
-        axios.get('/housekeeping/room-status')
+      const [tasksRes, slaRes, repeatRes, roomsRes, slaConfigRes, partsRes, plannedRes] = await Promise.all([
+        axios.get('/api/tasks/department/maintenance'),
+        axios.get('/api/maintenance/sla-metrics'),
+        axios.get('/api/maintenance/repeat-issues'),
+        axios.get('/api/housekeeping/room-status'),
+        axios.get('/api/maintenance/mobile/sla-configurations').catch(() => ({ data: { sla_configurations: [] } })),
+        axios.get('/api/maintenance/mobile/spare-parts').catch(() => ({ data: { spare_parts: [] } })),
+        axios.get('/api/maintenance/mobile/planned-maintenance').catch(() => ({ data: { planned_maintenance: [] } }))
       ]);
 
       const allTasks = tasksRes.data.tasks || [];
@@ -98,6 +101,9 @@ const MobileMaintenance = ({ user }) => {
       setSlaMetrics(slaRes.data);
       setRepeatIssues(repeatRes.data.repeat_issues || []);
       setAllRooms(roomsRes.data.rooms || []);
+      setSlaConfigurations(slaConfigRes.data.sla_configurations || []);
+      setPartsInventory(partsRes.data.spare_parts || []);
+      setPlannedMaintenance(plannedRes.data.planned_maintenance || []);
     } catch (error) {
       console.error('Failed to load maintenance data:', error);
       toast.error('Veri yüklenemedi');

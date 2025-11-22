@@ -389,6 +389,9 @@ const ExecutiveDashboard = ({ user }) => {
           Otomatik yenileme aktif (60 sn)
         </div>
       </div>
+
+      {/* Property Switcher */}
+      <PropertySwitcher onPropertyChange={() => loadData()} />
     </div>
   );
 };

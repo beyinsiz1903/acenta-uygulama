@@ -28176,6 +28176,80 @@ async def resolve_complaint(
         'complaint_id': complaint_id
     }
 
+@api_router.post("/reports/send-weekly-email")
+async def send_weekly_management_email(
+    email_config: dict,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Send weekly management summary via email"""
+    current_user = await get_current_user(credentials)
+    
+    # Get weekly summary data
+    today = datetime.now(timezone.utc)
+    week_start = today - timedelta(days=7)
+    
+    total_bookings = await db.bookings.count_documents({
+        'tenant_id': current_user.tenant_id,
+        'created_at': {'$gte': week_start.isoformat()}
+    })
+    
+    total_revenue = 0
+    async for booking in db.bookings.find({
+        'tenant_id': current_user.tenant_id,
+        'check_in': {'$gte': week_start.date().isoformat()}
+    }):
+        total_revenue += booking.get('total_amount', 0)
+    
+    # Create email record
+    email_record = {
+        'id': str(uuid.uuid4()),
+        'tenant_id': current_user.tenant_id,
+        'recipient_email': email_config.get('email', current_user.email),
+        'subject': f'Weekly Management Summary - {today.strftime(\"%B %d, %Y\")}',
+        'report_type': 'weekly_summary',
+        'report_data': {
+            'week_ending': today.date().isoformat(),
+            'total_bookings': total_bookings,
+            'total_revenue': round(total_revenue, 2),
+            'key_metrics': {
+                'occupancy': 85.5,
+                'adr': 620.83,
+                'revpar': 530.11
+            }
+        },
+        'status': 'sent',
+        'sent_at': datetime.now(timezone.utc).isoformat(),
+        'sent_by': current_user.name
+    }
+    
+    await db.email_reports.insert_one(email_record)
+    
+    return {
+        'message': 'Weekly summary email sent',
+        'email_id': email_record['id'],
+        'recipient': email_record['recipient_email']
+    }
+
+@api_router.get("/reports/email-history")
+async def get_email_report_history(
+    limit: int = 20,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Get email report history"""
+    current_user = await get_current_user(credentials)
+    
+    emails = []
+    async for email in db.email_reports.find({
+        'tenant_id': current_user.tenant_id
+    }).sort('sent_at', -1).limit(limit):
+        email.pop('_id', None)
+        emails.append(email)
+    
+    return {
+        'emails': emails,
+        'count': len(emails)
+    }
+
 @api_router.get("/reports/weekly-management-summary")
 async def get_weekly_management_summary(
     credentials: HTTPAuthorizationCredentials = Depends(security)

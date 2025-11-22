@@ -64,6 +64,10 @@ const MobileFrontDesk = ({ user }) => {
   const [keycardModalOpen, setKeycardModalOpen] = useState(false);
   const [selectedBookingForKeycard, setSelectedBookingForKeycard] = useState(null);
   const [keycardType, setKeycardType] = useState('physical');
+  
+  // COLLAPSIBLE STATE
+  const [arrivalsExpanded, setArrivalsExpanded] = useState(false);
+  const [departuresExpanded, setDeparturesExpanded] = useState(false);
 
   useEffect(() => {
     loadData();

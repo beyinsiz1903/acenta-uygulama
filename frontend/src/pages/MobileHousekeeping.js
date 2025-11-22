@@ -168,15 +168,30 @@ const MobileHousekeeping = ({ user }) => {
     }
   };
 
-  const handleStatusChange = async (roomId, newStatus) => {
+  const handleStatusChangeRequest = (roomId, roomNumber, currentStatus, newStatus) => {
+    setPendingStatusChange({ roomId, roomNumber, currentStatus, newStatus });
+    setConfirmDialogOpen(true);
+  };
+
+  const confirmStatusChange = async () => {
+    if (!pendingStatusChange) return;
+    
     try {
-      await axios.put(`/housekeeping/room/${roomId}/status?new_status=${newStatus}`);
+      await axios.put(`/housekeeping/room/${pendingStatusChange.roomId}/status?new_status=${pendingStatusChange.newStatus}`);
       toast.success('Oda durumu güncellendi!');
       loadData(); // Reload data
+      setConfirmDialogOpen(false);
+      setPendingStatusChange(null);
     } catch (error) {
       console.error('Status update error:', error);
       toast.error('Durum güncellenemedi');
+      setConfirmDialogOpen(false);
     }
+  };
+
+  const cancelStatusChange = () => {
+    setConfirmDialogOpen(false);
+    setPendingStatusChange(null);
   };
 
   const getStatusColor = (status) => {

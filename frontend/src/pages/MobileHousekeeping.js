@@ -497,7 +497,7 @@ const MobileHousekeeping = ({ user }) => {
                             className="h-7 text-xs px-3 bg-blue-600 hover:bg-blue-700"
                             onClick={() => handleStatusChangeRequest(room.id, room.room_number, room.status, getNextStatus(room.status))}
                           >
-                            ✓ Hazır
+                            ✓ Temizlendi
                           </Button>
                         </div>
                       </div>

@@ -281,20 +281,24 @@ class NewEndpointsTester:
         )
         
         # Verify department structure if we got data
-        if response and 'departments' in response and len(response['departments']) > 0:
-            dept = response['departments'][0]
-            expected_dept_fields = ['department', 'department_tr', 'metric', 'value', 'target', 'unit', 'status', 'details']
-            missing_dept_fields = [f for f in expected_dept_fields if f not in dept]
-            if missing_dept_fields:
-                print(f"⚠️  Department structure missing fields: {missing_dept_fields}")
+        if response and 'departments' in response:
+            print(f"📊 Departments response: {response['departments']}")
+            if isinstance(response['departments'], list) and len(response['departments']) > 0:
+                dept = response['departments'][0]
+                expected_dept_fields = ['department', 'department_tr', 'metric', 'value', 'target', 'unit', 'status', 'details']
+                missing_dept_fields = [f for f in expected_dept_fields if f not in dept]
+                if missing_dept_fields:
+                    print(f"⚠️  Department structure missing fields: {missing_dept_fields}")
+                else:
+                    print(f"✅ Department structure complete with all fields")
+                
+                # Check if we have the expected 4 departments
+                dept_names = [d.get('department', '') for d in response['departments']]
+                expected_depts = ['Housekeeping', 'F&B', 'Frontdesk', 'Maintenance']
+                print(f"📊 Departments found: {dept_names}")
+                print(f"📊 Expected departments: {expected_depts}")
             else:
-                print(f"✅ Department structure complete with all fields")
-            
-            # Check if we have the expected 4 departments
-            dept_names = [d.get('department', '') for d in response['departments']]
-            expected_depts = ['Housekeeping', 'F&B', 'Frontdesk', 'Maintenance']
-            print(f"📊 Departments found: {dept_names}")
-            print(f"📊 Expected departments: {expected_depts}")
+                print(f"📊 Departments is empty or not a list: {type(response['departments'])}")
         
         # 8. GET /api/gm/complaint-management
         print("\n8️⃣ Testing Complaint Management...")

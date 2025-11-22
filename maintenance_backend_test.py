@@ -648,7 +648,8 @@ class MaintenanceEndpointTester:
                                 missing_maintenance_fields = [field for field in required_maintenance_fields if field not in maintenance]
                                 if not missing_maintenance_fields:
                                     # Check overdue count
-                                    overdue_count = data.get("overdue_count", 0)
+                                    summary = data.get("summary", {})
+                                    overdue_count = summary.get("overdue_count", 0)
                                     if overdue_count >= test_case["expected_overdue"]:
                                         print(f"  ✅ {test_case['name']}: PASSED - Found {overdue_count} overdue maintenance items")
                                         passed += 1

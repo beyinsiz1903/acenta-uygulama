@@ -388,6 +388,216 @@ user_problem_statement: |
   24. POS Improvements - Detailed F&B charge entry, Menu items, Order tracking
 
 backend:
+  - task: "Approval System - Create Approval Request"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "POST /api/approvals/create - Create approval requests with different types: discount, price_override, budget_expense, rate_change, refund, comp_room"
+      - working: false
+        agent: "testing"
+        comment: "❌ ENDPOINT FAILING - POST /api/approvals/create returns HTTP 500 error. Root cause: AttributeError: 'User' object has no attribute 'username'. Code tries to access current_user.username but User model has 'name' field. All 6 approval types (discount, price_override, budget_expense, rate_change, refund, comp_room) failing with same error."
+
+  - task: "Approval System - Get Pending Approvals"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "GET /api/approvals/pending - Get pending approvals with filters for approval_type and priority, includes time_waiting_hours and is_urgent calculations"
+      - working: false
+        agent: "testing"
+        comment: "❌ ENDPOINT FAILING - GET /api/approvals/pending returns HTTP 200 but missing 'urgent_count' field in response. Response includes 'approvals' and 'count' fields but lacks 'urgent_count' field. All filter tests (approval_type, priority) have same issue."
+
+  - task: "Approval System - Get My Requests"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "GET /api/approvals/my-requests - Get current user's approval requests with status filter (pending, approved, rejected)"
+      - working: false
+        agent: "testing"
+        comment: "❌ ENDPOINT FAILING - GET /api/approvals/my-requests returns HTTP 200 but missing 'requests' field in response. Endpoint likely returns 'approvals' field instead of expected 'requests' field. All status filter tests failing with same issue."
+
+  - task: "Approval System - Approve Request"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "PUT /api/approvals/{id}/approve - Approve pending requests with role-based access control (admin/supervisor/fnb_manager/gm/finance_manager), creates notification for requester"
+      - working: true
+        agent: "testing"
+        comment: "✅ ENDPOINT WORKING - PUT /api/approvals/{id}/approve correctly handles authorization and returns 404 for non-existent approval IDs. Role-based access control functional. Minor: Test logic needs improvement for better validation coverage."
+
+  - task: "Approval System - Reject Request"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "PUT /api/approvals/{id}/reject - Reject requests with mandatory rejection_reason, role-based access control, creates notification for requester"
+      - working: true
+        agent: "testing"
+        comment: "✅ ENDPOINT WORKING - PUT /api/approvals/{id}/reject correctly validates rejection_reason requirement (400 error when missing) and returns 404 for non-existent approval IDs. Role-based access control functional. Minor: Test logic needs improvement for better validation coverage."
+
+  - task: "Approval System - Get Approval History"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "GET /api/approvals/history - Get approval history with filters for status, approval_type, and limit parameter"
+      - working: true
+        agent: "testing"
+        comment: "✅ ENDPOINT WORKING - GET /api/approvals/history returns proper response with 'history' and 'count' fields. All filters (status, approval_type, limit) working correctly. Response structure verified and functional."
+
+  - task: "Executive Dashboard - KPI Snapshot"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "GET /api/executive/kpi-snapshot - Returns critical KPIs: RevPAR, ADR, Occupancy, Revenue, NPS, Cash with trend calculations and summary data"
+      - working: false
+        agent: "testing"
+        comment: "❌ ENDPOINT FAILING - GET /api/executive/kpi-snapshot returns HTTP 200 but response structure mismatch. Endpoint returns lowercase field names (revpar, adr, occupancy, revenue, nps, cash) but test expects uppercase (RevPAR, ADR, Occupancy, Revenue, NPS, Cash). Core functionality works but field naming inconsistent."
+
+  - task: "Executive Dashboard - Performance Alerts"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "GET /api/executive/performance-alerts - Returns performance alerts with types: revenue_drop, low_occupancy, overbooking_risk, maintenance_backlog, cash_flow_warning, sorted by severity"
+      - working: true
+        agent: "testing"
+        comment: "✅ ENDPOINT WORKING - GET /api/executive/performance-alerts returns proper response with 'alerts', 'count', 'urgent_count', 'high_count' fields. Alert structure verified with required fields (id, type, severity, title, message, value, created_at). Severity-based sorting functional."
+
+  - task: "Executive Dashboard - Daily Summary"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "GET /api/executive/daily-summary - Returns daily summary with new_bookings, check_ins, check_outs, cancellations, revenue, complaints, incidents, and highlights with cancellation_rate, avg_revenue_per_booking"
+      - working: true
+        agent: "testing"
+        comment: "✅ ENDPOINT WORKING - GET /api/executive/daily-summary returns proper response with 'summary' and 'highlights' fields. Summary includes all required fields (new_bookings, check_ins, check_outs, cancellations, revenue, complaints, incidents). Highlights includes cancellation_rate and avg_revenue_per_booking. Date parameter filtering functional."
+
+  - task: "Notification System - Get Preferences"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "GET /api/notifications/preferences - Returns user notification preferences with default preferences for new users, includes notification types and channels"
+      - working: false
+        agent: "testing"
+        comment: "❌ ENDPOINT FAILING - GET /api/notifications/preferences returns HTTP 200 but invalid preferences structure. Endpoint returns array of preferences instead of expected object structure. Default preferences creation working but response format needs adjustment."
+
+  - task: "Notification System - Update Preferences"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "PUT /api/notifications/preferences - Update specific notification type preferences with enabled flag and channels (in_app, email, sms, push)"
+      - working: false
+        agent: "testing"
+        comment: "❌ ENDPOINT FAILING - PUT /api/notifications/preferences returns HTTP 200 but missing 'updated_preference' field in response. Endpoint processes updates but response structure incomplete. All notification types (booking_updates, maintenance_alerts, guest_requests) have same issue."
+
+  - task: "Notification System - Get Notifications List"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "GET /api/notifications/list - Returns notifications list with filters for unread_only and limit parameters, includes notification structure with id, type, title, message, priority, read, created_at"
+      - working: true
+        agent: "testing"
+        comment: "✅ ENDPOINT WORKING - GET /api/notifications/list returns proper response with 'notifications' and 'count' fields. All filters (unread_only, limit) working correctly. Notification structure verified with required fields. Empty notifications list handled properly."
+
+  - task: "Notification System - Mark Notification Read"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "PUT /api/notifications/{id}/mark-read - Mark specific notification as read, returns 404 for non-existent notification IDs"
+      - working: true
+        agent: "testing"
+        comment: "✅ ENDPOINT WORKING - PUT /api/notifications/{id}/mark-read correctly returns 404 for non-existent notification IDs. Endpoint validation functional. Minor: Test logic needs improvement for better coverage of successful read marking."
+
+  - task: "Notification System - Send System Alert"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "POST /api/notifications/send-system-alert - Send system alerts to specific target_roles with admin role requirement, creates notifications for users with target roles"
+      - working: false
+        agent: "testing"
+        comment: "❌ ENDPOINT FAILING - POST /api/notifications/send-system-alert returns HTTP 422 error. Request body validation failing for all test cases. Tested with title, message, priority, target_roles fields but endpoint expects different request structure or has validation issues."
+
   - task: "Dashboard - Employee Performance Endpoint"
     implemented: true
     working: true

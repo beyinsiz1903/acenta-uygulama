@@ -312,7 +312,7 @@ const MobileFrontDesk = ({ user }) => {
       </div>
 
       <div className="p-4 space-y-4">
-        {/* Quick Action Buttons */}
+        {/* Quick Action Buttons - Row 1 */}
         <div className="grid grid-cols-4 gap-2">
           <Button
             size="sm"
@@ -370,6 +370,57 @@ const MobileFrontDesk = ({ user }) => {
           >
             <AlertCircle className="w-5 h-5 mb-1" />
             <span className="text-[10px] font-medium">No-Show</span>
+          </Button>
+        </div>
+
+        {/* NEW FEATURES - Row 2 */}
+        <div className="grid grid-cols-4 gap-2">
+          <Button
+            size="sm"
+            className="h-16 flex flex-col items-center justify-center bg-purple-600 hover:bg-purple-700 text-white p-1"
+            onClick={() => setSearchModalOpen(true)}
+          >
+            <Search className="w-5 h-5 mb-1" />
+            <span className="text-[10px] font-medium">Arama</span>
+          </Button>
+          
+          <Button
+            size="sm"
+            className="h-16 flex flex-col items-center justify-center bg-indigo-600 hover:bg-indigo-700 text-white p-1"
+            onClick={() => {
+              const confirmed = todayArrivals.filter(b => b.status === 'confirmed')[0];
+              if (confirmed) openRoomAssignment(confirmed);
+              else toast.error('⚠️ Oda atanacak rezervasyon yok');
+            }}
+          >
+            <Home className="w-5 h-5 mb-1" />
+            <span className="text-[10px] font-medium">Oda Ata</span>
+          </Button>
+          
+          <Button
+            size="sm"
+            className="h-16 flex flex-col items-center justify-center bg-teal-600 hover:bg-teal-700 text-white p-1"
+            onClick={() => {
+              const confirmed = todayArrivals.filter(b => b.status === 'confirmed')[0];
+              if (confirmed) openPassportScan(confirmed);
+              else toast.error('⚠️ Kimlik okunacak rezervasyon yok');
+            }}
+          >
+            <Camera className="w-5 h-5 mb-1" />
+            <span className="text-[10px] font-medium">Kimlik</span>
+          </Button>
+          
+          <Button
+            size="sm"
+            className="h-16 flex flex-col items-center justify-center bg-cyan-600 hover:bg-cyan-700 text-white p-1"
+            onClick={() => {
+              const checkedIn = inHouse[0];
+              if (checkedIn) openKeycardModal(checkedIn);
+              else toast.error('⚠️ Kart basılacak rezervasyon yok');
+            }}
+          >
+            <Key className="w-5 h-5 mb-1" />
+            <span className="text-[10px] font-medium">Kart Bas</span>
           </Button>
         </div>
 

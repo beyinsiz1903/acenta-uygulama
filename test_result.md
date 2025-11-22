@@ -7091,15 +7091,18 @@ backend:
 
   - task: "Dashboard - Trend KPIs"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Added GET /api/dashboard/trend-kpis - Returns trending KPIs (Revenue, Bookings, Occupancy, ADR, RevPAR, Guest Rating) with period comparison (7days, 30days, 90days). Shows current vs previous values with trend percentages."
+      - working: true
+        agent: "testing"
+        comment: "✅ ENDPOINT WORKING - GET /api/dashboard/trend-kpis tested with all 3 periods (7days, 30days, 90days). Returns proper response with period and kpis array. All 6 expected KPIs present (Revenue, Bookings, Occupancy, ADR, RevPAR, Guest Rating) with required fields: name, current, previous, trend, unit, icon. Trend calculations functional with period-over-period comparison."
 
   - task: "F&B - Dashboard"
     implemented: true

@@ -57,15 +57,15 @@ const GMDashboard = ({ user, tenant, onLogout }) => {
     try {
       // Load daily flash report and other key metrics
       const [flashResponse, occupancyRes, folioRes, financeRes, costRes, expenseRes, trendRes, slaRes, delayedRes] = await Promise.all([
-        axios.get('/reports/daily-flash').catch(() => ({ data: {} })),
-        axios.get('/pms/dashboard').catch(() => ({ data: {} })),
-        axios.get('/folio/dashboard-stats').catch(() => ({ data: {} })),
-        axios.get('/reports/finance-snapshot').catch(() => ({ data: {} })),
-        axios.get('/reports/cost-summary').catch(() => ({ data: {} })),
-        axios.get('/finance/expense-summary?period=today').catch(() => ({ data: {} })),
-        axios.get('/analytics/7day-trend').catch(() => ({ data: { trend: [] } })),
-        axios.get('/settings/sla').catch(() => ({ data: { configs: [] } })),
-        axios.get('/tasks/delayed').catch(() => ({ data: { delayed_tasks: [] } }))
+        axios.get('/reports/daily-flash', { timeout: 15000 }).catch(() => ({ data: {} })),
+        axios.get('/pms/dashboard', { timeout: 15000 }).catch(() => ({ data: {} })),
+        axios.get('/folio/dashboard-stats', { timeout: 15000 }).catch(() => ({ data: {} })),
+        axios.get('/reports/finance-snapshot', { timeout: 15000 }).catch(() => ({ data: {} })),
+        axios.get('/reports/cost-summary', { timeout: 15000 }).catch(() => ({ data: {} })),
+        axios.get('/finance/expense-summary?period=today', { timeout: 15000 }).catch(() => ({ data: {} })),
+        axios.get('/analytics/7day-trend', { timeout: 15000 }).catch(() => ({ data: { trend: [] } })),
+        axios.get('/settings/sla', { timeout: 15000 }).catch(() => ({ data: { configs: [] } })),
+        axios.get('/tasks/delayed', { timeout: 15000 }).catch(() => ({ data: { delayed_tasks: [] } }))
       ]);
 
       setDashboardData({

@@ -85,12 +85,13 @@ const MobileHousekeeping = ({ user }) => {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [statusRes, dueOutRes, stayoverRes, arrivalRes, perfRes] = await Promise.all([
+      const [statusRes, dueOutRes, stayoverRes, arrivalRes, perfRes, cleaningReqRes] = await Promise.all([
         axios.get('/housekeeping/room-status'),
         axios.get('/housekeeping/due-out'),
         axios.get('/housekeeping/stayovers'),
         axios.get('/housekeeping/arrivals'),
-        axios.get('/housekeeping/staff-performance-table')
+        axios.get('/housekeeping/staff-performance-table'),
+        axios.get('/housekeeping/cleaning-requests?status=pending').catch(() => ({ data: { requests: [] } }))
       ]);
 
       setRoomStatus(statusRes.data);
@@ -98,6 +99,7 @@ const MobileHousekeeping = ({ user }) => {
       setStayovers(stayoverRes.data.stayover_rooms || []);
       setArrivals(arrivalRes.data.arrival_rooms || []);
       setStaffPerformance(perfRes.data);
+      setCleaningRequests(cleaningReqRes.data.categories?.pending || []);
       
       // Get all rooms for filtering
       const roomsRes = await axios.get('/pms/rooms');
@@ -108,6 +110,18 @@ const MobileHousekeeping = ({ user }) => {
     } finally {
       setLoading(false);
       setRefreshing(false);
+    }
+  };
+
+  const handleCleaningRequestStatus = async (requestId, newStatus) => {
+    try {
+      await axios.put(`/housekeeping/cleaning-request/${requestId}/status`, null, {
+        params: { status: newStatus }
+      });
+      toast.success(`Talep ${newStatus === 'in_progress' ? 'başlatıldı' : 'tamamlandı'}`);
+      loadData(); // Reload data
+    } catch (error) {
+      toast.error('İşlem başarısız');
     }
   };
 

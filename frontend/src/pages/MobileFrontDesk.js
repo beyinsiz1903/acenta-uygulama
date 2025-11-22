@@ -70,6 +70,8 @@ const MobileFrontDesk = ({ user }) => {
   // COLLAPSIBLE STATE
   const [arrivalsExpanded, setArrivalsExpanded] = useState(false);
   const [departuresExpanded, setDeparturesExpanded] = useState(false);
+  
+  console.log('🔍 Collapsible States:', { arrivalsExpanded, departuresExpanded });
 
   useEffect(() => {
     loadData();

@@ -231,15 +231,19 @@ class NewEndpointsTester:
         )
         
         # Verify anomaly structure if we got data
-        if response and 'anomalies' in response and len(response['anomalies']) > 0:
-            anomaly = response['anomalies'][0]
-            expected_anomaly_fields = ['id', 'type', 'severity', 'title', 'message', 'metric', 
-                                     'current_value', 'previous_value', 'variance', 'detected_at']
-            missing_anomaly_fields = [f for f in expected_anomaly_fields if f not in anomaly]
-            if missing_anomaly_fields:
-                print(f"⚠️  Anomaly structure missing fields: {missing_anomaly_fields}")
+        if response and 'anomalies' in response:
+            print(f"📊 Anomalies response: {response['anomalies']}")
+            if isinstance(response['anomalies'], list) and len(response['anomalies']) > 0:
+                anomaly = response['anomalies'][0]
+                expected_anomaly_fields = ['id', 'type', 'severity', 'title', 'message', 'metric', 
+                                         'current_value', 'previous_value', 'variance', 'detected_at']
+                missing_anomaly_fields = [f for f in expected_anomaly_fields if f not in anomaly]
+                if missing_anomaly_fields:
+                    print(f"⚠️  Anomaly structure missing fields: {missing_anomaly_fields}")
+                else:
+                    print(f"✅ Anomaly structure complete with all fields")
             else:
-                print(f"✅ Anomaly structure complete with all fields")
+                print(f"📊 Anomalies is empty or not a list: {type(response['anomalies'])}")
         
         # 6. GET /api/anomaly/alerts
         print("\n6️⃣ Testing Anomaly Alerts...")

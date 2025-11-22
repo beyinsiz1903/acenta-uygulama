@@ -5094,15 +5094,18 @@ backend:
 
   - task: "Inventory Mobile - Stock Movements History Endpoint"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Added GET /api/pos/mobile/inventory-movements - Returns stock movement history with date filtering, product filtering, movement type filtering (in/out/adjustment), shows product name, quantity, reason, performed by, timestamp. Includes sample data for empty database"
+      - working: true
+        agent: "testing"
+        comment: "✅ ENDPOINT WORKING PERFECTLY - GET /api/pos/mobile/inventory-movements tested with 7 test cases (100% success rate). Verified: All inventory movements retrieval, date range filtering, product_id filtering, movement type filtering (in/out/adjustment), limit parameter. Response structure confirmed with movements array and count. Movement structure validation with required fields: product_name, movement_type, quantity, reason, timestamp. Sample Turkish data provided for empty database."
 
   - task: "Inventory Mobile - Current Stock Levels Endpoint"
     implemented: true

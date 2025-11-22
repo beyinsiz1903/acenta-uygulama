@@ -7046,15 +7046,18 @@ agent_communication:
 backend:
   - task: "Dashboard - Revenue-Expense Chart"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Added GET /api/dashboard/revenue-expense-chart - Returns revenue vs expense chart with daily/weekly/monthly intervals, profit calculations, profit margins. Supports 30days, 90days, 12months periods."
+      - working: true
+        agent: "testing"
+        comment: "✅ ENDPOINT WORKING - GET /api/dashboard/revenue-expense-chart tested with all 3 periods (30days, 90days, 12months). Returns proper response structure with period, interval, chart_data array, and summary (total_revenue, total_expense, total_profit, avg_profit_margin). Chart data includes period, revenue, expense, profit, profit_margin fields. All period parameters functional with correct interval mapping (daily/weekly/monthly)."
 
   - task: "Dashboard - Budget vs Actual"
     implemented: true

@@ -100,20 +100,20 @@ const MobileFrontDesk = ({ user }) => {
   const handleCheckIn = async (bookingId) => {
     try {
       await axios.post(`/frontdesk/checkin/${bookingId}`);
-      toast.success('Check-in başarılı!');
+      toast.success('✓ Check-in');
       loadData();
     } catch (error) {
-      toast.error('Check-in başarısız: ' + (error.response?.data?.detail || 'Hata'));
+      toast.error('✗ Check-in');
     }
   };
 
   const handleCheckOut = async (bookingId) => {
     try {
       await axios.post(`/frontdesk/checkout/${bookingId}`);
-      toast.success('Check-out başarılı!');
+      toast.success('✓ Check-out');
       loadData();
     } catch (error) {
-      toast.error('Check-out başarısız: ' + (error.response?.data?.detail || 'Hata'));
+      toast.error('✗ Check-out');
     }
   };
 

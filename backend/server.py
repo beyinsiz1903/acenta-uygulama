@@ -36310,15 +36310,29 @@ async def guest_request_cleaning(
     Types: regular, urgent, turndown, do_not_disturb
     """
     try:
-        # Find guest's current booking
-        booking = await db.bookings.find_one({
-            'guest_id': current_user.id,
-            'status': 'checked_in',
-            'tenant_id': current_user.tenant_id
-        })
+        # Find booking - either by booking_id or current user's active booking
+        if request.booking_id:
+            booking = await db.bookings.find_one({
+                'id': request.booking_id,
+                'tenant_id': current_user.tenant_id
+            }, {'_id': 0})
+        else:
+            booking = await db.bookings.find_one({
+                'guest_id': current_user.id,
+                'status': 'checked_in',
+                'tenant_id': current_user.tenant_id
+            }, {'_id': 0})
         
         if not booking:
             raise HTTPException(status_code=404, detail="No active booking found")
+        
+        # Get room info
+        room = await db.rooms.find_one({'id': booking['room_id']}, {'_id': 0})
+        room_number = room.get('room_number') if room else request.room_number
+        
+        # Get guest info
+        guest = await db.guests.find_one({'id': booking['guest_id']}, {'_id': 0})
+        guest_name = guest.get('name') if guest else current_user.name
         
         # Create cleaning request
         cleaning_request_id = str(uuid.uuid4())
@@ -36327,13 +36341,13 @@ async def guest_request_cleaning(
             'tenant_id': current_user.tenant_id,
             'booking_id': booking['id'],
             'room_id': booking['room_id'],
-            'room_number': booking.get('room_number', request.room_number),
-            'guest_id': current_user.id,
-            'guest_name': booking.get('guest_name', current_user.name),
-            'request_type': request.request_type,
-            'notes': request.notes,
+            'room_number': room_number,
+            'guest_id': booking['guest_id'],
+            'guest_name': guest_name,
+            'request_type': request.type,
+            'notes': request.notes or "",
             'status': 'pending',  # pending, in_progress, completed, cancelled
-            'priority': 'urgent' if request.request_type == 'urgent' else 'normal',
+            'priority': 'urgent' if request.type == 'urgent' else 'normal',
             'requested_at': datetime.now(timezone.utc).isoformat(),
             'completed_at': None,
             'assigned_to': None,

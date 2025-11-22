@@ -7106,15 +7106,18 @@ backend:
 
   - task: "F&B - Dashboard"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Added GET /api/fnb/dashboard - Returns F&B overview with total/food/beverage revenue, orders count, avg order value, tables used, revenue change vs previous day."
+      - working: true
+        agent: "testing"
+        comment: "✅ ENDPOINT WORKING - GET /api/fnb/dashboard returns proper response with date and summary. Summary includes all required fields: total_revenue, food_revenue, beverage_revenue, orders_count, avg_order_value, tables_used, revenue_change. Default date parameter (today) and custom date parameter both functional. Previous day comparison calculation working correctly."
 
   - task: "F&B - Sales Report"
     implemented: true

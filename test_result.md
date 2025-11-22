@@ -420,6 +420,9 @@ backend:
       - working: false
         agent: "testing"
         comment: "❌ ENDPOINT FAILING - GET /api/approvals/pending returns HTTP 200 but missing 'urgent_count' field in response. Response includes 'approvals' and 'count' fields but lacks 'urgent_count' field. All filter tests (approval_type, priority) have same issue."
+      - working: false
+        agent: "testing"
+        comment: "❌ RE-TEST CONFIRMS ISSUE - GET /api/approvals/pending still missing 'urgent_count' field. Response structure: {approvals: [], count: 0}. The urgent_count field is not being included in the response. This issue persists after the username bug fix."
 
   - task: "Approval System - Get My Requests"
     implemented: true

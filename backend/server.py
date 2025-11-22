@@ -33296,7 +33296,7 @@ async def reject_request(
         {
             '$set': {
                 'status': ApprovalStatus.REJECTED.value,
-                'approved_by': current_user.username,
+                'approved_by': current_user.name,
                 'approved_by_id': current_user.id,
                 'approved_by_role': current_user.role,
                 'approval_date': datetime.now(timezone.utc).isoformat(),

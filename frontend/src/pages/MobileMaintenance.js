@@ -586,7 +586,11 @@ const MobileMaintenance = ({ user }) => {
               .filter(t => t.status !== 'completed')
               .slice(0, 10)
               .map((task) => (
-                <div key={task.id} className="p-3 bg-gray-50 rounded-lg border">
+                <div 
+                  key={task.id} 
+                  className="p-3 bg-gray-50 rounded-lg border cursor-pointer hover:bg-gray-100 transition-colors"
+                  onClick={() => loadTaskDetail(task)}
+                >
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex-1">
                       <p className="font-bold text-gray-900">{task.title}</p>
@@ -604,9 +608,12 @@ const MobileMaintenance = ({ user }) => {
                         )}
                       </div>
                     </div>
-                    <Badge className={getPriorityColor(task.priority)}>
-                      {task.priority}
-                    </Badge>
+                    <div className="flex flex-col items-end space-y-1">
+                      <Badge className={getPriorityColor(task.priority)}>
+                        {task.priority}
+                      </Badge>
+                      <Eye className="w-4 h-4 text-gray-400" />
+                    </div>
                   </div>
                   <div className="flex items-center justify-between">
                     <Badge className={getStatusColor(task.status)}>
@@ -615,7 +622,10 @@ const MobileMaintenance = ({ user }) => {
                     {task.status !== 'completed' && (
                       <Button
                         size="sm"
-                        onClick={() => handleTaskUpdate(task.id, task.status === 'new' ? 'in_progress' : 'completed')}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleTaskUpdate(task.id, task.status === 'new' ? 'in_progress' : 'completed');
+                        }}
                         variant="outline"
                       >
                         {task.status === 'new' ? 'Başla' : 'Tamamla'}

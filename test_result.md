@@ -7136,15 +7136,18 @@ backend:
 
   - task: "F&B - Menu Performance"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Added GET /api/fnb/menu-performance - Returns menu item performance with quantity sold, revenue, orders count, avg price. Shows top 10 performers and bottom 5 performers."
+      - working: true
+        agent: "testing"
+        comment: "✅ ENDPOINT WORKING - GET /api/fnb/menu-performance returns proper response with period, total_items, total_revenue, top_performers, bottom_performers. Period includes start_date and end_date. Top performers array includes item_name, quantity_sold, revenue, orders_count, avg_price fields. Default date range (30 days) and custom date range parameters both functional. Menu item aggregation and sorting working correctly."
 
   - task: "F&B - Revenue Chart"
     implemented: true

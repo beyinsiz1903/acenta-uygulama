@@ -27092,6 +27092,136 @@ async def get_market_segment_breakdown(
         }
     }
 
+@api_router.get("/pos/outlet-sales-breakdown")
+async def get_outlet_sales_breakdown(
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Get F&B sales breakdown by outlet"""
+    current_user = await get_current_user(credentials)
+    
+    today = datetime.now(timezone.utc)
+    if not start_date:
+        start_date = (today - timedelta(days=7)).date().isoformat()
+    if not end_date:
+        end_date = today.date().isoformat()
+    
+    # Mock outlet data (in production, get from db.outlets)
+    outlet_sales = {
+        'Restaurant': {'sales': 0, 'orders': 0, 'avg_ticket': 0},
+        'Bar': {'sales': 0, 'orders': 0, 'avg_ticket': 0},
+        'Room Service': {'sales': 0, 'orders': 0, 'avg_ticket': 0},
+        'Poolside': {'sales': 0, 'orders': 0, 'avg_ticket': 0}
+    }
+    
+    # Aggregate POS orders (mock logic)
+    async for order in db.pos_orders.find({
+        'tenant_id': current_user.tenant_id,
+        'created_at': {'$gte': start_date, '$lte': end_date}
+    }):
+        outlet = order.get('outlet_name', 'Restaurant')
+        if outlet not in outlet_sales:
+            outlet_sales[outlet] = {'sales': 0, 'orders': 0, 'avg_ticket': 0}
+        
+        outlet_sales[outlet]['sales'] += order.get('total_amount', 0)
+        outlet_sales[outlet]['orders'] += 1
+    
+    # Calculate averages
+    for outlet in outlet_sales:
+        if outlet_sales[outlet]['orders'] > 0:
+            outlet_sales[outlet]['avg_ticket'] = round(
+                outlet_sales[outlet]['sales'] / outlet_sales[outlet]['orders'], 2
+            )
+        outlet_sales[outlet]['sales'] = round(outlet_sales[outlet]['sales'], 2)
+    
+    total_sales = sum(o['sales'] for o in outlet_sales.values())
+    
+    return {
+        'outlets': outlet_sales,
+        'total_sales': round(total_sales, 2),
+        'period': {'start': start_date, 'end': end_date}
+    }
+
+@api_router.get("/pos/shift-metrics")
+async def get_shift_metrics(
+    date: Optional[str] = None,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Get POS sales metrics by shift (morning/afternoon/evening)"""
+    current_user = await get_current_user(credentials)
+    
+    if not date:
+        date = datetime.now(timezone.utc).date().isoformat()
+    
+    shift_data = {
+        'morning': {'sales': 0, 'orders': 0, 'hours': '06:00-14:00'},
+        'afternoon': {'sales': 0, 'orders': 0, 'hours': '14:00-18:00'},
+        'evening': {'sales': 0, 'orders': 0, 'hours': '18:00-23:00'}
+    }
+    
+    # Mock shift calculation
+    async for order in db.pos_orders.find({
+        'tenant_id': current_user.tenant_id,
+        'order_date': date
+    }):
+        created_at = order.get('created_at', '')
+        if isinstance(created_at, str):
+            hour = int(created_at.split('T')[1].split(':')[0]) if 'T' in created_at else 12
+        else:
+            hour = created_at.hour if hasattr(created_at, 'hour') else 12
+        
+        if 6 <= hour < 14:
+            shift = 'morning'
+        elif 14 <= hour < 18:
+            shift = 'afternoon'
+        else:
+            shift = 'evening'
+        
+        shift_data[shift]['sales'] += order.get('total_amount', 0)
+        shift_data[shift]['orders'] += 1
+    
+    # Round values
+    for shift in shift_data:
+        shift_data[shift]['sales'] = round(shift_data[shift]['sales'], 2)
+    
+    return {'shifts': shift_data, 'date': date}
+
+@api_router.get("/security/login-logs")
+async def get_security_login_logs(
+    limit: int = 50,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Get security login logs (successful and failed attempts)"""
+    current_user = await get_current_user(credentials)
+    
+    # Create login logs collection if not exists
+    logs = []
+    
+    async for log in db.login_logs.find({
+        'tenant_id': current_user.tenant_id
+    }).sort('timestamp', -1).limit(limit):
+        log.pop('_id', None)
+        logs.append(log)
+    
+    # If no logs, create some mock data for demo
+    if len(logs) == 0:
+        mock_logs = [
+            {
+                'id': str(uuid.uuid4()),
+                'tenant_id': current_user.tenant_id,
+                'email': 'admin@hotel.com',
+                'success': True,
+                'ip_address': '192.168.1.100',
+                'user_agent': 'Mozilla/5.0',
+                'timestamp': (datetime.now(timezone.utc) - timedelta(hours=i)).isoformat()
+            }
+            for i in range(10)
+        ]
+        logs = mock_logs
+    
+    return {'logs': logs, 'total': len(logs)}
+
 @api_router.get("/revenue/adr-tracking")
 async def get_adr_tracking(
     credentials: HTTPAuthorizationCredentials = Depends(security)

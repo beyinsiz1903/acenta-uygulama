@@ -36337,10 +36337,6 @@ async def get_system_logs(
             
             logs.append(log_entry)
         
-        # Filter by level if specified
-        if level:
-            logs = [log for log in logs if log['level'] == level.upper()]
-        
         # Add some system logs
         system_logs = [
             {
@@ -36365,6 +36361,10 @@ async def get_system_logs(
         
         logs.extend(system_logs)
         logs.sort(key=lambda x: x['timestamp'], reverse=True)
+        
+        # Filter by level if specified (after adding all logs)
+        if level:
+            logs = [log for log in logs if log['level'] == level.upper()]
         
         return {
             'logs': logs[:limit],

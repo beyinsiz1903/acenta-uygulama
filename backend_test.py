@@ -39,7 +39,7 @@ BACKEND_URL = "https://inventory-mobile-5.preview.emergentagent.com/api"
 TEST_EMAIL = "admin@hotel.com"
 TEST_PASSWORD = "admin123"
 
-class ApprovalExecutiveNotificationTester:
+class ApprovalSystemRetester:
     def __init__(self):
         self.session = None
         self.auth_token = None

@@ -233,15 +233,15 @@ const MobileHousekeeping = ({ user }) => {
 
   const getActionDescription = (roomNumber, currentStatus, newStatus) => {
     if (currentStatus === 'available' && newStatus === 'dirty') {
-      return `Oda ${roomNumber} kirliye alınacak.`;
+      return `${roomNumber} → Kirli`;
     } else if (currentStatus === 'dirty' && newStatus === 'cleaning') {
-      return `Oda ${roomNumber} temizliğe başlanacak.`;
+      return `${roomNumber} → Temizleniyor`;
     } else if (currentStatus === 'cleaning' && newStatus === 'inspected') {
-      return `Oda ${roomNumber} temizlik tamamlandı.`;
+      return `${roomNumber} → Kontrol`;
     } else if (currentStatus === 'inspected' && newStatus === 'available') {
-      return `Oda ${roomNumber} müsaite açılacak.`;
+      return `${roomNumber} → Müsait`;
     }
-    return `Oda ${roomNumber} durumu değişecek.`;
+    return `Oda ${roomNumber}`;
   };
 
   const getStatusColor = (status) => {

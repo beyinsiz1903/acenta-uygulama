@@ -425,6 +425,34 @@ class MeasurementUnit(str, Enum):
     PORTION = "portion"
 
 
+# Front Office Mobile Enums
+class GuestRequestType(str, Enum):
+    EXTRA_TOWEL = "extra_towel"
+    EXTRA_PILLOW = "extra_pillow"
+    ROOM_CLEANING = "room_cleaning"
+    WAKE_UP_CALL = "wake_up_call"
+    TAXI = "taxi"
+    RESTAURANT_RESERVATION = "restaurant_reservation"
+    LATE_CHECKOUT = "late_checkout"
+    EARLY_CHECKIN = "early_checkin"
+    MAINTENANCE = "maintenance"
+    OTHER = "other"
+
+class GuestRequestStatus(str, Enum):
+    PENDING = "pending"
+    ASSIGNED = "assigned"
+    IN_PROGRESS = "in_progress"
+    COMPLETED = "completed"
+    CANCELLED = "cancelled"
+
+class CheckInStatus(str, Enum):
+    PRE_ARRIVAL = "pre_arrival"
+    CHECKING_IN = "checking_in"
+    CHECKED_IN = "checked_in"
+    IN_HOUSE = "in_house"
+
+
+
 
 # Role-Permission Mapping
 ROLE_PERMISSIONS = {

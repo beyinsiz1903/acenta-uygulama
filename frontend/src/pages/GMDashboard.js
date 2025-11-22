@@ -41,6 +41,10 @@ const GMDashboard = ({ user, tenant, onLogout }) => {
   const navigate = useNavigate();
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [expenseSummary, setExpenseSummary] = useState(null);
+  const [trendData, setTrendData] = useState(null);
+  const [slaConfigs, setSlaConfigs] = useState([]);
+  const [delayedTasks, setDelayedTasks] = useState([]);
 
   useEffect(() => {
     loadDashboardData();

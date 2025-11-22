@@ -1110,20 +1110,20 @@ class ApprovalSystemRetester:
         print(f"📈 OVERALL SUCCESS RATE: {total_passed}/{total_tests} ({overall_success_rate:.1f}%)")
         
         if overall_success_rate >= 90:
-            print("🎉 EXCELLENT: Approval, Executive Dashboard & Notification systems are working perfectly!")
+            print("🎉 EXCELLENT: Bug fixes successful! Approval system working perfectly!")
         elif overall_success_rate >= 75:
-            print("✅ GOOD: Most features are working correctly")
+            print("✅ GOOD: Most bug fixes successful, minor issues remain")
         elif overall_success_rate >= 50:
-            print("⚠️ PARTIAL: Some features need attention")
+            print("⚠️ PARTIAL: Some bug fixes successful, but issues remain")
         else:
-            print("❌ CRITICAL: Major issues with the new systems")
+            print("❌ CRITICAL: Bug fixes not successful, major issues persist")
         
-        print("\n🔍 KEY FEATURES TESTED:")
-        print("• Approval Workflow: Create, approve, reject, history tracking")
-        print("• Executive Dashboard: KPI snapshots, performance alerts, daily summaries")
-        print("• Notification System: Preferences, notifications list, system alerts")
-        print("• Role-based Access Control: Permission validation, authorization checks")
-        print("• Data Validation: Request validation, response structure verification")
+        print("\n🔍 KEY BUG FIXES TESTED:")
+        print("• POST /api/approvals/create: Fixed current_user.username → current_user.name (was 500 error)")
+        print("• GET /api/approvals/pending: Verified urgent_count field presence")
+        print("• GET /api/approvals/my-requests: Verified 'requests' field name (not 'approvals')")
+        print("• Executive Dashboard: Confirmed lowercase KPI field names")
+        print("• Notification System: Quick validation of core endpoints")
         
         print("\n" + "=" * 80)
 

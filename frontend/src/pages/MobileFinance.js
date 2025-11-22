@@ -1275,6 +1275,526 @@ const MobileFinance = ({ user }) => {
           )}
         </DialogContent>
       </Dialog>
+
+
+      {/* Cash Flow Detail Modal - NEW */}
+      <Dialog open={cashFlowModalOpen} onOpenChange={setCashFlowModalOpen}>
+        <DialogContent className="max-w-full w-[95vw] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              <Wallet className="w-5 h-5 text-cyan-600" />
+              <span>Nakit Akışı Detayı</span>
+            </DialogTitle>
+          </DialogHeader>
+          
+          {cashFlowData ? (
+            <div className="space-y-4">
+              {/* Today's Summary */}
+              <Card className="bg-gradient-to-r from-cyan-50 to-blue-50">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base">Bugün ({cashFlowData.today?.date})</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="p-3 bg-green-50 rounded-lg">
+                      <p className="text-xs text-green-600">Nakit Girişi</p>
+                      <p className="text-lg font-bold text-green-700">
+                        {formatCurrency(cashFlowData.today?.cash_inflow || 0)}
+                      </p>
+                      <p className="text-xs text-gray-500">{cashFlowData.today?.inflow_count} işlem</p>
+                    </div>
+                    <div className="p-3 bg-red-50 rounded-lg">
+                      <p className="text-xs text-red-600">Nakit Çıkışı</p>
+                      <p className="text-lg font-bold text-red-700">
+                        {formatCurrency(cashFlowData.today?.cash_outflow || 0)}
+                      </p>
+                      <p className="text-xs text-gray-500">{cashFlowData.today?.outflow_count} işlem</p>
+                    </div>
+                  </div>
+                  <div className="p-3 bg-cyan-100 rounded-lg border-2 border-cyan-300">
+                    <p className="text-sm text-cyan-700 font-medium">Net Nakit Akışı</p>
+                    <p className={`text-2xl font-bold ${
+                      (cashFlowData.today?.net_flow || 0) >= 0 ? 'text-green-700' : 'text-red-700'
+                    }`}>
+                      {formatCurrency(cashFlowData.today?.net_flow || 0)}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Weekly Plan */}
+              {cashFlowData.weekly_plan && cashFlowData.weekly_plan.length > 0 && (
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base flex items-center">
+                      <Calendar className="w-4 h-4 mr-2" />
+                      7 Günlük Tahsilat/Ödeme Planı
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    {cashFlowData.weekly_plan.map((day) => (
+                      <div key={day.date} className="p-2 border rounded-lg">
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="text-sm font-medium text-gray-700">{day.day_name}</span>
+                          <span className="text-xs text-gray-500">
+                            {new Date(day.date).toLocaleDateString('tr-TR')}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          <div className="text-green-700">
+                            <span className="font-medium">Tahsilat: </span>
+                            {formatCurrency(day.expected_collections)}
+                          </div>
+                          <div className="text-orange-700">
+                            <span className="font-medium">Ödeme: </span>
+                            {formatCurrency(day.expected_payments)}
+                          </div>
+                        </div>
+                        {day.checkout_count > 0 && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            {day.checkout_count} çıkış bekleniyor
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Bank Balances */}
+              {cashFlowData.bank_balances && cashFlowData.bank_balances.length > 0 && (
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base flex items-center">
+                      <Building2 className="w-4 h-4 mr-2" />
+                      Banka Bakiyeleri
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    {cashFlowData.bank_balances.map((bank, idx) => (
+                      <div key={idx} className="flex justify-between p-2 bg-gray-50 rounded-lg">
+                        <div>
+                          <p className="text-sm font-semibold">{bank.bank_name}</p>
+                          <p className="text-xs text-gray-500">****{bank.account_number}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold text-indigo-700">{formatCurrency(bank.current_balance)}</p>
+                          <p className="text-xs text-gray-500">{bank.currency}</p>
+                        </div>
+                      </div>
+                    ))}
+                    <div className="mt-2 pt-2 border-t">
+                      <div className="flex justify-between">
+                        <span className="font-semibold">Toplam (TRY):</span>
+                        <span className="font-bold text-lg text-indigo-700">
+                          {formatCurrency(cashFlowData.total_bank_balance_try || 0)}
+                        </span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <Wallet className="w-12 h-12 mx-auto text-gray-300 mb-2" />
+              <p className="text-gray-500">Nakit akışı verisi yükleniyor...</p>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Risk Management Modal - NEW */}
+      <Dialog open={riskModalOpen} onOpenChange={setRiskModalOpen}>
+        <DialogContent className="max-w-full w-[95vw] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              <AlertTriangle className="w-5 h-5 text-red-600" />
+              <span>Risk Yönetimi</span>
+            </DialogTitle>
+          </DialogHeader>
+          
+          <Tabs defaultValue="overdue" className="w-full">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="overdue">Vadeli</TabsTrigger>
+              <TabsTrigger value="limits">Limitler</TabsTrigger>
+              <TabsTrigger value="suspicious">Şüpheli</TabsTrigger>
+              <TabsTrigger value="alerts">Uyarılar</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="overdue" className="space-y-2">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-semibold text-gray-900">Vadesi Geçmiş Hesaplar (7+ gün)</h3>
+                {overdueAccounts && (
+                  <Badge className="bg-red-500">
+                    {overdueAccounts.summary?.total_count || 0}
+                  </Badge>
+                )}
+              </div>
+              
+              {overdueAccounts && overdueAccounts.overdue_accounts?.length > 0 ? (
+                <div className="space-y-2">
+                  {overdueAccounts.overdue_accounts.map((account) => (
+                    <div key={account.folio_id} className={`p-3 rounded-lg border-2 ${getRiskColor(account.risk_level)}`}>
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <p className="font-bold">{account.guest_name}</p>
+                          <p className="text-sm">Folio: {account.folio_number}</p>
+                          <p className="text-sm">Oda: {account.room_number}</p>
+                          <p className="text-sm">Çıkış: {new Date(account.checkout_date).toLocaleDateString('tr-TR')}</p>
+                          <Badge className={`mt-1 ${
+                            account.risk_level === 'suspicious' ? 'bg-gray-900 text-white' :
+                            account.risk_level === 'critical' ? 'bg-red-600' :
+                            account.risk_level === 'warning' ? 'bg-yellow-500' : 'bg-green-500'
+                          }`}>
+                            {account.days_overdue} gün gecikmiş
+                          </Badge>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold text-lg text-red-700">{formatCurrency(account.balance)}</p>
+                          <Button
+                            size="sm"
+                            className="mt-2"
+                            onClick={() => loadFolioExtract(account.folio_id)}
+                          >
+                            <Eye className="w-3 h-3 mr-1" />
+                            Ekstre
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  <div className="mt-4 p-3 bg-gray-100 rounded-lg">
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div>
+                        <span className="text-gray-600">Toplam:</span>
+                        <span className="font-bold ml-2">{overdueAccounts.summary.total_count}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Tutar:</span>
+                        <span className="font-bold ml-2 text-red-700">
+                          {formatCurrency(overdueAccounts.summary.total_amount)}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Şüpheli:</span>
+                        <span className="font-bold ml-2">{overdueAccounts.summary.suspicious_count}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Kritik:</span>
+                        <span className="font-bold ml-2">{overdueAccounts.summary.critical_count}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-center text-gray-500 py-8">Vadesi geçmiş hesap yok</p>
+              )}
+            </TabsContent>
+            
+            <TabsContent value="limits" className="space-y-2">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-semibold text-gray-900">Kredi Limiti Aşımları</h3>
+                {creditViolations && (
+                  <Badge className="bg-orange-500">
+                    {creditViolations.summary?.total_count || 0}
+                  </Badge>
+                )}
+              </div>
+              
+              {creditViolations && creditViolations.violations?.length > 0 ? (
+                <div className="space-y-2">
+                  {creditViolations.violations.map((violation) => (
+                    <div key={violation.company_id} className={`p-3 rounded-lg border-2 ${
+                      violation.over_limit_amount > 0 ? 'bg-red-50 border-red-300' : 'bg-yellow-50 border-yellow-300'
+                    }`}>
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <p className="font-bold text-gray-900">{violation.company_name}</p>
+                          <div className="grid grid-cols-2 gap-2 mt-2 text-sm">
+                            <div>
+                              <p className="text-gray-600">Limit:</p>
+                              <p className="font-semibold">{formatCurrency(violation.credit_limit)}</p>
+                            </div>
+                            <div>
+                              <p className="text-gray-600">Borç:</p>
+                              <p className="font-semibold text-red-600">{formatCurrency(violation.current_debt)}</p>
+                            </div>
+                            <div>
+                              <p className="text-gray-600">Kullanım:</p>
+                              <p className="font-semibold">{violation.utilization_percentage.toFixed(1)}%</p>
+                            </div>
+                            <div>
+                              <p className="text-gray-600">Vade:</p>
+                              <p className="font-semibold">{violation.payment_terms_days} gün</p>
+                            </div>
+                          </div>
+                          {violation.over_limit_amount > 0 && (
+                            <Badge className="mt-2 bg-red-600">
+                              Limit aşımı: {formatCurrency(violation.over_limit_amount)}
+                            </Badge>
+                          )}
+                          {violation.warning && (
+                            <Badge className="mt-2 bg-yellow-500">
+                              {violation.warning}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                      {violation.contact_person && (
+                        <div className="mt-2 pt-2 border-t text-xs text-gray-600">
+                          <p>İletişim: {violation.contact_person}</p>
+                          {violation.contact_phone && <p>Tel: {violation.contact_phone}</p>}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-center text-gray-500 py-8">Limit aşımı yok</p>
+              )}
+            </TabsContent>
+            
+            <TabsContent value="suspicious" className="space-y-2">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-semibold text-gray-900">Şüpheli Alacaklar</h3>
+                {suspiciousReceivables && (
+                  <Badge className="bg-gray-900 text-white">
+                    {suspiciousReceivables.summary?.total_count || 0}
+                  </Badge>
+                )}
+              </div>
+              
+              {suspiciousReceivables && suspiciousReceivables.suspicious_receivables?.length > 0 ? (
+                <div className="space-y-2">
+                  {suspiciousReceivables.suspicious_receivables.map((item) => (
+                    <div key={item.folio_id} className="p-3 rounded-lg border-2 bg-gray-50 border-gray-900">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <p className="font-bold text-gray-900">{item.guest_name}</p>
+                          <p className="text-sm">Folio: {item.folio_number}</p>
+                          <p className="text-sm">Çıkış: {new Date(item.checkout_date).toLocaleDateString('tr-TR')}</p>
+                          <Badge className="mt-1 bg-gray-900 text-white">
+                            {item.days_overdue} gün gecikmiş
+                          </Badge>
+                          <p className="text-xs text-gray-600 mt-1">{item.reason}</p>
+                          <p className="text-xs text-gray-500">Ödeme sayısı: {item.payment_history_count}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold text-lg text-gray-900">{formatCurrency(item.balance)}</p>
+                          <Button
+                            size="sm"
+                            className="mt-2 bg-gray-900"
+                            onClick={() => loadFolioExtract(item.folio_id)}
+                          >
+                            <Eye className="w-3 h-3 mr-1" />
+                            Ekstre
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  <div className="mt-4 p-3 bg-gray-900 text-white rounded-lg">
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div>
+                        <span>Toplam:</span>
+                        <span className="font-bold ml-2">{suspiciousReceivables.summary.total_count}</span>
+                      </div>
+                      <div>
+                        <span>Tutar:</span>
+                        <span className="font-bold ml-2">
+                          {formatCurrency(suspiciousReceivables.summary.total_amount)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-center text-gray-500 py-8">Şüpheli alacak yok</p>
+              )}
+            </TabsContent>
+            
+            <TabsContent value="alerts" className="space-y-2">
+              {riskAlerts && riskAlerts.alerts?.length > 0 ? (
+                <div className="space-y-2">
+                  {riskAlerts.alerts.map((alert) => (
+                    <div key={alert.id} className={`p-3 rounded-lg border-2 ${
+                      alert.severity === 'critical' ? 'bg-red-50 border-red-300' :
+                      alert.severity === 'high' ? 'bg-orange-50 border-orange-300' :
+                      alert.severity === 'medium' ? 'bg-yellow-50 border-yellow-300' :
+                      'bg-blue-50 border-blue-300'
+                    }`}>
+                      <div className="flex items-start space-x-2">
+                        {getRiskIcon(alert.severity)}
+                        <div className="flex-1">
+                          <p className="font-bold text-gray-900">{alert.title}</p>
+                          <p className="text-sm text-gray-700">{alert.message}</p>
+                          {alert.amount && (
+                            <p className="text-sm font-bold text-red-600 mt-1">
+                              Tutar: {formatCurrency(alert.amount)}
+                            </p>
+                          )}
+                          {alert.action_required && (
+                            <Badge className="mt-2 bg-red-600">Aksiyon Gerekli</Badge>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-center text-gray-500 py-8">Uyarı yok</p>
+              )}
+            </TabsContent>
+          </Tabs>
+        </DialogContent>
+      </Dialog>
+
+      {/* Folio Full Extract Modal - NEW */}
+      <Dialog open={folioExtractModalOpen} onOpenChange={setFolioExtractModalOpen}>
+        <DialogContent className="max-w-full w-[95vw] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              <FileText className="w-5 h-5 text-indigo-600" />
+              <span>Folio Ekstresi</span>
+            </DialogTitle>
+          </DialogHeader>
+          
+          {selectedFolioExtract ? (
+            <div className="space-y-4">
+              {/* Folio Info */}
+              <Card className="bg-gradient-to-r from-indigo-50 to-purple-50">
+                <CardContent className="p-4">
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div>
+                      <p className="text-gray-600">Folio No:</p>
+                      <p className="font-bold">{selectedFolioExtract.folio?.folio_number}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-600">Durum:</p>
+                      <Badge>{selectedFolioExtract.folio?.status}</Badge>
+                    </div>
+                    <div>
+                      <p className="text-gray-600">Misafir:</p>
+                      <p className="font-bold">{selectedFolioExtract.guest?.name}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-600">Oda:</p>
+                      <p className="font-bold">{selectedFolioExtract.booking?.room_number}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-600">Giriş:</p>
+                      <p>{selectedFolioExtract.booking?.check_in && new Date(selectedFolioExtract.booking.check_in).toLocaleDateString('tr-TR')}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-600">Çıkış:</p>
+                      <p>{selectedFolioExtract.booking?.check_out && new Date(selectedFolioExtract.booking.check_out).toLocaleDateString('tr-TR')}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Charges */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base">Harcamalar ({selectedFolioExtract.charges?.length || 0})</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {selectedFolioExtract.charges && selectedFolioExtract.charges.length > 0 ? (
+                    selectedFolioExtract.charges.map((charge) => (
+                      <div key={charge.id} className="p-2 bg-gray-50 rounded border text-sm">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="font-semibold">{charge.description}</p>
+                            <p className="text-xs text-gray-500">
+                              {charge.date && new Date(charge.date).toLocaleDateString('tr-TR')} - {charge.category}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {charge.quantity}x {formatCurrency(charge.unit_price)}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-bold">{formatCurrency(charge.total)}</p>
+                            {charge.tax_amount > 0 && (
+                              <p className="text-xs text-gray-500">KDV: {formatCurrency(charge.tax_amount)}</p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-center text-gray-500 py-4">Harcama yok</p>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Payments */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base">Ödemeler ({selectedFolioExtract.payments?.length || 0})</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {selectedFolioExtract.payments && selectedFolioExtract.payments.length > 0 ? (
+                    selectedFolioExtract.payments.map((payment) => (
+                      <div key={payment.id} className="p-2 bg-green-50 rounded border border-green-200 text-sm">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="font-semibold text-green-700">Ödeme</p>
+                            <p className="text-xs text-gray-600">
+                              {payment.date && new Date(payment.date).toLocaleDateString('tr-TR')} - {payment.payment_method}
+                            </p>
+                            {payment.notes && (
+                              <p className="text-xs text-gray-500 italic">{payment.notes}</p>
+                            )}
+                          </div>
+                          <p className="font-bold text-green-700">{formatCurrency(payment.amount)}</p>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-center text-gray-500 py-4">Ödeme yok</p>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Summary */}
+              <Card className="bg-gradient-to-r from-blue-50 to-indigo-50">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base">Özet</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-gray-700">Toplam Harcama:</span>
+                      <span className="font-bold">{formatCurrency(selectedFolioExtract.summary?.total_charges || 0)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-700">Toplam Ödeme:</span>
+                      <span className="font-bold text-green-700">{formatCurrency(selectedFolioExtract.summary?.total_payments || 0)}</span>
+                    </div>
+                    <div className="flex justify-between pt-2 border-t-2 border-gray-300">
+                      <span className="font-bold text-lg text-gray-900">Kalan Bakiye:</span>
+                      <span className={`font-bold text-xl ${
+                        (selectedFolioExtract.summary?.current_balance || 0) > 0 ? 'text-red-700' : 'text-green-700'
+                      }`}>
+                        {formatCurrency(selectedFolioExtract.summary?.current_balance || 0)}
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <FileText className="w-12 h-12 mx-auto text-gray-300 mb-2" />
+              <p className="text-gray-500">Ekstre yükleniyor...</p>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 };

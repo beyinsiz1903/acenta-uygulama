@@ -680,6 +680,129 @@ class CashFlow(BaseModel):
     description: str
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
+
+# Maintenance & Technical Service Models
+class SLAConfiguration(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    tenant_id: str
+    priority: MaintenancePriority
+    response_time_minutes: int  # Yanıt süresi (dakika)
+    resolution_time_minutes: int  # Çözüm süresi (dakika)
+    is_active: bool = True
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class SparePart(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    tenant_id: str
+    part_number: str
+    part_name: str
+    description: Optional[str] = None
+    category: str  # Plumbing, Electrical, HVAC, etc.
+    warehouse_location: WarehouseLocation
+    current_stock: int = 0
+    minimum_stock: int = 0
+    unit_price: float = 0.0
+    supplier: Optional[str] = None
+    qr_code: Optional[str] = None
+    last_restocked: Optional[datetime] = None
+    notes: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class SparePartUsage(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    tenant_id: str
+    task_id: str
+    spare_part_id: str
+    part_name: str
+    quantity: int
+    unit_price: float
+    total_cost: float
+    used_by: str  # User who used the part
+    used_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    notes: Optional[str] = None
+
+class TaskPhoto(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    tenant_id: str
+    task_id: str
+    photo_url: str  # URL or base64 data
+    photo_type: str  # before, during, after
+    description: Optional[str] = None
+    uploaded_by: str
+    uploaded_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class AssetMaintenanceHistory(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    tenant_id: str
+    asset_id: str  # Equipment/Asset ID
+    asset_name: str
+    task_id: str
+    maintenance_type: MaintenanceType
+    description: str
+    parts_cost: float = 0.0
+    labor_cost: float = 0.0
+    total_cost: float = 0.0
+    technician: str
+    completed_at: datetime
+    downtime_minutes: Optional[int] = None
+    notes: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class PlannedMaintenance(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    tenant_id: str
+    asset_id: str
+    asset_name: str
+    maintenance_type: MaintenanceType
+    frequency_days: int  # Periyot (gün)
+    last_maintenance: Optional[datetime] = None
+    next_maintenance: datetime
+    estimated_duration_minutes: int
+    assigned_to: Optional[str] = None
+    is_active: bool = True
+    notes: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc()))
+
+class MaintenanceTaskExtended(BaseModel):
+    """Extended maintenance task with all new fields"""
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    tenant_id: str
+    task_number: str
+    title: str
+    description: str
+    priority: MaintenancePriority
+    status: MaintenanceTaskStatus
+    maintenance_type: MaintenanceType
+    asset_id: Optional[str] = None
+    asset_name: Optional[str] = None
+    room_id: Optional[str] = None
+    room_number: Optional[str] = None
+    reported_by: str
+    assigned_to: Optional[str] = None
+    estimated_duration_minutes: Optional[int] = None
+    actual_duration_minutes: Optional[int] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    started_at: Optional[datetime] = None
+    completed_at: Optional[datetime] = None
+    on_hold_at: Optional[datetime] = None
+    on_hold_reason: Optional[str] = None
+    parts_waiting: bool = False
+    parts_list: List[str] = []
+    photos: List[str] = []  # Photo IDs
+    notes: Optional[str] = None
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
 # Guest & Booking Models
 class GuestCreate(BaseModel):
     name: str

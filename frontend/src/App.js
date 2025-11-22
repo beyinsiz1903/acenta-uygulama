@@ -604,7 +604,7 @@ function App() {
             path="/mobile/revenue"
             element={
               isAuthenticated ? (
-                <RevenueManagementMobile user={user} />
+                <RevenueMobile user={user} />
               ) : (
                 <Navigate to="/auth" replace />
               )

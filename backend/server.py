@@ -3577,6 +3577,7 @@ async def update_invoice(invoice_id: str, updates: Dict[str, Any], current_user:
     return invoice_doc
 
 @api_router.get("/invoices/stats")
+@cached(ttl=600, key_prefix="invoices_stats")  # Cache for 10 min
 async def get_invoice_stats(current_user: User = Depends(get_current_user)):
     invoices = await db.invoices.find({'tenant_id': current_user.tenant_id}, {'_id': 0}).to_list(1000)
     total_revenue = sum(inv['total'] for inv in invoices if inv['status'] == 'paid')
@@ -6297,6 +6298,7 @@ async def apply_rate_recommendation(
     }
 
 @api_router.get("/housekeeping/staff/{staff_id}/detailed-stats")
+@cached(ttl=600, key_prefix="staff_detailed_stats")  # Cache for 10 min
 async def get_staff_detailed_statistics(
     staff_id: str,
     days: int = 30,
@@ -6573,6 +6575,7 @@ async def export_market_segment_excel(
 
 
 @api_router.get("/reports/company-aging")
+@cached(ttl=900, key_prefix="report_company_aging")  # Cache for 15 min
 async def get_company_aging_report(current_user: User = Depends(get_current_user)):
     """Company Accounts Receivable Aging Report"""
     today = datetime.now(timezone.utc).date()
@@ -6694,6 +6697,7 @@ async def export_company_aging_excel(current_user: User = Depends(get_current_us
 
 
 @api_router.get("/reports/finance-snapshot")
+@cached(ttl=600, key_prefix="report_finance_snapshot")  # Cache for 10 min
 async def get_finance_snapshot(current_user: User = Depends(get_current_user)):
     """
     Finance Snapshot for GM Dashboard
@@ -7151,6 +7155,7 @@ async def get_allotment_consumption(
 
 
 @api_router.get("/reports/cost-summary")
+@cached(ttl=600, key_prefix="report_cost_summary")  # Cache for 10 min
 async def get_cost_summary(current_user: User = Depends(get_current_user)):
     """
     Cost Summary Report for GM Dashboard
@@ -7317,6 +7322,7 @@ async def create_walk_in_booking(data: dict, current_user: User = Depends(get_cu
     }
 
 @api_router.get("/tasks/kanban")
+@cached(ttl=180, key_prefix="tasks_kanban")  # Cache for 3 min
 async def get_tasks_kanban(current_user: User = Depends(get_current_user)):
     """
     Get tasks organized by kanban columns: new, in_progress, waiting_parts, completed
@@ -7533,6 +7539,7 @@ async def update_loyalty_tier_benefits(
 
 
 @api_router.get("/reports/housekeeping-efficiency")
+@cached(ttl=600, key_prefix="report_hk_efficiency")  # Cache for 10 min
 async def get_housekeeping_efficiency_report(
     start_date: str,
     end_date: str,
@@ -8878,6 +8885,7 @@ async def predict_no_shows(
 # ============= DELUXE+ ENTERPRISE FEATURES =============
 
 @api_router.get("/deluxe/group-bookings")
+@cached(ttl=300, key_prefix="deluxe_group_bookings")  # Cache for 5 min
 async def get_group_bookings(
     start_date: str,
     end_date: str,
@@ -10673,6 +10681,7 @@ async def get_cash_flow(
 
 
 @api_router.get("/accounting/reports/profit-loss")
+@cached(ttl=900, key_prefix="report_profit_loss")  # Cache for 15 min
 async def get_profit_loss_report(
     start_date: str,
     end_date: str,
@@ -11540,6 +11549,7 @@ async def cancel_room_block(
     return {'message': 'Block cancelled successfully', 'block_id': block_id}
 
 @api_router.get("/pms/rooms/availability")
+@cached(ttl=120, key_prefix="rooms_availability")  # Cache for 2 min
 async def check_room_availability(
     check_in: str,
     check_out: str,
@@ -12194,6 +12204,7 @@ async def apply_pricing_recommendations(current_user: User = Depends(get_current
 
 # 3. Housekeeping Mobile
 @api_router.get("/housekeeping/rooms")
+@cached(ttl=120, key_prefix="housekeeping_rooms_list")  # Cache for 2 min
 async def get_housekeeping_rooms(
     status: str = 'dirty',
     current_user: User = Depends(get_current_user)
@@ -13331,6 +13342,7 @@ async def get_pricing_insights(
 # ========================================
 
 @api_router.get("/housekeeping/mobile/my-tasks")
+@cached(ttl=60, key_prefix="mobile_hk_my_tasks")  # Cache for 1 min
 async def get_my_housekeeping_tasks(
     status: str = None,
     current_user: User = Depends(get_current_user)
@@ -16818,6 +16830,7 @@ async def get_my_tasks(
     return {'tasks': tasks, 'count': len(tasks)}
 
 @api_router.get("/tasks/dashboard")
+@cached(ttl=300, key_prefix="tasks_dashboard")  # Cache for 5 min
 async def get_tasks_dashboard(current_user: User = Depends(get_current_user)):
     """Get tasks dashboard with all department stats"""
     # Get all tasks
@@ -19115,6 +19128,7 @@ class MiniBarUpdate(BaseModel):
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 @api_router.get("/rooms/{room_id}/details-enhanced")
+@cached(ttl=180, key_prefix="room_details_enhanced")  # Cache for 3 min
 async def get_room_details_enhanced(
     room_id: str,
     current_user: User = Depends(get_current_user)
@@ -19303,6 +19317,7 @@ class GuestTag(BaseModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 @api_router.get("/guests/{guest_id}/profile-enhanced")
+@cached(ttl=300, key_prefix="guest_profile_enhanced")  # Cache for 5 min
 async def get_guest_profile_enhanced(
     guest_id: str,
     current_user: User = Depends(get_current_user)
@@ -24873,6 +24888,7 @@ async def get_demo_status(
 # ============= GUEST MOBILE APP ENDPOINTS =============
 
 @api_router.get("/guest/bookings")
+@cached(ttl=300, key_prefix="guest_bookings_history")  # Cache for 5 min
 async def get_guest_bookings(
     current_user: User = Depends(get_current_user)
 ):
@@ -26266,6 +26282,7 @@ class GuestTag(str, Enum):
     HIGH_SPENDER = "high_spender"
 
 @api_router.get("/guests/{guest_id}/profile-complete")
+@cached(ttl=300, key_prefix="guest_profile_complete")  # Cache for 5 min
 async def get_complete_guest_profile(
     guest_id: str,
     credentials: HTTPAuthorizationCredentials = Depends(security)
@@ -29350,6 +29367,7 @@ async def get_frontdesk_notifications_mobile(
 # --------------------------------------------------------------------------
 
 @api_router.get("/housekeeping/mobile/sla-delayed-rooms")
+@cached(ttl=120, key_prefix="mobile_hk_delayed_rooms")  # Cache for 2 min
 async def get_sla_delayed_rooms_mobile(
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
@@ -30784,6 +30802,7 @@ async def get_planned_maintenance_mobile(
 
 
 @api_router.get("/maintenance/mobile/tasks/filtered")
+@cached(ttl=120, key_prefix="mobile_maintenance_tasks")  # Cache for 2 min
 async def get_filtered_tasks_mobile(
     status: Optional[str] = None,
     priority: Optional[str] = None,
@@ -31521,6 +31540,7 @@ async def assign_room_to_booking(
     }
 
 @api_router.get("/frontdesk/search-bookings")
+@cached(ttl=180, key_prefix="frontdesk_search_bookings")  # Cache for 3 min
 async def search_bookings(
     query: Optional[str] = None,
     date_from: Optional[str] = None,
@@ -31565,6 +31585,7 @@ async def search_bookings(
     }
 
 @api_router.get("/frontdesk/available-rooms")
+@cached(ttl=120, key_prefix="frontdesk_available_rooms")  # Cache for 2 min
 async def get_available_rooms_for_assignment(
     check_in: str,
     check_out: str,
@@ -33561,6 +33582,7 @@ async def get_adr_tracking(
 # ============= MAINTENANCE TASKS ENDPOINT =============
 
 @api_router.get("/maintenance/tasks")
+@cached(ttl=180, key_prefix="maintenance_tasks")  # Cache for 3 min
 async def get_maintenance_tasks(current_user: User = Depends(get_current_user)):
     """Get all maintenance tasks"""
     try:
@@ -34213,6 +34235,7 @@ async def get_monthly_forecast(
 # --------------------------------------------------------------------------
 
 @api_router.get("/frontdesk/rooms-with-filters")
+@cached(ttl=180, key_prefix="frontdesk_rooms_filtered")  # Cache for 3 min
 async def get_rooms_with_filters(
     bed_type: Optional[str] = None,
     floor: Optional[int] = None,
@@ -34261,6 +34284,7 @@ async def get_rooms_with_filters(
 # --------------------------------------------------------------------------
 
 @api_router.get("/frontoffice/mobile/available-rooms")
+@cached(ttl=120, key_prefix="mobile_available_rooms")  # Cache for 2 min
 async def get_available_rooms_mobile(
     check_in: str,
     check_out: str,
@@ -36369,6 +36393,7 @@ async def get_profit_loss_report(
 # --------------------------------------------------------------------------
 
 @api_router.get("/sales/group-bookings")
+@cached(ttl=300, key_prefix="sales_group_bookings")  # Cache for 5 min
 async def get_group_bookings(
     status: Optional[str] = None,
     credentials: HTTPAuthorizationCredentials = Depends(security)
@@ -43402,6 +43427,7 @@ async def get_risk_alerts(
 
 
 @api_router.get("/finance/folios-filtered")
+@cached(ttl=300, key_prefix="finance_folios_filtered")  # Cache for 5 min
 async def get_folios_filtered(
     customer_type: Optional[str] = None,  # vip, corporate, individual
     room_number: Optional[str] = None,

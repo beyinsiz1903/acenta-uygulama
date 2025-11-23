@@ -1360,6 +1360,201 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
           </Card>
         )}
 
+
+        {/* Conflict Solutions Panel */}
+        {showConflictSolutions && groupedConflicts && (
+          <Card className="border-red-300 bg-red-50">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg flex items-center gap-2 text-red-800">
+                  ⚠️ Booking Conflicts & Solutions
+                </CardTitle>
+                <Badge variant="destructive">
+                  {groupedConflicts.total_conflict_count} conflicts in {groupedConflicts.affected_rooms} rooms
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Summary Cards */}
+              <div className="grid grid-cols-3 gap-3">
+                <div className="bg-white p-3 rounded-lg border border-red-200 text-center">
+                  <div className="text-2xl font-bold text-red-600">{groupedConflicts.summary.critical}</div>
+                  <div className="text-xs text-gray-600">Critical (>5 overlaps)</div>
+                </div>
+                <div className="bg-white p-3 rounded-lg border border-orange-200 text-center">
+                  <div className="text-2xl font-bold text-orange-600">{groupedConflicts.summary.high}</div>
+                  <div className="text-xs text-gray-600">High (3-5 overlaps)</div>
+                </div>
+                <div className="bg-white p-3 rounded-lg border border-yellow-200 text-center">
+                  <div className="text-2xl font-bold text-yellow-600">{groupedConflicts.summary.medium}</div>
+                  <div className="text-xs text-gray-600">Medium (2 overlaps)</div>
+                </div>
+              </div>
+
+              {/* Top Critical Rooms */}
+              <div>
+                <div className="text-sm font-semibold text-gray-700 mb-3 flex items-center justify-between">
+                  <span>🔥 Top Critical Rooms (Immediate Action Required)</span>
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    className="text-xs h-7"
+                    onClick={() => {
+                      toast.info('Opening AI Conflict Resolution...');
+                      // Trigger AI solve-overbooking
+                    }}
+                  >
+                    🤖 Auto-Resolve All
+                  </Button>
+                </div>
+                <div className="space-y-2 max-h-80 overflow-y-auto">
+                  {groupedConflicts.top_critical_rooms.map((room, index) => (
+                    <div 
+                      key={room.room_id} 
+                      className={`bg-white p-4 rounded-lg border-l-4 ${
+                        room.severity === 'critical' ? 'border-l-red-600' :
+                        room.severity === 'high' ? 'border-l-orange-500' :
+                        'border-l-yellow-500'
+                      } shadow-sm`}
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex items-center gap-3">
+                          <div className={`
+                            w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold
+                            ${room.severity === 'critical' ? 'bg-red-600 text-white' :
+                              room.severity === 'high' ? 'bg-orange-500 text-white' :
+                              'bg-yellow-500 text-white'}
+                          `}>
+                            {index + 1}
+                          </div>
+                          <div>
+                            <div className="font-bold text-lg">Room {room.room_number}</div>
+                            <div className="text-xs text-gray-600 capitalize">{room.room_type}</div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-2xl font-bold text-red-600">{room.total_overlaps}</div>
+                          <div className="text-xs text-gray-600">overlaps</div>
+                        </div>
+                      </div>
+
+                      {/* Conflict Dates */}
+                      <div className="space-y-2 mt-3 pt-3 border-t">
+                        <div className="text-xs font-semibold text-gray-700">Conflict Dates:</div>
+                        {room.conflict_dates.slice(0, 3).map((conflict, idx) => (
+                          <div key={idx} className="bg-gray-50 p-2 rounded text-xs">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="font-medium">{conflict.date}</span>
+                              <Badge variant="destructive" className="text-xs">
+                                {conflict.overlap_count} bookings
+                              </Badge>
+                            </div>
+                            <div className="text-gray-600">
+                              {conflict.bookings.slice(0, 2).map((booking, bidx) => (
+                                <div key={bidx} className="truncate">
+                                  • {booking.check_in.split('T')[0]} → {booking.check_out.split('T')[0]} (${Math.round(booking.total_amount || 0)})
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                        {room.conflict_count > 3 && (
+                          <div className="text-xs text-gray-500 italic">
+                            +{room.conflict_count - 3} more conflict dates
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Solutions */}
+                      <div className="mt-3 pt-3 border-t bg-blue-50 -mx-4 -mb-4 p-3 rounded-b-lg">
+                        <div className="text-xs font-semibold text-blue-900 mb-2">💡 Suggested Solutions:</div>
+                        <div className="space-y-1 text-xs">
+                          {room.severity === 'critical' && (
+                            <>
+                              <div className="flex items-start gap-2">
+                                <span className="text-blue-600">1.</span>
+                                <span>Move {room.total_overlaps - 1} guests to similar available rooms ({room.room_type})</span>
+                              </div>
+                              <div className="flex items-start gap-2">
+                                <span className="text-blue-600">2.</span>
+                                <span>Upgrade {room.total_overlaps - 1} bookings to higher category at no extra cost</span>
+                              </div>
+                              <div className="flex items-start gap-2">
+                                <span className="text-blue-600">3.</span>
+                                <span>Contact guests for voluntary relocation with compensation (voucher/discount)</span>
+                              </div>
+                            </>
+                          )}
+                          {room.severity === 'high' && (
+                            <>
+                              <div className="flex items-start gap-2">
+                                <span className="text-blue-600">1.</span>
+                                <span>Find {room.total_overlaps - 1} similar rooms and reassign</span>
+                              </div>
+                              <div className="flex items-start gap-2">
+                                <span className="text-blue-600">2.</span>
+                                <span>Check if any booking can be moved to adjacent dates</span>
+                              </div>
+                            </>
+                          )}
+                          {room.severity === 'medium' && (
+                            <>
+                              <div className="flex items-start gap-2">
+                                <span className="text-blue-600">1.</span>
+                                <span>Reassign 1 booking to an available room of same type</span>
+                              </div>
+                              <div className="flex items-start gap-2">
+                                <span className="text-blue-600">2.</span>
+                                <span>Contact the later-arriving guest for alternative arrangement</span>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                        <div className="mt-2 flex gap-2">
+                          <Button 
+                            size="sm" 
+                            className="flex-1 text-xs h-7 bg-blue-600 hover:bg-blue-700"
+                            onClick={() => {
+                              toast.success(`Opening booking mover for Room ${room.room_number}`);
+                              // Open booking move dialog
+                            }}
+                          >
+                            🔄 Move Bookings
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            className="flex-1 text-xs h-7"
+                            onClick={() => {
+                              toast.info(`Finding available rooms similar to ${room.room_type}`);
+                              // Open find room dialog
+                            }}
+                          >
+                            🔍 Find Rooms
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Action Tips */}
+              <div className="bg-white p-3 rounded-lg border border-blue-200">
+                <div className="text-xs font-semibold text-blue-900 mb-2">📝 Best Practices:</div>
+                <ul className="text-xs text-gray-700 space-y-1 list-disc list-inside">
+                  <li>Resolve conflicts starting from earliest check-in dates</li>
+                  <li>Prioritize VIP guests and high-value bookings when relocating</li>
+                  <li>Always offer upgrade or compensation for inconvenience</li>
+                  <li>Document all changes and notify affected guests immediately</li>
+                  <li>Keep alternative accommodations list ready for extreme cases</li>
+                </ul>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+
         {/* Legend - Market Segments & Quick Tips */}
         <Card>
           <CardContent className="py-3">

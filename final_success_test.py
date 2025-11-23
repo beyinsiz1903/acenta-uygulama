@@ -357,15 +357,23 @@ class FinalSuccessTest:
         """Test 6: POST /api/messaging/send-message - Verify model works"""
         print("\n6️⃣ Testing POST /api/messaging/send-message...")
         
+        # Create test guest first
+        guest_id = await self.create_test_guest()
+        if not guest_id:
+            print(f"  ❌ FAILED - Could not create test guest")
+            self.test_results.append({"endpoint": "POST /api/messaging/send-message", "status": "FAILED", "details": "Could not create test guest"})
+            return False
+        
         try:
             url = f"{BACKEND_URL}/messaging/send-message"
             
-            # Test data
+            # Test data with correct SendMessageRequest model
             test_data = {
-                "channel": "whatsapp",
-                "to": "+1-555-1234",
-                "message": "Test message from hotel",
-                "subject": "Hotel Notification"
+                "guest_id": guest_id,
+                "message_type": "whatsapp",
+                "recipient": "+1-555-1234",
+                "message_content": "Test message from hotel",
+                "booking_id": None
             }
             
             async with self.session.post(url, json=test_data, headers=self.get_headers()) as response:

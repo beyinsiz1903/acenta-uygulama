@@ -3887,10 +3887,30 @@ async def check_in_guest(booking_id: str, create_folio: bool = True, current_use
     # Update guest total stays
     await db.guests.update_one({'id': booking['guest_id']}, {'$inc': {'total_stays': 1}})
     
+    # Auto deduct room amenities from inventory
+    inventory_results = None
+    try:
+        from hotel_inventory_system import deduct_room_amenities
+        guest_count = booking.get('adults', 1) + booking.get('children', 0)
+        room_type = room.get('type', 'standard')
+        
+        inventory_results = await deduct_room_amenities(
+            db=db,
+            tenant_id=current_user.tenant_id,
+            guest_count=guest_count,
+            room_type=room_type,
+            booking_id=booking_id,
+            user_name=current_user.name
+        )
+    except Exception as e:
+        print(f"⚠️ Inventory deduction failed: {str(e)}")
+        # Don't fail check-in if inventory fails
+    
     return {
         'message': 'Check-in completed successfully',
         'checked_in_at': checked_in_time.isoformat(),
-        'room_number': room['room_number']
+        'room_number': room['room_number'],
+        'inventory_deduction': inventory_results
     }
 
 @api_router.post("/frontdesk/checkout/{booking_id}")

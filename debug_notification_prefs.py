@@ -8,7 +8,7 @@ import aiohttp
 import json
 import uuid
 
-BACKEND_URL = "https://testing-dashboard-2.preview.emergentagent.com/api"
+BACKEND_URL = "https://rapid-checkin-sys.preview.emergentagent.com/api"
 
 async def debug_notification_prefs():
     session = aiohttp.ClientSession()

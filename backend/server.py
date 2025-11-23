@@ -17847,6 +17847,7 @@ async def get_employee_performance(
 
 
 @api_router.get("/dashboard/guest-satisfaction-trends")
+@cached(ttl=600, key_prefix="dashboard_guest_satisfaction")  # Cache for 10 minutes
 async def get_guest_satisfaction_trends(
     days: int = 30,
     current_user: User = Depends(get_current_user)

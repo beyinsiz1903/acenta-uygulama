@@ -26385,7 +26385,6 @@ class GuestTag(str, Enum):
     HIGH_SPENDER = "high_spender"
 
 @api_router.get("/guests/{guest_id}/profile-complete")
-@cached(ttl=300, key_prefix="guest_profile_complete")  # Cache for 5 min
 async def get_complete_guest_profile(
     guest_id: str,
     credentials: HTTPAuthorizationCredentials = Depends(security)

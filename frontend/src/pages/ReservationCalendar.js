@@ -1099,8 +1099,108 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
                 </div>
               )}
 
+              {/* Pickup Pace Analytics */}
+              {pickupPaceData && (
+                <div className="bg-white p-3 rounded-lg border-2 border-amber-300">
+                  <div className="text-sm font-semibold text-amber-700 mb-3 flex items-center justify-between">
+                    <span>📊 Pickup Pace Analysis</span>
+                    <Badge variant="outline" className="bg-amber-100 text-amber-700">
+                      {pickupPaceData.period || '30 days'}
+                    </Badge>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3 mb-3">
+                    <div className="text-center bg-amber-50 p-2 rounded">
+                      <div className="text-xl font-bold text-amber-700">
+                        {pickupPaceData.total_bookings || 0}
+                      </div>
+                      <div className="text-xs text-gray-600">Total Bookings</div>
+                    </div>
+                    <div className="text-center bg-green-50 p-2 rounded">
+                      <div className="text-xl font-bold text-green-700">
+                        {pickupPaceData.pace_percentage || 0}%
+                      </div>
+                      <div className="text-xs text-gray-600">vs Last Year</div>
+                    </div>
+                    <div className="text-center bg-blue-50 p-2 rounded">
+                      <div className="text-xl font-bold text-blue-700">
+                        {pickupPaceData.avg_daily_pickup || 0}
+                      </div>
+                      <div className="text-xs text-gray-600">Avg Daily</div>
+                    </div>
+                  </div>
+                  {pickupPaceData.trend && (
+                    <div className="text-xs">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-gray-600">Trend:</span>
+                        <Badge className={`${
+                          pickupPaceData.trend === 'up' ? 'bg-green-500' :
+                          pickupPaceData.trend === 'down' ? 'bg-red-500' :
+                          'bg-gray-500'
+                        } text-white text-[9px]`}>
+                          {pickupPaceData.trend === 'up' ? '↗ Increasing' :
+                           pickupPaceData.trend === 'down' ? '↘ Decreasing' :
+                           '→ Stable'}
+                        </Badge>
+                      </div>
+                      <div className="bg-gray-100 rounded-full h-2 mt-2">
+                        <div 
+                          className={`h-2 rounded-full ${
+                            pickupPaceData.pace_percentage >= 100 ? 'bg-green-500' :
+                            pickupPaceData.pace_percentage >= 80 ? 'bg-yellow-500' :
+                            'bg-red-500'
+                          }`}
+                          style={{ width: `${Math.min(pickupPaceData.pace_percentage || 0, 100)}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Lead Time Analysis */}
+              {leadTimeData && (
+                <div className="bg-white p-3 rounded-lg border-2 border-amber-300">
+                  <div className="text-sm font-semibold text-amber-700 mb-3">
+                    ⏱️ Lead Time Analysis
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="text-center bg-purple-50 p-2 rounded">
+                      <div className="text-xl font-bold text-purple-700">
+                        {leadTimeData.avg_lead_time || 0}
+                      </div>
+                      <div className="text-xs text-gray-600">Avg Lead Days</div>
+                    </div>
+                    <div className="text-center bg-indigo-50 p-2 rounded">
+                      <div className="text-xl font-bold text-indigo-700">
+                        {leadTimeData.median_lead_time || 0}
+                      </div>
+                      <div className="text-xs text-gray-600">Median Days</div>
+                    </div>
+                  </div>
+                  {leadTimeData.distribution && (
+                    <div className="mt-3 space-y-1">
+                      <div className="text-xs text-gray-600 font-medium">Booking Window:</div>
+                      {Object.entries(leadTimeData.distribution).slice(0, 4).map(([range, count]) => (
+                        <div key={range} className="flex items-center justify-between text-xs">
+                          <span className="text-gray-600">{range}</span>
+                          <div className="flex items-center gap-2">
+                            <div className="w-24 bg-gray-200 rounded-full h-1.5">
+                              <div 
+                                className="bg-amber-500 h-1.5 rounded-full"
+                                style={{ width: `${(count / Math.max(...Object.values(leadTimeData.distribution))) * 100}%` }}
+                              />
+                            </div>
+                            <span className="font-medium w-8 text-right">{count}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Empty State */}
-              {groupBookings.length === 0 && oversellProtection.length === 0 && !channelMixData && (
+              {groupBookings.length === 0 && oversellProtection.length === 0 && !channelMixData && !pickupPaceData && !leadTimeData && (
                 <div className="text-center py-8 text-gray-500">
                   <div className="text-4xl mb-2">💎</div>
                   <div className="text-sm">Deluxe+ analytics loading...</div>

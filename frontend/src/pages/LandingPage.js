@@ -149,9 +149,9 @@ const LandingPage = () => {
       {/* Header/Navigation */}
       <nav className="bg-white shadow-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex justify-between items-center h-20">
             <div className="flex items-center space-x-3">
-              <img src={syroceLogo} alt="Syroce" className="h-10 w-auto" />
+              <img src={syroceLogo} alt="Syroce" className="h-14 w-auto" />
             </div>
             <div className="hidden md:flex items-center space-x-8">
               <a href="#features" className="text-gray-600 hover:text-gray-900">Özellikler</a>

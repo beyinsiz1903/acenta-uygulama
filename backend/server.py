@@ -3621,7 +3621,7 @@ async def create_room_move_history(
     return {"message": "Room move logged successfully", "history": history}
 
 @api_router.get("/pms/dashboard")
-@cached(ttl=60, key_prefix="pms_dashboard")  # Cache for 1 minute - faster refresh
+@cached(ttl=30, key_prefix="pms_dashboard")  # Cache for 30 seconds - very fast refresh
 async def get_pms_dashboard(current_user: User = Depends(get_current_user)):
     # Try Redis cache first (FASTEST!)
     try:

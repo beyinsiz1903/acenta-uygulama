@@ -26,6 +26,31 @@ h1, h2, h3, h4, h5, h6 {
   color: #4a5568;
 }
 
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+/* Optimize animations */
+* {
+  will-change: auto;
+}
+
+.hover\:shadow-lg {
+  transition: box-shadow 0.2s ease-in-out, transform 0.2s ease-in-out;
+}
+
+/* GPU acceleration for smooth animations */
+.transform {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
 .App {
   min-height: 100vh;
 }

@@ -178,10 +178,10 @@ class CacheWarmer:
         return None
     
     async def background_refresh(self, tenant_id: str):
-        """Background cache refresh every 30 seconds"""
+        """Background cache refresh every 15 seconds (aggressive)"""
         while True:
             try:
-                await asyncio.sleep(30)  # Refresh every 30 seconds
+                await asyncio.sleep(15)  # Refresh every 15 seconds for max freshness
                 await self.warm_all_caches(tenant_id)
             except Exception as e:
                 print(f"Background cache refresh error: {e}")

@@ -44006,3 +44006,11 @@ try:
     print("✅ Finance endpoints included")
 except ImportError as e:
     print(f"⚠️ Finance endpoints not available: {e}")
+
+# Include monitoring endpoints
+try:
+    from monitoring import monitoring_router
+    app.include_router(monitoring_router, tags=["monitoring"])
+    print("✅ Monitoring endpoints included")
+except ImportError as e:
+    print(f"⚠️ Monitoring endpoints not available: {e}")

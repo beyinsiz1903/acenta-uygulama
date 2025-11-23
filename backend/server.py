@@ -3580,7 +3580,6 @@ async def create_room_move_history(
     return {"message": "Room move logged successfully", "history": history}
 
 @api_router.get("/pms/dashboard")
-@cached(ttl=15, key_prefix="pms_dashboard")  # Ultra-short cache
 async def get_pms_dashboard(current_user: User = Depends(get_current_user)):
     # Check pre-warmed cache first (instant response!)
     from cache_warmer import cache_warmer

@@ -40246,6 +40246,13 @@ class NotificationPreferenceRequest(BaseModel):
     enabled: bool
     channels: List[str] = ['in_app']  # in_app, email, sms, push
 
+class SystemAlertRequest(BaseModel):
+    type: str
+    title: str
+    message: str
+    priority: str = "normal"
+    target_roles: Optional[List[str]] = None
+
 # 1. GET /api/notifications/preferences - Get notification preferences
 @api_router.get("/notifications/preferences")
 async def get_notification_preferences(

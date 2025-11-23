@@ -451,8 +451,7 @@ const LandingPage = () => {
           <div className="grid md:grid-cols-4 gap-8 mb-8">
             <div>
               <div className="flex items-center space-x-2 mb-4">
-                <Hotel className="w-8 h-8 text-blue-400" />
-                <span className="text-xl font-bold">RoomOps PMS</span>
+                <img src={syroceLogo} alt="Syroce" className="h-8 w-auto" />
               </div>
               <p className="text-gray-400">
                 Otel yönetiminde yeni nesil deneyim

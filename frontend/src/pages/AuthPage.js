@@ -61,9 +61,9 @@ const AuthPage = ({ onLogin }) => {
       // Then call onLogin
       onLogin(response.data.access_token, response.data.user, response.data.tenant);
       
-      // Force full page reload to dashboard
+      // Force full page reload to home
       setTimeout(() => {
-        window.location.href = '/dashboard-simple';
+        window.location.href = '/';
       }, 300);
     } catch (error) {
       console.error('❌ Login error:', error);

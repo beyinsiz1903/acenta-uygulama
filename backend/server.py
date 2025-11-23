@@ -10132,6 +10132,49 @@ async def startup_db_seed():
             print(f"✓ Database already contains {user_count} users, skipping seed")
     except Exception as e:
         print(f"⚠️ Startup seeding error: {str(e)}")
+    
+    # Initialize optimization systems
+    try:
+        print("🚀 Initializing enterprise optimization systems...")
+        import redis
+        from optimization_endpoints import init_optimization_managers
+        
+        # Initialize Redis connection
+        redis_client = redis.Redis(
+            host='localhost',
+            port=6379,
+            db=0,
+            decode_responses=False  # Keep as bytes for now
+        )
+        
+        # Test Redis connection
+        redis_client.ping()
+        print("✅ Redis connection established")
+        
+        # Initialize optimization managers
+        init_optimization_managers(db, redis_client)
+        print("✅ Optimization managers initialized")
+        
+        # Setup indexes for optimization collections
+        from optimization_endpoints import archival_manager, materialized_views_manager
+        if archival_manager:
+            await archival_manager.setup_indexes()
+            print("✅ Archive indexes created")
+        
+        if materialized_views_manager:
+            await materialized_views_manager.setup_indexes()
+            print("✅ Materialized view indexes created")
+            
+            # Initial refresh of dashboard metrics
+            print("🔄 Refreshing dashboard metrics...")
+            await materialized_views_manager.refresh_dashboard_metrics()
+            print("✅ Dashboard metrics refreshed")
+        
+        print("🎉 Enterprise optimization systems ready!")
+        
+    except Exception as e:
+        print(f"⚠️ Optimization system initialization error: {str(e)}")
+        print("   System will continue without optimization features")
 
 @app.on_event("shutdown")
 async def shutdown_db_client():

@@ -1,7 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense, lazy } from "react";
 import "@/App.css";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import axios from "axios";
+import { QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { queryClient } from '@/lib/queryClient';
 import AuthPage from "@/pages/AuthPage";
 import Dashboard from "@/pages/Dashboard";
 import GMDashboard from "@/pages/GMDashboard";
@@ -59,6 +62,13 @@ import FeaturesShowcase from "@/pages/FeaturesShowcase";
 import HousekeepingDashboard from "@/pages/HousekeepingDashboard";
 import POSDashboard from "@/pages/POSDashboard";
 import { Toaster } from "@/components/ui/sonner";
+
+// Loading component
+const LoadingFallback = () => (
+  <div className="flex items-center justify-center h-screen">
+    <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600"></div>
+  </div>
+);
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;

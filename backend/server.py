@@ -32734,7 +32734,6 @@ async def create_approval_request(
     }
 
 @api_router.get("/approvals/pending")
-@cached(ttl=180, key_prefix="approvals_pending")  # Cache for 3 min
 async def get_pending_approvals(
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
@@ -32746,16 +32745,31 @@ async def get_pending_approvals(
         raise HTTPException(status_code=403, detail="Access denied")
     
     approvals = []
+    urgent_count = 0
     async for approval in db.approval_requests.find({
         'tenant_id': current_user.tenant_id,
         'status': 'pending'
     }).sort('created_at', -1):
         approval.pop('_id', None)
+        # Check if urgent (more than 24 hours old or marked as urgent)
+        created_at = approval.get('created_at')
+        is_urgent = False
+        if created_at:
+            from datetime import datetime, timezone
+            if isinstance(created_at, str):
+                created_dt = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+            else:
+                created_dt = created_at
+            hours_waiting = (datetime.now(timezone.utc) - created_dt).total_seconds() / 3600
+            is_urgent = hours_waiting > 24 or approval.get('priority') == 'urgent'
+        if is_urgent:
+            urgent_count += 1
         approvals.append(approval)
     
     return {
         'approvals': approvals,
-        'count': len(approvals)
+        'count': len(approvals),
+        'urgent_count': urgent_count
     }
 
 @api_router.get("/approvals/my-requests")

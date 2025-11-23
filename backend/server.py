@@ -10204,6 +10204,15 @@ async def startup_db_seed():
     except Exception as e:
         print(f"⚠️ Startup seeding error: {str(e)}")
     
+    # Initialize cache warmer for instant responses
+    try:
+        print("🔥 Initializing ultra-fast cache warmer...")
+        from cache_warmer import initialize_cache_warmer
+        await initialize_cache_warmer(db)
+        print("✅ Cache warmer initialized - responses will be instant!")
+    except Exception as e:
+        print(f"⚠️ Cache warmer initialization: {str(e)}")
+    
     # Initialize optimization systems
     try:
         print("🚀 Initializing enterprise optimization systems...")

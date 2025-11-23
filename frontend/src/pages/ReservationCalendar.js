@@ -93,6 +93,10 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
   const [pricingAlerts, setPricingAlerts] = useState([]);
   const [historicalTrends, setHistoricalTrends] = useState(null);
   const [showHistoricalPanel, setShowHistoricalPanel] = useState(false);
+  const [moveBookingDialog, setMoveBookingDialog] = useState({ open: false, room: null, bookings: [] });
+  const [selectedBookingToMove, setSelectedBookingToMove] = useState(null);
+  const [availableRoomsForMove, setAvailableRoomsForMove] = useState([]);
+
 
 
   

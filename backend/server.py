@@ -5124,6 +5124,7 @@ async def get_front_office_dashboard(current_user: User = Depends(get_current_us
     }
 
 @api_router.get("/department/housekeeping/dashboard")
+@cached(ttl=120, key_prefix="housekeeping_dashboard")  # Cache for 2 minutes
 async def get_housekeeping_dashboard(current_user: User = Depends(get_current_user)):
     """Housekeeping Manager Dashboard with room details"""
     

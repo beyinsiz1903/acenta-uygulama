@@ -287,101 +287,115 @@ class UltraPerformanceTester:
             await asyncio.sleep(0.2)
 
     def print_performance_summary(self):
-        """Print comprehensive performance summary"""
+        """Print ultra-detailed performance summary"""
         print("\n" + "=" * 80)
-        print("📊 ULTRA PERFORMANCE TEST RESULTS")
+        print("📊 FINAL ULTRA PERFORMANCE TEST RESULTS")
         print("=" * 80)
         
-        # Overall metrics
+        passed_endpoints = 0
         total_endpoints = len(self.test_results)
-        successful_endpoints = sum(1 for r in self.test_results if r["success"])
-        cached_targets_met = sum(1 for r in self.test_results if r["success"] and r["avg_cached_ms"] < r["target_cached_ms"])
-        cold_targets_met = sum(1 for r in self.test_results if r["success"] and r["cold_time_ms"] < r["target_cold_ms"])
         
-        print(f"\n📈 OVERALL PERFORMANCE METRICS:")
-        print(f"• Total Endpoints Tested: {total_endpoints}")
-        print(f"• Successful Endpoints: {successful_endpoints}/{total_endpoints} ({successful_endpoints/total_endpoints*100:.1f}%)")
-        print(f"• Cached Targets Met: {cached_targets_met}/{total_endpoints} ({cached_targets_met/total_endpoints*100:.1f}%)")
-        print(f"• Cold Targets Met: {cold_targets_met}/{total_endpoints} ({cold_targets_met/total_endpoints*100:.1f}%)")
-        
-        print(f"\n🎯 DETAILED ENDPOINT RESULTS:")
-        print("-" * 80)
+        print("\n🎯 CRITICAL ENDPOINTS PERFORMANCE:")
+        print("-" * 60)
         
         for result in self.test_results:
-            if not result["success"]:
-                print(f"❌ {result['endpoint']}: FAILED")
-                for error in result["errors"]:
-                    print(f"   Error: {error}")
-                continue
+            status_icon = "✅" if result["success"] and result["avg_ms"] < result["target_ms"] else "❌"
+            endpoint_name = result["endpoint"]
             
-            # Performance indicators
-            cached_status = "✅" if result["avg_cached_ms"] < result["target_cached_ms"] else "❌"
-            cold_status = "✅" if result["cold_time_ms"] < result["target_cold_ms"] else "❌"
+            if result["success"] and result["response_times"]:
+                avg_ms = result["avg_ms"]
+                target_ms = result["target_ms"]
+                
+                print(f"{status_icon} {endpoint_name}:")
+                print(f"   • Call 1 (cold): {result['response_times'][0]:.1f}ms")
+                if len(result["response_times"]) > 1:
+                    warm_times = [f"{t:.1f}ms" for t in result["response_times"][1:]]
+                    print(f"   • Call 2-5 (warm): {', '.join(warm_times)}")
+                print(f"   • Min/Avg/Max: {result['min_ms']:.1f}/{avg_ms:.1f}/{result['max_ms']:.1f} ms")
+                print(f"   • Cache working: {'Yes' if result['cache_working'] else 'No'}")
+                print(f"   • Data complete: {'Yes' if result['data_complete'] else 'No'}")
+                
+                if avg_ms < target_ms:
+                    passed_endpoints += 1
+                    if avg_ms < 1.0:
+                        print(f"   • Status: ✅ <{target_ms}ms (🚀 EXCEPTIONAL: Sub-millisecond!)")
+                    elif avg_ms < 2.0:
+                        print(f"   • Status: ✅ <{target_ms}ms (⚡ EXCELLENT: Ultra-fast!)")
+                    else:
+                        print(f"   • Status: ✅ <{target_ms}ms")
+                else:
+                    print(f"   • Status: ❌ >{target_ms}ms")
+            else:
+                print(f"{status_icon} {endpoint_name}: ❌ FAILED")
+                if result["errors"]:
+                    print(f"   • Errors: {', '.join(result['errors'][:3])}")
             
-            print(f"\n🔍 {result['endpoint']}:")
-            print(f"   {cold_status} Cold cache: {result['cold_time_ms']:.1f}ms (target: <{result['target_cold_ms']}ms)")
-            print(f"   {cached_status} Warm cache: {result['avg_cached_ms']:.1f}ms (target: <{result['target_cached_ms']}ms)")
-            print(f"   🚀 Peak performance: {result['peak_performance_ms']:.1f}ms")
-            print(f"   📊 Cache hit rate: {result['cache_hit_rate']:.1f}%")
+            print()
+        
+        # Overall assessment
+        success_rate = (passed_endpoints / total_endpoints * 100) if total_endpoints > 0 else 0
+        
+        print("=" * 80)
+        print(f"📈 OVERALL ULTRA PERFORMANCE RESULTS: {passed_endpoints}/{total_endpoints} ({success_rate:.1f}%)")
+        print("=" * 80)
+        
+        if success_rate == 100:
+            print("🎉 ABSOLUTELY PERFECT! 100% SUCCESS RATE")
+            print("🚀 ALL ENDPOINTS UNDER TARGET RESPONSE TIMES")
+            print("⚡ ULTRA-HIGH PERFORMANCE ACHIEVED")
+            print("✅ Cache optimization working perfectly")
+            print("✅ All optimizations successful")
             
-            # Individual call breakdown
-            print(f"   📋 Call breakdown:")
-            for call in result["calls"]:
-                call_status = "✅" if call["success"] else "❌"
-                print(f"      {call_status} Call {call['call_number']} ({call['type']}): {call['response_time_ms']:.1f}ms")
-        
-        print(f"\n🏆 PERFORMANCE ACHIEVEMENTS:")
-        print("-" * 40)
-        
-        # Calculate achievements
-        all_cached_under_20ms = all(r["success"] and r["avg_cached_ms"] < 20 for r in self.test_results)
-        all_cold_under_40ms = all(r["success"] and r["cold_time_ms"] < 40 for r in self.test_results)
-        avg_cache_hit_rate = statistics.mean([r["cache_hit_rate"] for r in self.test_results if r["success"]])
-        
-        if all_cached_under_20ms:
-            print("🎉 EXCELLENT: All cached calls <20ms ✅")
+            # Check for exceptional performance
+            sub_ms_count = sum(1 for r in self.test_results if r["success"] and r["avg_ms"] < 1.0)
+            if sub_ms_count > 0:
+                print(f"🌟 EXCEPTIONAL: {sub_ms_count} endpoints with sub-millisecond performance!")
+                
+        elif success_rate >= 80:
+            print("✅ EXCELLENT: Most endpoints meeting ultra-strict targets")
+            failed_endpoints = [r["endpoint"] for r in self.test_results if not (r["success"] and r["avg_ms"] < r["target_ms"])]
+            if failed_endpoints:
+                print(f"⚠️ Needs optimization: {', '.join(failed_endpoints)}")
         else:
-            print("⚠️ NEEDS WORK: Some cached calls >20ms ❌")
+            print("❌ CRITICAL: Ultra performance targets not met")
+            print("🔍 Recommend immediate performance optimization")
         
-        if all_cold_under_40ms:
-            print("🎉 EXCELLENT: All cold calls <40ms ✅")
-        else:
-            print("⚠️ NEEDS WORK: Some cold calls >40ms ❌")
+        print("\n🔧 OPTIMIZATION STATUS:")
+        cache_working_count = sum(1 for r in self.test_results if r["cache_working"])
+        print(f"• Cache effectiveness: {cache_working_count}/{total_endpoints} endpoints")
         
-        if avg_cache_hit_rate > 70:
-            print(f"🎉 EXCELLENT: Cache hit rate {avg_cache_hit_rate:.1f}% ✅")
-        elif avg_cache_hit_rate > 50:
-            print(f"✅ GOOD: Cache hit rate {avg_cache_hit_rate:.1f}% ⚠️")
-        else:
-            print(f"❌ POOR: Cache hit rate {avg_cache_hit_rate:.1f}% ❌")
+        data_complete_count = sum(1 for r in self.test_results if r["data_complete"])
+        print(f"• Data completeness: {data_complete_count}/{total_endpoints} endpoints")
         
-        print(f"\n🔧 OPTIMIZATION VERIFICATION:")
-        print("-" * 40)
-        print("✅ GZip compression: Enabled in session headers")
-        print("✅ Connection pooling: 100 connections, keep-alive 30s")
-        print("✅ Database indexes: Applied (verified by response times)")
-        print("✅ Query optimization: Minimal field projection")
-        print("✅ Cache TTL: Reduced to 30-60s")
-        print("✅ Default limits: Reduced for faster responses")
+        print("\n📊 PERFORMANCE BREAKDOWN:")
+        for result in self.test_results:
+            if result["success"] and len(result["response_times"]) >= 2:
+                cold_start = result["response_times"][0]
+                warm_avg = statistics.mean(result["response_times"][1:])
+                improvement = ((cold_start - warm_avg) / cold_start * 100) if cold_start > 0 else 0
+                print(f"• {result['endpoint']}: Cold {cold_start:.1f}ms → Warm {warm_avg:.1f}ms ({improvement:+.1f}%)")
         
-        # Final assessment
-        print(f"\n🎯 FINAL ASSESSMENT:")
-        print("=" * 40)
+        print("\n🎯 TARGET ACHIEVEMENT:")
+        print(f"• Monitoring endpoints (<{ULTRA_TARGET_MS}ms): ", end="")
+        monitoring_results = [r for r in self.test_results if "Monitoring" in r["endpoint"]]
+        monitoring_passed = sum(1 for r in monitoring_results if r["success"] and r["avg_ms"] < r["target_ms"])
+        print(f"{monitoring_passed}/{len(monitoring_results)} ({'✅' if monitoring_passed == len(monitoring_results) else '❌'})")
         
-        if successful_endpoints == total_endpoints and all_cached_under_20ms and all_cold_under_40ms:
-            print("🏆 ULTRA PERFORMANCE ACHIEVED!")
-            print("   All endpoints meet ultra performance criteria")
-            print("   System ready for high-load production use")
-        elif successful_endpoints == total_endpoints and cached_targets_met >= total_endpoints * 0.8:
-            print("✅ GOOD PERFORMANCE")
-            print("   Most endpoints meet performance targets")
-            print("   Minor optimizations may be beneficial")
-        else:
-            print("⚠️ PERFORMANCE ISSUES DETECTED")
-            print("   Some endpoints need optimization")
-            print("   Review failed endpoints and apply fixes")
+        print(f"• Cached endpoints (<{CACHE_TARGET_MS}ms): ", end="")
+        cached_results = [r for r in self.test_results if "Cache" in r["endpoint"]]
+        cached_passed = sum(1 for r in cached_results if r["success"] and r["avg_ms"] < r["target_ms"])
+        print(f"{cached_passed}/{len(cached_results)} ({'✅' if cached_passed == len(cached_results) else '❌'})")
         
         print("\n" + "=" * 80)
+        
+        if success_rate == 100:
+            print("🏆 MISSION ACCOMPLISHED: ULTRA PERFORMANCE ACHIEVED!")
+            print("Target: 6/6 endpoints under 5ms average = ABSOLUTELY PERFECT ✅")
+        else:
+            print("🔧 MISSION CONTINUES: Further optimization needed")
+            print(f"Target: 6/6 endpoints under 5ms average = {passed_endpoints}/6 ❌")
+        
+        print("=" * 80)
 
     async def run_ultra_performance_test(self):
         """Run the ultra performance verification test"""

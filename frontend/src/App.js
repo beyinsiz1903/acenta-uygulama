@@ -301,6 +301,17 @@ function App() {
             }
           />
           <Route
+            path="/settings"
+            element={
+              isAuthenticated ? (
+                <Settings user={user} tenant={tenant} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/auth" replace />
+              )
+            }
+          />
+
+          <Route
             path="/pending-ar"
             element={
               isAuthenticated ? (

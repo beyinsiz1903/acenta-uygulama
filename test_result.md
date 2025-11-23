@@ -821,7 +821,7 @@ backend:
 
   - task: "Notification System - Send System Alert"
     implemented: true
-    working: false
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 1
     priority: "high"
@@ -833,6 +833,9 @@ backend:
       - working: false
         agent: "testing"
         comment: "❌ ENDPOINT FAILING - POST /api/notifications/send-system-alert returns HTTP 422 error. Request body validation failing for all test cases. Tested with title, message, priority, target_roles fields but endpoint expects different request structure or has validation issues."
+      - working: true
+        agent: "testing"
+        comment: "✅ ENDPOINT NOW WORKING - POST /api/notifications/send-system-alert successfully accepts SystemAlertRequest model. Tested with type, title, message, priority, target_roles fields. All test cases (maintenance, system, emergency alerts) working correctly. Returns proper response with message, notifications_sent, target_roles fields. SystemAlertRequest model validation fixed."
 
   - task: "Dashboard - Employee Performance Endpoint"
     implemented: true

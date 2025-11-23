@@ -1405,6 +1405,65 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
                   </div>
                   <div className="mt-2 text-center">
                     <div className="text-xl font-bold text-purple-600">
+
+
+              {/* RMS Dynamic Pricing Alerts */}
+              {pricingAlerts.length > 0 && (
+                <div className="bg-white p-3 rounded-lg border-2 border-blue-300">
+                  <div className="text-sm font-semibold text-blue-700 mb-3 flex items-center justify-between">
+                    <span>📈 RMS Pricing Alerts</span>
+                    <Badge variant="outline" className="bg-blue-100 text-blue-700">
+                      {pricingAlerts.length} alerts
+                    </Badge>
+                  </div>
+                  <div className="space-y-2 max-h-64 overflow-y-auto">
+                    {pricingAlerts.map((alert, idx) => (
+                      <div 
+                        key={idx} 
+                        className={`p-3 rounded-lg border-l-4 ${
+                          alert.type === 'increase' && alert.severity === 'high' ? 'bg-green-50 border-l-green-600' :
+                          alert.type === 'increase' ? 'bg-blue-50 border-l-blue-500' :
+                          'bg-orange-50 border-l-orange-500'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex-1">
+                            <div className="font-semibold text-sm flex items-center gap-2">
+                              {alert.type === 'increase' ? '📈' : '📉'}
+                              {new Date(alert.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                            </div>
+                            <div className="text-xs text-gray-600 mt-1">
+                              {alert.message}
+                            </div>
+                          </div>
+                          <Badge className={`${
+                            alert.type === 'increase' && alert.severity === 'high' ? 'bg-green-600' :
+                            alert.type === 'increase' ? 'bg-blue-500' :
+                            'bg-orange-500'
+                          } text-white text-xs`}>
+                            {alert.suggested_action}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center justify-between pt-2 border-t border-gray-200">
+                          <span className="text-xs text-gray-500">Suggested Change:</span>
+                          <span className={`text-xs font-bold ${
+                            alert.type === 'increase' ? 'text-green-600' : 'text-orange-600'
+                          }`}>
+                            {alert.type === 'increase' ? '+' : ''}{alert.percentage}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-3 pt-3 border-t text-xs text-gray-600">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">💡 Tip:</span>
+                      <span>Pricing alerts are calculated based on occupancy trends and market demand</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
                       ${Math.round(aiRateRecommendations.reduce((sum, r) => sum + (r.revenue_impact || 0), 0))}
                     </div>
                     <div className="text-xs text-gray-600">Potential Revenue Increase</div>

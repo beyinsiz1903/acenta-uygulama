@@ -450,18 +450,25 @@ class FinalSuccessTest:
                 if response.status == 200:
                     data = await response.json()
                     
-                    # Check required fields
-                    required_fields = ["min_price", "recommended_price", "max_price"]
-                    missing_fields = [field for field in required_fields if field not in data]
-                    
-                    if not missing_fields:
-                        print(f"  ✅ PASSED - Price recommendation working")
-                        print(f"     Prices: min={data.get('min_price', 0)}, rec={data.get('recommended_price', 0)}, max={data.get('max_price', 0)}")
-                        self.test_results.append({"endpoint": "GET /api/rms/price-recommendation-slider", "status": "PASSED", "details": "Price recommendation working"})
-                        return True
+                    # Check for pricing_recommendation nested structure
+                    if "pricing_recommendation" in data:
+                        pricing = data["pricing_recommendation"]
+                        required_fields = ["min_price", "recommended_price", "max_price"]
+                        missing_fields = [field for field in required_fields if field not in pricing]
+                        
+                        if not missing_fields:
+                            print(f"  ✅ PASSED - Price recommendation working")
+                            print(f"     Prices: min={pricing.get('min_price', 0)}, rec={pricing.get('recommended_price', 0)}, max={pricing.get('max_price', 0)}")
+                            self.test_results.append({"endpoint": "GET /api/rms/price-recommendation-slider", "status": "PASSED", "details": "Price recommendation working"})
+                            return True
+                        else:
+                            print(f"  ❌ FAILED - Missing fields in pricing_recommendation: {missing_fields}")
+                            self.test_results.append({"endpoint": "GET /api/rms/price-recommendation-slider", "status": "FAILED", "details": f"Missing fields: {missing_fields}"})
+                            return False
                     else:
-                        print(f"  ❌ FAILED - Missing fields: {missing_fields}")
-                        self.test_results.append({"endpoint": "GET /api/rms/price-recommendation-slider", "status": "FAILED", "details": f"Missing fields: {missing_fields}"})
+                        print(f"  ❌ FAILED - Missing pricing_recommendation structure")
+                        print(f"     Available fields: {list(data.keys())}")
+                        self.test_results.append({"endpoint": "GET /api/rms/price-recommendation-slider", "status": "FAILED", "details": "Missing pricing_recommendation structure"})
                         return False
                 elif response.status == 422:
                     error_text = await response.text()

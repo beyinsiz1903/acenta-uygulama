@@ -250,9 +250,9 @@ const LandingPage = () => {
               <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-full mb-6">
                 <Zap className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">Ultra Hızlı</h3>
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">Kolay Kullanım</h3>
               <p className="text-gray-600">
-                Redis cache ve optimize edilmiş altyapı ile 8ms'den daha hızlı response süreleri
+                Sezgisel arayüz ve 15 dakikalık eğitim ile personeliniz hemen kullanmaya başlayabilir
               </p>
             </div>
             <div className="text-center">

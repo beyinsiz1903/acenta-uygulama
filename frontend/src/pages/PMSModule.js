@@ -572,6 +572,22 @@ const PMSModule = ({ user, tenant, onLogout }) => {
   };
 
   const handleCompanySelect = (companyId) => {
+    if (companyId === "none") {
+      setSelectedCompany(null);
+      setNewBooking({
+        ...newBooking,
+        company_id: null,
+        contracted_rate: '',
+        rate_type: '',
+        market_segment: '',
+        cancellation_policy: '',
+        billing_address: '',
+        billing_tax_number: '',
+        billing_contact_person: ''
+      });
+      return;
+    }
+    
     const company = companies.find(c => c.id === companyId);
     if (company) {
       setSelectedCompany(company);

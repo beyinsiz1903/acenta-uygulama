@@ -2581,6 +2581,7 @@ async def create_folio(folio_data: FolioCreate, current_user: User = Depends(get
 
 # Static folio routes (before parametric routes)
 @api_router.get("/folio/dashboard-stats")
+@cached(ttl=300, key_prefix="folio_dashboard_stats")  # Cache for 5 minutes
 async def get_folio_dashboard_stats(
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ):

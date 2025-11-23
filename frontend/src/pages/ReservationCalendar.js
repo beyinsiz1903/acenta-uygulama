@@ -1059,6 +1059,17 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
                       ⚠️ Conflicts ({groupedConflicts.total_conflict_count})
                     </Button>
                   )}
+                  <Button
+                    size="sm"
+                    variant={showHistoricalPanel ? "default" : "outline"}
+                    onClick={() => {
+                      setShowHistoricalPanel(!showHistoricalPanel);
+                      if (!historicalTrends) loadHistoricalTrends();
+                    }}
+                    className="flex items-center gap-2"
+                  >
+                    📊 Historical Trends
+                  </Button>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-blue-600">{getOccupancyForDate(new Date())}%</div>
                     <div className="text-xs text-gray-600">Today</div>

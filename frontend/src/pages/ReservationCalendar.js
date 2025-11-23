@@ -1708,9 +1708,26 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
                     size="sm" 
                     variant="outline"
                     className="text-xs h-7"
-                    onClick={() => {
-                      toast.info('Opening AI Conflict Resolution...');
-                      // Trigger AI solve-overbooking
+                    onClick={async () => {
+                      if (!confirm('This will automatically move bookings to resolve all conflicts. Continue?')) return;
+                      
+                      try {
+                        toast.info('🤖 AI analyzing conflicts and finding solutions...');
+                        const response = await axios.post('/ai/solve-overbooking', {
+                          start_date: currentDate.toISOString().split('T')[0],
+                          end_date: new Date(currentDate.getTime() + (daysToShow * 24 * 60 * 60 * 1000)).toISOString().split('T')[0]
+                        });
+                        
+                        if (response.data.solutions) {
+                          toast.success(`✅ Resolved ${response.data.solutions.length} conflicts!`);
+                          loadCalendarData(); // Refresh
+                          setShowConflictSolutions(false);
+                        } else {
+                          toast.warning('No automatic solution available. Please resolve manually.');
+                        }
+                      } catch (error) {
+                        toast.error(error.response?.data?.detail || 'Failed to auto-resolve conflicts');
+                      }
                     }}
                   >
                     🤖 Auto-Resolve All

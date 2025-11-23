@@ -2252,9 +2252,23 @@ async def login(data: UserLogin):
     
     tenant = None
     if user.tenant_id:
-        tenant_doc = await db.tenants.find_one({'id': user.tenant_id}, {'_id': 0})
-        if tenant_doc:
-            tenant = Tenant(**tenant_doc)
+        from bson import ObjectId
+        try:
+            # Try to find by _id (ObjectId) first
+            tenant_doc = await db.tenants.find_one({'_id': ObjectId(user.tenant_id)})
+            if tenant_doc:
+                tenant_doc.pop('_id', None)  # Remove _id
+                tenant = Tenant(**tenant_doc)
+            else:
+                # Fallback to id field
+                tenant_doc = await db.tenants.find_one({'id': user.tenant_id}, {'_id': 0})
+                if tenant_doc:
+                    tenant = Tenant(**tenant_doc)
+        except:
+            # If ObjectId conversion fails, try with id field
+            tenant_doc = await db.tenants.find_one({'id': user.tenant_id}, {'_id': 0})
+            if tenant_doc:
+                tenant = Tenant(**tenant_doc)
     
     token = create_token(user.id, user.tenant_id)
     return TokenResponse(access_token=token, user=user, tenant=tenant)

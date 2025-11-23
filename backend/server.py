@@ -3906,6 +3906,7 @@ async def get_inhouse_guests(current_user: User = Depends(get_current_user)):
 # ============= HOUSEKEEPING =============
 
 @api_router.get("/housekeeping/tasks")
+@cached(ttl=120, key_prefix="housekeeping_tasks")  # Cache for 2 minutes
 async def get_housekeeping_tasks(status: Optional[str] = None, current_user: User = Depends(get_current_user)):
     query = {'tenant_id': current_user.tenant_id}
     if status:

@@ -3320,6 +3320,7 @@ async def create_booking(booking_data: BookingCreate, current_user: User = Depen
     return booking
 
 @api_router.get("/pms/bookings", response_model=List[Booking])
+@cached(ttl=180, key_prefix="pms_bookings")  # Cache for 3 minutes
 async def get_bookings(
     limit: int = 100,
     offset: int = 0,

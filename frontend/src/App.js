@@ -778,8 +778,8 @@ function App() {
           />
         </Routes>
       </BrowserRouter>
+      <ReactQueryDevtools initialIsOpen={false} />
     </div>
-    <ReactQueryDevtools initialIsOpen={false} />
   </QueryClientProvider>
   );
 }

@@ -40308,7 +40308,12 @@ async def update_notification_preferences(
     return {
         'message': 'Bildirim tercihleri güncellendi',
         'notification_type': request.notification_type,
-        'enabled': request.enabled
+        'enabled': request.enabled,
+        'updated_preference': {
+            'type': request.notification_type,
+            'enabled': request.enabled,
+            'channels': request.channels
+        }
     }
 
 

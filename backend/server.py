@@ -3226,6 +3226,7 @@ async def create_guest(guest_data: GuestCreate, current_user: User = Depends(get
     return guest
 
 @api_router.get("/pms/guests", response_model=List[Guest])
+@cached(ttl=300, key_prefix="pms_guests")  # Cache for 5 minutes
 async def get_guests(
     limit: int = 1000,
     offset: int = 0,

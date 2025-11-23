@@ -66,10 +66,9 @@ BACKEND_URL = "https://tam-optimizasyon.preview.emergentagent.com/api"
 TEST_EMAIL = "admin@hotel.com"
 TEST_PASSWORD = "admin123"
 
-# Performance targets (in milliseconds)
-CACHED_TARGET_MS = 20  # Target for cached calls
-CACHED_PMS_TARGET_MS = 15  # Target for PMS cached calls
-COLD_TARGET_MS = 40  # Target for cold calls
+# Ultra-strict performance targets (in milliseconds)
+ULTRA_TARGET_MS = 5.0  # 5ms target for monitoring endpoints
+CACHE_TARGET_MS = 3.0  # 3ms target for pre-warmed cache endpoints
 
 class UltraPerformanceTester:
     def __init__(self):

@@ -116,25 +116,26 @@ function App() {
   const [tenant, setTenant] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Setup axios interceptor for handling auth errors
-  useEffect(() => {
-    const interceptor = axios.interceptors.response.use(
-      (response) => response,
-      (error) => {
-        // If we get 401 Unauthorized, logout the user
-        if (error.response && error.response.status === 401) {
-          console.warn('Authentication error detected, logging out...');
-          handleLogout();
-        }
-        return Promise.reject(error);
-      }
-    );
+  // Setup axios interceptor for handling auth errors - DISABLED for now
+  // The aggressive logout was causing issues with optional endpoints
+  // useEffect(() => {
+  //   const interceptor = axios.interceptors.response.use(
+  //     (response) => response,
+  //     (error) => {
+  //       // If we get 401 Unauthorized, logout the user
+  //       if (error.response && error.response.status === 401) {
+  //         console.warn('Authentication error detected, logging out...');
+  //         handleLogout();
+  //       }
+  //       return Promise.reject(error);
+  //     }
+  //   );
 
-    // Cleanup interceptor on unmount
-    return () => {
-      axios.interceptors.response.eject(interceptor);
-    };
-  }, []);
+  //   // Cleanup interceptor on unmount
+  //   return () => {
+  //     axios.interceptors.response.eject(interceptor);
+  //   };
+  // }, []);
 
   useEffect(() => {
     console.log('🔄 App mounting - checking auth state...');

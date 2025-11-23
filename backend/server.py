@@ -9086,23 +9086,27 @@ async def get_oversell_protection_map(
         
         occupancy_pct = (bookings_count / total_rooms * 100) if total_rooms > 0 else 0
         
-        # Calculate oversell risk and protection
-        if occupancy_pct >= 95:
+        # Calculate oversell risk and protection (5-level system)
+        if occupancy_pct >= 100:
+            risk_level = 'blackout'  # New level
+            max_oversell = 0
+            recommendation = "🔴 BLACKOUT - STOP ALL SELLING"
+        elif occupancy_pct >= 95:
             risk_level = 'danger'
             max_oversell = 0
-            recommendation = "STOP SELLING - At capacity"
+            recommendation = "🔴 RED ALERT - Stop selling, relocate if possible"
         elif occupancy_pct >= 85:
             risk_level = 'caution'
             max_oversell = 1
-            recommendation = "Careful - Allow 1 oversell max"
+            recommendation = "🟠 ORANGE - Careful, max 1 oversell with backup"
         elif occupancy_pct >= 70:
             risk_level = 'moderate'
             max_oversell = 2
-            recommendation = "Safe - Allow 2 oversells"
+            recommendation = "🟡 YELLOW - Allow 2 oversells, monitor closely"
         else:
             risk_level = 'safe'
             max_oversell = 3
-            recommendation = "Safe - Normal operations"
+            recommendation = "🟢 GREEN - Safe to sell, normal operations"
         
         # Calculate walk probability
         walk_probability = max(0, min(100, (occupancy_pct - 90) * 10))

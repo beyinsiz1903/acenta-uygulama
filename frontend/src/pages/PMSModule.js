@@ -869,11 +869,18 @@ const PMSModule = ({ user, tenant, onLogout }) => {
 
   const generateUpsellOffers = async (bookingId) => {
     try {
-      const response = await axios.post(`/ai/upsell/generate?booking_id=${bookingId}`);
+      const response = await axios.post(`/ai/upsell/generate?booking_id=${bookingId}`, {}, { timeout: 10000 });
       toast.success(`Generated ${response.data.total_offers} upsell offers`);
       setUpsellOffers(response.data.offers);
     } catch (error) {
-      toast.error('Failed to generate upsell offers');
+      console.error('Upsell generation error:', error);
+      if (error.response?.status === 503) {
+        toast.error('AI service is temporarily unavailable. Using default offers.');
+      } else if (error.response?.status === 404) {
+        toast.error('Booking not found or no available upsell options.');
+      } else {
+        toast.error(error.response?.data?.detail || 'Failed to generate upsell offers. Please try again.');
+      }
     }
   };
 

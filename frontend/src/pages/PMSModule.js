@@ -929,7 +929,14 @@ const PMSModule = ({ user, tenant, onLogout }) => {
         template_id: null
       });
     } catch (error) {
-      toast.error('Failed to send message');
+      console.error('Message send error:', error);
+      if (error.response?.status === 503) {
+        toast.error(`${newMessage.channel.toUpperCase()} service is not configured. Please configure API credentials in Settings.`);
+      } else if (error.response?.status === 401) {
+        toast.error('Authentication failed. Please check your API credentials.');
+      } else {
+        toast.error(error.response?.data?.detail || `Failed to send ${newMessage.channel} message. Please check your configuration.`);
+      }
     }
   };
 

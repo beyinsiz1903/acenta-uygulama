@@ -4481,6 +4481,7 @@ async def get_occupancy_report(start_date: str, end_date: str, current_user: Use
             'occupied_room_nights': occupied_room_nights, 'occupancy_rate': round(occupancy_rate, 2)}
 
 @api_router.get("/reports/revenue")
+@cached(ttl=600, key_prefix="report_revenue")  # Cache for 10 minutes
 async def get_revenue_report(start_date: str, end_date: str, current_user: User = Depends(get_current_user)):
     start = datetime.fromisoformat(start_date)
     end = datetime.fromisoformat(end_date)

@@ -26451,11 +26451,16 @@ async def get_complete_guest_profile(
     
     tags = guest_tags_doc.get('tags', []) if guest_tags_doc else []
     
+    # Clean guest data to remove ObjectId fields
+    guest_clean = {k: v for k, v in guest.items() if k != '_id'}
+    preferences_clean = {k: v for k, v in (preferences or {}).items() if k != '_id'}
+    
     return {
-        'guest': guest,
+        'guest_id': guest_id,
+        'guest': guest_clean,
         'stay_history': stay_history,
         'total_stays': len(stay_history),
-        'preferences': preferences if preferences else {},
+        'preferences': preferences_clean,
         'tags': tags,
         'vip_status': 'vip' in tags or guest.get('vip_status', False),
         'blacklist_status': 'blacklist' in tags

@@ -193,22 +193,26 @@ function App() {
   // Guest user routes
   if (isAuthenticated && user?.role === 'guest') {
     return (
-      <div className="App">
-        <Toaster position="top-right" />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/*" element={<GuestPortal user={user} onLogout={handleLogout} />} />
-          </Routes>
-        </BrowserRouter>
-      </div>
+      <QueryClientProvider client={queryClient}>
+        <div className="App">
+          <Toaster position="top-right" />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/*" element={<GuestPortal user={user} onLogout={handleLogout} />} />
+            </Routes>
+          </BrowserRouter>
+        </div>
+        <ReactQueryDevtools initialIsOpen={false} />
+      </QueryClientProvider>
     );
   }
 
   // Hotel admin routes
   return (
-    <div className="App">
-      <Toaster position="top-right" />
-      <BrowserRouter>
+    <QueryClientProvider client={queryClient}>
+      <div className="App">
+        <Toaster position="top-right" />
+        <BrowserRouter>
         <Routes>
           <Route
             path="/"

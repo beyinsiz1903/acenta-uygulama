@@ -2398,6 +2398,10 @@ async def get_rooms(current_user: User = Depends(get_current_user)):
             # Process cached data quickly
             rooms = []
             for room in cached_data:
+                # Ensure tenant_id is present
+                if 'tenant_id' not in room:
+                    room['tenant_id'] = current_user.tenant_id
+                
                 if 'floor' in room and isinstance(room['floor'], str):
                     try:
                         room['floor'] = int(room['floor'])

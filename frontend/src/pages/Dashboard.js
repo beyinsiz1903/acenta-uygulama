@@ -6,8 +6,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import Layout from '@/components/Layout';
 import { Hotel, FileText, TrendingUp, Award, ShoppingCart, Users, BedDouble, Calendar } from 'lucide-react';
+import cacheDB from '@/utils/cacheDB';
 
-// Cache for dashboard data
+// Memory cache for dashboard data (faster than IndexedDB)
 const dashboardCache = {
   stats: null,
   aiBriefing: null,

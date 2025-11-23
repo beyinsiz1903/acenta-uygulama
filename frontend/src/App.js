@@ -216,13 +216,17 @@ function App() {
         <Toaster position="top-right" />
         <BrowserRouter>
         <Routes>
+          {/* Public Landing Page */}
+          <Route path="/landing" element={<LandingPage />} />
+          <Route path="/login" element={<Navigate to="/auth" replace />} />
+          
           <Route
             path="/"
             element={
               isAuthenticated ? (
                 <GMDashboard user={user} tenant={tenant} onLogout={handleLogout} />
               ) : (
-                <Navigate to="/auth" replace />
+                <LandingPage />
               )
             }
           />

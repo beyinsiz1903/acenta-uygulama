@@ -175,7 +175,7 @@ const LandingPage = () => {
           <div className="text-center">
             <div className="inline-flex items-center space-x-2 bg-blue-500 bg-opacity-30 px-4 py-2 rounded-full mb-8">
               <Zap className="w-5 h-5" />
-              <span className="text-sm font-medium">%99.2 Daha Hızlı Performans</span>
+              <span className="text-sm font-medium">Türkiye'nin En Hızlı Büyüyen PMS'i</span>
             </div>
             <h1 className="text-4xl md:text-6xl font-bold mb-6">
               Otel Yönetiminde

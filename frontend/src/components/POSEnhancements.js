@@ -381,8 +381,10 @@ const POSEnhancements = () => {
                         </div>
 
                         {order.folio_id && (
-                          <div className="text-xs text-gray-600">
-                            Posted to folio: {order.folio_id}
+                          <div className="mt-2">
+                            <Badge variant="secondary" className="bg-green-100 text-green-700 text-xs">
+                              ✓ Posted to Room Folio
+                            </Badge>
                           </div>
                         )}
                       </div>

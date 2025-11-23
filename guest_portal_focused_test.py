@@ -14,7 +14,7 @@ from typing import Dict, List, Any, Optional
 import uuid
 
 # Configuration
-BACKEND_URL = "https://cache-boost-2.preview.emergentagent.com/api"
+BACKEND_URL = "https://tam-optimizasyon.preview.emergentagent.com/api"
 
 class FocusedGuestPortalTester:
     def __init__(self):

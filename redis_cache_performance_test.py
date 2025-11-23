@@ -14,7 +14,7 @@ from datetime import datetime
 from typing import Dict, List, Tuple
 
 # Configuration
-BACKEND_URL = "https://cache-boost-2.preview.emergentagent.com/api"
+BACKEND_URL = "https://tam-optimizasyon.preview.emergentagent.com/api"
 REDIS_URL = "redis://localhost:6379/0"
 
 # Test endpoints with their cache TTL

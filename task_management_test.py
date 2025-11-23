@@ -11,7 +11,7 @@ import os
 from datetime import datetime, timedelta
 
 # Configuration
-BACKEND_URL = "https://cache-boost-2.preview.emergentagent.com/api"
+BACKEND_URL = "https://tam-optimizasyon.preview.emergentagent.com/api"
 TEST_EMAIL = "test@hotel.com"
 TEST_PASSWORD = "test123"
 

@@ -2253,6 +2253,7 @@ async def login(data: UserLogin):
     return TokenResponse(access_token=token, user=user, tenant=tenant)
 
 @api_router.get("/auth/me", response_model=User)
+@cached(ttl=300, key_prefix="auth_me")  # Cache for 5 min
 async def get_me(current_user: User = Depends(get_current_user)):
     return current_user
 
@@ -2260,6 +2261,7 @@ async def get_me(current_user: User = Depends(get_current_user)):
 # NOTE: New guest endpoints are at line 21170+ (GUEST MOBILE APP ENDPOINTS)
 
 @api_router.get("/guest/bookings-old")
+@cached(ttl=600, key_prefix="guest_bookings_old")  # Cache for 10 min
 async def get_guest_bookings_old(current_user: User = Depends(get_current_user)):
     if current_user.role != UserRole.GUEST:
         raise HTTPException(status_code=403, detail="Only guests can access this endpoint")
@@ -2292,6 +2294,7 @@ async def get_guest_bookings_old(current_user: User = Depends(get_current_user))
     return {'active_bookings': active_bookings, 'past_bookings': past_bookings}
 
 @api_router.get("/guest/loyalty-old")
+@cached(ttl=600, key_prefix="guest_loyalty_old")  # Cache for 10 min
 async def get_guest_loyalty_old(current_user: User = Depends(get_current_user)):
     if current_user.role != UserRole.GUEST:
         raise HTTPException(status_code=403, detail="Only guests can access this endpoint")
@@ -2315,6 +2318,7 @@ async def get_guest_loyalty_old(current_user: User = Depends(get_current_user)):
     return {'loyalty_programs': enriched_programs, 'total_points': total_points}
 
 @api_router.get("/guest/notification-preferences")
+@cached(ttl=600, key_prefix="guest_notif_prefs")  # Cache for 10 min
 async def get_notification_preferences(current_user: User = Depends(get_current_user)):
     prefs = await db.notification_preferences.find_one({'user_id': current_user.id}, {'_id': 0})
     if not prefs:
@@ -2360,11 +2364,13 @@ async def create_room_service_request(request: RoomServiceCreate, current_user: 
     return room_service
 
 @api_router.get("/guest/room-service/{booking_id}")
+@cached(ttl=300, key_prefix="guest_room_service")  # Cache for 5 min
 async def get_room_service_requests(booking_id: str, current_user: User = Depends(get_current_user)):
     services = await db.room_services.find({'booking_id': booking_id}, {'_id': 0}).to_list(1000)
     return services
 
 @api_router.get("/guest/hotels")
+@cached(ttl=600, key_prefix="guest_hotels")  # Cache for 10 min
 async def browse_hotels(current_user: User = Depends(get_current_user)):
     hotels = await db.tenants.find({}, {'_id': 0}).to_list(1000)
     return hotels
@@ -2636,6 +2642,7 @@ async def get_folio_dashboard_stats(
         }
 
 @api_router.get("/folio/pending-ar")
+@cached(ttl=600, key_prefix="folio_pending_ar")  # Cache for 10 min
 async def get_pending_ar(
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
@@ -2709,6 +2716,7 @@ async def get_pending_ar(
         return []
 
 @api_router.get("/folio/booking/{booking_id}", response_model=List[Folio])
+@cached(ttl=180, key_prefix="folio_by_booking")  # Cache for 3 min
 async def get_booking_folios(booking_id: str, current_user: User = Depends(get_current_user)):
     """Get all folios for a booking"""
     folios = await db.folios.find({
@@ -2723,6 +2731,7 @@ async def get_booking_folios(booking_id: str, current_user: User = Depends(get_c
     return folios
 
 @api_router.get("/folio/{folio_id}", response_model=Dict[str, Any])
+@cached(ttl=180, key_prefix="folio_details")  # Cache for 3 min
 async def get_folio_details(folio_id: str, current_user: User = Depends(get_current_user)):
     """Get folio with charges and payments"""
     folio = await db.folios.find_one({
@@ -2755,6 +2764,7 @@ async def get_folio_details(folio_id: str, current_user: User = Depends(get_curr
 
 
 @api_router.get("/folio/{folio_id}/excel")
+@cached(ttl=600, key_prefix="folio_excel")  # Cache for 10 min
 async def export_folio_excel(folio_id: str, current_user: User = Depends(get_current_user)):
     """Export Folio to Excel"""
     folio_data = await get_folio_details(folio_id, current_user)
@@ -3383,6 +3393,7 @@ async def get_bookings(
     return bookings
 
 @api_router.get("/bookings/{booking_id}/override-logs", response_model=List[RateOverrideLog])
+@cached(ttl=600, key_prefix="booking_override_logs")  # Cache for 10 min
 async def get_booking_override_logs(booking_id: str, current_user: User = Depends(get_current_user)):
     """Get all rate override logs for a specific booking."""
     logs = await db.rate_override_logs.find({
@@ -3538,6 +3549,7 @@ async def get_pms_dashboard(current_user: User = Depends(get_current_user)):
     }
 
 @api_router.get("/pms/room-services")
+@cached(ttl=300, key_prefix="pms_room_services")  # Cache for 5 min
 async def get_hotel_room_services(current_user: User = Depends(get_current_user)):
     services = await db.room_services.find({'tenant_id': current_user.tenant_id}, {'_id': 0}).to_list(1000)
     return services
@@ -3566,6 +3578,7 @@ async def create_invoice(invoice_data: InvoiceCreate, current_user: User = Depen
     return invoice
 
 @api_router.get("/invoices", response_model=List[Invoice])
+@cached(ttl=300, key_prefix="invoices_list")  # Cache for 5 min
 async def get_invoices(current_user: User = Depends(get_current_user)):
     invoices = await db.invoices.find({'tenant_id': current_user.tenant_id}, {'_id': 0}).to_list(1000)
     return invoices
@@ -3597,6 +3610,7 @@ async def create_price_analysis(analysis: PriceAnalysis, current_user: User = De
     return analysis
 
 @api_router.get("/rms/analysis", response_model=List[PriceAnalysis])
+@cached(ttl=600, key_prefix="rms_analysis")  # Cache for 10 min
 async def get_price_analysis(current_user: User = Depends(get_current_user)):
     analyses = await db.price_analysis.find({'tenant_id': current_user.tenant_id}, {'_id': 0}).to_list(1000)
     return analyses
@@ -3612,6 +3626,7 @@ async def create_loyalty_program(program_data: LoyaltyProgramCreate, current_use
     return program
 
 @api_router.get("/loyalty/programs")
+@cached(ttl=600, key_prefix="loyalty_programs")  # Cache for 10 min
 async def get_loyalty_programs(current_user: User = Depends(get_current_user)):
     """Get loyalty program definitions (not guest memberships)"""
     programs = await db.loyalty_programs.find({'tenant_id': current_user.tenant_id}, {'_id': 0}).to_list(1000)
@@ -3633,6 +3648,7 @@ async def create_loyalty_transaction(transaction_data: LoyaltyTransactionCreate,
     return transaction
 
 @api_router.get("/loyalty/guest/{guest_id}")
+@cached(ttl=600, key_prefix="loyalty_guest")  # Cache for 10 min
 async def get_guest_loyalty_by_id(guest_id: str, current_user: User = Depends(get_current_user)):
     program = await db.loyalty_programs.find_one({'guest_id': guest_id, 'tenant_id': current_user.tenant_id}, {'_id': 0})
     transactions = await db.loyalty_transactions.find({'guest_id': guest_id, 'tenant_id': current_user.tenant_id}, {'_id': 0}).to_list(1000)
@@ -3648,6 +3664,7 @@ async def create_product(product: Product):
     return product
 
 @api_router.get("/marketplace/products", response_model=List[Product])
+@cached(ttl=300, key_prefix="marketplace_products")  # Cache for 5 min
 async def get_products():
     products = await db.products.find({}, {'_id': 0}).to_list(1000)
     return products
@@ -3661,6 +3678,7 @@ async def create_order(order_data: OrderCreate, current_user: User = Depends(get
     return order
 
 @api_router.get("/marketplace/orders", response_model=List[Order])
+@cached(ttl=300, key_prefix="marketplace_orders")  # Cache for 5 min
 async def get_orders(current_user: User = Depends(get_current_user)):
     orders = await db.orders.find({'tenant_id': current_user.tenant_id}, {'_id': 0}).to_list(1000)
     return orders
@@ -3846,6 +3864,7 @@ async def add_folio_charge(booking_id: str, charge_type: str, description: str, 
     return folio_charge
 
 @api_router.get("/frontdesk/folio/{booking_id}")
+@cached(ttl=180, key_prefix="frontdesk_folio")  # Cache for 3 min
 async def get_folio(booking_id: str, current_user: User = Depends(get_current_user)):
     charges = await db.folio_charges.find({'booking_id': booking_id, 'tenant_id': current_user.tenant_id}, {'_id': 0}).to_list(1000)
     payments = await db.payments.find({'booking_id': booking_id, 'tenant_id': current_user.tenant_id}, {'_id': 0}).to_list(1000)
@@ -3864,6 +3883,7 @@ async def process_payment(booking_id: str, amount: float, method: str, reference
     return payment
 
 @api_router.get("/frontdesk/arrivals")
+@cached(ttl=120, key_prefix="frontdesk_arrivals")  # Cache for 2 min
 async def get_arrivals(date: Optional[str] = None, current_user: User = Depends(get_current_user)):
     target_date = datetime.fromisoformat(date).date() if date else datetime.now(timezone.utc).date()
     start_of_day = datetime.combine(target_date, datetime.min.time())
@@ -3878,6 +3898,7 @@ async def get_arrivals(date: Optional[str] = None, current_user: User = Depends(
     return enriched
 
 @api_router.get("/frontdesk/departures")
+@cached(ttl=120, key_prefix="frontdesk_departures")  # Cache for 2 min
 async def get_departures(date: Optional[str] = None, current_user: User = Depends(get_current_user)):
     target_date = datetime.fromisoformat(date).date() if date else datetime.now(timezone.utc).date()
     start_of_day = datetime.combine(target_date, datetime.min.time())
@@ -3895,6 +3916,7 @@ async def get_departures(date: Optional[str] = None, current_user: User = Depend
     return enriched
 
 @api_router.get("/frontdesk/inhouse")
+@cached(ttl=180, key_prefix="frontdesk_inhouse")  # Cache for 3 min
 async def get_inhouse_guests(current_user: User = Depends(get_current_user)):
     bookings = await db.bookings.find({'tenant_id': current_user.tenant_id, 'status': 'checked_in'}, {'_id': 0}).to_list(1000)
     enriched = []
@@ -3956,6 +3978,7 @@ async def get_room_status_board(current_user: User = Depends(get_current_user)):
     return {'rooms': rooms, 'status_counts': status_counts, 'total_rooms': len(rooms)}
 
 @api_router.get("/housekeeping/due-out")
+@cached(ttl=120, key_prefix="hk_due_out")  # Cache for 2 min
 async def get_due_out_rooms(current_user: User = Depends(get_current_user)):
     """Get rooms with guests checking out today"""
     today = datetime.now(timezone.utc).date()
@@ -4001,6 +4024,7 @@ async def get_due_out_rooms(current_user: User = Depends(get_current_user)):
     }
 
 @api_router.get("/housekeeping/stayovers")
+@cached(ttl=120, key_prefix="hk_stayovers")  # Cache for 2 min
 async def get_stayover_rooms(current_user: User = Depends(get_current_user)):
     """Get rooms with guests staying beyond today"""
     today = datetime.now(timezone.utc).date()
@@ -4047,6 +4071,7 @@ async def get_stayover_rooms(current_user: User = Depends(get_current_user)):
     }
 
 @api_router.get("/housekeeping/arrivals")
+@cached(ttl=120, key_prefix="hk_arrivals")  # Cache for 2 min
 async def get_arrival_rooms(current_user: User = Depends(get_current_user)):
     """Get rooms with guests arriving today"""
     today = datetime.now(timezone.utc).date()
@@ -4172,6 +4197,7 @@ async def assign_housekeeping_task(
 # ============= ROOM BLOCKS (OUT OF ORDER / OUT OF SERVICE) =============
 
 @api_router.get("/pms/room-blocks")
+@cached(ttl=300, key_prefix="pms_room_blocks")  # Cache for 5 min
 async def get_room_blocks(
     room_id: Optional[str] = None,
     status: Optional[str] = None,
@@ -4521,6 +4547,7 @@ async def get_daily_summary(date_str: Optional[str] = None, current_user: User =
             'occupancy_rate': round((inhouse / total_rooms * 100) if total_rooms > 0 else 0, 2), 'daily_revenue': round(daily_revenue, 2)}
 
 @api_router.get("/reports/forecast")
+@cached(ttl=900, key_prefix="report_forecast")  # Cache for 15 min
 async def get_forecast(days: int = 30, current_user: User = Depends(get_current_user)):
     today = datetime.now(timezone.utc).date()
     forecast_data = []
@@ -4538,6 +4565,7 @@ async def get_forecast(days: int = 30, current_user: User = Depends(get_current_
 # ============= MANAGEMENT REPORTS =============
 
 @api_router.get("/reports/daily-flash-pdf")
+@cached(ttl=600, key_prefix="report_daily_flash_pdf")  # Cache for 10 min
 async def get_daily_flash_pdf(current_user: User = Depends(get_current_user)):
     """
     Export daily flash report as PDF
@@ -4807,6 +4835,7 @@ async def get_daily_flash_report(date_str: Optional[str] = None, current_user: U
 
 
 @api_router.get("/reports/daily-flash/excel")
+@cached(ttl=600, key_prefix="report_daily_flash_excel")  # Cache for 10 min
 async def export_daily_flash_excel(date_str: Optional[str] = None, current_user: User = Depends(get_current_user)):
     """Export Daily Flash Report to Excel"""
     # Get the report data
@@ -5193,6 +5222,7 @@ async def get_housekeeping_dashboard(current_user: User = Depends(get_current_us
     }
 
 @api_router.get("/department/revenue/comprehensive-suggestions")
+@cached(ttl=600, key_prefix="revenue_suggestions")  # Cache for 10 min
 async def get_revenue_comprehensive_suggestions(current_user: User = Depends(get_current_user)):
     """Revenue Manager comprehensive suggestions: pricing, min stay, CTA"""
     today = datetime.now(timezone.utc).date()
@@ -5309,6 +5339,7 @@ async def get_finance_dashboard(current_user: User = Depends(get_current_user)):
     }
 
 @api_router.get("/department/sales/corporate-accounts")
+@cached(ttl=600, key_prefix="sales_corporate")  # Cache for 10 min
 async def get_corporate_accounts(
     sort_by: str = 'revenue',
     current_user: User = Depends(get_current_user)
@@ -5378,6 +5409,7 @@ async def get_corporate_accounts(
     }
 
 @api_router.get("/department/it/system-info")
+@cached(ttl=600, key_prefix="it_system_info")  # Cache for 10 min
 async def get_it_system_info(current_user: User = Depends(get_current_user)):
     """IT Manager - System architecture and performance info"""
     return {
@@ -5413,6 +5445,7 @@ async def get_it_system_info(current_user: User = Depends(get_current_user)):
     }
 
 @api_router.get("/department/guest-relations/vip-notes")
+@cached(ttl=300, key_prefix="guest_relations_vip")  # Cache for 5 min
 async def get_vip_notes(current_user: User = Depends(get_current_user)):
     """Guest Relations - VIP notes and review integrations"""
     
@@ -5454,6 +5487,7 @@ async def get_vip_notes(current_user: User = Depends(get_current_user)):
     }
 
 @api_router.get("/ai/activity-feed")
+@cached(ttl=300, key_prefix="ai_activity_feed")  # Cache for 5 min
 async def get_ai_activity_feed(
     limit: int = 10,
     current_user: User = Depends(get_current_user)
@@ -5666,6 +5700,7 @@ async def get_ai_activity_feed(
     }
 
 @api_router.get("/revenue/by-department")
+@cached(ttl=900, key_prefix="revenue_by_dept")  # Cache for 15 min
 async def get_revenue_by_department(
     start_date: str = None,
     end_date: str = None,
@@ -5849,6 +5884,7 @@ async def assign_room_to_booking(
     }
 
 @api_router.get("/bookings/{booking_id}/available-rooms")
+@cached(ttl=120, key_prefix="booking_available_rooms")  # Cache for 2 min
 async def get_available_rooms_for_booking(
     booking_id: str,
     current_user: User = Depends(get_current_user)
@@ -6025,6 +6061,7 @@ async def complete_cleaning_timer(
     }
 
 @api_router.get("/housekeeping/active-timers")
+@cached(ttl=60, key_prefix="hk_active_timers")  # Cache for 1 min
 async def get_active_cleaning_timers(current_user: User = Depends(get_current_user)):
     """Get all active cleaning timers"""
     tasks = await db.housekeeping_tasks.find({
@@ -6107,6 +6144,7 @@ async def get_housekeeping_performance_stats(
     }
 
 @api_router.get("/rms/rate-recommendations")
+@cached(ttl=600, key_prefix="rms_recommendations")  # Cache for 10 min
 async def get_rate_recommendations(
     days_ahead: int = 14,
     current_user: User = Depends(get_current_user)
@@ -6495,6 +6533,7 @@ async def get_market_segment_report(
 
 
 @api_router.get("/reports/market-segment/excel")
+@cached(ttl=900, key_prefix="report_market_segment_excel")  # Cache for 15 min
 async def export_market_segment_excel(
     start_date: str,
     end_date: str,
@@ -6653,6 +6692,7 @@ async def get_company_aging_report(current_user: User = Depends(get_current_user
 
 
 @api_router.get("/reports/company-aging/excel")
+@cached(ttl=900, key_prefix="report_company_aging_excel")  # Cache for 15 min
 async def export_company_aging_excel(current_user: User = Depends(get_current_user)):
     """Export Company Aging Report to Excel"""
     report_data = await get_company_aging_report(current_user)
@@ -6815,6 +6855,7 @@ async def get_finance_snapshot(current_user: User = Depends(get_current_user)):
 
 
 @api_router.get("/pos/auto-post-settings")
+@cached(ttl=600, key_prefix="pos_auto_post")  # Cache for 10 min
 async def get_pos_auto_post_settings(current_user: User = Depends(get_current_user)):
     """
     Get POS auto-post settings for the tenant
@@ -6995,6 +7036,7 @@ async def manual_pos_post(
     }
 
 @api_router.get("/rates/periods")
+@cached(ttl=600, key_prefix="rates_periods")  # Cache for 10 min
 async def get_rate_periods(
     operator_id: str,
     room_type_id: str,
@@ -7050,6 +7092,7 @@ async def bulk_update_rate_periods(
     return {'message': f'{len(periods)} rate periods saved successfully'}
 
 @api_router.get("/rates/stop-sale/status")
+@cached(ttl=300, key_prefix="rates_stop_sale")  # Cache for 5 min
 async def get_stop_sale_status(current_user: User = Depends(get_current_user)):
     """
     Get stop-sale status for all operators
@@ -7100,6 +7143,7 @@ async def toggle_stop_sale(
     }
 
 @api_router.get("/allotment/consumption")
+@cached(ttl=300, key_prefix="allotment_consumption")  # Cache for 5 min
 async def get_allotment_consumption(
     start_date: str = None,
     end_date: str = None,
@@ -7594,6 +7638,7 @@ async def get_housekeeping_efficiency_report(
 
 
 @api_router.get("/reports/housekeeping-efficiency/excel")
+@cached(ttl=900, key_prefix="report_hk_efficiency_excel")  # Cache for 15 min
 async def export_housekeeping_efficiency_excel(
     start_date: str,
     end_date: str,
@@ -7630,6 +7675,7 @@ async def export_housekeeping_efficiency_excel(
 # ============= AUDIT & SECURITY =============
 
 @api_router.get("/audit-logs")
+@cached(ttl=600, key_prefix="audit_logs")  # Cache for 10 min
 async def get_audit_logs(
     entity_type: Optional[str] = None,
     entity_id: Optional[str] = None,
@@ -7671,6 +7717,7 @@ async def get_audit_logs(
     }
 
 @api_router.get("/export/folio/{folio_id}")
+@cached(ttl=600, key_prefix="export_folio")  # Cache for 10 min
 async def export_folio_csv(folio_id: str, current_user: User = Depends(get_current_user)):
     """Export folio transactions as CSV"""
     if not has_permission(current_user.role, Permission.EXPORT_DATA):
@@ -7761,6 +7808,7 @@ async def check_permission(
 # ============= CHANNEL MANAGER & RMS =============
 
 @api_router.get("/channel-manager/connections")
+@cached(ttl=300, key_prefix="cm_connections")  # Cache for 5 min
 async def get_channel_connections(current_user: User = Depends(get_current_user)):
     """Get all channel connections"""
     connections = await db.channel_connections.find(
@@ -7792,6 +7840,7 @@ async def create_channel_connection(
     return {'message': f'Channel {channel_name} connected successfully', 'connection': connection}
 
 @api_router.get("/channel-manager/ota-reservations")
+@cached(ttl=180, key_prefix="cm_ota_reservations")  # Cache for 3 min
 async def get_ota_reservations(
     status: Optional[str] = None,
     channel: Optional[ChannelType] = None,
@@ -7913,6 +7962,7 @@ async def import_ota_reservation(
     }
 
 @api_router.get("/channel-manager/exceptions")
+@cached(ttl=180, key_prefix="cm_exceptions")  # Cache for 3 min
 async def get_exception_queue(
     status: Optional[str] = None,
     exception_type: Optional[str] = None,
@@ -7931,6 +7981,7 @@ async def get_exception_queue(
 # ============= OTA OVERLAY & RATE PARITY =============
 
 @api_router.get("/channel/parity/check")
+@cached(ttl=300, key_prefix="channel_parity")  # Cache for 5 min
 async def check_rate_parity(
     date: Optional[str] = None,
     room_type: Optional[str] = None,
@@ -8011,6 +8062,7 @@ async def check_rate_parity(
     }
 
 @api_router.get("/channel/status")
+@cached(ttl=180, key_prefix="channel_status")  # Cache for 3 min
 async def get_channel_status(current_user: User = Depends(get_current_user)):
     """Get health status of all channel connections"""
     # Get all connections

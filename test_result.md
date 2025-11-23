@@ -797,6 +797,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "✅ ENDPOINT NOW WORKING - PUT /api/notifications/preferences successfully returns updated_preference field in response. Tested with approval_request, booking_updates, maintenance_alerts notification types. All test cases working correctly with proper response structure including message and updated_preference fields. Preference updates processed and returned correctly."
+      - working: true
+        agent: "testing"
+        comment: "✅ FINAL SUCCESS TEST CONFIRMED - PUT /api/notifications/preferences working perfectly with 'updated_preference' field present. Test data: {notification_type: 'approval_request', enabled: true, channels: ['in_app']}. Response: 'Bildirim tercihleri güncellendi' with updated_preference field. Critical field requirement satisfied."
 
   - task: "Notification System - Get Notifications List"
     implemented: true

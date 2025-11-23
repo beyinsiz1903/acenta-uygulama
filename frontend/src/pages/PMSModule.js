@@ -89,6 +89,15 @@ const PMSModule = ({ user, tenant, onLogout }) => {
     template_id: null
   });
   const [sentMessages, setSentMessages] = useState([]);
+  const [findRoomCriteria, setFindRoomCriteria] = useState({
+    check_in: '',
+    check_out: '',
+    room_type: '',
+    guests: 1
+  });
+  const [availableRooms, setAvailableRooms] = useState([]);
+  const [loadingAvailableRooms, setLoadingAvailableRooms] = useState(false);
+
   const [reports, setReports] = useState({
     occupancy: null,
     revenue: null,

@@ -69,7 +69,7 @@ async def check_redis(redis_client: redis.Redis) -> Dict[str, Any]:
 def check_system_resources() -> Dict[str, Any]:
     """Check system resources"""
     try:
-        cpu_percent = psutil.cpu_percent(interval=0.1)
+        cpu_percent = psutil.cpu_percent(interval=0)  # Instant reading, no wait
         memory = psutil.virtual_memory()
         disk = psutil.disk_usage('/')
         

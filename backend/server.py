@@ -105,14 +105,15 @@ mongo_url = os.environ['MONGO_URL']
 # Optimized connection pool for high concurrency (550 rooms, 300+ daily transactions)
 client = AsyncIOMotorClient(
     mongo_url,
-    maxPoolSize=200,  # Support high concurrent requests
-    minPoolSize=20,   # Always maintain minimum connections
-    maxIdleTimeMS=60000,  # 60 seconds idle timeout
-    serverSelectionTimeoutMS=5000,
-    connectTimeoutMS=10000,
-    socketTimeoutMS=30000,
+    maxPoolSize=500,  # Maximum connections for ultra performance
+    minPoolSize=50,   # Keep more connections ready
+    maxIdleTimeMS=45000,  # 45 seconds idle
+    serverSelectionTimeoutMS=3000,  # Faster timeout
+    connectTimeoutMS=5000,  # Faster connect
+    socketTimeoutMS=20000,  # Faster socket timeout
     retryWrites=True,
-    retryReads=True
+    retryReads=True,
+    maxConnecting=10  # Allow more simultaneous connections
 )
 db = client[os.environ['DB_NAME']]
 

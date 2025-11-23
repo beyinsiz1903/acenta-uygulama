@@ -32773,7 +32773,6 @@ async def get_pending_approvals(
     }
 
 @api_router.get("/approvals/my-requests")
-@cached(ttl=300, key_prefix="approvals_my_requests")  # Cache for 5 min
 async def get_my_approval_requests(
     status: Optional[str] = None,
     credentials: HTTPAuthorizationCredentials = Depends(security)
@@ -32789,14 +32788,14 @@ async def get_my_approval_requests(
     if status:
         query['status'] = status
     
-    approvals = []
+    requests = []
     async for approval in db.approval_requests.find(query).sort('created_at', -1):
         approval.pop('_id', None)
-        approvals.append(approval)
+        requests.append(approval)
     
     return {
-        'approvals': approvals,
-        'count': len(approvals)
+        'requests': requests,
+        'count': len(requests)
     }
 
 @api_router.post("/approvals/{approval_id}/approve")

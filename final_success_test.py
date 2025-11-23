@@ -405,21 +405,16 @@ class FinalSuccessTest:
         try:
             url = f"{BACKEND_URL}/pos/create-order"
             
-            # Test data
+            # Test data with correct POSOrderCreateRequest model
             test_data = {
-                "booking_id": str(uuid.uuid4()),
+                "booking_id": None,
+                "folio_id": None,
                 "order_items": [
                     {
-                        "item_name": "Coffee",
-                        "quantity": 2,
-                        "unit_price": 5.0,
-                        "total": 10.0
+                        "item_id": str(uuid.uuid4()),  # Required field
+                        "quantity": 2
                     }
-                ],
-                "table_number": "T1",
-                "server_name": "John Doe",
-                "post_to_folio": False,
-                "notes": "Test order"
+                ]
             }
             
             async with self.session.post(url, json=test_data, headers=self.get_headers()) as response:

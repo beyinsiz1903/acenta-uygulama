@@ -49,6 +49,7 @@ import RevenueManagementMobile from "@/pages/RevenueManagementMobile";
 import GMEnhancedDashboard from "@/pages/GMEnhancedDashboard";
 import SalesCRMMobile from "@/pages/SalesCRMMobile";
 import LandingPage from "@/pages/LandingPage";
+import SimpleAdminPanel from "@/pages/SimpleAdminPanel";
 import RateManagementMobile from "@/pages/RateManagementMobile";
 import RevenueMobile from "@/pages/RevenueMobile";
 import ChannelManagerMobile from "@/pages/ChannelManagerMobile";

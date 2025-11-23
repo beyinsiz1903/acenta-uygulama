@@ -4457,6 +4457,7 @@ async def cancel_room_block(
 # ============= REPORTING =============
 
 @api_router.get("/reports/occupancy")
+@cached(ttl=600, key_prefix="report_occupancy")  # Cache for 10 minutes
 async def get_occupancy_report(start_date: str, end_date: str, current_user: User = Depends(get_current_user)):
     start = datetime.fromisoformat(start_date)
     end = datetime.fromisoformat(end_date)

@@ -6426,6 +6426,7 @@ async def get_staff_detailed_statistics(
     }
 
 @api_router.get("/reports/market-segment")
+@cached(ttl=900, key_prefix="report_market_segment")  # Cache for 15 minutes
 async def get_market_segment_report(
     start_date: str,
     end_date: str,

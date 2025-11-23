@@ -221,6 +221,9 @@ function App() {
           <Route path="/landing" element={<LandingPage />} />
           <Route path="/login" element={<Navigate to="/auth" replace />} />
           
+          {/* Simple Admin Panel - No auth required for easy access */}
+          <Route path="/system-status" element={<SimpleAdminPanel />} />
+          
           <Route
             path="/"
             element={

@@ -31,6 +31,18 @@ from fastapi.responses import StreamingResponse
 # Add current directory to path for accounting models
 sys.path.append(os.path.dirname(__file__))
 
+# Import cache manager for performance optimization
+try:
+    from cache_manager import cached, cache, DashboardCache, RoomCache, BookingCache
+    print("✅ Cache manager imported successfully")
+except ImportError as e:
+    print(f"⚠️ Cache manager not available: {e}")
+    # Create dummy decorator if cache not available
+    def cached(ttl=300, key_prefix=""):
+        def decorator(func):
+            return func
+        return decorator
+
 # Import accounting models
 try:
     from accounting_models import (

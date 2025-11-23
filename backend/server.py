@@ -3358,22 +3358,41 @@ async def create_booking(booking_data: BookingCreate, current_user: User = Depen
     return booking
 
 @api_router.get("/pms/bookings", response_model=List[Booking])
-@cached(ttl=30, key_prefix="pms_bookings")  # Cache for 30 sec - ultra fresh
+@cached(ttl=15, key_prefix="pms_bookings")  # Ultra-short cache
 async def get_bookings(
-    limit: int = 50,  # Reduced default limit for speed
+    limit: int = 30,  # Further reduced for instant response
     offset: int = 0,
     start_date: Optional[str] = None,
     end_date: Optional[str] = None,
     status: Optional[str] = None,
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
-    """Get bookings with pagination and filtering - ULTRA OPTIMIZED"""
+    """Get bookings - INSTANT RESPONSE"""
     current_user = await get_current_user(credentials)
     
-    # Build query
+    # Check pre-warmed cache for default query (no filters)
+    if not start_date and not end_date and not status and offset == 0:
+        from cache_warmer import cache_warmer
+        if cache_warmer:
+            cached_data = cache_warmer.get_cached(f"bookings:{current_user.tenant_id}")
+            if cached_data:
+                # Process and return immediately
+                bookings = []
+                for booking in cached_data[:limit]:
+                    if 'rate_type' in booking:
+                        rate_map = {'advance_purchase': 'promotional', 'member': 'promotional'}
+                        if booking['rate_type'] in rate_map:
+                            booking['rate_type'] = rate_map[booking['rate_type']]
+                    if 'market_segment' in booking:
+                        segment_map = {'business': 'corporate'}
+                        if booking['market_segment'] in segment_map:
+                            booking['market_segment'] = segment_map[booking['market_segment']]
+                    bookings.append(booking)
+                return bookings
+    
+    # Fallback: Build query
     query = {'tenant_id': current_user.tenant_id}
     
-    # Date filter (default to last 30 days if no filter)
     if start_date or end_date:
         date_filter = {}
         if start_date:
@@ -3382,27 +3401,18 @@ async def get_bookings(
             date_filter['$lte'] = end_date
         query['check_in'] = date_filter
     else:
-        # Default: last 3 days to next 7 days (for performance)
         today = datetime.now(timezone.utc)
-        start_default = (today - timedelta(days=3)).isoformat()
-        end_default = (today + timedelta(days=7)).isoformat()
-        query['check_in'] = {'$gte': start_default, '$lte': end_default}
+        query['check_in'] = {
+            '$gte': (today - timedelta(days=2)).isoformat(),
+            '$lte': (today + timedelta(days=5)).isoformat()
+        }
     
-    # Status filter
     if status:
         query['status'] = status
     
-    # Essential fields projection for ultra-fast response
-    projection = {
-        '_id': 0,
-        'id': 1, 'guest_id': 1, 'room_id': 1,
-        'check_in': 1, 'check_out': 1, 'status': 1,
-        'total_amount': 1, 'guests_count': 1,
-        'rate_type': 1, 'market_segment': 1,
-        'booking_source': 1, 'tenant_id': 1
-    }
+    # Minimal projection
+    projection = {'_id': 0, 'id': 1, 'guest_id': 1, 'room_id': 1, 'check_in': 1, 'check_out': 1, 'status': 1, 'total_amount': 1}
     
-    # Get bookings with pagination
     bookings_raw = await db.bookings.find(query, projection).skip(offset).limit(limit).to_list(limit)
     
     # Fix enum mismatches

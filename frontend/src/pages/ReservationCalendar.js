@@ -655,6 +655,65 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
     return rateTypes[booking.rate_type] || { label: booking.rate_type?.toUpperCase() || 'STD', color: 'text-gray-300' };
   };
 
+
+  // RMS Dynamic Pricing - Generate alerts based on occupancy and conflicts
+  const generatePricingAlerts = () => {
+    const alerts = [];
+    const dateRange = Array.from({ length: daysToShow }, (_, i) => {
+      const date = new Date(currentDate);
+      date.setDate(date.getDate() + i);
+      return date;
+    });
+
+    dateRange.forEach(date => {
+      const occ = getOccupancyForDate(date);
+      const dateStr = date.toISOString().split('T')[0];
+      
+      // High demand alert
+      if (occ >= 90) {
+        alerts.push({
+          date: dateStr,
+          type: 'increase',
+          severity: 'high',
+          message: `Increase rates by 15-25% (${occ}% occupancy)`,
+          suggested_action: 'INCREASE',
+          percentage: '15-25%'
+        });
+      } else if (occ >= 80) {
+        alerts.push({
+          date: dateStr,
+          type: 'increase',
+          severity: 'medium',
+          message: `Consider rate increase of 10-15% (${occ}% occupancy)`,
+          suggested_action: 'INCREASE',
+          percentage: '10-15%'
+        });
+      }
+      // Low demand alert
+      else if (occ < 40) {
+        alerts.push({
+          date: dateStr,
+          type: 'decrease',
+          severity: 'medium',
+          message: `Consider promotional rates or packages (${occ}% occupancy)`,
+          suggested_action: 'PROMOTE',
+          percentage: '10-20% discount'
+        });
+      }
+    });
+
+    return alerts.slice(0, 10); // Top 10 alerts
+  };
+
+  // Calculate pricing alerts when data changes
+  useEffect(() => {
+    if (bookings.length > 0 && rooms.length > 0) {
+      const alerts = generatePricingAlerts();
+      setPricingAlerts(alerts);
+    }
+  }, [bookings, rooms, currentDate, daysToShow]);
+
+
   // Check if booking is arrival/stayover/departure for current date
   const getBookingStatus = (booking, date) => {
     const checkIn = new Date(booking.check_in);

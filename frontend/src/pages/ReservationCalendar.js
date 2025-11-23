@@ -2003,6 +2003,138 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
         )}
 
 
+
+
+        {/* Move Booking Dialog */}
+        <Dialog open={moveBookingDialog.open} onOpenChange={(open) => !open && setMoveBookingDialog({ open: false, room: null, bookings: [] })}>
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                🔄 Move Booking to Resolve Conflict
+              </DialogTitle>
+            </DialogHeader>
+            
+            {moveBookingDialog.room && (
+              <div className="space-y-4">
+                {/* Current Room Info */}
+                <div className="bg-red-50 p-4 rounded-lg border border-red-200">
+                  <div className="font-semibold text-red-900 mb-2">
+                    Conflicted Room: {moveBookingDialog.room.room_number}
+                  </div>
+                  <div className="text-sm text-gray-700">
+                    {moveBookingDialog.bookings.length} overlapping bookings need to be resolved
+                  </div>
+                </div>
+
+                {/* Select Booking to Move */}
+                <div>
+                  <Label className="text-sm font-semibold mb-2 block">Select booking to move:</Label>
+                  <div className="space-y-2">
+                    {moveBookingDialog.bookings.map((booking) => {
+                      const guest = guests.find(g => g.id === booking.guest_id);
+                      return (
+                        <div 
+                          key={booking.id}
+                          onClick={() => {
+                            setSelectedBookingToMove(booking);
+                            // Find available rooms for this booking's dates
+                            const findAvailableRooms = async () => {
+                              try {
+                                const params = new URLSearchParams({
+                                  check_in: booking.check_in.split('T')[0],
+                                  check_out: booking.check_out.split('T')[0],
+                                  room_type: moveBookingDialog.room.room_type
+                                });
+                                const response = await axios.get(`/frontdesk/available-rooms?${params.toString()}`);
+                                setAvailableRoomsForMove(response.data.available_rooms || []);
+                              } catch (error) {
+                                toast.error('Failed to find available rooms');
+                              }
+                            };
+                            findAvailableRooms();
+                          }}
+                          className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                            selectedBookingToMove?.id === booking.id 
+                              ? 'border-blue-500 bg-blue-50' 
+                              : 'border-gray-200 hover:border-blue-300'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <div className="font-medium">{guest?.name || 'Guest'}</div>
+                              <div className="text-xs text-gray-600">
+                                {new Date(booking.check_in).toLocaleDateString()} → {new Date(booking.check_out).toLocaleDateString()}
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <Badge>{booking.status}</Badge>
+                              <div className="text-xs text-gray-600 mt-1">${Math.round(booking.total_amount || 0)}</div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Available Rooms for Selected Booking */}
+                {selectedBookingToMove && availableRoomsForMove.length > 0 && (
+                  <div>
+                    <Label className="text-sm font-semibold mb-2 block">
+                      Available rooms for {new Date(selectedBookingToMove.check_in).toLocaleDateString()} → {new Date(selectedBookingToMove.check_out).toLocaleDateString()}:
+                    </Label>
+                    <div className="grid grid-cols-2 gap-3 max-h-64 overflow-y-auto">
+                      {availableRoomsForMove.map((room) => (
+                        <Card key={room.id} className="border-l-4 border-l-green-500">
+                          <CardContent className="p-3">
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between">
+                                <span className="font-semibold">Room {room.room_number}</span>
+                                <Badge variant="secondary">{room.room_type}</Badge>
+                              </div>
+                              <div className="text-xs text-gray-600">
+                                Floor {room.floor} • ${room.base_price}/night
+                              </div>
+                              <Button 
+                                size="sm" 
+                                className="w-full"
+                                onClick={async () => {
+                                  try {
+                                    await axios.put(`/bookings/${selectedBookingToMove.id}`, {
+                                      ...selectedBookingToMove,
+                                      room_id: room.id
+                                    });
+                                    toast.success(`Booking moved to Room ${room.room_number}!`);
+                                    setMoveBookingDialog({ open: false, room: null, bookings: [] });
+                                    setSelectedBookingToMove(null);
+                                    setAvailableRoomsForMove([]);
+                                    loadCalendarData(); // Refresh calendar
+                                  } catch (error) {
+                                    toast.error('Failed to move booking');
+                                  }
+                                }}
+                              >
+                                Move Here
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {selectedBookingToMove && availableRoomsForMove.length === 0 && (
+                  <div className="text-center py-8 bg-gray-50 rounded-lg">
+                    <div className="text-gray-600 mb-2">No available rooms found</div>
+                    <div className="text-xs text-gray-500">Try selecting a different booking or adjusting dates</div>
+                  </div>
+                )}
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
         {/* Legend - Market Segments & Quick Tips */}
         <Card>
           <CardContent className="py-3">

@@ -150,13 +150,17 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
       const startDate = currentDate.toISOString().split('T')[0];
       const endDate = new Date(currentDate.getTime() + daysToShow * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
       
-      const [leakageRes, heatmapRes] = await Promise.all([
+      const [leakageRes, heatmapRes, pickupRes, leadTimeRes] = await Promise.all([
         axios.get(`/enterprise/rate-leakage?start_date=${startDate}&end_date=${endDate}`).catch(() => ({ data: { leakages: [] } })),
-        axios.get(`/enterprise/availability-heatmap?start_date=${startDate}&end_date=${endDate}`).catch(() => ({ data: { heatmap: [] } }))
+        axios.get(`/enterprise/availability-heatmap?start_date=${startDate}&end_date=${endDate}`).catch(() => ({ data: { heatmap: [] } })),
+        axios.get(`/deluxe/pickup-pace-analytics?start_date=${startDate}&end_date=${endDate}`).catch(() => ({ data: null })),
+        axios.get(`/deluxe/lead-time-analysis?start_date=${startDate}&end_date=${endDate}`).catch(() => ({ data: null }))
       ]);
       
       setRateLeakages(leakageRes.data.leakages || []);
       setAvailabilityHeatmap(heatmapRes.data.heatmap || []);
+      setPickupPaceData(pickupRes.data);
+      setLeadTimeData(leadTimeRes.data);
     } catch (error) {
       console.error('Failed to load enterprise data:', error);
     }

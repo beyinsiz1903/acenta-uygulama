@@ -44258,10 +44258,6 @@ async def create_demo_request(request: DemoRequest):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Demo talebi kaydedilemedi: {str(e)}")
-        }
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Ping test failed: {str(e)}")
 
 
 # 4. ENDPOINT HEALTH CHECK

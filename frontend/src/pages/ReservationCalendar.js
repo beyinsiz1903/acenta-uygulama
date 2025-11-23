@@ -1824,8 +1824,15 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
                             size="sm" 
                             className="flex-1 text-xs h-7 bg-blue-600 hover:bg-blue-700"
                             onClick={() => {
-                              toast.success(`Opening booking mover for Room ${room.room_number}`);
-                              // Open booking move dialog
+                              // Get all bookings for this room on conflict dates
+                              const roomBookings = room.conflict_dates.flatMap(conflict => 
+                                conflict.bookings
+                              );
+                              setMoveBookingDialog({
+                                open: true,
+                                room: { room_number: room.room_number, room_type: room.room_type, id: room.room_id },
+                                bookings: roomBookings
+                              });
                             }}
                           >
                             🔄 Move Bookings
@@ -1835,8 +1842,13 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
                             variant="outline"
                             className="flex-1 text-xs h-7"
                             onClick={() => {
-                              toast.info(`Finding available rooms similar to ${room.room_type}`);
-                              // Open find room dialog
+                              // Find first conflict date
+                              const firstConflict = room.conflict_dates[0];
+                              if (firstConflict && firstConflict.bookings.length > 0) {
+                                const booking = firstConflict.bookings[0];
+                                // Open find room with this booking's dates
+                                window.open(`#find-room?check_in=${booking.check_in.split('T')[0]}&check_out=${booking.check_out.split('T')[0]}&room_type=${room.room_type}`, '_self');
+                              }
                             }}
                           >
                             🔍 Find Rooms

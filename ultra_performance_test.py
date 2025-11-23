@@ -284,7 +284,7 @@ class UltraPerformanceTester:
             self.test_results.append(result)
             
             # Small delay between endpoint tests
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(0.2)
 
     def print_performance_summary(self):
         """Print comprehensive performance summary"""

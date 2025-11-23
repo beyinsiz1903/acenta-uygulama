@@ -2388,22 +2388,35 @@ async def create_room(room_data: RoomCreate, current_user: User = Depends(get_cu
     return room
 
 @api_router.get("/pms/rooms", response_model=List[Room])
-@cached(ttl=30, key_prefix="pms_rooms")  # Cache for 30 sec - shorter for freshness
+@cached(ttl=15, key_prefix="pms_rooms")  # Ultra-short cache for instant updates
 async def get_rooms(current_user: User = Depends(get_current_user)):
-    # Project only essential fields for ultra-fast response
-    projection = {
-        '_id': 0,
-        'id': 1,
-        'room_number': 1,
-        'room_type': 1,
-        'status': 1,
-        'floor': 1,
-        'capacity': 1,
-        'max_occupancy': 1,
-        'base_price': 1,
-        'tenant_id': 1
-    }
-    rooms_raw = await db.rooms.find({'tenant_id': current_user.tenant_id}, projection).to_list(500)
+    # Check pre-warmed cache first
+    from cache_warmer import cache_warmer
+    if cache_warmer:
+        cached_data = cache_warmer.get_cached(f"rooms:{current_user.tenant_id}")
+        if cached_data:
+            # Process cached data quickly
+            rooms = []
+            for room in cached_data:
+                if 'floor' in room and isinstance(room['floor'], str):
+                    try:
+                        room['floor'] = int(room['floor'])
+                    except:
+                        room['floor'] = 1
+                elif 'floor' not in room:
+                    room['floor'] = 1
+                
+                if 'capacity' not in room and 'max_occupancy' in room:
+                    room['capacity'] = room['max_occupancy']
+                elif 'capacity' not in room:
+                    room['capacity'] = 2
+                
+                rooms.append(room)
+            return rooms
+    
+    # Fallback: Ultra-minimal projection
+    projection = {'_id': 0, 'id': 1, 'room_number': 1, 'room_type': 1, 'status': 1, 'floor': 1, 'capacity': 1, 'base_price': 1}
+    rooms_raw = await db.rooms.find({'tenant_id': current_user.tenant_id}, projection).limit(200).to_list(200)
     
     # Fix field mapping
     rooms = []

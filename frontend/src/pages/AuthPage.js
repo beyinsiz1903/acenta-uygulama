@@ -133,7 +133,7 @@ const AuthPage = ({ onLogin }) => {
               src={syroceLogo} 
               alt="Syroce" 
               style={{ 
-                height: isMobile ? '70px' : '90px', 
+                height: isMobile ? '85px' : '110px', 
                 width: 'auto',
                 filter: 'brightness(0) invert(1)'
               }} 

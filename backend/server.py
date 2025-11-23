@@ -5251,6 +5251,7 @@ async def get_revenue_comprehensive_suggestions(current_user: User = Depends(get
     }
 
 @api_router.get("/department/finance/dashboard")
+@cached(ttl=300, key_prefix="finance_dashboard")  # Cache for 5 minutes
 async def get_finance_dashboard(current_user: User = Depends(get_current_user)):
     """Finance Manager Dashboard with real-time AR and integrations"""
     

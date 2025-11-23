@@ -2415,7 +2415,7 @@ async def get_rooms(current_user: User = Depends(get_current_user)):
             return rooms
     
     # Fallback: Ultra-minimal projection
-    projection = {'_id': 0, 'id': 1, 'room_number': 1, 'room_type': 1, 'status': 1, 'floor': 1, 'capacity': 1, 'base_price': 1}
+    projection = {'_id': 0, 'id': 1, 'room_number': 1, 'room_type': 1, 'status': 1, 'floor': 1, 'capacity': 1, 'max_occupancy': 1, 'base_price': 1, 'tenant_id': 1}
     rooms_raw = await db.rooms.find({'tenant_id': current_user.tenant_id}, projection).limit(200).to_list(200)
     
     # Fix field mapping

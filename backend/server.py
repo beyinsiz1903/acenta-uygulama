@@ -27665,6 +27665,7 @@ async def get_revenue_expense_chart(
     }
 
 @api_router.get("/dashboard/budget-vs-actual")
+@cached(ttl=600, key_prefix="budget_vs_actual")  # Cache for 10 minutes
 async def get_budget_vs_actual(
     month: Optional[str] = None,  # YYYY-MM format
     credentials: HTTPAuthorizationCredentials = Depends(security)

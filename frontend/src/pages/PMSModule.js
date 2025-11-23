@@ -1576,7 +1576,7 @@ const PMSModule = ({ user, tenant, onLogout }) => {
                                 const folioRes = await axios.get(`/folio/booking/${currentBooking.id}`);
                                 if (folioRes.data && folioRes.data.length > 0) {
                                   setSelectedFolio(folioRes.data[0]);
-                                  setOpenDialog('folio');
+                                  setOpenDialog('folio-view');
                                   toast.success('Folio açıldı');
                                 } else {
                                   toast.error('Folio bulunamadı');

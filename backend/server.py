@@ -2381,6 +2381,7 @@ async def create_room(room_data: RoomCreate, current_user: User = Depends(get_cu
     return room
 
 @api_router.get("/pms/rooms", response_model=List[Room])
+@cached(ttl=120, key_prefix="pms_rooms")  # Cache for 2 minutes
 async def get_rooms(current_user: User = Depends(get_current_user)):
     rooms_raw = await db.rooms.find({'tenant_id': current_user.tenant_id}, {'_id': 0}).to_list(1000)
     

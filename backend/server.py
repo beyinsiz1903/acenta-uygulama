@@ -2393,7 +2393,16 @@ async def create_room(room_data: RoomCreate, current_user: User = Depends(get_cu
     return room
 
 @api_router.get("/pms/rooms", response_model=List[Room])
-async def get_rooms(current_user: User = Depends(get_current_user)):
+async def get_rooms_endpoint(current_user: User = Depends(get_current_user)):
+    from global_cache import fast_cache
+    
+    @fast_cache(ttl=10)  # Ultra-short 10s cache
+    async def get_rooms(current_user):
+        return await _get_rooms_impl(current_user)
+    
+    return await get_rooms(current_user)
+
+async def _get_rooms_impl(current_user: User):
     # Check pre-warmed cache first
     from cache_warmer import cache_warmer
     if cache_warmer:

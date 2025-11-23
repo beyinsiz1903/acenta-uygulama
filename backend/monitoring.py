@@ -22,7 +22,7 @@ class SystemMonitor:
     @staticmethod
     def get_cpu_usage() -> float:
         """Get CPU usage percentage"""
-        return psutil.cpu_percent(interval=1)
+        return psutil.cpu_percent(interval=0)  # Instant reading for fast response
     
     @staticmethod
     def get_memory_usage() -> Dict[str, Any]:

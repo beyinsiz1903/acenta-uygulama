@@ -39973,12 +39973,11 @@ async def get_approval_history(
 
 # 1. GET /api/executive/kpi-snapshot - Critical KPIs
 @api_router.get("/executive/kpi-snapshot")
-@cached(ttl=15, key_prefix="executive_kpi")  # Ultra-short cache
 async def get_executive_kpi_snapshot(
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
     """
-    Get critical KPI snapshot - INSTANT RESPONSE
+    Get critical KPI snapshot - INSTANT RESPONSE VIA PRE-WARMED CACHE
     """
     current_user = await get_current_user(credentials)
     

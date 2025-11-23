@@ -127,24 +127,24 @@ const AuthPage = ({ onLogin }) => {
       padding: isMobile ? '10px' : '20px'
     }}>
       <div style={{ width: '100%', maxWidth: isMobile ? '100%' : '500px' }}>
-        <div style={{ textAlign: 'center', marginBottom: isMobile ? '2rem' : '3rem', marginTop: isMobile ? '2rem' : '3rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.5rem' }}>
+        <div style={{ textAlign: 'center', marginBottom: isMobile ? '1.5rem' : '2rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
             <img 
               src={syroceLogo} 
               alt="Syroce" 
               style={{ 
-                height: isMobile ? '80px' : '120px', 
+                height: isMobile ? '80px' : '100px', 
                 width: 'auto',
                 filter: 'brightness(0) invert(1)'
               }} 
             />
           </div>
-          <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: isMobile ? '0.9rem' : '1.1rem' }}>
+          <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: isMobile ? '0.9rem' : '1.1rem', marginBottom: '1rem' }}>
             {isMobile ? 'Mobile Hotel Management' : 'Complete Hotel Management Platform'}
           </p>
           
           {/* Language Selector */}
-          <div className="flex justify-center mt-4">
+          <div className="flex justify-center">
             <LanguageSelector />
           </div>
         </div>

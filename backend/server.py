@@ -39963,15 +39963,21 @@ async def get_approval_history(
 
 # 1. GET /api/executive/kpi-snapshot - Critical KPIs
 @api_router.get("/executive/kpi-snapshot")
-@cached(ttl=60, key_prefix="executive_kpi")  # Cache for 1 min - ultra fresh
+@cached(ttl=15, key_prefix="executive_kpi")  # Ultra-short cache
 async def get_executive_kpi_snapshot(
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
     """
-    Get critical KPI snapshot for executives - ULTRA OPTIMIZED
-    RevPAR, ADR, Occupancy, Revenue, NPS, Cash Position
+    Get critical KPI snapshot - INSTANT RESPONSE
     """
     current_user = await get_current_user(credentials)
+    
+    # Check pre-warmed cache first (instant!)
+    from cache_warmer import cache_warmer
+    if cache_warmer:
+        cached_data = cache_warmer.get_cached(f"kpi:{current_user.tenant_id}")
+        if cached_data:
+            return cached_data
     
     today = datetime.now(timezone.utc).date()
     

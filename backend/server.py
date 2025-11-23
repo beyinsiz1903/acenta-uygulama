@@ -44258,16 +44258,6 @@ async def create_demo_request(request: DemoRequest):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Demo talebi kaydedilemedi: {str(e)}")
-
-                'min_ms': round(min_latency, 2),
-                'avg_ms': round(avg_latency, 2),
-                'max_ms': round(max_latency, 2)
-            },
-            'quality': quality,
-            'ping_times': [round(t, 2) for t in ping_times],
-            'timestamp': datetime.now(timezone.utc).isoformat(),
-            'status': 'success' if packet_loss < 100 else 'failed',
-            'note': 'Using TCP connectivity test (port 80/443) instead of ICMP ping'
         }
         
     except Exception as e:

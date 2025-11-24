@@ -170,7 +170,14 @@ const LandingPage = () => {
 
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-br from-blue-600 to-blue-800 text-white">
-        <div className="absolute inset-0 bg-black opacity-10"></div>
+        {/* Background Image */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center"
+          style={{
+            backgroundImage: 'url(https://images.unsplash.com/photo-1549278480-e3fc510d1562?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2Mzl8MHwxfHNlYXJjaHwxfHxob3RlbCUyMHRlY2hub2xvZ3l8ZW58MHx8fGJsdWV8MTc2Mzk3NDQzMnww&ixlib=rb-4.1.0&q=85)',
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/90 to-blue-800/90"></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 md:py-32">
           <div className="text-center">
             <div className="inline-flex items-center space-x-2 bg-blue-500 bg-opacity-30 px-4 py-2 rounded-full mb-8">

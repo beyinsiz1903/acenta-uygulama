@@ -204,55 +204,6 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
   }, [currentDate, daysToShow, bookings, showAIPanel, showDeluxePanel, showConflictSolutions]);
 
 
-  const loadCalendarData = useCallback(async () => {
-    setLoading(true);
-    try {
-      // Calculate date range for calendar view
-      const startDate = currentDate.toISOString().split('T')[0];
-      const endDate = new Date(currentDate);
-      endDate.setDate(endDate.getDate() + daysToShow);
-      const endDateStr = endDate.toISOString().split('T')[0];
-      
-      // PERFORMANCE OPTIMIZATION: Load only visible data
-      // For 550+ rooms: Load first batch (100 rooms) initially
-      // For bookings: Load only date range needed (not all 3 years of data)
-      const [roomsRes, bookingsRes, guestsRes, companiesRes, blocksRes] = await Promise.all([
-        axios.get(`/pms/rooms?limit=100&offset=${visibleRoomRange.start}`),
-        axios.get(`/pms/bookings?start_date=${startDate}&end_date=${endDateStr}&limit=500`),
-        axios.get('/pms/guests?limit=200').catch(() => ({ data: [] })),
-        axios.get('/companies?limit=100').catch(() => ({ data: [] })),
-        axios.get(`/pms/room-blocks?status=active&from_date=${startDate}&to_date=${endDateStr}`).catch(() => ({ data: { blocks: [] } }))
-      ]);
-
-      setRooms(roomsRes.data || []);
-      setBookings(bookingsRes.data || []);
-      setGuests(guestsRes.data || []);
-      setCompanies(companiesRes.data || []);
-      setRoomBlocks(blocksRes.data.blocks || []);
-      
-      // Load grouped conflicts for better conflict management (only if needed)
-      if (showConflictSolutions) {
-        try {
-          const conflictsRes = await axios.get('/deluxe/grouped-conflicts');
-          setGroupedConflicts(conflictsRes.data);
-        } catch (error) {
-          console.error('Failed to load grouped conflicts:', error);
-        }
-      }
-      
-      // Load Enterprise Mode data (only if panel is open)
-      if (showEnterprisePanel) {
-        loadEnterpriseData();
-      }
-    } catch (error) {
-      console.error('Failed to load calendar data:', error);
-      toast.error('Failed to load calendar data');
-    } finally {
-      setLoading(false);
-    }
-  }, [currentDate, daysToShow, visibleRoomRange.start, showConflictSolutions, showEnterprisePanel]);
-
-
   const loadHistoricalTrends = async () => {
     try {
       // Get last 90 days for trend analysis

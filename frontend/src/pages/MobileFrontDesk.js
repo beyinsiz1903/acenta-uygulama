@@ -301,15 +301,26 @@ const MobileFrontDesk = ({ user }) => {
               <p className="text-xs text-green-100">Front Desk Dashboard</p>
             </div>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleRefresh}
-            disabled={refreshing}
-            className="text-white hover:bg-white/20 p-2"
-          >
-            <RefreshCw className={`w-5 h-5 ${refreshing ? 'animate-spin' : ''}`} />
-          </Button>
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/')}
+              className="text-white hover:bg-white/20 p-2"
+              title="Ana Sayfa"
+            >
+              <Home className="w-5 h-5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className="text-white hover:bg-white/20 p-2"
+            >
+              <RefreshCw className={`w-5 h-5 ${refreshing ? 'animate-spin' : ''}`} />
+            </Button>
+          </div>
         </div>
       </div>
 

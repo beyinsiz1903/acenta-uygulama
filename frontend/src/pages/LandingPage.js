@@ -605,7 +605,7 @@ const LandingPage = () => {
           <div className="grid md:grid-cols-4 gap-8 mb-8">
             <div>
               <div className="flex items-center space-x-2 mb-6">
-                <img src={syroceLogo} alt="Syroce" className="h-24 w-auto" />
+                <img src="/syroce-logo.svg" alt="Syroce Logo" className="h-12 w-auto" style={{ filter: 'brightness(0) invert(1)' }} />
               </div>
               <p className="text-gray-400 text-base">
                 Otel yönetiminde yeni nesil deneyim

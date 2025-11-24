@@ -27,6 +27,7 @@ DEMO_PASSWORD = "demo123"  # Will be hashed
 
 # Demo users
 DEMO_USERS = [
+    {"email": "demo@hotel.com", "name": "Demo User", "role": "admin"},
     {"email": "admin@demo.com", "name": "Admin Demo", "role": "admin"},
     {"email": "manager@demo.com", "name": "Manager Demo", "role": "supervisor"},
     {"email": "frontdesk@demo.com", "name": "Front Desk Demo", "role": "front_desk"},

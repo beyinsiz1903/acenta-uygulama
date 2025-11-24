@@ -36,7 +36,7 @@ import {
   XCircle,
   ArrowUpCircle,
   ArrowDownCircle,
-  Wallet
+  Wallet,
   Home
 } from 'lucide-react';
 

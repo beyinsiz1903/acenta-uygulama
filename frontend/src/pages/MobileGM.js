@@ -20,7 +20,7 @@ import {
   Target,
   Calendar,
   Building2,
-  ChevronDown
+  ChevronDown,
   Home
 } from 'lucide-react';
 

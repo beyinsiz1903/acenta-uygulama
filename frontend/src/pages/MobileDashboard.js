@@ -120,7 +120,7 @@ const MobileDashboard = ({ user, onLogout }) => {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => navigate('/dashboard')}
+              onClick={() => navigate('/')}
               className="text-white hover:bg-white/20"
             >
               <Home className="w-4 h-4 mr-1" />

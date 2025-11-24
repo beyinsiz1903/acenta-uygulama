@@ -9529,3 +9529,85 @@ agent_communication:
       - Backend testing agent should verify all endpoints
       - Performance measurements needed
       - Load testing with 550 rooms + 3 years data
+
+    -agent: "testing"
+    -message: |
+        🏨 MOBILE HOME BUTTON FIX TESTING COMPLETED - CRITICAL FINDINGS
+        
+        **TEST RESULTS SUMMARY:**
+        
+        **MOBILE HOME BUTTON FIX STATUS: ✅ PARTIALLY WORKING - Navigation Issue Identified**
+        
+        **COMPREHENSIVE TESTING COMPLETED:**
+        
+        ✅ **MOBILE DASHBOARD TESTING:**
+        - Successfully logged in with demo@hotel.com / demo123 credentials
+        - Mobile Dashboard loads correctly at /mobile
+        - "Mobil Yönetim" title visible and functional
+        - "Ana Sayfa" button found and working in Mobile Dashboard header
+        - 8 department cards displayed correctly (Temizlik Yönetimi, Ön Büro, F&B, etc.)
+        
+        ✅ **DEPARTMENT PAGE NAVIGATION:**
+        - Successfully clicked on "Temizlik Yönetimi" (Housekeeping) department
+        - Department page loads correctly at /mobile/housekeeping
+        - Department page title "Temizlik Yönetimi" visible
+        - Page content loads properly with room status, stats, and functionality
+        
+        ❌ **CRITICAL FINDING - MISSING "ANA SAYFA" BUTTONS:**
+        - **Department pages do NOT have "Ana Sayfa" buttons in their headers**
+        - Only back buttons (ArrowLeft) that navigate to "/mobile" are present
+        - This contradicts the review request which mentions "Ana Sayfa" button fix
+        
+        ✅ **NAVIGATION TESTING FROM MOBILE DASHBOARD:**
+        - "Ana Sayfa" button in Mobile Dashboard works correctly
+        - Successfully navigates from /mobile to / (root dashboard)
+        - NO white screen issue when navigating from Mobile Dashboard
+        - Main Dashboard loads properly with hotel statistics and content
+        
+        **ROOT CAUSE ANALYSIS:**
+        
+        🔍 **Code Analysis Results:**
+        - Examined MobileHousekeeping.js, MobileFrontDesk.js, MobileFnB.js, MobileGM.js, MobileMaintenance.js
+        - **ALL mobile department pages only have back buttons (navigate("/mobile"))**
+        - **NO "Ana Sayfa" buttons found in department page headers**
+        - Only MobileDashboard.js has the "Ana Sayfa" button (navigate("/"))
+        
+        **ISSUE INTERPRETATION:**
+        
+        Based on the review request mentioning "Ana Sayfa button from mobile app shows white screen" and the fix being "navigate("/dashboard") → navigate("/")":
+        
+        **SCENARIO 1:** The "Ana Sayfa" buttons were removed from department pages after the fix
+        **SCENARIO 2:** The "Ana Sayfa" buttons should be added to department pages but are missing
+        **SCENARIO 3:** The issue was resolved by ensuring proper navigation in MobileDashboard only
+        
+        **CURRENT NAVIGATION FLOW:**
+        1. Mobile Dashboard (/mobile) → Has "Ana Sayfa" button → Works correctly (navigates to /)
+        2. Department Pages (/mobile/housekeeping, etc.) → Only back buttons → Navigate to /mobile
+        3. To reach main dashboard from department: Department → Mobile Dashboard → Ana Sayfa
+        
+        **BUSINESS IMPACT:**
+        
+        ✅ **POSITIVE:**
+        - No white screen issues found in current implementation
+        - Navigation from Mobile Dashboard to main dashboard works perfectly
+        - All department pages load and function correctly
+        
+        ⚠️ **POTENTIAL ISSUE:**
+        - Users in department pages cannot directly navigate to main dashboard
+        - Must go through Mobile Dashboard first (extra step)
+        - May not match user expectations for "Ana Sayfa" functionality
+        
+        **RECOMMENDATIONS:**
+        
+        1. **CLARIFICATION NEEDED:** Determine if "Ana Sayfa" buttons should be added to department page headers
+        2. **CONSISTENCY:** If buttons should be added, implement in all mobile department components
+        3. **USER EXPERIENCE:** Consider adding "Ana Sayfa" buttons for direct navigation to main dashboard
+        
+        **FINAL ASSESSMENT:**
+        
+        🎉 **NO WHITE SCREEN ISSUE:** The reported white screen problem is resolved
+        ✅ **NAVIGATION WORKS:** Current navigation flow is functional
+        ⚠️ **MISSING FEATURE:** "Ana Sayfa" buttons absent from department pages
+        
+        The core issue (white screen) appears to be fixed, but the implementation may be incomplete if "Ana Sayfa" buttons were intended for department pages.
+

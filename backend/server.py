@@ -2409,49 +2409,68 @@ async def create_room(room_data: RoomCreate, current_user: User = Depends(get_cu
     return room
 
 @api_router.get("/pms/rooms", response_model=List[Room])
-async def get_rooms(current_user: User = Depends(get_current_user)):
-    # Try Redis cache first (FASTEST!)
-    try:
-        from redis_cache import redis_cache
-        if redis_cache:
-            cache_key = f"rooms:{current_user.tenant_id}"
-            cached = redis_cache.get(cache_key)
-            if cached:
-                return cached
-    except:
-        pass
+async def get_rooms(
+    limit: int = 100,  # Optimized for 550+ room properties - load in batches
+    offset: int = 0,
+    status: Optional[str] = None,
+    room_type: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Get rooms with pagination - Optimized for large properties (550+ rooms)"""
     
-    # Check pre-warmed cache second
-    from cache_warmer import cache_warmer
-    if cache_warmer:
-        cached_data = cache_warmer.get_cached(f"rooms:{current_user.tenant_id}")
-        if cached_data:
-            # Process cached data quickly
-            rooms = []
-            for room in cached_data:
-                # Ensure tenant_id is present
-                if 'tenant_id' not in room:
-                    room['tenant_id'] = current_user.tenant_id
-                
-                if 'floor' in room and isinstance(room['floor'], str):
-                    try:
-                        room['floor'] = int(room['floor'])
-                    except:
+    # For small queries with filters, skip cache
+    use_cache = (offset == 0 and not status and not room_type and limit >= 100)
+    
+    # Try Redis cache first (FASTEST!) - only for full list
+    if use_cache:
+        try:
+            from redis_cache import redis_cache
+            if redis_cache:
+                cache_key = f"rooms:{current_user.tenant_id}:limit{limit}"
+                cached = redis_cache.get(cache_key)
+                if cached:
+                    return cached
+        except:
+            pass
+        
+        # Check pre-warmed cache second
+        from cache_warmer import cache_warmer
+        if cache_warmer:
+            cached_data = cache_warmer.get_cached(f"rooms:{current_user.tenant_id}")
+            if cached_data:
+                # Process cached data quickly
+                rooms = []
+                for room in cached_data[:limit]:  # Apply limit to cached data
+                    # Ensure tenant_id is present
+                    if 'tenant_id' not in room:
+                        room['tenant_id'] = current_user.tenant_id
+                    
+                    if 'floor' in room and isinstance(room['floor'], str):
+                        try:
+                            room['floor'] = int(room['floor'])
+                        except:
+                            room['floor'] = 1
+                    elif 'floor' not in room:
                         room['floor'] = 1
-                elif 'floor' not in room:
-                    room['floor'] = 1
-                
-                if 'capacity' not in room and 'max_occupancy' in room:
-                    room['capacity'] = room['max_occupancy']
-                elif 'capacity' not in room:
-                    room['capacity'] = 2
-                
-                rooms.append(room)
-            return rooms
+                    
+                    if 'capacity' not in room and 'max_occupancy' in room:
+                        room['capacity'] = room['max_occupancy']
+                    elif 'capacity' not in room:
+                        room['capacity'] = 2
+                    
+                    rooms.append(room)
+                return rooms
     
-    # Fallback: Ultra-minimal projection
+    # Build query with filters
+    query = {'tenant_id': current_user.tenant_id}
+    if status:
+        query['status'] = status
+    if room_type:
+        query['room_type'] = room_type
+    
+    # Fallback: Ultra-minimal projection with pagination
     projection = {'_id': 0, 'id': 1, 'room_number': 1, 'room_type': 1, 'status': 1, 'floor': 1, 'capacity': 1, 'max_occupancy': 1, 'base_price': 1, 'tenant_id': 1}
-    rooms_raw = await db.rooms.find({'tenant_id': current_user.tenant_id}, projection).limit(200).to_list(200)
+    rooms_raw = await db.rooms.find(query, projection).skip(offset).limit(limit).to_list(limit)
     
     # Fix field mapping
     rooms = []

@@ -163,7 +163,7 @@
        **COMPREHENSIVE VERIFICATION COMPLETED:**
        
        ✅ **PAGE LOADING:**
-       - Landing page loads successfully at https://hotel-pms-3.preview.emergentagent.com/
+       - Landing page loads successfully at https://optimize-booking.preview.emergentagent.com/
        - Page title: "Emergent | Fullstack App"
        - No critical loading errors
        
@@ -4243,7 +4243,7 @@ agent_communication:
       - This blocks access to ALL application features and modules
       
       🔍 TECHNICAL FINDINGS:
-      - Frontend URL working: https://hotel-pms-3.preview.emergentagent.com
+      - Frontend URL working: https://optimize-booking.preview.emergentagent.com
       - Auth page renders correctly with proper form fields and styling
       - Backend error detected: ValueError in daily flash report endpoint (Invalid isoformat string: 'invalid-date')
       - Frontend shows no visible error messages to users
@@ -8893,7 +8893,7 @@ agent_communication:
         **COMPREHENSIVE VERIFICATION COMPLETED:**
         
         ✅ **AUTH PAGE NAVIGATION:**
-        - Successfully navigated to https://hotel-pms-3.preview.emergentagent.com/auth
+        - Successfully navigated to https://optimize-booking.preview.emergentagent.com/auth
         - Page loaded without errors
         - All UI elements rendered correctly
         

@@ -18,6 +18,7 @@ import {
   RefreshCw,
   Wifi,
   WifiOff
+  Home
 } from 'lucide-react';
 
 const MobileSecurity = ({ user }) => {

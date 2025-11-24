@@ -37,6 +37,7 @@ import {
   ArrowUpCircle,
   ArrowDownCircle,
   Wallet
+  Home
 } from 'lucide-react';
 
 const MobileFinance = ({ user }) => {

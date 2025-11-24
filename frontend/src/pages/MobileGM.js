@@ -21,6 +21,7 @@ import {
   Calendar,
   Building2,
   ChevronDown
+  Home
 } from 'lucide-react';
 
 const MobileGM = ({ user }) => {

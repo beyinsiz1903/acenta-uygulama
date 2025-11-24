@@ -146,10 +146,10 @@ const AuthPage = ({ onLogin }) => {
         <div style={{ textAlign: 'center', marginBottom: isMobile ? '1rem' : '1.5rem' }}>
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.75rem' }}>
             <img 
-              src={syroceLogo} 
-              alt="Syroce" 
+              src="/syroce-logo.svg"
+              alt="Syroce Logo" 
               style={{ 
-                height: isMobile ? '85px' : '110px', 
+                height: isMobile ? '60px' : '70px', 
                 width: 'auto',
                 filter: 'brightness(0) invert(1)'
               }} 

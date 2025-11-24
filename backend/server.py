@@ -10464,6 +10464,74 @@ async def startup_db_seed():
     except Exception as e:
         print(f"⚠️ Optimization system initialization error: {str(e)}")
         print("   System will continue without optimization features")
+    
+    # Create performance indexes for 550+ rooms and 3-year data handling
+    try:
+        print("🚀 Creating performance indexes for large-scale operations...")
+        
+        # Bookings collection - Critical for calendar performance
+        await db.bookings.create_index([
+            ("tenant_id", 1),
+            ("check_in", 1),
+            ("check_out", 1)
+        ], name="idx_bookings_tenant_checkin_checkout")
+        
+        await db.bookings.create_index([
+            ("tenant_id", 1),
+            ("status", 1),
+            ("check_in", 1)
+        ], name="idx_bookings_tenant_status_checkin")
+        
+        await db.bookings.create_index([
+            ("tenant_id", 1),
+            ("room_id", 1),
+            ("check_in", 1)
+        ], name="idx_bookings_tenant_room_checkin")
+        
+        # Rooms collection - Critical for 550+ room handling
+        await db.rooms.create_index([
+            ("tenant_id", 1),
+            ("room_number", 1)
+        ], name="idx_rooms_tenant_number", unique=True)
+        
+        await db.rooms.create_index([
+            ("tenant_id", 1),
+            ("status", 1),
+            ("room_type", 1)
+        ], name="idx_rooms_tenant_status_type")
+        
+        # Guests collection - Faster lookups
+        await db.guests.create_index([
+            ("tenant_id", 1),
+            ("email", 1)
+        ], name="idx_guests_tenant_email")
+        
+        await db.guests.create_index([
+            ("tenant_id", 1),
+            ("phone", 1)
+        ], name="idx_guests_tenant_phone")
+        
+        # Folios collection - Performance for financial operations
+        await db.folios.create_index([
+            ("tenant_id", 1),
+            ("booking_id", 1)
+        ], name="idx_folios_tenant_booking")
+        
+        await db.folios.create_index([
+            ("tenant_id", 1),
+            ("status", 1),
+            ("created_at", -1)
+        ], name="idx_folios_tenant_status_created")
+        
+        print("✅ Performance indexes created successfully!")
+        print("   - Bookings: 3 compound indexes for fast date range queries")
+        print("   - Rooms: 2 indexes for 550+ room handling")
+        print("   - Guests: 2 indexes for quick lookups")
+        print("   - Folios: 2 indexes for financial operations")
+        
+    except Exception as e:
+        print(f"⚠️ Index creation warning: {str(e)}")
+        print("   Indexes may already exist or database not ready")
 
 @app.on_event("shutdown")
 async def shutdown_db_client():

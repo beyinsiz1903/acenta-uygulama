@@ -120,7 +120,7 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
 
   useEffect(() => {
     loadCalendarData();
-  }, [currentDate, daysToShow, visibleRoomRange.start, showConflictSolutions, showEnterprisePanel]);
+  }, [loadCalendarData]);
 
   // Real-time updates - Poll every 60 seconds for new bookings (optimized for performance)
   useEffect(() => {

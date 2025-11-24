@@ -14,7 +14,6 @@ import {
   Shield,
   Globe
 } from 'lucide-react';
-import syroceLogo from '../assets/syroce-logo.png';
 
 const LandingPage = () => {
   const navigate = useNavigate();

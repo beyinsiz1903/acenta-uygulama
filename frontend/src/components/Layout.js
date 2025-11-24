@@ -12,7 +12,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Home, Hotel, FileText, TrendingUp, Award, ShoppingCart, User, LogOut, Menu, Network, Calendar, DollarSign, Smartphone, Settings as SettingsIcon } from 'lucide-react';
 import LanguageSelector from '@/components/LanguageSelector';
-import syroceLogo from '../assets/syroce-logo.png';
 
 const Layout = ({ children, user, tenant, onLogout, currentModule }) => {
   const navigate = useNavigate();

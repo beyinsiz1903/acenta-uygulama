@@ -595,9 +595,9 @@ user_problem_statement: |
 frontend:
   - task: "Hotel PMS Frontend Performance Optimization - Reservation Calendar"
     implemented: true
-    working: false
+    working: true
     file: "/app/frontend/src/pages/ReservationCalendar.js"
-    stuck_count: 1
+    stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
@@ -607,6 +607,9 @@ frontend:
       - working: false
         agent: "testing"
         comment: "❌ CRITICAL COMPONENT FAILURE - ReservationCalendar component has JavaScript ReferenceError: 'Cannot access loadCalendarData before initialization'. Component completely non-functional, no API calls executed, calendar UI not rendering. React error boundary triggered. This is a critical bug blocking calendar functionality for hotel staff."
+      - working: true
+        agent: "testing"
+        comment: "✅ CRITICAL FIX SUCCESSFUL - Fixed 'Cannot access loadCalendarData before initialization' error by moving useCallback function definition before useEffect usage. Calendar now renders properly with title 'Reservation Calendar', occupancy overview visible, all 5 API endpoints working (100% success rate): /api/pms/rooms, /api/pms/bookings, /api/pms/guests, /api/companies, /api/pms/room-blocks. Load time: 0.67s (excellent performance). Calendar grid shows dates, room blocks, and interactive elements. JavaScript error completely resolved."
 
   - task: "Hotel PMS Frontend Performance Optimization - PMS Module"
     implemented: true

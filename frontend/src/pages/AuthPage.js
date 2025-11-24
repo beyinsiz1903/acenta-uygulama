@@ -10,7 +10,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Hotel, User, Smartphone } from 'lucide-react';
 import LanguageSelector from '@/components/LanguageSelector';
-import syroceLogo from '../assets/syroce-logo.png';
 
 const AuthPage = ({ onLogin }) => {
   const { t } = useTranslation();

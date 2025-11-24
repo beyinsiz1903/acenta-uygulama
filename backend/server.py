@@ -2492,14 +2492,15 @@ async def get_rooms(
         
         rooms.append(room)
     
-    # Cache result in Redis for 10 seconds
-    try:
-        from redis_cache import redis_cache
-        if redis_cache:
-            cache_key = f"rooms:{current_user.tenant_id}"
-            redis_cache.set(cache_key, rooms, ttl=10)
-    except:
-        pass
+    # Cache result in Redis for 30 seconds (only for full lists)
+    if use_cache:
+        try:
+            from redis_cache import redis_cache
+            if redis_cache:
+                cache_key = f"rooms:{current_user.tenant_id}:limit{limit}"
+                redis_cache.set(cache_key, rooms, ttl=30)
+        except:
+            pass
     
     return rooms
 

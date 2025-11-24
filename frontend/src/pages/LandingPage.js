@@ -148,9 +148,9 @@ const LandingPage = () => {
       {/* Header/Navigation */}
       <nav className="bg-white shadow-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-40">
-            <div className="flex items-center space-x-3">
-              <img src={syroceLogo} alt="Syroce" className="h-32 w-auto" />
+          <div className="flex justify-between items-center h-20">
+            <div className="flex items-center space-x-3 cursor-pointer" onClick={() => navigate('/')}>
+              <img src="/syroce-logo.svg" alt="Syroce Logo" className="h-12 w-auto" />
             </div>
             <div className="hidden md:flex items-center space-x-8">
               <a href="#features" className="text-gray-600 hover:text-gray-900 text-lg font-medium">Özellikler</a>
@@ -161,6 +161,15 @@ const LandingPage = () => {
                 className="bg-blue-600 text-white px-10 py-4 rounded-lg hover:bg-blue-700 transition text-lg font-semibold"
               >
                 Giriş Yap
+              </button>
+            </div>
+            {/* Mobile Menu Button */}
+            <div className="md:hidden">
+              <button 
+                onClick={() => navigate('/login')}
+                className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition font-semibold"
+              >
+                Giriş
               </button>
             </div>
           </div>

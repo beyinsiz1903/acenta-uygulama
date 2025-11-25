@@ -880,6 +880,18 @@ function App() {
               )
             }
           />
+          <Route
+            path="/vip-management"
+            element={
+              isAuthenticated ? (
+                <Suspense fallback={<LoadingFallback />}>
+                  <VIPManagement user={user} tenant={tenant} onLogout={handleLogout} />
+                </Suspense>
+              ) : (
+                <Navigate to="/auth" replace />
+              )
+            }
+          />
         </Routes>
       </BrowserRouter>
       {/* ReactQueryDevtools removed for production */}

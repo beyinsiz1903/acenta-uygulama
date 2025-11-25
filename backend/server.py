@@ -4098,6 +4098,63 @@ async def demand_forecast(
 
 @api_router.get("/predictions/complaint-risk/{guest_id}")
 async def predict_complaint_risk(
+
+
+# ============= SOCIAL MEDIA COMMAND CENTER (GAME-CHANGER #3) =============
+
+@api_router.get("/social-media/mentions")
+async def get_social_mentions(hours: int = 24, current_user: User = Depends(get_current_user)):
+    """Son 24 saatteki social media mentions"""
+    from social_media_radar import get_social_radar
+    radar = get_social_radar(db)
+    mentions = await radar.scan_mentions(current_user.tenant_id, hours)
+    return {'mentions': mentions, 'total': len(mentions)}
+
+@api_router.get("/social-media/sentiment")
+async def get_sentiment_summary(days: int = 7, current_user: User = Depends(get_current_user)):
+    """Sentiment özeti"""
+    from social_media_radar import get_social_radar
+    radar = get_social_radar(db)
+    summary = await radar.get_sentiment_summary(current_user.tenant_id, days)
+    return summary
+
+@api_router.get("/social-media/crisis-alerts")
+async def get_crisis_alerts(current_user: User = Depends(get_current_user)):
+    """Kriz uyarıları"""
+    from social_media_radar import get_social_radar
+    radar = get_social_radar(db)
+    alerts = await radar.detect_crisis(current_user.tenant_id)
+    return {'alerts': alerts, 'crisis_detected': len(alerts) > 0}
+
+# ============= REVENUE AUTOPILOT (GAME-CHANGER #4) =============
+
+@api_router.get("/autopilot/status")
+async def get_autopilot_status(current_user: User = Depends(get_current_user)):
+    """Autopilot durumu"""
+    from revenue_autopilot import get_revenue_autopilot
+    autopilot = get_revenue_autopilot(db)
+    return {
+        'mode': autopilot.mode,
+        'active': True,
+        'last_cycle': datetime.now(timezone.utc).isoformat()
+    }
+
+@api_router.post("/autopilot/run-cycle")
+async def run_autopilot_cycle(current_user: User = Depends(get_current_user)):
+    """Autopilot cycle manuel çalıştır"""
+    from revenue_autopilot import get_revenue_autopilot
+    autopilot = get_revenue_autopilot(db)
+    report = await autopilot.daily_optimization_cycle(current_user.tenant_id)
+    return report
+
+@api_router.post("/autopilot/set-mode")
+async def set_autopilot_mode(mode_data: dict, current_user: User = Depends(get_current_user)):
+    """Autopilot modunu ayarla"""
+    from revenue_autopilot import get_revenue_autopilot
+    autopilot = get_revenue_autopilot(db)
+    autopilot.mode = mode_data['mode']  # full_auto, supervised, advisory
+    return {'success': True, 'new_mode': autopilot.mode}
+
     guest_id: str,
     current_user: User = Depends(get_current_user)
 ):

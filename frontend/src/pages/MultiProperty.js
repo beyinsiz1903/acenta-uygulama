@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Card, CardContent } from '@/components/ui/card';
-import { Building } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Building, Home, MapPin, TrendingUp, Hotel, DollarSign } from 'lucide-react';
 
 const MultiProperty = () => {
+  const navigate = useNavigate();
   const [data, setData] = useState(null);
 
   useEffect(() => {
@@ -12,14 +15,103 @@ const MultiProperty = () => {
 
   return (
     <div className="p-6">
-      <h1 className="text-3xl font-bold mb-8">🏢 Multi-Property</h1>
-      <Card>
-        <CardContent className="pt-8 text-center">
-          <Building className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <p>Multi-property dashboard hazır</p>
-          {data && <p className="text-sm text-gray-500 mt-2">{data.total} otel</p>}
-        </CardContent>
-      </Card>
+      <div className="mb-8">
+        <div className="flex items-center gap-3">
+          <Button 
+            variant="outline" 
+            size="icon"
+            onClick={() => navigate('/')}
+            className="hover:bg-blue-50"
+          >
+            <Home className="w-5 h-5" />
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold">🏢 Multi-Property Dashboard</h1>
+            <p className="text-gray-600">Çoklu otel yönetimi ve konsolide raporlar</p>
+          </div>
+        </div>
+      </div>
+
+      {data && data.summary && (
+        <div className="grid grid-cols-4 gap-4 mb-6">
+          <Card>
+            <CardContent className="pt-6 text-center">
+              <Building className="w-10 h-10 text-blue-600 mx-auto mb-2" />
+              <p className="text-3xl font-bold">{data.summary.total_properties}</p>
+              <p className="text-sm text-gray-500">Oteller</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6 text-center">
+              <Hotel className="w-10 h-10 text-purple-600 mx-auto mb-2" />
+              <p className="text-3xl font-bold">{data.summary.total_rooms}</p>
+              <p className="text-sm text-gray-500">Toplam Oda</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6 text-center">
+              <TrendingUp className="w-10 h-10 text-green-600 mx-auto mb-2" />
+              <p className="text-3xl font-bold">{data.summary.avg_occupancy}%</p>
+              <p className="text-sm text-gray-500">Ort. Doluluk</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6 text-center">
+              <DollarSign className="w-10 h-10 text-orange-600 mx-auto mb-2" />
+              <p className="text-3xl font-bold">€{data.summary.total_revenue}</p>
+              <p className="text-sm text-gray-500">Bugün Gelir</p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {data && data.properties && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {data.properties.map((property) => (
+            <Card key={property.property_id} className="hover:shadow-lg transition-shadow cursor-pointer">
+              <CardContent className="pt-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <h3 className="text-xl font-bold mb-2">{property.property_name}</h3>
+                    <div className="flex items-center gap-2 text-gray-600">
+                      <MapPin className="w-4 h-4" />
+                      <span className="text-sm">{property.location || 'Istanbul'}</span>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-3xl font-bold text-purple-600">{property.occupancy_pct}%</p>
+                    <p className="text-xs text-gray-500">Doluluk</p>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-3 gap-4 mt-4 pt-4 border-t">
+                  <div>
+                    <p className="text-xs text-gray-500">Odalar</p>
+                    <p className="text-lg font-bold">{property.total_rooms}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">ADR</p>
+                    <p className="text-lg font-bold">€{property.adr}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Gelir</p>
+                    <p className="text-lg font-bold">€{property.today_revenue}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {!data && (
+        <Card>
+          <CardContent className="pt-8 text-center">
+            <Building className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-600">Multi-property dashboard hazır</p>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

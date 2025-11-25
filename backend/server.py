@@ -4440,8 +4440,8 @@ async def create_group_block(
         'success': True,
         'message': 'Grup bloğu başarıyla oluşturuldu',
         'block_id': block['id'],
-        'group_name': request.group_name,
-        'total_rooms': request.total_rooms
+        'group_name': group_name,
+        'total_rooms': block_data['total_rooms']
     }
 
 @api_router.get("/groups/blocks")

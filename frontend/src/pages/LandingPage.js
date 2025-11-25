@@ -69,7 +69,7 @@ const LandingPage = () => {
           <div className="text-center mb-12">
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full mb-6 border border-white/20">
               <Sparkles className="w-4 h-4 text-yellow-300" />
-              <span className="text-white text-sm font-semibold">Dünyanın En Gelişmiş Hotel PMS'i</span>
+              <span className="text-white text-sm font-semibold">Yeni Nesil Otel Yönetim Sistemi</span>
             </div>
             
             <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
@@ -80,7 +80,7 @@ const LandingPage = () => {
             </h1>
             
             <p className="text-xl md:text-2xl text-blue-100 mb-8 max-w-3xl mx-auto">
-              10 Unique AI Özellik • €4.69M ROI Potansiyeli • 10/10 Müdür Onayı
+              10 AI Özellik • 865 API Endpoint • 88 Modül • Tam Entegre Çözüm
             </p>
             
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">

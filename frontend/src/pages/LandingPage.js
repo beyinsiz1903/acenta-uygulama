@@ -108,7 +108,7 @@ const LandingPage = () => {
             {[
               { value: '88', label: 'Modül', icon: <BarChart className="w-6 h-6" /> },
               { value: '865', label: 'API Endpoint', icon: <Zap className="w-6 h-6" /> },
-              { value: '<10ms', label: 'Response Time', icon: <Target className="w-6 h-6" /> },
+              { value: '< 10ms', label: 'Response Time', icon: <Target className="w-6 h-6" /> },
               { value: '10', label: 'Game-Changers', icon: <Crown className="w-6 h-6" /> }
             ].map((stat, idx) => (
               <Card key={idx} className="bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/20 transition">

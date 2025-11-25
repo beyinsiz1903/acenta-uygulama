@@ -4005,13 +4005,7 @@ async def update_room_rate(rate_data: dict, current_user: User = Depends(get_cur
         'pushed_to': rate_update['pushed_to_channels']
     }
 
-        'total_responses': total,
-        'period_days': days
-    }
-
 # ============= PAYMENT & FINANCIAL (ALREADY ADDED ABOVE) =============
-
-    return {'success': True, 'payment_intent_id': intent['id'], 'client_secret': f'secret_{intent["id"][:8]}'}
 
 @api_router.get("/payments/installment-calculator")
 async def installment_calculator(amount: float, installments: int, current_user: User = Depends(get_current_user)):

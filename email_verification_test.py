@@ -35,8 +35,8 @@ def print_warning(message):
 def print_info(message):
     print(f"{Colors.BLUE}ℹ️  {message}{Colors.RESET}")
 
-def extract_code_from_logs():
-    """Extract verification code from backend logs"""
+def extract_code_from_logs(code_type="verification"):
+    """Extract verification or reset code from backend logs"""
     try:
         import subprocess
         result = subprocess.run(
@@ -46,16 +46,31 @@ def extract_code_from_logs():
             timeout=5
         )
         
-        # Look for the code pattern in logs
+        # Look for the code pattern in logs - get the LAST occurrence
         lines = result.stdout.split('\n')
-        for i, line in enumerate(lines):
-            if 'Kod:' in line or 'CODE:' in line:
-                # Extract 6-digit code
-                match = re.search(r'\b(\d{6})\b', line)
-                if match:
-                    return match.group(1)
+        codes = []
         
-        return None
+        for i, line in enumerate(lines):
+            # Check for the specific code type
+            if code_type == "verification" and 'E-POSTA DOĞRULAMA KODU' in line:
+                # Look for the code in the next few lines
+                for j in range(i, min(i+10, len(lines))):
+                    if 'Kod:' in lines[j]:
+                        match = re.search(r'\b(\d{6})\b', lines[j])
+                        if match:
+                            codes.append(match.group(1))
+                            break
+            elif code_type == "reset" and 'ŞİFRE SIFIRLAMA KODU' in line:
+                # Look for the code in the next few lines
+                for j in range(i, min(i+10, len(lines))):
+                    if 'Kod:' in lines[j]:
+                        match = re.search(r'\b(\d{6})\b', lines[j])
+                        if match:
+                            codes.append(match.group(1))
+                            break
+        
+        # Return the last code found (most recent)
+        return codes[-1] if codes else None
     except Exception as e:
         print_warning(f"Could not extract code from logs: {e}")
         return None

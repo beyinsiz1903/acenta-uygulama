@@ -201,6 +201,22 @@ const Dashboard = ({ user, tenant, onLogout }) => {
       path: '/vip-management',
       color: '#a855f7',
       badge: 'NEW'
+    },
+    {
+      title: '📊 Sales CRM',
+      description: 'Lead yönetimi ve satış hunisi',
+      icon: TrendingUp,
+      path: '/sales-crm',
+      color: '#3b82f6',
+      badge: 'NEW'
+    },
+    {
+      title: '🛡️ Service Recovery',
+      description: 'Şikayet yönetimi ve çözüm takibi',
+      icon: Shield,
+      path: '/service-recovery',
+      color: '#ef4444',
+      badge: 'NEW'
     }
   ], [t, stats]);
 

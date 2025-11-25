@@ -271,7 +271,7 @@ def test_password_reset_flow():
                     requests.post(f"{BACKEND_URL}/auth/forgot-password", json=forgot_data, timeout=10)
                     time.sleep(2)
                     
-                    restore_code = extract_code_from_logs()
+                    restore_code = extract_code_from_logs("reset")
                     if not restore_code:
                         restore_code = input("Enter the 6-digit code to restore password: ").strip()
                     

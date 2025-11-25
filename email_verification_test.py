@@ -214,7 +214,7 @@ def test_password_reset_flow():
             
             # Extract code from logs
             print_info("Checking backend logs for reset code...")
-            code = extract_code_from_logs()
+            code = extract_code_from_logs("reset")
             
             if code:
                 print_success(f"Found reset code in logs: {code}")

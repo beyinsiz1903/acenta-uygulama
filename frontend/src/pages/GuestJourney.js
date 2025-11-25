@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Smile, Meh, Frown, TrendingUp } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Smile, Meh, Frown, TrendingUp, Home } from 'lucide-react';
 
 const GuestJourney = () => {
+  const navigate = useNavigate();
   const [npsData, setNpsData] = useState(null);
 
   useEffect(() => {
@@ -21,9 +24,22 @@ const GuestJourney = () => {
 
   return (
     <div className="p-6">
-      <h1 className="text-3xl font-bold mb-8">
-        🛤️ Guest Journey & NPS
-      </h1>
+      <div className="mb-8">
+        <div className="flex items-center gap-3">
+          <Button 
+            variant="outline" 
+            size="icon"
+            onClick={() => navigate('/')}
+            className="hover:bg-purple-50"
+          >
+            <Home className="w-5 h-5" />
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold">🛤️ Guest Journey & NPS</h1>
+            <p className="text-gray-600">Misafir yolculuğu haritalama ve NPS tracking</p>
+          </div>
+        </div>
+      </div>
 
       {npsData && (
         <>

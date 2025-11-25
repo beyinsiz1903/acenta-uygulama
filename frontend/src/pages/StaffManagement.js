@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Calendar, TrendingUp, Award } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Users, Calendar, TrendingUp, Award, Home, UserPlus, Clock } from 'lucide-react';
+import { toast } from 'sonner';
 
 const StaffManagement = () => {
+  const navigate = useNavigate();
   const [staff, setStaff] = useState([]);
 
   useEffect(() => {
@@ -21,9 +25,22 @@ const StaffManagement = () => {
 
   return (
     <div className="p-6">
-      <h1 className="text-3xl font-bold mb-8">
-        👥 Staff Management & HR
-      </h1>
+      <div className="mb-8">
+        <div className="flex items-center gap-3">
+          <Button 
+            variant="outline" 
+            size="icon"
+            onClick={() => navigate('/')}
+            className="hover:bg-green-50"
+          >
+            <Home className="w-5 h-5" />
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold">👥 Staff Management & HR</h1>
+            <p className="text-gray-600">Personel, vardiya ve performans yönetimi</p>
+          </div>
+        </div>
+      </div>
 
       <div className="grid grid-cols-4 gap-4 mb-6">
         <Card>

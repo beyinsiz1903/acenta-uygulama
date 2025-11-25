@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { MessageCircle, Send } from 'lucide-react';
+import { MessageCircle, Send, Home, Bot } from 'lucide-react';
 
 const AIChatbot = () => {
+  const navigate = useNavigate();
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState('');
   const [loading, setLoading] = useState(false);
@@ -32,13 +34,29 @@ const AIChatbot = () => {
 
   return (
     <div className="p-6">
-      <h1 className="text-3xl font-bold mb-8">
-        🤖 AI Chatbot
-      </h1>
+      <div className="mb-6">
+        <div className="flex items-center gap-3">
+          <Button 
+            variant="outline" 
+            size="icon"
+            onClick={() => navigate('/')}
+            className="hover:bg-cyan-50"
+          >
+            <Home className="w-5 h-5" />
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold">🤖 AI Chatbot</h1>
+            <p className="text-gray-600">24/7 AI destekli misafir asistanı</p>
+          </div>
+        </div>
+      </div>
       
       <Card className="h-[600px] flex flex-col">
         <CardHeader>
-          <CardTitle>Misafir Asistanı</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Bot className="w-5 h-5" />
+            Misafir Asistanı
+          </CardTitle>
         </CardHeader>
         <CardContent className="flex-1 flex flex-col">
           <div className="flex-1 overflow-y-auto mb-4 space-y-3">
@@ -46,6 +64,7 @@ const AIChatbot = () => {
               <div className="text-center py-12">
                 <MessageCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                 <p className="text-gray-600">Bir mesaj göndererek başlayın</p>
+                <p className="text-sm text-gray-500 mt-2">AI asistan size yardımcı olmaya hazır</p>
               </div>
             ) : (
               messages.map((msg, idx) => (

@@ -128,20 +128,20 @@ const LandingPage = () => {
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex flex-wrap items-center justify-center gap-12 opacity-60">
             <div className="text-center">
-              <div className="text-2xl font-bold text-gray-800">🏆 #1</div>
-              <div className="text-sm text-gray-600">Türkiye'de</div>
+              <div className="text-2xl font-bold text-gray-800">550+</div>
+              <div className="text-sm text-gray-600">Oda Kapasitesi</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-gray-800">Top 3</div>
-              <div className="text-sm text-gray-600">Dünya'da</div>
+              <div className="text-2xl font-bold text-gray-800"><10ms</div>
+              <div className="text-sm text-gray-600">Yanıt Süresi</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-gray-800">100%</div>
-              <div className="text-sm text-gray-600">Müdür Onayı</div>
+              <div className="text-2xl font-bold text-gray-800">%100</div>
+              <div className="text-sm text-gray-600">Uptime SLA</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-gray-800">€4.69M</div>
-              <div className="text-sm text-gray-600">ROI/Yıl</div>
+              <div className="text-2xl font-bold text-gray-800">24/7</div>
+              <div className="text-sm text-gray-600">Destek</div>
             </div>
           </div>
         </div>

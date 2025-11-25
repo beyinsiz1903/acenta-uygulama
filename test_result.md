@@ -829,6 +829,21 @@ user_problem_statement: |
         agent: "testing"
         comment: "✅ ERROR HANDLING PERFECT - All error cases tested successfully: (1) Already registered email correctly rejected with HTTP 400, (2) Wrong verification code correctly rejected with HTTP 400, (3) Invalid email for password reset returns HTTP 200 with generic message (security best practice to prevent email enumeration), (4) Wrong reset code correctly rejected with HTTP 400. All error messages appropriate and secure."
 
+  - task: "AWS SES SMTP Email Integration - Production Email Sending"
+    implemented: true
+    working: false
+    file: "/app/backend/email_service.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "AWS SES SMTP integration for production email sending. Configuration: EMAIL_MODE=production, SMTP_HOST=email-smtp.eu-central-1.amazonaws.com:587, SENDER_EMAIL=info@syroce.com. Email service supports HTML formatted emails for verification codes, password reset, and welcome messages."
+      - working: false
+        agent: "testing"
+        comment: "❌ CRITICAL ISSUE - AWS SES SMTP Authentication Failed. Error: (535, b'Authentication Credentials Invalid'). Root Cause: SMTP credentials in .env are incorrect. The SMTP_USERNAME (AKIAWYAONKF4ZPKPG662Z) appears to be an AWS IAM Access Key, NOT SMTP credentials. AWS SES requires separate SMTP credentials generated from SES Console. Testing Results: (1) POST /api/auth/request-verification: API returns 200 OK but email fails to send with SMTP auth error. (2) POST /api/auth/forgot-password: API returns 200 OK but email fails to send with same SMTP auth error. Email service is correctly configured in production mode, SMTP host/port are correct, but authentication fails. REQUIRED FIX: Generate proper SMTP credentials from AWS SES Console (SMTP Settings > Create My SMTP Credentials) and update SMTP_USERNAME and SMTP_PASSWORD in /app/backend/.env. Also verify sender email (info@syroce.com) is verified in AWS SES. Current status: Email endpoints work but no actual emails are sent."
+
 frontend:
   - task: "Landing Page Visual Enhancement"
     implemented: true

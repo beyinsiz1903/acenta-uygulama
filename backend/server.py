@@ -3198,6 +3198,184 @@ async def get_vip_guests(
             {'id': protocol['guest_id']},
             {'_id': 0, 'name': 1, 'email': 1, 'phone': 1}
         )
+
+
+# ============= SALES CRM & LEAD MANAGEMENT (FAZ 2) =============
+
+@api_router.post("/sales/leads")
+async def create_lead(
+    lead_data: dict,
+    current_user: User = Depends(get_current_user)
+):
+    """Yeni satış lead'i oluştur"""
+    lead = {
+        'id': str(uuid.uuid4()),
+        'tenant_id': current_user.tenant_id,
+        'company_name': lead_data.get('company_name'),
+        'contact_name': lead_data['contact_name'],
+        'contact_email': lead_data['contact_email'],
+        'contact_phone': lead_data.get('contact_phone'),
+        'source': lead_data['source'],
+        'status': 'new',
+        'priority': lead_data.get('priority', 'medium'),
+        'estimated_value': lead_data.get('estimated_value'),
+        'estimated_rooms': lead_data.get('estimated_rooms'),
+        'target_checkin': lead_data.get('target_checkin'),
+        'assigned_to': lead_data.get('assigned_to', current_user.id),
+        'lead_score': 50,
+        'notes': lead_data.get('notes'),
+        'created_at': datetime.now(timezone.utc).isoformat(),
+        'updated_at': datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.sales_leads.insert_one(lead)
+    
+    return {
+        'success': True,
+        'message': 'Lead başarıyla oluşturuldu',
+        'lead_id': lead['id']
+    }
+
+@api_router.get("/sales/leads")
+async def get_leads(
+    status: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Lead'leri listele"""
+    query = {'tenant_id': current_user.tenant_id}
+    if status:
+        query['status'] = status
+    
+    leads = await db.sales_leads.find(query, {'_id': 0}).sort('created_at', -1).to_list(100)
+    
+    return {
+        'leads': leads,
+        'total': len(leads)
+    }
+
+@api_router.get("/sales/funnel")
+async def get_sales_funnel(current_user: User = Depends(get_current_user)):
+    """Satış hunisi metrikleri"""
+    statuses = ['new', 'contacted', 'qualified', 'proposal_sent', 'negotiating', 'won', 'lost']
+    funnel = {}
+    
+    for status in statuses:
+        count = await db.sales_leads.count_documents({
+            'tenant_id': current_user.tenant_id,
+            'status': status
+        })
+        funnel[status] = count
+    
+    total = sum(funnel.values())
+    
+    return {
+        'funnel': funnel,
+        'total_leads': total,
+        'win_rate': round((funnel['won'] / total * 100) if total > 0 else 0, 2)
+    }
+
+@api_router.post("/sales/activity")
+async def log_sales_activity(
+    activity_data: dict,
+    current_user: User = Depends(get_current_user)
+):
+    """Satış aktivitesi kaydet"""
+    activity = {
+        'id': str(uuid.uuid4()),
+        'tenant_id': current_user.tenant_id,
+        'lead_id': activity_data['lead_id'],
+        'activity_type': activity_data['activity_type'],
+        'subject': activity_data['subject'],
+        'description': activity_data.get('description'),
+        'created_by': current_user.id,
+        'created_at': datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.sales_activities.insert_one(activity)
+    await db.sales_leads.update_one(
+        {'id': activity_data['lead_id']},
+        {'$set': {'last_contacted_at': datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    return {'success': True, 'message': 'Aktivite kaydedildi'}
+
+# ============= MARKETING AUTOMATION (FAZ 2) =============
+
+@api_router.post("/marketing/campaigns")
+async def create_campaign(
+    campaign_data: dict,
+    current_user: User = Depends(get_current_user)
+):
+    """Pazarlama kampanyası oluştur"""
+    campaign = {
+        'id': str(uuid.uuid4()),
+        'tenant_id': current_user.tenant_id,
+        'name': campaign_data['name'],
+        'subject': campaign_data['subject'],
+        'message': campaign_data['message'],
+        'segment': campaign_data.get('segment', 'all'),
+        'status': 'draft',
+        'sent_count': 0,
+        'created_by': current_user.id,
+        'created_at': datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.marketing_campaigns.insert_one(campaign)
+    
+    return {'success': True, 'message': 'Kampanya oluşturuldu', 'campaign_id': campaign['id']}
+
+@api_router.get("/marketing/segments")
+async def get_customer_segments(current_user: User = Depends(get_current_user)):
+    """Müşteri segmentleri"""
+    vip_count = await db.guests.count_documents({'tenant_id': current_user.tenant_id, 'tags': 'vip'})
+    total = await db.guests.count_documents({'tenant_id': current_user.tenant_id})
+    
+    return {
+        'segments': [
+            {'name': 'VIP', 'count': vip_count},
+            {'name': 'All', 'count': total}
+        ]
+    }
+
+# ============= SERVICE RECOVERY (FAZ 2) =============
+
+@api_router.post("/service/complaints")
+async def create_complaint(
+    complaint_data: dict,
+    current_user: User = Depends(get_current_user)
+):
+    """Şikayet kaydı oluştur"""
+    complaint = {
+        'id': str(uuid.uuid4()),
+        'tenant_id': current_user.tenant_id,
+        'guest_id': complaint_data.get('guest_id'),
+        'booking_id': complaint_data.get('booking_id'),
+        'category': complaint_data['category'],
+        'severity': complaint_data.get('severity', 'medium'),
+        'description': complaint_data['description'],
+        'status': 'open',
+        'created_by': current_user.id,
+        'created_at': datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.service_complaints.insert_one(complaint)
+    
+    return {'success': True, 'message': 'Şikayet kaydedildi', 'complaint_id': complaint['id']}
+
+@api_router.get("/service/complaints")
+async def get_complaints(
+    status: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Şikayetleri listele"""
+    query = {'tenant_id': current_user.tenant_id}
+    if status:
+        query['status'] = status
+    
+    complaints = await db.service_complaints.find(query, {'_id': 0}).sort('created_at', -1).to_list(100)
+    
+    return {'complaints': complaints, 'total': len(complaints)}
+
         if guest:
             enriched.append({
                 **protocol,

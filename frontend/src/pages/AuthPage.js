@@ -140,6 +140,89 @@ const AuthPage = ({ onLogin }) => {
     }
   };
 
+  // New registration with email verification
+  const handleRequestVerification = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const requestData = {
+        email: hotelRegisterData.email,
+        name: hotelRegisterData.name,
+        password: hotelRegisterData.password,
+        property_name: hotelRegisterData.property_name,
+        phone: hotelRegisterData.phone,
+        user_type: activeTab === 'hotel-login' ? 'hotel' : 'guest'
+      };
+      
+      const response = await axios.post('/auth/request-verification', requestData);
+      toast.success('Doğrulama kodu e-postanıza gönderildi!');
+      setRegistrationStep('verification');
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Hata oluştu');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyCode = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const response = await axios.post('/auth/verify-email', {
+        email: hotelRegisterData.email,
+        code: verificationCode
+      });
+      
+      toast.success('Hesabınız başarıyla oluşturuldu!');
+      onLogin(response.data.access_token, response.data.user, response.data.tenant);
+      
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 500);
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Doğrulama başarısız');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Forgot password handlers
+  const handleForgotPasswordRequest = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await axios.post('/auth/forgot-password', {
+        email: hotelLoginData.email
+      });
+      toast.success('Şifre sıfırlama kodu e-postanıza gönderildi');
+      setForgotPasswordStep('code');
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Hata oluştu');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await axios.post('/auth/reset-password', {
+        email: hotelLoginData.email,
+        code: resetCode,
+        new_password: hotelLoginData.password
+      });
+      toast.success('Şifreniz başarıyla güncellendi!');
+      setShowForgotPassword(false);
+      setForgotPasswordStep('email');
+      setResetCode('');
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Sıfırlama başarısız');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="auth-page" style={{
       minHeight: '100vh',

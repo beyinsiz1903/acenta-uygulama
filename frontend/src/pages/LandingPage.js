@@ -153,16 +153,16 @@ const LandingPage = () => {
           <div className="text-center mb-16">
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-100 rounded-full mb-4">
               <Crown className="w-5 h-5 text-purple-600" />
-              <span className="text-purple-900 font-semibold">GAME-CHANGER FEATURES</span>
+              <span className="text-purple-900 font-semibold">YENİLİKÇİ TEKNOLOJİLER</span>
             </div>
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-              Hiçbir PMS'de Olmayan
+              Rakiplerinize Fark Atın
               <span className="block bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                10 Benzersiz AI Özellik
+                AI Destekli Özellikler
               </span>
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Sektörde ilk ve tek - Rakiplerinizin hayal bile edemediği özellikler
+              Yapay zeka teknolojileri ile otel yönetiminizi otomatikleştirin
             </p>
           </div>
 
@@ -171,29 +171,29 @@ const LandingPage = () => {
               {
                 icon: <MessageCircle className="w-12 h-12" />,
                 title: '🤖 AI WhatsApp Concierge',
-                description: '24/7 otomatik misafir hizmeti - Sıfır insan müdahalesi',
-                roi: '€140K/yıl',
+                description: '24/7 otomatik misafir hizmeti - Concierge maliyetlerini %50 azaltın',
+                roi: 'Tasarruf: €140K/yıl',
                 color: 'from-green-500 to-emerald-600'
               },
               {
                 icon: <Target className="w-12 h-12" />,
                 title: '🔮 Predictive Analytics',
-                description: 'No-show, talep, şikayet tahminleri - Geleceği görün',
-                roi: '€300K/yıl',
+                description: 'No-show ve talep tahminleri - Proaktif kararlar alın',
+                roi: 'Gelir Artışı: €300K/yıl',
                 color: 'from-purple-500 to-indigo-600'
               },
               {
                 icon: <Zap className="w-12 h-12" />,
                 title: '⚡ Revenue Autopilot',
-                description: 'Tam otomatik fiyat optimizasyonu - RevPAR +20%',
-                roi: '€500K/yıl',
+                description: 'Otomatik fiyat optimizasyonu - RevPAR\'ınızı artırın',
+                roi: 'Gelir Artışı: €500K/yıl',
                 color: 'from-orange-500 to-red-600'
               },
               {
                 icon: <Star className="w-12 h-12" />,
-                title: '📡 Social Media Radar',
-                description: 'Instagram, Twitter monitoring - Crisis detection',
-                roi: '€230K/yıl',
+                title: '📡 Social Media Monitoring',
+                description: 'Instagram, Twitter izleme - Kriz yönetimi',
+                roi: 'Tasarruf: €230K/yıl',
                 color: 'from-pink-500 to-rose-600'
               }
             ].map((feature, idx) => (
@@ -206,12 +206,77 @@ const LandingPage = () => {
                   <p className="text-gray-600 mb-4">{feature.description}</p>
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-semibold text-purple-600 bg-purple-100 px-3 py-1 rounded-full">
-                      ROI: {feature.roi}
+                      {feature.roi}
                     </span>
-                    <span className="text-xs text-gray-500">Hiçbir PMS'de YOK</span>
                   </div>
                 </CardContent>
               </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Visual Showcase - Dashboard & Mobile */}
+      <section className="py-24 bg-white">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+              Modern, Hızlı, Kullanıcı Dostu
+            </h2>
+            <p className="text-xl text-gray-600">
+              Sezgisel arayüz ile ekibiniz hemen adapte olur
+            </p>
+          </div>
+
+          {/* Dashboard Screenshot Mockup */}
+          <div className="mb-16">
+            <div className="relative">
+              <div className="absolute -inset-4 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl blur-2xl opacity-20"></div>
+              <div className="relative bg-white rounded-2xl shadow-2xl border-4 border-gray-200 p-4">
+                <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg p-8 min-h-[400px]">
+                  <div className="flex items-center gap-2 mb-6">
+                    <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                    <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="h-12 bg-white rounded-lg shadow-sm flex items-center px-4">
+                      <div className="w-32 h-4 bg-gradient-to-r from-blue-200 to-purple-200 rounded"></div>
+                    </div>
+                    <div className="grid grid-cols-4 gap-4">
+                      {[1,2,3,4].map(i => (
+                        <div key={i} className="h-24 bg-white rounded-lg shadow-sm p-4">
+                          <div className="w-full h-full bg-gradient-to-br from-blue-100 to-purple-100 rounded"></div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="grid grid-cols-3 gap-4">
+                      {[1,2,3].map(i => (
+                        <div key={i} className="h-32 bg-white rounded-lg shadow-sm"></div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="text-center mt-8">
+                    <span className="text-sm text-gray-500 italic">Dashboard Preview - 6 Kategori, 31 Modül</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Features with Icons */}
+          <div className="grid md:grid-cols-4 gap-8">
+            {[
+              { icon: '⚡', title: 'Ultra Hızlı', desc: '<10ms yanıt süresi' },
+              { icon: '🔒', title: 'Güvenli', desc: 'Enterprise-grade security' },
+              { icon: '📱', title: 'Mobil', desc: '7 departman mobil app' },
+              { icon: '🌍', title: 'Global', desc: '8 dil desteği' }
+            ].map((item, idx) => (
+              <div key={idx} className="text-center">
+                <div className="text-5xl mb-4">{item.icon}</div>
+                <h3 className="text-xl font-bold mb-2">{item.title}</h3>
+                <p className="text-gray-600">{item.desc}</p>
+              </div>
             ))}
           </div>
         </div>

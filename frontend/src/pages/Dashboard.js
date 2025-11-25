@@ -615,10 +615,12 @@ const Dashboard = ({ user, tenant, onLogout }) => {
                           </Card>
                         );
                       })}
-                    </div>
-                  </div>
-                )
-              ))}
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  )
+                ))}
+              </Accordion>
             </div>
           </>
         )}

@@ -931,6 +931,9 @@ function App() {
           <Route path="/ai-chatbot" element={isAuthenticated ? <Suspense fallback={<LoadingFallback />}><AIChatbot user={user} tenant={tenant} onLogout={handleLogout} /></Suspense> : <Navigate to="/auth" replace />} />
           <Route path="/dynamic-pricing" element={isAuthenticated ? <Suspense fallback={<LoadingFallback />}><DynamicPricing user={user} tenant={tenant} onLogout={handleLogout} /></Suspense> : <Navigate to="/auth" replace />} />
           <Route path="/reputation-center" element={isAuthenticated ? <Suspense fallback={<LoadingFallback />}><ReputationCenter user={user} tenant={tenant} onLogout={handleLogout} /></Suspense> : <Navigate to="/auth" replace />} />
+          <Route path="/multi-property" element={isAuthenticated ? <Suspense fallback={<LoadingFallback />}><MultiProperty user={user} tenant={tenant} onLogout={handleLogout} /></Suspense> : <Navigate to="/auth" replace />} />
+          <Route path="/payment-gateway" element={isAuthenticated ? <Suspense fallback={<LoadingFallback />}><PaymentGateway user={user} tenant={tenant} onLogout={handleLogout} /></Suspense> : <Navigate to="/auth" replace />} />
+          <Route path="/advanced-loyalty" element={isAuthenticated ? <Suspense fallback={<LoadingFallback />}><AdvancedLoyalty user={user} tenant={tenant} onLogout={handleLogout} /></Suspense> : <Navigate to="/auth" replace />} />
         </Routes>
       </BrowserRouter>
       {/* ReactQueryDevtools removed for production */}

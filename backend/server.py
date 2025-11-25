@@ -3721,13 +3721,57 @@ async def get_gds_reservations(current_user: User = Depends(get_current_user)):
 
 # ============= MOBILE APP BACKEND =============
 
-@api_router.post(\"/mobile/register-device\")\nasync def register_mobile_device(device_data: dict, current_user: User = Depends(get_current_user)):\n    \"\"\"Mobil cihaz kayd\u0131\"\"\"\n    device = {\n        'id': str(uuid.uuid4()),\n        'user_id': current_user.id,\n        'device_id': device_data['device_id'],\n        'device_type': device_data['device_type'],\n        'push_token': device_data.get('push_token'),\n        'app_version': device_data.get('app_version', '1.0.0'),\n        'os_version': device_data.get('os_version'),\n        'registered_at': datetime.now(timezone.utc).isoformat(),\n        'last_active': datetime.now(timezone.utc).isoformat()\n    }\n    await db.mobile_devices.insert_one(device)\n    return {'success': True, 'device_id': device['id']}\n\n@api_router.post(\"/mobile/push-notification\")\nasync def send_push_notification(notification_data: dict, current_user: User = Depends(get_current_user)):\n    \"\"\"Push notification g\u00f6nder\"\"\"\n    # Simulated (real: Firebase Cloud Messaging, APNs)\n    notification = {\n        'id': str(uuid.uuid4()),\n        'tenant_id': current_user.tenant_id,\n        'title': notification_data['title'],\n        'body': notification_data['body'],\n        'sent_at': datetime.now(timezone.utc).isoformat()\n    }\n    await db.push_notifications.insert_one(notification)\n    return {'success': True, 'message': 'Push notification g\u00f6nderildi (MOCK)'}
+@api_router.post("/mobile/register-device")
+async def register_mobile_device(device_data: dict, current_user: User = Depends(get_current_user)):
+    """Mobil cihaz kaydı"""
+    device = {
+        'id': str(uuid.uuid4()),
+        'user_id': current_user.id,
+        'device_id': device_data['device_id'],
+        'device_type': device_data['device_type'],
+        'push_token': device_data.get('push_token'),
+        'app_version': device_data.get('app_version', '1.0.0'),
+        'os_version': device_data.get('os_version'),
+        'registered_at': datetime.now(timezone.utc).isoformat(),
+        'last_active': datetime.now(timezone.utc).isoformat()
+    }
+    await db.mobile_devices.insert_one(device)
+    return {'success': True, 'device_id': device['id']}
+
+@api_router.post("/mobile/push-notification")
+async def send_push_notification(notification_data: dict, current_user: User = Depends(get_current_user)):
+    """Push notification gönder"""
+    notification = {
+        'id': str(uuid.uuid4()),
+        'tenant_id': current_user.tenant_id,
+        'title': notification_data['title'],
+        'body': notification_data['body'],
+        'sent_at': datetime.now(timezone.utc).isoformat()
+    }
+    await db.push_notifications.insert_one(notification)
+    return {'success': True, 'message': 'Push notification gönderildi (MOCK)'}
 
 # ============= IOT & SMART ROOMS =============
 
-@api_router.get(\"/iot/room-devices/{room_id}\")\nasync def get_room_devices(room_id: str, current_user: User = Depends(get_current_user)):\n    \"\"\"Odadaki ak\u0131ll\u0131 cihazlar\"\"\"\n    devices = await db.smart_room_devices.find({'room_id': room_id}, {'_id': 0}).to_list(100)\n    return {'room_id': room_id, 'devices': devices, 'total': len(devices)}\n\n@api_router.post(\"/iot/control-device\")\nasync def control_smart_device(control_data: dict, current_user: User = Depends(get_current_user)):\n    \"\"\"Ak\u0131ll\u0131 cihaz kontrol\"\"\"\n    # Simulated IoT control\n    command = {\n        'device_id': control_data['device_id'],\n        'command': control_data['command'],  # set_temperature, turn_on, turn_off\n        'value': control_data.get('value'),\n        'executed_at': datetime.now(timezone.utc).isoformat()\n    }\n    await db.iot_commands.insert_one(command)\n    return {'success': True, 'message': 'Cihaz komutu g\u00f6nderildi (MOCK)'}
+@api_router.get("/iot/room-devices/{room_id}")
+async def get_room_devices(room_id: str, current_user: User = Depends(get_current_user)):
+    """Odadaki akıllı cihazlar"""
+    devices = await db.smart_room_devices.find({'room_id': room_id}, {'_id': 0}).to_list(100)
+    return {'room_id': room_id, 'devices': devices, 'total': len(devices)}
 
-@api_router.get(\"/iot/energy-consumption\")\nasync def get_energy_consumption(days: int = 30, current_user: User = Depends(get_current_user)):\n    \"\"\"Enerji t\u00fcketim raporu\"\"\"\n    from datetime import timedelta\n    start = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()\n    \n    consumption = await db.energy_consumption.find({\n        'tenant_id': current_user.tenant_id,\n        'timestamp': {'$gte': start}\n    }, {'_id': 0}).to_list(1000)\n    \n    total_kwh = sum([c.get('consumption_kwh', 0) for c in consumption])\n    total_cost = sum([c.get('cost', 0) for c in consumption])\n    \n    return {\n        'period_days': days,\n        'total_kwh': round(total_kwh, 2),\n        'total_cost': round(total_cost, 2),\n        'daily_avg_kwh': round(total_kwh / days, 2) if days > 0 else 0,\n        'records': len(consumption)\n    }
+@api_router.post("/iot/control-device")
+async def control_smart_device(control_data: dict, current_user: User = Depends(get_current_user)):
+    """Akıllı cihaz kontrol"""
+    command = {
+        'device_id': control_data['device_id'],
+        'command': control_data['command'],
+        'value': control_data.get('value'),
+        'executed_at': datetime.now(timezone.utc).isoformat()
+    }
+    await db.iot_commands.insert_one(command)
+    return {'success': True, 'message': 'Cihaz komutu gönderildi (MOCK)'}
+
+@api_router.get("/iot/energy-consumption")\nasync def get_energy_consumption(days: int = 30, current_user: User = Depends(get_current_user)):\n    \"\"\"Enerji t\u00fcketim raporu\"\"\"\n    from datetime import timedelta\n    start = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()\n    \n    consumption = await db.energy_consumption.find({\n        'tenant_id': current_user.tenant_id,\n        'timestamp': {'$gte': start}\n    }, {'_id': 0}).to_list(1000)\n    \n    total_kwh = sum([c.get('consumption_kwh', 0) for c in consumption])\n    total_cost = sum([c.get('cost', 0) for c in consumption])\n    \n    return {\n        'period_days': days,\n        'total_kwh': round(total_kwh, 2),\n        'total_cost': round(total_cost, 2),\n        'daily_avg_kwh': round(total_kwh / days, 2) if days > 0 else 0,\n        'records': len(consumption)\n    }
 
 # ============= HR & STAFF MANAGEMENT =============
 

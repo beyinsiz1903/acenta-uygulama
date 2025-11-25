@@ -3879,14 +3879,18 @@ async def log_journey_event(event_data: dict, current_user: User = Depends(get_c
 @api_router.post("/nps/survey")
 async def submit_nps_survey(survey_data: dict, current_user: User = Depends(get_current_user)):
     """NPS anketi kaydet"""
-    score = survey_data['nps_score']
+    # Flexible field mapping
+    score = survey_data.get('nps_score') or survey_data.get('score', 5)
+    guest_id = survey_data.get('guest_id') or survey_data.get('user_id')
+    booking_id = survey_data.get('booking_id') or survey_data.get('reservation_id')
+    
     category = 'detractor' if score <= 6 else 'passive' if score <= 8 else 'promoter'
     
     survey = {
         'id': str(uuid.uuid4()),
         'tenant_id': current_user.tenant_id,
-        'guest_id': survey_data['guest_id'],
-        'booking_id': survey_data['booking_id'],
+        'guest_id': guest_id,
+        'booking_id': booking_id,
         'nps_score': score,
         'category': category,
         'feedback': survey_data.get('feedback'),

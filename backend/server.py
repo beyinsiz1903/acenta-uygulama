@@ -2279,6 +2279,252 @@ async def login(data: UserLogin):
 async def get_me(current_user: User = Depends(get_current_user)):
     return current_user
 
+# ============= NEW USER REGISTRATION WITH EMAIL VERIFICATION =============
+
+class EmailVerificationRequest(BaseModel):
+    """E-posta doğrulama kodu talebi"""
+    email: EmailStr
+    name: str
+    password: str
+    property_name: Optional[str] = None  # Hotel için
+    phone: Optional[str] = None
+    user_type: str = "hotel"  # "hotel" veya "guest"
+
+class VerifyCodeRequest(BaseModel):
+    """Doğrulama kodu kontrolü"""
+    email: EmailStr
+    code: str
+
+class ForgotPasswordRequest(BaseModel):
+    """Şifre sıfırlama talebi"""
+    email: EmailStr
+
+class ResetPasswordRequest(BaseModel):
+    """Yeni şifre belirleme"""
+    email: EmailStr
+    code: str
+    new_password: str
+
+@api_router.post("/auth/request-verification")
+async def request_verification_code(data: EmailVerificationRequest):
+    """E-posta doğrulama kodu gönder"""
+    # E-posta daha önce kullanılmış mı kontrol et
+    existing = await db.users.find_one({'email': data.email})
+    if existing:
+        raise HTTPException(status_code=400, detail="Bu e-posta adresi zaten kayıtlı")
+    
+    # Doğrulama kodu oluştur
+    from email_service import email_service
+    code = email_service.generate_verification_code()
+    
+    # Kodu veritabanına kaydet
+    verification_doc = {
+        'email': data.email,
+        'code': code,
+        'name': data.name,
+        'password': hash_password(data.password),
+        'property_name': data.property_name,
+        'phone': data.phone,
+        'user_type': data.user_type,
+        'created_at': datetime.now(timezone.utc),
+        'expires_at': datetime.now(timezone.utc) + timedelta(minutes=15),
+        'verified': False
+    }
+    
+    # Eski kodları sil
+    await db.verification_codes.delete_many({'email': data.email})
+    
+    # Yeni kodu kaydet
+    await db.verification_codes.insert_one(verification_doc)
+    
+    # E-posta gönder (mock)
+    await email_service.send_verification_code(data.email, code, data.name)
+    
+    return {
+        'success': True,
+        'message': 'Doğrulama kodu e-posta adresinize gönderildi',
+        'expires_in_minutes': 15
+    }
+
+@api_router.post("/auth/verify-email", response_model=TokenResponse)
+async def verify_email_and_register(data: VerifyCodeRequest):
+    """E-posta kodunu doğrula ve kullanıcı oluştur"""
+    # Doğrulama kodunu bul
+    verification = await db.verification_codes.find_one({
+        'email': data.email,
+        'code': data.code
+    })
+    
+    if not verification:
+        raise HTTPException(status_code=400, detail="Geçersiz veya hatalı doğrulama kodu")
+    
+    # Kod süresi dolmuş mu kontrol et
+    if datetime.now(timezone.utc) > verification['expires_at']:
+        await db.verification_codes.delete_one({'_id': verification['_id']})
+        raise HTTPException(status_code=400, detail="Doğrulama kodu süresi dolmuş. Lütfen yeni kod isteyin")
+    
+    # E-posta zaten kullanılmış mı kontrol et (tekrar)
+    existing = await db.users.find_one({'email': data.email})
+    if existing:
+        raise HTTPException(status_code=400, detail="Bu e-posta adresi zaten kayıtlı")
+    
+    # Kullanıcı tipine göre kayıt
+    if verification['user_type'] == 'hotel':
+        # Hotel admin kullanıcısı
+        tenant = Tenant(
+            name=verification['name'],
+            property_name=verification.get('property_name', f"{verification['name']} Hotel"),
+            email=data.email,
+            phone=verification.get('phone'),
+            address='',
+            location='',
+            description=''
+        )
+        tenant_dict = tenant.model_dump()
+        tenant_dict['created_at'] = tenant_dict['created_at'].isoformat()
+        await db.tenants.insert_one(tenant_dict)
+        
+        user = User(
+            tenant_id=tenant.id,
+            email=data.email,
+            name=verification['name'],
+            role=UserRole.ADMIN,
+            phone=verification.get('phone'),
+            is_active=True
+        )
+        user_dict = user.model_dump()
+        user_dict['hashed_password'] = verification['password']
+        user_dict['created_at'] = user_dict['created_at'].isoformat()
+        user_dict['email_verified'] = True
+        user_dict['email_verified_at'] = datetime.now(timezone.utc).isoformat()
+        await db.users.insert_one(user_dict)
+        
+        # Doğrulama kaydını sil
+        await db.verification_codes.delete_one({'_id': verification['_id']})
+        
+        # Hoşgeldin e-postası gönder
+        from email_service import email_service
+        await email_service.send_welcome_email(data.email, verification['name'])
+        
+        token = create_token(user.id, tenant.id)
+        return TokenResponse(access_token=token, user=user, tenant=tenant)
+    
+    else:
+        # Guest kullanıcısı
+        user = User(
+            tenant_id=None,
+            email=data.email,
+            name=verification['name'],
+            role=UserRole.GUEST,
+            phone=verification.get('phone'),
+            is_active=True
+        )
+        user_dict = user.model_dump()
+        user_dict['hashed_password'] = verification['password']
+        user_dict['created_at'] = user_dict['created_at'].isoformat()
+        user_dict['email_verified'] = True
+        user_dict['email_verified_at'] = datetime.now(timezone.utc).isoformat()
+        await db.users.insert_one(user_dict)
+        
+        prefs = NotificationPreferences(user_id=user.id)
+        await db.notification_preferences.insert_one(prefs.model_dump())
+        
+        # Doğrulama kaydını sil
+        await db.verification_codes.delete_one({'_id': verification['_id']})
+        
+        # Hoşgeldin e-postası gönder
+        from email_service import email_service
+        await email_service.send_welcome_email(data.email, verification['name'])
+        
+        token = create_token(user.id, None)
+        return TokenResponse(access_token=token, user=user, tenant=None)
+
+@api_router.post("/auth/forgot-password")
+async def forgot_password(data: ForgotPasswordRequest):
+    """Şifre sıfırlama kodu gönder"""
+    # Kullanıcı var mı kontrol et
+    user = await db.users.find_one({'email': data.email})
+    if not user:
+        # Güvenlik için başarılı mesajı döndür (e-posta enumeration saldırısını önle)
+        return {
+            'success': True,
+            'message': 'Eğer bu e-posta kayıtlıysa, şifre sıfırlama kodu gönderildi'
+        }
+    
+    # Sıfırlama kodu oluştur
+    from email_service import email_service
+    code = email_service.generate_verification_code()
+    
+    # Kodu veritabanına kaydet
+    reset_doc = {
+        'email': data.email,
+        'code': code,
+        'created_at': datetime.now(timezone.utc),
+        'expires_at': datetime.now(timezone.utc) + timedelta(minutes=15),
+        'used': False
+    }
+    
+    # Eski kodları sil
+    await db.password_reset_codes.delete_many({'email': data.email})
+    
+    # Yeni kodu kaydet
+    await db.password_reset_codes.insert_one(reset_doc)
+    
+    # E-posta gönder (mock)
+    await email_service.send_password_reset_code(data.email, code, user.get('name'))
+    
+    return {
+        'success': True,
+        'message': 'Eğer bu e-posta kayıtlıysa, şifre sıfırlama kodu gönderildi',
+        'expires_in_minutes': 15
+    }
+
+@api_router.post("/auth/reset-password")
+async def reset_password(data: ResetPasswordRequest):
+    """Şifre sıfırlama kodunu doğrula ve yeni şifre belirle"""
+    # Sıfırlama kodunu bul
+    reset = await db.password_reset_codes.find_one({
+        'email': data.email,
+        'code': data.code,
+        'used': False
+    })
+    
+    if not reset:
+        raise HTTPException(status_code=400, detail="Geçersiz veya kullanılmış sıfırlama kodu")
+    
+    # Kod süresi dolmuş mu kontrol et
+    if datetime.now(timezone.utc) > reset['expires_at']:
+        await db.password_reset_codes.delete_one({'_id': reset['_id']})
+        raise HTTPException(status_code=400, detail="Sıfırlama kodu süresi dolmuş. Lütfen yeni kod isteyin")
+    
+    # Kullanıcıyı bul
+    user = await db.users.find_one({'email': data.email})
+    if not user:
+        raise HTTPException(status_code=404, detail="Kullanıcı bulunamadı")
+    
+    # Şifreyi güncelle
+    new_hashed_password = hash_password(data.new_password)
+    await db.users.update_one(
+        {'email': data.email},
+        {
+            '$set': {
+                'hashed_password': new_hashed_password,
+                'password_reset_at': datetime.now(timezone.utc).isoformat()
+            }
+        }
+    )
+    
+    # Kodu kullanıldı olarak işaretle
+    await db.password_reset_codes.update_one(
+        {'_id': reset['_id']},
+        {'$set': {'used': True, 'used_at': datetime.now(timezone.utc)}}
+    )
+    
+    return {
+        'success': True,
+        'message': 'Şifreniz başarıyla güncellendi. Şimdi yeni şifrenizle giriş yapabilirsiniz'
+    }
+
 # ============= GUEST PORTAL ENDPOINTS (OLD - DEPRECATED) =============
 # NOTE: New guest endpoints are at line 21170+ (GUEST MOBILE APP ENDPOINTS)
 

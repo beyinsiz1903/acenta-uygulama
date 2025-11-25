@@ -4008,6 +4008,107 @@ async def update_room_rate(rate_data: dict, current_user: User = Depends(get_cur
 # ============= PAYMENT & FINANCIAL (ALREADY ADDED ABOVE) =============
 
 @api_router.get("/payments/installment-calculator")
+
+
+# ============= AI WHATSAPP CONCIERGE (GAME-CHANGER #1) =============
+
+@api_router.post("/ai-concierge/whatsapp")
+async def ai_whatsapp_concierge(
+    message_data: dict,
+    current_user: User = Depends(get_current_user)
+):
+    """AI WhatsApp Concierge - Otomatik misafir hizmeti"""
+    from ai_whatsapp_concierge import get_ai_concierge
+    
+    concierge = get_ai_concierge(db)
+    result = await concierge.process_guest_message(
+        message_data['phone'],
+        message_data['message'],
+        current_user.tenant_id
+    )
+    
+    # Save conversation
+    conversation = {
+        'id': str(uuid.uuid4()),
+        'tenant_id': current_user.tenant_id,
+        'phone': message_data['phone'],
+        'user_message': message_data['message'],
+        'ai_response': result['response'],
+        'action_taken': result.get('action'),
+        'created_at': datetime.now(timezone.utc).isoformat()
+    }
+    await db.ai_conversations.insert_one(conversation)
+    
+    return result
+
+@api_router.get("/ai-concierge/conversations")
+async def get_ai_conversations(
+    phone: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """AI Concierge conversation history"""
+    query = {'tenant_id': current_user.tenant_id}
+    if phone:
+        query['phone'] = phone
+    
+    conversations = await db.ai_conversations.find(query, {'_id': 0}).sort('created_at', -1).limit(100).to_list(100)
+    
+    return {
+        'conversations': conversations,
+        'total': len(conversations)
+    }
+
+# ============= PREDICTIVE ANALYTICS (GAME-CHANGER #2) =============
+
+@api_router.get("/predictions/no-shows")
+async def predict_no_shows(
+    target_date: str,
+    current_user: User = Depends(get_current_user)
+):
+    """No-show risk predictions"""
+    from predictive_engine import get_predictive_engine
+    
+    engine = get_predictive_engine(db)
+    predictions = await engine.predict_no_shows(current_user.tenant_id, target_date)
+    
+    return {
+        'target_date': target_date,
+        'predictions': predictions,
+        'high_risk_count': len([p for p in predictions if p['risk_level'] == 'high']),
+        'total_at_risk': len(predictions)
+    }
+
+@api_router.get("/predictions/demand-forecast")
+async def demand_forecast(
+    days: int = 30,
+    current_user: User = Depends(get_current_user)
+):
+    """30 günlük talep tahmini"""
+    from predictive_engine import get_predictive_engine
+    
+    engine = get_predictive_engine(db)
+    forecast = await engine.predict_demand(current_user.tenant_id, days)
+    
+    return {
+        'forecast_period': f'{days} days',
+        'daily_forecast': forecast,
+        'avg_occupancy': round(sum([f['occupancy_forecast'] for f in forecast]) / len(forecast), 1) if forecast else 0,
+        'peak_days': [f for f in forecast if f['demand_level'] == 'very_high']
+    }
+
+@api_router.get("/predictions/complaint-risk/{guest_id}")
+async def predict_complaint_risk(
+    guest_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Misafir şikayet riski"""
+    from predictive_engine import get_predictive_engine
+    
+    engine = get_predictive_engine(db)
+    risk = await engine.predict_complaint_risk(current_user.tenant_id, guest_id)
+    
+    return risk
+
 async def installment_calculator(amount: float, installments: int, current_user: User = Depends(get_current_user)):
     rates = {1: 0.0, 2: 0.02, 3: 0.03, 6: 0.05, 9: 0.07, 12: 0.09}
     rate = rates.get(installments, 0.1)

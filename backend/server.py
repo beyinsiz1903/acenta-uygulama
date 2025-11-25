@@ -3548,6 +3548,87 @@ async def get_negative_review_alerts(current_user: User = Depends(get_current_us
         'description': complaint_data['description'],
         'status': 'open',
         'created_by': current_user.id,
+
+
+# ============= REPORT AUTOMATION =============
+
+@api_router.post("/reports/schedule-flash")
+async def schedule_flash_report(
+    schedule_data: dict,
+    current_user: User = Depends(get_current_user)
+):
+    """Flash report otomatik gönderim ayarla"""
+    from report_automation import get_report_automation
+    from email_service import email_service
+    
+    automation = get_report_automation(db, email_service)
+    schedule = automation.schedule_daily_report(
+        current_user.tenant_id,
+        schedule_data['recipients'],
+        schedule_data.get('send_time', '07:00')
+    )
+    
+    return {
+        'success': True,
+        'message': 'Flash report otomatik gönderim ayarlandı',
+        'send_time': schedule['send_time'],
+        'recipients': schedule['recipients']
+    }
+
+@api_router.post("/reports/send-flash-now")
+async def send_flash_report_now(
+    recipients: List[str],
+    current_user: User = Depends(get_current_user)
+):
+    """Flash report'u şimdi gönder"""
+    from report_automation import get_report_automation
+    from email_service import email_service
+    
+    automation = get_report_automation(db, email_service)
+    await automation.send_flash_report_email(current_user.tenant_id, recipients)
+    
+    return {
+        'success': True,
+        'message': f'Flash report {len(recipients)} alıcıya gönderildi'
+    }
+
+# ============= HOUSEKEEPING AI =============
+
+@api_router.post("/housekeeping/ai-assignment")
+async def get_ai_room_assignment(
+    staff_data: dict,
+    current_user: User = Depends(get_current_user)
+):
+    """AI ile oda dağılımı optimizasyonu"""
+    from housekeeping_ai import get_housekeeping_ai
+    
+    ai = get_housekeeping_ai(db)
+    assignments = await ai.optimize_room_assignment(
+        current_user.tenant_id,
+        staff_data['staff_list']
+    )
+    
+    return {
+        'success': True,
+        'assignments': assignments,
+        'total_rooms': len(assignments),
+        'total_estimated_time': sum([a['estimated_minutes'] for a in assignments])
+    }
+
+@api_router.get("/housekeeping/predict-time")
+async def predict_cleaning_time(
+    room_type: str,
+    staff_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Temizlik süresi tahmini"""
+    from housekeeping_ai import get_housekeeping_ai
+    
+    ai = get_housekeeping_ai(db)
+    prediction = await ai.predict_cleaning_time(room_type, staff_id)
+    
+    return prediction
+
         'created_at': datetime.now(timezone.utc).isoformat()
     }
     

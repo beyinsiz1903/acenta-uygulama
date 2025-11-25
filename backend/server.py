@@ -4366,30 +4366,38 @@ async def create_group_block(
     current_user: User = Depends(get_current_user)
 ):
     """Grup bloğu oluştur"""
-    from group_sales_models import GroupBlockCreate, GroupBlock, BillingType, GroupBlockStatus
+    from group_sales_models import BillingType, GroupBlockStatus
     
-    request = GroupBlockCreate(**block_data)
+    # Flexible field mapping
+    group_name = block_data.get('group_name') or block_data.get('block_name')
+    organization = block_data.get('organization') or block_data.get('group_type', '')
+    contact_name = block_data.get('contact_name') or block_data.get('contact_person')
+    contact_email = block_data.get('contact_email') or block_data.get('email', '')
+    contact_phone = block_data.get('contact_phone') or block_data.get('phone', '')
+    check_in = block_data.get('check_in') or block_data.get('check_in_date')
+    check_out = block_data.get('check_out') or block_data.get('check_out_date')
+    cutoff_date = block_data.get('cutoff_date') or block_data.get('cutoff', check_in)
     
     # Create group block
     block = {
         'id': str(uuid.uuid4()),
         'tenant_id': current_user.tenant_id,
-        'group_name': request.group_name,
-        'organization': request.organization,
-        'contact_name': request.contact_name,
-        'contact_email': request.contact_email,
-        'contact_phone': request.contact_phone,
-        'check_in': request.check_in,
-        'check_out': request.check_out,
-        'total_rooms': request.total_rooms,
+        'group_name': group_name,
+        'organization': organization,
+        'contact_name': contact_name,
+        'contact_email': contact_email,
+        'contact_phone': contact_phone,
+        'check_in': check_in,
+        'check_out': check_out,
+        'total_rooms': block_data['total_rooms'],
         'rooms_picked_up': 0,
-        'room_breakdown': request.room_breakdown or {},
-        'group_rate': request.group_rate,
-        'room_type': request.room_type,
-        'cutoff_date': request.cutoff_date,
-        'billing_type': request.billing_type,
-        'status': GroupBlockStatus.TENTATIVE,
-        'special_requirements': request.special_requirements,
+        'room_breakdown': block_data.get('room_breakdown', {}),
+        'group_rate': block_data.get('group_rate') or block_data.get('rate_per_room', 100),
+        'room_type': block_data.get('room_type', 'Standard'),
+        'cutoff_date': cutoff_date,
+        'billing_type': block_data.get('billing_type', 'master_account'),
+        'status': 'tentative',
+        'special_requirements': block_data.get('special_requirements'),
         'created_by': current_user.id,
         'created_at': datetime.now(timezone.utc).isoformat(),
         'updated_at': datetime.now(timezone.utc).isoformat()

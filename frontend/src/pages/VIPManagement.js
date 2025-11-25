@@ -100,12 +100,24 @@ const VIPManagement = () => {
   return (
     <div className="p-6">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          👑 VIP Misafir Yönetimi
-        </h1>
-        <p className="text-gray-600">
-          VIP profiller, özel protokoller ve kutlama takibi
-        </p>
+        <div className="flex items-center gap-3">
+          <Button 
+            variant="outline" 
+            size="icon"
+            onClick={() => navigate('/')}
+            className="hover:bg-purple-50"
+          >
+            <Home className="w-5 h-5" />
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              👑 VIP Misafir Yönetimi
+            </h1>
+            <p className="text-gray-600">
+              VIP profiller, özel protokoller ve kutlama takibi
+            </p>
+          </div>
+        </div>
       </div>
 
       <Tabs defaultValue="vip-list" className="space-y-6">

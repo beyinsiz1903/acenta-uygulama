@@ -298,51 +298,140 @@ const AuthPage = ({ onLogin }) => {
                   </TabsList>
                   
                   <TabsContent value="login">
-                    <form onSubmit={handleHotelLogin} className="space-y-4" style={{ paddingTop: '1rem' }}>
-                      {isMobile && (
-                        <div className="bg-blue-50 p-3 rounded-lg mb-4">
-                          <p className="text-sm text-blue-800 font-medium">
-                            📱 Mobile Quick Access
-                          </p>
-                          <p className="text-xs text-blue-600 mt-1">
-                            Manage your hotel from anywhere
-                          </p>
+                    {!showForgotPassword ? (
+                      <form onSubmit={handleHotelLogin} className="space-y-4" style={{ paddingTop: '1rem' }}>
+                        {isMobile && (
+                          <div className="bg-blue-50 p-3 rounded-lg mb-4">
+                            <p className="text-sm text-blue-800 font-medium">
+                              📱 Mobile Quick Access
+                            </p>
+                            <p className="text-xs text-blue-600 mt-1">
+                              Manage your hotel from anywhere
+                            </p>
+                          </div>
+                        )}
+                        <div>
+                          <Label>{t('common.email')}</Label>
+                          <Input
+                            type="email"
+                            value={hotelLoginData.email}
+                            onChange={(e) => setHotelLoginData({...hotelLoginData, email: e.target.value})}
+                            required
+                            data-testid="hotel-login-email"
+                            placeholder={isMobile ? "your@email.com" : ""}
+                            style={isMobile ? { fontSize: '16px' } : {}}
+                          />
                         </div>
-                      )}
-                      <div>
-                        <Label>{t('common.email')}</Label>
-                        <Input
-                          type="email"
-                          value={hotelLoginData.email}
-                          onChange={(e) => setHotelLoginData({...hotelLoginData, email: e.target.value})}
-                          required
-                          data-testid="hotel-login-email"
-                          placeholder={isMobile ? "your@email.com" : ""}
-                          style={isMobile ? { fontSize: '16px' } : {}}
-                        />
+                        <div>
+                          <Label>{t('common.password')}</Label>
+                          <Input
+                            type="password"
+                            value={hotelLoginData.password}
+                            onChange={(e) => setHotelLoginData({...hotelLoginData, password: e.target.value})}
+                            required
+                            data-testid="hotel-login-password"
+                            placeholder={isMobile ? "••••••••" : ""}
+                            style={isMobile ? { fontSize: '16px' } : {}}
+                          />
+                        </div>
+                        <div className="flex justify-end">
+                          <button
+                            type="button"
+                            onClick={() => setShowForgotPassword(true)}
+                            className="text-sm text-blue-600 hover:text-blue-800"
+                          >
+                            Şifremi Unuttum
+                          </button>
+                        </div>
+                        <Button 
+                          type="submit" 
+                          className="w-full" 
+                          disabled={loading} 
+                          data-testid="hotel-login-btn"
+                          style={isMobile ? { height: '48px', fontSize: '16px' } : {}}
+                        >
+                          {loading ? t('common.loading') : t('common.login')}
+                        </Button>
+                      </form>
+                    ) : (
+                      <div className="space-y-4" style={{ paddingTop: '1rem' }}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowForgotPassword(false);
+                            setForgotPasswordStep('email');
+                          }}
+                          className="text-sm text-blue-600 hover:text-blue-800 mb-4"
+                        >
+                          ← Giriş Sayfasına Dön
+                        </button>
+                        
+                        {forgotPasswordStep === 'email' && (
+                          <form onSubmit={handleForgotPasswordRequest} className="space-y-4">
+                            <div>
+                              <Label>E-posta Adresiniz</Label>
+                              <Input
+                                type="email"
+                                value={hotelLoginData.email}
+                                onChange={(e) => setHotelLoginData({...hotelLoginData, email: e.target.value})}
+                                required
+                                placeholder="ornek@hotel.com"
+                              />
+                              <p className="text-xs text-gray-500 mt-1">
+                                Size bir doğrulama kodu göndereceğiz
+                              </p>
+                            </div>
+                            <Button type="submit" className="w-full" disabled={loading}>
+                              {loading ? 'Gönderiliyor...' : 'Kod Gönder'}
+                            </Button>
+                          </form>
+                        )}
+                        
+                        {forgotPasswordStep === 'code' && (
+                          <form onSubmit={(e) => { e.preventDefault(); setForgotPasswordStep('newpassword'); }} className="space-y-4">
+                            <div>
+                              <Label>Doğrulama Kodu</Label>
+                              <Input
+                                type="text"
+                                value={resetCode}
+                                onChange={(e) => setResetCode(e.target.value)}
+                                required
+                                placeholder="123456"
+                                maxLength={6}
+                              />
+                              <p className="text-xs text-gray-500 mt-1">
+                                E-postanıza gönderilen 6 haneli kodu girin
+                              </p>
+                            </div>
+                            <Button type="submit" className="w-full" disabled={loading}>
+                              Devam Et
+                            </Button>
+                          </form>
+                        )}
+                        
+                        {forgotPasswordStep === 'newpassword' && (
+                          <form onSubmit={handleResetPassword} className="space-y-4">
+                            <div>
+                              <Label>Yeni Şifreniz</Label>
+                              <Input
+                                type="password"
+                                value={hotelLoginData.password}
+                                onChange={(e) => setHotelLoginData({...hotelLoginData, password: e.target.value})}
+                                required
+                                placeholder="••••••••"
+                                minLength={6}
+                              />
+                              <p className="text-xs text-gray-500 mt-1">
+                                En az 6 karakter olmalı
+                              </p>
+                            </div>
+                            <Button type="submit" className="w-full" disabled={loading}>
+                              {loading ? 'Güncelleniyor...' : 'Şifremi Güncelle'}
+                            </Button>
+                          </form>
+                        )}
                       </div>
-                      <div>
-                        <Label>{t('common.password')}</Label>
-                        <Input
-                          type="password"
-                          value={hotelLoginData.password}
-                          onChange={(e) => setHotelLoginData({...hotelLoginData, password: e.target.value})}
-                          required
-                          data-testid="hotel-login-password"
-                          placeholder={isMobile ? "••••••••" : ""}
-                          style={isMobile ? { fontSize: '16px' } : {}}
-                        />
-                      </div>
-                      <Button 
-                        type="submit" 
-                        className="w-full" 
-                        disabled={loading} 
-                        data-testid="hotel-login-btn"
-                        style={isMobile ? { height: '48px', fontSize: '16px' } : {}}
-                      >
-                        {loading ? t('common.loading') : t('common.login')}
-                      </Button>
-                    </form>
+                    )}
                   </TabsContent>
                   
                   <TabsContent value="register">

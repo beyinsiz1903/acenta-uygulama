@@ -4097,8 +4097,16 @@ async def demand_forecast(
     }
 
 @api_router.get("/predictions/complaint-risk/{guest_id}")
-async def predict_complaint_risk(
-
+async def predict_complaint_risk(guest_id: str, current_user: User = Depends(get_current_user)):
+    """Predict complaint risk for a guest"""
+    # Mock implementation - returns risk score
+    return {
+        'guest_id': guest_id,
+        'risk_score': 0.35,
+        'risk_level': 'medium',
+        'factors': ['Previous complaint', 'Long wait time'],
+        'recommendation': 'Proactive service recovery recommended'
+    }
 
 # ============= SOCIAL MEDIA COMMAND CENTER (GAME-CHANGER #3) =============
 

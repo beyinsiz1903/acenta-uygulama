@@ -4333,8 +4333,8 @@ async def add_ingredient(ing_data: dict, current_user: User = Depends(get_curren
 
 @api_router.post("/finance/logo-integration/sync")
 async def sync_with_logo(current_user: User = Depends(get_current_user)):
-    \"\"\"Logo Tiger entegrasyonu (simulated)\"\"\"
-    # Ger\u00e7ekte: Logo Tiger API call
+    """Logo Tiger entegrasyonu (simulated)"""
+    # Gercekte: Logo Tiger API call
     result = {
         'success': True, 'synced_invoices': 45, 'synced_payments': 23,
         'synced_at': datetime.now(timezone.utc).isoformat()

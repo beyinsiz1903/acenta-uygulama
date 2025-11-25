@@ -3649,6 +3649,7 @@ async def get_complaints(
     
     complaints = await db.service_complaints.find(query, {'_id': 0}).sort('created_at', -1).to_list(100)
     
+    return {'complaints': complaints, 'total': len(complaints)}
 
 
 # ============= MULTI-PROPERTY MANAGEMENT =============

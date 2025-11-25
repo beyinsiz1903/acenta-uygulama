@@ -217,6 +217,30 @@ const Dashboard = ({ user, tenant, onLogout }) => {
       path: '/service-recovery',
       color: '#ef4444',
       badge: 'NEW'
+    },
+    {
+      title: '🧖 Spa & Wellness',
+      description: 'Spa randevuları ve treatment yönetimi',
+      icon: Sparkles,
+      path: '/spa-wellness',
+      color: '#8b5cf6',
+      badge: 'NEW'
+    },
+    {
+      title: '🏛️ Meeting & Events',
+      description: 'Toplantı odaları ve etkinlik yönetimi',
+      icon: Calendar,
+      path: '/meeting-events',
+      color: '#f59e0b',
+      badge: 'NEW'
+    },
+    {
+      title: '🤖 AI Chatbot',
+      description: 'AI destekli misafir asistanı',
+      icon: Bot,
+      path: '/ai-chatbot',
+      color: '#06b6d4',
+      badge: 'NEW'
     }
   ], [t, stats]);
 

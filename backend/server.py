@@ -609,6 +609,8 @@ class User(BaseModel):
     role: UserRole
     phone: Optional[str] = None
     is_active: bool = True
+    email_verified: bool = False
+    email_verified_at: Optional[datetime] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     password: Optional[str] = Field(None, exclude=True)  # Exclude password from responses
 

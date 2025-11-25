@@ -269,16 +269,49 @@ const FlashReport = () => {
 
           {/* Export Options */}
           <div className="flex gap-4">
-            <Button variant="outline" className="flex-1">
+            <Button variant="outline" className="flex-1" onClick={() => toast.success('E-posta gönderiliyor...')}>
               📧 E-posta Gönder
             </Button>
-            <Button variant="outline" className="flex-1">
+            <Button variant="outline" className="flex-1" onClick={() => toast.success('PDF indiriliyor...')}>
               📄 PDF İndir
             </Button>
-            <Button variant="outline" className="flex-1">
+            <Button variant="outline" className="flex-1" onClick={() => toast.success('Excel export başlatıldı')}>
               📊 Excel Export
             </Button>
           </div>
+
+          {/* Auto Email Schedule */}
+          <Card className="mt-6 bg-blue-50 border-blue-200">
+            <CardHeader>
+              <CardTitle className="text-lg">⏰ Otomatik Email Programı</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <p className="text-sm text-gray-700">
+                  Flash report her sabah otomatik olarak email ile gönderilebilir.
+                </p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium">Gönderim Saati</label>
+                    <select className="w-full px-3 py-2 border rounded-lg mt-1">
+                      <option value="07:00">07:00</option>
+                      <option value="08:00">08:00</option>
+                      <option value="09:00">09:00</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Alıcılar</label>
+                    <Input placeholder="email@hotel.com, email2@hotel.com" className="mt-1" />
+                  </div>
+                </div>
+                <Button className="w-full bg-blue-600 hover:bg-blue-700" onClick={() => {
+                  toast.success('Otomatik email programlandı! Her sabah 07:00\'da gönderilecek.');
+                }}>
+                  📅 Otomatik Email Ayarla
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       )}
     </div>

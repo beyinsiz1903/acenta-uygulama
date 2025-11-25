@@ -3698,9 +3698,26 @@ async def create_payment_intent(payment_data: dict, current_user: User = Depends
 
 @api_router.post("/gds/push-rate")
 async def push_rate_to_gds(rate_data: dict, current_user: User = Depends(get_current_user)):
-    \"\"\"GDS'e rate ve availability g\u00f6nder\"\"\"\n    # Simulated GDS push (real: Amadeus/Sabre API)\n    gds_update = {\n        'id': str(uuid.uuid4()),\n        'tenant_id': current_user.tenant_id,\n        'gds_provider': rate_data['provider'],\n        'room_type': rate_data['room_type'],\n        'rate': rate_data['rate'],\n        'availability': rate_data['availability'],\n        'pushed_at': datetime.now(timezone.utc).isoformat(),\n        'success': True\n    }\n    await db.gds_rate_updates.insert_one(gds_update)\n    return {'success': True, 'message': f'{rate_data[\"provider\"]} GDS g\u00fcncellendi', 'update_id': gds_update['id']}
+    """GDS'e rate ve availability gönder"""
+    # Simulated GDS push (real: Amadeus/Sabre API)
+    gds_update = {
+        'id': str(uuid.uuid4()),
+        'tenant_id': current_user.tenant_id,
+        'gds_provider': rate_data.get('provider', 'Amadeus'),
+        'room_type': rate_data['room_type'],
+        'rate': rate_data['rate'],
+        'availability': rate_data['availability'],
+        'pushed_at': datetime.now(timezone.utc).isoformat(),
+        'success': True
+    }
+    await db.gds_rate_updates.insert_one(gds_update)
+    return {'success': True, 'message': f'{gds_update["gds_provider"]} GDS güncellendi', 'update_id': gds_update['id']}
 
-@api_router.get(\"/gds/reservations\")\nasync def get_gds_reservations(current_user: User = Depends(get_current_user)):\n    \"\"\"GDS'ten gelen rezervasyonlar\"\"\"\n    reservations = await db.gds_reservations.find({'tenant_id': current_user.tenant_id}, {'_id': 0}).to_list(100)\n    return {'reservations': reservations, 'total': len(reservations)}
+@api_router.get("/gds/reservations")
+async def get_gds_reservations(current_user: User = Depends(get_current_user)):
+    """GDS'ten gelen rezervasyonlar"""
+    reservations = await db.gds_reservations.find({'tenant_id': current_user.tenant_id}, {'_id': 0}).to_list(100)
+    return {'reservations': reservations, 'total': len(reservations)}
 
 # ============= MOBILE APP BACKEND =============
 

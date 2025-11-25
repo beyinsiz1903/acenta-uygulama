@@ -4224,7 +4224,7 @@ async def installment_calculator(amount: float, installments: int, current_user:
 
 @api_router.post("/hr/clock-in")
 async def clock_in(staff_data: dict, current_user: User = Depends(get_current_user)):
-    \"\"\"Personel giri\u015f kayd\u0131\"\"\"
+    """Personel giris kaydi"""
     record = {
         'id': str(uuid.uuid4()), 'tenant_id': current_user.tenant_id,
         'staff_id': staff_data['staff_id'], 'date': date.today().isoformat(),

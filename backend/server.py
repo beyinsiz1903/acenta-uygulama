@@ -3654,6 +3654,38 @@ async def get_complaints(
 
 @api_router.get("/multi-property/dashboard")
 async def multi_property_dashboard(current_user: User = Depends(get_current_user)):
+    properties = [{'property_id': current_user.tenant_id, 'property_name': 'Grand Hotel', 'occupancy_pct': 75}]
+    return {'properties': properties, 'total': 1}
+
+# ============= PAYMENT GATEWAY =============
+
+@api_router.post("/payments/intent")
+async def payment_intent(payment_data: dict, current_user: User = Depends(get_current_user)):
+    intent = {'id': str(uuid.uuid4()), 'amount': payment_data['amount'], 'status': 'pending'}
+    await db.payment_intents.insert_one(intent)
+    return {'success': True, 'intent_id': intent['id']}
+
+@api_router.get("/payments/installment")
+async def installment_calc(amount: float, months: int, current_user: User = Depends(get_current_user)):
+    total = amount * (1 + months * 0.01)
+    return {'monthly': round(total/months, 2), 'total': round(total, 2)}
+
+# ============= ADVANCED LOYALTY =============
+
+@api_router.post("/loyalty/points")
+async def add_points(data: dict, current_user: User = Depends(get_current_user)):
+    await db.loyalty_transactions.insert_one({
+        'id': str(uuid.uuid4()), 'guest_id': data['guest_id'], 
+        'points': data['points'], 'created_at': datetime.now(timezone.utc).isoformat()
+    })
+    return {'success': True}
+
+
+
+# ============= MULTI-PROPERTY MANAGEMENT =============
+
+@api_router.get("/multi-property/dashboard")
+async def multi_property_dashboard(current_user: User = Depends(get_current_user)):
     properties = [{'property_id': current_user.tenant_id, 'property_name': 'Grand Hotel', 'occupancy_pct': 75, 'total_rooms': 50}]
     return {'properties': properties, 'total_properties': 1}
 

@@ -37,7 +37,11 @@ class DynamicPricingEngine:
     
     async def calculate_demand_factors(self, tenant_id: str, target_date: str) -> dict:
         """Talep faktörlerini hesapla"""
-        target = datetime.fromisoformat(target_date)
+        # Parse target date with timezone
+        if 'T' in target_date:
+            target = datetime.fromisoformat(target_date.replace('Z', '+00:00'))
+        else:
+            target = datetime.fromisoformat(target_date).replace(tzinfo=timezone.utc)
         
         # Day of week factor
         day_of_week = target.weekday()

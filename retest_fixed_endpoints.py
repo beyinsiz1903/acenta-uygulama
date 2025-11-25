@@ -120,7 +120,12 @@ class FixedEndpointsRetester:
             ) as response:
                 if response.status == 200:
                     data = await response.json()
-                    rooms = data.get("rooms", [])
+                    # Handle both list and dict responses
+                    if isinstance(data, list):
+                        rooms = data
+                    else:
+                        rooms = data.get("rooms", [])
+                    
                     if rooms:
                         self.test_room_id = rooms[0]["id"]
                         print(f"✅ Using room: {self.test_room_id}")

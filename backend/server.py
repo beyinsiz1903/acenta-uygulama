@@ -2774,6 +2774,515 @@ async def get_pre_arrival_communications(
         'total': len(communications)
     }
 
+# ============= VIP & ENHANCED GUEST PROFILE MANAGEMENT =============
+
+@api_router.post("/guests/{guest_id}/vip-protocol")
+async def create_vip_protocol(
+    guest_id: str,
+    protocol_data: dict,
+    current_user: User = Depends(get_current_user)
+):
+    """VIP protokol oluştur veya güncelle"""
+    from vip_guest_models import VIPProtocol, VIPTier
+    
+    # Check if guest exists
+    guest = await db.guests.find_one({
+        'id': guest_id,
+        'tenant_id': current_user.tenant_id
+    }, {'_id': 0})
+    
+    if not guest:
+        raise HTTPException(status_code=404, detail="Misafir bulunamadı")
+    
+    # Create or update VIP protocol
+    existing = await db.vip_protocols.find_one({
+        'guest_id': guest_id,
+        'tenant_id': current_user.tenant_id
+    })
+    
+    if existing:
+        # Update existing
+        await db.vip_protocols.update_one(
+            {'guest_id': guest_id, 'tenant_id': current_user.tenant_id},
+            {
+                '$set': {
+                    **protocol_data,
+                    'updated_at': datetime.now(timezone.utc).isoformat()
+                }
+            }
+        )
+        message = "VIP protokol güncellendi"
+    else:
+        # Create new
+        protocol = {
+            'id': str(uuid.uuid4()),
+            'guest_id': guest_id,
+            'tenant_id': current_user.tenant_id,
+            **protocol_data,
+            'approved_by': current_user.id,
+            'approved_at': datetime.now(timezone.utc).isoformat(),
+            'active': True,
+            'created_at': datetime.now(timezone.utc).isoformat()
+        }
+        await db.vip_protocols.insert_one(protocol)
+        message = "VIP protokol oluşturuldu"
+    
+    # Update guest tags
+    current_tags = guest.get('tags', [])
+    if 'vip' not in current_tags:
+        current_tags.append('vip')
+        await db.guests.update_one(
+            {'id': guest_id},
+            {'$set': {'tags': current_tags, 'vip_status': True}}
+        )
+    
+    return {
+        'success': True,
+        'message': message,
+        'guest_id': guest_id
+    }
+
+@api_router.get("/guests/{guest_id}/vip-protocol")
+async def get_vip_protocol(
+    guest_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """VIP protokol detaylarını getir"""
+    protocol = await db.vip_protocols.find_one({
+        'guest_id': guest_id,
+        'tenant_id': current_user.tenant_id,
+        'active': True
+    }, {'_id': 0})
+    
+    if not protocol:
+        return {
+            'has_protocol': False,
+            'guest_id': guest_id,
+            'message': 'VIP protokol bulunamadı'
+        }
+    
+    return {
+        'has_protocol': True,
+        'protocol': protocol
+    }
+
+@api_router.post("/guests/{guest_id}/blacklist")
+async def add_to_blacklist(
+    guest_id: str,
+    entry_data: dict,
+    current_user: User = Depends(get_current_user)
+):
+    """Misafiri blacklist'e ekle"""
+    from vip_guest_models import BlacklistEntry
+    
+    # Check guest exists
+    guest = await db.guests.find_one({
+        'id': guest_id,
+        'tenant_id': current_user.tenant_id
+    }, {'_id': 0})
+    
+    if not guest:
+        raise HTTPException(status_code=404, detail="Misafir bulunamadı")
+    
+    # Create blacklist entry
+    entry = {
+        'id': str(uuid.uuid4()),
+        'guest_id': guest_id,
+        'tenant_id': current_user.tenant_id,
+        'reason': entry_data.get('reason'),
+        'severity': entry_data.get('severity', 'medium'),
+        'incident_date': entry_data.get('incident_date', datetime.now(timezone.utc).isoformat()),
+        'detailed_notes': entry_data.get('detailed_notes', ''),
+        'reported_by': current_user.id,
+        'approved_by': entry_data.get('approved_by'),
+        'action_taken': entry_data.get('action_taken', 'warning'),
+        'active': True,
+        'permanent': entry_data.get('permanent', False),
+        'created_at': datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.blacklist_entries.insert_one(entry)
+    
+    # Update guest tags
+    current_tags = guest.get('tags', [])
+    action = entry_data.get('action_taken', 'warning')
+    
+    if action == 'blacklist' and 'blacklist' not in current_tags:
+        current_tags.append('blacklist')
+    if action == 'do_not_rent' and 'do_not_rent' not in current_tags:
+        current_tags.append('do_not_rent')
+    
+    await db.guests.update_one(
+        {'id': guest_id},
+        {
+            '$set': {
+                'tags': current_tags,
+                'blacklist_status': action in ['blacklist', 'do_not_rent']
+            }
+        }
+    )
+    
+    return {
+        'success': True,
+        'message': f'Misafir {action} listesine eklendi',
+        'entry_id': entry['id'],
+        'action_taken': action
+    }
+
+@api_router.get("/guests/{guest_id}/blacklist")
+async def get_blacklist_history(
+    guest_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Misafirin blacklist geçmişi"""
+    entries = await db.blacklist_entries.find({
+        'guest_id': guest_id,
+        'tenant_id': current_user.tenant_id
+    }, {'_id': 0}).sort('created_at', -1).to_list(100)
+    
+    return {
+        'guest_id': guest_id,
+        'entries': entries,
+        'total': len(entries),
+        'has_active_entry': any(e.get('active', False) for e in entries)
+    }
+
+@api_router.post("/guests/{guest_id}/celebration")
+async def update_celebration_tracking(
+    guest_id: str,
+    celebration_data: dict,
+    current_user: User = Depends(get_current_user)
+):
+    """Kutlama bilgilerini güncelle"""
+    # Check guest exists
+    guest = await db.guests.find_one({
+        'id': guest_id,
+        'tenant_id': current_user.tenant_id
+    }, {'_id': 0})
+    
+    if not guest:
+        raise HTTPException(status_code=404, detail="Misafir bulunamadı")
+    
+    # Create or update celebration tracking
+    existing = await db.celebration_tracking.find_one({
+        'guest_id': guest_id,
+        'tenant_id': current_user.tenant_id
+    })
+    
+    if existing:
+        await db.celebration_tracking.update_one(
+            {'guest_id': guest_id, 'tenant_id': current_user.tenant_id},
+            {
+                '$set': {
+                    **celebration_data,
+                    'updated_at': datetime.now(timezone.utc).isoformat()
+                }
+            }
+        )
+    else:
+        celebration = {
+            'guest_id': guest_id,
+            'tenant_id': current_user.tenant_id,
+            **celebration_data,
+            'created_at': datetime.now(timezone.utc).isoformat(),
+            'updated_at': datetime.now(timezone.utc).isoformat()
+        }
+        await db.celebration_tracking.insert_one(celebration)
+    
+    return {
+        'success': True,
+        'message': 'Kutlama bilgileri kaydedildi',
+        'guest_id': guest_id
+    }
+
+@api_router.get("/guests/{guest_id}/celebration")
+async def get_celebration_info(
+    guest_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Kutlama bilgilerini getir"""
+    celebration = await db.celebration_tracking.find_one({
+        'guest_id': guest_id,
+        'tenant_id': current_user.tenant_id
+    }, {'_id': 0})
+    
+    if not celebration:
+        return {
+            'has_celebration': False,
+            'guest_id': guest_id
+        }
+    
+    # Check upcoming celebrations (next 30 days)
+    upcoming = []
+    today = date.today()
+    
+    if celebration.get('birthday'):
+        bday = celebration['birthday']
+        if isinstance(bday, str):
+            bday = datetime.fromisoformat(bday).date()
+        # Check if birthday in next 30 days (ignore year)
+        this_year_bday = bday.replace(year=today.year)
+        days_until = (this_year_bday - today).days
+        if 0 <= days_until <= 30:
+            upcoming.append({
+                'type': 'birthday',
+                'date': this_year_bday.isoformat(),
+                'days_until': days_until
+            })
+    
+    if celebration.get('anniversary'):
+        anniv = celebration['anniversary']
+        if isinstance(anniv, str):
+            anniv = datetime.fromisoformat(anniv).date()
+        this_year_anniv = anniv.replace(year=today.year)
+        days_until = (this_year_anniv - today).days
+        if 0 <= days_until <= 30:
+            upcoming.append({
+                'type': 'anniversary',
+                'date': this_year_anniv.isoformat(),
+                'days_until': days_until
+            })
+    
+    return {
+        'has_celebration': True,
+        'celebration': celebration,
+        'upcoming_celebrations': upcoming
+    }
+
+@api_router.post("/guests/{guest_id}/enhanced-preferences")
+async def update_enhanced_preferences(
+    guest_id: str,
+    preferences: dict,
+    current_user: User = Depends(get_current_user)
+):
+    """Gelişmiş tercihleri güncelle"""
+    # Check guest exists
+    guest = await db.guests.find_one({
+        'id': guest_id,
+        'tenant_id': current_user.tenant_id
+    }, {'_id': 0})
+    
+    if not guest:
+        raise HTTPException(status_code=404, detail="Misafir bulunamadı")
+    
+    # Create or update preferences
+    existing = await db.enhanced_guest_preferences.find_one({
+        'guest_id': guest_id,
+        'tenant_id': current_user.tenant_id
+    })
+    
+    if existing:
+        await db.enhanced_guest_preferences.update_one(
+            {'guest_id': guest_id, 'tenant_id': current_user.tenant_id},
+            {
+                '$set': {
+                    **preferences,
+                    'updated_at': datetime.now(timezone.utc).isoformat()
+                }
+            }
+        )
+    else:
+        pref_doc = {
+            'guest_id': guest_id,
+            'tenant_id': current_user.tenant_id,
+            **preferences,
+            'created_at': datetime.now(timezone.utc).isoformat(),
+            'updated_at': datetime.now(timezone.utc).isoformat()
+        }
+        await db.enhanced_guest_preferences.insert_one(pref_doc)
+    
+    return {
+        'success': True,
+        'message': 'Tercihler başarıyla kaydedildi',
+        'guest_id': guest_id
+    }
+
+@api_router.get("/guests/{guest_id}/complete-profile")
+async def get_complete_guest_profile(
+    guest_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Misafirin tam profili - tüm detaylar"""
+    # Get guest
+    guest = await db.guests.find_one({
+        'id': guest_id,
+        'tenant_id': current_user.tenant_id
+    }, {'_id': 0})
+    
+    if not guest:
+        raise HTTPException(status_code=404, detail="Misafir bulunamadı")
+    
+    # Get all stays
+    stays = await db.bookings.find({
+        'guest_id': guest_id,
+        'tenant_id': current_user.tenant_id
+    }, {'_id': 0}).sort('check_in', -1).to_list(100)
+    
+    # Get VIP protocol
+    vip_protocol = await db.vip_protocols.find_one({
+        'guest_id': guest_id,
+        'tenant_id': current_user.tenant_id,
+        'active': True
+    }, {'_id': 0})
+    
+    # Get enhanced preferences
+    preferences = await db.enhanced_guest_preferences.find_one({
+        'guest_id': guest_id,
+        'tenant_id': current_user.tenant_id
+    }, {'_id': 0})
+    
+    # Get celebration info
+    celebration = await db.celebration_tracking.find_one({
+        'guest_id': guest_id,
+        'tenant_id': current_user.tenant_id
+    }, {'_id': 0})
+    
+    # Get blacklist entries
+    blacklist = await db.blacklist_entries.find({
+        'guest_id': guest_id,
+        'tenant_id': current_user.tenant_id,
+        'active': True
+    }, {'_id': 0}).to_list(10)
+    
+    # Calculate spending profile
+    total_spent = sum([s.get('total_amount', 0) for s in stays])
+    total_nights = sum([
+        (datetime.fromisoformat(s['check_out'].replace('Z', '+00:00')) - 
+         datetime.fromisoformat(s['check_in'].replace('Z', '+00:00'))).days 
+        for s in stays if s.get('check_in') and s.get('check_out')
+    ])
+    
+    spending_profile = {
+        'total_stays': len(stays),
+        'total_nights': total_nights,
+        'total_spent': round(total_spent, 2),
+        'avg_spend_per_stay': round(total_spent / len(stays), 2) if len(stays) > 0 else 0,
+        'lifetime_value_tier': 'vip' if total_spent > 10000 else 'high_value' if total_spent > 5000 else 'valuable' if total_spent > 2000 else 'regular'
+    }
+    
+    return {
+        'guest': guest,
+        'stay_history': stays[:10],  # Last 10 stays
+        'total_stays': len(stays),
+        'vip_protocol': vip_protocol,
+        'has_vip_protocol': vip_protocol is not None,
+        'enhanced_preferences': preferences,
+        'has_preferences': preferences is not None,
+        'celebration_tracking': celebration,
+        'has_celebrations': celebration is not None,
+        'blacklist_entries': blacklist,
+        'is_blacklisted': len(blacklist) > 0,
+        'spending_profile': spending_profile
+    }
+
+@api_router.get("/vip/list")
+async def get_vip_guests(
+    tier: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """VIP misafirleri listele"""
+    query = {
+        'tenant_id': current_user.tenant_id,
+        'active': True
+    }
+    
+    if tier:
+        query['vip_tier'] = tier
+    
+    protocols = await db.vip_protocols.find(query, {'_id': 0}).to_list(100)
+    
+    # Enrich with guest details
+    enriched = []
+    for protocol in protocols:
+        guest = await db.guests.find_one(
+            {'id': protocol['guest_id']},
+            {'_id': 0, 'name': 1, 'email': 1, 'phone': 1}
+        )
+        if guest:
+            enriched.append({
+                **protocol,
+                'guest_name': guest.get('name'),
+                'guest_email': guest.get('email'),
+                'guest_phone': guest.get('phone')
+            })
+    
+    return {
+        'vip_guests': enriched,
+        'total': len(enriched),
+        'tier_filter': tier
+    }
+
+@api_router.get("/celebrations/upcoming")
+async def get_upcoming_celebrations(
+    days: int = 30,
+    current_user: User = Depends(get_current_user)
+):
+    """Yaklaşan kutlamalar (30 gün içinde)"""
+    celebrations = await db.celebration_tracking.find({
+        'tenant_id': current_user.tenant_id
+    }, {'_id': 0}).to_list(1000)
+    
+    upcoming = []
+    today = date.today()
+    
+    for celeb in celebrations:
+        # Check birthday
+        if celeb.get('birthday'):
+            bday = celeb['birthday']
+            if isinstance(bday, str):
+                bday = datetime.fromisoformat(bday).date()
+            this_year_bday = bday.replace(year=today.year)
+            days_until = (this_year_bday - today).days
+            
+            if 0 <= days_until <= days:
+                guest = await db.guests.find_one(
+                    {'id': celeb['guest_id']},
+                    {'_id': 0, 'name': 1, 'email': 1, 'phone': 1}
+                )
+                if guest:
+                    upcoming.append({
+                        'type': 'birthday',
+                        'guest_id': celeb['guest_id'],
+                        'guest_name': guest.get('name'),
+                        'guest_email': guest.get('email'),
+                        'date': this_year_bday.isoformat(),
+                        'days_until': days_until,
+                        'age': today.year - bday.year
+                    })
+        
+        # Check anniversary
+        if celeb.get('anniversary'):
+            anniv = celeb['anniversary']
+            if isinstance(anniv, str):
+                anniv = datetime.fromisoformat(anniv).date()
+            this_year_anniv = anniv.replace(year=today.year)
+            days_until = (this_year_anniv - today).days
+            
+            if 0 <= days_until <= days:
+                guest = await db.guests.find_one(
+                    {'id': celeb['guest_id']},
+                    {'_id': 0, 'name': 1, 'email': 1}
+                )
+                if guest:
+                    upcoming.append({
+                        'type': 'anniversary',
+                        'guest_id': celeb['guest_id'],
+                        'guest_name': guest.get('name'),
+                        'guest_email': guest.get('email'),
+                        'date': this_year_anniv.isoformat(),
+                        'days_until': days_until,
+                        'years': today.year - anniv.year
+                    })
+    
+    # Sort by days_until
+    upcoming.sort(key=lambda x: x['days_until'])
+    
+    return {
+        'upcoming_celebrations': upcoming,
+        'total': len(upcoming),
+        'days_range': days
+    }
+
 @api_router.post("/pre-arrival/send-welcome")
 async def send_pre_arrival_welcome(
     booking_id: str,

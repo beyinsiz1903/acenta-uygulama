@@ -4148,6 +4148,33 @@ async def run_autopilot_cycle(current_user: User = Depends(get_current_user)):
     return report
 
 @api_router.post("/autopilot/set-mode")
+
+
+# ============= GUEST DNA PROFILE (GAME-CHANGER #5) =============
+
+@api_router.get("/guest-dna/{guest_id}")
+async def get_guest_dna_profile(guest_id: str, current_user: User = Depends(get_current_user)):
+    from guest_dna_engine import get_guest_dna_engine
+    engine = get_guest_dna_engine(db)
+    profile = await engine.generate_dna_profile(current_user.tenant_id, guest_id)
+    return profile
+
+# ============= DYNAMIC STAFFING AI (GAME-CHANGER #6) =============
+
+@api_router.get("/staffing-ai/optimal")
+async def get_optimal_staffing(target_date: str, current_user: User = Depends(get_current_user)):
+    from dynamic_staffing_ai import get_staffing_ai
+    ai = get_staffing_ai(db)
+    optimal = await ai.calculate_optimal_staffing(current_user.tenant_id, target_date)
+    return optimal
+
+@api_router.get("/staffing-ai/schedule")
+async def generate_auto_schedule(target_date: str, current_user: User = Depends(get_current_user)):
+    from dynamic_staffing_ai import get_staffing_ai
+    ai = get_staffing_ai(db)
+    schedule = await ai.generate_shift_schedule(current_user.tenant_id, target_date)
+    return {'schedule': schedule, 'target_date': target_date}
+
 async def set_autopilot_mode(mode_data: dict, current_user: User = Depends(get_current_user)):
     """Autopilot modunu ayarla"""
     from revenue_autopilot import get_revenue_autopilot

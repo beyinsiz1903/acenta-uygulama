@@ -952,6 +952,8 @@ function App() {
           <Route path="/predictive-analytics" element={isAuthenticated ? <Suspense fallback={<LoadingFallback />}><PredictiveAnalytics user={user} tenant={tenant} onLogout={handleLogout} /></Suspense> : <Navigate to="/auth" replace />} />
           <Route path="/social-media-radar" element={isAuthenticated ? <Suspense fallback={<LoadingFallback />}><SocialMediaRadar user={user} tenant={tenant} onLogout={handleLogout} /></Suspense> : <Navigate to="/auth" replace />} />
           <Route path="/revenue-autopilot" element={isAuthenticated ? <Suspense fallback={<LoadingFallback />}><RevenueAutopilot user={user} tenant={tenant} onLogout={handleLogout} /></Suspense> : <Navigate to="/auth" replace />} />
+          <Route path="/hr-complete" element={isAuthenticated ? <Suspense fallback={<LoadingFallback />}><HRComplete user={user} tenant={tenant} onLogout={handleLogout} /></Suspense> : <Navigate to="/auth" replace />} />
+          <Route path="/fnb-complete" element={isAuthenticated ? <Suspense fallback={<LoadingFallback />}><FnBComplete user={user} tenant={tenant} onLogout={handleLogout} /></Suspense> : <Navigate to="/auth" replace />} />
         </Routes>
       </BrowserRouter>
       {/* ReactQueryDevtools removed for production */}

@@ -215,9 +215,59 @@ const ServiceRecovery = () => {
                 </div>
                 <div className="ml-4">
                   {complaint.status === 'open' ? (
-                    <Button size="sm" variant="outline">Çöz</Button>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button size="sm" className="bg-green-600 hover:bg-green-700">
+                          ✓ Çöz
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Şikayeti Çöz</DialogTitle>
+                        </DialogHeader>
+                        <form className="space-y-4 mt-4" onSubmit={async (e) => {
+                          e.preventDefault();
+                          const formData = new FormData(e.target);
+                          try {
+                            await axios.post(`/service/complaints/${complaint.id}/resolve`, {
+                              resolution_notes: formData.get('resolution'),
+                              compensation_offered: formData.get('compensation'),
+                              compensation_amount: parseFloat(formData.get('amount') || 0)
+                            });
+                            toast.success('Şikayet çözüldü ve kaydedildi!');
+                            loadComplaints();
+                          } catch (error) {
+                            toast.error('Şikayet çözülemedi');
+                          }
+                        }}>
+                          <div>
+                            <Label>Çözüm Açıklaması</Label>
+                            <Textarea name="resolution" required rows={3} placeholder="Sorunu nasıl çözdünüz?" />
+                          </div>
+                          <div>
+                            <Label>Compensation</Label>
+                            <select name="compensation" className="w-full px-3 py-2 border rounded-lg">
+                              <option value="">Yok</option>
+                              <option value="free_night">Bedava Gece</option>
+                              <option value="room_upgrade">Oda Upgrade</option>
+                              <option value="fnb_credit">F&B Credit</option>
+                              <option value="spa_voucher">Spa Voucher</option>
+                              <option value="discount">İndirim</option>
+                            </select>
+                          </div>
+                          <div>
+                            <Label>Compensation Tutarı (€)</Label>
+                            <Input type="number" name="amount" placeholder="0" />
+                          </div>
+                          <Button type="submit" className="w-full">Çözümü Kaydet</Button>
+                        </form>
+                      </DialogContent>
+                    </Dialog>
                   ) : (
-                    <CheckCircle2 className="w-6 h-6 text-green-600" />
+                    <div className="text-right">
+                      <CheckCircle2 className="w-6 h-6 text-green-600 mx-auto mb-1" />
+                      <p className="text-xs text-green-600">Çözüldü</p>
+                    </div>
                   )}
                 </div>
               </div>

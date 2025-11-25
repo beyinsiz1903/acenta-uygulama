@@ -948,6 +948,8 @@ function App() {
           <Route path="/arrival-list" element={isAuthenticated ? <Suspense fallback={<LoadingFallback />}><ArrivalList user={user} tenant={tenant} onLogout={handleLogout} /></Suspense> : <Navigate to="/auth" replace />} />
           <Route path="/ai-whatsapp-concierge" element={isAuthenticated ? <Suspense fallback={<LoadingFallback />}><AIWhatsAppConcierge user={user} tenant={tenant} onLogout={handleLogout} /></Suspense> : <Navigate to="/auth" replace />} />
           <Route path="/predictive-analytics" element={isAuthenticated ? <Suspense fallback={<LoadingFallback />}><PredictiveAnalytics user={user} tenant={tenant} onLogout={handleLogout} /></Suspense> : <Navigate to="/auth" replace />} />
+          <Route path="/social-media-radar" element={isAuthenticated ? <Suspense fallback={<LoadingFallback />}><SocialMediaRadar user={user} tenant={tenant} onLogout={handleLogout} /></Suspense> : <Navigate to="/auth" replace />} />
+          <Route path="/revenue-autopilot" element={isAuthenticated ? <Suspense fallback={<LoadingFallback />}><RevenueAutopilot user={user} tenant={tenant} onLogout={handleLogout} /></Suspense> : <Navigate to="/auth" replace />} />
         </Routes>
       </BrowserRouter>
       {/* ReactQueryDevtools removed for production */}

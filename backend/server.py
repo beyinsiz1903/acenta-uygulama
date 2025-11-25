@@ -3928,7 +3928,9 @@ async def get_nps_score(days: int = 30, current_user: User = Depends(get_current
         'promoters': promoters,
         'passives': len([s for s in surveys if s['category'] == 'passive']),
         'detractors': detractors,
-
+        'total_responses': total,
+        'period_days': days
+    }
 
 # ============= ARRIVAL LIST & FRONT DESK OPERATIONS =============
 

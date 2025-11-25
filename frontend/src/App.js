@@ -92,6 +92,8 @@ const AIWhatsAppConcierge = lazy(() => import("@/pages/AIWhatsAppConcierge"));
 const PredictiveAnalytics = lazy(() => import("@/pages/PredictiveAnalytics"));
 const SocialMediaRadar = lazy(() => import("@/pages/SocialMediaRadar"));
 const RevenueAutopilot = lazy(() => import("@/pages/RevenueAutopilot"));
+const HRComplete = lazy(() => import("@/pages/HRComplete"));
+const FnBComplete = lazy(() => import("@/pages/FnBComplete"));
 
 import { Toaster } from "@/components/ui/sonner";
 

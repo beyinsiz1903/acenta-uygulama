@@ -241,6 +241,22 @@ const Dashboard = ({ user, tenant, onLogout }) => {
       path: '/ai-chatbot',
       color: '#06b6d4',
       badge: 'NEW'
+    },
+    {
+      title: '🤖 AI Dynamic Pricing',
+      description: 'Rakip analizi ve otomatik fiyatlandırma',
+      icon: TrendingUp,
+      path: '/dynamic-pricing',
+      color: '#8b5cf6',
+      badge: 'AI'
+    },
+    {
+      title: '⭐ Reputation Center',
+      description: 'Online itibar yönetimi ve review tracking',
+      icon: Star,
+      path: '/reputation-center',
+      color: '#f59e0b',
+      badge: 'NEW'
     }
   ], [t, stats]);
 

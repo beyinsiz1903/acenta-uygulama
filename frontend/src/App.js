@@ -90,6 +90,8 @@ const GuestJourney = lazy(() => import("@/pages/GuestJourney"));
 const ArrivalList = lazy(() => import("@/pages/ArrivalList"));
 const AIWhatsAppConcierge = lazy(() => import("@/pages/AIWhatsAppConcierge"));
 const PredictiveAnalytics = lazy(() => import("@/pages/PredictiveAnalytics"));
+const SocialMediaRadar = lazy(() => import("@/pages/SocialMediaRadar"));
+const RevenueAutopilot = lazy(() => import("@/pages/RevenueAutopilot"));
 
 import { Toaster } from "@/components/ui/sonner";
 

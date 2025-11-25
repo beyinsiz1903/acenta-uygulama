@@ -377,6 +377,24 @@ const Dashboard = ({ user, tenant, onLogout }) => {
       color: '#8b5cf6',
       badge: 'GAME-CHANGER',
       category: 'ai'
+    },
+    {
+      title: '👥 HR Complete Suite',
+      description: 'Time & Attendance, Payroll, Leave, Recruitment',
+      icon: Users,
+      path: '/hr-complete',
+      color: '#10b981',
+      badge: 'COMPLETE',
+      category: 'management'
+    },
+    {
+      title: '🍳 F&B Complete Suite',
+      description: 'Recipe Costing, BEO, Kitchen Display, Inventory',
+      icon: ShoppingCart,
+      path: '/fnb-complete',
+      color: '#f97316',
+      badge: 'COMPLETE',
+      category: 'core'
     }
   ], [t, stats]);
 

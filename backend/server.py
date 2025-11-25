@@ -4252,15 +4252,25 @@ async def clock_out(staff_data: dict, current_user: User = Depends(get_current_u
 
 @api_router.post("/hr/leave-request")
 async def create_leave_request(leave_data: dict, current_user: User = Depends(get_current_user)):
+    # Calculate total days if not provided
+    if 'total_days' not in leave_data:
+        from datetime import datetime
+        start = datetime.fromisoformat(leave_data['start_date'])
+        end = datetime.fromisoformat(leave_data['end_date'])
+        total_days = (end - start).days + 1
+    else:
+        total_days = leave_data['total_days']
+    
     leave = {
         'id': str(uuid.uuid4()), 'tenant_id': current_user.tenant_id,
-        'staff_id': leave_data['staff_id'], 'leave_type': leave_data['leave_type'],
+        'staff_id': leave_data['staff_id'], 'staff_name': leave_data.get('staff_name', 'Unknown'),
+        'leave_type': leave_data['leave_type'],
         'start_date': leave_data['start_date'], 'end_date': leave_data['end_date'],
-        'total_days': leave_data['total_days'], 'reason': leave_data.get('reason'),
+        'total_days': total_days, 'reason': leave_data.get('reason'),
         'status': 'pending', 'created_at': datetime.now(timezone.utc).isoformat()
     }
     await db.leave_requests.insert_one(leave)
-    return {'success': True, 'leave_id': leave['id']}
+    return {'success': True, 'leave_id': leave['id'], 'total_days': total_days}
 
 @api_router.get("/hr/payroll/{month}")
 async def get_payroll(month: str, current_user: User = Depends(get_current_user)):

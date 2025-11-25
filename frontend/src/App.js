@@ -79,6 +79,8 @@ const ServiceRecovery = lazy(() => import("@/pages/ServiceRecovery"));
 const SpaWellness = lazy(() => import("@/pages/SpaWellness"));
 const MeetingEvents = lazy(() => import("@/pages/MeetingEvents"));
 const AIChatbot = lazy(() => import("@/pages/AIChatbot"));
+const DynamicPricing = lazy(() => import("@/pages/DynamicPricing"));
+const ReputationCenter = lazy(() => import("@/pages/ReputationCenter"));
 
 import { Toaster } from "@/components/ui/sonner";
 

@@ -2533,6 +2533,396 @@ async def reset_password(data: ResetPasswordRequest):
         'message': 'Şifreniz başarıyla güncellendi. Şimdi yeni şifrenizle giriş yapabilirsiniz'
     }
 
+# ============= ONLINE CHECK-IN & PRE-ARRIVAL ENDPOINTS =============
+
+@api_router.post("/checkin/online")
+async def submit_online_checkin(
+    checkin_data: dict,
+    current_user: User = Depends(get_current_user)
+):
+    """Online check-in submission"""
+    from online_checkin_models import OnlineCheckinRequest, OnlineCheckinResponse, UpsellOffer
+    
+    # Import here to avoid circular dependency
+    request = OnlineCheckinRequest(**checkin_data)
+    
+    # Verify booking belongs to user
+    booking = await db.bookings.find_one({
+        'id': request.booking_id,
+        'tenant_id': current_user.tenant_id
+    }, {'_id': 0})
+    
+    if not booking:
+        raise HTTPException(status_code=404, detail="Rezervasyon bulunamadı")
+    
+    # Create online check-in record
+    checkin_record = {
+        'id': str(uuid.uuid4()),
+        'booking_id': request.booking_id,
+        'tenant_id': current_user.tenant_id,
+        'guest_id': booking['guest_id'],
+        
+        # Guest info
+        'passport_number': request.passport_number,
+        'passport_expiry': request.passport_expiry,
+        'nationality': request.nationality,
+        
+        # Arrival details
+        'estimated_arrival_time': request.estimated_arrival_time,
+        'flight_number': request.flight_number,
+        'coming_from': request.coming_from,
+        
+        # Room preferences
+        'room_view': request.room_view,
+        'floor_preference': request.floor_preference,
+        'bed_type': request.bed_type,
+        'pillow_type': request.pillow_type,
+        'room_temperature': request.room_temperature,
+        
+        # Special requests
+        'special_requests': request.special_requests,
+        'dietary_restrictions': request.dietary_restrictions,
+        'accessibility_needs': request.accessibility_needs,
+        
+        # Additional
+        'newspaper_preference': request.newspaper_preference,
+        'smoking_preference': request.smoking_preference,
+        'connecting_rooms': request.connecting_rooms,
+        'quiet_room': request.quiet_room,
+        
+        # Communication
+        'mobile_number': request.mobile_number,
+        'whatsapp_number': request.whatsapp_number,
+        
+        # Status
+        'status': 'pending',
+        'submitted_at': datetime.now(timezone.utc).isoformat(),
+        'processed': False
+    }
+    
+    await db.online_checkins.insert_one(checkin_record)
+    
+    # Update booking with preferences
+    await db.bookings.update_one(
+        {'id': request.booking_id},
+        {
+            '$set': {
+                'online_checkin_completed': True,
+                'online_checkin_at': datetime.now(timezone.utc).isoformat(),
+                'special_requests': request.special_requests,
+                'estimated_arrival_time': request.estimated_arrival_time
+            }
+        }
+    )
+    
+    # Generate upsell offers
+    upsell_offers = []
+    
+    # Room upgrade offer
+    current_room = await db.rooms.find_one({'id': booking['room_id']}, {'_id': 0})
+    if current_room and current_room['room_type'] == 'Standard':
+        upgrade_offer = {
+            'id': str(uuid.uuid4()),
+            'type': 'room_upgrade',
+            'title': 'Deluxe Oda Upgrade',
+            'description': 'Konaklama deneyiminizi Deluxe odamıza yükseltin! Daha geniş alan, daha iyi manzara.',
+            'original_price': 100.0,
+            'discounted_price': 75.0,
+            'savings': 25.0
+        }
+        upsell_offers.append(upgrade_offer)
+    
+    # Early check-in offer
+    if request.estimated_arrival_time:
+        try:
+            arrival_hour = int(request.estimated_arrival_time.split(':')[0])
+            if arrival_hour < 14:  # Before standard check-in
+                early_checkin_offer = {
+                    'id': str(uuid.uuid4()),
+                    'type': 'early_checkin',
+                    'title': 'Erken Check-in Garantisi',
+                    'description': f'Odanız {request.estimated_arrival_time} saatinde hazır olacak. Ekstra ücret ödemeden erken giriş yapın!',
+                    'original_price': 50.0,
+                    'discounted_price': 35.0,
+                    'savings': 15.0
+                }
+                upsell_offers.append(early_checkin_offer)
+        except:
+            pass
+    
+    # Save upsell offers
+    for offer in upsell_offers:
+        offer_doc = {
+            **offer,
+            'booking_id': request.booking_id,
+            'tenant_id': current_user.tenant_id,
+            'guest_id': booking['guest_id'],
+            'status': 'pending',
+            'offered_at': datetime.now(timezone.utc).isoformat()
+        }
+        await db.upsell_offers.insert_one(offer_doc)
+    
+    return {
+        'checkin_id': checkin_record['id'],
+        'booking_id': request.booking_id,
+        'status': 'approved',
+        'room_number': current_room.get('room_number') if current_room else None,
+        'estimated_ready_time': '14:00',
+        'upsell_offers': upsell_offers,
+        'check_in_instructions': 'Lütfen resepsiyona geldiğinizde kimliğinizi ibraz edin. Odanız hazır olacaktır.',
+        'message': 'Online check-in başarıyla tamamlandı!'
+    }
+
+@api_router.get("/checkin/online/{booking_id}")
+async def get_online_checkin_status(
+    booking_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Online check-in durumunu getir"""
+    checkin = await db.online_checkins.find_one({
+        'booking_id': booking_id,
+        'tenant_id': current_user.tenant_id
+    }, {'_id': 0})
+    
+    if not checkin:
+        return {'completed': False, 'checkin': None}
+    
+    return {'completed': True, 'checkin': checkin}
+
+@api_router.post("/upsell/accept")
+async def accept_upsell_offer(
+    data: dict,
+    current_user: User = Depends(get_current_user)
+):
+    """Upsell teklifini kabul et"""
+    offer_id = data.get('offer_id')
+    action = data.get('action')  # accept or reject
+    
+    # Find offer
+    offer = await db.upsell_offers.find_one({
+        'id': offer_id,
+        'tenant_id': current_user.tenant_id
+    })
+    
+    if not offer:
+        raise HTTPException(status_code=404, detail="Teklif bulunamadı")
+    
+    # Update offer status
+    await db.upsell_offers.update_one(
+        {'id': offer_id},
+        {
+            '$set': {
+                'status': 'accepted' if action == 'accept' else 'rejected',
+                'responded_at': datetime.now(timezone.utc).isoformat()
+            }
+        }
+    )
+    
+    if action == 'accept':
+        # Add charge to booking/folio
+        booking_id = offer.get('booking_id')
+        
+        # Create folio charge
+        charge = {
+            'id': str(uuid.uuid4()),
+            'tenant_id': current_user.tenant_id,
+            'booking_id': booking_id,
+            'charge_category': 'upsell',
+            'description': offer.get('title'),
+            'amount': offer.get('discounted_price') or offer.get('original_price'),
+            'posted_at': datetime.now(timezone.utc).isoformat(),
+            'voided': False
+        }
+        
+        # Find or create folio
+        folio = await db.folios.find_one({
+            'booking_id': booking_id,
+            'folio_type': 'guest'
+        }, {'_id': 0})
+        
+        if folio:
+            charge['folio_id'] = folio['id']
+            await db.folio_charges.insert_one(charge)
+        
+        return {
+            'success': True,
+            'message': f'{offer.get("title")} başarıyla eklendi!',
+            'charge_added': True,
+            'amount': charge['amount']
+        }
+    else:
+        return {
+            'success': True,
+            'message': 'Teklif reddedildi',
+            'charge_added': False
+        }
+
+@api_router.get("/pre-arrival/communications/{booking_id}")
+async def get_pre_arrival_communications(
+    booking_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Pre-arrival iletişim geçmişi"""
+    communications = await db.pre_arrival_communications.find({
+        'booking_id': booking_id,
+        'tenant_id': current_user.tenant_id
+    }, {'_id': 0}).to_list(100)
+    
+    return {
+        'booking_id': booking_id,
+        'communications': communications,
+        'total': len(communications)
+    }
+
+@api_router.post("/pre-arrival/send-welcome")
+async def send_pre_arrival_welcome(
+    booking_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Pre-arrival hoşgeldin e-postası gönder"""
+    # Get booking
+    booking = await db.bookings.find_one({
+        'id': booking_id,
+        'tenant_id': current_user.tenant_id
+    }, {'_id': 0})
+    
+    if not booking:
+        raise HTTPException(status_code=404, detail="Rezervasyon bulunamadı")
+    
+    # Get guest
+    guest = await db.guests.find_one({'id': booking['guest_id']}, {'_id': 0})
+    if not guest:
+        raise HTTPException(status_code=404, detail="Misafir bulunamadı")
+    
+    # Create welcome email content
+    check_in_date = booking['check_in']
+    if isinstance(check_in_date, str):
+        check_in_date = datetime.fromisoformat(check_in_date.replace('Z', '+00:00'))
+    
+    from email_service import email_service
+    
+    # Generate 6-digit confirmation code for express check-in
+    confirmation_code = email_service.generate_verification_code()
+    
+    # Send email (this will use AWS SES in production)
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <style>
+            body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+            .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+            .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                      color: white; padding: 30px; text-align: center; }}
+            .content {{ padding: 30px; background: #f9f9f9; }}
+            .code-box {{ background: white; border: 2px solid #667eea; padding: 15px; 
+                       text-align: center; font-size: 24px; font-weight: bold; 
+                       margin: 20px 0; border-radius: 8px; }}
+            .info-box {{ background: white; padding: 15px; margin: 10px 0; border-left: 4px solid #667eea; }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>✨ Syroce'ye Hoş Geldiniz!</h1>
+                <p>Rezervasyon Onayı</p>
+            </div>
+            <div class="content">
+                <p>Sayın {guest['name']},</p>
+                <p>Rezervasyonunuz için teşekkür ederiz. Sizi ağırlamak için sabırsızlanıyoruz!</p>
+                
+                <div class="info-box">
+                    <strong>📅 Check-in Tarihi:</strong> {check_in_date.strftime('%d.%m.%Y')}<br>
+                    <strong>⏰ Check-in Saati:</strong> 14:00<br>
+                    <strong>🏨 Rezervasyon Kodu:</strong> {booking['id'][:8].upper()}
+                </div>
+                
+                <h3>🚀 Hızlı Check-in Kodunuz:</h3>
+                <div class="code-box">{confirmation_code}</div>
+                <p style="color: #666; font-size: 14px;">Bu kodu resepsiyonda göstererek anında check-in yapabilirsiniz.</p>
+                
+                <h3>✅ Online Check-in Yapın</h3>
+                <p>Gelişinizden önce online check-in yaparak zamandan tasarruf edin:</p>
+                <ul>
+                    <li>Oda tercihlerinizi belirleyin</li>
+                    <li>Özel isteklerinizi iletin</li>
+                    <li>Pasaport bilgilerinizi gönderin</li>
+                </ul>
+                <p style="text-align: center;">
+                    <a href="https://syroce.com/online-checkin/{booking['id']}" 
+                       style="background: #667eea; color: white; padding: 15px 30px; 
+                              text-decoration: none; border-radius: 5px; display: inline-block;">
+                        Online Check-in Yap
+                    </a>
+                </p>
+                
+                <h3>🎁 Özel Teklifler</h3>
+                <p>Konaklamanızı daha özel hale getirin:</p>
+                <ul>
+                    <li>🛏️ Deluxe Oda Upgrade - Sadece €75</li>
+                    <li>⏰ Erken Check-in (12:00) - Sadece €35</li>
+                    <li>💆 Spa Paketi - %20 İndirimli</li>
+                </ul>
+                
+                <p>Görüşmek üzere!<br>
+                <strong>Syroce Ekibi</strong></p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    
+    # In production, this would send via AWS SES
+    print(f"📧 Sending pre-arrival email to {guest['email']}")
+    
+    # Save communication record
+    comm_record = {
+        'id': str(uuid.uuid4()),
+        'booking_id': booking_id,
+        'tenant_id': current_user.tenant_id,
+        'guest_id': booking['guest_id'],
+        'communication_type': 'welcome_email',
+        'sent_at': datetime.now(timezone.utc).isoformat(),
+        'subject': 'Syroce\'ye Hoş Geldiniz - Rezervasyon Onayı',
+        'message': html_content,
+        'opened': False,
+        'clicked': False
+    }
+    
+    await db.pre_arrival_communications.insert_one(comm_record)
+    
+    # Update booking with confirmation code
+    await db.bookings.update_one(
+        {'id': booking_id},
+        {'$set': {'express_checkin_code': confirmation_code}}
+    )
+    
+    return {
+        'success': True,
+        'message': 'Pre-arrival hoşgeldin e-postası gönderildi',
+        'email_sent_to': guest['email'],
+        'confirmation_code': confirmation_code
+    }
+
+@api_router.get("/upsell/offers/{booking_id}")
+async def get_upsell_offers(
+    booking_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Rezervasyon için upsell tekliflerini getir"""
+    offers = await db.upsell_offers.find({
+        'booking_id': booking_id,
+        'tenant_id': current_user.tenant_id,
+        'status': 'pending'
+    }, {'_id': 0}).to_list(100)
+    
+    return {
+        'booking_id': booking_id,
+        'offers': offers,
+        'total': len(offers)
+    }
+
 # ============= GUEST PORTAL ENDPOINTS (OLD - DEPRECATED) =============
 # NOTE: New guest endpoints are at line 21170+ (GUEST MOBILE APP ENDPOINTS)
 

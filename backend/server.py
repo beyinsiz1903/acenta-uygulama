@@ -2923,6 +2923,190 @@ async def get_upsell_offers(
         'total': len(offers)
     }
 
+# ============= FLASH REPORT & DAILY ANALYTICS =============
+
+@api_router.get("/reports/flash-report")
+@cached(ttl=300, key_prefix="flash_report")  # Cache for 5 min
+async def get_flash_report(
+    date: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Daily Flash Report - Günlük özet rapor
+    5 yıldızlı otel yöneticileri için sabah raporu
+    """
+    target_date = datetime.now(timezone.utc) if not date else datetime.fromisoformat(date)
+    today_start = target_date.replace(hour=0, minute=0, second=0, microsecond=0)
+    today_end = target_date.replace(hour=23, minute=59, second=59)
+    
+    # Get total rooms
+    total_rooms = await db.rooms.count_documents({'tenant_id': current_user.tenant_id})
+    
+    # Occupancy today
+    occupied_today = await db.bookings.count_documents({
+        'tenant_id': current_user.tenant_id,
+        'status': 'checked_in',
+        'check_in': {'$lte': today_end.isoformat()},
+        'check_out': {'$gte': today_start.isoformat()}
+    })
+    
+    occupancy_pct = (occupied_today / total_rooms * 100) if total_rooms > 0 else 0
+    
+    # Arrivals today
+    arrivals_today = await db.bookings.count_documents({
+        'tenant_id': current_user.tenant_id,
+        'check_in': {
+            '$gte': today_start.isoformat(),
+            '$lte': today_end.isoformat()
+        },
+        'status': {'$in': ['confirmed', 'guaranteed', 'checked_in']}
+    })
+    
+    # Departures today
+    departures_today = await db.bookings.count_documents({
+        'tenant_id': current_user.tenant_id,
+        'check_out': {
+            '$gte': today_start.isoformat(),
+            '$lte': today_end.isoformat()
+        }
+    })
+    
+    # In-house guests
+    in_house = await db.bookings.count_documents({
+        'tenant_id': current_user.tenant_id,
+        'status': 'checked_in'
+    })
+    
+    # Revenue today
+    today_bookings = await db.bookings.find({
+        'tenant_id': current_user.tenant_id,
+        'check_in': {
+            '$gte': today_start.isoformat(),
+            '$lte': today_end.isoformat()
+        }
+    }, {'_id': 0, 'total_amount': 1, 'base_rate': 1}).to_list(1000)
+    
+    total_revenue = sum([b.get('total_amount', 0) for b in today_bookings])
+    
+    # Calculate ADR (Average Daily Rate)
+    adr = total_revenue / occupied_today if occupied_today > 0 else 0
+    
+    # Calculate RevPAR (Revenue Per Available Room)
+    revpar = total_revenue / total_rooms if total_rooms > 0 else 0
+    
+    # No-shows today
+    no_shows = await db.bookings.count_documents({
+        'tenant_id': current_user.tenant_id,
+        'check_in': {
+            '$gte': today_start.isoformat(),
+            '$lte': today_end.isoformat()
+        },
+        'status': 'no_show'
+    })
+    
+    # Cancellations today
+    cancellations = await db.bookings.count_documents({
+        'tenant_id': current_user.tenant_id,
+        'status': 'cancelled',
+        'created_at': {
+            '$gte': today_start.isoformat(),
+            '$lte': today_end.isoformat()
+        }
+    })
+    
+    # F&B Revenue (from POS)
+    fnb_revenue = 0.0
+    try:
+        fnb_orders = await db.pos_orders.find({
+            'tenant_id': current_user.tenant_id,
+            'created_at': {
+                '$gte': today_start.isoformat(),
+                '$lte': today_end.isoformat()
+            }
+        }, {'_id': 0, 'total_amount': 1}).to_list(1000)
+        fnb_revenue = sum([o.get('total_amount', 0) for o in fnb_orders])
+    except:
+        pass
+    
+    # Other Revenue (spa, laundry, minibar)
+    other_revenue = 0.0
+    try:
+        other_charges = await db.folio_charges.find({
+            'tenant_id': current_user.tenant_id,
+            'posted_at': {
+                '$gte': today_start.isoformat(),
+                '$lte': today_end.isoformat()
+            },
+            'charge_category': {'$in': ['spa', 'laundry', 'minibar', 'telephone', 'upsell']}
+        }, {'_id': 0, 'amount': 1}).to_list(1000)
+        other_revenue = sum([c.get('amount', 0) for c in other_charges])
+    except:
+        pass
+    
+    # Total Revenue
+    total_revenue_all = total_revenue + fnb_revenue + other_revenue
+    
+    # TRevPAR (Total Revenue Per Available Room)
+    trevpar = total_revenue_all / total_rooms if total_rooms > 0 else 0
+    
+    # VIP arrivals today
+    vip_arrivals = await db.bookings.count_documents({
+        'tenant_id': current_user.tenant_id,
+        'check_in': {
+            '$gte': today_start.isoformat(),
+            '$lte': today_end.isoformat()
+        },
+        'guest_id': {'$exists': True}
+        # TODO: Add VIP tag check when guest tags are implemented
+    })
+    
+    return {
+        'report_date': target_date.strftime('%Y-%m-%d'),
+        'generated_at': datetime.now(timezone.utc).isoformat(),
+        
+        # Occupancy Metrics
+        'occupancy': {
+            'rooms_occupied': occupied_today,
+            'total_rooms': total_rooms,
+            'occupancy_pct': round(occupancy_pct, 2),
+            'rooms_available': total_rooms - occupied_today
+        },
+        
+        # Guest Flow
+        'guest_flow': {
+            'arrivals': arrivals_today,
+            'departures': departures_today,
+            'in_house': in_house,
+            'no_shows': no_shows,
+            'cancellations': cancellations
+        },
+        
+        # Revenue Metrics
+        'revenue': {
+            'rooms_revenue': round(total_revenue, 2),
+            'fnb_revenue': round(fnb_revenue, 2),
+            'other_revenue': round(other_revenue, 2),
+            'total_revenue': round(total_revenue_all, 2),
+            'adr': round(adr, 2),
+            'revpar': round(revpar, 2),
+            'trevpar': round(trevpar, 2)
+        },
+        
+        # Breakdown
+        'revenue_breakdown': {
+            'rooms': round((total_revenue / total_revenue_all * 100) if total_revenue_all > 0 else 0, 1),
+            'fnb': round((fnb_revenue / total_revenue_all * 100) if total_revenue_all > 0 else 0, 1),
+            'other': round((other_revenue / total_revenue_all * 100) if total_revenue_all > 0 else 0, 1)
+        },
+        
+        # Special Notes
+        'special_notes': {
+            'vip_arrivals': vip_arrivals,
+            'group_arrivals': 0,  # TODO: Implement when group management is ready
+            'events_today': 0  # TODO: Implement events calendar
+        }
+    }
+
 # ============= GUEST PORTAL ENDPOINTS (OLD - DEPRECATED) =============
 # NOTE: New guest endpoints are at line 21170+ (GUEST MOBILE APP ENDPOINTS)
 

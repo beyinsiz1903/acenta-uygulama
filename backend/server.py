@@ -4294,12 +4294,15 @@ async def create_job_posting(job_data: dict, current_user: User = Depends(get_cu
 async def create_recipe(recipe_data: dict, current_user: User = Depends(get_current_user)):
     ingredients = recipe_data.get('ingredients', [])
     total_cost = sum([i.get('cost', 0) * i.get('quantity', 0) for i in ingredients])
-    selling_price = recipe_data['selling_price']
+    selling_price = recipe_data.get('selling_price', 0)
     gp = ((selling_price - total_cost) / selling_price * 100) if selling_price > 0 else 0
+    
+    # Support both recipe_name and dish_name
+    dish_name = recipe_data.get('recipe_name') or recipe_data.get('dish_name', 'Unnamed Recipe')
     
     recipe = {
         'id': str(uuid.uuid4()), 'tenant_id': current_user.tenant_id,
-        'dish_name': recipe_data['dish_name'], 'category': recipe_data['category'],
+        'dish_name': dish_name, 'category': recipe_data.get('category', 'general'),
         'ingredients': ingredients, 'total_cost': round(total_cost, 2),
         'selling_price': selling_price, 'gp_percentage': round(gp, 1),
         'active': True, 'created_at': datetime.now(timezone.utc).isoformat()

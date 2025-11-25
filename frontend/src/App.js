@@ -84,6 +84,9 @@ const ReputationCenter = lazy(() => import("@/pages/ReputationCenter"));
 const MultiProperty = lazy(() => import("@/pages/MultiProperty"));
 const PaymentGateway = lazy(() => import("@/pages/PaymentGateway"));
 const AdvancedLoyalty = lazy(() => import("@/pages/AdvancedLoyalty"));
+const GDSIntegration = lazy(() => import("@/pages/GDSIntegration"));
+const StaffManagement = lazy(() => import("@/pages/StaffManagement"));
+const GuestJourney = lazy(() => import("@/pages/GuestJourney"));
 
 import { Toaster } from "@/components/ui/sonner";
 

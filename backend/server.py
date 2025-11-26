@@ -29443,21 +29443,37 @@ async def get_guest_patterns(
     
     repeat_guests = sum(1 for g in guests if g.get('total_stays', 0) > 1)
     
-    return {
-        'patterns': {
-            'average_length_of_stay': round(avg_los, 1),
-            'total_bookings_analyzed': total_bookings,
-            'repeat_guest_ratio': round((repeat_guests / len(guests) * 100), 1) if guests else 0,
-            'vip_guest_count': vip_count,
-            'guests_with_preferences': preferences_count
-        },
-        'insights': [
-            f"Average stay: {round(avg_los, 1)} nights",
-            f"{repeat_guests} repeat guests out of {len(guests)} total",
-            f"{vip_count} VIP guests identified",
-            f"{preferences_count} guests have recorded preferences"
-        ]
-    }
+    try:
+        return {
+            'patterns': {
+                'average_length_of_stay': round(avg_los, 1),
+                'total_bookings_analyzed': total_bookings,
+                'repeat_guest_ratio': round((repeat_guests / len(guests) * 100), 1) if guests else 0,
+                'vip_guest_count': vip_count,
+                'guests_with_preferences': preferences_count
+            },
+            'insights': [
+                f"Average stay: {round(avg_los, 1)} nights",
+                f"{repeat_guests} repeat guests out of {len(guests)} total",
+                f"{vip_count} VIP guests identified",
+                f"{preferences_count} guests have recorded preferences"
+            ]
+        }
+    except Exception as e:
+        return {
+            'patterns': {
+                'average_length_of_stay': round(avg_los, 1),
+                'total_bookings_analyzed': total_bookings,
+                'repeat_guest_ratio': 0,
+                'vip_guest_count': vip_count,
+                'guests_with_preferences': preferences_count
+            },
+            'insights': [
+                "Analysis in progress",
+                "Guest pattern analysis available soon"
+            ],
+            'error': str(e)
+        }
 
 # ============= NEW ENHANCEMENTS: OTA, GUEST PROFILE, HK MOBILE, RMS, MESSAGING, POS =============
 

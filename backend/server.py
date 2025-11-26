@@ -48501,6 +48501,96 @@ async def log_audit_trail(
     
     await db.audit_trail.insert_one(entry.model_dump())
 
+# ============= ADDITIONAL ENDPOINTS - BEFORE ROUTER REGISTRATION =============
+
+@api_router.get("/night-audit/audit-history")
+async def get_audit_history(
+    limit: int = 30,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Get night audit history for last N days"""
+    current_user = await get_current_user(credentials)
+    
+    audits = await db.night_audits.find(
+        {'tenant_id': current_user.tenant_id},
+        {'_id': 0}
+    ).sort('audit_date', -1).limit(limit).to_list(limit)
+    
+    return {'audits': audits, 'total_count': len(audits)}
+
+@api_router.post("/cashiering/city-ledger-payment")
+async def post_city_ledger_payment(
+    account_id: str,
+    amount: float,
+    payment_method: str,
+    reference: Optional[str] = None,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Post payment to city ledger account"""
+    current_user = await get_current_user(credentials)
+    
+    account = await db.city_ledger_accounts.find_one({
+        'id': account_id,
+        'tenant_id': current_user.tenant_id
+    })
+    
+    if not account:
+        raise HTTPException(status_code=404, detail="Account not found")
+    
+    transaction = CityLedgerTransaction(
+        tenant_id=current_user.tenant_id,
+        account_id=account_id,
+        transaction_type='payment',
+        amount=amount,
+        description=f"Payment received via {payment_method}",
+        reference_number=reference,
+        posted_by=current_user.name
+    )
+    
+    await db.city_ledger_transactions.insert_one(transaction.model_dump())
+    
+    new_balance = account['current_balance'] - amount
+    await db.city_ledger_accounts.update_one(
+        {'id': account_id},
+        {'$set': {'current_balance': max(0, new_balance)}}
+    )
+    
+    return {
+        'success': True,
+        'transaction_id': transaction.id,
+        'account_name': account['account_name'],
+        'amount_paid': amount,
+        'new_balance': max(0, new_balance)
+    }
+
+@api_router.get("/cashiering/city-ledger/{account_id}/transactions")
+async def get_city_ledger_transactions(
+    account_id: str,
+    limit: int = 100,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Get transaction history for city ledger account"""
+    current_user = await get_current_user(credentials)
+    
+    transactions = await db.city_ledger_transactions.find(
+        {'account_id': account_id, 'tenant_id': current_user.tenant_id},
+        {'_id': 0}
+    ).sort('transaction_date', -1).limit(limit).to_list(limit)
+    
+    charges = sum(t['amount'] for t in transactions if t['transaction_type'] == 'charge')
+    payments = sum(t['amount'] for t in transactions if t['transaction_type'] == 'payment')
+    
+    return {
+        'account_id': account_id,
+        'transactions': transactions,
+        'summary': {
+            'total_charges': round(charges, 2),
+            'total_payments': round(payments, 2),
+            'current_balance': round(charges - payments, 2),
+            'transaction_count': len(transactions)
+        }
+    }
+
 
 
 # Include router at the very end after ALL endpoints are defined

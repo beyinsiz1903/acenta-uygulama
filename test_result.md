@@ -1005,7 +1005,7 @@ backend:
     file: "/app/backend/server.py"
     stuck_count: 1
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
@@ -1013,6 +1013,9 @@ backend:
       - working: false
         agent: "testing"
         comment: "❌ ENDPOINT FAILING - POST /api/reservations/{booking_id}/extra-charges returns HTTP 422 error. Request body validation failing. Tested with charge_name, charge_amount, notes fields but endpoint expects different request structure. Endpoint implementation exists but request validation needs review."
+      - working: "NA"
+        agent: "main"
+        comment: "Main agent reviewing endpoint implementation. Model ExtraChargeCreate defined with charge_name, charge_amount, notes fields. Endpoint at line 29506. Ready for comprehensive testing to identify exact validation issue."
 
   - task: "OTA Reservation - Multi-Room Reservation"
     implemented: true

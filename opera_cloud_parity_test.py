@@ -552,6 +552,38 @@ def test_complete_flows(headers: Dict):
     print("\n📋 Flow 3: Queue Rooms Management")
     flow_success = True
     
+    # Get a test booking for queue
+    try:
+        guests_response = requests.get(f"{BACKEND_URL}/pms/guests?limit=1", headers=headers, timeout=10)
+        rooms_response = requests.get(f"{BACKEND_URL}/pms/rooms?limit=1", headers=headers, timeout=10)
+        
+        flow_booking_id = None
+        if guests_response.status_code == 200 and rooms_response.status_code == 200:
+            guests = guests_response.json().get("guests", [])
+            rooms = rooms_response.json().get("rooms", [])
+            
+            if guests and rooms:
+                booking_response = requests.post(
+                    f"{BACKEND_URL}/pms/bookings",
+                    headers=headers,
+                    json={
+                        "guest_id": guests[0].get("id"),
+                        "room_id": rooms[0].get("id"),
+                        "check_in": "2025-11-28",
+                        "check_out": "2025-11-30",
+                        "adults": 2,
+                        "children": 0,
+                        "guests_count": 2,
+                        "total_amount": 1200.0,
+                        "channel": "direct"
+                    },
+                    timeout=10
+                )
+                if booking_response.status_code == 200:
+                    flow_booking_id = booking_response.json().get("booking", {}).get("id")
+    except:
+        pass
+    
     # Add to queue
     success, elapsed, data = test_endpoint(
         "  Add to Queue",
@@ -559,13 +591,11 @@ def test_complete_flows(headers: Dict):
         "/rooms/queue/add",
         headers,
         data={
-            "guest_name": "Flow Test Guest",
-            "guest_email": "flowguest@test.com",
-            "guest_phone": "+1234567890",
-            "room_type": "Standard",
-            "check_in_date": "2025-11-28",
-            "check_out_date": "2025-11-30",
-            "adults": 2
+            "booking_id": flow_booking_id if flow_booking_id else "flow-test-booking",
+            "requested_room": "102",
+            "arrival_time": "15:00",
+            "special_requests": "VIP guest",
+            "priority": 2
         }
     )
     if not success:

@@ -48123,7 +48123,17 @@ async def get_ar_aging_report(
         )
         
         if oldest_transaction:
-            transaction_date = datetime.fromisoformat(oldest_transaction['transaction_date'])
+            # Parse transaction_date safely
+            transaction_date = oldest_transaction['transaction_date']
+            if isinstance(transaction_date, str):
+                transaction_date = datetime.fromisoformat(transaction_date.replace('Z', '+00:00'))
+            elif not isinstance(transaction_date, datetime):
+                continue  # Skip invalid data
+            
+            # Ensure timezone-aware
+            if transaction_date.tzinfo is None:
+                transaction_date = transaction_date.replace(tzinfo=timezone.utc)
+            
             days_old = (today - transaction_date).days
             
             aging_entry = {
@@ -49220,7 +49230,17 @@ async def get_ar_aging_report(
         )
         
         if oldest_transaction:
-            transaction_date = datetime.fromisoformat(oldest_transaction['transaction_date'])
+            # Parse transaction_date safely
+            transaction_date = oldest_transaction['transaction_date']
+            if isinstance(transaction_date, str):
+                transaction_date = datetime.fromisoformat(transaction_date.replace('Z', '+00:00'))
+            elif not isinstance(transaction_date, datetime):
+                continue  # Skip invalid data
+            
+            # Ensure timezone-aware
+            if transaction_date.tzinfo is None:
+                transaction_date = transaction_date.replace(tzinfo=timezone.utc)
+            
             days_old = (today - transaction_date).days
             
             aging_entry = {

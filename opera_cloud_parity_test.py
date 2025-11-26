@@ -499,10 +499,10 @@ def test_complete_flows(headers: Dict):
             "account_name": "Flow Test Corp",
             "company_name": "Flow Test Ltd",
             "contact_person": "Test Manager",
-            "contact_email": "manager@flowtest.com",
-            "contact_phone": "+1234567890",
+            "email": "manager@flowtest.com",
+            "phone": "+1234567890",
             "credit_limit": 100000.0,
-            "payment_terms": "Net 30"
+            "payment_terms": 30
         }
     )
     if not success:

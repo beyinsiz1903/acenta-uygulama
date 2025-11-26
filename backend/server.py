@@ -29716,19 +29716,7 @@ async def get_cleaning_time_statistics(
 
 # ===== 3. GUEST PROFILE ENHANCEMENTS =====
 
-class GuestPreference(BaseModel):
-    model_config = ConfigDict(extra="ignore")
-    guest_id: str
-    tenant_id: str
-    pillow_type: Optional[str] = None  # soft, firm, extra_firm
-    floor_preference: Optional[str] = None  # low, middle, high, no_preference
-    room_temperature: Optional[str] = None  # cool, moderate, warm
-    smoking: bool = False
-    special_needs: Optional[str] = None
-    dietary_restrictions: Optional[str] = None
-    newspaper_preference: Optional[str] = None
-
-class GuestTag(str, Enum):
+class GuestTagEnum(str, Enum):
     VIP = "vip"
     BLACKLIST = "blacklist"
     HONEYMOON = "honeymoon"

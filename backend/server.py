@@ -48613,6 +48613,14 @@ app.include_router(api_router)
 if desktop_router:
     app.include_router(desktop_router, prefix="/api", tags=["desktop-enhancements"])
 
+# Include World-Class PMS Features (Aşama 1, 2, 3)
+try:
+    from world_class_features import world_class_router
+    app.include_router(world_class_router, tags=["world-class-features"])
+    print("✅ World-Class PMS features included (116 endpoints): Group Management, Contactless, Sustainability, Voice AI, Blockchain, Metaverse, Advanced Analytics")
+except ImportError as e:
+    print(f"⚠️ World-Class features not available: {e}")
+
 # Include advanced features router
 try:
     from advanced_features_endpoints import advanced_router

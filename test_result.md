@@ -1099,7 +1099,7 @@ backend:
     implemented: true
     working: false
     file: "/app/backend/server.py"
-    stuck_count: 1
+    stuck_count: 2
     priority: "high"
     needs_retesting: false
     status_history:
@@ -1109,6 +1109,9 @@ backend:
       - working: false
         agent: "testing"
         comment: "❌ ENDPOINT FAILING - POST /api/guests/{guest_id}/preferences returns HTTP 422 error. Request body validation failing. Tested with pillow_type, floor_preference, room_temperature, smoking, special_needs, dietary_restrictions, newspaper_preference fields but endpoint expects different request structure."
+      - working: false
+        agent: "testing"
+        comment: "❌ DUPLICATE ENDPOINT DEFINITIONS FOUND - There are TWO definitions of POST /api/guests/{guest_id}/preferences: (1) Line 22920: Expects dietary_restrictions as List[str], room_temperature as int, includes extra_requests, allergies fields. (2) Line 29820: Expects dietary_restrictions as Optional[str], room_temperature as str, different field set. FastAPI is using the FIRST definition (line 22920). Error: dietary_restrictions must be a list, not a string. RECOMMENDATION: Remove duplicate endpoint definition and standardize the model."
 
   - task: "Guest Profile - Tags Management (VIP/Blacklist)"
     implemented: true

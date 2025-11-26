@@ -1066,7 +1066,7 @@ backend:
 
   - task: "OTA Reservation Details - Complete Endpoint"
     implemented: true
-    working: false
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 1
     priority: "high"
@@ -1081,6 +1081,9 @@ backend:
       - working: false
         agent: "testing"
         comment: "❌ ENDPOINT FAILING WITH HTTP 500 - GET /api/reservations/{booking_id}/ota-details returns Internal Server Error. Root cause: ObjectId serialization error in response. Error: 'ObjectId' object is not iterable. The endpoint is trying to serialize MongoDB ObjectId fields directly in the response. RECOMMENDATION: Remove '_id' fields from MongoDB documents before returning, or convert ObjectId to string."
+      - working: true
+        agent: "testing"
+        comment: "✅ COMPREHENSIVE RE-TEST PASSED - HTTP 200 (39ms). ObjectId serialization issue FIXED by main agent. Endpoint now returns proper JSON response without MongoDB ObjectId errors. All fields serializing correctly: booking_id, special_requests, source_of_booking, ota_channel, extra_charges array, multi_room_info, commission_pct, payment_model. Critical fix verified and working in production."
 
   - task: "OTA Reservation - Extra Charges Endpoint"
     implemented: true

@@ -434,17 +434,12 @@ def test_queue_rooms_module(headers: Dict):
         if queue_items:
             queue_id = queue_items[0].get("id") or queue_items[0].get("queue_id")
     
-    # 3. Assign Priority
+    # 3. Assign Priority (uses query parameters)
     success, elapsed, data = test_endpoint(
         "3. POST /rooms/queue/assign-priority",
         "POST",
-        "/rooms/queue/assign-priority",
-        headers,
-        data={
-            "queue_id": queue_id if queue_id else "test-queue-id",
-            "priority": "high",
-            "reason": "VIP guest"
-        }
+        f"/rooms/queue/assign-priority?queue_id={queue_id if queue_id else 'test-queue-id'}&priority=1",
+        headers
     )
     test_results["queue_rooms"].append(("assign-priority", success, elapsed))
     

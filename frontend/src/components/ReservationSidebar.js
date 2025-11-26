@@ -19,44 +19,47 @@ const ReservationSidebar = ({
 
   return (
     <div 
-      className="fixed right-0 top-16 bottom-0 w-[480px] bg-white shadow-2xl z-50 overflow-y-auto transform transition-transform duration-300"
-      style={{ borderLeft: '4px solid #3b82f6' }}
+      className="fixed right-0 top-16 bottom-0 w-[480px] bg-white shadow-xl z-50 overflow-hidden flex flex-col animate-slide-in-right rounded-l-2xl"
+      style={{ 
+        boxShadow: '0 0 60px rgba(0, 0, 0, 0.15), 0 0 20px rgba(59, 130, 246, 0.1)',
+        borderLeft: '1px solid rgba(59, 130, 246, 0.2)'
+      }}
     >
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 sticky top-0 z-10">
-        <div className="flex justify-between items-start">
-          <div>
-            <h2 className="text-2xl font-bold mb-1">{booking.guest_name || 'Guest'}</h2>
-            <div className="flex items-center space-x-2">
-              <Badge className={getSegmentColor(booking.market_segment)}>
+      <div className="bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 text-white p-6 shadow-lg">
+        <div className="flex justify-between items-start mb-6">
+          <div className="flex-1">
+            <h2 className="text-2xl font-bold mb-2 tracking-tight">{booking.guest_name || 'Guest'}</h2>
+            <div className="flex items-center gap-2 flex-wrap">
+              <Badge className={`${getSegmentColor(booking.market_segment)} backdrop-blur-sm bg-opacity-90 transition-all hover:scale-105`}>
                 {booking.market_segment || 'Standard'}
               </Badge>
-              <Badge className="bg-white text-blue-600">
+              <Badge className="bg-white/90 text-blue-700 backdrop-blur-sm transition-all hover:scale-105 font-medium">
                 {getStatusLabel(booking.status)}
               </Badge>
             </div>
           </div>
           <button 
             onClick={onClose}
-            className="text-white hover:bg-white hover:bg-opacity-20 rounded p-2 transition-colors"
+            className="text-white hover:bg-white/20 rounded-full p-2 transition-all duration-200 hover:rotate-90 backdrop-blur-sm"
           >
-            <X className="w-6 h-6" />
+            <X className="w-5 h-5" />
           </button>
         </div>
         
-        {/* Quick Stats */}
-        <div className="grid grid-cols-3 gap-3 mt-6">
-          <div className="bg-white bg-opacity-20 rounded-lg p-3">
-            <div className="text-xs opacity-90">Nights</div>
-            <div className="text-xl font-bold">{nights}</div>
+        {/* Quick Stats - Modern Cards */}
+        <div className="grid grid-cols-3 gap-3">
+          <div className="bg-white/15 backdrop-blur-md rounded-xl p-3 transition-all duration-300 hover:bg-white/25 hover:scale-105 border border-white/20">
+            <div className="text-xs font-medium opacity-90 mb-1">Nights</div>
+            <div className="text-2xl font-bold">{nights}</div>
           </div>
-          <div className="bg-white bg-opacity-20 rounded-lg p-3">
-            <div className="text-xs opacity-90">ADR</div>
-            <div className="text-xl font-bold">${adr.toFixed(0)}</div>
+          <div className="bg-white/15 backdrop-blur-md rounded-xl p-3 transition-all duration-300 hover:bg-white/25 hover:scale-105 border border-white/20">
+            <div className="text-xs font-medium opacity-90 mb-1">ADR</div>
+            <div className="text-2xl font-bold">${adr.toFixed(0)}</div>
           </div>
-          <div className="bg-white bg-opacity-20 rounded-lg p-3">
-            <div className="text-xs opacity-90">Total</div>
-            <div className="text-xl font-bold">${booking.total_amount}</div>
+          <div className="bg-white/15 backdrop-blur-md rounded-xl p-3 transition-all duration-300 hover:bg-white/25 hover:scale-105 border border-white/20">
+            <div className="text-xs font-medium opacity-90 mb-1">Total</div>
+            <div className="text-2xl font-bold">${booking.total_amount}</div>
           </div>
         </div>
       </div>

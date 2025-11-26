@@ -627,13 +627,8 @@ def test_complete_flows(headers: Dict):
     success, elapsed, _ = test_endpoint(
         "  Notify Guest",
         "POST",
-        "/rooms/queue/notify-guest",
-        headers,
-        data={
-            "queue_id": queue_id,
-            "notification_type": "room_ready",
-            "message": "Room ready"
-        }
+        f"/rooms/queue/notify-guest?queue_id={queue_id}&room_number=102",
+        headers
     )
     if not success:
         flow_success = False

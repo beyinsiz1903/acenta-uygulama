@@ -1203,7 +1203,7 @@ backend:
     implemented: true
     working: false
     file: "/app/backend/server.py"
-    stuck_count: 2
+    stuck_count: 3
     priority: "high"
     needs_retesting: false
     status_history:
@@ -1216,6 +1216,9 @@ backend:
       - working: false
         agent: "testing"
         comment: "❌ DUPLICATE ENDPOINT DEFINITIONS FOUND - There are TWO definitions of POST /api/guests/{guest_id}/tags: (1) Line 22972: Expects single 'tag' as query parameter (not body), plus color and notes parameters. (2) Line 29871: Expects body with 'tags' array using GuestTagsUpdate model. FastAPI is using the FIRST definition (line 22972). Error: Missing required query parameter 'tag'. RECOMMENDATION: Remove duplicate endpoint definition and decide on single tag vs array of tags approach."
+      - working: false
+        agent: "testing"
+        comment: "❌ COMPREHENSIVE RE-TEST FAILED - HTTP 500 Internal Server Error. ROOT CAUSE CONFIRMED: Duplicate GuestTag definitions causing type conflict. GuestTag defined as BaseModel at line 22761 and as Enum at line 29731. Endpoint at line 22972 tries to create GuestTag instance as BaseModel, but Python resolves to the Enum definition. TypeError: 'EnumType.__call__() got an unexpected keyword argument tenant_id'. CRITICAL FIX REQUIRED: Remove duplicate GuestTag definition. Either keep BaseModel (line 22761) or Enum (line 29731), but not both. Rename one to avoid conflict."
 
   - task: "Revenue Management - Price Recommendation Slider"
     implemented: true

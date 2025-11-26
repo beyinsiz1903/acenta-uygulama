@@ -1273,7 +1273,7 @@ backend:
 
   - task: "Messaging Module - Send Message (WhatsApp/SMS/Email)"
     implemented: true
-    working: false
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 2
     priority: "high"
@@ -1297,6 +1297,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "✅ FINAL SUCCESS TEST PASSED - POST /api/messaging/send-message working perfectly with SendMessageRequest model. Correct fields: guest_id, message_type, recipient, message_content, booking_id. Test guest created, message sent successfully. Response: 'WHATSAPP sent successfully'. Message model fully functional."
+      - working: true
+        agent: "testing"
+        comment: "✅ COMPREHENSIVE RE-TEST PASSED - CASE-INSENSITIVE ENUM WORKING! Tested all 3 variations: (1) UPPERCASE 'WHATSAPP' - HTTP 200 (64ms) ✅, (2) lowercase 'whatsapp' - HTTP 200 (41ms) ✅, (3) MixedCase 'WhatsApp' - HTTP 200 (38ms) ✅. Main agent successfully implemented field_validator with lowercase conversion. The @field_validator('message_type', mode='before') decorator converts any case to lowercase before validation. Critical fix verified and working perfectly."
 
   - task: "Messaging Module - Message Templates"
     implemented: true

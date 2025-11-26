@@ -1023,7 +1023,7 @@ backend:
     file: "/app/backend/server.py"
     stuck_count: 1
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
@@ -1031,6 +1031,9 @@ backend:
       - working: false
         agent: "testing"
         comment: "❌ ENDPOINT FAILING - POST /api/reservations/multi-room returns HTTP 422 error. Request body validation failing. Tested with group_name, primary_booking_id, related_booking_ids fields but endpoint expects different request structure. Endpoint implementation exists but request validation needs review."
+      - working: "NA"
+        agent: "main"
+        comment: "Main agent reviewing endpoint implementation. Model MultiRoomReservationCreate defined correctly at line 29541. Ready for comprehensive testing."
 
   - task: "Housekeeping Mobile - Room Assignments"
     implemented: true

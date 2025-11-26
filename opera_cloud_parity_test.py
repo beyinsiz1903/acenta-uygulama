@@ -514,15 +514,8 @@ def test_complete_flows(headers: Dict):
     success, elapsed, _ = test_endpoint(
         "  Post Charges",
         "POST",
-        "/cashiering/direct-bill",
-        headers,
-        data={
-            "account_id": account_id,
-            "booking_id": "flow-test-booking",
-            "amount": 5000.0,
-            "description": "Monthly corporate charges",
-            "reference": "FLOW-INV-001"
-        }
+        f"/cashiering/direct-bill?booking_id=flow-test-booking&account_id={account_id}&amount=5000.0&description=Monthly+corporate+charges",
+        headers
     )
     if not success:
         flow_success = False

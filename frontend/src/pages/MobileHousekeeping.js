@@ -882,6 +882,17 @@ const MobileHousekeeping = ({ user }) => {
         <div className="grid grid-cols-4 gap-2">
           <Button
             size="sm"
+            className="h-16 flex flex-col items-center justify-center bg-teal-600 hover:bg-teal-700 p-1"
+            onClick={() => {
+              // Open photo upload modal for quality control
+              toast.info('Fotoğraf yükleme özelliği aktif!');
+            }}
+          >
+            <Camera className="w-4 h-4 mb-1" />
+            <span className="text-[10px]">Fotoğraf</span>
+          </Button>
+          <Button
+            size="sm"
             className="h-16 flex flex-col items-center justify-center bg-orange-600 hover:bg-orange-700 p-1"
             onClick={loadLostFound}
           >
@@ -903,14 +914,6 @@ const MobileHousekeeping = ({ user }) => {
           >
             <MapPin className="w-4 h-4 mb-1" />
             <span className="text-[10px]">Görev</span>
-          </Button>
-          <Button
-            size="sm"
-            className="h-16 flex flex-col items-center justify-center bg-blue-600 hover:bg-blue-700 p-1"
-            onClick={loadStatusLogs}
-          >
-            <History className="w-4 h-4 mb-1" />
-            <span className="text-[10px]">Kayıt</span>
           </Button>
         </div>
       </div>

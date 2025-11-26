@@ -351,23 +351,68 @@ def test_queue_rooms_module(headers: Dict):
     print_header("QUEUE ROOMS MODULE - 5 ENDPOINTS")
     
     queue_id = None
+    booking_id = None
     
-    # 1. Add Guest to Queue
+    # First, create a test booking for the queue
+    print("  Creating test booking for queue...")
+    try:
+        # Get a guest and room first
+        guests_response = requests.get(
+            f"{BACKEND_URL}/pms/guests?limit=1",
+            headers=headers,
+            timeout=10
+        )
+        rooms_response = requests.get(
+            f"{BACKEND_URL}/pms/rooms?limit=1",
+            headers=headers,
+            timeout=10
+        )
+        
+        if guests_response.status_code == 200 and rooms_response.status_code == 200:
+            guests = guests_response.json().get("guests", [])
+            rooms = rooms_response.json().get("rooms", [])
+            
+            if guests and rooms:
+                guest_id = guests[0].get("id")
+                room_id = rooms[0].get("id")
+                
+                # Create a booking
+                booking_response = requests.post(
+                    f"{BACKEND_URL}/pms/bookings",
+                    headers=headers,
+                    json={
+                        "guest_id": guest_id,
+                        "room_id": room_id,
+                        "check_in": "2025-11-27",
+                        "check_out": "2025-11-30",
+                        "adults": 2,
+                        "children": 0,
+                        "guests_count": 2,
+                        "total_amount": 1500.0,
+                        "channel": "direct"
+                    },
+                    timeout=10
+                )
+                
+                if booking_response.status_code == 200:
+                    booking_data = booking_response.json()
+                    booking_id = booking_data.get("booking", {}).get("id")
+                    print(f"  ✅ Test booking created: {booking_id}")
+    except Exception as e:
+        print(f"  ⚠️  Could not create test booking: {e}")
+    
+    # 1. Add Guest to Queue (requires booking_id)
     success, elapsed, data = test_endpoint(
         "1. POST /rooms/queue/add",
         "POST",
         "/rooms/queue/add",
         headers,
         data={
-            "guest_name": "Jane Smith",
-            "guest_email": "jane.smith@email.com",
-            "guest_phone": "+1234567890",
-            "room_type": "Deluxe",
-            "check_in_date": "2025-11-27",
-            "check_out_date": "2025-11-30",
-            "adults": 2,
-            "children": 1,
-            "notes": "Early check-in requested"
+            "booking_id": booking_id if booking_id else "test-booking-queue-001",
+            "requested_room": "101",
+            "arrival_time": "14:00",
+            "special_requests": "Early check-in requested",
+            "priority": 3
         }
     )
     test_results["queue_rooms"].append(("add-to-queue", success, elapsed))

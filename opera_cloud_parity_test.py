@@ -527,14 +527,8 @@ def test_complete_flows(headers: Dict):
     success, elapsed, _ = test_endpoint(
         "  Post Payment",
         "POST",
-        "/cashiering/city-ledger-payment",
-        headers,
-        data={
-            "account_id": account_id,
-            "amount": 5000.0,
-            "payment_method": "bank_transfer",
-            "reference": "FLOW-PAY-001"
-        }
+        f"/cashiering/city-ledger-payment?account_id={account_id}&amount=5000.0&payment_method=bank_transfer&reference=FLOW-PAY-001",
+        headers
     )
     if not success:
         flow_success = False

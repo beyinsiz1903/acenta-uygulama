@@ -29435,6 +29435,9 @@ async def get_ota_reservation_details(
         'booking_id': booking_id,
         'tenant_id': current_user.tenant_id
     }):
+        # Remove MongoDB _id field to avoid serialization issues
+        if '_id' in charge:
+            del charge['_id']
         extra_charges.append(charge)
     
     # Check if part of multi-room reservation

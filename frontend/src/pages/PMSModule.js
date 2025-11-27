@@ -2659,6 +2659,17 @@ const PMSModule = ({ user, tenant, onLogout }) => {
               <RevenueDashboard />
             </div>
 
+            {/* Group Reports */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Group Revenue by Company</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <GroupRevenueByCompany reports={reports} />
+              </CardContent>
+            </Card>
+
+
             {/* AI Activity Log */}
             <div>
               <h3 className="text-xl font-bold mb-4">AI Intelligence Activity</h3>

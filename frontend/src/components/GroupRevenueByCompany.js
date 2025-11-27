@@ -14,9 +14,10 @@ const GroupRevenueByCompany = () => {
   const [groups, setGroups] = useState([]);
   const [companyFilter, setCompanyFilter] = useState('all');
   const [startDate, setStartDate] = useState(() => {
-    const d = new Date();
-    d.setDate(d.getDate() - 30);
-    return d.toISOString().slice(0, 10);
+    // Default to year-to-date for broader view
+    const now = new Date();
+    const startOfYear = new Date(now.getFullYear(), 0, 1);
+    return startOfYear.toISOString().slice(0, 10);
   });
   const [endDate, setEndDate] = useState(() => new Date().toISOString().slice(0, 10));
 

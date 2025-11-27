@@ -28,7 +28,7 @@ const GroupRevenueByCompany = () => {
       const params = {
         start_date: startDate,
         end_date: endDate,
-        min_rooms: 2,
+        min_rooms: 1,
       };
       const res = await axios.get('/deluxe/group-bookings', { params });
       setGroups(res.data?.groups || []);

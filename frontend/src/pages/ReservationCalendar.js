@@ -679,22 +679,24 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
 
   // Calculate booking span width (how many days)
   const calculateBookingSpan = (booking, startDate) => {
-    const checkIn = new Date(booking.check_in);
-    const checkOut = new Date(booking.check_out);
-    const rangeStart = new Date(startDate);
-    const rangeEnd = new Date(startDate);
-    rangeEnd.setDate(rangeEnd.getDate() + daysToShow);
+    const checkIn = toDateStringUTC(booking.check_in);
+    const checkOut = toDateStringUTC(booking.check_out);
+    const rangeStart = toDateStringUTC(startDate);
+    
+    // Calculate range end
+    const rangeEndDate = new Date(startDate);
+    rangeEndDate.setDate(rangeEndDate.getDate() + daysToShow);
+    const rangeEnd = toDateStringUTC(rangeEndDate);
 
-    // Normalize to date only (avoid mutation)
-    const checkInDate = new Date(checkIn.getFullYear(), checkIn.getMonth(), checkIn.getDate());
-    const checkOutDate = new Date(checkOut.getFullYear(), checkOut.getMonth(), checkOut.getDate());
-    const rangeStartDate = new Date(rangeStart.getFullYear(), rangeStart.getMonth(), rangeStart.getDate());
-    const rangeEndDate = new Date(rangeEnd.getFullYear(), rangeEnd.getMonth(), rangeEnd.getDate());
+    // Effective visible range
+    const effectiveStart = checkIn < rangeStart ? rangeStart : checkIn;
+    const effectiveEnd = checkOut > rangeEnd ? rangeEnd : checkOut;
 
-    const effectiveStart = checkInDate < rangeStartDate ? rangeStartDate : checkInDate;
-    const effectiveEnd = checkOutDate > rangeEndDate ? rangeEndDate : checkOutDate;
-
-    const nights = Math.ceil((effectiveEnd - effectiveStart) / (1000 * 60 * 60 * 24));
+    // Calculate days between strings
+    const startMs = new Date(effectiveStart).getTime();
+    const endMs = new Date(effectiveEnd).getTime();
+    const nights = Math.ceil((endMs - startMs) / (1000 * 60 * 60 * 24));
+    
     return Math.max(1, nights);
   };
 

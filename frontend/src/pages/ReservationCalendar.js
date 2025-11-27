@@ -1656,6 +1656,18 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
                       {dateRange.map((date, idx) => {
                         const booking = getBookingForRoomOnDate(room.id, date);
                         const isStart = booking && isBookingStart(booking, date);
+                        
+                        // Debug logging for first room and first 3 dates
+                        if (room.room_number === '101' && idx < 3) {
+                          console.log(`🔍 Room 101, Date ${idx}:`, {
+                            date: date.toISOString().split('T')[0],
+                            hasBooking: !!booking,
+                            isStart: isStart,
+                            bookingId: booking?.id?.substring(0, 8),
+                            bookingGuest: booking?.guest_name
+                          });
+                        }
+                        
                         const roomBlock = getRoomBlockForDate(room.id, date);
                         const isBlockStart = roomBlock && isBlockStart(roomBlock, date);
                         const isDragOver = dragOverCell?.roomId === room.id && 

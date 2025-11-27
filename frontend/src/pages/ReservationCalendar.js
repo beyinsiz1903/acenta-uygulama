@@ -3095,27 +3095,25 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
                               </div>
                             )}
                             
-                            {/* Booking bar - segment color coded */}
+                            {/* Booking bar - Modern Aesthetic Design */}
                             {isStart && booking && (
                               <div
                                 draggable
                                 onDragStart={(e) => handleDragStart(e, booking)}
                                 onDragEnd={handleDragEnd}
                                 onDoubleClick={() => handleBookingDoubleClick(booking)}
-                                className={`absolute top-2 left-1 rounded-lg ${getSegmentColor(
+                                className={`absolute top-1.5 left-1 rounded-xl ${getSegmentColor(
                                   booking.market_segment || booking.rate_type
-                                )} text-white text-xs overflow-hidden shadow-md hover:shadow-xl transition-all cursor-move z-20 group ${
-                                  draggingBooking?.id === booking.id ? 'opacity-30 scale-90 ring-4 ring-blue-400 animate-pulse' : ''
-                                } ${hasConflict(room.id, date) ? 'ring-2 ring-red-500 animate-pulse' : ''}
+                                )} text-white text-xs overflow-hidden shadow-lg hover:shadow-2xl transition-all cursor-move z-20 group border-2 border-white/20 ${
+                                  draggingBooking?.id === booking.id ? 'opacity-30 scale-95 ring-2 ring-blue-500 animate-pulse' : ''
+                                } ${hasConflict(room.id, date) ? 'ring-2 ring-red-400 animate-pulse' : ''}
                                 ${showDeluxePanel && isGroupBooking(booking.id) ? 'ring-2 ring-amber-400' : ''}`}
                                 style={{
                                   width: `${calculateBookingSpan(booking, currentDate) * 96 - 8}px`,
-                                  height: viewMode === 'simplified' ? '52px' : '70px',
-                                  backgroundImage: showDeluxePanel && isGroupBooking(booking.id) && viewMode === 'detailed'
-                                    ? 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(251, 191, 36, 0.15) 10px, rgba(251, 191, 36, 0.15) 20px)' 
-                                    : draggingBooking?.id === booking.id 
-                                    ? 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255, 255, 255, 0.1) 10px, rgba(255, 255, 255, 0.1) 20px)'
-                                    : 'none'
+                                  height: viewMode === 'simplified' ? '50px' : '68px',
+                                  background: draggingBooking?.id === booking.id 
+                                    ? 'linear-gradient(135deg, rgba(59, 130, 246, 0.8) 0%, rgba(37, 99, 235, 0.8) 100%)'
+                                    : undefined
                                 }}
                                 title={`Detaylar için çift tıkla | Taşımak için sürükle\n${booking.guest_name || 'Misafir'} - ${booking.market_segment || 'Standard'}${showDeluxePanel && isGroupBooking(booking.id) ? `\n👥 GRUP: ${getGroupInfo(booking.id)?.company_name}` : ''}`}
                               >

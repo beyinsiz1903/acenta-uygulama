@@ -1455,7 +1455,7 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
         </Card>
 
         {/* Calendar Grid - Fixed sticky structure */}
-        <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
+        <div className="bg-white rounded-lg shadow-sm border relative">
           {/* Date Header Row - STICKY (parent must NOT have overflow) */}
           <div className="sticky top-16 z-40 bg-white shadow-md border-b overflow-x-auto">
             <div className="min-w-max">

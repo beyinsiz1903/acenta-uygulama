@@ -3755,7 +3755,7 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Total Payments:</span>
                     <span className="font-semibold text-green-600">
-                      -${folioPayments.reduce((sum, p) => sum + (p.amount || 0), 0).toFixed(2)}
+                      -${folioPayments.filter(p => !p.voided).reduce((sum, p) => sum + (p.amount || 0), 0).toFixed(2)}
                     </span>
                   </div>
                   <div className="border-t-2 border-gray-300 pt-3 mt-2 flex justify-between items-center">

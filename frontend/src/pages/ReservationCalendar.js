@@ -79,6 +79,19 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
   const [draggingBooking, setDraggingBooking] = useState(null);
   const [dragOverCell, setDragOverCell] = useState(null);
   
+  // Filter states
+  const [filters, setFilters] = useState({
+    roomType: '',
+    roomStatus: '',
+    bookingStatus: '',
+    marketSegment: '',
+    showFilters: false
+  });
+  
+  // Bulk operations
+  const [selectedBookings, setSelectedBookings] = useState([]);
+  const [bulkActionMode, setBulkActionMode] = useState(false);
+  
   // Hover tooltip state for ADR/BAR display
   const [hoveredCell, setHoveredCell] = useState(null);
   const [cellRates, setCellRates] = useState({});

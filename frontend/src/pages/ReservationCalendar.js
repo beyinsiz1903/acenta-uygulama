@@ -1457,9 +1457,9 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
         {/* Calendar Grid - Removed Card wrapper to prevent sticky behavior */}
         <div className="bg-white rounded-lg shadow-sm border">
           {/* Date Header Row - OUTSIDE scroll container so it scrolls with page */}
-          <div className="overflow-x-auto border-b">
-            <div className="min-w-max">
-              <div className="flex bg-white" style={{ position: 'static !important' }}>
+          <div className="overflow-x-auto border-b" style={{ position: 'relative' }}>
+            <div className="min-w-max" style={{ position: 'relative' }}>
+              <div className="flex bg-white" style={{ position: 'relative !important', top: 'auto !important', position: 'static !important' }}>
                 <div className="w-40 flex-shrink-0 p-3 border-r font-bold text-gray-800 text-sm">
                   ODALAR
                 </div>

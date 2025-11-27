@@ -21,7 +21,15 @@ import {
   Info,
   Search,
   AlertCircle,
-  CheckCircle
+  CheckCircle,
+  DollarSign,
+  CreditCard,
+  XCircle,
+  Printer,
+  Lock,
+  History,
+  ArrowRightLeft,
+  Download
 } from 'lucide-react';
 
 const ReservationCalendar = ({ user, tenant, onLogout }) => {

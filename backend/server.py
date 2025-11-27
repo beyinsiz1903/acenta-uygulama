@@ -1308,6 +1308,9 @@ class Booking(BaseModel):
     tenant_id: str
     guest_id: str
     room_id: str
+    # Enriched fields for calendar display
+    guest_name: Optional[str] = None
+    room_number: Optional[str] = None
     check_in: datetime
     check_out: datetime
     adults: int = 1

@@ -3028,8 +3028,8 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
                                 onDoubleClick={() => handleBookingDoubleClick(booking)}
                                 className={`absolute top-2 left-1 rounded-lg ${getSegmentColor(
                                   booking.market_segment || booking.rate_type
-                                )} text-white text-xs overflow-hidden shadow-sm hover:shadow-lg transition-all cursor-move z-20 group ${
-                                  draggingBooking?.id === booking.id ? 'opacity-100 scale-105 shadow-2xl ring-4 ring-blue-400' : ''
+                                )} text-white text-xs overflow-hidden shadow-md hover:shadow-xl transition-all cursor-move z-20 group ${
+                                  draggingBooking?.id === booking.id ? 'opacity-50 scale-95 ring-4 ring-blue-400' : ''
                                 } ${hasConflict(room.id, date) ? 'ring-2 ring-red-500 animate-pulse' : ''}
                                 ${showDeluxePanel && isGroupBooking(booking.id) ? 'ring-2 ring-amber-400' : ''}`}
                                 style={{
@@ -3039,7 +3039,7 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
                                     ? 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(251, 191, 36, 0.15) 10px, rgba(251, 191, 36, 0.15) 20px)' 
                                     : 'none'
                                 }}
-                                title={`Double-click for details | Drag to move\n${booking.guest_name || 'Guest'} - ${booking.market_segment || 'Standard'}${showDeluxePanel && isGroupBooking(booking.id) ? `\n👥 GROUP: ${getGroupInfo(booking.id)?.company_name}` : ''}`}
+                                title={`Detaylar için çift tıkla | Taşımak için sürükle\n${booking.guest_name || 'Misafir'} - ${booking.market_segment || 'Standard'}${showDeluxePanel && isGroupBooking(booking.id) ? `\n👥 GRUP: ${getGroupInfo(booking.id)?.company_name}` : ''}`}
                               >
                                 {/* Bulk Selection Checkbox */}
                                 {bulkActionMode && (

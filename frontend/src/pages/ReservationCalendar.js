@@ -3055,11 +3055,11 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
                             key={idx}
                             data-date={date.toISOString()}
                             data-room-id={room.id}
-                            className={`w-24 flex-shrink-0 border-r border-gray-100 relative cursor-pointer hover:bg-gray-50 transition-colors ${
-                              isToday(date) ? 'bg-blue-50/50' : 'bg-white'
-                            } ${isDragOver ? 'bg-green-50 ring-2 ring-green-400' : ''}
-                            ${roomBlock ? 'bg-gray-100/50' : ''}`}
-                            style={{ height: viewMode === 'simplified' ? '60px' : '80px' }}
+                            className={`w-24 flex-shrink-0 border-r border-gray-100 relative cursor-pointer hover:bg-blue-50/20 transition-all ${
+                              isToday(date) ? 'bg-blue-50/40' : 'bg-white'
+                            } ${isDragOver ? 'bg-emerald-50 ring-2 ring-emerald-400' : ''}
+                            ${roomBlock ? 'bg-gray-50' : ''}`}
+                            style={{ height: viewMode === 'simplified' ? '56px' : '76px' }}
                             onClick={() => !booking && !roomBlock && handleCellClick(room.id, date)}
                             onDragOver={(e) => handleDragOver(e, room.id, date)}
                             onDragLeave={handleDragLeave}

@@ -66,7 +66,6 @@ const PickupPaceReport = () => {
 
   useEffect(() => {
     loadPickup();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const summary = data?.summary;

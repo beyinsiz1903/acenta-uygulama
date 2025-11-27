@@ -2265,7 +2265,7 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
               <div className="grid grid-cols-3 gap-3">
                 <div className="bg-white p-3 rounded-lg border border-red-200 text-center">
                   <div className="text-2xl font-bold text-red-600">{groupedConflicts.summary.critical}</div>
-                  <div className="text-xs text-gray-600">Critical (>5 overlaps)</div>
+                  <div className="text-xs text-gray-600">Critical (&gt;5 overlaps)</div>
                 </div>
                 <div className="bg-white p-3 rounded-lg border border-orange-200 text-center">
                   <div className="text-2xl font-bold text-orange-600">{groupedConflicts.summary.high}</div>

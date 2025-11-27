@@ -3028,28 +3028,28 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
                                 {viewMode === 'simplified' ? (
                                   /* Simplified View - Clean & Minimal */
                                   <div className={`p-2 h-full flex flex-col justify-center ${bulkActionMode ? 'pl-6' : ''}`}>
-                                    <div className="font-semibold text-sm truncate leading-tight">
-                                      {booking.guest_name || 'Guest'}
+                                    <div className="font-bold text-sm truncate leading-tight text-white">
+                                      {booking.guest_name || 'Misafir'}
                                     </div>
-                                    <div className="text-xs font-bold text-white/90 mt-0.5">
+                                    <div className="text-xs font-bold text-white mt-0.5">
                                       ${booking.total_amount?.toFixed(0) || '0'}
                                     </div>
                                   </div>
                                 ) : (
                                   /* Detailed View - Full Info */
                                   <div className="p-2 relative">
-                                    <div className={`font-semibold truncate pr-8 flex items-center gap-1 ${bulkActionMode ? 'pl-6' : ''}`}>
+                                    <div className={`font-bold truncate pr-8 flex items-center gap-1 text-white ${bulkActionMode ? 'pl-6' : ''}`}>
                                       {(booking.rate_type === 'promotional' || booking.rate_type === 'promo') && (
                                         <span className="text-yellow-300 animate-pulse">🎉</span>
                                       )}
-                                      {booking.guest_name || 'Guest'}
+                                      {booking.guest_name || 'Misafir'}
                                     </div>
-                                    <div className="text-xs opacity-90 flex items-center mt-1">
+                                    <div className="text-xs text-white flex items-center mt-1">
                                       <Clock className="w-3 h-3 mr-1" />
                                       {calculateBookingSpan(booking, currentDate)}n
                                     </div>
                                     {booking.company_name && (
-                                      <div className="text-xs opacity-90 flex items-center truncate">
+                                      <div className="text-xs text-white flex items-center truncate">
                                         <Building2 className="w-3 h-3 mr-1" />
                                         {booking.company_name}
                                       </div>

@@ -3506,52 +3506,70 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
       <Dialog open={showMoveReasonDialog} onOpenChange={setShowMoveReasonDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Room Move - Reason Required</DialogTitle>
+            <DialogTitle>Oda Değişikliği - Neden Gerekli</DialogTitle>
           </DialogHeader>
           {moveData && (
             <div className="space-y-4">
+              {/* Same Room Type Warning */}
+              {moveData.isSameRoomType && (
+                <div className="bg-amber-50 border border-amber-300 rounded-lg p-4 flex items-start space-x-3">
+                  <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                  <div className="text-sm text-amber-900">
+                    <div className="font-semibold mb-1">Aynı Oda Tipi İçinde Taşıma</div>
+                    <div>Bu rezervasyon <strong>{moveData.oldRoomType}</strong> tipinden yine <strong>{moveData.newRoomType}</strong> tipine taşınıyor. Lütfen bu değişikliğin nedenini belirtin.</div>
+                  </div>
+                </div>
+              )}
+
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <div className="text-sm text-blue-900">
-                  <div className="font-semibold mb-2">Moving Booking:</div>
-                  <div>Guest: <strong>{moveData.booking.guest_name}</strong></div>
-                  <div>From: <strong>Room {moveData.oldRoom}</strong> → <strong>Room {moveData.newRoom}</strong></div>
-                  <div>Dates: <strong>{moveData.newCheckIn}</strong> to <strong>{moveData.newCheckOut}</strong></div>
+                  <div className="font-semibold mb-2">Rezervasyon Taşınıyor:</div>
+                  <div>Misafir: <strong>{moveData.booking.guest_name}</strong></div>
+                  <div>
+                    Oda: <strong>Oda {moveData.oldRoom}</strong> ({moveData.oldRoomType}) 
+                    → <strong>Oda {moveData.newRoom}</strong> ({moveData.newRoomType})
+                  </div>
+                  <div>Tarihler: <strong>{moveData.newCheckIn}</strong> - <strong>{moveData.newCheckOut}</strong></div>
                 </div>
               </div>
 
               <div>
-                <Label>Reason for Move *</Label>
+                <Label>Taşıma Nedeni *</Label>
                 <select
                   className="w-full border rounded-md p-2 mb-2"
                   value={moveReason}
                   onChange={(e) => setMoveReason(e.target.value)}
                 >
-                  <option value="">Select reason...</option>
-                  <option value="Guest Request">Guest Request</option>
-                  <option value="Room Maintenance">Room Maintenance</option>
-                  <option value="Upgrade">Room Upgrade</option>
-                  <option value="Downgrade">Room Downgrade</option>
-                  <option value="Overbooking">Overbooking Resolution</option>
-                  <option value="VIP Guest">VIP Guest Priority</option>
-                  <option value="Room Issue">Room Issue / Complaint</option>
-                  <option value="Operational">Operational Reasons</option>
-                  <option value="Other">Other</option>
+                  <option value="">Neden seçin...</option>
+                  <option value="Misafir Talebi">Misafir Talebi</option>
+                  <option value="Oda Bakımı">Oda Bakımı</option>
+                  <option value="Upgrade">Oda Yükseltme (Upgrade)</option>
+                  <option value="Downgrade">Oda Düşürme (Downgrade)</option>
+                  <option value="Overbooking">Aşırı Rezervasyon Çözümü</option>
+                  <option value="VIP Misafir">VIP Misafir Önceliği</option>
+                  <option value="Oda Sorunu">Oda Sorunu / Şikayet</option>
+                  <option value="Operasyonel">Operasyonel Nedenler</option>
+                  <option value="Oda Görünümü">Oda Görünümü / Manzara</option>
+                  <option value="Gürültü">Gürültü Şikayeti</option>
+                  <option value="Temizlik">Temizlik Sorunu</option>
+                  <option value="Diğer">Diğer</option>
                 </select>
-                {moveReason === 'Other' && (
+                {moveReason === 'Diğer' && (
                   <Input
-                    placeholder="Please specify..."
-                    onChange={(e) => setMoveReason(e.target.value)}
+                    placeholder="Lütfen belirtin..."
+                    className="mt-2"
+                    onChange={(e) => setMoveReason(`Diğer: ${e.target.value}`)}
                   />
                 )}
               </div>
 
               <div className="text-xs text-gray-600 bg-gray-50 p-3 rounded">
-                <strong>Note:</strong> This move will be recorded in the room move history with timestamp and your user details for audit purposes.
+                <strong>Not:</strong> Bu taşıma işlemi oda değişiklik geçmişine kaydedilecek ve denetim amacıyla tarih, saat ve kullanıcı bilgileriniz ile birlikte saklanacaktır.
               </div>
 
               <div className="flex space-x-2">
                 <Button onClick={handleConfirmMove} className="flex-1">
-                  Confirm Move
+                  Taşımayı Onayla
                 </Button>
                 <Button 
                   variant="outline" 
@@ -3561,7 +3579,7 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
                     setMoveData(null);
                   }}
                 >
-                  Cancel
+                  İptal
                 </Button>
               </div>
             </div>

@@ -88,6 +88,8 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
   const [groupBookings, setGroupBookings] = useState([]);
   const [pickupPaceData, setPickupPaceData] = useState(null);
   const [leadTimeData, setLeadTimeData] = useState(null);
+  const [groupBookings, setGroupBookings] = useState([]);
+
   const [oversellProtection, setOversellProtection] = useState([]);
   const [channelMixData, setChannelMixData] = useState(null);
   

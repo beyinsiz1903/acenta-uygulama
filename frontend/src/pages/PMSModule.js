@@ -4088,26 +4088,10 @@ const PMSModule = ({ user, tenant, onLogout }) => {
                 </div>
               )}
 
-              {/* Rate Information */}
+              {/* Channel selection (rate details managed per-room above) */}
               <div className="grid grid-cols-3 gap-4 border-t pt-4">
-                <div>
-                  <Label>Base Rate</Label>
-                  <Input 
-                    type="number" 
-                    step="0.01" 
-                    value={newBooking.base_rate} 
-                    onChange={(e) => setNewBooking({...newBooking, base_rate: parseFloat(e.target.value) || 0})}
-                  />
-                </div>
-                <div>
-                  <Label>Total Amount *</Label>
-                  <Input 
-                    type="number" 
-                    step="0.01" 
-                    value={newBooking.total_amount} 
-                    onChange={(e) => setNewBooking({...newBooking, total_amount: parseFloat(e.target.value) || 0})} 
-                    required 
-                  />
+                <div className="col-span-2 text-xs text-gray-500 flex items-center">
+                  Per-room base rate and total amount are managed in the multi-room section above.
                 </div>
                 <div>
                   <Label>Channel</Label>
@@ -4125,7 +4109,7 @@ const PMSModule = ({ user, tenant, onLogout }) => {
               </div>
 
               {/* Override Reason - Show if rate is different from base */}
-              {newBooking.base_rate > 0 && newBooking.base_rate !== newBooking.total_amount && (
+              {false && newBooking.base_rate > 0 && newBooking.base_rate !== newBooking.total_amount && (
                 <div className="bg-yellow-50 border border-yellow-200 p-4 rounded">
                   <Label className="text-yellow-800">Override Reason * (Required for rate change)</Label>
                   <Textarea 

@@ -3223,9 +3223,9 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
                               
                               await axios.post(`/folio/${selectedBookingFolio.id}/payment`, {
                                 amount: parseFloat(paymentForm.amount),
-                                payment_method: paymentForm.method,
+                                method: paymentForm.method,
                                 payment_type: 'interim',
-                                reference_number: paymentForm.reference || undefined,
+                                reference: paymentForm.reference || undefined,
                                 notes: paymentForm.notes || undefined
                               });
                               

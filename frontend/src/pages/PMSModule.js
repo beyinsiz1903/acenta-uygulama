@@ -1581,6 +1581,19 @@ const PMSModule = ({ user, tenant, onLogout }) => {
                 return (
                 <Card key={room.id} className={`${roomBlock ? 'border-2 border-red-400' : ''} ${currentBooking ? 'border-l-4 border-l-blue-500' : ''}`}>
                   <CardHeader className="relative pb-2">
+                    {/* New Booking + Button */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowNewBookingDialog(true);
+                        setNewBooking(prev => ({...prev, room_id: room.id, room_number: room.room_number}));
+                      }}
+                      className="absolute top-2 left-2 w-7 h-7 bg-blue-600 hover:bg-blue-700 text-white rounded-full flex items-center justify-center transition-all hover:scale-110 shadow-lg z-10"
+                      title="Yeni Rezervasyon Oluştur"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                    
                     {roomBlock && (
                       <div className="absolute top-2 right-2 flex gap-1">
                         {roomBlock.type === 'out_of_order' && (

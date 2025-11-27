@@ -3147,6 +3147,14 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
                   <Button
                     size="sm"
                     variant="outline"
+                    onClick={() => setShowActivityLog(!showActivityLog)}
+                  >
+                    <History className="w-4 h-4 mr-2" />
+                    Activity Log
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
                     onClick={async () => {
                       try {
                         const response = await axios.get(`/folio/${selectedBookingFolio.id}/excel`, {

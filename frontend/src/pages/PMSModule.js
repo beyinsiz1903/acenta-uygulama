@@ -281,65 +281,6 @@ const PMSModule = ({ user, tenant, onLogout }) => {
     notes: ''
   });
 
-  const addRoomToMultiBooking = () => {
-    setMultiRoomBooking(prev => [
-      ...prev,
-      {
-        room_id: '',
-        adults: 1,
-        children: 0,
-        children_ages: [],
-        total_amount: 0,
-        base_rate: 0,
-        rate_plan: '',
-        package_code: null
-      }
-    ]);
-  };
-
-  const removeRoomFromMultiBooking = (index) => {
-    setMultiRoomBooking(prev => {
-      if (prev.length === 1) return prev; // En az 1 oda kalsın
-      return prev.filter((_, i) => i !== index);
-    });
-  };
-
-  const updateMultiRoomField = (index, field, value) => {
-    setMultiRoomBooking(prev => prev.map((room, i) => {
-      if (i !== index) return room;
-      if (field === 'adults' || field === 'children' || field === 'base_rate' || field === 'total_amount') {
-        const numeric = field === 'base_rate' || field === 'total_amount'
-          ? parseFloat(value) || 0
-          : parseInt(value) || 0;
-        return { ...room, [field]: numeric };
-      }
-      return { ...room, [field]: value };
-    }));
-  };
-
-  const updateMultiRoomChildrenAges = (index, childrenCount) => {
-    setMultiRoomBooking(prev => prev.map((room, i) => {
-      if (i !== index) return room;
-      const count = parseInt(childrenCount) || 0;
-      let ages = room.children_ages || [];
-      if (count > ages.length) {
-        ages = [...ages, ...Array(count - ages.length).fill(0)];
-      } else {
-        ages = ages.slice(0, count);
-      }
-      return { ...room, children: count, children_ages: ages };
-    }));
-  };
-
-  const updateMultiRoomChildAge = (roomIndex, ageIndex, age) => {
-    setMultiRoomBooking(prev => prev.map((room, i) => {
-      if (i !== roomIndex) return room;
-      const ages = [...(room.children_ages || [])];
-      ages[ageIndex] = parseInt(age) || 0;
-      return { ...room, children_ages: ages };
-    }));
-  };
-
   const [newCompany, setNewCompany] = useState({
     name: '',
     corporate_code: '',

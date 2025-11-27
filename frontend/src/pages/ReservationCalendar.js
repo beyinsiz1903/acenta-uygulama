@@ -1458,22 +1458,45 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
         <Card>
           <CardContent className="p-0 overflow-x-auto">
             <div className="min-w-max">
-              {/* Date Header Row */}
-              <div className="flex border-b bg-gray-50 sticky top-0 z-10">
-                <div className="w-32 flex-shrink-0 p-3 border-r font-semibold">
-                  Room
+              {/* Date Header Row - Modern Sticky Design */}
+              <div className="flex border-b bg-white sticky top-0 z-30 shadow-md">
+                <div className="w-40 flex-shrink-0 p-3 border-r font-bold text-gray-800 text-sm">
+                  ODALAR
                 </div>
                 {dateRange.map((date, idx) => {
                   const intensity = getHeatmapIntensity(date);
+                  
+                  // Calculate occupancy percentage and ADR for this date
+                  const dayBookings = bookings.filter(b => {
+                    const checkIn = new Date(b.check_in);
+                    const checkOut = new Date(b.check_out);
+                    checkIn.setHours(0, 0, 0, 0);
+                    checkOut.setHours(0, 0, 0, 0);
+                    const currentDate = new Date(date);
+                    currentDate.setHours(0, 0, 0, 0);
+                    return currentDate >= checkIn && currentDate < checkOut && b.status !== 'cancelled';
+                  });
+                  
+                  const occupancyRate = rooms.length > 0 ? Math.round((dayBookings.length / rooms.length) * 100) : 0;
+                  
+                  const totalRevenue = dayBookings.reduce((sum, b) => {
+                    const nights = Math.ceil((new Date(b.check_out) - new Date(b.check_in)) / (1000 * 60 * 60 * 24));
+                    return sum + ((b.total_amount || 0) / nights);
+                  }, 0);
+                  const adr = dayBookings.length > 0 ? Math.round(totalRevenue / dayBookings.length) : 0;
+                  
                   return (
                   <div
                     key={idx}
-                    className={`w-24 flex-shrink-0 p-2 border-r text-center text-sm ${
-                      isToday(date) ? 'bg-blue-50 font-bold text-blue-600' : getHeatmapColor(intensity)
+                    className={`w-28 flex-shrink-0 p-2.5 border-r text-center ${
+                      isToday(date) ? 'bg-blue-600 text-white' : 'bg-white text-gray-700'
                     }`}
-                    title={`Occupancy intensity: ${intensity}`}
+                    title={`Doluluk: ${occupancyRate}% | ADR: $${adr}`}
                   >
-                    <div>{formatDateWithDay(date)}</div>
+                    <div className="text-xs font-bold uppercase tracking-wide">{formatDateWithDay(date)}</div>
+                    <div className={`text-[10px] mt-1 font-semibold ${isToday(date) ? 'text-blue-100' : 'text-gray-500'}`}>
+                      ${adr > 0 ? adr : '-'} · %{occupancyRate}
+                    </div>
                   </div>
                   );
                 })}

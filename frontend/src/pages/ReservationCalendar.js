@@ -2938,10 +2938,10 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
                                     )}
                                   </div>
                                 )}
-                                  
-                                  {/* Status indicators - top right - Only in detailed mode */}
-                                  {viewMode === 'detailed' && (
-                                    <div className="absolute top-1 right-1 flex flex-col space-y-1 items-end">
+                                
+                                {/* Status indicators - top right - Only in detailed mode */}
+                                {viewMode === 'detailed' && (
+                                  <div className="absolute top-1 right-1 flex flex-col space-y-1 items-end">
                                     {/* AI Recommendation Badge */}
                                     {showAIPanel && getAIRecommendation(booking.id) && (
                                       <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white text-[8px] font-bold px-1 py-0.5 rounded animate-pulse" title="AI Recommendation Available">

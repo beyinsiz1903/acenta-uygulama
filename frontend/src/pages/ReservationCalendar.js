@@ -3022,8 +3022,8 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
 
                   return sortedTypes.map((roomType) => (
                     <div key={roomType}>
-                      {/* Room Type Header - Minimal Style */}
-                      <div className="sticky left-0 z-10 bg-gradient-to-r from-slate-100 to-gray-100 border-b-2 border-slate-300">
+                      {/* Room Type Header - Minimal Style (Non-sticky) */}
+                      <div className="bg-gradient-to-r from-slate-100 to-gray-100 border-b-2 border-slate-300">
                         <div className="flex items-center px-4 py-2">
                           <Building2 className="w-4 h-4 mr-2 text-slate-600" />
                           <span className="font-bold text-sm text-slate-700 tracking-wide uppercase">

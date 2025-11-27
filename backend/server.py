@@ -12804,7 +12804,6 @@ async def get_pickup_pace_analytics(
             'velocity_30day': round(velocity_30, 2)
         },
         'channels_summary': channels_summary
-        }
     }
 
 @api_router.get("/deluxe/lead-time-analysis")

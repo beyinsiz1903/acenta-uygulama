@@ -7128,6 +7128,41 @@ async def check_in_guest(booking_id: str, create_folio: bool = True, current_use
             folio_dict = folio.model_dump()
             folio_dict['created_at'] = folio_dict['created_at'].isoformat()
             await db.folios.insert_one(folio_dict)
+            
+            # Auto-post room charges to folio
+            check_in_dt = booking['check_in'] if isinstance(booking['check_in'], datetime) else datetime.fromisoformat(booking['check_in'].replace('Z', '+00:00'))
+            check_out_dt = booking['check_out'] if isinstance(booking['check_out'], datetime) else datetime.fromisoformat(booking['check_out'].replace('Z', '+00:00'))
+            nights = (check_out_dt - check_in_dt).days
+            
+            if nights > 0:
+                room = await db.rooms.find_one({'id': booking['room_id']}, {'_id': 0})
+                room_rate = room.get('base_price', booking.get('base_rate', 100))
+                
+                room_charge_amount = room_rate * nights
+                tax_rate = 0.18
+                tax_amount = room_charge_amount * tax_rate
+                total_amount = room_charge_amount + tax_amount
+                
+                room_charge = FolioCharge(
+                    tenant_id=current_user.tenant_id,
+                    folio_id=folio.id,
+                    charge_category='room',
+                    description=f"Room {room.get('room_number', '?')} - {nights} night(s)",
+                    quantity=nights,
+                    unit_price=room_rate,
+                    amount=room_charge_amount,
+                    tax_rate=tax_rate,
+                    tax_amount=tax_amount,
+                    total=total_amount
+                )
+                
+                room_charge_dict = room_charge.model_dump()
+                room_charge_dict['posted_at'] = room_charge_dict['posted_at'].isoformat()
+                await db.folio_charges.insert_one(room_charge_dict)
+                
+                # Update folio balance
+                balance = await calculate_folio_balance(folio.id, current_user.tenant_id)
+                await db.folios.update_one({'id': folio.id}, {'$set': {'balance': balance}})
     
     # Update booking and room status
     checked_in_time = datetime.now(timezone.utc)

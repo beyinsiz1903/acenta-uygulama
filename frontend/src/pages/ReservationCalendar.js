@@ -3088,10 +3088,10 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
                               </div>
                             )}
 
-                            {/* Empty cell indicator */}
+                            {/* Empty cell indicator - Modern */}
                             {!booking && !roomBlock && (
                               <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                                <Plus className="w-6 h-6 text-gray-400" />
+                                <Plus className="w-5 h-5 text-blue-400" />
                               </div>
                             )}
                             

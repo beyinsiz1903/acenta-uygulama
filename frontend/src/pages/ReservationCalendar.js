@@ -2786,12 +2786,15 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
 
                   return sortedTypes.map((roomType) => (
                     <div key={roomType}>
-                      {/* Room Type Header */}
-                      <div className="sticky left-0 z-10 bg-gradient-to-r from-blue-600 to-blue-500 text-white">
-                        <div className="flex items-center p-3 border-b border-blue-400">
-                          <Building2 className="w-5 h-5 mr-2" />
-                          <span className="font-bold text-lg uppercase tracking-wide">
-                            {roomType} ({groupedRooms[roomType].length} rooms)
+                      {/* Room Type Header - Minimal Style */}
+                      <div className="sticky left-0 z-10 bg-gradient-to-r from-slate-100 to-gray-100 border-b-2 border-slate-300">
+                        <div className="flex items-center px-4 py-2">
+                          <Building2 className="w-4 h-4 mr-2 text-slate-600" />
+                          <span className="font-bold text-sm text-slate-700 tracking-wide uppercase">
+                            {roomType}
+                          </span>
+                          <span className="ml-2 text-xs text-slate-500 font-normal">
+                            {groupedRooms[roomType].length} odalar
                           </span>
                         </div>
                       </div>

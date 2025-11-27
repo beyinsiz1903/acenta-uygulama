@@ -118,6 +118,18 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
     try {
       // Calculate date range for calendar view
       const startDate = new Date(currentDate);
+  // Opens Reports tab Pickup Pace for a given arrival date
+  const openPickupPaceForDate = (dateStr) => {
+    if (!dateStr) return;
+    // Store target date so Reports/PickupPaceReport can pick it up on load
+    try {
+      localStorage.setItem('pickup_target_date', dateStr);
+    } catch (e) {
+      console.warn('Unable to persist pickup target date', e);
+    }
+    window.open('/pms?tab=reports', '_blank');
+  };
+
       startDate.setDate(startDate.getDate() - 7); // 1 week before
       const endDate = new Date(currentDate);
       endDate.setDate(endDate.getDate() + daysToShow + 7); // Show range + 1 week after

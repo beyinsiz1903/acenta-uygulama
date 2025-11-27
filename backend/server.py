@@ -6632,12 +6632,16 @@ async def get_bookings(
                 first_name = guest.get('first_name', '')
                 last_name = guest.get('last_name', '')
                 booking['guest_name'] = f"{first_name} {last_name}".strip() or 'Unknown Guest'
+            else:
+                print(f"⚠️ Guest not found for guest_id: {booking['guest_id']}")
         
-        # Add room_number if not present
+        # Add room_number if not present  
         if not booking.get('room_number') and booking.get('room_id'):
             room = await db.rooms.find_one({'id': booking['room_id']}, {'room_number': 1, '_id': 0})
             if room:
                 booking['room_number'] = room.get('room_number', 'N/A')
+            else:
+                print(f"⚠️ Room not found for room_id: {booking['room_id']}")
         
         # Map rate_type values
         if 'rate_type' in booking:
@@ -6657,6 +6661,10 @@ async def get_bookings(
                 booking['market_segment'] = segment_map[booking['market_segment']]
         
         bookings.append(booking)
+    
+    print(f"📊 Enriched {len(bookings)} bookings with guest_name and room_number")
+    if bookings:
+        print(f"   Sample booking: guest_name={bookings[0].get('guest_name')}, room_number={bookings[0].get('room_number')}")
     
     return bookings
 

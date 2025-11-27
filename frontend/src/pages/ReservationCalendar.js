@@ -2644,6 +2644,9 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Quick Booking</DialogTitle>
+            <DialogDescription>
+              Create a new reservation for the selected room and date
+            </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleCreateBooking} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">

@@ -27,7 +27,7 @@ import time
 from datetime import datetime, timezone
 
 # Configuration
-BACKEND_URL = "https://takvim-fix.preview.emergentagent.com/api"
+BACKEND_URL = "https://reservation-display.preview.emergentagent.com/api"
 TEST_EMAIL = "admin@hotel.com"
 TEST_PASSWORD = "admin123"
 

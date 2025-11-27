@@ -218,7 +218,7 @@
 ## 📋 QUICK START GUIDE
 
 **Login:**
-- URL: https://takvim-fix.preview.emergentagent.com
+- URL: https://reservation-display.preview.emergentagent.com
 - Demo: demo@hotel.com / demo123
 
 **New User Registration:**

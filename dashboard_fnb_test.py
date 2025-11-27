@@ -20,7 +20,7 @@ class DashboardFnBTester:
                         self.base_url = line.split('=')[1].strip() + '/api'
                         break
         except:
-            self.base_url = "https://takvim-fix.preview.emergentagent.com/api"
+            self.base_url = "https://reservation-display.preview.emergentagent.com/api"
         
         self.token = None
         self.tenant_id = None

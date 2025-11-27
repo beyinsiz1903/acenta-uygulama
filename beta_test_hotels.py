@@ -13,7 +13,7 @@ import random
 from typing import Dict, List, Optional
 
 # Configuration
-BACKEND_URL = "https://takvim-fix.preview.emergentagent.com/api"
+BACKEND_URL = "https://reservation-display.preview.emergentagent.com/api"
 
 class Color:
     """Terminal colors"""

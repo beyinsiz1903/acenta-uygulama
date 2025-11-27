@@ -388,6 +388,24 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
   const handleDragStart = (e, booking) => {
     setDraggingBooking(booking);
     e.dataTransfer.effectAllowed = 'move';
+    
+    // Create custom drag image (full booking card preview)
+    const dragPreview = document.createElement('div');
+    dragPreview.className = 'bg-blue-500 text-white rounded-lg shadow-2xl p-3 border-2 border-blue-300';
+    dragPreview.style.position = 'absolute';
+    dragPreview.style.top = '-1000px';
+    dragPreview.style.width = '200px';
+    dragPreview.innerHTML = `
+      <div class="font-bold text-sm">${booking.guest_name || 'Guest'}</div>
+      <div class="text-xs mt-1">💰 $${booking.total_amount?.toFixed(0) || '0'}</div>
+      <div class="text-xs mt-1">🏨 Moving booking...</div>
+    `;
+    document.body.appendChild(dragPreview);
+    e.dataTransfer.setDragImage(dragPreview, 100, 40);
+    
+    setTimeout(() => {
+      document.body.removeChild(dragPreview);
+    }, 0);
   };
 
   const handleDragOver = (e, roomId, date) => {

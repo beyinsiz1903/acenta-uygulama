@@ -12,6 +12,7 @@ import AIActivityLog from '@/components/AIActivityLog';
 import StaffTaskManager from '@/components/StaffTaskManager';
 import FeedbackSystem from '@/components/FeedbackSystem';
 import AllotmentGrid from '@/components/AllotmentGrid';
+import GroupRevenueByCompany from '@/components/GroupRevenueByCompany';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

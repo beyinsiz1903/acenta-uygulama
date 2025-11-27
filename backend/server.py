@@ -6608,6 +6608,11 @@ async def get_bookings(
                     if 'market_segment' in booking:
                         segment_map = {'business': 'corporate'}
                         if booking['market_segment'] in segment_map:
+                            booking['market_segment'] = segment_map[booking['market_segment']]
+                    bookings.append(booking)
+                return bookings
+
+    # Fallback: Build query
 
 class RatePlanFilter(BaseModel):
     channel: Optional[ChannelType] = None

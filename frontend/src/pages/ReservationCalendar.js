@@ -1458,8 +1458,8 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
         <Card>
           <CardContent className="p-0 overflow-x-auto">
             <div className="min-w-max">
-              {/* Date Header Row - Modern Design (Non-Sticky) */}
-              <div className="flex border-b bg-white shadow-sm">
+              {/* Date Header Row - Modern Design (Non-Sticky - Forced) */}
+              <div className="flex border-b bg-white shadow-sm" style={{ position: 'static' }}>
                 <div className="w-40 flex-shrink-0 p-3 border-r font-bold text-gray-800 text-sm">
                   ODALAR
                 </div>

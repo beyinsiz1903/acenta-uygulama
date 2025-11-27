@@ -5627,7 +5627,8 @@ async def calculate_folio_balance(folio_id: str, tenant_id: str) -> float:
         
         payments = await db.payments.find({
             'folio_id': folio_id,
-            'tenant_id': tenant_id
+            'tenant_id': tenant_id,
+            'voided': False
         }).to_list(1000)
         
         total_charges = sum(float(c.get('total', 0)) for c in charges)

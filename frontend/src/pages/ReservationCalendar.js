@@ -549,10 +549,15 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
   const getDateRange = () => {
     const dates = [];
     const start = new Date(currentDate);
-    start.setHours(0, 0, 0, 0);
+    
+    // Get start date components in local time
+    const startYear = start.getFullYear();
+    const startMonth = start.getMonth();
+    const startDay = start.getDate();
 
     for (let i = 0; i < daysToShow; i++) {
-      const date = new Date(start.getTime() + i * 24 * 60 * 60 * 1000);  // Add i days in milliseconds
+      // Create date in UTC to avoid timezone issues
+      const date = new Date(Date.UTC(startYear, startMonth, startDay + i));
       dates.push(date);
     }
     return dates;

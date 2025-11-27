@@ -2938,10 +2938,10 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
         <Card>
           <CardContent className="p-0 overflow-auto max-h-[600px]">
             <div className="min-w-max">
-              {/* Date Header Row - Sticky with daily rates */}
-              <div className="flex border-b bg-gray-50 sticky top-0 z-30 shadow-sm">
-                <div className="w-32 flex-shrink-0 p-3 border-r font-semibold">
-                  Room
+              {/* Date Header Row - Modern Sticky Header */}
+              <div className="flex border-b bg-white sticky top-0 z-30 shadow-md">
+                <div className="w-32 flex-shrink-0 p-3 border-r font-bold text-gray-700 text-xs uppercase tracking-wider">
+                  Odalar
                 </div>
                 {dateRange.map((date, idx) => {
                   const intensity = getHeatmapIntensity(date);

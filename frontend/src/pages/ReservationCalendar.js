@@ -58,6 +58,7 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
   const [showChargeForm, setShowChargeForm] = useState(false);
   const [showTransferDialog, setShowTransferDialog] = useState(false);
   const [showActivityLog, setShowActivityLog] = useState(false);
+  const [selectedChargesForTransfer, setSelectedChargesForTransfer] = useState([]);
   const [paymentForm, setPaymentForm] = useState({
     amount: '',
     method: 'card',

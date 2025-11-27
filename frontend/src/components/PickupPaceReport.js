@@ -50,6 +50,34 @@ const PickupPaceReport = () => {
         params: {
           target_date: targetDate,
           lookback_days: lookbackDays,
+        <div>
+          <Label className="text-xs text-gray-600">Filters</Label>
+          <div className="flex items-center gap-3 mt-1 text-xs text-gray-700">
+            <label className="inline-flex items-center gap-1 cursor-pointer">
+              <input
+                type="checkbox"
+                className="rounded border-gray-300"
+                checked={groupOnly}
+                onChange={(e) => {
+                  const value = e.target.checked;
+                  setGroupOnly(value);
+                  try {
+                    localStorage.setItem('pickup_group_only', String(value));
+                  } catch (err) {
+                    console.warn('Unable to persist pickup_group_only', err);
+                  }
+                }}
+              />
+              <span>Only group bookings</span>
+            </label>
+            {companyId && (
+              <span className="px-2 py-0.5 bg-blue-50 border border-blue-200 rounded-full text-[11px]">
+                Filtered by company (Group drill-down)
+              </span>
+            )}
+          </div>
+        </div>
+
           group_only: groupOnly,
           company_id: companyId || undefined,
         },

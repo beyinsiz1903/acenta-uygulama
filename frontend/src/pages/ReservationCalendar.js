@@ -2988,7 +2988,7 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
                                       )}
                                     </div>
                                   </div>
-                                </div>
+                                )}
                                 
                                 {/* Enhanced Rate overlay - shown on hover */}
                                 <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-90 text-white text-[10px] px-2 py-1.5 opacity-0 group-hover:opacity-100 transition-opacity">

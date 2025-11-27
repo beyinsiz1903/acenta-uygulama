@@ -3145,6 +3145,152 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
                 </div>
               </div>
               
+              {/* Payments List */}
+              <div>
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="text-lg font-semibold">Payments</h3>
+                  <Button 
+                    size="sm" 
+                    onClick={() => {
+                      setPaymentForm({
+                        amount: selectedBookingFolio?.balance?.toFixed(2) || '',
+                        method: 'card',
+                        reference: '',
+                        notes: ''
+                      });
+                      setShowPaymentForm(!showPaymentForm);
+                    }}
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Record Payment
+                  </Button>
+                </div>
+                
+                {/* Payment Form */}
+                {showPaymentForm && (
+                  <Card className="mb-4 border-blue-200 bg-blue-50">
+                    <CardContent className="p-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label>Amount *</Label>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            value={paymentForm.amount}
+                            onChange={(e) => setPaymentForm({...paymentForm, amount: e.target.value})}
+                            placeholder="0.00"
+                          />
+                        </div>
+                        <div>
+                          <Label>Payment Method *</Label>
+                          <select
+                            className="w-full border rounded-md p-2"
+                            value={paymentForm.method}
+                            onChange={(e) => setPaymentForm({...paymentForm, method: e.target.value})}
+                          >
+                            <option value="card">Credit Card</option>
+                            <option value="cash">Cash</option>
+                            <option value="bank_transfer">Bank Transfer</option>
+                            <option value="check">Check</option>
+                          </select>
+                        </div>
+                        <div>
+                          <Label>Reference Number</Label>
+                          <Input
+                            value={paymentForm.reference}
+                            onChange={(e) => setPaymentForm({...paymentForm, reference: e.target.value})}
+                            placeholder="Transaction ref..."
+                          />
+                        </div>
+                        <div>
+                          <Label>Notes</Label>
+                          <Input
+                            value={paymentForm.notes}
+                            onChange={(e) => setPaymentForm({...paymentForm, notes: e.target.value})}
+                            placeholder="Additional notes..."
+                          />
+                        </div>
+                      </div>
+                      <div className="flex gap-2 mt-4">
+                        <Button 
+                          size="sm"
+                          onClick={async () => {
+                            try {
+                              if (!paymentForm.amount || parseFloat(paymentForm.amount) <= 0) {
+                                toast.error('Please enter a valid amount');
+                                return;
+                              }
+                              
+                              await axios.post(`/folio/${selectedBookingFolio.id}/payment`, {
+                                amount: parseFloat(paymentForm.amount),
+                                payment_method: paymentForm.method,
+                                payment_type: 'interim',
+                                reference_number: paymentForm.reference || undefined,
+                                notes: paymentForm.notes || undefined
+                              });
+                              
+                              toast.success('Payment recorded successfully');
+                              
+                              // Reload folio details
+                              const detailsRes = await axios.get(`/folio/${selectedBookingFolio.id}`);
+                              setFolioCharges(detailsRes.data.charges || []);
+                              setFolioPayments(detailsRes.data.payments || []);
+                              setSelectedBookingFolio({...selectedBookingFolio, balance: detailsRes.data.balance});
+                              
+                              setShowPaymentForm(false);
+                              setPaymentForm({ amount: '', method: 'card', reference: '', notes: '' });
+                            } catch (error) {
+                              toast.error('Failed to record payment');
+                              console.error(error);
+                            }
+                          }}
+                        >
+                          Save Payment
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => {
+                            setShowPaymentForm(false);
+                            setPaymentForm({ amount: '', method: 'card', reference: '', notes: '' });
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+                
+                <div className="space-y-2 max-h-96 overflow-y-auto">
+                  {folioPayments.length === 0 ? (
+                    <div className="text-center text-gray-400 py-8">No payments recorded</div>
+                  ) : (
+                    folioPayments.map((payment) => (
+                      <Card key={payment.id} className="border-green-200 bg-green-50">
+                        <CardContent className="p-4">
+                          <div className="flex justify-between">
+                            <div>
+                              <div className="font-semibold">{payment.payment_method?.toUpperCase()}</div>
+                              <div className="text-sm text-gray-600">
+                                {payment.reference_number || 'No reference'}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                {new Date(payment.processed_at).toLocaleDateString()}
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="font-bold text-green-600">-${payment.amount?.toFixed(2) || '0.00'}</div>
+                              <div className="text-xs text-gray-600">{payment.payment_type}</div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))
+                  )}
+                </div>
+              </div>
+              
               {/* Totals */}
               <div className="border-t pt-4">
                 <div className="flex justify-between text-lg font-bold">

@@ -10550,6 +10550,66 @@ backend:
         agent: "testing"
         comment: "✅ FOLIO AUTO-CREATION WORKING PERFECTLY - Comprehensive testing completed with 6/6 tests passed (100% success rate). VERIFIED: (1) POST /api/pms/bookings creates booking and returns HTTP 200 ✅, (2) Folio automatically created on booking creation (lines 6405-6416 in server.py) ✅, (3) GET /api/folio/booking/{booking_id} returns HTTP 200 immediately after booking creation ✅, (4) Folio has all required fields: folio_number, folio_type=guest, booking_id, guest_id ✅, (5) Folio number follows F-YYYY-##### format (e.g., F-2025-00362) ✅, (6) Existing bookings can retrieve folios successfully ✅. TESTED WITH: demo@hotel.com / demo123 credentials. Created test booking (ID: f0c44443-e29f-4c53-8801-f857120b7cb5) and verified folio (ID: 6f5d9914-a7e6-41c7-8586-ab4798469b4c, Number: F-2025-00362) was immediately available. Also verified existing bookings have folios. NOTE: Found 20 old bookings without folios (created before auto-creation feature was implemented), but all NEW bookings correctly create folios. FIX CONFIRMED: 'No folio found' issue is RESOLVED for new bookings!"
 
+  - task: "Folio System - Payment Void"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "POST /api/payment/{payment_id}/void - Void a payment with reason, mark as voided, recalculate folio balance"
+      - working: true
+        agent: "testing"
+        comment: "✅ PAYMENT VOID WORKING PERFECTLY - All tests passed (4/4). VERIFIED: (1) POST /api/payment/{payment_id}/void returns HTTP 200 with success message ✅, (2) Payment marked as voided=True in database ✅, (3) Voided payment appears in activity log with action='voided' ✅, (4) Folio balance recalculated correctly after void (balance increased by voided payment amount) ✅. CRITICAL BUG FIXED: calculate_folio_balance function was not excluding voided payments from balance calculation (line 5630 in server.py). Added 'voided': False filter to payments query. Balance formula now correctly: (active charges) - (active payments). Tested with demo@hotel.com credentials. Response time: ~40ms."
+
+  - task: "Folio System - Activity Log"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "GET /api/folio/{folio_id}/activity-log - Returns comprehensive activity log with charges, payments, and operations sorted by timestamp"
+      - working: true
+        agent: "testing"
+        comment: "✅ ACTIVITY LOG WORKING PERFECTLY - All tests passed (6/6). VERIFIED: (1) GET /api/folio/{folio_id}/activity-log returns HTTP 200 with activities array ✅, (2) Charges present in activity log (type='charge', action='added' or 'voided') ✅, (3) Payments present in activity log (type='payment', action='processed' or 'voided') ✅, (4) Operations present in activity log (type='operation') ✅, (5) Activities sorted by timestamp (newest first) ✅, (6) All required fields present: type, action, timestamp, description, amount, user, details ✅. Response includes folio object, activities array, and total_count. Response time: ~40ms."
+
+  - task: "Folio System - Balance Calculation"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "calculate_folio_balance function - Calculate balance excluding voided charges and voided payments"
+      - working: true
+        agent: "testing"
+        comment: "✅ BALANCE CALCULATION WORKING PERFECTLY - All tests passed (4/4). VERIFIED: (1) Voided charges excluded from balance calculation ✅, (2) Voided payments excluded from balance calculation ✅, (3) Balance formula correct: (active charges) - (active payments) ✅, (4) Balance matches expected calculation ✅. CRITICAL BUG FIXED: Function was filtering charges by voided=False but NOT filtering payments by voided status. Added 'voided': False filter to payments query at line 5630. Balance now correctly excludes both voided charges and voided payments. Tested with multiple scenarios including voided items."
+
+  - task: "Folio System - Folio Transfer"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "POST /api/folio/transfer - Transfer charges from one folio to another, update both folio balances, create operation record"
+      - working: true
+        agent: "testing"
+        comment: "✅ FOLIO TRANSFER WORKING PERFECTLY - All tests passed (5/5). VERIFIED: (1) POST /api/folio/transfer returns HTTP 200 with operation details ✅, (2) Charges successfully moved to destination folio (verified via activity log) ✅, (3) Source folio balance updated correctly (decreased) ✅, (4) Destination folio balance updated correctly (increased) ✅, (5) Operation record created in folio_operations collection ✅. Transfer operation includes: operation_type='transfer', from_folio_id, to_folio_id, charge_ids, reason, performed_by, performed_at. Both folios' balances recalculated using calculate_folio_balance function. Response time: ~45ms."
+
 metadata:
   created_by: "testing_agent"
   version: "1.1"

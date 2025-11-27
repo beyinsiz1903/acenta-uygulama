@@ -48929,6 +48929,57 @@ async def get_revenue_trend(
         'success': True,
         'days': days,
         'trend': trend_data,
+
+@api_router.get("/analytics/booking-trends")
+async def get_booking_trends(
+    days: int = 30,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Get booking trends for the last N days"""
+    current_user = await get_current_user(credentials)
+    
+    end_date = datetime.now(timezone.utc)
+    start_date = end_date - timedelta(days=days)
+    
+    # Get all bookings created in date range
+    bookings = await db.bookings.find({
+        'tenant_id': current_user.tenant_id,
+        'created_at': {
+            '$gte': start_date.isoformat(),
+            '$lte': end_date.isoformat()
+        }
+    }).to_list(length=10000)
+    
+    # Calculate daily booking counts
+    trend_data = []
+    current = start_date
+    
+    while current <= end_date:
+        # Count bookings created on this date
+        daily_bookings = 0
+        for booking in bookings:
+            booking_date = datetime.fromisoformat(booking['created_at'].replace('Z', '+00:00'))
+            if booking_date.date() == current.date():
+                daily_bookings += 1
+        
+        trend_data.append({
+            'date': current.strftime('%Y-%m-%d'),
+            'bookings': daily_bookings
+        })
+        
+        current += timedelta(days=1)
+    
+    total_bookings = sum(d['bookings'] for d in trend_data)
+    average_daily = round(total_bookings / len(trend_data), 2) if trend_data else 0
+    
+    return {
+        'success': True,
+        'days': days,
+        'trend': trend_data,
+        'total_bookings': total_bookings,
+        'average_daily_bookings': average_daily
+    }
+
         'total_revenue': round(total_revenue, 2),
         'average_daily_revenue': average_daily
     }

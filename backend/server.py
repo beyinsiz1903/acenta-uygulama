@@ -6762,8 +6762,10 @@ async def create_rate_plan(
 ):
     data = payload.model_dump()
     data["tenant_id"] = current_user.tenant_id
-    # Map base_price to base_rate for the RatePlan model
-    data["base_rate"] = data.pop("base_price")
+    # Map base_price to base_rate for the RatePlan model and keep base_price for compatibility
+    base_price = data.get("base_price")
+    data["base_rate"] = base_price
+    data["base_price"] = base_price  # Keep for compatibility
     if data.get("valid_from"):
         data["valid_from"] = data["valid_from"].isoformat()
     if data.get("valid_to"):

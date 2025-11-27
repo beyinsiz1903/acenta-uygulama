@@ -42,6 +42,11 @@ const FnBComplete = () => {
           <TabsTrigger value="beo">
             <FileText className="w-4 h-4 mr-2" />BEO
           </TabsTrigger>
+        <TabsContent value="outlet-sales">
+          <FnBOutletDashboard />
+        </TabsContent>
+
+
           <TabsTrigger value="kitchen">
             <Monitor className="w-4 h-4 mr-2" />Kitchen Display
           </TabsTrigger>

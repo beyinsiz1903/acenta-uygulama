@@ -1013,6 +1013,66 @@ const PMSModule = ({ user, tenant, onLogout }) => {
           </div>
         </div>
 
+
+        {/* Quick Actions Toolbar */}
+        <Card className="border-blue-200 bg-gradient-to-r from-blue-50 to-purple-50">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="text-sm font-semibold text-gray-700">Quick Actions:</div>
+              </div>
+              <div className="flex gap-2">
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={() => {
+                    setOpenDialog('newbooking');
+                    toast.info('Opening new booking form...');
+                  }}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  New Booking
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={() => {
+                    setOpenDialog('newguest');
+                  }}
+                >
+                  <UserPlus className="w-4 h-4 mr-2" />
+                  New Guest
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={async () => {
+                    try {
+                      const response = await axios.get('/reports/flash-report');
+                      toast.success('Flash report generated!');
+                      console.log('Flash report:', response.data);
+                    } catch (error) {
+                      toast.error('Failed to generate report');
+                    }
+                  }}
+                >
+                  <FileText className="w-4 h-4 mr-2" />
+                  Flash Report
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={() => loadData()}
+                >
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Refresh
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+
         <Tabs value={activeTab} className="w-full" onValueChange={(v) => {
           setActiveTab(v);
           if (v === 'frontdesk') loadFrontDeskData();

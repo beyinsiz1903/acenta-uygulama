@@ -1638,11 +1638,74 @@ const PMSModule = ({ user, tenant, onLogout }) => {
           <TabsContent value="rooms" className="space-y-4">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-semibold">Rooms ({rooms.length})</h2>
-              <Button onClick={() => setOpenDialog('room')}>
-                <Plus className="w-4 h-4 mr-2" />
-                Add Room
-              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  variant={bulkRoomMode ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => {
+                    setBulkRoomMode(!bulkRoomMode);
+                    setSelectedRooms([]);
+                  }}
+                >
+                  <CheckSquare className="w-4 h-4 mr-2" />
+                  Bulk Mode
+                </Button>
+                <Button onClick={() => setOpenDialog('room')}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Room
+                </Button>
+              </div>
             </div>
+            
+            {/* Bulk Actions Toolbar */}
+            {bulkRoomMode && selectedRooms.length > 0 && (
+              <Card className="border-purple-200 bg-purple-50">
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-center">
+                    <div className="font-semibold">{selectedRooms.length} room(s) selected</div>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        onClick={async () => {
+                          const newStatus = window.prompt('New status:', 'clean');
+                          if (newStatus) {
+                            try {
+                              let success = 0;
+                              for (const roomId of selectedRooms) {
+                                try {
+                                  await axios.patch(`/pms/rooms/${roomId}`, { status: newStatus });
+                                  success++;
+                                } catch (error) {
+                                  console.error(`Failed to update room ${roomId}:`, error);
+                                }
+                              }
+                              toast.success(`${success}/${selectedRooms.length} rooms updated`);
+                              setSelectedRooms([]);
+                              setBulkRoomMode(false);
+                              loadData();
+                            } catch (error) {
+                              toast.error('Bulk update failed');
+                            }
+                          }
+                        }}
+                      >
+                        Update Status
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setSelectedRooms([]);
+                          setBulkRoomMode(false);
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {rooms.map((room) => {
                 const roomBlock = roomBlocks.find(b => b.room_id === room.id && b.status === 'active');

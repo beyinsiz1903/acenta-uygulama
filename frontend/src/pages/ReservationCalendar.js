@@ -1846,18 +1846,51 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
                 <Input value={selectedRoom?.room_number || ''} disabled />
               </div>
               <div>
-                <Label>Guest *</Label>
-                <select
-                  className="w-full border rounded-md p-2"
-                  value={newBooking.guest_id}
-                  onChange={(e) => setNewBooking({...newBooking, guest_id: e.target.value})}
-                  required
-                >
-                  <option value="">Select guest...</option>
-                  {guests.map(guest => (
-                    <option key={guest.id} value={guest.id}>{guest.name}</option>
-                  ))}
-                </select>
+                <Label>Misafir *</Label>
+                <div className="flex gap-2">
+                  <select
+                    className="flex-1 border rounded-md p-2"
+                    value={newBooking.guest_id}
+                    onChange={(e) => {
+                      if (e.target.value === 'NEW') {
+                        setNewBooking({...newBooking, guest_id: '', guest_name: '', guest_email: '', guest_phone: ''});
+                      } else {
+                        setNewBooking({...newBooking, guest_id: e.target.value});
+                      }
+                    }}
+                  >
+                    <option value="">Misafir seçin...</option>
+                    <option value="NEW" className="font-bold text-blue-600">+ Yeni Misafir Ekle</option>
+                    {guests.map(guest => (
+                      <option key={guest.id} value={guest.id}>{guest.name}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                {/* New Guest Form */}
+                {newBooking.guest_id === '' && newBooking.guest_name !== undefined && (
+                  <div className="mt-3 p-3 border rounded-md bg-blue-50 space-y-2">
+                    <div className="text-sm font-semibold text-blue-900 mb-2">Yeni Misafir Bilgileri</div>
+                    <Input
+                      placeholder="İsim Soyisim *"
+                      value={newBooking.guest_name || ''}
+                      onChange={(e) => setNewBooking({...newBooking, guest_name: e.target.value})}
+                      required
+                    />
+                    <Input
+                      type="email"
+                      placeholder="E-posta"
+                      value={newBooking.guest_email || ''}
+                      onChange={(e) => setNewBooking({...newBooking, guest_email: e.target.value})}
+                    />
+                    <Input
+                      type="tel"
+                      placeholder="Telefon"
+                      value={newBooking.guest_phone || ''}
+                      onChange={(e) => setNewBooking({...newBooking, guest_phone: e.target.value})}
+                    />
+                  </div>
+                )}
               </div>
             </div>
             

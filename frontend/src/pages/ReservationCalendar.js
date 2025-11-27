@@ -2899,7 +2899,7 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
                                 className={`absolute top-2 left-1 rounded-lg ${getSegmentColor(
                                   booking.market_segment || booking.rate_type
                                 )} text-white text-xs overflow-hidden shadow-sm hover:shadow-lg transition-all cursor-move z-20 group ${
-                                  draggingBooking?.id === booking.id ? 'opacity-50' : ''
+                                  draggingBooking?.id === booking.id ? 'opacity-100 scale-105 shadow-2xl ring-4 ring-blue-400' : ''
                                 } ${hasConflict(room.id, date) ? 'ring-2 ring-red-500 animate-pulse' : ''}
                                 ${showDeluxePanel && isGroupBooking(booking.id) ? 'ring-2 ring-amber-400' : ''}`}
                                 style={{

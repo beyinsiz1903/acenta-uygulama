@@ -229,7 +229,7 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
     }
     
     try {
-      await axios.post('/api/pms/bookings', newBooking);
+      await axios.post('/pms/bookings', newBooking);
       toast.success('Booking created successfully!');
       setShowNewBookingDialog(false);
       loadCalendarData();

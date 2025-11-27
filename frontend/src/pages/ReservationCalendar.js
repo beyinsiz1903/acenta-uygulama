@@ -2900,6 +2900,8 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
                         return (
                           <div
                             key={idx}
+                            data-date={date.toISOString()}
+                            data-room-id={room.id}
                             className={`w-24 flex-shrink-0 border-r border-gray-100 relative cursor-pointer hover:bg-gray-50 transition-colors ${
                               isToday(date) ? 'bg-blue-50/50' : 'bg-white'
                             } ${isDragOver ? 'bg-green-50 ring-2 ring-green-400' : ''}

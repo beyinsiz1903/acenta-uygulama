@@ -619,9 +619,9 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
       return dayStr >= checkIn && dayStr < checkOut;
     });
     
-    // Enhanced debug for troubleshooting
-    if (!window.debuggedRooms) window.debuggedRooms = {};
-    if (!window.debuggedRooms[roomId]) {
+    // Debug only if enabled
+    if (DEBUG_ROOMS && !window.debuggedRooms) window.debuggedRooms = {};
+    if (DEBUG_ROOMS && !window.debuggedRooms[roomId]) {
       window.debuggedRooms[roomId] = true;
       console.log(`\n🔬 getBookingForRoomOnDate DEBUG (Room: ${roomId.substring(0,8)}..., Date: ${dayStr}):`);
       console.log('  Total bookings to search:', bookings.length);

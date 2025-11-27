@@ -3200,6 +3200,7 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
                   console.log('💳 Payments found:', detailsRes.data.payments?.length || 0);
                   
                   setFolioCharges(detailsRes.data.charges || []);
+                  setFolioPayments(detailsRes.data.payments || []);
                   
                   // Close sidebar and open folio dialog
                   setShowSidebar(false);

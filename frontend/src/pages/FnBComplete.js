@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Home, ChefHat, FileText, Package, Monitor } from 'lucide-react';
 import { toast } from 'sonner';
+import FnBOutletDashboard from '@/components/FnBOutletDashboard';
 
 const FnBComplete = () => {
   const navigate = useNavigate();

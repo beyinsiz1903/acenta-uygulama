@@ -525,30 +525,31 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 16px;
-        font-weight: 700;
+        font-size: 20px;
+        font-weight: 900;
         color: white;
-        padding: 12px 16px;
+        padding: 0 20px;
         text-align: center;
-        text-shadow: 0 3px 6px rgba(0,0,0,0.5);
-        letter-spacing: 0.3px;
-        background: rgba(255,255,255,0.1);
+        text-shadow: 0 4px 8px rgba(0,0,0,0.6);
+        letter-spacing: 0.5px;
+        background: rgba(255,255,255,0.15);
+        line-height: 1.2;
       ">
         ${booking.guest_name || 'Misafir'}
       </div>
-      <div style="display: flex; height: 22px; background: rgba(0,0,0,0.15);">
+      <div style="display: flex; height: 20px; background: rgba(0,0,0,0.2);">
         ${cellsHTML}
       </div>
       <div style="
         background: linear-gradient(135deg, #000000 0%, #1e293b 100%);
         color: #fbbf24;
-        font-size: 12px;
+        font-size: 13px;
         padding: 4px 12px;
-        font-weight: 800;
+        font-weight: 900;
         text-align: center;
-        height: 22px;
-        line-height: 14px;
-        letter-spacing: 1px;
+        height: 20px;
+        line-height: 12px;
+        letter-spacing: 1.2px;
         text-shadow: 0 2px 4px rgba(0,0,0,0.5);
       ">
         ${bookingSpan} GECE • $${booking.total_amount?.toFixed(0) || '0'}

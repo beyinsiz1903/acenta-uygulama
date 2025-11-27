@@ -700,15 +700,10 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
 
   // Check if booking starts on this date
   const isBookingStart = (booking, date) => {
-    // Create new Date objects to avoid mutation
-    const checkIn = new Date(booking.check_in);
-    const current = new Date(date);
+    const dayStr = toDateStringUTC(date);
+    const checkInStr = toDateStringUTC(booking.check_in);
     
-    // Compare only dates (year, month, day)
-    const checkInDate = new Date(checkIn.getFullYear(), checkIn.getMonth(), checkIn.getDate());
-    const currentDate = new Date(current.getFullYear(), current.getMonth(), current.getDate());
-
-    return checkInDate.getTime() === currentDate.getTime();
+    return dayStr === checkInStr;
   };
 
   const getStatusColor = (status) => {

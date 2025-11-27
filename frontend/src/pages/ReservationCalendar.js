@@ -2672,6 +2672,52 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
           </CardContent>
         </Card>
 
+
+
+        {/* Occupancy Graph - Above Calendar */}
+        <Card className="bg-white shadow-sm">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-sm font-semibold text-gray-700">Doluluk %</div>
+              <div className="text-xs text-gray-500">Son {daysToShow} Gün</div>
+            </div>
+            <div className="h-16 flex items-end gap-0.5">
+              {dateRange.map((date, idx) => {
+                const dayBookings = bookings.filter(b => {
+                  const checkIn = new Date(b.check_in);
+                  const checkOut = new Date(b.check_out);
+                  checkIn.setHours(0, 0, 0, 0);
+                  checkOut.setHours(0, 0, 0, 0);
+                  date.setHours(0, 0, 0, 0);
+                  return date >= checkIn && date < checkOut && b.status !== 'cancelled';
+                }).length;
+                
+                const occupancyRate = rooms.length > 0 ? (dayBookings / rooms.length) * 100 : 0;
+                const height = Math.max((occupancyRate / 100) * 64, 4); // Min 4px height
+                
+                return (
+                  <div key={idx} className="flex-1 flex flex-col items-center gap-1">
+                    <div 
+                      className={`w-full rounded-t transition-all cursor-pointer ${
+                        occupancyRate >= 90 ? 'bg-red-500 hover:bg-red-600' :
+                        occupancyRate >= 80 ? 'bg-orange-400 hover:bg-orange-500' :
+                        occupancyRate >= 70 ? 'bg-yellow-400 hover:bg-yellow-500' :
+                        occupancyRate >= 50 ? 'bg-green-400 hover:bg-green-500' :
+                        'bg-blue-300 hover:bg-blue-400'
+                      }`}
+                      style={{ height: `${height}px` }}
+                      title={`${new Date(date).toLocaleDateString()}: ${occupancyRate.toFixed(1)}% (${dayBookings}/${rooms.length})`}
+                    ></div>
+                    <div className="text-[9px] text-gray-500 font-semibold">
+                      {occupancyRate.toFixed(0)}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Calendar Grid */}
         <Card>
           <CardContent className="p-0 overflow-x-auto">

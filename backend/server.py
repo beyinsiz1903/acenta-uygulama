@@ -49892,3 +49892,197 @@ async def log_audit_trail(
 
 
 
+
+
+# ============================================================================
+# ANALYTICS ENDPOINTS
+# ============================================================================
+
+@api_router.get("/analytics/occupancy-trend")
+async def get_occupancy_trend(
+    days: int = 30,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Get occupancy trend for the last N days"""
+    current_user = await get_current_user(credentials)
+    
+    from datetime import datetime, timedelta
+    
+    end_date = datetime.now()
+    start_date = end_date - timedelta(days=days)
+    
+    # Get all bookings in date range
+    bookings = await db.bookings.find({
+        'tenant_id': current_user.tenant_id,
+        'status': {'$ne': 'cancelled'},
+        '$or': [
+            {
+                'check_in': {
+                    '$gte': start_date.isoformat(),
+                    '$lte': end_date.isoformat()
+                }
+            },
+            {
+                'check_out': {
+                    '$gte': start_date.isoformat(),
+                    '$lte': end_date.isoformat()
+                }
+            }
+        ]
+    }).to_list(length=10000)
+    
+    # Get total rooms
+    total_rooms = await db.rooms.count_documents({'tenant_id': current_user.tenant_id})
+    
+    # Calculate daily occupancy
+    trend_data = []
+    current = start_date
+    
+    while current <= end_date:
+        # Count rooms occupied on this date
+        occupied = 0
+        for booking in bookings:
+            check_in = datetime.fromisoformat(booking['check_in'].replace('Z', '+00:00'))
+            check_out = datetime.fromisoformat(booking['check_out'].replace('Z', '+00:00'))
+            
+            if check_in.date() <= current.date() < check_out.date():
+                occupied += 1
+        
+        occupancy_rate = (occupied / total_rooms * 100) if total_rooms > 0 else 0
+        
+        trend_data.append({
+            'date': current.strftime('%Y-%m-%d'),
+            'occupancy_rate': round(occupancy_rate, 2),
+            'occupied_rooms': occupied,
+            'total_rooms': total_rooms
+        })
+        
+        current += timedelta(days=1)
+    
+    return {
+        'success': True,
+        'days': days,
+        'trend': trend_data,
+        'average_occupancy': round(sum(d['occupancy_rate'] for d in trend_data) / len(trend_data), 2) if trend_data else 0
+    }
+
+
+@api_router.get("/ai/pms/guest-patterns")
+async def get_guest_patterns(
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """AI-powered guest behavior pattern analysis"""
+    current_user = await get_current_user(credentials)
+    
+    from datetime import datetime, timedelta
+    
+    # Get recent bookings (last 90 days)
+    ninety_days_ago = datetime.now() - timedelta(days=90)
+    
+    bookings = await db.bookings.find({
+        'tenant_id': current_user.tenant_id,
+        'check_in': {'$gte': ninety_days_ago.isoformat()}
+    }).to_list(length=5000)
+    
+    # Analyze patterns
+    patterns = {
+        'booking_lead_time': {},
+        'stay_duration': {},
+        'preferred_room_types': {},
+        'booking_channels': {},
+        'peak_seasons': {},
+        'cancellation_rate': 0
+    }
+    
+    total_bookings = len(bookings)
+    cancelled = 0
+    lead_times = []
+    durations = []
+    room_types = {}
+    channels = {}
+    monthly_bookings = {}
+    
+    for booking in bookings:
+        # Lead time
+        if booking.get('created_at'):
+            created = datetime.fromisoformat(booking['created_at'].replace('Z', '+00:00'))
+            check_in = datetime.fromisoformat(booking['check_in'].replace('Z', '+00:00'))
+            lead_time = (check_in - created).days
+            lead_times.append(lead_time)
+        
+        # Duration
+        check_in = datetime.fromisoformat(booking['check_in'].replace('Z', '+00:00'))
+        check_out = datetime.fromisoformat(booking['check_out'].replace('Z', '+00:00'))
+        duration = (check_out - check_in).days
+        durations.append(duration)
+        
+        # Room type (get from room)
+        room = await db.rooms.find_one({'id': booking.get('room_id')})
+        if room:
+            room_type = room.get('room_type', 'standard')
+            room_types[room_type] = room_types.get(room_type, 0) + 1
+        
+        # Channel
+        channel = booking.get('booking_channel', 'direct')
+        channels[channel] = channels.get(channel, 0) + 1
+        
+        # Month
+        month = check_in.strftime('%B')
+        monthly_bookings[month] = monthly_bookings.get(month, 0) + 1
+        
+        # Cancellation
+        if booking.get('status') == 'cancelled':
+            cancelled += 1
+    
+    # Calculate averages and patterns
+    patterns['booking_lead_time'] = {
+        'average_days': round(sum(lead_times) / len(lead_times), 1) if lead_times else 0,
+        'distribution': {
+            'same_day': len([x for x in lead_times if x == 0]),
+            '1-7_days': len([x for x in lead_times if 1 <= x <= 7]),
+            '8-30_days': len([x for x in lead_times if 8 <= x <= 30]),
+            '30+_days': len([x for x in lead_times if x > 30])
+        }
+    }
+    
+    patterns['stay_duration'] = {
+        'average_nights': round(sum(durations) / len(durations), 1) if durations else 0,
+        'distribution': {
+            '1_night': len([x for x in durations if x == 1]),
+            '2-3_nights': len([x for x in durations if 2 <= x <= 3]),
+            '4-7_nights': len([x for x in durations if 4 <= x <= 7]),
+            '7+_nights': len([x for x in durations if x > 7])
+        }
+    }
+    
+    patterns['preferred_room_types'] = room_types
+    patterns['booking_channels'] = channels
+    patterns['peak_seasons'] = monthly_bookings
+    patterns['cancellation_rate'] = round((cancelled / total_bookings * 100), 2) if total_bookings > 0 else 0
+    
+    # AI Insights
+    insights = []
+    
+    avg_lead = patterns['booking_lead_time']['average_days']
+    if avg_lead < 7:
+        insights.append("Misafirleriniz çoğunlukla son dakika rezervasyonu yapıyor. Esnek iptal politikası düşünün.")
+    elif avg_lead > 30:
+        insights.append("Misafirleriniz önceden planlama yapıyor. Erken rezervasyon indirimleri sunun.")
+    
+    if patterns['cancellation_rate'] > 15:
+        insights.append(f"İptal oranı yüksek (%{patterns['cancellation_rate']}). İptal koşullarını gözden geçirin.")
+    
+    avg_stay = patterns['stay_duration']['average_nights']
+    if avg_stay < 2:
+        insights.append("Kısa süreli konaklamalar yaygın. Transit misafir profili olabilir.")
+    elif avg_stay > 5:
+        insights.append("Uzun süreli konaklamalar yaygın. Haftalık paket fiyatları sunun.")
+    
+    return {
+        'success': True,
+        'total_bookings_analyzed': total_bookings,
+        'patterns': patterns,
+        'ai_insights': insights,
+        'generated_at': datetime.now().isoformat()
+    }
+

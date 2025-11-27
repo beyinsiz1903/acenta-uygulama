@@ -1458,6 +1458,20 @@ const PMSModule = ({ user, tenant, onLogout }) => {
                         statusColors[room.status] || 'bg-gray-100 border-gray-300'
                       } ${priorityColor ? 'ring-2 ring-offset-1 ' + (priorityColor === 'bg-red-600' ? 'ring-red-500' : priorityColor === 'bg-orange-600' ? 'ring-orange-500' : 'ring-blue-500') : ''}`}>
                         <div className="absolute top-1 right-1 flex gap-1">
+                          {/* New Booking Button */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              // Open new booking dialog with pre-selected room
+                              setShowNewBookingDialog(true);
+                              setNewBooking(prev => ({...prev, room_id: room.id, room_number: room.room_number}));
+                            }}
+                            className="w-6 h-6 bg-blue-600 hover:bg-blue-700 text-white rounded-full flex items-center justify-center transition-all hover:scale-110 shadow-md"
+                            title="Yeni Rezervasyon Oluştur"
+                          >
+                            <span className="text-sm font-bold">+</span>
+                          </button>
+                          
                           {priorityIcon && (
                             <span className={`px-1.5 py-0.5 text-[10px] font-bold ${priorityColor} text-white rounded flex items-center`} title={priorityTitle}>
                               {priorityIcon}

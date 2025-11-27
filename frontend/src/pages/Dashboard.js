@@ -155,6 +155,7 @@ const Dashboard = ({ user, tenant, onLogout }) => {
     if (!isCacheValid) {
       loadDashboardStats();
       loadAIBriefing();
+      loadChartData();
     }
 
     // Prefetch commonly used routes in background

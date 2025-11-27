@@ -328,7 +328,7 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
       console.log('✅ Booking updated:', updateResponse.data);
       
       // Log room move history
-      await axios.post('/api/pms/room-move-history', {
+      await axios.post('/pms/room-move-history', {
         booking_id: moveData.booking.id,
         old_room: moveData.oldRoom,
         new_room: moveData.newRoom,

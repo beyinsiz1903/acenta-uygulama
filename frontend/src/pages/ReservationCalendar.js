@@ -45,6 +45,14 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [selectedBookingFolio, setSelectedBookingFolio] = useState(null);
   const [folioCharges, setFolioCharges] = useState([]);
+  const [folioPayments, setFolioPayments] = useState([]);
+  const [showPaymentForm, setShowPaymentForm] = useState(false);
+  const [paymentForm, setPaymentForm] = useState({
+    amount: '',
+    method: 'card',
+    reference: '',
+    notes: ''
+  });
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedRoom, setSelectedRoom] = useState(null);
   

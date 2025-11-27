@@ -2047,6 +2047,49 @@ const PMSModule = ({ user, tenant, onLogout }) => {
                 </Button>
               </div>
             </div>
+
+            {/* Booking Stats */}
+            <div className="grid grid-cols-5 gap-4">
+              <Card>
+                <CardContent className="p-4">
+                  <div className="text-xs text-gray-600">Total Bookings</div>
+                  <div className="text-2xl font-bold">{bookings.length}</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <div className="text-xs text-gray-600">Confirmed</div>
+                  <div className="text-2xl font-bold text-blue-600">
+                    {bookings.filter(b => b.status === 'confirmed').length}
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <div className="text-xs text-gray-600">Checked In</div>
+                  <div className="text-2xl font-bold text-green-600">
+                    {bookings.filter(b => b.status === 'checked_in').length}
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <div className="text-xs text-gray-600">Total Revenue</div>
+                  <div className="text-2xl font-bold text-green-600">
+                    ${bookings.reduce((sum, b) => sum + (b.total_amount || 0), 0).toFixed(0)}
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <div className="text-xs text-gray-600">Avg ADR</div>
+                  <div className="text-2xl font-bold text-purple-600">
+                    ${bookings.length > 0 ? (bookings.reduce((sum, b) => sum + (b.total_amount || 0), 0) / bookings.length).toFixed(0) : 0}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
             <div className="space-y-4">
               {bookings.map((booking) => {
                 const guest = guests.find(g => g.id === booking.guest_id);

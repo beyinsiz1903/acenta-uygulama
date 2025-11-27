@@ -283,7 +283,16 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
 
   // Handle booking double-click - Show sidebar
   const handleBookingDoubleClick = async (booking) => {
-    setSelectedBooking(booking);
+    // Attach group summary if this booking is part of a group
+    let enrichedBooking = booking;
+    if (booking.group_booking_id && groupBookings && groupBookings.length > 0) {
+      const summary = groupBookings.find(g => g.group_booking_id === booking.group_booking_id);
+      if (summary) {
+        enrichedBooking = { ...booking, _group_summary: summary };
+      }
+    }
+
+    setSelectedBooking(enrichedBooking);
     
     // Load folio data
     try {

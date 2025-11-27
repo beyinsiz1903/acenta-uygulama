@@ -106,6 +106,9 @@ const ReservationSidebar = ({
                 <span className="font-semibold">{booking.children || 0}</span>
               </div>
             </div>
+  const groupSummary = booking.group_booking_id && booking._group_summary;
+
+
           </CardContent>
         </Card>
 

@@ -1434,6 +1434,38 @@ class FolioOperationCreate(BaseModel):
     amount: Optional[float] = None
     reason: str
 
+class RatePlan(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    tenant_id: str
+    name: str
+    code: str
+    type: RateType = RateType.BAR
+    currency: str = "EUR"
+    base_price: float
+    market_segment: Optional[MarketSegment] = None
+    channel_restrictions: List[ChannelType] = []
+    company_ids: List[str] = []
+    valid_from: Optional[date] = None
+    valid_to: Optional[date] = None
+    days_of_week: List[int] = []  # 0=Monday
+    min_stay: Optional[int] = None
+    max_stay: Optional[int] = None
+    cancellation_policy: Optional[CancellationPolicyType] = None
+    is_active: bool = True
+
+class Package(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    tenant_id: str
+    name: str
+    code: str
+    description: Optional[str] = None
+    included_services: List[str] = []
+    price_type: str = "per_room"  # per_room, per_person, per_stay
+    additional_amount: float = 0.0
+    linked_rate_plan_ids: List[str] = []
+    is_active: bool = True
+
+
 class FolioOperation(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))

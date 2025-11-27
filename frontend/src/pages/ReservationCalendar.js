@@ -3270,19 +3270,51 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
                     folioPayments.map((payment) => (
                       <Card key={payment.id} className="border-green-200 bg-green-50">
                         <CardContent className="p-4">
-                          <div className="flex justify-between">
-                            <div>
-                              <div className="font-semibold">{payment.payment_method?.toUpperCase()}</div>
-                              <div className="text-sm text-gray-600">
-                                {payment.reference_number || 'No reference'}
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <div className="font-semibold text-green-700">
+                                  {payment.method === 'card' ? '💳 Credit Card' : 
+                                   payment.method === 'cash' ? '💵 Cash' :
+                                   payment.method === 'bank_transfer' ? '🏦 Bank Transfer' :
+                                   payment.method === 'check' ? '📝 Check' : payment.method?.toUpperCase()}
+                                </div>
+                                <Badge variant="outline" className="text-xs">
+                                  {payment.payment_type}
+                                </Badge>
                               </div>
-                              <div className="text-xs text-gray-500">
-                                {new Date(payment.processed_at).toLocaleDateString()}
+                              <div className="text-sm text-gray-600 mb-1">
+                                📅 {new Date(payment.processed_at).toLocaleString('tr-TR', {
+                                  year: 'numeric',
+                                  month: 'long',
+                                  day: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
                               </div>
+                              {payment.reference && (
+                                <div className="text-xs text-gray-500">
+                                  Ref: {payment.reference}
+                                </div>
+                              )}
+                              {payment.processed_by && (
+                                <div className="text-xs text-gray-500">
+                                  👤 Processed by: {payment.processed_by}
+                                </div>
+                              )}
+                              {payment.notes && (
+                                <div className="text-xs text-gray-500 mt-1 italic">
+                                  📝 {payment.notes}
+                                </div>
+                              )}
                             </div>
                             <div className="text-right">
-                              <div className="font-bold text-green-600">-${payment.amount?.toFixed(2) || '0.00'}</div>
-                              <div className="text-xs text-gray-600">{payment.payment_type}</div>
+                              <div className="text-xl font-bold text-green-600">
+                                -${payment.amount?.toFixed(2) || '0.00'}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                {payment.status || 'PAID'}
+                              </div>
                             </div>
                           </div>
                         </CardContent>

@@ -565,20 +565,27 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
       booking.room_id === roomId && isBookingOnDate(booking, date)
     );
     
-    // Debug: Log first call
-    if (window.debugCalendar === undefined) {
-      window.debugCalendar = true;
-      console.log('🔍 getBookingForRoomOnDate Debug:', {
+    // Enhanced debug for troubleshooting
+    if (!window.debugCalendarDetailed) {
+      window.debugCalendarDetailed = true;
+      const dateStr = date.toISOString().split('T')[0];
+      console.log('🔍 Enhanced Calendar Debug:', {
         totalBookings: bookings.length,
         searchingForRoom: roomId,
-        searchingForDate: date.toISOString().split('T')[0],
+        searchingForDate: dateStr,
         found: !!found,
-        allBookings: bookings.slice(0, 3).map(b => ({
-          room_id: b.room_id,
-          check_in: b.check_in,
-          check_out: b.check_out,
-          guest_name: b.guest_name
-        }))
+        sampleBookings: bookings.slice(0, 3).map(b => ({
+          id: b.id?.substring(0, 8),
+          room_id: b.room_id?.substring(0, 8),
+          room_number: b.room_number,
+          guest_name: b.guest_name,
+          check_in: b.check_in?.split('T')[0],
+          check_out: b.check_out?.split('T')[0],
+          matchesRoom: b.room_id === roomId,
+          matchesDate: isBookingOnDate(b, date)
+        })),
+        roomsCount: rooms.length,
+        firstRoomId: rooms[0]?.id?.substring(0, 8)
       });
     }
     

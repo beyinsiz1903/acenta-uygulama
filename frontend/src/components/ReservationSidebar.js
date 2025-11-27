@@ -109,6 +109,61 @@ const ReservationSidebar = ({
           </CardContent>
         </Card>
 
+        {/* Group Section */}
+        {groupSummary && (
+          <Card className="border-none shadow-md hover:shadow-lg transition-all duration-300 rounded-xl bg-blue-50/60 border border-blue-200">
+            <CardContent className="pt-6">
+              <div className="flex items-center mb-4">
+                <Users className="w-5 h-5 text-blue-600 mr-2" />
+                <h3 className="font-bold text-lg">Group</h3>
+              </div>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Group ID:</span>
+                  <span className="font-mono text-xs bg-white px-2 py-0.5 rounded border border-blue-100">
+                    {booking.group_booking_id?.slice(0, 8)}…
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Rooms in Group:</span>
+                  <span className="font-semibold">{groupSummary.totalRooms}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Group Revenue:</span>
+                  <span className="font-semibold">${groupSummary.totalAmount}</span>
+                </div>
+              </div>
+
+              <div className="mt-4 space-y-2">
+                <div className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Other rooms in this group</div>
+                <div className="space-y-1 max-h-40 overflow-y-auto">
+                  {groupSummary.bookings
+                    .filter(b => b.id !== booking.id)
+                    .map(b => (
+                      <div
+                        key={b.id}
+                        className="flex justify-between items-center text-xs bg-white px-2 py-1 rounded border border-blue-100"
+                      >
+                        <div>
+                          <div className="font-medium">
+                            Room {b.room_number || '?'}
+                          </div>
+                          <div className="text-[11px] text-gray-500">
+                            {b.adults} adults{b.children ? `, ${b.children} children` : ''}
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-semibold">${b.total_amount}</div>
+                          <div className="text-[10px] text-gray-500">{getStatusLabel(b.status)}</div>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Stay Information */}
         <Card className="border-none shadow-md hover:shadow-lg transition-all duration-300 rounded-xl backdrop-blur-sm">
           <CardContent className="pt-6">

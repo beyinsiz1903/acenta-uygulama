@@ -430,14 +430,6 @@ const PMSModule = ({ user, tenant, onLogout }) => {
     }
   };
 
-  const loadAuditLogs = async () => {
-    try {
-      // Reduce limit for faster load
-      const response = await axios.get('/audit-logs?limit=20');
-      setAuditLogs(response.data.logs || []);
-    } catch (error) {
-      // Permission denied is okay
-      if (error.response?.status !== 403) {
   // Cached rate plans and packages to avoid refetching on every change
   const [ratePlans, setRatePlans] = useState([]);
   const [packages, setPackages] = useState([]);
@@ -460,6 +452,14 @@ const PMSModule = ({ user, tenant, onLogout }) => {
     }
   };
 
+  const loadAuditLogs = async () => {
+    try {
+      // Reduce limit for faster load
+      const response = await axios.get('/audit-logs?limit=20');
+      setAuditLogs(response.data.logs || []);
+    } catch (error) {
+      // Permission denied is okay
+      if (error.response?.status !== 403) {
         console.error('Failed to load audit logs:', error);
       }
     }

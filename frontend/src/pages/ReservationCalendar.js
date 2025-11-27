@@ -1683,15 +1683,16 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
                     {/* Timeline Cells */}
                     <div className="flex relative" style={{ width: `${daysToShow * 96}px` }}>
                       {dateRange.map((date, idx) => {
+                        const dayStr = toDateStringUTC(date);
                         const booking = getBookingForRoomOnDate(room.id, date);
                         const isStart = booking && isBookingStart(booking, date);
                         
                         // AGGRESSIVE DEBUG - Log everything for first room
                         if (room.room_number === '101' && idx < 3) {
-                          const dateStr = date.toISOString().split('T')[0];
-                          console.log(`\n🔍 ROOM 101 DEBUG - Date ${idx} (${dateStr}):`);
+                          console.log(`\n🔍 ROOM 101 DEBUG - Date ${idx} (${dayStr}):`);
                           console.log('  Room ID:', room.id);
-                          console.log('  Date object:', date);
+                          console.log('  Date string:', dayStr);
+                          console.log('  Date object:', date.toString());
                           console.log('  Total bookings in state:', bookings.length);
                           console.log('  Booking found:', booking ? 'YES' : 'NO');
                           
@@ -1699,16 +1700,18 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
                             console.log('  ✅ Booking Details:');
                             console.log('    - Guest:', booking.guest_name);
                             console.log('    - Room #:', booking.room_number);
-                            console.log('    - Check-in:', booking.check_in);
-                            console.log('    - Check-out:', booking.check_out);
+                            console.log('    - Check-in:', toDateStringUTC(booking.check_in));
+                            console.log('    - Check-out:', toDateStringUTC(booking.check_out));
                             console.log('    - Is Start:', isStart);
                           } else {
                             console.log('  ❌ No booking found');
-                            console.log('  Checking bookings with this room_id:', 
-                              bookings.filter(b => b.room_id === room.id).map(b => ({
+                            const roomBookings = bookings.filter(b => b.room_id === room.id);
+                            console.log('  Checking bookings with this room_id:', roomBookings.length, 
+                              roomBookings.map(b => ({
                                 guest: b.guest_name,
-                                checkIn: b.check_in?.split('T')[0],
-                                checkOut: b.check_out?.split('T')[0]
+                                checkIn: toDateStringUTC(b.check_in),
+                                checkOut: toDateStringUTC(b.check_out),
+                                matchesDate: dayStr >= toDateStringUTC(b.check_in) && dayStr < toDateStringUTC(b.check_out)
                               }))
                             );
                           }

@@ -1454,13 +1454,13 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
           </CardContent>
         </Card>
 
-        {/* Calendar Grid - Removed Card wrapper to prevent sticky behavior */}
-        <div className="bg-white rounded-lg shadow-sm border">
-          {/* Date Header Row - STICKY within calendar scroll */}
-          <div className="overflow-x-auto">
+        {/* Calendar Grid - Fixed sticky structure */}
+        <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
+          {/* Date Header Row - STICKY (parent must NOT have overflow) */}
+          <div className="sticky top-16 z-40 bg-white shadow-md border-b overflow-x-auto">
             <div className="min-w-max">
               <div 
-                className="flex bg-white sticky top-16 z-40 shadow-md border-b"
+                className="flex bg-white"
               >
                 <div className="w-40 flex-shrink-0 p-3 border-r font-bold text-gray-800 text-sm">
                   ODALAR

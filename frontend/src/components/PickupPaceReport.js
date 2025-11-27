@@ -98,6 +98,38 @@ const PickupPaceReport = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="30">Last 30 days</SelectItem>
+      {/* Filters: group-only and company context */}
+      <div className="grid grid-cols-4 gap-3 mb-2">
+        <div>
+          <Label className="text-xs text-gray-600">Filters</Label>
+          <div className="flex items-center gap-3 mt-1 text-xs text-gray-700">
+            <label className="inline-flex items-center gap-1 cursor-pointer">
+              <input
+                type="checkbox"
+                className="rounded border-gray-300"
+                checked={groupOnly}
+                onChange={(e) => {
+                  const value = e.target.checked;
+                  setGroupOnly(value);
+                  try {
+                    localStorage.setItem('pickup_group_only', String(value));
+                  } catch (err) {
+                    console.warn('Unable to persist pickup_group_only', err);
+                  }
+                }}
+              />
+              <span>Only group bookings</span>
+            </label>
+            {companyId && (
+              <span className="px-2 py-0.5 bg-blue-50 border border-blue-200 rounded-full text-[11px]">
+                Filtered by company (Group drill-down)
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+
+
               <SelectItem value="60">Last 60 days</SelectItem>
               <SelectItem value="90">Last 90 days</SelectItem>
             </SelectContent>

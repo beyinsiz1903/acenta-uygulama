@@ -35,7 +35,8 @@ import {
   Square,
   Trash2,
   Home,
-  Users
+  Users,
+  Monitor
 } from 'lucide-react';
 
 const ReservationCalendar = ({ user, tenant, onLogout }) => {

@@ -5621,7 +5621,7 @@ async def calculate_folio_balance(folio_id: str, tenant_id: str) -> float:
             'voided': False
         }).to_list(1000)
         
-        payments = await db.folio_payments.find({
+        payments = await db.payments.find({
             'folio_id': folio_id,
             'tenant_id': tenant_id
         }).to_list(1000)

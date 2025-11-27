@@ -31,6 +31,7 @@ const PickupPaceReport = () => {
         params: {
           target_date: targetDate,
           lookback_days: lookbackDays,
+          group_only: false,
         },
       });
       setData(res.data);

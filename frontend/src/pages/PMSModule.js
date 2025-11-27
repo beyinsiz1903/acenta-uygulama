@@ -3604,7 +3604,7 @@ const PMSModule = ({ user, tenant, onLogout }) => {
               <DialogDescription>Fill in the booking details below</DialogDescription>
             </DialogHeader>
             <form onSubmit={handleCreateBooking} className="space-y-6">
-              {/* Guest and Room Selection */}
+              {/* Guest selection */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>Guest *</Label>
@@ -3615,16 +3615,116 @@ const PMSModule = ({ user, tenant, onLogout }) => {
                     </SelectContent>
                   </Select>
                 </div>
-                <div>
-                  <Label>Room *</Label>
-                  <Select value={newBooking.room_id} onValueChange={(v) => setNewBooking({...newBooking, room_id: v})}>
-                    <SelectTrigger><SelectValue placeholder="Select room" /></SelectTrigger>
-                    <SelectContent>
-                      {rooms.filter(r => r.status === 'available').map(r => (
-                        <SelectItem key={r.id} value={r.id}>Room {r.room_number} - {r.room_type}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+              </div>
+
+              {/* Multi-room rooms list */}
+              <div className="mt-4 border rounded-lg p-4 space-y-4 bg-slate-50">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-semibold text-sm">Rooms in this Booking</h3>
+                    <p className="text-xs text-slate-500">You can add multiple rooms under one reservation (family, small group, etc.).</p>
+                  </div>
+                  <Button type="button" variant="outline" size="sm" onClick={addRoomToMultiBooking}>
+                    <Plus className="w-4 h-4 mr-1" /> Add Room
+                  </Button>
+                </div>
+
+                <div className="space-y-3">
+                  {multiRoomBooking.map((room, index) => (
+                    <div key={index} className="border rounded-md bg-white p-3 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="font-medium text-sm">Room #{index + 1}</div>
+                        {multiRoomBooking.length > 1 && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                            onClick={() => removeRoomFromMultiBooking(index)}
+                          >
+                            Remove
+                          </Button>
+                        )}
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-3">
+                        <div>
+                          <Label className="text-xs">Room *</Label>
+                          <Select
+                            value={room.room_id}
+                            onValueChange={(v) => updateMultiRoomField(index, 'room_id', v)}
+                          >
+                            <SelectTrigger><SelectValue placeholder="Select room" /></SelectTrigger>
+                            <SelectContent>
+                              {rooms.filter(r => r.status === 'available').map(r => (
+                                <SelectItem key={r.id} value={r.id}>
+                                  Room {r.room_number} - {r.room_type}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label className="text-xs">Adults</Label>
+                          <Input
+                            type="number"
+                            min="1"
+                            value={room.adults}
+                            onChange={(e) => updateMultiRoomField(index, 'adults', e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs">Children</Label>
+                          <Input
+                            type="number"
+                            min="0"
+                            value={room.children}
+                            onChange={(e) => updateMultiRoomChildrenAges(index, e.target.value)}
+                          />
+                        </div>
+                      </div>
+
+                      {room.children > 0 && (
+                        <div>
+                          <Label className="text-xs">Children Ages</Label>
+                          <div className="grid grid-cols-4 gap-2 mt-1">
+                            {Array.from({ length: room.children }).map((_, ageIndex) => (
+                              <Input
+                                key={ageIndex}
+                                type="number"
+                                min="0"
+                                max="17"
+                                placeholder={`Child ${ageIndex + 1}`}
+                                value={room.children_ages?.[ageIndex] ?? ''}
+                                onChange={(e) => updateMultiRoomChildAge(index, ageIndex, e.target.value)}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="grid grid-cols-2 gap-3 pt-2 border-t mt-2">
+                        <div>
+                          <Label className="text-xs">Base Rate</Label>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            value={room.base_rate}
+                            onChange={(e) => updateMultiRoomField(index, 'base_rate', e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs">Total Amount *</Label>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            value={room.total_amount}
+                            onChange={(e) => updateMultiRoomField(index, 'total_amount', e.target.value)}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
 

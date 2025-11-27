@@ -1821,20 +1821,19 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
                                 onDragStart={(e) => handleDragStart(e, booking)}
                                 onDragEnd={handleDragEnd}
                                 onDoubleClick={() => handleBookingDoubleClick(booking)}
-                                className={`absolute top-1 left-0.5 rounded-lg ${getSegmentColor(
-                                  booking.market_segment || booking.rate_type
-                                )} text-white text-xs overflow-hidden shadow-md hover:shadow-xl transition-all cursor-move z-20 group border border-white/30 ${
+                                className={`absolute top-1 left-0.5 rounded-lg text-white text-xs overflow-hidden shadow-md hover:shadow-xl transition-all cursor-move z-20 group border border-white/30 ${
                                   draggingBooking?.id === booking.id ? 'opacity-50 scale-95' : ''
                                 } ${hasConflict(room.id, date) ? 'ring-2 ring-red-500 animate-pulse' : ''}
                                 ${showDeluxePanel && isGroupBooking(booking.id) ? 'ring-2 ring-amber-400' : ''}`}
                                 style={{
                                   width: `${calculateBookingSpan(booking, currentDate) * 96 - 4}px`,
                                   height: '54px',
-                                  backgroundImage: showDeluxePanel && isGroupBooking(booking.id) 
-                                    ? 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(251, 191, 36, 0.2) 10px, rgba(251, 191, 36, 0.2) 20px)' 
-                                    : 'none'
+                                  backgroundColor: booking.group_booking_id ? getGroupColor(booking) : undefined,
+                                  backgroundImage: !booking.group_booking_id
+                                    ? 'none'
+                                    : 'repeating-linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.08) 8px, transparent 8px, transparent 16px)'
                                 }}
-                                title={`Double-click for details | Drag to move\n${booking.guest_name || 'Guest'} - ${booking.market_segment || 'Standard'}${showDeluxePanel && isGroupBooking(booking.id) ? `\n👥 GROUP: ${getGroupInfo(booking.id)?.company_name}` : ''}`}
+                                title={`Double-click for details | Drag to move\n${booking.guest_name || 'Guest'} - ${booking.market_segment || 'Standard'}${booking.group_booking_id ? `\nGroup: ${booking.group_booking_id}` : ''}`}
                               >
                                 {/* Main booking info - Compact Typography */}
                                 <div className="p-1.5 h-[54px] relative">

@@ -161,6 +161,32 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
       setGuests(guestsRes.data || []);
       setCompanies(companiesRes.data || []);
       setRoomBlocks(blocksRes.data.blocks || []);
+
+      // Build group bookings summary for sidebar
+      const rawBookings = bookingsRes.data || [];
+      const groupMap = new Map();
+      rawBookings.forEach(b => {
+        if (!b.group_booking_id) return;
+        if (!groupMap.has(b.group_booking_id)) {
+          groupMap.set(b.group_booking_id, []);
+        }
+        groupMap.get(b.group_booking_id).push(b);
+      });
+      const groupSummary = Array.from(groupMap.entries()).map(([groupId, groupItems]) => {
+        const master = groupItems[0];
+        const totalRooms = groupItems.length;
+        const totalAmount = groupItems.reduce((sum, x) => sum + (x.total_amount || 0), 0);
+        const guestName = master.guest_name || guestsRes.data.find(g => g.id === master.guest_id)?.name || 'Group Guest';
+        return {
+          group_booking_id: groupId,
+          totalRooms,
+          totalAmount,
+          master,
+          bookings: groupItems,
+          guest_name: guestName
+        };
+      });
+      setGroupBookings(groupSummary);
       
       // Load Enterprise Mode data
       loadEnterpriseData();

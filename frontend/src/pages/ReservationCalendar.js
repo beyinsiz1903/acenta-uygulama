@@ -2937,22 +2937,44 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
         <Card>
           <CardContent className="p-0 overflow-x-auto">
             <div className="min-w-max">
-              {/* Date Header Row */}
-              <div className="flex border-b bg-gray-50 sticky top-0 z-10">
+              {/* Date Header Row - Non-sticky with daily rates */}
+              <div className="flex border-b bg-gray-50">
                 <div className="w-32 flex-shrink-0 p-3 border-r font-semibold">
                   Room
                 </div>
                 {dateRange.map((date, idx) => {
                   const intensity = getHeatmapIntensity(date);
+                  
+                  // Calculate daily rate (ADR) for this date
+                  const dayBookings = bookings.filter(b => {
+                    const checkIn = new Date(b.check_in);
+                    const checkOut = new Date(b.check_out);
+                    checkIn.setHours(0, 0, 0, 0);
+                    checkOut.setHours(0, 0, 0, 0);
+                    const currentDate = new Date(date);
+                    currentDate.setHours(0, 0, 0, 0);
+                    return currentDate >= checkIn && currentDate < checkOut && b.status !== 'cancelled';
+                  });
+                  
+                  const totalRevenue = dayBookings.reduce((sum, b) => {
+                    const nights = Math.ceil((new Date(b.check_out) - new Date(b.check_in)) / (1000 * 60 * 60 * 24));
+                    return sum + ((b.total_amount || 0) / nights);
+                  }, 0);
+                  
+                  const adr = dayBookings.length > 0 ? (totalRevenue / dayBookings.length) : 0;
+                  
                   return (
                   <div
                     key={idx}
                     className={`w-24 flex-shrink-0 p-2 border-r text-center text-sm ${
                       isToday(date) ? 'bg-blue-50 font-bold text-blue-600' : getHeatmapColor(intensity)
                     }`}
-                    title={`Occupancy intensity: ${intensity}`}
+                    title={`Occupancy intensity: ${intensity} | ADR: $${adr.toFixed(0)}`}
                   >
-                    <div>{formatDateWithDay(date)}</div>
+                    <div className="font-semibold">{formatDateWithDay(date)}</div>
+                    <div className="text-[10px] text-gray-600 mt-0.5 font-bold">
+                      ${adr > 0 ? adr.toFixed(0) : '-'}
+                    </div>
                   </div>
                   );
                 })}

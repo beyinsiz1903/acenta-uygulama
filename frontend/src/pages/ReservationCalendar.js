@@ -29,7 +29,13 @@ import {
   Lock,
   History,
   ArrowRightLeft,
-  Download
+  Download,
+  Filter,
+  CheckSquare,
+  Square,
+  Trash2,
+  Home,
+  Users
 } from 'lucide-react';
 
 const ReservationCalendar = ({ user, tenant, onLogout }) => {

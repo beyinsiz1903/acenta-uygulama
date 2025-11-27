@@ -1607,11 +1607,11 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
                         return (
                           <div
                             key={idx}
-                            className={`w-28 flex-shrink-0 border-r relative cursor-pointer hover:bg-gray-100 transition-colors ${
-                              isToday(date) ? 'bg-blue-50' : ''
-                            } ${isDragOver ? 'bg-green-100 border-2 border-green-500' : ''}
-                            ${roomBlock ? 'bg-gray-200 bg-opacity-50' : ''}`}
-                            style={{ height: '80px' }}
+                            className={`w-28 flex-shrink-0 border-r border-gray-200 relative cursor-pointer transition-all ${
+                              isToday(date) ? 'bg-blue-50/80 shadow-inner' : 'bg-white hover:bg-gray-50'
+                            } ${isDragOver ? 'bg-emerald-50 ring-2 ring-emerald-400 shadow-lg' : ''}
+                            ${roomBlock ? 'bg-gray-100/60 border-dashed' : ''}`}
+                            style={{ height: '80px', minHeight: '80px' }}
                             onClick={() => !booking && !roomBlock && handleCellClick(room.id, date)}
                             onDragOver={(e) => handleDragOver(e, room.id, date)}
                             onDragLeave={handleDragLeave}

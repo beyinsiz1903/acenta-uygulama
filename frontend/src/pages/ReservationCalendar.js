@@ -599,33 +599,36 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
 
   // Get booking for room on specific date
   const getBookingForRoomOnDate = (roomId, date) => {
+    const dayStr = toDateStringUTC(date);
+    
     const found = bookings.find(booking => {
-      const roomMatch = booking.room_id === roomId;
-      const dateMatch = isBookingOnDate(booking, date);
+      if (booking.room_id !== roomId) return false;
       
-      // Debug first call for each room
-      if (!window.debuggedRooms) window.debuggedRooms = {};
-      if (!window.debuggedRooms[roomId]) {
-        window.debuggedRooms[roomId] = true;
-        const dateStr = date.toISOString().split('T')[0];
-        console.log(`\n🔬 getBookingForRoomOnDate DEBUG (Room: ${roomId.substring(0,8)}..., Date: ${dateStr}):`);
-        console.log('  Total bookings to search:', bookings.length);
-        console.log('  Looking for room_id:', roomId);
-        console.log('  Bookings with this room_id:', bookings.filter(b => b.room_id === roomId).length);
-        
-        // Show first booking with this room
-        const sampleBooking = bookings.find(b => b.room_id === roomId);
-        if (sampleBooking) {
-          console.log('  Sample booking for this room:');
-          console.log('    - Guest:', sampleBooking.guest_name);
-          console.log('    - Check-in:', sampleBooking.check_in);
-          console.log('    - Check-out:', sampleBooking.check_out);
-          console.log('    - Room #:', sampleBooking.room_number);
-        }
-      }
+      const checkIn = toDateStringUTC(booking.check_in);
+      const checkOut = toDateStringUTC(booking.check_out);
       
-      return roomMatch && dateMatch;
+      return dayStr >= checkIn && dayStr < checkOut;
     });
+    
+    // Enhanced debug for troubleshooting
+    if (!window.debuggedRooms) window.debuggedRooms = {};
+    if (!window.debuggedRooms[roomId]) {
+      window.debuggedRooms[roomId] = true;
+      console.log(`\n🔬 getBookingForRoomOnDate DEBUG (Room: ${roomId.substring(0,8)}..., Date: ${dayStr}):`);
+      console.log('  Total bookings to search:', bookings.length);
+      console.log('  Looking for room_id:', roomId);
+      
+      const roomBookings = bookings.filter(b => b.room_id === roomId);
+      console.log('  Bookings with this room_id:', roomBookings.length);
+      
+      if (roomBookings.length > 0) {
+        console.log('  Sample booking for this room:');
+        console.log('    - Guest:', roomBookings[0].guest_name);
+        console.log('    - Check-in:', toDateStringUTC(roomBookings[0].check_in));
+        console.log('    - Check-out:', toDateStringUTC(roomBookings[0].check_out));
+        console.log('    - Room #:', roomBookings[0].room_number);
+      }
+    }
     
     return found;
   };

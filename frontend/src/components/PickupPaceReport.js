@@ -22,6 +22,25 @@ const PickupPaceReport = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [data, setData] = useState(null);
+  const [groupOnly, setGroupOnly] = useState(() => {
+    try {
+      const stored = localStorage.getItem('pickup_group_only');
+      if (stored != null) return stored === 'true';
+    } catch (e) {
+      console.warn('Unable to read pickup_group_only from localStorage', e);
+    }
+    return false;
+  });
+
+  const [companyId, setCompanyId] = useState(() => {
+    try {
+      return localStorage.getItem('pickup_company_id') || null;
+    } catch (e) {
+      console.warn('Unable to read pickup_company_id from localStorage', e);
+      return null;
+    }
+  });
+
 
   const loadPickup = async () => {
     setLoading(true);

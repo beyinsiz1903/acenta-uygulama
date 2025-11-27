@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Tuple
 
 # Configuration
-BASE_URL = "https://guest-calendar.preview.emergentagent.com/api"
+BASE_URL = "https://takvim-fix.preview.emergentagent.com/api"
 LOGIN_EMAIL = "demo@hotel.com"
 LOGIN_PASSWORD = "demo123"
 

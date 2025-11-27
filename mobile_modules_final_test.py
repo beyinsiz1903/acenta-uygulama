@@ -17,7 +17,7 @@ from typing import Dict, List, Any, Optional
 import uuid
 
 # Configuration
-BACKEND_URL = "https://guest-calendar.preview.emergentagent.com/api"
+BACKEND_URL = "https://takvim-fix.preview.emergentagent.com/api"
 TEST_EMAIL = "admin@hotel.com"
 TEST_PASSWORD = "admin123"
 

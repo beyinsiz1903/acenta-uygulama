@@ -1776,7 +1776,6 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
                     </div>
                   </div>
                       ))
-                    </div>
                   ));
                 })()
               )}

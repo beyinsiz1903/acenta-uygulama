@@ -1920,15 +1920,72 @@ const PMSModule = ({ user, tenant, onLogout }) => {
 
           {/* GUESTS TAB */}
           <TabsContent value="guests" className="space-y-4">
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center gap-4">
               <h2 className="text-2xl font-semibold">Guests ({guests.length})</h2>
-              <Button onClick={() => setOpenDialog('guest')}>
-                <Plus className="w-4 h-4 mr-2" />
-                Add Guest
-              </Button>
+              <div className="flex gap-2 flex-1 max-w-md">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Input
+                    placeholder="Search guests by name, email, phone..."
+                    value={globalSearchQuery}
+                    onChange={(e) => setGlobalSearchQuery(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                <Button onClick={() => setOpenDialog('guest')}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Guest
+                </Button>
+              </div>
             </div>
+            
+            {/* Guest Stats */}
+            <div className="grid grid-cols-4 gap-4">
+              <Card>
+                <CardContent className="p-4">
+                  <div className="text-xs text-gray-600">Total Guests</div>
+                  <div className="text-2xl font-bold">{guests.length}</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <div className="text-xs text-gray-600">VIP Guests</div>
+                  <div className="text-2xl font-bold text-purple-600">
+                    {guests.filter(g => g.loyalty_tier === 'vip').length}
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <div className="text-xs text-gray-600">Gold Members</div>
+                  <div className="text-2xl font-bold text-yellow-600">
+                    {guests.filter(g => g.loyalty_tier === 'gold').length}
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <div className="text-xs text-gray-600">Repeat Guests</div>
+                  <div className="text-2xl font-bold text-green-600">
+                    {guests.filter(g => (g.total_stays || 0) > 1).length}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {guests.map((guest) => (
+              {guests
+                .filter(guest => {
+                  if (!globalSearchQuery) return true;
+                  const query = globalSearchQuery.toLowerCase();
+                  return (
+                    guest.name?.toLowerCase().includes(query) ||
+                    guest.email?.toLowerCase().includes(query) ||
+                    guest.phone?.toLowerCase().includes(query) ||
+                    guest.id_number?.toLowerCase().includes(query)
+                  );
+                })
+                .map((guest) => (
                 <Card key={guest.id}>
                   <CardHeader>
                     <CardTitle className="flex justify-between items-center">

@@ -10,7 +10,10 @@ const ReservationSidebar = ({
   onClose, 
   getSegmentColor, 
   getStatusLabel,
-  getRateTypeInfo 
+  getRateTypeInfo,
+  onViewFolio,
+  onEditReservation,
+  onSendConfirmation
 }) => {
   if (!booking) return null;
 

@@ -527,14 +527,22 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
 
   const handleConfirmMove = async () => {
     if (!moveReason.trim()) {
-      toast.error('Please provide a reason for the room move');
+      toast.error('Lütfen oda taşıma nedeni belirtin');
       return;
     }
     
-    console.log('🔄 Moving booking:', {
+    // Extra validation for same room type moves
+    if (moveData.isSameRoomType && moveReason === '') {
+      toast.error('Aynı oda tipi içinde taşıma yapıyorsunuz. Neden zorunludur.');
+      return;
+    }
+    
+    console.log('🔄 Oda taşıma işlemi:', {
       bookingId: moveData.booking.id,
-      from: `${moveData.oldRoom} (${moveData.oldCheckIn})`,
-      to: `${moveData.newRoom} (${moveData.newCheckIn})`,
+      from: `${moveData.oldRoom} (${moveData.oldRoomType}) - ${moveData.oldCheckIn}`,
+      to: `${moveData.newRoom} (${moveData.newRoomType}) - ${moveData.newCheckIn}`,
+      isSameRoomType: moveData.isSameRoomType,
+      reason: moveReason,
       currentDateView: currentDate.toISOString().split('T')[0]
     });
     
@@ -547,23 +555,26 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
         check_out: moveData.newCheckOut
       });
       
-      console.log('✅ Booking updated:', updateResponse.data);
+      console.log('✅ Rezervasyon güncellendi:', updateResponse.data);
       
-      // Log room move history
+      // Log room move history with enhanced details
       await axios.post('/pms/room-move-history', {
         booking_id: moveData.booking.id,
         old_room: moveData.oldRoom,
         new_room: moveData.newRoom,
+        old_room_type: moveData.oldRoomType,
+        new_room_type: moveData.newRoomType,
+        is_same_room_type: moveData.isSameRoomType,
         old_check_in: moveData.oldCheckIn,
         new_check_in: moveData.newCheckIn,
         reason: moveReason,
         moved_by: user.name,
         timestamp: new Date().toISOString()
-      }).catch(err => console.log('History logging failed:', err));
+      }).catch(err => console.log('Geçmiş kaydı başarısız:', err));
       
       // Always navigate to the new booking date to ensure it's visible
       const newCheckIn = new Date(moveData.newCheckIn);
-      console.log('📅 Navigating timeline to:', newCheckIn.toISOString().split('T')[0]);
+      console.log('📅 Takvim yeni tarihe yönlendiriliyor:', newCheckIn.toISOString().split('T')[0]);
       
       setShowMoveReasonDialog(false);
       setMoveReason('');
@@ -572,7 +583,11 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
       // Set the new date FIRST, then reload data
       setCurrentDate(newCheckIn);
       
-      toast.success(`Booking moved to ${moveData.newRoom} on ${newCheckIn.toLocaleDateString()}!`);
+      const moveTypeInfo = moveData.isSameRoomType 
+        ? `(Aynı tip: ${moveData.newRoomType})` 
+        : `(${moveData.oldRoomType} → ${moveData.newRoomType})`;
+      
+      toast.success(`✅ Rezervasyon Oda ${moveData.newRoom}'a taşındı ${moveTypeInfo}`);
       
       // Small delay to ensure state update completes before reload
       setTimeout(() => {

@@ -88,8 +88,6 @@ const ReservationSidebar = ({
                   <span className="font-semibold text-sm">{booking.guest_email}</span>
                 </div>
               )}
-  // Group summary for this booking (if part of a group)
-  const groupSummary = booking.group_booking_id && booking._group_summary;
 
               {booking.guest_phone && (
                 <div className="flex justify-between">

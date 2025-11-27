@@ -177,22 +177,6 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
         const totalAmount = groupItems.reduce((sum, x) => sum + (x.total_amount || 0), 0);
         const guestName = master.guest_name || guestsRes.data.find(g => g.id === master.guest_id)?.name || 'Group Guest';
         return {
-  // Deterministic color for group bookings
-  const getGroupColor = (booking) => {
-    if (!booking || !booking.group_booking_id) return '#2563eb'; // default blue
-    const groupId = booking.group_booking_id;
-    if (groupColorMap[groupId]) return groupColorMap[groupId];
-    const palette = ['#2563eb', '#0891b2', '#7c3aed', '#db2777', '#059669', '#ea580c'];
-    let hash = 0;
-    for (let i = 0; i < groupId.length; i++) {
-      hash = groupId.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    const idx = Math.abs(hash) % palette.length;
-    const color = palette[idx];
-    setGroupColorMap(prev => ({ ...prev, [groupId]: color }));
-    return color;
-  };
-
           group_booking_id: groupId,
           totalRooms,
           totalAmount,

@@ -1489,12 +1489,12 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
         {/* Calendar Grid - Fixed sticky structure */}
         <div className="bg-white rounded-lg shadow-sm border relative">
           {/* Date Header Row - STICKY (parent must NOT have overflow) */}
-          <div className="sticky top-16 z-40 bg-white shadow-md border-b overflow-x-auto">
+          <div className="overflow-x-auto">
             <div className="min-w-max">
               <div 
-                className="flex bg-white"
+                className="flex bg-white sticky top-16 z-40 shadow-md border-b-2 border-gray-400"
               >
-                <div className="w-40 flex-shrink-0 p-3 border-r font-bold text-gray-800 text-sm">
+                <div className="w-40 flex-shrink-0 p-3 border-r-2 border-gray-400 font-bold text-gray-800 text-sm">
                   ODALAR
                 </div>
                 {dateRange.map((date, idx) => {

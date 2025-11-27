@@ -440,19 +440,39 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
     setDraggingBooking(booking);
     e.dataTransfer.effectAllowed = 'move';
     
-    // Create custom drag image (full booking card preview)
+    // Calculate booking span for visual representation
+    const bookingSpan = calculateBookingSpan(booking, currentDate);
+    const bookingWidth = bookingSpan * 96; // 96px per day
+    
+    // Create custom drag image showing full booking length
     const dragPreview = document.createElement('div');
-    dragPreview.className = 'bg-blue-500 text-white rounded-lg shadow-2xl p-3 border-2 border-blue-300';
+    dragPreview.className = 'bg-blue-600 text-white rounded-lg shadow-2xl border-2 border-blue-300 flex';
     dragPreview.style.position = 'absolute';
     dragPreview.style.top = '-1000px';
-    dragPreview.style.width = '200px';
+    dragPreview.style.width = `${bookingWidth}px`;
+    dragPreview.style.height = '60px';
+    
+    // Create cells for each day
+    let cellsHTML = '';
+    for (let i = 0; i < bookingSpan; i++) {
+      cellsHTML += `
+        <div class="flex-1 border-r border-blue-400 flex items-center justify-center text-xs font-bold">
+          ${i === 0 ? booking.guest_name?.substring(0, 10) || 'Misafir' : ''}
+        </div>
+      `;
+    }
+    
     dragPreview.innerHTML = `
-      <div class="font-bold text-sm">${booking.guest_name || 'Guest'}</div>
-      <div class="text-xs mt-1">💰 $${booking.total_amount?.toFixed(0) || '0'}</div>
-      <div class="text-xs mt-1">🏨 Moving booking...</div>
+      <div class="flex w-full h-full">
+        ${cellsHTML}
+      </div>
+      <div class="absolute bottom-0 left-0 right-0 bg-blue-900 text-white text-xs px-2 py-1 font-bold text-center">
+        ${bookingSpan} Gece • $${booking.total_amount?.toFixed(0) || '0'}
+      </div>
     `;
+    
     document.body.appendChild(dragPreview);
-    e.dataTransfer.setDragImage(dragPreview, 100, 40);
+    e.dataTransfer.setDragImage(dragPreview, bookingWidth / 2, 30);
     
     setTimeout(() => {
       document.body.removeChild(dragPreview);

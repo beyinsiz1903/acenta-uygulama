@@ -1669,14 +1669,14 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
                                 }}
                                 title={`Double-click for details | Drag to move\n${booking.guest_name || 'Guest'} - ${booking.market_segment || 'Standard'}${showDeluxePanel && isGroupBooking(booking.id) ? `\n👥 GROUP: ${getGroupInfo(booking.id)?.company_name}` : ''}`}
                               >
-                                {/* Main booking info - Modern Typography */}
-                                <div className="p-2.5 h-[52px] relative">
-                                  <div className="font-bold text-sm truncate pr-8 text-white drop-shadow-sm" style={{ fontFamily: 'Inter, system-ui, -apple-system, sans-serif', letterSpacing: '-0.01em' }}>
+                                {/* Main booking info - Compact Typography */}
+                                <div className="p-1.5 h-[54px] relative">
+                                  <div className="font-bold text-xs truncate pr-6 text-white drop-shadow-sm" style={{ fontFamily: 'Inter, system-ui, -apple-system, sans-serif', letterSpacing: '-0.01em' }}>
                                     {booking.guest_name || 'Misafir'}
                                   </div>
-                                  <div className="text-[11px] text-white/95 flex items-center mt-1.5 font-medium">
-                                    <Clock className="w-3 h-3 mr-1" />
-                                    {calculateBookingSpan(booking, currentDate)} gece
+                                  <div className="text-[10px] text-white/95 flex items-center mt-1 font-medium">
+                                    <Clock className="w-2.5 h-2.5 mr-0.5" />
+                                    {calculateBookingSpan(booking, currentDate)}n
                                   </div>
                                   {booking.company_name && (
                                     <div className="text-[11px] text-white/95 flex items-center truncate mt-0.5 font-medium">

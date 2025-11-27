@@ -1570,13 +1570,16 @@ class RatePlan(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     tenant_id: str
     name: str
+    code: str
     description: Optional[str] = None
     room_type: str
     base_rate: float
+    base_price: Optional[float] = None  # For compatibility
     pricing_strategy: PricingStrategy = PricingStrategy.STATIC
     min_rate: Optional[float] = None
     max_rate: Optional[float] = None
     active_channels: List[ChannelType] = []
+    is_active: bool = True
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class RateUpdate(BaseModel):

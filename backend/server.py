@@ -6732,12 +6732,6 @@ async def create_package(
     package = Package(**data)
     await db.packages.insert_one(package.model_dump())
     return package
-
-                            booking['market_segment'] = segment_map[booking['market_segment']]
-                    bookings.append(booking)
-                return bookings
-    
-    # Fallback: Build query
     query = {'tenant_id': current_user.tenant_id}
     
     if start_date or end_date:

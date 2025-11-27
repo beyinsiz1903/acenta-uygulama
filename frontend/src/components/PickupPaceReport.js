@@ -102,6 +102,33 @@ const PickupPaceReport = () => {
             </CardContent>
           </Card>
           <Card>
+      {/* Channel breakdown */}
+      {data?.channels_summary && data.channels_summary.length > 0 && (
+        <div className="grid grid-cols-3 gap-4 mb-2 text-sm">
+          {data.channels_summary.map((ch) => {
+            const share = summary && summary.total_bookings > 0
+              ? (ch.bookings / summary.total_bookings) * 100
+              : 0;
+            return (
+              <Card key={ch.channel}>
+                <CardContent className="py-3">
+                  <div className="text-xs text-gray-500">{ch.channel === 'direct' ? 'Direct' : ch.channel}</div>
+                  <div className="text-lg font-semibold">{ch.bookings} bookings</div>
+                  <div className="mt-1 h-1.5 bg-gray-200 rounded">
+                    <div
+                      className="h-1.5 bg-indigo-500 rounded"
+                      style={{ width: `${Math.min(100, share)}%` }}
+                    />
+                  </div>
+                  <div className="text-[11px] text-gray-500 mt-1">{share.toFixed(1)}% of pickup</div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+
+
             <CardContent className="py-3">
               <div className="text-xs text-gray-500">30-Day Velocity (bkgs/day)</div>
               <div className="text-xl font-bold text-amber-600">{summary.velocity_30day.toFixed(2)}</div>

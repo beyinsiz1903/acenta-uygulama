@@ -761,18 +761,19 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
   // Get color by market segment (more important for revenue management)
   const getSegmentColor = (segment) => {
     const colors = {
-      corporate: 'bg-blue-600',      // Corporate → Blue
-      'ota': 'bg-purple-600',        // OTA → Purple
-      'walk_in': 'bg-orange-500',    // Walk-in → Orange
-      'walk-in': 'bg-orange-500',    // Walk-in → Orange
-      group: 'bg-green-600',         // Group → Green
-      leisure: 'bg-pink-500',        // Leisure → Pink
-      government: 'bg-indigo-600',   // Government → Indigo
-      promotional: 'bg-gradient-to-r from-yellow-500 via-amber-500 to-orange-500',  // Promo → Gradient Gold
-      promo: 'bg-gradient-to-r from-yellow-500 via-amber-500 to-orange-500',        // Promo → Gradient Gold
-      'non_refundable': 'bg-red-600',     // Non-refundable → Red
-      'advance_purchase': 'bg-teal-600',  // Advance Purchase → Teal
-      default: 'bg-blue-500'
+      corporate: 'bg-blue-500',          // Corporate → Soft Blue
+      'ota': 'bg-purple-500',            // OTA → Soft Purple
+      'walk_in': 'bg-orange-400',        // Walk-in → Soft Orange
+      'walk-in': 'bg-orange-400',        // Walk-in → Soft Orange
+      group: 'bg-emerald-500',           // Group → Emerald
+      leisure: 'bg-pink-400',            // Leisure → Soft Pink
+      government: 'bg-indigo-500',       // Government → Soft Indigo
+      promotional: 'bg-gradient-to-r from-amber-400 to-orange-400',  // Promo → Soft Gradient
+      promo: 'bg-gradient-to-r from-amber-400 to-orange-400',
+      'non_refundable': 'bg-rose-500',   // Non-refundable → Rose
+      'advance_purchase': 'bg-teal-500', // Advance Purchase → Teal
+      guaranteed: 'bg-sky-500',          // Guaranteed → Sky Blue
+      default: 'bg-slate-500'            // Default → Slate
     };
     return colors[segment?.toLowerCase()] || colors.default;
   };

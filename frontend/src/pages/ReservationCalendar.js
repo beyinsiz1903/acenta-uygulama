@@ -3069,6 +3069,9 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Guest Folio - Booking #{selectedBooking?.id?.slice(0, 8)}</DialogTitle>
+              <DialogDescription>
+                View all charges, payments, and balance details for this reservation
+              </DialogDescription>
             </DialogHeader>
             
             <div className="space-y-4">

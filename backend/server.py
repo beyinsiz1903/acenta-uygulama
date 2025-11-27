@@ -12777,6 +12777,20 @@ async def get_pickup_pace_analytics(
     velocity_7 = sum(daily_pickup.get(i, {}).get('count', 0) for i in range(7)) / 7
     velocity_14 = sum(daily_pickup.get(i, {}).get('count', 0) for i in range(14)) / 14
     velocity_30 = sum(daily_pickup.get(i, {}).get('count', 0) for i in range(30)) / 30
+
+    # Aggregate channel-level pickup (for direct vs OTA and other breakdowns)
+    channel_pickup: Dict[str, int] = {}
+    for day_data in daily_pickup.values():
+        for ch, cnt in day_data.get('channels', {}).items():
+            channel_pickup[ch] = channel_pickup.get(ch, 0) + cnt
+
+    channels_summary = [
+        {
+            'channel': ch,
+            'bookings': count,
+        }
+        for ch, count in channel_pickup.items()
+    ]
     
     return {
         'target_date': target.isoformat(),
@@ -12788,6 +12802,8 @@ async def get_pickup_pace_analytics(
             'velocity_7day': round(velocity_7, 2),
             'velocity_14day': round(velocity_14, 2),
             'velocity_30day': round(velocity_30, 2)
+        },
+        'channels_summary': channels_summary
         }
     }
 

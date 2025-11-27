@@ -1631,17 +1631,17 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
                                 }}
                                 title={`Double-click for details | Drag to move\n${booking.guest_name || 'Guest'} - ${booking.market_segment || 'Standard'}${showDeluxePanel && isGroupBooking(booking.id) ? `\n👥 GROUP: ${getGroupInfo(booking.id)?.company_name}` : ''}`}
                               >
-                                {/* Main booking info */}
-                                <div className="p-2 h-[48px] relative">
-                                  <div className="font-semibold truncate pr-8">
-                                    {booking.guest_name || 'Guest'}
+                                {/* Main booking info - Modern Typography */}
+                                <div className="p-2.5 h-[52px] relative">
+                                  <div className="font-bold text-sm truncate pr-8 text-white drop-shadow-sm" style={{ fontFamily: 'Inter, system-ui, -apple-system, sans-serif', letterSpacing: '-0.01em' }}>
+                                    {booking.guest_name || 'Misafir'}
                                   </div>
-                                  <div className="text-xs opacity-90 flex items-center mt-1">
+                                  <div className="text-[11px] text-white/95 flex items-center mt-1.5 font-medium">
                                     <Clock className="w-3 h-3 mr-1" />
-                                    {calculateBookingSpan(booking, currentDate)}n
+                                    {calculateBookingSpan(booking, currentDate)} gece
                                   </div>
                                   {booking.company_name && (
-                                    <div className="text-xs opacity-90 flex items-center truncate">
+                                    <div className="text-[11px] text-white/95 flex items-center truncate mt-0.5 font-medium">
                                       <Building2 className="w-3 h-3 mr-1" />
                                       {booking.company_name}
                                     </div>

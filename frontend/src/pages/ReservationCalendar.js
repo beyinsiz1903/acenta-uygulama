@@ -3324,13 +3324,34 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
                 </div>
               </div>
               
-              {/* Totals */}
-              <div className="border-t pt-4">
-                <div className="flex justify-between text-lg font-bold">
-                  <span>Total Balance:</span>
-                  <span className="text-blue-600">
-                    ${selectedBookingFolio?.balance?.toFixed(2) || '0.00'}
-                  </span>
+              {/* Totals Summary */}
+              <div className="border-t pt-4 bg-gray-50 p-4 rounded-lg">
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Total Charges:</span>
+                    <span className="font-semibold">
+                      ${folioCharges.reduce((sum, c) => sum + (c.total || c.amount || 0), 0).toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Total Payments:</span>
+                    <span className="font-semibold text-green-600">
+                      -${folioPayments.reduce((sum, p) => sum + (p.amount || 0), 0).toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="border-t pt-2 flex justify-between text-xl font-bold">
+                    <span>Outstanding Balance:</span>
+                    <span className={`${
+                      (selectedBookingFolio?.balance || 0) > 0 ? 'text-red-600' : 'text-green-600'
+                    }`}>
+                      ${selectedBookingFolio?.balance?.toFixed(2) || '0.00'}
+                    </span>
+                  </div>
+                  {(selectedBookingFolio?.balance || 0) === 0 && folioCharges.length > 0 && (
+                    <div className="text-center text-green-600 text-sm font-semibold pt-2">
+                      ✓ Fully Paid
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

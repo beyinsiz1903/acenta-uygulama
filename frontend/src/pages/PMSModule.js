@@ -32,6 +32,8 @@ const PMSModule = ({ user, tenant, onLogout }) => {
   const { t } = useTranslation();
   const [rooms, setRooms] = useState([]);
   const [guests, setGuests] = useState([]);
+  const [groupedBookings, setGroupedBookings] = useState([]);
+
   const [bookings, setBookings] = useState([]);
   const [companies, setCompanies] = useState([]);
   const [arrivals, setArrivals] = useState([]);

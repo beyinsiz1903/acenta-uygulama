@@ -3179,6 +3179,7 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
                             value={paymentForm.amount}
                             onChange={(e) => setPaymentForm({...paymentForm, amount: e.target.value})}
                             placeholder="0.00"
+                            autoFocus
                           />
                         </div>
                         <div>

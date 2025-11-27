@@ -2757,6 +2757,9 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Booking Details</DialogTitle>
+            <DialogDescription>
+              Complete information about the selected reservation
+            </DialogDescription>
           </DialogHeader>
           {selectedBooking && (
             <div className="space-y-4">

@@ -48929,6 +48929,9 @@ async def get_revenue_trend(
         'success': True,
         'days': days,
         'trend': trend_data,
+        'total_revenue': round(total_revenue, 2),
+        'average_daily_revenue': average_daily
+    }
 
 @api_router.get("/analytics/booking-trends")
 async def get_booking_trends(

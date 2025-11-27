@@ -476,7 +476,9 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
     e.dataTransfer.effectAllowed = 'move';
     
     // Calculate booking span for visual representation
-    const bookingSpan = calculateBookingSpan(booking, currentDate);
+    const checkIn = new Date(booking.check_in);
+    const checkOut = new Date(booking.check_out);
+    const bookingSpan = Math.max(1, Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24)));
     const bookingWidth = bookingSpan * 96; // 96px per day
     
     // Create custom drag image showing full booking length

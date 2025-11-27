@@ -1,0 +1,162 @@
+import React, { useEffect, useMemo, useState } from 'react';
+import axios from 'axios';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from 'sonner';
+
+const PickupPaceReport = () => {
+  const [targetDate, setTargetDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [lookbackDays, setLookbackDays] = useState(90);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [data, setData] = useState(null);
+
+  const loadPickup = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await axios.get('/deluxe/pickup-pace-analytics', {
+        params: {
+          target_date: targetDate,
+          lookback_days: lookbackDays,
+        },
+      });
+      setData(res.data);
+    } catch (err) {
+      console.error('Failed to load pickup pace analytics', err);
+      setError(err.response?.data?.detail || 'Failed to load pickup pace analytics');
+      toast.error('Failed to load pickup pace analytics');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadPickup();
+  }, []);
+
+  const summary = data?.summary;
+  const chartData = useMemo(() => data?.chart_data || [], [data]);
+
+  // For a quick visual, compute max cumulative bookings and revenue for scaling
+  const maxCumBookings = useMemo(
+    () => (chartData.length ? Math.max(...chartData.map((d) => d.cumulative_bookings || 0)) : 0),
+    [chartData]
+  );
+  const maxCumRevenue = useMemo(
+    () => (chartData.length ? Math.max(...chartData.map((d) => d.cumulative_revenue || 0)) : 0),
+    [chartData]
+  );
+
+  return (
+    <div className="space-y-4">
+      {/* Filters */}
+      <div className="grid grid-cols-4 gap-3 mb-2">
+        <div>
+          <Label className="text-xs text-gray-600">Arrival Date (Target)</Label>
+          <Input type="date" value={targetDate} onChange={(e) => setTargetDate(e.target.value)} />
+        </div>
+        <div>
+          <Label className="text-xs text-gray-600">Lookback Window</Label>
+          <Select value={String(lookbackDays)} onValueChange={(v) => setLookbackDays(parseInt(v, 10) || 30)}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="30">Last 30 days</SelectItem>
+              <SelectItem value="60">Last 60 days</SelectItem>
+              <SelectItem value="90">Last 90 days</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex items-end justify-end col-span-2">
+          <Button size="sm" onClick={loadPickup} disabled={loading}>
+            {loading ? 'Loading…' : 'Refresh Pickup'}
+          </Button>
+        </div>
+      </div>
+
+      {/* Summary */}
+      {summary && (
+        <div className="grid grid-cols-4 gap-4 mb-2 text-sm">
+          <Card>
+            <CardContent className="py-3">
+              <div className="text-xs text-gray-500">Total Bookings</div>
+              <div className="text-xl font-bold">{summary.total_bookings}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="py-3">
+              <div className="text-xs text-gray-500">Total Revenue</div>
+              <div className="text-xl font-bold text-blue-600">${summary.total_revenue.toFixed(2)}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="py-3">
+              <div className="text-xs text-gray-500">7-Day Velocity (bkgs/day)</div>
+              <div className="text-xl font-bold text-emerald-600">{summary.velocity_7day.toFixed(2)}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="py-3">
+              <div className="text-xs text-gray-500">30-Day Velocity (bkgs/day)</div>
+              <div className="text-xl font-bold text-amber-600">{summary.velocity_30day.toFixed(2)}</div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Chart/Table */}
+      {loading ? (
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-full" />
+          <Skeleton className="h-8 w-full" />
+          <Skeleton className="h-8 w-full" />
+        </div>
+      ) : error ? (
+        <div className="text-sm text-red-600 py-4">{error}</div>
+      ) : !chartData.length ? (
+        <div className="text-sm text-gray-500 py-4 text-center">No pickup data for this arrival date.</div>
+      ) : (
+        <div className="border rounded-md overflow-hidden">
+          <div className="grid grid-cols-6 bg-gray-50 text-xs font-semibold text-gray-600 border-b">
+            <div className="px-3 py-2">Days Before</div>
+            <div className="px-3 py-2">Date</div>
+            <div className="px-3 py-2 text-right">Daily Pickup</div>
+            <div className="px-3 py-2 text-right">Cumulative Bkgs</div>
+            <div className="px-3 py-2 text-right">Cumulative Rev</div>
+            <div className="px-3 py-2">Visual</div>
+          </div>
+          {chartData.map((row) => {
+            const bookingsRatio = maxCumBookings ? row.cumulative_bookings / maxCumBookings : 0;
+            const revenueRatio = maxCumRevenue ? row.cumulative_revenue / maxCumRevenue : 0;
+            return (
+              <div
+                key={row.days_before}
+                className="grid grid-cols-6 text-xs border-b last:border-b-0 hover:bg-blue-50/40"
+              >
+                <div className="px-3 py-2">{row.days_before}</div>
+                <div className="px-3 py-2">{row.date}</div>
+                <div className="px-3 py-2 text-right">{row.daily_pickup}</div>
+                <div className="px-3 py-2 text-right">{row.cumulative_bookings}</div>
+                <div className="px-3 py-2 text-right">${row.cumulative_revenue.toFixed(2)}</div>
+                <div className="px-3 py-2">
+                  <div className="flex items-center gap-1">
+                    <div className="h-2 bg-blue-500 rounded" style={{ width: `${bookingsRatio * 80 || 0}%` }} />
+                    <div className="h-2 bg-emerald-400 rounded" style={{ width: `${revenueRatio * 80 || 0}%` }} />
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default PickupPaceReport;

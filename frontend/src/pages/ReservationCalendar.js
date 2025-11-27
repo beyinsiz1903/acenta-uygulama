@@ -85,7 +85,6 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
   
   // Deluxe+ states
   const [showDeluxePanel, setShowDeluxePanel] = useState(false);
-  const [groupBookings, setGroupBookings] = useState([]);
   const [pickupPaceData, setPickupPaceData] = useState(null);
   const [leadTimeData, setLeadTimeData] = useState(null);
   const [groupBookings, setGroupBookings] = useState([]);

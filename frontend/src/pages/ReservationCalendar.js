@@ -3135,32 +3135,33 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
                                   />
                                 )}
                                 
-                                {/* Main booking info */}
+                                {/* Main booking info - Modern Clean Design */}
                                 {viewMode === 'simplified' ? (
-                                  /* Simplified View - Clean & Minimal */
-                                  <div className={`p-2 h-full flex flex-col justify-center ${bulkActionMode ? 'pl-6' : ''}`}>
-                                    <div className="font-bold text-sm truncate leading-tight text-white">
+                                  /* Simplified View - Ultra Clean & Modern */
+                                  <div className={`p-2.5 h-full flex flex-col justify-center ${bulkActionMode ? 'pl-6' : ''}`}>
+                                    <div className="font-bold text-[13px] truncate leading-tight text-white drop-shadow-sm">
                                       {booking.guest_name || 'Misafir'}
                                     </div>
-                                    <div className="text-xs font-bold text-white mt-0.5">
-                                      ${booking.total_amount?.toFixed(0) || '0'}
+                                    <div className="text-[11px] font-bold text-white/90 mt-1 flex items-center gap-1">
+                                      <DollarSign className="w-3 h-3" />
+                                      {booking.total_amount?.toFixed(0) || '0'}
                                     </div>
                                   </div>
                                 ) : (
-                                  /* Detailed View - Full Info */
-                                  <div className="p-2 relative">
-                                    <div className={`font-bold truncate pr-8 flex items-center gap-1 text-white ${bulkActionMode ? 'pl-6' : ''}`}>
+                                  /* Detailed View - Full Info with Better Typography */
+                                  <div className="p-2.5 relative">
+                                    <div className={`font-bold text-sm truncate pr-8 flex items-center gap-1 text-white drop-shadow-sm ${bulkActionMode ? 'pl-6' : ''}`}>
                                       {(booking.rate_type === 'promotional' || booking.rate_type === 'promo') && (
-                                        <span className="text-yellow-300 animate-pulse">🎉</span>
+                                        <span className="text-yellow-300 animate-pulse">✨</span>
                                       )}
                                       {booking.guest_name || 'Misafir'}
                                     </div>
-                                    <div className="text-xs text-white flex items-center mt-1">
+                                    <div className="text-[11px] text-white/90 flex items-center mt-1.5">
                                       <Clock className="w-3 h-3 mr-1" />
                                       {calculateBookingSpan(booking, currentDate)}n
                                     </div>
                                     {booking.company_name && (
-                                      <div className="text-xs text-white flex items-center truncate">
+                                      <div className="text-[11px] text-white/90 flex items-center truncate mt-0.5">
                                         <Building2 className="w-3 h-3 mr-1" />
                                         {booking.company_name}
                                       </div>

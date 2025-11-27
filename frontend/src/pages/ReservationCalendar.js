@@ -563,15 +563,17 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
 
   // Check if booking overlaps with date
   const isBookingOnDate = (booking, date) => {
+    // Create new Date objects to avoid mutation
     const checkIn = new Date(booking.check_in);
     const checkOut = new Date(booking.check_out);
     const current = new Date(date);
     
-    checkIn.setHours(0, 0, 0, 0);
-    checkOut.setHours(0, 0, 0, 0);
-    current.setHours(0, 0, 0, 0);
+    // Normalize to midnight (create new dates to avoid mutation)
+    const checkInDate = new Date(checkIn.getFullYear(), checkIn.getMonth(), checkIn.getDate());
+    const checkOutDate = new Date(checkOut.getFullYear(), checkOut.getMonth(), checkOut.getDate());
+    const currentDate = new Date(current.getFullYear(), current.getMonth(), current.getDate());
 
-    return current >= checkIn && current < checkOut;
+    return currentDate >= checkInDate && currentDate < checkOutDate;
   };
 
   // Get booking for room on specific date

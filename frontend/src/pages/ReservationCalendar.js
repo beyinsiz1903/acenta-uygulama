@@ -635,31 +635,24 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
 
   // Get room block for room on specific date
   const getRoomBlockForDate = (roomId, date) => {
+    const dayStr = toDateStringUTC(date);
+    
     return roomBlocks.find(block => {
       if (block.room_id !== roomId || block.status !== 'active') return false;
       
-      const blockStart = new Date(block.start_date);
-      const blockEnd = block.end_date ? new Date(block.end_date) : new Date('9999-12-31');
-      const current = new Date(date);
+      const blockStart = toDateStringUTC(block.start_date);
+      const blockEnd = block.end_date ? toDateStringUTC(block.end_date) : '9999-12-31';
       
-      // Normalize to date only
-      const blockStartDate = new Date(blockStart.getFullYear(), blockStart.getMonth(), blockStart.getDate());
-      const blockEndDate = new Date(blockEnd.getFullYear(), blockEnd.getMonth(), blockEnd.getDate());
-      const currentDate = new Date(current.getFullYear(), current.getMonth(), current.getDate());
-      
-      return currentDate >= blockStartDate && currentDate <= blockEndDate;
+      return dayStr >= blockStart && dayStr <= blockEnd;
     });
   };
 
   // Check if block starts on this date
   const isBlockStart = (block, date) => {
-    const blockStart = new Date(block.start_date);
-    const current = new Date(date);
+    const dayStr = toDateStringUTC(date);
+    const blockStartStr = toDateStringUTC(block.start_date);
     
-    const blockStartDate = new Date(blockStart.getFullYear(), blockStart.getMonth(), blockStart.getDate());
-    const currentDate = new Date(current.getFullYear(), current.getMonth(), current.getDate());
-    
-    return blockStartDate.getTime() === currentDate.getTime();
+    return dayStr === blockStartStr;
   };
 
   // Calculate block span (how many days visible)

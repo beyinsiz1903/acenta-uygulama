@@ -2938,8 +2938,16 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
         <Card>
           <CardContent className="p-0 overflow-x-auto">
             <div className="min-w-max">
-              {/* Date Header Row - Modern Header (Non-sticky) */}
-              <div className="flex border-b bg-white shadow-sm" style={{ position: 'relative !important', top: 'auto !important' }}>
+              {/* Date Header Row - Modern Header (Non-sticky) - FORCED */}
+              <div 
+                className="flex border-b bg-white shadow-sm" 
+                style={{ 
+                  position: 'static',
+                  top: 'auto',
+                  position: '-webkit-static'
+                }}
+                data-testid="calendar-date-header"
+              >
                 <div className="w-32 flex-shrink-0 p-3 border-r font-bold text-gray-700 text-xs uppercase tracking-wider">
                   Odalar
                 </div>

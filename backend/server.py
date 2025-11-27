@@ -48825,6 +48825,64 @@ async def get_city_ledger_transactions(
 
 
 
+# Analytics Endpoints (moved before router include to avoid 404)
+@api_router.get("/analytics/occupancy-trend")
+async def get_occupancy_trend(
+    days: int = 30,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Get occupancy trend for the last N days"""
+    current_user = await get_current_user(credentials)
+    
+    end_date = datetime.now(timezone.utc)
+    start_date = end_date - timedelta(days=days)
+    
+    # Get all bookings in date range
+    bookings = await db.bookings.find({
+        'tenant_id': current_user.tenant_id,
+        'status': {'$ne': 'cancelled'},
+        '$and': [
+            {'check_out': {'$gt': start_date.isoformat()}},
+            {'check_in': {'$lt': end_date.isoformat()}}
+        ]
+    }).to_list(length=10000)
+    
+    # Get total rooms
+    total_rooms = await db.rooms.count_documents({'tenant_id': current_user.tenant_id})
+    
+    # Calculate daily occupancy
+    trend_data = []
+    current = start_date
+    
+    while current <= end_date:
+        # Count rooms occupied on this date
+        occupied = 0
+        for booking in bookings:
+            check_in = datetime.fromisoformat(booking['check_in'].replace('Z', '+00:00'))
+            check_out = datetime.fromisoformat(booking['check_out'].replace('Z', '+00:00'))
+            
+            if check_in.date() <= current.date() < check_out.date():
+                occupied += 1
+        
+        occupancy_rate = (occupied / total_rooms * 100) if total_rooms > 0 else 0
+        
+        trend_data.append({
+            'date': current.strftime('%Y-%m-%d'),
+            'occupancy_rate': round(occupancy_rate, 2),
+            'occupied_rooms': occupied,
+            'total_rooms': total_rooms
+        })
+        
+        current += timedelta(days=1)
+    
+    return {
+        'success': True,
+        'days': days,
+        'trend': trend_data,
+        'average_occupancy': round(sum(d['occupancy_rate'] for d in trend_data) / len(trend_data), 2) if trend_data else 0
+    }
+
+
 # Include router at the very end after ALL endpoints are defined
 app.include_router(api_router)
 

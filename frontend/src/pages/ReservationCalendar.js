@@ -658,13 +658,14 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
     const rangeEnd = new Date(startDate);
     rangeEnd.setDate(rangeEnd.getDate() + daysToShow);
 
-    checkIn.setHours(0, 0, 0, 0);
-    checkOut.setHours(0, 0, 0, 0);
-    rangeStart.setHours(0, 0, 0, 0);
-    rangeEnd.setHours(0, 0, 0, 0);
+    // Normalize to date only (avoid mutation)
+    const checkInDate = new Date(checkIn.getFullYear(), checkIn.getMonth(), checkIn.getDate());
+    const checkOutDate = new Date(checkOut.getFullYear(), checkOut.getMonth(), checkOut.getDate());
+    const rangeStartDate = new Date(rangeStart.getFullYear(), rangeStart.getMonth(), rangeStart.getDate());
+    const rangeEndDate = new Date(rangeEnd.getFullYear(), rangeEnd.getMonth(), rangeEnd.getDate());
 
-    const effectiveStart = checkIn < rangeStart ? rangeStart : checkIn;
-    const effectiveEnd = checkOut > rangeEnd ? rangeEnd : checkOut;
+    const effectiveStart = checkInDate < rangeStartDate ? rangeStartDate : checkInDate;
+    const effectiveEnd = checkOutDate > rangeEndDate ? rangeEndDate : checkOutDate;
 
     const nights = Math.ceil((effectiveEnd - effectiveStart) / (1000 * 60 * 60 * 24));
     return Math.max(1, nights);

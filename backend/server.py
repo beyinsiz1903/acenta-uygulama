@@ -40078,6 +40078,114 @@ async def get_group_bookings(
             'status': booking.get('status'),
             'contact_person': booking.get('contact_person'),
             'contact_email': booking.get('contact_email'),
+
+class MultiRoomBookingCreate(BaseModel):
+    guest_id: Optional[str] = None
+    guest: Optional[GuestCreate] = None
+    arrival_date: str
+    departure_date: str
+    rooms: List[dict]
+    company_id: Optional[str] = None
+    channel: ChannelType = ChannelType.DIRECT
+    special_requests: Optional[str] = None
+
+@api_router.post("/pms/bookings/multi-room", response_model=List[Booking])
+async def create_multi_room_booking(
+    payload: MultiRoomBookingCreate,
+    current_user: User = Depends(get_current_user)
+):
+    """Create a multi-room booking under one group_booking_id.
+
+    - If guest_id is not provided but guest info is, creates the guest first.
+    - Creates one Booking per room and links them with group_booking_id.
+    - Auto-creates folio for each booking (same behavior as single booking).
+    """
+    # Resolve guest
+    guest_id = payload.guest_id
+    if not guest_id and payload.guest:
+        guest = Guest(
+            tenant_id=current_user.tenant_id,
+            **payload.guest.model_dump()
+        )
+        guest_dict = guest.model_dump()
+        guest_dict["created_at"] = guest_dict["created_at"].isoformat()
+        await db.guests.insert_one(guest_dict)
+        guest_id = guest.id
+
+    if not guest_id:
+        raise HTTPException(status_code=400, detail="guest_id or guest details must be provided")
+
+    check_in_dt = datetime.fromisoformat(payload.arrival_date.replace("Z", "+00:00"))
+    check_out_dt = datetime.fromisoformat(payload.departure_date.replace("Z", "+00:00"))
+
+    group_id = str(uuid.uuid4())
+    created_bookings: List[Booking] = []
+
+    for room_data in payload.rooms:
+        room_id = room_data.get("room_id")
+        if not room_id:
+            raise HTTPException(status_code=400, detail="room_id is required for each room")
+
+        adults = int(room_data.get("adults", 1))
+        children = int(room_data.get("children", 0))
+        children_ages = room_data.get("children_ages", [])
+        total_amount = float(room_data.get("total_amount", 0.0))
+        base_rate = room_data.get("base_rate")
+        rate_plan = room_data.get("rate_plan")
+        package_code = room_data.get("package_code")
+
+        booking = Booking(
+            tenant_id=current_user.tenant_id,
+            guest_id=guest_id,
+            room_id=room_id,
+            check_in=check_in_dt,
+            check_out=check_out_dt,
+            adults=adults,
+            children=children,
+            children_ages=children_ages,
+            guests_count=adults + children,
+            total_amount=total_amount,
+            base_rate=base_rate,
+            channel=payload.channel,
+            rate_plan=rate_plan,
+            special_requests=payload.special_requests,
+            company_id=payload.company_id,
+            group_booking_id=group_id,
+        )
+
+        # Attach basic package info as note if provided
+        if package_code:
+            note = f"Package: {package_code}"
+            booking.special_requests = f"{booking.special_requests} | {note}" if booking.special_requests else note
+
+        qr_token = generate_time_based_qr_token(booking.id, expiry_hours=72)
+        qr_data = f"booking:{booking.id}:token:{qr_token}"
+        qr_code = generate_qr_code(qr_data)
+        booking.qr_code = qr_code
+        booking.qr_code_data = qr_token
+
+        booking_dict = booking.model_dump()
+        booking_dict["check_in"] = booking_dict["check_in"].isoformat()
+        booking_dict["check_out"] = booking_dict["check_out"].isoformat()
+        booking_dict["created_at"] = booking_dict["created_at"].isoformat()
+        await db.bookings.insert_one(booking_dict)
+
+        folio_number = await generate_folio_number(current_user.tenant_id)
+        folio = Folio(
+            tenant_id=current_user.tenant_id,
+            booking_id=booking.id,
+            folio_number=folio_number,
+            folio_type=FolioType.GUEST,
+            guest_id=guest_id,
+        )
+        folio_dict = folio.model_dump()
+        folio_dict["created_at"] = folio_dict["created_at"].isoformat()
+        await db.folios.insert_one(folio_dict)
+
+        created_bookings.append(booking)
+
+    return created_bookings
+
             'contact_phone': booking.get('contact_phone'),
             'special_requirements': booking.get('special_requirements', ''),
             'notes': booking.get('notes', '')

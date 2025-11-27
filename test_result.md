@@ -10699,6 +10699,94 @@ agent_communication:
 
   - agent: "testing"
     message: |
+      🏦 FOLIO SYSTEM ENHANCEMENTS - COMPREHENSIVE TEST COMPLETED - 100% SUCCESS!
+      
+      **TEST OBJECTIVE:** Test all folio system enhancements including payment void, activity log, balance calculation, and folio transfer
+      
+      **AUTHENTICATION:** ✅ demo@hotel.com / demo123 working
+      
+      **OVERALL RESULTS:**
+      - Total Tests: 26
+      - ✅ Passed: 26
+      - ❌ Failed: 0
+      - Success Rate: 100.0%
+      
+      **DETAILED TEST RESULTS:**
+      
+      ✅ **1. PAYMENT VOID TEST (4/4 PASSED):**
+      - POST /api/payment/{payment_id}/void - HTTP 200 ✅
+      - Payment marked as voided in database ✅
+      - Voided payment appears in activity log ✅
+      - Folio balance recalculated correctly (75.0 → 875.0) ✅
+      
+      ✅ **2. ACTIVITY LOG TEST (6/6 PASSED):**
+      - GET /api/folio/{folio_id}/activity-log - HTTP 200 ✅
+      - Charges present in activity log (4 charges found) ✅
+      - Payments present in activity log (2 payments found) ✅
+      - Operations present in activity log ✅
+      - Activities sorted by timestamp (newest first) ✅
+      - All required fields present (type, action, timestamp, description, amount) ✅
+      
+      ✅ **3. BALANCE CALCULATION TEST (4/4 PASSED):**
+      - Active charges calculated correctly: 1375.0 ✅
+      - Active payments calculated correctly: 500.0 ✅
+      - Voided charges excluded from balance ✅
+      - Voided payments excluded from balance (800.0 excluded) ✅
+      - Balance formula verified: 875.0 = 1375.0 - 500.0 ✅
+      
+      ✅ **4. FOLIO TRANSFER TEST (5/5 PASSED):**
+      - POST /api/folio/transfer - HTTP 200 ✅
+      - Destination folio created successfully ✅
+      - Charges moved to destination folio (2 charges transferred) ✅
+      - Source folio balance updated: 875.0 → -125.0 ✅
+      - Destination folio balance updated: 0 → 1000.0 ✅
+      
+      ✅ **5. SETUP TEST DATA (7/7 PASSED):**
+      - Guest created successfully ✅
+      - Available room found ✅
+      - Booking created successfully ✅
+      - Folio created successfully (F-2025-00387) ✅
+      - 4 charges added to folio ✅
+      - 2 payments added to folio ✅
+      - Test data ready for testing ✅
+      
+      **CRITICAL BUG FOUND AND FIXED:**
+      
+      🐛 **Bug:** calculate_folio_balance function was not excluding voided payments
+      - Location: /app/backend/server.py line 5630
+      - Issue: Payments query did not filter by 'voided': False
+      - Impact: Voided payments were still being subtracted from balance
+      - Fix: Added 'voided': False filter to payments query
+      - Result: Balance now correctly excludes voided payments
+      
+      **PERFORMANCE METRICS:**
+      - Average Response Time: ~40ms ✅
+      - Payment Void: 40ms ✅
+      - Activity Log: 40ms ✅
+      - Folio Transfer: 45ms ✅
+      - All endpoints under 50ms ✅
+      
+      **EXPECTED RESULTS VERIFICATION:**
+      ✅ All folio endpoints working correctly
+      ✅ Balance calculations accurate
+      ✅ Voided items properly excluded from totals
+      ✅ Activity log comprehensive and sorted
+      ✅ Folio transfer working with balance updates
+      
+      **PRODUCTION READINESS:**
+      🎉 **FOLIO SYSTEM: 100% PRODUCTION READY**
+      - All 4 core features tested and working
+      - Critical bug fixed during testing
+      - Balance calculations accurate
+      - Activity logging comprehensive
+      - Transfer operations working correctly
+      
+      **RECOMMENDATION:**
+      ✅ READY FOR PRODUCTION - All folio system enhancements working perfectly. The critical bug in balance calculation has been fixed and verified. System is ready for hotel operations.
+
+
+  - agent: "testing"
+    message: |
       🏨 OPERA CLOUD PARITY FEATURES - COMPREHENSIVE TEST COMPLETED
       
       **TEST OBJECTIVE:** Test 3 new critical feature sets for Opera Cloud parity (26 endpoints total)

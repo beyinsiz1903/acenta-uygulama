@@ -3239,25 +3239,37 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
               <div>
                 <div className="flex justify-between items-center mb-3">
                   <h3 className="text-lg font-semibold">Charges</h3>
-                  {selectedBookingFolio?.status !== 'closed' && (
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={() => {
-                        setChargeForm({
-                          category: 'room',
-                          description: '',
-                          quantity: 1,
-                          unit_price: '',
-                          notes: ''
-                        });
-                        setShowChargeForm(!showChargeForm);
-                      }}
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Charge
-                    </Button>
-                  )}
+                  <div className="flex gap-2">
+                    {selectedChargesForTransfer.length > 0 && (
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => setShowTransferDialog(true)}
+                      >
+                        <ArrowRightLeft className="w-4 h-4 mr-2" />
+                        Transfer ({selectedChargesForTransfer.length})
+                      </Button>
+                    )}
+                    {selectedBookingFolio?.status !== 'closed' && (
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => {
+                          setChargeForm({
+                            category: 'room',
+                            description: '',
+                            quantity: 1,
+                            unit_price: '',
+                            notes: ''
+                          });
+                          setShowChargeForm(!showChargeForm);
+                        }}
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add Charge
+                      </Button>
+                    )}
+                  </div>
                 </div>
                 
                 {/* Charge Form */}

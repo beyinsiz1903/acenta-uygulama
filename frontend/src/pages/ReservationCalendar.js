@@ -223,18 +223,50 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
   const handleCreateBooking = async (e) => {
     e.preventDefault();
     
-    if (!newBooking.guest_id) {
-      toast.error('Please select a guest');
+    let guestId = newBooking.guest_id;
+    
+    // If new guest, create guest first
+    if (!guestId && newBooking.guest_name) {
+      try {
+        const newGuest = {
+          id: `guest_${Date.now()}`,
+          name: newBooking.guest_name,
+          email: newBooking.guest_email || '',
+          phone: newBooking.guest_phone || '',
+          tenant_id: user.tenant_id,
+          created_at: new Date().toISOString()
+        };
+        
+        await axios.post('/pms/guests', newGuest);
+        guestId = newGuest.id;
+        toast.success('Yeni misafir oluşturuldu!');
+      } catch (error) {
+        toast.error('Misafir oluşturulamadı: ' + (error.response?.data?.detail || error.message));
+        return;
+      }
+    }
+    
+    if (!guestId) {
+      toast.error('Lütfen bir misafir seçin veya yeni misafir ekleyin');
       return;
     }
     
     try {
-      await axios.post('/pms/bookings', newBooking);
-      toast.success('Booking created successfully!');
+      const bookingData = {
+        ...newBooking,
+        guest_id: guestId
+      };
+      
+      await axios.post('/pms/bookings', bookingData);
+      toast.success('Rezervasyon başarıyla oluşturuldu!');
       setShowNewBookingDialog(false);
-      loadCalendarData();
+      
+      // Reload calendar to show new booking
+      setTimeout(() => {
+        loadCalendarData();
+      }, 500);
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Failed to create booking');
+      toast.error(error.response?.data?.detail || 'Rezervasyon oluşturulamadı');
     }
   };
 

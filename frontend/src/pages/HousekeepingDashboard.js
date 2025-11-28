@@ -1,10 +1,13 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import Layout from '../components/Layout';
 import StaffAssignment from '../components/StaffAssignment';
+import HousekeepingDetailedReports from '../components/HousekeepingDetailedReports';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Bed, Users, ArrowLeft, Sparkles } from 'lucide-react';
+import { Skeleton } from '../components/ui/skeleton';
 
 const HousekeepingDashboard = ({ user, tenant, onLogout }) => {
   const navigate = useNavigate();

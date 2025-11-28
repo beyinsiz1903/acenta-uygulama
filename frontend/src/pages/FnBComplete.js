@@ -108,7 +108,17 @@ const FnBComplete = ({ user, tenant, onLogout }) => {
                 <CardTitle>Kitchen Display System</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-center text-gray-600 py-8">Real-time order display - Mutfak ekranı</p>
+                <div className="flex flex-col items-center justify-center gap-4 py-8">
+                  <p className="text-center text-gray-600 max-w-md">
+                    Servis sırasında mutfak için tam ekran, karanlık temalı Kitchen Display ekranını kullanın.
+                  </p>
+                  <Button
+                    className="bg-orange-600 hover:bg-orange-700"
+                    onClick={() => navigate('/kitchen-display')}
+                  >
+                    Tam Ekran Kitchen Display Aç
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>

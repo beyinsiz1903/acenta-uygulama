@@ -4284,6 +4284,21 @@ frontend:
         agent: "testing"
         comment: "🎉 PERFECT API CONTRACT VALIDATION COMPLETED - 100% SUCCESS RATE (13/13 tests passed). ✅ RATE PLANS API (6/6): POST /api/rates/rate-plans creates rate plans with tenant_id verification (created IDs: cb387abd-85ff-4e1d-8ec9-98cdf4dcb9c7, f013b43f-f95a-49cf-9c69-e4a950f06b69), GET /api/rates/rate-plans lists with filters (channel=direct, stay_date filtering) and tenant_id verification. ✅ PACKAGES API (3/3): POST /api/rates/packages creates packages with tenant_id verification (created IDs: 7b586809-9cb6-461d-92df-ec9c897dbdc3, db84d35d-662a-4cc7-ac03-7de93932c13e), GET /api/rates/packages lists all packages with tenant_id verification. ✅ MULTI-ROOM BOOKING API (1/1): POST /api/pms/bookings/multi-room successfully creates single room booking with group_booking_id populated (Booking ID: 5c9d52c6-75c0-42d6-b423-0fed1d8e05c6, Group Booking ID: c0b7a389-143f-4a80-8d64-b6adb0b7fdd8), booking created in database and verified. ✅ BOOKINGS GET API (3/3): GET /api/pms/bookings works with default parameters, limit parameter, and date range filtering, all returning proper booking lists with tenant_id verification and group_booking_id populated bookings visible. AUTHENTICATION: Successfully tested with demo@hotel.com / demo123 credentials. TENANT ISOLATION: All endpoints properly filter by tenant_id (b402342e-ca88-4aba-849c-4db8bab3a79f). BUG FIXES APPLIED: Fixed RatePlan model field mapping (base_price ↔ base_rate), added missing fields (code, is_active), created test rooms and guest data. All requested API contracts validated and working perfectly."
 
+  - task: "AR/Finance Backend Endpoints Testing"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "User requested testing of AR/Finance endpoints: Company aging report (GET /reports/company-aging + Excel export), Pending AR (GET /folio/pending-ar), City Ledger management (GET/POST /cashiering/city-ledger, AR aging report, payments, transactions). Base URL: https://event-filter-system-1.preview.emergentagent.com/api, Auth: demo@hotel.com / demo123"
+      - working: true
+        agent: "testing"
+        comment: "🎉 AR/FINANCE BACKEND TESTING COMPLETED - 100% SUCCESS RATE (8/8 tests passed). ✅ COMPANY AGING REPORT: GET /reports/company-aging returns proper structure with report_date, total_ar (5345.4), company_count (5), companies array with aging buckets (0-7 days, 8-14 days, 15-30 days, 30+ days), folio_count per company (32.4ms). ✅ EXCEL EXPORT: GET /reports/company-aging/excel generates proper Excel file (5552 bytes) with correct content-type (59.1ms) - FIXED merged cell issue in Excel generation. ✅ PENDING AR: GET /folio/pending-ar returns array structure with company_id, company_name, total_outstanding, open_folios_count, days_outstanding, aging object (12.0ms). ✅ CITY LEDGER ACCOUNTS: GET /cashiering/city-ledger returns accounts array and total_count (9.2ms). ✅ CREATE ACCOUNT: POST /cashiering/city-ledger creates account with success=true, account_id, credit_limit=10000 (27.8ms). ✅ AR AGING REPORT: GET /cashiering/ar-aging-report returns aging_buckets (current, 30_days, 60_days, 90_plus), totals, generated_at (10.8ms). ✅ CITY LEDGER PAYMENT: POST /cashiering/city-ledger-payment processes payment with new_balance calculation - FIXED query parameter format (22.6ms). ✅ TRANSACTIONS: GET /cashiering/city-ledger/{account_id}/transactions returns summary with total_charges, total_payments, current_balance, transaction_count (12.4ms). AUTHENTICATION: Successfully tested with demo@hotel.com / demo123. BUG FIXES: Fixed Excel merged cell AttributeError, corrected payment endpoint parameter format. All AR/Finance functionality working perfectly for Turkish hotel finance operations."
+
 metadata:
   created_by: "main_agent"
   version: "1.0"

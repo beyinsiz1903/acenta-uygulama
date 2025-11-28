@@ -78,6 +78,42 @@ const HousekeepingDashboard = ({ user, tenant, onLogout }) => {
           </CardContent>
         </Card>
 
+        {/* HK Summary Widgets */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Today&apos;s Housekeeping Snapshot</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <Skeleton className="h-20" />
+                <Skeleton className="h-20" />
+                <Skeleton className="h-20" />
+                <Skeleton className="h-20" />
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div className="bg-blue-50 p-3 rounded">
+                  <div className="text-xs text-gray-600">Rooms (Total)</div>
+                  <div className="text-2xl font-bold text-blue-700">{roomStatus?.summary?.total_rooms ?? '-'}</div>
+                </div>
+                <div className="bg-green-50 p-3 rounded">
+                  <div className="text-xs text-gray-600">Vacant Clean</div>
+                  <div className="text-2xl font-bold text-green-700">{roomStatus?.summary?.vacant_clean ?? '-'}</div>
+                </div>
+                <div className="bg-yellow-50 p-3 rounded">
+                  <div className="text-xs text-gray-600">Vacant Dirty</div>
+                  <div className="text-2xl font-bold text-yellow-700">{roomStatus?.summary?.vacant_dirty ?? '-'}</div>
+                </div>
+                <div className="bg-red-50 p-3 rounded">
+                  <div className="text-xs text-gray-600">Out of Order / Service</div>
+                  <div className="text-2xl font-bold text-red-700">{(roomStatus?.summary?.out_of_order || 0) + (roomStatus?.summary?.out_of_service || 0)}</div>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Staff Assignment Component */}
         <StaffAssignment />
 

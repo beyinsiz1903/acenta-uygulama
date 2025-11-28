@@ -521,6 +521,16 @@ const GroupSales = () => {
           <Card>
             <CardContent className="pt-6">
               <div className="text-center">
+                <p className="text-sm text-gray-500">Potansiyel Oda Geliri</p>
+                <p className="text-xl font-bold text-amber-600">
+                  €{groups.reduce((sum, g) => sum + (g.total_rooms * (g.group_rate || 0)), 0).toFixed(0)}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-center">
                 <p className="text-sm text-gray-500">Ort. Pickup</p>
                 <p className="text-3xl font-bold text-orange-600">
                   {groups.length > 0 

@@ -5037,12 +5037,47 @@ async def create_group_block(
 @api_router.get("/groups/blocks")
 async def get_group_blocks(
     status: Optional[str] = None,
+    date_range: Optional[str] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
     current_user: User = Depends(get_current_user)
 ):
     """Grup bloklarını listele"""
     query = {'tenant_id': current_user.tenant_id}
     if status:
         query['status'] = status
+
+    # Date range filtering based on check_in (stored as YYYY-MM-DD string)
+    if date_range:
+        today = datetime.now(timezone.utc).date()
+        range_start = None
+        range_end = None
+
+        if date_range == "today":
+            range_start = today
+            range_end = today
+        elif date_range == "this_month":
+            first_day = today.replace(day=1)
+            # Find last day of month by going to first day of next month and subtracting one day
+            if first_day.month == 12:
+                next_month = first_day.replace(year=first_day.year + 1, month=1, day=1)
+            else:
+                next_month = first_day.replace(month=first_day.month + 1, day=1)
+            last_day = next_month - timedelta(days=1)
+            range_start = first_day
+            range_end = last_day
+        elif date_range == "custom" and start_date and end_date:
+            try:
+                range_start = datetime.fromisoformat(start_date).date()
+                range_end = datetime.fromisoformat(end_date).date()
+            except Exception:
+                range_start = None
+                range_end = None
+
+        if range_start and range_end:
+            start_str = range_start.isoformat()
+            end_str = range_end.isoformat()
+            query['check_in'] = {'$gte': start_str, '$lte': end_str}
     
     blocks = await db.group_blocks.find(query, {'_id': 0}).sort('check_in', -1).to_list(100)
     

@@ -17,6 +17,10 @@ const StatusBadge = ({ status }) => {
     tentative: 'bg-yellow-100 text-yellow-800',
     definite: 'bg-green-100 text-green-800',
     released: 'bg-gray-100 text-gray-800',
+
+const GroupSales = () => {
+  const navigate = useNavigate();
+
     completed: 'bg-blue-100 text-blue-800',
     cancelled: 'bg-red-100 text-red-800'
   };

@@ -356,7 +356,7 @@ class ARFinanceBackendTester:
                 
                 new_balance = data.get('new_balance')
                 self.log_result("City Ledger Payment", True, response_time, 
-                              f"Payment processed: Amount {payment_data['amount']}, New balance: {new_balance}")
+                              f"Payment processed: Amount {params['amount']}, New balance: {new_balance}")
                 return True
             else:
                 self.log_result("City Ledger Payment", False, response_time, 

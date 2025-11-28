@@ -20,6 +20,7 @@ const ChannelManagerModule = lazy(() => import("@/pages/ChannelManagerModule"));
 const ReservationCalendar = lazy(() => import("@/pages/ReservationCalendar"));
 const Settings = lazy(() => import("@/pages/Settings"));
 const PendingAR = lazy(() => import("@/pages/PendingAR"));
+const CityLedgerAccounts = lazy(() => import("@/pages/CityLedgerAccounts"));
 const LoyaltyModule = lazy(() => import("@/pages/LoyaltyModule"));
 const MarketplaceModule = lazy(() => import("@/pages/MarketplaceModule"));
 const HotelInventory = lazy(() => import("@/pages/HotelInventory"));

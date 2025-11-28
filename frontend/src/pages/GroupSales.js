@@ -67,12 +67,45 @@ const GroupSales = () => {
 
   useEffect(() => {
     loadGroups();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [statusFilter, dateFilter, customStart, customEnd]);
 
   const loadGroups = async () => {
     try {
-      const response = await axios.get('/groups/blocks');
-      setGroups(response.data.blocks || []);
+      const params = {};
+      if (statusFilter !== 'all') params.status = statusFilter;
+
+      const response = await axios.get('/groups/blocks', { params });
+      let blocks = response.data.blocks || [];
+
+      // Date filter (client-side, based on check_in)
+      const today = new Date();
+      if (dateFilter !== 'custom') {
+        blocks = blocks.filter((b) => {
+          const ci = new Date(b.check_in);
+          if (Number.isNaN(ci.getTime())) return true;
+          if (dateFilter === 'today') {
+            return ci.toDateString() === today.toDateString();
+          }
+          if (dateFilter === 'this_month') {
+            return ci.getFullYear() === today.getFullYear() && ci.getMonth() === today.getMonth();
+          }
+          if (dateFilter === 'next_30') {
+            const diff = (ci - today) / (1000 * 60 * 60 * 24);
+            return diff >= 0 && diff <= 30;
+          }
+          return true;
+        });
+      } else if (customStart && customEnd) {
+        const start = new Date(customStart);
+        const end = new Date(customEnd);
+        blocks = blocks.filter((b) => {
+          const ci = new Date(b.check_in);
+          return ci >= start && ci <= end;
+        });
+      }
+
+      setGroups(blocks);
     } catch (error) {
       toast.error('Grup listesi yüklenemedi');
     }

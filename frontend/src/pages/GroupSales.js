@@ -41,6 +41,10 @@ const GroupSales = () => {
 
   const [loading, setLoading] = useState(false);
   const [groups, setGroups] = useState([]);
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [dateFilter, setDateFilter] = useState('this_month');
+  const [customStart, setCustomStart] = useState('');
+  const [customEnd, setCustomEnd] = useState('');
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [groupDetails, setGroupDetails] = useState(null);

@@ -26,6 +26,10 @@ const POSDashboard = ({ user, tenant, onLogout }) => {
             </p>
           </div>
           <div className="flex items-center gap-3">
+            <Button variant="outline" onClick={() => navigate('/fnb-complete')}>
+              <UtensilsCrossed className="w-4 h-4 mr-2" />
+              F&amp;B Suite
+            </Button>
             <Button variant="outline" onClick={() => navigate('/features')}>
               <Sparkles className="w-4 h-4 mr-2" />
               All Features

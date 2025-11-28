@@ -10,6 +10,28 @@ import { Bed, Users, ArrowLeft, Sparkles } from 'lucide-react';
 import { Skeleton } from '../components/ui/skeleton';
 
 const HousekeepingDashboard = ({ user, tenant, onLogout }) => {
+  const [hkDashboard, setHkDashboard] = useState(null);
+  const [roomStatus, setRoomStatus] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadHK = async () => {
+      try {
+        const [dashRes, statusRes] = await Promise.all([
+          axios.get('/department/housekeeping/dashboard'),
+          axios.get('/housekeeping/room-status')
+        ]);
+        setHkDashboard(dashRes.data || null);
+        setRoomStatus(statusRes.data || null);
+      } catch (err) {
+        console.error('Failed to load housekeeping dashboard', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadHK();
+  }, []);
+
   const navigate = useNavigate();
 
   return (

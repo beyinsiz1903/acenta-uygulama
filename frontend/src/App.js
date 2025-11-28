@@ -418,6 +418,16 @@ function App() {
             }
           />
           <Route
+            path="/city-ledger"
+            element={
+              isAuthenticated ? (
+                <CityLedgerAccounts user={user} tenant={tenant} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/auth" replace />
+              )
+            }
+          />
+          <Route
             path="/loyalty"
             element={
               isAuthenticated ? (

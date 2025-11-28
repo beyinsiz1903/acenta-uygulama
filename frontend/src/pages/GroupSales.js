@@ -70,52 +70,6 @@ const GroupSales = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusFilter, dateFilter, customStart, customEnd]);
 
-      {/* Filters */}
-      <div className="mt-4 mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div>
-          <Label className="text-xs text-gray-600">Durum</Label>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger>
-              <SelectValue placeholder="Tüm durumlar" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tümü</SelectItem>
-              <SelectItem value="tentative">Opsiyonel</SelectItem>
-              <SelectItem value="definite">Kesin</SelectItem>
-              <SelectItem value="completed">Tamamlandı</SelectItem>
-              <SelectItem value="cancelled">İptal</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <Label className="text-xs text-gray-600">Tarih Aralığı (Check-in)</Label>
-          <Select value={dateFilter} onValueChange={setDateFilter}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="today">Bugün</SelectItem>
-              <SelectItem value="this_month">Bu Ay</SelectItem>
-              <SelectItem value="next_30">Önümüzdeki 30 Gün</SelectItem>
-              <SelectItem value="custom">Özel Aralık</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        {dateFilter === 'custom' && (
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <Label className="text-xs text-gray-600">Başlangıç</Label>
-              <Input type="date" value={customStart} onChange={(e) => setCustomStart(e.target.value)} />
-            </div>
-            <div>
-              <Label className="text-xs text-gray-600">Bitiş</Label>
-              <Input type="date" value={customEnd} onChange={(e) => setCustomEnd(e.target.value)} />
-            </div>
-          </div>
-        )}
-      </div>
-
-
   const loadGroups = async () => {
     try {
       const params = {};

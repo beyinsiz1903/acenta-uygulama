@@ -5066,6 +5066,9 @@ async def get_group_blocks(
             last_day = next_month - timedelta(days=1)
             range_start = first_day
             range_end = last_day
+        elif date_range == "next_30":
+            range_start = today
+            range_end = today + timedelta(days=30)
         elif date_range == "custom" and start_date and end_date:
             try:
                 range_start = datetime.fromisoformat(start_date).date()

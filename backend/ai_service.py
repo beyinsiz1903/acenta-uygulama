@@ -8,7 +8,13 @@ from datetime import datetime, timedelta
 from typing import List, Dict, Any
 import asyncio
 from dotenv import load_dotenv
-from emergentintegrations.llm.chat import LlmChat, UserMessage
+try:
+    from emergentintegrations.llm.chat import LlmChat, UserMessage
+    _AI_BACKEND_AVAILABLE = True
+except Exception:
+    LlmChat = None
+    UserMessage = None
+    _AI_BACKEND_AVAILABLE = False
 
 # Load environment variables
 load_dotenv()

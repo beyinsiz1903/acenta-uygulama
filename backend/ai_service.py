@@ -5,7 +5,7 @@ Provides AI-powered insights, predictions, and recommendations
 
 import os
 from datetime import datetime, timedelta
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 import asyncio
 from dotenv import load_dotenv
 try:
@@ -21,20 +21,23 @@ load_dotenv()
 
 class AIService:
     def __init__(self):
-        if not _AI_BACKEND_AVAILABLE:
-            # Fallback mode: no external LLM backend available
-            self.api_key = None
-        else:
-            self.api_key = os.getenv('EMERGENT_LLM_KEY')
-            if not self.api_key:
-                raise ValueError("EMERGENT_LLM_KEY not found in environment variables")
+        # Track whether we can safely call the external LLM backend
+        self.llm_enabled = False
+        self.api_key = None
+        
+        if _AI_BACKEND_AVAILABLE and LlmChat is not None:
+            api_key = os.getenv('EMERGENT_LLM_KEY')
+            if api_key:
+                self.api_key = api_key
+                self.llm_enabled = True
+        # If the backend or key is missing we stay in fallback mode
     
     def _create_chat(self, system_message: str, session_id: str = "default") -> LlmChat:
         """Create a new chat instance with the specified system message.
         If LLM backend is not available, raise a clear error so callers can
         fallback to heuristic logic instead of crashing the app.
         """
-        if not _AI_BACKEND_AVAILABLE or not self.api_key or LlmChat is None:
+        if not self.llm_enabled:
             raise RuntimeError("LLM backend not available")
 
         chat = LlmChat(
@@ -91,19 +94,21 @@ Provide a friendly greeting, highlight key metrics, and give 1-2 actionable insi
         historical_data: List[Dict[str, Any]],
         current_occupancy: float,
         upcoming_bookings: int,
-        season: str = "normal"
+        season: str = "normal",
+        room_capacity: Optional[int] = None
     ) -> Dict[str, Any]:
         """
-        Predict occupancy trends and patterns for PMS
+        Predict occupancy trends and patterns for PMS.
+        Falls back to a deterministic heuristic when the LLM backend is unavailable.
         """
         system_message = """You are a hotel revenue management AI.
         Analyze occupancy data and provide predictions with confidence levels.
         Be data-driven and provide specific numbers."""
         
-        chat = self._create_chat(system_message, session_id="occupancy_prediction")
-        
-        prompt = f"""Analyze this hotel occupancy data:
-
+        try:
+            chat = self._create_chat(system_message, session_id="occupancy_prediction")
+            prompt = f"""Analyze this hotel occupancy data:
+            
 Current occupancy: {current_occupancy}%
 Upcoming bookings (next 7 days): {upcoming_bookings}
 Season: {season}
@@ -116,24 +121,87 @@ Based on this data:
 4. Provide 1-2 actionable recommendations
 
 Format your response as JSON with keys: tomorrow_prediction, next_week_prediction, patterns, recommendations"""
-        
-        user_message = UserMessage(text=prompt)
-        response = await chat.send_message(user_message)
+            
+            user_message = UserMessage(text=prompt)
+            response = await chat.send_message(user_message)
+        except Exception as exc:
+            return self._fallback_occupancy_prediction(
+                current_occupancy=current_occupancy,
+                upcoming_bookings=upcoming_bookings,
+                season=season,
+                room_capacity=room_capacity,
+                error_message=str(exc)
+            )
         
         # Try to parse as JSON, fallback to text response
         try:
             import json
-            # Extract JSON from response
             json_start = response.find('{')
             json_end = response.rfind('}') + 1
             if json_start != -1 and json_end != -1:
-                return json.loads(response[json_start:json_end])
-        except:
+                parsed = json.loads(response[json_start:json_end])
+                if isinstance(parsed, dict):
+                    parsed.setdefault("source", "llm")
+                    return parsed
+        except Exception:
             pass
         
         return {
             "prediction": response,
-            "confidence": "medium"
+            "confidence": "medium",
+            "source": "llm_raw"
+        }
+
+    def _fallback_occupancy_prediction(
+        self,
+        current_occupancy: float,
+        upcoming_bookings: int,
+        season: str,
+        room_capacity: Optional[int] = None,
+        error_message: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Generate a deterministic occupancy prediction when the AI backend
+        is unavailable. Keeps the UI responsive instead of surfacing 500 errors.
+        """
+        capacity = max(room_capacity or 100, 1)
+        booking_ratio = min(1.5, upcoming_bookings / capacity)
+        seasonal_adjustment = 5 if season == "peak" else -3 if season == "low" else 0
+        
+        demand_modifier = booking_ratio * 20
+        tomorrow_prediction = max(0.0, min(100.0, current_occupancy + demand_modifier * 0.6 + seasonal_adjustment))
+        next_week_prediction = max(
+            tomorrow_prediction,
+            max(0.0, min(100.0, current_occupancy + demand_modifier + seasonal_adjustment))
+        )
+        
+        confidence = "high" if booking_ratio >= 1 else "medium" if booking_ratio >= 0.5 else "low"
+        
+        patterns = [
+            f"Current occupancy is {current_occupancy:.1f}%.",
+            f"{upcoming_bookings} upcoming bookings cover roughly {booking_ratio:.0%} of available rooms."
+        ]
+        if error_message:
+            patterns.append("AI service unavailable, using heuristic forecast.")
+        
+        recommendations = []
+        if booking_ratio >= 0.8:
+            recommendations.append("Prioritize rate management to capitalize on strong demand.")
+        else:
+            recommendations.append("Launch a targeted promotion to build short-term demand.")
+        
+        if next_week_prediction > current_occupancy + 5:
+            recommendations.append("Schedule sufficient staff to handle the projected increase in occupancy.")
+        else:
+            recommendations.append("Use the softer demand window for maintenance or deep cleaning.")
+        
+        return {
+            "tomorrow_prediction": round(tomorrow_prediction, 1),
+            "next_week_prediction": round(next_week_prediction, 1),
+            "patterns": patterns,
+            "recommendations": recommendations,
+            "confidence": confidence,
+            "source": "heuristic"
         }
     
     async def analyze_guest_patterns(

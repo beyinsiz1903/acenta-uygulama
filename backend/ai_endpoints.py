@@ -110,7 +110,8 @@ async def predict_occupancy(
             historical_data=historical_data,
             current_occupancy=current_occupancy,
             upcoming_bookings=upcoming_bookings,
-            season="normal"
+            season="normal",
+            room_capacity=total_rooms
         )
         
         return {

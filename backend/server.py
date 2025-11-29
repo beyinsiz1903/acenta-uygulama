@@ -13113,15 +13113,25 @@ async def get_grouped_conflicts(
         }
     }
 
+class ChannelMixRequest(BaseModel):
+    start_date: str = Field(..., description="Inclusive period start date (YYYY-MM-DD)")
+    end_date: str = Field(..., description="Inclusive period end date (YYYY-MM-DD)")
+
+
 @api_router.post("/deluxe/optimize-channel-mix")
 async def optimize_channel_mix(
-    start_date: str,
-    end_date: str,
+    request: ChannelMixRequest,
     current_user: User = Depends(get_current_user)
 ):
     """Simulate optimal OTA vs Direct channel mix"""
-    start = datetime.fromisoformat(start_date).date()
-    end = datetime.fromisoformat(end_date).date()
+    try:
+        start = datetime.fromisoformat(request.start_date).date()
+        end = datetime.fromisoformat(request.end_date).date()
+    except ValueError:
+        raise HTTPException(status_code=422, detail="Invalid date format. Use YYYY-MM-DD.")
+    
+    if start > end:
+        raise HTTPException(status_code=422, detail="start_date must be before end_date.")
     
     # Get historical bookings
     bookings = await db.bookings.find({

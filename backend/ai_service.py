@@ -21,9 +21,13 @@ load_dotenv()
 
 class AIService:
     def __init__(self):
-        self.api_key = os.getenv('EMERGENT_LLM_KEY')
-        if not self.api_key:
-            raise ValueError("EMERGENT_LLM_KEY not found in environment variables")
+        if not _AI_BACKEND_AVAILABLE:
+            # Fallback mode: no external LLM backend available
+            self.api_key = None
+        else:
+            self.api_key = os.getenv('EMERGENT_LLM_KEY')
+            if not self.api_key:
+                raise ValueError("EMERGENT_LLM_KEY not found in environment variables")
     
     def _create_chat(self, system_message: str, session_id: str = "default") -> LlmChat:
         """Create a new chat instance with the specified system message"""

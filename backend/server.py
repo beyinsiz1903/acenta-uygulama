@@ -16051,12 +16051,13 @@ async def log_ai_activity(
     await db.ai_activity_log.insert_one(activity)
     return {'message': 'Activity logged successfully', 'activity_id': activity['id']}
 
-# Import and include AI endpoints
+# Import and include AI endpoints (optional - fallback if dependencies missing)
 try:
     from ai_endpoints import api_router as ai_ai_router
     api_router.include_router(ai_ai_router, tags=["AI Intelligence"])
     print("✅ AI endpoints loaded successfully")
-except ImportError as e:
+except Exception as e:
+    # Log but don't break main app; some AI features may be disabled
     print(f"⚠️ AI endpoints not loaded: {e}")
 
 # ============= 7 CRITICAL FEATURES ENDPOINTS =============

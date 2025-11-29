@@ -30,7 +30,13 @@ class AIService:
                 raise ValueError("EMERGENT_LLM_KEY not found in environment variables")
     
     def _create_chat(self, system_message: str, session_id: str = "default") -> LlmChat:
-        """Create a new chat instance with the specified system message"""
+        """Create a new chat instance with the specified system message.
+        If LLM backend is not available, raise a clear error so callers can
+        fallback to heuristic logic instead of crashing the app.
+        """
+        if not _AI_BACKEND_AVAILABLE or not self.api_key or LlmChat is None:
+            raise RuntimeError("LLM backend not available")
+
         chat = LlmChat(
             api_key=self.api_key,
             session_id=session_id,

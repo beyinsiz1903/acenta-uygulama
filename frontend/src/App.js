@@ -542,6 +542,17 @@ function App() {
           <Route
             path="/efatura"
             element={
+          <Route
+            path="/frontdesk/audit-checklist"
+            element={
+              isAuthenticated ? (
+                <FrontdeskAuditChecklist user={user} tenant={tenant} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/auth" replace />
+              )
+            }
+          />
+
               isAuthenticated ? (
                 <EFaturaModule user={user} tenant={tenant} onLogout={handleLogout} />
               ) : (

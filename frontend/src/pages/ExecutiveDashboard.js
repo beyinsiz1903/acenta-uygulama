@@ -142,6 +142,22 @@ const ExecutiveDashboard = ({ user }) => {
       <div className="bg-black/30 backdrop-blur-sm text-white p-4 sticky top-0 z-10 shadow-lg border-b border-white/10">
         <div className="flex items-center justify-between mb-2">
         <div className="mt-2">
+        <div className="mt-2">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="bg-white/10">
+              <TabsTrigger value="snapshot" className="data-[state=active]:bg-white/20 data-[state=active]:text-white">
+                Snapshot
+              </TabsTrigger>
+              <TabsTrigger value="budget" className="data-[state=active]:bg-white/20 data-[state=active]:text-white">
+                Budget
+              </TabsTrigger>
+              <TabsTrigger value="comp" className="data-[state=active]:bg-white/20 data-[state=active]:text-white">
+                Comp-Set
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="bg-white/10">
               <TabsTrigger value="snapshot" className="data-[state=active]:bg-white/20 data-[state=active]:text-white">

@@ -308,22 +308,7 @@ const Reports = ({ user, tenant, onLogout }) => {
                 <FileSpreadsheet className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
                   No Reports Selected
-        {/* Night Audit Section */
-        <div className="mt-10">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <Calendar className="w-5 h-5 text-blue-600" />
-            Night Audit
-          </h2>
-          <p className="text-sm text-gray-600 mb-4">
-            Gece denetimi işlemlerinizi yönetin: oda gelirlerini post edin, no-show rezervasyonları işleyin ve gün sonu kapanışını tamamlayın.
-          </p>
-          <Card className="border border-blue-100 bg-blue-50/40">
-            <CardContent className="p-4">
-              <NightAuditModule />
-            </CardContent>
-          </Card>
-        </div>
-
+                </h3>
                 </h3>
                 <p className="text-gray-500 mb-4">
                   Click the "Add Report to Download" button to start selecting reports

@@ -16238,6 +16238,73 @@ async def get_ai_activity_log(
         'stats': {
             'total': total,
             'successful': successful,
+
+
+# ============= MAINTENANCE WORK ORDERS =============
+
+@api_router.post("/maintenance/work-orders")
+async def create_maintenance_work_order(
+    data: MaintenanceWorkOrder,
+    current_user: User = Depends(get_current_user)
+):
+    """Create a new maintenance work order (from HK, Front Desk, GM, etc.)"""
+    wo = data.model_copy(update={
+        'tenant_id': current_user.tenant_id,
+        'reported_by_user_id': data.reported_by_user_id or current_user.id,
+        'reported_by_role': data.reported_by_role or current_user.role,
+        'created_at': datetime.now(timezone.utc),
+        'status': data.status or 'open',
+    })
+    await db.maintenance_work_orders.insert_one(wo.model_dump())
+    return wo
+
+
+@api_router.get("/maintenance/work-orders")
+async def get_maintenance_work_orders(
+    status: Optional[str] = None,
+    room_id: Optional[str] = None,
+    priority: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """List maintenance work orders with basic filters"""
+    query = {'tenant_id': current_user.tenant_id}
+    if status:
+        query['status'] = status
+    if room_id:
+        query['room_id'] = room_id
+    if priority:
+        query['priority'] = priority
+
+    items = await db.maintenance_work_orders.find(query, {'_id': 0}).sort('created_at', -1).to_list(500)
+    return {'items': items, 'count': len(items)}
+
+
+@api_router.patch("/maintenance/work-orders/{work_order_id}")
+async def update_maintenance_work_order(
+    work_order_id: str,
+    status: Optional[str] = None,
+    priority: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Update status/priority of a maintenance work order"""
+    updates: dict = {}
+    if status:
+        updates['status'] = status
+        if status == 'completed':
+            updates['completed_at'] = datetime.now(timezone.utc)
+    if priority:
+        updates['priority'] = priority
+
+    if not updates:
+        return {'updated': False}
+
+    result = await db.maintenance_work_orders.update_one(
+        {'tenant_id': current_user.tenant_id, 'id': work_order_id},
+        {'$set': updates}
+    )
+
+    return {'updated': result.modified_count == 1}
+
             'failed': total - successful
         }
     }

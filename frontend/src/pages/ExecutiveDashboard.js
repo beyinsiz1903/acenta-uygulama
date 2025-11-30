@@ -46,15 +46,17 @@ const ExecutiveDashboard = ({ user }) => {
     try {
       setLoading(true);
       
-      const [kpiRes, alertsRes, summaryRes] = await Promise.all([
+      const [kpiRes, alertsRes, summaryRes, compSetRes] = await Promise.all([
         axios.get('/executive/kpi-snapshot'),
         axios.get('/executive/performance-alerts'),
-        axios.get('/executive/daily-summary')
+        axios.get('/executive/daily-summary'),
+        axios.get('/executive/comp-set-summary')
       ]);
       
       setKpiSnapshot(kpiRes.data);
       setAlerts(alertsRes.data.alerts || []);
       setDailySummary(summaryRes.data);
+      setCompSetSummary(compSetRes.data || null);
     } catch (error) {
       console.error('Failed to load executive data:', error);
       toast.error('Veriler yüklenemedi');

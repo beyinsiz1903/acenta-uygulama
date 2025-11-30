@@ -14,6 +14,7 @@ import FeedbackSystem from '@/components/FeedbackSystem';
 import AllotmentGrid from '@/components/AllotmentGrid';
 import GroupRevenueByCompany from '@/components/GroupRevenueByCompany';
 import PickupPaceReport from '@/components/PickupPaceReport';
+import VirtualizedBookingList from '@/components/VirtualizedBookingList';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

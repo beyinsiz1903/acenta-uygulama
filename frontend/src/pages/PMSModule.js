@@ -1797,8 +1797,14 @@ const PMSModule = ({ user, tenant, onLogout }) => {
                               className="h-6 text-[10px] ml-auto"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                // TODO: open maintenance issue dialog prefilled with room info
-                                toast.info(`Create maintenance ticket for room ${room.room_number}`);
+                                setMaintenanceForm({
+                                  room_id: room.id,
+                                  room_number: room.room_number,
+                                  issue_type: 'housekeeping_damage',
+                                  priority: 'normal',
+                                  description: ''
+                                });
+                                setMaintenanceDialogOpen(true);
                               }}
                             >
                               MNT

@@ -310,7 +310,7 @@ const Reports = ({ user, tenant, onLogout }) => {
                   No Reports Selected
                 </h3>
                 <p className="text-gray-500 mb-4">
-                  Click the "Add Report to Download" button to start selecting reports
+                  Click the &quot;Add Report to Download&quot; button to start selecting reports
                 </p>
                 <Button 
                   onClick={() => setShowSelector(true)}

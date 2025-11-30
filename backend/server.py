@@ -46308,6 +46308,134 @@ async def get_corporate_customers(
             'company_name': 'Tech Solutions Ltd.',
             'total_bookings': 342,
             'total_revenue': 513000,
+
+
+# 4. GET /api/corporate/contracts/utilization - contract usage vs commitment
+@api_router.get("/corporate/contracts/utilization")
+async def get_corporate_contract_utilization(
+    current_user: User = Depends(get_current_user)
+):
+    """Compute contract utilization metrics per corporate company
+
+    - Uses companies collection (room_nights_commitment, contracted_rate)
+    - Aggregates bookings by company_id
+    - Returns list with commitment, actual room nights, revenue & utilization %
+    """
+    tenant_id = current_user.tenant_id
+
+    # Fetch active companies with a commitment
+    companies = await db.companies.find({
+        'tenant_id': tenant_id,
+        'status': CompanyStatus.ACTIVE,
+        'room_nights_commitment': {'$gt': 0}
+    }, {'_id': 0}).to_list(1000)
+
+    if not companies:
+        return {
+            'contracts': [],
+            'summary': {
+                'total_companies': 0,
+                'total_committed_nights': 0,
+                'total_actual_nights': 0,
+                'total_revenue': 0.0,
+                'avg_utilization_pct': 0.0,
+            }
+        }
+
+    company_ids = [c['id'] for c in companies]
+
+    # Aggregate bookings per company
+    pipeline = [
+        {
+            '$match': {
+                'tenant_id': tenant_id,
+                'company_id': {'$in': company_ids},
+                'status': {'$in': ['confirmed', 'checked_in', 'checked_out']}
+            }
+        },
+        {
+            '$project': {
+                '_id': 0,
+                'company_id': 1,
+                # Night count per booking
+                'nights': {
+                    '$max': [
+                        1,
+                        {
+                            '$dateDiff': {
+                                'startDate': {'$toDate': '$check_in'},
+                                'endDate': {'$toDate': '$check_out'},
+                                'unit': 'day'
+                            }
+                        }
+                    ]
+                },
+                'total_amount': 1,
+            }
+        },
+        {
+            '$group': {
+                '_id': '$company_id',
+                'room_nights': {'$sum': '$nights'},
+                'revenue': {'$sum': '$total_amount'},
+                'bookings_count': {'$sum': 1}
+            }
+        }
+    ]
+
+    agg_results = await db.bookings.aggregate(pipeline).to_list(1000)
+    metrics_by_company = {item['_id']: item for item in agg_results}
+
+    contracts = []
+    total_committed = 0
+    total_actual = 0
+    total_revenue = 0.0
+
+    for c in companies:
+        comp_id = c['id']
+        commit = c.get('room_nights_commitment', 0) or 0
+        metrics = metrics_by_company.get(comp_id, {})
+        actual_nights = int(metrics.get('room_nights', 0))
+        revenue = float(metrics.get('revenue', 0.0))
+        bookings_count = int(metrics.get('bookings_count', 0))
+
+        utilization = 0.0
+        if commit > 0:
+            utilization = round((actual_nights / commit) * 100, 1)
+
+        total_committed += commit
+        total_actual += actual_nights
+        total_revenue += revenue
+
+        contracts.append({
+            'company_id': comp_id,
+            'company_name': c.get('name'),
+            'corporate_code': c.get('corporate_code'),
+            'contact_person': c.get('contact_person'),
+            'contact_email': c.get('contact_email'),
+            'room_nights_commitment': commit,
+            'actual_room_nights': actual_nights,
+            'bookings_count': bookings_count,
+            'revenue': round(revenue, 2),
+            'utilization_pct': utilization,
+            'status': 'under_utilized' if utilization < 70 and commit > 0 else 'healthy'
+        })
+
+    avg_utilization = 0.0
+    if total_committed > 0:
+        avg_utilization = round((total_actual / total_committed) * 100, 1)
+
+    return {
+        'contracts': contracts,
+        'summary': {
+            'total_companies': len(contracts),
+            'total_committed_nights': total_committed,
+            'total_actual_nights': total_actual,
+            'total_revenue': round(total_revenue, 2),
+            'avg_utilization_pct': avg_utilization,
+        }
+    }
+
             'contract_status': 'active',
             'last_booking': (datetime.now() - timedelta(days=5)).isoformat()[:10],
             'contact_person': 'Ahmet Yılmaz',

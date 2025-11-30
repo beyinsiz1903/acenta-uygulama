@@ -658,6 +658,17 @@ function App() {
                 <Navigate to="/auth" replace />
               )
             }
+          <Route
+            path="/night-audit/logs"
+            element={
+              isAuthenticated ? (
+                <NightAuditLogs user={user} tenant={tenant} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/auth" replace />
+              )
+            }
+          />
+
           />
           <Route
             path="/mobile/gm"

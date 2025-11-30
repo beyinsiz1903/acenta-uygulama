@@ -558,6 +558,17 @@ function App() {
                 <CorporateContractsDashboard user={user} tenant={tenant} onLogout={handleLogout} />
               ) : (
                 <Navigate to="/auth" replace />
+          <Route
+            path="/maintenance/work-orders"
+            element={
+              isAuthenticated ? (
+                <MaintenanceWorkOrders user={user} tenant={tenant} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/auth" replace />
+              )
+            }
+          />
+
               )
             }
           />

@@ -194,6 +194,17 @@ const PMSModule = ({ user, tenant, onLogout }) => {
     contact_person: '',
     contact_email: '',
     contact_phone: '',
+  // Lightweight stats for UI (kept outside heavy JSX where possible)
+  const bookingStats = useMemo(() => {
+    const total = bookings.length;
+    const confirmed = bookings.filter(b => b.status === 'confirmed').length;
+    const checkedIn = bookings.filter(b => b.status === 'checked_in').length;
+    const totalRevenue = bookings.reduce((sum, b) => sum + (b.total_amount || 0), 0);
+    const avgAdr = total > 0 ? totalRevenue / total : 0;
+    return { total, confirmed, checkedIn, totalRevenue, avgAdr };
+  }, [bookings]);
+
+
     contracted_rate: '',
     default_rate_type: '',
     default_market_segment: '',

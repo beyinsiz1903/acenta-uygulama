@@ -200,13 +200,13 @@ def test_night_audit_flow():
     
     if audit_id:
         try:
-            end_of_day_data = {
+            params = {
                 "audit_id": audit_id
             }
             
             response = requests.post(
                 f"{API_BASE}/night-audit/end-of-day", 
-                json=end_of_day_data, 
+                params=params, 
                 headers=headers, 
                 timeout=15
             )

@@ -36,6 +36,7 @@ const Layout = ({ children, user, tenant, onLogout, currentModule }) => {
     { name: t('nav.invoices'), path: '/invoices', icon: FileText, id: 'invoices' },
     { name: 'Pending AR', path: '/pending-ar', icon: DollarSign, id: 'pending-ar' },
     { name: 'Cost Management', path: '/cost-management', icon: TrendingUp, id: 'cost-management' },
+    { name: 'Reports', path: '/reports', icon: FileText, id: 'reports' },
     { name: t('nav.rms'), path: '/rms', icon: TrendingUp, id: 'rms' },
     { name: 'Housekeeping', path: '/housekeeping', icon: Home, id: 'housekeeping' },
     { name: 'F&B', path: '/fnb-complete', icon: ChefHat, id: 'fnb' },

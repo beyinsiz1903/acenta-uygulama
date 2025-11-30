@@ -206,15 +206,16 @@ async def process_payment(
 
 @api_router.get("/frontdesk/arrivals")
 async def get_arrivals(date: Optional[str] = None, current_user: User = Depends(get_current_user)):
-    """Get today's arrivals"""
+    """Get today's arrivals (optimized to avoid N+1 queries)"""
     if not date:
         target_date = datetime.now(timezone.utc).date()
     else:
         target_date = datetime.fromisoformat(date).date()
-    
+
     start_of_day = datetime.combine(target_date, datetime.min.time())
     end_of_day = datetime.combine(target_date, datetime.max.time())
-    
+
+    # Fetch bookings for the day
     bookings = await db.bookings.find({
         'tenant_id': current_user.tenant_id,
         'status': {'$in': ['confirmed', 'checked_in']},
@@ -223,14 +224,32 @@ async def get_arrivals(date: Optional[str] = None, current_user: User = Depends(
             '$lte': end_of_day.isoformat()
         }
     }, {'_id': 0}).to_list(1000)
-    
-    # Enrich with guest and room data
+
+    if not bookings:
+        return []
+
+    # Collect unique guest and room IDs for bulk lookup
+    guest_ids = {b.get('guest_id') for b in bookings if b.get('guest_id')}
+    room_ids = {b.get('room_id') for b in bookings if b.get('room_id')}
+
+    guests = []
+    rooms = []
+    if guest_ids:
+        guests = await db.guests.find({'id': {'$in': list(guest_ids)}}, {'_id': 0}).to_list(len(guest_ids))
+    if room_ids:
+        rooms = await db.rooms.find({'id': {'$in': list(room_ids)}}, {'_id': 0}).to_list(len(room_ids))
+
+    guest_map = {g['id']: g for g in guests if 'id' in g}
+    room_map = {r['id']: r for r in rooms if 'id' in r}
+
     enriched = []
     for booking in bookings:
-        guest = await db.guests.find_one({'id': booking['guest_id']}, {'_id': 0})
-        room = await db.rooms.find_one({'id': booking['room_id']}, {'_id': 0})
-        enriched.append({**booking, 'guest': guest, 'room': room})
-    
+        enriched.append({
+            **booking,
+            'guest': guest_map.get(booking.get('guest_id')),
+            'room': room_map.get(booking.get('room_id')),
+        })
+
     return enriched
 
 @api_router.get("/frontdesk/departures")

@@ -703,6 +703,9 @@ class MaintenanceWorkOrder(BaseModel):
     source: str = "housekeeping"  # housekeeping, frontdesk, sensor, gm, other
     description: Optional[str] = None
     reported_by_user_id: Optional[str] = None
+    asset_id: Optional[str] = None
+    plan_id: Optional[str] = None
+
     reported_by_role: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 

@@ -540,9 +540,6 @@ function App() {
             }
           />
           <Route
-            path="/efatura"
-            element={
-          <Route
             path="/frontdesk/audit-checklist"
             element={
               isAuthenticated ? (
@@ -552,7 +549,9 @@ function App() {
               )
             }
           />
-
+          <Route
+            path="/efatura"
+            element={
               isAuthenticated ? (
                 <EFaturaModule user={user} tenant={tenant} onLogout={handleLogout} />
               ) : (

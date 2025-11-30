@@ -31,7 +31,6 @@ const NightAuditModule = () => {
   // Fetch status + report when auditDate changes
   useEffect(() => {
     fetchStatusAndReport();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [auditDate]);
 
   const fetchStatusAndReport = async () => {

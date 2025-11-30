@@ -110,6 +110,22 @@ const ExecutiveDashboard = ({ user }) => {
   };
 
   if (loading && !refreshing) {
+  const handleYearChange = async (direction) => {
+    const newYear = budgetYear + (direction === 'next' ? 1 : -1);
+    setBudgetYear(newYear);
+    try {
+      setRefreshing(true);
+      const res = await axios.get('/executive/budget-overview', { params: { year: newYear } });
+      setBudgetOverview(res.data || null);
+    } catch (error) {
+      console.error('Failed to load budget overview:', error);
+      toast.error('Bütçe verileri yüklenemedi');
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
         <div className="text-center text-white">

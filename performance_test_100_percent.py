@@ -29,7 +29,7 @@ from typing import List, Dict, Any
 from datetime import datetime
 
 # Configuration
-BACKEND_URL = "https://event-filter-system-1.preview.emergentagent.com/api"
+BACKEND_URL = "https://page-load-issue.preview.emergentagent.com/api"
 TEST_USER_EMAIL = "admin@hotel.com"
 TEST_USER_PASSWORD = "admin123"
 

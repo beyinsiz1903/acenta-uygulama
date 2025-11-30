@@ -10,7 +10,7 @@ import json
 from datetime import datetime, timezone, timedelta
 
 # Configuration
-BACKEND_URL = "https://event-filter-system-1.preview.emergentagent.com/api"
+BACKEND_URL = "https://page-load-issue.preview.emergentagent.com/api"
 TEST_EMAIL = "demo@hotel.com"
 TEST_PASSWORD = "demo123"
 

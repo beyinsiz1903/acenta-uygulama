@@ -15,7 +15,7 @@ import uuid
 import base64
 
 # Configuration
-BACKEND_URL = "https://event-filter-system-1.preview.emergentagent.com/api"
+BACKEND_URL = "https://page-load-issue.preview.emergentagent.com/api"
 TEST_EMAIL = "test@hotel.com"
 TEST_PASSWORD = "test123"
 

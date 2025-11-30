@@ -9,7 +9,7 @@ import json
 from datetime import datetime, timezone
 
 # Configuration
-BASE_URL = "https://event-filter-system-1.preview.emergentagent.com/api"
+BASE_URL = "https://page-load-issue.preview.emergentagent.com/api"
 LOGIN_EMAIL = "demo@hotel.com"
 LOGIN_PASSWORD = "demo123"
 

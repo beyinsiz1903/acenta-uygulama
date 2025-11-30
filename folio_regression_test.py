@@ -5,7 +5,7 @@ Folio Calculations Regression Testing
 
 This script tests all folio calculation scenarios to ensure accuracy as requested in the review.
 
-Base URL: https://event-filter-system-1.preview.emergentagent.com/api
+Base URL: https://page-load-issue.preview.emergentagent.com/api
 Login: test@hotel.com / test123
 
 Test Scenarios:
@@ -27,7 +27,7 @@ from datetime import datetime, timedelta, timezone
 from decimal import Decimal, ROUND_HALF_UP
 
 class FolioRegressionTester:
-    def __init__(self, base_url="https://event-filter-system-1.preview.emergentagent.com"):
+    def __init__(self, base_url="https://page-load-issue.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.token = None

@@ -8,7 +8,7 @@ import json
 from datetime import datetime, timedelta
 import random
 
-BASE_URL = "https://event-filter-system-1.preview.emergentagent.com/api"
+BASE_URL = "https://page-load-issue.preview.emergentagent.com/api"
 TOKEN = None
 
 def register_demo_hotel():

@@ -466,6 +466,131 @@ const ExecutiveDashboard = ({ user }) => {
                     </div>
                     <div className="flex justify-between text-gray-300">
                       <span className="text-[11px]">Comp-set</span>
+            </TabsContent>
+
+            {/* Budget Management Tab */}
+            <TabsContent value="budget" className="mt-4">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between mb-2">
+                  <div>
+                    <h2 className="text-lg font-bold text-white">Budget Management</h2>
+                    <p className="text-xs text-gray-300">Yıllık bütçe hedefleri ve gerçekleşen performans</p>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="border-white/30 text-white"
+                      onClick={() => handleYearChange('prev')}
+                    >
+                      <ChevronRight className="h-4 w-4 rotate-180 mr-1" />
+                      {budgetYear - 1}
+                    </Button>
+                    <span className="font-semibold text-white">{budgetYear}</span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="border-white/30 text-white"
+                      onClick={() => handleYearChange('next')}
+                    >
+                      {budgetYear + 1}
+                      <ChevronRight className="h-4 w-4 ml-1" />
+                    </Button>
+                  </div>
+                </div>
+
+                {budgetOverview && (
+                  <>
+                    {/* Totals Summary */}
+                    <Card className="bg-white/5 border border-white/20 text-white">
+                      <CardContent className="p-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+                        <div>
+                          <div className="text-gray-300 mb-1">Toplam Gelir (Bütçe)</div>
+                          <div className="text-lg font-bold">
+                            ₺{(budgetOverview.totals.rev_target / 1000).toFixed(0)}K
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-gray-300 mb-1">Toplam Gelir (Gerçekleşen)</div>
+                          <div className="text-lg font-bold text-emerald-400">
+                            ₺{(budgetOverview.totals.rev_actual / 1000).toFixed(0)}K
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-gray-300 mb-1">Rev. Variance %</div>
+                          <div className={budgetOverview.totals.rev_variance_pct >= 0 ? 'text-emerald-400 font-bold' : 'text-red-300 font-bold'}>
+                            {budgetOverview.totals.rev_variance_pct > 0 ? '+' : ''}
+                            {budgetOverview.totals.rev_variance_pct}%
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-gray-300 mb-1">Avg. Occ / ADR</div>
+                          <div className="text-sm">
+                            <span className="text-emerald-300">{budgetOverview.totals.occ_actual.toFixed(1)}%</span>
+                            <span className="text-gray-400"> / </span>
+                            <span className="text-blue-300">₺{budgetOverview.totals.adr_actual.toFixed(0)}</span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Monthly Table (read-only for now) */}
+                    <Card className="bg-white/5 border border-white/10 text-white overflow-x-auto">
+                      <CardContent className="p-0">
+                        <table className="min-w-full text-xs">
+                          <thead className="bg-white/10">
+                            <tr>
+                              <th className="px-3 py-2 text-left">Ay</th>
+                              <th className="px-3 py-2 text-right">Occ Target</th>
+                              <th className="px-3 py-2 text-right">Occ Actual</th>
+                              <th className="px-3 py-2 text-right">ADR Target</th>
+                              <th className="px-3 py-2 text-right">ADR Actual</th>
+                              <th className="px-3 py-2 text-right">Rev Target</th>
+                              <th className="px-3 py-2 text-right">Rev Actual</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {budgetOverview.months.map((m) => (
+                              <tr key={m.month} className="border-t border-white/5">
+                                <td className="px-3 py-1.5">
+                                  {m.month}. Ay
+                                </td>
+                                <td className="px-3 py-1.5 text-right text-gray-300">{m.occ_target.toFixed(1)}%</td>
+                                <td className={`px-3 py-1.5 text-right ${m.occ_actual >= m.occ_target ? 'text-emerald-300' : 'text-red-300'}`}>
+                                  {m.occ_actual.toFixed(1)}%
+                                </td>
+                                <td className="px-3 py-1.5 text-right text-gray-300">₺{m.adr_target.toFixed(0)}</td>
+                                <td className={`px-3 py-1.5 text-right ${m.adr_actual >= m.adr_target ? 'text-emerald-300' : 'text-red-300'}`}>
+                                  ₺{m.adr_actual.toFixed(0)}
+                                </td>
+                                <td className="px-3 py-1.5 text-right text-gray-300">₺{(m.rev_target / 1000).toFixed(0)}K</td>
+                                <td className={`px-3 py-1.5 text-right ${m.rev_actual >= m.rev_target ? 'text-emerald-300' : 'text-red-300'}`}>
+                                  ₺{(m.rev_actual / 1000).toFixed(0)}K
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </CardContent>
+                    </Card>
+                  </>
+                )}
+              </div>
+            </TabsContent>
+
+            {/* Comp-Set Tab */}
+            <TabsContent value="comp" className="mt-4">
+              <div className="p-4">
+                {compSetSummary ? (
+                  <>{/* Comp-Set Summary card reused */}</>
+                ) : (
+                  <div className="text-xs text-gray-300">Comp-set verisi bulunamadı.</div>
+                )}
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
+
                       <span>₺{compSetSummary.comp_set.revpar.toFixed(0)}</span>
         </TabsContent>
 

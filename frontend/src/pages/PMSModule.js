@@ -2417,7 +2417,7 @@ const PMSModule = ({ user, tenant, onLogout }) => {
               </Card>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-4 max-h-[600px] overflow-y-auto">
               {groupedBookings.map((item, idx) => {
                 if (item.type === 'single') {
                   const booking = item.booking;

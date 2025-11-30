@@ -658,6 +658,7 @@ function App() {
                 <Navigate to="/auth" replace />
               )
             }
+          />
           <Route
             path="/night-audit/logs"
             element={
@@ -667,8 +668,6 @@ function App() {
                 <Navigate to="/auth" replace />
               )
             }
-          />
-
           />
           <Route
             path="/mobile/gm"

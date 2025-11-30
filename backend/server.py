@@ -16333,6 +16333,82 @@ async def update_maintenance_work_order(
     }
 
 @api_router.post("/ai/log-activity")
+
+
+# ============= IoT SENSOR ALERTS → MAINTENANCE BRIDGE =============
+
+@api_router.post("/engineering/sensor-alerts")
+async def ingest_sensor_alert(
+    alert: SensorAlert,
+    current_user: User = Depends(get_current_user)
+):
+    """Receive IoT sensor alert and optionally create maintenance work order
+
+    Bu endpoint, BMS/IoT sistemlerinden gelen uyarıları alır ve
+    belirlenen metrik ve eşiklere göre otomatik bakım iş emri üretebilir.
+    """
+    tenant_id = current_user.tenant_id
+
+    payload = alert.model_dump()
+    payload.update({
+        'id': str(uuid.uuid4()),
+        'tenant_id': tenant_id,
+        'created_at': datetime.now(timezone.utc).isoformat(),
+    })
+
+    await db.sensor_alerts.insert_one(payload)
+
+    # Basit kural motoru: belirli metrik ve severity için otomatik ticket
+    auto_created_work_order = None
+
+    metric = alert.metric
+    severity = alert.severity
+    threshold_breached = alert.threshold_breached
+
+    should_create = False
+    issue_type = 'other'
+    priority = 'normal'
+
+    if metric in ['water_leak', 'flood'] and (threshold_breached or severity in ['high', 'critical']):
+        should_create = True
+        issue_type = 'plumbing'
+        priority = 'urgent'
+    elif metric == 'temperature' and alert.value > 28 and severity in ['warning', 'high', 'critical']:
+        should_create = True
+        issue_type = 'hvac'
+        priority = 'high'
+    elif metric == 'humidity' and alert.value > 80 and severity in ['warning', 'high', 'critical']:
+        should_create = True
+        issue_type = 'hvac'
+        priority = 'high'
+
+    if should_create:
+        wo_data = MaintenanceWorkOrder(
+            room_id=alert.room_id,
+            room_number=alert.room_number,
+            issue_type=issue_type,
+            priority=priority,
+            source='sensor',
+            description=alert.message or f"Sensor alert from {alert.sensor_id} ({metric}={alert.value})"
+        )
+        wo_payload = wo_data.model_dump()
+        wo_payload.update({
+            'id': str(uuid.uuid4()),
+            'tenant_id': tenant_id,
+            'reported_by_user_id': current_user.id,
+            'reported_by_role': current_user.role,
+            'created_at': datetime.now(timezone.utc).isoformat(),
+            'status': 'open',
+        })
+        await db.maintenance_work_orders.insert_one(wo_payload)
+        auto_created_work_order = wo_payload
+
+    return {
+        'ingested': True,
+        'sensor_alert_id': payload['id'],
+        'auto_created_work_order': auto_created_work_order,
+    }
+
 async def log_ai_activity(
     activity_data: dict,
     current_user: User = Depends(get_current_user)

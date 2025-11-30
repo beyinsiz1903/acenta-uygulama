@@ -2411,7 +2411,7 @@ const PMSModule = ({ user, tenant, onLogout }) => {
                 <CardContent className="p-4">
                   <div className="text-xs text-gray-600">Avg ADR</div>
                   <div className="text-2xl font-bold text-purple-600">
-                    ${bookings.length > 0 ? (bookings.reduce((sum, b) => sum + (b.total_amount || 0), 0) / bookings.length).toFixed(0) : 0}
+                    ${bookingStats.avgAdr.toFixed(0)}
                   </div>
                 </CardContent>
               </Card>

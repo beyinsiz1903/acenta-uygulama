@@ -309,7 +309,6 @@ const Reports = ({ user, tenant, onLogout }) => {
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
                   No Reports Selected
                 </h3>
-                </h3>
                 <p className="text-gray-500 mb-4">
                   Click the "Add Report to Download" button to start selecting reports
                 </p>

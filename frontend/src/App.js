@@ -568,6 +568,27 @@ function App() {
             element={
               isAuthenticated ? (
                 <MaintenanceWorkOrders user={user} tenant={tenant} onLogout={handleLogout} />
+          <Route
+            path="/maintenance/assets"
+            element={
+              isAuthenticated ? (
+                <MaintenanceAssets user={user} tenant={tenant} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/auth" replace />
+              )
+            }
+          />
+          <Route
+            path="/maintenance/plans"
+            element={
+              isAuthenticated ? (
+                <MaintenancePlans user={user} tenant={tenant} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/auth" replace />
+              )
+            }
+          />
+
               ) : (
                 <Navigate to="/auth" replace />
               )

@@ -44443,6 +44443,191 @@ async def get_executive_comp_set_summary(
     }
 
 
+class BudgetMonth(BaseModel):
+    month: int
+    occ_target: float = 0
+    adr_target: float = 0
+    rev_target: float = 0
+
+
+class BudgetConfig(BaseModel):
+    year: int
+    currency: str = "TRY"
+    months: List[BudgetMonth]
+
+
+@api_router.get("/executive/budget-config")
+async def get_executive_budget_config(
+    year: Optional[int] = None,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Get or initialize budget configuration for a given year (manual input ready)."""
+    current_user = await get_current_user(credentials)
+    target_year = year or datetime.now(timezone.utc).year
+
+    existing = await db.executive_budgets.find_one(
+        {'tenant_id': current_user.tenant_id, 'year': target_year},
+        {'_id': 0}
+    )
+    if existing:
+        return existing
+
+    # Default empty config with 12 months
+    default_months = [
+        {
+            'month': m,
+            'occ_target': 0.0,
+            'adr_target': 0.0,
+            'rev_target': 0.0,
+        }
+        for m in range(1, 13)
+    ]
+
+    return {
+        'tenant_id': current_user.tenant_id,
+        'year': target_year,
+        'currency': 'TRY',
+        'months': default_months,
+    }
+
+
+@api_router.put("/executive/budget-config")
+async def upsert_executive_budget_config(
+    config: BudgetConfig,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Create or update annual budget configuration for the current tenant."""
+    current_user = await get_current_user(credentials)
+    doc = config.dict()
+    doc['tenant_id'] = current_user.tenant_id
+
+    await db.executive_budgets.update_one(
+        {'tenant_id': current_user.tenant_id, 'year': config.year},
+        {'$set': doc},
+        upsert=True,
+    )
+    return {'status': 'ok'}
+
+
+@api_router.get("/executive/budget-overview")
+async def get_executive_budget_overview(
+    year: Optional[int] = None,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Return budget vs actual overview for the selected year (simple heuristic actuals)."""
+    current_user = await get_current_user(credentials)
+    target_year = year or datetime.now(timezone.utc).year
+
+    # Load budget config (or defaults)
+    config = await db.executive_budgets.find_one(
+        {'tenant_id': current_user.tenant_id, 'year': target_year},
+        {'_id': 0}
+    )
+
+    if not config:
+        # Reuse the same default as get_executive_budget_config
+        config = await get_executive_budget_config(year=target_year, credentials=credentials)
+
+    # Compute simple monthly actuals based on bookings
+    months_actual = {m: {'rev_actual': 0.0, 'occ_actual': 0.0, 'adr_actual': 0.0} for m in range(1, 13)}
+
+    # Pre-calc total rooms
+    total_rooms = await db.rooms.count_documents({'tenant_id': current_user.tenant_id}) or 0
+
+    # Fetch bookings for the year
+    year_start = datetime(target_year, 1, 1, tzinfo=timezone.utc).isoformat()
+    year_end = datetime(target_year + 1, 1, 1, tzinfo=timezone.utc).isoformat()
+
+    async for booking in db.bookings.find({
+        'tenant_id': current_user.tenant_id,
+        'status': {'$in': ['checked_in', 'checked_out']},
+        'check_in': {'$gte': year_start, '$lt': year_end},
+    }, {'_id': 0}):
+        check_in_str = booking.get('check_in')
+        if not check_in_str:
+            continue
+        try:
+            check_in_dt = datetime.fromisoformat(check_in_str)
+        except Exception:
+            continue
+        if check_in_dt.year != target_year:
+            continue
+        month = check_in_dt.month
+        total_amount = float(booking.get('total_amount', 0.0) or 0.0)
+        nights = max(1, int(booking.get('nights') or 1))
+
+        ma = months_actual[month]
+        ma['rev_actual'] += total_amount
+        ma['occ_actual'] += nights
+
+    # Derive ADR and rough occupancy per month
+    for m in range(1, 13):
+        ma = months_actual[m]
+        if ma['occ_actual'] > 0:
+            ma['adr_actual'] = ma['rev_actual'] / ma['occ_actual']
+        # Rough occupancy: occupied room nights / (total_rooms * days_in_month)
+        try:
+            days_in_month = (datetime(target_year + (1 if m == 12 else 0), (m % 12) + 1, 1, tzinfo=timezone.utc) - datetime(target_year, m, 1, tzinfo=timezone.utc)).days
+        except Exception:
+            days_in_month = 30
+        if total_rooms > 0 and days_in_month > 0:
+            ma['occ_actual'] = (ma['occ_actual'] / (total_rooms * days_in_month)) * 100
+
+    # Merge budget + actuals
+    months_output = []
+    totals = {
+        'rev_target': 0.0,
+        'rev_actual': 0.0,
+        'occ_target': 0.0,
+        'occ_actual': 0.0,
+        'adr_target': 0.0,
+        'adr_actual': 0.0,
+    }
+
+    for month_cfg in config['months']:
+        m = month_cfg['month']
+        ma = months_actual.get(m, {})
+        month_entry = {
+            'month': m,
+            'occ_target': float(month_cfg.get('occ_target', 0.0)),
+            'occ_actual': round(float(ma.get('occ_actual', 0.0)), 1),
+            'adr_target': float(month_cfg.get('adr_target', 0.0)),
+            'adr_actual': round(float(ma.get('adr_actual', 0.0)), 1),
+            'rev_target': float(month_cfg.get('rev_target', 0.0)),
+            'rev_actual': round(float(ma.get('rev_actual', 0.0)), 2),
+        }
+        months_output.append(month_entry)
+
+        totals['rev_target'] += month_entry['rev_target']
+        totals['rev_actual'] += month_entry['rev_actual']
+        totals['occ_target'] += month_entry['occ_target']
+        totals['occ_actual'] += month_entry['occ_actual']
+        totals['adr_target'] += month_entry['adr_target']
+        totals['adr_actual'] += month_entry['adr_actual']
+
+    def variance_pct(target: float, actual: float) -> float:
+        if target == 0:
+            return 0.0
+        return round(((actual - target) / target) * 100, 1)
+
+    totals_output = {
+        'rev_target': round(totals['rev_target'], 2),
+        'rev_actual': round(totals['rev_actual'], 2),
+        'rev_variance_pct': variance_pct(totals['rev_target'], totals['rev_actual']),
+        'occ_target': round(totals['occ_target'] / 12, 1) if totals['occ_target'] else 0.0,
+        'occ_actual': round(totals['occ_actual'] / 12, 1) if totals['occ_actual'] else 0.0,
+        'adr_target': round(totals['adr_target'] / 12, 1) if totals['adr_target'] else 0.0,
+        'adr_actual': round(totals['adr_actual'] / 12, 1) if totals['adr_actual'] else 0.0,
+    }
+
+    return {
+        'year': target_year,
+        'currency': config.get('currency', 'TRY'),
+        'months': months_output,
+        'totals': totals_output,
+    }
+
+
 @api_router.get("/executive/daily-summary")
 async def get_executive_daily_summary(
     date: Optional[str] = None,

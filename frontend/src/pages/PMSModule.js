@@ -2417,129 +2417,16 @@ const PMSModule = ({ user, tenant, onLogout }) => {
               </Card>
             </div>
 
-            <div className="space-y-4 max-h-[600px] overflow-y-auto">
-              {groupedBookings.map((item, idx) => {
-                if (item.type === 'single') {
-                  const booking = item.booking;
-                  const guest = guests.find(g => g.id === booking.guest_id);
-                  const room = rooms.find(r => r.id === booking.room_id);
-                  return (
-                    <Card
-                      key={booking.id}
-                      className="cursor-pointer hover:shadow-lg transition-shadow"
-                      onDoubleClick={() => {
-                        setSelectedBookingDetail(booking);
-                        setOpenDialog('bookingDetail');
-                        toast.info('Opening booking details...');
-                      }}
-                      title="Double-click to view full details"
-                    >
-                      <CardContent className="pt-6">
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <div className="font-semibold text-lg flex items-center gap-2">
-                              {guest?.name}
-                              {booking.company_id && (
-                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-blue-50 text-blue-700 border border-blue-200">
-                                  Corp · {booking.market_segment || 'corporate'}
-                                </span>
-                              )}
-                            </div>
-                            <div className="text-sm text-gray-600">Room {room?.room_number} - {room?.room_type}</div>
-                            <div className="text-sm text-gray-500">
-                              {new Date(booking.check_in).toLocaleDateString()} - {new Date(booking.check_out).toLocaleDateString()}
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <div className="text-right space-y-1">
-                              {booking.company_id && (
-                                <div className="text-[11px] text-gray-500">
-                                  {(() => {
-                                    const company = companies.find(c => c.id === booking.company_id);
-                                    return company ? `${company.name}${company.corporate_code ? ' · ' + company.corporate_code : ''}` : 'Corporate Booking';
-                                  })()}
-                                </div>
-                              )}
-                              <div className="text-2xl font-bold">${booking.total_amount}</div>
-                              <span className={`px-3 py-1 rounded-full text-xs ${booking.status === 'confirmed' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
-                                {booking.status.toUpperCase()}
-                              </span>
-                            </div>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                loadBookingFolios(booking.id);
-                              }}
-                              title="View charges & payments"
-                            >
-                              <DollarSign className="w-4 h-4 mr-1" />
-                              View Folio
-                            </Button>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                }
-
-                // Group booking row with expandable details
-                const groupGuest = guests.find(g => g.id === item.master_booking.guest_id);
-                const groupRooms = item.bookings.map(b => rooms.find(r => r.id === b.room_id));
-                const totalRooms = item.bookings.length;
-                const totalAmount = item.bookings.reduce((sum, b) => sum + (b.total_amount || 0), 0);
-
-                return (
-                  <Card
-                    key={item.group_booking_id || idx}
-                    className="cursor-pointer hover:shadow-lg transition-shadow border-l-4 border-l-blue-500 bg-blue-50/30"
-                    title="Double-click to view group details"
-                  >
-                    <CardContent className="pt-6 space-y-4">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <div className="text-xs uppercase tracking-wide text-blue-600 font-semibold">Group Booking</div>
-                            <span className="inline-flex items-center rounded-full bg-blue-100 text-blue-700 px-2 py-0.5 text-xs">
-                              {totalRooms} Rooms
-                            </span>
-                          </div>
-                          <div className="font-semibold text-lg mt-1">{groupGuest?.name || 'Group Guest'}</div>
-                          <div className="text-sm text-gray-500">
-                            {new Date(item.master_booking.check_in).toLocaleDateString()} - {new Date(item.master_booking.check_out).toLocaleDateString()}
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-xs text-gray-500 mb-1">Total Group Revenue</div>
-                          <div className="text-2xl font-bold text-blue-700">${totalAmount}</div>
-                        </div>
-                      </div>
-
-                      {/* Group rooms detail */}
-                      <div className="mt-2 border-t pt-3 space-y-2">
-                        {item.bookings.map((b, index) => {
-                          const r = groupRooms[index];
-                          return (
-                            <div key={b.id} className="flex justify-between items-center text-sm bg-white/60 px-3 py-2 rounded border border-blue-50">
-                              <div>
-                                <div className="font-medium">Room {r?.room_number || '-'} - {r?.room_type || ''}</div>
-                                <div className="text-xs text-gray-500">
-                                  {b.adults} adults{b.children ? `, ${b.children} children` : ''}
-                                </div>
-                              </div>
-                              <div className="text-right">
-                                <div className="font-semibold">${b.total_amount}</div>
-                                <div className="text-xs text-gray-500">{b.status.toUpperCase()}</div>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
+            <div className="space-y-4">
+              <VirtualizedBookingList
+                bookings={bookings}
+                onSelectBooking={(booking) => {
+                  setSelectedBookingDetail(booking);
+                  setOpenDialog('bookingDetail');
+                  toast.info('Opening booking details...');
+                }}
+                height={600}
+              />
             </div>
           </TabsContent>
 

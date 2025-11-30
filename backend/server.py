@@ -40451,6 +40451,25 @@ async def get_group_bookings(
     return group_bookings
 
 class MultiRoomBookingCreate(BaseModel):
+class MultiRoomBookingCreate(BaseModel):
+    guest_id: Optional[str] = None
+    guest: Optional[GuestCreate] = None
+    arrival_date: str
+    departure_date: str
+    rooms: List[dict]
+    company_id: Optional[str] = None
+    channel: ChannelType = ChannelType.DIRECT
+    special_requests: Optional[str] = None
+    # Corporate / contracted booking fields (applied to all rooms in this group)
+    contracted_rate: Optional[ContractedRateType] = None
+    rate_type: Optional[RateType] = None
+    market_segment: Optional[MarketSegment] = None
+    cancellation_policy: Optional[CancellationPolicyType] = None
+    billing_address: Optional[str] = None
+    billing_tax_number: Optional[str] = None
+    billing_contact_person: Optional[str] = None
+
+
     guest_id: Optional[str] = None
     guest: Optional[GuestCreate] = None
     arrival_date: str

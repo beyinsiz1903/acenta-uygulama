@@ -1280,12 +1280,15 @@ const PMSModule = ({ user, tenant, onLogout }) => {
         </Card>
 
 
-        <Tabs value={activeTab} className="w-full" onValueChange={(v) => {
-          setActiveTab(v);
-          if (v === 'frontdesk') loadFrontDeskData();
-          if (v === 'housekeeping') loadHousekeepingData();
-          if (v === 'reports') loadReports();
-        }}>
+        <Tabs
+          value={activeTab}
+          className="w-full"
+          onValueChange={(v) => {
+            // Sekme değeri hemen değişsin (UI anında tepki versin)
+            setActiveTab(v);
+            // Ağır veri yükleri sadece ilk girişte, arkada tetikleniyor (useEffect)
+          }}
+        >
           <TabsList className="grid w-full grid-cols-12 gap-1">
             <TabsTrigger value="frontdesk" data-testid="tab-frontdesk">
               <UserCheck className="w-4 h-4 mr-2" />

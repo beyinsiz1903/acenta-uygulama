@@ -5833,6 +5833,145 @@ async def get_pending_ar(
             # Use balance field directly
             folios_with_balance = [f for f in company_folios if f.get('balance', 0) > 0]
             total_outstanding = sum(f.get('balance', 0) for f in folios_with_balance)
+
+@api_router.get("/frontdesk/audit-checklist")
+async def get_frontdesk_audit_checklist(
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Front desk için night audit öncesi checklist
+    - Bugünün check-in'i olup henüz check-in yapılmamış misafirler
+    - Açık foliosu olan misafir/şirketler
+    - Şüpheli bakiye / dengesiz folio adayları
+    - Bugün check-out olması gereken ama hâlâ open olanlar
+    """
+    current_user = await get_current_user(credentials)
+    tenant_id = current_user.tenant_id
+    today = datetime.now(timezone.utc).date()
+    today_start = datetime.combine(today, datetime.min.time()).replace(tzinfo=timezone.utc)
+    today_end = datetime.combine(today, datetime.max.time()).replace(tzinfo=timezone.utc)
+
+    # 1) Unchecked-in arrivals
+    unchecked_in_arrivals = []
+    arrivals_cursor = db.bookings.find({
+        'tenant_id': tenant_id,
+        'check_in': {
+            '$gte': today_start.isoformat(),
+            '$lte': today_end.isoformat()
+        },
+        'status': {'$in': ['confirmed', 'guaranteed']}
+    }, {'_id': 0})
+    async for booking in arrivals_cursor:
+        if booking.get('checked_in_at'):
+            continue
+        guest = await db.guests.find_one({'id': booking.get('guest_id')}, {'_id': 0})
+        room = None
+        if booking.get('room_id'):
+            room = await db.rooms.find_one({'id': booking['room_id']}, {'_id': 0})
+        unchecked_in_arrivals.append({
+            'booking_id': booking.get('id'),
+            'reservation_number': booking.get('reservation_number'),
+            'guest_name': guest.get('name') if guest else 'Unknown',
+            'guest_email': guest.get('email') if guest else None,
+            'room_number': room.get('room_number') if room else None,
+            'vip_status': guest.get('vip_status', False) if guest else False,
+            'check_in': booking.get('check_in'),
+            'check_out': booking.get('check_out'),
+            'ota_channel': booking.get('ota_channel'),
+            'special_requests': booking.get('special_requests')
+        })
+
+    # 2) Open folios (with balance)
+    open_folios = await db.folios.find({
+        'tenant_id': tenant_id,
+        'status': 'open'
+    }, {'_id': 0}).to_list(2000)
+
+    open_folios_with_balance = []
+    unbalanced_folios = []
+    overdue_departures = []
+
+    for folio in open_folios:
+        balance = folio.get('balance', 0.0)
+        if balance and abs(balance) > 0.01:
+            # Folio type / owner
+            owner_name = None
+            owner_type = folio.get('folio_type')
+            if owner_type == 'guest' and folio.get('guest_id'):
+                guest = await db.guests.find_one({'id': folio['guest_id']}, {'_id': 0})
+                owner_name = guest.get('name') if guest else None
+            elif owner_type in ['company', 'agency'] and folio.get('company_id'):
+                company = await db.companies.find_one({'id': folio['company_id']}, {'_id': 0})
+                owner_name = company.get('name') if company else None
+
+            folio_item = {
+                'folio_id': folio.get('id'),
+                'folio_number': folio.get('folio_number'),
+                'folio_type': owner_type,
+                'owner_name': owner_name,
+                'balance': round(balance, 2),
+                'status': folio.get('status'),
+                'created_at': folio.get('created_at'),
+                'booking_id': folio.get('booking_id'),
+            }
+            open_folios_with_balance.append(folio_item)
+
+            # 3) Unbalanced folios (heuristic)
+            # Eğer balance belirgin şekilde pozitif ve created_at eskiyse flagle
+            try:
+                created_at = folio.get('created_at')
+                days_open = None
+                if created_at:
+                    created_dt = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+                    days_open = (datetime.now(timezone.utc) - created_dt).days
+            except Exception:
+                days_open = None
+
+            if days_open is not None and days_open > 2 and balance > 0:
+                unbalanced_folios.append({
+                    **folio_item,
+                    'days_open': days_open,
+                })
+
+            # 4) Bugün check-out olması gereken ama hâlâ open olanlar
+            if folio.get('booking_id'):
+                booking = await db.bookings.find_one({'id': folio['booking_id']}, {'_id': 0})
+                if booking:
+                    check_out_str = booking.get('check_out')
+                    try:
+                        if check_out_str:
+                            co_date = datetime.fromisoformat(check_out_str).date()
+                            if co_date <= today and booking.get('status') == 'checked_in':
+                                overdue_departures.append({
+                                    'booking_id': booking.get('id'),
+                                    'reservation_number': booking.get('reservation_number'),
+                                    'guest_name': owner_name,
+                                    'room_number': booking.get('room_number'),
+                                    'check_out': check_out_str,
+                                    'folio_id': folio.get('id'),
+                                    'balance': round(balance, 2),
+                                })
+                    except Exception:
+                        pass
+
+    summary = {
+        'unchecked_in_count': len(unchecked_in_arrivals),
+        'vip_unchecked_in': len([a for a in unchecked_in_arrivals if a.get('vip_status')]),
+        'open_folio_count': len(open_folios_with_balance),
+        'total_open_balance': round(sum(f['balance'] for f in open_folios_with_balance), 2),
+        'unbalanced_folio_count': len(unbalanced_folios),
+        'overdue_departures_count': len(overdue_departures),
+    }
+
+    return {
+        'date': today.isoformat(),
+        'tenant_id': tenant_id,
+        'unchecked_in_arrivals': unchecked_in_arrivals,
+        'open_folios': open_folios_with_balance,
+        'unbalanced_folios': unbalanced_folios,
+        'overdue_departures': overdue_departures,
+        'summary': summary,
+    }
+
             
             if total_outstanding > 0 and folios_with_balance:
                 # Find oldest folio

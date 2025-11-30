@@ -551,6 +551,17 @@ function App() {
             }
           />
           <Route
+            path="/reports/corporate-contracts"
+            element={
+              isAuthenticated ? (
+                <CorporateContractsDashboard user={user} tenant={tenant} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/auth" replace />
+              )
+            }
+          />
+
+          <Route
             path="/efatura"
             element={
               isAuthenticated ? (

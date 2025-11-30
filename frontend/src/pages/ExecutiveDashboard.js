@@ -31,6 +31,9 @@ const ExecutiveDashboard = ({ user }) => {
   const [alerts, setAlerts] = useState([]);
   const [dailySummary, setDailySummary] = useState(null);
   const [compSetSummary, setCompSetSummary] = useState(null);
+  const [budgetOverview, setBudgetOverview] = useState(null);
+  const [activeTab, setActiveTab] = useState('snapshot');
+  const [budgetYear, setBudgetYear] = useState(new Date().getFullYear());
 
   useEffect(() => {
     loadData();

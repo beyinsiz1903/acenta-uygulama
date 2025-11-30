@@ -5312,9 +5312,9 @@ const PMSModule = ({ user, tenant, onLogout }) => {
                   </Card>
                 </div>
 
-                {/* Financial Info */}
+                {/* Financial & Corporate Info */}
                 <Card className="bg-gradient-to-r from-green-50 to-emerald-50">
-                  <CardContent className="pt-4">
+                  <CardContent className="pt-4 space-y-3">
                     <div className="grid grid-cols-3 gap-4 text-center">
                       <div>
                         <div className="text-2xl font-bold text-green-700">
@@ -5335,6 +5335,40 @@ const PMSModule = ({ user, tenant, onLogout }) => {
                         <div className="text-xs text-gray-600">Status</div>
                       </div>
                     </div>
+
+                    {selectedBookingDetail.company_id && (
+                      <div className="grid grid-cols-2 gap-4 text-xs text-left bg-white/60 p-3 rounded border border-emerald-100">
+                        <div className="space-y-1">
+                          <div className="text-[11px] font-semibold text-gray-700">Corporate</div>
+                          <div className="text-gray-800 font-medium">
+                            {(() => {
+                              const company = companies.find(c => c.id === selectedBookingDetail.company_id);
+                              return company ? company.name : 'Corporate Booking';
+                            })()}
+                          </div>
+                          <div className="text-[11px] text-gray-500">
+                            Code: {
+                              (() => {
+                                const company = companies.find(c => c.id === selectedBookingDetail.company_id);
+                                return company?.corporate_code || 'N/A';
+                              })()
+                            }
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <div className="text-[11px] font-semibold text-gray-700">Rate Details</div>
+                          <div className="text-[11px] text-gray-600">
+                            Contracted: <span className="font-medium">{selectedBookingDetail.contracted_rate || 'N/A'}</span>
+                          </div>
+                          <div className="text-[11px] text-gray-600">
+                            Segment: <span className="font-medium">{selectedBookingDetail.market_segment || 'corporate'}</span>
+                          </div>
+                          <div className="text-[11px] text-gray-600">
+                            Policy: <span className="font-medium">{selectedBookingDetail.cancellation_policy || 'standard'}</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
 

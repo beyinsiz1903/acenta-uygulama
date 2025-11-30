@@ -703,6 +703,8 @@ class CompanyCreate(BaseModel):
     default_rate_type: Optional[RateType] = None
     default_market_segment: Optional[MarketSegment] = None
     default_cancellation_policy: Optional[CancellationPolicyType] = None
+    room_nights_commitment: Optional[int] = None
+
     payment_terms: Optional[str] = None
     status: CompanyStatus = CompanyStatus.PENDING
 

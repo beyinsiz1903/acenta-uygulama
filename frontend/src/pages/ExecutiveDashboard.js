@@ -166,6 +166,9 @@ const ExecutiveDashboard = ({ user }) => {
               <TabsTrigger value="budget" className="data-[state=active]:bg-white/20 data-[state=active]:text-white">
                 Budget
               </TabsTrigger>
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsContent value="snapshot" className="mt-0">
+
               <TabsTrigger value="comp" className="data-[state=active]:bg-white/20 data-[state=active]:text-white">
                 Comp-Set
               </TabsTrigger>

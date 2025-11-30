@@ -40529,6 +40529,11 @@ async def create_multi_room_booking(
             rate_plan=rate_plan,
             special_requests=payload.special_requests,
             company_id=payload.company_id,
+            # Apply corporate / contracted booking attributes from payload
+            contracted_rate=payload.contracted_rate,
+            rate_type=payload.rate_type,
+            market_segment=payload.market_segment,
+            cancellation_policy=payload.cancellation_policy,
             group_booking_id=group_id,
         )
 

@@ -46895,28 +46895,6 @@ async def run_preventive_maintenance_scheduler(
         }
     }
 
-            'contract_status': 'active',
-            'last_booking': (datetime.now() - timedelta(days=5)).isoformat()[:10],
-            'contact_person': 'Ahmet Yılmaz',
-            'vip_status': True
-        },
-        {
-            'company_name': 'Finance Corp',
-            'total_bookings': 156,
-            'total_revenue': 280800,
-            'contract_status': 'expiring_soon',
-            'last_booking': (datetime.now() - timedelta(days=12)).isoformat()[:10],
-            'contact_person': 'Zeynep Kara',
-            'vip_status': True
-        }
-    ]
-    
-    return {
-        'corporate_customers': customers,
-        'count': len(customers),
-        'total_revenue': sum(c['total_revenue'] for c in customers)
-    }
-
 
 # 3. GET /api/corporate/rates - Contract rates
 @api_router.get("/corporate/rates")

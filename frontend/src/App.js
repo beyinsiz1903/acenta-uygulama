@@ -594,12 +594,6 @@ function App() {
             }
           />
 
-              ) : (
-                <Navigate to="/auth" replace />
-              )
-            }
-          />
-
           <Route
             path="/efatura"
             element={

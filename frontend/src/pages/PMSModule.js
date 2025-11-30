@@ -1299,7 +1299,6 @@ const PMSModule = ({ user, tenant, onLogout }) => {
           onValueChange={(v) => {
             // Sekme değeri hemen değişsin (UI anında tepki versin)
             setActiveTab(v);
-            // Ağır veri yükleri sadece ilk girişte, arkada tetikleniyor (useEffect)
           }}
         >
           <TabsList className="grid w-full grid-cols-12 gap-1">

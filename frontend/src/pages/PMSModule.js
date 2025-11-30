@@ -2362,7 +2362,7 @@ const PMSModule = ({ user, tenant, onLogout }) => {
           {/* BOOKINGS TAB */}
           <TabsContent value="bookings" className="space-y-4">
             <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-semibold">Bookings ({bookings.length})</h2>
+              <h2 className="text-2xl font-semibold">Bookings ({bookingStats.total})</h2>
               <div className="flex gap-2">
                 <Button variant="outline" onClick={() => setOpenDialog('findroom')}>
                   <Home className="w-4 h-4 mr-2" />

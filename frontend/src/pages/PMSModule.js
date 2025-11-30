@@ -2395,7 +2395,7 @@ const PMSModule = ({ user, tenant, onLogout }) => {
                 <CardContent className="p-4">
                   <div className="text-xs text-gray-600">Checked In</div>
                   <div className="text-2xl font-bold text-green-600">
-                    {bookings.filter(b => b.status === 'checked_in').length}
+                    {bookingStats.checkedIn}
                   </div>
                 </CardContent>
               </Card>

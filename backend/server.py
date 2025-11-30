@@ -16238,6 +16238,9 @@ async def get_ai_activity_log(
         'stats': {
             'total': total,
             'successful': successful,
+            'failed': total - successful
+        }
+    }
 
 
 # ============= MAINTENANCE WORK ORDERS =============

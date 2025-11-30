@@ -30,7 +30,6 @@ const MaintenanceWorkOrders = ({ user, tenant, onLogout }) => {
 
   useEffect(() => {
     loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleUpdateStatus = async (id, newStatus) => {

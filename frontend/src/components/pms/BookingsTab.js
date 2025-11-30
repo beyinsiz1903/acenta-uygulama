@@ -1,6 +1,7 @@
 import React, { memo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { TabsContent } from '@/components/ui/tabs';
 import { Home, Plus } from 'lucide-react';
 import VirtualizedBookingList from '@/components/VirtualizedBookingList';
 

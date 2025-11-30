@@ -48291,12 +48291,18 @@ async def handle_no_shows(
     charge_no_show_fee: bool = True,
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
-    """Process no-shows for the audit date"""
+    """Process no-shows for the audit date
+    - Marks eligible bookings as no_show
+    - Optionally posts no-show fee charges to guest folios
+    - Writes detailed audit trail into night_audit_logs
+    """
     current_user = await get_current_user(credentials)
+    logging_service = get_logging_service(db)
     
     no_show_fee = 50.0
     processed_count = 0
     total_charges = 0.0
+    no_show_details = []
     
     # Find bookings that should have checked in but didn't
     no_show_bookings = await db.bookings.find({
@@ -48306,9 +48312,14 @@ async def handle_no_shows(
     }).to_list(1000)
     
     for booking in no_show_bookings:
+        booking_id = booking.get('id')
+        guest_id = booking.get('guest_id')
+        room_id = booking.get('room_id')
+        room_number = booking.get('room_number')
+        
         # Update booking status
         await db.bookings.update_one(
-            {'id': booking['id']},
+            {'id': booking_id},
             {
                 '$set': {
                     'status': 'no_show',
@@ -48318,19 +48329,23 @@ async def handle_no_shows(
             }
         )
         
+        fee_posted = False
+        folio_id = None
+        
         # Post no-show fee if configured
         if charge_no_show_fee:
             folio = await db.folios.find_one({
-                'booking_id': booking['id'],
+                'booking_id': booking_id,
                 'folio_type': 'guest'
             })
             
             if folio:
+                folio_id = folio.get('id')
                 charge = {
                     'id': str(uuid.uuid4()),
                     'tenant_id': current_user.tenant_id,
-                    'folio_id': folio['id'],
-                    'booking_id': booking['id'],
+                    'folio_id': folio_id,
+                    'booking_id': booking_id,
                     'charge_category': 'no_show_fee',
                     'description': f"No-Show Fee - {audit_date}",
                     'amount': no_show_fee,
@@ -48339,8 +48354,38 @@ async def handle_no_shows(
                 }
                 await db.folio_charges.insert_one(charge)
                 total_charges += no_show_fee
+                fee_posted = True
         
         processed_count += 1
+        
+        no_show_details.append({
+            'booking_id': booking_id,
+            'guest_id': guest_id,
+            'room_id': room_id,
+            'room_number': room_number,
+            'folio_id': folio_id,
+            'fee_posted': fee_posted,
+            'fee_amount': no_show_fee if fee_posted else 0.0
+        })
+    
+    # Write detailed night audit log entry
+    await logging_service.log_night_audit(
+        tenant_id=current_user.tenant_id,
+        audit_date=audit_date,
+        user_id=current_user.id,
+        user_name=current_user.name,
+        status='completed',
+        rooms_processed=processed_count,
+        charges_posted=processed_count if charge_no_show_fee else 0,
+        total_amount=total_charges,
+        duration_seconds=None,
+        metadata={
+            'action': 'no_show_handling',
+            'no_show_count': processed_count,
+            'no_show_fee_enabled': charge_no_show_fee,
+            'no_show_details': no_show_details,
+        },
+    )
     
     return {
         'success': True,

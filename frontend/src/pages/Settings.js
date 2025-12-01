@@ -126,6 +126,40 @@ const Settings = ({ user, tenant, onLogout }) => {
     }
   };
 
+  const loadRoomMappings = async () => {
+    try {
+      const res = await axios.get('/ota/room-mappings');
+      setRoomMappings(res.data.mappings || []);
+    } catch (error) {
+      console.error('Failed to load room mappings', error);
+    }
+  };
+
+  const addRoomMapping = async () => {
+    try {
+      await axios.post('/ota/room-mappings', {
+        channel_name: 'booking',
+        channel_room_type: newMapping.channel_room_type,
+        pms_room_type: newMapping.pms_room_type
+      });
+      toast.success('Room mapping added');
+      setNewMapping({ channel_room_type: '', pms_room_type: '' });
+      await loadRoomMappings();
+    } catch (error) {
+      toast.error('Failed to add room mapping');
+    }
+  };
+
+  const removeRoomMapping = async (mappingId) => {
+    try {
+      await axios.delete(`/ota/room-mappings/${mappingId}`);
+      toast.success('Room mapping removed');
+      await loadRoomMappings();
+    } catch (error) {
+      toast.error('Failed to remove room mapping');
+    }
+  };
+
   return (
     <Layout user={user} tenant={tenant} onLogout={onLogout} currentModule="settings">
       <div className="p-6 space-y-6">

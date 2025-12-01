@@ -1034,6 +1034,7 @@ function App() {
           <Route path="/revenue-autopilot" element={isAuthenticated ? <Suspense fallback={<LoadingFallback />}><RevenueAutopilot user={user} tenant={tenant} onLogout={handleLogout} /></Suspense> : <Navigate to="/auth" replace />} />
           <Route path="/hr-complete" element={isAuthenticated ? <Suspense fallback={<LoadingFallback />}><HRComplete user={user} tenant={tenant} onLogout={handleLogout} /></Suspense> : <Navigate to="/auth" replace />} />
           <Route path="/fnb-complete" element={isAuthenticated ? <Suspense fallback={<LoadingFallback />}><FnBComplete user={user} tenant={tenant} onLogout={handleLogout} /></Suspense> : <Navigate to="/auth" replace />} />
+          <Route path="/fnb/beo-generator" element={isAuthenticated ? <Suspense fallback={<LoadingFallback />}><FnbBeoGenerator user={user} tenant={tenant} onLogout={handleLogout} /></Suspense> : <Navigate to="/auth" replace />} />
           <Route path="/kitchen-display" element={isAuthenticated ? <Suspense fallback={<LoadingFallback />}><KitchenDisplay user={user} tenant={tenant} onLogout={handleLogout} /></Suspense> : <Navigate to="/auth" replace />} />
         </Routes>
       </BrowserRouter>

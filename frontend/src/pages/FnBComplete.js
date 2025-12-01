@@ -96,7 +96,9 @@ const FnBComplete = ({ user, tenant, onLogout }) => {
                 <div className="text-center py-8">
                   <FileText className="w-16 h-16 text-orange-600 mx-auto mb-4" />
                   <p className="text-gray-700 mb-4">Banquet Event Order otomatik oluşturma</p>
-                  <Button className="bg-orange-600">BEO Oluştur</Button>
+                  <Button className="bg-orange-600" onClick={() => navigate('/fnb/beo-generator')}>
+                    BEO Oluştur
+                  </Button>
                 </div>
               </CardContent>
             </Card>

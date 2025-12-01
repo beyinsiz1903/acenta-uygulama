@@ -86,6 +86,7 @@ const Settings = ({ user, tenant, onLogout }) => {
   useEffect(() => {
     loadBookingCreds();
     loadBookingLogs();
+    loadRoomMappings();
   }, []);
 
   const saveBookingCredentials = async () => {

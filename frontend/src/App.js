@@ -7,6 +7,7 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { queryClient } from '@/lib/queryClient';
 import usePushNotifications from '@/hooks/usePushNotifications';
 import { NotificationProvider } from '@/context/NotificationContext';
+import NotificationCenter from '@/components/NotificationCenter';
 
 // Critical imports - loaded immediately
 import AuthPage from "@/pages/AuthPage";

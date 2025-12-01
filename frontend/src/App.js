@@ -95,6 +95,7 @@ const SocialMediaRadar = lazy(() => import("@/pages/SocialMediaRadar"));
 const RevenueAutopilot = lazy(() => import("@/pages/RevenueAutopilot"));
 const HRComplete = lazy(() => import("@/pages/HRComplete"));
 const FnBComplete = lazy(() => import("@/pages/FnBComplete"));
+const FnbBeoGenerator = lazy(() => import("@/pages/FnbBeoGenerator"));
 const KitchenDisplay = lazy(() => import("@/pages/KitchenDisplay"));
 const NightAuditLogs = lazy(() => import("@/pages/NightAuditLogs"));
 const FrontdeskAuditChecklist = lazy(() => import("@/pages/FrontdeskAuditChecklist"));

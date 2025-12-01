@@ -1,14 +1,24 @@
 import React, { useState } from 'react';
-import { Camera, Upload, X, CheckCircle } from 'lucide-react';
+import { Camera, Upload, X, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import axios from 'axios';
 
-const PhotoUploadComponent = ({ roomId, roomNumber, type = 'before', onUploadComplete }) => {
+const PhotoUploadComponent = ({
+  roomId,
+  roomNumber,
+  photoType = 'before',
+  onUploadComplete,
+  showNotes = true
+}) => {
   const [photo, setPhoto] = useState(null);
   const [preview, setPreview] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [qualityScore, setQualityScore] = useState(photoType === 'after' ? 9 : 0);
+  const [notes, setNotes] = useState('');
 
   const handleCapture = (e) => {
     const file = e.target.files[0];
@@ -30,16 +40,26 @@ const PhotoUploadComponent = ({ roomId, roomNumber, type = 'before', onUploadCom
       const formData = new FormData();
       formData.append('photo', photo);
       formData.append('room_id', roomId);
-      formData.append('type', type);
+      formData.append('photo_type', photoType);
+      if (roomNumber) {
+        formData.append('room_number', roomNumber);
+      }
+      if (photoType === 'after' && qualityScore) {
+        formData.append('quality_score', qualityScore);
+      }
+      if (showNotes && notes.trim()) {
+        formData.append('notes', notes.trim());
+      }
       formData.append('timestamp', new Date().toISOString());
 
       await axios.post('/housekeeping/upload-photo', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
-      toast.success(`✓ ${type === 'before' ? 'Önce' : 'Sonra'} fotoğrafı yüklendi!`);
+      toast.success(`✓ ${photoType === 'before' ? 'Önce' : 'Sonra'} fotoğrafı yüklendi!`);
       setPhoto(null);
       setPreview(null);
+      setNotes('');
       if (onUploadComplete) onUploadComplete();
     } catch (error) {
       toast.error('Fotoğraf yüklenemedi');
@@ -48,13 +68,18 @@ const PhotoUploadComponent = ({ roomId, roomNumber, type = 'before', onUploadCom
     }
   };
 
+  const getTitle = () => {
+    if (photoType === 'before') return '📷 Önce Fotoğrafı';
+    if (photoType === 'after') return '✅ Sonra Fotoğrafı';
+    if (photoType === 'issue') return '⚠️ Hasar Kaydı';
+    return '📸 Fotoğraf';
+  };
+
   return (
     <Card className="border-2 border-dashed border-gray-300">
       <CardContent className="p-4">
         <div className="text-center">
-          <p className="font-semibold mb-2">
-            {type === 'before' ? '📷 Önce' : '✅ Sonra'} Fotoğrafı
-          </p>
+          <p className="font-semibold mb-2">{getTitle()}</p>
           <p className="text-xs text-gray-600 mb-3">Oda {roomNumber}</p>
 
           {!preview ? (
@@ -103,6 +128,30 @@ const PhotoUploadComponent = ({ roomId, roomNumber, type = 'before', onUploadCom
                 )}
                 Yükle
               </Button>
+              {photoType === 'after' && (
+                <div className="text-left space-y-2">
+                  <Label className="text-xs text-gray-600">Kalite Skoru: {qualityScore}/10</Label>
+                  <input
+                    type="range"
+                    min="1"
+                    max="10"
+                    value={qualityScore}
+                    onChange={(e) => setQualityScore(Number(e.target.value))}
+                    className="w-full"
+                  />
+                </div>
+              )}
+              {showNotes && (
+                <div className="text-left space-y-2">
+                  <Label className="text-xs text-gray-600">Notlar</Label>
+                  <Textarea
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    rows={2}
+                    placeholder="Lekeler, bakım notları..."
+                  />
+                </div>
+              )}
             </div>
           )}
         </div>

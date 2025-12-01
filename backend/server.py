@@ -17,9 +17,20 @@ import bcrypt
 import jwt
 from enum import Enum
 from passlib.context import CryptContext
+import asyncio
 
 # Password hashing context
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+DEFAULT_PUSH_CHANNELS = [
+    'general',
+    'arrivals',
+    'housekeeping',
+    'maintenance',
+    'finance',
+    'executive'
+]
+from websocket_server import broadcast_kitchen_orders
 import qrcode
 import io
 import base64
@@ -3873,6 +3884,31 @@ async def register_mobile_device(device_data: dict, current_user: User = Depends
         'last_active': datetime.now(timezone.utc).isoformat()
     }
     await db.mobile_devices.insert_one(device)
+    
+    if device_data.get('push_token'):
+        await db.push_device_tokens.update_one(
+            {
+                'tenant_id': current_user.tenant_id,
+                'user_id': current_user.id,
+                'device_id': device_data['device_id']
+            },
+            {
+                '$set': {
+                    'tenant_id': current_user.tenant_id,
+                    'user_id': current_user.id,
+                    'device_id': device_data['device_id'],
+                    'platform': device_data.get('device_type', 'mobile'),
+                    'push_token': device_data['push_token'],
+                    'app_version': device_data.get('app_version'),
+                    'os_version': device_data.get('os_version'),
+                    'subscriptions': DEFAULT_PUSH_CHANNELS,
+                    'departments': [current_user.role] if current_user.role else [],
+                    'updated_at': datetime.now(timezone.utc).isoformat(),
+                    'created_at': datetime.now(timezone.utc).isoformat()
+                }
+            },
+            upsert=True
+        )
     return {'success': True, 'device_id': device['id']}
 
 @api_router.post("/mobile/push-notification")
@@ -4370,13 +4406,22 @@ async def installment_calculator(amount: float, installments: int, current_user:
 
 # ============= HR COMPLETE SUITE (İK MÜDÜRÜ İÇİN) =============
 
+async def _get_staff_map(tenant_id: str):
+    staff = await db.staff_members.find({'tenant_id': tenant_id}, {'_id': 0}).to_list(500)
+    return {member['id']: member for member in staff}
+
+
 @api_router.post("/hr/clock-in")
 async def clock_in(staff_data: dict, current_user: User = Depends(get_current_user)):
     """Personel giris kaydi"""
     record = {
-        'id': str(uuid.uuid4()), 'tenant_id': current_user.tenant_id,
-        'staff_id': staff_data['staff_id'], 'date': date.today().isoformat(),
-        'clock_in': datetime.now(timezone.utc).isoformat(), 'status': 'present',
+        'id': str(uuid.uuid4()),
+        'tenant_id': current_user.tenant_id,
+        'staff_id': staff_data['staff_id'],
+        'date': date.today().isoformat(),
+        'clock_in': datetime.now(timezone.utc).isoformat(),
+        'clock_out': None,
+        'status': 'present',
         'created_at': datetime.now(timezone.utc).isoformat()
     }
     await db.attendance_records.insert_one(record)
@@ -4426,6 +4471,168 @@ async def get_payroll(month: str, current_user: User = Depends(get_current_user)
     total = sum([p.get('net_salary', 0) for p in payroll])
     return {'payroll': payroll, 'total': total, 'count': len(payroll)}
 
+
+def _parse_date_range(start: Optional[str], end: Optional[str], days: int = 7):
+    today = date.today()
+    start_date = datetime.fromisoformat(start).date() if start else today - timedelta(days=days)
+    end_date = datetime.fromisoformat(end).date() if end else today
+    if start_date > end_date:
+        start_date, end_date = end_date, start_date
+    return start_date, end_date
+
+
+@api_router.get("/hr/attendance/records")
+async def get_attendance_records(
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    staff_id: Optional[str] = None,
+    limit: int = 500,
+    current_user: User = Depends(get_current_user)
+):
+    start_dt, end_dt = _parse_date_range(start_date, end_date, days=7)
+    query: Dict[str, Any] = {
+        'tenant_id': current_user.tenant_id,
+        'date': {'$gte': start_dt.isoformat(), '$lte': end_dt.isoformat()}
+    }
+    if staff_id:
+        query['staff_id'] = staff_id
+    records = await db.attendance_records.find(query, {'_id': 0}).sort('clock_in', -1).limit(limit).to_list(limit)
+    staff_map = await _get_staff_map(current_user.tenant_id)
+    for record in records:
+        staff = staff_map.get(record['staff_id'])
+        if staff:
+            record['staff_name'] = staff.get('name')
+            record['department'] = staff.get('department')
+            record['position'] = staff.get('position')
+    return {
+        'records': records,
+        'total': len(records),
+        'range': {'start': start_dt.isoformat(), 'end': end_dt.isoformat()}
+    }
+
+
+@api_router.get("/hr/attendance/summary")
+async def get_attendance_summary(
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    start_dt, end_dt = _parse_date_range(start_date, end_date, days=30)
+    query = {
+        'tenant_id': current_user.tenant_id,
+        'date': {'$gte': start_dt.isoformat(), '$lte': end_dt.isoformat()}
+    }
+    records = await db.attendance_records.find(query, {'_id': 0}).to_list(2000)
+    staff_map = await _get_staff_map(current_user.tenant_id)
+    
+    summary: Dict[str, Any] = {}
+    for record in records:
+        staff_id = record['staff_id']
+        summary.setdefault(staff_id, {
+            'staff_id': staff_id,
+            'total_hours': 0,
+            'days_present': 0,
+            'overtime_hours': 0,
+            'late_count': 0
+        })
+        summary[staff_id]['total_hours'] += record.get('total_hours', 0)
+        summary[staff_id]['days_present'] += 1
+    
+    for staff_id, data in summary.items():
+        staff = staff_map.get(staff_id, {})
+        data['staff_name'] = staff.get('name', staff_id)
+        data['department'] = staff.get('department', 'unknown')
+        data['position'] = staff.get('position', 'Staff')
+        overtime_threshold = staff.get('monthly_hours', 160)
+        if data['total_hours'] > overtime_threshold:
+            data['overtime_hours'] = round(data['total_hours'] - overtime_threshold, 2)
+        data['average_daily_hours'] = round(
+            data['total_hours'] / data['days_present'], 2
+        ) if data['days_present'] else 0
+    
+    summary_list = sorted(summary.values(), key=lambda x: x['staff_name'])
+    total_hours = round(sum(item['total_hours'] for item in summary_list), 2)
+    avg_hours = round(total_hours / len(summary_list), 2) if summary_list else 0
+    
+    return {
+        'summary': summary_list,
+        'range': {'start': start_dt.isoformat(), 'end': end_dt.isoformat()},
+        'metrics': {
+            'staff_count': len(summary_list),
+            'total_hours': total_hours,
+            'avg_hours_per_staff': avg_hours
+        }
+    }
+
+
+@api_router.get("/hr/payroll/export")
+async def export_payroll(
+    month: Optional[str] = None,
+    format: str = 'json',
+    current_user: User = Depends(get_current_user)
+):
+    today = date.today()
+    if month:
+        start_dt = datetime.fromisoformat(f"{month}-01").date()
+    else:
+        start_dt = date(today.year, today.month, 1)
+    next_month = start_dt.replace(day=28) + timedelta(days=4)
+    end_dt = next_month - timedelta(days=next_month.day)
+    
+    query = {
+        'tenant_id': current_user.tenant_id,
+        'date': {'$gte': start_dt.isoformat(), '$lte': end_dt.isoformat()}
+    }
+    records = await db.attendance_records.find(query, {'_id': 0}).to_list(5000)
+    staff_map = await _get_staff_map(current_user.tenant_id)
+    
+    payroll_rows = {}
+    for record in records:
+        staff_id = record['staff_id']
+        payroll_rows.setdefault(staff_id, 0)
+        payroll_rows[staff_id] += record.get('total_hours', 0)
+    
+    payroll = []
+    for staff_id, total_hours in payroll_rows.items():
+        staff = staff_map.get(staff_id, {})
+        hourly_rate = staff.get('hourly_rate', 12)
+        overtime_hours = max(0, total_hours - staff.get('monthly_hours', 160))
+        overtime_rate = staff.get('overtime_rate', hourly_rate * 1.5)
+        base_hours = total_hours - overtime_hours
+        gross_pay = (base_hours * hourly_rate) + (overtime_hours * overtime_rate)
+        payroll.append({
+            'staff_id': staff_id,
+            'staff_name': staff.get('name', staff_id),
+            'department': staff.get('department', 'unknown'),
+            'total_hours': round(total_hours, 2),
+            'overtime_hours': round(overtime_hours, 2),
+            'hourly_rate': hourly_rate,
+            'overtime_rate': overtime_rate,
+            'gross_pay': round(gross_pay, 2)
+        })
+    
+    response = {
+        'month': start_dt.strftime('%Y-%m'),
+        'payroll': payroll,
+        'staff_count': len(payroll),
+        'total_gross_pay': round(sum(row['gross_pay'] for row in payroll), 2)
+    }
+    
+    if format == 'csv':
+        import csv
+        from io import StringIO
+        buffer = StringIO()
+        writer = csv.DictWriter(buffer, fieldnames=list(payroll[0].keys()) if payroll else [
+            'staff_id', 'staff_name', 'department', 'total_hours', 'overtime_hours',
+            'hourly_rate', 'overtime_rate', 'gross_pay'
+        ])
+        writer.writeheader()
+        for row in payroll:
+            writer.writerow(row)
+        response['csv'] = base64.b64encode(buffer.getvalue().encode()).decode()
+    
+    return response
+
 @api_router.post("/hr/job-posting")
 async def create_job_posting(job_data: dict, current_user: User = Depends(get_current_user)):
     job = {
@@ -4445,52 +4652,306 @@ async def complete_kitchen_order(order_id: str, current_user: User = Depends(get
         {'id': order_id},
         {'$set': {'status': 'ready', 'ready_at': datetime.now(timezone.utc).isoformat()}}
     )
+    await _broadcast_kitchen_queue(current_user.tenant_id)
     return {'success': True, 'message': 'Sipariş hazır olarak işaretlendi'}
 
 # ============= PHOTO UPLOAD (KAT HİZMETLERİ İÇİN) =============
 
 @api_router.post("/housekeeping/upload-photo")
 async def upload_room_photo(
-    photo: bytes = File(...),
+    photo: UploadFile = File(...),
     room_id: str = Form(...),
-    photo_type: str = Form(...),
+    photo_type: Optional[str] = Form(None),
+    legacy_type: Optional[str] = Form(None, alias="type"),
+    room_number: Optional[str] = Form(None),
+    quality_score: Optional[int] = Form(None),
+    notes: Optional[str] = Form(None),
     current_user: User = Depends(get_current_user)
 ):
-    # Save photo (simulated - gerçekte S3, CloudFlare R2)
+    """
+    Upload a housekeeping photo (before/after/issue) with optional quality metadata.
+    Stores a base64 inline preview so mobile/desktop apps can show the image instantly.
+    """
+    file_bytes = await photo.read()
+    file_size = len(file_bytes)
+    
+    # Encode preview for quick rendering if file is reasonably small (<2MB)
+    inline_preview = None
+    if file_size <= 2_000_000:
+        encoded = base64.b64encode(file_bytes).decode('utf-8')
+        inline_preview = f"data:{photo.content_type};base64,{encoded}"
+    
+    # Determine final inspection type
+    normalized_type = (photo_type or legacy_type or 'inspection').lower()
+    
+    # Safe quality score parsing
+    parsed_quality = None
+    if quality_score is not None:
+        try:
+            parsed_quality = max(1, min(10, int(quality_score)))
+        except (TypeError, ValueError):
+            parsed_quality = None
+    
     photo_record = {
         'id': str(uuid.uuid4()),
         'tenant_id': current_user.tenant_id,
         'room_id': room_id,
-        'photo_type': photo_type,  # before, after
+        'room_number': room_number,
+        'photo_type': normalized_type,  # before, after, inspection, issue
+        'quality_score': parsed_quality,
+        'notes': notes,
         'uploaded_by': current_user.id,
+        'uploaded_by_name': current_user.name,
         'uploaded_at': datetime.now(timezone.utc).isoformat(),
-        'url': f'/photos/{room_id}_{photo_type}_{str(uuid.uuid4())[:8]}.jpg'
+        'file_name': photo.filename,
+        'content_type': photo.content_type,
+        'size_kb': round(file_size / 1024, 2),
+        'storage': 'inline',
+        'inline_preview': inline_preview,
+        # Placeholder URL until external storage (S3/R2) is configured
+        'url': f'/photos/{room_id}_{normalized_type}_{str(uuid.uuid4())[:8]}.jpg'
     }
+    
     await db.room_photos.insert_one(photo_record)
-    return {'success': True, 'photo_id': photo_record['id'], 'url': photo_record['url']}
+    return {
+        'success': True,
+        'photo_id': photo_record['id'],
+        'inline_preview': photo_record['inline_preview'],
+        'quality_score': photo_record['quality_score']
+    }
+
+
+@api_router.get("/housekeeping/photos/feed")
+async def get_housekeeping_photo_feed(
+    limit: int = 12,
+    room_id: Optional[str] = None,
+    photo_type: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Return the most recent housekeeping photos for quick quality control."""
+    query = {'tenant_id': current_user.tenant_id}
+    if room_id:
+        query['room_id'] = room_id
+    if photo_type:
+        query['photo_type'] = photo_type
+    
+    limit = max(1, min(limit, 50))
+    photos = await db.room_photos.find(query, {'_id': 0}).sort('uploaded_at', -1).to_list(limit)
+    return {'photos': photos, 'count': len(photos)}
+
+# Helper functions for push notification delivery
+async def _collect_push_devices(
+    tenant_id: str,
+    user_ids: Optional[List[str]] = None,
+    departments: Optional[List[str]] = None
+):
+    query: Dict[str, Any] = {'tenant_id': tenant_id}
+    if user_ids:
+        query['user_id'] = {'$in': user_ids}
+    if departments:
+        query['departments'] = {'$in': departments}
+    return await db.push_device_tokens.find(query, {'_id': 0}).to_list(1000)
+
+
+async def _simulate_push_delivery(devices: List[dict], payload: dict) -> List[dict]:
+    deliveries = []
+    for device in devices:
+        deliveries.append({
+            'device_id': device.get('device_id'),
+            'platform': device.get('platform', 'unknown'),
+            'user_id': device.get('user_id'),
+            'status': 'queued',
+            'delivered_at': datetime.now(timezone.utc).isoformat()
+        })
+    if deliveries:
+        print(f"📱 Mock push deliver: {len(deliveries)} devices → {payload.get('title')}")
+    return deliveries
+
+
+async def _record_push_log(tenant_id: str, payload: dict, deliveries: List[dict], created_by: str):
+    log_entry = {
+        'id': str(uuid.uuid4()),
+        'tenant_id': tenant_id,
+        'title': payload.get('title'),
+        'body': payload.get('body'),
+        'channels': payload.get('channels', ['in_app']),
+        'target_user_ids': payload.get('user_ids'),
+        'target_departments': payload.get('departments'),
+        'delivery_count': len(deliveries),
+        'deliveries': deliveries[:50],
+        'created_by': created_by,
+        'created_at': datetime.now(timezone.utc).isoformat()
+    }
+    await db.push_delivery_logs.insert_one(log_entry)
+    return log_entry
+
 
 # ============= PUSH NOTIFICATIONS (TÜM DEPARTMANLAR) =============
 
 @api_router.post("/notifications/send-push")
 async def send_push_notification(notif_data: dict, current_user: User = Depends(get_current_user)):
-    # Save notification
-    notification = {
+    channels = notif_data.get('channels', ['in_app', 'push'])
+    target_user_ids = notif_data.get('user_ids')
+    if notif_data.get('user_id') and not target_user_ids:
+        target_user_ids = [notif_data['user_id']]
+    target_departments = notif_data.get('departments')
+    
+    payload = {
         'id': str(uuid.uuid4()),
         'tenant_id': current_user.tenant_id,
-        'user_id': notif_data.get('user_id'),
-        'department': notif_data.get('department'),
         'title': notif_data['title'],
         'body': notif_data['body'],
         'type': notif_data.get('type', 'info'),
+        'priority': notif_data.get('priority', 'normal'),
+        'action_url': notif_data.get('action_url'),
+        'metadata': notif_data.get('metadata', {}),
+        'channels': channels,
+        'user_ids': target_user_ids,
+        'departments': target_departments,
         'sent_at': datetime.now(timezone.utc).isoformat(),
-        'read': False
+        'created_by': current_user.id
     }
-    await db.push_notifications.insert_one(notification)
     
-    # Gerçekte: Firebase Cloud Messaging, APNs
-    print(f"📱 Push Notification: {notif_data['title']} → {notif_data.get('user_id', 'all')}")
+    if 'in_app' in channels:
+        in_app_notification = {
+            **payload,
+            'user_id': target_user_ids[0] if target_user_ids and len(target_user_ids) == 1 else None,
+            'department': target_departments,
+            'read': False
+        }
+        await db.notifications.insert_one(in_app_notification)
     
-    return {'success': True, 'notification_id': notification['id']}
+    deliveries: List[dict] = []
+    if 'push' in channels:
+        devices = await _collect_push_devices(
+            tenant_id=current_user.tenant_id,
+            user_ids=target_user_ids,
+            departments=target_departments
+        )
+        deliveries = await _simulate_push_delivery(devices, payload)
+    
+    await db.push_notifications.insert_one({
+        **payload,
+        'target_count': len(deliveries),
+    })
+    await _record_push_log(current_user.tenant_id, payload, deliveries, current_user.id)
+    
+    return {
+        'success': True,
+        'notification_id': payload['id'],
+        'queued': len(deliveries),
+        'channels': channels
+    }
+
+
+@api_router.post("/notifications/push/register")
+async def register_push_device(device_payload: dict, current_user: User = Depends(get_current_user)):
+    device_id = device_payload.get('device_id')
+    push_token = device_payload.get('push_token')
+    if not device_id or not push_token:
+        raise HTTPException(status_code=400, detail="device_id and push_token are required")
+    
+    subscriptions = device_payload.get('subscriptions') or device_payload.get('channels') or DEFAULT_PUSH_CHANNELS
+    departments = device_payload.get('departments') or ([current_user.role] if current_user.role else [])
+    
+    device_doc = {
+        'tenant_id': current_user.tenant_id,
+        'user_id': current_user.id,
+        'device_id': device_id,
+        'device_name': device_payload.get('device_name'),
+        'platform': device_payload.get('platform', 'web'),
+        'push_token': push_token,
+        'app_version': device_payload.get('app_version'),
+        'os_version': device_payload.get('os_version'),
+        'user_agent': device_payload.get('user_agent'),
+        'timezone': device_payload.get('timezone'),
+        'subscriptions': subscriptions,
+        'departments': departments,
+        'capabilities': device_payload.get('capabilities', {}),
+        'updated_at': datetime.now(timezone.utc).isoformat(),
+        'created_at': datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.push_device_tokens.update_one(
+        {
+            'tenant_id': current_user.tenant_id,
+            'user_id': current_user.id,
+            'device_id': device_id
+        },
+        {'$set': device_doc},
+        upsert=True
+    )
+    
+    return {
+        'success': True,
+        'device_id': device_id,
+        'subscriptions': subscriptions
+    }
+
+
+@api_router.post("/notifications/push/subscriptions")
+async def update_push_subscriptions(subscription_payload: dict, current_user: User = Depends(get_current_user)):
+    channels = subscription_payload.get('channels') or DEFAULT_PUSH_CHANNELS
+    
+    await db.push_subscriptions.update_one(
+        {
+            'tenant_id': current_user.tenant_id,
+            'user_id': current_user.id
+        },
+        {
+            '$set': {
+                'channels': channels,
+                'updated_at': datetime.now(timezone.utc).isoformat()
+            }
+        },
+        upsert=True
+    )
+    
+    await db.push_device_tokens.update_many(
+        {
+            'tenant_id': current_user.tenant_id,
+            'user_id': current_user.id
+        },
+        {'$set': {'subscriptions': channels}}
+    )
+    
+    return {'success': True, 'channels': channels}
+
+
+@api_router.get("/notifications/push/subscriptions")
+async def get_push_subscriptions(current_user: User = Depends(get_current_user)):
+    record = await db.push_subscriptions.find_one(
+        {'tenant_id': current_user.tenant_id, 'user_id': current_user.id},
+        {'_id': 0}
+    )
+    return {
+        'channels': record.get('channels') if record else DEFAULT_PUSH_CHANNELS
+    }
+
+
+@api_router.get("/notifications/push-status")
+async def get_push_status(current_user: User = Depends(get_current_user)):
+    devices = await db.push_device_tokens.find(
+        {'tenant_id': current_user.tenant_id, 'user_id': current_user.id},
+        {'_id': 0}
+    ).sort('updated_at', -1).to_list(20)
+    
+    subscription = await db.push_subscriptions.find_one(
+        {'tenant_id': current_user.tenant_id, 'user_id': current_user.id},
+        {'_id': 0}
+    )
+    
+    last_delivery = await db.push_delivery_logs.find(
+        {'tenant_id': current_user.tenant_id, 'target_user_ids': {'$in': [current_user.id]}}
+    ).sort('created_at', -1).to_list(1)
+    
+    return {
+        'enabled': len(devices) > 0,
+        'devices': devices,
+        'device_count': len(devices),
+        'subscriptions': subscription.get('channels') if subscription else DEFAULT_PUSH_CHANNELS,
+        'last_delivery': last_delivery[0] if last_delivery else None
+    }
 
 @api_router.get("/notifications/my-notifications")
 async def get_my_notifications(current_user: User = Depends(get_current_user)):
@@ -4513,31 +4974,115 @@ async def get_my_notifications(current_user: User = Depends(get_current_user)):
 
 # ============= F&B COMPLETE SUITE (CHEF İÇİN) =============
 
+async def _get_ingredient_map(tenant_id: str):
+    ingredients = await db.ingredients.find({'tenant_id': tenant_id}, {'_id': 0}).to_list(1000)
+    return {ing['id']: ing for ing in ingredients}, ingredients
+
+
+def _enrich_recipe_cost(recipe: dict, ingredient_map: Dict[str, dict]):
+    enriched_lines = []
+    total_cost = 0
+    for line in recipe.get('ingredients', []):
+        ingredient = ingredient_map.get(line.get('ingredient_id'))
+        unit_cost = line.get('unit_cost') or (ingredient.get('unit_cost') if ingredient else 0)
+        quantity = line.get('quantity', 1)
+        waste_pct = line.get('waste_pct', 0)
+        line_cost = unit_cost * quantity * (1 + waste_pct / 100)
+        total_cost += line_cost
+        
+        enriched_lines.append({
+            'ingredient_id': line.get('ingredient_id'),
+            'ingredient_name': line.get('ingredient_name') or (ingredient.get('name') if ingredient else 'Unknown'),
+            'unit': line.get('unit') or (ingredient.get('unit') if ingredient else ''),
+            'quantity': quantity,
+            'unit_cost': round(unit_cost, 2),
+            'waste_pct': waste_pct,
+            'line_cost': round(line_cost, 2),
+            'supplier': ingredient.get('supplier') if ingredient else None
+        })
+    
+    recipe['cost_breakdown'] = enriched_lines
+    recipe['total_cost'] = round(total_cost, 2)
+    selling_price = recipe.get('selling_price', 0)
+    recipe['gp_percentage'] = round(((selling_price - total_cost) / selling_price * 100), 1) if selling_price else 0
+    recipe['ingredient_count'] = len(enriched_lines)
+    return recipe
+
+
 @api_router.post("/fnb/recipes")
 async def create_recipe(recipe_data: dict, current_user: User = Depends(get_current_user)):
-    ingredients = recipe_data.get('ingredients', [])
-    total_cost = sum([i.get('cost', 0) * i.get('quantity', 0) for i in ingredients])
-    selling_price = recipe_data.get('selling_price', 0)
-    gp = ((selling_price - total_cost) / selling_price * 100) if selling_price > 0 else 0
-    
-    # Support both recipe_name and dish_name
-    dish_name = recipe_data.get('recipe_name') or recipe_data.get('dish_name', 'Unnamed Recipe')
+    ingredient_map, _ = await _get_ingredient_map(current_user.tenant_id)
     
     recipe = {
-        'id': str(uuid.uuid4()), 'tenant_id': current_user.tenant_id,
-        'dish_name': dish_name, 'category': recipe_data.get('category', 'general'),
-        'ingredients': ingredients, 'total_cost': round(total_cost, 2),
-        'selling_price': selling_price, 'gp_percentage': round(gp, 1),
-        'active': True, 'created_at': datetime.now(timezone.utc).isoformat()
+        'id': str(uuid.uuid4()),
+        'tenant_id': current_user.tenant_id,
+        'dish_name': recipe_data.get('recipe_name') or recipe_data.get('dish_name', 'Unnamed Recipe'),
+        'category': recipe_data.get('category', 'general'),
+        'portion_size': recipe_data.get('portion_size', '1 portion'),
+        'preparation_time': recipe_data.get('preparation_time', 15),
+        'ingredients': recipe_data.get('ingredients', []),
+        'selling_price': recipe_data.get('selling_price', 0),
+        'active': True,
+        'created_at': datetime.now(timezone.utc).isoformat()
     }
+    
+    recipe = _enrich_recipe_cost(recipe, ingredient_map)
     await db.recipes.insert_one(recipe)
-    return {'success': True, 'recipe_id': recipe['id'], 'gp_percentage': recipe['gp_percentage']}
+    
+    return {
+        'success': True,
+        'recipe_id': recipe['id'],
+        'gp_percentage': recipe['gp_percentage'],
+        'total_cost': recipe['total_cost']
+    }
+
 
 @api_router.get("/fnb/recipes")
 async def get_recipes(current_user: User = Depends(get_current_user)):
-    recipes = await db.recipes.find({'tenant_id': current_user.tenant_id, 'active': True}, {'_id': 0}).to_list(200)
-    avg_gp = sum([r.get('gp_percentage', 0) for r in recipes]) / len(recipes) if recipes else 0
-    return {'recipes': recipes, 'total': len(recipes), 'avg_gp': round(avg_gp, 1)}
+    ingredient_map, _ = await _get_ingredient_map(current_user.tenant_id)
+    recipes = await db.recipes.find(
+        {'tenant_id': current_user.tenant_id, 'active': True},
+        {'_id': 0}
+    ).sort('dish_name', 1).to_list(200)
+    
+    enriched = [_enrich_recipe_cost(dict(recipe), ingredient_map) for recipe in recipes]
+    avg_gp = sum([r.get('gp_percentage', 0) for r in enriched]) / len(enriched) if enriched else 0
+    avg_food_cost = sum([r.get('total_cost', 0) for r in enriched]) / len(enriched) if enriched else 0
+    
+    return {
+        'recipes': enriched,
+        'total': len(enriched),
+        'avg_gp': round(avg_gp, 1),
+        'avg_food_cost': round(avg_food_cost, 2)
+    }
+
+
+@api_router.get("/fnb/recipes/{recipe_id}")
+async def get_recipe(recipe_id: str, current_user: User = Depends(get_current_user)):
+    recipe = await db.recipes.find_one({'tenant_id': current_user.tenant_id, 'id': recipe_id}, {'_id': 0})
+    if not recipe:
+        raise HTTPException(status_code=404, detail="Recipe not found")
+    ingredient_map, _ = await _get_ingredient_map(current_user.tenant_id)
+    recipe = _enrich_recipe_cost(recipe, ingredient_map)
+    return {'recipe': recipe}
+
+
+@api_router.put("/fnb/recipes/{recipe_id}")
+async def update_recipe(recipe_id: str, recipe_data: dict, current_user: User = Depends(get_current_user)):
+    recipe = await db.recipes.find_one({'tenant_id': current_user.tenant_id, 'id': recipe_id})
+    if not recipe:
+        raise HTTPException(status_code=404, detail="Recipe not found")
+    
+    updated = {**recipe, **recipe_data}
+    ingredient_map, _ = await _get_ingredient_map(current_user.tenant_id)
+    updated = _enrich_recipe_cost(updated, ingredient_map)
+    
+    await db.recipes.update_one(
+        {'tenant_id': current_user.tenant_id, 'id': recipe_id},
+        {'$set': updated}
+    )
+    updated.pop('_id', None)
+    return {'success': True, 'recipe': updated}
 
 @api_router.post("/fnb/beo")
 async def create_beo(beo_data: dict, current_user: User = Depends(get_current_user)):
@@ -4549,37 +5094,279 @@ async def create_beo(beo_data: dict, current_user: User = Depends(get_current_us
     await db.banquet_event_orders.insert_one(beo)
     return {'success': True, 'beo_id': beo['id'], 'message': 'BEO olusturuldu'}
 
+async def _get_active_kitchen_orders(tenant_id: str, statuses: Optional[List[str]] = None):
+    query = {'tenant_id': tenant_id}
+    if statuses:
+        query['status'] = {'$in': statuses}
+    else:
+        query['status'] = {'$in': ['pending', 'preparing']}
+    return await db.kitchen_orders.find(query, {'_id': 0}).sort(
+        [('priority', -1), ('ordered_at', 1)]
+    ).to_list(200)
+
+
+async def _next_kitchen_order_number(tenant_id: str) -> int:
+    last_order = await db.kitchen_orders.find({'tenant_id': tenant_id}).sort('order_number', -1).limit(1).to_list(1)
+    return (last_order[0]['order_number'] + 1) if last_order else 1
+
+
+async def _broadcast_kitchen_queue(tenant_id: str):
+    try:
+        orders = await _get_active_kitchen_orders(tenant_id)
+        await broadcast_kitchen_orders(tenant_id, orders)
+    except Exception as exc:
+        logging.warning(f"Kitchen broadcast failed: {exc}")
+
+
 @api_router.get("/fnb/kitchen-display")
-async def get_kitchen_orders(current_user: User = Depends(get_current_user)):
-    orders = await db.kitchen_orders.find({
-        'tenant_id': current_user.tenant_id, 'status': {'$in': ['pending', 'preparing']}
-    }, {'_id': 0}).sort('priority', -1).to_list(50)
+async def get_kitchen_orders(
+    status: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    statuses = status.split(',') if status else None
+    orders = await _get_active_kitchen_orders(current_user.tenant_id, statuses=statuses)
     return {'orders': orders, 'total': len(orders)}
+
+
+@api_router.post("/fnb/kitchen-order")
+async def create_kitchen_order(order_data: dict, current_user: User = Depends(get_current_user)):
+    if not order_data.get('items'):
+        raise HTTPException(status_code=400, detail="Order items required")
+    
+    order = {
+        'id': str(uuid.uuid4()),
+        'tenant_id': current_user.tenant_id,
+        'order_number': await _next_kitchen_order_number(current_user.tenant_id),
+        'table_number': order_data.get('table_number'),
+        'room_number': order_data.get('room_number'),
+        'priority': order_data.get('priority', 'normal'),
+        'status': 'pending',
+        'station': order_data.get('station'),
+        'items': order_data.get('items'),
+        'notes': order_data.get('notes'),
+        'ordered_by': current_user.name,
+        'ordered_at': datetime.now(timezone.utc).isoformat()
+    }
+    await db.kitchen_orders.insert_one(order)
+    await _broadcast_kitchen_queue(current_user.tenant_id)
+    order.pop('_id', None)
+    return {'success': True, 'order': order}
+
+
+@api_router.put("/fnb/kitchen-order/{order_id}/status")
+async def update_kitchen_order_status(
+    order_id: str,
+    status: str,
+    current_user: User = Depends(get_current_user)
+):
+    update_data = {'status': status}
+    if status == 'preparing':
+        update_data['started_at'] = datetime.now(timezone.utc).isoformat()
+    if status in ['ready', 'served']:
+        update_data['ready_at'] = datetime.now(timezone.utc).isoformat()
+    result = await db.kitchen_orders.update_one(
+        {'tenant_id': current_user.tenant_id, 'id': order_id},
+        {'$set': update_data}
+    )
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Order not found")
+    await _broadcast_kitchen_queue(current_user.tenant_id)
+    return {'success': True, 'order_id': order_id, 'status': status}
+
+@api_router.get("/fnb/ingredients")
+async def list_ingredients(current_user: User = Depends(get_current_user)):
+    ingredients = await db.ingredients.find(
+        {'tenant_id': current_user.tenant_id},
+        {'_id': 0}
+    ).sort('name', 1).to_list(500)
+    
+    low_stock = [ing for ing in ingredients if ing.get('current_stock', 0) <= ing.get('reorder_point', 0)]
+    total_value = sum((ing.get('current_stock', 0) * ing.get('unit_cost', 0)) for ing in ingredients)
+    
+    categories = {}
+    for ing in ingredients:
+        cat = ing.get('category', 'other')
+        categories.setdefault(cat, 0)
+        categories[cat] += 1
+    
+    return {
+        'ingredients': ingredients,
+        'summary': {
+            'total_items': len(ingredients),
+            'low_stock': len(low_stock),
+            'inventory_value': round(total_value, 2),
+            'categories': categories
+        }
+    }
+
 
 @api_router.post("/fnb/ingredients")
 async def add_ingredient(ing_data: dict, current_user: User = Depends(get_current_user)):
     ingredient = {
-        'id': str(uuid.uuid4()), 'tenant_id': current_user.tenant_id,
-        **ing_data, 'created_at': datetime.now(timezone.utc).isoformat()
+        'id': str(uuid.uuid4()),
+        'tenant_id': current_user.tenant_id,
+        'name': ing_data['name'],
+        'category': ing_data.get('category', 'general'),
+        'unit': ing_data.get('unit', 'kg'),
+        'current_stock': ing_data.get('current_stock', 0),
+        'par_level': ing_data.get('par_level', 0),
+        'reorder_point': ing_data.get('reorder_point', 0),
+        'unit_cost': ing_data.get('unit_cost', 0),
+        'supplier': ing_data.get('supplier'),
+        'last_order_date': ing_data.get('last_order_date'),
+        'created_at': datetime.now(timezone.utc).isoformat()
     }
     await db.ingredients.insert_one(ingredient)
-    return {'success': True, 'ingredient_id': ingredient['id']}
+    ingredient.pop('_id', None)
+    return {'success': True, 'ingredient': ingredient}
+
+
+@api_router.put("/fnb/ingredients/{ingredient_id}")
+async def update_ingredient(ingredient_id: str, ing_data: dict, current_user: User = Depends(get_current_user)):
+    ingredient = await db.ingredients.find_one({'tenant_id': current_user.tenant_id, 'id': ingredient_id})
+    if not ingredient:
+        raise HTTPException(status_code=404, detail="Ingredient not found")
+    
+    updated = {**ingredient, **ing_data}
+    await db.ingredients.update_one(
+        {'tenant_id': current_user.tenant_id, 'id': ingredient_id},
+        {'$set': updated}
+    )
+    updated.pop('_id', None)
+    return {'success': True, 'ingredient': updated}
 
 # ============= FINANCE INTEGRATION (FINANS MÜDÜRÜ İÇİN) =============
 
+class LogoConnector:
+    """Mock Logo/Netsis connector for ERP sync"""
+    def __init__(self):
+        self.base_url = os.environ.get('LOGO_API_URL', 'https://logo.example/api')
+    
+    async def send_invoice(self, invoice):
+        await asyncio.sleep(0.1)
+        return {
+            'external_id': f"LOGO-{invoice['id'][:8]}",
+            'status': 'synced',
+            'message': 'Invoice pushed to Logo'
+        }
+    
+    async def send_payment(self, payment):
+        await asyncio.sleep(0.1)
+        return {
+            'external_id': f"LOGO-PAY-{payment['id'][:8]}",
+            'status': 'synced',
+            'message': 'Payment pushed to Logo'
+        }
+
+
+class NetsisConnector:
+    """Mock Netsis connector"""
+    def __init__(self):
+        self.base_url = os.environ.get('NETSIS_API_URL', 'https://netsis.example/api')
+    
+    async def send_invoice(self, invoice):
+        await asyncio.sleep(0.1)
+        return {
+            'external_id': f"NETSIS-{invoice['id'][:8]}",
+            'status': 'synced',
+            'message': 'Invoice pushed to Netsis'
+        }
+
+
+async def _gather_invoices(tenant_id: str, since: Optional[str] = None):
+    query = {'tenant_id': tenant_id}
+    if since:
+        query['created_at'] = {'$gte': since}
+    invoices = await db.finance_invoices.find(query, {'_id': 0}).sort('created_at', -1).to_list(500)
+    return invoices
+
+
+async def _gather_payments(tenant_id: str, since: Optional[str] = None):
+    query = {'tenant_id': tenant_id}
+    if since:
+        query['created_at'] = {'$gte': since}
+    payments = await db.finance_payments.find(query, {'_id': 0}).sort('created_at', -1).to_list(500)
+    return payments
+
+
+async def _log_accounting_sync(tenant_id: str, payload: dict):
+    record = {
+        'id': str(uuid.uuid4()),
+        'tenant_id': tenant_id,
+        **payload,
+        'created_at': datetime.now(timezone.utc).isoformat()
+    }
+    await db.accounting_sync_logs.insert_one(record)
+    return record
+
+
 @api_router.post("/finance/logo-integration/sync")
 async def sync_with_logo(sync_data: dict = None, current_user: User = Depends(get_current_user)):
-    """Logo Tiger entegrasyonu (simulated)"""
-    # Gercekte: Logo Tiger API call
-    result = {
-        'id': str(uuid.uuid4()),
-        'tenant_id': current_user.tenant_id,
-        'success': True, 'synced_invoices': 45, 'synced_payments': 23,
-        'synced_at': datetime.now(timezone.utc).isoformat()
+    """Sync finance data with Logo ERP"""
+    connector = LogoConnector()
+    since = sync_data.get('since') if sync_data else None
+    invoices = await _gather_invoices(current_user.tenant_id, since)
+    payments = await _gather_payments(current_user.tenant_id, since)
+    
+    synced_invoices = []
+    for invoice in invoices:
+        result = await connector.send_invoice(invoice)
+        synced_invoices.append({**invoice, **result})
+    
+    synced_payments = []
+    for payment in payments:
+        result = await connector.send_payment(payment)
+        synced_payments.append({**payment, **result})
+    
+    log_entry = await _log_accounting_sync(current_user.tenant_id, {
+        'provider': 'logo',
+        'synced_invoices': len(synced_invoices),
+        'synced_payments': len(synced_payments),
+        'synced_at': datetime.now(timezone.utc).isoformat(),
+        'status': 'success'
+    })
+    
+    return {
+        'success': True,
+        'synced_invoices': len(synced_invoices),
+        'synced_payments': len(synced_payments),
+        'log_id': log_entry['id']
     }
-    await db.accounting_sync_logs.insert_one(result)
-    return {'success': result['success'], 'synced_invoices': result['synced_invoices'], 
-            'synced_payments': result['synced_payments'], 'synced_at': result['synced_at']}
+
+
+@api_router.post("/finance/netsis-integration/sync")
+async def sync_with_netsis(sync_data: dict = None, current_user: User = Depends(get_current_user)):
+    connector = NetsisConnector()
+    since = sync_data.get('since') if sync_data else None
+    invoices = await _gather_invoices(current_user.tenant_id, since)
+    
+    synced = []
+    for invoice in invoices:
+        result = await connector.send_invoice(invoice)
+        synced.append({**invoice, **result})
+    
+    log_entry = await _log_accounting_sync(current_user.tenant_id, {
+        'provider': 'netsis',
+        'synced_invoices': len(synced),
+        'synced_payments': 0,
+        'synced_at': datetime.now(timezone.utc).isoformat(),
+        'status': 'success'
+    })
+    
+    return {
+        'success': True,
+        'synced_invoices': len(synced),
+        'log_id': log_entry['id']
+    }
+
+
+@api_router.get("/finance/integration/logs")
+async def get_integration_logs(limit: int = 20, current_user: User = Depends(get_current_user)):
+    logs = await db.accounting_sync_logs.find(
+        {'tenant_id': current_user.tenant_id},
+        {'_id': 0}
+    ).sort('created_at', -1).limit(limit).to_list(limit)
+    return {'logs': logs, 'count': len(logs)}
 
 @api_router.get("/finance/budget-vs-actual")
 async def budget_vs_actual(month: str, current_user: User = Depends(get_current_user)):

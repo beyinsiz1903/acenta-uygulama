@@ -81,6 +81,10 @@ const MobileHousekeeping = ({ user }) => {
   const [filterStaff, setFilterStaff] = useState('all');
   const [cleaningRequests, setCleaningRequests] = useState([]);
   const [cleaningRequestsExpanded, setCleaningRequestsExpanded] = useState(true);
+  const [photoModalOpen, setPhotoModalOpen] = useState(false);
+  const [selectedPhotoRoom, setSelectedPhotoRoom] = useState(null);
+  const [photoGallery, setPhotoGallery] = useState([]);
+  const [loadingPhotos, setLoadingPhotos] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -143,6 +147,41 @@ const MobileHousekeeping = ({ user }) => {
       setLoading(false);
       setRefreshing(false);
     }
+  };
+
+  const fetchRoomPhotosForModal = async (roomId) => {
+    if (!roomId) return;
+    setLoadingPhotos(true);
+    try {
+      const res = await axios.get(`/housekeeping/room/${roomId}/photos`);
+      setPhotoGallery(res.data.photos || []);
+    } catch (error) {
+      toast.error('Fotoğraf geçmişi yüklenemedi');
+    } finally {
+      setLoadingPhotos(false);
+    }
+  };
+
+  const handlePhotoRoomChange = (roomId) => {
+    const targetRoom = allRooms.find((room) => room.id === roomId);
+    if (!targetRoom) return;
+    setSelectedPhotoRoom(targetRoom);
+    fetchRoomPhotosForModal(roomId);
+  };
+
+  const openPhotoModal = (room) => {
+    const preferredRoom =
+      room ||
+      getRoomsByStatus('cleaning')[0] ||
+      getRoomsByStatus('dirty')[0] ||
+      allRooms[0];
+    if (!preferredRoom) {
+      toast.error('Oda listesi henüz hazır değil');
+      return;
+    }
+    setSelectedPhotoRoom(preferredRoom);
+    setPhotoModalOpen(true);
+    fetchRoomPhotosForModal(preferredRoom.id);
   };
 
   const handleCleaningRequestStatus = async (requestId, newStatus) => {
@@ -883,10 +922,8 @@ const MobileHousekeeping = ({ user }) => {
           <Button
             size="sm"
             className="h-16 flex flex-col items-center justify-center bg-teal-600 hover:bg-teal-700 p-1"
-            onClick={() => {
-              // Open photo upload modal for quality control
-              toast.info('Fotoğraf yükleme özelliği aktif!');
-            }}
+            onClick={() => openPhotoModal()}
+            disabled={!allRooms.length}
           >
             <Camera className="w-4 h-4 mb-1" />
             <span className="text-[10px]">Fotoğraf</span>
@@ -917,6 +954,92 @@ const MobileHousekeeping = ({ user }) => {
           </Button>
         </div>
       </div>
+
+      {/* Photo Upload Modal */}
+      <Dialog open={photoModalOpen} onOpenChange={setPhotoModalOpen}>
+        <DialogContent className="max-w-full w-[95vw] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>📷 Fotoğraf & Kalite Kontrol</DialogTitle>
+          </DialogHeader>
+          {selectedPhotoRoom ? (
+            <div className="space-y-4">
+              <div>
+                <Label className="text-xs text-gray-600">Oda Seç</Label>
+                <select
+                  value={selectedPhotoRoom?.id}
+                  onChange={(e) => handlePhotoRoomChange(e.target.value)}
+                  className="w-full p-2 border rounded mt-1"
+                >
+                  {allRooms.map((room) => (
+                    <option key={room.id} value={room.id}>
+                      Oda {room.room_number} • {room.status}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="grid gap-3">
+                <PhotoUploadComponent
+                  roomId={selectedPhotoRoom.id}
+                  roomNumber={selectedPhotoRoom.room_number}
+                  photoType="before"
+                  showNotes={false}
+                  onUploadComplete={() => fetchRoomPhotosForModal(selectedPhotoRoom.id)}
+                />
+                <PhotoUploadComponent
+                  roomId={selectedPhotoRoom.id}
+                  roomNumber={selectedPhotoRoom.room_number}
+                  photoType="after"
+                  onUploadComplete={() => fetchRoomPhotosForModal(selectedPhotoRoom.id)}
+                />
+              </div>
+              <div className="space-y-2">
+                <p className="text-xs font-semibold text-gray-600">
+                  Son Fotoğraflar
+                </p>
+                {loadingPhotos ? (
+                  <div className="flex items-center justify-center py-6 text-gray-500 text-sm">
+                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                    Yükleniyor
+                  </div>
+                ) : photoGallery.length ? (
+                  <div className="grid grid-cols-2 gap-2">
+                    {photoGallery.slice(0, 6).map((photo) => (
+                      <div key={photo.id} className="border rounded-lg overflow-hidden">
+                        {photo.inline_preview ? (
+                          <img
+                            src={photo.inline_preview}
+                            alt={photo.photo_type}
+                            className="h-32 w-full object-cover"
+                          />
+                        ) : (
+                          <div className="h-32 flex items-center justify-center text-[11px] text-gray-500">
+                            Görsel yok
+                          </div>
+                        )}
+                        <div className="p-2 text-[11px] space-y-1">
+                          <p className="font-semibold capitalize">{photo.photo_type}</p>
+                          {photo.quality_score && (
+                            <p className="text-blue-600 font-bold">{photo.quality_score}/10</p>
+                          )}
+                          <p className="text-gray-500">
+                            {new Date(photo.uploaded_at).toLocaleString('tr-TR')}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-xs text-gray-500 py-4 text-center">
+                    Bu oda için henüz fotoğraf yok
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-gray-600">Oda bilgisi yükleniyor...</p>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Lost & Found Modal */}
       <Dialog open={lostFoundModalOpen} onOpenChange={setLostFoundModalOpen}>

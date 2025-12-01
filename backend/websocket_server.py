@@ -21,7 +21,8 @@ sio = socketio.AsyncServer(
 connected_clients: Dict[str, Set[str]] = {
     'dashboard': set(),
     'pms': set(),
-    'notifications': set()
+    'notifications': set(),
+    'kitchen': set()
 }
 
 @sio.event
@@ -122,6 +123,19 @@ async def broadcast_room_status_update(room_id: str, status: str):
         logger.debug(f"Room status update broadcasted: {room_id} -> {status}")
     except Exception as e:
         logger.error(f"Failed to broadcast room status update: {e}")
+
+
+async def broadcast_kitchen_orders(tenant_id: str, orders: Any):
+    """Broadcast kitchen display orders"""
+    try:
+        await sio.emit('kitchen_orders', {
+            'tenant_id': tenant_id,
+            'orders': orders,
+            'timestamp': datetime.utcnow().isoformat()
+        }, room='kitchen')
+        logger.debug("Kitchen orders broadcasted")
+    except Exception as e:
+        logger.error(f"Failed to broadcast kitchen orders: {e}")
 
 async def get_connected_clients_count() -> Dict[str, int]:
     """Get count of connected clients per room"""

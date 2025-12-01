@@ -12,6 +12,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Home, Hotel, FileText, TrendingUp, Award, ShoppingCart, User, LogOut, Menu, Network, Calendar, DollarSign, Smartphone, Settings as SettingsIcon, ChefHat, Wrench } from 'lucide-react';
 import LanguageSelector from '@/components/LanguageSelector';
+import NotificationBell from '@/components/NotificationBell';
+import PushSubscriptionManager from '@/components/PushSubscriptionManager';
 
 const Layout = ({ children, user, tenant, onLogout, currentModule }) => {
   const navigate = useNavigate();
@@ -100,13 +102,13 @@ const Layout = ({ children, user, tenant, onLogout, currentModule }) => {
               })}
             </nav>
 
-            {/* User Menu and Language Selector */}
+            {/* User Menu and Utilities */}
             <div className="flex items-center space-x-3">
-              {/* Language Selector */}
               <div className="hidden md:block">
                 <LanguageSelector />
               </div>
-              
+              <PushSubscriptionManager />
+              <NotificationBell />
               <Button
                 variant="ghost"
                 className="md:hidden"

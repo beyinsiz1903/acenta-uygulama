@@ -9,18 +9,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Home, ChefHat, FileText, Package, Monitor } from 'lucide-react';
 import { toast } from 'sonner';
 import FnBOutletDashboard from '@/components/FnBOutletDashboard';
+import RecipeCostingManager from '@/components/RecipeCostingManager';
+import IngredientInventoryPanel from '@/components/IngredientInventoryPanel';
 
 const FnBComplete = ({ user, tenant, onLogout }) => {
   const navigate = useNavigate();
-  const [recipes, setRecipes] = useState([]);
-
-  useEffect(() => {
-    axios
-      .get('/fnb/recipes')
-      .then((res) => setRecipes(res.data.recipes || []))
-      .catch(() => {});
-  }, []);
-
   return (
     <Layout user={user} tenant={tenant} onLogout={onLogout} currentModule="fnb">
       <div className="p-6 space-y-6">
@@ -70,22 +63,7 @@ const FnBComplete = ({ user, tenant, onLogout }) => {
           </TabsContent>
 
           <TabsContent value="recipes" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Recipe Costing &amp; Management</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="p-4 bg-green-50 rounded-lg">
-                    <p className="font-semibold">Toplam: {recipes.length} recipe</p>
-                    <p className="text-sm text-gray-600">Recipe costing sistemi aktif</p>
-                  </div>
-                  <Button className="w-full" onClick={() => toast.success('Yeni recipe ekle...')}>
-                    + Yeni Recipe Ekle
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            <RecipeCostingManager />
           </TabsContent>
 
           <TabsContent value="beo" className="mt-6">
@@ -130,16 +108,7 @@ const FnBComplete = ({ user, tenant, onLogout }) => {
           </TabsContent>
 
           <TabsContent value="inventory" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Ingredient Inventory</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-center text-gray-600 py-8">
-                  Malzeme stok takibi, par level, auto reorder
-                </p>
-              </CardContent>
-            </Card>
+            <IngredientInventoryPanel />
           </TabsContent>
         </Tabs>
       </div>

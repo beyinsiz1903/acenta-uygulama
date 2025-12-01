@@ -4,6 +4,7 @@ import axios from 'axios';
 import Layout from '../components/Layout';
 import StaffAssignment from '../components/StaffAssignment';
 import HousekeepingDetailedReports from '../components/HousekeepingDetailedReports';
+import HousekeepingQualityPanel from '../components/HousekeepingQualityPanel';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Bed, Users, ArrowLeft, Sparkles } from 'lucide-react';
@@ -124,6 +125,11 @@ const HousekeepingDashboard = ({ user, tenant, onLogout }) => {
             )}
           </CardContent>
         </Card>
+
+        {/* Quality Control */}
+        {roomStatus?.rooms?.length ? (
+          <HousekeepingQualityPanel rooms={roomStatus.rooms} />
+        ) : null}
 
         {/* Staff Assignment Component */}
         <StaffAssignment />

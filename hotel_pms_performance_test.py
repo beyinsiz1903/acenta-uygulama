@@ -40,7 +40,7 @@ from typing import Dict, List, Any, Optional
 import concurrent.futures
 
 # Configuration
-BACKEND_URL = "https://speedy-pms-switch.preview.emergentagent.com/api"
+BACKEND_URL = "https://booking-system-76.preview.emergentagent.com/api"
 TEST_EMAIL = "demo@hotel.com"
 TEST_PASSWORD = "demo123"
 

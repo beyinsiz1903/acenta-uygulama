@@ -163,7 +163,7 @@
        **COMPREHENSIVE VERIFICATION COMPLETED:**
        
        ✅ **PAGE LOADING:**
-       - Landing page loads successfully at https://speedy-pms-switch.preview.emergentagent.com/
+       - Landing page loads successfully at https://booking-system-76.preview.emergentagent.com/
        - Page title: "Emergent | Fullstack App"
        - No critical loading errors
        
@@ -684,7 +684,7 @@
        🏆 FINAL COMPREHENSIVE VALIDATION COMPLETED - PRODUCTION READY ✅
        
        **TEST OBJECTIVE:** 100% validation for production deployment
-       **BASE URL:** https://speedy-pms-switch.preview.emergentagent.com
+       **BASE URL:** https://booking-system-76.preview.emergentagent.com
        **LOGIN:** demo@hotel.com / demo123
        
        **COMPREHENSIVE TEST RESULTS:**
@@ -4312,7 +4312,7 @@ frontend:
     status_history:
       - working: "NA"
         agent: "testing"
-        comment: "User requested testing of AR/Finance endpoints: Company aging report (GET /reports/company-aging + Excel export), Pending AR (GET /folio/pending-ar), City Ledger management (GET/POST /cashiering/city-ledger, AR aging report, payments, transactions). Base URL: https://speedy-pms-switch.preview.emergentagent.com/api, Auth: demo@hotel.com / demo123"
+        comment: "User requested testing of AR/Finance endpoints: Company aging report (GET /reports/company-aging + Excel export), Pending AR (GET /folio/pending-ar), City Ledger management (GET/POST /cashiering/city-ledger, AR aging report, payments, transactions). Base URL: https://booking-system-76.preview.emergentagent.com/api, Auth: demo@hotel.com / demo123"
       - working: true
         agent: "testing"
         comment: "🎉 AR/FINANCE BACKEND TESTING COMPLETED - 100% SUCCESS RATE (8/8 tests passed). ✅ COMPANY AGING REPORT: GET /reports/company-aging returns proper structure with report_date, total_ar (5345.4), company_count (5), companies array with aging buckets (0-7 days, 8-14 days, 15-30 days, 30+ days), folio_count per company (32.4ms). ✅ EXCEL EXPORT: GET /reports/company-aging/excel generates proper Excel file (5552 bytes) with correct content-type (59.1ms) - FIXED merged cell issue in Excel generation. ✅ PENDING AR: GET /folio/pending-ar returns array structure with company_id, company_name, total_outstanding, open_folios_count, days_outstanding, aging object (12.0ms). ✅ CITY LEDGER ACCOUNTS: GET /cashiering/city-ledger returns accounts array and total_count (9.2ms). ✅ CREATE ACCOUNT: POST /cashiering/city-ledger creates account with success=true, account_id, credit_limit=10000 (27.8ms). ✅ AR AGING REPORT: GET /cashiering/ar-aging-report returns aging_buckets (current, 30_days, 60_days, 90_plus), totals, generated_at (10.8ms). ✅ CITY LEDGER PAYMENT: POST /cashiering/city-ledger-payment processes payment with new_balance calculation - FIXED query parameter format (22.6ms). ✅ TRANSACTIONS: GET /cashiering/city-ledger/{account_id}/transactions returns summary with total_charges, total_payments, current_balance, transaction_count (12.4ms). AUTHENTICATION: Successfully tested with demo@hotel.com / demo123. BUG FIXES: Fixed Excel merged cell AttributeError, corrected payment endpoint parameter format. All AR/Finance functionality working perfectly for Turkish hotel finance operations."
@@ -5246,7 +5246,7 @@ agent_communication:
       - This blocks access to ALL application features and modules
       
       🔍 TECHNICAL FINDINGS:
-      - Frontend URL working: https://speedy-pms-switch.preview.emergentagent.com
+      - Frontend URL working: https://booking-system-76.preview.emergentagent.com
       - Auth page renders correctly with proper form fields and styling
       - Backend error detected: ValueError in daily flash report endpoint (Invalid isoformat string: 'invalid-date')
       - Frontend shows no visible error messages to users
@@ -9896,7 +9896,7 @@ agent_communication:
         **COMPREHENSIVE VERIFICATION COMPLETED:**
         
         ✅ **AUTH PAGE NAVIGATION:**
-        - Successfully navigated to https://speedy-pms-switch.preview.emergentagent.com/auth
+        - Successfully navigated to https://booking-system-76.preview.emergentagent.com/auth
         - Page loaded without errors
         - All UI elements rendered correctly
         
@@ -12157,7 +12157,7 @@ agent_communication:
       🏦 AR/FINANCE BACKEND TESTING COMPLETED - 100% SUCCESS RATE!
       
       **TEST OBJECTIVE:** Comprehensive testing of AR (Accounts Receivable) and City Ledger endpoints
-      **BASE URL:** https://speedy-pms-switch.preview.emergentagent.com/api
+      **BASE URL:** https://booking-system-76.preview.emergentagent.com/api
       **AUTHENTICATION:** demo@hotel.com / demo123 ✅
       
       **COMPREHENSIVE AR/FINANCE TESTING RESULTS (8/8 PASSED - 100% SUCCESS):**
@@ -12226,7 +12226,7 @@ agent_communication:
       🏨 GROUPS BLOCKS ENDPOINT FILTER TESTING COMPLETED - 100% SUCCESS!
       
       **TEST OBJECTIVE:** Verify new filter parameters for /api/groups/blocks endpoint
-      **BASE URL:** https://speedy-pms-switch.preview.emergentagent.com/api
+      **BASE URL:** https://booking-system-76.preview.emergentagent.com/api
       **AUTHENTICATION:** demo@hotel.com / demo123 ✅
       
       **COMPREHENSIVE FILTER TESTING RESULTS (6/6 PASSED - 100% SUCCESS):**
@@ -12558,7 +12558,7 @@ agent_communication:
        🎯 COMPREHENSIVE FRONTEND TESTING COMPLETED - PRODUCTION READY!
        
        **TEST EXECUTION DATE:** November 26, 2025
-       **BASE URL:** https://speedy-pms-switch.preview.emergentagent.com
+       **BASE URL:** https://booking-system-76.preview.emergentagent.com
        **CREDENTIALS:** demo@hotel.com / demo123
        
        ═══════════════════════════════════════════════════════════════════════════
@@ -12808,7 +12808,7 @@ agent_communication:
        
        **TEST EXECUTION DATE:** November 27, 2025
        **TEST TYPE:** Fresh browser session with cleared cache/storage
-       **URL:** https://speedy-pms-switch.preview.emergentagent.com/reservation-calendar
+       **URL:** https://booking-system-76.preview.emergentagent.com/reservation-calendar
        **CREDENTIALS:** demo@hotel.com / demo123
        
        ═══════════════════════════════════════════════════════════════════════════
@@ -13101,7 +13101,7 @@ agent_communication:
       🌙 NIGHT AUDIT BACKEND TESTING COMPLETED - 100% SUCCESS RATE!
       
       **TEST OBJECTIVE:** Comprehensive testing of Night Audit flow as requested by user
-      **BASE URL:** https://speedy-pms-switch.preview.emergentagent.com/api
+      **BASE URL:** https://booking-system-76.preview.emergentagent.com/api
       **AUTHENTICATION:** demo@hotel.com / demo123 ✅
       **AUDIT DATE:** 2025-11-29 (yesterday's date)
       

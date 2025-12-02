@@ -170,43 +170,31 @@ class PMSRoomsTester:
     # ============= PMS ROOMS BACKEND TESTS (7 endpoints) =============
 
     async def test_pms_rooms_endpoint(self):
-        """Test POST /api/approvals/create - **CRITICAL RE-TEST** after username bug fix"""
-        print("\n📋 Testing Create Approval Request Endpoint (CRITICAL RE-TEST)...")
-        print("🔧 BUG FIX: current_user.username → current_user.name should fix 500 error")
+        """Test GET /api/pms/rooms - Main rooms list endpoint"""
+        print("\n🏨 Testing PMS Rooms Endpoint (CRITICAL - Previously had HTTP 500)...")
+        print("🔧 EXPECTED FIX: No more ResponseValidationError with tenant_id missing")
         
         test_cases = [
             {
-                "name": "Create discount approval request",
-                "data": {
-                    "approval_type": "discount",
-                    "amount": 50.0,
-                    "reason": "VIP guest discount request",
-                    "priority": "normal"
-                },
+                "name": "Get all rooms - verify required fields for Rooms TAB",
+                "params": {},
                 "expected_status": 200,
-                "expected_fields": ["message", "approval_id", "status", "approval_type", "requested_by"]
+                "required_fields": ["id", "room_number", "room_type", "floor", "base_price", "status"],
+                "expected_response_type": "list"
             },
             {
-                "name": "Create price override approval request",
-                "data": {
-                    "approval_type": "price_override",
-                    "amount": 120.0,
-                    "reason": "Corporate rate adjustment",
-                    "priority": "high"
-                },
+                "name": "Get rooms with pagination",
+                "params": {"limit": 50},
                 "expected_status": 200,
-                "expected_fields": ["message", "approval_id", "status", "approval_type", "requested_by"]
+                "required_fields": ["id", "room_number", "room_type", "floor", "base_price", "status"],
+                "expected_response_type": "list"
             },
             {
-                "name": "Create budget expense approval request",
-                "data": {
-                    "approval_type": "budget_expense",
-                    "amount": 2500.0,
-                    "reason": "Emergency maintenance equipment",
-                    "priority": "urgent"
-                },
+                "name": "Get rooms with status filter",
+                "params": {"status": "available"},
                 "expected_status": 200,
-                "expected_fields": ["message", "approval_id", "status", "approval_type", "requested_by"]
+                "required_fields": ["id", "room_number", "room_type", "floor", "base_price", "status"],
+                "expected_response_type": "list"
             }
         ]
         
@@ -215,35 +203,46 @@ class PMSRoomsTester:
         
         for test_case in test_cases:
             try:
-                url = f"{BACKEND_URL}/approvals/create"
+                url = f"{BACKEND_URL}/pms/rooms"
+                if test_case["params"]:
+                    params = "&".join([f"{k}={v}" for k, v in test_case["params"].items()])
+                    url += f"?{params}"
                 
-                async with self.session.post(url, json=test_case["data"], headers=self.get_headers()) as response:
+                start_time = datetime.now()
+                async with self.session.get(url, headers=self.get_headers()) as response:
+                    end_time = datetime.now()
+                    response_time = (end_time - start_time).total_seconds() * 1000
+                    
                     if response.status == test_case["expected_status"]:
                         data = await response.json()
-                        missing_fields = [field for field in test_case["expected_fields"] if field not in data]
-                        if not missing_fields:
-                            # Store approval ID for later tests
-                            if "approval_id" in data:
-                                self.created_test_data['approval_requests'].append(data["approval_id"])
-                            # Verify requested_by field contains user name (not username)
-                            if "requested_by" in data:
-                                print(f"  ✅ {test_case['name']}: PASSED - requested_by: {data['requested_by']}")
+                        
+                        # Verify response is a list
+                        if isinstance(data, list):
+                            if data:  # If rooms exist, check structure
+                                room = data[0]
+                                missing_fields = [field for field in test_case["required_fields"] if field not in room]
+                                if not missing_fields:
+                                    print(f"  ✅ {test_case['name']}: PASSED ({response_time:.1f}ms)")
+                                    print(f"      📊 Sample room: {room.get('room_number', 'N/A')} - {room.get('room_type', 'N/A')} - {room.get('status', 'N/A')}")
+                                    passed += 1
+                                else:
+                                    print(f"  ❌ {test_case['name']}: Missing required fields {missing_fields}")
                             else:
-                                print(f"  ✅ {test_case['name']}: PASSED")
-                            passed += 1
+                                print(f"  ✅ {test_case['name']}: PASSED - No rooms found ({response_time:.1f}ms)")
+                                passed += 1
                         else:
-                            print(f"  ❌ {test_case['name']}: Missing fields {missing_fields}")
+                            print(f"  ❌ {test_case['name']}: Expected list response, got {type(data)}")
                     else:
                         error_text = await response.text()
                         print(f"  ❌ {test_case['name']}: Expected {test_case['expected_status']}, got {response.status}")
                         if response.status == 500:
-                            print(f"      🔍 500 Error Details: {error_text[:200]}...")
+                            print(f"      🔍 500 Error Details: {error_text[:300]}...")
                         
             except Exception as e:
                 print(f"  ❌ {test_case['name']}: Error {e}")
         
         self.test_results.append({
-            "endpoint": "POST /api/approvals/create",
+            "endpoint": "GET /api/pms/rooms",
             "passed": passed, "total": total, "success_rate": f"{passed/total*100:.1f}%"
         })
 

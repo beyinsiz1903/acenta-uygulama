@@ -657,25 +657,25 @@ class HousekeepingTester:
                 {
                     "name": "Update room status to dirty",
                     "room_id": room_id,
-                    "data": {"status": "dirty"},
+                    "params": {"new_status": "dirty"},
                     "expected_status": [200, 404]
                 },
                 {
                     "name": "Update room status to cleaning",
                     "room_id": room_id,
-                    "data": {"status": "cleaning"},
+                    "params": {"new_status": "cleaning"},
                     "expected_status": [200, 404]
                 },
                 {
                     "name": "Update room status to inspected",
                     "room_id": room_id,
-                    "data": {"status": "inspected"},
+                    "params": {"new_status": "inspected"},
                     "expected_status": [200, 404]
                 },
                 {
                     "name": "Update room status to available",
                     "room_id": room_id,
-                    "data": {"status": "available"},
+                    "params": {"new_status": "available"},
                     "expected_status": [200, 404]
                 }
             ]
@@ -685,13 +685,16 @@ class HousekeepingTester:
             
             for test_case in test_cases:
                 try:
+                    # Endpoint expects query parameters, not JSON body
                     url = f"{BACKEND_URL}/housekeeping/room/{test_case['room_id']}/status"
+                    params = "&".join([f"{k}={v}" for k, v in test_case["params"].items()])
+                    url += f"?{params}"
                     
-                    async with self.session.put(url, json=test_case["data"], headers=self.get_headers()) as response:
+                    async with self.session.put(url, headers=self.get_headers()) as response:
                         if response.status in test_case["expected_status"]:
                             if response.status == 200:
                                 data = await response.json()
-                                required_fields = ["message", "room_id", "new_status"]
+                                required_fields = ["message", "new_status"]
                                 missing_fields = [field for field in required_fields if field not in data]
                                 if not missing_fields:
                                     print(f"  ✅ {test_case['name']}: PASSED")

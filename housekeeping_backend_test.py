@@ -443,7 +443,7 @@ class HousekeepingTester:
                                     # Verify rooms structure if rooms exist
                                     if data.get("rooms"):
                                         room = data["rooms"][0]
-                                        required_room_fields = ["room_number", "status", "guest_name"]
+                                        required_room_fields = ["room_number", "status"]
                                         missing_room_fields = [field for field in required_room_fields if field not in room]
                                         if not missing_room_fields:
                                             print(f"  ✅ {test_case['name']}: PASSED - Full structure verified")

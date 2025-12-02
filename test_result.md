@@ -1121,6 +1121,18 @@ user_problem_statement: |
         agent: "testing"
         comment: "✅ PREVIOUSLY ADDED FEATURES: 4/4 endpoints working perfectly. All endpoints tested and verified: (1) GET /api/reports/flash-report - HTTP 200 (41ms), (2) POST /api/groups/create-block - HTTP 200 (39ms), (3) GET /api/arrivals/today - HTTP 200 (41ms), (4) POST /api/rms/update-rate - HTTP 200 (41ms) - Fixed to accept both date and target_date. Average response time: 41ms. All previously added features still operational."
 
+  - task: "Core Dashboard - Auth & Home Flow"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/Dashboard.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Dashboard welcome header, AI briefing rendering (object-safe), quick stats and module grid reviewed. Needs fresh automated UI retest for login→dashboard flow after AI briefing fix."
+
 frontend:
   - task: "Landing Page Visual Enhancement"
     implemented: true

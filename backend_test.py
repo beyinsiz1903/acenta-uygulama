@@ -522,7 +522,7 @@ class PMSRoomsTester:
                 url = f"{BACKEND_URL}/pms/rooms/{test_case['room_id']}"
                 
                 start_time = datetime.now()
-                async with self.session.patch(url, json=test_case["data"], headers=self.get_headers()) as response:
+                async with self.session.put(url, json=test_case["data"], headers=self.get_headers()) as response:
                     end_time = datetime.now()
                     response_time = (end_time - start_time).total_seconds() * 1000
                     

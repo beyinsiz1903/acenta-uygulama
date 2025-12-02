@@ -142,61 +142,79 @@ class FrontDeskTester:
         
         return validation
     
-    def create_test_booking(self) -> Optional[str]:
-        """Create a test booking for check-in/check-out testing"""
+    def create_test_data(self) -> Dict[str, str]:
+        """Create test room, guest, and booking for comprehensive testing"""
         try:
-            # First, get available rooms
-            rooms_result = self.test_endpoint("GET", "/pms/rooms")
-            if not rooms_result["success"] or not rooms_result["data"]:
-                print("❌ No rooms available for test booking")
-                return None
+            # Create test room
+            room_data = {
+                "room_number": "101",
+                "room_type": "Standard",
+                "floor": 1,
+                "capacity": 2,
+                "base_price": 100.0,
+                "amenities": ["WiFi", "TV", "AC"]
+            }
             
-            available_room = None
-            for room in rooms_result["data"]:
-                if room.get("status") == "available":
-                    available_room = room
-                    break
+            room_result = self.test_endpoint("POST", "/pms/rooms", room_data)
+            if not room_result["success"]:
+                print(f"❌ Failed to create test room: {room_result.get('error', 'Unknown error')}")
+                return {}
             
-            if not available_room:
-                print("❌ No available rooms found for test booking")
-                return None
+            room_id = room_result["data"]["id"]
+            print(f"✅ Test room created: {room_id} (Room 101)")
             
-            # Get guests
-            guests_result = self.test_endpoint("GET", "/pms/guests")
-            if not guests_result["success"] or not guests_result["data"]:
-                print("❌ No guests available for test booking")
-                return None
+            # Create test guest
+            guest_data = {
+                "name": "John Doe",
+                "email": "john.doe@example.com",
+                "phone": "+1234567890",
+                "id_number": "ID123456789",
+                "nationality": "US",
+                "address": "123 Main St, City, Country"
+            }
             
-            guest = guests_result["data"][0]
+            guest_result = self.test_endpoint("POST", "/pms/guests", guest_data)
+            if not guest_result["success"]:
+                print(f"❌ Failed to create test guest: {guest_result.get('error', 'Unknown error')}")
+                return {}
             
-            # Create booking
+            guest_id = guest_result["data"]["id"]
+            print(f"✅ Test guest created: {guest_id} (John Doe)")
+            
+            # Create test booking for today's arrival
             today = datetime.now(timezone.utc)
             tomorrow = today + timedelta(days=1)
             
             booking_data = {
-                "guest_id": guest["id"],
-                "room_id": available_room["id"],
+                "guest_id": guest_id,
+                "room_id": room_id,
                 "check_in": today.isoformat(),
                 "check_out": tomorrow.isoformat(),
                 "adults": 1,
                 "children": 0,
                 "guests_count": 1,
                 "total_amount": 100.0,
-                "channel": "direct"
+                "channel": "direct",
+                "status": "confirmed"
             }
             
             booking_result = self.test_endpoint("POST", "/pms/bookings", booking_data)
-            if booking_result["success"]:
-                booking_id = booking_result["data"]["id"]
-                print(f"✅ Test booking created: {booking_id}")
-                return booking_id
-            else:
+            if not booking_result["success"]:
                 print(f"❌ Failed to create test booking: {booking_result.get('error', 'Unknown error')}")
-                return None
-                
+                return {}
+            
+            booking_id = booking_result["data"]["id"]
+            print(f"✅ Test booking created: {booking_id}")
+            
+            return {
+                "room_id": room_id,
+                "guest_id": guest_id,
+                "booking_id": booking_id
+            }
+            
         except Exception as e:
-            print(f"❌ Error creating test booking: {str(e)}")
-            return None
+            print(f"❌ Error creating test data: {str(e)}")
+            return {}
     
     def run_comprehensive_test(self):
         """Run comprehensive Front Desk test suite"""

@@ -92,18 +92,18 @@ class PMSRoomsTester:
         }
 
     async def create_test_data(self):
-        """Create comprehensive test data for approval, executive dashboard, and notification testing"""
-        print("\n🔧 Creating test data for Approval, Executive Dashboard, and Notification endpoints...")
+        """Create test data for PMS Rooms testing"""
+        print("\n🔧 Creating test data for PMS Rooms testing...")
         
         try:
-            # Create test guest for bookings (needed for executive dashboard)
+            # Create test guest for bookings
             guest_data = {
-                "name": "John Manager",
-                "email": "john.manager@hotel.com",
-                "phone": "+1-555-0123",
-                "id_number": "ID123456789",
-                "nationality": "US",
-                "vip_status": True
+                "name": "Ahmet Yılmaz",
+                "email": "ahmet.yilmaz@example.com",
+                "phone": "+90-555-123-4567",
+                "id_number": "12345678901",
+                "nationality": "TR",
+                "vip_status": False
             }
             
             async with self.session.post(f"{BACKEND_URL}/pms/guests", 
@@ -118,7 +118,7 @@ class PMSRoomsTester:
                     print(f"⚠️ Guest creation failed: {response.status}")
                     return False
 
-            # Get available room
+            # Get available room for booking
             async with self.session.get(f"{BACKEND_URL}/pms/rooms", 
                                       headers=self.get_headers()) as response:
                 if response.status == 200:
@@ -134,18 +134,18 @@ class PMSRoomsTester:
                     print(f"⚠️ Failed to get rooms: {response.status}")
                     return False
 
-            # Create test booking for executive dashboard data
+            # Create test booking for checkout testing
             booking_data = {
                 "guest_id": guest_id,
                 "room_id": room_id,
-                "check_in": (datetime.now(timezone.utc)).isoformat(),
-                "check_out": (datetime.now(timezone.utc) + timedelta(days=3)).isoformat(),
+                "check_in": (datetime.now(timezone.utc) - timedelta(days=1)).isoformat(),
+                "check_out": (datetime.now(timezone.utc) + timedelta(days=2)).isoformat(),
                 "adults": 2,
-                "children": 1,
-                "children_ages": [8],
-                "guests_count": 3,
-                "total_amount": 450.0,
-                "special_requests": "Executive suite preferred"
+                "children": 0,
+                "children_ages": [],
+                "guests_count": 2,
+                "total_amount": 300.0,
+                "special_requests": "Oda manzarası önemli"
             }
             
             async with self.session.post(f"{BACKEND_URL}/pms/bookings", 

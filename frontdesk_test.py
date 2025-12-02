@@ -293,11 +293,12 @@ class FrontDeskTester:
         else:
             print(f"   ❌ HTTP {inhouse_result['status_code']} - {inhouse_result.get('error', 'Unknown error')}")
         
-        # Test 4: Create test booking and test folio/checkin/checkout
-        print("\n4. Testing Check-in/Check-out Flow...")
-        test_booking_id = self.create_test_booking()
+        # Test 4: Create test data and test folio/checkin/checkout
+        print("\n4. Creating Test Data...")
+        test_data = self.create_test_data()
         
-        if test_booking_id:
+        if test_data and "booking_id" in test_data:
+            test_booking_id = test_data["booking_id"]
             # Test folio endpoint
             print("\n   4a. Testing Folio Endpoint...")
             folio_result = self.test_endpoint("GET", f"/frontdesk/folio/{test_booking_id}")

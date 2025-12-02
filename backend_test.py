@@ -1,28 +1,25 @@
 #!/usr/bin/env python3
 """
-APPROVAL SYSTEM RE-TESTING AFTER BUG FIXES
-Focus on endpoints that previously failed due to current_user.username → current_user.name bug fix
+PMS ROOMS BACKEND FLOW TESTING
+Test PMS Rooms section backend endpoints and verify compatibility with PMSModule.js Rooms TAB
 
-BUG FIXES APPLIED:
-- Fixed current_user.username → current_user.name in all approval endpoints
-- This should fix the 500 error in POST /api/approvals/create
+OBJECTIVE: Verify /api/pms/rooms and related endpoints work correctly and return expected data structure
+Previously reported HTTP 500 / ResponseValidationError (tenant_id missing) should be fixed
 
-APPROVAL SYSTEM RE-TESTING (6 endpoints):
-1. POST /api/approvals/create - **CRITICAL RE-TEST** (was failing with 500 error)
-2. GET /api/approvals/pending - **RE-TEST RESPONSE STRUCTURE** (urgent_count was missing)
-3. GET /api/approvals/my-requests - **RE-TEST RESPONSE STRUCTURE** (should return 'requests' not 'approvals')
-4. PUT /api/approvals/{id}/approve - Quick validation test
-5. PUT /api/approvals/{id}/reject - Quick validation test  
-6. GET /api/approvals/history - Quick validation test
+TARGET ENDPOINTS (7):
+1. GET /api/pms/rooms - Main rooms list with required fields
+2. GET /api/pms/room-blocks - Room blocks data
+3. GET /api/pms/bookings - Active check-ins
+4. GET /api/pms/guests - Guest list
+5. PATCH /api/pms/rooms/{room_id} - Room status update (bulk update function)
+6. POST /api/frontdesk/checkout/{booking_id} - Quick checkout button
+7. GET /api/folio/booking/{booking_id} - Quick folio button
 
-EXECUTIVE DASHBOARD - QUICK SPOT CHECKS (3 endpoints):
-7. GET /api/executive/kpi-snapshot - Verify KPI structure (lowercase field names)
-8. GET /api/executive/performance-alerts - Quick validation
-9. GET /api/executive/daily-summary - Quick validation
-
-NOTIFICATION SYSTEM - QUICK SPOT CHECKS (2 endpoints):
-10. GET /api/notifications/list - Quick validation
-11. PUT /api/notifications/{id}/mark-read - Quick validation
+EXPECTED RESULTS:
+- All endpoints return HTTP 200 (no 500 errors)
+- GET /api/pms/rooms includes: room.id, room.room_number, room.room_type, room.floor, room.base_price, room.status
+- Supporting endpoints return proper data structures for Rooms TAB functionality
+- No ResponseValidationError with tenant_id missing
 """
 
 import asyncio

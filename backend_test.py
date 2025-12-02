@@ -542,7 +542,7 @@ class PMSRoomsTester:
                 print(f"  ❌ {test_case['name']}: Error {e}")
         
         self.test_results.append({
-            "endpoint": "PATCH /api/pms/rooms/{room_id}",
+            "endpoint": "PUT /api/pms/rooms/{room_id}",
             "passed": passed, "total": total, "success_rate": f"{passed/total*100:.1f}%"
         })
 

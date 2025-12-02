@@ -1533,6 +1533,18 @@ frontend:
         comment: "✅ DATETIME PARSING BUG FIXED - Fixed timezone-aware/naive datetime comparison issue that was causing HTTP 500 error. Endpoint now works perfectly with HTTP 200 response (12ms). Duration calculation for in-progress tasks working correctly. All functionality verified including staff filtering."
 
   - task: "Housekeeping Mobile - Cleaning Time Statistics"
+  - task: "PMS Housekeeping - UI & Interactions"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/components/pms/HousekeepingTab.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Housekeeping tab (room status board, due out / stayover / arrivals lists, task counters, task cards) reviewed. Backend endpoints for housekeeping tasks, room-status, due-out, stayovers, arrivals and quick status update are implemented and tested with caching; frontend renders lists with safe mapping and uses nested room/task fields as provided. Need fresh end-to-end UI retest for PMS → Housekeeping to confirm there are no runtime errors and interactions (status buttons, task state changes) behave correctly."
+
     implemented: true
     working: true
     file: "/app/backend/server.py"

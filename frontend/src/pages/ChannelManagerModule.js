@@ -228,6 +228,15 @@ const ChannelManagerModule = ({ user, tenant, onLogout }) => {
                 {roomMappings.length === 0 ? (
                   <div className="text-center py-8 text-gray-500">
                     Henüz bir oda eşlemesi yok.
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setShowAddMapping(true)}
+                >
+                  <Plus className="w-4 h-4 mr-1" /> Eşleme Ekle
+                </Button>
+
                   </div>
                 ) : (
                   <div className="overflow-x-auto">

@@ -273,24 +273,6 @@ const ChannelManagerModule = ({ user, tenant, onLogout }) => {
     }
   };
 
-
-      setLoading(false);
-    }
-  };
-
-  const handleImportReservation = async (otaId) => {
-    setLoading(true);
-    try {
-      await axios.post(`/channel-manager/import-reservation/${otaId}`);
-      toast.success('Reservation imported successfully!');
-      loadOtaReservations();
-    } catch (error) {
-      toast.error(error.response?.data?.detail || 'Failed to import reservation');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const getStatusBadge = (status) => {
     const statusConfig = {
       active: { color: 'bg-green-500', label: 'Active' },

@@ -158,6 +158,21 @@ const ChannelManagerModule = ({ user, tenant, onLogout }) => {
     } catch (error) {
       console.error('Failed to load OTA reservations:', error);
       setOtaReservations([]);
+  const loadSyncHistory = async () => {
+    try {
+      const response = await axios.get('/channel-manager/sync-history?days=7');
+      const data = response.data;
+      setSyncSummary(data.summary || null);
+      const logs = Array.isArray(data.sync_logs) ? data.sync_logs : [];
+      setSyncLogs(logs);
+    } catch (error) {
+      console.error('Failed to load sync history:', error);
+      setSyncLogs([]);
+      setSyncSummary(null);
+    }
+  };
+
+
     }
   };
 

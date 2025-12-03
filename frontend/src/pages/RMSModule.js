@@ -195,7 +195,7 @@ const RMSModule = ({ user, tenant, onLogout }) => {
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Market Position</p>
+                  <p className="text-sm text-gray-600">Pazar Pozisyonu</p>
                   <p className="text-2xl font-bold">{pricingStrategy?.market_position || 'N/A'}</p>
                 </div>
                 <Users className="w-8 h-8 text-orange-500" />

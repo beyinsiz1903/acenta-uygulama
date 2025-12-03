@@ -59,7 +59,14 @@ const ChannelManagerModule = ({ user, tenant, onLogout }) => {
   const loadConnections = async () => {
     try {
       const response = await axios.get('/channel-manager/connections');
-      setConnections(Array.isArray(response.data) ? response.data : []);
+      // Backend returns { connections, count }
+      const data = response.data;
+      const list = Array.isArray(data)
+        ? data
+        : Array.isArray(data.connections)
+          ? data.connections
+          : [];
+      setConnections(list);
     } catch (error) {
       console.error('Failed to load connections:', error);
       setConnections([]);

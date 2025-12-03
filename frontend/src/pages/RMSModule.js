@@ -245,7 +245,7 @@ const RMSModule = ({ user, tenant, onLogout }) => {
         {/* Comp Set Table */}
         <Card>
           <CardHeader>
-            <CardTitle>Competitive Set</CardTitle>
+            <CardTitle>Rakip Set Detayı</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">

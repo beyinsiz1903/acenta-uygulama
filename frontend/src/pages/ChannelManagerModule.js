@@ -472,6 +472,82 @@ const ChannelManagerModule = ({ user, tenant, onLogout }) => {
             </Card>
           </TabsContent>
 
+          {/* Room Mappings Tab */}
+          <TabsContent value="mappings" className="mt-4">
+            <Card>
+              <CardHeader className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Room Mappings</CardTitle>
+                  <CardDescription>
+                    Eşleştirilmiş PMS oda tiplerinizi Booking.com ve diğer OTA oda tipleriyle yönetin.
+                  </CardDescription>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setShowAddMapping(true)}
+                >
+                  <Plus className="w-4 h-4 mr-1" /> Eşleme Ekle
+                </Button>
+              </CardHeader>
+              <CardContent>
+                {roomMappings.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    Henüz bir oda eşlemesi yok.
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full text-sm">
+                      <thead>
+                        <tr className="border-b bg-gray-50">
+                          <th className="text-left p-2">Channel</th>
+                          <th className="text-left p-2">PMS Room Type</th>
+                          <th className="text-left p-2">Channel Room Type</th>
+                          <th className="text-left p-2">Channel Room ID</th>
+                          <th className="text-left p-2">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {roomMappings.map((mapping) => {
+                          const connection = connections.find(
+                            (c) => c.id === mapping.channel_id
+                          );
+                          return (
+                            <tr key={mapping.id} className="border-b hover:bg-gray-50">
+                              <td className="p-2">
+                                <div className="flex items-center gap-2">
+                                  <Badge variant="outline">
+                                    {connection?.channel_type === 'booking_com'
+                                      ? 'Booking.com'
+                                      : connection?.channel_name || 'Unknown'}
+                                  </Badge>
+                                </div>
+                              </td>
+                              <td className="p-2">{mapping.pms_room_type}</td>
+                              <td className="p-2">{mapping.channel_room_type}</td>
+                              <td className="p-2">{mapping.channel_room_id || '-'}</td>
+                              <td className="p-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                                  onClick={() => handleDeleteRoomMapping(mapping.id)}
+                                >
+                                  Sil
+                                </Button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+
 
           {/* Rate & Availability Tab */}
           <TabsContent value="rates" className="space-y-4">

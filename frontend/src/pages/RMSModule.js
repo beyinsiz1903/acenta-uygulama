@@ -278,7 +278,7 @@ const RMSModule = ({ user, tenant, onLogout }) => {
         {/* Recent Price Adjustments */}
         <Card>
           <CardHeader>
-            <CardTitle>Recent Price Adjustments</CardTitle>
+            <CardTitle>Son Fiyat Güncellemeleri</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">

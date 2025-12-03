@@ -544,7 +544,6 @@ const ChannelManagerModule = ({ user, tenant, onLogout }) => {
               </CardContent>
             </Card>
           </TabsContent>
-        </div>
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>

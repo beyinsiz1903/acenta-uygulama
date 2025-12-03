@@ -44,6 +44,19 @@ const ChannelManagerModule = ({ user, tenant, onLogout }) => {
   const [roomMappings, setRoomMappings] = useState([]);
   const [mappingFilterChannel, setMappingFilterChannel] = useState('all');
 
+  // Rate & Availability form state
+  const [rateRoomType, setRateRoomType] = useState('');
+  const [rateDateFrom, setRateDateFrom] = useState('');
+  const [rateDateTo, setRateDateTo] = useState('');
+  const [baseRate, setBaseRate] = useState('');
+  const [discountPct, setDiscountPct] = useState('');
+  const [channelSelection, setChannelSelection] = useState({
+    all: true,
+    booking_com: false,
+    expedia: false,
+    airbnb: false,
+  });
+
   // OTA Reservations state
   const [otaReservations, setOtaReservations] = useState([]);
   const [reservationFilter, setReservationFilter] = useState('pending');

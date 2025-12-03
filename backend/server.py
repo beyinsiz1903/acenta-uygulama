@@ -12584,17 +12584,20 @@ async def get_channel_connections(current_user: User = Depends(get_current_user)
 
 @api_router.post("/channel-manager/connections")
 async def create_channel_connection(
-    channel_type: ChannelType,
-    channel_name: str,
-    property_id: Optional[str] = None,
+    payload: ChannelConnectionCreate,
     current_user: User = Depends(get_current_user)
 ):
     """Create a new channel connection"""
     connection = ChannelConnection(
         tenant_id=current_user.tenant_id,
-        channel_type=channel_type,
-        channel_name=channel_name,
-        property_id=property_id,
+        channel_type=payload.channel_type,
+        channel_name=payload.channel_name,
+        property_id=payload.property_id,
+        api_endpoint=payload.api_endpoint,
+        api_key=payload.api_key,
+        api_secret=payload.api_secret,
+        sync_rate_availability=payload.sync_rate_availability,
+        sync_reservations=payload.sync_reservations,
         status=ChannelStatus.ACTIVE
     )
     
@@ -12602,7 +12605,7 @@ async def create_channel_connection(
     conn_dict['created_at'] = conn_dict['created_at'].isoformat()
     await db.channel_connections.insert_one(conn_dict)
     
-    return {'message': f'Channel {channel_name} connected successfully', 'connection': connection}
+    return {'message': f'Channel {payload.channel_name} connected successfully', 'connection': connection}
 
 @api_router.get("/channel-manager/room-mappings")
 async def get_room_mappings(

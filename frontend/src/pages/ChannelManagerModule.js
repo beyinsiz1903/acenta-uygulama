@@ -218,6 +218,8 @@ const ChannelManagerModule = ({ user, tenant, onLogout }) => {
             <p className="text-gray-600">Manage OTA connections and reservations</p>
           </div>
           <Dialog open={showAddConnection} onOpenChange={setShowAddConnection}>
+          {/* Connections Tab */}
+
           {/* Room Mappings Tab */}
           <TabsContent value="mappings" className="mt-4">
             <Card>

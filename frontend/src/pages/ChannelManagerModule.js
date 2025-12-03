@@ -230,7 +230,7 @@ const ChannelManagerModule = ({ user, tenant, onLogout }) => {
 
       const base = parseFloat(baseRate) || 0;
       const disc = parseFloat(discountPct) || 0;
-      const final = base * (1 - disc / 100);
+      const final = base * (1 - (Number.isNaN(disc) ? 0 : disc) / 100);
 
       const selectedChannels = [];
       if (channelSelection.all) {

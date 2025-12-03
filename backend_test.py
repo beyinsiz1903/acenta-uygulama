@@ -694,10 +694,11 @@ class PMSBookingsTester:
     # ============= MAIN TEST EXECUTION =============
 
     async def run_all_tests(self):
-        """Run comprehensive PMS Rooms backend testing"""
-        print("🚀 PMS ROOMS BACKEND FLOW TESTING")
-        print("Testing 7 ENDPOINTS for Rooms TAB compatibility")
-        print("Focus: Verify HTTP 500 / ResponseValidationError (tenant_id) is fixed")
+        """Run comprehensive PMS Bookings backend testing"""
+        print("🚀 PMS BOOKINGS BACKEND FLOW TESTING")
+        print("Testing BookingsTab/VirtualizedBookingList veri yapısı doğrulaması")
+        print("Base URL: https://tab-checker.preview.emergentagent.com/api")
+        print("Login: demo@hotel.com / demo123")
         print("=" * 80)
         
         # Setup
@@ -711,18 +712,17 @@ class PMSBookingsTester:
         if not await self.create_test_data():
             print("⚠️ Test data creation failed. Some tests may not work properly.")
         
-        # Run all PMS Rooms tests
-        print("\n" + "="*50)
-        print("🏨 PMS ROOMS BACKEND ENDPOINT TESTING")
-        print("="*50)
+        # Run all PMS Bookings tests
+        print("\n" + "="*60)
+        print("📅 PMS BOOKINGS BACKEND ENDPOINT TESTING")
+        print("="*60)
         
-        await self.test_pms_rooms_endpoint()
-        await self.test_pms_room_blocks_endpoint()
-        await self.test_pms_bookings_endpoint()
-        await self.test_pms_guests_endpoint()
-        await self.test_room_status_update_endpoint()
-        await self.test_quick_checkout_endpoint()
-        await self.test_quick_folio_endpoint()
+        await self.test_pms_bookings_default_endpoint()
+        await self.test_pms_bookings_with_limit()
+        await self.test_pms_bookings_with_date_range()
+        await self.test_folio_booking_endpoint()
+        await self.test_payments_booking_endpoint()
+        await self.test_performance_benchmarks()
         
         # Cleanup
         await self.cleanup_session()

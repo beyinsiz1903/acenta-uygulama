@@ -343,36 +343,42 @@ class PMSBookingsTester:
             "avg_response_time": f"{avg_response_time:.1f}ms"
         })
 
-    async def test_pms_bookings_endpoint(self):
-        """Test GET /api/pms/bookings - Active check-ins"""
-        print("\n📅 Testing PMS Bookings Endpoint (Active Check-ins)...")
+    async def test_pms_bookings_with_date_range(self):
+        """Test GET /api/pms/bookings?start_date=YYYY-MM-DD&end_date=YYYY-MM-DD (7 günlük periyot)"""
+        print("\n📅 Testing PMS Bookings Endpoint with Date Range (7-day period)...")
+        
+        # Calculate 7-day period
+        today = datetime.now(timezone.utc).date()
+        start_date = today - timedelta(days=3)  # 3 days ago
+        end_date = today + timedelta(days=4)    # 4 days from now (total 7 days)
         
         test_cases = [
             {
-                "name": "Get all bookings - verify structure",
-                "params": {},
-                "expected_status": 200,
-                "required_fields": ["id", "room_id", "guest_id", "status", "check_in", "check_out"]
-            },
-            {
-                "name": "Get active check-ins only",
-                "params": {"status": "checked_in"},
-                "expected_status": 200,
-                "required_fields": ["id", "room_id", "guest_id", "status", "check_in", "check_out"]
-            },
-            {
-                "name": "Get bookings with date range",
+                "name": "Get bookings for 7-day period",
                 "params": {
-                    "start_date": (datetime.now(timezone.utc) - timedelta(days=7)).date().isoformat(),
-                    "end_date": (datetime.now(timezone.utc) + timedelta(days=7)).date().isoformat()
+                    "start_date": start_date.isoformat(),
+                    "end_date": end_date.isoformat()
                 },
                 "expected_status": 200,
-                "required_fields": ["id", "room_id", "guest_id", "status", "check_in", "check_out"]
+                "required_fields": ["id", "guest_id", "room_id", "status", "total_amount", "check_in", "check_out"],
+                "optional_fields": ["guest_name", "room_number"]
+            },
+            {
+                "name": "Get bookings for 7-day period with limit",
+                "params": {
+                    "start_date": start_date.isoformat(),
+                    "end_date": end_date.isoformat(),
+                    "limit": 100
+                },
+                "expected_status": 200,
+                "required_fields": ["id", "guest_id", "room_id", "status", "total_amount", "check_in", "check_out"],
+                "optional_fields": ["guest_name", "room_number"]
             }
         ]
         
         passed = 0
         total = len(test_cases)
+        response_times = []
         
         for test_case in test_cases:
             try:
@@ -385,6 +391,7 @@ class PMSBookingsTester:
                 async with self.session.get(url, headers=self.get_headers()) as response:
                     end_time = datetime.now()
                     response_time = (end_time - start_time).total_seconds() * 1000
+                    response_times.append(response_time)
                     
                     if response.status == test_case["expected_status"]:
                         data = await response.json()
@@ -393,14 +400,20 @@ class PMSBookingsTester:
                             if data:  # If bookings exist, check structure
                                 booking = data[0]
                                 missing_fields = [field for field in test_case["required_fields"] if field not in booking]
+                                optional_present = [field for field in test_case["optional_fields"] if field in booking]
+                                
                                 if not missing_fields:
                                     print(f"  ✅ {test_case['name']}: PASSED ({response_time:.1f}ms)")
-                                    print(f"      📊 Sample booking: {booking.get('guest_name', 'N/A')} - {booking.get('status', 'N/A')}")
+                                    print(f"      📊 Date range: {start_date} to {end_date} (7 days)")
+                                    print(f"      📊 Bookings found: {len(data)}")
+                                    print(f"      📊 Sample booking dates: {booking.get('check_in', 'N/A')[:10]} - {booking.get('check_out', 'N/A')[:10]}")
+                                    print(f"      📊 Optional fields present: {optional_present}")
                                     passed += 1
                                 else:
                                     print(f"  ❌ {test_case['name']}: Missing required fields {missing_fields}")
                             else:
-                                print(f"  ✅ {test_case['name']}: PASSED - No bookings found ({response_time:.1f}ms)")
+                                print(f"  ✅ {test_case['name']}: PASSED - No bookings in date range ({response_time:.1f}ms)")
+                                print(f"      📊 Date range: {start_date} to {end_date} (7 days)")
                                 passed += 1
                         else:
                             print(f"  ❌ {test_case['name']}: Expected list response, got {type(data)}")
@@ -413,9 +426,13 @@ class PMSBookingsTester:
             except Exception as e:
                 print(f"  ❌ {test_case['name']}: Error {e}")
         
+        avg_response_time = sum(response_times) / len(response_times) if response_times else 0
+        print(f"      ⏱️ Average Response Time: {avg_response_time:.1f}ms")
+        
         self.test_results.append({
-            "endpoint": "GET /api/pms/bookings",
-            "passed": passed, "total": total, "success_rate": f"{passed/total*100:.1f}%"
+            "endpoint": "GET /api/pms/bookings?start_date&end_date",
+            "passed": passed, "total": total, "success_rate": f"{passed/total*100:.1f}%",
+            "avg_response_time": f"{avg_response_time:.1f}ms"
         })
 
     async def test_pms_guests_endpoint(self):

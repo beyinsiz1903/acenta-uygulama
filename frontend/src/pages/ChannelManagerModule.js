@@ -692,6 +692,8 @@ const ChannelManagerModule = ({ user, tenant, onLogout }) => {
                           type="number"
                           placeholder="0.00"
                           className="mt-1"
+                          value={baseRate}
+                          onChange={(e) => setBaseRate(e.target.value)}
                         />
                       </div>
                       <div>

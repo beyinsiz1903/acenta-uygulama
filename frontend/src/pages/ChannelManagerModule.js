@@ -157,11 +157,6 @@ const ChannelManagerModule = ({ user, tenant, onLogout }) => {
         sync_rate_availability: true,
         sync_reservations: true
       });
-            <TabsTrigger value="mappings">
-              <Network className="w-4 h-4 mr-2" />
-              Room Mappings
-            </TabsTrigger>
-
       loadConnections();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to add connection');

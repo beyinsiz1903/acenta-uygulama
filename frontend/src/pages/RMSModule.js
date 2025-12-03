@@ -138,7 +138,7 @@ const RMSModule = ({ user, tenant, onLogout }) => {
           </div>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <Label>Auto-Pricing</Label>
+              <Label>Otomatik Fiyatlama</Label>
               <Switch
                 checked={autoPricingEnabled}
                 onCheckedChange={handleToggleAutoPricing}

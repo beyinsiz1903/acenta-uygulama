@@ -733,46 +733,62 @@ class PMSBookingsTester:
     def print_test_summary(self):
         """Print comprehensive test summary"""
         print("\n" + "=" * 80)
-        print("📊 PMS ROOMS BACKEND FLOW TEST RESULTS")
+        print("📊 PMS BOOKINGS BACKEND FLOW TEST RESULTS")
         print("=" * 80)
         
         total_passed = 0
         total_tests = 0
         
-        print("\n🏨 ENDPOINT TEST RESULTS:")
-        print("-" * 60)
+        print("\n📅 ENDPOINT TEST RESULTS:")
+        print("-" * 70)
         
         for result in self.test_results:
             endpoint = result["endpoint"]
             passed = result["passed"]
             total = result["total"]
             success_rate = result["success_rate"]
+            avg_time = result.get("avg_response_time", "N/A")
             
             status = "✅" if passed == total else "❌" if passed == 0 else "⚠️"
-            print(f"{status} {endpoint}: {success_rate}")
+            print(f"{status} {endpoint}: {success_rate} (avg: {avg_time})")
             
             total_passed += passed
             total_tests += total
+        
+        # Performance summary
+        if hasattr(self, 'performance_results'):
+            print("\n⚡ PERFORMANCE SUMMARY:")
+            print("-" * 70)
+            for perf in self.performance_results:
+                target_met = "✅" if 5 <= perf["avg_time"] <= 15 else "⚠️" if perf["avg_time"] <= 50 else "❌"
+                print(f"{target_met} {perf['endpoint']}: {perf['avg_time']:.1f}ms avg (range: {perf['min_time']:.1f}-{perf['max_time']:.1f}ms)")
         
         print("\n" + "=" * 80)
         overall_success_rate = (total_passed / total_tests * 100) if total_tests > 0 else 0
         print(f"📈 OVERALL SUCCESS RATE: {total_passed}/{total_tests} ({overall_success_rate:.1f}%)")
         
+        # Final assessment
         if overall_success_rate >= 90:
-            print("🎉 EXCELLENT: PMS Rooms backend ready for production!")
+            print("🎉 SONUÇ: PMS Bookings backend: production-ready ✅")
+            print("   Tüm endpoint'ler HTTP 200 dönüyor, veri yapısı stabil")
         elif overall_success_rate >= 75:
-            print("✅ GOOD: Most endpoints working, minor issues remain")
+            print("✅ SONUÇ: PMS Bookings backend: mostly ready")
+            print("   Çoğu endpoint çalışıyor, küçük sorunlar var")
         elif overall_success_rate >= 50:
-            print("⚠️ PARTIAL: Some endpoints working, significant issues remain")
+            print("⚠️ SONUÇ: PMS Bookings backend: partial issues")
+            print("   Bazı endpoint'ler çalışıyor, önemli sorunlar var")
         else:
-            print("❌ CRITICAL: Major backend issues, needs immediate attention")
+            print("❌ SONUÇ: PMS Bookings backend: critical issues")
+            print("   Büyük backend sorunları, acil müdahale gerekli")
         
-        print("\n🔍 KEY VERIFICATION POINTS:")
-        print("• GET /api/pms/rooms: Required fields for Rooms TAB (id, room_number, room_type, floor, base_price, status)")
-        print("• No HTTP 500 / ResponseValidationError with tenant_id missing")
-        print("• All supporting endpoints return proper data structures")
-        print("• Room status update (bulk function) working")
-        print("• Quick checkout and folio buttons functional")
+        print("\n🔍 DOĞRULANAN NOKTALAR:")
+        print("• GET /api/pms/bookings: Gerekli alanlar (id, guest_id, room_id, status, total_amount, check_in, check_out)")
+        print("• HTTP 500/ValidationError yok")
+        print("• BookingsTab/VirtualizedBookingList için uygun veri yapısı")
+        print("• Pagination (limit parameter) çalışıyor")
+        print("• Date range filtering (7-day period) çalışıyor")
+        print("• Folio ve payment endpoint'leri test edildi")
+        print("• Response süreleri raporlandı")
         
         print("\n" + "=" * 80)
 

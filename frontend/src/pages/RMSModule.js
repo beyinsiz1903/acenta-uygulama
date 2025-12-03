@@ -226,7 +226,7 @@ const RMSModule = ({ user, tenant, onLogout }) => {
 
           <Card>
             <CardHeader>
-              <CardTitle>Competitive Set Analysis</CardTitle>
+              <CardTitle>Rakip Set Analizi</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="h-80">

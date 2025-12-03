@@ -805,19 +805,64 @@ const ChannelManagerModule = ({ user, tenant, onLogout }) => {
                   <CardContent>
                     <div className="space-y-2">
                       <label className="flex items-center space-x-2">
-                        <input type="checkbox" className="rounded" defaultChecked />
+                        <input
+                          type="checkbox"
+                          className="rounded"
+                          checked={channelSelection.all}
+                          onChange={(e) =>
+                            setChannelSelection({
+                              all: e.target.checked,
+                              booking_com: false,
+                              expedia: false,
+                              airbnb: false,
+                            })
+                          }
+                        />
                         <span>All Channels</span>
                       </label>
                       <label className="flex items-center space-x-2">
-                        <input type="checkbox" className="rounded" />
+                        <input
+                          type="checkbox"
+                          className="rounded"
+                          checked={channelSelection.booking_com}
+                          onChange={(e) =>
+                            setChannelSelection((prev) => ({
+                              ...prev,
+                              all: false,
+                              booking_com: e.target.checked,
+                            }))
+                          }
+                        />
                         <span>Booking.com</span>
                       </label>
                       <label className="flex items-center space-x-2">
-                        <input type="checkbox" className="rounded" />
+                        <input
+                          type="checkbox"
+                          className="rounded"
+                          checked={channelSelection.expedia}
+                          onChange={(e) =>
+                            setChannelSelection((prev) => ({
+                              ...prev,
+                              all: false,
+                              expedia: e.target.checked,
+                            }))
+                          }
+                        />
                         <span>Expedia</span>
                       </label>
                       <label className="flex items-center space-x-2">
-                        <input type="checkbox" className="rounded" />
+                        <input
+                          type="checkbox"
+                          className="rounded"
+                          checked={channelSelection.airbnb}
+                          onChange={(e) =>
+                            setChannelSelection((prev) => ({
+                              ...prev,
+                              all: false,
+                              airbnb: e.target.checked,
+                            }))
+                          }
+                        />
                         <span>Airbnb</span>
                       </label>
                     </div>

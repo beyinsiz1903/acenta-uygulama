@@ -96,6 +96,21 @@ const ChannelManagerModule = ({ user, tenant, onLogout }) => {
     }
   };
 
+  const loadPmsRoomTypes = async () => {
+    try {
+      const response = await axios.get('/pms/rooms');
+      const data = Array.isArray(response.data) ? response.data : [];
+      // Unique room_type list
+      const types = Array.from(
+        new Set(data.map((room) => room.room_type).filter(Boolean))
+      );
+      setPmsRoomTypes(types);
+    } catch (error) {
+      console.error('Failed to load PMS rooms:', error);
+      setPmsRoomTypes([]);
+    }
+  };
+
   useEffect(() => {
     loadConnections();
     loadRoomMappings();

@@ -133,8 +133,8 @@ const RMSModule = ({ user, tenant, onLogout }) => {
       <div className="p-6 space-y-6">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold">Revenue Management System</h1>
-            <p className="text-gray-600">AI-powered pricing & demand forecasting</p>
+            <h1 className="text-3xl font-bold">Gelir Yönetim Sistemi (RMS)</h1>
+            <p className="text-gray-600">Yapay zeka destekli fiyatlama ve talep tahmini</p>
           </div>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">

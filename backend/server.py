@@ -12626,14 +12626,21 @@ async def get_room_mappings(
 
 @api_router.post("/channel-manager/room-mappings")
 async def create_room_mapping(
-    mapping: RoomMapping,
+    mapping: RoomMappingCreate,
     current_user: User = Depends(get_current_user)
 ):
-    mapping.tenant_id = current_user.tenant_id
-    payload = mapping.model_dump()
+    room_mapping = RoomMapping(
+        tenant_id=current_user.tenant_id,
+        channel_id=mapping.channel_id,
+        pms_room_type=mapping.pms_room_type,
+        channel_room_type=mapping.channel_room_type,
+        channel_room_id=mapping.channel_room_id,
+        notes=mapping.notes,
+    )
+    payload = room_mapping.model_dump()
     payload['created_at'] = payload['created_at'].isoformat()
     await db.room_mappings.insert_one(payload)
-    return {'message': 'Room mapping created', 'mapping': mapping}
+    return {'message': 'Room mapping created', 'mapping': room_mapping}
 
 @api_router.delete("/channel-manager/room-mappings/{mapping_id}")
 async def delete_room_mapping(

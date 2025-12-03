@@ -1662,6 +1662,13 @@ class RoomMapping(BaseModel):
     notes: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
+class RoomMappingCreate(BaseModel):
+    channel_id: str
+    pms_room_type: str
+    channel_room_type: str
+    channel_room_id: Optional[str] = None
+    notes: Optional[str] = None
+
 class RatePlan(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))

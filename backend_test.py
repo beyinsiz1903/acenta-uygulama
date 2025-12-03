@@ -629,93 +629,67 @@ class PMSBookingsTester:
         })
 
     async def test_performance_benchmarks(self):
-        """Test GET /api/folio/booking/{booking_id} - Quick folio button"""
-        print("\n📄 Testing Quick Folio Endpoint...")
+        """Test performance benchmarks for PMS Bookings endpoints"""
+        print("\n⚡ Testing Performance Benchmarks...")
+        print("🎯 TARGET: Response times should be around 7-10ms (previous test results)")
         
-        # Get a booking ID for testing
-        booking_id = None
-        if self.created_test_data['bookings']:
-            booking_id = self.created_test_data['bookings'][0]
-        else:
-            # Try to get a booking from the bookings endpoint
-            try:
-                async with self.session.get(f"{BACKEND_URL}/pms/bookings", headers=self.get_headers()) as response:
-                    if response.status == 200:
-                        bookings = await response.json()
-                        if bookings:
-                            booking_id = bookings[0]["id"]
-            except:
-                pass
-        
-        if not booking_id:
-            print("  ⚠️ No booking available for testing folio")
-            self.test_results.append({
-                "endpoint": "GET /api/folio/booking/{booking_id}",
-                "passed": 0, "total": 1, "success_rate": "0.0%"
-            })
-            return
-        
-        test_cases = [
-            {
-                "name": "Get folio for booking",
-                "booking_id": booking_id,
-                "expected_status": [200, 404],  # 200 if folio exists, 404 if not found
-                "expected_fields": ["id", "booking_id", "folio_number", "balance"]
-            }
+        # Test multiple calls to get average response times
+        endpoints_to_test = [
+            {"url": f"{BACKEND_URL}/pms/bookings", "name": "Default bookings"},
+            {"url": f"{BACKEND_URL}/pms/bookings?limit=100", "name": "Bookings with limit=100"},
         ]
         
-        passed = 0
-        total = len(test_cases)
-        
-        for test_case in test_cases:
-            try:
-                url = f"{BACKEND_URL}/folio/booking/{test_case['booking_id']}"
-                
-                start_time = datetime.now()
-                async with self.session.get(url, headers=self.get_headers()) as response:
-                    end_time = datetime.now()
-                    response_time = (end_time - start_time).total_seconds() * 1000
-                    
-                    if response.status in test_case["expected_status"]:
-                        if response.status == 200:
-                            data = await response.json()
-                            # Handle both single folio and list of folios
-                            if isinstance(data, list) and data:
-                                folio = data[0]  # Take first folio
-                                missing_fields = [field for field in test_case["expected_fields"] if field not in folio]
-                                if not missing_fields:
-                                    print(f"  ✅ {test_case['name']}: PASSED - Folio found ({response_time:.1f}ms)")
-                                    print(f"      📊 Folio: {folio.get('folio_number', 'N/A')} - Balance: {folio.get('balance', 'N/A')}")
-                                    passed += 1
-                                else:
-                                    print(f"  ❌ {test_case['name']}: Missing required fields {missing_fields}")
-                            elif isinstance(data, dict):
-                                missing_fields = [field for field in test_case["expected_fields"] if field not in data]
-                                if not missing_fields:
-                                    print(f"  ✅ {test_case['name']}: PASSED - Folio found ({response_time:.1f}ms)")
-                                    print(f"      📊 Folio: {data.get('folio_number', 'N/A')} - Balance: {data.get('balance', 'N/A')}")
-                                    passed += 1
-                                else:
-                                    print(f"  ❌ {test_case['name']}: Missing required fields {missing_fields}")
-                            else:
-                                print(f"  ✅ {test_case['name']}: PASSED - Empty folio list ({response_time:.1f}ms)")
-                                passed += 1
-                        else:  # 404
-                            print(f"  ✅ {test_case['name']}: PASSED - No folio found (expected) ({response_time:.1f}ms)")
-                            passed += 1
-                    else:
-                        error_text = await response.text()
-                        print(f"  ❌ {test_case['name']}: Expected {test_case['expected_status']}, got {response.status}")
-                        if response.status == 500:
-                            print(f"      🔍 500 Error Details: {error_text[:300]}...")
-                        
-            except Exception as e:
-                print(f"  ❌ {test_case['name']}: Error {e}")
-        
-        self.test_results.append({
-            "endpoint": "GET /api/folio/booking/{booking_id}",
-            "passed": passed, "total": total, "success_rate": f"{passed/total*100:.1f}%"
+        # Add date range test
+        today = datetime.now(timezone.utc).date()
+        start_date = today - timedelta(days=3)
+        end_date = today + timedelta(days=4)
+        endpoints_to_test.append({
+            "url": f"{BACKEND_URL}/pms/bookings?start_date={start_date.isoformat()}&end_date={end_date.isoformat()}",
+            "name": "Bookings with 7-day date range"
         })
+        
+        performance_results = []
+        
+        for endpoint in endpoints_to_test:
+            response_times = []
+            successful_calls = 0
+            
+            # Make 5 calls to get average
+            for i in range(5):
+                try:
+                    start_time = datetime.now()
+                    async with self.session.get(endpoint["url"], headers=self.get_headers()) as response:
+                        end_time = datetime.now()
+                        response_time = (end_time - start_time).total_seconds() * 1000
+                        
+                        if response.status == 200:
+                            response_times.append(response_time)
+                            successful_calls += 1
+                        
+                except Exception as e:
+                    print(f"      ⚠️ Call {i+1} failed: {e}")
+            
+            if response_times:
+                avg_time = sum(response_times) / len(response_times)
+                min_time = min(response_times)
+                max_time = max(response_times)
+                
+                performance_results.append({
+                    "endpoint": endpoint["name"],
+                    "avg_time": avg_time,
+                    "min_time": min_time,
+                    "max_time": max_time,
+                    "success_rate": f"{successful_calls}/5"
+                })
+                
+                # Check if meets performance target (7-10ms range)
+                performance_status = "✅" if 5 <= avg_time <= 15 else "⚠️" if avg_time <= 50 else "❌"
+                print(f"  {performance_status} {endpoint['name']}: {avg_time:.1f}ms avg (min: {min_time:.1f}ms, max: {max_time:.1f}ms)")
+            else:
+                print(f"  ❌ {endpoint['name']}: All calls failed")
+        
+        # Store performance results
+        self.performance_results = performance_results
 
     # ============= MAIN TEST EXECUTION =============
 

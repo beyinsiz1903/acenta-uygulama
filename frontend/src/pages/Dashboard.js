@@ -156,34 +156,6 @@ const Dashboard = ({ user, tenant, onLogout }) => {
     }
 
     if (typeof briefing === 'object') {
-      // If backend sends structured briefing object, render it safely
-      if (briefing.occupancy_percentage != null || briefing.confidence_level || briefing.reason) {
-        const { occupancy_percentage, confidence_level, reason } = briefing;
-        return (
-          <div className="space-y-1">
-            {occupancy_percentage != null && (
-              <div>
-                <span className="font-semibold">
-                  {typeof occupancy_percentage === 'number'
-                    ? occupancy_percentage.toFixed(1)
-                    : String(occupancy_percentage)}
-                  %
-                </span>{' '}
-                occupancy
-              </div>
-            )}
-            {confidence_level && (
-              <div>
-                Confidence: <span className="font-semibold">{String(confidence_level)}</span>
-              </div>
-            )}
-            {reason && (
-              <div className="text-sm opacity-90">{String(reason)}</div>
-            )}
-          </div>
-        );
-      }
-
       try {
         return JSON.stringify(briefing);
       } catch (e) {
@@ -191,7 +163,6 @@ const Dashboard = ({ user, tenant, onLogout }) => {
       }
     }
 
-    // Fallback for unexpected types
     return String(briefing);
   };
 

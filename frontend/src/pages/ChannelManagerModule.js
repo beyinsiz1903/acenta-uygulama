@@ -40,6 +40,10 @@ const ChannelManagerModule = ({ user, tenant, onLogout }) => {
     sync_reservations: true
   });
   
+  // Room mappings state
+  const [roomMappings, setRoomMappings] = useState([]);
+  const [mappingFilterChannel, setMappingFilterChannel] = useState('all');
+
   // OTA Reservations state
   const [otaReservations, setOtaReservations] = useState([]);
   const [reservationFilter, setReservationFilter] = useState('pending');

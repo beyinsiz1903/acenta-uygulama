@@ -208,7 +208,7 @@ const RMSModule = ({ user, tenant, onLogout }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
-              <CardTitle>30-Day Demand Forecast</CardTitle>
+              <CardTitle>30 Günlük Talep Tahmini</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="h-80">

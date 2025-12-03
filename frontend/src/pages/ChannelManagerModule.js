@@ -198,6 +198,22 @@ const ChannelManagerModule = ({ user, tenant, onLogout }) => {
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to add connection');
     } finally {
+  const handleImportReservation = async (otaReservationId) => {
+    try {
+      setLoading(true);
+      await axios.post(`/channel-manager/import-reservation/${otaReservationId}`);
+      toast.success('Reservation imported successfully');
+      loadOtaReservations();
+      loadExceptions();
+    } catch (error) {
+      console.error('Failed to import reservation:', error);
+      toast.error(error.response?.data?.detail || 'Failed to import reservation');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
       setLoading(false);
     }
   };

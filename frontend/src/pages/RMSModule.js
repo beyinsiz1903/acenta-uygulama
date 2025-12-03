@@ -146,7 +146,7 @@ const RMSModule = ({ user, tenant, onLogout }) => {
             </div>
             <Button onClick={handleApplyRecommendations}>
               <Target className="w-4 h-4 mr-2" />
-              Apply Recommendations
+              Önerileri Uygula
             </Button>
           </div>
         </div>

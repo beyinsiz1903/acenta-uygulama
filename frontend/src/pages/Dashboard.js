@@ -647,7 +647,15 @@ const Dashboard = ({ user, tenant, onLogout }) => {
                 </CardHeader>
                 <CardContent className="p-4 pt-0">
                   <div className="text-sm md:text-base leading-relaxed mb-3">
-                    {renderAIBriefingText(aiBriefing.briefing) || aiBriefing.summary}
+                    {typeof aiBriefing.summary === 'string'
+                      ? aiBriefing.summary
+                      : (() => {
+                          try {
+                            return JSON.stringify(aiBriefing.summary);
+                          } catch (e) {
+                            return String(aiBriefing.summary);
+                          }
+                        })()}
                   </div>
                   {renderBriefingItems(aiBriefing.briefing_items)}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs bg-white/10 rounded-lg p-3 mt-3">

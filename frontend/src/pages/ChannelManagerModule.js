@@ -234,12 +234,14 @@ const ChannelManagerModule = ({ user, tenant, onLogout }) => {
             <h1 className="text-4xl font-bold mb-2" style={{ fontFamily: 'Space Grotesk' }}>
               Channel Manager
             </h1>
-                <Dialog open={showAddMapping} onOpenChange={setShowAddMapping}>
-                  <DialogContent className="max-w-lg">
-                    <DialogHeader>
-                      <DialogTitle>Yeni Room Mapping Ekle</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4 mt-2">
+            <p className="text-gray-600">Manage OTA connections and reservations</p>
+          </div>
+          <Dialog open={showAddMapping} onOpenChange={setShowAddMapping}>
+            <DialogContent className="max-w-lg">
+              <DialogHeader>
+                <DialogTitle>Yeni Room Mapping Ekle</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 mt-2">
                       <div>
                         <Label>Channel</Label>
                         <select

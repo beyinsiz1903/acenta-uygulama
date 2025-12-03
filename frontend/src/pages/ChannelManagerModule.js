@@ -114,6 +114,7 @@ const ChannelManagerModule = ({ user, tenant, onLogout }) => {
   useEffect(() => {
     loadConnections();
     loadRoomMappings();
+    loadPmsRoomTypes();
     loadOtaReservations();
     loadExceptions();
   }, []);

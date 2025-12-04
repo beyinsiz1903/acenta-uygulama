@@ -36735,6 +36735,64 @@ async def get_available_rooms_for_assignment(
         'check_out': check_out
     }
 
+
+@api_router.post("/channel-manager/push-availability")
+async def push_channel_availability(
+    check_in: str,
+    check_out: str,
+    room_type: Optional[str] = None,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Simulate pushing availability to Booking.com and other OTAs.
+
+    Uses the existing /pms/rooms/availability logic to get availability
+    and then normalizes it to a Booking-like payload via BookingAdapter.
+    """
+    current_user = await get_current_user(credentials)
+
+    # Fetch availability from PMS
+    rooms = await check_room_availability(check_in, check_out, room_type, current_user)
+
+    # Only handle booking.com for now via adapter (simulated)
+    connection = await db.channel_connections.find_one({
+        'tenant_id': current_user.tenant_id,
+        'channel_type': ChannelType.BOOKING_COM,
+    })
+
+    adapter_result = None
+    if connection:
+        adapter = BookingAdapter(connection)
+        adapter_result = await adapter.push_availability({
+            'rooms': rooms,
+            'check_in': check_in,
+            'check_out': check_out,
+        })
+
+    # Log sync
+    sync_log = {
+        'id': str(uuid.uuid4()),
+        'tenant_id': current_user.tenant_id,
+        'timestamp': datetime.now(timezone.utc).isoformat(),
+        'channel': ChannelType.BOOKING_COM,
+        'sync_type': 'availability',
+        'status': 'success',
+        'duration_ms': 0,
+        'records_synced': len(rooms),
+        'error_message': None,
+        'initiator_type': 'hotel_user',
+        'initiator_name': current_user.name,
+        'initiator_id': current_user.id,
+        'ip_address': None,
+    }
+    await db.channel_sync_logs.insert_one(sync_log)
+
+    return {
+        'message': 'Availability push simulated successfully',
+        'rooms_count': len(rooms),
+        'booking_adapter': adapter_result,
+    }
+
+
 from booking_adapter import BookingAdapter
 from booking_availability import normalize_availability_response
 

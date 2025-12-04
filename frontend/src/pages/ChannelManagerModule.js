@@ -1063,6 +1063,12 @@ const ChannelManagerModule = ({ user, tenant, onLogout }) => {
                           </td>
                           <td className="p-2">{log.records_synced ?? '-'}</td>
                           <td className="p-2">{log.duration_ms ?? '-'}</td>
+                          <td className="p-2 text-[11px]">
+                            {log.initiator_name
+                              ? `${log.initiator_type || 'user'}: ${log.initiator_name}`
+                              : log.initiator_type || '-'}
+                          </td>
+                          <td className="p-2 text-[11px]">{log.ip_address || '-'}</td>
                           <td className="p-2 max-w-xs truncate" title={log.error_message || ''}>
                             {log.error_message || '-'}
                           </td>

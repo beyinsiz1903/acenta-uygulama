@@ -558,6 +558,58 @@ const ChannelManagerModule = ({ user, tenant, onLogout }) => {
                     {connections.map((conn) => (
                       <div key={conn.id} className="border rounded-lg p-4 flex items-center justify-between">
                         <div className="flex items-center space-x-4">
+              {/* Parity Alert */}
+              {parityInfo && (
+                <div className="mt-4">
+                  <Card className={parityInfo.parity_status === 'good' ? 'border-green-200 bg-green-50' : 'border-amber-200 bg-amber-50'}>
+                    <CardHeader className="py-2 flex items-center justify-between">
+                      <div>
+                        <CardTitle className="text-sm flex items-center gap-2">
+                          {parityInfo.parity_status === 'good' ? (
+                            <span className="inline-flex items-center text-green-700">
+                              <span className="w-2 h-2 rounded-full bg-green-500 mr-1" />
+                              Rate Parity İyi
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center text-amber-700">
+                              <span className="w-2 h-2 rounded-full bg-amber-500 mr-1" />
+                              Rate Parity Sorunları
+                            </span>
+                          )}
+                        </CardTitle>
+                        <CardDescription className="text-xs mt-1">
+                          {parityInfo.recommendation}
+                        </CardDescription>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="xs"
+                        onClick={loadRateParity}
+                        disabled={loading}
+                      >
+                        <RefreshCw className="w-3 h-3 mr-1" /> Yenile
+                      </Button>
+                    </CardHeader>
+                    {parityInfo.issues && parityInfo.issues.length > 0 && (
+                      <CardContent className="pt-0 pb-3">
+                        <ul className="text-xs list-disc list-inside space-y-1">
+                          {parityInfo.issues.slice(0, 3).map((issue, idx) => (
+                            <li key={idx}>
+                              {issue.message || `${issue.channel}: ${issue.difference_pct}% fark`}
+                            </li>
+                          ))}
+                          {parityInfo.issues.length > 3 && (
+                            <li className="text-[11px] text-gray-600">
+                              +{parityInfo.issues.length - 3} daha fazla parity issue...
+                            </li>
+                          )}
+                        </ul>
+                      </CardContent>
+                    )}
+                  </Card>
+                </div>
+              )}
+
                           <div className="text-4xl">
                             {channelLogos[conn.channel_type] || '🌐'}
                           </div>

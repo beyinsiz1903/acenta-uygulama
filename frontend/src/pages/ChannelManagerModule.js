@@ -70,6 +70,21 @@ const ChannelManagerModule = ({ user, tenant, onLogout }) => {
   const [syncLogs, setSyncLogs] = useState([]);
   const [syncSummary, setSyncSummary] = useState(null);
 
+  const getChannelLabel = (channel) => {
+    switch (channel) {
+      case 'booking_com':
+        return 'Booking.com';
+      case 'expedia':
+        return 'Expedia';
+      case 'airbnb':
+        return 'Airbnb';
+      case 'direct':
+        return 'Direct Website';
+      default:
+        return channel || '-';
+    }
+  };
+
   // Rate parity state
   const [parityInfo, setParityInfo] = useState(null);
 

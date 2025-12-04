@@ -9,6 +9,8 @@ Real HTTP calls to Booking.com can be added later in a controlled way.
 """
 from typing import Dict, Any, List
 
+from booking_availability import normalize_availability_response
+
 
 class BookingAdapter:
     def __init__(self, connection: Dict[str, Any]):

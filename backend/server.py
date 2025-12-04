@@ -12658,6 +12658,25 @@ async def create_room_mapping(
     payload = room_mapping.model_dump()
     payload['created_at'] = payload['created_at'].isoformat()
     await db.room_mappings.insert_one(payload)
+
+    # Log mapping creation
+    sync_log = {
+        'id': str(uuid.uuid4()),
+        'tenant_id': current_user.tenant_id,
+        'timestamp': datetime.now(timezone.utc).isoformat(),
+        'channel': room_mapping.channel_id,
+        'sync_type': 'mapping_create',
+        'status': 'success',
+        'duration_ms': 0,
+        'records_synced': 1,
+        'error_message': None,
+        'initiator_type': 'hotel_user',
+        'initiator_name': current_user.name,
+        'initiator_id': current_user.id,
+        'ip_address': None,
+    }
+    await db.channel_sync_logs.insert_one(sync_log)
+
     return {'message': 'Room mapping created', 'mapping': room_mapping}
 
 @api_router.delete("/channel-manager/room-mappings/{mapping_id}")

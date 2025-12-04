@@ -1046,7 +1046,7 @@ const ChannelManagerModule = ({ user, tenant, onLogout }) => {
                       {syncLogs.map((log, idx) => (
                         <tr key={idx} className="border-t hover:bg-gray-50">
                           <td className="p-2 whitespace-nowrap text-[11px]">{log.timestamp}</td>
-                          <td className="p-2">{log.channel}</td>
+                          <td className="p-2">{getChannelLabel(log.channel)}</td>
                           <td className="p-2">{log.sync_type}</td>
                           <td className="p-2">
                             <span

@@ -12684,13 +12684,35 @@ async def delete_room_mapping(
     mapping_id: str,
     current_user: User = Depends(get_current_user)
 ):
+    # Fetch mapping for logging context
+    mapping = await db.room_mappings.find_one({'id': mapping_id, 'tenant_id': current_user.tenant_id})
+
     result = await db.room_mappings.delete_one({
         'id': mapping_id,
         'tenant_id': current_user.tenant_id
     })
     if result.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="Mapping not found")
-    return {'message': 'Mapping removed'}
+        raise HTTPException(status_code=404, detail="Room mapping not found")
+
+    # Log mapping deletion
+    sync_log = {
+        'id': str(uuid.uuid4()),
+        'tenant_id': current_user.tenant_id,
+        'timestamp': datetime.now(timezone.utc).isoformat(),
+        'channel': mapping.get('channel_id') if mapping else None,
+        'sync_type': 'mapping_delete',
+        'status': 'success',
+        'duration_ms': 0,
+        'records_synced': 0,
+        'error_message': None,
+        'initiator_type': 'hotel_user',
+        'initiator_name': current_user.name,
+        'initiator_id': current_user.id,
+        'ip_address': None,
+    }
+    await db.channel_sync_logs.insert_one(sync_log)
+
+    return {'message': 'Room mapping deleted', 'mapping_id': mapping_id}
 
 @api_router.get("/channel-manager/ota-reservations")
 @cached(ttl=180, key_prefix="cm_ota_reservations")  # Cache for 3 min

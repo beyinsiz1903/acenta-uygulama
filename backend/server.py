@@ -7665,7 +7665,11 @@ async def get_guests(
 # ============= PMS - BOOKINGS MANAGEMENT =============
 
 @api_router.post("/pms/bookings", response_model=Booking)
-async def create_booking(booking_data: BookingCreate, current_user: User = Depends(get_current_user)):
+async def create_booking(
+    booking_data: BookingCreate,
+    current_user: User = Depends(get_current_user),
+    _: None = Depends(require_module("pms")),
+):
     check_in_dt = datetime.fromisoformat(booking_data.check_in.replace('Z', '+00:00'))
     check_out_dt = datetime.fromisoformat(booking_data.check_out.replace('Z', '+00:00'))
     

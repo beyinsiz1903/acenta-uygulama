@@ -2345,6 +2345,13 @@ def generate_qr_code(data: str) -> str:
     return f"data:image/png;base64,{img_base64}"
 
 def generate_time_based_qr_token(booking_id: str, expiry_hours: int = 72) -> str:
+    expiry = datetime.now(timezone.utc) + timedelta(hours=expiry_hours)
+    token = secrets.token_urlsafe(32)
+    return jwt.encode({
+        'booking_id': booking_id,
+        'token': token,
+        'exp': expiry
+    }, JWT_SECRET, algorithm=JWT_ALGORITHM)
 
 # ============= TENANT MODULE & ADMIN HELPERS =============
 

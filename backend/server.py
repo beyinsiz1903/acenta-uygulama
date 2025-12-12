@@ -610,6 +610,14 @@ class Tenant(BaseModel):
     location: Optional[str] = None
     amenities: List[str] = []
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    modules: Dict[str, bool] = Field(
+        default_factory=lambda: {
+            "pms": True,
+            "reports": True,
+            "invoices": True,
+            "ai": True,
+        }
+    )
 
 class User(BaseModel):
     model_config = ConfigDict(extra="allow")  # Changed from "ignore" to "allow" to fix tenant_id loading
@@ -2337,6 +2345,84 @@ def generate_qr_code(data: str) -> str:
     return f"data:image/png;base64,{img_base64}"
 
 def generate_time_based_qr_token(booking_id: str, expiry_hours: int = 72) -> str:
+
+# ============= TENANT MODULE & ADMIN HELPERS =============
+
+MODULE_DEFAULTS: Dict[str, bool] = {
+    "pms": True,
+    "reports": True,
+    "invoices": True,
+    "ai": True,
+}
+
+
+def get_tenant_modules(tenant_doc: Dict[str, Any]) -> Dict[str, bool]:
+    """Merge stored tenant modules with defaults.
+
+    If no modules are stored, all modules are treated as enabled by default
+    to preserve backward compatibility for existing hotels.
+    """
+    modules = tenant_doc.get("modules") or {}
+    merged = MODULE_DEFAULTS.copy()
+
+    if isinstance(modules, dict):
+        for key, value in modules.items():
+            try:
+                merged[key] = bool(value)
+            except Exception:
+                # Ignore invalid values and keep default
+                continue
+
+    return merged
+
+
+def require_module(module_name: str):
+    """Dependency to ensure the current hotel has a specific module enabled."""
+
+    async def dependency(current_user: User = Depends(get_current_user)) -> None:
+        if not current_user.tenant_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Bu işlem için bir otel hesabı gerekir",
+            )
+
+        # Find tenant by logical id or Mongo _id
+        tenant_doc = await db.tenants.find_one({"id": current_user.tenant_id})
+        if not tenant_doc:
+            try:
+                from bson import ObjectId
+
+                tenant_doc = await db.tenants.find_one(
+                    {"_id": ObjectId(current_user.tenant_id)}
+                )
+            except Exception:
+                tenant_doc = None
+
+        if not tenant_doc:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Otel bulunamadı",
+            )
+
+        modules = get_tenant_modules(tenant_doc)
+        if not modules.get(module_name, False):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"{module_name} modülü bu otel için aktif değil",
+            )
+
+    return dependency
+
+
+async def require_admin(current_user: User = Depends(get_current_user)) -> User:
+    """Allow only admin users (otel yöneticileri) to access admin endpoints."""
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Bu işlemi sadece yönetici kullanıcılar yapabilir",
+        )
+    return current_user
+
     expiry = datetime.now(timezone.utc) + timedelta(hours=expiry_hours)
     token = secrets.token_urlsafe(32)
     return jwt.encode({

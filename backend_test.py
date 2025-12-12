@@ -30,7 +30,7 @@ from typing import Dict, List, Any, Optional
 import uuid
 
 # Configuration
-BACKEND_URL = "https://hata-giderelim.preview.emergentagent.com/api"
+BACKEND_URL = "https://perm-selector.preview.emergentagent.com/api"
 TEST_EMAIL = "demo@hotel.com"
 TEST_PASSWORD = "demo123"
 
@@ -697,7 +697,7 @@ class PMSBookingsTester:
         """Run comprehensive PMS Bookings backend testing"""
         print("🚀 PMS BOOKINGS BACKEND FLOW TESTING")
         print("Testing BookingsTab/VirtualizedBookingList veri yapısı doğrulaması")
-        print("Base URL: https://hata-giderelim.preview.emergentagent.com/api")
+        print("Base URL: https://perm-selector.preview.emergentagent.com/api")
         print("Login: demo@hotel.com / demo123")
         print("=" * 80)
         

@@ -14,7 +14,7 @@ from typing import Dict, List, Any, Optional
 import uuid
 
 # Configuration
-BACKEND_URL = "https://hata-giderelim.preview.emergentagent.com/api"
+BACKEND_URL = "https://perm-selector.preview.emergentagent.com/api"
 
 class GuestPortalTester:
     def __init__(self):

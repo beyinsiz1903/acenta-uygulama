@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 import os
 
 # Get backend URL from environment
-BACKEND_URL = os.getenv('REACT_APP_BACKEND_URL', 'https://hata-giderelim.preview.emergentagent.com')
+BACKEND_URL = os.getenv('REACT_APP_BACKEND_URL', 'https://perm-selector.preview.emergentagent.com')
 API_BASE = f"{BACKEND_URL}/api"
 
 class RevenueMobileAPITester:

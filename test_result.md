@@ -163,7 +163,7 @@
        **COMPREHENSIVE VERIFICATION COMPLETED:**
        
        ✅ **PAGE LOADING:**
-       - Landing page loads successfully at https://hata-giderelim.preview.emergentagent.com/
+       - Landing page loads successfully at https://perm-selector.preview.emergentagent.com/
        - Page title: "Emergent | Fullstack App"
        - No critical loading errors
        
@@ -684,7 +684,7 @@
        🏆 FINAL COMPREHENSIVE VALIDATION COMPLETED - PRODUCTION READY ✅
        
        **TEST OBJECTIVE:** 100% validation for production deployment
-       **BASE URL:** https://hata-giderelim.preview.emergentagent.com
+       **BASE URL:** https://perm-selector.preview.emergentagent.com
        **LOGIN:** demo@hotel.com / demo123
        
        **COMPREHENSIVE TEST RESULTS:**
@@ -857,7 +857,7 @@
        🏨 SYROCE HOTEL PMS DASHBOARD UI COMPREHENSIVE TEST COMPLETED - PRODUCTION READY ✅
        
        **TEST OBJECTIVE:** Complete Dashboard UI verification after login with demo@hotel.com / demo123
-       **BASE URL:** https://hata-giderelim.preview.emergentagent.com
+       **BASE URL:** https://perm-selector.preview.emergentagent.com
        
        **COMPREHENSIVE TEST RESULTS:**
        
@@ -955,7 +955,7 @@
        🏨 PMS GUESTS TAB UI COMPREHENSIVE TEST COMPLETED - PRODUCTION READY ✅
        
        **TEST OBJECTIVE:** Complete PMS → Guests tab UI verification for Syroce Hotel PMS app
-       **BASE URL:** https://hata-giderelim.preview.emergentagent.com
+       **BASE URL:** https://perm-selector.preview.emergentagent.com
        **LOGIN:** demo@hotel.com / demo123
        
        **COMPREHENSIVE TEST RESULTS:**
@@ -1090,7 +1090,7 @@ agent_communication:
        
        **USER REQUEST (Turkish):** PMS Bookings backend akışını test et
        **OBJECTIVE:** /api/pms/bookings ve BookingsTab/VirtualizedBookingList veri yapısı doğrulaması
-       **BASE URL:** https://hata-giderelim.preview.emergentagent.com/api
+       **BASE URL:** https://perm-selector.preview.emergentagent.com/api
        **LOGIN:** demo@hotel.com / demo123
        
        **COMPREHENSIVE TEST RESULTS:**
@@ -1153,7 +1153,7 @@ agent_communication:
        🚨 PMS → BOOKINGS TAB UI CRITICAL FAILURE - REACT RUNTIME ERRORS BLOCKING FUNCTIONALITY
        
        **TEST OBJECTIVE:** Complete PMS → Bookings tab UI verification for Syroce Hotel PMS app
-       **BASE URL:** https://hata-giderelim.preview.emergentagent.com
+       **BASE URL:** https://perm-selector.preview.emergentagent.com
        **LOGIN:** demo@hotel.com / demo123
        
        **CRITICAL ISSUES IDENTIFIED:**
@@ -1232,7 +1232,7 @@ agent_communication:
        🚨 AI PREDICTION PATTERNS FIX VERIFICATION - CRITICAL ISSUE STILL PRESENT ❌
        
        **RE-TEST OBJECTIVE:** Verify PMS → Bookings tab UI after AI prediction patterns fix
-       **BASE URL:** https://hata-giderelim.preview.emergentagent.com
+       **BASE URL:** https://perm-selector.preview.emergentagent.com
        **LOGIN:** demo@hotel.com / demo123
        **DATE:** December 3, 2025
        
@@ -1306,7 +1306,7 @@ agent_communication:
        
        **RE-TEST DATE:** December 3, 2025 - 09:48 AM
        **OBJECTIVE:** Re-test PMS → Bookings tab UI focusing on React child object rendering from AI-related components
-       **BASE URL:** https://hata-giderelim.preview.emergentagent.com
+       **BASE URL:** https://perm-selector.preview.emergentagent.com
        **LOGIN:** demo@hotel.com / demo123
        
        **CRITICAL SUCCESS CONFIRMATION:**
@@ -1790,7 +1790,7 @@ backend:
     status_history:
       - working: "NA"
         agent: "user"
-        comment: "Turkish request: PMS Bookings backend akışını test et. Test /api/pms/bookings ve BookingsTab/VirtualizedBookingList'in dayandığı veri yapısının stabil olduğunu, hata vermediğini ve performans hedeflerini karşıladığını doğrulamak. Base URL: https://hata-giderelim.preview.emergentagent.com/api. Login: demo@hotel.com / demo123. Test endpoints: GET /pms/bookings (default), GET /pms/bookings?limit=100, GET /pms/bookings?start_date&end_date (7-day period), folio/payment endpoints if available."
+        comment: "Turkish request: PMS Bookings backend akışını test et. Test /api/pms/bookings ve BookingsTab/VirtualizedBookingList'in dayandığı veri yapısının stabil olduğunu, hata vermediğini ve performans hedeflerini karşıladığını doğrulamak. Base URL: https://perm-selector.preview.emergentagent.com/api. Login: demo@hotel.com / demo123. Test endpoints: GET /pms/bookings (default), GET /pms/bookings?limit=100, GET /pms/bookings?start_date&end_date (7-day period), folio/payment endpoints if available."
       - working: true
         agent: "testing"
         comment: "🎉 PMS BOOKINGS BACKEND: PRODUCTION-READY ✅ - 100% SUCCESS RATE (7/7 endpoints). COMPREHENSIVE TESTING COMPLETED: ✅ GET /api/pms/bookings (default): 7.4ms avg - All required fields present (id, guest_id, room_id, status, total_amount, check_in, check_out), optional fields working (guest_name, room_number), 8 bookings returned. ✅ GET /api/pms/bookings?limit=100: 7.9ms avg - Pagination working correctly, limit parameter respected. ✅ GET /api/pms/bookings?start_date&end_date (7-day period): 15.8ms avg - Date range filtering working, 11 bookings found in range 2025-11-30 to 2025-12-07. ✅ GET /api/folio/booking/{booking_id}: 8.8ms avg - Folio endpoint working, returns proper structure. ✅ GET /api/payments/booking/{booking_id}: 9.5ms avg - Payments endpoint accessible. PERFORMANCE EXCELLENT: Default bookings 11.7ms avg (6.8-18.6ms range), Limit=100: 10.2ms avg (7.0-11.6ms range), Date range: 22.9ms avg (16.2-27.1ms range). NO HTTP 500/ValidationError found. BookingsTab/VirtualizedBookingList veri yapısı completely stable and production-ready."
@@ -4977,7 +4977,7 @@ frontend:
     status_history:
       - working: "NA"
         agent: "testing"
-        comment: "User requested testing of AR/Finance endpoints: Company aging report (GET /reports/company-aging + Excel export), Pending AR (GET /folio/pending-ar), City Ledger management (GET/POST /cashiering/city-ledger, AR aging report, payments, transactions). Base URL: https://hata-giderelim.preview.emergentagent.com/api, Auth: demo@hotel.com / demo123"
+        comment: "User requested testing of AR/Finance endpoints: Company aging report (GET /reports/company-aging + Excel export), Pending AR (GET /folio/pending-ar), City Ledger management (GET/POST /cashiering/city-ledger, AR aging report, payments, transactions). Base URL: https://perm-selector.preview.emergentagent.com/api, Auth: demo@hotel.com / demo123"
       - working: true
         agent: "testing"
         comment: "🎉 AR/FINANCE BACKEND TESTING COMPLETED - 100% SUCCESS RATE (8/8 tests passed). ✅ COMPANY AGING REPORT: GET /reports/company-aging returns proper structure with report_date, total_ar (5345.4), company_count (5), companies array with aging buckets (0-7 days, 8-14 days, 15-30 days, 30+ days), folio_count per company (32.4ms). ✅ EXCEL EXPORT: GET /reports/company-aging/excel generates proper Excel file (5552 bytes) with correct content-type (59.1ms) - FIXED merged cell issue in Excel generation. ✅ PENDING AR: GET /folio/pending-ar returns array structure with company_id, company_name, total_outstanding, open_folios_count, days_outstanding, aging object (12.0ms). ✅ CITY LEDGER ACCOUNTS: GET /cashiering/city-ledger returns accounts array and total_count (9.2ms). ✅ CREATE ACCOUNT: POST /cashiering/city-ledger creates account with success=true, account_id, credit_limit=10000 (27.8ms). ✅ AR AGING REPORT: GET /cashiering/ar-aging-report returns aging_buckets (current, 30_days, 60_days, 90_plus), totals, generated_at (10.8ms). ✅ CITY LEDGER PAYMENT: POST /cashiering/city-ledger-payment processes payment with new_balance calculation - FIXED query parameter format (22.6ms). ✅ TRANSACTIONS: GET /cashiering/city-ledger/{account_id}/transactions returns summary with total_charges, total_payments, current_balance, transaction_count (12.4ms). AUTHENTICATION: Successfully tested with demo@hotel.com / demo123. BUG FIXES: Fixed Excel merged cell AttributeError, corrected payment endpoint parameter format. All AR/Finance functionality working perfectly for Turkish hotel finance operations."
@@ -5911,7 +5911,7 @@ agent_communication:
       - This blocks access to ALL application features and modules
       
       🔍 TECHNICAL FINDINGS:
-      - Frontend URL working: https://hata-giderelim.preview.emergentagent.com
+      - Frontend URL working: https://perm-selector.preview.emergentagent.com
       - Auth page renders correctly with proper form fields and styling
       - Backend error detected: ValueError in daily flash report endpoint (Invalid isoformat string: 'invalid-date')
       - Frontend shows no visible error messages to users
@@ -10575,7 +10575,7 @@ agent_communication:
         **COMPREHENSIVE VERIFICATION COMPLETED:**
         
         ✅ **AUTH PAGE NAVIGATION:**
-        - Successfully navigated to https://hata-giderelim.preview.emergentagent.com/auth
+        - Successfully navigated to https://perm-selector.preview.emergentagent.com/auth
         - Page loaded without errors
         - All UI elements rendered correctly
         
@@ -11396,7 +11396,7 @@ agent_communication:
       🏨 PMS GUESTS BACKEND FLOW TEST COMPLETED - PRODUCTION READY ✅
       
       **USER REQUEST:** Turkish language request to test PMS Guests backend flow
-      **BASE URL:** https://hata-giderelim.preview.emergentagent.com/api
+      **BASE URL:** https://perm-selector.preview.emergentagent.com/api
       **CREDENTIALS:** demo@hotel.com / demo123
       
       **COMPREHENSIVE TEST RESULTS:**
@@ -12923,7 +12923,7 @@ agent_communication:
       🏦 AR/FINANCE BACKEND TESTING COMPLETED - 100% SUCCESS RATE!
       
       **TEST OBJECTIVE:** Comprehensive testing of AR (Accounts Receivable) and City Ledger endpoints
-      **BASE URL:** https://hata-giderelim.preview.emergentagent.com/api
+      **BASE URL:** https://perm-selector.preview.emergentagent.com/api
       **AUTHENTICATION:** demo@hotel.com / demo123 ✅
       
       **COMPREHENSIVE AR/FINANCE TESTING RESULTS (8/8 PASSED - 100% SUCCESS):**
@@ -12992,7 +12992,7 @@ agent_communication:
       🏨 GROUPS BLOCKS ENDPOINT FILTER TESTING COMPLETED - 100% SUCCESS!
       
       **TEST OBJECTIVE:** Verify new filter parameters for /api/groups/blocks endpoint
-      **BASE URL:** https://hata-giderelim.preview.emergentagent.com/api
+      **BASE URL:** https://perm-selector.preview.emergentagent.com/api
       **AUTHENTICATION:** demo@hotel.com / demo123 ✅
       
       **COMPREHENSIVE FILTER TESTING RESULTS (6/6 PASSED - 100% SUCCESS):**
@@ -13324,7 +13324,7 @@ agent_communication:
        🎯 COMPREHENSIVE FRONTEND TESTING COMPLETED - PRODUCTION READY!
        
        **TEST EXECUTION DATE:** November 26, 2025
-       **BASE URL:** https://hata-giderelim.preview.emergentagent.com
+       **BASE URL:** https://perm-selector.preview.emergentagent.com
        **CREDENTIALS:** demo@hotel.com / demo123
        
        ═══════════════════════════════════════════════════════════════════════════
@@ -13574,7 +13574,7 @@ agent_communication:
        
        **TEST EXECUTION DATE:** November 27, 2025
        **TEST TYPE:** Fresh browser session with cleared cache/storage
-       **URL:** https://hata-giderelim.preview.emergentagent.com/reservation-calendar
+       **URL:** https://perm-selector.preview.emergentagent.com/reservation-calendar
        **CREDENTIALS:** demo@hotel.com / demo123
        
        ═══════════════════════════════════════════════════════════════════════════
@@ -13867,7 +13867,7 @@ agent_communication:
       🌙 NIGHT AUDIT BACKEND TESTING COMPLETED - 100% SUCCESS RATE!
       
       **TEST OBJECTIVE:** Comprehensive testing of Night Audit flow as requested by user
-      **BASE URL:** https://hata-giderelim.preview.emergentagent.com/api
+      **BASE URL:** https://perm-selector.preview.emergentagent.com/api
       **AUTHENTICATION:** demo@hotel.com / demo123 ✅
       **AUDIT DATE:** 2025-11-29 (yesterday's date)
       
@@ -13953,7 +13953,7 @@ agent_communication:
       🔍 SETTINGS OTA TAB TESTING COMPLETED - CRITICAL FRONTEND LOADING ISSUE IDENTIFIED
       
       **TEST OBJECTIVE:** Verify Settings page OTA tab for Booking.com integration settings
-      **URL TESTED:** https://hata-giderelim.preview.emergentagent.com/settings
+      **URL TESTED:** https://perm-selector.preview.emergentagent.com/settings
       **CREDENTIALS:** demo@hotel.com / demo123
       
       **CRITICAL FINDINGS:**
@@ -14039,7 +14039,7 @@ agent_communication:
       🏨 PMS FRONT DESK COMPREHENSIVE WORKFLOW TEST COMPLETED - 100% SUCCESS RATE
       
       **TEST OBJECTIVE:** Complete Front Desk section testing as requested in Turkish
-      **BASE URL:** https://hata-giderelim.preview.emergentagent.com
+      **BASE URL:** https://perm-selector.preview.emergentagent.com
       **CREDENTIALS:** demo@hotel.com / demo123
       
       **COMPREHENSIVE TEST RESULTS:**
@@ -14318,7 +14318,7 @@ agent_communication:
       🎯 AI DASHBOARD BRIEFING ENDPOINT TEST COMPLETED - 100% SUCCESS!
       
       **TEST OBJECTIVE:** Validate /api/ai/dashboard/briefing endpoint response structure for Dashboard.js compatibility
-      **BASE URL:** https://hata-giderelim.preview.emergentagent.com/api
+      **BASE URL:** https://perm-selector.preview.emergentagent.com/api
       **AUTHENTICATION:** demo@hotel.com / demo123 ✅
       
       **COMPREHENSIVE VALIDATION RESULTS:**

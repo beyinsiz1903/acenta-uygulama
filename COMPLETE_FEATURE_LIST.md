@@ -218,7 +218,7 @@
 ## 📋 QUICK START GUIDE
 
 **Login:**
-- URL: https://hata-giderelim.preview.emergentagent.com
+- URL: https://perm-selector.preview.emergentagent.com
 - Demo: demo@hotel.com / demo123
 
 **New User Registration:**

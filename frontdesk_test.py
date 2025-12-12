@@ -13,7 +13,7 @@ from typing import Dict, Any, Optional
 
 class FrontDeskTester:
     def __init__(self):
-        self.base_url = "https://hata-giderelim.preview.emergentagent.com/api"
+        self.base_url = "https://perm-selector.preview.emergentagent.com/api"
         self.session = requests.Session()
         self.session.headers.update({
             'Content-Type': 'application/json',

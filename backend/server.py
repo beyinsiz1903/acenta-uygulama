@@ -5750,7 +5750,8 @@ async def get_upsell_offers(
 @cached(ttl=300, key_prefix="flash_report")  # Cache for 5 min
 async def get_flash_report(
     date: Optional[str] = None,
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
+    _: None = Depends(require_module("reports")),
 ):
     """
     Daily Flash Report - Günlük özet rapor
@@ -9277,7 +9278,12 @@ async def cancel_room_block(
 
 @api_router.get("/reports/occupancy")
 @cached(ttl=600, key_prefix="report_occupancy")  # Cache for 10 minutes
-async def get_occupancy_report(start_date: str, end_date: str, current_user: User = Depends(get_current_user)):
+async def get_occupancy_report(
+    start_date: str,
+    end_date: str,
+    current_user: User = Depends(get_current_user),
+    _: None = Depends(require_module("reports")),
+):
     start = datetime.fromisoformat(start_date)
     end = datetime.fromisoformat(end_date)
 
@@ -9308,7 +9314,12 @@ async def get_occupancy_report(start_date: str, end_date: str, current_user: Use
 
 @api_router.get("/reports/revenue")
 @cached(ttl=600, key_prefix="report_revenue")  # Cache for 10 minutes
-async def get_revenue_report(start_date: str, end_date: str, current_user: User = Depends(get_current_user)):
+async def get_revenue_report(
+    start_date: str,
+    end_date: str,
+    current_user: User = Depends(get_current_user),
+    _: None = Depends(require_module("reports")),
+):
     start = datetime.fromisoformat(start_date)
     end = datetime.fromisoformat(end_date)
     bookings = await db.bookings.find({'tenant_id': current_user.tenant_id, 'status': {'$in': ['checked_in', 'checked_out']},
@@ -9330,7 +9341,11 @@ async def get_revenue_report(start_date: str, end_date: str, current_user: User 
 
 @api_router.get("/reports/daily-summary")
 @cached(ttl=300, key_prefix="report_daily_summary")  # Cache for 5 minutes
-async def get_daily_summary(date_str: Optional[str] = None, current_user: User = Depends(get_current_user)):
+async def get_daily_summary(
+    date_str: Optional[str] = None,
+    current_user: User = Depends(get_current_user),
+    _: None = Depends(require_module("reports")),
+):
     target_date = datetime.fromisoformat(date_str).date() if date_str else datetime.now(timezone.utc).date()
     start_of_day = datetime.combine(target_date, datetime.min.time())
     end_of_day = datetime.combine(target_date, datetime.max.time())
@@ -9346,7 +9361,11 @@ async def get_daily_summary(date_str: Optional[str] = None, current_user: User =
 
 @api_router.get("/reports/forecast")
 @cached(ttl=900, key_prefix="report_forecast")  # Cache for 15 min
-async def get_forecast(days: int = 30, current_user: User = Depends(get_current_user)):
+async def get_forecast(
+    days: int = 30,
+    current_user: User = Depends(get_current_user),
+    _: None = Depends(require_module("reports")),
+):
     today = datetime.now(timezone.utc).date()
     forecast_data = []
     for i in range(days):

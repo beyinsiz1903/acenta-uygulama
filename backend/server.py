@@ -6440,7 +6440,11 @@ async def browse_hotels(current_user: User = Depends(get_current_user)):
 # ============= PMS - ROOMS MANAGEMENT =============
 
 @api_router.post("/pms/rooms", response_model=Room)
-async def create_room(room_data: RoomCreate, current_user: User = Depends(get_current_user)):
+async def create_room(
+    room_data: RoomCreate,
+    current_user: User = Depends(get_current_user),
+    _: None = Depends(require_module("pms")),
+):
     room = Room(tenant_id=current_user.tenant_id, **room_data.model_dump())
     room_dict = room.model_dump()
     room_dict['created_at'] = room_dict['created_at'].isoformat()
@@ -7619,7 +7623,11 @@ async def post_room_charges(current_user: User = Depends(get_current_user)):
 # ============= GUEST MANAGEMENT =============
 
 @api_router.post("/pms/guests", response_model=Guest)
-async def create_guest(guest_data: GuestCreate, current_user: User = Depends(get_current_user)):
+async def create_guest(
+    guest_data: GuestCreate,
+    current_user: User = Depends(get_current_user),
+    _: None = Depends(require_module("pms")),
+):
     guest = Guest(tenant_id=current_user.tenant_id, **guest_data.model_dump())
     guest_dict = guest.model_dump()
     guest_dict['created_at'] = guest_dict['created_at'].isoformat()

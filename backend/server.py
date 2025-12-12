@@ -7752,7 +7752,8 @@ async def get_bookings(
     start_date: Optional[str] = None,
     end_date: Optional[str] = None,
     status: Optional[str] = None,
-    credentials: HTTPAuthorizationCredentials = Depends(security)
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    _: None = Depends(require_module("pms")),
 ):
     """Get bookings - INSTANT RESPONSE"""
     current_user = await get_current_user(credentials)

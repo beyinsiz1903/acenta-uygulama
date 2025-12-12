@@ -6453,7 +6453,8 @@ async def get_rooms(
     offset: int = 0,
     status: Optional[str] = None,
     room_type: Optional[str] = None,
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
+    _: None = Depends(require_module("pms")),
 ):
     """Get rooms with pagination - Optimized for large properties (550+ rooms)"""
     

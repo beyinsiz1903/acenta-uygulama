@@ -30021,6 +30021,88 @@ async def get_rms_publish_logs(
         
         if log.get('status') == 'completed':
             stats['successful'] += 1
+
+# ============= TENANT ADMIN ENDPOINTS (HOTEL MODULE MANAGEMENT) =============
+
+class TenantModulesUpdate(BaseModel):
+    modules: Dict[str, bool]
+
+
+@api_router.get("/admin/tenants")
+async def list_tenants(current_user: User = Depends(require_admin)):
+    """List all hotels/tenants for super admin users.
+
+    NOTE: Şu anda super admin mantığı UserRole.ADMIN üzerinden çalışıyor.
+    İleride isterseniz ayrı bir süper admin rolü ekleyebiliriz.
+    """
+    tenants = await db.tenants.find({}, {"_id": 0}).to_list(1000)
+
+    # Merge defaults for backward compatibility
+    for tenant in tenants:
+        tenant["modules"] = get_tenant_modules(tenant)
+
+    return {"tenants": tenants}
+
+
+@api_router.patch("/admin/tenants/{tenant_id}/modules")
+async def update_tenant_modules(
+    tenant_id: str,
+    payload: TenantModulesUpdate,
+    current_user: User = Depends(require_admin),
+):
+    """Update enabled modules for a specific hotel.
+
+    Body örneği:
+    {
+      "modules": {
+        "pms": true,
+        "reports": true,
+        "invoices": false,
+        "ai": true
+      }
+    }
+    """
+    # Try by logical id first
+    query = {"id": tenant_id}
+
+    update_doc = {"$set": {"modules": payload.modules}}
+
+    result = await db.tenants.update_one(query, update_doc)
+    if result.matched_count == 0:
+        # Fallback to Mongo _id
+        try:
+            from bson import ObjectId
+
+            result = await db.tenants.update_one(
+                {"_id": ObjectId(tenant_id)}, update_doc
+            )
+        except Exception:
+            result = None
+
+    if not result or result.matched_count == 0:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Otel bulunamadı",
+        )
+
+    # Return updated tenant with merged modules
+    tenant_doc = await db.tenants.find_one(query, {"_id": 0})
+    if not tenant_doc:
+        from bson import ObjectId
+
+        tenant_doc = await db.tenants.find_one(
+            {"_id": ObjectId(tenant_id)}, {"_id": 0}
+        )
+
+    if not tenant_doc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Otel bulunamadı",
+        )
+
+    tenant_doc["modules"] = get_tenant_modules(tenant_doc)
+    return tenant_doc
+
         elif log.get('status') == 'failed':
             stats['failed'] += 1
         

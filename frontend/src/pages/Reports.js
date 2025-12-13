@@ -31,6 +31,7 @@ const Reports = ({ user, tenant, onLogout }) => {
   const [loading, setLoading] = useState(false);
   const [selectedReports, setSelectedReports] = useState([]);
   const [showSelector, setShowSelector] = useState(false);
+  const [activeSection, setActiveSection] = useState('excel'); // 'excel' | 'night_audit'
 
   // All available reports
   const availableReports = [

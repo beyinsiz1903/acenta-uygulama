@@ -848,7 +848,7 @@ function App() {
           <Route
             path="/mobile/revenue"
             element={
-              isAuthenticated ? (
+              isAuthenticated && modules?.mobile_revenue !== false ? (
                 <RevenueMobile user={user} />
               ) : (
                 <Navigate to="/auth" replace />
@@ -888,7 +888,7 @@ function App() {
           <Route
             path="/mobile/revenue"
             element={
-              isAuthenticated ? (
+              isAuthenticated && modules?.mobile_revenue !== false ? (
                 <RevenueMobile user={user} />
               ) : (
                 <Navigate to="/auth" replace />

@@ -1587,6 +1587,91 @@ backend:
             **PRODUCTION READINESS:** ✅ READY
             Module-based authorization system is working perfectly with excellent backward compatibility and proper 200/403 behavior for all endpoints.
 
+frontend:
+  - task: "Login Flow with Demo User"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/AuthPage.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "testing"
+          comment: "Need to test login with demo@hotel.com / demo123 credentials"
+
+  - task: "Dashboard Module Cards Display (All Modules Open)"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/Dashboard.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "testing"
+          comment: "Need to verify PMS, Reports, Invoices, AI, Mobile, GM cards are visible in default tenant scenario"
+
+  - task: "Top Navigation Menu (All Modules Open)"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/components/Layout.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "testing"
+          comment: "Need to verify all expected menu items are visible: PMS, Reports, Invoices, Housekeeping, Maintenance, F&B, POS, Marketplace, Mobile App, GM menus"
+
+  - task: "Page Navigation and Route Access (All Modules Open)"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "testing"
+          comment: "Need to test navigation to key pages: /pms, /invoices, /reports, /ai-chatbot, /dynamic-pricing, /ai-whatsapp-concierge, /predictive-analytics, /reputation-center, /revenue-autopilot, /social-media-radar, /mobile, /mobile/housekeeping, /mobile/revenue, /gm-classic, /executive, /gm/enhanced"
+
+  - task: "Admin Tenants Module Configuration"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/AdminTenants.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "testing"
+          comment: "Need to test /admin/tenants page module switches and configuration persistence"
+
+  - task: "Restricted Modules Scenario - UI Behavior"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/Dashboard.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "testing"
+          comment: "Need to configure restricted modules via admin and test UI behavior: menu hiding, dashboard card filtering, route guards"
+
+  - task: "Route Guards for Restricted Modules"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "testing"
+          comment: "Need to test route guards prevent access to disabled modules and redirect appropriately"
+
 metadata:
   created_by: "main_agent"
   version: "1.0"

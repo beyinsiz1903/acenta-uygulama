@@ -1079,9 +1079,42 @@ function App() {
           />
           <Route path="/spa-wellness" element={isAuthenticated ? <Suspense fallback={<LoadingFallback />}><SpaWellness user={user} tenant={tenant} onLogout={handleLogout} /></Suspense> : <Navigate to="/auth" replace />} />
           <Route path="/meeting-events" element={isAuthenticated ? <Suspense fallback={<LoadingFallback />}><MeetingEvents user={user} tenant={tenant} onLogout={handleLogout} /></Suspense> : <Navigate to="/auth" replace />} />
-          <Route path="/ai-chatbot" element={isAuthenticated ? <Suspense fallback={<LoadingFallback />}><AIChatbot user={user} tenant={tenant} onLogout={handleLogout} /></Suspense> : <Navigate to="/auth" replace />} />
-          <Route path="/dynamic-pricing" element={isAuthenticated ? <Suspense fallback={<LoadingFallback />}><DynamicPricing user={user} tenant={tenant} onLogout={handleLogout} /></Suspense> : <Navigate to="/auth" replace />} />
-          <Route path="/reputation-center" element={isAuthenticated ? <Suspense fallback={<LoadingFallback />}><ReputationCenter user={user} tenant={tenant} onLogout={handleLogout} /></Suspense> : <Navigate to="/auth" replace />} />
+          <Route
+            path="/ai-chatbot"
+            element={
+              isAuthenticated && modules?.ai_chatbot !== false ? (
+                <Suspense fallback={<LoadingFallback />}>
+                  <AIChatbot user={user} tenant={tenant} onLogout={handleLogout} />
+                </Suspense>
+              ) : (
+                <Navigate to="/auth" replace />
+              )
+            }
+          />
+          <Route
+            path="/dynamic-pricing"
+            element={
+              isAuthenticated && modules?.ai_pricing !== false ? (
+                <Suspense fallback={<LoadingFallback />}>
+                  <DynamicPricing user={user} tenant={tenant} onLogout={handleLogout} />
+                </Suspense>
+              ) : (
+                <Navigate to="/auth" replace />
+              )
+            }
+          />
+          <Route
+            path="/reputation-center"
+            element={
+              isAuthenticated && modules?.ai_reputation !== false ? (
+                <Suspense fallback={<LoadingFallback />}>
+                  <ReputationCenter user={user} tenant={tenant} onLogout={handleLogout} />
+                </Suspense>
+              ) : (
+                <Navigate to="/auth" replace />
+              )
+            }
+          />
           <Route path="/multi-property" element={isAuthenticated ? <Suspense fallback={<LoadingFallback />}><MultiProperty user={user} tenant={tenant} onLogout={handleLogout} /></Suspense> : <Navigate to="/auth" replace />} />
           <Route path="/payment-gateway" element={isAuthenticated ? <Suspense fallback={<LoadingFallback />}><PaymentGateway user={user} tenant={tenant} onLogout={handleLogout} /></Suspense> : <Navigate to="/auth" replace />} />
           <Route path="/advanced-loyalty" element={isAuthenticated ? <Suspense fallback={<LoadingFallback />}><AdvancedLoyalty user={user} tenant={tenant} onLogout={handleLogout} /></Suspense> : <Navigate to="/auth" replace />} />

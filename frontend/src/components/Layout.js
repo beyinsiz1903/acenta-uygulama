@@ -48,6 +48,8 @@ const Layout = ({ children, user, tenant, onLogout, currentModule }) => {
     { name: t('nav.loyalty'), path: '/loyalty', icon: Award, id: 'loyalty', moduleKey: 'pms' },
     { name: t('nav.marketplace'), path: '/marketplace', icon: ShoppingCart, id: 'marketplace', moduleKey: 'pms' },
     { name: '⚙️ Settings', path: '/settings', icon: SettingsIcon, id: 'settings' },
+    // Sadece admin kullanıcılar için Admin/Otel Yönetimi menüsü
+    { name: 'Admin', path: '/admin/tenants', icon: SettingsIcon, id: 'admin-tenants' },
     { name: '✨ New Features', path: '/features', icon: Award, id: 'features', highlight: true },
     { name: '📱 Mobile App', path: '/mobile', icon: Smartphone, id: 'mobile', highlight: true, moduleKey: 'pms' },
   ];

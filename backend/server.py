@@ -5873,6 +5873,9 @@ async def get_flash_report(
                 '$lte': today_end.isoformat()
             }
         }, {'_id': 0, 'total_amount': 1}).to_list(1000)
+        fnb_revenue = sum([o.get('total_amount', 0) for o in fnb_orders])
+    except:
+        pass
 
 
 @api_router.get("/reports/official-guest-list")

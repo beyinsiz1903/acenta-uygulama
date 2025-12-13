@@ -5982,10 +5982,6 @@ async def get_official_guest_list(
         'rows': rows,
     }
 
-        fnb_revenue = sum([o.get('total_amount', 0) for o in fnb_orders])
-    except:
-        pass
-    
     # Other Revenue (spa, laundry, minibar)
     other_revenue = 0.0
     try:

@@ -72,6 +72,7 @@ import CostManagement from "@/pages/CostManagement";
 import FeaturesShowcase from "@/pages/FeaturesShowcase";
 import HousekeepingDashboard from "@/pages/HousekeepingDashboard";
 import POSDashboard from "@/pages/POSDashboard";
+const AdminTenants = lazy(() => import("@/pages/AdminTenants"));
 
 // New 5-star hotel features
 const OnlineCheckin = lazy(() => import("@/pages/OnlineCheckin"));

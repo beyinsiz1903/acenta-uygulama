@@ -858,7 +858,7 @@ function App() {
           <Route
             path="/gm/enhanced"
             element={
-              isAuthenticated ? (
+              isAuthenticated && modules?.gm_dashboards !== false ? (
                 <GMEnhancedDashboard user={user} />
               ) : (
                 <Navigate to="/auth" replace />

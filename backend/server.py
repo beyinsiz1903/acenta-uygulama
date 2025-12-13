@@ -11993,6 +11993,81 @@ async def export_revenue_detail_excel(
             'payment_count': todays_payment_count
         },
         'mtd_collections': {
+
+
+@api_router.get("/reports/channel-distribution/excel")
+async def export_channel_distribution_excel(
+    start_date: str,
+    end_date: str,
+    current_user: User = Depends(get_current_user),
+    _: None = Depends(require_module("reports")),
+):
+    """Sales channel distribution report (OTA, Direct, Corporate, etc.)."""
+    start = datetime.fromisoformat(start_date)
+    end = datetime.fromisoformat(end_date)
+
+    if start.tzinfo is None:
+        start = start.replace(tzinfo=timezone.utc)
+    if end.tzinfo is None:
+        end = end.replace(tzinfo=timezone.utc)
+
+    bookings = await db.bookings.find(
+        {
+            'tenant_id': current_user.tenant_id,
+            'status': {'$in': ['confirmed', 'guaranteed', 'checked_in', 'checked_out']},
+            'check_in': {'$gte': start.isoformat(), '$lte': end.isoformat()},
+        },
+        {
+            '_id': 0,
+            'total_amount': 1,
+            'channel': 1,
+            'market_segment': 1,
+        },
+    ).to_list(20000)
+
+    channel_stats: Dict[str, Dict[str, Any]] = {}
+
+    for b in bookings:
+        channel = str(b.get('channel') or 'DIRECT')
+        if channel not in channel_stats:
+            channel_stats[channel] = {
+                'channel': channel,
+                'bookings': 0,
+                'revenue': 0.0,
+            }
+        channel_stats[channel]['bookings'] += 1
+        channel_stats[channel]['revenue'] += b.get('total_amount') or 0.0
+
+    total_revenue = sum(v['revenue'] for v in channel_stats.values()) or 1.0
+
+    headers = [
+        'Channel',
+        'Bookings',
+        'Revenue',
+        'Share %',
+    ]
+
+    data: List[List[Any]] = []
+    for key, row in sorted(channel_stats.items(), key=lambda x: x[0]):
+        share = (row['revenue'] / total_revenue) * 100.0
+        data.append([
+            row['channel'],
+            row['bookings'],
+            round(row['revenue'], 2),
+            round(share, 2),
+        ])
+
+    title = f"Channel Distribution {start_date} to {end_date}"
+    wb = create_excel_workbook(
+        title=title,
+        headers=headers,
+        data=data,
+        sheet_name="Channels",
+    )
+
+    filename = f"channel_distribution_{start_date}_to_{end_date}.xlsx"
+    return excel_response(wb, filename)
+
             'amount': round(mtd_collections, 2),
             'collection_rate_percentage': round(collection_rate, 2)
         },

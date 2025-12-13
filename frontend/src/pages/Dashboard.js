@@ -566,11 +566,30 @@ const Dashboard = ({ user, tenant, modules, onLogout }) => {
     if (!modules) return visibleModules;
 
     return visibleModules.filter((m) => {
-      // Basit eşleme: ana modülleri backend modules ile bağlıyoruz
+      // PMS & mobil
       if (m.path === '/pms') return modules.pms !== false;
+      if (m.path === '/mobile' || m.path?.startsWith('/mobile/')) return modules.pms_mobile !== false;
+
+      // Raporlar
       if (m.path === '/reports' || m.path === '/flash-report') return modules.reports !== false;
-      if (m.path === '/invoices' || m.path === '/efatura' || m.path === '/e-fatura') return modules.invoices !== false;
+
+      // Faturalar & finans
+      if (m.path === '/invoices' || m.path === '/efatura' || m.path === '/e-fatura' || m.path === '/pending-ar' || m.path === '/cost-management') {
+        return modules.invoices !== false;
+      }
+
+      // AI alt modülleri
+      if (m.path === '/ai-chatbot') return modules.ai_chatbot !== false;
+      if (m.path === '/dynamic-pricing') return modules.ai_pricing !== false;
+      if (m.path === '/ai-whatsapp-concierge') return modules.ai_whatsapp !== false;
+      if (m.path === '/predictive-analytics') return modules.ai_predictive !== false;
+      if (m.path === '/reputation-center') return modules.ai_reputation !== false;
+      if (m.path === '/revenue-autopilot') return modules.ai_revenue_autopilot !== false;
+      if (m.path === '/social-media-radar') return modules.ai_social_radar !== false;
+
+      // AI kategorisi genel fallback: ana ai kapalıysa gizle
       if (m.category === 'ai' || m.path === '/ai-pms') return modules.ai !== false;
+
       // Diğer modüller şimdilik her zaman görünür
       return true;
     });

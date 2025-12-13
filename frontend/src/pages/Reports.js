@@ -429,6 +429,7 @@ const Reports = ({ user, tenant, onLogout }) => {
             </CardContent>
           </Card>
         </div>
+        )}
 
       </div>
     </Layout>

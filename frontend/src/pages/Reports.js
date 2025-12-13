@@ -324,6 +324,34 @@ const Reports = ({ user, tenant, onLogout }) => {
           </Card>
         )}
 
+        {/* Official Guest List Shortcut */}
+        <Card className="mt-6 border-green-200 bg-green-50/40">
+          <CardContent className="pt-6 flex items-start justify-between gap-4">
+            <div className="flex gap-3 flex-1">
+              <FileText className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-1">Resmi Müşteri Listesi (Maliye Raporu)</h4>
+                <p className="text-sm text-gray-600 mb-1">
+                  Maliye veya resmi denetim geldiğinde, seçtiğiniz gün için otelde konaklayan tüm
+                  misafirlerin resmi listesini tek ekrandan alabilirsiniz. Liste, TCKN/pasaport,
+                  oda, giriş-çıkış ve toplam tutarı içerir.
+                </p>
+                <p className="text-xs text-gray-500">
+                  İpucu: İhtiyaç anında hızlı erişim için bu sayfayı sık kullananlara ekleyin.
+                </p>
+              </div>
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-xs bg-white"
+              onClick={() => navigate('/reports/official-guest-list')}
+            >
+              Resmi Müşteri Listesine Git
+            </Button>
+          </CardContent>
+        </Card>
+
         {/* Info Card */}
         <Card className="mt-6 bg-blue-50 border-blue-200">
           <CardContent className="pt-6 flex items-start justify-between gap-4">

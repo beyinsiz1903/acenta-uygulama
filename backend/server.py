@@ -11833,6 +11833,119 @@ async def get_finance_snapshot(current_user: User = Depends(get_current_user)):
     month_start_dt = datetime.combine(month_start, datetime.min.time()).replace(tzinfo=timezone.utc)
     
     mtd_payments = await db.payments.find({
+
+
+@api_router.get("/reports/revenue-detail/excel")
+async def export_revenue_detail_excel(
+    start_date: str,
+    end_date: str,
+    current_user: User = Depends(get_current_user),
+    _: None = Depends(require_module("reports")),
+):
+    """Detailed room revenue by date, room type and rate code.
+
+    NOTE: Uses bookings collection and groups by date, room_type and rate_code-like fields.
+    """
+    start = datetime.fromisoformat(start_date)
+    end = datetime.fromisoformat(end_date)
+
+    if start.tzinfo is None:
+        start = start.replace(tzinfo=timezone.utc)
+    if end.tzinfo is None:
+        end = end.replace(tzinfo=timezone.utc)
+
+    # Fetch bookings in range
+    bookings = await db.bookings.find(
+        {
+            'tenant_id': current_user.tenant_id,
+            'status': {'$in': ['confirmed', 'guaranteed', 'checked_in', 'checked_out']},
+            '$or': [
+                {'check_in': {'$gte': start.isoformat(), '$lte': end.isoformat()}},
+                {'check_out': {'$gte': start.isoformat(), '$lte': end.isoformat()}},
+                {'check_in': {'$lte': start.isoformat()}, 'check_out': {'$gte': end.isoformat()}},
+            ],
+        },
+        {
+            '_id': 0,
+            'check_in': 1,
+            'check_out': 1,
+            'total_amount': 1,
+            'room_type': 1,
+            'rate_plan': 1,
+            'market_segment': 1,
+        },
+    ).to_list(10000)
+
+    # Aggregate per stay-date
+    daily_stats: Dict[tuple, Dict[str, Any]] = {}
+
+    for b in bookings:
+        try:
+            ci = datetime.fromisoformat(b['check_in'])
+            co = datetime.fromisoformat(b['check_out'])
+        except Exception:
+            continue
+
+        # Normalize to date range
+        ci_date = max(ci.date(), start.date())
+        co_date = min(co.date(), end.date())
+
+        days = (co_date - ci_date).days or 1
+        daily_amount = (b.get('total_amount') or 0) / days
+
+        for i in range(days):
+            d = ci_date + timedelta(days=i)
+            key = (
+                d.isoformat(),
+                b.get('room_type', 'STD'),
+                b.get('rate_plan', 'Standard'),
+            )
+            if key not in daily_stats:
+                daily_stats[key] = {
+                    'date': d.isoformat(),
+                    'room_type': key[1],
+                    'rate_plan': key[2],
+                    'nights': 0,
+                    'revenue': 0.0,
+                }
+
+            daily_stats[key]['nights'] += 1
+            daily_stats[key]['revenue'] += daily_amount
+
+    # Prepare Excel
+    headers = [
+        'Date',
+        'Room Type',
+        'Rate Plan',
+        'Nights',
+        'Revenue',
+        'ADR',
+    ]
+
+    data: List[List[Any]] = []
+    for key, row in sorted(daily_stats.items(), key=lambda x: (x[1]['date'], x[1]['room_type'])):
+        nights = row['nights'] or 1
+        adr = row['revenue'] / nights
+        data.append([
+            row['date'],
+            row['room_type'],
+            row['rate_plan'],
+            row['nights'],
+            round(row['revenue'], 2),
+            round(adr, 2),
+        ])
+
+    title = f"Revenue Detail {start_date} to {end_date}"
+    wb = create_excel_workbook(
+        title=title,
+        headers=headers,
+        data=data,
+        sheet_name="Revenue Detail",
+    )
+
+    filename = f"revenue_detail_{start_date}_to_{end_date}.xlsx"
+    return excel_response(wb, filename)
+
         'tenant_id': current_user.tenant_id,
         'processed_at': {
             '$gte': month_start_dt.isoformat(),

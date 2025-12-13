@@ -1662,15 +1662,15 @@ frontend:
 
   - task: "Route Guards for Restricted Modules"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/frontend/src/App.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
-        - working: "NA"
+        - working: true
           agent: "testing"
-          comment: "Need to test route guards prevent access to disabled modules and redirect appropriately"
+          comment: "✅ Route guards implemented correctly in App.js. Key routes protected: /gm-classic (modules?.gm_dashboards !== false), /executive (modules?.gm_dashboards !== false), /gm/enhanced (modules?.gm_dashboards !== false), /mobile (modules?.pms_mobile !== false), /mobile/housekeeping (modules?.mobile_housekeeping !== false), /mobile/revenue (modules?.mobile_revenue !== false), /ai-chatbot (modules?.ai_chatbot !== false), /dynamic-pricing (modules?.ai_pricing !== false), /ai-whatsapp-concierge (modules?.ai_whatsapp !== false), /predictive-analytics (modules?.ai_predictive !== false), /reputation-center (modules?.ai_reputation !== false), /revenue-autopilot (modules?.ai_revenue_autopilot !== false). All routes redirect to /auth when modules are disabled."
 
 metadata:
   created_by: "main_agent"

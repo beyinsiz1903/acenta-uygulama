@@ -11933,6 +11933,59 @@ async def export_revenue_detail_excel(
             row['nights'],
             round(row['revenue'], 2),
             round(adr, 2),
+
+
+@api_router.get("/reports/operations-daily-summary/excel")
+async def export_operations_daily_summary_excel(
+    date: str,
+    current_user: User = Depends(get_current_user),
+    _: None = Depends(require_module("reports")),
+):
+    """Daily operations summary: arrivals, departures, in-house guests."""
+    target = datetime.fromisoformat(date)
+    if target.tzinfo is None:
+        target = target.replace(tzinfo=timezone.utc)
+
+    day_start = datetime.combine(target.date(), datetime.min.time()).replace(tzinfo=timezone.utc)
+    day_end = datetime.combine(target.date(), datetime.max.time()).replace(tzinfo=timezone.utc)
+
+    arrivals = await db.bookings.count_documents({
+        'tenant_id': current_user.tenant_id,
+        'check_in': {'$gte': day_start.isoformat(), '$lte': day_end.isoformat()},
+        'status': {'$in': ['confirmed', 'guaranteed', 'checked_in']},
+    })
+
+    departures = await db.bookings.count_documents({
+        'tenant_id': current_user.tenant_id,
+        'check_out': {'$gte': day_start.isoformat(), '$lte': day_end.isoformat()},
+        'status': {'$in': ['checked_in', 'checked_out']},
+    })
+
+    in_house = await db.bookings.count_documents({
+        'tenant_id': current_user.tenant_id,
+        'status': 'checked_in',
+    })
+
+    headers = ['Metric', 'Value']
+    data = [
+        ['Date', target.date().isoformat()],
+        ['', ''],
+        ['Arrivals', arrivals],
+        ['Departures', departures],
+        ['In-House Guests', in_house],
+    ]
+
+    title = f"Operations Daily Summary {target.date().isoformat()}"
+    wb = create_excel_workbook(
+        title=title,
+        headers=headers,
+        data=data,
+        sheet_name="Operations Summary",
+    )
+
+    filename = f"operations_daily_summary_{target.date().isoformat()}.xlsx"
+    return excel_response(wb, filename)
+
         ])
 
     title = f"Revenue Detail {start_date} to {end_date}"

@@ -27035,7 +27035,8 @@ async def get_my_permissions(
 
 @api_router.get("/mobile/staff/dashboard")
 async def get_staff_mobile_dashboard(
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
+    _: None = Depends(require_module("pms_mobile")),
 ):
     """
     Mobile staff dashboard

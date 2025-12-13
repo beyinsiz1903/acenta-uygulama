@@ -148,6 +148,15 @@ const ModuleReport = ({ user, tenant, onLogout }) => {
               />
               <span>Fatura modülü kapalı olanlar</span>
             </label>
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs"
+              onClick={handleExportCsv}
+              disabled={loading || !filteredRows.length}
+            >
+              CSV Dışa Aktar
+            </Button>
           </div>
         </div>
 

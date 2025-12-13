@@ -35,10 +35,11 @@ const Reports = ({ user, tenant, onLogout }) => {
 
   // All available reports
   const availableReports = [
+    // FINANS RAPORLARI
     {
       id: 'daily-flash',
       name: 'Daily Flash Report',
-      category: 'Financial',
+      category: 'financial',
       icon: DollarSign,
       endpoint: '/reports/daily-flash/excel',
       needsDateRange: false,
@@ -47,29 +48,69 @@ const Reports = ({ user, tenant, onLogout }) => {
     {
       id: 'company-aging',
       name: 'Company Aging Report',
-      category: 'Financial',
+      category: 'financial',
       icon: DollarSign,
       endpoint: '/reports/company-aging/excel',
       needsDateRange: false,
       description: 'Accounts receivable aging by company'
     },
     {
+      id: 'revenue-detail',
+      name: 'Revenue Detail Report',
+      category: 'financial',
+      icon: DollarSign,
+      endpoint: '/reports/revenue-detail/excel',
+      needsDateRange: true,
+      description: 'Detailed room revenue by date, room type and rate code'
+    },
+    {
+      id: 'forecast-detail',
+      name: 'Forecast Detail Report',
+      category: 'financial',
+      icon: Calendar,
+      endpoint: '/reports/forecast-detail/excel',
+      needsDateRange: true,
+      description: 'Forecasted occupancy and revenue by date for upcoming periods'
+    },
+
+    // OPERASYON RAPORLARI
+    {
       id: 'housekeeping-efficiency',
       name: 'Housekeeping Efficiency',
-      category: 'Operational',
+      category: 'operational',
       icon: Building,
       endpoint: '/reports/housekeeping-efficiency/excel',
       needsDateRange: true,
       description: 'Staff performance and task completion'
     },
     {
+      id: 'operations-daily-summary',
+      name: 'Operations Daily Summary',
+      category: 'operational',
+      icon: Calendar,
+      endpoint: '/reports/operations-daily-summary/excel',
+      needsDateRange: false,
+      description: 'Daily summary of arrivals, departures and in-house guests'
+    },
+
+    // PAZAR / MARKET RAPORLARI
+    {
       id: 'market-segment',
       name: 'Market Segment Analysis',
-      category: 'Market',
+      category: 'market',
       icon: TrendingUp,
       endpoint: '/reports/market-segment/excel',
       needsDateRange: true,
       description: 'Revenue by market segment and rate type'
+    },
+    {
+      id: 'channel-distribution',
+      name: 'Channel Distribution Report',
+      category: 'market',
+      icon: TrendingUp,
+      endpoint: '/reports/channel-distribution/excel',
+      needsDateRange: true,
+      description: 'Production and revenue by sales channel (OTA, direct, corporate)'
     }
   ];
 

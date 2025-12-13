@@ -195,11 +195,13 @@ function App() {
     const token = localStorage.getItem('token');
     const storedUser = localStorage.getItem('user');
     const storedTenant = localStorage.getItem('tenant');
+    const storedModules = localStorage.getItem('modules');
     
     console.log('📦 LocalStorage check:', {
       hasToken: !!token,
       hasUser: !!storedUser,
-      hasTenant: !!storedTenant
+      hasTenant: !!storedTenant,
+      hasModules: !!storedModules,
     });
     
     if (token && storedUser) {
@@ -213,6 +215,14 @@ function App() {
             setTenant(JSON.parse(storedTenant));
           } catch (e) {
             console.warn('Failed to parse tenant data:', e);
+          }
+        }
+
+        if (storedModules) {
+          try {
+            setModules(JSON.parse(storedModules));
+          } catch (e) {
+            console.warn('Failed to parse modules data:', e);
           }
         }
         setIsAuthenticated(true);

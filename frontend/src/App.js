@@ -210,20 +210,30 @@ function App() {
         const parsedUser = JSON.parse(storedUser);
         setUser(parsedUser);
         
+        let parsedTenant = null;
         if (storedTenant && storedTenant !== 'null') {
           try {
-            setTenant(JSON.parse(storedTenant));
+            parsedTenant = JSON.parse(storedTenant);
           } catch (e) {
             console.warn('Failed to parse tenant data:', e);
           }
         }
 
+        let parsedModules = null;
         if (storedModules) {
           try {
-            setModules(JSON.parse(storedModules));
+            parsedModules = JSON.parse(storedModules);
+            setModules(parsedModules);
           } catch (e) {
             console.warn('Failed to parse modules data:', e);
           }
+        }
+
+        // Tenant nesnesine modules alanını merge et
+        if (parsedTenant) {
+          setTenant(parsedModules ? { ...parsedTenant, modules: parsedModules } : parsedTenant);
+        } else {
+          setTenant(null);
         }
         setIsAuthenticated(true);
         console.log('✅ Auth state restored successfully');
@@ -233,6 +243,7 @@ function App() {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         localStorage.removeItem('tenant');
+        localStorage.removeItem('modules');
       }
     } else {
       console.log('ℹ️ No auth data found in localStorage');

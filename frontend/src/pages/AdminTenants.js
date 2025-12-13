@@ -6,10 +6,24 @@ import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 
 const MODULE_KEYS = [
-  { key: 'pms', label: 'PMS' },
+  // PMS ve çekirdek modüller
+  { key: 'pms', label: 'PMS (Masaüstü)' },
+  { key: 'pms_mobile', label: 'PMS Mobil & Mobil Uygulamalar' },
+  { key: 'gm_dashboards', label: 'GM & Executive Dashboardlar' },
+
+  // Raporlama & Finans
   { key: 'reports', label: 'Raporlar' },
-  { key: 'invoices', label: 'Faturalar' },
-  { key: 'ai', label: 'AI Modülleri' },
+  { key: 'invoices', label: 'Fatura & Finans Modülleri' },
+
+  // AI genel anahtar ve alt modüller
+  { key: 'ai', label: 'AI Genel Anahtar (hepsini aç/kapat)' },
+  { key: 'ai_chatbot', label: 'AI Chatbot' },
+  { key: 'ai_pricing', label: 'AI Dynamic Pricing' },
+  { key: 'ai_whatsapp', label: 'AI WhatsApp Concierge' },
+  { key: 'ai_predictive', label: 'AI Tahminler (Predictive Analytics)' },
+  { key: 'ai_reputation', label: 'AI Reputation / Review Analizi' },
+  { key: 'ai_revenue_autopilot', label: 'AI Revenue Autopilot' },
+  { key: 'ai_social_radar', label: 'AI Social Media Radar' },
 ];
 
 const AdminTenants = ({ user, tenant, onLogout }) => {

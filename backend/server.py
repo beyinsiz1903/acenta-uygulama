@@ -2356,10 +2356,21 @@ def generate_time_based_qr_token(booking_id: str, expiry_hours: int = 72) -> str
 # ============= TENANT MODULE & ADMIN HELPERS =============
 
 MODULE_DEFAULTS: Dict[str, bool] = {
+    # Ana modüller
     "pms": True,
+    "pms_mobile": True,
+    "gm_dashboards": True,
     "reports": True,
     "invoices": True,
+    # AI genel anahtar ve alt modüller
     "ai": True,
+    "ai_chatbot": True,
+    "ai_pricing": True,
+    "ai_whatsapp": True,
+    "ai_predictive": True,
+    "ai_reputation": True,
+    "ai_revenue_autopilot": True,
+    "ai_social_radar": True,
 }
 
 

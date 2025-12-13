@@ -245,10 +245,26 @@ function App() {
     localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(userData));
     localStorage.setItem('tenant', tenantData ? JSON.stringify(tenantData) : 'null');
+
+    // Tenant modüllerini subscription endpoint'inden çek
+    const fetchModules = async () => {
+      try {
+        const res = await axios.get('/subscription/current');
+        const tenantModules = res.data?.modules || null;
+        if (tenantModules) {
+          localStorage.setItem('modules', JSON.stringify(tenantModules));
+          setModules(tenantModules);
+        }
+      } catch (error) {
+        console.warn('Failed to load tenant modules, using default behavior (all enabled).', error);
+      }
+    };
+
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     setUser(userData);
     setTenant(tenantData);
     setIsAuthenticated(true);
+    fetchModules();
     console.log('✅ Auth state updated:', { isAuthenticated: true, user: userData?.email });
   };
 

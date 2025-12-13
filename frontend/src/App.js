@@ -272,9 +272,11 @@ function App() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     localStorage.removeItem('tenant');
+    localStorage.removeItem('modules');
     delete axios.defaults.headers.common['Authorization'];
     setUser(null);
     setTenant(null);
+    setModules(null);
     setIsAuthenticated(false);
   };
 

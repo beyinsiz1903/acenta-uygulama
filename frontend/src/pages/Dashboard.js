@@ -19,7 +19,7 @@ const dashboardCache = {
   CACHE_DURATION: 30000 // 30 seconds
 };
 
-const Dashboard = ({ user, tenant, onLogout }) => {
+const Dashboard = ({ user, tenant, modules, onLogout }) => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [stats, setStats] = useState(dashboardCache.stats);

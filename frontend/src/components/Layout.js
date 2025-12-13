@@ -83,6 +83,12 @@ const Layout = ({ children, user, tenant, onLogout, currentModule }) => {
               style={{ scrollBehavior: 'smooth' }}
             >
               {navigation.map((item) => {
+                // Eğer tenant.modules varsa, backend modül yetkilerine göre menüyü filtrele
+                if (tenant?.modules && item.moduleKey) {
+                  if (tenant.modules[item.moduleKey] === false) {
+                    return null;
+                  }
+                }
                 const Icon = item.icon;
                 const isActive = currentModule === item.id;
                 return (

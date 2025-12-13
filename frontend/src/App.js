@@ -706,6 +706,18 @@ function App() {
               )
             }
           />
+          <Route
+            path="/reports/official-guest-list"
+            element={
+              isAuthenticated ? (
+                <Suspense fallback={<LoadingFallback />}>
+                  <OfficialGuestList user={user} tenant={tenant} onLogout={handleLogout} />
+                </Suspense>
+              ) : (
+                <Navigate to="/auth" replace />
+              )
+            }
+          />
           {/* Mobile Department Routes */}
           <Route
             path="/mobile"

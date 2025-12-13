@@ -34,8 +34,8 @@ const Layout = ({ children, user, tenant, onLogout, currentModule }) => {
   const navigation = [
     { name: t('nav.dashboard'), path: '/', icon: Home, id: 'dashboard' },
     { name: t('nav.pms'), path: '/pms', icon: Hotel, id: 'pms', moduleKey: 'pms' },
-    { name: 'Calendar', path: '/reservation-calendar', icon: Calendar, id: 'calendar' },
-    { name: t('nav.invoices'), path: '/invoices', icon: FileText, id: 'invoices' },
+    { name: 'Calendar', path: '/reservation-calendar', icon: Calendar, id: 'calendar', moduleKey: 'pms' },
+    { name: t('nav.invoices'), path: '/invoices', icon: FileText, id: 'invoices', moduleKey: 'invoices' },
     { name: 'Pending AR', path: '/pending-ar', icon: DollarSign, id: 'pending-ar' },
     { name: 'Cost Management', path: '/cost-management', icon: TrendingUp, id: 'cost-management' },
     { name: 'Reports', path: '/reports', icon: FileText, id: 'reports' },

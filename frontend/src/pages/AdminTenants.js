@@ -4,28 +4,46 @@ import Layout from '@/components/Layout';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
+import { Link } from 'react-router-dom';
 
-const MODULE_KEYS = [
-  // PMS ve çekirdek modüller
-  { key: 'pms', label: 'PMS (Masaüstü)' },
-  { key: 'pms_mobile', label: 'PMS Mobil Ana Erişim' },
-  { key: 'mobile_housekeeping', label: 'Mobil Housekeeping' },
-  { key: 'mobile_revenue', label: 'Mobil Revenue' },
-  { key: 'gm_dashboards', label: 'GM & Executive Dashboardlar' },
-
-  // Raporlama & Finans
-  { key: 'reports', label: 'Raporlar' },
-  { key: 'invoices', label: 'Fatura & Finans Modülleri' },
-
-  // AI genel anahtar ve alt modüller
-  { key: 'ai', label: 'AI Genel Anahtar (hepsini aç/kapat)' },
-  { key: 'ai_chatbot', label: 'AI Chatbot' },
-  { key: 'ai_pricing', label: 'AI Dynamic Pricing' },
-  { key: 'ai_whatsapp', label: 'AI WhatsApp Concierge' },
-  { key: 'ai_predictive', label: 'AI Tahminler (Predictive Analytics)' },
-  { key: 'ai_reputation', label: 'AI Reputation / Review Analizi' },
-  { key: 'ai_revenue_autopilot', label: 'AI Revenue Autopilot' },
-  { key: 'ai_social_radar', label: 'AI Social Media Radar' },
+const MODULE_GROUPS = [
+  {
+    id: 'pms',
+    title: 'PMS & Operasyon',
+    description: 'Ön büro, oda yönetimi ve günlük operasyon modülleri',
+    items: [
+      { key: 'pms', label: 'PMS (Masaüstü)', hint: 'Ana PMS ekranı, rezervasyon ve oda yönetimi' },
+      { key: 'pms_mobile', label: 'PMS Mobil Ana Erişim', hint: 'Personel için mobil PMS ana paneli' },
+      { key: 'mobile_housekeeping', label: 'Mobil Housekeeping', hint: 'Kat hizmetleri için mobil görev listesi ve oda durumu' },
+      { key: 'mobile_revenue', label: 'Mobil Revenue', hint: 'Gelir yöneticileri için mobil revenue ekranları' },
+      { key: 'gm_dashboards', label: 'GM & Executive Dashboardlar', hint: 'Genel Müdür ve üst yönetim için özet dashboardlar' },
+    ],
+  },
+  {
+    id: 'reports_finance',
+    title: 'Raporlama & Finans',
+    description: 'Gelir, doluluk ve fatura/finans raporları',
+    items: [
+      { key: 'reports', label: 'Raporlar', hint: 'Flash report, doluluk, gelir ve forecast raporları' },
+      { key: 'invoices', label: 'Fatura & Finans Modülleri', hint: 'Fatura, alacak takibi ve mali raporlar' },
+    ],
+  },
+  {
+    id: 'ai',
+    title: 'Yapay Zeka Modülleri',
+    description: 'AI destekli fiyatlama, chatbot ve analitik özellikler',
+    items: [
+      { key: 'ai', label: 'AI Genel Anahtar', hint: 'Tüm AI modüllerini toplu aç/kapat (alt modüllerin üst anahtarı)' },
+      { key: 'ai_chatbot', label: 'AI Chatbot', hint: 'Misafir sorularına yanıt veren akıllı asistan' },
+      { key: 'ai_pricing', label: 'AI Dynamic Pricing', hint: 'Doluluk, tarih ve rakip fiyatlarına göre oda fiyat önerileri' },
+      { key: 'ai_whatsapp', label: 'AI WhatsApp Concierge', hint: 'WhatsApp üzerinden concierge ve misafir iletişimi' },
+      { key: 'ai_predictive', label: 'AI Tahminler (Predictive Analytics)', hint: 'Talep ve performans tahminleri' },
+      { key: 'ai_reputation', label: 'AI Reputation / Review Analizi', hint: 'Yorum ve puanlamaları otomatik analiz eder' },
+      { key: 'ai_revenue_autopilot', label: 'AI Revenue Autopilot', hint: 'Gelir yönetimi aksiyonlarını otomatikleştirme' },
+      { key: 'ai_social_radar', label: 'AI Social Media Radar', hint: 'Sosyal medya ve online görünürlük takibi' },
+    ],
+  },
 ];
 
 const AdminTenants = ({ user, tenant, onLogout }) => {

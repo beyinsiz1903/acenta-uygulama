@@ -1008,6 +1008,18 @@ function App() {
               )
             }
           />
+          <Route
+            path="/admin/module-report"
+            element={
+              isAuthenticated && user?.role === 'admin' ? (
+                <Suspense fallback={<LoadingFallback />}>
+                  <ModuleReport user={user} tenant={tenant} onLogout={handleLogout} />
+                </Suspense>
+              ) : (
+                <Navigate to="/auth" replace />
+              )
+            }
+          />
           
           {/* New 5-Star Hotel Features */}
           <Route

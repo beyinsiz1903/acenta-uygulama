@@ -595,7 +595,7 @@ const Dashboard = ({ user, tenant, modules, onLogout }) => {
     });
 
     return categories;
-  }, [modules]);
+  }, [filteredModules]);
 
   return (
     <Layout user={user} tenant={tenant} onLogout={onLogout} currentModule="dashboard">

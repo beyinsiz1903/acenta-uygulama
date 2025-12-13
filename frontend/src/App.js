@@ -718,7 +718,7 @@ function App() {
           <Route
             path="/mobile/housekeeping"
             element={
-              isAuthenticated ? (
+              isAuthenticated && modules?.mobile_housekeeping !== false ? (
                 <MobileHousekeeping user={user} />
               ) : (
                 <Navigate to="/auth" replace />

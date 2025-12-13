@@ -33,7 +33,7 @@ const Layout = ({ children, user, tenant, onLogout, currentModule }) => {
 
   const navigation = [
     { name: t('nav.dashboard'), path: '/', icon: Home, id: 'dashboard' },
-    { name: t('nav.pms'), path: '/pms', icon: Hotel, id: 'pms' },
+    { name: t('nav.pms'), path: '/pms', icon: Hotel, id: 'pms', moduleKey: 'pms' },
     { name: 'Calendar', path: '/reservation-calendar', icon: Calendar, id: 'calendar' },
     { name: t('nav.invoices'), path: '/invoices', icon: FileText, id: 'invoices' },
     { name: 'Pending AR', path: '/pending-ar', icon: DollarSign, id: 'pending-ar' },

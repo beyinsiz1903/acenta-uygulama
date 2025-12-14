@@ -11991,25 +11991,6 @@ async def export_forecast_detail_excel(
     filename = f"forecast_detail_{start_date}_to_{end_date}.xlsx"
     return excel_response(wb, filename)
 
-        for i in range(days):
-            d = ci_date + timedelta(days=i)
-            key = (
-                d.isoformat(),
-                b.get('room_type', 'STD'),
-                b.get('rate_plan', 'Standard'),
-            )
-            if key not in daily_stats:
-                daily_stats[key] = {
-                    'date': d.isoformat(),
-                    'room_type': key[1],
-                    'rate_plan': key[2],
-                    'nights': 0,
-                    'revenue': 0.0,
-                }
-
-            daily_stats[key]['nights'] += 1
-            daily_stats[key]['revenue'] += daily_amount
-
     # Prepare Excel
     headers = [
         'Date',

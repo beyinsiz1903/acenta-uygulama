@@ -12077,47 +12077,6 @@ async def export_operations_daily_summary_excel(
     filename = f"operations_daily_summary_{target.date().isoformat()}.xlsx"
     return excel_response(wb, filename)
 
- 
-    
-    # 4. Calculate Collection Rate (MTD Collections / MTD Revenue)
-    mtd_charges = await db.folio_charges.find({
-        'tenant_id': current_user.tenant_id,
-        'date': {
-            '$gte': month_start_dt.isoformat(),
-            '$lte': today_end.isoformat()
-        },
-        'voided': False
-    }).to_list(10000)
-    
-    mtd_revenue = sum(charge.get('total', 0) for charge in mtd_charges)
-    collection_rate = (mtd_collections / mtd_revenue * 100) if mtd_revenue > 0 else 0
-    
-    # 5. Get Accounting Invoices (E-Fatura ready)
-    pending_invoices = await db.accounting_invoices.find({
-        'tenant_id': current_user.tenant_id,
-        'status': {'$in': ['pending', 'partial']}
-    }).to_list(1000)
-    
-    pending_invoice_total = sum(inv.get('total', 0) for inv in pending_invoices)
-    pending_invoice_count = len(pending_invoices)
-    
-    return {
-        'report_date': today.isoformat(),
-        'pending_ar': {
-            'total': round(total_pending_ar, 2),
-            'overdue_breakdown': {
-                '0-30_days': round(overdue_0_30, 2),
-                '30-60_days': round(overdue_30_60, 2),
-                '60_plus_days': round(overdue_60_plus, 2)
-            },
-            'overdue_invoices_count': overdue_invoices_count
-        },
-        'todays_collections': {
-            'amount': round(todays_collections, 2),
-            'payment_count': todays_payment_count
-        },
-        'mtd_collections': {
-
 
 @api_router.get("/reports/channel-distribution/excel")
 async def export_channel_distribution_excel(

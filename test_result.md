@@ -15310,3 +15310,76 @@ test_plan:
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
+
+   -agent: "testing"
+   -message: |
+       🏨 HOTEL LOGIN FLOW TEST COMPLETED - feith@test.com
+       
+       **TEST OBJECTIVE:** Test newly created hotel login flow with feith@test.com / feith123
+       **BASE URL:** https://canli-problem.preview.emergentagent.com/auth
+       **DATE:** December 14, 2025
+       
+       **COMPREHENSIVE TEST RESULTS:**
+       
+       🎉 **LOGIN FUNCTIONALITY: ✅ WORKING (with workaround)**
+       
+       **BACKEND VERIFICATION:**
+       ✅ Backend API working perfectly
+       - curl test: HTTP 200 response
+       - Valid JWT token generated
+       - User data returned: Feith Manager (admin role)
+       - Tenant data returned: Test Feith Hotel (50 rooms, Istanbul)
+       
+       **FRONTEND LOGIN FLOW:**
+       ✅ **Using Enter Key Method:**
+       - Email filled: feith@test.com ✅
+       - Password filled: feith123 ✅
+       - Press Enter in password field ✅
+       - API request sent: POST /api/auth/login ✅
+       - HTTP 200 response received ✅
+       - Console logs: "🔐 Attempting login" ✅
+       - Console logs: "✅ Login successful" ✅
+       - Console logs: "✅ Auth state updated" ✅
+       - Redirected to dashboard ✅
+       - No 401 errors ✅
+       - No infinite reload loop ✅
+       - Dashboard loads with "Welcome back, Feith Manager" ✅
+       - Hotel name displayed: "Test Feith Hotel" ✅
+       
+       ❌ **CRITICAL BUG IDENTIFIED: Login Button Click Does NOT Work**
+       
+       **ROOT CAUSE ANALYSIS:**
+       - Form structure investigation revealed:
+         * 4 forms found on page (Hotel Login, Hotel Register, Guest Login, Guest Register)
+         * Hotel Login form (Form 0) has `Has onSubmit: False`
+         * React onSubmit handler not properly attached to DOM
+         * Form has default values: `Action: /auth`, `Method: get`
+         * Button click does NOT trigger form submission
+         * Pressing Enter DOES trigger form submission
+       
+       **USER IMPACT:**
+       - ❌ Users clicking the "Login" button: NO RESPONSE (form doesn't submit)
+       - ✅ Users pressing Enter after filling password: LOGIN WORKS
+       - This creates a confusing UX where button appears broken
+       
+       **TECHNICAL DETAILS:**
+       - Button type: "submit" ✅ (correct)
+       - Button enabled: true ✅ (correct)
+       - Button found in DOM: true ✅ (correct)
+       - Button click event: NOT triggering form submission ❌ (BUG)
+       - Enter key event: DOES trigger form submission ✅ (works)
+       
+       **WORKAROUND:**
+       Users can successfully login by pressing Enter key after filling credentials.
+       
+       **RECOMMENDATION:**
+       Fix the Login button click handler to properly trigger form submission. The issue is likely:
+       1. React event handler not properly attached
+       2. Button click not bubbling to form submit
+       3. Possible issue with nested Tabs components interfering with form submission
+       
+       **FINAL VERDICT:**
+       🟡 **PARTIALLY WORKING** - Login flow works via Enter key, but button click is broken.
+       - Backend: 100% working ✅
+       - Frontend (Enter key): 100% working ✅
+       - Frontend (Button click): 0% working ❌

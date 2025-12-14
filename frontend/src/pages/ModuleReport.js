@@ -27,7 +27,8 @@ const ModuleReport = ({ user, tenant, onLogout }) => {
     phone: '',
     address: '',
     location: '',
-    description: ''
+    description: '',
+    subscription_days: 30  // Default 30 days
   });
 
   const loadReport = async () => {
@@ -78,7 +79,8 @@ const ModuleReport = ({ user, tenant, onLogout }) => {
         phone: '',
         address: '',
         location: '',
-        description: ''
+        description: '',
+        subscription_days: 30
       });
       await loadReport(); // Reload list
       alert('Otel başarıyla oluşturuldu!');

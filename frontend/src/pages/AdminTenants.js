@@ -52,6 +52,9 @@ const AdminTenants = ({ user, tenant, onLogout }) => {
   const [tenants, setTenants] = useState([]);
   const [error, setError] = useState(null);
   const [filter, setFilter] = useState('');
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+  const [selectedTenant, setSelectedTenant] = useState(null);
+  const [subscriptionDays, setSubscriptionDays] = useState(30);
 
   const loadTenants = async () => {
     setLoading(true);
@@ -97,6 +100,33 @@ const AdminTenants = ({ user, tenant, onLogout }) => {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleUpdateSubscription = async () => {
+    if (!selectedTenant) return;
+    
+    setSaving(true);
+    setError(null);
+    try {
+      await axios.patch(`/admin/tenants/${selectedTenant.id}/subscription`, {
+        subscription_days: subscriptionDays || null
+      });
+      
+      setShowSubscriptionModal(false);
+      await loadTenants(); // Reload to get updated dates
+      alert('Üyelik süresi başarıyla güncellendi!');
+    } catch (err) {
+      console.error('Failed to update subscription', err);
+      setError(err.response?.data?.detail || 'Üyelik güncellenirken bir hata oluştu');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const openSubscriptionModal = (t) => {
+    setSelectedTenant(t);
+    setSubscriptionDays(30); // Default
+    setShowSubscriptionModal(true);
   };
 
   return (

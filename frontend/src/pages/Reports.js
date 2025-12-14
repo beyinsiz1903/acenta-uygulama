@@ -284,7 +284,7 @@ const Reports = ({ user, tenant, onLogout }) => {
 
         {/* Selected Reports */}
         {selectedReports.length > 0 && (
-          <>
+          <div>
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900">
                 Selected Reports ({selectedReports.length})

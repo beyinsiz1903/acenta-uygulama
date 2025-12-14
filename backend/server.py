@@ -11833,7 +11833,12 @@ async def get_finance_snapshot(current_user: User = Depends(get_current_user)):
     month_start_dt = datetime.combine(month_start, datetime.min.time()).replace(tzinfo=timezone.utc)
     
     mtd_payments = await db.payments.find({
-
+        'tenant_id': current_user.tenant_id,
+        'processed_at': {
+            '$gte': month_start_dt.isoformat(),
+            '$lte': today_end.isoformat()
+        }
+    }).to_list(10000)
 
 @api_router.get("/reports/revenue-detail/excel")
 async def export_revenue_detail_excel(

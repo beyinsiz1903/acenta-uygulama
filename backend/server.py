@@ -9006,6 +9006,168 @@ async def get_stayover_rooms(current_user: User = Depends(get_current_user)):
         'count': len(stayover_rooms)
     }
 
+
+@api_router.get("/housekeeping/room-status-report")
+@cached(ttl=120, key_prefix="hk_room_status_report")
+async def get_room_status_report(current_user: User = Depends(get_current_user)):
+    """Comprehensive room status report with DND, Sleep Out, OOO details"""
+    
+    # Get all rooms
+    rooms = await db.rooms.find({'tenant_id': current_user.tenant_id}, {'_id': 0}).to_list(1000)
+    
+    # Calculate summary
+    summary = {
+        'total_rooms': len(rooms),
+        'occupied': sum(1 for r in rooms if r.get('status') == 'occupied'),
+        'vacant_clean': sum(1 for r in rooms if r.get('status') in ['available', 'inspected']),
+        'vacant_dirty': sum(1 for r in rooms if r.get('status') == 'dirty'),
+        'out_of_order': sum(1 for r in rooms if r.get('status') == 'out_of_order'),
+        'out_of_service': sum(1 for r in rooms if r.get('status') == 'maintenance')
+    }
+    
+    # Get DND (Do Not Disturb) rooms - occupied rooms with DND flag
+    dnd_rooms = []
+    sleep_out_rooms = []
+    out_of_order_rooms = []
+    
+    # Get current bookings for occupied rooms
+    bookings = await db.bookings.find({
+        'tenant_id': current_user.tenant_id,
+        'status': 'checked_in'
+    }, {'_id': 0}).to_list(1000)
+    
+    for booking in bookings:
+        room = next((r for r in rooms if r.get('id') == booking.get('room_id')), None)
+        if not room:
+            continue
+            
+        guest = await db.guests.find_one({'id': booking.get('guest_id')}, {'_id': 0})
+        guest_name = guest.get('name') if guest else 'Unknown'
+        room_number = room.get('room_number')
+        
+        # Check for DND flag
+        if booking.get('dnd_status') or room.get('dnd_status'):
+            dnd_since = booking.get('dnd_since') or room.get('dnd_since', datetime.now(timezone.utc).isoformat())
+            try:
+                dnd_time = datetime.fromisoformat(dnd_since.replace('Z', '+00:00'))
+                duration_hours = int((datetime.now(timezone.utc) - dnd_time).total_seconds() / 3600)
+            except:
+                duration_hours = 0
+                
+            dnd_rooms.append({
+                'room': room_number,
+                'guest': guest_name,
+                'dnd_since': dnd_since[:16] if isinstance(dnd_since, str) else dnd_since.strftime('%H:%M'),
+                'duration_hours': duration_hours
+            })
+        
+        # Check for Sleep Out (guest hasn't been in room for 24h+)
+        last_activity = booking.get('last_room_activity')
+        if last_activity:
+            try:
+                activity_time = datetime.fromisoformat(last_activity.replace('Z', '+00:00'))
+                hours_since = (datetime.now(timezone.utc) - activity_time).total_seconds() / 3600
+                if hours_since > 24:
+                    sleep_out_rooms.append({
+                        'room': room_number,
+                        'guest': guest_name,
+                        'last_activity': last_activity[:16] if isinstance(last_activity, str) else last_activity.strftime('%Y-%m-%d %H:%M'),
+                        'status': 'suspected'
+                    })
+            except:
+                pass
+    
+    # Get Out of Order rooms
+    for room in rooms:
+        if room.get('status') == 'out_of_order':
+            out_of_order_rooms.append({
+                'room': room.get('room_number'),
+                'reason': room.get('ooo_reason', 'Maintenance required'),
+                'since': room.get('ooo_since', 'N/A'),
+                'expected_fix': room.get('ooo_until', 'TBD')
+            })
+    
+    return {
+        'summary': summary,
+        'dnd_rooms': dnd_rooms,
+        'sleep_out': sleep_out_rooms,
+        'out_of_order': out_of_order_rooms
+    }
+
+
+@api_router.get("/housekeeping/staff-performance-detailed")
+@cached(ttl=300, key_prefix="hk_staff_perf_detailed")
+async def get_staff_performance_detailed(current_user: User = Depends(get_current_user)):
+    """Detailed staff performance metrics"""
+    
+    # Get completed tasks from last 30 days
+    start_date = (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
+    
+    tasks = await db.housekeeping_tasks.find({
+        'tenant_id': current_user.tenant_id,
+        'status': 'completed',
+        'completed_at': {'$gte': start_date}
+    }, {'_id': 0}).to_list(5000)
+    
+    # Group by staff
+    staff_stats = {}
+    for task in tasks:
+        staff = task.get('assigned_to', 'Unassigned')
+        if staff not in staff_stats:
+            staff_stats[staff] = {
+                'staff_name': staff,
+                'tasks_completed': 0,
+                'durations': [],
+                'quality_scores': []
+            }
+        
+        staff_stats[staff]['tasks_completed'] += 1
+        
+        # Calculate duration if available
+        if task.get('started_at') and task.get('completed_at'):
+            try:
+                started = datetime.fromisoformat(task['started_at'].replace('Z', '+00:00'))
+                completed = datetime.fromisoformat(task['completed_at'].replace('Z', '+00:00'))
+                duration = (completed - started).total_seconds() / 60
+                staff_stats[staff]['durations'].append(duration)
+            except:
+                pass
+        
+        # Quality score (from inspections or ratings)
+        if task.get('quality_score'):
+            staff_stats[staff]['quality_scores'].append(task['quality_score'])
+    
+    # Calculate final metrics
+    staff_performance = []
+    for staff, data in staff_stats.items():
+        avg_duration = sum(data['durations']) / len(data['durations']) if data['durations'] else 0
+        avg_quality = sum(data['quality_scores']) / len(data['quality_scores']) if data['quality_scores'] else 95
+        
+        # Performance rating
+        if avg_duration > 0:
+            speed_rating = 'Fast' if avg_duration < 20 else 'Average' if avg_duration < 30 else 'Slow'
+        else:
+            speed_rating = 'N/A'
+        
+        staff_performance.append({
+            'staff_name': staff,
+            'tasks_completed': data['tasks_completed'],
+            'avg_duration_minutes': round(avg_duration, 1),
+            'quality_score': round(avg_quality, 1),
+            'speed_rating': speed_rating,
+            'efficiency_rating': '⭐⭐⭐⭐⭐' if avg_quality >= 95 and avg_duration < 20 else '⭐⭐⭐⭐' if avg_quality >= 90 else '⭐⭐⭐'
+        })
+    
+    # Sort by tasks completed
+    staff_performance.sort(key=lambda x: x['tasks_completed'], reverse=True)
+    
+    return {
+        'staff_performance': staff_performance,
+        'total_staff': len(staff_performance),
+        'total_tasks': sum(s['tasks_completed'] for s in staff_performance)
+    }
+
+
 @api_router.get("/housekeeping/arrivals")
 @cached(ttl=120, key_prefix="hk_arrivals")  # Cache for 2 min
 async def get_arrival_rooms(current_user: User = Depends(get_current_user)):

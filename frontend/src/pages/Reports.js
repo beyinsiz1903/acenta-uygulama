@@ -368,7 +368,7 @@ const Reports = ({ user, tenant, onLogout }) => {
                 </Card>
               ))}
             </div>
-          </>
+          </div>
         )}
 
         {/* Empty State */}

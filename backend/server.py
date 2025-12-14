@@ -11839,6 +11839,55 @@ async def get_finance_snapshot(current_user: User = Depends(get_current_user)):
             '$lte': today_end.isoformat()
         }
     }).to_list(10000)
+    
+    mtd_collections = sum(payment.get('amount', 0) for payment in mtd_payments)
+    
+    # 4. Calculate Collection Rate (MTD Collections / MTD Revenue)
+    mtd_charges = await db.folio_charges.find({
+        'tenant_id': current_user.tenant_id,
+        'date': {
+            '$gte': month_start_dt.isoformat(),
+            '$lte': today_end.isoformat()
+        },
+        'voided': False
+    }).to_list(10000)
+    
+    mtd_revenue = sum(charge.get('total', 0) for charge in mtd_charges)
+    collection_rate = (mtd_collections / mtd_revenue * 100) if mtd_revenue > 0 else 0
+    
+    # 5. Get Accounting Invoices (E-Fatura ready)
+    pending_invoices = await db.accounting_invoices.find({
+        'tenant_id': current_user.tenant_id,
+        'status': {'$in': ['pending', 'partial']}
+    }).to_list(1000)
+    
+    pending_invoice_total = sum(inv.get('total', 0) for inv in pending_invoices)
+    pending_invoice_count = len(pending_invoices)
+    
+    return {
+        'report_date': today.isoformat(),
+        'pending_ar': {
+            'total': round(total_pending_ar, 2),
+            'overdue_breakdown': {
+                '0-30_days': round(overdue_0_30, 2),
+                '30-60_days': round(overdue_30_60, 2),
+                '60_plus_days': round(overdue_60_plus, 2)
+            },
+            'overdue_invoices_count': overdue_invoices_count
+        },
+        'todays_collections': {
+            'amount': round(todays_collections, 2),
+            'payment_count': todays_payment_count
+        },
+        'mtd_collections': {
+            'amount': round(mtd_collections, 2),
+            'collection_rate_percentage': round(collection_rate, 2)
+        },
+        'accounting_invoices': {
+            'pending_count': pending_invoice_count,
+            'pending_total': round(pending_invoice_total, 2)
+        }
+    }
 
 @api_router.get("/reports/revenue-detail/excel")
 async def export_revenue_detail_excel(

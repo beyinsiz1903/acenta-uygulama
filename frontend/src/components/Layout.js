@@ -172,6 +172,11 @@ const Layout = ({ children, user, tenant, onLogout, currentModule }) => {
               </div>
               
               {navigation.map((item) => {
+                // Super Admin kontrolü - sadece super_admin görebilir
+                if (item.requireSuperAdmin && user?.role !== 'super_admin') {
+                  return null;
+                }
+                
                 // Eğer tenant.modules varsa, backend modül yetkilerine göre menüyü filtrele
                 if (tenant?.modules && item.moduleKey) {
                   if (tenant.modules[item.moduleKey] === false) {

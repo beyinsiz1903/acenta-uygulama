@@ -1012,7 +1012,7 @@ function App() {
           <Route
             path="/admin/tenants"
             element={
-              isAuthenticated && user?.role === 'admin' ? (
+              isAuthenticated && user?.role === 'super_admin' ? (
                 <Suspense fallback={<LoadingFallback />}>
                   <AdminTenants user={user} tenant={tenant} onLogout={handleLogout} />
                 </Suspense>
@@ -1024,7 +1024,7 @@ function App() {
           <Route
             path="/admin/module-report"
             element={
-              isAuthenticated && user?.role === 'admin' ? (
+              isAuthenticated && user?.role === 'super_admin' ? (
                 <Suspense fallback={<LoadingFallback />}>
                   <ModuleReport user={user} tenant={tenant} onLogout={handleLogout} />
                 </Suspense>

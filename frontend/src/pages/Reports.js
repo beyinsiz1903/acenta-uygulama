@@ -231,7 +231,7 @@ const Reports = ({ user, tenant, onLogout }) => {
 
         {/* Excel Reports Section */}
         {activeSection === 'excel' && (
-          <>
+          <div>
             {/* Add Report Button */}
             <div className="mb-6">
               {!showSelector ? (
@@ -243,215 +243,215 @@ const Reports = ({ user, tenant, onLogout }) => {
                   Add Report to Download
                 </Button>
               ) : (
-            <Card className="border-2 border-blue-500">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg">Select Report</CardTitle>
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={() => setShowSelector(false)}
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <Select onValueChange={addReport}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Choose a report..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableReports
-                      .filter(r => !selectedReports.find(sr => sr.id === r.id))
-                      .map(report => (
-                        <SelectItem key={report.id} value={report.id}>
-                          <div className="flex items-center gap-2">
-                            <report.icon className="w-4 h-4 text-gray-500" />
-                            <div>
-                              <div className="font-medium">{report.name}</div>
-                              <div className="text-xs text-gray-500">{report.description}</div>
-                            </div>
-                          </div>
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-
-        {/* Selected Reports */}
-        {selectedReports.length > 0 && (
-          <div>
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900">
-                Selected Reports ({selectedReports.length})
-              </h2>
-              <Button 
-                onClick={handleDownloadAll}
-                disabled={loading}
-                className="bg-green-600 hover:bg-green-700"
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Download All
-              </Button>
-            </div>
-
-            <div className="space-y-4">
-              {selectedReports.map(report => (
-                <Card key={report.id} className="border-l-4 border-l-green-500">
-                  <CardContent className="pt-6">
-                    <div className="flex items-start justify-between gap-4">
-                      {/* Report Info */}
-                      <div className="flex items-start gap-3 flex-1">
-                        <div className="mt-1">
-                          <report.icon className="w-5 h-5 text-gray-600" />
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-gray-900 mb-1">
-                            {report.name}
-                          </h3>
-                          <p className="text-sm text-gray-500 mb-3">
-                            {report.description}
-                          </p>
-
-                          {/* Date Range Inputs */}
-                          {report.needsDateRange && (
-                            <div className="grid grid-cols-2 gap-3 max-w-md">
-                              <div>
-                                <Label className="text-xs text-gray-600">Start Date</Label>
-                                <Input
-                                  type="date"
-                                  value={report.startDate}
-                                  onChange={(e) => updateReportDate(report.id, 'startDate', e.target.value)}
-                                  className="mt-1 h-9"
-                                />
-                              </div>
-                              <div>
-                                <Label className="text-xs text-gray-600">End Date</Label>
-                                <Input
-                                  type="date"
-                                  value={report.endDate}
-                                  onChange={(e) => updateReportDate(report.id, 'endDate', e.target.value)}
-                                  className="mt-1 h-9"
-                                />
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Action Buttons */}
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          onClick={() => handleDownloadReport(report)}
-                          disabled={loading}
-                          className="bg-green-600 hover:bg-green-700 text-white"
-                        >
-                          <Download className="w-4 h-4 mr-1" />
-                          Download
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => removeReport(report.id)}
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
+                <Card className="border-2 border-blue-500">
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-lg">Select Report</CardTitle>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => setShowSelector(false)}
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
                     </div>
+                  </CardHeader>
+                  <CardContent>
+                    <Select onValueChange={addReport}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Choose a report..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableReports
+                          .filter(r => !selectedReports.find(sr => sr.id === r.id))
+                          .map(report => (
+                            <SelectItem key={report.id} value={report.id}>
+                              <div className="flex items-center gap-2">
+                                <report.icon className="w-4 h-4 text-gray-500" />
+                                <div>
+                                  <div className="font-medium">{report.name}</div>
+                                  <div className="text-xs text-gray-500">{report.description}</div>
+                                </div>
+                              </div>
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
                   </CardContent>
                 </Card>
-              ))}
+              )}
             </div>
-          </div>
-        )}
 
-        {/* Empty State */}
-        {selectedReports.length === 0 && !showSelector && (
-          <Card className="border-dashed border-2">
-            <CardContent className="py-12">
-              <div className="text-center">
-                <FileSpreadsheet className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  No Reports Selected
-                </h3>
-                <p className="text-gray-500 mb-4">
-                  Click the &quot;Add Report to Download&quot; button to start selecting reports
-                </p>
-                <Button 
-                  onClick={() => setShowSelector(true)}
+            {/* Selected Reports */}
+            {selectedReports.length > 0 && (
+              <div>
+                <div className="mb-4 flex items-center justify-between">
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    Selected Reports ({selectedReports.length})
+                  </h2>
+                  <Button 
+                    onClick={handleDownloadAll}
+                    disabled={loading}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Download All
+                  </Button>
+                </div>
+
+                <div className="space-y-4">
+                  {selectedReports.map(report => (
+                    <Card key={report.id} className="border-l-4 border-l-green-500">
+                      <CardContent className="pt-6">
+                        <div className="flex items-start justify-between gap-4">
+                          {/* Report Info */}
+                          <div className="flex items-start gap-3 flex-1">
+                            <div className="mt-1">
+                              <report.icon className="w-5 h-5 text-gray-600" />
+                            </div>
+                            <div className="flex-1">
+                              <h3 className="font-semibold text-gray-900 mb-1">
+                                {report.name}
+                              </h3>
+                              <p className="text-sm text-gray-500 mb-3">
+                                {report.description}
+                              </p>
+
+                              {/* Date Range Inputs */}
+                              {report.needsDateRange && (
+                                <div className="grid grid-cols-2 gap-3 max-w-md">
+                                  <div>
+                                    <Label className="text-xs text-gray-600">Start Date</Label>
+                                    <Input
+                                      type="date"
+                                      value={report.startDate}
+                                      onChange={(e) => updateReportDate(report.id, 'startDate', e.target.value)}
+                                      className="mt-1 h-9"
+                                    />
+                                  </div>
+                                  <div>
+                                    <Label className="text-xs text-gray-600">End Date</Label>
+                                    <Input
+                                      type="date"
+                                      value={report.endDate}
+                                      onChange={(e) => updateReportDate(report.id, 'endDate', e.target.value)}
+                                      className="mt-1 h-9"
+                                    />
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Action Buttons */}
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              onClick={() => handleDownloadReport(report)}
+                              disabled={loading}
+                              className="bg-green-600 hover:bg-green-700 text-white"
+                            >
+                              <Download className="w-4 h-4 mr-1" />
+                              Download
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => removeReport(report.id)}
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Empty State */}
+            {selectedReports.length === 0 && !showSelector && (
+              <Card className="border-dashed border-2">
+                <CardContent className="py-12">
+                  <div className="text-center">
+                    <FileSpreadsheet className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                      No Reports Selected
+                    </h3>
+                    <p className="text-gray-500 mb-4">
+                      Click the &quot;Add Report to Download&quot; button to start selecting reports
+                    </p>
+                    <Button 
+                      onClick={() => setShowSelector(true)}
+                      variant="outline"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Your First Report
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Official Guest List Shortcut */}
+            <Card className="mt-6 border-green-200 bg-green-50/40">
+              <CardContent className="pt-6 flex items-start justify-between gap-4">
+                <div className="flex gap-3 flex-1">
+                  <FileText className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="font-semibold text-gray-900 mb-1">Resmi Müşteri Listesi (Maliye Raporu)</h4>
+                    <p className="text-sm text-gray-600 mb-1">
+                      Maliye veya resmi denetim geldiğinde, seçtiğiniz gün için otelde konaklayan tüm
+                      misafirlerin resmi listesini tek ekrandan alabilirsiniz. Liste, TCKN/pasaport,
+                      oda, giriş-çıkış ve toplam tutarı içerir.
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      İpucu: İhtiyaç anında hızlı erişim için bu sayfayı sık kullananlara ekleyin.
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  size="sm"
                   variant="outline"
+                  className="text-xs bg-white"
+                  onClick={() => navigate('/reports/official-guest-list')}
                 >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Your First Report
+                  Resmi Müşteri Listesine Git
                 </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+              </CardContent>
+            </Card>
 
-        {/* Official Guest List Shortcut */}
-        <Card className="mt-6 border-green-200 bg-green-50/40">
-          <CardContent className="pt-6 flex items-start justify-between gap-4">
-            <div className="flex gap-3 flex-1">
-              <FileText className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-              <div>
-                <h4 className="font-semibold text-gray-900 mb-1">Resmi Müşteri Listesi (Maliye Raporu)</h4>
-                <p className="text-sm text-gray-600 mb-1">
-                  Maliye veya resmi denetim geldiğinde, seçtiğiniz gün için otelde konaklayan tüm
-                  misafirlerin resmi listesini tek ekrandan alabilirsiniz. Liste, TCKN/pasaport,
-                  oda, giriş-çıkış ve toplam tutarı içerir.
-                </p>
-                <p className="text-xs text-gray-500">
-                  İpucu: İhtiyaç anında hızlı erişim için bu sayfayı sık kullananlara ekleyin.
-                </p>
-              </div>
-            </div>
-            <Button
-              size="sm"
-              variant="outline"
-              className="text-xs bg-white"
-              onClick={() => navigate('/reports/official-guest-list')}
-            >
-              Resmi Müşteri Listesine Git
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Info Card */}
-        {activeSection === 'excel' && (
-          <Card className="mt-6 bg-blue-50 border-blue-200">
-            <CardContent className="pt-6 flex items-start justify-between gap-4">
-            <div className="flex gap-3 flex-1">
-              <FileText className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-              <div>
-                <h4 className="font-semibold text-gray-900 mb-1">Export Tips</h4>
-                <ul className="text-sm text-gray-600 space-y-1">
-                  <li>• Select multiple reports and download them all at once</li>
-                  <li>• Date ranges are automatically set to last 30 days (adjustable)</li>
-                  <li>• Excel files include formatted tables with headers and totals</li>
-                  <li>• All financial amounts are properly formatted with currency symbols</li>
-                </ul>
-              </div>
-            </div>
-            <div className="flex flex-col items-end gap-2">
-              <span className="text-xs text-gray-500">Corporate performance</span>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => navigate('/reports/corporate-contracts')}
-                className="text-xs"
-              >
-                Corporate Contracts Dashboard
-              </Button>
-            </div>
-          </CardContent>
-          </Card>
+            {/* Info Card */}
+            <Card className="mt-6 bg-blue-50 border-blue-200">
+              <CardContent className="pt-6 flex items-start justify-between gap-4">
+                <div className="flex gap-3 flex-1">
+                  <FileText className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="font-semibold text-gray-900 mb-1">Export Tips</h4>
+                    <ul className="text-sm text-gray-600 space-y-1">
+                      <li>• Select multiple reports and download them all at once</li>
+                      <li>• Date ranges are automatically set to last 30 days (adjustable)</li>
+                      <li>• Excel files include formatted tables with headers and totals</li>
+                      <li>• All financial amounts are properly formatted with currency symbols</li>
+                    </ul>
+                  </div>
+                </div>
+                <div className="flex flex-col items-end gap-2">
+                  <span className="text-xs text-gray-500">Corporate performance</span>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => navigate('/reports/corporate-contracts')}
+                    className="text-xs"
+                  >
+                    Corporate Contracts Dashboard
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         )}
 
         {/* Night Audit Section */}

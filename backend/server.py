@@ -608,6 +608,9 @@ class Tenant(BaseModel):
     address: Optional[str] = None
     total_rooms: Optional[int] = 50
     subscription_status: str = "active"
+    subscription_start_date: Optional[str] = None
+    subscription_end_date: Optional[str] = None
+    subscription_tier: Optional[str] = "basic"
     location: Optional[str] = None
     amenities: List[str] = []
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
@@ -643,6 +646,7 @@ class TenantRegister(BaseModel):
     address: str
     location: Optional[str] = None
     description: Optional[str] = None
+    subscription_days: Optional[int] = None  # Duration in days (30, 60, 90, 180, 365, None=unlimited)
 
 class GuestRegister(BaseModel):
     email: EmailStr

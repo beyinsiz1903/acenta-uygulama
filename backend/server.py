@@ -30687,6 +30687,14 @@ async def create_tenant(
     if existing:
         raise HTTPException(status_code=400, detail="Bu email adresi ile kayıtlı bir otel zaten var")
     
+    # Calculate subscription dates
+    start_date = datetime.now(timezone.utc)
+    end_date = None
+    
+    if payload.subscription_days:
+        end_date = start_date + timedelta(days=payload.subscription_days)
+    # If None, unlimited subscription
+    
     # Create new tenant
     new_tenant = Tenant(
         property_name=payload.property_name,
@@ -30695,7 +30703,10 @@ async def create_tenant(
         address=payload.address,
         location=payload.location or "",
         description=payload.description or "",
-        subscription_tier="basic"
+        subscription_tier="basic",
+        subscription_start_date=start_date.isoformat(),
+        subscription_end_date=end_date.isoformat() if end_date else None,
+        subscription_status="active"
     )
     
     tenant_dict = new_tenant.model_dump()
@@ -30724,7 +30735,10 @@ async def create_tenant(
         "success": True,
         "message": "Otel başarıyla oluşturuldu",
         "tenant_id": new_tenant.id,
-        "user_id": new_user.id
+        "user_id": new_user.id,
+        "subscription_start": start_date.isoformat(),
+        "subscription_end": end_date.isoformat() if end_date else "Sınırsız",
+        "subscription_days": payload.subscription_days or "Sınırsız"
     }
 
 

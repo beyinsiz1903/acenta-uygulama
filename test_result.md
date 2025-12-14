@@ -15483,3 +15483,63 @@ agent_communication:
        **RECOMMENDATION:**
        System is production-ready. No issues found. Authorization working as expected.
 
+   - agent: "testing"
+     message: |
+       🎉 SUBSCRIPTION MANAGEMENT TEST COMPLETED - 100% SUCCESS
+       
+       **TEST OBJECTIVE:** Test subscription (üyelik süresi) management system
+       
+       **TEST SCENARIO EXECUTED:**
+       
+       1. ✅ **Super Admin Login:** demo@hotel.com / demo123
+          - Successfully authenticated as super_admin role
+       
+       2. ✅ **Create Hotel with subscription_days=90:**
+          - Endpoint: POST /api/admin/tenants
+          - Request body included subscription_days: 90
+          - Response: HTTP 200
+          - ✅ subscription_start returned (current date)
+          - ✅ subscription_end returned (90 days later)
+          - ✅ subscription_days: 90 returned
+          - ✅ Date calculation verified: exactly 90 days difference
+       
+       3. ✅ **Update Subscription to 180 days:**
+          - Endpoint: PATCH /api/admin/tenants/{tenant_id}/subscription
+          - Request body: {"subscription_days": 180}
+          - Response: HTTP 200
+          - ✅ subscription_end updated correctly (180 days from start)
+          - ✅ Date calculation verified: exactly 180 days difference
+       
+       4. ✅ **Update to Unlimited Subscription:**
+          - Endpoint: PATCH /api/admin/tenants/{tenant_id}/subscription
+          - Request body: {"subscription_days": null}
+          - Response: HTTP 200
+          - ✅ subscription_end: "Sınırsız" (unlimited)
+          - ✅ subscription_days: "Sınırsız"
+       
+       5. ✅ **Verify Hotel in List:**
+          - Endpoint: GET /api/admin/tenants
+          - Response: HTTP 200
+          - ✅ Test hotel found in list
+          - ✅ subscription_start_date field present
+          - ✅ subscription_end_date field present
+          - ✅ subscription_status field present
+       
+       **FINAL RESULTS:**
+       - Total Tests: 5/5 (100%)
+       - All subscription operations working correctly
+       - Date calculations accurate
+       - Unlimited subscription properly handled
+       - All required fields present in responses
+       
+       **TECHNICAL VERIFICATION:**
+       ✅ POST /api/admin/tenants with subscription_days parameter working
+       ✅ PATCH /api/admin/tenants/{tenant_id}/subscription working
+       ✅ GET /api/admin/tenants returns subscription fields
+       ✅ Date arithmetic correct (90 days, 180 days)
+       ✅ Null handling for unlimited subscription working
+       ✅ Turkish response messages ("Sınırsız") working
+       
+       **RECOMMENDATION:**
+       Subscription management system is **PRODUCTION READY** and working perfectly. All test scenarios passed with 100% success rate.
+

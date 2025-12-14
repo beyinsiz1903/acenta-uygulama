@@ -2514,38 +2514,62 @@ async def register_guest(data: GuestRegister):
 
 @api_router.post("/auth/login", response_model=TokenResponse)
 async def login(data: UserLogin):
+    print(f"🔐 Login attempt for: {data.email}")
+    
     user_doc = await db.users.find_one({'email': data.email})
     if user_doc:
         user_doc.pop('_id', None)  # Remove _id field
+        print(f"✅ User found: {user_doc.get('name')} (ID: {user_doc.get('id')})")
+        print(f"   Tenant ID: {user_doc.get('tenant_id')}")
+    else:
+        print(f"❌ User not found for email: {data.email}")
     
     # Support both 'password' and 'hashed_password' field names
-    hashed_pwd = user_doc.get('hashed_password') or user_doc.get('password', '') if user_doc else ''
+    hashed_pwd = user_doc.get('hashed_password') or user_doc.get('password_hash') or user_doc.get('password', '') if user_doc else ''
+    
+    if not hashed_pwd:
+        print(f"❌ No password hash found in user document")
+        print(f"   Available fields: {list(user_doc.keys()) if user_doc else 'N/A'}")
+    
     if not user_doc or not verify_password(data.password, hashed_pwd):
+        print(f"❌ Login failed: Invalid credentials")
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
-    user_data = {k: v for k, v in user_doc.items() if k not in ['password', 'hashed_password']}
+    print(f"✅ Password verified successfully")
+    
+    user_data = {k: v for k, v in user_doc.items() if k not in ['password', 'hashed_password', 'password_hash']}
     user = User(**user_data)
     
     tenant = None
     if user.tenant_id:
+        print(f"🔍 Looking for tenant with ID: {user.tenant_id}")
         from bson import ObjectId
         try:
             # Try to find by _id (ObjectId) first
             tenant_doc = await db.tenants.find_one({'_id': ObjectId(user.tenant_id)})
             if tenant_doc:
+                print(f"✅ Tenant found by _id (ObjectId)")
                 tenant_doc.pop('_id', None)  # Remove _id
                 tenant = Tenant(**tenant_doc)
             else:
                 # Fallback to id field
                 tenant_doc = await db.tenants.find_one({'id': user.tenant_id}, {'_id': 0})
                 if tenant_doc:
+                    print(f"✅ Tenant found by id field")
                     tenant = Tenant(**tenant_doc)
-        except:
+                else:
+                    print(f"❌ Tenant not found by any method")
+        except Exception as e:
+            print(f"⚠️ ObjectId conversion failed: {e}, trying id field...")
             # If ObjectId conversion fails, try with id field
             tenant_doc = await db.tenants.find_one({'id': user.tenant_id}, {'_id': 0})
             if tenant_doc:
+                print(f"✅ Tenant found by id field (fallback)")
                 tenant = Tenant(**tenant_doc)
+            else:
+                print(f"❌ Tenant still not found")
     
+    print(f"✅ Login successful for {user.email}")
     token = create_token(user.id, user.tenant_id)
     return TokenResponse(access_token=token, user=user, tenant=tenant)
 

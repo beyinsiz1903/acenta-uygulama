@@ -10,7 +10,7 @@ import time
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://perm-selector.preview.emergentagent.com/api"
+BASE_URL = "https://canli-problem.preview.emergentagent.com/api"
 LOGIN_EMAIL = "demo@hotel.com"
 LOGIN_PASSWORD = "demo123"
 

@@ -218,7 +218,7 @@
 ## 📋 QUICK START GUIDE
 
 **Login:**
-- URL: https://perm-selector.preview.emergentagent.com
+- URL: https://canli-problem.preview.emergentagent.com
 - Demo: demo@hotel.com / demo123
 
 **New User Registration:**

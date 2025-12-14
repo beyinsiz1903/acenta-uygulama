@@ -41,7 +41,7 @@ import uuid
 import statistics
 
 # Configuration
-BACKEND_URL = "https://perm-selector.preview.emergentagent.com/api"
+BACKEND_URL = "https://canli-problem.preview.emergentagent.com/api"
 TEST_EMAIL = "admin@hotel.com"
 TEST_PASSWORD = "admin123"
 

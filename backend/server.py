@@ -30575,8 +30575,6 @@ async def update_tenant_modules(
 
     tenant_doc["modules"] = get_tenant_modules(tenant_doc)
     return tenant_doc
-        'stats': stats
-    }
 
 
 @api_router.get("/logs/maintenance-predictions")

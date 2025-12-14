@@ -30669,6 +30669,8 @@ async def create_tenant(
     
     user_dict = new_user.model_dump()
     user_dict['created_at'] = user_dict['created_at'].isoformat()
+    # Rename password_hash to hashed_password for login compatibility
+    user_dict['hashed_password'] = user_dict.pop('password_hash', hashed_password)
     await db.users.insert_one(user_dict)
     
     return {

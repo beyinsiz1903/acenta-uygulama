@@ -222,6 +222,31 @@ const ModuleReport = ({ user, tenant, onLogout }) => {
                     />
                   </div>
 
+                  <div className="space-y-2">
+                    <Label htmlFor="subscription_days">Üyelik Süresi *</Label>
+                    <select
+                      id="subscription_days"
+                      required
+                      value={createForm.subscription_days || ''}
+                      onChange={(e) => setCreateForm({ ...createForm, subscription_days: e.target.value ? parseInt(e.target.value) : null })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="30">30 Gün (1 Ay) - Trial</option>
+                      <option value="60">60 Gün (2 Ay)</option>
+                      <option value="90">90 Gün (3 Ay)</option>
+                      <option value="180">180 Gün (6 Ay)</option>
+                      <option value="365">365 Gün (1 Yıl)</option>
+                      <option value="">Sınırsız (Lifetime)</option>
+                    </select>
+                    <p className="text-xs text-gray-500">
+                      Üyelik başlangıç tarihi: Bugün | Bitiş: {
+                        createForm.subscription_days 
+                          ? new Date(Date.now() + createForm.subscription_days * 24 * 60 * 60 * 1000).toLocaleDateString('tr-TR')
+                          : 'Sınırsız'
+                      }
+                    </p>
+                  </div>
+
                   <div className="border-t pt-4 mt-4">
                     <h3 className="font-semibold mb-3">Admin Kullanıcı Bilgileri</h3>
                     <div className="grid grid-cols-2 gap-4">

@@ -30466,6 +30466,56 @@ async def get_module_report(current_user: User = Depends(require_admin)):
     return {"rows": report_rows, "count": len(report_rows)}
 
 
+@api_router.post("/admin/tenants")
+async def create_tenant(
+    payload: TenantRegister,
+    current_user: User = Depends(require_admin)
+):
+    """Create a new hotel/tenant (Admin only)"""
+    
+    # Check if tenant with same email already exists
+    existing = await db.tenants.find_one({"email": payload.email})
+    if existing:
+        raise HTTPException(status_code=400, detail="Bu email adresi ile kayıtlı bir otel zaten var")
+    
+    # Create new tenant
+    new_tenant = Tenant(
+        property_name=payload.property_name,
+        email=payload.email,
+        phone=payload.phone,
+        address=payload.address,
+        location=payload.location or "",
+        description=payload.description or "",
+        subscription_tier="basic"
+    )
+    
+    tenant_dict = new_tenant.model_dump()
+    tenant_dict['created_at'] = tenant_dict['created_at'].isoformat()
+    await db.tenants.insert_one(tenant_dict)
+    
+    # Create admin user for this tenant
+    hashed_password = hash_password(payload.password)
+    
+    new_user = User(
+        tenant_id=new_tenant.id,
+        email=payload.email,
+        name=payload.name,
+        phone=payload.phone,
+        password_hash=hashed_password,
+        role=UserRole.ADMIN
+    )
+    
+    user_dict = new_user.model_dump()
+    user_dict['created_at'] = user_dict['created_at'].isoformat()
+    await db.users.insert_one(user_dict)
+    
+    return {
+        "success": True,
+        "message": "Otel başarıyla oluşturuldu",
+        "tenant_id": new_tenant.id,
+        "user_id": new_user.id
+    }
+
 
 @api_router.patch("/admin/tenants/{tenant_id}/modules")
 async def update_tenant_modules(

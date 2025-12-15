@@ -109,6 +109,13 @@ const PMSModule = ({ user, tenant, onLogout }) => {
     template_id: null
   });
   const [sentMessages, setSentMessages] = useState([]);
+  const [posOrders, setPosOrders] = useState([]);
+  const [posRevenue, setPosRevenue] = useState({
+    restaurant: 0,
+    bar: 0,
+    room_service: 0,
+    total: 0
+  });
   const [findRoomCriteria, setFindRoomCriteria] = useState({
     check_in: '',
     check_out: '',
@@ -2839,19 +2846,19 @@ const PMSModule = ({ user, tenant, onLogout }) => {
                 <CardContent>
                   <div className="grid grid-cols-4 gap-4">
                     <div className="text-center">
-                      <div className="text-3xl font-bold text-green-600">$2,450</div>
+                      <div className="text-3xl font-bold text-green-600">${posRevenue.restaurant.toFixed(0)}</div>
                       <div className="text-sm text-gray-600">Restaurant</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-3xl font-bold text-blue-600">$1,280</div>
+                      <div className="text-3xl font-bold text-blue-600">${posRevenue.bar.toFixed(0)}</div>
                       <div className="text-sm text-gray-600">Bar</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-3xl font-bold text-purple-600">$580</div>
+                      <div className="text-3xl font-bold text-purple-600">${posRevenue.room_service.toFixed(0)}</div>
                       <div className="text-sm text-gray-600">Room Service</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-3xl font-bold text-orange-600">$4,310</div>
+                      <div className="text-3xl font-bold text-orange-600">${posRevenue.total.toFixed(0)}</div>
                       <div className="text-sm text-gray-600">Total F&B</div>
                     </div>
                   </div>

@@ -21,6 +21,16 @@ const Layout = ({ children, user, tenant, onLogout, currentModule }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navScrollRef = useRef(null);
 
+  // Debug logging
+  useEffect(() => {
+    console.log('🔍 Layout Debug - User Info:', {
+      email: user?.email,
+      name: user?.name,
+      role: user?.role,
+      isSuperAdmin: user?.role === 'super_admin'
+    });
+  }, [user]);
+
   // Scroll active item into view when currentModule changes
   useEffect(() => {
     if (navScrollRef.current && currentModule) {

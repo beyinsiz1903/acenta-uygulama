@@ -2200,6 +2200,10 @@ class AssignRoleRequest(BaseModel):
     user_id: str
     role_id: str
 
+
+class UpdateUserRoleRequest(BaseModel):
+    role: str
+
 class CreateBackupRequest(BaseModel):
     backup_type: str = "full"  # full, incremental
     include_collections: Optional[List[str]] = None

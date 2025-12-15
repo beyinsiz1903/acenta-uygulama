@@ -256,6 +256,11 @@ function App() {
 
   const handleLogin = (token, userData, tenantData) => {
     console.log('🔐 handleLogin called with:', { token: token?.substring(0, 20) + '...', userData, tenantData });
+    
+    // IMPORTANT: Clear old data first to prevent stale data
+    localStorage.clear();
+    
+    // Then set new data
     localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(userData));
     localStorage.setItem('tenant', tenantData ? JSON.stringify(tenantData) : 'null');
@@ -279,7 +284,7 @@ function App() {
     setTenant(tenantData);
     setIsAuthenticated(true);
     fetchModules();
-    console.log('✅ Auth state updated:', { isAuthenticated: true, user: userData?.email });
+    console.log('✅ Auth state updated:', { isAuthenticated: true, user: userData?.email, role: userData?.role });
   };
 
   const handleLogout = () => {

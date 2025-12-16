@@ -63,12 +63,10 @@ export default function InventoryPage() {
         setError(apiErrorMessage(e));
       }
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     if (productId) loadInventory(productId);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [productId, rangeDays]);
 
   const grid = useMemo(() => {

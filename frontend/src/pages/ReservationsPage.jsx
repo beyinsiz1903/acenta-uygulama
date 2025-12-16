@@ -221,7 +221,6 @@ function ReservationDetails({ open, onOpenChange, reservationId }) {
 
   useEffect(() => {
     if (open) load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, reservationId]);
 
   async function confirm() {
@@ -370,7 +369,6 @@ export default function ReservationsPage() {
 
   useEffect(() => {
     load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {

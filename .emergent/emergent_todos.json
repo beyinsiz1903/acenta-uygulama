@@ -1,26 +1,22 @@
 [
   {
-    "content": "Phase 2: Backend - implement reservations workflow (reserve/confirm/cancel), voucher HTML endpoint, manual payments",
-    "status": "completed"
-  },
-  {
-    "content": "Phase 2: Backend - implement CRM leads + quotes + convert-to-reservation",
-    "status": "completed"
-  },
-  {
-    "content": "Phase 2: Backend - implement B2B (agencies, agents, discount/commission groups) + agent booking",
-    "status": "completed"
-  },
-  {
-    "content": "Phase 2: Backend - implement reports (sales summary, reservations summary, CSV export)",
-    "status": "completed"
-  },
-  {
-    "content": "Phase 2: Backend - implement core CRUD: customers, products, rate plans, inventory",
-    "status": "completed"
-  },
-  {
     "content": "Phase 2: Frontend - implement app shell (login, layout, nav, role-based routing)",
+    "status": "completed"
+  },
+  {
+    "content": "Phase 2: Frontend - implement Products/Pricing/Inventory pages",
+    "status": "completed"
+  },
+  {
+    "content": "Phase 2: Frontend - implement Reservations + Voucher print view + Payments UI",
+    "status": "completed"
+  },
+  {
+    "content": "Phase 2: Frontend - implement CRM (customers, leads board, quotes builder)",
+    "status": "completed"
+  },
+  {
+    "content": "Phase 2: Frontend - implement B2B portal (agent login, booking)",
     "status": "in_progress"
   }
 ]

@@ -1,0 +1,59 @@
+import axios from "axios";
+
+const backendUrl = process.env.REACT_APP_BACKEND_URL;
+
+export function getToken() {
+  return localStorage.getItem("acenta_token") || "";
+}
+
+export function setToken(token) {
+  localStorage.setItem("acenta_token", token);
+}
+
+export function clearToken() {
+  localStorage.removeItem("acenta_token");
+  localStorage.removeItem("acenta_user");
+}
+
+export function getUser() {
+  try {
+    const raw = localStorage.getItem("acenta_user");
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function setUser(user) {
+  localStorage.setItem("acenta_user", JSON.stringify(user));
+}
+
+export const api = axios.create({
+  baseURL: `${backendUrl}/api`,
+});
+
+api.interceptors.request.use((config) => {
+  const token = getToken();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+api.interceptors.response.use(
+  (resp) => resp,
+  (err) => {
+    if (err?.response?.status === 401) {
+      // don't hard-redirect; let UI handle
+    }
+    return Promise.reject(err);
+  }
+);
+
+export function apiErrorMessage(err) {
+  return (
+    err?.response?.data?.detail ||
+    err?.message ||
+    "Beklenmeyen bir hata oluştu"
+  );
+}

@@ -29,34 +29,38 @@ export default function InventoryPage() {
     setProductId((prev) => prev || (resp.data || [])[0]?.id || "");
   }, []);
 
-  const loadInventory = useCallback(async (pid) => {
-    if (!pid) return;
-    setLoading(true);
-    setError("");
-    try {
-      const resp = await api.get("/inventory", {
-        params: { product_id: pid, start, end },
-      });
-      setRows(resp.data || []);
-    } catch (e) {
-      setError(apiErrorMessage(e));
-    } finally {
-      setLoading(false);
-    }
-  }, [start, end]);
-
-  useEffect(() => {
-    (async () => {
+  const loadInventory = useCallback(
+    async (pid) => {
+      if (!pid) return;
+      setLoading(true);
+      setError("");
       try {
-        await loadProducts();
+        const resp = await api.get("/inventory", {
+          params: { product_id: pid, start, end },
+        });
+        setRows(resp.data || []);
       } catch (e) {
         setError(apiErrorMessage(e));
+      } finally {
+        setLoading(false);
       }
-    })();
+    },
+    [start, end]
+  );
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      loadProducts().catch((e) => setError(apiErrorMessage(e)));
+    }, 0);
+    return () => clearTimeout(t);
   }, [loadProducts]);
 
   useEffect(() => {
-    if (productId) loadInventory(productId);
+    if (!productId) return;
+    const t = setTimeout(() => {
+      loadInventory(productId);
+    }, 0);
+    return () => clearTimeout(t);
   }, [productId, rangeDays, loadInventory]);
 
   const grid = useMemo(() => {
@@ -76,29 +80,30 @@ export default function InventoryPage() {
     return days;
   }, [rows, rangeDays]);
 
-  const upsertDay = useCallback(async (day) => {
-    try {
-      await api.post("/inventory/upsert", {
-        product_id: productId,
-        date: day.date,
-        capacity_total: Number(day.capacity_total || 0),
-        capacity_available: Number(day.capacity_available || 0),
-        price: day.price === "" || day.price === null ? null : Number(day.price),
-        restrictions: { closed: !!day.closed, cta: false, ctd: false },
-      });
-      await loadInventory(productId);
-    } catch (e) {
-      alert(apiErrorMessage(e));
-    }
-  }, [productId, loadInventory]);
+  const upsertDay = useCallback(
+    async (day) => {
+      try {
+        await api.post("/inventory/upsert", {
+          product_id: productId,
+          date: day.date,
+          capacity_total: Number(day.capacity_total || 0),
+          capacity_available: Number(day.capacity_available || 0),
+          price: day.price === "" || day.price === null ? null : Number(day.price),
+          restrictions: { closed: !!day.closed, cta: false, ctd: false },
+        });
+        await loadInventory(productId);
+      } catch (e) {
+        alert(apiErrorMessage(e));
+      }
+    },
+    [productId, loadInventory]
+  );
 
   return (
     <div className="space-y-4">
       <div>
         <h2 className="text-2xl font-semibold text-slate-900">Müsaitlik & Kontenjan</h2>
-        <p className="text-sm text-slate-600">
-          Tarih bazında kapasite ve fiyat güncelle.
-        </p>
+        <p className="text-sm text-slate-600">Tarih bazında kapasite ve fiyat güncelle.</p>
       </div>
 
       <Card className="rounded-2xl shadow-sm">
@@ -148,9 +153,7 @@ export default function InventoryPage() {
                 <RefreshCw className="h-4 w-4" />
                 Yenile
               </Button>
-              <div className="text-xs text-slate-500">
-                Aralık: {start} → {end}
-              </div>
+              <div className="text-xs text-slate-500">Aralık: {start} → {end}</div>
             </div>
           </div>
 
@@ -178,9 +181,10 @@ export default function InventoryPage() {
                     <td colSpan={6} className="py-6 text-slate-500">Yükleniyor...</td>
                   </tr>
                 ) : (
-                  grid.map((d) => (
-                    <InventoryRow key={d.date} day={d} onSave={upsertDay} />
-                  ))
+                  grid.map((d) => {
+                    const key = `${d.date}-${d.capacity_total}-${d.capacity_available}-${d.price ?? ""}-${d?.restrictions?.closed ? 1 : 0}`;
+                    return <InventoryRow key={key} day={d} onSave={upsertDay} />;
+                  })
                 )}
               </tbody>
             </table>
@@ -200,14 +204,6 @@ function InventoryRow({ day, onSave }) {
   const [capacityAvail, setCapacityAvail] = useState(day.capacity_available || 0);
   const [price, setPrice] = useState(day.price ?? "");
   const [closed, setClosed] = useState(!!day?.restrictions?.closed);
-
-  useEffect(() => {
-
-    setCapacityTotal(day.capacity_total || 0);
-    setCapacityAvail(day.capacity_available || 0);
-    setPrice(day.price ?? "");
-    setClosed(!!day?.restrictions?.closed);
-  }, [day]);
 
   return (
     <tr className="border-t">

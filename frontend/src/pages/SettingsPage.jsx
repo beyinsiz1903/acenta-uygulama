@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Settings, UserPlus } from "lucide-react";
 
 import { api, apiErrorMessage } from "../lib/api";
@@ -103,7 +103,7 @@ export default function SettingsPage() {
   const [error, setError] = useState("");
   const [openUser, setOpenUser] = useState(false);
 
-  async function load() {
+  const load = useCallback(async () => {
     setError("");
     try {
       const resp = await api.get("/settings/users");
@@ -111,12 +111,14 @@ export default function SettingsPage() {
     } catch (e) {
       setError(apiErrorMessage(e));
     }
-  }
+  }, []);
 
   useEffect(() => {
-
-    load();
-  }, []);
+    const t = setTimeout(() => {
+      load();
+    }, 0);
+    return () => clearTimeout(t);
+  }, [load]);
 
   return (
     <div className="space-y-4">

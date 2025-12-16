@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Plus, FileText, ArrowRight, RefreshCw } from "lucide-react";
 
 import { api, apiErrorMessage } from "../lib/api";
@@ -289,7 +289,7 @@ export default function CrmPage() {
   const [openLeadForm, setOpenLeadForm] = useState(false);
   const [openQuoteForm, setOpenQuoteForm] = useState(false);
 
-  async function load() {
+  const load = useCallback(async () => {
     setError("");
     try {
       const [a, b] = await Promise.all([api.get("/leads"), api.get("/quotes")]);
@@ -298,12 +298,14 @@ export default function CrmPage() {
     } catch (e) {
       setError(apiErrorMessage(e));
     }
-  }
+  }, []);
 
   useEffect(() => {
-
-    load();
-  }, []);
+    const t = setTimeout(() => {
+      load();
+    }, 0);
+    return () => clearTimeout(t);
+  }, [load]);
 
   async function convertQuote(id) {
     try {

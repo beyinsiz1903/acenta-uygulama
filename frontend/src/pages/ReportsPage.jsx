@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { BarChart3, Download } from "lucide-react";
 
 import { api, apiErrorMessage } from "../lib/api";
@@ -10,7 +10,7 @@ export default function ReportsPage() {
   const [sales, setSales] = useState([]);
   const [error, setError] = useState("");
 
-  async function load() {
+  const load = useCallback(async () => {
     setError("");
     try {
       const [a, b] = await Promise.all([
@@ -22,12 +22,14 @@ export default function ReportsPage() {
     } catch (e) {
       setError(apiErrorMessage(e));
     }
-  }
+  }, []);
 
   useEffect(() => {
-
-    load();
-  }, []);
+    const t = setTimeout(() => {
+      load();
+    }, 0);
+    return () => clearTimeout(t);
+  }, [load]);
 
   async function downloadCsv() {
     try {

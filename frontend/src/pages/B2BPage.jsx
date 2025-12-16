@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Building2, Plus, UserPlus } from "lucide-react";
 
 import { api, apiErrorMessage } from "../lib/api";
@@ -193,7 +193,7 @@ export default function B2BPage() {
   const [openAgency, setOpenAgency] = useState(false);
   const [openAgent, setOpenAgent] = useState(false);
 
-  async function load() {
+  const load = useCallback(async () => {
     setError("");
     try {
       const resp = await api.get("/b2b/agencies");
@@ -201,21 +201,21 @@ export default function B2BPage() {
     } catch (e) {
       setError(apiErrorMessage(e));
     }
-  }
+  }, []);
 
   useEffect(() => {
-
-    load();
-  }, []);
+    const t = setTimeout(() => {
+      load();
+    }, 0);
+    return () => clearTimeout(t);
+  }, [load]);
 
   return (
     <div className="space-y-4">
       <div className="flex items-start justify-between gap-4">
         <div>
           <h2 className="text-2xl font-semibold text-slate-900">B2B / Acenteler</h2>
-          <p className="text-sm text-slate-600">
-            Alt acenteleri ve b2b_agent kullanıcılarını yönet.
-          </p>
+          <p className="text-sm text-slate-600">Alt acenteleri ve b2b_agent kullanıcılarını yönet.</p>
         </div>
         <div className="flex gap-2">
           <Button onClick={() => setOpenAgency(true)} className="gap-2" data-testid="b2b-new-agency">

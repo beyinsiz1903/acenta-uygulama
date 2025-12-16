@@ -358,7 +358,7 @@ export default function ReservationsPage() {
     setError("");
     try {
       const resp = await api.get("/reservations", {
-        params: { status: status || undefined, q: q || undefined },
+        params: { status: (status && status !== "all") ? status : undefined, q: q || undefined },
       });
       setRows(resp.data || []);
     } catch (e) {

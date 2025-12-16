@@ -454,7 +454,7 @@ class AcentaAPITester:
             self.log("⚠️  Skipping quote tests - missing customer_id or product_id")
             return False
 
-        # Create quote
+        # Create quote (single day tour - end_date should be None)
         today = datetime.now().strftime("%Y-%m-%d")
         quote_data = {
             "customer_id": self.customer_id,
@@ -463,7 +463,7 @@ class AcentaAPITester:
                 {
                     "product_id": self.product_id,
                     "start_date": today,
-                    "end_date": today,
+                    "end_date": None,
                     "pax": 2,
                     "unit_price": 150.0,
                     "total": 300.0

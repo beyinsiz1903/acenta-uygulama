@@ -45,6 +45,7 @@ export default function App() {
           <Route path="customers" element={<CustomersPage />} />
           <Route path="crm" element={<CrmPage />} />
           <Route path="b2b" element={<B2BPage />} />
+          <Route path="b2b-book" element={<B2BBookingPage />} />
           <Route path="reports" element={<ReportsPage />} />
           <Route path="settings" element={<SettingsPage />} />
         </Route>

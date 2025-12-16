@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Ticket, Search, CheckCircle2, XCircle, ExternalLink, Plus } from "lucide-react";
 
@@ -205,7 +205,7 @@ function ReservationDetails({ open, onOpenChange, reservationId }) {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  async function load() {
+  const load = useCallback(async () => {
     if (!reservationId) return;
     setLoading(true);
     setError("");
@@ -217,11 +217,11 @@ function ReservationDetails({ open, onOpenChange, reservationId }) {
     } finally {
       setLoading(false);
     }
-  }
+  }, [reservationId]);
 
   useEffect(() => {
     if (open) load();
-  }, [open, reservationId]);
+  }, [open, load]);
 
   async function confirm() {
     await api.post(`/reservations/${reservationId}/confirm`);
@@ -229,7 +229,7 @@ function ReservationDetails({ open, onOpenChange, reservationId }) {
   }
 
   async function cancel() {
-    if (!window.confirm("Rezervasyonu iptal etmek istiyor musun?") ) return;
+    if (!window.confirm("Rezervasyonu iptal etmek istiyor musun?")) return;
     await api.post(`/reservations/${reservationId}/cancel`);
     await load();
   }
@@ -342,7 +342,7 @@ export default function ReservationsPage() {
   const [searchParams] = useSearchParams();
   const statusParam = searchParams.get("status") || "";
 
-  const [status, setStatus] = useState(statusParam);
+  const [status, setStatus] = useState(statusParam || "all");
   const [q, setQ] = useState("");
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -352,12 +352,12 @@ export default function ReservationsPage() {
   const [detailId, setDetailId] = useState(null);
   const [openDetail, setOpenDetail] = useState(false);
 
-  async function load() {
+  const load = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
       const resp = await api.get("/reservations", {
-        params: { status: (status && status !== "all") ? status : undefined, q: q || undefined },
+        params: { status: status && status !== "all" ? status : undefined, q: q || undefined },
       });
       setRows(resp.data || []);
     } catch (e) {
@@ -365,20 +365,24 @@ export default function ReservationsPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [q, status]);
 
   useEffect(() => {
     load();
-  }, []);
+  }, [load]);
 
   useEffect(() => {
-    setStatus(statusParam);
+    setStatus(statusParam || "all");
   }, [statusParam]);
 
-  const badges = useMemo(() => rows.reduce((acc, r) => {
-    acc[r.status] = (acc[r.status] || 0) + 1;
-    return acc;
-  }, {}), [rows]);
+  const badges = useMemo(
+    () =>
+      rows.reduce((acc, r) => {
+        acc[r.status] = (acc[r.status] || 0) + 1;
+        return acc;
+      }, {}),
+    [rows]
+  );
 
   return (
     <div className="space-y-4">
@@ -491,7 +495,9 @@ export default function ReservationsPage() {
           </div>
 
           <div className="mt-3 text-xs text-slate-500">
-            Durum sayaçları: {Object.entries(badges).map(([k, v]) => `${k}:${v}`).join("  ")}
+            Durum sayaçları: {Object.entries(badges)
+              .map(([k, v]) => `${k}:${v}`)
+              .join("  ")}
           </div>
         </CardContent>
       </Card>

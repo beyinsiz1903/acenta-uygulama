@@ -1,17 +1,24 @@
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
+
+from bson import ObjectId
 
 from app.db import get_db
-from app.utils import now_utc
+from app.utils import now_utc, to_object_id
 
 
 async def upsert_inventory(org_id: str, user_email: str, payload: dict[str, Any]) -> dict[str, Any]:
     db = await get_db()
 
+    try:
+        product_oid = to_object_id(payload["product_id"])
+    except Exception:
+        raise ValueError("invalid product_id")
+
     doc = {
         "organization_id": org_id,
-        "product_id": payload["product_id"],
+        "product_id": product_oid,
         "date": payload["date"],
         "capacity_total": int(payload["capacity_total"]),
         "capacity_available": int(payload["capacity_available"]),
@@ -21,14 +28,19 @@ async def upsert_inventory(org_id: str, user_email: str, payload: dict[str, Any]
         "updated_by": user_email,
     }
 
-    existing = await db.inventory.find_one({
-        "organization_id": org_id,
-        "product_id": payload["product_id"],
-        "date": payload["date"],
-    })
+    existing = await db.inventory.find_one(
+        {
+            "organization_id": org_id,
+            "product_id": product_oid,
+            "date": payload["date"],
+        }
+    )
 
     if existing:
-        await db.inventory.update_one({"_id": existing["_id"]}, {"$set": doc, "$setOnInsert": {"created_at": now_utc(), "created_by": user_email}})
+        await db.inventory.update_one(
+            {"_id": existing["_id"]},
+            {"$set": doc, "$setOnInsert": {"created_at": now_utc(), "created_by": user_email}},
+        )
         return {"status": "updated"}
 
     doc["created_at"] = now_utc()
@@ -39,11 +51,12 @@ async def upsert_inventory(org_id: str, user_email: str, payload: dict[str, Any]
 
 async def consume_inventory(org_id: str, product_id: str, date_str: str, pax: int) -> bool:
     db = await get_db()
+    product_oid = to_object_id(product_id)
 
     res = await db.inventory.find_one_and_update(
         {
             "organization_id": org_id,
-            "product_id": product_id,
+            "product_id": product_oid,
             "date": date_str,
             "capacity_available": {"$gte": pax},
             "restrictions.closed": {"$ne": True},
@@ -55,7 +68,7 @@ async def consume_inventory(org_id: str, product_id: str, date_str: str, pax: in
     return res is not None
 
 
-async def release_inventory(org_id: str, product_id: str, date_str: str, pax: int) -> None:
+async def release_inventory(org_id: str, product_id: ObjectId, date_str: str, pax: int) -> None:
     db = await get_db()
     await db.inventory.update_one(
         {"organization_id": org_id, "product_id": product_id, "date": date_str},

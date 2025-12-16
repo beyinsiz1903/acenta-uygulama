@@ -1,14 +1,22 @@
 from __future__ import annotations
 
+from bson import ObjectId
 from fastapi import APIRouter, Depends, HTTPException, Response
 
 from app.auth import get_current_user
 from app.db import get_db
 from app.schemas import ReservationCreateIn
-from app.services.reservations import apply_payment, create_reservation, set_reservation_status
-from app.utils import serialize_doc
+from app.services.reservations import create_reservation, set_reservation_status
+from app.utils import serialize_doc, to_object_id
 
 router = APIRouter(prefix="/api/reservations", tags=["reservations"])
+
+
+def _oid_or_400(id_str: str) -> ObjectId:
+    try:
+        return to_object_id(id_str)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Geçersiz id")
 
 
 @router.post("/reserve", dependencies=[Depends(get_current_user)])
@@ -33,11 +41,12 @@ async def list_reservations(status: str | None = None, q: str | None = None, use
 @router.get("/{reservation_id}", dependencies=[Depends(get_current_user)])
 async def get_reservation(reservation_id: str, user=Depends(get_current_user)):
     db = await get_db()
-    doc = await db.reservations.find_one({"organization_id": user["organization_id"], "_id": reservation_id})
+    res_oid = _oid_or_400(reservation_id)
+    doc = await db.reservations.find_one({"organization_id": user["organization_id"], "_id": res_oid})
     if not doc:
         raise HTTPException(status_code=404, detail="Rezervasyon bulunamadı")
 
-    payments = await db.payments.find({"organization_id": user["organization_id"], "reservation_id": reservation_id}).sort("created_at", -1).to_list(200)
+    payments = await db.payments.find({"organization_id": user["organization_id"], "reservation_id": res_oid}).sort("created_at", -1).to_list(200)
     out = serialize_doc(doc)
     out["payments"] = [serialize_doc(p) for p in payments]
     out["due_amount"] = round(float(out.get("total_price") or 0) - float(out.get("paid_amount") or 0), 2)
@@ -59,7 +68,8 @@ async def cancel(reservation_id: str, user=Depends(get_current_user)):
 @router.get("/{reservation_id}/voucher", dependencies=[Depends(get_current_user)])
 async def voucher(reservation_id: str, user=Depends(get_current_user)):
     db = await get_db()
-    res = await db.reservations.find_one({"organization_id": user["organization_id"], "_id": reservation_id})
+    res_oid = _oid_or_400(reservation_id)
+    res = await db.reservations.find_one({"organization_id": user["organization_id"], "_id": res_oid})
     if not res:
         raise HTTPException(status_code=404, detail="Rezervasyon bulunamadı")
 

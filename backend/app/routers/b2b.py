@@ -1,14 +1,22 @@
 from __future__ import annotations
 
+from bson import ObjectId
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.auth import get_current_user, require_roles
 from app.db import get_db
 from app.schemas import AgencyIn, UserCreateIn
 from app.services.reservations import create_reservation
-from app.utils import now_utc, serialize_doc
+from app.utils import now_utc, serialize_doc, to_object_id
 
 router = APIRouter(prefix="/api/b2b", tags=["b2b"])
+
+
+def _oid_or_400(id_str: str) -> ObjectId:
+    try:
+        return to_object_id(id_str)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Geçersiz id")
 
 
 @router.post("/agencies", dependencies=[Depends(require_roles(["admin"]))])
@@ -42,11 +50,12 @@ async def create_agent(payload: UserCreateIn, user=Depends(get_current_user)):
     if not payload.agency_id:
         raise HTTPException(status_code=400, detail="agency_id gerekli")
 
-    agency = await db.agencies.find_one({"organization_id": user["organization_id"], "_id": payload.agency_id})
+    agency_oid = _oid_or_400(payload.agency_id)
+
+    agency = await db.agencies.find_one({"organization_id": user["organization_id"], "_id": agency_oid})
     if not agency:
         raise HTTPException(status_code=404, detail="Acente bulunamadı")
 
-    # create user with b2b_agent role
     from app.auth import hash_password
 
     doc = {
@@ -55,14 +64,14 @@ async def create_agent(payload: UserCreateIn, user=Depends(get_current_user)):
         "name": payload.name,
         "password_hash": hash_password(payload.password),
         "roles": list(set((payload.roles or []) + ["b2b_agent"])),
-        "agency_id": payload.agency_id,
+        "agency_id": agency_oid,
         "created_at": now_utc(),
         "updated_at": now_utc(),
         "is_active": True,
     }
 
     ins = await db.users.insert_one(doc)
-    saved = await db.users.find_one({"_id": ins.inserted_id})
+    saved = await db.users.find_one({"_id": ins.inserted_id}, {"password_hash": 0})
     return serialize_doc(saved)
 
 

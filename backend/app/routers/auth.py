@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 
-from app.auth import create_access_token, verify_password
+from app.auth import create_access_token, get_current_user, verify_password
 from app.db import get_db
 from app.schemas import AuthUser, LoginRequest, LoginResponse
 from app.utils import serialize_doc
@@ -41,6 +41,6 @@ async def login(payload: LoginRequest):
 
 
 @router.get("/me")
-async def me(user= None):
-    # For simplicity the frontend uses /login response; keep endpoint for future.
-    return {"ok": True}
+async def me(user=Depends(get_current_user)):
+    # Helpful for frontend refresh
+    return user

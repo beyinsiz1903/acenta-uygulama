@@ -15,10 +15,6 @@ def now_utc() -> datetime:
     return datetime.now(timezone.utc)
 
 
-def oid() -> ObjectId:
-    return ObjectId()
-
-
 def serialize_doc(doc: Any) -> Any:
     """Recursively convert MongoDB docs into JSON-serializable structures."""
     if doc is None:
@@ -45,6 +41,10 @@ def serialize_doc(doc: Any) -> Any:
     return doc
 
 
+def to_object_id(id_str: str) -> ObjectId:
+    return ObjectId(id_str)
+
+
 def generate_code(prefix: str, length: int = 6) -> str:
     alphabet = string.digits
     return f"{prefix}-{''.join(secrets.choice(alphabet) for _ in range(length))}"
@@ -55,7 +55,6 @@ def generate_pnr() -> str:
 
 
 def generate_voucher_no() -> str:
-    # Month-based prefix makes it easier to locate
     yyyymm = datetime.now(timezone.utc).strftime("%Y%m")
     return generate_code(f"VCH-{yyyymm}", 6)
 
@@ -83,13 +82,8 @@ def safe_int(v: Any, default: int = 0) -> int:
         return default
 
 
-def parse_date_yyyy_mm_dd(date_str: str) -> datetime:
-    # naive date interpreted as UTC midnight
-    return datetime.fromisoformat(date_str)
-
-
 def date_range_yyyy_mm_dd(start: str, end: str) -> list[str]:
-    # inclusive start, exclusive end for accommodation nights
+    """Inclusive start, exclusive end (accommodation nights)."""
     from datetime import date, timedelta
 
     s = date.fromisoformat(start)

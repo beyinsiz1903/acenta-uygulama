@@ -1,14 +1,22 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends
+from bson import ObjectId
+from fastapi import APIRouter, Depends, HTTPException
 
 from app.auth import get_current_user
 from app.db import get_db
 from app.schemas import InventoryUpsertIn
 from app.services.inventory import upsert_inventory
-from app.utils import serialize_doc
+from app.utils import serialize_doc, to_object_id
 
 router = APIRouter(prefix="/api/inventory", tags=["inventory"])
+
+
+def _oid_or_400(id_str: str) -> ObjectId:
+    try:
+        return to_object_id(id_str)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Geçersiz id")
 
 
 @router.post("/upsert", dependencies=[Depends(get_current_user)])
@@ -23,7 +31,7 @@ async def list_inventory(product_id: str, start: str, end: str, user=Depends(get
     docs = await db.inventory.find(
         {
             "organization_id": user["organization_id"],
-            "product_id": product_id,
+            "product_id": _oid_or_400(product_id),
             "date": {"$gte": start, "$lte": end},
         }
     ).sort("date", 1).to_list(2000)

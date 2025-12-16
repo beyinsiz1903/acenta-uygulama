@@ -133,7 +133,6 @@ export default function ProductsPage() {
 
   useEffect(() => {
     load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const filtered = useMemo(() => rows, [rows]);

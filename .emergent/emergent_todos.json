@@ -1,62 +1,10 @@
 [
   {
     "content": "Phase 2: Generate design guidelines (shadcn/ui) for Acenta Master (Agentis+ clone)",
-    "status": "pending"
+    "status": "completed"
   },
   {
     "content": "Phase 2: Backend - implement JWT auth + org/user/role model + serialization helpers",
-    "status": "pending"
-  },
-  {
-    "content": "Phase 2: Backend - implement core CRUD: customers, products, rate plans, inventory",
-    "status": "pending"
-  },
-  {
-    "content": "Phase 2: Backend - implement reservations workflow (reserve/confirm/cancel), voucher HTML endpoint, manual payments",
-    "status": "pending"
-  },
-  {
-    "content": "Phase 2: Backend - implement CRM leads + quotes + convert-to-reservation",
-    "status": "pending"
-  },
-  {
-    "content": "Phase 2: Backend - implement B2B (agencies, agents, discount/commission groups) + agent booking",
-    "status": "pending"
-  },
-  {
-    "content": "Phase 2: Backend - implement reports (sales summary, reservations summary, CSV export)",
-    "status": "pending"
-  },
-  {
-    "content": "Phase 2: Frontend - implement app shell (login, layout, nav, role-based routing)",
-    "status": "pending"
-  },
-  {
-    "content": "Phase 2: Frontend - implement Products/Pricing/Inventory pages",
-    "status": "pending"
-  },
-  {
-    "content": "Phase 2: Frontend - implement Reservations + Voucher print view + Payments UI",
-    "status": "pending"
-  },
-  {
-    "content": "Phase 2: Frontend - implement CRM (customers, leads board, quotes builder)",
-    "status": "pending"
-  },
-  {
-    "content": "Phase 2: Frontend - implement B2B portal (agent login, booking)",
-    "status": "pending"
-  },
-  {
-    "content": "Phase 2: Frontend - implement Reports + Settings (users/roles)",
-    "status": "pending"
-  },
-  {
-    "content": "Phase 2: End-to-End Testing using Testing Agent (all user stories)",
-    "status": "pending"
-  },
-  {
-    "content": "Phase 2: Update plan.md with implementation status and next steps",
-    "status": "pending"
+    "status": "in_progress"
   }
 ]

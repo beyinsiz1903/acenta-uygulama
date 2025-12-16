@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Plus, Search, Trash2, Pencil, Users } from "lucide-react";
 
 import { api, apiErrorMessage } from "../lib/api";
@@ -105,7 +105,7 @@ export default function CustomersPage() {
   const [openForm, setOpenForm] = useState(false);
   const [editing, setEditing] = useState(null);
 
-  async function load() {
+  const load = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
@@ -116,14 +116,14 @@ export default function CustomersPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [q]);
 
   useEffect(() => {
     load();
-  }, []);
+  }, [load]);
 
   async function remove(id) {
-    if (!window.confirm("Müşteriyi silmek istiyor musun?") ) return;
+    if (!window.confirm("Müşteriyi silmek istiyor musun?")) return;
     try {
       await api.delete(`/customers/${id}`);
       await load();
@@ -242,12 +242,7 @@ export default function CustomersPage() {
         </CardContent>
       </Card>
 
-      <CustomerForm
-        open={openForm}
-        onOpenChange={setOpenForm}
-        initial={editing}
-        onSaved={load}
-      />
+      <CustomerForm open={openForm} onOpenChange={setOpenForm} initial={editing} onSaved={load} />
     </div>
   );
 }

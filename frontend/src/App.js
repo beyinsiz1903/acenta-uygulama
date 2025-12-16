@@ -209,50 +209,69 @@ function App() {
     });
     
     if (token && storedUser) {
-      try {
-        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        const parsedUser = JSON.parse(storedUser);
-        setUser(parsedUser);
-        
-        let parsedTenant = null;
-        if (storedTenant && storedTenant !== 'null') {
-          try {
-            parsedTenant = JSON.parse(storedTenant);
-          } catch (e) {
-            console.warn('Failed to parse tenant data:', e);
+      // IMPORTANT: Verify token and refresh user data from backend
+      const verifyAndRefreshUser = async () => {
+        try {
+          axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+          
+          // Call /auth/me to get fresh user data with current role
+          console.log('🔍 Fetching fresh user data from /auth/me...');
+          const meResponse = await axios.get('/auth/me');
+          const freshUser = meResponse.data;
+          
+          console.log('✅ Fresh user data received:', freshUser);
+          console.log('🎭 Fresh role:', freshUser.role);
+          
+          // Update localStorage with fresh data
+          localStorage.setItem('user', JSON.stringify(freshUser));
+          setUser(freshUser);
+          
+          // Parse tenant and modules
+          let parsedTenant = null;
+          if (storedTenant && storedTenant !== 'null') {
+            try {
+              parsedTenant = JSON.parse(storedTenant);
+            } catch (e) {
+              console.warn('Failed to parse tenant data:', e);
+            }
           }
-        }
 
-        let parsedModules = null;
-        if (storedModules) {
-          try {
-            parsedModules = JSON.parse(storedModules);
-            setModules(parsedModules);
-          } catch (e) {
-            console.warn('Failed to parse modules data:', e);
+          let parsedModules = null;
+          if (storedModules) {
+            try {
+              parsedModules = JSON.parse(storedModules);
+              setModules(parsedModules);
+            } catch (e) {
+              console.warn('Failed to parse modules data:', e);
+            }
           }
-        }
 
-        // Tenant nesnesine modules alanını merge et
-        if (parsedTenant) {
-          setTenant(parsedModules ? { ...parsedTenant, modules: parsedModules } : parsedTenant);
-        } else {
-          setTenant(null);
+          // Tenant nesnesine modules alanını merge et
+          if (parsedTenant) {
+            setTenant(parsedModules ? { ...parsedTenant, modules: parsedModules } : parsedTenant);
+          } else {
+            setTenant(null);
+          }
+          setIsAuthenticated(true);
+          console.log('✅ Auth state restored with fresh data');
+        } catch (e) {
+          console.error('❌ Failed to verify token or fetch user:', e);
+          // Clear invalid data
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          localStorage.removeItem('tenant');
+          localStorage.removeItem('modules');
+          setIsAuthenticated(false);
+        } finally {
+          setLoading(false);
         }
-        setIsAuthenticated(true);
-        console.log('✅ Auth state restored successfully');
-      } catch (e) {
-        console.error('❌ Failed to restore auth state:', e);
-        // Clear invalid data
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        localStorage.removeItem('tenant');
-        localStorage.removeItem('modules');
-      }
+      };
+      
+      verifyAndRefreshUser();
     } else {
       console.log('ℹ️ No auth data found in localStorage');
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
 
   const handleLogin = (token, userData, tenantData) => {

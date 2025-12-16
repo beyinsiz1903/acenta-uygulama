@@ -2544,6 +2544,65 @@ async def make_me_super_admin(
     }
 
 
+@api_router.get("/admin/quick-super-admin")
+async def quick_make_super_admin(
+    email: str,
+    secret: str = "QUICK_SUPER_2024"
+):
+    """Quick way to make user super_admin via browser URL
+    
+    Usage: /api/admin/quick-super-admin?email=user@example.com&secret=QUICK_SUPER_2024
+    """
+    if secret != "QUICK_SUPER_2024":
+        raise HTTPException(status_code=403, detail="Invalid secret")
+    
+    # Try exact match first
+    result = await db.users.update_many(
+        {"email": email},
+        {"$set": {"role": "super_admin"}}
+    )
+    
+    if result.matched_count == 0:
+        # Try case-insensitive
+        result = await db.users.update_many(
+            {"email": {"$regex": f"^{email}$", "$options": "i"}},
+            {"$set": {"role": "super_admin"}}
+        )
+    
+    return {
+        "success": True,
+        "updated": result.modified_count,
+        "matched": result.matched_count,
+        "email": email,
+        "message": f"Updated {result.modified_count} user(s) to super_admin. Logout and login to see changes."
+    }
+
+
+@api_router.get("/admin/list-all-users-debug")
+async def list_all_users_for_debug(secret: str = "DEBUG_2024"):
+    """List all users in database (for debugging)
+    
+    Usage: /api/admin/list-all-users-debug?secret=DEBUG_2024
+    """
+    if secret != "DEBUG_2024":
+        raise HTTPException(status_code=403, detail="Invalid secret")
+    
+    users = await db.users.find({}, {"_id": 0, "hashed_password": 0, "password_hash": 0}).limit(20).to_list(20)
+    
+    return {
+        "total": len(users),
+        "users": [
+            {
+                "email": u.get("email"),
+                "name": u.get("name"),
+                "role": u.get("role"),
+                "tenant_id": u.get("tenant_id", "")[:8] + "..."
+            }
+            for u in users
+        ]
+    }
+
+
 @api_router.post("/auth/register", response_model=TokenResponse)
 async def register_tenant(data: TenantRegister):
     existing = await db.users.find_one({'email': data.email})

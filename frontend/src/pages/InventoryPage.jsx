@@ -202,7 +202,7 @@ function InventoryRow({ day, onSave }) {
   const [closed, setClosed] = useState(!!day?.restrictions?.closed);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+
     setCapacityTotal(day.capacity_total || 0);
     setCapacityAvail(day.capacity_available || 0);
     setPrice(day.price ?? "");

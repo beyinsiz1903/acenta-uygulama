@@ -270,14 +270,14 @@ class AcentaAPITester:
             self.log("⚠️  Skipping reservation tests - missing product_id or customer_id")
             return False
 
-        # Create reservation
+        # Create reservation (single day tour - end_date should be None)
         today = datetime.now().strftime("%Y-%m-%d")
         reservation_data = {
             "idempotency_key": str(uuid.uuid4()),
             "product_id": self.product_id,
             "customer_id": self.customer_id,
             "start_date": today,
-            "end_date": today,
+            "end_date": None,
             "pax": 2,
             "channel": "direct",
             "agency_id": None

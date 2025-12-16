@@ -185,7 +185,8 @@ class AcentaAPITester:
         inventory_data = {
             "product_id": self.product_id,
             "date": today,
-            "capacity": 10,
+            "capacity_total": 10,
+            "capacity_available": 10,
             "price": 150.0
         }
         success, response = self.run_test(

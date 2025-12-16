@@ -122,7 +122,7 @@ export default function ProductsPage() {
     setLoading(true);
     setError("");
     try {
-      const resp = await api.get("/products", { params: { q, type: type || undefined } });
+      const resp = await api.get("/products", { params: { q, type: (type && type !== "all") ? type : undefined } });
       setRows(resp.data || []);
     } catch (e) {
       setError(apiErrorMessage(e));

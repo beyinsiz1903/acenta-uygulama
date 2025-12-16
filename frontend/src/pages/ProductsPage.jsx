@@ -192,7 +192,7 @@ export default function ProductsPage() {
                 <SelectValue placeholder="Tüm tipler" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Tümü</SelectItem>
+                <SelectItem value="all">Tümü</SelectItem>
                 {TYPES.map((t) => (
                   <SelectItem key={t.value} value={t.value}>
                     {t.label}

@@ -599,14 +599,14 @@ class AcentaAPITester:
         agent_token = response['access_token']
         self.log(f"✅ Agent logged in")
 
-        # Create booking as agent
+        # Create booking as agent (single day tour - end_date should be None)
         today = datetime.now().strftime("%Y-%m-%d")
         booking_data = {
             "idempotency_key": str(uuid.uuid4()),
             "product_id": self.product_id,
             "customer_id": self.customer_id,
             "start_date": today,
-            "end_date": today,
+            "end_date": None,
             "pax": 1
         }
         

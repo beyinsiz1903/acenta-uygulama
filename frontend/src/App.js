@@ -10,6 +10,7 @@ import ReservationsPage from "./pages/ReservationsPage";
 import CustomersPage from "./pages/CustomersPage";
 import CrmPage from "./pages/CrmPage";
 import B2BPage from "./pages/B2BPage";
+import B2BBookingPage from "./pages/B2BBookingPage";
 import ReportsPage from "./pages/ReportsPage";
 import SettingsPage from "./pages/SettingsPage";
 

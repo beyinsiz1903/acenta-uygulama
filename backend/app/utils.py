@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import csv
 import io
+import os
 import secrets
 import string
 from datetime import datetime, timezone
-from typing import Any, Iterable, Optional
+from typing import Any, Iterable
 
 from bson import ObjectId
 

@@ -1,21 +1,13 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { CalendarDays, Save, RefreshCw } from "lucide-react";
 import { addDays, format, startOfToday } from "date-fns";
 
 import { api, apiErrorMessage } from "../lib/api";
-import { formatMoney } from "../lib/format";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
-
-const TYPES = [
-  { value: "tour", label: "Tur" },
-  { value: "activity", label: "Aktivite" },
-  { value: "accommodation", label: "Konaklama" },
-  { value: "transfer", label: "Transfer" },
-];
 
 export default function InventoryPage() {
   const [products, setProducts] = useState([]);
@@ -31,19 +23,17 @@ export default function InventoryPage() {
     [rangeDays]
   );
 
-  async function loadProducts() {
+  const loadProducts = useCallback(async () => {
     const resp = await api.get("/products");
     setProducts(resp.data || []);
-    if (!productId && (resp.data || []).length) {
-      setProductId(resp.data[0].id);
-    }
-  }
+    setProductId((prev) => prev || (resp.data || [])[0]?.id || "");
+  }, []);
 
-  async function loadInventory(pid) {
+  const loadInventory = useCallback(async (pid) => {
+    if (!pid) return;
     setLoading(true);
     setError("");
     try {
-      if (!pid) return;
       const resp = await api.get("/inventory", {
         params: { product_id: pid, start, end },
       });
@@ -53,7 +43,7 @@ export default function InventoryPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [start, end]);
 
   useEffect(() => {
     (async () => {
@@ -63,11 +53,11 @@ export default function InventoryPage() {
         setError(apiErrorMessage(e));
       }
     })();
-  }, []);
+  }, [loadProducts]);
 
   useEffect(() => {
     if (productId) loadInventory(productId);
-  }, [productId, rangeDays]);
+  }, [productId, rangeDays, loadInventory]);
 
   const grid = useMemo(() => {
     const map = new Map(rows.map((r) => [r.date, r]));
@@ -86,7 +76,7 @@ export default function InventoryPage() {
     return days;
   }, [rows, rangeDays]);
 
-  async function upsertDay(day) {
+  const upsertDay = useCallback(async (day) => {
     try {
       await api.post("/inventory/upsert", {
         product_id: productId,
@@ -100,7 +90,7 @@ export default function InventoryPage() {
     } catch (e) {
       alert(apiErrorMessage(e));
     }
-  }
+  }, [productId, loadInventory]);
 
   return (
     <div className="space-y-4">
@@ -211,14 +201,10 @@ function InventoryRow({ day, onSave }) {
   const [price, setPrice] = useState(day.price ?? "");
   const [closed, setClosed] = useState(!!day?.restrictions?.closed);
 
-  React.useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => {
     setCapacityTotal(day.capacity_total || 0);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCapacityAvail(day.capacity_available || 0);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPrice(day.price ?? "");
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setClosed(!!day?.restrictions?.closed);
   }, [day]);
 
@@ -265,13 +251,15 @@ function InventoryRow({ day, onSave }) {
         <Button
           size="sm"
           className="gap-2"
-          onClick={() => onSave({
-            date: day.date,
-            capacity_total: capacityTotal,
-            capacity_available: capacityAvail,
-            price,
-            closed,
-          })}
+          onClick={() =>
+            onSave({
+              date: day.date,
+              capacity_total: capacityTotal,
+              capacity_available: capacityAvail,
+              price,
+              closed,
+            })
+          }
           data-testid={`inv-save-${day.date}`}
         >
           <Save className="h-4 w-4" />

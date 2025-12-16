@@ -417,7 +417,7 @@ export default function ReservationsPage() {
                 <SelectValue placeholder="Tüm durumlar" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Tümü</SelectItem>
+                <SelectItem value="all">Tümü</SelectItem>
                 <SelectItem value="pending">Beklemede</SelectItem>
                 <SelectItem value="confirmed">Onaylı</SelectItem>
                 <SelectItem value="paid">Ödendi</SelectItem>

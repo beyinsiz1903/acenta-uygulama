@@ -1,8 +1,7 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Plus, Search, Trash2, Pencil, Layers } from "lucide-react";
 
 import { api, apiErrorMessage } from "../lib/api";
-import { cn } from "../lib/utils";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Input } from "../components/ui/input";
@@ -111,34 +110,36 @@ function ProductForm({ open, onOpenChange, initial, onSaved }) {
 export default function ProductsPage() {
   const [rows, setRows] = useState([]);
   const [q, setQ] = useState("");
-  const [type, setType] = useState("");
+  const [type, setType] = useState("all");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   const [openForm, setOpenForm] = useState(false);
   const [editing, setEditing] = useState(null);
 
-  async function load() {
+  const load = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
-      const resp = await api.get("/products", { params: { q, type: (type && type !== "all") ? type : undefined } });
+      const resp = await api.get("/products", {
+        params: { q, type: type && type !== "all" ? type : undefined },
+      });
       setRows(resp.data || []);
     } catch (e) {
       setError(apiErrorMessage(e));
     } finally {
       setLoading(false);
     }
-  }
+  }, [q, type]);
 
   useEffect(() => {
     load();
-  }, []);
+  }, [load]);
 
   const filtered = useMemo(() => rows, [rows]);
 
   async function remove(id) {
-    if (!window.confirm("Ürünü silmek istiyor musun?") ) return;
+    if (!window.confirm("Ürünü silmek istiyor musun?")) return;
     try {
       await api.delete(`/products/${id}`);
       await load();
@@ -276,12 +277,7 @@ export default function ProductsPage() {
         </CardContent>
       </Card>
 
-      <ProductForm
-        open={openForm}
-        onOpenChange={setOpenForm}
-        initial={editing}
-        onSaved={load}
-      />
+      <ProductForm open={openForm} onOpenChange={setOpenForm} initial={editing} onSaved={load} />
     </div>
   );
 }

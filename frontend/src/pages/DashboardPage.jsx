@@ -163,7 +163,7 @@ export default function DashboardPage() {
             Lead ve teklif akışını yönet.
             <div className="mt-3">
               <Button asChild variant="outline" size="sm">
-                <Link to="/app/crm">CRM'e Git</Link>
+                <Link to="/app/crm">CRM&apos;e Git</Link>
               </Button>
             </div>
           </CardContent>

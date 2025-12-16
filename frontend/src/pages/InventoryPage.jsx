@@ -211,7 +211,7 @@ function InventoryRow({ day, onSave }) {
   const [price, setPrice] = useState(day.price ?? "");
   const [closed, setClosed] = useState(!!day?.restrictions?.closed);
 
-  useEffect(() => {
+  React.useEffect(() => {
     setCapacityTotal(day.capacity_total || 0);
     setCapacityAvail(day.capacity_available || 0);
     setPrice(day.price ?? "");

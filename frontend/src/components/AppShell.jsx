@@ -25,6 +25,7 @@ const nav = [
   { to: "/app/customers", label: "Müşteriler", icon: Users, roles: ["admin", "sales", "ops"] },
   { to: "/app/crm", label: "CRM", icon: FileText, roles: ["admin", "sales"] },
   { to: "/app/b2b", label: "B2B / Acenteler", icon: Building2, roles: ["admin"] },
+  { to: "/app/b2b-book", label: "B2B Rezervasyon", icon: Ticket, roles: ["b2b_agent"] },
   { to: "/app/reports", label: "Raporlar", icon: BarChart3, roles: ["admin", "sales", "accounting"] },
   { to: "/app/settings", label: "Ayarlar", icon: Settings, roles: ["admin"] },
 ];

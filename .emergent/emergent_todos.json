@@ -1,10 +1,10 @@
 [
   {
-    "content": "Phase 2: Generate design guidelines (shadcn/ui) for Acenta Master (Agentis+ clone)",
+    "content": "Phase 2: Backend - implement JWT auth + org/user/role model + serialization helpers",
     "status": "completed"
   },
   {
-    "content": "Phase 2: Backend - implement JWT auth + org/user/role model + serialization helpers",
+    "content": "Phase 2: Backend - implement core CRUD: customers, products, rate plans, inventory",
     "status": "in_progress"
   }
 ]

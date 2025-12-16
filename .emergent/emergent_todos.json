@@ -1,14 +1,14 @@
 [
   {
-    "content": "Phase 2: Frontend - implement B2B portal (agent login, booking)",
-    "status": "completed"
-  },
-  {
-    "content": "Phase 2: Frontend - implement Reports + Settings (users/roles)",
-    "status": "completed"
-  },
-  {
     "content": "Phase 2: End-to-End Testing using Testing Agent (all user stories)",
-    "status": "in_progress"
+    "status": "completed"
+  },
+  {
+    "content": "Phase 2: Update plan.md with implementation status and next steps",
+    "status": "completed"
+  },
+  {
+    "content": "Phase 2: Address minor warnings from lint/logs (optional cleanup)",
+    "status": "cancelled"
   }
 ]

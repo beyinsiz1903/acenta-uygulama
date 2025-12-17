@@ -214,8 +214,8 @@ export default function B2BPage() {
     <div className="space-y-4">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-semibold text-slate-900">B2B / Acenteler</h2>
-          <p className="text-sm text-slate-600">Alt acenteleri ve b2b_agent kullanıcılarını yönet.</p>
+          <h2 className="text-2xl font-semibold text-foreground">B2B / Acenteler</h2>
+          <p className="text-sm text-muted-foreground">Alt acenteleri ve b2b_agent kullanıcılarını yönet.</p>
         </div>
         <div className="flex gap-2">
           <Button onClick={() => setOpenAgency(true)} className="gap-2" data-testid="b2b-new-agency">
@@ -238,7 +238,7 @@ export default function B2BPage() {
       <Card className="rounded-2xl shadow-sm">
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
-            <Building2 className="h-4 w-4 text-slate-500" />
+            <Building2 className="h-4 w-4 text-muted-foreground" />
             Acenteler
           </CardTitle>
         </CardHeader>
@@ -246,7 +246,7 @@ export default function B2BPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm" data-testid="agency-table">
               <thead>
-                <tr className="text-left text-slate-500">
+                <tr className="text-left text-muted-foreground">
                   <th className="py-2">Ad</th>
                   <th className="py-2">İndirim</th>
                   <th className="py-2">Komisyon</th>
@@ -255,21 +255,21 @@ export default function B2BPage() {
               <tbody>
                 {agencies.length === 0 ? (
                   <tr>
-                    <td colSpan={3} className="py-6 text-slate-500">Kayıt yok.</td>
+                    <td colSpan={3} className="py-6 text-muted-foreground">Kayıt yok.</td>
                   </tr>
                 ) : (
                   agencies.map((a) => (
                     <tr key={a.id} className="border-t">
-                      <td className="py-3 font-medium text-slate-900">{a.name}</td>
-                      <td className="py-3 text-slate-700">{a.discount_percent}%</td>
-                      <td className="py-3 text-slate-700">{a.commission_percent}%</td>
+                      <td className="py-3 font-medium text-foreground">{a.name}</td>
+                      <td className="py-3 text-foreground/80">{a.discount_percent}%</td>
+                      <td className="py-3 text-foreground/80">{a.commission_percent}%</td>
                     </tr>
                   ))
                 )}
               </tbody>
             </table>
           </div>
-          <div className="mt-3 text-xs text-slate-500">
+          <div className="mt-3 text-xs text-muted-foreground">
             Not: b2b_agent kullanıcıları için “demo login” aynı giriş ekranından yapılır.
           </div>
         </CardContent>

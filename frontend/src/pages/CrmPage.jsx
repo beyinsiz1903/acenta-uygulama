@@ -19,6 +19,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { api, apiErrorMessage } from "../lib/api";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import {
@@ -610,31 +611,31 @@ export default function CrmPage() {
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm" data-testid="quote-table">
-              <thead>
-                <tr className="text-left text-muted-foreground">
-                  <th className="py-2">Durum</th>
-                  <th className="py-2">Toplam</th>
-                  <th className="py-2">Para Birimi</th>
-                  <th className="py-2 text-right">İşlem</th>
-                </tr>
-              </thead>
-              <tbody>
+            <Table data-testid="quote-table">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Durum</TableHead>
+                  <TableHead>Toplam</TableHead>
+                  <TableHead>Para Birimi</TableHead>
+                  <TableHead className="text-right">İşlem</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {quotes.length === 0 ? (
-                  <tr>
-                    <td colSpan={4} className="py-6 text-muted-foreground">Kayıt yok.</td>
-                  </tr>
+                  <TableRow>
+                    <TableCell colSpan={4} className="py-6 text-muted-foreground">Kayıt yok.</TableCell>
+                  </TableRow>
                 ) : (
                   quotes.map((q) => (
-                    <tr key={q.id} className="border-t">
-                      <td className="py-3">
+                    <TableRow key={q.id}>
+                      <TableCell>
                         <span className="rounded-full border bg-accent px-2 py-1 text-xs font-medium text-foreground/80">
                           {q.status}
                         </span>
-                      </td>
-                      <td className="py-3 font-medium text-foreground">{q.total}</td>
-                      <td className="py-3 text-muted-foreground">{q.currency}</td>
-                      <td className="py-3 text-right">
+                      </TableCell>
+                      <TableCell className="font-medium text-foreground">{q.total}</TableCell>
+                      <TableCell className="text-muted-foreground">{q.currency}</TableCell>
+                      <TableCell className="text-right">
                         <Button
                           size="sm"
                           onClick={() => convertQuote(q.id)}
@@ -643,12 +644,12 @@ export default function CrmPage() {
                         >
                           Rezervasyona Çevir <ArrowRight className="h-4 w-4" />
                         </Button>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   ))
                 )}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         </CardContent>
       </Card>

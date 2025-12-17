@@ -186,6 +186,39 @@ function SortableLeadCard({ lead }) {
       <LeadCard lead={lead} dragging={isDragging} />
     </div>
   );
+
+function KanbanColumn({ col, items }) {
+  const { setNodeRef, isOver } = useDroppable({ id: col.key });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={
+        "rounded-2xl border bg-white p-3 transition " +
+        (isOver ? "ring-2 ring-slate-900/10" : "")
+      }
+      data-testid={`lead-col-${col.key}`}
+    >
+      <div className="flex items-center justify-between">
+        <div className="text-xs font-semibold text-slate-700 uppercase tracking-wide">{col.label}</div>
+        <div className="text-[11px] text-slate-500">{items.length}</div>
+      </div>
+
+      <div className="mt-2 space-y-2">
+        <SortableContext items={items.map((l) => l.id)} strategy={verticalListSortingStrategy}>
+          {items.length ? (
+            items.map((l) => <SortableLeadCard key={l.id} lead={l} />)
+          ) : (
+            <div className="rounded-xl border border-dashed bg-slate-50 px-3 py-6 text-center text-xs text-slate-500">
+              Kartı buraya bırakın
+            </div>
+          )}
+        </SortableContext>
+      </div>
+    </div>
+  );
+}
+
 }
 
 
@@ -427,10 +460,11 @@ export default function CrmPage() {
   );
 
   async function persistLeadMove({ leadId, toStatus, toIndex }) {
-    const bucket = leadBuckets[toStatus] || [];
+    // Not: Hesaplamayı yaparken taşınan kartı listeden çıkarıyoruz ki komşu indeksleri şaşmasın.
+    const bucket = (leadBuckets[toStatus] || []).filter((l) => l.id !== leadId);
 
     // UI index (0 = en üst). backend sort_index büyük => üst.
-    // Basit yaklaşım: (en üst için) max+1, araya koyma için komşuların ortalaması.
+    // Basit yaklaşım: en üst için max+1, araya koyma için komşuların ortalaması.
     const upper = bucket[toIndex - 1];
     const lower = bucket[toIndex];
 
@@ -482,13 +516,13 @@ export default function CrmPage() {
     const activeId = String(active.id);
     const overId = String(over.id);
 
+    const fromStatus = findStatusOfLead(activeId);
+
     // Eğer kolon üzerine bırakıldıysa overId = statusKey
     const statuses = LEAD_STATUSES.map((s) => s.key);
     if (statuses.includes(overId)) {
-      const fromStatus = findStatusOfLead(activeId);
-      if (fromStatus !== overId) {
-        persistLeadMove({ leadId: activeId, toStatus: overId, toIndex: 0 });
-      }
+      // Kolona bırakınca en üste alıyoruz.
+      persistLeadMove({ leadId: activeId, toStatus: overId, toIndex: 0 });
       return;
     }
 
@@ -497,10 +531,15 @@ export default function CrmPage() {
     if (!overLead) return;
 
     const toStatus = overLead.status || "new";
-    const toIndex = (leadBuckets[toStatus] || []).findIndex((x) => x.id === overId);
+    let toIndex = (leadBuckets[toStatus] || []).findIndex((x) => x.id === overId);
     if (toIndex === -1) return;
 
-    const fromStatus = findStatusOfLead(activeId);
+    // Aynı kolonda reorder yaparken: aktif kartı listeden çıkardığımız için hedef indeks kayabilir.
+    if (fromStatus === toStatus) {
+      const activeIndex = (leadBuckets[toStatus] || []).findIndex((x) => x.id === activeId);
+      if (activeIndex !== -1 && activeIndex < toIndex) toIndex = Math.max(0, toIndex - 1);
+    }
+
     persistLeadMove({ leadId: activeId, toStatus, toIndex });
   }
 
@@ -541,39 +580,7 @@ export default function CrmPage() {
           <DndContext sensors={sensors} collisionDetection={closestCorners} onDragEnd={handleDragEnd}>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-3" data-testid="lead-board">
               {LEAD_STATUSES.map((col) => (
-                <div
-                  key={col.key}
-                  className="rounded-2xl border bg-white p-3"
-                  data-testid={`lead-col-${col.key}`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="text-xs font-semibold text-slate-700 uppercase tracking-wide">
-                      {col.label}
-                    </div>
-                    <div className="text-[11px] text-slate-500">{(leadBuckets[col.key] || []).length}</div>
-                  </div>
-
-                  <div className="mt-2 space-y-2" id={col.key}>
-                    {/* Kolonun kendisini drop target yapmak için */}
-                    <SortableContext
-                      items={(leadBuckets[col.key] || []).map((l) => l.id)}
-                      strategy={verticalListSortingStrategy}
-                    >
-                      {leadBuckets[col.key]?.length ? (
-                        leadBuckets[col.key].map((l) => <SortableLeadCard key={l.id} lead={l} />)
-                      ) : (
-                        <div
-                          className="rounded-xl border border-dashed bg-slate-50 px-3 py-6 text-center text-xs text-slate-500"
-                        >
-                          Kartı buraya bırakın
-                        </div>
-                      )}
-                    </SortableContext>
-
-                    {/* Boş kolona direkt bırakmayı yakalamak için overId=statusKey */}
-                    <div className="h-0 w-0" id={col.key} />
-                  </div>
-                </div>
+                <KanbanColumn key={col.key} col={col} items={leadBuckets[col.key] || []} />
               ))}
             </div>
           </DndContext>

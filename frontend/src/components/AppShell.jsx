@@ -354,7 +354,7 @@ export default function AppShell() {
 
       <footer className="border-t bg-background">
         <div className="mx-auto max-w-7xl px-4 py-4 text-xs text-muted-foreground">
-          © {new Date().getFullYear()} Acenta Master — v1
+          © {new Date().getFullYear()} — v1
         </div>
       </footer>
     </div>

@@ -16,6 +16,7 @@ import { cn } from "../lib/utils";
 
 function ymd(d) {
   return format(d, "yyyy-MM-dd");
+}
 
 function daysInMonth(date) {
   const d = startOfMonth(date);
@@ -25,8 +26,6 @@ function daysInMonth(date) {
     d.setDate(d.getDate() + 1);
   }
   return out;
-}
-
 }
 
 export default function InventoryPage() {

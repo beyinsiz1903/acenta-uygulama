@@ -127,7 +127,7 @@ export default function AppShell() {
 
       {/* Mobile nav drawer */}
       <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
-        <SheetContent side="left" className="p-0">
+        <SheetContent side="left" className="p-0" data-testid="mobile-nav-sheet">
           <div className="border-b px-5 py-4">
             <div className="flex items-center gap-3">
               <div className="h-9 w-9 rounded-xl bg-primary text-primary-foreground grid place-items-center font-semibold">

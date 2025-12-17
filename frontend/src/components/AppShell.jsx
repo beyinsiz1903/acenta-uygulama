@@ -131,7 +131,7 @@ export default function AppShell() {
                 A
               </div>
               <div>
-                <div className="text-sm font-semibold text-foreground">Acenta Master</div>
+                <div className="sr-only">Acenta Master</div>
                 <div className="text-xs text-muted-foreground">Menü</div>
               </div>
             </div>

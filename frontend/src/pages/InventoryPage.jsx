@@ -293,8 +293,19 @@ export default function InventoryPage() {
                 </div>
               ) : null}
 
-              <div className="rounded-2xl border bg-white p-3">
-                <DayPicker
+              <Tabs value={view} onValueChange={setView}>
+                <TabsList className="mb-3">
+                  <TabsTrigger value="calendar" className="gap-2" data-testid="inv-view-calendar">
+                    <CalendarDays className="h-4 w-4" /> Takvim
+                  </TabsTrigger>
+                  <TabsTrigger value="grid" className="gap-2" data-testid="inv-view-grid">
+                    <Table2 className="h-4 w-4" /> Grid
+                  </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="calendar">
+                  <div className="rounded-2xl border bg-white p-3">
+                    <DayPicker
                   mode="single"
                   selected={selectedDay}
                   onSelect={(d) => {

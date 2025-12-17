@@ -207,6 +207,27 @@ export default function AppShell() {
                     {item.label}
                   </NavLink>
                 );
+
+          <div className="fixed bottom-0 left-0 right-0 border-t bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 py-3">
+            <div className="flex items-center justify-between gap-2">
+              <div className="text-xs text-muted-foreground truncate">{user?.email || ""}</div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setMobileNavOpen(false);
+                  clearToken();
+                  window.location.href = "/login";
+                }}
+                className="gap-2"
+                data-testid="mobile-logout"
+              >
+                <LogOut className="h-4 w-4" />
+                Çıkış
+              </Button>
+            </div>
+          </div>
+
               })}
             </div>
           </div>

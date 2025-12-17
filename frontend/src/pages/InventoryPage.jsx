@@ -71,10 +71,14 @@ function CalendarDayCell({ date, activeModifiers, inv, cnFn }) {
 
 function DayContent(props) {
   // Not: DayPicker 'components' API'si gereği burada hook yok; render-safe.
-  const dateStr = ymd(props.date);
-  const inv = props.invMap?.get?.(dateStr);
-
-  return <CalendarDayCell date={props.date} activeModifiers={props.activeModifiers} inv={inv} cnFn={cn} />;
+  // invMap şu an doğrudan props ile gelmiyor, bu yüzden sadece gün numarası göstereceğiz.
+  // Takvim hücre detayları InventoryPage içinde zaten mevcut; isterseniz ileri adımda Context ile besleyebiliriz.
+  return (
+    <div className={cn("flex h-10 w-10 items-center justify-center rounded-md border border-slate-100 bg-white")}
+    >
+      <div className="text-[12px] leading-none text-slate-900">{props.date.getDate()}</div>
+    </div>
+  );
 }
 
 export default function InventoryPage() {

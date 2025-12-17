@@ -329,41 +329,7 @@ function ReservationDetails({ open, onOpenChange, reservationId }) {
                 </div>
               </div>
 
-              <div className="rounded-2xl border bg-card p-3">
-                <div className="text-xs text-muted-foreground">Toplam</div>
-                <div className="text-sm font-semibold text-foreground">
-                  {formatMoney(data.total_price, data.currency)}
-                </div>
-              </div>
-              <div className="rounded-2xl border bg-card p-3">
-                <div className="text-xs text-muted-foreground">Ödenen</div>
-                <div className="text-sm font-semibold text-foreground">
-                  {formatMoney(data.paid_amount, data.currency)}
-                </div>
-              </div>
-              <div className="rounded-2xl border bg-card p-3">
-                <div className="text-xs text-muted-foreground">Kalan</div>
-                <div className="text-sm font-semibold text-foreground">
-                  {formatMoney(data.due_amount, data.currency)}
-                </div>
-              </div>
-            </div>
 
-            <div className="flex flex-wrap gap-2">
-              <Button onClick={confirm} variant="outline" className="gap-2" data-testid="res-confirm">
-                <CheckCircle2 className="h-4 w-4" /> Onayla
-              </Button>
-              <Button onClick={cancel} variant="destructive" className="gap-2" data-testid="res-cancel">
-                <XCircle className="h-4 w-4" /> İptal
-              </Button>
-              <Button
-                onClick={openVoucher}
-                className="gap-2"
-                data-testid="res-voucher"
-              >
-                <ExternalLink className="h-4 w-4" /> Voucher
-              </Button>
-            </div>
 
             <PaymentForm reservationId={reservationId} currency={data.currency} onSaved={load} />
 

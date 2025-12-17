@@ -31,14 +31,14 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-background flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="mb-6 text-center">
-          <div className="mx-auto h-12 w-12 rounded-2xl bg-slate-900 text-white grid place-items-center font-bold">
+          <div className="mx-auto h-12 w-12 rounded-2xl bg-primary text-primary-foreground grid place-items-center font-bold">
             A
           </div>
-          <h1 className="mt-3 text-2xl font-semibold text-slate-900">Acenta Master</h1>
-          <p className="mt-1 text-sm text-slate-600">
+          <h1 className="mt-3 text-2xl font-semibold text-foreground">Acenta Master</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
             Acenta operasyonlarını tek panelden yönet.
           </p>
         </div>
@@ -85,7 +85,7 @@ export default function LoginPage() {
                 {loading ? "Giriş yapılıyor..." : "Giriş Yap"}
               </Button>
 
-              <div className="text-xs text-slate-500">
+              <div className="text-xs text-muted-foreground">
                 Demo: <span className="font-medium">admin@acenta.test</span> / <span className="font-medium">admin123</span>
               </div>
             </form>

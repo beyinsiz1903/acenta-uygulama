@@ -373,11 +373,7 @@ export default function InventoryPage() {
                         day: "h-10 w-10 p-0 font-normal aria-selected:opacity-100",
                       }}
                       components={{
-                        DayContent: (props) => {
-                          const dateStr = ymd(props.date);
-                          const inv = invMap.get(dateStr);
-                          return <CalendarDayCell date={props.date} activeModifiers={props.activeModifiers} inv={inv} cnFn={cn} />;
-                        },
+                        DayContent: DayContent,
                       }}
                     />
 

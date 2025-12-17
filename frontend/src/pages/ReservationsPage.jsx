@@ -167,7 +167,7 @@ function PaymentForm({ reservationId, currency, onSaved }) {
   }
 
   return (
-    <div className="rounded-2xl border bg-white p-4">
+    <div className="rounded-2xl border bg-card p-4">
       <div className="text-sm font-semibold text-foreground">Tahsilat Ekle</div>
       <div className="mt-3 grid grid-cols-1 md:grid-cols-4 gap-3">
         <div className="space-y-2">

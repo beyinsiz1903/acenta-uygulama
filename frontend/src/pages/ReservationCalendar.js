@@ -1150,6 +1150,29 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
                       className="flex-1 relative group"
                       title={`${formatDate(date)}: ${occ}% occupancy`}
                     >
+
+              {/* Data Source / Empty Dataset Notice */}
+              {(calendarMeta.rooms || 0) === 0 ? (
+                <div className="bg-white/70 border border-amber-200 rounded-lg p-3 text-sm text-amber-900">
+                  <div className="font-semibold mb-1">Bu otel için oda kaydı bulunamadı.</div>
+                  <div className="text-xs text-amber-800/90">
+                    Deluxe+ analizleri oda ve rezervasyon verisine göre hesaplanır. Önce oda ekleyin veya bu otelin verisi olan bir tenant ile giriş yapın.
+                  </div>
+                </div>
+              ) : (calendarMeta.bookings || 0) === 0 ? (
+                <div className="bg-white/70 border border-amber-200 rounded-lg p-3 text-sm text-amber-900">
+                  <div className="font-semibold mb-1">Seçili tarih aralığında rezervasyon yok.</div>
+                  <div className="text-xs text-amber-800/90">
+                    Tarih aralığı: <span className="font-medium">{calendarMeta.start_date} → {calendarMeta.end_date}</span>. Deluxe+ metrikleri bu aralıkta rezervasyon olmadığında yanıltıcı olabilir.
+                    İsterseniz takvimde farklı bir tarihe gidin veya test için bir rezervasyon oluşturun.
+                  </div>
+                </div>
+              ) : (
+                <div className="text-[11px] text-amber-800/80">
+                  Veri kaynağı: {calendarMeta.rooms} oda, {calendarMeta.bookings} rezervasyon (aralık: {calendarMeta.start_date} → {calendarMeta.end_date})
+                </div>
+              )}
+
                       <div className="h-8 bg-gray-200 rounded overflow-hidden">
                         <div
                           className={`h-full transition-all ${
@@ -1218,7 +1241,7 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
               )}
 
               {/* Oversell Protection Map */}
-              {oversellProtection.length > 0 && (
+              {(calendarMeta.bookings || 0) > 0 && oversellProtection.length > 0 && (
                 <div className="bg-white p-3 rounded-lg border-2 border-red-300">
                   <div className="text-sm font-semibold text-red-700 mb-2">
                     🛡️ Oversell Protection Status
@@ -1261,7 +1284,7 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
               )}
 
               {/* Channel Mix Optimization */}
-              {channelMixData && (
+              {(calendarMeta.bookings || 0) > 0 && channelMixData && (
                 <div className="bg-white p-3 rounded-lg border-2 border-blue-300">
                   <div className="text-sm font-semibold text-blue-700 mb-2">
                     📊 Channel Mix Analysis
@@ -1296,7 +1319,8 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
               )}
 
               {/* Empty State */}
-              {groupBookings.length === 0 && oversellProtection.length === 0 && !channelMixData && (
+              {(calendarMeta.rooms || 0) > 0 && (calendarMeta.bookings || 0) > 0 &&
+               groupBookings.length === 0 && oversellProtection.length === 0 && !channelMixData && (
                 <div className="text-center py-8 text-gray-500">
                   <div className="text-4xl mb-2">💎</div>
                   <div className="text-sm">Deluxe+ analytics loading...</div>

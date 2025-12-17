@@ -95,10 +95,7 @@ export default function AppShell() {
               <div className="h-9 w-9 rounded-xl bg-primary text-primary-foreground grid place-items-center font-semibold">
                 A
               </div>
-              <div>
-                <div className="text-sm font-semibold text-foreground leading-tight">Acenta Master</div>
-                {/* subtitle removed */}
-              </div>
+              <div className="sr-only">Acenta Master</div>
             </div>
           </div>
 

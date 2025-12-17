@@ -100,6 +100,7 @@ export default function AppShell() {
                 <div className="text-xs text-muted-foreground">Operasyon & Rezervasyon Yönetimi</div>
               </div>
             </div>
+          </div>
 
           <div className="flex items-center gap-2">
             <ThemeToggle />

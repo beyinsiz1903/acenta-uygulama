@@ -275,8 +275,9 @@ C102,standard,1,2,90,city,queen,wifi"""
         print("🎯 OBJECTIVE: Verify C101 and C102 exist with view/bed_type/amenities")
         
         try:
+            # Use a filter to bypass cache and get fresh data from database
             start_time = datetime.now()
-            async with self.session.get(f"{BACKEND_URL}/pms/rooms?limit=300", 
+            async with self.session.get(f"{BACKEND_URL}/pms/rooms?limit=300&room_type=deluxe", 
                                       headers=self.get_headers()) as response:
                 end_time = datetime.now()
                 response_time = (end_time - start_time).total_seconds() * 1000

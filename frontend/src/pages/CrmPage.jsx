@@ -220,7 +220,7 @@ function KanbanColumn({ col, items }) {
       <div className="mt-2 space-y-2">
         <SortableContext items={items.map((l) => l.id)} strategy={verticalListSortingStrategy}>
           {items.length ? (
-            items.map((l) => <SortableLeadCard key={l.id} lead={l} />)
+            items.map((l) => <SortableLeadCard key={l.id} lead={l} status={col.key} />)
           ) : (
             <div className="rounded-xl border border-dashed bg-accent/40 px-3 py-6 text-center text-xs text-muted-foreground">
               Kartı buraya bırakın

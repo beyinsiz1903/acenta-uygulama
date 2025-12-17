@@ -11,13 +11,13 @@ function StatCard({ title, value, icon: Icon, to, testId }) {
   return (
     <Card className="rounded-2xl shadow-sm">
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm text-slate-700 flex items-center gap-2">
-          <Icon className="h-4 w-4 text-slate-500" />
+        <CardTitle className="text-sm text-muted-foreground flex items-center gap-2">
+          <Icon className="h-4 w-4 text-muted-foreground" />
           {title}
         </CardTitle>
       </CardHeader>
       <CardContent className="flex items-end justify-between">
-        <div className="text-3xl font-semibold text-slate-900" data-testid={testId}>
+        <div className="text-3xl font-semibold text-foreground" data-testid={testId}>
           {value}
         </div>
         {to ? (
@@ -68,8 +68,8 @@ export default function DashboardPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-semibold text-slate-900">Dashboard</h2>
-          <p className="text-sm text-slate-600">
+          <h2 className="text-2xl font-semibold text-foreground">Dashboard</h2>
+          <p className="text-sm text-muted-foreground">
             Rezervasyon ve satış özetini buradan takip edebilirsin.
           </p>
         </div>
@@ -107,11 +107,11 @@ export default function DashboardPage() {
                 <XAxis dataKey="day" tick={{ fontSize: 12 }} />
                 <YAxis tick={{ fontSize: 12 }} />
                 <Tooltip />
-                <Bar dataKey="revenue" fill="#0f172a" radius={[8, 8, 0, 0]} />
+                <Bar dataKey="revenue" fill="hsl(var(--primary))" radius={[8, 8, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
-          <div className="mt-3 text-xs text-slate-500">
+          <div className="mt-3 text-xs text-muted-foreground">
             Not: Gelir hesaplaması rezervasyon total_price üzerinden yapılır (v1).
           </div>
         </CardContent>
@@ -120,8 +120,8 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="rounded-2xl shadow-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-slate-700 flex items-center gap-2">
-              <Layers className="h-4 w-4 text-slate-500" />
+            <CardTitle className="text-sm text-muted-foreground flex items-center gap-2">
+              <Layers className="h-4 w-4 text-muted-foreground" />
               Ürün Kataloğu
             </CardTitle>
           </CardHeader>
@@ -137,8 +137,8 @@ export default function DashboardPage() {
 
         <Card className="rounded-2xl shadow-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-slate-700 flex items-center gap-2">
-              <CalendarDays className="h-4 w-4 text-slate-500" />
+            <CardTitle className="text-sm text-muted-foreground flex items-center gap-2">
+              <CalendarDays className="h-4 w-4 text-muted-foreground" />
               Müsaitlik Takvimi
             </CardTitle>
           </CardHeader>
@@ -154,8 +154,8 @@ export default function DashboardPage() {
 
         <Card className="rounded-2xl shadow-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-slate-700 flex items-center gap-2">
-              <Users className="h-4 w-4 text-slate-500" />
+            <CardTitle className="text-sm text-muted-foreground flex items-center gap-2">
+              <Users className="h-4 w-4 text-muted-foreground" />
               CRM
             </CardTitle>
           </CardHeader>
@@ -171,8 +171,8 @@ export default function DashboardPage() {
 
         <Card className="rounded-2xl shadow-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-slate-700 flex items-center gap-2">
-              <Ticket className="h-4 w-4 text-slate-500" />
+            <CardTitle className="text-sm text-muted-foreground flex items-center gap-2">
+              <Ticket className="h-4 w-4 text-muted-foreground" />
               Voucher
             </CardTitle>
           </CardHeader>

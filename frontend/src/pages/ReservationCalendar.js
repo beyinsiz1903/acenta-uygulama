@@ -36,6 +36,14 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
   const [roomBlocks, setRoomBlocks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [daysToShow, setDaysToShow] = useState(14); // 2 weeks view
+
+  // Calendar data meta (used to avoid misleading Enterprise/AI/Deluxe+ metrics when dataset is empty)
+  const [calendarMeta, setCalendarMeta] = useState({
+    start_date: null,
+    end_date: null,
+    rooms: 0,
+    bookings: 0,
+  });
   
   // Dialog states
   const [groupColorMap, setGroupColorMap] = useState({});
@@ -145,14 +153,26 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
         axios.get(`/pms/room-blocks?status=active&_t=${cacheBuster}`).catch(() => ({ data: { blocks: [] } }))
       ]);
 
+      const rangeStart = startDate.toISOString().split('T')[0];
+      const rangeEnd = endDate.toISOString().split('T')[0];
+      const roomsCount = roomsRes.data?.length || 0;
+      const bookingsCount = bookingsRes.data?.length || 0;
+
+      setCalendarMeta({
+        start_date: rangeStart,
+        end_date: rangeEnd,
+        rooms: roomsCount,
+        bookings: bookingsCount,
+      });
+
       console.log('📊 Calendar Data Loaded:', {
-        rooms: roomsRes.data?.length || 0,
-        bookings: bookingsRes.data?.length || 0,
+        rooms: roomsCount,
+        bookings: bookingsCount,
         guests: guestsRes.data?.length || 0,
         bookingsSample: bookingsRes.data?.[0],
         dateRange: {
-          start: startDate.toISOString().split('T')[0],
-          end: endDate.toISOString().split('T')[0]
+          start: rangeStart,
+          end: rangeEnd
         }
       });
       
@@ -200,7 +220,7 @@ const ReservationCalendar = ({ user, tenant, onLogout }) => {
       setGroupBookings(groupSummary);
       
       // Load Enterprise Mode data
-      loadEnterpriseData();
+      loadEnterpriseData({ roomsCount });
     } catch (error) {
       console.error('Failed to load calendar data:', error);
       toast.error('Failed to load calendar data');

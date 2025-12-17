@@ -22,6 +22,7 @@ export default function InventoryPage() {
   const [products, setProducts] = useState([]);
   const [productId, setProductId] = useState("");
   const [month, setMonth] = useState(() => new Date());
+  const [view, setView] = useState("calendar"); // calendar | grid
 
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);

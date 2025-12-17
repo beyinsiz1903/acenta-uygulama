@@ -142,7 +142,7 @@ export default function AppShell() {
               <div className="rounded-xl border bg-background/50 p-2">
                 <div className="text-[11px] text-muted-foreground">Ciro 7G</div>
                 <div className="text-sm font-semibold text-foreground" data-testid="sb-rev7">
-                  {Math.round(sidebarStats.revenue7d)}
+                  {formatMoney(sidebarStats.revenue7d, "TRY")}
                 </div>
               </div>
             </div>

@@ -81,7 +81,7 @@ export default function AppShell() {
 
       <div className="mx-auto grid max-w-7xl grid-cols-12 gap-4 px-4 py-6">
         <aside className="col-span-12 md:col-span-3 lg:col-span-2">
-          <nav className="rounded-2xl border bg-white p-2 shadow-sm">
+          <nav className="rounded-2xl border bg-card p-2 shadow-sm">
             {visibleNav.map((item) => {
               const Icon = item.icon;
               const active = location.pathname === item.to;

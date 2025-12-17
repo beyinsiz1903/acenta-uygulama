@@ -4,6 +4,7 @@ import { BarChart3, Download } from "lucide-react";
 import { api, apiErrorMessage } from "../lib/api";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
 
 export default function ReportsPage() {
   const [resSummary, setResSummary] = useState([]);
@@ -71,30 +72,30 @@ export default function ReportsPage() {
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm" data-testid="sales-table">
-              <thead>
-                <tr className="text-left text-muted-foreground">
-                  <th className="py-2">Gün</th>
-                  <th className="py-2">Rezervasyon</th>
-                  <th className="py-2">Ciro</th>
-                </tr>
-              </thead>
-              <tbody>
+            <Table data-testid="sales-table">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Gün</TableHead>
+                  <TableHead>Rezervasyon</TableHead>
+                  <TableHead>Ciro</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {sales.length === 0 ? (
-                  <tr>
-                    <td colSpan={3} className="py-6 text-muted-foreground">Kayıt yok.</td>
-                  </tr>
+                  <TableRow>
+                    <TableCell colSpan={3} className="py-6 text-muted-foreground">Kayıt yok.</TableCell>
+                  </TableRow>
                 ) : (
                   sales.map((r) => (
-                    <tr key={r.day} className="border-t">
-                      <td className="py-3 font-medium text-foreground">{r.day}</td>
-                      <td className="py-3 text-foreground/80">{r.count}</td>
-                      <td className="py-3 text-foreground/80">{r.revenue}</td>
-                    </tr>
+                    <TableRow key={r.day}>
+                      <TableCell className="font-medium text-foreground">{r.day}</TableCell>
+                      <TableCell className="text-foreground/80">{r.count}</TableCell>
+                      <TableCell className="text-foreground/80">{r.revenue}</TableCell>
+                    </TableRow>
                   ))
                 )}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         </CardContent>
       </Card>

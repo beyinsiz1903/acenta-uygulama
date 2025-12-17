@@ -33,11 +33,19 @@ async def debug_rooms():
             rooms = await response.json()
             print(f"\n📊 Total rooms found: {len(rooms)}")
             
+            # Show all room numbers
+            room_numbers = [room.get('room_number') for room in rooms]
+            print(f"📊 All room numbers: {sorted(room_numbers)}")
+            
             # Look for C101 and C102
             c_rooms = [room for room in rooms if room.get('room_number', '').startswith('C10')]
             print(f"📊 C10x rooms found: {len(c_rooms)}")
             
-            for room in c_rooms:
+            # Look for any C rooms
+            c_any_rooms = [room for room in rooms if room.get('room_number', '').startswith('C')]
+            print(f"📊 Any C rooms found: {len(c_any_rooms)}")
+            
+            for room in c_any_rooms:
                 print(f"\n🏨 Room: {room.get('room_number')}")
                 print(f"   Type: {room.get('room_type')}")
                 print(f"   View: {room.get('view')}")

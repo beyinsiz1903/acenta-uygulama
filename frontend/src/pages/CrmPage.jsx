@@ -5,6 +5,7 @@ import {
   DndContext,
   PointerSensor,
   closestCorners,
+  useDroppable,
   useSensor,
   useSensors,
 } from "@dnd-kit/core";

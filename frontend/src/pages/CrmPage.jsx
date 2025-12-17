@@ -182,7 +182,7 @@ function LeadCard({ lead, dragging, status }) {
   );
 }
 
-function SortableLeadCard({ lead }) {
+function SortableLeadCard({ lead, status }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: lead.id,
     data: { lead },

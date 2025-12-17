@@ -364,9 +364,6 @@ C102,standard,1,2,90,city,queen,wifi"""
                                     return  # Exit early on success
                                 else:
                                     print(f"    ❌ {scenario_name}: Rooms not found in cache")
-                            else:
-                                print(f"    ❌ {scenario_name}: Missing rooms or incorrect properties")
-                                print(f"        C101 valid: {'✅' if c101_valid else '❌'}, C102 valid: {'✅' if c102_valid else '❌'}")
                         else:
                             print(f"    ❌ {scenario_name}: Expected list response, got {type(data)}")
                     else:

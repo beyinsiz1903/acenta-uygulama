@@ -546,8 +546,8 @@ export default function CrmPage() {
     <div className="space-y-4">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-semibold text-slate-900">CRM</h2>
-          <p className="text-sm text-slate-600">Lead → Teklif → Rezervasyon</p>
+          <h2 className="text-2xl font-semibold text-foreground">CRM</h2>
+          <p className="text-sm text-muted-foreground">Lead → Teklif → Rezervasyon</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={load} className="gap-2" data-testid="crm-refresh">
@@ -594,7 +594,7 @@ export default function CrmPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm" data-testid="quote-table">
               <thead>
-                <tr className="text-left text-slate-500">
+                <tr className="text-left text-muted-foreground">
                   <th className="py-2">Durum</th>
                   <th className="py-2">Toplam</th>
                   <th className="py-2">Para Birimi</th>
@@ -604,18 +604,18 @@ export default function CrmPage() {
               <tbody>
                 {quotes.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="py-6 text-slate-500">Kayıt yok.</td>
+                    <td colSpan={4} className="py-6 text-muted-foreground">Kayıt yok.</td>
                   </tr>
                 ) : (
                   quotes.map((q) => (
                     <tr key={q.id} className="border-t">
                       <td className="py-3">
-                        <span className="rounded-full border bg-slate-50 px-2 py-1 text-xs font-medium text-slate-700">
+                        <span className="rounded-full border bg-accent px-2 py-1 text-xs font-medium text-foreground/80">
                           {q.status}
                         </span>
                       </td>
-                      <td className="py-3 font-medium text-slate-900">{q.total}</td>
-                      <td className="py-3 text-slate-600">{q.currency}</td>
+                      <td className="py-3 font-medium text-foreground">{q.total}</td>
+                      <td className="py-3 text-muted-foreground">{q.currency}</td>
                       <td className="py-3 text-right">
                         <Button
                           size="sm"

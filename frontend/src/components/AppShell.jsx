@@ -107,9 +107,9 @@ export default function AppShell() {
             })}
           </nav>
 
-          <div className="mt-4 rounded-2xl border bg-white p-4 shadow-sm">
-            <div className="text-xs font-semibold text-slate-900">Hızlı İpuçları</div>
-            <div className="mt-2 text-xs text-slate-600">
+          <div className="mt-4 rounded-2xl border bg-card p-4 shadow-sm">
+            <div className="text-xs font-semibold text-foreground">Hızlı İpuçları</div>
+            <div className="mt-2 text-xs text-muted-foreground">
               Müsaitlik ekranında kapasite ve fiyatı güncelleyip rezervasyon akışını
               hızlıca test edebilirsin.
             </div>

@@ -241,7 +241,7 @@ function ReservationDetails({ open, onOpenChange, reservationId }) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="p-0">
-        <div className="border-b px-5 py-4">
+        <div className="sticky top-0 z-10 border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-5 py-4">
           <SheetHeader>
             <SheetTitle>Rezervasyon Detayı</SheetTitle>
           </SheetHeader>

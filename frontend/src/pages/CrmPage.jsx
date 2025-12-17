@@ -412,8 +412,96 @@ export default function CrmPage() {
       if (!buckets[st]) buckets[st] = [];
       buckets[st].push(l);
     }
+    // Backend zaten sort_index desc döndürüyor; yine de güvenli olsun.
+    for (const k of Object.keys(buckets)) {
+      buckets[k] = buckets[k].slice().sort((a, b) => Number(b.sort_index || 0) - Number(a.sort_index || 0));
+    }
     return buckets;
   }, [leads]);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 6 },
+    })
+  );
+
+  async function persistLeadMove({ leadId, toStatus, toIndex }) {
+    const bucket = leadBuckets[toStatus] || [];
+
+    // UI index (0 = en üst). backend sort_index büyük => üst.
+    // Basit yaklaşım: (en üst için) max+1, araya koyma için komşuların ortalaması.
+    const upper = bucket[toIndex - 1];
+    const lower = bucket[toIndex];
+
+    const upperVal = upper ? Number(upper.sort_index || 0) : null;
+    const lowerVal = lower ? Number(lower.sort_index || 0) : null;
+
+    let nextSort = null;
+    if (upperVal === null && lowerVal === null) nextSort = Date.now() / 1000;
+    else if (upperVal === null) nextSort = (lowerVal || 0) + 1;
+    else if (lowerVal === null) nextSort = upperVal + 1;
+    else nextSort = (upperVal + lowerVal) / 2;
+
+    // Optimistic UI
+    setLeads((prev) =>
+      prev.map((l) =>
+        l.id === leadId
+          ? {
+              ...l,
+              status: toStatus,
+              sort_index: nextSort,
+            }
+          : l
+      )
+    );
+
+    try {
+      await api.patch(`/leads/${leadId}/status`, {
+        status: toStatus,
+        sort_index: nextSort,
+      });
+      await load();
+    } catch (e) {
+      alert(apiErrorMessage(e));
+      await load();
+    }
+  }
+
+  function findStatusOfLead(id) {
+    for (const st of Object.keys(leadBuckets)) {
+      if ((leadBuckets[st] || []).some((x) => x.id === id)) return st;
+    }
+    return "new";
+  }
+
+  function handleDragEnd(event) {
+    const { active, over } = event;
+    if (!active?.id || !over?.id) return;
+
+    const activeId = String(active.id);
+    const overId = String(over.id);
+
+    // Eğer kolon üzerine bırakıldıysa overId = statusKey
+    const statuses = LEAD_STATUSES.map((s) => s.key);
+    if (statuses.includes(overId)) {
+      const fromStatus = findStatusOfLead(activeId);
+      if (fromStatus !== overId) {
+        persistLeadMove({ leadId: activeId, toStatus: overId, toIndex: 0 });
+      }
+      return;
+    }
+
+    // Kartın üstüne bırakıldıysa: hedef kartın status'una git, index'i hesapla
+    const overLead = leadById.get(overId);
+    if (!overLead) return;
+
+    const toStatus = overLead.status || "new";
+    const toIndex = (leadBuckets[toStatus] || []).findIndex((x) => x.id === overId);
+    if (toIndex === -1) return;
+
+    const fromStatus = findStatusOfLead(activeId);
+    persistLeadMove({ leadId: activeId, toStatus, toIndex });
+  }
 
   return (
     <div className="space-y-4">

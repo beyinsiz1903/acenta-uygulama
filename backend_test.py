@@ -553,7 +553,7 @@ class PMSRoomsBulkTester:
 
 async def main():
     """Main test execution"""
-    tester = PMSBookingsTester()
+    tester = PMSRoomsBulkTester()
     await tester.run_all_tests()
 
 if __name__ == "__main__":

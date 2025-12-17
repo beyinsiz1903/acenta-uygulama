@@ -92,14 +92,14 @@ export default function AppShell() {
             </Button>
 
             <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-xl bg-primary text-primary-foreground grid place-items-center font-semibold">
-              A
+              <div className="h-9 w-9 rounded-xl bg-primary text-primary-foreground grid place-items-center font-semibold">
+                A
+              </div>
+              <div>
+                <div className="text-sm font-semibold text-foreground">Acenta Master</div>
+                <div className="text-xs text-muted-foreground">Operasyon & Rezervasyon Yönetimi</div>
+              </div>
             </div>
-            <div>
-              <div className="text-sm font-semibold text-foreground">Acenta Master</div>
-              <div className="text-xs text-muted-foreground">Operasyon & Rezervasyon Yönetimi</div>
-            </div>
-          </div>
 
           <div className="flex items-center gap-2">
             <ThemeToggle />

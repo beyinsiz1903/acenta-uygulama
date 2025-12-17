@@ -1,5 +1,19 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Plus, FileText, ArrowRight, RefreshCw } from "lucide-react";
+import { Plus, FileText, ArrowRight, RefreshCw, GripVertical } from "lucide-react";
+
+import {
+  DndContext,
+  PointerSensor,
+  closestCorners,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 import { api, apiErrorMessage } from "../lib/api";
 import { Button } from "../components/ui/button";

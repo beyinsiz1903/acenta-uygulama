@@ -3297,6 +3297,81 @@ const PMSModule = ({ user, tenant, onLogout }) => {
           </DialogContent>
         </Dialog>
 
+        {/* Room Images Dialog */}
+        <Dialog open={openDialog === 'room-images'} onOpenChange={(open) => !open && setOpenDialog(null)}>
+          <DialogContent className="max-w-4xl">
+            <DialogHeader>
+              <DialogTitle>Oda Fotoğrafları {selectedRoom ? `- ${selectedRoom.room_number}` : ''}</DialogTitle>
+              <DialogDescription>
+                Bu özellik preview ortamında sunucu diskine yükler. Canlıda dosya kalıcılığı için daha sonra S3/Cloudinary önerilir.
+              </DialogDescription>
+            </DialogHeader>
+
+            {selectedRoom ? (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                  {(selectedRoom.images || []).length === 0 ? (
+                    <div className="col-span-full text-sm text-gray-500">Henüz fotoğraf yüklenmemiş.</div>
+                  ) : (
+                    (selectedRoom.images || []).map((src) => (
+                      <a key={src} href={src} target="_blank" rel="noreferrer" className="block">
+                        <div className="h-32 rounded-lg overflow-hidden border bg-gray-50">
+                          <img src={src} alt="room" className="w-full h-full object-cover" />
+                        </div>
+                      </a>
+                    ))
+                  )}
+                </div>
+
+                <div className="border-t pt-4">
+                  <Label>Yeni Fotoğraf(lar) Yükle</Label>
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={async (e) => {
+                      try {
+                        const files = Array.from(e.target.files || []);
+                        if (files.length === 0) return;
+
+                        const formData = new FormData();
+                        files.forEach((f) => formData.append('files', f));
+
+                        const res = await axios.post(`/pms/rooms/${selectedRoom.id}/images`, formData, {
+                          headers: { 'Content-Type': 'multipart/form-data' },
+                        });
+
+                        toast.success(`${res.data.uploaded} fotoğraf yüklendi`);
+
+                        // Refresh rooms, then refresh selectedRoom reference
+                        await loadData();
+                        setSelectedRoom((prev) => {
+                          if (!prev) return prev;
+                          const updated = rooms.find(r => r.id === prev.id);
+                          return updated || prev;
+                        });
+                      } catch (err) {
+                        toast.error(err?.response?.data?.detail || 'Fotoğraf yüklenemedi');
+                      } finally {
+                        // clear input value
+                        e.target.value = '';
+                      }
+                    }}
+                  />
+                  <p className="text-[11px] text-gray-500 mt-1">JPEG/PNG/WEBP önerilir. Max 10MB/dosya.</p>
+                </div>
+
+                <div className="flex justify-end">
+                  <Button variant="outline" onClick={() => setOpenDialog(null)}>Kapat</Button>
+                </div>
+              </div>
+            ) : (
+              <div className="text-sm text-gray-500">Oda seçilmedi.</div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+
         {/* Bulk Rooms Dialog */}
         <Dialog open={openDialog === 'bulk-rooms'} onOpenChange={(open) => !open && setOpenDialog(null)}>
           <DialogContent className="max-w-3xl">

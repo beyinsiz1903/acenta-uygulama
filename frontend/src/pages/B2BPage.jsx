@@ -4,6 +4,7 @@ import { Building2, Plus, UserPlus } from "lucide-react";
 import { api, apiErrorMessage } from "../lib/api";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import {
@@ -244,30 +245,30 @@ export default function B2BPage() {
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm" data-testid="agency-table">
-              <thead>
-                <tr className="text-left text-muted-foreground">
-                  <th className="py-2">Ad</th>
-                  <th className="py-2">İndirim</th>
-                  <th className="py-2">Komisyon</th>
-                </tr>
-              </thead>
-              <tbody>
+            <Table data-testid="agency-table">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Ad</TableHead>
+                  <TableHead>İndirim</TableHead>
+                  <TableHead>Komisyon</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {agencies.length === 0 ? (
-                  <tr>
-                    <td colSpan={3} className="py-6 text-muted-foreground">Kayıt yok.</td>
-                  </tr>
+                  <TableRow>
+                    <TableCell colSpan={3} className="py-6 text-muted-foreground">Kayıt yok.</TableCell>
+                  </TableRow>
                 ) : (
                   agencies.map((a) => (
-                    <tr key={a.id} className="border-t">
-                      <td className="py-3 font-medium text-foreground">{a.name}</td>
-                      <td className="py-3 text-foreground/80">{a.discount_percent}%</td>
-                      <td className="py-3 text-foreground/80">{a.commission_percent}%</td>
-                    </tr>
+                    <TableRow key={a.id}>
+                      <TableCell className="font-medium text-foreground">{a.name}</TableCell>
+                      <TableCell className="text-foreground/80">{a.discount_percent}%</TableCell>
+                      <TableCell className="text-foreground/80">{a.commission_percent}%</TableCell>
+                    </TableRow>
                   ))
                 )}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
           <div className="mt-3 text-xs text-muted-foreground">
             Not: b2b_agent kullanıcıları için “demo login” aynı giriş ekranından yapılır.

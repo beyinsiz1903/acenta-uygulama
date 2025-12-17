@@ -359,7 +359,7 @@ function ReservationDetails({ open, onOpenChange, reservationId }) {
                 <XCircle className="h-4 w-4" /> İptal
               </Button>
               <Button
-                onClick={() => window.open(`${process.env.REACT_APP_BACKEND_URL}/api/reservations/${reservationId}/voucher`, "_blank")}
+                onClick={openVoucher}
                 className="gap-2"
                 data-testid="res-voucher"
               >

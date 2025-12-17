@@ -333,14 +333,13 @@ function ReservationDetails({ open, onOpenChange, reservationId }) {
           </div>
         ) : null}
 
-        <DrawerFooter>
+        <SheetFooter className="gap-2 border-t px-5 py-4">
           <Button variant="outline" onClick={() => onOpenChange(false)} data-testid="res-detail-close">
             Kapat
           </Button>
-        </DrawerFooter>
-        </div>
-      </DrawerContent>
-    </Drawer>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   );
 }
 

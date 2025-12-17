@@ -366,9 +366,9 @@ C102,standard,1,2,90,city,queen,wifi"""
     # ============= MAIN TEST EXECUTION =============
 
     async def run_all_tests(self):
-        """Run comprehensive PMS Rooms Bulk Features backend testing"""
-        print("🚀 PMS ROOMS BULK FEATURES BACKEND TESTING")
-        print("Testing the new PMS Rooms bulk features on preview backend")
+        """Run comprehensive CSV Import backend testing"""
+        print("🚀 CSV IMPORT ENDPOINT BACKEND TESTING")
+        print("Testing the new CSV import endpoint for rooms")
         print("Base URL: https://code-review-helper-12.preview.emergentagent.com/api")
         print("Login: muratsutay@hotmail.com / murat1903")
         print("=" * 80)
@@ -383,15 +383,14 @@ C102,standard,1,2,90,city,queen,wifi"""
         # Clean up existing test rooms
         await self.cleanup_test_rooms()
         
-        # Run all PMS Rooms Bulk tests
+        # Run all CSV Import tests
         print("\n" + "="*60)
-        print("🏨 PMS ROOMS BULK FEATURES TESTING")
+        print("📄 CSV IMPORT ENDPOINT TESTING")
         print("="*60)
         
-        await self.test_bulk_rooms_range_creation()
-        await self.test_rooms_filtering()
-        await self.test_bulk_rooms_template_creation()
-        await self.test_room_image_upload()
+        await self.test_csv_import_first_time()
+        await self.test_csv_import_second_time()
+        await self.test_rooms_verification()
         
         # Cleanup
         await self.cleanup_session()

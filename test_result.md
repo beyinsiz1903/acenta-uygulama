@@ -125,8 +125,7 @@
 ##   test_sequence: 0
 ##   run_ui: false
 ## test_plan:
-##   current_focus:
-##     - "Lead Kanban drag-drop sonrası stage/status ve sıralama (sort_index) kalıcılığı"
+##   current_focus: []
 ##   stuck_tasks: []
 ##   test_all: false
 ##   test_priority: "high_first"

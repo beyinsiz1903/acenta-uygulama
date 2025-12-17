@@ -49,8 +49,8 @@ export default function ReportsPage() {
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="text-2xl font-semibold text-slate-900">Raporlar</h2>
-        <p className="text-sm text-slate-600">Özet satış ve rezervasyon raporları.</p>
+        <h2 className="text-2xl font-semibold text-foreground">Raporlar</h2>
+        <p className="text-sm text-muted-foreground">Özet satış ve rezervasyon raporları.</p>
       </div>
 
       {error ? (
@@ -62,7 +62,7 @@ export default function ReportsPage() {
       <Card className="rounded-2xl shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-base flex items-center gap-2">
-            <BarChart3 className="h-4 w-4 text-slate-500" />
+            <BarChart3 className="h-4 w-4 text-muted-foreground" />
             Satış Özeti
           </CardTitle>
           <Button variant="outline" onClick={downloadCsv} className="gap-2" data-testid="reports-csv">
@@ -73,7 +73,7 @@ export default function ReportsPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm" data-testid="sales-table">
               <thead>
-                <tr className="text-left text-slate-500">
+                <tr className="text-left text-muted-foreground">
                   <th className="py-2">Gün</th>
                   <th className="py-2">Rezervasyon</th>
                   <th className="py-2">Ciro</th>
@@ -82,14 +82,14 @@ export default function ReportsPage() {
               <tbody>
                 {sales.length === 0 ? (
                   <tr>
-                    <td colSpan={3} className="py-6 text-slate-500">Kayıt yok.</td>
+                    <td colSpan={3} className="py-6 text-muted-foreground">Kayıt yok.</td>
                   </tr>
                 ) : (
                   sales.map((r) => (
                     <tr key={r.day} className="border-t">
-                      <td className="py-3 font-medium text-slate-900">{r.day}</td>
-                      <td className="py-3 text-slate-700">{r.count}</td>
-                      <td className="py-3 text-slate-700">{r.revenue}</td>
+                      <td className="py-3 font-medium text-foreground">{r.day}</td>
+                      <td className="py-3 text-foreground/80">{r.count}</td>
+                      <td className="py-3 text-foreground/80">{r.revenue}</td>
                     </tr>
                   ))
                 )}
@@ -106,9 +106,9 @@ export default function ReportsPage() {
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3" data-testid="res-summary">
             {resSummary.map((r) => (
-              <div key={r.status} className="rounded-2xl border bg-white p-3">
-                <div className="text-xs text-slate-500">{r.status}</div>
-                <div className="text-2xl font-semibold text-slate-900">{r.count}</div>
+              <div key={r.status} className="rounded-2xl border bg-card p-3">
+                <div className="text-xs text-muted-foreground">{r.status}</div>
+                <div className="text-2xl font-semibold text-foreground">{r.count}</div>
               </div>
             ))}
           </div>

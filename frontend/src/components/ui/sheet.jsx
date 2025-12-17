@@ -32,7 +32,7 @@ const sheetVariants = cva(
         top: "inset-x-0 top-0 border-b data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top",
         bottom:
           "inset-x-0 bottom-0 border-t data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
-        left: "inset-y-0 left-0 h-full w-3/4 border-r data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left sm:max-w-sm",
+        left: "inset-y-0 left-0 h-full w-[86vw] max-w-[360px] border-r data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left sm:w-[380px] sm:max-w-none",
         right:
           "inset-y-0 right-0 h-full w-11/12 border-l data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right sm:w-[560px] sm:max-w-none",
       },
@@ -48,7 +48,7 @@ const SheetContent = React.forwardRef(({ side = "right", className, children, ..
     <SheetOverlay />
     <SheetPrimitive.Content ref={ref} className={cn(sheetVariants({ side }), className)} {...props}>
       <SheetPrimitive.Close
-        className="absolute right-4 top-4 rounded-md opacity-70 ring-offset-background transition hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary">
+        className="absolute right-4 top-4 inline-flex h-9 w-9 items-center justify-center rounded-full border bg-background/80 shadow-sm opacity-90 ring-offset-background transition hover:opacity-100 hover:bg-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
         <X className="h-4 w-4" />
         <span className="sr-only">Close</span>
       </SheetPrimitive.Close>

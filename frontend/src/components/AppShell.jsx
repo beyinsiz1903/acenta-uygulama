@@ -196,10 +196,11 @@ export default function AppShell() {
                     onClick={() => setMobileNavOpen(false)}
                     className={({ isActive }) =>
                       cn(
-                        "flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition hover:shadow-sm",
+                        "relative flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition hover:shadow-sm",
+                        "border-l-4",
                         isActive
-                          ? "bg-primary text-primary-foreground shadow"
-                          : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                          ? "bg-primary text-primary-foreground shadow border-primary"
+                          : "border-transparent text-muted-foreground hover:bg-accent hover:text-foreground"
                       )
                     }
                   >

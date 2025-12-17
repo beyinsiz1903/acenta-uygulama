@@ -329,8 +329,9 @@ function ReservationDetails({ open, onOpenChange, reservationId }) {
                 ))}
               </div>
             </div>
-          </div>
-        ) : null}
+            </div>
+          ) : null}
+        </div>
 
         <SheetFooter className="gap-2 border-t px-5 py-4">
           <Button variant="outline" onClick={() => onOpenChange(false)} data-testid="res-detail-close">

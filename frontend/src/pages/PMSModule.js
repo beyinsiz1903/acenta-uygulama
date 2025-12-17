@@ -2136,7 +2136,7 @@ const PMSModule = ({ user, tenant, onLogout }) => {
                 <CardContent className="py-12 text-center">
                   <FileText className="w-16 h-16 mx-auto text-gray-400 mb-4" />
                   <p className="text-gray-600 mb-2">Loading reports...</p>
-                  <p className="text-sm text-gray-500">If reports don't load, please check console for errors</p>
+                  <p className="text-sm text-gray-500">If reports don&apos;t load, please check console for errors</p>
                 </CardContent>
               </Card>
             )}

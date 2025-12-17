@@ -355,8 +355,9 @@ export default function InventoryPage() {
                 </TabsList>
 
                 <TabsContent value="calendar">
-                  <div className="rounded-2xl border bg-white p-3">
-                        <DayPicker
+                  <InventoryCtx.Provider value={{ invMap }}>
+                    <div className="rounded-2xl border bg-white p-3">
+                      <DayPicker
                       mode="single"
                       selected={selectedDay}
                       onSelect={(d) => {

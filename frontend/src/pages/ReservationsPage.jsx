@@ -238,6 +238,12 @@ function ReservationDetails({ open, onOpenChange, reservationId }) {
 
   const badge = statusBadge(data?.status);
 
+  const openVoucher = useCallback(() => {
+    if (!reservationId) return;
+    // REACT_APP_BACKEND_URL kullanılmalı, hardcode yok.
+    window.open(`${process.env.REACT_APP_BACKEND_URL}/api/reservations/${reservationId}/voucher`, "_blank");
+  }, [reservationId]);
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="p-0">

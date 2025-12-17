@@ -7047,6 +7047,102 @@ async def bulk_create_rooms_template(
     if docs:
         await db.rooms.insert_many(docs)
 
+@api_router.post("/pms/rooms/import-csv", response_model=RoomCsvImportResponse)
+async def import_rooms_csv(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+    _: None = Depends(require_module("pms")),
+):
+    # CSV rows limit safety
+    MAX_ROWS = 2000
+
+    if not (file.filename or '').lower().endswith('.csv'):
+        raise HTTPException(status_code=400, detail="Lütfen .csv dosyası yükleyin")
+
+    content = await file.read()
+    if not content:
+        raise HTTPException(status_code=400, detail="CSV dosyası boş")
+    if len(content) > 2 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="CSV dosyası çok büyük (max 2MB)")
+
+    import csv
+    import io
+
+    decoded = content.decode('utf-8-sig', errors='replace')
+    reader = csv.DictReader(io.StringIO(decoded))
+
+    required = {'room_number','room_type','floor','capacity','base_price'}
+    header = set([h.strip() for h in (reader.fieldnames or []) if h])
+    missing = sorted(list(required - header))
+    if missing:
+        raise HTTPException(status_code=400, detail=f"Eksik kolonlar: {', '.join(missing)}")
+
+    existing = await db.rooms.find(
+        {"tenant_id": current_user.tenant_id},
+        {"_id": 0, "room_number": 1},
+    ).to_list(10000)
+    existing_numbers = set([r.get("room_number") for r in existing if r.get("room_number")])
+
+    created = 0
+    skipped_numbers: List[str] = []
+    error_rows: List[Dict[str, Any]] = []
+    docs = []
+
+    for idx, row in enumerate(reader, start=2):  # header is row 1
+        if idx > MAX_ROWS + 1:
+            break
+
+        try:
+            room_number = (row.get('room_number') or '').strip()
+            if not room_number:
+                raise ValueError('room_number boş')
+
+            if room_number in existing_numbers:
+                skipped_numbers.append(room_number)
+                continue
+
+            room_type = (row.get('room_type') or 'standard').strip() or 'standard'
+            floor = int((row.get('floor') or '1').strip() or 1)
+            capacity = int((row.get('capacity') or '2').strip() or 2)
+            base_price = float((row.get('base_price') or '0').strip() or 0)
+
+            view = (row.get('view') or '').strip() or None
+            bed_type = (row.get('bed_type') or '').strip() or None
+
+            amenities_raw = (row.get('amenities') or '').strip()
+            amenities = [a.strip() for a in amenities_raw.split('|') if a.strip()] if amenities_raw else []
+
+            room = Room(
+                tenant_id=current_user.tenant_id,
+                room_number=room_number,
+                room_type=room_type,
+                floor=floor,
+                capacity=capacity,
+                base_price=base_price,
+                amenities=amenities,
+                view=view,
+                bed_type=bed_type,
+            )
+            room_dict = room.model_dump()
+            room_dict['created_at'] = room_dict['created_at'].isoformat()
+            docs.append(room_dict)
+            existing_numbers.add(room_number)
+            created += 1
+        except Exception as e:
+            error_rows.append({"row_number": idx, "error": str(e)})
+
+    if docs:
+        await db.rooms.insert_many(docs)
+
+    return RoomCsvImportResponse(
+        created=created,
+        skipped=len(skipped_numbers),
+        errors=len(error_rows),
+        skipped_room_numbers=skipped_numbers,
+        error_rows=error_rows[:50],
+    )
+
+
     return RoomBulkCreateResponse(
         created=len(created_rooms),
         skipped=len(skipped),

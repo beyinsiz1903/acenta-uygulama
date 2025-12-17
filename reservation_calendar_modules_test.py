@@ -225,8 +225,9 @@ class ReservationCalendarModulesTest:
                     'total_bookings': total_bookings,
                     'success': True,
                     'analysis': analysis,
-                    'revenue_impact': revenue_impact,
-                    'recommendations_count': len(data.get('recommendations', []))
+                    'revenue_impact': revenue_impact if isinstance(revenue_impact, dict) else {},
+                    'recommendations_count': len(data.get('recommendations', [])),
+                    'raw_response': data  # Store full response for debugging
                 }
                 
                 return True

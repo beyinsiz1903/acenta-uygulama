@@ -305,62 +305,139 @@ export default function InventoryPage() {
 
                 <TabsContent value="calendar">
                   <div className="rounded-2xl border bg-white p-3">
-                    <DayPicker
-                  mode="single"
-                  selected={selectedDay}
-                  onSelect={(d) => {
-                    if (!d) return;
-                    setSelectedDay(d);
-                    setOpenDay(true);
-                  }}
-                  month={month}
-                  onMonthChange={setMonth}
-                  showOutsideDays
-                  modifiers={modifiers}
-                  modifiersClassNames={{
-                    closed: "bg-rose-50 text-rose-800 rounded-md",
-                  }}
-                  classNames={{
-                    months: "flex flex-col space-y-4",
-                    month: "space-y-4",
-                    caption: "flex justify-center pt-1 relative items-center",
-                    caption_label: "text-sm font-medium",
-                    nav: "hidden",
-                    table: "w-full border-collapse space-y-1",
-                    head_row: "flex",
-                    head_cell: "text-slate-500 rounded-md w-10 font-normal text-[0.8rem]",
-                    row: "flex w-full mt-2",
-                    cell: "relative p-0 text-center text-sm w-10 h-10",
-                    day: "h-10 w-10 p-0 font-normal aria-selected:opacity-100",
-                  }}
-                  components={{
-                    DayContent: (props) => {
-                      const dateStr = ymd(props.date);
-                      const inv = invMap.get(dateStr);
-                      const cap = inv ? `${inv.capacity_available}/${inv.capacity_total}` : "-";
-                      const price = inv?.price;
-                      const closed = !!inv?.restrictions?.closed;
-                      return (
-                        <div className={cn("flex h-10 w-10 flex-col items-center justify-center rounded-md border", props.activeModifiers.selected ? "border-slate-900 bg-slate-900 text-white" : "border-slate-100 hover:border-slate-200", closed ? "bg-rose-50" : "bg-white")}>
-                          <div className={cn("text-[12px] leading-none", props.activeModifiers.selected ? "text-white" : "text-slate-900")}>{props.date.getDate()}</div>
-                          <div className={cn("mt-0.5 text-[10px] leading-none", props.activeModifiers.selected ? "text-white/80" : closed ? "text-rose-700" : "text-slate-500")}>{cap}</div>
-                          {price != null ? (
-                            <div className={cn("mt-0.5 text-[10px] leading-none", props.activeModifiers.selected ? "text-white" : "text-slate-700")}>{Number(price).toFixed(0)}</div>
-                          ) : null}
-                        </div>
-                      );
-                    },
-                  }}
-                />
+                        <DayPicker
+                      mode="single"
+                      selected={selectedDay}
+                      onSelect={(d) => {
+                        if (!d) return;
+                        setSelectedDay(d);
+                        setOpenDay(true);
+                      }}
+                      month={month}
+                      onMonthChange={setMonth}
+                      showOutsideDays
+                      modifiers={modifiers}
+                      modifiersClassNames={{
+                        closed: "bg-rose-50 text-rose-800 rounded-md",
+                      }}
+                      classNames={{
+                        months: "flex flex-col space-y-4",
+                        month: "space-y-4",
+                        caption: "flex justify-center pt-1 relative items-center",
+                        caption_label: "text-sm font-medium",
+                        nav: "hidden",
+                        table: "w-full border-collapse space-y-1",
+                        head_row: "flex",
+                        head_cell: "text-slate-500 rounded-md w-10 font-normal text-[0.8rem]",
+                        row: "flex w-full mt-2",
+                        cell: "relative p-0 text-center text-sm w-10 h-10",
+                        day: "h-10 w-10 p-0 font-normal aria-selected:opacity-100",
+                      }}
+                      components={{
+                        DayContent: (props) => {
+                          const dateStr = ymd(props.date);
+                          const inv = invMap.get(dateStr);
+                          const cap = inv ? `${inv.capacity_available}/${inv.capacity_total}` : "-";
+                          const price = inv?.price;
+                          const closed = !!inv?.restrictions?.closed;
+                          return (
+                            <div
+                              className={cn(
+                                "flex h-10 w-10 flex-col items-center justify-center rounded-md border",
+                                props.activeModifiers.selected
+                                  ? "border-slate-900 bg-slate-900 text-white"
+                                  : "border-slate-100 hover:border-slate-200",
+                                closed ? "bg-rose-50" : "bg-white"
+                              )}
+                            >
+                              <div className={cn("text-[12px] leading-none", props.activeModifiers.selected ? "text-white" : "text-slate-900")}>
+                                {props.date.getDate()}
+                              </div>
+                              <div
+                                className={cn(
+                                  "mt-0.5 text-[10px] leading-none",
+                                  props.activeModifiers.selected
+                                    ? "text-white/80"
+                                    : closed
+                                      ? "text-rose-700"
+                                      : "text-slate-500"
+                                )}
+                              >
+                                {cap}
+                              </div>
+                              {price != null ? (
+                                <div
+                                  className={cn("mt-0.5 text-[10px] leading-none", props.activeModifiers.selected ? "text-white" : "text-slate-700")}
+                                >
+                                  {Number(price).toFixed(0)}
+                                </div>
+                              ) : null}
+                            </div>
+                          );
+                        },
+                      }}
+                    />
 
-                {loading ? (
-                  <div className="mt-3 text-sm text-slate-500">Yükleniyor...</div>
-                ) : null}
+                    {loading ? <div className="mt-3 text-sm text-slate-500">Yükleniyor...</div> : null}
 
-                <div className="mt-3 text-xs text-slate-500">
-                  Hücre içeriği: <span className="font-medium">müsait/toplam</span> ve opsiyonel fiyat.
-                </div>
-              </div>
+                    <div className="mt-3 text-xs text-slate-500">
+                      Hücre içeriği: <span className="font-medium">müsait/toplam</span> ve opsiyonel fiyat.
+                    </div>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="grid">
+                  <div className="overflow-x-auto rounded-2xl border bg-white">
+                    <table className="w-full text-sm" data-testid="inventory-grid-table">
+                      <thead>
+                        <tr className="text-left text-slate-500">
+                          <th className="py-2 px-3">Tarih</th>
+                          <th className="py-2 px-3">Gün</th>
+                          <th className="py-2 px-3">Kapasite</th>
+                          <th className="py-2 px-3">Müsait</th>
+                          <th className="py-2 px-3">Fiyat</th>
+                          <th className="py-2 px-3">Durum</th>
+                          <th className="py-2 px-3 text-right">İşlem</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {loading ? (
+                          <tr>
+                            <td colSpan={7} className="py-6 px-3 text-slate-500">Yükleniyor...</td>
+                          </tr>
+                        ) : (
+                          gridRows.map((r) => (
+                            <tr key={r.date} className="border-t">
+                              <td className="py-2 px-3 font-medium text-slate-900">{r.date}</td>
+                              <td className="py-2 px-3 text-slate-600">{r.dow}</td>
+                              <td className="py-2 px-3 text-slate-700">{r.capacity_total}</td>
+                              <td className="py-2 px-3 text-slate-700">{r.capacity_available}</td>
+                              <td className="py-2 px-3 text-slate-700">
+                                {r.price == null ? <span className="text-slate-400">(rate plan)</span> : formatMoney(r.price, "TRY")}
+                              </td>
+                              <td className="py-2 px-3">
+                                <span
+                                  className={cn(
+                                    "rounded-full border px-2 py-1 text-xs font-medium",
+                                    r.closed ? "border-rose-200 bg-rose-50 text-rose-700" : "border-emerald-200 bg-emerald-50 text-emerald-700"
+                                  )}
+                                >
+                                  {r.closed ? "Kapalı" : "Açık"}
+                                </span>
+                              </td>
+                              <td className="py-2 px-3 text-right">
+                                <Button variant="outline" size="sm" onClick={() => openDayEditor(r.date)} data-testid={`grid-open-${r.date}`}>
+                                  Düzenle
+                                </Button>
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </TabsContent>
+              </Tabs>
             </CardContent>
           </Card>
         </div>

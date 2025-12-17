@@ -140,7 +140,9 @@ const LEAD_STATUSES = [
   { key: "lost", label: "Kaybedildi", tone: "bg-rose-500/10 text-rose-300 border-rose-500/20" },
 ];
 
-function LeadCard({ lead, dragging }) {
+function LeadCard({ lead, dragging, status }) {
+  const tone = LEAD_STATUSES.find((s) => s.key === (status || lead.status))?.tone;
+
   return (
     <div
       className={
@@ -153,16 +155,26 @@ function LeadCard({ lead, dragging }) {
           <GripVertical className="h-4 w-4" />
         </div>
         <div className="min-w-0 flex-1">
-          <div className="truncate text-sm font-semibold text-foreground">
-            {lead.customer_name || lead.customer_id}
+          <div className="flex items-center justify-between gap-2">
+            <div className="truncate text-sm font-semibold text-foreground">
+              {lead.customer_name || lead.customer_id}
+            </div>
+            {tone ? (
+              <span className={"shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-semibold " + tone}>
+                {(status || lead.status || "new").toUpperCase()}
+              </span>
+            ) : null}
           </div>
-          <div className="mt-0.5 flex flex-wrap items-center gap-2">
+
+          <div className="mt-1 flex flex-wrap items-center gap-2">
             <span className="rounded-full border bg-accent px-2 py-0.5 text-[11px] font-medium text-foreground/80">
               {lead.source || "-"}
             </span>
             {lead.notes ? (
               <span className="truncate text-xs text-muted-foreground">{lead.notes}</span>
-            ) : null}
+            ) : (
+              <span className="text-xs text-muted-foreground">Not yok</span>
+            )}
           </div>
         </div>
       </div>

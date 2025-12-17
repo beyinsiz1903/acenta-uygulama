@@ -180,6 +180,62 @@ function QuoteForm({ open, onOpenChange, onSaved }) {
             end_date: endDate || null,
             pax: Number(pax || 1),
             unit_price: Number(unitPrice || 0),
+
+const LEAD_STATUSES = [
+  { key: "new", label: "Yeni" },
+  { key: "contacted", label: "İletişim" },
+  { key: "won", label: "Kazanıldı" },
+  { key: "lost", label: "Kaybedildi" },
+];
+
+function LeadCard({ lead, dragging }) {
+  return (
+    <div
+      className={
+        "group relative rounded-2xl border bg-white px-3 py-2 shadow-sm transition " +
+        (dragging ? "opacity-70" : "hover:shadow-md")
+      }
+    >
+      <div className="flex items-start gap-2">
+        <div className="mt-0.5 text-slate-400 group-hover:text-slate-600">
+          <GripVertical className="h-4 w-4" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-sm font-semibold text-slate-900">
+            {lead.customer_name || lead.customer_id}
+          </div>
+          <div className="mt-0.5 flex flex-wrap items-center gap-2">
+            <span className="rounded-full border bg-slate-50 px-2 py-0.5 text-[11px] font-medium text-slate-700">
+              {lead.source || "-"}
+            </span>
+            {lead.notes ? (
+              <span className="truncate text-xs text-slate-500">{lead.notes}</span>
+            ) : null}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SortableLeadCard({ lead }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: lead.id,
+    data: { lead },
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+      <LeadCard lead={lead} dragging={isDragging} />
+    </div>
+  );
+}
+
             total,
           },
         ],

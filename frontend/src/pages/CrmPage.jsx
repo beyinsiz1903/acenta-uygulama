@@ -144,24 +144,24 @@ function LeadCard({ lead, dragging }) {
   return (
     <div
       className={
-        "group relative rounded-2xl border bg-white px-3 py-2 shadow-sm transition " +
+        "group relative rounded-2xl border bg-card px-3 py-2 shadow-sm transition " +
         (dragging ? "opacity-70" : "hover:shadow-md")
       }
     >
       <div className="flex items-start gap-2">
-        <div className="mt-0.5 text-slate-400 group-hover:text-slate-600">
+        <div className="mt-0.5 text-muted-foreground group-hover:text-foreground/70">
           <GripVertical className="h-4 w-4" />
         </div>
         <div className="min-w-0 flex-1">
-          <div className="truncate text-sm font-semibold text-slate-900">
+          <div className="truncate text-sm font-semibold text-foreground">
             {lead.customer_name || lead.customer_id}
           </div>
           <div className="mt-0.5 flex flex-wrap items-center gap-2">
-            <span className="rounded-full border bg-slate-50 px-2 py-0.5 text-[11px] font-medium text-slate-700">
+            <span className="rounded-full border bg-accent px-2 py-0.5 text-[11px] font-medium text-foreground/80">
               {lead.source || "-"}
             </span>
             {lead.notes ? (
-              <span className="truncate text-xs text-slate-500">{lead.notes}</span>
+              <span className="truncate text-xs text-muted-foreground">{lead.notes}</span>
             ) : null}
           </div>
         </div>
@@ -195,14 +195,14 @@ function KanbanColumn({ col, items }) {
     <div
       ref={setNodeRef}
       className={
-        "rounded-2xl border bg-white p-3 transition " +
-        (isOver ? "ring-2 ring-slate-900/10" : "")
+        "rounded-2xl border bg-card p-3 transition " +
+        (isOver ? "ring-2 ring-primary/15" : "")
       }
       data-testid={`lead-col-${col.key}`}
     >
       <div className="flex items-center justify-between">
-        <div className="text-xs font-semibold text-slate-700 uppercase tracking-wide">{col.label}</div>
-        <div className="text-[11px] text-slate-500">{items.length}</div>
+        <div className="text-xs font-semibold text-foreground/80 uppercase tracking-wide">{col.label}</div>
+        <div className="text-[11px] text-muted-foreground">{items.length}</div>
       </div>
 
       <div className="mt-2 space-y-2">
@@ -210,7 +210,7 @@ function KanbanColumn({ col, items }) {
           {items.length ? (
             items.map((l) => <SortableLeadCard key={l.id} lead={l} />)
           ) : (
-            <div className="rounded-xl border border-dashed bg-slate-50 px-3 py-6 text-center text-xs text-slate-500">
+            <div className="rounded-xl border border-dashed bg-accent/40 px-3 py-6 text-center text-xs text-muted-foreground">
               Kartı buraya bırakın
             </div>
           )}

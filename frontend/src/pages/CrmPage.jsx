@@ -195,7 +195,7 @@ function SortableLeadCard({ lead, status }) {
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <LeadCard lead={lead} dragging={isDragging} />
+      <LeadCard lead={lead} dragging={isDragging} status={status} />
     </div>
   );
 }

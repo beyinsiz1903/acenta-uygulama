@@ -9,7 +9,7 @@ import time
 import redis
 from statistics import mean
 
-BACKEND_URL = "https://canli-problem.preview.emergentagent.com/api"
+BACKEND_URL = "https://code-review-helper-12.preview.emergentagent.com/api"
 REDIS_URL = "redis://localhost:6379/0"
 
 async def test_cache_performance():

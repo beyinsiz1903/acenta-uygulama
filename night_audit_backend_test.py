@@ -21,7 +21,7 @@ import sys
 import os
 
 # Configuration
-BASE_URL = "https://canli-problem.preview.emergentagent.com"
+BASE_URL = "https://code-review-helper-12.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api"
 
 # Demo credentials

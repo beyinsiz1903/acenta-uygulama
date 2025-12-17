@@ -218,7 +218,7 @@
 ## 📋 QUICK START GUIDE
 
 **Login:**
-- URL: https://canli-problem.preview.emergentagent.com
+- URL: https://code-review-helper-12.preview.emergentagent.com
 - Demo: demo@hotel.com / demo123
 
 **New User Registration:**

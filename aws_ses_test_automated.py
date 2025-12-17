@@ -9,7 +9,7 @@ from datetime import datetime
 import subprocess
 
 # Backend URL from environment
-BACKEND_URL = "https://canli-problem.preview.emergentagent.com/api"
+BACKEND_URL = "https://code-review-helper-12.preview.emergentagent.com/api"
 
 # Test configuration
 TEST_EMAIL = "testuser_ses_" + str(int(time.time())) + "@gmail.com"

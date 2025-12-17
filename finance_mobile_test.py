@@ -11,7 +11,7 @@ from datetime import datetime, timezone
 import uuid
 
 # Configuration
-BACKEND_URL = "https://canli-problem.preview.emergentagent.com/api"
+BACKEND_URL = "https://code-review-helper-12.preview.emergentagent.com/api"
 TEST_USER_EMAIL = "admin@hotel.com"
 TEST_USER_PASSWORD = "admin123"
 

@@ -11,7 +11,7 @@ import os
 from datetime import datetime, timedelta
 
 # Configuration
-BACKEND_URL = "https://canli-problem.preview.emergentagent.com/api"
+BACKEND_URL = "https://code-review-helper-12.preview.emergentagent.com/api"
 TEST_EMAIL = "financetest@hotel.com"
 TEST_PASSWORD = "test123456"
 

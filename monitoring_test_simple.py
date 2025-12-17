@@ -11,7 +11,7 @@ import time
 from datetime import datetime
 
 # Configuration
-BACKEND_URL = "https://canli-problem.preview.emergentagent.com/api"
+BACKEND_URL = "https://code-review-helper-12.preview.emergentagent.com/api"
 
 class SimpleMonitoringTester:
     def __init__(self):

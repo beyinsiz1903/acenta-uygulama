@@ -31,7 +31,7 @@ from datetime import datetime, timezone
 from typing import Dict, List, Any, Optional
 
 # Configuration
-BACKEND_URL = "https://canli-problem.preview.emergentagent.com/api"
+BACKEND_URL = "https://code-review-helper-12.preview.emergentagent.com/api"
 TEST_EMAIL = "demo@hotel.com"
 TEST_PASSWORD = "demo123"
 REQUESTS_PER_ENDPOINT = 20

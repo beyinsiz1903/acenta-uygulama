@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 import sys
 
 # Configuration
-BASE_URL = "https://canli-problem.preview.emergentagent.com/api"
+BASE_URL = "https://code-review-helper-12.preview.emergentagent.com/api"
 AUTH_EMAIL = "demo@hotel.com"
 AUTH_PASSWORD = "demo123"
 

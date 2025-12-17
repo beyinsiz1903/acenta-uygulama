@@ -31,7 +31,7 @@ from typing import Dict, List, Any, Optional
 import uuid
 
 # Configuration
-BACKEND_URL = "https://canli-problem.preview.emergentagent.com/api"
+BACKEND_URL = "https://code-review-helper-12.preview.emergentagent.com/api"
 TEST_EMAIL = "demo@hotel.com"
 TEST_PASSWORD = "demo123"
 
@@ -649,7 +649,7 @@ class ModuleAuthorizationTester:
         """Run comprehensive module authorization testing"""
         print("🚀 MODÜL BAZLI YETKİLENDİRME SİSTEMİ TEST SUITE")
         print("Yeni eklenen modül bazlı yetkilendirme için backend regresyon ve özellik testleri")
-        print("Base URL: https://canli-problem.preview.emergentagent.com/api")
+        print("Base URL: https://code-review-helper-12.preview.emergentagent.com/api")
         print("Login: demo@hotel.com / demo123")
         print("=" * 80)
         

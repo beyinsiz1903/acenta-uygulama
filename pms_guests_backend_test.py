@@ -9,7 +9,7 @@ Test Objectives:
 3. Test guest 360° profile endpoints if available
 4. Verify response structure matches frontend expectations
 
-Base URL: https://canli-problem.preview.emergentagent.com/api
+Base URL: https://code-review-helper-12.preview.emergentagent.com/api
 """
 
 import requests
@@ -18,7 +18,7 @@ import sys
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://canli-problem.preview.emergentagent.com/api"
+BASE_URL = "https://code-review-helper-12.preview.emergentagent.com/api"
 LOGIN_EMAIL = "demo@hotel.com"
 LOGIN_PASSWORD = "demo123"
 

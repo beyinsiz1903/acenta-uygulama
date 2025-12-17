@@ -4,6 +4,7 @@ import { Settings, UserPlus } from "lucide-react";
 import { api, apiErrorMessage } from "../lib/api";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import {
@@ -148,30 +149,32 @@ export default function SettingsPage() {
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm" data-testid="users-table">
-              <thead>
-                <tr className="text-left text-muted-foreground">
-                  <th className="py-2">Email</th>
-                  <th className="py-2">Ad</th>
-                  <th className="py-2">Roller</th>
-                </tr>
-              </thead>
-              <tbody>
+            <Table data-testid="users-table">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Ad</TableHead>
+                  <TableHead>Roller</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {users.length === 0 ? (
-                  <tr>
-                    <td colSpan={3} className="py-6 text-muted-foreground">Kayıt yok.</td>
-                  </tr>
+                  <TableRow>
+                    <TableCell colSpan={3} className="py-6 text-muted-foreground">
+                      Kayıt yok.
+                    </TableCell>
+                  </TableRow>
                 ) : (
                   users.map((u) => (
-                    <tr key={u.id} className="border-t">
-                      <td className="py-3 font-medium text-foreground">{u.email}</td>
-                      <td className="py-3 text-foreground/80">{u.name || "-"}</td>
-                      <td className="py-3 text-muted-foreground">{(u.roles || []).join(", ")}</td>
-                    </tr>
+                    <TableRow key={u.id}>
+                      <TableCell className="font-medium text-foreground">{u.email}</TableCell>
+                      <TableCell className="text-foreground/80">{u.name || "-"}</TableCell>
+                      <TableCell className="text-muted-foreground">{(u.roles || []).join(", ")}</TableCell>
+                    </TableRow>
                   ))
                 )}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         </CardContent>
       </Card>

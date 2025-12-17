@@ -331,19 +331,19 @@ function ReservationDetails({ open, onOpenChange, reservationId }) {
                 </div>
               </div>
 
-              <div className="rounded-2xl border bg-white p-3">
+              <div className="rounded-2xl border bg-card p-3">
                 <div className="text-xs text-muted-foreground">Toplam</div>
                 <div className="text-sm font-semibold text-foreground">
                   {formatMoney(data.total_price, data.currency)}
                 </div>
               </div>
-              <div className="rounded-2xl border bg-white p-3">
+              <div className="rounded-2xl border bg-card p-3">
                 <div className="text-xs text-muted-foreground">Ödenen</div>
                 <div className="text-sm font-semibold text-foreground">
                   {formatMoney(data.paid_amount, data.currency)}
                 </div>
               </div>
-              <div className="rounded-2xl border bg-white p-3">
+              <div className="rounded-2xl border bg-card p-3">
                 <div className="text-xs text-muted-foreground">Kalan</div>
                 <div className="text-sm font-semibold text-foreground">
                   {formatMoney(data.due_amount, data.currency)}

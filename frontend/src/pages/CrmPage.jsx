@@ -134,10 +134,10 @@ function LeadForm({ open, onOpenChange, onSaved }) {
 }
 
 const LEAD_STATUSES = [
-  { key: "new", label: "Yeni" },
-  { key: "contacted", label: "İletişim" },
-  { key: "won", label: "Kazanıldı" },
-  { key: "lost", label: "Kaybedildi" },
+  { key: "new", label: "Yeni", tone: "bg-sky-500/10 text-sky-300 border-sky-500/20" },
+  { key: "contacted", label: "İletişim", tone: "bg-amber-500/10 text-amber-300 border-amber-500/20" },
+  { key: "won", label: "Kazanıldı", tone: "bg-emerald-500/10 text-emerald-300 border-emerald-500/20" },
+  { key: "lost", label: "Kaybedildi", tone: "bg-rose-500/10 text-rose-300 border-rose-500/20" },
 ];
 
 function LeadCard({ lead, dragging }) {

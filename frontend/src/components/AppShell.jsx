@@ -216,7 +216,7 @@ export default function AppShell() {
           </div>
         </aside>
 
-        <main className="col-span-12 md:col-span-9 lg:col-span-10">
+        <main className="col-span-12 md:col-span-9 lg:col-span-10 md:min-h-[calc(100vh-104px)]">
           <Outlet />
         </main>
       </div>

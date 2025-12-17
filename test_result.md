@@ -106,15 +106,18 @@
 ## backend:
 ##   - task: "Lead Kanban drag-drop sonrası stage/status ve sıralama (sort_index) kalıcılığı"
 ##     implemented: true
-##     working: false
+##     working: true
 ##     file: "/app/backend/app/routers/leads.py, /app/backend/app/schemas.py, /app/backend/app/seed.py"
 ##     stuck_count: 0
 ##     priority: "high"
-##     needs_retesting: true
+##     needs_retesting: false
 ##     status_history:
 ##       - working: "NA"
 ##         agent: "main"
 ##         comment: "Lead modeline sort_index eklendi. /api/leads listesi sort_index desc + created_at desc ile sıralanıyor. PATCH /api/leads/{lead_id}/status artık opsiyonel sort_index alıp hem status hem sıralama güncelleyebiliyor. Seed index güncellendi. Backend restart OK."
+##       - working: true
+##         agent: "testing"
+##         comment: "COMPREHENSIVE TESTING COMPLETED ✅ All 7 test scenarios passed (10/10 tests): 1) /api/health OK 2) Admin login successful (admin@acenta.test/admin123) 3) Customer creation/listing working 4) Lead creation with auto sort_index assignment working - 3 leads created with timestamps 5) /api/leads sorting by sort_index desc verified 6) PATCH /api/leads/{id}/status with status+sort_index update working (new→contacted, sort_index=999999) 7) Status filtering (?status=contacted) shows updated lead at top. Backend service running stable, all API endpoints responding correctly."
 ## frontend: []
 ## metadata:
 ##   created_by: "main_agent"

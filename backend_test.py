@@ -88,102 +88,33 @@ class PMSRoomsBulkTester:
             "Content-Type": "application/json"
         }
 
-    async def create_test_data(self):
-        """Create test data for PMS Bookings testing"""
-        print("\n🔧 Creating test data for PMS Bookings testing...")
+    async def cleanup_test_rooms(self):
+        """Clean up any existing test rooms to avoid conflicts"""
+        print("\n🧹 Cleaning up existing test rooms...")
         
         try:
-            # Create test guest for bookings
-            guest_data = {
-                "name": "Mehmet Özkan",
-                "email": "mehmet.ozkan@example.com",
-                "phone": "+90-555-987-6543",
-                "id_number": "98765432109",
-                "nationality": "TR",
-                "vip_status": False
-            }
-            
-            async with self.session.post(f"{BACKEND_URL}/pms/guests", 
-                                       json=guest_data, 
-                                       headers=self.get_headers()) as response:
-                if response.status == 200:
-                    guest = await response.json()
-                    guest_id = guest["id"]
-                    self.created_test_data['guests'].append(guest_id)
-                    print(f"✅ Test guest created: {guest_id}")
-                else:
-                    print(f"⚠️ Guest creation failed: {response.status}")
-                    return False
-
-            # Get available room for booking
-            async with self.session.get(f"{BACKEND_URL}/pms/rooms", 
+            # Get existing rooms with test prefixes
+            async with self.session.get(f"{BACKEND_URL}/pms/rooms?limit=500", 
                                       headers=self.get_headers()) as response:
                 if response.status == 200:
                     rooms = await response.json()
-                    if rooms:
-                        room_id = rooms[0]["id"]
-                        self.created_test_data['rooms'].append(room_id)
-                        print(f"✅ Using room: {room_id}")
-                    else:
-                        print("⚠️ No rooms available")
-                        return False
+                    test_rooms = [room for room in rooms if room.get('room_number', '').startswith(('A10', 'B'))]
+                    
+                    for room in test_rooms:
+                        try:
+                            async with self.session.delete(f"{BACKEND_URL}/pms/rooms/{room['id']}", 
+                                                         headers=self.get_headers()) as del_response:
+                                if del_response.status in [200, 204, 404]:
+                                    print(f"  🗑️ Cleaned up room: {room.get('room_number', 'Unknown')}")
+                        except Exception as e:
+                            print(f"  ⚠️ Failed to delete room {room.get('room_number', 'Unknown')}: {e}")
+                    
+                    print(f"✅ Cleanup completed - {len(test_rooms)} test rooms processed")
                 else:
-                    print(f"⚠️ Failed to get rooms: {response.status}")
-                    return False
-
-            # Create multiple test bookings for comprehensive testing
-            booking_dates = [
-                # Past booking
-                {
-                    "check_in": (datetime.now(timezone.utc) - timedelta(days=5)).isoformat(),
-                    "check_out": (datetime.now(timezone.utc) - timedelta(days=3)).isoformat(),
-                    "status": "checked_out"
-                },
-                # Current booking
-                {
-                    "check_in": (datetime.now(timezone.utc) - timedelta(days=1)).isoformat(),
-                    "check_out": (datetime.now(timezone.utc) + timedelta(days=2)).isoformat(),
-                    "status": "checked_in"
-                },
-                # Future booking
-                {
-                    "check_in": (datetime.now(timezone.utc) + timedelta(days=3)).isoformat(),
-                    "check_out": (datetime.now(timezone.utc) + timedelta(days=5)).isoformat(),
-                    "status": "confirmed"
-                }
-            ]
-            
-            for i, booking_info in enumerate(booking_dates):
-                booking_data = {
-                    "guest_id": guest_id,
-                    "room_id": room_id,
-                    "check_in": booking_info["check_in"],
-                    "check_out": booking_info["check_out"],
-                    "adults": 2,
-                    "children": 0,
-                    "children_ages": [],
-                    "guests_count": 2,
-                    "total_amount": 250.0 + (i * 50),  # Different amounts
-                    "special_requests": f"Test booking {i+1} - BookingsTab test"
-                }
-                
-                async with self.session.post(f"{BACKEND_URL}/pms/bookings", 
-                                           json=booking_data, 
-                                           headers=self.get_headers()) as response:
-                    if response.status == 200:
-                        booking = await response.json()
-                        booking_id = booking["id"]
-                        self.created_test_data['bookings'].append(booking_id)
-                        print(f"✅ Test booking {i+1} created: {booking_id}")
-                    else:
-                        print(f"⚠️ Booking {i+1} creation failed: {response.status}")
-
-            print(f"✅ Test data creation completed - {len(self.created_test_data['bookings'])} bookings created")
-            return True
-            
+                    print(f"⚠️ Failed to get rooms for cleanup: {response.status}")
+                    
         except Exception as e:
-            print(f"❌ Error creating test data: {e}")
-            return False
+            print(f"❌ Error during cleanup: {e}")
 
     # ============= PMS BOOKINGS BACKEND TESTS =============
 

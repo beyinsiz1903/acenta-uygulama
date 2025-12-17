@@ -1,23 +1,28 @@
 #!/usr/bin/env python3
 """
-PMS ROOMS BULK FEATURES BACKEND TESTING
-Test the new PMS Rooms bulk features on preview backend.
+CSV IMPORT ENDPOINT BACKEND TESTING
+Test the new CSV import endpoint for rooms.
 
-OBJECTIVE: Test the new bulk room creation endpoints and room image upload functionality
+OBJECTIVE: Test the CSV import functionality as requested
 
 TARGET ENDPOINTS:
-1. POST /api/pms/rooms/bulk/range - Create rooms with range (A101-A105)
-2. GET /api/pms/rooms?room_type=deluxe&view=sea&amenity=wifi&limit=200 - Filter rooms
-3. POST /api/pms/rooms/bulk/template - Create rooms with template (B1-B3)
-4. POST /api/pms/rooms/{room_id}/images - Upload room image
-5. Verify room data structure and filtering
+1. POST /api/pms/rooms/import-csv - Import rooms from CSV file
+2. GET /api/pms/rooms?limit=300 - Verify imported rooms exist
+
+TEST SCENARIO:
+1. Login as muratsutay@hotmail.com / murat1903
+2. Call POST /api/pms/rooms/import-csv with multipart/form-data file named rooms.csv containing:
+   room_number,room_type,floor,capacity,base_price,view,bed_type,amenities
+   C101,deluxe,1,2,150,sea,king,wifi|balcony
+   C102,standard,1,2,90,city,queen,wifi
+3. Expect response: created==2, skipped==0, errors==0
+4. Call again with same file and expect created==0 skipped==2
+5. Verify via GET /api/pms/rooms?limit=300 that C101 and C102 exist and have view/bed_type/amenities
 
 EXPECTED RESULTS:
-- All calls should return HTTP 200, no 500/ValidationError
-- Bulk creation should return created count
-- Room filtering should work with multiple parameters
-- Image upload should return proper image path
-- All room objects should contain required fields
+- First import: created=2, skipped=0, errors=0
+- Second import: created=0, skipped=2, errors=0
+- Rooms C101 and C102 should exist with correct properties
 """
 
 import asyncio

@@ -16,7 +16,7 @@ export default function ThemeToggle({ testId = "theme-toggle" }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2" data-testid="theme-toggle">
+        <Button variant="outline" size="sm" className="gap-2" data-testid={testId}>
           <Sun className="h-4 w-4 dark:hidden" />
           <Moon className="hidden h-4 w-4 dark:block" />
           <span className="hidden md:inline">Tema</span>

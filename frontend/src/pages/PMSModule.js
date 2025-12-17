@@ -3360,7 +3360,7 @@ const PMSModule = ({ user, tenant, onLogout }) => {
 
                   <div className="flex justify-end gap-2 pt-2">
                     <Button type="button" variant="outline" onClick={() => setOpenDialog(null)}>Kapat</Button>
-                    <Button type="submit" disabled>Import (yakında)</Button>
+                    <Button type="submit" disabled={!bulkCsvFile}>Import</Button>
                   </div>
                 </form>
               </TabsContent>

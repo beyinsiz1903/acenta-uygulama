@@ -56,10 +56,11 @@ export default function AppShell() {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
             <div className="hidden sm:block text-right">
-              <div className="text-sm font-medium text-slate-900">{user?.name || user?.email}</div>
-              <div className="text-xs text-slate-500">{(user?.roles || []).join(", ")}</div>
+              <div className="text-sm font-medium text-foreground">{user?.name || user?.email}</div>
+              <div className="text-xs text-muted-foreground">{(user?.roles || []).join(", ")}</div>
             </div>
             <Button
               variant="outline"

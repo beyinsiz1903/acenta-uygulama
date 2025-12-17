@@ -7,6 +7,28 @@ import { cn } from "@/lib/utils"
 
 const Sheet = SheetPrimitive.Root
 
+// Radix Dialog zaten scroll-lock uygular; ancak bazı mobil tarayıcılarda body scroll kaçabiliyor.
+// Bu küçük efekt, body scroll'u kesin kilitlemek için.
+function useBodyScrollLock(locked) {
+  React.useEffect(() => {
+    if (!locked) return;
+    const prevOverflow = document.body.style.overflow;
+    const prevPaddingRight = document.body.style.paddingRight;
+
+    // scrollbar shift'i azalt
+    const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
+    document.body.style.overflow = "hidden";
+    if (scrollBarWidth > 0) {
+      document.body.style.paddingRight = `${scrollBarWidth}px`;
+    }
+
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      document.body.style.paddingRight = prevPaddingRight;
+    };
+  }, [locked]);
+}
+
 const SheetTrigger = SheetPrimitive.Trigger
 
 const SheetClose = SheetPrimitive.Close

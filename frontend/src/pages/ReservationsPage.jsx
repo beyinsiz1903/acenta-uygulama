@@ -243,6 +243,13 @@ function ReservationDetails({ open, onOpenChange, reservationId }) {
       <SheetContent side="right" className="p-0">
         <div className="sticky top-0 z-10 border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-5 py-4">
           <SheetHeader>
+
+  const openVoucher = useCallback(() => {
+    if (!reservationId) return;
+    // REACT_APP_BACKEND_URL kullanılmalı, hardcode yok.
+    window.open(`${process.env.REACT_APP_BACKEND_URL}/api/reservations/${reservationId}/voucher`, "_blank");
+  }, [reservationId]);
+
             <SheetTitle>Rezervasyon Detayı</SheetTitle>
           </SheetHeader>
         </div>

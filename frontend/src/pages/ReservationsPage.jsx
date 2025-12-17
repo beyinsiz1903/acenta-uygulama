@@ -278,7 +278,6 @@ function ReservationDetails({ open, onOpenChange, reservationId }) {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
 
               <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
                 <div className="rounded-2xl border bg-card p-4">

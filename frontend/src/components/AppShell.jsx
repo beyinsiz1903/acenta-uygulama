@@ -79,7 +79,18 @@ export default function AppShell() {
     <div className="min-h-screen bg-background">
       <div className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              className="md:hidden"
+              onClick={() => setMobileNavOpen(true)}
+              data-testid="mobile-nav-open"
+            >
+              <Menu className="h-5 w-5" />
+            </Button>
+
+            <div className="flex items-center gap-3">
             <div className="h-9 w-9 rounded-xl bg-primary text-primary-foreground grid place-items-center font-semibold">
               A
             </div>

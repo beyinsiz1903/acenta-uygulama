@@ -230,7 +230,7 @@ export default function InventoryPage() {
                 <div>
                   <CardTitle className="text-base flex items-center gap-2">
                     <CalendarDays className="h-4 w-4 text-slate-500" />
-                    Takvim
+                    Müsaitlik
                   </CardTitle>
                   <div className="mt-1 text-xs text-slate-500">Aralık: {start} → {end}</div>
                 </div>

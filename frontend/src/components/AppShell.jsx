@@ -40,6 +40,36 @@ export default function AppShell() {
   const user = getUser();
   const location = useLocation();
 
+  const [resSummary, setResSummary] = useState([]);
+  const [sales, setSales] = useState([]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const [a, b] = await Promise.all([
+          api.get("/reports/reservations-summary"),
+          api.get("/reports/sales-summary?days=7"),
+        ]);
+        setResSummary(a.data || []);
+        setSales(b.data || []);
+      } catch {
+        // Sidebar metrikleri opsiyonel; hata UI'ı bozmasın.
+      }
+    })();
+  }, []);
+
+  const sidebarStats = useMemo(() => {
+    const map = new Map((resSummary || []).map((r) => [r.status, Number(r.count || 0)]));
+    const total = (resSummary || []).reduce((a, r) => a + Number(r.count || 0), 0);
+    const revenue7d = (sales || []).reduce((a, r) => a + Number(r.revenue || 0), 0);
+    return {
+      total,
+      pending: map.get("pending") || 0,
+      confirmed: map.get("confirmed") || 0,
+      revenue7d,
+    };
+  }, [resSummary, sales]);
+
   const visibleNav = nav.filter((n) => userHasRole(user, n.roles));
 
   return (

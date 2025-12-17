@@ -485,10 +485,10 @@ export default function InventoryPage() {
                   <Label>Fiyat (boş bırak → null)</Label>
                   <Input type="number" value={bulkPrice} onChange={(e) => setBulkPrice(e.target.value)} data-testid="bulk-price" />
                 </div>
-                <div className="col-span-2 flex items-center justify-between rounded-xl border bg-slate-50 px-3 py-2">
+                <div className="col-span-2 flex items-center justify-between rounded-xl border bg-accent/40 px-3 py-2">
                   <div>
-                    <div className="text-sm font-medium text-slate-900">Günleri kapat</div>
-                    <div className="text-xs text-slate-500">Seçili aralıkta satış kapalı</div>
+                    <div className="text-sm font-medium text-foreground">Günleri kapat</div>
+                    <div className="text-xs text-muted-foreground">Seçili aralıkta satış kapalı</div>
                   </div>
                   <input type="checkbox" checked={bulkClosed} onChange={(e) => setBulkClosed(e.target.checked)} data-testid="bulk-closed" />
                 </div>
@@ -500,7 +500,7 @@ export default function InventoryPage() {
                 </Button>
               </div>
 
-              <div className="mt-3 text-xs text-slate-500">
+              <div className="mt-3 text-xs text-muted-foreground">
                 Not: Bu işlem her gün için upsert yapar.
               </div>
             </CardContent>
@@ -513,11 +513,11 @@ export default function InventoryPage() {
             <CardContent>
               {selectedDay ? (
                 <div className="space-y-2 text-sm">
-                  <div className="font-semibold text-slate-900" data-testid="day-summary-date">{ymd(selectedDay)}</div>
-                  <div className="text-slate-700">Kapasite: {selectedInv?.capacity_total ?? 0}</div>
-                  <div className="text-slate-700">Müsait: {selectedInv?.capacity_available ?? 0}</div>
-                  <div className="text-slate-700">Fiyat: {selectedInv?.price != null ? formatMoney(selectedInv.price, "TRY") : "(rate plan)"}</div>
-                  <div className={cn("text-sm", selectedInv?.restrictions?.closed ? "text-rose-700" : "text-slate-700")}>
+                  <div className="font-semibold text-foreground" data-testid="day-summary-date">{ymd(selectedDay)}</div>
+                  <div className="text-foreground/80">Kapasite: {selectedInv?.capacity_total ?? 0}</div>
+                  <div className="text-foreground/80">Müsait: {selectedInv?.capacity_available ?? 0}</div>
+                  <div className="text-foreground/80">Fiyat: {selectedInv?.price != null ? formatMoney(selectedInv.price, "TRY") : "(rate plan)"}</div>
+                  <div className={cn("text-sm", selectedInv?.restrictions?.closed ? "text-rose-700" : "text-foreground/80")}>
                     Durum: {selectedInv?.restrictions?.closed ? "Kapalı" : "Açık"}
                   </div>
                   <Button
@@ -532,7 +532,7 @@ export default function InventoryPage() {
                   </Button>
                 </div>
               ) : (
-                <div className="text-sm text-slate-600">Takvimden bir gün seçin.</div>
+                <div className="text-sm text-muted-foreground">Takvimden bir gün seçin.</div>
               )}
             </CardContent>
           </Card>
@@ -543,7 +543,7 @@ export default function InventoryPage() {
         <SheetContent side="right" className="sm:max-w-xl" data-testid="inventory-day-drawer">
           <SheetHeader>
             <SheetTitle>Gün Düzenle</SheetTitle>
-            <div className="text-xs text-slate-500">{selectedDay ? ymd(selectedDay) : "-"}</div>
+            <div className="text-xs text-muted-foreground">{selectedDay ? ymd(selectedDay) : "-"}</div>
           </SheetHeader>
 
           <div className="mt-5 space-y-4">
@@ -563,10 +563,10 @@ export default function InventoryPage() {
               <Input type="number" value={dayPrice} onChange={(e) => setDayPrice(e.target.value)} data-testid="day-price" />
             </div>
 
-            <div className="flex items-center justify-between rounded-xl border bg-slate-50 px-3 py-2">
+            <div className="flex items-center justify-between rounded-xl border bg-accent/40 px-3 py-2">
               <div>
-                <div className="text-sm font-medium text-slate-900">Kapalı</div>
-                <div className="text-xs text-slate-500">Bu tarih satışa kapalı</div>
+                <div className="text-sm font-medium text-foreground">Kapalı</div>
+                <div className="text-xs text-muted-foreground">Bu tarih satışa kapalı</div>
               </div>
               <input type="checkbox" checked={dayClosed} onChange={(e) => setDayClosed(e.target.checked)} data-testid="day-closed" />
             </div>

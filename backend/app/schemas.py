@@ -74,6 +74,16 @@ class InventoryUpsertIn(BaseModel):
     restrictions: dict[str, Any] = Field(default_factory=lambda: {"closed": False, "cta": False, "ctd": False})
 
 
+class InventoryBulkUpsertIn(BaseModel):
+    product_id: str
+    start_date: str  # YYYY-MM-DD
+    end_date: str  # YYYY-MM-DD (inclusive)
+    capacity_total: int
+    capacity_available: int
+    price: Optional[float] = None
+    closed: bool = False
+
+
 class ReservationCreateIn(BaseModel):
     idempotency_key: Optional[str] = None
     product_id: str
@@ -126,6 +136,10 @@ class LeadOut(LeadIn):
     id: str
     created_at: datetime
     updated_at: datetime
+
+
+class LeadStatusPatchIn(BaseModel):
+    status: str
 
 
 class QuoteIn(BaseModel):

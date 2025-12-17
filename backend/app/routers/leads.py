@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from app.auth import get_current_user
 from app.db import get_db
-from app.schemas import LeadIn
+from app.schemas import LeadIn, LeadStatusPatchIn
 from app.utils import now_utc, serialize_doc, to_object_id
 
 router = APIRouter(prefix="/api/leads", tags=["leads"])
@@ -21,7 +21,9 @@ def _oid_or_400(id_str: str) -> ObjectId:
 @router.post("", dependencies=[Depends(get_current_user)])
 async def create_lead(payload: LeadIn, user=Depends(get_current_user)):
     db = await get_db()
-    cust = await db.customers.find_one({"organization_id": user["organization_id"], "_id": _oid_or_400(payload.customer_id)})
+    cust = await db.customers.find_one(
+        {"organization_id": user["organization_id"], "_id": _oid_or_400(payload.customer_id)}
+    )
     if not cust:
         raise HTTPException(status_code=404, detail="Müşteri bulunamadı")
 
@@ -65,6 +67,26 @@ async def update_lead(lead_id: str, payload: LeadIn, user=Depends(get_current_us
     await db.leads.update_one(
         {"_id": existing["_id"]},
         {"$set": {**doc, "updated_at": now_utc(), "updated_by": user.get("email")}},
+    )
+    saved = await db.leads.find_one({"_id": existing["_id"]})
+    return serialize_doc(saved)
+
+
+@router.patch("/{lead_id}/status", dependencies=[Depends(get_current_user)])
+async def patch_status(lead_id: str, payload: LeadStatusPatchIn, user=Depends(get_current_user)):
+    db = await get_db()
+    lead_oid = _oid_or_400(lead_id)
+    existing = await db.leads.find_one({"organization_id": user["organization_id"], "_id": lead_oid})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Lead bulunamadı")
+
+    status = payload.status
+    if status not in ["new", "contacted", "won", "lost"]:
+        raise HTTPException(status_code=400, detail="Geçersiz status")
+
+    await db.leads.update_one(
+        {"_id": existing["_id"]},
+        {"$set": {"status": status, "updated_at": now_utc(), "updated_by": user.get("email")}},
     )
     saved = await db.leads.find_one({"_id": existing["_id"]})
     return serialize_doc(saved)

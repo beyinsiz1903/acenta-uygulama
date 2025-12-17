@@ -5,8 +5,8 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from app.auth import get_current_user
 from app.db import get_db
-from app.schemas import InventoryUpsertIn
-from app.services.inventory import upsert_inventory
+from app.schemas import InventoryBulkUpsertIn, InventoryUpsertIn
+from app.services.inventory import bulk_upsert_inventory, upsert_inventory
 from app.utils import serialize_doc, to_object_id
 
 router = APIRouter(prefix="/api/inventory", tags=["inventory"])
@@ -21,7 +21,19 @@ def _oid_or_400(id_str: str) -> ObjectId:
 
 @router.post("/upsert", dependencies=[Depends(get_current_user)])
 async def upsert(payload: InventoryUpsertIn, user=Depends(get_current_user)):
-    result = await upsert_inventory(user["organization_id"], user.get("email"), payload.model_dump())
+    try:
+        result = await upsert_inventory(user["organization_id"], user.get("email"), payload.model_dump())
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Geçersiz veri")
+    return result
+
+
+@router.post("/bulk_upsert", dependencies=[Depends(get_current_user)])
+async def bulk_upsert(payload: InventoryBulkUpsertIn, user=Depends(get_current_user)):
+    try:
+        result = await bulk_upsert_inventory(user["organization_id"], user.get("email"), payload.model_dump())
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     return result
 
 

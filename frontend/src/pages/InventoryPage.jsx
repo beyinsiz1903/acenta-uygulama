@@ -1,32 +1,57 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { CalendarDays, Save, RefreshCw } from "lucide-react";
-import { addDays, format, startOfToday } from "date-fns";
+import { addMonths, endOfMonth, format, startOfMonth, subMonths } from "date-fns";
+import { CalendarDays, ChevronLeft, ChevronRight, Edit3, Layers, Save, Sparkles } from "lucide-react";
+import { DayPicker } from "react-day-picker";
 
 import { api, apiErrorMessage } from "../lib/api";
+import { formatMoney } from "../lib/format";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "../components/ui/sheet";
+import { cn } from "../lib/utils";
+
+function ymd(d) {
+  return format(d, "yyyy-MM-dd");
+}
 
 export default function InventoryPage() {
   const [products, setProducts] = useState([]);
   const [productId, setProductId] = useState("");
-  const [rangeDays, setRangeDays] = useState(14);
+  const [month, setMonth] = useState(() => new Date());
+
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const start = useMemo(() => format(startOfToday(), "yyyy-MM-dd"), []);
-  const end = useMemo(
-    () => format(addDays(startOfToday(), Number(rangeDays || 14)), "yyyy-MM-dd"),
-    [rangeDays]
-  );
+  const [openDay, setOpenDay] = useState(false);
+  const [selectedDay, setSelectedDay] = useState(null);
+
+  // Bulk update controls
+  const [bulkStart, setBulkStart] = useState(ymd(new Date()));
+  const [bulkEnd, setBulkEnd] = useState(ymd(new Date()));
+  const [bulkCapTotal, setBulkCapTotal] = useState(20);
+  const [bulkCapAvail, setBulkCapAvail] = useState(20);
+  const [bulkPrice, setBulkPrice] = useState("");
+  const [bulkClosed, setBulkClosed] = useState(false);
+  const [bulkLoading, setBulkLoading] = useState(false);
+
+  const start = useMemo(() => ymd(startOfMonth(month)), [month]);
+  const end = useMemo(() => ymd(endOfMonth(month)), [month]);
+
+  const invMap = useMemo(() => {
+    const map = new Map();
+    for (const r of rows) map.set(r.date, r);
+    return map;
+  }, [rows]);
 
   const loadProducts = useCallback(async () => {
     const resp = await api.get("/products");
-    setProducts(resp.data || []);
-    setProductId((prev) => prev || (resp.data || [])[0]?.id || "");
+    const list = resp.data || [];
+    setProducts(list);
+    setProductId((prev) => prev || list[0]?.id || "");
   }, []);
 
   const loadInventory = useCallback(
@@ -61,208 +86,358 @@ export default function InventoryPage() {
       loadInventory(productId);
     }, 0);
     return () => clearTimeout(t);
-  }, [productId, rangeDays, loadInventory]);
+  }, [productId, month, loadInventory]);
 
-  const grid = useMemo(() => {
-    const map = new Map(rows.map((r) => [r.date, r]));
-    const days = [];
-    for (let i = 0; i < Number(rangeDays || 14); i++) {
-      const d = format(addDays(startOfToday(), i), "yyyy-MM-dd");
-      const item = map.get(d) || {
-        date: d,
-        capacity_total: 0,
-        capacity_available: 0,
-        price: null,
-        restrictions: { closed: false },
-      };
-      days.push(item);
+  const selectedInv = useMemo(() => {
+    if (!selectedDay) return null;
+    return invMap.get(ymd(selectedDay)) || null;
+  }, [invMap, selectedDay]);
+
+  const dayEditorInitial = useMemo(() => {
+    const d = selectedDay ? ymd(selectedDay) : "";
+    return {
+      date: d,
+      capacity_total: selectedInv?.capacity_total ?? 0,
+      capacity_available: selectedInv?.capacity_available ?? 0,
+      price: selectedInv?.price ?? "",
+      closed: !!selectedInv?.restrictions?.closed,
+    };
+  }, [selectedDay, selectedInv]);
+
+  const [dayCapTotal, setDayCapTotal] = useState(0);
+  const [dayCapAvail, setDayCapAvail] = useState(0);
+  const [dayPrice, setDayPrice] = useState("");
+  const [dayClosed, setDayClosed] = useState(false);
+  const [daySaving, setDaySaving] = useState(false);
+
+  useEffect(() => {
+    setDayCapTotal(dayEditorInitial.capacity_total);
+    setDayCapAvail(dayEditorInitial.capacity_available);
+    setDayPrice(dayEditorInitial.price);
+    setDayClosed(dayEditorInitial.closed);
+  }, [dayEditorInitial]);
+
+  async function saveDay() {
+    if (!selectedDay) return;
+    setDaySaving(true);
+    try {
+      await api.post("/inventory/upsert", {
+        product_id: productId,
+        date: ymd(selectedDay),
+        capacity_total: Number(dayCapTotal || 0),
+        capacity_available: Number(dayCapAvail || 0),
+        price: dayPrice === "" || dayPrice === null ? null : Number(dayPrice),
+        restrictions: { closed: !!dayClosed, cta: false, ctd: false },
+      });
+      await loadInventory(productId);
+      setOpenDay(false);
+    } catch (e) {
+      alert(apiErrorMessage(e));
+    } finally {
+      setDaySaving(false);
     }
-    return days;
-  }, [rows, rangeDays]);
+  }
 
-  const upsertDay = useCallback(
-    async (day) => {
-      try {
-        await api.post("/inventory/upsert", {
-          product_id: productId,
-          date: day.date,
-          capacity_total: Number(day.capacity_total || 0),
-          capacity_available: Number(day.capacity_available || 0),
-          price: day.price === "" || day.price === null ? null : Number(day.price),
-          restrictions: { closed: !!day.closed, cta: false, ctd: false },
-        });
-        await loadInventory(productId);
-      } catch (e) {
-        alert(apiErrorMessage(e));
+  async function applyBulk() {
+    if (!bulkStart || !bulkEnd) return;
+    setBulkLoading(true);
+    try {
+      await api.post("/inventory/bulk_upsert", {
+        product_id: productId,
+        start_date: bulkStart,
+        end_date: bulkEnd,
+        capacity_total: Number(bulkCapTotal || 0),
+        capacity_available: Number(bulkCapAvail || 0),
+        price: bulkPrice === "" || bulkPrice === null ? null : Number(bulkPrice),
+        closed: !!bulkClosed,
+      });
+      await loadInventory(productId);
+    } catch (e) {
+      alert(apiErrorMessage(e));
+    } finally {
+      setBulkLoading(false);
+    }
+  }
+
+  const modifiers = useMemo(() => {
+    const closed = [];
+    for (const r of rows) {
+      if (r?.restrictions?.closed) {
+        const parts = (r.date || "").split("-");
+        if (parts.length === 3) {
+          closed.push(new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2])));
+        }
       }
-    },
-    [productId, loadInventory]
-  );
+    }
+    return { closed };
+  }, [rows]);
 
   return (
     <div className="space-y-4">
-      <div>
-        <h2 className="text-2xl font-semibold text-slate-900">Müsaitlik & Kontenjan</h2>
-        <p className="text-sm text-slate-600">Tarih bazında kapasite ve fiyat güncelle.</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-semibold text-slate-900">Müsaitlik & Kontenjan</h2>
+          <p className="text-sm text-slate-600">
+            Takvimden gün seçerek kapasite/fiyat düzenleyin veya tarih aralığına toplu uygulayın.
+          </p>
+        </div>
       </div>
 
-      <Card className="rounded-2xl shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <CalendarDays className="h-4 w-4 text-slate-500" />
-            Takvim
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div className="space-y-2">
-              <Label>Ürün</Label>
-              <Select value={productId} onValueChange={setProductId}>
-                <SelectTrigger data-testid="inventory-product">
-                  <SelectValue placeholder="Ürün seç" />
-                </SelectTrigger>
-                <SelectContent>
-                  {products.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>
-                      {p.title} ({p.type})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+      <div className="grid grid-cols-12 gap-4">
+        <div className="col-span-12 lg:col-span-8">
+          <Card className="rounded-2xl shadow-sm">
+            <CardHeader className="pb-3">
+              <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+                <div>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <CalendarDays className="h-4 w-4 text-slate-500" />
+                    Takvim
+                  </CardTitle>
+                  <div className="mt-1 text-xs text-slate-500">Aralık: {start} → {end}</div>
+                </div>
 
-            <div className="space-y-2">
-              <Label>Gün sayısı</Label>
-              <Input
-                type="number"
-                min={7}
-                max={60}
-                value={rangeDays}
-                onChange={(e) => setRangeDays(e.target.value)}
-                data-testid="inventory-range"
-              />
-            </div>
+                <div className="flex flex-col md:flex-row gap-2 md:items-end">
+                  <div className="space-y-2">
+                    <Label>Ürün</Label>
+                    <Select value={productId} onValueChange={setProductId}>
+                      <SelectTrigger data-testid="inventory-product">
+                        <SelectValue placeholder="Ürün seç" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {products.map((p) => (
+                          <SelectItem key={p.id} value={p.id}>
+                            {p.title} ({p.type})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-            <div className="flex items-end gap-2">
-              <Button
-                variant="outline"
-                onClick={() => loadInventory(productId)}
-                className="gap-2"
-                data-testid="inventory-refresh"
-              >
-                <RefreshCw className="h-4 w-4" />
-                Yenile
-              </Button>
-              <div className="text-xs text-slate-500">Aralık: {start} → {end}</div>
-            </div>
-          </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      className="gap-2"
+                      onClick={() => setMonth((m) => subMonths(m, 1))}
+                      data-testid="inventory-prev-month"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                      Önceki
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="gap-2"
+                      onClick={() => setMonth((m) => addMonths(m, 1))}
+                      data-testid="inventory-next-month"
+                    >
+                      Sonraki
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
 
-          {error ? (
-            <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700" data-testid="inventory-error">
-              {error}
-            </div>
-          ) : null}
+                  <Button
+                    variant="outline"
+                    className="gap-2"
+                    onClick={() => loadInventory(productId)}
+                    data-testid="inventory-refresh"
+                  >
+                    <Layers className="h-4 w-4" />
+                    Yenile
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
 
-          <div className="mt-4 overflow-x-auto">
-            <table className="w-full text-sm" data-testid="inventory-table">
-              <thead>
-                <tr className="text-left text-slate-500">
-                  <th className="py-2">Tarih</th>
-                  <th className="py-2">Kapasite</th>
-                  <th className="py-2">Müsait</th>
-                  <th className="py-2">Fiyat</th>
-                  <th className="py-2">Kapalı</th>
-                  <th className="py-2 text-right">Kaydet</th>
-                </tr>
-              </thead>
-              <tbody>
+            <CardContent>
+              {error ? (
+                <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700" data-testid="inventory-error">
+                  {error}
+                </div>
+              ) : null}
+
+              <div className="rounded-2xl border bg-white p-3">
+                <DayPicker
+                  mode="single"
+                  selected={selectedDay}
+                  onSelect={(d) => {
+                    if (!d) return;
+                    setSelectedDay(d);
+                    setOpenDay(true);
+                  }}
+                  month={month}
+                  onMonthChange={setMonth}
+                  showOutsideDays
+                  modifiers={modifiers}
+                  modifiersClassNames={{
+                    closed: "bg-rose-50 text-rose-800 rounded-md",
+                  }}
+                  classNames={{
+                    months: "flex flex-col space-y-4",
+                    month: "space-y-4",
+                    caption: "flex justify-center pt-1 relative items-center",
+                    caption_label: "text-sm font-medium",
+                    nav: "hidden",
+                    table: "w-full border-collapse space-y-1",
+                    head_row: "flex",
+                    head_cell: "text-slate-500 rounded-md w-10 font-normal text-[0.8rem]",
+                    row: "flex w-full mt-2",
+                    cell: "relative p-0 text-center text-sm w-10 h-10",
+                    day: "h-10 w-10 p-0 font-normal aria-selected:opacity-100",
+                  }}
+                  components={{
+                    DayContent: (props) => {
+                      const dateStr = ymd(props.date);
+                      const inv = invMap.get(dateStr);
+                      const cap = inv ? `${inv.capacity_available}/${inv.capacity_total}` : "-";
+                      const price = inv?.price;
+                      const closed = !!inv?.restrictions?.closed;
+                      return (
+                        <div className={cn("flex h-10 w-10 flex-col items-center justify-center rounded-md border", props.activeModifiers.selected ? "border-slate-900 bg-slate-900 text-white" : "border-slate-100 hover:border-slate-200", closed ? "bg-rose-50" : "bg-white")}>
+                          <div className={cn("text-[12px] leading-none", props.activeModifiers.selected ? "text-white" : "text-slate-900")}>{props.date.getDate()}</div>
+                          <div className={cn("mt-0.5 text-[10px] leading-none", props.activeModifiers.selected ? "text-white/80" : closed ? "text-rose-700" : "text-slate-500")}>{cap}</div>
+                          {price != null ? (
+                            <div className={cn("mt-0.5 text-[10px] leading-none", props.activeModifiers.selected ? "text-white" : "text-slate-700")}>{Number(price).toFixed(0)}</div>
+                          ) : null}
+                        </div>
+                      );
+                    },
+                  }}
+                />
+
                 {loading ? (
-                  <tr>
-                    <td colSpan={6} className="py-6 text-slate-500">Yükleniyor...</td>
-                  </tr>
-                ) : (
-                  grid.map((d) => {
-                    const key = `${d.date}-${d.capacity_total}-${d.capacity_available}-${d.price ?? ""}-${d?.restrictions?.closed ? 1 : 0}`;
-                    return <InventoryRow key={key} day={d} onSave={upsertDay} />;
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
+                  <div className="mt-3 text-sm text-slate-500">Yükleniyor...</div>
+                ) : null}
 
-          <div className="mt-3 text-xs text-slate-500">
-            İpucu: Fiyat boş ise sistem rate plan üzerinden fiyat hesaplar.
+                <div className="mt-3 text-xs text-slate-500">
+                  Hücre içeriği: <span className="font-medium">müsait/toplam</span> ve opsiyonel fiyat.
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="col-span-12 lg:col-span-4">
+          <Card className="rounded-2xl shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-slate-500" />
+                Toplu Güncelle
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label>Başlangıç</Label>
+                  <Input type="date" value={bulkStart} onChange={(e) => setBulkStart(e.target.value)} data-testid="bulk-start" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Bitiş</Label>
+                  <Input type="date" value={bulkEnd} onChange={(e) => setBulkEnd(e.target.value)} data-testid="bulk-end" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Kapasite</Label>
+                  <Input type="number" value={bulkCapTotal} onChange={(e) => setBulkCapTotal(e.target.value)} data-testid="bulk-cap-total" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Müsait</Label>
+                  <Input type="number" value={bulkCapAvail} onChange={(e) => setBulkCapAvail(e.target.value)} data-testid="bulk-cap-avail" />
+                </div>
+                <div className="space-y-2 col-span-2">
+                  <Label>Fiyat (boş bırak → null)</Label>
+                  <Input type="number" value={bulkPrice} onChange={(e) => setBulkPrice(e.target.value)} data-testid="bulk-price" />
+                </div>
+                <div className="col-span-2 flex items-center justify-between rounded-xl border bg-slate-50 px-3 py-2">
+                  <div>
+                    <div className="text-sm font-medium text-slate-900">Günleri kapat</div>
+                    <div className="text-xs text-slate-500">Seçili aralıkta satış kapalı</div>
+                  </div>
+                  <input type="checkbox" checked={bulkClosed} onChange={(e) => setBulkClosed(e.target.checked)} data-testid="bulk-closed" />
+                </div>
+              </div>
+
+              <div className="mt-3">
+                <Button onClick={applyBulk} disabled={bulkLoading || !productId} className="w-full gap-2" data-testid="bulk-apply">
+                  {bulkLoading ? "Uygulanıyor..." : "Toplu Uygula"}
+                </Button>
+              </div>
+
+              <div className="mt-3 text-xs text-slate-500">
+                Not: Bu işlem her gün için upsert yapar.
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="mt-4 rounded-2xl shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-base">Seçili Gün Özeti</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {selectedDay ? (
+                <div className="space-y-2 text-sm">
+                  <div className="font-semibold text-slate-900" data-testid="day-summary-date">{ymd(selectedDay)}</div>
+                  <div className="text-slate-700">Kapasite: {selectedInv?.capacity_total ?? 0}</div>
+                  <div className="text-slate-700">Müsait: {selectedInv?.capacity_available ?? 0}</div>
+                  <div className="text-slate-700">Fiyat: {selectedInv?.price != null ? formatMoney(selectedInv.price, "TRY") : "(rate plan)"}</div>
+                  <div className={cn("text-sm", selectedInv?.restrictions?.closed ? "text-rose-700" : "text-slate-700")}>
+                    Durum: {selectedInv?.restrictions?.closed ? "Kapalı" : "Açık"}
+                  </div>
+                  <Button
+                    variant="outline"
+                    className="w-full gap-2"
+                    onClick={() => setOpenDay(true)}
+                    disabled={!selectedDay}
+                    data-testid="day-open-editor"
+                  >
+                    <Edit3 className="h-4 w-4" />
+                    Düzenle
+                  </Button>
+                </div>
+              ) : (
+                <div className="text-sm text-slate-600">Takvimden bir gün seçin.</div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      <Sheet open={openDay} onOpenChange={setOpenDay}>
+        <SheetContent side="right" className="sm:max-w-xl" data-testid="inventory-day-drawer">
+          <SheetHeader>
+            <SheetTitle>Gün Düzenle</SheetTitle>
+            <div className="text-xs text-slate-500">{selectedDay ? ymd(selectedDay) : "-"}</div>
+          </SheetHeader>
+
+          <div className="mt-5 space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>Kapasite</Label>
+                <Input type="number" value={dayCapTotal} onChange={(e) => setDayCapTotal(e.target.value)} data-testid="day-cap-total" />
+              </div>
+              <div className="space-y-2">
+                <Label>Müsait</Label>
+                <Input type="number" value={dayCapAvail} onChange={(e) => setDayCapAvail(e.target.value)} data-testid="day-cap-avail" />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Fiyat (boş bırak → null)</Label>
+              <Input type="number" value={dayPrice} onChange={(e) => setDayPrice(e.target.value)} data-testid="day-price" />
+            </div>
+
+            <div className="flex items-center justify-between rounded-xl border bg-slate-50 px-3 py-2">
+              <div>
+                <div className="text-sm font-medium text-slate-900">Kapalı</div>
+                <div className="text-xs text-slate-500">Bu tarih satışa kapalı</div>
+              </div>
+              <input type="checkbox" checked={dayClosed} onChange={(e) => setDayClosed(e.target.checked)} data-testid="day-closed" />
+            </div>
+
+            <Button onClick={saveDay} disabled={daySaving} className="w-full gap-2" data-testid="day-save">
+              <Save className="h-4 w-4" />
+              {daySaving ? "Kaydediliyor..." : "Kaydet"}
+            </Button>
           </div>
-        </CardContent>
-      </Card>
+        </SheetContent>
+      </Sheet>
     </div>
-  );
-}
-
-function InventoryRow({ day, onSave }) {
-  const [capacityTotal, setCapacityTotal] = useState(day.capacity_total || 0);
-  const [capacityAvail, setCapacityAvail] = useState(day.capacity_available || 0);
-  const [price, setPrice] = useState(day.price ?? "");
-  const [closed, setClosed] = useState(!!day?.restrictions?.closed);
-
-  return (
-    <tr className="border-t">
-      <td className="py-3 font-medium text-slate-900">{day.date}</td>
-      <td className="py-3">
-        <Input
-          className="w-24"
-          type="number"
-          value={capacityTotal}
-          onChange={(e) => setCapacityTotal(e.target.value)}
-          data-testid={`inv-total-${day.date}`}
-        />
-      </td>
-      <td className="py-3">
-        <Input
-          className="w-24"
-          type="number"
-          value={capacityAvail}
-          onChange={(e) => setCapacityAvail(e.target.value)}
-          data-testid={`inv-avail-${day.date}`}
-        />
-      </td>
-      <td className="py-3">
-        <Input
-          className="w-32"
-          type="number"
-          value={price}
-          onChange={(e) => setPrice(e.target.value)}
-          placeholder="(rate plan)"
-          data-testid={`inv-price-${day.date}`}
-        />
-      </td>
-      <td className="py-3">
-        <input
-          type="checkbox"
-          checked={closed}
-          onChange={(e) => setClosed(e.target.checked)}
-          data-testid={`inv-closed-${day.date}`}
-        />
-      </td>
-      <td className="py-3 text-right">
-        <Button
-          size="sm"
-          className="gap-2"
-          onClick={() =>
-            onSave({
-              date: day.date,
-              capacity_total: capacityTotal,
-              capacity_available: capacityAvail,
-              price,
-              closed,
-            })
-          }
-          data-testid={`inv-save-${day.date}`}
-        >
-          <Save className="h-4 w-4" />
-          Kaydet
-        </Button>
-      </td>
-    </tr>
   );
 }

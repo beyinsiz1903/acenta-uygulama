@@ -127,24 +127,50 @@ export default function AppShell() {
             </div>
 
             <div className="mt-3 grid grid-cols-3 gap-2">
-              <div className="rounded-xl border bg-background/50 p-2">
+              <NavLink
+                to="/app/reservations"
+                className={({ isActive }) =>
+                  cn(
+                    "rounded-xl border bg-background/50 p-2 transition hover:bg-accent/40 hover:shadow-sm",
+                    isActive ? "ring-1 ring-ring" : ""
+                  )
+                }
+              >
                 <div className="text-[11px] text-muted-foreground">Toplam</div>
                 <div className="text-sm font-semibold text-foreground" data-testid="sb-total">
                   {sidebarStats.total}
                 </div>
-              </div>
-              <div className="rounded-xl border bg-background/50 p-2">
+              </NavLink>
+
+              <NavLink
+                to="/app/reservations?status=pending"
+                className={({ isActive }) =>
+                  cn(
+                    "rounded-xl border bg-background/50 p-2 transition hover:bg-accent/40 hover:shadow-sm",
+                    isActive ? "ring-1 ring-ring" : ""
+                  )
+                }
+              >
                 <div className="text-[11px] text-muted-foreground">Bekleyen</div>
                 <div className="text-sm font-semibold text-foreground" data-testid="sb-pending">
                   {sidebarStats.pending}
                 </div>
-              </div>
-              <div className="rounded-xl border bg-background/50 p-2">
+              </NavLink>
+
+              <NavLink
+                to="/app/reports"
+                className={({ isActive }) =>
+                  cn(
+                    "rounded-xl border bg-background/50 p-2 transition hover:bg-accent/40 hover:shadow-sm",
+                    isActive ? "ring-1 ring-ring" : ""
+                  )
+                }
+              >
                 <div className="text-[11px] text-muted-foreground">Ciro 7G</div>
                 <div className="text-sm font-semibold text-foreground" data-testid="sb-rev7">
                   {formatMoney(sidebarStats.revenue7d, "TRY")}
                 </div>
-              </div>
+              </NavLink>
             </div>
 
             <div className="mt-2 flex items-center justify-between text-[11px] text-muted-foreground">

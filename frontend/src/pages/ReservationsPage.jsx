@@ -167,7 +167,7 @@ function PaymentForm({ reservationId, currency, onSaved }) {
 
   return (
     <div className="rounded-2xl border bg-white p-4">
-      <div className="text-sm font-semibold text-slate-900">Tahsilat Ekle</div>
+      <div className="text-sm font-semibold text-foreground">Tahsilat Ekle</div>
       <div className="mt-3 grid grid-cols-1 md:grid-cols-4 gap-3">
         <div className="space-y-2">
           <Label>Tutar</Label>
@@ -246,7 +246,7 @@ function ReservationDetails({ open, onOpenChange, reservationId }) {
 
         <div className="px-4 pb-4">
 
-        {loading ? <div className="text-sm text-slate-500">Yükleniyor...</div> : null}
+        {loading ? <div className="text-sm text-muted-foreground">Yükleniyor...</div> : null}
         {error ? (
           <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700" data-testid="res-detail-error">
             {error}
@@ -256,36 +256,36 @@ function ReservationDetails({ open, onOpenChange, reservationId }) {
         {data ? (
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <div className="rounded-2xl border bg-slate-50 p-3">
-                <div className="text-xs text-slate-500">PNR</div>
-                <div className="text-sm font-semibold text-slate-900">{data.pnr}</div>
+              <div className="rounded-2xl border bg-accent/40 p-3">
+                <div className="text-xs text-muted-foreground">PNR</div>
+                <div className="text-sm font-semibold text-foreground">{data.pnr}</div>
               </div>
-              <div className="rounded-2xl border bg-slate-50 p-3">
-                <div className="text-xs text-slate-500">Voucher</div>
-                <div className="text-sm font-semibold text-slate-900">{data.voucher_no}</div>
+              <div className="rounded-2xl border bg-accent/40 p-3">
+                <div className="text-xs text-muted-foreground">Voucher</div>
+                <div className="text-sm font-semibold text-foreground">{data.voucher_no}</div>
               </div>
-              <div className="rounded-2xl border bg-slate-50 p-3">
-                <div className="text-xs text-slate-500">Durum</div>
-                <div className="text-sm font-semibold text-slate-900">{badge.label}</div>
+              <div className="rounded-2xl border bg-accent/40 p-3">
+                <div className="text-xs text-muted-foreground">Durum</div>
+                <div className="text-sm font-semibold text-foreground">{badge.label}</div>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div className="rounded-2xl border bg-white p-3">
-                <div className="text-xs text-slate-500">Toplam</div>
-                <div className="text-sm font-semibold text-slate-900">
+                <div className="text-xs text-muted-foreground">Toplam</div>
+                <div className="text-sm font-semibold text-foreground">
                   {formatMoney(data.total_price, data.currency)}
                 </div>
               </div>
               <div className="rounded-2xl border bg-white p-3">
-                <div className="text-xs text-slate-500">Ödenen</div>
-                <div className="text-sm font-semibold text-slate-900">
+                <div className="text-xs text-muted-foreground">Ödenen</div>
+                <div className="text-sm font-semibold text-foreground">
                   {formatMoney(data.paid_amount, data.currency)}
                 </div>
               </div>
               <div className="rounded-2xl border bg-white p-3">
-                <div className="text-xs text-slate-500">Kalan</div>
-                <div className="text-sm font-semibold text-slate-900">
+                <div className="text-xs text-muted-foreground">Kalan</div>
+                <div className="text-sm font-semibold text-foreground">
                   {formatMoney(data.due_amount, data.currency)}
                 </div>
               </div>
@@ -310,18 +310,18 @@ function ReservationDetails({ open, onOpenChange, reservationId }) {
             <PaymentForm reservationId={reservationId} currency={data.currency} onSaved={load} />
 
             <div className="rounded-2xl border bg-white p-4">
-              <div className="text-sm font-semibold text-slate-900">Tahsilatlar</div>
-              <div className="mt-2 text-sm text-slate-600">
+              <div className="text-sm font-semibold text-foreground">Tahsilatlar</div>
+              <div className="mt-2 text-sm text-muted-foreground">
                 {(data.payments || []).length === 0 ? "Kayıt yok." : null}
               </div>
               <div className="mt-2 space-y-2">
                 {(data.payments || []).map((p) => (
-                  <div key={p.id} className="flex items-center justify-between rounded-xl border bg-slate-50 px-3 py-2">
-                    <div className="text-sm text-slate-700">
+                  <div key={p.id} className="flex items-center justify-between rounded-xl border bg-accent/40 px-3 py-2">
+                    <div className="text-sm text-foreground/80">
                       {p.method} — {p.reference || "-"}
-                      <div className="text-xs text-slate-500">{p.created_at}</div>
+                      <div className="text-xs text-muted-foreground">{p.created_at}</div>
                     </div>
-                    <div className="text-sm font-semibold text-slate-900">
+                    <div className="text-sm font-semibold text-foreground">
                       {formatMoney(p.amount, p.currency)}
                     </div>
                   </div>

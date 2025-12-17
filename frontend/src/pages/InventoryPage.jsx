@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { addMonths, endOfMonth, format, startOfMonth, subMonths } from "date-fns";
-import { CalendarDays, ChevronLeft, ChevronRight, Edit3, Layers, Save, Sparkles } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight, Edit3, Layers, Save, Sparkles, Table2 } from "lucide-react";
 import { DayPicker } from "react-day-picker";
 
 import { api, apiErrorMessage } from "../lib/api";

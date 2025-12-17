@@ -6,6 +6,7 @@ import { api, apiErrorMessage } from "../lib/api";
 import { formatMoney, statusBadge } from "../lib/format";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
@@ -444,41 +445,41 @@ export default function ReservationsPage() {
           ) : null}
 
           <div className="overflow-x-auto">
-            <table className="w-full text-sm" data-testid="res-table">
-              <thead>
-                <tr className="text-left text-muted-foreground">
-                  <th className="py-2">PNR</th>
-                  <th className="py-2">Durum</th>
-                  <th className="py-2">Toplam</th>
-                  <th className="py-2">Ödenen</th>
-                  <th className="py-2">Kanal</th>
-                  <th className="py-2 text-right">İşlem</th>
-                </tr>
-              </thead>
-              <tbody>
+            <Table data-testid="res-table">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>PNR</TableHead>
+                  <TableHead>Durum</TableHead>
+                  <TableHead>Toplam</TableHead>
+                  <TableHead>Ödenen</TableHead>
+                  <TableHead>Kanal</TableHead>
+                  <TableHead className="text-right">İşlem</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {loading ? (
-                  <tr>
-                    <td colSpan={6} className="py-6 text-muted-foreground">Yükleniyor...</td>
-                  </tr>
+                  <TableRow>
+                    <TableCell colSpan={6} className="py-6 text-muted-foreground">Yükleniyor...</TableCell>
+                  </TableRow>
                 ) : rows.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="py-6 text-muted-foreground">Kayıt yok.</td>
-                  </tr>
+                  <TableRow>
+                    <TableCell colSpan={6} className="py-6 text-muted-foreground">Kayıt yok.</TableCell>
+                  </TableRow>
                 ) : (
                   rows.map((r) => {
                     const b = statusBadge(r.status);
                     return (
-                      <tr key={r.id} className="border-t">
-                        <td className="py-3 font-medium text-foreground">{r.pnr}</td>
-                        <td className="py-3">
+                      <TableRow key={r.id}>
+                        <TableCell className="font-medium text-foreground">{r.pnr}</TableCell>
+                        <TableCell>
                           <span className="rounded-full border bg-accent px-2 py-1 text-xs font-medium text-foreground/80">
                             {b.label}
                           </span>
-                        </td>
-                        <td className="py-3 text-foreground/80">{formatMoney(r.total_price, r.currency)}</td>
-                        <td className="py-3 text-foreground/80">{formatMoney(r.paid_amount, r.currency)}</td>
-                        <td className="py-3 text-muted-foreground">{r.channel}</td>
-                        <td className="py-3 text-right">
+                        </TableCell>
+                        <TableCell className="text-foreground/80">{formatMoney(r.total_price, r.currency)}</TableCell>
+                        <TableCell className="text-foreground/80">{formatMoney(r.paid_amount, r.currency)}</TableCell>
+                        <TableCell className="text-muted-foreground">{r.channel}</TableCell>
+                        <TableCell className="text-right">
                           <Button
                             variant="outline"
                             size="sm"
@@ -490,13 +491,13 @@ export default function ReservationsPage() {
                           >
                             Aç
                           </Button>
-                        </td>
-                      </tr>
+                        </TableCell>
+                      </TableRow>
                     );
                   })
                 )}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
 
           <div className="mt-3 text-xs text-muted-foreground">

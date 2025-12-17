@@ -220,8 +220,6 @@ function KanbanColumn({ col, items }) {
   );
 }
 
-}
-
 
 function QuoteForm({ open, onOpenChange, onSaved }) {
   const [customers, setCustomers] = useState([]);

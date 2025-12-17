@@ -301,7 +301,7 @@ export default function AppShell() {
                 }
               >
                 <div className="text-[11px] text-muted-foreground">Ciro 7G</div>
-                <div className="text-sm font-semibold text-foreground" data-testid="sb-rev7">
+                <div className="text-sm font-semibold text-foreground truncate" title={formatMoney(sidebarStats.revenue7d, "TRY")} data-testid="sb-rev7">
                   {formatMoney(sidebarStats.revenue7d, "TRY")}
                 </div>
               </NavLink>

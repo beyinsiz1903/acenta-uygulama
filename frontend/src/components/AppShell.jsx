@@ -110,6 +110,19 @@ export default function AppShell() {
             <Button
               variant="outline"
               size="sm"
+              data-testid="logout-btn"
+              onClick={() => {
+                clearToken();
+                window.location.href = "/login";
+              }}
+              className="gap-2"
+            >
+              <LogOut className="h-4 w-4" />
+              Çıkış
+            </Button>
+          </div>
+        </div>
+      </div>
 
       {/* Mobile nav drawer */}
       <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
@@ -199,19 +212,6 @@ export default function AppShell() {
         </SheetContent>
       </Sheet>
 
-              data-testid="logout-btn"
-              onClick={() => {
-                clearToken();
-                window.location.href = "/login";
-              }}
-              className="gap-2"
-            >
-              <LogOut className="h-4 w-4" />
-              Çıkış
-            </Button>
-          </div>
-        </div>
-      </div>
 
       <div className="mx-auto grid max-w-7xl grid-cols-12 gap-4 px-4 py-6">
         <aside className="col-span-12 md:col-span-3 lg:col-span-2 md:sticky md:top-[84px] md:h-[calc(100vh-104px)]">

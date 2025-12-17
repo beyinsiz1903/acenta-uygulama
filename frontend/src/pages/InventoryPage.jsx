@@ -68,6 +68,15 @@ function CalendarDayCell({ date, activeModifiers, inv, cnFn }) {
 }
 
 
+
+function DayContent(props) {
+  // Not: DayPicker 'components' API'si gereği burada hook yok; render-safe.
+  const dateStr = ymd(props.date);
+  const inv = props.invMap?.get?.(dateStr);
+
+  return <CalendarDayCell date={props.date} activeModifiers={props.activeModifiers} inv={inv} cnFn={cn} />;
+}
+
 export default function InventoryPage() {
   const [products, setProducts] = useState([]);
   const [productId, setProductId] = useState("");

@@ -43,8 +43,8 @@ export default function AppShell() {
   const visibleNav = nav.filter((n) => userHasRole(user, n.roles));
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="sticky top-0 z-40 border-b bg-white/95 backdrop-blur">
+    <div className="min-h-screen bg-background">
+      <div className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
           <div className="flex items-center gap-3">
             <div className="h-9 w-9 rounded-xl bg-slate-900 text-white grid place-items-center font-semibold">

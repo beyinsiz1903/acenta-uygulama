@@ -7,28 +7,6 @@ import { cn } from "@/lib/utils"
 
 const Sheet = SheetPrimitive.Root
 
-// Radix Dialog zaten scroll-lock uygular; ancak bazı mobil tarayıcılarda body scroll kaçabiliyor.
-// Bu küçük efekt, body scroll'u kesin kilitlemek için.
-function useBodyScrollLock(locked) {
-  React.useEffect(() => {
-    if (!locked) return;
-    const prevOverflow = document.body.style.overflow;
-    const prevPaddingRight = document.body.style.paddingRight;
-
-    // scrollbar shift'i azalt
-    const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
-    document.body.style.overflow = "hidden";
-    if (scrollBarWidth > 0) {
-      document.body.style.paddingRight = `${scrollBarWidth}px`;
-    }
-
-    return () => {
-      document.body.style.overflow = prevOverflow;
-      document.body.style.paddingRight = prevPaddingRight;
-    };
-  }, [locked]);
-}
-
 const SheetTrigger = SheetPrimitive.Trigger
 
 const SheetClose = SheetPrimitive.Close
@@ -47,7 +25,7 @@ const SheetOverlay = React.forwardRef(({ className, ...props }, ref) => (
 SheetOverlay.displayName = SheetPrimitive.Overlay.displayName
 
 const sheetVariants = cva(
-  "fixed z-50 gap-4 border border-border bg-background/95 p-6 shadow-2xl backdrop-blur supports-[backdrop-filter]:bg-background/80 transition ease-in-out data-[state=closed]:duration-300 data-[state=open]:duration-500 data-[state=open]:animate-in data-[state=closed]:animate-out",
+  "fixed z-50 gap-4 border border-border bg-background/95 p-6 shadow-2xl backdrop-blur supports-[backdrop-filter]:bg-background/80 transition will-change-transform ease-out data-[state=closed]:duration-200 data-[state=open]:duration-300 data-[state=open]:animate-in data-[state=closed]:animate-out",
   {
     variants: {
       side: {
@@ -65,14 +43,10 @@ const sheetVariants = cva(
   }
 )
 
-const SheetContent = React.forwardRef(({ side = "right", className, children, ...props }, ref) => {
-  // Body scroll lock (özellikle mobilde)
-  useBodyScrollLock(props?.open === true || props?."data-state" === "open");
-
-  return (
-    <SheetPortal>
-      <SheetOverlay />
-      <SheetPrimitive.Content ref={ref} className={cn(sheetVariants({ side }), className)} {...props}>
+const SheetContent = React.forwardRef(({ side = "right", className, children, ...props }, ref) => (
+  <SheetPortal>
+    <SheetOverlay />
+    <SheetPrimitive.Content ref={ref} className={cn(sheetVariants({ side }), className)} {...props}>
       <SheetPrimitive.Close
         className="absolute right-4 top-4 rounded-md opacity-70 ring-offset-background transition hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary">
         <X className="h-4 w-4" />

@@ -207,17 +207,23 @@ function KanbanColumn({ col, items }) {
     <div
       ref={setNodeRef}
       className={
-        "rounded-2xl border bg-card p-3 transition " +
-        (isOver ? "ring-2 ring-primary/15" : "")
+        "rounded-2xl border bg-card/60 p-3 transition shadow-sm " +
+        (isOver ? "ring-2 ring-primary/25" : "hover:bg-card")
       }
       data-testid={`lead-col-${col.key}`}
     >
       <div className="flex items-center justify-between">
-        <div className="text-xs font-semibold text-foreground/80 uppercase tracking-wide">{col.label}</div>
-        <div className="text-[11px] text-muted-foreground">{items.length}</div>
+        <div className="flex items-center gap-2">
+          <div className={"rounded-lg border px-2 py-1 text-[11px] font-semibold " + (col.tone || "bg-accent text-foreground/80 border-border")}
+          >
+            {col.label}
+          </div>
+          <div className="text-xs text-muted-foreground">{items.length} kart</div>
+        </div>
+        <div className="h-2 w-2 rounded-full bg-primary/50" />
       </div>
 
-      <div className="mt-2 space-y-2">
+      <div className="mt-3 space-y-2 max-h-[520px] overflow-y-auto pr-1">
         <SortableContext items={items.map((l) => l.id)} strategy={verticalListSortingStrategy}>
           {items.length ? (
             items.map((l) => <SortableLeadCard key={l.id} lead={l} status={col.key} />)

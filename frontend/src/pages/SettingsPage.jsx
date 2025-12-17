@@ -75,7 +75,7 @@ function UserForm({ open, onOpenChange, onSaved }) {
           <div className="space-y-2">
             <Label>Roller (virgülle)</Label>
             <Input value={roles} onChange={(e) => setRoles(e.target.value)} data-testid="user-roles" />
-            <div className="text-xs text-slate-500">Örn: admin,sales,ops,accounting</div>
+            <div className="text-xs text-muted-foreground">Örn: admin,sales,ops,accounting</div>
           </div>
 
           {error ? (
@@ -124,8 +124,8 @@ export default function SettingsPage() {
     <div className="space-y-4">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-semibold text-slate-900">Ayarlar</h2>
-          <p className="text-sm text-slate-600">Kullanıcı ve rol yönetimi.</p>
+          <h2 className="text-2xl font-semibold text-foreground">Ayarlar</h2>
+          <p className="text-sm text-muted-foreground">Kullanıcı ve rol yönetimi.</p>
         </div>
         <Button onClick={() => setOpenUser(true)} className="gap-2" data-testid="user-new">
           <UserPlus className="h-4 w-4" />
@@ -142,7 +142,7 @@ export default function SettingsPage() {
       <Card className="rounded-2xl shadow-sm">
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
-            <Settings className="h-4 w-4 text-slate-500" />
+            <Settings className="h-4 w-4 text-muted-foreground" />
             Kullanıcılar
           </CardTitle>
         </CardHeader>
@@ -150,7 +150,7 @@ export default function SettingsPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm" data-testid="users-table">
               <thead>
-                <tr className="text-left text-slate-500">
+                <tr className="text-left text-muted-foreground">
                   <th className="py-2">Email</th>
                   <th className="py-2">Ad</th>
                   <th className="py-2">Roller</th>
@@ -159,14 +159,14 @@ export default function SettingsPage() {
               <tbody>
                 {users.length === 0 ? (
                   <tr>
-                    <td colSpan={3} className="py-6 text-slate-500">Kayıt yok.</td>
+                    <td colSpan={3} className="py-6 text-muted-foreground">Kayıt yok.</td>
                   </tr>
                 ) : (
                   users.map((u) => (
                     <tr key={u.id} className="border-t">
-                      <td className="py-3 font-medium text-slate-900">{u.email}</td>
-                      <td className="py-3 text-slate-700">{u.name || "-"}</td>
-                      <td className="py-3 text-slate-600">{(u.roles || []).join(", ")}</td>
+                      <td className="py-3 font-medium text-foreground">{u.email}</td>
+                      <td className="py-3 text-foreground/80">{u.name || "-"}</td>
+                      <td className="py-3 text-muted-foreground">{(u.roles || []).join(", ")}</td>
                     </tr>
                   ))
                 )}

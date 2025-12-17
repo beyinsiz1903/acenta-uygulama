@@ -59,6 +59,10 @@ const AdminTenants = ({ user, tenant, onLogout }) => {
   const [selectedTenant, setSelectedTenant] = useState(null);
   const [subscriptionDays, setSubscriptionDays] = useState(30);
 
+  // Manual subscription date editing (YYYY-MM-DD). Past dates allowed.
+  const [subscriptionStartDate, setSubscriptionStartDate] = useState('');
+  const [subscriptionEndDate, setSubscriptionEndDate] = useState('');
+
   const loadTenants = async () => {
     setLoading(true);
     setError(null);
@@ -107,14 +111,17 @@ const AdminTenants = ({ user, tenant, onLogout }) => {
 
   const handleUpdateSubscription = async () => {
     if (!selectedTenant) return;
-    
+
     setSaving(true);
     setError(null);
     try {
       await axios.patch(`/admin/tenants/${selectedTenant.id}/subscription`, {
-        subscription_days: subscriptionDays || null
+        subscription_days: subscriptionDays || null,
+        // If user filled manual dates, backend will prefer these.
+        subscription_start_date: subscriptionStartDate || null,
+        subscription_end_date: subscriptionEndDate || null,
       });
-      
+
       setShowSubscriptionModal(false);
       await loadTenants(); // Reload to get updated dates
       alert('Üyelik süresi başarıyla güncellendi!');
@@ -126,9 +133,27 @@ const AdminTenants = ({ user, tenant, onLogout }) => {
     }
   };
 
+  const formatDateInput = (d) => {
+    try {
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
+    } catch {
+      return '';
+    }
+  };
+
   const openSubscriptionModal = (t) => {
     setSelectedTenant(t);
     setSubscriptionDays(30); // Default
+
+    // Default manual dates: today + selected duration (or unlimited)
+    const start = new Date();
+    const end = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    setSubscriptionStartDate(formatDateInput(start));
+    setSubscriptionEndDate(formatDateInput(end));
+
     setShowSubscriptionModal(true);
   };
 
@@ -297,11 +322,24 @@ const AdminTenants = ({ user, tenant, onLogout }) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="subscription_duration">Yeni Üyelik Süresi</Label>
+              <Label htmlFor="subscription_duration">Yeni Üyelik Süresi (opsiyonel)</Label>
               <select
                 id="subscription_duration"
                 value={subscriptionDays || ''}
-                onChange={(e) => setSubscriptionDays(e.target.value ? parseInt(e.target.value) : null)}
+                onChange={(e) => {
+                  const days = e.target.value ? parseInt(e.target.value) : null;
+                  setSubscriptionDays(days);
+
+                  // Auto-fill the manual date inputs based on selection
+                  const start = new Date();
+                  setSubscriptionStartDate(formatDateInput(start));
+                  if (days) {
+                    const end = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+                    setSubscriptionEndDate(formatDateInput(end));
+                  } else {
+                    setSubscriptionEndDate(''); // Unlimited
+                  }
+                }}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="30">30 Gün (1 Ay) - Trial</option>
@@ -311,13 +349,45 @@ const AdminTenants = ({ user, tenant, onLogout }) => {
                 <option value="365">365 Gün (1 Yıl)</option>
                 <option value="">Sınırsız (Lifetime)</option>
               </select>
+              <p className="text-[11px] text-gray-500">
+                Paket seçimi, aşağıdaki tarih alanlarını otomatik doldurur; isterseniz manuel olarak değiştirebilirsiniz.
+              </p>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
+                <div className="space-y-1">
+                  <Label htmlFor="subscription_start_date">Başlangıç Tarihi</Label>
+                  <input
+                    id="subscription_start_date"
+                    type="date"
+                    value={subscriptionStartDate}
+                    onChange={(e) => setSubscriptionStartDate(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    disabled={saving}
+                  />
+                  <p className="text-[11px] text-gray-500">Geçmiş tarih girebilirsiniz.</p>
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="subscription_end_date">Bitiş Tarihi</Label>
+                  <input
+                    id="subscription_end_date"
+                    type="date"
+                    value={subscriptionEndDate}
+                    onChange={(e) => setSubscriptionEndDate(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    disabled={saving}
+                  />
+                  <p className="text-[11px] text-gray-500">Boş bırakırsanız: Sınırsız</p>
+                </div>
+              </div>
+
               <p className="text-xs text-gray-500 mt-2">
-                Yeni Başlangıç: <strong>{new Date().toLocaleDateString('tr-TR')}</strong>
+                Yeni Başlangıç: <strong>
+                  {subscriptionStartDate ? new Date(subscriptionStartDate).toLocaleDateString('tr-TR') : 'Belirlenmemiş'}
+                </strong>
                 <br />
                 Yeni Bitiş: <strong>
-                  {subscriptionDays 
-                    ? new Date(Date.now() + subscriptionDays * 24 * 60 * 60 * 1000).toLocaleDateString('tr-TR')
-                    : 'Sınırsız'}
+                  {subscriptionEndDate ? new Date(subscriptionEndDate).toLocaleDateString('tr-TR') : 'Sınırsız'}
                 </strong>
               </p>
             </div>

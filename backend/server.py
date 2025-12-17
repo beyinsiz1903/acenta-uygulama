@@ -31070,8 +31070,20 @@ async def get_maintenance_prediction_logs(
 # ============= SUBSCRIPTION & PRICING ENDPOINTS =============
 
 class SubscriptionUpdateRequest(BaseModel):
-    """Subscription duration update request"""
+    """Subscription duration/date update request
+
+    Backward compatible:
+    - If only subscription_days is provided → start=now, end=now+days (or unlimited)
+    - If subscription_start_date or subscription_end_date provided → backend prefers these values
+
+    Dates can be provided as:
+    - YYYY-MM-DD
+    - ISO8601 datetime (e.g. 2025-12-17T00:00:00Z)
+    """
+
     subscription_days: Optional[int] = None  # None = unlimited
+    subscription_start_date: Optional[str] = None
+    subscription_end_date: Optional[str] = None
 
 from subscription_models import (
     SubscriptionTier, SubscriptionPlan, SUBSCRIPTION_PLANS,
@@ -31085,42 +31097,78 @@ async def update_tenant_subscription(
     payload: SubscriptionUpdateRequest,
     current_user: User = Depends(require_super_admin)
 ):
-    """Update subscription duration for a tenant (SUPER ADMIN only)"""
-    
+    """Update subscription duration for a tenant (SUPER ADMIN only)
+
+    Supports both duration-based updates and manual start/end date updates.
+    """
+
+    def _parse_date_input(value: Optional[str]) -> Optional[datetime]:
+        if value is None:
+            return None
+        value = value.strip()
+        if not value:
+            return None
+
+        # Accept YYYY-MM-DD or ISO8601. Normalize to UTC.
+        try:
+            if len(value) == 10 and value[4] == '-' and value[7] == '-':
+                dt = datetime.fromisoformat(value)
+                return dt.replace(tzinfo=timezone.utc)
+
+            dt = datetime.fromisoformat(value.replace('Z', '+00:00'))
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=timezone.utc)
+            return dt.astimezone(timezone.utc)
+        except Exception:
+            raise HTTPException(
+                status_code=400,
+                detail="Geçersiz tarih formatı. YYYY-MM-DD veya ISO8601 kullanın (örn: 2025-12-17).",
+            )
+
     # Find tenant
     tenant = await db.tenants.find_one({"id": tenant_id})
     if not tenant:
         raise HTTPException(status_code=404, detail="Otel bulunamadı")
-    
-    # Calculate new dates
-    start_date = datetime.now(timezone.utc)
-    end_date = None
-    
-    if payload.subscription_days:
-        end_date = start_date + timedelta(days=payload.subscription_days)
-    
+
+    # If manual dates are provided, prefer them. Otherwise, fallback to subscription_days.
+    manual_mode = bool(payload.subscription_start_date) or bool(payload.subscription_end_date)
+
+    if manual_mode:
+        start_date = _parse_date_input(payload.subscription_start_date) or datetime.now(timezone.utc)
+        end_date = _parse_date_input(payload.subscription_end_date)
+    else:
+        start_date = datetime.now(timezone.utc)
+        end_date = None
+        if payload.subscription_days:
+            end_date = start_date + timedelta(days=payload.subscription_days)
+
+    if end_date and end_date < start_date:
+        raise HTTPException(status_code=400, detail="Bitiş tarihi başlangıç tarihinden önce olamaz")
+
     # Update tenant
     update_data = {
         "subscription_start_date": start_date.isoformat(),
         "subscription_end_date": end_date.isoformat() if end_date else None,
-        "subscription_status": "active"
+        "subscription_status": "active",
+        "updated_at": datetime.now(timezone.utc).isoformat(),
     }
-    
+
     result = await db.tenants.update_one(
         {"id": tenant_id},
         {"$set": update_data}
     )
-    
+
     if result.modified_count == 0:
         raise HTTPException(status_code=400, detail="Subscription güncellenemedi")
-    
+
     return {
         "success": True,
         "message": "Üyelik süresi başarıyla güncellendi",
         "tenant_id": tenant_id,
         "subscription_start": start_date.isoformat(),
         "subscription_end": end_date.isoformat() if end_date else "Sınırsız",
-        "subscription_days": payload.subscription_days or "Sınırsız"
+        "subscription_days": payload.subscription_days or "Sınırsız",
+        "manual_dates": manual_mode,
     }
 
 

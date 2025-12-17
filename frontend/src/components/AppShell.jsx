@@ -140,7 +140,7 @@ export default function AppShell() {
             </div>
           </div>
 
-          <div className="px-4 py-4 pb-24">
+          <div className="px-4 py-4 pb-32">
             <div className="grid grid-cols-3 gap-2">
               <NavLink
                 to="/app/reservations"

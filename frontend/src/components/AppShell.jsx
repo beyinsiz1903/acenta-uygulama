@@ -81,7 +81,37 @@ export default function AppShell() {
 
       <div className="mx-auto grid max-w-7xl grid-cols-12 gap-4 px-4 py-6">
         <aside className="col-span-12 md:col-span-3 lg:col-span-2">
-          <nav className="rounded-2xl border bg-card p-2 shadow-sm">
+          <div className="rounded-2xl border bg-card/60 p-3 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="h-9 w-9 rounded-xl bg-primary text-primary-foreground grid place-items-center font-semibold">
+                  A
+                </div>
+                <div>
+                  <div className="text-sm font-semibold text-foreground">Acenta Master</div>
+                  <div className="text-xs text-muted-foreground">Kurumsal Panel</div>
+                </div>
+              </div>
+              <div className="hidden md:block h-2 w-2 rounded-full bg-emerald-500" title="Online" />
+            </div>
+
+            <div className="mt-3 grid grid-cols-3 gap-2">
+              <div className="rounded-xl border bg-background/50 p-2">
+                <div className="text-[11px] text-muted-foreground">Gün</div>
+                <div className="text-sm font-semibold text-foreground">{new Date().toLocaleDateString("tr-TR", { day: "2-digit", month: "2-digit" })}</div>
+              </div>
+              <div className="rounded-xl border bg-background/50 p-2">
+                <div className="text-[11px] text-muted-foreground">Mod</div>
+                <div className="text-sm font-semibold text-foreground">v1</div>
+              </div>
+              <div className="rounded-xl border bg-background/50 p-2">
+                <div className="text-[11px] text-muted-foreground">Rol</div>
+                <div className="text-sm font-semibold text-foreground">{(user?.roles || ["-"])[0]}</div>
+              </div>
+            </div>
+
+            <div className="mt-3">
+              <nav className="rounded-2xl border bg-card p-2 shadow-sm">
             {visibleNav.map((item) => {
               const Icon = item.icon;
               const active = location.pathname === item.to;

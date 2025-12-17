@@ -98,6 +98,7 @@ export default function AppShell() {
               <div className="text-sm font-semibold text-foreground">Acenta Master</div>
               <div className="text-xs text-muted-foreground">Operasyon & Rezervasyon Yönetimi</div>
             </div>
+            </div>
           </div>
 
           <div className="flex items-center gap-2">

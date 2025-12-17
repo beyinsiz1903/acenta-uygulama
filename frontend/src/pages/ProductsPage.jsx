@@ -214,35 +214,35 @@ export default function ProductsPage() {
           ) : null}
 
           <div className="overflow-x-auto">
-            <table className="w-full text-sm" data-testid="product-table">
-              <thead>
-                <tr className="text-left text-muted-foreground">
-                  <th className="py-2">Tip</th>
-                  <th className="py-2">Başlık</th>
-                  <th className="py-2">Açıklama</th>
-                  <th className="py-2 text-right">İşlem</th>
-                </tr>
-              </thead>
-              <tbody>
+            <Table data-testid="product-table">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Tip</TableHead>
+                  <TableHead>Başlık</TableHead>
+                  <TableHead>Açıklama</TableHead>
+                  <TableHead className="text-right">İşlem</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {loading ? (
-                  <tr>
-                    <td colSpan={4} className="py-6 text-muted-foreground">Yükleniyor...</td>
-                  </tr>
+                  <TableRow>
+                    <TableCell colSpan={4} className="py-6 text-muted-foreground">Yükleniyor...</TableCell>
+                  </TableRow>
                 ) : filtered.length === 0 ? (
-                  <tr>
-                    <td colSpan={4} className="py-6 text-muted-foreground">Kayıt yok.</td>
-                  </tr>
+                  <TableRow>
+                    <TableCell colSpan={4} className="py-6 text-muted-foreground">Kayıt yok.</TableCell>
+                  </TableRow>
                 ) : (
                   filtered.map((r) => (
-                    <tr key={r.id} className="border-t">
-                      <td className="py-3">
+                    <TableRow key={r.id}>
+                      <TableCell>
                         <span className="rounded-full border bg-accent px-2 py-1 text-xs font-medium text-foreground/80">
                           {r.type}
                         </span>
-                      </td>
-                      <td className="py-3 font-medium text-foreground">{r.title}</td>
-                      <td className="py-3 text-muted-foreground">{r.description || "-"}</td>
-                      <td className="py-3 text-right">
+                      </TableCell>
+                      <TableCell className="font-medium text-foreground">{r.title}</TableCell>
+                      <TableCell className="text-muted-foreground">{r.description || "-"}</TableCell>
+                      <TableCell className="text-right">
                         <div className="inline-flex gap-2">
                           <Button
                             variant="outline"
@@ -268,12 +268,12 @@ export default function ProductsPage() {
                             Sil
                           </Button>
                         </div>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   ))
                 )}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         </CardContent>
       </Card>

@@ -269,72 +269,94 @@ C102,standard,1,2,90,city,queen,wifi"""
                 "avg_response_time": "N/A"
             })
 
-    async def test_bulk_rooms_template_creation(self):
-        """Test POST /api/pms/rooms/bulk/template - Create rooms B1-B3"""
-        print("\n🏨 Testing Bulk Rooms Template Creation (B1-B3)...")
-        print("🎯 OBJECTIVE: Create 3 standard rooms with template B1-B3")
-        
-        bulk_template_payload = {
-            "prefix": "B",
-            "start_number": 1,
-            "count": 3,
-            "floor": 2,
-            "room_type": "standard",
-            "capacity": 3,
-            "base_price": 90,
-            "amenities": ["wifi"],
-            "view": "city",
-            "bed_type": "twin"
-        }
+    async def test_rooms_verification(self):
+        """Test GET /api/pms/rooms?limit=300 - Verify C101 and C102 exist with correct properties"""
+        print("\n🔍 Testing Rooms Verification (C101 and C102 existence)...")
+        print("🎯 OBJECTIVE: Verify C101 and C102 exist with view/bed_type/amenities")
         
         try:
             start_time = datetime.now()
-            async with self.session.post(f"{BACKEND_URL}/pms/rooms/bulk/template", 
-                                       json=bulk_template_payload, 
-                                       headers=self.get_headers()) as response:
+            async with self.session.get(f"{BACKEND_URL}/pms/rooms?limit=300", 
+                                      headers=self.get_headers()) as response:
                 end_time = datetime.now()
                 response_time = (end_time - start_time).total_seconds() * 1000
                 
                 if response.status == 200:
                     data = await response.json()
-                    created_count = data.get("created", 0)
                     
-                    if created_count == 3:
-                        print(f"  ✅ Bulk template creation: PASSED ({response_time:.1f}ms)")
-                        print(f"      📊 Expected: 3 rooms, Created: {created_count}")
-                        print(f"      📊 Room range: B1-B3")
-                        print(f"      📊 Room type: standard, View: city, Bed: twin")
-                        print(f"      📊 Amenities: {bulk_template_payload['amenities']}")
+                    if isinstance(data, list):
+                        # Look for our imported rooms C101 and C102
+                        c101_room = next((room for room in data if room.get('room_number') == 'C101'), None)
+                        c102_room = next((room for room in data if room.get('room_number') == 'C102'), None)
                         
-                        # Store created room info for later tests
-                        self.created_test_data['bulk_rooms'].extend([f"B{i}" for i in range(1, 4)])
+                        # Verify C101 properties
+                        c101_valid = False
+                        if c101_room:
+                            c101_valid = (
+                                c101_room.get('room_type') == 'deluxe' and
+                                c101_room.get('view') == 'sea' and
+                                c101_room.get('bed_type') == 'king' and
+                                'wifi' in c101_room.get('amenities', []) and
+                                'balcony' in c101_room.get('amenities', [])
+                            )
                         
-                        self.test_results.append({
-                            "endpoint": "POST /api/pms/rooms/bulk/template",
-                            "passed": 1, "total": 1, "success_rate": "100.0%",
-                            "avg_response_time": f"{response_time:.1f}ms"
-                        })
+                        # Verify C102 properties
+                        c102_valid = False
+                        if c102_room:
+                            c102_valid = (
+                                c102_room.get('room_type') == 'standard' and
+                                c102_room.get('view') == 'city' and
+                                c102_room.get('bed_type') == 'queen' and
+                                'wifi' in c102_room.get('amenities', [])
+                            )
+                        
+                        if c101_room and c102_room and c101_valid and c102_valid:
+                            print(f"  ✅ Rooms verification: PASSED ({response_time:.1f}ms)")
+                            print(f"      📊 Total rooms returned: {len(data)}")
+                            print(f"      📊 C101 found: ✅ (deluxe, sea, king, wifi|balcony)")
+                            print(f"      📊 C102 found: ✅ (standard, city, queen, wifi)")
+                            print(f"      📊 All properties verified: ✅")
+                            
+                            self.test_results.append({
+                                "endpoint": "GET /api/pms/rooms?limit=300",
+                                "passed": 1, "total": 1, "success_rate": "100.0%",
+                                "avg_response_time": f"{response_time:.1f}ms"
+                            })
+                        else:
+                            print(f"  ❌ Rooms verification: Missing rooms or incorrect properties")
+                            print(f"      📊 C101 found: {'✅' if c101_room else '❌'}, valid: {'✅' if c101_valid else '❌'}")
+                            print(f"      📊 C102 found: {'✅' if c102_room else '❌'}, valid: {'✅' if c102_valid else '❌'}")
+                            if c101_room:
+                                print(f"      📊 C101 actual: {c101_room.get('room_type')}, {c101_room.get('view')}, {c101_room.get('bed_type')}, {c101_room.get('amenities')}")
+                            if c102_room:
+                                print(f"      📊 C102 actual: {c102_room.get('room_type')}, {c102_room.get('view')}, {c102_room.get('bed_type')}, {c102_room.get('amenities')}")
+                            
+                            self.test_results.append({
+                                "endpoint": "GET /api/pms/rooms?limit=300",
+                                "passed": 0, "total": 1, "success_rate": "0.0%",
+                                "avg_response_time": f"{response_time:.1f}ms"
+                            })
                     else:
-                        print(f"  ❌ Bulk template creation: Expected 3 rooms, got {created_count}")
+                        print(f"  ❌ Rooms verification: Expected list response, got {type(data)}")
                         self.test_results.append({
-                            "endpoint": "POST /api/pms/rooms/bulk/template",
+                            "endpoint": "GET /api/pms/rooms?limit=300",
                             "passed": 0, "total": 1, "success_rate": "0.0%",
                             "avg_response_time": f"{response_time:.1f}ms"
                         })
                 else:
                     error_text = await response.text()
-                    print(f"  ❌ Bulk template creation: Expected 200, got {response.status}")
+                    print(f"  ❌ Rooms verification: Expected 200, got {response.status}")
                     print(f"      🔍 Error Details: {error_text[:300]}...")
                     self.test_results.append({
-                        "endpoint": "POST /api/pms/rooms/bulk/template",
+                        "endpoint": "GET /api/pms/rooms?limit=300",
                         "passed": 0, "total": 1, "success_rate": "0.0%",
                         "avg_response_time": f"{response_time:.1f}ms"
                     })
                     
         except Exception as e:
-            print(f"  ❌ Bulk template creation: Error {e}")
+            print(f"  ❌ Rooms verification: Error {e}")
             self.test_results.append({
-                "endpoint": "POST /api/pms/rooms/bulk/template",
+                "endpoint": "GET /api/pms/rooms?limit=300",
                 "passed": 0, "total": 1, "success_rate": "0.0%",
                 "avg_response_time": "N/A"
             })

@@ -354,7 +354,14 @@ function QuoteForm({ open, onOpenChange, onSaved }) {
 export default function CrmPage() {
   const [leads, setLeads] = useState([]);
   const [quotes, setQuotes] = useState([]);
+  const [customers, setCustomers] = useState([]);
   const [error, setError] = useState("");
+
+  const leadById = useMemo(() => {
+    const map = new Map();
+    for (const l of leads) map.set(l.id, l);
+    return map;
+  }, [leads]);
 
   const [openLeadForm, setOpenLeadForm] = useState(false);
   const [openQuoteForm, setOpenQuoteForm] = useState(false);

@@ -101,3 +101,32 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+## user_problem_statement: "Müsaitlik ekranını takvim/grid görünümüne, Lead pipeline'ı drag-drop Kanban'a, Rezervasyon detayını drawer'a çevir. Ayrıca agentis.com.tr referansıyla tüm uygulamanın tasarımını daha kurumsal/modern hale getir."
+## backend:
+##   - task: "Lead Kanban drag-drop sonrası stage/status ve sıralama (sort_index) kalıcılığı"
+##     implemented: true
+##     working: false
+##     file: "/app/backend/app/routers/leads.py, /app/backend/app/schemas.py, /app/backend/app/seed.py"
+##     stuck_count: 0
+##     priority: "high"
+##     needs_retesting: true
+##     status_history:
+##       - working: "NA"
+##         agent: "main"
+##         comment: "Lead modeline sort_index eklendi. /api/leads listesi sort_index desc + created_at desc ile sıralanıyor. PATCH /api/leads/{lead_id}/status artık opsiyonel sort_index alıp hem status hem sıralama güncelleyebiliyor. Seed index güncellendi. Backend restart OK."
+## frontend: []
+## metadata:
+##   created_by: "main_agent"
+##   version: "1.0"
+##   test_sequence: 0
+##   run_ui: false
+## test_plan:
+##   current_focus:
+##     - "Lead Kanban drag-drop sonrası stage/status ve sıralama (sort_index) kalıcılığı"
+##   stuck_tasks: []
+##   test_all: false
+##   test_priority: "high_first"
+## agent_communication:
+##   - agent: "main"
+##     message: "Backend'de lead Kanban kalıcılığı için sort_index alanı eklendi ve status patch endpoint'i sort_index kabul edecek şekilde genişletildi. Lütfen auth ile login olup lead oluşturma, listeleme sıralaması, status+sort_index patch akışını test edin."

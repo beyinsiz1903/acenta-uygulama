@@ -220,7 +220,7 @@ export default function AppShell() {
                 <Button variant="ghost" size="sm" onClick={() => setMobileNavOpen(false)} className="gap-2">
                   Kapat
                 </Button>
-                <ThemeToggle />
+                <ThemeToggle testId="theme-toggle-mobile" />
                 <Button
                   variant="outline"
                   size="sm"

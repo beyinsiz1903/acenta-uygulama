@@ -9,7 +9,7 @@ import uuid
 from datetime import datetime, timedelta
 
 class AcentaAPITester:
-    def __init__(self, base_url="https://acenta-master.preview.emergentagent.com"):
+    def __init__(self, base_url="https://appt-scheduler-5.preview.emergentagent.com"):
         self.base_url = base_url
         self.token = None
         self.tests_run = 0

@@ -2377,7 +2377,8 @@ const PMSModule = ({ user, tenant, onLogout }) => {
             </Card>
           </TabsContent>
         </Tabs>
-          <TabsContent value="guests" className="space-y-4">
+
+        {/* Dialogs and Modals */}
             <div className="flex justify-between items-center gap-4">
               <h2 className="text-2xl font-semibold">Guests ({guests.length})</h2>
               <div className="flex gap-2 flex-1 max-w-md">

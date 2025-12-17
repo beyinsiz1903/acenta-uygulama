@@ -1800,54 +1800,22 @@ const PMSModule = ({ user, tenant, onLogout }) => {
               {guests.map((guest) => {
                 return (
                 <Card key={guest.id}>
-                  <CardHeader className="relative pb-2">
-                    {/* Bulk Selection Checkbox */}
-                    {bulkRoomMode && (
-                      <input
-                        type="checkbox"
-                        className="absolute top-2 right-2 w-5 h-5 cursor-pointer z-20"
-                        checked={selectedRooms.includes(room.id)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setSelectedRooms([...selectedRooms, room.id]);
-                          } else {
-                            setSelectedRooms(selectedRooms.filter(id => id !== room.id));
-                          }
-                        }}
-                      />
-                    )}
-                    
-                    {/* New Booking + Button */}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setOpenDialog('booking');
-                        setNewBooking(prev => ({...prev, room_id: room.id, room_number: room.room_number}));
-                      }}
-                      className="absolute top-2 left-2 w-7 h-7 bg-blue-600 hover:bg-blue-700 text-white rounded-full flex items-center justify-center transition-all hover:scale-110 shadow-lg z-10"
-                      title="Yeni Rezervasyon Oluştur"
-                    >
-                      <Plus className="w-4 h-4" />
-                    </button>
-                    
-                    {roomBlock && (
-                      <div className="absolute top-2 right-2 flex gap-1">
-                        {roomBlock.type === 'out_of_order' && (
-                          <span className="px-2 py-1 text-xs font-bold bg-red-600 text-white rounded">OUT OF ORDER</span>
-                        )}
-                        {roomBlock.type === 'out_of_service' && (
-                          <span className="px-2 py-1 text-xs font-bold bg-orange-500 text-white rounded">OUT OF SERVICE</span>
-                        )}
-                        {roomBlock.type === 'maintenance' && (
-                          <span className="px-2 py-1 text-xs font-bold bg-yellow-600 text-white rounded">MAINTENANCE</span>
-                        )}
-                      </div>
-                    )}
+                  <CardHeader>
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg">Room {room.room_number}</CardTitle>
-                      <Badge variant={room.status === 'occupied' ? 'default' : room.status === 'available' ? 'secondary' : 'outline'}>
-                        {room.status}
-                      </Badge>
+                      <CardTitle className="text-lg">{guest.name}</CardTitle>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setSelectedGuest360(guest.id);
+                          loadGuest360(guest.id);
+                        }}
+                      >
+                        <User className="w-4 h-4 mr-2" />
+                        Profile
+                      </Button>
+                    </div>
+                    <CardDescription>{guest.email}</CardDescription>
                     </div>
                     <CardDescription className="capitalize text-xs">{room.room_type} • Floor {room.floor} • ${room.base_price}/night</CardDescription>
                   </CardHeader>

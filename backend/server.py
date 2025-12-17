@@ -138,6 +138,12 @@ app = FastAPI(
     title="RoomOps Platform",
     default_response_class=ORJSONResponse  # Ultra-fast JSON serialization
 )
+
+# Serve uploaded files (room images, etc.)
+UPLOAD_DIR = Path(os.environ.get('UPLOAD_DIR', '/app/backend/uploads'))
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+app.mount('/api/uploads', StaticFiles(directory=str(UPLOAD_DIR)), name='uploads')
+
 api_router = APIRouter(prefix="/api")
 security = HTTPBearer()
 

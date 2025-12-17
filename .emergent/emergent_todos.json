@@ -1,11 +1,11 @@
 [
   {
     "content": "Phase 3: Inventory screen redesign to calendar/grid view with day editor + bulk update",
-    "status": "in_progress"
+    "status": "completed"
   },
   {
     "content": "Phase 3: CRM lead pipeline to drag-drop Kanban with status updates (backend patch endpoint + frontend dnd)",
-    "status": "pending"
+    "status": "in_progress"
   },
   {
     "content": "Phase 3: Reservations detail redesign to right-side drawer (Sheet/Drawer)",

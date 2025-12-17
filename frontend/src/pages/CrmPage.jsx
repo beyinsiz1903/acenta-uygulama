@@ -186,6 +186,7 @@ function SortableLeadCard({ lead }) {
       <LeadCard lead={lead} dragging={isDragging} />
     </div>
   );
+}
 
 function KanbanColumn({ col, items }) {
   const { setNodeRef, isOver } = useDroppable({ id: col.key });

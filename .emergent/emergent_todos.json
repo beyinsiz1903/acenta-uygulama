@@ -1,14 +1,22 @@
 [
   {
-    "content": "Phase 2: End-to-End Testing using Testing Agent (all user stories)",
-    "status": "completed"
+    "content": "Phase 3: Inventory screen redesign to calendar/grid view with day editor + bulk update",
+    "status": "pending"
   },
   {
-    "content": "Phase 2: Update plan.md with implementation status and next steps",
-    "status": "completed"
+    "content": "Phase 3: CRM lead pipeline to drag-drop Kanban with status updates (backend patch endpoint + frontend dnd)",
+    "status": "pending"
   },
   {
-    "content": "Phase 2: Address minor warnings from lint/logs (optional cleanup)",
-    "status": "cancelled"
+    "content": "Phase 3: Reservations detail redesign to right-side drawer (Sheet/Drawer)",
+    "status": "pending"
+  },
+  {
+    "content": "Phase 3: End-to-End Testing using Testing Agent (skip drag-drop if needed)",
+    "status": "pending"
+  },
+  {
+    "content": "Phase 3: Update plan.md with Phase 3 progress",
+    "status": "pending"
   }
 ]

@@ -2947,7 +2947,7 @@ const PMSModule = ({ user, tenant, onLogout }) => {
 
               <Card className="mt-6">
                 <CardHeader>
-                  <CardTitle>Today's F&B Revenue</CardTitle>
+                  <CardTitle>Today&apos;s F&B Revenue</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-4 gap-4">

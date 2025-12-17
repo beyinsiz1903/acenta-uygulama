@@ -2377,3 +2377,4 @@ const PMSModule = ({ user, tenant, onLogout }) => {
             </Card>
           </TabsContent>
         </Tabs>
+

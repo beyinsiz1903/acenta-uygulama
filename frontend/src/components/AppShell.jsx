@@ -96,8 +96,8 @@ export default function AppShell() {
                 A
               </div>
               <div>
-                <div className="text-sm font-semibold text-foreground">Acenta Master</div>
-                <div className="text-xs text-muted-foreground">Operasyon & Rezervasyon Yönetimi</div>
+                <div className="text-sm font-semibold text-foreground leading-tight">Acenta Master</div>
+                <div className="hidden sm:block text-xs text-muted-foreground">Operasyon & Rezervasyon Yönetimi</div>
               </div>
             </div>
           </div>

@@ -238,13 +238,15 @@ function ReservationDetails({ open, onOpenChange, reservationId }) {
   const badge = statusBadge(data?.status);
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="max-h-[92vh]">
-        <DrawerHeader>
-          <DrawerTitle>Rezervasyon Detayı</DrawerTitle>
-        </DrawerHeader>
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="right" className="p-0">
+        <div className="border-b px-5 py-4">
+          <SheetHeader>
+            <SheetTitle>Rezervasyon Detayı</SheetTitle>
+          </SheetHeader>
+        </div>
 
-        <div className="px-4 pb-4">
+        <div className="max-h-[calc(100vh-64px)] overflow-y-auto px-5 py-4">
 
         {loading ? <div className="text-sm text-muted-foreground">Yükleniyor...</div> : null}
         {error ? (

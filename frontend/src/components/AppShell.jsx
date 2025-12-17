@@ -110,6 +110,95 @@ export default function AppShell() {
             <Button
               variant="outline"
               size="sm"
+
+      {/* Mobile nav drawer */}
+      <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
+        <SheetContent side="left" className="p-0">
+          <div className="border-b px-5 py-4">
+            <div className="flex items-center gap-3">
+              <div className="h-9 w-9 rounded-xl bg-primary text-primary-foreground grid place-items-center font-semibold">
+                A
+              </div>
+              <div>
+                <div className="text-sm font-semibold text-foreground">Acenta Master</div>
+                <div className="text-xs text-muted-foreground">Menü</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="px-4 py-4">
+            <div className="grid grid-cols-3 gap-2">
+              <NavLink
+                to="/app/reservations"
+                onClick={() => setMobileNavOpen(false)}
+                className={({ isActive }) =>
+                  cn(
+                    "rounded-xl border bg-background/50 p-2 transition hover:bg-accent/40 hover:shadow-sm",
+                    isActive ? "ring-1 ring-ring" : ""
+                  )
+                }
+              >
+                <div className="text-[11px] text-muted-foreground">Toplam</div>
+                <div className="text-sm font-semibold text-foreground">{sidebarStats.total}</div>
+              </NavLink>
+
+              <NavLink
+                to="/app/reservations?status=pending"
+                onClick={() => setMobileNavOpen(false)}
+                className={({ isActive }) =>
+                  cn(
+                    "rounded-xl border bg-background/50 p-2 transition hover:bg-accent/40 hover:shadow-sm",
+                    isActive ? "ring-1 ring-ring" : ""
+                  )
+                }
+              >
+                <div className="text-[11px] text-muted-foreground">Bekleyen</div>
+                <div className="text-sm font-semibold text-foreground">{sidebarStats.pending}</div>
+              </NavLink>
+
+              <NavLink
+                to="/app/reports"
+                onClick={() => setMobileNavOpen(false)}
+                className={({ isActive }) =>
+                  cn(
+                    "rounded-xl border bg-background/50 p-2 transition hover:bg-accent/40 hover:shadow-sm",
+                    isActive ? "ring-1 ring-ring" : ""
+                  )
+                }
+              >
+                <div className="text-[11px] text-muted-foreground">Ciro 7G</div>
+                <div className="text-sm font-semibold text-foreground">{formatMoney(sidebarStats.revenue7d, "TRY")}</div>
+              </NavLink>
+            </div>
+
+            <div className="mt-4 rounded-2xl border bg-card p-2 shadow-sm">
+              {visibleNav.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <NavLink
+                    key={`m-${item.to}`}
+                    to={item.to}
+                    end={item.to === "/app"}
+                    onClick={() => setMobileNavOpen(false)}
+                    className={({ isActive }) =>
+                      cn(
+                        "flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition hover:shadow-sm",
+                        isActive
+                          ? "bg-primary text-primary-foreground shadow"
+                          : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                      )
+                    }
+                  >
+                    <Icon className="h-4 w-4" />
+                    {item.label}
+                  </NavLink>
+                );
+              })}
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
+
               data-testid="logout-btn"
               onClick={() => {
                 clearToken();

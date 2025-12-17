@@ -5,6 +5,7 @@ import { api, apiErrorMessage } from "../lib/api";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Input } from "../components/ui/input";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
 import { Label } from "../components/ui/label";
 import {
   Dialog,
@@ -182,31 +183,35 @@ export default function CustomersPage() {
           ) : null}
 
           <div className="overflow-x-auto">
-            <table className="w-full text-sm" data-testid="customer-table">
-              <thead>
-                <tr className="text-left text-muted-foreground">
-                  <th className="py-2">Ad Soyad</th>
-                  <th className="py-2">Email</th>
-                  <th className="py-2">Telefon</th>
-                  <th className="py-2 text-right">İşlem</th>
-                </tr>
-              </thead>
-              <tbody>
+            <Table data-testid="customer-table">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Ad Soyad</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Telefon</TableHead>
+                  <TableHead className="text-right">İşlem</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {loading ? (
-                  <tr>
-                    <td colSpan={4} className="py-6 text-muted-foreground">Yükleniyor...</td>
-                  </tr>
+                  <TableRow>
+                    <TableCell colSpan={4} className="py-6 text-muted-foreground">
+                      Yükleniyor...
+                    </TableCell>
+                  </TableRow>
                 ) : rows.length === 0 ? (
-                  <tr>
-                    <td colSpan={4} className="py-6 text-muted-foreground">Kayıt yok.</td>
-                  </tr>
+                  <TableRow>
+                    <TableCell colSpan={4} className="py-6 text-muted-foreground">
+                      Kayıt yok.
+                    </TableCell>
+                  </TableRow>
                 ) : (
                   rows.map((r) => (
-                    <tr key={r.id} className="border-t">
-                      <td className="py-3 font-medium text-foreground">{r.name}</td>
-                      <td className="py-3 text-muted-foreground">{r.email || "-"}</td>
-                      <td className="py-3 text-muted-foreground">{r.phone || "-"}</td>
-                      <td className="py-3 text-right">
+                    <TableRow key={r.id}>
+                      <TableCell className="font-medium text-foreground">{r.name}</TableCell>
+                      <TableCell className="text-muted-foreground">{r.email || "-"}</TableCell>
+                      <TableCell className="text-muted-foreground">{r.phone || "-"}</TableCell>
+                      <TableCell className="text-right">
                         <div className="inline-flex gap-2">
                           <Button
                             variant="outline"
@@ -232,12 +237,12 @@ export default function CustomersPage() {
                             Sil
                           </Button>
                         </div>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   ))
                 )}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         </CardContent>
       </Card>

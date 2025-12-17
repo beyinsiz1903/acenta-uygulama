@@ -179,7 +179,7 @@ export default function AppShell() {
             </div>
 
             <div className="mt-3">
-              <nav className="rounded-2xl border bg-card p-2 shadow-sm">
+              <nav className="rounded-2xl border bg-card p-2 shadow-sm max-h-[calc(100vh-330px)] overflow-y-auto">
             {visibleNav.map((item) => {
               const Icon = item.icon;
               const active = location.pathname === item.to;

@@ -41,12 +41,12 @@ function CalendarDayCell({ date, activeModifiers, inv, cnFn }) {
       className={cnFn(
         "flex h-10 w-10 flex-col items-center justify-center rounded-md border",
         activeModifiers.selected
-          ? "border-slate-900 bg-slate-900 text-white"
-          : "border-slate-100 hover:border-slate-200",
-        closed ? "bg-rose-50" : "bg-white"
+          ? "border-primary bg-primary text-primary-foreground"
+          : "border-border hover:border-foreground/20",
+        closed ? "bg-rose-50/50" : "bg-background"
       )}
     >
-      <div className={cnFn("text-[12px] leading-none", activeModifiers.selected ? "text-white" : "text-slate-900")}>
+      <div className={cnFn("text-[12px] leading-none", activeModifiers.selected ? "text-primary-foreground" : "text-foreground")}>
         {date.getDate()}
       </div>
       <div
@@ -56,13 +56,13 @@ function CalendarDayCell({ date, activeModifiers, inv, cnFn }) {
             ? "text-white/80"
             : closed
               ? "text-rose-700"
-              : "text-slate-500"
+              : "text-muted-foreground"
         )}
       >
         {cap}
       </div>
       {price != null ? (
-        <div className={cnFn("mt-0.5 text-[10px] leading-none", activeModifiers.selected ? "text-white" : "text-slate-700")}>
+        <div className={cnFn("mt-0.5 text-[10px] leading-none", activeModifiers.selected ? "text-primary-foreground" : "text-foreground/80")}>
           {Number(price).toFixed(0)}
         </div>
       ) : null}

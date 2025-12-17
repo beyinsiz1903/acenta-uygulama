@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
-import { formatMoney } from "../lib/format";
+import { formatMoney, formatMoneyCompact } from "../lib/format";
 import {
   LayoutGrid,
   CalendarDays,
@@ -181,7 +181,7 @@ export default function AppShell() {
                 }
               >
                 <div className="text-[11px] text-muted-foreground">Ciro 7G</div>
-                <div className="text-sm font-semibold text-foreground">{formatMoney(sidebarStats.revenue7d, "TRY")}</div>
+                <div className="text-sm font-semibold text-foreground">{formatMoneyCompact(sidebarStats.revenue7d, "TRY")}</div>
               </NavLink>
             </div>
 
@@ -302,7 +302,7 @@ export default function AppShell() {
               >
                 <div className="text-[11px] text-muted-foreground">Ciro 7G</div>
                 <div className="text-sm font-semibold text-foreground truncate" title={formatMoney(sidebarStats.revenue7d, "TRY")} data-testid="sb-rev7">
-                  {formatMoney(sidebarStats.revenue7d, "TRY")}
+                  {formatMoneyCompact(sidebarStats.revenue7d, "TRY")}
                 </div>
               </NavLink>
             </div>

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { addMonths, endOfMonth, format, startOfMonth, subMonths } from "date-fns";
 import { CalendarDays, ChevronLeft, ChevronRight, Edit3, Layers, Save, Sparkles, Table2 } from "lucide-react";
 import { DayPicker } from "react-day-picker";
@@ -13,6 +13,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "../components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { cn } from "../lib/utils";
+
+const InventoryCtx = React.createContext({ invMap: new Map() });
+
 
 function ymd(d) {
   return format(d, "yyyy-MM-dd");
@@ -70,15 +73,11 @@ function CalendarDayCell({ date, activeModifiers, inv, cnFn }) {
 
 
 function DayContent(props) {
-  // Not: DayPicker 'components' API'si gereği burada hook yok; render-safe.
-  // invMap şu an doğrudan props ile gelmiyor, bu yüzden sadece gün numarası göstereceğiz.
-  // Takvim hücre detayları InventoryPage içinde zaten mevcut; isterseniz ileri adımda Context ile besleyebiliriz.
-  return (
-    <div className={cn("flex h-10 w-10 items-center justify-center rounded-md border border-slate-100 bg-white")}
-    >
-      <div className="text-[12px] leading-none text-slate-900">{props.date.getDate()}</div>
-    </div>
-  );
+  const { invMap } = useContext(InventoryCtx);
+  const dateStr = ymd(props.date);
+  const inv = invMap.get(dateStr);
+
+  return <CalendarDayCell date={props.date} activeModifiers={props.activeModifiers} inv={inv} cnFn={cn} />;
 }
 
 export default function InventoryPage() {
@@ -392,10 +391,11 @@ export default function InventoryPage() {
 
                     {loading ? <div className="mt-3 text-sm text-slate-500">Yükleniyor...</div> : null}
 
-                    <div className="mt-3 text-xs text-slate-500">
-                      Hücre içeriği: <span className="font-medium">müsait/toplam</span> ve opsiyonel fiyat.
+                      <div className="mt-3 text-xs text-slate-500">
+                        Hücre içeriği: <span className="font-medium">müsait/toplam</span> ve opsiyonel fiyat.
+                      </div>
                     </div>
-                  </div>
+                  </InventoryCtx.Provider>
                 </TabsContent>
 
                 <TabsContent value="grid">

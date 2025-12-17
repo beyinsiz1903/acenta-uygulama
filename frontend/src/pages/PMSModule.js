@@ -3345,11 +3345,9 @@ const PMSModule = ({ user, tenant, onLogout }) => {
 
                         // Refresh rooms, then refresh selectedRoom reference
                         await loadData();
-                        setSelectedRoom((prev) => {
-                          if (!prev) return prev;
-                          const updated = rooms.find(r => r.id === prev.id);
-                          return updated || prev;
-                        });
+                        // After loadData, close and re-open dialog to refresh selectedRoom from updated rooms list.
+                        // (Rooms state updates async; we keep the dialog open and optimistically append returned images.)
+                        setSelectedRoom(prev => prev ? ({ ...prev, images: res.data.images || prev.images }) : prev);
                       } catch (err) {
                         toast.error(err?.response?.data?.detail || 'Fotoğraf yüklenemedi');
                       } finally {

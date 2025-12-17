@@ -16,6 +16,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "../components/ui/dialog";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from "../components/ui/drawer";
 
 function ReservationForm({ open, onOpenChange, onSaved }) {
   const [products, setProducts] = useState([]);
@@ -237,11 +238,13 @@ function ReservationDetails({ open, onOpenChange, reservationId }) {
   const badge = statusBadge(data?.status);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl">
-        <DialogHeader>
-          <DialogTitle>Rezervasyon Detayı</DialogTitle>
-        </DialogHeader>
+    <Drawer open={open} onOpenChange={onOpenChange}>
+      <DrawerContent className="max-h-[92vh]">
+        <DrawerHeader>
+          <DrawerTitle>Rezervasyon Detayı</DrawerTitle>
+        </DrawerHeader>
+
+        <div className="px-4 pb-4">
 
         {loading ? <div className="text-sm text-slate-500">Yükleniyor...</div> : null}
         {error ? (
@@ -328,13 +331,14 @@ function ReservationDetails({ open, onOpenChange, reservationId }) {
           </div>
         ) : null}
 
-        <DialogFooter>
+        <DrawerFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} data-testid="res-detail-close">
             Kapat
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </DrawerFooter>
+        </div>
+      </DrawerContent>
+    </Drawer>
   );
 }
 

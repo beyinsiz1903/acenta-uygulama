@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "./ui/button";
+import ThemeToggle from "./ThemeToggle";
 import { cn } from "../lib/utils";
 import { clearToken, getUser } from "../lib/api";
 

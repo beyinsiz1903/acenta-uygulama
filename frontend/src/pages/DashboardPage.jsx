@@ -125,7 +125,7 @@ export default function DashboardPage() {
               Ürün Kataloğu
             </CardTitle>
           </CardHeader>
-          <CardContent className="text-sm text-slate-600">
+          <CardContent className="text-sm text-muted-foreground">
             Tur / konaklama / transfer ürünlerini oluştur.
             <div className="mt-3">
               <Button asChild variant="outline" size="sm">
@@ -142,7 +142,7 @@ export default function DashboardPage() {
               Müsaitlik Takvimi
             </CardTitle>
           </CardHeader>
-          <CardContent className="text-sm text-slate-600">
+          <CardContent className="text-sm text-muted-foreground">
             Kapasite ve fiyatı tarih bazında güncelle.
             <div className="mt-3">
               <Button asChild variant="outline" size="sm">
@@ -159,7 +159,7 @@ export default function DashboardPage() {
               CRM
             </CardTitle>
           </CardHeader>
-          <CardContent className="text-sm text-slate-600">
+          <CardContent className="text-sm text-muted-foreground">
             Lead ve teklif akışını yönet.
             <div className="mt-3">
               <Button asChild variant="outline" size="sm">
@@ -176,7 +176,7 @@ export default function DashboardPage() {
               Voucher
             </CardTitle>
           </CardHeader>
-          <CardContent className="text-sm text-slate-600">
+          <CardContent className="text-sm text-muted-foreground">
             Rezervasyon detayından voucher yazdır.
           </CardContent>
         </Card>

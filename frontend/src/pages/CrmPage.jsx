@@ -369,8 +369,19 @@ export default function CrmPage() {
   const load = useCallback(async () => {
     setError("");
     try {
-      const [a, b] = await Promise.all([api.get("/leads"), api.get("/quotes")]);
-      setLeads(a.data || []);
+      const [a, b, c] = await Promise.all([api.get("/leads"), api.get("/quotes"), api.get("/customers")]);
+      const custList = c.data || [];
+      const custMap = new Map(custList.map((x) => [x.id, x]));
+
+      setCustomers(custList);
+
+      // Lead kartında müşteri adını göstermek için zenginleştir.
+      const enrichedLeads = (a.data || []).map((l) => ({
+        ...l,
+        customer_name: custMap.get(l.customer_id)?.name,
+      }));
+
+      setLeads(enrichedLeads);
       setQuotes(b.data || []);
     } catch (e) {
       setError(apiErrorMessage(e));

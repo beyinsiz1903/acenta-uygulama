@@ -388,7 +388,7 @@ class PMSRoomsBulkTester:
             
             # Prepare multipart form data
             form_data = aiohttp.FormData()
-            form_data.add_field('image', png_data, filename='test_room_image.png', content_type='image/png')
+            form_data.add_field('files', png_data, filename='test_room_image.png', content_type='image/png')
             
             # Remove Content-Type header to let aiohttp set it for multipart
             headers = {

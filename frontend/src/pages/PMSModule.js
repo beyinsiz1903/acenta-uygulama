@@ -2379,26 +2379,8 @@ const PMSModule = ({ user, tenant, onLogout }) => {
         </Tabs>
 
         {/* Dialogs and Modals */}
-            <div className="flex justify-between items-center gap-4">
-              <h2 className="text-2xl font-semibold">Guests ({guests.length})</h2>
-              <div className="flex gap-2 flex-1 max-w-md">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <Input
-                    placeholder="Search guests by name, email, phone..."
-                    value={globalSearchQuery}
-                    onChange={(e) => setGlobalSearchQuery(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-                <Button onClick={() => setOpenDialog('guest')}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Guest
-                </Button>
-              </div>
-            </div>
-            
-            {/* Guest Stats */}
+
+        {/* Folio Dialog */}
             <div className="grid grid-cols-4 gap-4">
               <Card>
                 <CardContent className="p-4">

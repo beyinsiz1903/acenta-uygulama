@@ -133,3 +133,5 @@
 ## agent_communication:
 ##   - agent: "main"
 ##     message: "Backend'de lead Kanban kalıcılığı için sort_index alanı eklendi ve status patch endpoint'i sort_index kabul edecek şekilde genişletildi. Lütfen auth ile login olup lead oluşturma, listeleme sıralaması, status+sort_index patch akışını test edin."
+##   - agent: "testing"
+##     message: "✅ TESTING COMPLETE - Lead Kanban drag-drop functionality is working perfectly. All 7 test scenarios passed with 100% success rate (10/10 tests). Key findings: 1) sort_index auto-assignment working (timestamp-based) 2) Proper desc sorting in /api/leads 3) PATCH endpoint correctly updates both status and sort_index 4) Status filtering maintains sort order 5) Backend service stable. Ready for frontend integration."

@@ -16,7 +16,7 @@ import {
 import { Button } from "./ui/button";
 import ThemeToggle from "./ThemeToggle";
 import { cn } from "../lib/utils";
-import { clearToken, getUser } from "../lib/api";
+import { api, clearToken, getUser } from "../lib/api";
 
 const nav = [
   { to: "/app", label: "Dashboard", icon: LayoutGrid, roles: ["admin", "sales", "ops", "accounting", "b2b_agent"] },

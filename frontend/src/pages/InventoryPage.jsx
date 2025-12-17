@@ -11,6 +11,7 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "../components/ui/sheet";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { cn } from "../lib/utils";
 
@@ -400,54 +401,63 @@ export default function InventoryPage() {
                 </TabsContent>
 
                 <TabsContent value="grid">
-                  <div className="overflow-x-auto rounded-2xl border bg-white">
-                    <table className="w-full text-sm" data-testid="inventory-grid-table">
-                      <thead>
-                        <tr className="text-left text-muted-foreground">
-                          <th className="py-2 px-3">Tarih</th>
-                          <th className="py-2 px-3">Gün</th>
-                          <th className="py-2 px-3">Kapasite</th>
-                          <th className="py-2 px-3">Müsait</th>
-                          <th className="py-2 px-3">Fiyat</th>
-                          <th className="py-2 px-3">Durum</th>
-                          <th className="py-2 px-3 text-right">İşlem</th>
-                        </tr>
-                      </thead>
-                      <tbody>
+                  <div className="overflow-x-auto rounded-2xl border bg-card">
+                    <Table data-testid="inventory-grid-table">
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="px-3">Tarih</TableHead>
+                          <TableHead className="px-3">Gün</TableHead>
+                          <TableHead className="px-3">Kapasite</TableHead>
+                          <TableHead className="px-3">Müsait</TableHead>
+                          <TableHead className="px-3">Fiyat</TableHead>
+                          <TableHead className="px-3">Durum</TableHead>
+                          <TableHead className="px-3 text-right">İşlem</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
                         {loading ? (
-                          <tr>
-                            <td colSpan={7} className="py-6 px-3 text-muted-foreground">Yükleniyor...</td>
-                          </tr>
+                          <TableRow>
+                            <TableCell colSpan={7} className="py-6 px-3 text-muted-foreground">
+                              Yükleniyor...
+                            </TableCell>
+                          </TableRow>
                         ) : (
                           gridRows.map((r) => (
-                            <tr key={r.date} className="border-t">
-                              <td className="py-2 px-3 font-medium text-foreground">{r.date}</td>
-                              <td className="py-2 px-3 text-muted-foreground">{r.dow}</td>
-                              <td className="py-2 px-3 text-foreground/80">{r.capacity_total}</td>
-                              <td className="py-2 px-3 text-foreground/80">{r.capacity_available}</td>
-                              <td className="py-2 px-3 text-foreground/80">
+                            <TableRow key={r.date}>
+                              <TableCell className="px-3 font-medium text-foreground">{r.date}</TableCell>
+                              <TableCell className="px-3 text-muted-foreground">{r.dow}</TableCell>
+                              <TableCell className="px-3 text-foreground/80">{r.capacity_total}</TableCell>
+                              <TableCell className="px-3 text-foreground/80">{r.capacity_available}</TableCell>
+                              <TableCell className="px-3 text-foreground/80">
                                 {r.price == null ? <span className="text-muted-foreground">(rate plan)</span> : formatMoney(r.price, "TRY")}
-                              </td>
-                              <td className="py-2 px-3">
+                              </TableCell>
+                              <TableCell className="px-3">
                                 <span
                                   className={cn(
                                     "rounded-full border px-2 py-1 text-xs font-medium",
-                                    r.closed ? "border-rose-200 bg-rose-50 text-rose-700" : "border-emerald-200 bg-emerald-50 text-emerald-700"
+                                    r.closed
+                                      ? "border-rose-200 bg-rose-50 text-rose-700"
+                                      : "border-emerald-200 bg-emerald-50 text-emerald-700"
                                   )}
                                 >
                                   {r.closed ? "Kapalı" : "Açık"}
                                 </span>
-                              </td>
-                              <td className="py-2 px-3 text-right">
-                                <Button variant="outline" size="sm" onClick={() => openDayEditor(r.date)} data-testid={`grid-open-${r.date}`}>
+                              </TableCell>
+                              <TableCell className="px-3 text-right">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => openDayEditor(r.date)}
+                                  data-testid={`grid-open-${r.date}`}
+                                >
                                   Düzenle
                                 </Button>
-                              </td>
-                            </tr>
+                              </TableCell>
+                            </TableRow>
                           ))
                         )}
-                      </tbody>
-                    </table>
+                      </TableBody>
+                    </Table>
                   </div>
                 </TabsContent>
               </Tabs>

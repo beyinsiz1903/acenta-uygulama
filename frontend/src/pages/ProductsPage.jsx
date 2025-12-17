@@ -173,12 +173,12 @@ export default function ProductsPage() {
       <Card className="rounded-2xl shadow-sm">
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
-            <Layers className="h-4 w-4 text-slate-500" />
+            <Layers className="h-4 w-4 text-muted-foreground" />
             Katalog
           </CardTitle>
           <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3">
             <div className="relative">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Ara (başlık)"
                 value={q}
@@ -215,7 +215,7 @@ export default function ProductsPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm" data-testid="product-table">
               <thead>
-                <tr className="text-left text-slate-500">
+                <tr className="text-left text-muted-foreground">
                   <th className="py-2">Tip</th>
                   <th className="py-2">Başlık</th>
                   <th className="py-2">Açıklama</th>
@@ -225,22 +225,22 @@ export default function ProductsPage() {
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={4} className="py-6 text-slate-500">Yükleniyor...</td>
+                    <td colSpan={4} className="py-6 text-muted-foreground">Yükleniyor...</td>
                   </tr>
                 ) : filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="py-6 text-slate-500">Kayıt yok.</td>
+                    <td colSpan={4} className="py-6 text-muted-foreground">Kayıt yok.</td>
                   </tr>
                 ) : (
                   filtered.map((r) => (
                     <tr key={r.id} className="border-t">
                       <td className="py-3">
-                        <span className="rounded-full border bg-slate-50 px-2 py-1 text-xs font-medium text-slate-700">
+                        <span className="rounded-full border bg-accent px-2 py-1 text-xs font-medium text-foreground/80">
                           {r.type}
                         </span>
                       </td>
-                      <td className="py-3 font-medium text-slate-900">{r.title}</td>
-                      <td className="py-3 text-slate-600">{r.description || "-"}</td>
+                      <td className="py-3 font-medium text-foreground">{r.title}</td>
+                      <td className="py-3 text-muted-foreground">{r.description || "-"}</td>
                       <td className="py-3 text-right">
                         <div className="inline-flex gap-2">
                           <Button

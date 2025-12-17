@@ -172,6 +172,32 @@ export default function InventoryPage() {
     }
   }
 
+  const monthDays = useMemo(() => daysInMonth(month), [month]);
+
+  const gridRows = useMemo(() => {
+    return monthDays.map((d) => {
+      const date = ymd(d);
+      const inv = invMap.get(date) || null;
+      return {
+        date,
+        dow: format(d, "EEE"),
+        capacity_total: inv?.capacity_total ?? 0,
+        capacity_available: inv?.capacity_available ?? 0,
+        price: inv?.price ?? null,
+        closed: !!inv?.restrictions?.closed,
+      };
+    });
+  }, [monthDays, invMap]);
+
+  function openDayEditor(dateStr) {
+    const parts = (dateStr || "").split("-");
+    if (parts.length !== 3) return;
+    const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+    setSelectedDay(d);
+    setOpenDay(true);
+  }
+
+
   const modifiers = useMemo(() => {
     const closed = [];
     for (const r of rows) {

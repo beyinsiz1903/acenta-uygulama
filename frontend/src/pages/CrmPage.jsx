@@ -537,28 +537,45 @@ export default function CrmPage() {
           <CardTitle className="text-base">Lead Pipeline</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-3" data-testid="lead-board">
-            {Object.entries(leadBuckets).map(([status, arr]) => (
-              <div key={status} className="rounded-2xl border bg-white p-3">
-                <div className="text-xs font-semibold text-slate-700 uppercase tracking-wide">
-                  {status}
+          <DndContext sensors={sensors} collisionDetection={closestCorners} onDragEnd={handleDragEnd}>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3" data-testid="lead-board">
+              {LEAD_STATUSES.map((col) => (
+                <div
+                  key={col.key}
+                  className="rounded-2xl border bg-white p-3"
+                  data-testid={`lead-col-${col.key}`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="text-xs font-semibold text-slate-700 uppercase tracking-wide">
+                      {col.label}
+                    </div>
+                    <div className="text-[11px] text-slate-500">{(leadBuckets[col.key] || []).length}</div>
+                  </div>
+
+                  <div className="mt-2 space-y-2" id={col.key}>
+                    {/* Kolonun kendisini drop target yapmak için */}
+                    <SortableContext
+                      items={(leadBuckets[col.key] || []).map((l) => l.id)}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      {leadBuckets[col.key]?.length ? (
+                        leadBuckets[col.key].map((l) => <SortableLeadCard key={l.id} lead={l} />)
+                      ) : (
+                        <div
+                          className="rounded-xl border border-dashed bg-slate-50 px-3 py-6 text-center text-xs text-slate-500"
+                        >
+                          Kartı buraya bırakın
+                        </div>
+                      )}
+                    </SortableContext>
+
+                    {/* Boş kolona direkt bırakmayı yakalamak için overId=statusKey */}
+                    <div className="h-0 w-0" id={col.key} />
+                  </div>
                 </div>
-                <div className="mt-2 space-y-2">
-                  {arr.length === 0 ? (
-                    <div className="text-xs text-slate-500">Boş</div>
-                  ) : (
-                    arr.map((l) => (
-                      <div key={l.id} className="rounded-xl border bg-slate-50 px-3 py-2">
-                        <div className="text-sm font-medium text-slate-900">{l.customer_id}</div>
-                        <div className="text-xs text-slate-600">{l.source || "-"}</div>
-                        <div className="text-xs text-slate-500">{l.notes || ""}</div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          </DndContext>
         </CardContent>
       </Card>
 

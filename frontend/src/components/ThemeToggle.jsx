@@ -10,7 +10,7 @@ import {
 } from "./ui/dropdown-menu";
 import { Button } from "./ui/button";
 
-export default function ThemeToggle() {
+export default function ThemeToggle({ testId = "theme-toggle" }) {
   const { theme, setTheme } = useTheme();
 
   return (

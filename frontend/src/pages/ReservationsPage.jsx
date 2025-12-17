@@ -367,7 +367,7 @@ function ReservationDetails({ open, onOpenChange, reservationId }) {
 
             <PaymentForm reservationId={reservationId} currency={data.currency} onSaved={load} />
 
-            <div className="rounded-2xl border bg-white p-4">
+            <div className="rounded-2xl border bg-card p-4">
               <div className="flex items-center justify-between">
                 <div className="text-sm font-semibold text-foreground">Tahsilatlar</div>
                 <span className="rounded-full border bg-accent px-2 py-1 text-xs font-medium text-foreground/80">

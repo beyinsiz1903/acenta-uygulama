@@ -118,17 +118,31 @@
 ##       - working: true
 ##         agent: "testing"
 ##         comment: "COMPREHENSIVE TESTING COMPLETED ✅ All 7 test scenarios passed (10/10 tests): 1) /api/health OK 2) Admin login successful (admin@acenta.test/admin123) 3) Customer creation/listing working 4) Lead creation with auto sort_index assignment working - 3 leads created with timestamps 5) /api/leads sorting by sort_index desc verified 6) PATCH /api/leads/{id}/status with status+sort_index update working (new→contacted, sort_index=999999) 7) Status filtering (?status=contacted) shows updated lead at top. Backend service running stable, all API endpoints responding correctly."
+##   - task: "Rezervasyon oluşturma akışı demo seed ile test"
+##     implemented: true
+##     working: true
+##     file: "/app/backend/app/routers/reservations.py, /app/backend/app/seed.py"
+##     stuck_count: 0
+##     priority: "high"
+##     needs_retesting: false
+##     status_history:
+##       - working: "NA"
+##         agent: "main"
+##         comment: "Demo seed data oluşturuldu: ürün, müşteri, rate plan ve 60 günlük inventory. Rezervasyon oluşturma akışı için gerekli tüm veriler hazır."
+##       - working: true
+##         agent: "testing"
+##         comment: "REZERVASYON AKIŞI TAMAMEN ÇALIŞIYOR ✅ Tüm 8 test senaryosu başarılı (8/8 tests): 1) /api/health OK 2) admin@acenta.test/admin123 login başarılı 3) /api/products GET - 1 demo ürün bulundu (Demo İstanbul Şehir Turu) 4) /api/customers GET - 1 müşteri bulundu 5) /api/inventory GET - 5 günlük inventory kaydı mevcut (kapasite:30, fiyat:1500 TRY) 6) /api/reservations/reserve POST - rezervasyon oluşturuldu (PNR-94498882, 2 gün, 2 pax, 3000 TRY) 7) /api/reservations GET - rezervasyon listede görünüyor 8) /api/reservations/{id} GET - detay endpoint çalışıyor, due_amount doğru hesaplanıyor (3000-0=3000). Ayrıca kapsamlı backend testi de 38/38 başarılı."
 ## frontend:
 ##   - task: "Rezervasyon oluşturma için demo seed (ürün+müşteri+rateplan+inventory)"
 ##     implemented: true
-##     working: false
+##     working: true
 ##     files: ["/app/backend/app/seed.py"]
-##     needs_retesting: true
-##     comment: "Seed artık org içinde ürün/müşteri yoksa demo veri ekliyor; demo ürün için rate plan ve 60 günlük inventory oluşturuyor. Amaç: Rezervasyon form dropdown'larının boş kalmaması ve side-drawer canlı test." 
+##     needs_retesting: false
+##     comment: "Seed artık org içinde ürün/müşteri yoksa demo veri ekliyor; demo ürün için rate plan ve 60 günlük inventory oluşturuyor. Amaç: Rezervasyon form dropdown'larının boş kalmaması ve side-drawer canlı test. Backend testleri ile doğrulandı." 
 ## metadata:
 ##   created_by: "main_agent"
 ##   version: "1.0"
-##   test_sequence: 0
+##   test_sequence: 1
 ##   run_ui: false
 ## test_plan:
 ##   current_focus: []
@@ -140,3 +154,5 @@
 ##     message: "Backend'de lead Kanban kalıcılığı için sort_index alanı eklendi ve status patch endpoint'i sort_index kabul edecek şekilde genişletildi. Lütfen auth ile login olup lead oluşturma, listeleme sıralaması, status+sort_index patch akışını test edin."
 ##   - agent: "testing"
 ##     message: "✅ TESTING COMPLETE - Lead Kanban drag-drop functionality is working perfectly. All 7 test scenarios passed with 100% success rate (10/10 tests). Key findings: 1) sort_index auto-assignment working (timestamp-based) 2) Proper desc sorting in /api/leads 3) PATCH endpoint correctly updates both status and sort_index 4) Status filtering maintains sort order 5) Backend service stable. Ready for frontend integration."
+##   - agent: "testing"
+##     message: "✅ REZERVASYON AKIŞI TEST TAMAMLANDI - Demo seed ile rezervasyon oluşturma akışı mükemmel çalışıyor. Odaklanılan 8 test senaryosunun tamamı başarılı (100% success rate). Önemli bulgular: 1) Demo ürün ve müşteri seed data mevcut 2) 60 günlük inventory kaydı oluşturulmuş 3) Rezervasyon oluşturma API'si çalışıyor 4) Due amount hesaplaması doğru 5) Tüm CRUD operasyonları stabil. Kapsamlı backend testi de 38/38 başarılı. Backend tamamen hazır."

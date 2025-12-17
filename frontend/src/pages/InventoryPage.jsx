@@ -266,8 +266,8 @@ export default function InventoryPage() {
     <div className="space-y-4">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-semibold text-slate-900">Müsaitlik & Kontenjan</h2>
-          <p className="text-sm text-slate-600">
+          <h2 className="text-2xl font-semibold text-foreground">Müsaitlik & Kontenjan</h2>
+          <p className="text-sm text-muted-foreground">
             Takvimden gün seçerek kapasite/fiyat düzenleyin veya tarih aralığına toplu uygulayın.
           </p>
         </div>
@@ -280,10 +280,10 @@ export default function InventoryPage() {
               <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
                 <div>
                   <CardTitle className="text-base flex items-center gap-2">
-                    <CalendarDays className="h-4 w-4 text-slate-500" />
+                    <CalendarDays className="h-4 w-4 text-muted-foreground" />
                     Müsaitlik
                   </CardTitle>
-                  <div className="mt-1 text-xs text-slate-500">Aralık: {start} → {end}</div>
+                  <div className="mt-1 text-xs text-muted-foreground">Aralık: {start} → {end}</div>
                 </div>
 
                 <div className="flex flex-col md:flex-row gap-2 md:items-end">
@@ -380,7 +380,7 @@ export default function InventoryPage() {
                         nav: "hidden",
                         table: "w-full border-collapse space-y-1",
                         head_row: "flex",
-                        head_cell: "text-slate-500 rounded-md w-10 font-normal text-[0.8rem]",
+                        head_cell: "text-muted-foreground rounded-md w-10 font-normal text-[0.8rem]",
                         row: "flex w-full mt-2",
                         cell: "relative p-0 text-center text-sm w-10 h-10",
                         day: "h-10 w-10 p-0 font-normal aria-selected:opacity-100",
@@ -390,9 +390,9 @@ export default function InventoryPage() {
                       }}
                     />
 
-                    {loading ? <div className="mt-3 text-sm text-slate-500">Yükleniyor...</div> : null}
+                    {loading ? <div className="mt-3 text-sm text-muted-foreground">Yükleniyor...</div> : null}
 
-                      <div className="mt-3 text-xs text-slate-500">
+                      <div className="mt-3 text-xs text-muted-foreground">
                         Hücre içeriği: <span className="font-medium">müsait/toplam</span> ve opsiyonel fiyat.
                       </div>
                     </div>
@@ -403,7 +403,7 @@ export default function InventoryPage() {
                   <div className="overflow-x-auto rounded-2xl border bg-white">
                     <table className="w-full text-sm" data-testid="inventory-grid-table">
                       <thead>
-                        <tr className="text-left text-slate-500">
+                        <tr className="text-left text-muted-foreground">
                           <th className="py-2 px-3">Tarih</th>
                           <th className="py-2 px-3">Gün</th>
                           <th className="py-2 px-3">Kapasite</th>
@@ -416,17 +416,17 @@ export default function InventoryPage() {
                       <tbody>
                         {loading ? (
                           <tr>
-                            <td colSpan={7} className="py-6 px-3 text-slate-500">Yükleniyor...</td>
+                            <td colSpan={7} className="py-6 px-3 text-muted-foreground">Yükleniyor...</td>
                           </tr>
                         ) : (
                           gridRows.map((r) => (
                             <tr key={r.date} className="border-t">
-                              <td className="py-2 px-3 font-medium text-slate-900">{r.date}</td>
-                              <td className="py-2 px-3 text-slate-600">{r.dow}</td>
-                              <td className="py-2 px-3 text-slate-700">{r.capacity_total}</td>
-                              <td className="py-2 px-3 text-slate-700">{r.capacity_available}</td>
-                              <td className="py-2 px-3 text-slate-700">
-                                {r.price == null ? <span className="text-slate-400">(rate plan)</span> : formatMoney(r.price, "TRY")}
+                              <td className="py-2 px-3 font-medium text-foreground">{r.date}</td>
+                              <td className="py-2 px-3 text-muted-foreground">{r.dow}</td>
+                              <td className="py-2 px-3 text-foreground/80">{r.capacity_total}</td>
+                              <td className="py-2 px-3 text-foreground/80">{r.capacity_available}</td>
+                              <td className="py-2 px-3 text-foreground/80">
+                                {r.price == null ? <span className="text-muted-foreground">(rate plan)</span> : formatMoney(r.price, "TRY")}
                               </td>
                               <td className="py-2 px-3">
                                 <span
@@ -459,7 +459,7 @@ export default function InventoryPage() {
           <Card className="rounded-2xl shadow-sm">
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-slate-500" />
+                <Sparkles className="h-4 w-4 text-muted-foreground" />
                 Toplu Güncelle
               </CardTitle>
             </CardHeader>

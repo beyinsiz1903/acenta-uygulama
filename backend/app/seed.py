@@ -20,7 +20,7 @@ async def ensure_seed_data() -> None:
     await db.reservations.create_index([("organization_id", 1), ("pnr", 1)], unique=True)
     await db.reservations.create_index([("organization_id", 1), ("idempotency_key", 1)], unique=True, sparse=True)
     await db.payments.create_index([("organization_id", 1), ("reservation_id", 1)])
-    await db.leads.create_index([("organization_id", 1), ("status", 1)])
+    await db.leads.create_index([("organization_id", 1), ("status", 1), ("sort_index", -1)])
     await db.quotes.create_index([("organization_id", 1), ("status", 1)])
 
     org = await db.organizations.find_one({"slug": "default"})

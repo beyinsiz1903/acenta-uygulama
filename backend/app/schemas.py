@@ -130,6 +130,8 @@ class LeadIn(BaseModel):
     customer_id: str
     notes: Optional[str] = None
     status: str = "new"  # new|contacted|won|lost
+    # Kanban sıralaması için (yüksek değer = daha üstte). Opsiyonel.
+    sort_index: Optional[float] = None
 
 
 class LeadOut(LeadIn):
@@ -140,6 +142,8 @@ class LeadOut(LeadIn):
 
 class LeadStatusPatchIn(BaseModel):
     status: str
+    # Drag-drop sonrası aynı anda sütun içi sıralamayı da güncelleyebilmek için.
+    sort_index: Optional[float] = None
 
 
 class QuoteIn(BaseModel):

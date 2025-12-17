@@ -376,43 +376,7 @@ export default function InventoryPage() {
                         DayContent: (props) => {
                           const dateStr = ymd(props.date);
                           const inv = invMap.get(dateStr);
-                          const cap = inv ? `${inv.capacity_available}/${inv.capacity_total}` : "-";
-                          const price = inv?.price;
-                          const closed = !!inv?.restrictions?.closed;
-                          return (
-                            <div
-                              className={cn(
-                                "flex h-10 w-10 flex-col items-center justify-center rounded-md border",
-                                props.activeModifiers.selected
-                                  ? "border-slate-900 bg-slate-900 text-white"
-                                  : "border-slate-100 hover:border-slate-200",
-                                closed ? "bg-rose-50" : "bg-white"
-                              )}
-                            >
-                              <div className={cn("text-[12px] leading-none", props.activeModifiers.selected ? "text-white" : "text-slate-900")}>
-                                {props.date.getDate()}
-                              </div>
-                              <div
-                                className={cn(
-                                  "mt-0.5 text-[10px] leading-none",
-                                  props.activeModifiers.selected
-                                    ? "text-white/80"
-                                    : closed
-                                      ? "text-rose-700"
-                                      : "text-slate-500"
-                                )}
-                              >
-                                {cap}
-                              </div>
-                              {price != null ? (
-                                <div
-                                  className={cn("mt-0.5 text-[10px] leading-none", props.activeModifiers.selected ? "text-white" : "text-slate-700")}
-                                >
-                                  {Number(price).toFixed(0)}
-                                </div>
-                              ) : null}
-                            </div>
-                          );
+                          return <CalendarDayCell date={props.date} activeModifiers={props.activeModifiers} inv={inv} cnFn={cn} />;
                         },
                       }}
                     />

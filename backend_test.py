@@ -147,6 +147,9 @@ class PMSRoomsBulkTester:
                 if response.status == 200:
                     data = await response.json()
                     created_count = data.get("created", 0)
+                    skipped_count = data.get("skipped", 0)
+                    
+                    print(f"      📊 Response data: {data}")
                     
                     if created_count == 5:
                         print(f"  ✅ Bulk range creation: PASSED ({response_time:.1f}ms)")

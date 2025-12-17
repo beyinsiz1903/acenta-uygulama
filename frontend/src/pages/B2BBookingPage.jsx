@@ -61,8 +61,8 @@ export default function B2BBookingPage() {
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="text-2xl font-semibold text-slate-900">B2B Rezervasyon</h2>
-        <p className="text-sm text-slate-600">
+        <h2 className="text-2xl font-semibold text-foreground">B2B Rezervasyon</h2>
+        <p className="text-sm text-muted-foreground">
           {user?.agency_id ? "Alt acente hesabı" : "Bu sayfa b2b_agent için."}
         </p>
       </div>
@@ -70,7 +70,7 @@ export default function B2BBookingPage() {
       <Card className="rounded-2xl shadow-sm">
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
-            <Ticket className="h-4 w-4 text-slate-500" />
+            <Ticket className="h-4 w-4 text-muted-foreground" />
             Yeni Rezervasyon
           </CardTitle>
         </CardHeader>
@@ -134,11 +134,11 @@ export default function B2BBookingPage() {
           </div>
 
           {lastReservation ? (
-            <div className="mt-4 rounded-2xl border bg-slate-50 p-4" data-testid="b2b-book-result">
-              <div className="text-sm font-semibold text-slate-900">Oluşturuldu</div>
-              <div className="mt-1 text-sm text-slate-700">PNR: {lastReservation.pnr}</div>
-              <div className="text-sm text-slate-700">Toplam: {formatMoney(lastReservation.total_price, lastReservation.currency)}</div>
-              <div className="text-xs text-slate-500">İndirim/komisyon acente ayarlarından hesaplanır.</div>
+            <div className="mt-4 rounded-2xl border bg-accent/40 p-4" data-testid="b2b-book-result">
+              <div className="text-sm font-semibold text-foreground">Oluşturuldu</div>
+              <div className="mt-1 text-sm text-foreground/80">PNR: {lastReservation.pnr}</div>
+              <div className="text-sm text-foreground/80">Toplam: {formatMoney(lastReservation.total_price, lastReservation.currency)}</div>
+              <div className="text-xs text-muted-foreground">İndirim/komisyon acente ayarlarından hesaplanır.</div>
             </div>
           ) : null}
         </CardContent>

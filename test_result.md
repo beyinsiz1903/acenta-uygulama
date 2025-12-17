@@ -118,7 +118,13 @@
 ##       - working: true
 ##         agent: "testing"
 ##         comment: "COMPREHENSIVE TESTING COMPLETED ✅ All 7 test scenarios passed (10/10 tests): 1) /api/health OK 2) Admin login successful (admin@acenta.test/admin123) 3) Customer creation/listing working 4) Lead creation with auto sort_index assignment working - 3 leads created with timestamps 5) /api/leads sorting by sort_index desc verified 6) PATCH /api/leads/{id}/status with status+sort_index update working (new→contacted, sort_index=999999) 7) Status filtering (?status=contacted) shows updated lead at top. Backend service running stable, all API endpoints responding correctly."
-## frontend: []
+## frontend:
+##   - task: "Rezervasyon oluşturma için demo seed (ürün+müşteri+rateplan+inventory)"
+##     implemented: true
+##     working: false
+##     files: ["/app/backend/app/seed.py"]
+##     needs_retesting: true
+##     comment: "Seed artık org içinde ürün/müşteri yoksa demo veri ekliyor; demo ürün için rate plan ve 60 günlük inventory oluşturuyor. Amaç: Rezervasyon form dropdown'larının boş kalmaması ve side-drawer canlı test." 
 ## metadata:
 ##   created_by: "main_agent"
 ##   version: "1.0"

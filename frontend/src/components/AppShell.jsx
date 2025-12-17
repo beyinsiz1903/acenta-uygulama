@@ -135,7 +135,9 @@ export default function AppShell() {
                 </NavLink>
               );
             })}
-          </nav>
+              </nav>
+            </div>
+          </div>
 
           <div className="mt-4 rounded-2xl border bg-card p-4 shadow-sm">
             <div className="text-xs font-semibold text-foreground">Hızlı İpuçları</div>

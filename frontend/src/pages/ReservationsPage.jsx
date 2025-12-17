@@ -273,6 +273,57 @@ function ReservationDetails({ open, onOpenChange, reservationId }) {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+                <div className="rounded-2xl border bg-card p-4">
+                  <div className="text-xs text-muted-foreground">Aksiyonlar</div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <Button onClick={confirm} variant="outline" className="gap-2" data-testid="res-confirm">
+                      <CheckCircle2 className="h-4 w-4" />
+                      Onayla
+                    </Button>
+                    <Button onClick={cancel} variant="destructive" className="gap-2" data-testid="res-cancel">
+                      <XCircle className="h-4 w-4" />
+                      İptal
+                    </Button>
+                    <Button
+                      onClick={openVoucher}
+                      variant="outline"
+                      className="gap-2"
+                      data-testid="res-voucher"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                      Voucher
+                    </Button>
+                  </div>
+                  <div className="mt-3 text-xs text-muted-foreground">
+                    Not: Aksiyonlar status’e göre backend’de doğrulanır.
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border bg-card p-4 md:col-span-2">
+                  <div className="text-xs text-muted-foreground">Özet</div>
+                  <div className="mt-3 grid grid-cols-2 gap-3">
+                    <div>
+                      <div className="text-xs text-muted-foreground">Toplam</div>
+                      <div className="text-sm font-semibold text-foreground">{formatMoney(data.total_price, data.currency)}</div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-muted-foreground">Ödenen</div>
+                      <div className="text-sm font-semibold text-foreground">{formatMoney(data.paid_amount, data.currency)}</div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-muted-foreground">Kalan</div>
+                      <div className="text-sm font-semibold text-foreground">{formatMoney(data.due_amount, data.currency)}</div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-muted-foreground">Kanal</div>
+                      <div className="text-sm font-semibold text-foreground">{data.channel}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div className="rounded-2xl border bg-white p-3">
                 <div className="text-xs text-muted-foreground">Toplam</div>
                 <div className="text-sm font-semibold text-foreground">

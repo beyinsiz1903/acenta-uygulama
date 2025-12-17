@@ -320,17 +320,22 @@ class ReservationCalendarModulesTest:
                 conclusions.append(f"✅ CHANNEL MIX DATA: {total_bookings} bookings analyzed")
                 
                 # Check specific metrics
-                direct_gap = revenue_impact.get('direct_booking_gap', 0)
-                potential_savings = revenue_impact.get('potential_savings', 0)
-                
-                conclusions.append(f"   → Direct booking gap: {direct_gap}%")
-                conclusions.append(f"   → Potential savings: ${potential_savings}")
-                
-                if direct_gap == 40:
-                    conclusions.append("✅ CONFIRMED: API returns 40% direct_booking_gap - UI is displaying correct backend data")
-                
-                if potential_savings == 0:
-                    conclusions.append("✅ CONFIRMED: API returns $0 potential_savings - UI is displaying correct backend data")
+                if isinstance(revenue_impact, dict):
+                    direct_gap = revenue_impact.get('direct_booking_gap', 0)
+                    potential_savings = revenue_impact.get('potential_savings', 0)
+                    
+                    conclusions.append(f"   → Direct booking gap: {direct_gap}%")
+                    conclusions.append(f"   → Potential savings: ${potential_savings}")
+                    
+                    if direct_gap == 40:
+                        conclusions.append("✅ CONFIRMED: API returns 40% direct_booking_gap - UI is displaying correct backend data")
+                    
+                    if potential_savings == 0:
+                        conclusions.append("✅ CONFIRMED: API returns $0 potential_savings - UI is displaying correct backend data")
+                else:
+                    conclusions.append(f"   → Revenue impact data format issue: {type(revenue_impact)}")
+        else:
+            conclusions.append("❌ CHANNEL MIX API FAILED: Could not retrieve channel optimization data")
         
         # Check enterprise heatmap
         heatmap = self.results['enterprise_availability_heatmap']

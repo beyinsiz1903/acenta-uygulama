@@ -392,8 +392,8 @@ export default function ReservationsPage() {
     <div className="space-y-4">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-semibold text-slate-900">Rezervasyonlar</h2>
-          <p className="text-sm text-slate-600">Durum akışı + voucher + tahsilat.</p>
+          <h2 className="text-2xl font-semibold text-foreground">Rezervasyonlar</h2>
+          <p className="text-sm text-muted-foreground">Durum akışı + voucher + tahsilat.</p>
         </div>
         <Button onClick={() => setOpenForm(true)} className="gap-2" data-testid="res-new">
           <Plus className="h-4 w-4" />
@@ -404,12 +404,12 @@ export default function ReservationsPage() {
       <Card className="rounded-2xl shadow-sm">
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
-            <Ticket className="h-4 w-4 text-slate-500" />
+            <Ticket className="h-4 w-4 text-muted-foreground" />
             Liste
           </CardTitle>
           <div className="mt-3 grid grid-cols-1 md:grid-cols-4 gap-3">
             <div className="relative md:col-span-2">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Ara (PNR)"
                 value={q}
@@ -445,7 +445,7 @@ export default function ReservationsPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm" data-testid="res-table">
               <thead>
-                <tr className="text-left text-slate-500">
+                <tr className="text-left text-muted-foreground">
                   <th className="py-2">PNR</th>
                   <th className="py-2">Durum</th>
                   <th className="py-2">Toplam</th>
@@ -457,26 +457,26 @@ export default function ReservationsPage() {
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={6} className="py-6 text-slate-500">Yükleniyor...</td>
+                    <td colSpan={6} className="py-6 text-muted-foreground">Yükleniyor...</td>
                   </tr>
                 ) : rows.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-6 text-slate-500">Kayıt yok.</td>
+                    <td colSpan={6} className="py-6 text-muted-foreground">Kayıt yok.</td>
                   </tr>
                 ) : (
                   rows.map((r) => {
                     const b = statusBadge(r.status);
                     return (
                       <tr key={r.id} className="border-t">
-                        <td className="py-3 font-medium text-slate-900">{r.pnr}</td>
+                        <td className="py-3 font-medium text-foreground">{r.pnr}</td>
                         <td className="py-3">
-                          <span className="rounded-full border bg-slate-50 px-2 py-1 text-xs font-medium text-slate-700">
+                          <span className="rounded-full border bg-accent px-2 py-1 text-xs font-medium text-foreground/80">
                             {b.label}
                           </span>
                         </td>
-                        <td className="py-3 text-slate-700">{formatMoney(r.total_price, r.currency)}</td>
-                        <td className="py-3 text-slate-700">{formatMoney(r.paid_amount, r.currency)}</td>
-                        <td className="py-3 text-slate-600">{r.channel}</td>
+                        <td className="py-3 text-foreground/80">{formatMoney(r.total_price, r.currency)}</td>
+                        <td className="py-3 text-foreground/80">{formatMoney(r.paid_amount, r.currency)}</td>
+                        <td className="py-3 text-muted-foreground">{r.channel}</td>
                         <td className="py-3 text-right">
                           <Button
                             variant="outline"
@@ -498,7 +498,7 @@ export default function ReservationsPage() {
             </table>
           </div>
 
-          <div className="mt-3 text-xs text-slate-500">
+          <div className="mt-3 text-xs text-muted-foreground">
             Durum sayaçları: {Object.entries(badges)
               .map(([k, v]) => `${k}:${v}`)
               .join("  ")}

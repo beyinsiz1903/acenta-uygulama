@@ -264,7 +264,7 @@ function ReservationDetails({ open, onOpenChange, reservationId }) {
           {data ? (
             <div className="space-y-4">
               <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-              <div className="rounded-2xl border bg-accent/40 p-3">
+                <div className="rounded-2xl border bg-accent/40 p-3">
                 <div className="text-xs text-muted-foreground">PNR</div>
                 <div className="text-sm font-semibold text-foreground">{data.pnr}</div>
               </div>

@@ -149,7 +149,7 @@ export default function AgencyHotelsPage() {
                 <TableCell className="text-muted-foreground">{hotel.country}</TableCell>
                 <TableCell>
                   {hotel.active ? (
-                    <Badge variant="success" className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20">
+                    <Badge className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20">
                       Aktif
                     </Badge>
                   ) : (

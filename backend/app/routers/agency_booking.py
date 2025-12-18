@@ -9,7 +9,7 @@ from pydantic import BaseModel
 
 from app.auth import get_current_user, require_roles
 from app.db import get_db
-from app.utils import serialize_doc
+from app.utils import serialize_doc, now_utc
 
 router = APIRouter(prefix="/api/agency/bookings", tags=["agency-bookings"])
 

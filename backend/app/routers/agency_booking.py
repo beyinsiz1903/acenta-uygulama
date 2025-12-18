@@ -138,6 +138,7 @@ async def get_booking_draft(draft_id: str, user=Depends(get_current_user)):
     db = await get_db()
     agency_id = user.get("agency_id")
     
+    # FAZ-3.2: Check expiration BEFORE not-found check
     draft = await db.booking_drafts.find_one({
         "organization_id": user["organization_id"],
         "agency_id": agency_id,
@@ -147,7 +148,7 @@ async def get_booking_draft(draft_id: str, user=Depends(get_current_user)):
     if not draft:
         raise HTTPException(status_code=404, detail="DRAFT_NOT_FOUND")
     
-    # FAZ-3.2: Check expiration
+    # Check expiration
     if draft.get("expires_at"):
         expires_at = draft["expires_at"]
         if datetime.now(timezone.utc) > expires_at:

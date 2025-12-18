@@ -108,7 +108,7 @@ export default function AgencyBookingDraftPage() {
     );
   }
 
-  const { hotel_name, guest, rate_snapshot, status } = draft;
+  const { hotel_name, guest, rate_snapshot, status, stay, occupancy } = draft;
 
   return (
     <div className="space-y-6">
@@ -124,6 +124,34 @@ export default function AgencyBookingDraftPage() {
           </p>
         </div>
       </div>
+
+      {/* Stay & Occupancy Info */}
+      {stay && occupancy && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              Konaklama Bilgileri
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex items-center gap-2 text-sm">
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+              <span>
+                {stay.check_in} - {stay.check_out}
+                <span className="font-semibold ml-2">({stay.nights} gece)</span>
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <Users className="h-4 w-4 text-muted-foreground" />
+              <span>
+                {occupancy.adults} yetişkin
+                {occupancy.children > 0 && `, ${occupancy.children} çocuk`}
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Draft Details */}
       <Card>
@@ -158,10 +186,13 @@ export default function AgencyBookingDraftPage() {
           <div className="border-t pt-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Toplam Tutar</p>
+                <p className="text-sm font-medium">Toplam Tutar</p>
                 <p className="text-xs text-muted-foreground mt-1">
                   {rate_snapshot.board} • {rate_snapshot.cancellation === "NON_REFUNDABLE" ? "İade edilemez" : "Ücretsiz iptal"}
                 </p>
+                <Badge variant="outline" className="text-xs mt-2">
+                  Fiyat Snapshot
+                </Badge>
               </div>
               <div className="text-right">
                 <p className="text-3xl font-bold text-primary">
@@ -212,26 +243,36 @@ export default function AgencyBookingDraftPage() {
         </CardContent>
       </Card>
 
-      {/* Next Steps */}
-      <Card className="border-dashed">
+      {/* Action Buttons */}
+      <Card>
         <CardContent className="pt-6">
-          <div className="text-center space-y-4">
-            <div className="text-sm text-muted-foreground">
-              <p className="font-semibold text-foreground mb-2">FAZ-3.1: Ödeme & Onay</p>
-              <p>
-                Bu aşamada ödeme entegrasyonu eklenecek ve taslak onaylanacak.
-              </p>
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Button onClick={() => navigate("/app/agency/hotels")} variant="outline">
-                Yeni Arama
-              </Button>
-              <Button disabled>
-                Ödeme Yap (FAZ-3.1)
-              </Button>
-            </div>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button
+              onClick={handleCancel}
+              variant="outline"
+              disabled={confirmLoading || cancelLoading || status !== "draft"}
+              className="gap-2 flex-1"
+            >
+              {cancelLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+              <XCircle className="h-4 w-4" />
+              Taslağı İptal Et
+            </Button>
+            <Button
+              onClick={handleConfirm}
+              disabled={confirmLoading || cancelLoading || status !== "draft"}
+              className="gap-2 flex-1"
+            >
+              {confirmLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+              <CheckCircle className="h-4 w-4" />
+              {confirmLoading ? "Onaylanıyor..." : "Rezervasyonu Onayla"}
+            </Button>
           </div>
+
+          {status !== "draft" && (
+            <p className="text-xs text-muted-foreground text-center mt-3">
+              Bu taslak zaten {status === "confirmed" ? "onaylanmış" : "iptal edilmiş"}
+            </p>
+          )}
         </CardContent>
       </Card>
     </div>

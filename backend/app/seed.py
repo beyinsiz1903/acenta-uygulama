@@ -212,9 +212,6 @@ async def ensure_seed_data() -> None:
             if not existing_link:
                 await db.agency_hotel_links.insert_one(_link(agency_id, hotel_id))
 
-            }
-        )
-
     dg = await db.discount_groups.find_one({"organization_id": org_id, "name": "B2B İndirim"})
     if not dg:
         await db.discount_groups.insert_one(

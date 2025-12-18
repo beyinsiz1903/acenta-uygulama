@@ -146,7 +146,20 @@ async def search_availability(payload: SearchRequestIn, user=Depends(get_current
             "city": hotel.get("city"),
             "country": hotel.get("country"),
         },
-
+        "stay": {
+            "check_in": payload.check_in,
+            "check_out": payload.check_out,
+            "nights": nights,
+        },
+        "occupancy": {
+            "adults": payload.occupancy.adults,
+            "children": payload.occupancy.children,
+        },
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "rooms": mock_rooms,
+    }
+    
+    return response
 
 
 class GuestInfoIn(BaseModel):

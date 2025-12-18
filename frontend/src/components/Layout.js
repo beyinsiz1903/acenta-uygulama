@@ -81,9 +81,6 @@ const Layout = ({ children, user, tenant, onLogout, currentModule }) => {
                 data-testid="logo"
               />
               <div className="flex flex-col leading-tight min-w-0">
-                <span className="text-xs uppercase tracking-[0.2em] text-gray-400">
-                  Syroce PMS
-                </span>
                 <span className="text-xs uppercase tracking-[0.2em] text-gray-400 hidden md:block">
                   Syroce PMS
                 </span>

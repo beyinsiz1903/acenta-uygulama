@@ -151,11 +151,18 @@ async def get_booking_draft(draft_id: str, user=Depends(get_current_user)):
     # Check expiration
     if draft.get("expires_at"):
         expires_at = draft["expires_at"]
+        now = datetime.now(timezone.utc)
+        
         # Handle timezone-naive datetimes from MongoDB
-        if expires_at.tzinfo is None:
+        if hasattr(expires_at, 'tzinfo') and expires_at.tzinfo is None:
             expires_at = expires_at.replace(tzinfo=timezone.utc)
         
-        if datetime.now(timezone.utc) > expires_at:
+        # Debug log
+        import logging
+        logger = logging.getLogger("acenta-master")
+        logger.info(f"TTL Check: expires_at={expires_at}, now={now}, expired={now > expires_at}")
+        
+        if now > expires_at:
             raise HTTPException(status_code=410, detail="DRAFT_EXPIRED")
     
     return serialize_doc(draft)

@@ -17,6 +17,8 @@ class AuthUser(BaseModel):
     name: str | None = None
     roles: list[str] = Field(default_factory=list)
     organization_id: str
+    agency_id: str | None = None
+    hotel_id: str | None = None
 
 
 class LoginResponse(BaseModel):

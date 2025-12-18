@@ -23,7 +23,10 @@ export default function LoginPage() {
       const resp = await api.post("/auth/login", { email, password });
       setToken(resp.data.access_token);
       setUser(resp.data.user);
-      navigate("/app");
+      
+      // Role-based redirect
+      const redirectPath = redirectByRole(resp.data.user);
+      navigate(redirectPath, { replace: true });
     } catch (err) {
       setError(apiErrorMessage(err));
     } finally {

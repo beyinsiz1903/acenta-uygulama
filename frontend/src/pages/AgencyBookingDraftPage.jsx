@@ -34,6 +34,17 @@ export default function AgencyBookingDraftPage() {
       setDraft(resp.data);
     } catch (err) {
       console.error("[BookingDraft] Load error:", err);
+      const errorDetail = err?.response?.data?.detail;
+      
+      // FAZ-3.2: Handle expired draft
+      if (errorDetail === "DRAFT_EXPIRED") {
+        toast.error("Taslak süresi doldu. Lütfen yeniden arama yapın.");
+        setTimeout(() => {
+          navigate("/app/agency/hotels");
+        }, 2000);
+        return;
+      }
+      
       setError(apiErrorMessage(err));
     } finally {
       setLoading(false);

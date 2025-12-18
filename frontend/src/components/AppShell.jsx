@@ -13,6 +13,8 @@ import {
   BarChart3,
   LogOut,
   Menu,
+  Hotel,
+  Link as LinkIcon,
 } from "lucide-react";
 
 import { Button } from "./ui/button";
@@ -20,8 +22,9 @@ import { Sheet, SheetContent } from "./ui/sheet";
 import ThemeToggle from "./ThemeToggle";
 import { cn } from "../lib/utils";
 import { api, clearToken, getUser } from "../lib/api";
+import { getMenuForUser } from "../config/menuConfig";
 
-const nav = [
+const legacyNav = [
   { to: "/app", label: "Dashboard", icon: LayoutGrid, roles: ["admin", "sales", "ops", "accounting", "b2b_agent"] },
   { to: "/app/products", label: "Ürünler", icon: Layers, roles: ["admin", "sales", "ops"] },
   { to: "/app/inventory", label: "Müsaitlik", icon: CalendarDays, roles: ["admin", "sales", "ops"] },
@@ -33,6 +36,13 @@ const nav = [
   { to: "/app/reports", label: "Raporlar", icon: BarChart3, roles: ["admin", "sales", "accounting"] },
   { to: "/app/settings", label: "Ayarlar", icon: Settings, roles: ["admin"] },
 ];
+
+const iconMap = {
+  "Acentalar": Building2,
+  "Oteller": Hotel,
+  "Link Yönetimi": LinkIcon,
+  "Otellerim": Hotel,
+};
 
 function userHasRole(user, allowed) {
   const roles = user?.roles || [];

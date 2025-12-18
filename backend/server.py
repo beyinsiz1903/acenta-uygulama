@@ -6836,7 +6836,11 @@ async def get_rooms(
                 return rooms
     
     # Build query with filters
-    query = {'tenant_id': current_user.tenant_id, 'is_active': True}
+    # Backward compatible: old room docs may not have is_active field.
+    query = {
+        'tenant_id': current_user.tenant_id,
+        '$or': [{'is_active': True}, {'is_active': {'$exists': False}}],
+    }
     if status:
         query['status'] = status
     if room_type:

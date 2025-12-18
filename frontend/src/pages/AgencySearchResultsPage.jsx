@@ -187,7 +187,7 @@ export default function AgencySearchResultsPage() {
           <div className="text-center text-sm text-muted-foreground">
             <p className="font-semibold">FAZ-2.1: Mock Data</p>
             <p className="mt-1">
-              Bu veriler mock'tur. Faz-2.2'de gerçek PMS/CM entegrasyonu eklenecek.
+              Bu veriler mock&apos;tur. Faz-2.2&apos;de gerçek PMS/CM entegrasyonu eklenecek.
             </p>
           </div>
         </CardContent>

@@ -282,7 +282,14 @@ async def get_booking_draft(draft_id: str, user=Depends(get_current_user)):
     
     draft = await db.booking_drafts.find_one({
         "organization_id": user["organization_id"],
-
+        "agency_id": agency_id,
+        "_id": draft_id,
+    })
+    
+    if not draft:
+        raise HTTPException(status_code=404, detail="DRAFT_NOT_FOUND")
+    
+    return serialize_doc(draft)
 
 
 class BookingConfirmIn(BaseModel):

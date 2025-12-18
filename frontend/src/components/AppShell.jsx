@@ -197,7 +197,41 @@ export default function AppShell() {
             </div>
 
             <div className="mt-4 rounded-2xl border bg-card p-2 shadow-sm">
-              {visibleNav.map((item) => {
+              {roleBasedMenu.map((section) => (
+                <div key={section.label} className="mb-3 last:mb-0">
+                  <div className="px-3 py-1 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                    {section.label}
+                  </div>
+                  {section.children.map((item) => {
+                    const Icon = iconMap[item.label] || Building2;
+                    return (
+                      <NavLink
+                        key={`rb-${item.path}`}
+                        to={item.path}
+                        onClick={() => setMobileNavOpen(false)}
+                        className={({ isActive }) =>
+                          cn(
+                            "relative flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition hover:shadow-sm",
+                            "border-l-4",
+                            isActive
+                              ? "bg-primary text-primary-foreground shadow border-primary"
+                              : "border-transparent text-muted-foreground hover:bg-accent hover:text-foreground"
+                          )
+                        }
+                      >
+                        <Icon className="h-4 w-4" />
+                        {item.label}
+                      </NavLink>
+                    );
+                  })}
+                </div>
+              ))}
+
+              {visibleLegacyNav.length > 0 && roleBasedMenu.length > 0 && (
+                <div className="my-2 border-t" />
+              )}
+
+              {visibleLegacyNav.map((item) => {
                 const Icon = item.icon;
                 return (
                   <NavLink
@@ -219,7 +253,6 @@ export default function AppShell() {
                     {item.label}
                   </NavLink>
                 );
-
               })}
             </div>
           </div>

@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { CheckCircle, Hotel, Calendar, Users, User, Loader2, AlertCircle } from "lucide-react";
+import { CheckCircle, Hotel, Calendar, Users, User, Loader2, AlertCircle, XCircle } from "lucide-react";
 import { api, apiErrorMessage } from "../lib/api";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { formatMoney } from "../lib/format";
+import { toast } from "sonner";
 
 export default function AgencyBookingDraftPage() {
   const { draftId } = useParams();
@@ -15,6 +16,8 @@ export default function AgencyBookingDraftPage() {
   const [draft, setDraft] = useState(location.state?.draft || null);
   const [loading, setLoading] = useState(!draft);
   const [error, setError] = useState("");
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  const [cancelLoading, setCancelLoading] = useState(false);
 
   useEffect(() => {
     if (!draft) {
@@ -34,6 +37,46 @@ export default function AgencyBookingDraftPage() {
       setError(apiErrorMessage(err));
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleConfirm() {
+    setConfirmLoading(true);
+    try {
+      const resp = await api.post("/agency/bookings/confirm", {
+        draft_id: draftId,
+      });
+      console.log("[BookingDraft] Confirmed:", resp.data);
+      toast.success("Rezervasyon onaylandı");
+      
+      // Navigate to confirmed page
+      navigate(`/app/agency/booking/confirmed/${resp.data.id}`, {
+        state: { booking: resp.data },
+      });
+    } catch (err) {
+      console.error("[BookingDraft] Confirm error:", err);
+      toast.error(apiErrorMessage(err));
+    } finally {
+      setConfirmLoading(false);
+    }
+  }
+
+  async function handleCancel() {
+    if (!window.confirm("Rezervasyon taslağını iptal etmek istediğinize emin misiniz?")) {
+      return;
+    }
+
+    setCancelLoading(true);
+    try {
+      await api.delete(`/agency/bookings/draft/${draftId}`);
+      console.log("[BookingDraft] Cancelled");
+      toast.success("Taslak iptal edildi");
+      navigate("/app/agency/hotels");
+    } catch (err) {
+      console.error("[BookingDraft] Cancel error:", err);
+      toast.error(apiErrorMessage(err));
+    } finally {
+      setCancelLoading(false);
     }
   }
 

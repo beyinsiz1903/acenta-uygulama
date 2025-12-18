@@ -1,61 +1,82 @@
 import React, { useEffect, useState } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
-import { Hotel, Calendar, Users, ArrowLeft, Loader2 } from "lucide-react";
-import { api, apiErrorMessage } from "../lib/api";
+import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
+import { Hotel, Calendar, Users, ArrowLeft, Loader2, Check } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
+import { formatMoney } from "../lib/format";
 
 export default function AgencySearchResultsPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const [hotel, setHotel] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [searchData, setSearchData] = useState(location.state?.searchData || null);
+  const [loading, setLoading] = useState(!searchData);
 
-  // Extract search context from URL
-  const searchContext = {
-    hotel_id: searchParams.get("hotel_id"),
-    check_in: searchParams.get("check_in"),
-    check_out: searchParams.get("check_out"),
-    adults: parseInt(searchParams.get("adults")) || 0,
-    children: parseInt(searchParams.get("children")) || 0,
-  };
+  const searchId = searchParams.get("search_id");
 
   useEffect(() => {
-    console.log("[SearchResults] Context:", searchContext);
-    loadHotelInfo();
-  }, []);
+    console.log("[SearchResults] search_id:", searchId);
+    console.log("[SearchResults] searchData from state:", searchData);
 
-  async function loadHotelInfo() {
-    setLoading(true);
-    try {
-      const resp = await api.get("/agency/hotels");
-      const hotels = resp.data || [];
-      const foundHotel = hotels.find((h) => h.id === searchContext.hotel_id);
-      setHotel(foundHotel);
-    } catch (err) {
-      console.error("[SearchResults] Load error:", err);
-    } finally {
+    // If no searchData in location.state, show error
+    if (!searchData) {
       setLoading(false);
     }
+  }, [searchId]);
+
+  function handleSelectRoom(roomTypeId, ratePlanId) {
+    console.log("[SearchResults] Room selected:", { searchId, roomTypeId, ratePlanId });
+    
+    // Navigate to booking placeholder
+    const params = new URLSearchParams({
+      search_id: searchId,
+      room_type_id: roomTypeId,
+      rate_plan_id: ratePlanId,
+    });
+    
+    navigate(`/app/agency/booking/new?${params.toString()}`);
   }
 
-  const nights = searchContext.check_in && searchContext.check_out
-    ? Math.floor((new Date(searchContext.check_out) - new Date(searchContext.check_in)) / (1000 * 60 * 60 * 24))
-    : 0;
+  if (loading || !searchData) {
+    return (
+      <div className="space-y-6">
+        <div className="rounded-2xl border bg-card shadow-sm p-12 flex flex-col items-center justify-center gap-4">
+          {loading ? (
+            <>
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <p className="text-sm text-muted-foreground">Arama sonuçları yükleniyor...</p>
+            </>
+          ) : (
+            <div className="text-center">
+              <p className="font-semibold text-foreground">Arama sonucu bulunamadı</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Lütfen yeni bir arama yapın.
+              </p>
+              <Button onClick={() => navigate("/app/agency/hotels")} className="mt-4">
+                Otellerime Dön
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  const { hotel, stay, occupancy, rooms } = searchData;
 
   return (
     <div className="space-y-6">
-      {/* Back button + Search summary */}
+      {/* Back button */}
       <div className="flex items-center justify-between">
         <Button
-          onClick={() => navigate(`/app/agency/hotels/${searchContext.hotel_id}`)}
+          onClick={() => navigate(`/app/agency/hotels/${hotel.id}`)}
           variant="outline"
           className="gap-2"
         >
           <ArrowLeft className="h-4 w-4" />
-          Aramaya D\u00f6n
+          Aramaya Dön
         </Button>
       </div>
 
@@ -64,68 +85,115 @@ export default function AgencySearchResultsPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Hotel className="h-5 w-5" />
-            Arama Detaylar\u0131
+            Arama Detayları
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Y\u00fckleniyor...
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Hotel className="h-4 w-4 text-muted-foreground" />
+              <span className="font-medium">{hotel.name}</span>
+              <Badge className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20">
+                Bağlı Otel
+              </Badge>
             </div>
-          ) : (
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Hotel className="h-4 w-4 text-muted-foreground" />
-                <span className="font-medium">{hotel?.name || "Bilinmeyen Otel"}</span>
-                <Badge className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20">
-                  Ba\u011fl\u0131 Otel
-                </Badge>
-              </div>
 
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Calendar className="h-4 w-4" />
-                <span>
-                  {searchContext.check_in} - {searchContext.check_out}
-                  {nights > 0 && ` (${nights} gece)`}
-                </span>
-              </div>
-
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Users className="h-4 w-4" />
-                <span>
-                  {searchContext.adults} yeti\u015fkin
-                  {searchContext.children > 0 && `, ${searchContext.children} \u00e7ocuk`}
-                </span>
-              </div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Calendar className="h-4 w-4" />
+              <span>
+                {stay.check_in} - {stay.check_out}
+                {stay.nights > 0 && ` (${stay.nights} gece)`}
+              </span>
             </div>
-          )}
+
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Users className="h-4 w-4" />
+              <span>
+                {occupancy.adults} yetişkin
+                {occupancy.children > 0 && `, ${occupancy.children} çocuk`}
+              </span>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
-      {/* Mock Results */}
-      <Card>
-        <CardHeader>
-          <CardTitle>M\u00fcsait Odalar (Mock)</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="rounded-lg border-2 border-dashed bg-muted/20 p-12 text-center">
-            <div className="mx-auto max-w-md space-y-3">
-              <div className="text-4xl">\ud83d\uded1</div>
-              <p className="font-semibold text-foreground">
-                FAZ-2.1: Availability Mock
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Bu ekranda Faz-2.1'de mock oda verileri g\u00f6r\u00fcnecek.
-                <br />
-                Faz-2.2'de ger\u00e7ek PMS/CM entegrasyonu eklenecek.
-              </p>
-              <div className="pt-4">
+      {/* Room Results */}
+      <div className="space-y-4">
+        <h2 className="text-lg font-semibold">Müsait Odalar ({rooms.length})</h2>
+
+        {rooms.map((room) => (
+          <Card key={room.room_type_id}>
+            <CardHeader>
+              <div className="flex items-start justify-between">
+                <div>
+                  <CardTitle className="text-lg">{room.name}</CardTitle>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Maks: {room.max_occupancy.adults} yetişkin, {room.max_occupancy.children} çocuk
+                  </p>
+                </div>
                 <Badge variant="outline" className="text-xs">
-                  Context haz\u0131r \u2713 | API entegrasyonu bekleniyor
+                  {room.inventory_left} oda kaldı
                 </Badge>
               </div>
-            </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {room.rate_plans.map((ratePlan) => (
+                <div
+                  key={ratePlan.rate_plan_id}
+                  className="flex items-center justify-between p-4 rounded-lg border hover:bg-accent/50 transition"
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium">{ratePlan.name}</p>
+                      <Badge variant="secondary" className="text-xs">
+                        {ratePlan.board}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {ratePlan.cancellation === "NON_REFUNDABLE" ? (
+                        "İade edilemez"
+                      ) : (
+                        <span className="flex items-center gap-1">
+                          <Check className="h-3 w-3 text-emerald-600" />
+                          Ücretsiz iptal
+                        </span>
+                      )}
+                    </p>
+                  </div>
+
+                  <div className="text-right ml-4">
+                    <p className="text-xs text-muted-foreground">
+                      {stay.nights} gece toplam
+                    </p>
+                    <p className="text-lg font-bold text-primary">
+                      {formatMoney(ratePlan.price.total, ratePlan.price.currency)}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Gecelik: {formatMoney(ratePlan.price.per_night, ratePlan.price.currency)}
+                    </p>
+                  </div>
+
+                  <Button
+                    onClick={() => handleSelectRoom(room.room_type_id, ratePlan.rate_plan_id)}
+                    className="ml-4"
+                  >
+                    Seç
+                  </Button>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Mock Notice */}
+      <Card className="border-dashed">
+        <CardContent className="pt-6">
+          <div className="text-center text-sm text-muted-foreground">
+            <p className="font-semibold">FAZ-2.1: Mock Data</p>
+            <p className="mt-1">
+              Bu veriler mock'tur. Faz-2.2'de gerçek PMS/CM entegrasyonu eklenecek.
+            </p>
           </div>
         </CardContent>
       </Card>

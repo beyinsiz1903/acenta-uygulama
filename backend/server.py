@@ -7127,7 +7127,10 @@ async def bulk_delete_rooms(
     if not target_ids and not target_numbers:
         raise HTTPException(status_code=400, detail="Silinecek oda seçilmedi")
 
-    query: Dict[str, Any] = {"tenant_id": current_user.tenant_id, "is_active": True}
+    query: Dict[str, Any] = {
+        "tenant_id": current_user.tenant_id,
+        "$or": [{"is_active": True}, {"is_active": {"$exists": False}}],
+    }
     or_clauses = []
     if target_ids:
         or_clauses.append({"id": {"$in": list(target_ids)}})

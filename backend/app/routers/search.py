@@ -215,6 +215,8 @@ async def create_booking_draft(payload: BookingDraftCreateIn, user=Depends(get_c
     draft_id = f"draft_{uuid.uuid4().hex[:16]}"
     
     # Mock rate snapshot (in real scenario, re-fetch from gateway)
+    # Note: We need to calculate nights from check_in/check_out later
+    # For now, mock single night pricing
     mock_rate_snapshot = {
         "room_type_id": payload.room_type_id,
         "room_type_name": "Standart Oda" if payload.room_type_id == "rt_standard" else "Deluxe Oda",
@@ -237,7 +239,7 @@ async def create_booking_draft(payload: BookingDraftCreateIn, user=Depends(get_c
         "search_id": payload.search_id,
         "hotel_id": payload.hotel_id,
         "hotel_name": hotel.get("name"),
-        "status": "draft",  # draft|confirmed|cancelled
+        "status": "draft",
         "guest": payload.guest.model_dump(),
         "special_requests": payload.special_requests,
         "rate_snapshot": mock_rate_snapshot,

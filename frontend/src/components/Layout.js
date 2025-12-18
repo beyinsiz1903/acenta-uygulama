@@ -80,11 +80,17 @@ const Layout = ({ children, user, tenant, onLogout, currentModule }) => {
                 onClick={() => navigate('/')}
                 data-testid="logo"
               />
-              <div className="hidden md:flex flex-col leading-tight">
+              <div className="flex flex-col leading-tight min-w-0">
                 <span className="text-xs uppercase tracking-[0.2em] text-gray-400">
                   Syroce PMS
                 </span>
-                <span className="text-sm font-semibold text-gray-700 truncate max-w-xs">
+                <span className="text-xs uppercase tracking-[0.2em] text-gray-400 hidden md:block">
+                  Syroce PMS
+                </span>
+                <span
+                  className="text-sm font-semibold text-gray-700 truncate max-w-[160px] sm:max-w-[240px] md:max-w-xs"
+                  title={tenant?.property_name || 'Hotel Management'}
+                >
                   {tenant?.property_name || 'Hotel Management'}
                 </span>
               </div>

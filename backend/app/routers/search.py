@@ -27,6 +27,21 @@ class SearchRequestIn(BaseModel):
     currency: str = "TRY"
 
 
+class GuestInfoIn(BaseModel):
+    full_name: str
+    email: Optional[str] = None
+    phone: Optional[str] = None
+
+
+class BookingDraftCreateIn(BaseModel):
+    search_id: str
+    hotel_id: str
+    room_type_id: str
+    rate_plan_id: str
+    guest: GuestInfoIn
+    special_requests: Optional[str] = None
+
+
 @router.post("/search", dependencies=[Depends(require_roles(["agency_admin", "agency_agent"]))])
 async def search_availability(payload: SearchRequestIn, user=Depends(get_current_user)):
     """
@@ -162,21 +177,6 @@ async def search_availability(payload: SearchRequestIn, user=Depends(get_current
     return response
 
 
-class GuestInfoIn(BaseModel):
-    full_name: str
-    email: Optional[str] = None
-    phone: Optional[str] = None
-
-
-class BookingDraftCreateIn(BaseModel):
-    search_id: str
-    hotel_id: str
-    room_type_id: str
-    rate_plan_id: str
-    guest: GuestInfoIn
-    special_requests: Optional[str] = None
-
-
 @router.post("/bookings/draft", dependencies=[Depends(require_roles(["agency_admin", "agency_agent"]))])
 async def create_booking_draft(payload: BookingDraftCreateIn, user=Depends(get_current_user)):
     """
@@ -271,18 +271,3 @@ async def get_booking_draft(draft_id: str, user=Depends(get_current_user)):
         raise HTTPException(status_code=404, detail="DRAFT_NOT_FOUND")
     
     return serialize_doc(draft)
-
-        "stay": {
-            "check_in": payload.check_in,
-            "check_out": payload.check_out,
-            "nights": nights,
-        },
-        "occupancy": {
-            "adults": payload.occupancy.adults,
-            "children": payload.occupancy.children,
-        },
-        "generated_at": datetime.now(timezone.utc).isoformat(),
-        "rooms": mock_rooms,
-    }
-    
-    return response

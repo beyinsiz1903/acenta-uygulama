@@ -79,6 +79,71 @@ async def search_availability(payload: SearchRequestIn, user=Depends(get_current
     if payload.occupancy.adults < 1:
         raise HTTPException(status_code=422, detail="MINIMUM_1_ADULT")
     
+    # FAZ-2.2.1: Compute REAL availability from DB
+    availability = await compute_availability(
+        hotel_id=payload.hotel_id,
+        check_in=payload.check_in,
+        check_out=payload.check_out,
+        organization_id=user["organization_id"],
+    )
+    
+    # Generate search_id
+    search_id = f"srch_{uuid.uuid4().hex[:16]}"
+    
+    # Map availability to gateway format
+    rooms_response = []
+    
+    for room_type, avail_data in availability.items():
+        if avail_data["available_rooms"] <= 0:
+            continue  # Skip if no availability
+        
+        # Room type ID
+        room_type_id = f"rt_{room_type}"
+        room_type_name = room_type.title() + " Oda"
+        
+        # Max occupancy (from first room of this type)
+        max_occupancy = {"adults": 2, "children": 2}  # Default, can be fetched from rooms
+        
+        # Calculate price
+        per_night = avail_data.get("avg_base_price", 0)
+        total_price = per_night * nights
+        
+        # Generate rate plans (mock for now - FAZ-2.2.2'de rate_plans koleksiyonundan gelecek)
+        rate_plans = [
+            {
+                "rate_plan_id": "rp_refundable",
+                "name": "İade Edilebilir",
+                "board": "RO",
+                "cancellation": f"FREE_CANCEL_UNTIL_{payload.check_in}",
+                "price": {
+                    "currency": payload.currency,
+                    "total": total_price,
+                    "per_night": per_night,
+                    "tax_included": True,
+                },
+            },
+            {
+                "rate_plan_id": "rp_nonrefundable",
+                "name": "İade Edilemez (İndirimli)",
+                "board": "RO",
+                "cancellation": "NON_REFUNDABLE",
+                "price": {
+                    "currency": payload.currency,
+                    "total": round(total_price * 0.85, 2),  # 15% discount
+                    "per_night": round(per_night * 0.85, 2),
+                    "tax_included": True,
+                },
+            },
+        ]
+        
+        rooms_response.append({
+            "room_type_id": room_type_id,
+            "name": room_type_name,
+            "max_occupancy": max_occupancy,
+            "inventory_left": avail_data["available_rooms"],
+            "rate_plans": rate_plans,
+        })
+    
     # Generate mock response (FAZ-2.1)
     search_id = f"srch_{uuid.uuid4().hex[:16]}"
     

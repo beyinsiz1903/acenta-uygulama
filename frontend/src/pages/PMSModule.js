@@ -3248,6 +3248,72 @@ const PMSModule = ({ user, tenant, onLogout }) => {
                       <Input 
                         value={newBooking.billing_tax_number} 
                         onChange={(e) => setNewBooking({...newBooking, billing_tax_number: e.target.value})}
+
+        {/* Bulk Delete Rooms Dialog */}
+        <Dialog open={openDialog === 'bulk-delete-rooms'} onOpenChange={(open) => !open && setOpenDialog(null)}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Toplu Oda Silme</DialogTitle>
+              <DialogDescription>
+                Bu işlem geri alınamaz gibi düşünün (soft delete yapılır). Silmeyi onaylamak için aşağıya <span className="font-mono">DELETE</span> yazmalısınız.
+                Aktif rezervasyonu olan odalar otomatik olarak bloklanır.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-3">
+              <div className="rounded-md border bg-gray-50 p-3 text-sm">
+                <div className="font-semibold">Silinecek oda sayısı: {selectedRooms.length}</div>
+                <div className="text-xs text-gray-600 mt-1">
+                  Seçili odalardan ilk 5&apos;i: {rooms.filter(r => selectedRooms.includes(r.id)).slice(0,5).map(r => r.room_number).join(', ') || '-'}
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <Label>Onay</Label>
+                <Input
+                  value={bulkDeleteConfirm}
+                  onChange={(e) => setBulkDeleteConfirm(e.target.value)}
+                  placeholder="DELETE"
+                />
+                <p className="text-[11px] text-gray-500">Yanlışlıkla silmeyi önlemek için zorunludur.</p>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <Button variant="outline" onClick={() => setOpenDialog(null)}>Vazgeç</Button>
+                <Button
+                  variant="destructive"
+                  disabled={selectedRooms.length === 0 || bulkDeleteConfirm.trim().toUpperCase() !== 'DELETE'}
+                  onClick={async () => {
+                    try {
+                      const res = await axios.post('/pms/rooms/bulk/delete', {
+                        ids: selectedRooms,
+                        confirm_text: bulkDeleteConfirm,
+                      });
+
+                      const msgParts = [`Deleted: ${res.data.deleted}`];
+                      if (res.data.blocked > 0) msgParts.push(`Blocked: ${res.data.blocked}`);
+                      toast.success(msgParts.join(' • '));
+
+                      if (res.data.blocked > 0) {
+                        toast.info(`Bloklanan odalar: ${(res.data.blocked_rooms || []).slice(0, 10).join(', ')}`);
+                      }
+
+                      setSelectedRooms([]);
+                      setBulkRoomMode(false);
+                      setOpenDialog(null);
+                      await loadData();
+                    } catch (err) {
+                      toast.error(err?.response?.data?.detail || 'Toplu silme başarısız');
+                    }
+                  }}
+                >
+                  Sil
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
                       />
 
               {/* Multi-room section placeholder: future enhancement */}

@@ -24,7 +24,7 @@ async def my_hotels(user=Depends(get_current_user)):
         }
     ).to_list(2000)
 
-    hotel_ids = [l["hotel_id"] for l in links]
+    hotel_ids = [link["hotel_id"] for link in links]
     if not hotel_ids:
         return []
 

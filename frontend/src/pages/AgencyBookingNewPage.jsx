@@ -59,6 +59,14 @@ export default function AgencyBookingNewPage() {
         hotel_id: searchData.hotel.id,
         room_type_id: context.room_type_id,
         rate_plan_id: context.rate_plan_id,
+        // Stay snapshot
+        check_in: searchData.stay.check_in,
+        check_out: searchData.stay.check_out,
+        nights: searchData.stay.nights,
+        // Occupancy snapshot
+        adults: searchData.occupancy.adults,
+        children: searchData.occupancy.children,
+        // Guest info
         guest: {
           full_name: formData.full_name.trim(),
           email: formData.email.trim() || undefined,

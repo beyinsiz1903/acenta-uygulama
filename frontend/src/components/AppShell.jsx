@@ -358,29 +358,60 @@ export default function AppShell() {
 
             <div className="mt-3">
               <nav className="rounded-2xl border bg-card p-2 shadow-sm max-h-[calc(100vh-330px)] overflow-y-auto">
-            {visibleNav.map((item) => {
-              const Icon = item.icon;
-              const active = location.pathname === item.to;
-              return (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  end={item.to === "/app"}
-                  className={({ isActive }) =>
-                    cn(
-                      "flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition hover:shadow-sm",
-                      isActive
-                        ? "bg-primary text-primary-foreground shadow"
-                        : "text-muted-foreground hover:bg-accent hover:text-foreground"
-                    )
-                  }
-                  data-testid={`nav-${item.label}`}
-                >
-                  <Icon className="h-4 w-4" />
-                  {item.label}
-                </NavLink>
-              );
-            })}
+                {roleBasedMenu.map((section) => (
+                  <div key={section.label} className="mb-3 last:mb-0">
+                    <div className="px-3 py-1 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                      {section.label}
+                    </div>
+                    {section.children.map((item) => {
+                      const Icon = iconMap[item.label] || Building2;
+                      return (
+                        <NavLink
+                          key={`d-${item.path}`}
+                          to={item.path}
+                          className={({ isActive }) =>
+                            cn(
+                              "flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition hover:shadow-sm",
+                              isActive
+                                ? "bg-primary text-primary-foreground shadow"
+                                : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                            )
+                          }
+                        >
+                          <Icon className="h-4 w-4" />
+                          {item.label}
+                        </NavLink>
+                      );
+                    })}
+                  </div>
+                ))}
+
+                {visibleLegacyNav.length > 0 && roleBasedMenu.length > 0 && (
+                  <div className="my-2 border-t" />
+                )}
+
+                {visibleLegacyNav.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <NavLink
+                      key={item.to}
+                      to={item.to}
+                      end={item.to === "/app"}
+                      className={({ isActive }) =>
+                        cn(
+                          "flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition hover:shadow-sm",
+                          isActive
+                            ? "bg-primary text-primary-foreground shadow"
+                            : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                        )
+                      }
+                      data-testid={`nav-${item.label}`}
+                    >
+                      <Icon className="h-4 w-4" />
+                      {item.label}
+                    </NavLink>
+                  );
+                })}
               </nav>
             </div>
           </div>

@@ -184,3 +184,22 @@ class UserCreateIn(BaseModel):
     password: str
     roles: list[str] = Field(default_factory=list)
     agency_id: Optional[str] = None
+
+    hotel_id: Optional[str] = None
+
+
+class HotelCreateIn(BaseModel):
+    name: str
+    city: Optional[str] = None
+    country: Optional[str] = None
+    active: bool = True
+
+
+class AgencyHotelLinkCreateIn(BaseModel):
+    agency_id: str
+    hotel_id: str
+    active: bool = True
+
+
+class AgencyHotelLinkPatchIn(BaseModel):
+    active: Optional[bool] = None

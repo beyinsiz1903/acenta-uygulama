@@ -21,6 +21,7 @@ import AgencyHotelDetailPage from "./pages/AgencyHotelDetailPage";
 import AgencySearchResultsPage from "./pages/AgencySearchResultsPage";
 import AgencyBookingNewPage from "./pages/AgencyBookingNewPage";
 import AgencyBookingDraftPage from "./pages/AgencyBookingDraftPage";
+import AgencyBookingConfirmedPage from "./pages/AgencyBookingConfirmedPage";
 import AdminLinksPage from "./pages/AdminLinksPage";
 import AdminAgenciesPage from "./pages/AdminAgenciesPage";
 import AdminHotelsPage from "./pages/AdminHotelsPage";
@@ -70,6 +71,7 @@ export default function App() {
             <Route path="search" element={<AgencySearchResultsPage />} />
             <Route path="booking/new" element={<AgencyBookingNewPage />} />
             <Route path="booking/draft/:draftId" element={<AgencyBookingDraftPage />} />
+            <Route path="booking/confirmed/:bookingId" element={<AgencyBookingConfirmedPage />} />
           </Route>
         </Route>
 

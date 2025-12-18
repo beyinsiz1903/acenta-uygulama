@@ -56,6 +56,8 @@ app.include_router(leads_router)
 app.include_router(quotes_router)
 app.include_router(payments_router)
 app.include_router(b2b_router)
+app.include_router(admin_router)
+app.include_router(agency_router)
 app.include_router(reports_router)
 app.include_router(settings_router)
 

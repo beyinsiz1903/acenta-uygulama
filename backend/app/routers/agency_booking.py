@@ -304,7 +304,7 @@ async def cancel_booking_draft(draft_id: str, user=Depends(get_current_user)):
         {
             "$set": {
                 "status": "cancelled",
-                "updated_at": datetime.now(timezone.utc),
+                "updated_at": now_utc(),
             }
         },
     )

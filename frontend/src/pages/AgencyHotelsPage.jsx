@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Hotel, AlertCircle, Loader2 } from "lucide-react";
 import { api, apiErrorMessage, getUser } from "../lib/api";
+import { useNavigate } from "react-router-dom";
 import {
   Table,
   TableBody,
@@ -12,6 +13,7 @@ import {
 import { Badge } from "../components/ui/badge";
 
 export default function AgencyHotelsPage() {
+  const navigate = useNavigate();
   const [hotels, setHotels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -143,7 +145,11 @@ export default function AgencyHotelsPage() {
           </TableHeader>
           <TableBody>
             {hotels.map((hotel) => (
-              <TableRow key={hotel.id} className="cursor-pointer hover:bg-accent/50">
+              <TableRow 
+                key={hotel.id} 
+                className="cursor-pointer hover:bg-accent/50"
+                onClick={() => navigate(`/app/agency/hotels/${hotel.id}`)}
+              >
                 <TableCell className="font-medium">{hotel.name}</TableCell>
                 <TableCell className="text-muted-foreground">{hotel.city}</TableCell>
                 <TableCell className="text-muted-foreground">{hotel.country}</TableCell>

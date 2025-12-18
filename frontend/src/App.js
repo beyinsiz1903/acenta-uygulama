@@ -1,8 +1,11 @@
 import React from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 
+import RequireAuth from "./components/RequireAuth";
 import AppShell from "./components/AppShell";
 import LoginPage from "./pages/LoginPage";
+import UnauthorizedPage from "./pages/UnauthorizedPage";
+import ErrorContextPage from "./pages/ErrorContextPage";
 import DashboardPage from "./pages/DashboardPage";
 import ProductsPage from "./pages/ProductsPage";
 import InventoryPage from "./pages/InventoryPage";
@@ -14,14 +17,10 @@ import B2BBookingPage from "./pages/B2BBookingPage";
 import ReportsPage from "./pages/ReportsPage";
 import SettingsPage from "./pages/SettingsPage";
 
-import { Toaster } from "./components/ui/sonner";
-import { getToken } from "./lib/api";
+import AdminLayout from "./layouts/AdminLayout";
+import AgencyLayout from "./layouts/AgencyLayout";
 
-function RequireAuth({ children }) {
-  const token = getToken();
-  if (!token) return <Navigate to="/login" replace />;
-  return children;
-}
+import { Toaster } from "./components/ui/sonner";
 
 export default function App() {
   return (
@@ -29,7 +28,40 @@ export default function App() {
       <Toaster richColors />
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/unauthorized" element={<UnauthorizedPage />} />
+        <Route path="/error-context" element={<ErrorContextPage />} />
 
+        {/* Super Admin Routes */}
+        <Route
+          path="/app/admin/*"
+          element={
+            <RequireAuth roles={["super_admin"]}>
+              <AppShell />
+            </RequireAuth>
+          }
+        >
+          <Route element={<AdminLayout />}>
+            <Route path="agencies" element={<div>Acentalar (TODO)</div>} />
+            <Route path="hotels" element={<div>Oteller (TODO)</div>} />
+            <Route path="links" element={<div>Link Yönetimi (TODO)</div>} />
+          </Route>
+        </Route>
+
+        {/* Agency Routes */}
+        <Route
+          path="/app/agency/*"
+          element={
+            <RequireAuth roles={["agency_admin", "agency_agent"]}>
+              <AppShell />
+            </RequireAuth>
+          }
+        >
+          <Route element={<AgencyLayout />}>
+            <Route path="hotels" element={<div>Otellerim (TODO)</div>} />
+          </Route>
+        </Route>
+
+        {/* Legacy/Common Routes (temporary - will be role-gated later) */}
         <Route
           path="/app"
           element={

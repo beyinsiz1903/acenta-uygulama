@@ -18,6 +18,8 @@ import ReportsPage from "./pages/ReportsPage";
 import SettingsPage from "./pages/SettingsPage";
 import AgencyHotelsPage from "./pages/AgencyHotelsPage";
 import AdminLinksPage from "./pages/AdminLinksPage";
+import AdminAgenciesPage from "./pages/AdminAgenciesPage";
+import AdminHotelsPage from "./pages/AdminHotelsPage";
 
 import AdminLayout from "./layouts/AdminLayout";
 import AgencyLayout from "./layouts/AgencyLayout";
@@ -43,8 +45,8 @@ export default function App() {
           }
         >
           <Route element={<AdminLayout />}>
-            <Route path="agencies" element={<div>Acentalar (TODO)</div>} />
-            <Route path="hotels" element={<div>Oteller (TODO)</div>} />
+            <Route path="agencies" element={<AdminAgenciesPage />} />
+            <Route path="hotels" element={<AdminHotelsPage />} />
             <Route path="links" element={<AdminLinksPage />} />
           </Route>
         </Route>

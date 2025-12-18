@@ -66,6 +66,22 @@ export default function AgencyBookingDraftPage() {
       });
     } catch (err) {
       console.error("[BookingDraft] Confirm error:", err);
+      const errorDetail = err?.response?.data?.detail;
+      
+      // FAZ-3.2: Handle specific errors
+      if (errorDetail === "DRAFT_EXPIRED") {
+        toast.error("Taslak süresi doldu. Lütfen yeniden arama yapın.");
+        setTimeout(() => {
+          navigate("/app/agency/hotels");
+        }, 2000);
+        return;
+      }
+      
+      if (errorDetail?.code === "PRICE_CHANGED") {
+        toast.error(`Fiyat değişti: ${errorDetail.old_total} → ${errorDetail.new_total} ${errorDetail.currency}`);
+        return;
+      }
+      
       toast.error(apiErrorMessage(err));
     } finally {
       setConfirmLoading(false);

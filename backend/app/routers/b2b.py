@@ -19,7 +19,7 @@ def _oid_or_400(id_str: str) -> ObjectId:
         raise HTTPException(status_code=400, detail="Geçersiz id")
 
 
-@router.post("/agencies", dependencies=[Depends(require_roles(["admin"]))])
+@router.post("/agencies", dependencies=[Depends(require_roles(["super_admin"]))])
 async def create_agency(payload: AgencyIn, user=Depends(get_current_user)):
     db = await get_db()
     doc = payload.model_dump()
@@ -37,14 +37,14 @@ async def create_agency(payload: AgencyIn, user=Depends(get_current_user)):
     return serialize_doc(saved)
 
 
-@router.get("/agencies", dependencies=[Depends(require_roles(["admin"]))])
+@router.get("/agencies", dependencies=[Depends(require_roles(["super_admin"]))])
 async def list_agencies(user=Depends(get_current_user)):
     db = await get_db()
     docs = await db.agencies.find({"organization_id": user["organization_id"]}).sort("created_at", -1).to_list(200)
     return [serialize_doc(d) for d in docs]
 
 
-@router.post("/agents", dependencies=[Depends(require_roles(["admin"]))])
+@router.post("/agents", dependencies=[Depends(require_roles(["super_admin"]))])
 async def create_agent(payload: UserCreateIn, user=Depends(get_current_user)):
     db = await get_db()
     if not payload.agency_id:
@@ -63,7 +63,7 @@ async def create_agent(payload: UserCreateIn, user=Depends(get_current_user)):
         "email": payload.email,
         "name": payload.name,
         "password_hash": hash_password(payload.password),
-        "roles": list(set((payload.roles or []) + ["b2b_agent"])),
+        "roles": list(set(["agency_agent"] + (payload.roles or []))),
         "agency_id": agency_oid,
         "created_at": now_utc(),
         "updated_at": now_utc(),
@@ -75,7 +75,7 @@ async def create_agent(payload: UserCreateIn, user=Depends(get_current_user)):
     return serialize_doc(saved)
 
 
-@router.post("/book", dependencies=[Depends(require_roles(["b2b_agent"]))])
+@router.post("/book", dependencies=[Depends(require_roles(["agency_agent", "agency_admin"]))])
 async def b2b_book(payload: dict, user=Depends(get_current_user)):
     agency_id = user.get("agency_id")
     if not agency_id:

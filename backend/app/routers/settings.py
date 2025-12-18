@@ -18,20 +18,26 @@ def _oid_or_400(id_str: str) -> ObjectId:
         raise HTTPException(status_code=400, detail="Geçersiz id")
 
 
-@router.get("/users", dependencies=[Depends(require_roles(["admin"]))])
+@router.get("/users", dependencies=[Depends(require_roles(["super_admin"]))])
 async def list_users(user=Depends(get_current_user)):
     db = await get_db()
     docs = await db.users.find({"organization_id": user["organization_id"]}, {"password_hash": 0}).sort("created_at", -1).to_list(200)
     return [serialize_doc(d) for d in docs]
 
 
-@router.post("/users", dependencies=[Depends(require_roles(["admin"]))])
+@router.post("/users", dependencies=[Depends(require_roles(["super_admin"]))])
 async def create_user(payload: UserCreateIn, user=Depends(get_current_user)):
     db = await get_db()
 
     from app.auth import hash_password
 
-    roles = payload.roles or ["sales"]
+    roles = payload.roles or ["agency_agent"]
+
+    # Normalize legacy role names
+    roles = [
+        "super_admin" if r == "admin" else "agency_agent" if r in ("sales", "b2b_agent") else r
+        for r in roles
+    ]
 
     agency_oid = None
     if payload.agency_id:

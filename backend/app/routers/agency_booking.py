@@ -73,8 +73,8 @@ async def create_booking_draft(payload: BookingDraftCreateIn, user=Depends(get_c
     
     draft_id = f"draft_{uuid.uuid4().hex[:16]}"
     
-    # FAZ-3.2: Set 15-minute TTL
-    now = datetime.now(timezone.utc)
+    # FAZ-3.2: Set 15-minute TTL (UTC aware)
+    now = now_utc()
     expires_at = now + timedelta(minutes=15)
     
     # Calculate total price based on nights

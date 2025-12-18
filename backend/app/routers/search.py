@@ -9,6 +9,7 @@ from pydantic import BaseModel
 
 from app.auth import get_current_user, require_roles
 from app.db import get_db
+from app.services.hotel_availability import compute_availability
 
 router = APIRouter(prefix="/api/agency", tags=["agency-search"])
 

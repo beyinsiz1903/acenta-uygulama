@@ -24,6 +24,7 @@ from app.routers.b2b import router as b2b_router
 from app.routers.admin import router as admin_router
 from app.routers.agency import router as agency_router
 from app.routers.search import router as search_router
+from app.routers.agency_booking import router as agency_booking_router
 from app.routers.reports import router as reports_router
 from app.routers.settings import router as settings_router
 

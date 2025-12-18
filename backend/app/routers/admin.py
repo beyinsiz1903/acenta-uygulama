@@ -14,7 +14,7 @@ from app.schemas import (
 )
 from app.utils import now_utc, serialize_doc
 
-router = APIRouter(prefix="/api/admin", tags=["admin"ადგ])
+router = APIRouter(prefix="/api/admin", tags=["admin"])
 
 
 def _new_id() -> str:

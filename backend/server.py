@@ -61,6 +61,7 @@ app.include_router(b2b_router)
 app.include_router(admin_router)
 app.include_router(agency_router)
 app.include_router(search_router)
+app.include_router(agency_booking_router)
 app.include_router(reports_router)
 app.include_router(settings_router)
 

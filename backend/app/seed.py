@@ -213,6 +213,95 @@ async def ensure_seed_data() -> None:
                 await db.agency_hotel_links.insert_one(_link(agency_id, hotel_id))
 
     dg = await db.discount_groups.find_one({"organization_id": org_id, "name": "B2B İndirim"})
+
+
+    # FAZ-2.2.1: Create rooms for hotels if none exist
+    rooms_count = await db.rooms.count_documents({"organization_id": org_id})
+    if rooms_count == 0 and len(hotels) >= 3:
+        import uuid
+
+        now = now_utc()
+        rooms_to_create = []
+
+        # Hotel 1 (İstanbul): 5 standard, 3 deluxe
+        for i in range(1, 6):
+            rooms_to_create.append({
+                "_id": str(uuid.uuid4()),
+                "tenant_id": hotels[0]["_id"],
+                "organization_id": org_id,
+                "room_type": "standard",
+                "room_number": f"10{i}",
+                "base_price": 2450.0,
+                "max_occupancy": {"adults": 2, "children": 2},
+                "active": True,
+                "created_at": now,
+                "updated_at": now,
+                "created_by": DEFAULT_ADMIN_EMAIL,
+            })
+        for i in range(1, 4):
+            rooms_to_create.append({
+                "_id": str(uuid.uuid4()),
+                "tenant_id": hotels[0]["_id"],
+                "organization_id": org_id,
+                "room_type": "deluxe",
+                "room_number": f"20{i}",
+                "base_price": 3200.0,
+                "max_occupancy": {"adults": 3, "children": 1},
+                "active": True,
+                "created_at": now,
+                "updated_at": now,
+                "created_by": DEFAULT_ADMIN_EMAIL,
+            })
+
+        # Hotel 2 (Antalya): 4 standard, 2 deluxe
+        for i in range(1, 5):
+            rooms_to_create.append({
+                "_id": str(uuid.uuid4()),
+                "tenant_id": hotels[1]["_id"],
+                "organization_id": org_id,
+                "room_type": "standard",
+                "room_number": f"10{i}",
+                "base_price": 2200.0,
+                "max_occupancy": {"adults": 2, "children": 2},
+                "active": True,
+                "created_at": now,
+                "updated_at": now,
+                "created_by": DEFAULT_ADMIN_EMAIL,
+            })
+        for i in range(1, 3):
+            rooms_to_create.append({
+                "_id": str(uuid.uuid4()),
+                "tenant_id": hotels[1]["_id"],
+                "organization_id": org_id,
+                "room_type": "deluxe",
+                "room_number": f"20{i}",
+                "base_price": 2900.0,
+                "max_occupancy": {"adults": 3, "children": 1},
+                "active": True,
+                "created_at": now,
+                "updated_at": now,
+                "created_by": DEFAULT_ADMIN_EMAIL,
+            })
+
+        # Hotel 3 (İzmir): 3 standard
+        for i in range(1, 4):
+            rooms_to_create.append({
+                "_id": str(uuid.uuid4()),
+                "tenant_id": hotels[2]["_id"],
+                "organization_id": org_id,
+                "room_type": "standard",
+                "room_number": f"10{i}",
+                "base_price": 1950.0,
+                "max_occupancy": {"adults": 2, "children": 2},
+                "active": True,
+                "created_at": now,
+                "updated_at": now,
+                "created_by": DEFAULT_ADMIN_EMAIL,
+            })
+
+        await db.rooms.insert_many(rooms_to_create)
+        logger.info(f"Created {len(rooms_to_create)} rooms for demo hotels")
+
     if not dg:
         await db.discount_groups.insert_one(
             {

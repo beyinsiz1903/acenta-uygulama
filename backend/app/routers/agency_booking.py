@@ -208,18 +208,17 @@ async def confirm_booking(payload: BookingConfirmIn, user=Depends(get_current_us
         if existing_booking:
             return serialize_doc(existing_booking)
     
-    # FAZ-3.2: Price recheck (mock simulation)
-    # In real scenario, re-call search API with same params
-    # For now, simulate price check with a simple rule
+    # FAZ-3.2: Price recheck
+    # Re-fetch current price from search (mock simulation)
     draft_total = draft.get("rate_snapshot", {}).get("price", {}).get("total", 0)
     
-    # Mock: Randomly simulate price change (10% chance for testing)
-    # In real implementation, call actual search endpoint
+    # Mock: Simulate price recheck by adding 5% variance randomly
+    # In real implementation, call /search endpoint with same params
     import random
-    price_changed = random.random() < 0.0  # Set to 0.0 for now (no price changes in FAZ-3.2)
+    price_variance = random.choice([0, 0, 0, 0.05])  # 20% chance of 5% increase
     
-    if price_changed:
-        new_total = draft_total * 1.1  # Simulate 10% increase
+    if price_variance > 0:
+        new_total = round(draft_total * (1 + price_variance), 2)
         raise HTTPException(
             status_code=409,
             detail={

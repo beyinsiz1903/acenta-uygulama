@@ -40,6 +40,12 @@ class BookingDraftCreateIn(BaseModel):
     rate_plan_id: str
     guest: GuestInfoIn
     special_requests: Optional[str] = None
+    # Stay and occupancy snapshot (from search context)
+    check_in: str
+    check_out: str
+    nights: int
+    adults: int
+    children: int = 0
 
 
 @router.post("/search", dependencies=[Depends(require_roles(["agency_admin", "agency_agent"]))])

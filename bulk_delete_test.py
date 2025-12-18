@@ -139,7 +139,7 @@ class BulkDeleteTester:
                     print(f"✅ Bulk room creation successful - Created: {created}, Skipped: {skipped}, Errors: {errors}")
                     
                     if created == 3:
-                        self.created_rooms = ['DEL1', 'DEL2', 'DEL3']
+                        self.created_rooms = [f'{self.test_prefix}1', f'{self.test_prefix}2', f'{self.test_prefix}3']
                         return True
                     else:
                         print(f"⚠️ Expected 3 rooms created, got {created}")

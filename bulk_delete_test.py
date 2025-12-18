@@ -166,7 +166,7 @@ class BulkDeleteTester:
                     found_rooms = []
                     for room in rooms:
                         room_number = room.get('room_number', '')
-                        if room_number in ['DEL1', 'DEL2', 'DEL3']:
+                        if room_number in self.created_rooms:
                             found_rooms.append(room_number)
                     
                     if should_exist:

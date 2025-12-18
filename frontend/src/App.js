@@ -17,6 +17,7 @@ import B2BBookingPage from "./pages/B2BBookingPage";
 import ReportsPage from "./pages/ReportsPage";
 import SettingsPage from "./pages/SettingsPage";
 import AgencyHotelsPage from "./pages/AgencyHotelsPage";
+import AdminLinksPage from "./pages/AdminLinksPage";
 
 import AdminLayout from "./layouts/AdminLayout";
 import AgencyLayout from "./layouts/AgencyLayout";
@@ -44,7 +45,7 @@ export default function App() {
           <Route element={<AdminLayout />}>
             <Route path="agencies" element={<div>Acentalar (TODO)</div>} />
             <Route path="hotels" element={<div>Oteller (TODO)</div>} />
-            <Route path="links" element={<div>Link Yönetimi (TODO)</div>} />
+            <Route path="links" element={<AdminLinksPage />} />
           </Route>
         </Route>
 

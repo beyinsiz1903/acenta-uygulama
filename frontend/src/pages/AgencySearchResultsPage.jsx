@@ -24,14 +24,18 @@ export default function AgencySearchResultsPage() {
   function handleSelectRoom(roomTypeId, ratePlanId) {
     console.log("[SearchResults] Room selected:", { searchId, roomTypeId, ratePlanId });
     
-    // Navigate to booking placeholder
+    setLoading(true);
+    
+    // Navigate to booking draft
     const params = new URLSearchParams({
       search_id: searchId,
       room_type_id: roomTypeId,
       rate_plan_id: ratePlanId,
     });
     
-    navigate(`/app/agency/booking/new?${params.toString()}`);
+    navigate(`/app/agency/booking/new?${params.toString()}`, {
+      state: { searchData },
+    });
   }
 
   if (loading || !searchData) {

@@ -78,6 +78,8 @@ async def ensure_seed_data() -> None:
                 "percent": 10.0,
                 "created_at": now_utc(),
                 "updated_at": now_utc(),
+            }
+        )
 
     # -------------------------------
     # Phase-1 tenant demo: agencies/hotels/links + agency_admin users

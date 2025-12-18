@@ -113,12 +113,13 @@ class BulkDeleteTester:
     async def create_bulk_rooms(self) -> bool:
         """Create bulk rooms for testing"""
         try:
-            print(f"🏨 Creating bulk rooms {self.test_prefix}1-{self.test_prefix}3...")
+            # Use timestamp to ensure unique room numbers (generate once)
+            if self.test_prefix == "DEL":
+                import time
+                timestamp = str(int(time.time()))[-4:]  # Last 4 digits of timestamp
+                self.test_prefix = f"DEL{timestamp}"
             
-            # Use timestamp to ensure unique room numbers
-            import time
-            timestamp = str(int(time.time()))[-4:]  # Last 4 digits of timestamp
-            self.test_prefix = f"DEL{timestamp}"
+            print(f"🏨 Creating bulk rooms {self.test_prefix}1-{self.test_prefix}3...")
             
             bulk_data = {
                 "prefix": self.test_prefix,

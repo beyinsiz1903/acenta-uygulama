@@ -139,6 +139,22 @@
 ##     files: ["/app/backend/app/seed.py"]
 ##     needs_retesting: false
 ##     comment: "Seed artık org içinde ürün/müşteri yoksa demo veri ekliyor; demo ürün için rate plan ve 60 günlük inventory oluşturuyor. Amaç: Rezervasyon form dropdown'larının boş kalmaması ve side-drawer canlı test. Backend testleri ile doğrulandı." 
+
+## backend:
+##   - task: "Phase-1 multi-tenant omurga (agencies/hotels/agency_hotel_links) + RBAC role normalization + /api/admin + /api/agency/hotels"
+##     implemented: true
+##     working: false
+##     needs_retesting: true
+##     files:
+##       - "/app/backend/app/routers/admin.py"
+##       - "/app/backend/app/routers/agency.py"
+##       - "/app/backend/app/schemas.py"
+##       - "/app/backend/app/seed.py"
+##       - "/app/backend/app/routers/settings.py"
+##       - "/app/backend/app/routers/b2b.py"
+##       - "/app/backend/server.py"
+##     comment: "Seed admin artık super_admin. Demo: 2 acenta + 3 otel + linkler + 2 agency_admin user. RBAC: admin/sales/b2b_agent normalize. Super admin CRUD admin endpoints eklendi. Agency kullanıcıları /api/agency/hotels ile sadece active linkli otelleri görür."
+
 ## metadata:
 ##   created_by: "main_agent"
 ##   version: "1.0"

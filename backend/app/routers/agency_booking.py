@@ -231,7 +231,7 @@ async def confirm_booking(payload: BookingConfirmIn, user=Depends(get_current_us
     
     # Create confirmed booking
     booking_id = f"bkg_{uuid.uuid4().hex[:16]}"
-    confirmed_at = datetime.now(timezone.utc)
+    confirmed_at = now_utc()
     
     booking = {
         "_id": booking_id,

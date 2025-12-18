@@ -78,6 +78,138 @@ async def ensure_seed_data() -> None:
                 "percent": 10.0,
                 "created_at": now_utc(),
                 "updated_at": now_utc(),
+
+    # -------------------------------
+    # Phase-1 tenant demo: agencies/hotels/links + agency_admin users
+    # -------------------------------
+    await db.agencies.create_index([("organization_id", 1), ("name", 1)])
+    await db.hotels.create_index([("organization_id", 1), ("name", 1)])
+    await db.agency_hotel_links.create_index(
+        [("organization_id", 1), ("agency_id", 1), ("hotel_id", 1)], unique=True
+    )
+
+    # Create 2 agencies if none
+    agencies = await db.agencies.find({"organization_id": org_id}).to_list(10)
+    if len(agencies) == 0:
+        import uuid
+
+        now = now_utc()
+        a1 = {
+            "_id": str(uuid.uuid4()),
+            "organization_id": org_id,
+            "name": "Demo Acente A",
+            "is_active": True,
+            "created_at": now,
+            "updated_at": now,
+            "created_by": DEFAULT_ADMIN_EMAIL,
+            "updated_by": DEFAULT_ADMIN_EMAIL,
+        }
+        a2 = {
+            "_id": str(uuid.uuid4()),
+            "organization_id": org_id,
+            "name": "Demo Acente B",
+            "is_active": True,
+            "created_at": now,
+            "updated_at": now,
+            "created_by": DEFAULT_ADMIN_EMAIL,
+            "updated_by": DEFAULT_ADMIN_EMAIL,
+        }
+        await db.agencies.insert_many([a1, a2])
+        agencies = [a1, a2]
+
+    # Create 3 hotels if none
+    hotels = await db.hotels.find({"organization_id": org_id}).to_list(10)
+    if len(hotels) == 0:
+        import uuid
+
+        now = now_utc()
+        h1 = {
+            "_id": str(uuid.uuid4()),
+            "organization_id": org_id,
+            "name": "Demo Hotel 1",
+            "city": "İstanbul",
+            "country": "TR",
+            "active": True,
+            "created_at": now,
+            "updated_at": now,
+            "created_by": DEFAULT_ADMIN_EMAIL,
+            "updated_by": DEFAULT_ADMIN_EMAIL,
+        }
+        h2 = {
+            "_id": str(uuid.uuid4()),
+            "organization_id": org_id,
+            "name": "Demo Hotel 2",
+            "city": "Antalya",
+            "country": "TR",
+            "active": True,
+            "created_at": now,
+            "updated_at": now,
+            "created_by": DEFAULT_ADMIN_EMAIL,
+            "updated_by": DEFAULT_ADMIN_EMAIL,
+        }
+        h3 = {
+            "_id": str(uuid.uuid4()),
+            "organization_id": org_id,
+            "name": "Demo Hotel 3",
+            "city": "İzmir",
+            "country": "TR",
+            "active": True,
+            "created_at": now,
+            "updated_at": now,
+            "created_by": DEFAULT_ADMIN_EMAIL,
+            "updated_by": DEFAULT_ADMIN_EMAIL,
+        }
+        await db.hotels.insert_many([h1, h2, h3])
+        hotels = [h1, h2, h3]
+
+    # Create agency_admin users (1 per agency) if missing
+    for idx, ag in enumerate(agencies[:2]):
+        email = f"agency{idx+1}@demo.test"
+        existing_user = await db.users.find_one({"organization_id": org_id, "email": email})
+        if not existing_user:
+            await db.users.insert_one(
+                {
+                    "organization_id": org_id,
+                    "email": email,
+                    "name": f"Agency Admin {idx+1}",
+                    "password_hash": hash_password("agency123"),
+                    "roles": ["agency_admin"],
+                    "agency_id": ag["_id"],
+                    "created_at": now_utc(),
+                    "updated_at": now_utc(),
+                    "is_active": True,
+                }
+            )
+
+    # Ensure links: agency A -> hotel1+hotel2, agency B -> hotel3
+    if len(agencies) >= 2 and len(hotels) >= 3:
+        import uuid
+
+        def _link(agency_id: str, hotel_id: str):
+            return {
+                "_id": str(uuid.uuid4()),
+                "organization_id": org_id,
+                "agency_id": agency_id,
+                "hotel_id": hotel_id,
+                "active": True,
+                "created_at": now_utc(),
+                "updated_at": now_utc(),
+                "created_by": DEFAULT_ADMIN_EMAIL,
+                "updated_by": DEFAULT_ADMIN_EMAIL,
+            }
+
+        desired = [
+            (agencies[0]["_id"], hotels[0]["_id"]),
+            (agencies[0]["_id"], hotels[1]["_id"]),
+            (agencies[1]["_id"], hotels[2]["_id"]),
+        ]
+        for agency_id, hotel_id in desired:
+            existing_link = await db.agency_hotel_links.find_one(
+                {"organization_id": org_id, "agency_id": agency_id, "hotel_id": hotel_id}
+            )
+            if not existing_link:
+                await db.agency_hotel_links.insert_one(_link(agency_id, hotel_id))
+
             }
         )
 

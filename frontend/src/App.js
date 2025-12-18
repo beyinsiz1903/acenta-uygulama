@@ -16,6 +16,7 @@ import B2BPage from "./pages/B2BPage";
 import B2BBookingPage from "./pages/B2BBookingPage";
 import ReportsPage from "./pages/ReportsPage";
 import SettingsPage from "./pages/SettingsPage";
+import AgencyHotelsPage from "./pages/AgencyHotelsPage";
 
 import AdminLayout from "./layouts/AdminLayout";
 import AgencyLayout from "./layouts/AgencyLayout";
@@ -57,7 +58,7 @@ export default function App() {
           }
         >
           <Route element={<AgencyLayout />}>
-            <Route path="hotels" element={<div>Otellerim (TODO)</div>} />
+            <Route path="hotels" element={<AgencyHotelsPage />} />
           </Route>
         </Route>
 

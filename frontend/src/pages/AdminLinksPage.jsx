@@ -243,13 +243,7 @@ export default function AdminLinksPage() {
                   </div>
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground">
-                  {new Date(link.created_at).toLocaleString("tr-TR", {
-                    day: "2-digit",
-                    month: "2-digit",
-                    year: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
+                  {formatDateTime(link.created_at)}
                 </TableCell>
                 <TableCell className="text-xs text-muted-foreground">
                   {link.created_by || "-"}

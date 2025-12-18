@@ -84,7 +84,14 @@ export default function AppShell() {
     };
   }, [resSummary, sales]);
 
-  const visibleNav = nav.filter((n) => userHasRole(user, n.roles));
+  // Role-based menu (new structure)
+  const roleBasedMenu = getMenuForUser(user);
+  
+  // Legacy nav (filtered by role)
+  const visibleLegacyNav = legacyNav.filter((n) => userHasRole(user, n.roles));
+
+  // Combine both menus
+  const allMenuItems = [...roleBasedMenu, ...visibleLegacyNav];
 
   return (
     <div className="min-h-screen bg-background">

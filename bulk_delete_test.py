@@ -177,8 +177,8 @@ class BulkDeleteTester:
                     # Debug: print first few rooms to see format
                     if len(found_rooms) == 0 and should_exist:
                         print(f"   Debug: Expected rooms: {expected_rooms}")
-                        recent_rooms = [r.get('room_number', '') for r in rooms[:10] if r.get('room_number', '').startswith(self.test_prefix)]
-                        print(f"   Debug: Recent rooms with prefix {self.test_prefix}: {recent_rooms}")
+                        all_del_rooms = [r.get('room_number', '') for r in rooms if r.get('room_number', '').startswith('DEL')]
+                        print(f"   Debug: All DEL rooms found: {all_del_rooms[-10:]}")  # Last 10 DEL rooms
                     
                     if should_exist:
                         if len(found_rooms) == 3:

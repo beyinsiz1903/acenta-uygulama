@@ -48,6 +48,10 @@ class BookingDraftCreateIn(BaseModel):
     children: int = 0
 
 
+class BookingConfirmIn(BaseModel):
+    draft_id: str
+
+
 @router.post("/search", dependencies=[Depends(require_roles(["agency_admin", "agency_agent"]))])
 async def search_availability(payload: SearchRequestIn, user=Depends(get_current_user)):
     """
@@ -292,10 +296,6 @@ async def get_booking_draft(draft_id: str, user=Depends(get_current_user)):
     return serialize_doc(draft)
 
 
-class BookingConfirmIn(BaseModel):
-    draft_id: str
-
-
 @router.post("/bookings/confirm", dependencies=[Depends(require_roles(["agency_admin", "agency_agent"]))])
 async def confirm_booking(payload: BookingConfirmIn, user=Depends(get_current_user)):
     """
@@ -411,12 +411,3 @@ async def cancel_booking_draft(draft_id: str, user=Depends(get_current_user)):
     
     saved = await db.booking_drafts.find_one({"_id": draft_id})
     return serialize_doc(saved)
-
-        "agency_id": agency_id,
-        "_id": draft_id,
-    })
-    
-    if not draft:
-        raise HTTPException(status_code=404, detail="DRAFT_NOT_FOUND")
-    
-    return serialize_doc(draft)

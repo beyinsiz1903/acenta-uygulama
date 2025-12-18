@@ -143,8 +143,8 @@
 ## backend:
 ##   - task: "Phase-1 multi-tenant omurga (agencies/hotels/agency_hotel_links) + RBAC role normalization + /api/admin + /api/agency/hotels"
 ##     implemented: true
-##     working: false
-##     needs_retesting: true
+##     working: true
+##     needs_retesting: false
 ##     files:
 ##       - "/app/backend/app/routers/admin.py"
 ##       - "/app/backend/app/routers/agency.py"
@@ -153,7 +153,15 @@
 ##       - "/app/backend/app/routers/settings.py"
 ##       - "/app/backend/app/routers/b2b.py"
 ##       - "/app/backend/server.py"
-##     comment: "Seed admin artık super_admin. Demo: 2 acenta + 3 otel + linkler + 2 agency_admin user. RBAC: admin/sales/b2b_agent normalize. Super admin CRUD admin endpoints eklendi. Agency kullanıcıları /api/agency/hotels ile sadece active linkli otelleri görür."
+##     stuck_count: 0
+##     priority: "high"
+##     status_history:
+##       - working: "NA"
+##         agent: "main"
+##         comment: "Seed admin artık super_admin. Demo: 2 acenta + 3 otel + linkler + 2 agency_admin user. RBAC: admin/sales/b2b_agent normalize. Super admin CRUD admin endpoints eklendi. Agency kullanıcıları /api/agency/hotels ile sadece active linkli otelleri görür."
+##       - working: true
+##         agent: "testing"
+##         comment: "✅ PHASE-1 MULTI-TENANT TEST COMPLETE - All 15 test scenarios passed (100% success rate). Comprehensive testing completed: 1) /api/health OK 2) SUPER_ADMIN login (admin@acenta.test/admin123) with super_admin role confirmed 3) Admin endpoints working: GET /api/admin/agencies (2 agencies), GET /api/admin/hotels (3 hotels), GET /api/admin/agency-hotel-links (3 links) 4) PATCH /api/admin/agency-hotel-links/{id} active=false working and verified 5) AGENCY_ADMIN login agency1@demo.test/agency123 with agency_admin role and agency_id confirmed 6) Agency1 sees Demo Hotel 1 & 2 as expected 7) AGENCY_ADMIN login agency2@demo.test/agency123 working 8) Agency2 sees only Demo Hotel 3 as expected 9) Visibility rule working: after deactivating Agency A->Hotel 2 link, Agency1 now sees only Demo Hotel 1 10) Security working: Agency1 correctly denied admin access (403). Multi-tenant omurga, RBAC, and visibility rules all functioning perfectly."
 
 ## metadata:
 ##   created_by: "main_agent"

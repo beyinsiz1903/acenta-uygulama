@@ -19,12 +19,7 @@ export default function AgencySearchResultsPage() {
   useEffect(() => {
     console.log("[SearchResults] search_id:", searchId);
     console.log("[SearchResults] searchData from state:", searchData);
-
-    // If no searchData in location.state, show error
-    if (!searchData) {
-      setLoading(false);
-    }
-  }, [searchId]);
+  }, [searchId, searchData]);
 
   function handleSelectRoom(roomTypeId, ratePlanId) {
     console.log("[SearchResults] Room selected:", { searchId, roomTypeId, ratePlanId });

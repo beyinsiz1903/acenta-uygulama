@@ -141,6 +141,8 @@ class BulkDeleteTester:
                     
                     if created == 3:
                         self.created_rooms = [f'{self.test_prefix}1', f'{self.test_prefix}2', f'{self.test_prefix}3']
+                        # Small delay to ensure rooms are indexed
+                        await asyncio.sleep(1)
                         return True
                     else:
                         print(f"⚠️ Expected 3 rooms created, got {created}")

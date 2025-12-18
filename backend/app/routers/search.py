@@ -282,6 +282,129 @@ async def get_booking_draft(draft_id: str, user=Depends(get_current_user)):
     
     draft = await db.booking_drafts.find_one({
         "organization_id": user["organization_id"],
+
+
+
+class BookingConfirmIn(BaseModel):
+    draft_id: str
+
+
+@router.post("/bookings/confirm", dependencies=[Depends(require_roles(["agency_admin", "agency_agent"]))])
+async def confirm_booking(payload: BookingConfirmIn, user=Depends(get_current_user)):
+    """
+    FAZ-3.1: Confirm booking draft
+    Creates final booking record (no payment yet)
+    Idempotent: returns same booking if already confirmed
+    """
+    db = await get_db()
+    agency_id = user.get("agency_id")
+    
+    if not agency_id:
+        raise HTTPException(status_code=403, detail="NOT_LINKED_TO_AGENCY")
+    
+    # Get draft
+    draft = await db.booking_drafts.find_one({
+        "organization_id": user["organization_id"],
+        "agency_id": agency_id,
+        "_id": payload.draft_id,
+    })
+    
+    if not draft:
+        raise HTTPException(status_code=404, detail="DRAFT_NOT_FOUND")
+    
+    # Check if cancelled
+    if draft.get("status") == "cancelled":
+        raise HTTPException(status_code=409, detail="DRAFT_CANCELLED")
+    
+    # Idempotency: if already confirmed, return existing booking
+    if draft.get("status") == "confirmed" and draft.get("confirmed_booking_id"):
+        existing_booking = await db.bookings.find_one({"_id": draft["confirmed_booking_id"]})
+        if existing_booking:
+            return serialize_doc(existing_booking)
+    
+    # Create confirmed booking
+    booking_id = f"bkg_{uuid.uuid4().hex[:16]}"
+    confirmed_at = datetime.now(timezone.utc)
+    
+    booking = {
+        "_id": booking_id,
+        "organization_id": user["organization_id"],
+        "agency_id": agency_id,
+        "draft_id": payload.draft_id,
+        "search_id": draft.get("search_id"),
+        "hotel_id": draft["hotel_id"],
+        "hotel_name": draft.get("hotel_name"),
+        "status": "confirmed",
+        "stay": draft.get("stay"),
+        "occupancy": draft.get("occupancy"),
+        "guest": draft.get("guest"),
+        "special_requests": draft.get("special_requests"),
+        "rate_snapshot": draft.get("rate_snapshot"),
+        "confirmed_at": confirmed_at,
+        "created_at": confirmed_at,
+        "updated_at": confirmed_at,
+        "created_by": user.get("email"),
+        "payment_status": "pending",  # pending|paid|partial (FAZ-3.2)
+    }
+    
+    await db.bookings.insert_one(booking)
+    
+    # Update draft status
+    await db.booking_drafts.update_one(
+        {"_id": payload.draft_id},
+        {
+            "$set": {
+                "status": "confirmed",
+                "confirmed_booking_id": booking_id,
+                "updated_at": confirmed_at,
+            }
+        },
+    )
+    
+    saved = await db.bookings.find_one({"_id": booking_id})
+    return serialize_doc(saved)
+
+
+@router.delete("/bookings/draft/{draft_id}", dependencies=[Depends(require_roles(["agency_admin", "agency_agent"]))])
+async def cancel_booking_draft(draft_id: str, user=Depends(get_current_user)):
+    """
+    FAZ-3.1: Cancel booking draft
+    Sets status to cancelled (does not delete)
+    """
+    db = await get_db()
+    agency_id = user.get("agency_id")
+    
+    if not agency_id:
+        raise HTTPException(status_code=403, detail="NOT_LINKED_TO_AGENCY")
+    
+    # Get draft
+    draft = await db.booking_drafts.find_one({
+        "organization_id": user["organization_id"],
+        "agency_id": agency_id,
+        "_id": draft_id,
+    })
+    
+    if not draft:
+        raise HTTPException(status_code=404, detail="DRAFT_NOT_FOUND")
+    
+    # Cannot cancel confirmed draft
+    if draft.get("status") == "confirmed":
+        raise HTTPException(status_code=409, detail="DRAFT_ALREADY_CONFIRMED")
+    
+    # Update status to cancelled
+    await db.booking_drafts.update_one(
+        {"_id": draft_id},
+        {
+            "$set": {
+                "status": "cancelled",
+                "updated_at": datetime.now(timezone.utc),
+            }
+        },
+    )
+    
+    saved = await db.booking_drafts.find_one({"_id": draft_id})
+    return serialize_doc(saved)
+
         "agency_id": agency_id,
         "_id": draft_id,
     })

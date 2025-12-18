@@ -147,62 +147,6 @@ async def search_availability(payload: SearchRequestIn, user=Depends(get_current
     # Generate mock response (FAZ-2.1)
     search_id = f"srch_{uuid.uuid4().hex[:16]}"
     
-    # Mock room types and rate plans
-    mock_rooms = [
-        {
-            "room_type_id": "rt_standard",
-            "name": "Standart Oda",
-            "max_occupancy": {"adults": 2, "children": 2},
-            "inventory_left": 5,
-            "rate_plans": [
-                {
-                    "rate_plan_id": "rp_refundable",
-                    "name": "İade Edilebilir",
-                    "board": "RO",
-                    "cancellation": f"FREE_CANCEL_UNTIL_{payload.check_in}",
-                    "price": {
-                        "currency": payload.currency,
-                        "total": 2450.0 * nights,
-                        "per_night": 2450.0,
-                        "tax_included": True,
-                    },
-                },
-                {
-                    "rate_plan_id": "rp_nonrefundable",
-                    "name": "İade Edilemez (İndirimli)",
-                    "board": "RO",
-                    "cancellation": "NON_REFUNDABLE",
-                    "price": {
-                        "currency": payload.currency,
-                        "total": 2100.0 * nights,
-                        "per_night": 2100.0,
-                        "tax_included": True,
-                    },
-                },
-            ],
-        },
-        {
-            "room_type_id": "rt_deluxe",
-            "name": "Deluxe Oda",
-            "max_occupancy": {"adults": 3, "children": 1},
-            "inventory_left": 2,
-            "rate_plans": [
-                {
-                    "rate_plan_id": "rp_refundable",
-                    "name": "İade Edilebilir",
-                    "board": "BB",
-                    "cancellation": f"FREE_CANCEL_UNTIL_{payload.check_in}",
-                    "price": {
-                        "currency": payload.currency,
-                        "total": 3200.0 * nights,
-                        "per_night": 3200.0,
-                        "tax_included": True,
-                    },
-                },
-            ],
-        },
-    ]
-    
     response = {
         "search_id": search_id,
         "hotel": {
@@ -221,7 +165,7 @@ async def search_availability(payload: SearchRequestIn, user=Depends(get_current
             "children": payload.occupancy.children,
         },
         "generated_at": datetime.now(timezone.utc).isoformat(),
-        "rooms": mock_rooms,
+        "rooms": rooms_response,  # Real DB data!
     }
     
     return response

@@ -171,6 +171,7 @@ export default function AgencySearchResultsPage() {
                   <Button
                     onClick={() => handleSelectRoom(room.room_type_id, ratePlan.rate_plan_id)}
                     className="ml-4"
+                    disabled={loading}
                   >
                     Seç
                   </Button>

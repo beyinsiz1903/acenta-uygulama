@@ -19,11 +19,24 @@ export default function AgencyBookingConfirmedPage() {
   useEffect(() => {
     console.log("[BookingConfirmed] booking_id:", bookingId);
     if (!booking) {
-      // In FAZ-3.2, add GET /api/agency/bookings/:id endpoint
-      setLoading(false);
-      setError("Rezervasyon detayı henüz endpoint'ten yüklenemiyor (FAZ-3.2)");
+      loadBooking();
     }
   }, [bookingId]);
+
+  async function loadBooking() {
+    setLoading(true);
+    setError("");
+    try {
+      const resp = await api.get(`/agency/bookings/${bookingId}`);
+      console.log("[BookingConfirmed] Loaded:", resp.data);
+      setBooking(resp.data);
+    } catch (err) {
+      console.error("[BookingConfirmed] Load error:", err);
+      setError(apiErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  }
 
   if (loading) {
     return (

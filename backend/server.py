@@ -713,6 +713,10 @@ class Room(BaseModel):
     bed_type: Optional[str] = None
     images: List[str] = []  # stored paths/urls
 
+    # Soft delete
+    is_active: bool = True
+    deleted_at: Optional[str] = None
+
     current_booking_id: Optional[str] = None
     last_cleaned: Optional[datetime] = None
     notes: Optional[str] = None

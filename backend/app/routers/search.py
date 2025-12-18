@@ -220,9 +220,11 @@ async def create_booking_draft(payload: BookingDraftCreateIn, user=Depends(get_c
     
     draft_id = f"draft_{uuid.uuid4().hex[:16]}"
     
+    # Calculate total price based on nights
+    base_price_per_night = 2450.0 if payload.rate_plan_id == "rp_refundable" else 2100.0
+    total_price = base_price_per_night * payload.nights
+    
     # Mock rate snapshot (in real scenario, re-fetch from gateway)
-    # Note: We need to calculate nights from check_in/check_out later
-    # For now, mock single night pricing
     mock_rate_snapshot = {
         "room_type_id": payload.room_type_id,
         "room_type_name": "Standart Oda" if payload.room_type_id == "rt_standard" else "Deluxe Oda",
@@ -231,8 +233,8 @@ async def create_booking_draft(payload: BookingDraftCreateIn, user=Depends(get_c
         "board": "RO",
         "price": {
             "currency": "TRY",
-            "total": 2450.0 if payload.rate_plan_id == "rp_refundable" else 2100.0,
-            "per_night": 2450.0 if payload.rate_plan_id == "rp_refundable" else 2100.0,
+            "total": total_price,
+            "per_night": base_price_per_night,
             "tax_included": True,
         },
         "cancellation": "FREE_CANCEL" if payload.rate_plan_id == "rp_refundable" else "NON_REFUNDABLE",
@@ -246,6 +248,15 @@ async def create_booking_draft(payload: BookingDraftCreateIn, user=Depends(get_c
         "hotel_id": payload.hotel_id,
         "hotel_name": hotel.get("name"),
         "status": "draft",
+        "stay": {
+            "check_in": payload.check_in,
+            "check_out": payload.check_out,
+            "nights": payload.nights,
+        },
+        "occupancy": {
+            "adults": payload.adults,
+            "children": payload.children,
+        },
         "guest": payload.guest.model_dump(),
         "special_requests": payload.special_requests,
         "rate_snapshot": mock_rate_snapshot,

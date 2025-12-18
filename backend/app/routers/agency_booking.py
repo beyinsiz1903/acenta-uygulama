@@ -187,6 +187,10 @@ async def confirm_booking(payload: BookingConfirmIn, user=Depends(get_current_us
     # FAZ-3.2: Check expiration
     if draft.get("expires_at"):
         expires_at = draft["expires_at"]
+        # Handle timezone-naive datetimes from MongoDB
+        if expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=timezone.utc)
+        
         if datetime.now(timezone.utc) > expires_at:
             raise HTTPException(status_code=410, detail="DRAFT_EXPIRED")
     

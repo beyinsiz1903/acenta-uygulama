@@ -100,27 +100,36 @@ export default function AgencyHotelDetailPage() {
     }
 
     setSearchLoading(true);
-    console.log("[HotelDetail] Search context:", {
-      hotel_id: hotelId,
-      hotel_name: hotel?.name,
-      agency_id: user?.agency_id,
-      ...formData,
-    });
+    
+    try {
+      const searchPayload = {
+        hotel_id: hotelId,
+        check_in: formData.check_in,
+        check_out: formData.check_out,
+        occupancy: {
+          adults: formData.adults,
+          children: formData.children,
+        },
+        currency: "TRY",
+      };
 
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+      console.log("[HotelDetail] Search API call:", searchPayload);
 
-    // Navigate to search results with context
-    const params = new URLSearchParams({
-      hotel_id: hotelId,
-      check_in: formData.check_in,
-      check_out: formData.check_out,
-      adults: formData.adults.toString(),
-      children: formData.children.toString(),
-    });
+      const resp = await api.post("/agency/search", searchPayload);
+      const searchData = resp.data;
 
-    navigate(`/app/agency/search?${params.toString()}`);
-    setSearchLoading(false);
+      console.log("[HotelDetail] Search response:", searchData);
+
+      // Navigate to search results with search_id
+      navigate(`/app/agency/search?search_id=${searchData.search_id}`, {
+        state: { searchData },
+      });
+    } catch (err) {
+      console.error("[HotelDetail] Search error:", err);
+      setFormError(apiErrorMessage(err));
+    } finally {
+      setSearchLoading(false);
+    }
   }
 
   // Loading state

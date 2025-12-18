@@ -148,19 +148,14 @@ async def get_booking_draft(draft_id: str, user=Depends(get_current_user)):
     if not draft:
         raise HTTPException(status_code=404, detail="DRAFT_NOT_FOUND")
     
-    # Check expiration
+    # FAZ-3.2: Check expiration (normalize timezone)
     if draft.get("expires_at"):
         expires_at = draft["expires_at"]
-        now = datetime.now(timezone.utc)
+        now = now_utc()
         
-        # Handle timezone-naive datetimes from MongoDB
+        # Normalize timezone-naive datetimes from MongoDB
         if hasattr(expires_at, 'tzinfo') and expires_at.tzinfo is None:
             expires_at = expires_at.replace(tzinfo=timezone.utc)
-        
-        # Debug log
-        import logging
-        logger = logging.getLogger("acenta-master")
-        logger.info(f"TTL Check: expires_at={expires_at}, now={now}, expired={now > expires_at}")
         
         if now > expires_at:
             raise HTTPException(status_code=410, detail="DRAFT_EXPIRED")

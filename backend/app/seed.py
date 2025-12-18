@@ -47,12 +47,26 @@ async def ensure_seed_data() -> None:
                 "email": DEFAULT_ADMIN_EMAIL,
                 "name": "Admin",
                 "password_hash": hash_password(DEFAULT_ADMIN_PASSWORD),
-                "roles": ["admin"],
+                "roles": ["super_admin"],
                 "created_at": now_utc(),
                 "updated_at": now_utc(),
                 "is_active": True,
             }
         )
+    else:
+        # Normalize legacy role -> new role names
+        roles = set(admin.get("roles") or [])
+        if "admin" in roles:
+            roles.discard("admin")
+            roles.add("super_admin")
+        if "sales" in roles:
+            roles.discard("sales")
+            roles.add("agency_agent")
+        if "b2b_agent" in roles:
+            roles.discard("b2b_agent")
+            roles.add("agency_agent")
+        if roles != set(admin.get("roles") or []):
+            await db.users.update_one({"_id": admin["_id"]}, {"$set": {"roles": list(roles), "updated_at": now_utc()}})
 
     # Create a default commission+discount group for quick setup
     cg = await db.commission_groups.find_one({"organization_id": org_id, "name": "Standart Komisyon"})

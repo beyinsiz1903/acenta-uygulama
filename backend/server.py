@@ -30,6 +30,7 @@ from app.routers.settings import router as settings_router
 from app.routers.hotel import router as hotel_router
 from app.routers.settlements import hotel_router as hotel_settlements_router
 from app.routers.settlements import agency_router as agency_settlements_router
+from app.routers.bookings import router as bookings_router
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / ".env")
@@ -70,6 +71,7 @@ app.include_router(settings_router)
 app.include_router(hotel_router)
 app.include_router(hotel_settlements_router)
 app.include_router(agency_settlements_router)
+app.include_router(bookings_router)
 
 
 @app.get("/api/health")

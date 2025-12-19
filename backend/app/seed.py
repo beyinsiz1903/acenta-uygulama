@@ -426,6 +426,54 @@ async def ensure_seed_data() -> None:
 
         await db.rate_plans.insert_many(plans_to_create)
         await db.rate_periods.insert_many(periods_to_create)
+
+
+    # FAZ-2.3: Create stop-sell rules + channel allocations if none exist
+    stop_sell_count = await db.stop_sell_rules.count_documents({"organization_id": org_id})
+    if stop_sell_count == 0 and len(hotels) >= 1:
+        import uuid
+
+        now = now_utc()
+
+        # Stop-sell for Hotel 1 deluxe (New Year period)
+        await db.stop_sell_rules.insert_one({
+            "_id": str(uuid.uuid4()),
+            "tenant_id": hotels[0]["_id"],
+            "organization_id": org_id,
+            "room_type": "deluxe",
+            "start_date": "2025-12-30",
+            "end_date": "2026-01-02",
+            "is_active": True,
+            "reason": "Yılbaşı bakım",
+            "created_at": now,
+            "updated_at": now,
+        })
+
+        logger.info("Created demo stop-sell rule")
+
+    allocation_count = await db.channel_allocations.count_documents({"organization_id": org_id})
+    if allocation_count == 0 and len(hotels) >= 1:
+        import uuid
+
+        now = now_utc()
+
+        # Allocation for Hotel 1 standard (agency_extranet gets 2 rooms)
+        await db.channel_allocations.insert_one({
+            "_id": str(uuid.uuid4()),
+            "tenant_id": hotels[0]["_id"],
+            "organization_id": org_id,
+            "room_type": "standard",
+            "channel": "agency_extranet",
+            "start_date": "2026-03-01",
+            "end_date": "2026-03-31",
+            "allotment": 2,
+            "is_active": True,
+            "created_at": now,
+            "updated_at": now,
+        })
+
+        logger.info("Created demo channel allocation")
+
         logger.info(f"Created {len(plans_to_create)} rate plans and {len(periods_to_create)} rate periods")
 
 

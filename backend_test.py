@@ -1545,6 +1545,26 @@ class FAZ6CommissionTester:
         if not self.hotel_id:
             self.log("❌ No hotel_id available for search")
             return False
+        
+        # Check if current agency is linked to the target hotel
+        if hasattr(self, 'target_agency_id') and hasattr(self, 'agency_id'):
+            if self.agency_id != self.target_agency_id:
+                self.log(f"⚠️  Current agency ({self.agency_id}) != target agency ({self.target_agency_id})")
+                self.log(f"   Looking for a hotel linked to current agency...")
+                
+                # Find a hotel linked to current agency
+                for link in getattr(self, 'all_links', []):
+                    if link.get('agency_id') == self.agency_id and link.get('active'):
+                        self.hotel_id = link.get('hotel_id')
+                        self.target_agency_id = self.agency_id  # Update target
+                        commission_type = link.get('commission_type', 'percent')
+                        commission_value = link.get('commission_value', 10.0)
+                        self.log(f"   Found linked hotel: {self.hotel_id}")
+                        self.log(f"   Commission: {commission_type}={commission_value}")
+                        break
+                else:
+                    self.log(f"❌ No hotel linked to current agency")
+                    return False
             
         search_data = {
             "hotel_id": self.hotel_id,

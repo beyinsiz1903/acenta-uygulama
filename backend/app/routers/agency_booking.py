@@ -285,8 +285,6 @@ async def confirm_booking(payload: BookingConfirmIn, request: Request, user=Depe
         "commission_amount": round(commission_amount, 2),
 
 
-    await db.bookings.update_one({"_id": booking_id}, {"$set": {"check_in_date": booking.get("check_in_date"), "check_out_date": booking.get("check_out_date")}})
-
     # FAZ-7: data hygiene - parsed date fields on booking (UTC midnight)
     stay = booking.get("stay") or {}
     if stay.get("check_in"):

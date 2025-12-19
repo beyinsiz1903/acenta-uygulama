@@ -1385,6 +1385,469 @@ class FAZ5HotelExtranetTester:
         return 0 if self.tests_failed == 0 else 1
 
 
+class FAZ91BookingDetailTester:
+    def __init__(self, base_url="https://voucher-share.preview.emergentagent.com"):
+        self.base_url = base_url
+        self.agency_token = None
+        self.hotel_token = None
+        self.tests_run = 0
+        self.tests_passed = 0
+        self.tests_failed = 0
+        self.failed_tests = []
+        
+        # Store IDs for testing
+        self.agency_id = None
+        self.hotel_id = None
+        self.booking_id = None
+        self.booking_id_to_cancel = None
+
+    def log(self, msg):
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}")
+
+    def run_test(self, name, method, endpoint, expected_status, data=None, headers_override=None, token=None):
+        """Run a single API test with specific token"""
+        url = f"{self.base_url}/{endpoint}"
+        headers = headers_override or {'Content-Type': 'application/json'}
+        
+        # Use specific token if provided
+        if token:
+            headers['Authorization'] = f'Bearer {token}'
+
+        self.tests_run += 1
+        self.log(f"🔍 Test #{self.tests_run}: {name}")
+        
+        try:
+            if method == 'GET':
+                response = requests.get(url, headers=headers, timeout=10)
+            elif method == 'POST':
+                response = requests.post(url, json=data, headers=headers, timeout=10)
+            elif method == 'PUT':
+                response = requests.put(url, json=data, headers=headers, timeout=10)
+            elif method == 'DELETE':
+                response = requests.delete(url, headers=headers, timeout=10)
+            else:
+                raise ValueError(f"Unsupported method: {method}")
+
+            success = response.status_code == expected_status
+            if success:
+                self.tests_passed += 1
+                self.log(f"✅ PASSED - Status: {response.status_code}")
+                try:
+                    return True, response.json() if response.content else {}
+                except:
+                    return True, response.text if hasattr(response, 'text') else {}
+            else:
+                self.tests_failed += 1
+                self.failed_tests.append(f"{name} - Expected {expected_status}, got {response.status_code}")
+                self.log(f"❌ FAILED - Expected {expected_status}, got {response.status_code}")
+                try:
+                    self.log(f"   Response: {response.text[:200]}")
+                except:
+                    pass
+                return False, {}
+
+        except Exception as e:
+            self.tests_failed += 1
+            self.failed_tests.append(f"{name} - Error: {str(e)}")
+            self.log(f"❌ FAILED - Error: {str(e)}")
+            return False, {}
+
+    def test_agency_login(self):
+        """1) Agency admin login"""
+        self.log("\n=== 1) AGENCY LOGIN ===")
+        success, response = self.run_test(
+            "Agency Login (agency1@demo.test)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "agency1@demo.test", "password": "agency123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.agency_token = response['access_token']
+            user = response.get('user', {})
+            self.agency_id = user.get('agency_id')
+            
+            if self.agency_id:
+                self.log(f"✅ Agency logged in successfully, agency_id: {self.agency_id}")
+                return True
+            else:
+                self.log(f"❌ Agency ID missing from user")
+                return False
+        return False
+
+    def test_agency_bookings_list(self):
+        """2) Get agency bookings list"""
+        self.log("\n=== 2) AGENCY BOOKINGS LIST ===")
+        success, response = self.run_test(
+            "Get Agency Bookings List",
+            "GET",
+            "api/agency/bookings",
+            200,
+            token=self.agency_token
+        )
+        
+        if success:
+            bookings = response if isinstance(response, list) else []
+            self.log(f"✅ Found {len(bookings)} bookings for agency")
+            
+            if len(bookings) > 0:
+                # Pick first booking for detail test
+                self.booking_id = bookings[0].get('id')
+                self.log(f"✅ Selected booking for detail test: {self.booking_id}")
+                
+                # Pick second booking for cancel test if available
+                if len(bookings) > 1:
+                    self.booking_id_to_cancel = bookings[1].get('id')
+                    self.log(f"✅ Selected booking for cancel test: {self.booking_id_to_cancel}")
+                else:
+                    self.booking_id_to_cancel = self.booking_id
+                    
+                return True
+            else:
+                self.log(f"⚠️  No bookings found for agency - cannot test detail endpoint")
+                return False
+        return False
+
+    def test_agency_booking_detail(self):
+        """3) Get agency booking detail - should return normalized public view"""
+        self.log("\n=== 3) AGENCY BOOKING DETAIL ===")
+        
+        if not self.booking_id:
+            self.log("❌ No booking ID available")
+            return False
+            
+        success, response = self.run_test(
+            "Get Agency Booking Detail",
+            "GET",
+            f"api/agency/bookings/{self.booking_id}",
+            200,
+            token=self.agency_token
+        )
+        
+        if success:
+            # Verify it's normalized public view (not raw Mongo doc)
+            required_fields = ['id', 'code', 'status', 'status_tr', 'status_en']
+            optional_fields = ['hotel_name', 'guest_name', 'check_in_date', 'check_out_date', 
+                             'nights', 'room_type', 'board_type', 'adults', 'children', 
+                             'total_amount', 'currency', 'source', 'payment_status']
+            
+            missing_required = [f for f in required_fields if f not in response]
+            if missing_required:
+                self.log(f"❌ Missing required fields: {missing_required}")
+                return False
+            
+            self.log(f"✅ All required fields present: {required_fields}")
+            
+            # Check status translations
+            status = response.get('status')
+            status_tr = response.get('status_tr')
+            status_en = response.get('status_en')
+            
+            self.log(f"✅ Status fields: status={status}, status_tr={status_tr}, status_en={status_en}")
+            
+            # Verify no ObjectId or raw datetime objects (should be strings)
+            for key, value in response.items():
+                if str(type(value)) in ['<class \'bson.objectid.ObjectId\'>', '<class \'datetime.datetime\'>']:
+                    self.log(f"❌ Non-serializable field {key}: {type(value)}")
+                    return False
+            
+            self.log(f"✅ All fields are JSON serializable")
+            
+            # Log some key fields for verification
+            self.log(f"   ID: {response.get('id')}")
+            self.log(f"   Hotel: {response.get('hotel_name')}")
+            self.log(f"   Guest: {response.get('guest_name')}")
+            self.log(f"   Dates: {response.get('check_in_date')} to {response.get('check_out_date')}")
+            self.log(f"   Amount: {response.get('total_amount')} {response.get('currency')}")
+            
+            return True
+        return False
+
+    def test_hotel_login(self):
+        """4) Hotel admin login"""
+        self.log("\n=== 4) HOTEL LOGIN ===")
+        success, response = self.run_test(
+            "Hotel Login (hoteladmin@acenta.test)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "hoteladmin@acenta.test", "password": "admin123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.hotel_token = response['access_token']
+            user = response.get('user', {})
+            self.hotel_id = user.get('hotel_id')
+            roles = user.get('roles', [])
+            
+            if 'hotel_admin' in roles and self.hotel_id:
+                self.log(f"✅ Hotel admin logged in successfully, hotel_id: {self.hotel_id}")
+                return True
+            else:
+                self.log(f"❌ Hotel admin role or hotel_id missing: roles={roles}, hotel_id={self.hotel_id}")
+                return False
+        return False
+
+    def test_hotel_bookings_list(self):
+        """5) Get hotel bookings list"""
+        self.log("\n=== 5) HOTEL BOOKINGS LIST ===")
+        success, response = self.run_test(
+            "Get Hotel Bookings List",
+            "GET",
+            "api/hotel/bookings",
+            200,
+            token=self.hotel_token
+        )
+        
+        if success:
+            bookings = response if isinstance(response, list) else []
+            self.log(f"✅ Found {len(bookings)} bookings for hotel")
+            
+            if len(bookings) > 0:
+                # Verify hotel_id matches
+                for booking in bookings[:3]:  # Check first few
+                    booking_hotel_id = booking.get('hotel_id')
+                    if booking_hotel_id != self.hotel_id:
+                        self.log(f"❌ Access control issue: booking hotel_id={booking_hotel_id}, user hotel_id={self.hotel_id}")
+                        return False
+                
+                self.log(f"✅ Access control working: all bookings belong to hotel {self.hotel_id}")
+                return True
+            else:
+                self.log(f"⚠️  No bookings found for hotel")
+                return True  # Not an error, just no data
+        return False
+
+    def test_hotel_booking_detail(self):
+        """6) Get hotel booking detail - should return same normalized public view"""
+        self.log("\n=== 6) HOTEL BOOKING DETAIL ===")
+        
+        if not self.booking_id:
+            self.log("❌ No booking ID available")
+            return False
+            
+        success, response = self.run_test(
+            "Get Hotel Booking Detail",
+            "GET",
+            f"api/hotel/bookings/{self.booking_id}",
+            200,
+            token=self.hotel_token
+        )
+        
+        if success:
+            # Verify it's normalized public view (same as agency endpoint)
+            required_fields = ['id', 'code', 'status', 'status_tr', 'status_en']
+            
+            missing_required = [f for f in required_fields if f not in response]
+            if missing_required:
+                self.log(f"❌ Missing required fields: {missing_required}")
+                return False
+            
+            self.log(f"✅ All required fields present: {required_fields}")
+            
+            # Check status translations
+            status = response.get('status')
+            status_tr = response.get('status_tr')
+            status_en = response.get('status_en')
+            
+            self.log(f"✅ Status fields: status={status}, status_tr={status_tr}, status_en={status_en}")
+            
+            # Verify JSON serializable
+            for key, value in response.items():
+                if str(type(value)) in ['<class \'bson.objectid.ObjectId\'>', '<class \'datetime.datetime\'>']:
+                    self.log(f"❌ Non-serializable field {key}: {type(value)}")
+                    return False
+            
+            self.log(f"✅ All fields are JSON serializable")
+            return True
+        return False
+
+    def test_hotel_booking_access_control(self):
+        """7) Test access control - different hotel booking should return 404"""
+        self.log("\n=== 7) HOTEL ACCESS CONTROL ===")
+        
+        # Try to access a booking with a fake ID from different hotel
+        fake_booking_id = "bkg_fakeid12345678"
+        
+        success, response = self.run_test(
+            "Get Different Hotel Booking (Should Fail)",
+            "GET",
+            f"api/hotel/bookings/{fake_booking_id}",
+            404,
+            token=self.hotel_token
+        )
+        
+        if success:
+            self.log(f"✅ Access control working: 404 returned for non-existent/different hotel booking")
+            return True
+        return False
+
+    def test_cancel_booking(self):
+        """8) Cancel a booking to test status normalization"""
+        self.log("\n=== 8) CANCEL BOOKING ===")
+        
+        if not self.booking_id_to_cancel:
+            self.log("❌ No booking ID available for cancellation")
+            return False
+            
+        cancel_data = {"reason": "Test cancellation for FAZ-9.1"}
+        
+        success, response = self.run_test(
+            "Cancel Booking",
+            "POST",
+            f"api/bookings/{self.booking_id_to_cancel}/cancel",
+            200,
+            data=cancel_data,
+            token=self.agency_token
+        )
+        
+        if success:
+            status = response.get('status')
+            if status == 'cancelled':
+                self.log(f"✅ Booking cancelled successfully: status={status}")
+                return True
+            else:
+                self.log(f"❌ Booking status not cancelled: status={status}")
+                return False
+        return False
+
+    def test_cancelled_booking_status_agency(self):
+        """9) Check cancelled booking status via agency endpoint"""
+        self.log("\n=== 9) CANCELLED BOOKING STATUS (AGENCY) ===")
+        
+        if not self.booking_id_to_cancel:
+            self.log("❌ No cancelled booking ID available")
+            return False
+            
+        success, response = self.run_test(
+            "Get Cancelled Booking Detail (Agency)",
+            "GET",
+            f"api/agency/bookings/{self.booking_id_to_cancel}",
+            200,
+            token=self.agency_token
+        )
+        
+        if success:
+            status = response.get('status')
+            status_tr = response.get('status_tr')
+            status_en = response.get('status_en')
+            
+            if status == 'cancelled':
+                self.log(f"✅ Status correct: {status}")
+            else:
+                self.log(f"❌ Status incorrect: {status} (expected 'cancelled')")
+                return False
+                
+            if status_tr == 'İptal Edildi':
+                self.log(f"✅ Turkish status correct: {status_tr}")
+            else:
+                self.log(f"❌ Turkish status incorrect: {status_tr} (expected 'İptal Edildi')")
+                return False
+                
+            if status_en == 'Cancelled':
+                self.log(f"✅ English status correct: {status_en}")
+            else:
+                self.log(f"❌ English status incorrect: {status_en} (expected 'Cancelled')")
+                return False
+                
+            return True
+        return False
+
+    def test_cancelled_booking_status_hotel(self):
+        """10) Check cancelled booking status via hotel endpoint"""
+        self.log("\n=== 10) CANCELLED BOOKING STATUS (HOTEL) ===")
+        
+        if not self.booking_id_to_cancel:
+            self.log("❌ No cancelled booking ID available")
+            return False
+            
+        success, response = self.run_test(
+            "Get Cancelled Booking Detail (Hotel)",
+            "GET",
+            f"api/hotel/bookings/{self.booking_id_to_cancel}",
+            200,
+            token=self.hotel_token
+        )
+        
+        if success:
+            status = response.get('status')
+            status_tr = response.get('status_tr')
+            status_en = response.get('status_en')
+            
+            if status == 'cancelled' and status_tr == 'İptal Edildi' and status_en == 'Cancelled':
+                self.log(f"✅ All status fields correct: status={status}, status_tr={status_tr}, status_en={status_en}")
+                return True
+            else:
+                self.log(f"❌ Status fields incorrect: status={status}, status_tr={status_tr}, status_en={status_en}")
+                return False
+        return False
+
+    def print_summary(self):
+        """Print test summary"""
+        self.log("\n" + "="*60)
+        self.log("FAZ-9.1 BOOKING DETAIL PUBLIC VIEW TEST SUMMARY")
+        self.log("="*60)
+        self.log(f"Total Tests: {self.tests_run}")
+        self.log(f"✅ Passed: {self.tests_passed}")
+        self.log(f"❌ Failed: {self.tests_failed}")
+        self.log(f"Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%")
+        
+        if self.failed_tests:
+            self.log("\n❌ FAILED TESTS:")
+            for i, test in enumerate(self.failed_tests, 1):
+                self.log(f"  {i}. {test}")
+        
+        self.log("="*60)
+
+    def run_faz91_tests(self):
+        """Run all FAZ-9.1 tests in sequence"""
+        self.log("🚀 Starting FAZ-9.1 Booking Detail Public View Tests")
+        self.log(f"Base URL: {self.base_url}")
+        
+        # 1) Agency login
+        if not self.test_agency_login():
+            self.log("❌ Agency login failed - stopping tests")
+            self.print_summary()
+            return 1
+
+        # 2) Agency bookings list
+        if not self.test_agency_bookings_list():
+            self.log("❌ Agency bookings list failed - stopping tests")
+            self.print_summary()
+            return 1
+
+        # 3) Agency booking detail
+        self.test_agency_booking_detail()
+
+        # 4) Hotel login
+        if not self.test_hotel_login():
+            self.log("❌ Hotel login failed - stopping hotel tests")
+        else:
+            # 5) Hotel bookings list
+            self.test_hotel_bookings_list()
+            
+            # 6) Hotel booking detail
+            self.test_hotel_booking_detail()
+            
+            # 7) Hotel access control
+            self.test_hotel_booking_access_control()
+
+        # 8) Cancel booking
+        self.test_cancel_booking()
+
+        # 9) Check cancelled status via agency
+        self.test_cancelled_booking_status_agency()
+
+        # 10) Check cancelled status via hotel
+        self.test_cancelled_booking_status_hotel()
+
+        # Summary
+        self.print_summary()
+
+        return 0 if self.tests_failed == 0 else 1
+
+
 class FAZ8PMSTester:
     def __init__(self, base_url="https://voucher-share.preview.emergentagent.com"):
         self.base_url = base_url

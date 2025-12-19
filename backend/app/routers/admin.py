@@ -105,6 +105,9 @@ async def create_link(payload: AgencyHotelLinkCreateIn, user=Depends(get_current
         "agency_id": payload.agency_id,
         "hotel_id": payload.hotel_id,
         "active": payload.active,
+        # FAZ-6: Commission settings on link
+        "commission_type": payload.commission_type,
+        "commission_value": payload.commission_value,
         "created_at": now_utc(),
         "updated_at": now_utc(),
         "created_by": user.get("email"),
@@ -140,6 +143,11 @@ async def patch_link(link_id: str, payload: AgencyHotelLinkPatchIn, user=Depends
     }
     if payload.active is not None:
         update["active"] = payload.active
+
+    if payload.commission_type is not None:
+        update["commission_type"] = payload.commission_type
+    if payload.commission_value is not None:
+        update["commission_value"] = payload.commission_value
 
     await db.agency_hotel_links.update_one({"_id": link_id}, {"$set": update})
     saved = await db.agency_hotel_links.find_one({"_id": link_id})

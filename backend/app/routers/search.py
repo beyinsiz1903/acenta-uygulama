@@ -86,6 +86,7 @@ async def search_availability(payload: SearchRequestIn, user=Depends(get_current
         check_in=payload.check_in,
         check_out=payload.check_out,
         organization_id=user["organization_id"],
+        channel="agency_extranet",  # FAZ-2.3: Channel context
     )
     
     # Generate search_id

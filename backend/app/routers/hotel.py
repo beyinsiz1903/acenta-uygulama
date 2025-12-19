@@ -11,7 +11,7 @@ from app.auth import get_current_user, require_roles
 from app.db import get_db
 from app.services.audit import write_audit_log
 from app.services.events import write_booking_event
-from app.utils import date_to_utc_midnight, now_utc, serialize_doc
+from app.utils import date_to_utc_midnight, now_utc, serialize_doc, build_booking_public_view
 
 router = APIRouter(prefix="/api/hotel", tags=["hotel"])
 

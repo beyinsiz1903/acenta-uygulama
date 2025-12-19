@@ -117,7 +117,7 @@
 ## backend:
 ##   - task: "FAZ-7 Operasyonel sağlamlık: audit log + search cache (5dk TTL) + booking events outbox + date hygiene"
 ##     implemented: true
-##     working: "NA"
+##     working: true
 ##     file: "/app/backend/app/services/audit.py, /app/backend/app/services/events.py, /app/backend/app/services/search_cache.py, /app/backend/app/routers/audit.py, /app/backend/app/routers/search.py, /app/backend/app/routers/agency_booking.py, /app/backend/app/routers/bookings.py, /app/backend/app/routers/hotel.py, /app/backend/app/routers/admin.py, /app/backend/app/utils.py, /app/backend/app/seed.py, /app/backend/server.py"
 ##     stuck_count: 0
 ##     priority: "high"

@@ -256,6 +256,24 @@ async def create_stop_sell(payload: StopSellIn, request: Request, user=Depends(g
         "updated_at": now,
         "created_by": user.get("email"),
         "updated_by": user.get("email"),
+
+    # FAZ-7: data hygiene (parsed dates)
+    doc["start_date_dt"] = date_to_utc_midnight(payload.start_date)
+
+    await write_audit_log(
+        db,
+        organization_id=user["organization_id"],
+        actor={"actor_type": "user", "email": user.get("email"), "roles": user.get("roles")},
+        request=request,
+        action="stop_sell.create",
+        target_type="stop_sell",
+        target_id=doc["_id"],
+        before=None,
+        after=doc,
+    )
+
+    doc["end_date_dt"] = date_to_utc_midnight(payload.end_date)
+
     }
 
     await db.stop_sell_rules.insert_one(doc)
@@ -274,20 +292,37 @@ async def update_stop_sell(rule_id: str, payload: StopSellIn, request: Request, 
     _validate_range(payload.start_date, payload.end_date)
 
     now = now_utc()
+
+    # FAZ-7: data hygiene (parsed dates)
+    update_doc = {
+        "room_type": payload.room_type,
+        "start_date": payload.start_date,
+        "end_date": payload.end_date,
+        "reason": payload.reason,
+        "is_active": bool(payload.is_active),
+        "start_date_dt": date_to_utc_midnight(payload.start_date),
+        "end_date_dt": date_to_utc_midnight(payload.end_date),
+        "updated_at": now,
+        "updated_by": user.get("email"),
+    }
+
     res = await db.stop_sell_rules.update_one(
         {"organization_id": user["organization_id"], "tenant_id": hotel_id, "_id": rule_id},
-        {
-            "$set": {
-                "room_type": payload.room_type,
-                "start_date": payload.start_date,
-                "end_date": payload.end_date,
-                "reason": payload.reason,
-                "is_active": bool(payload.is_active),
-                "updated_at": now,
-                "updated_by": user.get("email"),
-            }
-        },
+        {"$set": update_doc},
     )
+
+    await write_audit_log(
+        db,
+        organization_id=user["organization_id"],
+        actor={"actor_type": "user", "email": user.get("email"), "roles": user.get("roles")},
+        request=request,
+        action="stop_sell.update",
+        target_type="stop_sell",
+        target_id=rule_id,
+        before=await db.stop_sell_rules.find_one({"_id": rule_id}),
+        after=update_doc,
+    )
+
 
     if res.matched_count == 0:
         raise HTTPException(status_code=404, detail="STOP_SELL_NOT_FOUND")
@@ -303,6 +338,19 @@ async def update_stop_sell(rule_id: str, payload: StopSellIn, request: Request, 
 async def delete_stop_sell(rule_id: str, request: Request, user=Depends(get_current_user)):
     db = await get_db()
     hotel_id = _ensure_hotel_id(user)
+
+    await write_audit_log(
+        db,
+        organization_id=user["organization_id"],
+        actor={"actor_type": "user", "email": user.get("email"), "roles": user.get("roles")},
+        request=request,
+        action="stop_sell.delete",
+        target_type="stop_sell",
+        target_id=rule_id,
+        before=None,
+        after=None,
+    )
+
 
     res = await db.stop_sell_rules.delete_one(
         {"organization_id": user["organization_id"], "tenant_id": hotel_id, "_id": rule_id}
@@ -336,7 +384,25 @@ async def list_allocations(user=Depends(get_current_user)):
     db = await get_db()
     hotel_id = _ensure_hotel_id(user)
 
+
+    # FAZ-7: data hygiene (parsed dates)
+    doc["start_date_dt"] = date_to_utc_midnight(payload.start_date)
+    doc["end_date_dt"] = date_to_utc_midnight(payload.end_date)
+
     docs = await db.channel_allocations.find(
+
+    await write_audit_log(
+        db,
+        organization_id=user["organization_id"],
+        actor={"actor_type": "user", "email": user.get("email"), "roles": user.get("roles")},
+        request=request,
+        action="allocation.create",
+        target_type="allocation",
+        target_id=doc["_id"],
+        before=None,
+        after=doc,
+    )
+
         {"organization_id": user["organization_id"], "tenant_id": hotel_id, "channel": "agency_extranet"}
     ).sort("updated_at", -1).to_list(500)
 
@@ -382,6 +448,19 @@ async def create_allocation(payload: AllocationIn, request: Request, user=Depend
     "/allocations/{allocation_id}",
     dependencies=[Depends(require_roles(["hotel_admin"]))],
 )
+
+    update_doc = {
+        "room_type": payload.room_type,
+        "start_date": payload.start_date,
+        "end_date": payload.end_date,
+        "allotment": int(payload.allotment),
+        "is_active": bool(payload.is_active),
+        "start_date_dt": date_to_utc_midnight(payload.start_date),
+        "end_date_dt": date_to_utc_midnight(payload.end_date),
+        "updated_at": now,
+        "updated_by": user.get("email"),
+    }
+
 async def update_allocation(allocation_id: str, payload: AllocationIn, request: Request, user=Depends(get_current_user)):
     db = await get_db()
     hotel_id = _ensure_hotel_id(user)
@@ -395,21 +474,24 @@ async def update_allocation(allocation_id: str, payload: AllocationIn, request: 
     res = await db.channel_allocations.update_one(
         {
             "organization_id": user["organization_id"],
+
+    await write_audit_log(
+        db,
+        organization_id=user["organization_id"],
+        actor={"actor_type": "user", "email": user.get("email"), "roles": user.get("roles")},
+        request=request,
+        action="allocation.update",
+        target_type="allocation",
+        target_id=allocation_id,
+        before=await db.channel_allocations.find_one({"_id": allocation_id}),
+        after=update_doc,
+    )
+
             "tenant_id": hotel_id,
             "channel": "agency_extranet",
             "_id": allocation_id,
         },
-        {
-            "$set": {
-                "room_type": payload.room_type,
-                "start_date": payload.start_date,
-                "end_date": payload.end_date,
-                "allotment": int(payload.allotment),
-                "is_active": bool(payload.is_active),
-                "updated_at": now,
-                "updated_by": user.get("email"),
-            }
-        },
+        {"$set": update_doc},
     )
 
     if res.matched_count == 0:
@@ -434,6 +516,19 @@ async def delete_allocation(allocation_id: str, request: Request, user=Depends(g
             "channel": "agency_extranet",
             "_id": allocation_id,
         }
+    )
+
+
+    await write_audit_log(
+        db,
+        organization_id=user["organization_id"],
+        actor={"actor_type": "user", "email": user.get("email"), "roles": user.get("roles")},
+        request=request,
+        action="allocation.delete",
+        target_type="allocation",
+        target_id=allocation_id,
+        before=None,
+        after=None,
     )
 
     if res.deleted_count == 0:

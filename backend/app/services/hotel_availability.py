@@ -21,6 +21,7 @@ async def compute_availability(
     check_in: str,
     check_out: str,
     organization_id: str,
+    channel: str = "agency_extranet",  # FAZ-2.3: Channel parameter
 ) -> dict[str, Any]:
     """
     FAZ-2.2.1: Compute real availability from rooms + bookings + blocks

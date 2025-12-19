@@ -1756,6 +1756,7 @@ class FAZ6CommissionTester:
                         
                         # For testing purposes, we'll simulate a successful booking
                         # In real scenario, frontend would handle price change and retry
+                        import uuid
                         self.booking_id = f"bkg_simulated_{uuid.uuid4().hex[:8]}"
                         self.log(f"✅ Simulated booking ID for further tests: {self.booking_id}")
                         return True

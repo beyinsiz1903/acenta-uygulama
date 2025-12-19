@@ -80,13 +80,8 @@ async def list_hotel_bookings(
         query["agency_id"] = agency_id
 
     # Date filter (overlap). Bookings store stay.check_in/check_out as YYYY-MM-DD strings.
-    if date_from:
-        _parse_date(date_from)
-    if date_to:
-        _parse_date(date_to)
-
     if date_from and date_to:
-        # overlap: booking.check_in <= date_to AND booking.check_out >= date_from
+        # overlap (checkout exclusive stored, but filter is coarse)
         query["stay.check_in"] = {"$lte": date_to}
         query["stay.check_out"] = {"$gte": date_from}
     elif date_from:

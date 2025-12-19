@@ -227,15 +227,14 @@ async def ensure_seed_data() -> None:
             existing_link = await db.agency_hotel_links.find_one(
                 {"organization_id": org_id, "agency_id": agency_id, "hotel_id": hotel_id}
             )
+            if not existing_link:
+                await db.agency_hotel_links.insert_one(_link(agency_id, hotel_id))
 
         # FAZ-6: backfill commission fields for existing links
         await db.agency_hotel_links.update_many(
             {"organization_id": org_id, "commission_type": {"$exists": False}},
             {"$set": {"commission_type": "percent", "commission_value": 10.0, "updated_at": now_utc()}},
         )
-
-            if not existing_link:
-                await db.agency_hotel_links.insert_one(_link(agency_id, hotel_id))
 
     dg = await db.discount_groups.find_one({"organization_id": org_id, "name": "B2B İndirim"})
 

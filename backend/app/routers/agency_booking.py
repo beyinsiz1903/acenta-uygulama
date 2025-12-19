@@ -313,6 +313,25 @@ async def cancel_booking_draft(draft_id: str, user=Depends(get_current_user)):
     return serialize_doc(saved)
 
 
+@router.get("", dependencies=[Depends(require_roles(["agency_admin", "agency_agent"]))])
+async def list_agency_bookings(user=Depends(get_current_user)):
+    """
+    FAZ-4: List all confirmed bookings for this agency
+    """
+    db = await get_db()
+    agency_id = user.get("agency_id")
+    
+    if not agency_id:
+        raise HTTPException(status_code=403, detail="NOT_LINKED_TO_AGENCY")
+    
+    bookings = await db.bookings.find({
+        "organization_id": user["organization_id"],
+        "agency_id": agency_id,
+    }).sort("created_at", -1).to_list(500)
+    
+    return [serialize_doc(b) for b in bookings]
+
+
 @router.get("/{booking_id}", dependencies=[Depends(require_roles(["agency_admin", "agency_agent"]))])
 async def get_booking(booking_id: str, user=Depends(get_current_user)):
     """

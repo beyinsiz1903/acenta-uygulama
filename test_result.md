@@ -128,6 +128,20 @@
 ##         comment: "Audit log gerçek eklendi (diff/light snapshot): booking confirm/cancel + hotel booking note/guest-note/cancel-request + stop-sell CRUD + allocation CRUD + agency-hotel link create/update. Origin: ip+user-agent+path+X-App-Version (+X-Request-Id opsiyonel). Search cache: /api/agency/search canonical payload ile Mongo cache + TTL index (5dk). Events: booking.created/updated/cancelled outbox (booking_events) delivered=false. Data hygiene: date_to_utc_midnight helper; booking confirm’de check_in_date/check_out_date; stop-sell/allocation create/update’de *_dt alanları." 
 
 ##     needs_retesting: false
+
+## frontend:
+##   - task: "FAZ-7 Admin Audit Logs UI (/app/admin/audit)"
+##     implemented: true
+##     working: "NA"
+##     file: "/app/frontend/src/pages/AdminAuditLogsPage.jsx, /app/frontend/src/config/menuConfig.js, /app/frontend/src/App.js, /app/frontend/src/lib/api.js, /app/frontend/src/utils/appVersion.js"
+##     stuck_count: 0
+##     priority: "high"
+##     needs_retesting: false
+##     status_history:
+##       - working: "NA"
+##         agent: "main"
+##         comment: "Super admin için /app/admin/audit sayfası eklendi: filtre bar (action/target_type/target_id/actor_email/range/limit) + tablo + detay drawer (origin+diff+meta JSON) + Copy as JSON. Menüye ‘Audit Logs’ eklendi. Axios artık X-App-Version header gönderiyor (package.json version). Backend /api/audit/logs actor_email ve range (24h/7d) filtrelerini destekliyor." 
+
 ##     status_history:
 ##       - working: "NA"
 ##         agent: "main"

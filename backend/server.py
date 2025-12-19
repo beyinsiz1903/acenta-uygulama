@@ -65,6 +65,7 @@ app.include_router(search_router)
 app.include_router(agency_booking_router)
 app.include_router(reports_router)
 app.include_router(settings_router)
+app.include_router(hotel_router)
 
 
 @app.get("/api/health")

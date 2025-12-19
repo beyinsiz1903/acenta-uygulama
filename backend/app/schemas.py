@@ -202,6 +202,14 @@ class AgencyHotelLinkCreateIn(BaseModel):
     hotel_id: str
     active: bool = True
 
+    # FAZ-6: Commission settings
+    commission_type: str = "percent"  # percent|fixed_per_booking
+    commission_value: float = 0.0
+
 
 class AgencyHotelLinkPatchIn(BaseModel):
     active: Optional[bool] = None
+
+    # FAZ-6: Commission settings
+    commission_type: Optional[str] = None
+    commission_value: Optional[float] = None

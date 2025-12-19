@@ -67,6 +67,8 @@ async def list_hotel_bookings(
     db = await get_db()
     hotel_id = _ensure_hotel_id(user)
 
+    date_from, date_to = _normalize_date_to_inclusive_overlap(date_from, date_to)
+
     query: dict[str, Any] = {
         "organization_id": user["organization_id"],
         "hotel_id": hotel_id,

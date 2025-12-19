@@ -230,6 +230,23 @@ async def confirm_booking(payload: BookingConfirmIn, user=Depends(get_current_us
             },
         )
     
+    # FAZ-6: Commission snapshot from link (gross=rate_snapshot.price.total)
+    link = await db.agency_hotel_links.find_one({
+        "organization_id": user["organization_id"],
+        "agency_id": agency_id,
+        "hotel_id": draft["hotel_id"],
+    })
+    commission_type = (link or {}).get("commission_type") or "percent"
+    commission_value = (link or {}).get("commission_value") or 0.0
+
+    from app.services.commission import compute_commission, month_from_check_in, create_financial_entry
+
+    gross_total = float(draft.get("rate_snapshot", {}).get("price", {}).get("total", 0) or 0)
+    currency = draft.get("rate_snapshot", {}).get("price", {}).get("currency", "TRY")
+    commission_type_norm, commission_amount = compute_commission(gross_total, commission_type, commission_value)
+    net_amount = round(gross_total - commission_amount, 2)
+    month = month_from_check_in((draft.get("stay") or {}).get("check_in") or "")
+
     # Create confirmed booking
     booking_id = f"bkg_{uuid.uuid4().hex[:16]}"
     confirmed_at = now_utc()

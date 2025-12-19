@@ -298,6 +298,31 @@ async def confirm_booking(payload: BookingConfirmIn, request: Request, user=Depe
 
     # FAZ-7: events + audit
     await write_booking_event(
+
+    # FAZ-7: events + audit
+    await write_booking_event(
+        db,
+        organization_id=user["organization_id"],
+        event_type="booking.created",
+        booking_id=booking_id,
+        hotel_id=draft["hotel_id"],
+        agency_id=agency_id,
+        payload={"channel": "agency_extranet"},
+    )
+
+    await write_audit_log(
+        db,
+        organization_id=user["organization_id"],
+        actor={"actor_type": "user", "email": user.get("email"), "roles": user.get("roles")},
+        request=request,
+        action="booking.confirm",
+        target_type="booking",
+        target_id=booking_id,
+        before=before_draft,
+        after=booking,
+        meta={"draft_id": payload.draft_id},
+    )
+
         db,
         organization_id=user["organization_id"],
         event_type="booking.created",

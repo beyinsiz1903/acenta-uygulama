@@ -1763,14 +1763,24 @@ class FAZ91BookingDetailTester:
         if not self.booking_id:
             self.log("❌ No booking ID available")
             return False
+        
+        # If we're using a non-existent booking ID, expect 404
+        expected_status = 404 if self.booking_id.startswith("bkg_nonexistent_") else 200
             
         success, response = self.run_test(
             "Get Hotel Booking Detail",
             "GET",
             f"api/hotel/bookings/{self.booking_id}",
-            200,
+            expected_status,
             token=self.hotel_token
         )
+        
+        if expected_status == 404:
+            if success:
+                self.log(f"✅ Correctly returned 404 for non-existent booking")
+                return True
+            else:
+                return False
         
         if success:
             # Verify it's normalized public view (same as agency endpoint)

@@ -138,6 +138,20 @@
 ##     priority: "high"
 ##     needs_retesting: false
 ##     status_history:
+
+## backend:
+##   - task: "FAZ-8 PMS entegrasyonuna hazırlık: Connect Layer + PmsClient adapter + source=local|pms işaretleme"
+##     implemented: true
+##     working: "NA"
+##     file: "/app/backend/app/services/pms_client.py, /app/backend/app/services/mock_pms.py, /app/backend/app/services/connect_layer.py, /app/backend/app/services/pms_booking_mapper.py, /app/backend/app/services/source_utils.py, /app/backend/app/routers/search.py, /app/backend/app/routers/agency_booking.py, /app/backend/app/routers/bookings.py, /app/backend/app/schemas.py, /app/backend/app/routers/rateplans.py, /app/backend/app/routers/inventory.py, /app/backend/app/services/inventory.py, /app/backend/app/routers/hotel.py, /app/backend/app/seed.py"
+##     stuck_count: 0
+##     priority: "high"
+##     needs_retesting: true
+##     status_history:
+##       - working: "NA"
+##         agent: "main"
+##         comment: "PMS adapter interface çıkarıldı (PmsClient.quote/create_booking/cancel_booking). MockPmsClient local DB üzerinden quote & idempotent create (draft_id idempotency_key) + NO_INVENTORY/PRICE_CHANGED mapping simülasyonu yapıyor. Connect Layer (connect_layer.py) error mapping standardı uyguluyor (503 PMS_UNAVAILABLE, 409 NO_INVENTORY/PRICE_CHANGED). /api/agency/search artık connect_layer.quote kullanıyor (cache devam). /api/agency/bookings/confirm artık önce connect_layer.create_booking çağırıyor; PMS succeed olmadan DB’ye booking yazmıyor (fallback yok). Booking doc’a pms_booking_id + pms_status + source="pms" yazılıyor. Cancel endpoint PMS cancel’i önce çağırıyor. Rate plan & inventory upsert path’lerinde source alanı desteklendi (default local). stop_sell_rules ve channel_allocations create’lerinde source=local eklendi. Seed’de ilgili indexler eklendi." 
+
 ##       - working: "NA"
 ##         agent: "main"
 ##         comment: "Super admin için /app/admin/audit sayfası eklendi: filtre bar (action/target_type/target_id/actor_email/range/limit) + tablo + detay drawer (origin+diff+meta JSON) + Copy as JSON. Menüye ‘Audit Logs’ eklendi. Axios artık X-App-Version header gönderiyor (package.json version). Backend /api/audit/logs actor_email ve range (24h/7d) filtrelerini destekliyor." 

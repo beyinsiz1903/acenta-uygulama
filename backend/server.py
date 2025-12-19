@@ -337,6 +337,24 @@ async def get_cm_actor(
         "actor_type": api_key.get('actor_type', 'agency'),
         "actor_id": api_key['id'],
         "origin": CMOrigin.api.value,
+
+# CM partner webhook URL (push)
+CM_PARTNER_WEBHOOK_URL = os.environ.get('CM_PARTNER_WEBHOOK_URL', 'https://agency.syroce.com/webhooks/cm')
+
+
+async def cm_push_event(event: dict):
+    """Push CM events to partner webhook.
+
+    Best-effort delivery (no outbox/retry yet).
+    """
+    try:
+        import httpx
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            await client.post(CM_PARTNER_WEBHOOK_URL, json=event)
+    except Exception as e:
+        # never fail core flow
+        print(f"CM webhook push failed: {e}")
+
         "key_name": api_key.get('name'),
     }
 

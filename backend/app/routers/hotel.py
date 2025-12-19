@@ -252,13 +252,16 @@ async def create_stop_sell(payload: StopSellIn, request: Request, user=Depends(g
         "end_date": payload.end_date,
         "reason": payload.reason,
         "is_active": bool(payload.is_active),
+        # FAZ-7: data hygiene (parsed dates)
+        "start_date_dt": date_to_utc_midnight(payload.start_date),
+        "end_date_dt": date_to_utc_midnight(payload.end_date),
         "created_at": now,
         "updated_at": now,
         "created_by": user.get("email"),
         "updated_by": user.get("email"),
+    }
 
-    # FAZ-7: data hygiene (parsed dates)
-    doc["start_date_dt"] = date_to_utc_midnight(payload.start_date)
+    await db.stop_sell_rules.insert_one(doc)
 
     await write_audit_log(
         db,
@@ -272,11 +275,6 @@ async def create_stop_sell(payload: StopSellIn, request: Request, user=Depends(g
         after=doc,
     )
 
-    doc["end_date_dt"] = date_to_utc_midnight(payload.end_date)
-
-    }
-
-    await db.stop_sell_rules.insert_one(doc)
     saved = await db.stop_sell_rules.find_one({"_id": doc["_id"]})
     return serialize_doc(saved)
 
@@ -339,6 +337,19 @@ async def delete_stop_sell(rule_id: str, request: Request, user=Depends(get_curr
     db = await get_db()
     hotel_id = _ensure_hotel_id(user)
 
+    before = await db.stop_sell_rules.find_one(
+        {"organization_id": user["organization_id"], "tenant_id": hotel_id, "_id": rule_id}
+    )
+    if not before:
+        raise HTTPException(status_code=404, detail="STOP_SELL_NOT_FOUND")
+
+    res = await db.stop_sell_rules.delete_one(
+        {"organization_id": user["organization_id"], "tenant_id": hotel_id, "_id": rule_id}
+    )
+
+    if res.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="STOP_SELL_NOT_FOUND")
+
     await write_audit_log(
         db,
         organization_id=user["organization_id"],
@@ -347,17 +358,9 @@ async def delete_stop_sell(rule_id: str, request: Request, user=Depends(get_curr
         action="stop_sell.delete",
         target_type="stop_sell",
         target_id=rule_id,
-        before=None,
+        before=before,
         after=None,
     )
-
-
-    res = await db.stop_sell_rules.delete_one(
-        {"organization_id": user["organization_id"], "tenant_id": hotel_id, "_id": rule_id}
-    )
-
-    if res.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="STOP_SELL_NOT_FOUND")
 
     return {"ok": True}
 

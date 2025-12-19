@@ -249,3 +249,16 @@
 ##     message: "✅ HOTEL EXTRANET PARTIAL RE-TEST COMPLETE - Düzeltilen konular başarıyla test edildi (4/4 test senaryosu PASS). TEMEL BULGULAR: 1) LOGIN PASS: hoteladmin@acenta.test/admin123 giriş başarılı, otomatik /app/hotel/bookings yönlendirme çalışıyor 2) STOP-SELL PASS: Yeni kayıt oluşturma çalışıyor, silme işlemi optimistic UI update ile anında listeden kalkıyor ve reload sonrası geri gelmiyor 3) ALLOCATION PASS: Yeni kayıt oluşturma çalışıyor, silme işlemi optimistic UI update ile anında listeden kalkıyor 4) SESSION/401 PASS: Test süresince hiç 401 hatası gözlemlenmedi, session yönetimi stabil. Minor: Console'da nested button warning'i mevcut (UI component structure), ancak functionality etkilenmiyor. Tüm düzeltilen konular production-ready."
 ##   - agent: "testing"
 ##     message: "✅ FAZ-6 COMMISSION & SETTLEMENTS TEST COMPLETE - All 15 test scenarios passed with 100% success rate. CRITICAL FUNCTIONALITY VERIFIED: 1) Super admin authentication working (admin@acenta.test/admin123) 2) Agency-hotel links with commission settings found (percent=10.0%) 3) Agency authentication working (agency1@demo.test/agency123) 4) Search availability working with proper hotel linking 5) Booking draft creation successful 6) Booking confirmation with automatic commission calculation (gross=4200, commission=420, net=3780) - all calculations verified correct 7) Hotel settlements API working (hotel admin sees only own hotel data) 8) Agency settlements API working (shows totals: gross=16800, commission=1680, net=15120, count=6) 9) CSV exports working for both hotel and agency 10) Booking cancellation and reversal working (status=cancelled, commission_reversed=true, settlement entries updated). Commission and settlement system is production-ready."
+
+## frontend:
+  - task: "FAZ-6 Mutabakat UI smoke test"
+    implemented: true
+    working: false
+    file: "/app/frontend/src/pages/AgencySettlementsPage.jsx, /app/frontend/src/pages/HotelSettlementsPage.jsx, /app/frontend/src/config/menuConfig.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "FAZ-6 MUTABAKAT UI SMOKE TEST COMPLETED - MIXED RESULTS. AGENCY SIDE FULLY FUNCTIONAL: ✅ Login successful (agency1@demo.test/agency123), ✅ Mutabakat menu item visible in agency menu, ✅ Agency settlements page loads correctly with proper title, ✅ Month filtering working (2026-03 input and Filtrele button functional), ✅ Table displays data (1 settlement row with hotel data), ✅ All agency functionality production-ready. HOTEL SIDE HAS CRITICAL ISSUES: ✅ Login successful (hoteladmin@acenta.test/admin123), ❌ Hotel Mutabakat menu item NOT FOUND in hotel menu, ❌ Navigation to /app/hotel/settlements redirects back to login page (authentication/authorization issue), ❌ Hotel settlements page inaccessible. ROOT CAUSE: Hotel admin user lacks proper permissions or hotel role configuration issue preventing access to settlements functionality. CSV exports also failing due to authentication token not being passed to new tabs (affects both sides but API endpoints work when called with proper auth headers)."

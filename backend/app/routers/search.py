@@ -105,73 +105,25 @@ async def search_availability(payload: SearchRequestIn, user=Depends(get_current
     if payload.occupancy.adults < 1:
         raise HTTPException(status_code=422, detail="MINIMUM_1_ADULT")
     
-    # FAZ-2.2.1: Compute REAL availability from DB
-    availability = await compute_availability(
-        hotel_id=payload.hotel_id,
-        check_in=payload.check_in,
-        check_out=payload.check_out,
-        organization_id=user["organization_id"],
-        channel="agency_extranet",  # FAZ-2.3: Channel context
-    )
-    
-    # PMS-like response already includes search_id; ensure exists
-    search_id = response.get("search_id") or f"srch_{uuid.uuid4().hex[:16]}"
-    response["search_id"] = search_id
-    
-    # Map availability to gateway format
-    rooms_response = []
-    
-    for room_type, avail_data in availability.items():
-        if avail_data["available_rooms"] <= 0:
-            continue  # Skip if no availability
-        
-        # Room type ID
-        room_type_id = f"rt_{room_type}"
-        room_type_name = room_type.title() + " Oda"
-        
-        # Max occupancy (from first room of this type - can be enhanced)
-        max_occupancy = {"adults": 2, "children": 2}  # Default
-        
-        # FAZ-2.2.2: Get rates from rate_pricing service
-        rate_plans_list = await compute_rate_for_stay(
-            tenant_id=payload.hotel_id,
-            room_type=room_type,
-            check_in=payload.check_in,
-            check_out=payload.check_out,
-            nights=nights,
-            organization_id=user["organization_id"],
-            currency=payload.currency,
-        )
-        
-        # Fallback: If no rate plans matched, use base_price
-        if not rate_plans_list:
-            per_night = avail_data.get("avg_base_price", 0)
-            total_price = per_night * nights
-            
-            rate_plans_list = [
-                {
-                    "rate_plan_id": "rp_base",
-                    "rate_plan_name": "Base Rate",
-                    "board": "RO",
-                    "cancellation": "FREE_CANCEL",
-                    "price": {
-                        "currency": payload.currency,
-                        "total": round(total_price, 2),
-                        "per_night": round(per_night, 2),
-                        "tax_included": True,
-                    },
-                }
-            ]
-        
-        rooms_response.append({
-            "room_type_id": room_type_id,
-            "name": room_type_name,
-            "max_occupancy": max_occupancy,
-            "inventory_left": avail_data["available_rooms"],
-            "rate_plans": rate_plans_list,
-        })
+    # FAZ-8: PMS Connect Layer quote() (mock adapter for now)
+    from app.services.connect_layer import quote
 
-    # Response comes from connect layer
+    quote_resp = await quote(
+        organization_id=user["organization_id"],
+        channel="agency_extranet",
+        payload={
+            "hotel_id": payload.hotel_id,
+            "check_in": payload.check_in,
+            "check_out": payload.check_out,
+            "occupancy": payload.occupancy.model_dump(),
+            "currency": payload.currency,
+        },
+    )
+
+    # Keep existing response contract for frontend
+    search_id = quote_resp.get("search_id") or f"srch_{uuid.uuid4().hex[:16]}"
+    response = {
+        "search_id": search_id,
         "hotel": {
             "id": hotel["_id"],
             "name": hotel.get("name"),
@@ -181,14 +133,15 @@ async def search_availability(payload: SearchRequestIn, user=Depends(get_current
         "stay": {
             "check_in": payload.check_in,
             "check_out": payload.check_out,
-            "nights": nights,
+            "nights": int(quote_resp.get("nights") or nights),
         },
         "occupancy": {
             "adults": payload.occupancy.adults,
             "children": payload.occupancy.children,
         },
         "generated_at": datetime.now(timezone.utc).isoformat(),
-        "rooms": rooms_response,  # Real DB data!
+        "rooms": quote_resp.get("rooms") or [],
+        "source": quote_resp.get("source") or "pms",
     }
 
     # FAZ-7: store cache (5 min TTL)

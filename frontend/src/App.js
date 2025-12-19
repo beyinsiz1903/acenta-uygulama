@@ -11,6 +11,7 @@ import ErrorContextPage from "./pages/ErrorContextPage";
 import AdminAgenciesPage from "./pages/AdminAgenciesPage";
 import AdminHotelsPage from "./pages/AdminHotelsPage";
 import AdminLinksPage from "./pages/AdminLinksPage";
+import AdminAuditLogsPage from "./pages/AdminAuditLogsPage";
 
 // Agency pages
 import AgencyHotelsPage from "./pages/AgencyHotelsPage";
@@ -68,6 +69,7 @@ export default function App() {
             <Route path="agencies" element={<AdminAgenciesPage />} />
             <Route path="hotels" element={<AdminHotelsPage />} />
             <Route path="links" element={<AdminLinksPage />} />
+            <Route path="audit" element={<AdminAuditLogsPage />} />
           </Route>
         </Route>
 

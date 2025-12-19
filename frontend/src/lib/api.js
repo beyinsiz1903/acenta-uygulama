@@ -37,6 +37,17 @@ api.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+
+  // FAZ-7: app version for audit origin
+  try {
+    // lazy import to avoid circular deps issues
+    // eslint-disable-next-line global-require
+    const { APP_VERSION } = require("../utils/appVersion");
+    config.headers["X-App-Version"] = APP_VERSION;
+  } catch {
+    // ignore
+  }
+
   return config;
 });
 

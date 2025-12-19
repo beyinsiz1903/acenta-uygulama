@@ -23,8 +23,8 @@ def _oid_or_400(id_str: str) -> ObjectId:
 async def upsert(payload: InventoryUpsertIn, user=Depends(get_current_user)):
     try:
         doc = payload.model_dump()
-    doc["source"] = doc.get("source") or "local"
-    result = await upsert_inventory(user["organization_id"], user.get("email"), doc)
+        doc["source"] = doc.get("source") or "local"
+        result = await upsert_inventory(user["organization_id"], user.get("email"), doc)
     except ValueError:
         raise HTTPException(status_code=400, detail="Geçersiz veri")
     return result
@@ -34,8 +34,8 @@ async def upsert(payload: InventoryUpsertIn, user=Depends(get_current_user)):
 async def bulk_upsert(payload: InventoryBulkUpsertIn, user=Depends(get_current_user)):
     try:
         doc = payload.model_dump()
-    doc["source"] = doc.get("source") or "local"
-    result = await bulk_upsert_inventory(user["organization_id"], user.get("email"), doc)
+        doc["source"] = doc.get("source") or "local"
+        result = await bulk_upsert_inventory(user["organization_id"], user.get("email"), doc)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     return result

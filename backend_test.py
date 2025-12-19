@@ -2627,14 +2627,29 @@ class FAZ7AuditCacheEventsTester:
         if success:
             self.log(f"✅ Booking cancelled: {self.booking_id}")
             
-            # Check audit logs for booking.cancel action
+            # Login as super admin to check audit logs
             success, response = self.run_test(
-                "Check Audit Logs for Booking Cancel",
-                "GET",
-                f"api/audit/logs?action=booking.cancel&limit=10",
+                "Super Admin Login for Cancel Check",
+                "POST",
+                "api/auth/login",
                 200,
-                token=self.super_admin_token or self.agency_token
+                data={"email": "admin@acenta.test", "password": "admin123"},
+                headers_override={'Content-Type': 'application/json'}
             )
+            
+            if success and 'access_token' in response:
+                super_admin_token = response['access_token']
+                
+                # Check audit logs for booking.cancel action
+                success, response = self.run_test(
+                    "Check Audit Logs for Booking Cancel",
+                    "GET",
+                    f"api/audit/logs?action=booking.cancel&limit=10",
+                    200,
+                    token=super_admin_token
+                )
+            else:
+                success = False
             
             if success:
                 logs = response

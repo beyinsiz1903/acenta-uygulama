@@ -321,6 +321,8 @@ async def create_stop_sell(payload: StopSellIn, request: Request, user=Depends(g
         "end_date": payload.end_date,
         "reason": payload.reason,
         "is_active": bool(payload.is_active),
+        # FAZ-8
+        "source": "local",
         # FAZ-7: data hygiene (parsed dates)
         "start_date_dt": date_to_utc_midnight(payload.start_date),
         "end_date_dt": date_to_utc_midnight(payload.end_date),
@@ -490,6 +492,8 @@ async def create_allocation(payload: AllocationIn, request: Request, user=Depend
         "end_date_dt": date_to_utc_midnight(payload.end_date),
         "allotment": int(payload.allotment),
         "is_active": bool(payload.is_active),
+        # FAZ-8
+        "source": "local",
         "created_at": now,
         "updated_at": now,
         "created_by": user.get("email"),

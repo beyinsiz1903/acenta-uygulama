@@ -27,6 +27,7 @@ from app.routers.search import router as search_router
 from app.routers.agency_booking import router as agency_booking_router
 from app.routers.reports import router as reports_router
 from app.routers.settings import router as settings_router
+from app.routers.hotel import router as hotel_router
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / ".env")

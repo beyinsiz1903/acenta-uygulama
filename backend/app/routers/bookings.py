@@ -88,6 +88,15 @@ async def cancel_booking(booking_id: str, payload: BookingCancelIn, request: Req
             hotel_id=str(booking.get("hotel_id")),
             entry_type="reversal",
             month=month,
+            currency=currency,
+            gross_amount=-gross_amount,
+            commission_amount=-commission_amount,
+            net_amount=-net_amount,
+            source_status="cancelled",
+            created_at=now,
+        )
+
+    updated = await db.bookings.find_one({"_id": booking_id})
 
     # FAZ-7: event outbox + audit
     await write_booking_event(
@@ -113,13 +122,4 @@ async def cancel_booking(booking_id: str, payload: BookingCancelIn, request: Req
         meta={"reason": payload.reason},
     )
 
-            currency=currency,
-            gross_amount=-gross_amount,
-            commission_amount=-commission_amount,
-            net_amount=-net_amount,
-            source_status="cancelled",
-            created_at=now,
-        )
-
-    updated = await db.bookings.find_one({"_id": booking_id})
     return serialize_doc(updated)

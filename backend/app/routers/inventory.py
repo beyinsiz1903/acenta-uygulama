@@ -33,7 +33,9 @@ async def upsert(payload: InventoryUpsertIn, user=Depends(get_current_user)):
 @router.post("/bulk_upsert", dependencies=[Depends(get_current_user)])
 async def bulk_upsert(payload: InventoryBulkUpsertIn, user=Depends(get_current_user)):
     try:
-        result = await bulk_upsert_inventory(user["organization_id"], user.get("email"), payload.model_dump())
+        doc = payload.model_dump()
+    doc["source"] = doc.get("source") or "local"
+    result = await bulk_upsert_inventory(user["organization_id"], user.get("email"), doc)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     return result

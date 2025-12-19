@@ -449,19 +449,6 @@ async def create_allocation(payload: AllocationIn, request: Request, user=Depend
     "/allocations/{allocation_id}",
     dependencies=[Depends(require_roles(["hotel_admin"]))],
 )
-
-    update_doc = {
-        "room_type": payload.room_type,
-        "start_date": payload.start_date,
-        "end_date": payload.end_date,
-        "allotment": int(payload.allotment),
-        "is_active": bool(payload.is_active),
-        "start_date_dt": date_to_utc_midnight(payload.start_date),
-        "end_date_dt": date_to_utc_midnight(payload.end_date),
-        "updated_at": now,
-        "updated_by": user.get("email"),
-    }
-
 async def update_allocation(allocation_id: str, payload: AllocationIn, request: Request, user=Depends(get_current_user)):
     db = await get_db()
     hotel_id = _ensure_hotel_id(user)

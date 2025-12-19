@@ -1385,11 +1385,630 @@ class FAZ5HotelExtranetTester:
         return 0 if self.tests_failed == 0 else 1
 
 
+class FAZ6CommissionTester:
+    def __init__(self, base_url="https://pms-extranet-app.preview.emergentagent.com"):
+        self.base_url = base_url
+        self.super_admin_token = None
+        self.agency_token = None
+        self.hotel_token = None
+        self.tests_run = 0
+        self.tests_passed = 0
+        self.tests_failed = 0
+        self.failed_tests = []
+        
+        # Store IDs for testing
+        self.agency_hotel_link_id = None
+        self.booking_id = None
+        self.hotel_id = None
+        self.agency_id = None
+
+    def log(self, msg):
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}")
+
+    def run_test(self, name, method, endpoint, expected_status, data=None, headers_override=None, token=None):
+        """Run a single API test with specific token"""
+        url = f"{self.base_url}/{endpoint}"
+        headers = headers_override or {'Content-Type': 'application/json'}
+        
+        # Use specific token if provided
+        if token:
+            headers['Authorization'] = f'Bearer {token}'
+
+        self.tests_run += 1
+        self.log(f"🔍 Test #{self.tests_run}: {name}")
+        
+        try:
+            if method == 'GET':
+                response = requests.get(url, headers=headers, timeout=10)
+            elif method == 'POST':
+                response = requests.post(url, json=data, headers=headers, timeout=10)
+            elif method == 'PUT':
+                response = requests.put(url, json=data, headers=headers, timeout=10)
+            elif method == 'DELETE':
+                response = requests.delete(url, headers=headers, timeout=10)
+            else:
+                raise ValueError(f"Unsupported method: {method}")
+
+            success = response.status_code == expected_status
+            if success:
+                self.tests_passed += 1
+                self.log(f"✅ PASSED - Status: {response.status_code}")
+                try:
+                    return True, response.json() if response.content else {}
+                except:
+                    return True, response.text if hasattr(response, 'text') else {}
+            else:
+                self.tests_failed += 1
+                self.failed_tests.append(f"{name} - Expected {expected_status}, got {response.status_code}")
+                self.log(f"❌ FAILED - Expected {expected_status}, got {response.status_code}")
+                try:
+                    self.log(f"   Response: {response.text[:200]}")
+                except:
+                    pass
+                return False, {}
+
+        except Exception as e:
+            self.tests_failed += 1
+            self.failed_tests.append(f"{name} - Error: {str(e)}")
+            self.log(f"❌ FAILED - Error: {str(e)}")
+            return False, {}
+
+    def test_super_admin_login(self):
+        """1) SUPER_ADMIN login"""
+        self.log("\n=== 1) SUPER_ADMIN LOGIN ===")
+        success, response = self.run_test(
+            "Super Admin Login",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "admin@acenta.test", "password": "admin123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.super_admin_token = response['access_token']
+            user = response.get('user', {})
+            roles = user.get('roles', [])
+            
+            if 'super_admin' in roles:
+                self.log(f"✅ Super admin role confirmed: {roles}")
+                return True
+            else:
+                self.log(f"❌ Missing super_admin role: {roles}")
+                return False
+        return False
+
+    def test_agency_hotel_links(self):
+        """2) GET /api/admin/agency-hotel-links → en az 1 link bul"""
+        self.log("\n=== 2) AGENCY-HOTEL LINKS ===")
+        success, response = self.run_test(
+            "Get Agency-Hotel Links",
+            "GET",
+            "api/admin/agency-hotel-links",
+            200,
+            token=self.super_admin_token
+        )
+        if success and isinstance(response, list) and len(response) > 0:
+            # Find a link with commission settings
+            for link in response:
+                if link.get('commission_type') and link.get('commission_value') is not None:
+                    self.agency_hotel_link_id = link.get('id')
+                    self.agency_id = link.get('agency_id')
+                    self.hotel_id = link.get('hotel_id')
+                    commission_type = link.get('commission_type')
+                    commission_value = link.get('commission_value')
+                    
+                    self.log(f"✅ Found link with commission: {commission_type}={commission_value}%")
+                    self.log(f"   Agency ID: {self.agency_id}")
+                    self.log(f"   Hotel ID: {self.hotel_id}")
+                    return True
+            
+            self.log(f"❌ No links found with commission settings")
+            return False
+        else:
+            self.log(f"❌ No agency-hotel links found")
+            return False
+
+    def test_agency_login(self):
+        """3) AGENCY login"""
+        self.log("\n=== 3) AGENCY LOGIN ===")
+        success, response = self.run_test(
+            "Agency Login",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "agency1@demo.test", "password": "agency123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.agency_token = response['access_token']
+            user = response.get('user', {})
+            agency_id = user.get('agency_id')
+            
+            if agency_id:
+                self.log(f"✅ Agency logged in successfully, agency_id: {agency_id}")
+                return True
+            else:
+                self.log(f"❌ Agency ID missing from user")
+                return False
+        return False
+
+    def test_search_availability(self):
+        """4) Arama yap: POST /api/agency/search"""
+        self.log("\n=== 4) SEARCH AVAILABILITY ===")
+        
+        if not self.hotel_id:
+            self.log("❌ No hotel_id available for search")
+            return False
+            
+        search_data = {
+            "hotel_id": self.hotel_id,
+            "check_in": "2026-03-10",
+            "check_out": "2026-03-12",
+            "occupancy": {"adults": 2, "children": 0}
+        }
+        
+        success, response = self.run_test(
+            "Agency Search",
+            "POST",
+            "api/agency/search",
+            200,
+            data=search_data,
+            token=self.agency_token
+        )
+        
+        if success:
+            search_id = response.get('search_id')
+            rooms = response.get('rooms', [])
+            
+            if search_id and len(rooms) > 0:
+                self.search_id = search_id
+                self.log(f"✅ Search successful: {search_id}, found {len(rooms)} room types")
+                
+                # Find a room type to book
+                for room in rooms:
+                    if room.get('inventory_left', 0) > 0:
+                        self.room_type_id = room.get('room_type_id')
+                        rate_plans = room.get('rate_plans', [])
+                        if rate_plans:
+                            self.rate_plan_id = rate_plans[0].get('rate_plan_id')
+                            self.log(f"   Available room: {self.room_type_id}, rate: {self.rate_plan_id}")
+                            return True
+                
+                self.log(f"❌ No available rooms found")
+                return False
+            else:
+                self.log(f"❌ Invalid search response")
+                return False
+        return False
+
+    def test_create_draft(self):
+        """5) Draft oluştur: POST /api/agency/bookings/draft"""
+        self.log("\n=== 5) CREATE BOOKING DRAFT ===")
+        
+        if not hasattr(self, 'search_id') or not hasattr(self, 'room_type_id'):
+            self.log("❌ Missing search_id or room_type_id")
+            return False
+            
+        draft_data = {
+            "search_id": self.search_id,
+            "hotel_id": self.hotel_id,
+            "room_type_id": self.room_type_id,
+            "rate_plan_id": getattr(self, 'rate_plan_id', 'rp_base'),
+            "guest": {
+                "full_name": "Ahmet Yılmaz",
+                "email": "ahmet.yilmaz@example.com",
+                "phone": "+905551234567"
+            },
+            "check_in": "2026-03-10",
+            "check_out": "2026-03-12",
+            "nights": 2,
+            "adults": 2,
+            "children": 0
+        }
+        
+        success, response = self.run_test(
+            "Create Booking Draft",
+            "POST",
+            "api/agency/bookings/draft",
+            200,
+            data=draft_data,
+            token=self.agency_token
+        )
+        
+        if success:
+            draft_id = response.get('id')
+            if draft_id:
+                self.draft_id = draft_id
+                self.log(f"✅ Draft created: {draft_id}")
+                return True
+            else:
+                self.log(f"❌ No draft ID in response")
+                return False
+        return False
+
+    def test_confirm_booking(self):
+        """6) Confirm: POST /api/agency/bookings/confirm"""
+        self.log("\n=== 6) CONFIRM BOOKING ===")
+        
+        if not hasattr(self, 'draft_id'):
+            self.log("❌ Missing draft_id")
+            return False
+            
+        confirm_data = {"draft_id": self.draft_id}
+        
+        success, response = self.run_test(
+            "Confirm Booking",
+            "POST",
+            "api/agency/bookings/confirm",
+            200,
+            data=confirm_data,
+            token=self.agency_token
+        )
+        
+        if success:
+            booking_id = response.get('id')
+            gross_amount = response.get('gross_amount')
+            commission_amount = response.get('commission_amount')
+            net_amount = response.get('net_amount')
+            currency = response.get('currency')
+            commission_type_snapshot = response.get('commission_type_snapshot')
+            commission_value_snapshot = response.get('commission_value_snapshot')
+            
+            if booking_id:
+                self.booking_id = booking_id
+                self.log(f"✅ Booking confirmed: {booking_id}")
+                
+                # Verify commission calculations
+                rate_snapshot = response.get('rate_snapshot', {})
+                rate_total = rate_snapshot.get('price', {}).get('total', 0)
+                
+                self.log(f"   Rate snapshot total: {rate_total}")
+                self.log(f"   Gross amount: {gross_amount}")
+                self.log(f"   Commission amount: {commission_amount}")
+                self.log(f"   Net amount: {net_amount}")
+                self.log(f"   Currency: {currency}")
+                self.log(f"   Commission type: {commission_type_snapshot}")
+                self.log(f"   Commission value: {commission_value_snapshot}")
+                
+                # Verify calculations
+                if abs(float(gross_amount or 0) - float(rate_total or 0)) < 0.01:
+                    self.log(f"✅ Gross amount matches rate snapshot")
+                else:
+                    self.log(f"❌ Gross amount mismatch: {gross_amount} vs {rate_total}")
+                    return False
+                
+                if commission_type_snapshot == "percent":
+                    expected_commission = round(float(gross_amount) * float(commission_value_snapshot) / 100.0, 2)
+                    if abs(float(commission_amount) - expected_commission) < 0.01:
+                        self.log(f"✅ Commission calculation correct")
+                    else:
+                        self.log(f"❌ Commission calculation wrong: {commission_amount} vs {expected_commission}")
+                        return False
+                
+                expected_net = round(float(gross_amount) - float(commission_amount), 2)
+                if abs(float(net_amount) - expected_net) < 0.01:
+                    self.log(f"✅ Net amount calculation correct")
+                else:
+                    self.log(f"❌ Net amount calculation wrong: {net_amount} vs {expected_net}")
+                    return False
+                
+                if currency:
+                    self.log(f"✅ Currency populated: {currency}")
+                else:
+                    self.log(f"❌ Currency missing")
+                    return False
+                
+                if commission_type_snapshot and commission_value_snapshot is not None:
+                    self.log(f"✅ Commission snapshots populated")
+                else:
+                    self.log(f"❌ Commission snapshots missing")
+                    return False
+                
+                return True
+            else:
+                self.log(f"❌ No booking ID in response")
+                return False
+        return False
+
+    def test_hotel_admin_login(self):
+        """7) HOTEL admin login"""
+        self.log("\n=== 7) HOTEL ADMIN LOGIN ===")
+        success, response = self.run_test(
+            "Hotel Admin Login",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "hoteladmin@acenta.test", "password": "admin123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.hotel_token = response['access_token']
+            user = response.get('user', {})
+            roles = user.get('roles', [])
+            hotel_id = user.get('hotel_id')
+            
+            if 'hotel_admin' in roles and hotel_id:
+                self.log(f"✅ Hotel admin logged in: {hotel_id}")
+                return True
+            else:
+                self.log(f"❌ Missing hotel_admin role or hotel_id")
+                return False
+        return False
+
+    def test_hotel_settlements(self):
+        """8) GET /api/hotel/settlements?month=2026-03"""
+        self.log("\n=== 8) HOTEL SETTLEMENTS ===")
+        
+        success, response = self.run_test(
+            "Hotel Settlements",
+            "GET",
+            "api/hotel/settlements?month=2026-03",
+            200,
+            token=self.hotel_token
+        )
+        
+        if success:
+            totals = response.get('totals', [])
+            entries = response.get('entries', [])
+            
+            self.log(f"✅ Hotel settlements retrieved: {len(totals)} agencies, {len(entries)} entries")
+            
+            # Look for our agency in totals
+            agency_found = False
+            for total in totals:
+                if total.get('agency_id') == self.agency_id:
+                    agency_found = True
+                    gross_total = total.get('gross_total', 0)
+                    commission_total = total.get('commission_total', 0)
+                    net_total = total.get('net_total', 0)
+                    count = total.get('count', 0)
+                    
+                    self.log(f"   Agency totals: gross={gross_total}, commission={commission_total}, net={net_total}, count={count}")
+                    
+                    if count > 0:
+                        self.log(f"✅ Agency found in settlements with bookings")
+                        return True
+                    else:
+                        self.log(f"❌ Agency found but no bookings")
+                        return False
+            
+            if not agency_found:
+                self.log(f"❌ Agency not found in settlements")
+                return False
+        return False
+
+    def test_agency_settlements(self):
+        """9) AGENCY settlements: GET /api/agency/settlements?month=2026-03"""
+        self.log("\n=== 9) AGENCY SETTLEMENTS ===")
+        
+        success, response = self.run_test(
+            "Agency Settlements",
+            "GET",
+            "api/agency/settlements?month=2026-03",
+            200,
+            token=self.agency_token
+        )
+        
+        if success:
+            totals = response.get('totals', [])
+            entries = response.get('entries', [])
+            
+            self.log(f"✅ Agency settlements retrieved: {len(totals)} hotels, {len(entries)} entries")
+            
+            # Look for our hotel in totals
+            hotel_found = False
+            for total in totals:
+                if total.get('hotel_id') == self.hotel_id:
+                    hotel_found = True
+                    gross_total = total.get('gross_total', 0)
+                    commission_total = total.get('commission_total', 0)
+                    net_total = total.get('net_total', 0)
+                    count = total.get('count', 0)
+                    
+                    self.log(f"   Hotel totals: gross={gross_total}, commission={commission_total}, net={net_total}, count={count}")
+                    
+                    if count > 0:
+                        self.log(f"✅ Hotel found in settlements with bookings")
+                        return True
+                    else:
+                        self.log(f"❌ Hotel found but no bookings")
+                        return False
+            
+            if not hotel_found:
+                self.log(f"❌ Hotel not found in settlements")
+                return False
+        return False
+
+    def test_csv_exports(self):
+        """10) CSV export tests"""
+        self.log("\n=== 10) CSV EXPORTS ===")
+        
+        # Hotel CSV export
+        success, response = self.run_test(
+            "Hotel Settlements CSV Export",
+            "GET",
+            "api/hotel/settlements?month=2026-03&export=csv",
+            200,
+            token=self.hotel_token
+        )
+        
+        if success and isinstance(response, str) and len(response) > 0:
+            self.log(f"✅ Hotel CSV export successful ({len(response)} bytes)")
+            if 'agency_id' in response and 'gross_total' in response:
+                self.log(f"✅ CSV contains expected headers")
+            else:
+                self.log(f"❌ CSV missing expected headers")
+                return False
+        else:
+            self.log(f"❌ Hotel CSV export failed")
+            return False
+        
+        # Agency CSV export
+        success, response = self.run_test(
+            "Agency Settlements CSV Export",
+            "GET",
+            "api/agency/settlements?month=2026-03&export=csv",
+            200,
+            token=self.agency_token
+        )
+        
+        if success and isinstance(response, str) and len(response) > 0:
+            self.log(f"✅ Agency CSV export successful ({len(response)} bytes)")
+            if 'hotel_id' in response and 'gross_total' in response:
+                self.log(f"✅ CSV contains expected headers")
+                return True
+            else:
+                self.log(f"❌ CSV missing expected headers")
+                return False
+        else:
+            self.log(f"❌ Agency CSV export failed")
+            return False
+
+    def test_cancel_and_reversal(self):
+        """11) Cancel + reversal test"""
+        self.log("\n=== 11) CANCEL & REVERSAL ===")
+        
+        if not self.booking_id:
+            self.log("❌ No booking_id available for cancellation")
+            return False
+        
+        # Get settlements before cancellation
+        success, before_response = self.run_test(
+            "Hotel Settlements Before Cancel",
+            "GET",
+            "api/hotel/settlements?month=2026-03",
+            200,
+            token=self.hotel_token
+        )
+        
+        before_totals = {}
+        if success:
+            for total in before_response.get('totals', []):
+                if total.get('agency_id') == self.agency_id:
+                    before_totals = total
+                    break
+        
+        # Cancel booking
+        cancel_data = {"reason": "test"}
+        success, response = self.run_test(
+            "Cancel Booking",
+            "POST",
+            f"api/bookings/{self.booking_id}/cancel",
+            200,
+            data=cancel_data,
+            token=self.agency_token
+        )
+        
+        if success:
+            status = response.get('status')
+            commission_reversed = response.get('commission_reversed')
+            
+            if status == 'cancelled':
+                self.log(f"✅ Booking status set to cancelled")
+            else:
+                self.log(f"❌ Booking status not cancelled: {status}")
+                return False
+            
+            if commission_reversed is True:
+                self.log(f"✅ Commission reversed flag set")
+            else:
+                self.log(f"❌ Commission reversed flag not set: {commission_reversed}")
+                return False
+        else:
+            self.log(f"❌ Booking cancellation failed")
+            return False
+        
+        # Check settlements after cancellation
+        success, after_response = self.run_test(
+            "Hotel Settlements After Cancel",
+            "GET",
+            "api/hotel/settlements?month=2026-03",
+            200,
+            token=self.hotel_token
+        )
+        
+        if success:
+            after_totals = {}
+            for total in after_response.get('totals', []):
+                if total.get('agency_id') == self.agency_id:
+                    after_totals = total
+                    break
+            
+            # Check if totals are zeroed or reduced
+            before_gross = before_totals.get('gross_total', 0)
+            after_gross = after_totals.get('gross_total', 0)
+            before_count = before_totals.get('count', 0)
+            after_count = after_totals.get('count', 0)
+            
+            self.log(f"   Before cancel: gross={before_gross}, count={before_count}")
+            self.log(f"   After cancel: gross={after_gross}, count={after_count}")
+            
+            if abs(after_gross) < abs(before_gross) or after_count != before_count:
+                self.log(f"✅ Settlement totals updated after cancellation")
+                return True
+            else:
+                self.log(f"❌ Settlement totals not updated properly")
+                return False
+        
+        return False
+
+    def print_summary(self):
+        """Print test summary"""
+        self.log("\n" + "="*60)
+        self.log("FAZ-6 COMMISSION & SETTLEMENTS TEST SUMMARY")
+        self.log("="*60)
+        self.log(f"Total Tests: {self.tests_run}")
+        self.log(f"✅ Passed: {self.tests_passed}")
+        self.log(f"❌ Failed: {self.tests_failed}")
+        self.log(f"Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%")
+        
+        if self.failed_tests:
+            self.log("\n❌ FAILED TESTS:")
+            for i, test in enumerate(self.failed_tests, 1):
+                self.log(f"  {i}. {test}")
+        
+        self.log("="*60)
+
+    def run_faz6_tests(self):
+        """Run all FAZ-6 tests in sequence"""
+        self.log("🚀 Starting FAZ-6 Commission & Settlements Tests")
+        self.log(f"Base URL: {self.base_url}")
+        
+        # Test sequence
+        tests = [
+            self.test_super_admin_login,
+            self.test_agency_hotel_links,
+            self.test_agency_login,
+            self.test_search_availability,
+            self.test_create_draft,
+            self.test_confirm_booking,
+            self.test_hotel_admin_login,
+            self.test_hotel_settlements,
+            self.test_agency_settlements,
+            self.test_csv_exports,
+            self.test_cancel_and_reversal,
+        ]
+        
+        for test_func in tests:
+            if not test_func():
+                self.log(f"❌ Test failed: {test_func.__name__} - stopping execution")
+                break
+        
+        # Summary
+        self.print_summary()
+        return 0 if self.tests_failed == 0 else 1
+
+
 def main():
-    if len(sys.argv) > 1 and sys.argv[1] == "faz5":
-        tester = FAZ5HotelExtranetTester()
-        exit_code = tester.run_faz5_tests()
-        sys.exit(exit_code)
+    if len(sys.argv) > 1:
+        if sys.argv[1] == "faz5":
+            tester = FAZ5HotelExtranetTester()
+            exit_code = tester.run_faz5_tests()
+            sys.exit(exit_code)
+        elif sys.argv[1] == "faz6":
+            tester = FAZ6CommissionTester()
+            exit_code = tester.run_faz6_tests()
+            sys.exit(exit_code)
     else:
         tester = AcentaAPITester()
         exit_code = tester.run_all_tests()

@@ -6,6 +6,22 @@ import AppShell from "./components/AppShell";
 import LoginPage from "./pages/LoginPage";
 import UnauthorizedPage from "./pages/UnauthorizedPage";
 import ErrorContextPage from "./pages/ErrorContextPage";
+
+// Admin pages
+import AdminAgenciesPage from "./pages/AdminAgenciesPage";
+import AdminHotelsPage from "./pages/AdminHotelsPage";
+import AdminLinksPage from "./pages/AdminLinksPage";
+
+// Agency pages
+import AgencyHotelsPage from "./pages/AgencyHotelsPage";
+import AgencyHotelDetailPage from "./pages/AgencyHotelDetailPage";
+import AgencySearchResultsPage from "./pages/AgencySearchResultsPage";
+import AgencyBookingNewPage from "./pages/AgencyBookingNewPage";
+import AgencyBookingDraftPage from "./pages/AgencyBookingDraftPage";
+import AgencyBookingConfirmedPage from "./pages/AgencyBookingConfirmedPage";
+import AgencyBookingsListPage from "./pages/AgencyBookingsListPage";
+
+// Legacy pages (hidden from main menu)
 import DashboardPage from "./pages/DashboardPage";
 import ProductsPage from "./pages/ProductsPage";
 import InventoryPage from "./pages/InventoryPage";
@@ -16,15 +32,6 @@ import B2BPage from "./pages/B2BPage";
 import B2BBookingPage from "./pages/B2BBookingPage";
 import ReportsPage from "./pages/ReportsPage";
 import SettingsPage from "./pages/SettingsPage";
-import AgencyHotelsPage from "./pages/AgencyHotelsPage";
-import AgencyHotelDetailPage from "./pages/AgencyHotelDetailPage";
-import AgencySearchResultsPage from "./pages/AgencySearchResultsPage";
-import AgencyBookingNewPage from "./pages/AgencyBookingNewPage";
-import AgencyBookingDraftPage from "./pages/AgencyBookingDraftPage";
-import AgencyBookingConfirmedPage from "./pages/AgencyBookingConfirmedPage";
-import AdminLinksPage from "./pages/AdminLinksPage";
-import AdminAgenciesPage from "./pages/AdminAgenciesPage";
-import AdminHotelsPage from "./pages/AdminHotelsPage";
 
 import AdminLayout from "./layouts/AdminLayout";
 import AgencyLayout from "./layouts/AgencyLayout";
@@ -56,7 +63,7 @@ export default function App() {
           </Route>
         </Route>
 
-        {/* Agency Routes */}
+        {/* Agency Routes (Core Flow) */}
         <Route
           path="/app/agency/*"
           element={
@@ -72,19 +79,20 @@ export default function App() {
             <Route path="booking/new" element={<AgencyBookingNewPage />} />
             <Route path="booking/draft/:draftId" element={<AgencyBookingDraftPage />} />
             <Route path="booking/confirmed/:bookingId" element={<AgencyBookingConfirmedPage />} />
+            <Route path="bookings" element={<AgencyBookingsListPage />} />
           </Route>
         </Route>
 
-        {/* Legacy/Common Routes (temporary - will be role-gated later) */}
+        {/* Legacy Routes (Product-based system - hidden) */}
         <Route
-          path="/app"
+          path="/app/legacy/*"
           element={
             <RequireAuth>
               <AppShell />
             </RequireAuth>
           }
         >
-          <Route index element={<DashboardPage />} />
+          <Route path="dashboard" element={<DashboardPage />} />
           <Route path="products" element={<ProductsPage />} />
           <Route path="inventory" element={<InventoryPage />} />
           <Route path="reservations" element={<ReservationsPage />} />
@@ -96,8 +104,10 @@ export default function App() {
           <Route path="settings" element={<SettingsPage />} />
         </Route>
 
-        <Route path="/" element={<Navigate to="/app" replace />} />
-        <Route path="*" element={<Navigate to="/app" replace />} />
+        {/* Redirect root to appropriate dashboard */}
+        <Route path="/app" element={<Navigate to="/app/agency/hotels" replace />} />
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>
   );

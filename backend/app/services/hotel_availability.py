@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from typing import Any
 
 from app.db import get_db
@@ -75,8 +75,15 @@ async def compute_availability(
     # Filter overlapping bookings
     overlapping_bookings = []
     for booking in bookings:
-        booking_check_in = parse_date(booking.get("check_in") or booking.get("start_date", ""))
-        booking_check_out = parse_date(booking.get("check_out") or booking.get("end_date", ""))
+        stay = booking.get("stay") or {}
+        booking_check_in_str = stay.get("check_in") or booking.get("check_in") or booking.get("start_date")
+        booking_check_out_str = stay.get("check_out") or booking.get("check_out") or booking.get("end_date")
+
+        if not booking_check_in_str or not booking_check_out_str:
+            continue
+
+        booking_check_in = parse_date(booking_check_in_str)
+        booking_check_out = parse_date(booking_check_out_str)
         
         # Overlap check
         if booking_check_in < search_check_out and booking_check_out > search_check_in:
@@ -168,10 +175,11 @@ async def compute_availability(
             # Check date overlap
             rule_start = parse_date(rule.get("start_date", ""))
             rule_end_str = rule.get("end_date")
-            rule_end = parse_date(rule_end_str) if rule_end_str else None
-            
-            # Overlap check
-            if rule_start < search_check_out and (rule_end is None or rule_end > search_check_in):
+            rule_end_incl = parse_date(rule_end_str) if rule_end_str else None
+            rule_end_excl = (rule_end_incl + timedelta(days=1)) if rule_end_incl else None
+
+            # Overlap check (end_date inclusive)
+            if rule_start < search_check_out and (rule_end_excl is None or rule_end_excl > search_check_in):
                 stop_sell_active = True
                 break
         
@@ -184,10 +192,11 @@ async def compute_availability(
             # Check date overlap
             alloc_start = parse_date(alloc.get("start_date", ""))
             alloc_end_str = alloc.get("end_date")
-            alloc_end = parse_date(alloc_end_str) if alloc_end_str else None
-            
-            # Overlap check
-            if alloc_start < search_check_out and (alloc_end is None or alloc_end > search_check_in):
+            alloc_end_incl = parse_date(alloc_end_str) if alloc_end_str else None
+            alloc_end_excl = (alloc_end_incl + timedelta(days=1)) if alloc_end_incl else None
+
+            # Overlap check (end_date inclusive)
+            if alloc_start < search_check_out and (alloc_end_excl is None or alloc_end_excl > search_check_in):
                 allocation_limit = alloc.get("allotment", 0)
                 break
         
@@ -202,6 +211,8 @@ async def compute_availability(
                 "channel": channel,
                 "status": {"$in": ACTIVE_BOOKING_STATUSES},
                 "rate_snapshot.room_type_id": f"rt_{room_type}",
+                "stay.check_in": {"$lt": check_out},
+                "stay.check_out": {"$gt": check_in},
             })
             final_available = max(0, min(base_available, allocation_limit - sold_on_channel))
         else:

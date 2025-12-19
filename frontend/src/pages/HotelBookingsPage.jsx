@@ -46,7 +46,7 @@ export default function HotelBookingsPage() {
 
   useEffect(() => {
     loadBookings();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line
   }, []);
 
   const filtered = useMemo(() => {

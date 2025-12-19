@@ -2106,6 +2106,12 @@ class Booking(BaseModel):
     tenant_id: str
     guest_id: str
     room_id: str
+
+    # CM / integration semantics (defaults chosen by user)
+    source_channel: str = "direct"  # direct|agency|airbnb|booking|expedia|manual
+    origin: str = "ui"  # ui|api|webhook|import
+    hold_status: str = "none"  # none|tentative|hold|released|expired
+    allocation_source: str = "manual"  # manual|channel|allotment
     # Enriched fields for calendar display
     guest_name: Optional[str] = None
     room_number: Optional[str] = None
@@ -9494,6 +9500,8 @@ async def update_booking(
     
     # Handle other fields
     allowed_fields = ['room_id', 'guest_id', 'total_amount', 'status', 'adults', 'children', 
+                     'check_in', 'check_out', 'special_requests', 'company_id', 'rate_plan',
+                     'source_channel', 'origin', 'hold_status', 'allocation_source',
                      'children_ages', 'guests_count', 'special_requests', 'company_id', 
                      'contracted_rate', 'rate_type', 'market_segment']
     

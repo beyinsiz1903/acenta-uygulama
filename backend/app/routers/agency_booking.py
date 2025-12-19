@@ -354,7 +354,7 @@ async def confirm_booking(payload: BookingConfirmIn, request: Request, user=Depe
     )
     
     saved = await db.bookings.find_one({"_id": booking_id})
-    return serialize_doc(saved)
+    return build_booking_public_view(saved)
 
 
 @router.delete("/draft/{draft_id}", dependencies=[Depends(require_roles(["agency_admin", "agency_agent"]))])

@@ -2,12 +2,14 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 
 from app.auth import get_current_user, require_roles
 from app.db import get_db
 from app.services.commission import create_financial_entry, month_from_check_in
+from app.services.audit import write_audit_log
+from app.services.events import write_booking_event
 from app.utils import now_utc, serialize_doc
 
 router = APIRouter(prefix="/api/bookings", tags=["bookings"])
@@ -21,7 +23,7 @@ class BookingCancelIn(BaseModel):
     "/{booking_id}/cancel",
     dependencies=[Depends(require_roles(["agency_admin", "agency_agent", "hotel_admin", "hotel_staff"]))],
 )
-async def cancel_booking(booking_id: str, payload: BookingCancelIn, user=Depends(get_current_user)):
+async def cancel_booking(booking_id: str, payload: BookingCancelIn, request: Request, user=Depends(get_current_user)):
     """FAZ-6: Cancel booking and create reversal financial entry.
 
     - allowed: agency or hotel side

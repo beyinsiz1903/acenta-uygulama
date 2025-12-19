@@ -14,6 +14,10 @@ from app.db import get_db
 from app.services.hotel_availability import compute_availability
 from app.services.rate_pricing import compute_rate_for_stay
 
+
+from app.services.search_cache import canonical_search_payload, cache_key
+from app.utils import now_utc
+
 router = APIRouter(prefix="/api/agency", tags=["agency-search"])
 
 

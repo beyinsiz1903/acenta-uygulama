@@ -9462,6 +9462,23 @@ async def create_rate_override(
     new_rate: float,
     override_reason: str,
     current_user: User = Depends(get_current_user)
+
+    # Push CM event (best-effort)
+    await cm_push_event({
+        "type": "booking.created",
+        "tenant_id": current_user.tenant_id,
+        "booking_id": booking.id,
+        "room_id": booking.room_id,
+        "check_in": booking.check_in,
+        "check_out": booking.check_out,
+        "status": booking.status,
+        "source_channel": getattr(booking, 'source_channel', 'direct'),
+        "origin": getattr(booking, 'origin', 'ui'),
+        "hold_status": getattr(booking, 'hold_status', 'none'),
+        "allocation_source": getattr(booking, 'allocation_source', 'manual'),
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    })
+
 ):
     """Create a rate override log for an existing booking."""
     booking = await db.bookings.find_one({

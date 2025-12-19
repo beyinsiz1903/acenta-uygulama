@@ -38,6 +38,8 @@ import io
 import base64
 import secrets
 import sys
+import hashlib
+
 import random
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side

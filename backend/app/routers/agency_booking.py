@@ -260,25 +260,6 @@ async def confirm_booking(payload: BookingConfirmIn, user=Depends(get_current_us
         "search_id": draft.get("search_id"),
         "hotel_id": draft["hotel_id"],
         "hotel_name": draft.get("hotel_name"),
-
-    # FAZ-6: Create financial entry for settlements (month based on stay.check_in)
-    if month:
-        await create_financial_entry(
-            db,
-            organization_id=user["organization_id"],
-            booking_id=booking_id,
-            agency_id=agency_id,
-            hotel_id=draft["hotel_id"],
-            entry_type="booking",
-            month=month,
-            currency=currency,
-            gross_amount=gross_total,
-            commission_amount=commission_amount,
-            net_amount=net_amount,
-            source_status="confirmed",
-            created_at=confirmed_at,
-        )
-
         "agency_name": draft.get("agency_name"),
         "status": "confirmed",
         "stay": draft.get("stay"),

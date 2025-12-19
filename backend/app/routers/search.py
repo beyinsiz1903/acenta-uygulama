@@ -102,47 +102,46 @@ async def search_availability(payload: SearchRequestIn, user=Depends(get_current
         room_type_id = f"rt_{room_type}"
         room_type_name = room_type.title() + " Oda"
         
-        # Max occupancy (from first room of this type)
-        max_occupancy = {"adults": 2, "children": 2}  # Default, can be fetched from rooms
+        # Max occupancy (from first room of this type - can be enhanced)
+        max_occupancy = {"adults": 2, "children": 2}  # Default
         
-        # Calculate price
-        per_night = avail_data.get("avg_base_price", 0)
-        total_price = per_night * nights
+        # FAZ-2.2.2: Get rates from rate_pricing service
+        rate_plans_list = await compute_rate_for_stay(
+            tenant_id=payload.hotel_id,
+            room_type=room_type,
+            check_in=payload.check_in,
+            check_out=payload.check_out,
+            nights=nights,
+            organization_id=user["organization_id"],
+            currency=payload.currency,
+        )
         
-        # Generate rate plans (mock for now - FAZ-2.2.2'de rate_plans koleksiyonundan gelecek)
-        rate_plans = [
-            {
-                "rate_plan_id": "rp_refundable",
-                "name": "İade Edilebilir",
-                "board": "RO",
-                "cancellation": f"FREE_CANCEL_UNTIL_{payload.check_in}",
-                "price": {
-                    "currency": payload.currency,
-                    "total": total_price,
-                    "per_night": per_night,
-                    "tax_included": True,
-                },
-            },
-            {
-                "rate_plan_id": "rp_nonrefundable",
-                "name": "İade Edilemez (İndirimli)",
-                "board": "RO",
-                "cancellation": "NON_REFUNDABLE",
-                "price": {
-                    "currency": payload.currency,
-                    "total": round(total_price * 0.85, 2),  # 15% discount
-                    "per_night": round(per_night * 0.85, 2),
-                    "tax_included": True,
-                },
-            },
-        ]
+        # Fallback: If no rate plans matched, use base_price
+        if not rate_plans_list:
+            per_night = avail_data.get("avg_base_price", 0)
+            total_price = per_night * nights
+            
+            rate_plans_list = [
+                {
+                    "rate_plan_id": "rp_base",
+                    "rate_plan_name": "Base Rate",
+                    "board": "RO",
+                    "cancellation": "FREE_CANCEL",
+                    "price": {
+                        "currency": payload.currency,
+                        "total": round(total_price, 2),
+                        "per_night": round(per_night, 2),
+                        "tax_included": True,
+                    },
+                }
+            ]
         
         rooms_response.append({
             "room_type_id": room_type_id,
             "name": room_type_name,
             "max_occupancy": max_occupancy,
             "inventory_left": avail_data["available_rooms"],
-            "rate_plans": rate_plans,
+            "rate_plans": rate_plans_list,
         })
     
     # Generate mock response (FAZ-2.1)

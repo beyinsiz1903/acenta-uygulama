@@ -27,6 +27,8 @@ async def upsert_inventory(org_id: str, user_email: str, payload: dict[str, Any]
         "price": payload.get("price"),
         "restrictions": payload.get("restrictions")
         or {"closed": False, "cta": False, "ctd": False},
+        # FAZ-8
+        "source": payload.get("source") or "local",
         "updated_at": now_utc(),
         "updated_by": user_email,
     }

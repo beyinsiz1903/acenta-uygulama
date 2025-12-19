@@ -142,7 +142,7 @@
 ## backend:
 ##   - task: "FAZ-8 PMS entegrasyonuna hazırlık: Connect Layer + PmsClient adapter + source=local|pms işaretleme"
 ##     implemented: true
-##     working: "NA"
+##     working: true
 ##     file: "/app/backend/app/services/pms_client.py, /app/backend/app/services/mock_pms.py, /app/backend/app/services/connect_layer.py, /app/backend/app/services/pms_booking_mapper.py, /app/backend/app/services/source_utils.py, /app/backend/app/routers/search.py, /app/backend/app/routers/agency_booking.py, /app/backend/app/routers/bookings.py, /app/backend/app/schemas.py, /app/backend/app/routers/rateplans.py, /app/backend/app/routers/inventory.py, /app/backend/app/services/inventory.py, /app/backend/app/routers/hotel.py, /app/backend/app/seed.py"
 ##     stuck_count: 0
 ##     priority: "high"

@@ -35,6 +35,19 @@ def _validate_range(start_date: str, end_date: str) -> None:
         raise HTTPException(status_code=422, detail="INVALID_DATE_RANGE")
 
 
+def _normalize_date_to_inclusive_overlap(date_from: Optional[str], date_to: Optional[str]) -> tuple[Optional[str], Optional[str]]:
+    """UI sends inclusive date range; bookings overlap checks expect inclusive boundaries too."""
+    if not date_from and not date_to:
+        return None, None
+
+    if date_from:
+        _parse_date(date_from)
+    if date_to:
+        _parse_date(date_to)
+
+    return date_from, date_to
+
+
 # -------------------------
 # Bookings (hotel view)
 # -------------------------

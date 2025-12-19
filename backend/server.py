@@ -631,7 +631,7 @@ async def list_partner_api_keys(current_user: Any = Depends(temp_require_super_a
 
 
 @api_router.post("/admin/api-keys/{key_id}/revoke")
-async def revoke_partner_api_key(key_id: str, current_user: Any = Depends(require_super_admin)):
+async def revoke_partner_api_key(key_id: str, current_user: Any = Depends(temp_require_super_admin)):
     res = await db.api_keys.update_one({"tenant_id": current_user.tenant_id, "id": key_id}, {"$set": {"is_active": False}})
     if res.matched_count == 0:
         raise HTTPException(status_code=404, detail="Key not found")

@@ -825,10 +825,575 @@ class AcentaAPITester:
         return 0 if self.tests_failed == 0 else 1
 
 
+class FAZ5HotelExtranetTester:
+    def __init__(self, base_url="https://pms-extranet-app.preview.emergentagent.com"):
+        self.base_url = base_url
+        self.hotel_token = None
+        self.agency_token = None
+        self.tests_run = 0
+        self.tests_passed = 0
+        self.tests_failed = 0
+        self.failed_tests = []
+        
+        # Store created IDs for testing
+        self.hotel_id = None
+        self.stop_sell_id = None
+        self.allocation_id = None
+        self.booking_ids = []
+
+    def log(self, msg):
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}")
+
+    def run_test(self, name, method, endpoint, expected_status, data=None, headers_override=None, token=None):
+        """Run a single API test with specific token"""
+        url = f"{self.base_url}/{endpoint}"
+        headers = headers_override or {'Content-Type': 'application/json'}
+        
+        # Use specific token if provided, otherwise use hotel_token
+        if token:
+            headers['Authorization'] = f'Bearer {token}'
+        elif self.hotel_token and not headers_override:
+            headers['Authorization'] = f'Bearer {self.hotel_token}'
+
+        self.tests_run += 1
+        self.log(f"🔍 Test #{self.tests_run}: {name}")
+        
+        try:
+            if method == 'GET':
+                response = requests.get(url, headers=headers, timeout=10)
+            elif method == 'POST':
+                response = requests.post(url, json=data, headers=headers, timeout=10)
+            elif method == 'PUT':
+                response = requests.put(url, json=data, headers=headers, timeout=10)
+            elif method == 'DELETE':
+                response = requests.delete(url, headers=headers, timeout=10)
+            else:
+                raise ValueError(f"Unsupported method: {method}")
+
+            success = response.status_code == expected_status
+            if success:
+                self.tests_passed += 1
+                self.log(f"✅ PASSED - Status: {response.status_code}")
+                try:
+                    return True, response.json() if response.content else {}
+                except:
+                    return True, {}
+            else:
+                self.tests_failed += 1
+                self.failed_tests.append(f"{name} - Expected {expected_status}, got {response.status_code}")
+                self.log(f"❌ FAILED - Expected {expected_status}, got {response.status_code}")
+                try:
+                    self.log(f"   Response: {response.text[:200]}")
+                except:
+                    pass
+                return False, {}
+
+        except Exception as e:
+            self.tests_failed += 1
+            self.failed_tests.append(f"{name} - Error: {str(e)}")
+            self.log(f"❌ FAILED - Error: {str(e)}")
+            return False, {}
+
+    def test_hotel_admin_login(self):
+        """A1) Test hotel admin login"""
+        self.log("\n=== A) AUTH / CONTEXT ===")
+        success, response = self.run_test(
+            "Hotel Admin Login",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "hoteladmin@acenta.test", "password": "admin123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.hotel_token = response['access_token']
+            user = response.get('user', {})
+            roles = user.get('roles', [])
+            hotel_id = user.get('hotel_id')
+            
+            if 'hotel_admin' in roles:
+                self.log(f"✅ User has hotel_admin role: {roles}")
+            else:
+                self.log(f"❌ Missing hotel_admin role: {roles}")
+                return False
+                
+            if hotel_id:
+                self.hotel_id = hotel_id
+                self.log(f"✅ Hotel ID populated: {hotel_id}")
+            else:
+                self.log(f"❌ Hotel ID missing")
+                return False
+                
+            return True
+        return False
+
+    def test_hotel_bookings_list(self):
+        """B2) Test hotel bookings endpoint"""
+        self.log("\n=== B) HOTEL ENDPOINTS ===")
+        success, response = self.run_test(
+            "Hotel Bookings List",
+            "GET",
+            "api/hotel/bookings",
+            200
+        )
+        if success:
+            self.log(f"✅ Hotel bookings endpoint working (found {len(response)} bookings)")
+        return success
+
+    def test_stop_sell_crud(self):
+        """B3) Test stop-sell CRUD operations"""
+        self.log("\n--- Stop-sell CRUD ---")
+        
+        # Create stop-sell
+        stop_sell_data = {
+            "room_type": "deluxe",
+            "start_date": "2026-03-10",
+            "end_date": "2026-03-12",
+            "reason": "bakım",
+            "is_active": True
+        }
+        success, response = self.run_test(
+            "Create Stop-sell",
+            "POST",
+            "api/hotel/stop-sell",
+            200,
+            data=stop_sell_data
+        )
+        if success and response.get('id'):
+            self.stop_sell_id = response['id']
+            self.log(f"✅ Stop-sell created with ID: {self.stop_sell_id}")
+        else:
+            return False
+
+        # List stop-sell
+        success, response = self.run_test(
+            "List Stop-sell",
+            "GET",
+            "api/hotel/stop-sell",
+            200
+        )
+        if success:
+            found = any(item.get('id') == self.stop_sell_id for item in response)
+            if found:
+                self.log(f"✅ Created stop-sell found in list")
+            else:
+                self.log(f"❌ Created stop-sell not found in list")
+                return False
+
+        # Update stop-sell (toggle is_active)
+        stop_sell_data['is_active'] = False
+        success, response = self.run_test(
+            "Update Stop-sell (toggle active)",
+            "PUT",
+            f"api/hotel/stop-sell/{self.stop_sell_id}",
+            200,
+            data=stop_sell_data
+        )
+        if success:
+            self.log(f"✅ Stop-sell updated successfully")
+
+        # Delete stop-sell
+        success, response = self.run_test(
+            "Delete Stop-sell",
+            "DELETE",
+            f"api/hotel/stop-sell/{self.stop_sell_id}",
+            200
+        )
+        if success:
+            self.log(f"✅ Stop-sell deleted successfully")
+
+        return True
+
+    def test_allocation_crud(self):
+        """B4) Test allocation CRUD operations"""
+        self.log("\n--- Allocation CRUD ---")
+        
+        # Create allocation
+        allocation_data = {
+            "room_type": "standard",
+            "start_date": "2026-03-01",
+            "end_date": "2026-03-31",
+            "allotment": 2,
+            "is_active": True,
+            "channel": "agency_extranet"
+        }
+        success, response = self.run_test(
+            "Create Allocation",
+            "POST",
+            "api/hotel/allocations",
+            200,
+            data=allocation_data
+        )
+        if success and response.get('id'):
+            self.allocation_id = response['id']
+            self.log(f"✅ Allocation created with ID: {self.allocation_id}")
+        else:
+            return False
+
+        # List allocations
+        success, response = self.run_test(
+            "List Allocations",
+            "GET",
+            "api/hotel/allocations",
+            200
+        )
+        if success:
+            found = any(item.get('id') == self.allocation_id for item in response)
+            if found:
+                self.log(f"✅ Created allocation found in list")
+            else:
+                self.log(f"❌ Created allocation not found in list")
+                return False
+
+        # Update allocation (toggle is_active)
+        allocation_data['is_active'] = False
+        success, response = self.run_test(
+            "Update Allocation (toggle active)",
+            "PUT",
+            f"api/hotel/allocations/{self.allocation_id}",
+            200,
+            data=allocation_data
+        )
+        if success:
+            self.log(f"✅ Allocation updated successfully")
+
+        # Delete allocation
+        success, response = self.run_test(
+            "Delete Allocation",
+            "DELETE",
+            f"api/hotel/allocations/{self.allocation_id}",
+            200
+        )
+        if success:
+            self.log(f"✅ Allocation deleted successfully")
+
+        return True
+
+    def test_agency_login(self):
+        """C5) Test agency login"""
+        self.log("\n=== C) SEARCH IMPACT (CRITICAL) ===")
+        success, response = self.run_test(
+            "Agency Login",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "agency1@demo.test", "password": "agency123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.agency_token = response['access_token']
+            self.log(f"✅ Agency logged in successfully")
+            return True
+        return False
+
+    def test_search_with_stop_sell_impact(self):
+        """C6) Test search with stop-sell impact"""
+        self.log("\n--- Search with Stop-sell Impact ---")
+        
+        # First, create an active stop-sell for deluxe rooms
+        stop_sell_data = {
+            "room_type": "deluxe",
+            "start_date": "2026-03-10",
+            "end_date": "2026-03-12",
+            "reason": "bakım",
+            "is_active": True
+        }
+        success, response = self.run_test(
+            "Create Stop-sell for Search Test",
+            "POST",
+            "api/hotel/stop-sell",
+            200,
+            data=stop_sell_data,
+            token=self.hotel_token
+        )
+        if success:
+            stop_sell_id = response.get('id')
+            self.log(f"✅ Stop-sell created for search test: {stop_sell_id}")
+        
+        # Now search as agency
+        search_data = {
+            "hotel_id": self.hotel_id,
+            "check_in": "2026-03-10",
+            "check_out": "2026-03-12",
+            "occupancy": {"adults": 2, "children": 0}
+        }
+        success, response = self.run_test(
+            "Agency Search with Stop-sell Active",
+            "POST",
+            "api/agency/search",
+            200,
+            data=search_data,
+            token=self.agency_token
+        )
+        if success:
+            rooms = response.get('rooms', [])
+            deluxe_found = any(room.get('room_type_id') == 'rt_deluxe' and room.get('inventory_left', 0) > 0 for room in rooms)
+            
+            if not deluxe_found:
+                self.log(f"✅ Stop-sell working: deluxe rooms not available or inventory_left=0")
+            else:
+                self.log(f"❌ Stop-sell not working: deluxe rooms still available")
+                return False
+        
+        return success
+
+    def test_allocation_impact_and_bookings(self):
+        """C7) Test allocation impact and booking flow"""
+        self.log("\n--- Allocation Impact & Booking Flow ---")
+        
+        # Create allocation for standard rooms
+        allocation_data = {
+            "room_type": "standard",
+            "start_date": "2026-03-01",
+            "end_date": "2026-03-31",
+            "allotment": 2,
+            "is_active": True,
+            "channel": "agency_extranet"
+        }
+        success, response = self.run_test(
+            "Create Allocation for Search Test",
+            "POST",
+            "api/hotel/allocations",
+            200,
+            data=allocation_data,
+            token=self.hotel_token
+        )
+        if success:
+            allocation_id = response.get('id')
+            self.log(f"✅ Allocation created for search test: {allocation_id}")
+        
+        # Search to check allocation limit
+        search_data = {
+            "hotel_id": self.hotel_id,
+            "check_in": "2026-03-15",
+            "check_out": "2026-03-17",
+            "occupancy": {"adults": 2, "children": 0}
+        }
+        success, response = self.run_test(
+            "Agency Search with Allocation Active",
+            "POST",
+            "api/agency/search",
+            200,
+            data=search_data,
+            token=self.agency_token
+        )
+        
+        search_id = None
+        standard_inventory = 0
+        if success:
+            search_id = response.get('search_id')
+            rooms = response.get('rooms', [])
+            for room in rooms:
+                if room.get('room_type_id') == 'rt_standard':
+                    standard_inventory = room.get('inventory_left', 0)
+                    break
+            
+            if standard_inventory <= 2:
+                self.log(f"✅ Allocation working: standard inventory_left={standard_inventory} (≤2)")
+            else:
+                self.log(f"❌ Allocation not working: standard inventory_left={standard_inventory} (>2)")
+        
+        # Create 2 bookings to exhaust allocation
+        if search_id and standard_inventory > 0:
+            for i in range(2):
+                # Create draft
+                draft_data = {
+                    "search_id": search_id,
+                    "hotel_id": self.hotel_id,
+                    "room_type_id": "rt_standard",
+                    "rate_plan_id": "rp_base",
+                    "guest": {
+                        "full_name": f"Test Guest {i+1}",
+                        "email": f"guest{i+1}@test.com",
+                        "phone": "+905551234567"
+                    },
+                    "check_in": "2026-03-15",
+                    "check_out": "2026-03-17",
+                    "nights": 2,
+                    "adults": 2,
+                    "children": 0
+                }
+                
+                success, response = self.run_test(
+                    f"Create Booking Draft {i+1}",
+                    "POST",
+                    "api/agency/bookings/draft",
+                    200,
+                    data=draft_data,
+                    token=self.agency_token
+                )
+                
+                if success:
+                    draft_id = response.get('id')
+                    self.log(f"✅ Draft {i+1} created: {draft_id}")
+                    
+                    # Confirm booking
+                    confirm_data = {"draft_id": draft_id}
+                    success, response = self.run_test(
+                        f"Confirm Booking {i+1}",
+                        "POST",
+                        "api/agency/bookings/confirm",
+                        200,
+                        data=confirm_data,
+                        token=self.agency_token
+                    )
+                    
+                    if success:
+                        booking_id = response.get('id')
+                        self.booking_ids.append(booking_id)
+                        self.log(f"✅ Booking {i+1} confirmed: {booking_id}")
+            
+            # Search again to verify inventory is exhausted
+            success, response = self.run_test(
+                "Agency Search After 2 Bookings",
+                "POST",
+                "api/agency/search",
+                200,
+                data=search_data,
+                token=self.agency_token
+            )
+            
+            if success:
+                rooms = response.get('rooms', [])
+                standard_inventory_after = 0
+                for room in rooms:
+                    if room.get('room_type_id') == 'rt_standard':
+                        standard_inventory_after = room.get('inventory_left', 0)
+                        break
+                
+                if standard_inventory_after == 0:
+                    self.log(f"✅ Allocation exhausted: standard inventory_left=0 after 2 bookings")
+                else:
+                    self.log(f"❌ Allocation not exhausted: standard inventory_left={standard_inventory_after}")
+        
+        return True
+
+    def test_booking_actions(self):
+        """D8-11) Test booking actions"""
+        self.log("\n=== D) BOOKING ACTIONS ===")
+        
+        # List hotel bookings
+        success, response = self.run_test(
+            "Hotel Admin List Bookings",
+            "GET",
+            "api/hotel/bookings",
+            200,
+            token=self.hotel_token
+        )
+        
+        if success:
+            bookings = response
+            self.log(f"✅ Found {len(bookings)} bookings")
+            
+            if len(bookings) > 0:
+                booking_id = bookings[0].get('id')
+                if not booking_id and self.booking_ids:
+                    booking_id = self.booking_ids[0]
+                
+                if booking_id:
+                    # Add booking note
+                    note_data = {"note": "test not"}
+                    success, response = self.run_test(
+                        "Add Booking Note",
+                        "POST",
+                        f"api/hotel/bookings/{booking_id}/note",
+                        200,
+                        data=note_data,
+                        token=self.hotel_token
+                    )
+                    if success:
+                        self.log(f"✅ Booking note added successfully")
+                    
+                    # Add guest note
+                    guest_note_data = {"note": "guest note"}
+                    success, response = self.run_test(
+                        "Add Guest Note",
+                        "POST",
+                        f"api/hotel/bookings/{booking_id}/guest-note",
+                        200,
+                        data=guest_note_data,
+                        token=self.hotel_token
+                    )
+                    if success:
+                        self.log(f"✅ Guest note added successfully")
+                    
+                    # Add cancel request
+                    cancel_data = {"reason": "misafir iptal istedi"}
+                    success, response = self.run_test(
+                        "Add Cancel Request",
+                        "POST",
+                        f"api/hotel/bookings/{booking_id}/cancel-request",
+                        200,
+                        data=cancel_data,
+                        token=self.hotel_token
+                    )
+                    if success:
+                        self.log(f"✅ Cancel request added successfully")
+                else:
+                    self.log(f"⚠️  No booking ID available for actions test")
+            else:
+                self.log(f"⚠️  No bookings found for actions test")
+        
+        return success
+
+    def print_summary(self):
+        """Print test summary"""
+        self.log("\n" + "="*60)
+        self.log("FAZ-5 HOTEL EXTRANET TEST SUMMARY")
+        self.log("="*60)
+        self.log(f"Total Tests: {self.tests_run}")
+        self.log(f"✅ Passed: {self.tests_passed}")
+        self.log(f"❌ Failed: {self.tests_failed}")
+        self.log(f"Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%")
+        
+        if self.failed_tests:
+            self.log("\n❌ FAILED TESTS:")
+            for i, test in enumerate(self.failed_tests, 1):
+                self.log(f"  {i}. {test}")
+        
+        self.log("="*60)
+
+    def run_faz5_tests(self):
+        """Run all FAZ-5 tests in sequence"""
+        self.log("🚀 Starting FAZ-5 Hotel Extranet Tests")
+        self.log(f"Base URL: {self.base_url}")
+        
+        # A) Auth / context
+        if not self.test_hotel_admin_login():
+            self.log("❌ Hotel admin login failed - stopping tests")
+            self.print_summary()
+            return 1
+
+        # B) Hotel endpoints
+        self.test_hotel_bookings_list()
+        self.test_stop_sell_crud()
+        self.test_allocation_crud()
+
+        # C) Search impact
+        if not self.test_agency_login():
+            self.log("❌ Agency login failed - stopping search tests")
+        else:
+            self.test_search_with_stop_sell_impact()
+            self.test_allocation_impact_and_bookings()
+
+        # D) Booking actions
+        self.test_booking_actions()
+
+        # Summary
+        self.print_summary()
+
+        return 0 if self.tests_failed == 0 else 1
+
+
 def main():
-    tester = AcentaAPITester()
-    exit_code = tester.run_all_tests()
-    sys.exit(exit_code)
+    if len(sys.argv) > 1 and sys.argv[1] == "faz5":
+        tester = FAZ5HotelExtranetTester()
+        exit_code = tester.run_faz5_tests()
+        sys.exit(exit_code)
+    else:
+        tester = AcentaAPITester()
+        exit_code = tester.run_all_tests()
+        sys.exit(exit_code)
 
 
 if __name__ == "__main__":

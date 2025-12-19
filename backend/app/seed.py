@@ -560,9 +560,6 @@ async def ensure_seed_data() -> None:
                 "created_at": now_utc(),
                 "updated_at": now_utc(),
             }
-
-                "source": "local",
-
         )
 
     # -------------------------------

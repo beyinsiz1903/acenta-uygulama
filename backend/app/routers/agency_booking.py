@@ -273,6 +273,15 @@ async def confirm_booking(payload: BookingConfirmIn, user=Depends(get_current_us
         "created_by": user.get("email"),
         "payment_status": "pending",  # pending|paid|partial
         "channel": "agency_extranet",
+
+        # FAZ-6: financial snapshot
+        "gross_amount": round(gross_total, 2),
+        "commission_amount": round(commission_amount, 2),
+        "net_amount": round(net_amount, 2),
+        "currency": currency,
+        "commission_type_snapshot": commission_type_norm,
+        "commission_value_snapshot": float(commission_value or 0),
+        "commission_reversed": False,
     }
     
     await db.bookings.insert_one(booking)

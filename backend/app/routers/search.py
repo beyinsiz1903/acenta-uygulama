@@ -174,25 +174,6 @@ async def search_availability(payload: SearchRequestIn, user=Depends(get_current
             "rate_plans": rate_plans_list,
         })
 
-    # FAZ-7: store cache (5 min TTL)
-    ttl_seconds = 300
-    expires_at = now_utc() + timedelta(seconds=ttl_seconds)
-    await db.search_cache.update_one(
-        {"_id": key},
-        {
-            "$set": {
-                "organization_id": user["organization_id"],
-                "agency_id": agency_id,
-                "normalized": normalized,
-                "response": response,
-                "expires_at": expires_at,
-                "created_at": now_utc(),
-            }
-        },
-        upsert=True,
-    )
-
-    
     # Generate response
     search_id = f"srch_{uuid.uuid4().hex[:16]}"
     

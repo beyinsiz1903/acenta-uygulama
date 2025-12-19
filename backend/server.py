@@ -519,8 +519,6 @@ async def cm_get_ari(
     while cur <= ed:
         day_s = cur.isoformat()
 
-# CM partner webhook URL (push)
-CM_PARTNER_WEBHOOK_URL = os.environ.get('CM_PARTNER_WEBHOOK_URL', 'https://agency.syroce.com/webhooks/cm')
 
         for rt, rt_room_ids in rooms_by_type.items():
             if room_type and rt != room_type:

@@ -9,7 +9,7 @@ import uuid
 from datetime import datetime, timedelta
 
 class AcentaAPITester:
-    def __init__(self, base_url="https://pms-extranet-app.preview.emergentagent.com"):
+    def __init__(self, base_url="https://voucher-share.preview.emergentagent.com"):
         self.base_url = base_url
         self.token = None
         self.tests_run = 0
@@ -826,7 +826,7 @@ class AcentaAPITester:
 
 
 class FAZ5HotelExtranetTester:
-    def __init__(self, base_url="https://pms-extranet-app.preview.emergentagent.com"):
+    def __init__(self, base_url="https://voucher-share.preview.emergentagent.com"):
         self.base_url = base_url
         self.hotel_token = None
         self.agency_token = None
@@ -1386,7 +1386,7 @@ class FAZ5HotelExtranetTester:
 
 
 class FAZ8PMSTester:
-    def __init__(self, base_url="https://pms-extranet-app.preview.emergentagent.com"):
+    def __init__(self, base_url="https://voucher-share.preview.emergentagent.com"):
         self.base_url = base_url
         self.agency_token = None
         self.super_admin_token = None
@@ -2045,7 +2045,7 @@ class FAZ8PMSTester:
 
 
 class FAZ6CommissionTester:
-    def __init__(self, base_url="https://pms-extranet-app.preview.emergentagent.com"):
+    def __init__(self, base_url="https://voucher-share.preview.emergentagent.com"):
         self.base_url = base_url
         self.super_admin_token = None
         self.agency_token = None
@@ -2777,7 +2777,7 @@ class FAZ6CommissionTester:
 
 
 class FAZ7AuditCacheEventsTester:
-    def __init__(self, base_url="https://pms-extranet-app.preview.emergentagent.com"):
+    def __init__(self, base_url="https://voucher-share.preview.emergentagent.com"):
         self.base_url = base_url
         self.hotel_token = None
         self.agency_token = None

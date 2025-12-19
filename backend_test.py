@@ -3367,6 +3367,10 @@ def main():
             tester = FAZ7AuditCacheEventsTester()
             exit_code = tester.run_faz7_tests()
             sys.exit(exit_code)
+        elif sys.argv[1] == "faz8":
+            tester = FAZ8PMSTester()
+            exit_code = tester.run_faz8_tests()
+            sys.exit(exit_code)
     else:
         tester = AcentaAPITester()
         exit_code = tester.run_all_tests()

@@ -606,21 +606,6 @@ async def cm_get_ari_v2(
     end_date: str,
     room_type: Optional[str] = None,
     operator_id: Optional[str] = None,
-
-async def cm_push_event(event: dict):
-    """Push CM events to partner webhook.
-
-    NOTE: This is a best-effort delivery for now (no retries/outbox yet).
-    Next phase should add outbox + retries.
-    """
-    try:
-        import httpx
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            await client.post(CM_PARTNER_WEBHOOK_URL, json=event)
-    except Exception as e:
-        # Don't fail core flow
-        print(f"CM webhook push failed: {e}")
-
     actor: dict = Depends(get_cm_actor),
 ):
     """CM ARI v2 (nested room_type -> days).

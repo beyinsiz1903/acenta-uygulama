@@ -103,6 +103,33 @@
 #====================================================================================================
 
 ## user_problem_statement: "Müsaitlik ekranını takvim/grid görünümüne, Lead pipeline'ı drag-drop Kanban'a, Rezervasyon detayını drawer'a çevir. Ayrıca agentis.com.tr referansıyla tüm uygulamanın tasarımını daha kurumsal/modern hale getir."
+
+## backend:
+##   - task: "FAZ-5 Hotel Extranet: /api/hotel/bookings + stop-sell + allocations + booking aksiyonları"
+##     implemented: true
+##     working: "NA"
+##     file: "/app/backend/app/routers/hotel.py, /app/backend/app/services/hotel_availability.py, /app/backend/app/routers/agency_booking.py, /app/backend/app/seed.py, /app/backend/server.py"
+##     stuck_count: 0
+##     priority: "high"
+##     needs_retesting: true
+##     status_history:
+##       - working: "NA"
+##         agent: "main"
+##         comment: "Hotel router eklendi: GET /api/hotel/bookings (hotel_id ownership + filtreler), stop-sell CRUD (/api/hotel/stop-sell), allocations CRUD (/api/hotel/allocations). Booking aksiyonları: POST /api/hotel/bookings/{id}/note, /guest-note, /cancel-request. Seed: hoteladmin@acenta.test/admin123 (hotel_admin) hotels[0] ile ilişkilendirildi. Agency booking confirm artık channel=agency_extranet, agency_name snapshot ve hotel_availability allocation sold-count room_type+date overlap ile hesaplıyor."
+
+## frontend:
+##   - task: "FAZ-5 Hotel Extranet UI: /app/hotel routes + Stop-sell + Allocation + Bookings aksiyonları"
+##     implemented: true
+##     working: "NA"
+##     file: "/app/frontend/src/App.js, /app/frontend/src/config/menuConfig.js, /app/frontend/src/pages/HotelBookingsPage.jsx, /app/frontend/src/pages/HotelStopSellPage.jsx, /app/frontend/src/pages/HotelAllocationsPage.jsx, /app/frontend/src/layouts/HotelLayout.jsx"
+##     stuck_count: 0
+##     priority: "high"
+##     needs_retesting: false
+##     status_history:
+##       - working: "NA"
+##         agent: "main"
+##         comment: "Hotel menüsü eklendi ve route guard: /app/hotel/bookings, /stop-sell, /allocations (hotel_admin). HotelBookingsPage filtreler (tarih/durum/acenta adı) + aksiyonlar (iptal talebi, not ekle, misafir notu). Stop-sell & Allocation sayfaları basit tablo + ekle + toggle active + sil. Login default demo bilgisi hoteladmin@acenta.test/admin123 olarak güncellendi."
+
 ## backend:
 ##   - task: "Lead Kanban drag-drop sonrası stage/status ve sıralama (sort_index) kalıcılığı"
 ##     implemented: true

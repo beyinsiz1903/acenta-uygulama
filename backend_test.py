@@ -2117,6 +2117,595 @@ class FAZ6CommissionTester:
         return 0 if self.tests_failed == 0 else 1
 
 
+class FAZ7AuditCacheEventsTester:
+    def __init__(self, base_url="https://pms-extranet-app.preview.emergentagent.com"):
+        self.base_url = base_url
+        self.hotel_token = None
+        self.agency_token = None
+        self.super_admin_token = None
+        self.tests_run = 0
+        self.tests_passed = 0
+        self.tests_failed = 0
+        self.failed_tests = []
+        
+        # Store IDs for testing
+        self.hotel_id = None
+        self.agency_id = None
+        self.stop_sell_id = None
+        self.allocation_id = None
+        self.booking_id = None
+        self.search_response_1 = None
+        self.search_response_2 = None
+
+    def log(self, msg):
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}")
+
+    def run_test(self, name, method, endpoint, expected_status, data=None, headers_override=None, token=None):
+        """Run a single API test with specific token"""
+        url = f"{self.base_url}/{endpoint}"
+        headers = headers_override or {'Content-Type': 'application/json'}
+        
+        if token:
+            headers['Authorization'] = f'Bearer {token}'
+
+        self.tests_run += 1
+        self.log(f"🔍 Test #{self.tests_run}: {name}")
+        
+        try:
+            if method == 'GET':
+                response = requests.get(url, headers=headers, timeout=10)
+            elif method == 'POST':
+                response = requests.post(url, json=data, headers=headers, timeout=10)
+            elif method == 'PUT':
+                response = requests.put(url, json=data, headers=headers, timeout=10)
+            elif method == 'DELETE':
+                response = requests.delete(url, headers=headers, timeout=10)
+            else:
+                raise ValueError(f"Unsupported method: {method}")
+
+            success = response.status_code == expected_status
+            if success:
+                self.tests_passed += 1
+                self.log(f"✅ PASSED - Status: {response.status_code}")
+                try:
+                    return True, response.json() if response.content else {}
+                except:
+                    return True, {}
+            else:
+                self.tests_failed += 1
+                self.failed_tests.append(f"{name} - Expected {expected_status}, got {response.status_code}")
+                self.log(f"❌ FAILED - Expected {expected_status}, got {response.status_code}")
+                try:
+                    self.log(f"   Response: {response.text[:200]}")
+                except:
+                    pass
+                return False, {}
+
+        except Exception as e:
+            self.tests_failed += 1
+            self.failed_tests.append(f"{name} - Error: {str(e)}")
+            self.log(f"❌ FAILED - Error: {str(e)}")
+            return False, {}
+
+    def test_hotel_admin_login(self):
+        """1) Login hoteladmin@acenta.test / admin123"""
+        self.log("\n=== 1) HOTEL ADMIN LOGIN ===")
+        success, response = self.run_test(
+            "Hotel Admin Login",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "hoteladmin@acenta.test", "password": "admin123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.hotel_token = response['access_token']
+            user = response.get('user', {})
+            self.hotel_id = user.get('hotel_id')
+            
+            if self.hotel_id:
+                self.log(f"✅ Hotel admin logged in, hotel_id: {self.hotel_id}")
+                return True
+            else:
+                self.log(f"❌ Hotel ID missing")
+                return False
+        return False
+
+    def test_stop_sell_creation(self):
+        """2) Stop-sell oluştur (POST /api/hotel/stop-sell)"""
+        self.log("\n=== 2) CREATE STOP-SELL ===")
+        
+        stop_sell_data = {
+            "room_type": "deluxe",
+            "start_date": "2026-04-10",
+            "end_date": "2026-04-12",
+            "reason": "bakım çalışması",
+            "is_active": True
+        }
+        
+        success, response = self.run_test(
+            "Create Stop-sell",
+            "POST",
+            "api/hotel/stop-sell",
+            200,
+            data=stop_sell_data,
+            token=self.hotel_token
+        )
+        
+        if success and response.get('id'):
+            self.stop_sell_id = response['id']
+            self.log(f"✅ Stop-sell created: {self.stop_sell_id}")
+            return True
+        return False
+
+    def test_allocation_creation(self):
+        """3) Allocation oluştur (POST /api/hotel/allocations)"""
+        self.log("\n=== 3) CREATE ALLOCATION ===")
+        
+        allocation_data = {
+            "room_type": "standard",
+            "start_date": "2026-04-01",
+            "end_date": "2026-04-30",
+            "allotment": 5,
+            "is_active": True,
+            "channel": "agency_extranet"
+        }
+        
+        success, response = self.run_test(
+            "Create Allocation",
+            "POST",
+            "api/hotel/allocations",
+            200,
+            data=allocation_data,
+            token=self.hotel_token
+        )
+        
+        if success and response.get('id'):
+            self.allocation_id = response['id']
+            self.log(f"✅ Allocation created: {self.allocation_id}")
+            return True
+        return False
+
+    def test_booking_actions(self):
+        """4) Booking note + guest-note + cancel-request çağır"""
+        self.log("\n=== 4) BOOKING ACTIONS ===")
+        
+        # First get existing bookings
+        success, response = self.run_test(
+            "List Hotel Bookings",
+            "GET",
+            "api/hotel/bookings",
+            200,
+            token=self.hotel_token
+        )
+        
+        if success and len(response) > 0:
+            booking_id = response[0].get('id')
+            self.log(f"✅ Found booking for actions: {booking_id}")
+            
+            # Add booking note
+            note_data = {"note": "Otel yönetimi notu - FAZ7 test"}
+            success, response = self.run_test(
+                "Add Booking Note",
+                "POST",
+                f"api/hotel/bookings/{booking_id}/note",
+                200,
+                data=note_data,
+                token=self.hotel_token
+            )
+            if success:
+                self.log(f"✅ Booking note added")
+            
+            # Add guest note
+            guest_note_data = {"note": "Misafir özel talebi - FAZ7 test"}
+            success, response = self.run_test(
+                "Add Guest Note",
+                "POST",
+                f"api/hotel/bookings/{booking_id}/guest-note",
+                200,
+                data=guest_note_data,
+                token=self.hotel_token
+            )
+            if success:
+                self.log(f"✅ Guest note added")
+            
+            # Add cancel request
+            cancel_request_data = {"reason": "Misafir iptal talebi - FAZ7 test"}
+            success, response = self.run_test(
+                "Add Cancel Request",
+                "POST",
+                f"api/hotel/bookings/{booking_id}/cancel-request",
+                200,
+                data=cancel_request_data,
+                token=self.hotel_token
+            )
+            if success:
+                self.log(f"✅ Cancel request added")
+                return True
+        else:
+            self.log(f"⚠️  No bookings found for actions test")
+            return True  # Not a failure, just no data
+        
+        return False
+
+    def test_agency_login(self):
+        """5) Login agency1@demo.test / agency123"""
+        self.log("\n=== 5) AGENCY LOGIN ===")
+        success, response = self.run_test(
+            "Agency Login",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "agency1@demo.test", "password": "agency123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.agency_token = response['access_token']
+            user = response.get('user', {})
+            self.agency_id = user.get('agency_id')
+            
+            if self.agency_id:
+                self.log(f"✅ Agency logged in, agency_id: {self.agency_id}")
+                return True
+            else:
+                self.log(f"❌ Agency ID missing")
+                return False
+        return False
+
+    def test_search_cache_hit(self):
+        """6) Aynı otelde iki kez aynı payload ile /api/agency/search çağır"""
+        self.log("\n=== 6) SEARCH CACHE TEST ===")
+        
+        if not self.hotel_id:
+            self.log("❌ No hotel_id for search test")
+            return False
+        
+        search_data = {
+            "hotel_id": self.hotel_id,
+            "check_in": "2026-04-15",
+            "check_out": "2026-04-17",
+            "occupancy": {"adults": 2, "children": 0}
+        }
+        
+        # First search call
+        success, response = self.run_test(
+            "First Search Call",
+            "POST",
+            "api/agency/search",
+            200,
+            data=search_data,
+            token=self.agency_token
+        )
+        
+        if success:
+            self.search_response_1 = response
+            search_id_1 = response.get('search_id')
+            self.log(f"✅ First search successful: {search_id_1}")
+            
+            # Second search call (should be cache hit)
+            success, response = self.run_test(
+                "Second Search Call (Cache Hit)",
+                "POST",
+                "api/agency/search",
+                200,
+                data=search_data,
+                token=self.agency_token
+            )
+            
+            if success:
+                self.search_response_2 = response
+                search_id_2 = response.get('search_id')
+                self.log(f"✅ Second search successful: {search_id_2}")
+                
+                # Check if search_id is the same (cache hit indicator)
+                if search_id_1 == search_id_2:
+                    self.log(f"✅ CACHE HIT CONFIRMED: search_id identical ({search_id_1})")
+                    return True
+                else:
+                    self.log(f"❌ CACHE MISS: search_id different ({search_id_1} vs {search_id_2})")
+                    return False
+        
+        return False
+
+    def test_booking_creation_with_dates(self):
+        """7) Draft + confirm ile booking oluştur ve check_in_date/check_out_date kontrol et"""
+        self.log("\n=== 7) BOOKING CREATION WITH DATE HYGIENE ===")
+        
+        if not self.search_response_1:
+            self.log("❌ No search response for booking creation")
+            return False
+        
+        search_id = self.search_response_1.get('search_id')
+        rooms = self.search_response_1.get('rooms', [])
+        
+        # Find available room
+        available_room = None
+        for room in rooms:
+            if room.get('inventory_left', 0) > 0:
+                available_room = room
+                break
+        
+        if not available_room:
+            self.log("❌ No available rooms for booking")
+            return False
+        
+        room_type_id = available_room.get('room_type_id')
+        rate_plans = available_room.get('rate_plans', [])
+        rate_plan_id = rate_plans[0].get('rate_plan_id') if rate_plans else 'rp_base'
+        
+        # Create draft
+        draft_data = {
+            "search_id": search_id,
+            "hotel_id": self.hotel_id,
+            "room_type_id": room_type_id,
+            "rate_plan_id": rate_plan_id,
+            "guest": {
+                "full_name": "Mehmet Özkan",
+                "email": "mehmet.ozkan@example.com",
+                "phone": "+905551234567"
+            },
+            "check_in": "2026-04-15",
+            "check_out": "2026-04-17",
+            "nights": 2,
+            "adults": 2,
+            "children": 0
+        }
+        
+        success, response = self.run_test(
+            "Create Booking Draft",
+            "POST",
+            "api/agency/bookings/draft",
+            200,
+            data=draft_data,
+            token=self.agency_token
+        )
+        
+        if success:
+            draft_id = response.get('id')
+            self.log(f"✅ Draft created: {draft_id}")
+            
+            # Confirm booking
+            confirm_data = {"draft_id": draft_id}
+            success, response = self.run_test(
+                "Confirm Booking",
+                "POST",
+                "api/agency/bookings/confirm",
+                200,
+                data=confirm_data,
+                token=self.agency_token
+            )
+            
+            if success:
+                self.booking_id = response.get('id')
+                check_in_date = response.get('check_in_date')
+                check_out_date = response.get('check_out_date')
+                
+                self.log(f"✅ Booking confirmed: {self.booking_id}")
+                
+                # Check date fields
+                if check_in_date and check_out_date:
+                    self.log(f"✅ Date hygiene OK: check_in_date={check_in_date}, check_out_date={check_out_date}")
+                    return True
+                else:
+                    self.log(f"❌ Date fields missing: check_in_date={check_in_date}, check_out_date={check_out_date}")
+                    return False
+        
+        return False
+
+    def test_booking_events_created(self):
+        """8) booking_events koleksiyonunda booking.created kaydı kontrol et"""
+        self.log("\n=== 8) CHECK BOOKING.CREATED EVENT ===")
+        
+        if not self.booking_id:
+            self.log("❌ No booking_id for events check")
+            return False
+        
+        # Login as super admin first
+        success, response = self.run_test(
+            "Super Admin Login for Events Check",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "admin@acenta.test", "password": "admin123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        
+        if success and 'access_token' in response:
+            super_admin_token = response['access_token']
+            
+            # Check audit logs for booking.confirm action
+            success, response = self.run_test(
+                "Check Audit Logs for Booking Creation",
+                "GET",
+                f"api/audit/logs?action=booking.confirm&limit=10",
+                200,
+                token=super_admin_token
+            )
+            
+            if success:
+                logs = response
+                booking_confirm_found = False
+                
+                for log in logs:
+                    if log.get('target', {}).get('id') == self.booking_id:
+                        booking_confirm_found = True
+                        self.log(f"✅ Booking confirm audit log found for booking: {self.booking_id}")
+                        break
+                
+                if booking_confirm_found:
+                    self.log(f"✅ BOOKING.CREATED EVENT VERIFIED (via audit log)")
+                    return True
+                else:
+                    self.log(f"❌ No booking confirm audit log found for booking: {self.booking_id}")
+                    return False
+        
+        return False
+
+    def test_booking_cancel_and_events(self):
+        """9) Cancel endpoint: POST /api/bookings/{booking_id}/cancel"""
+        self.log("\n=== 9) BOOKING CANCEL & EVENTS ===")
+        
+        if not self.booking_id:
+            self.log("❌ No booking_id for cancel test")
+            return False
+        
+        # Cancel booking
+        success, response = self.run_test(
+            "Cancel Booking",
+            "POST",
+            f"api/bookings/{self.booking_id}/cancel",
+            200,
+            token=self.agency_token
+        )
+        
+        if success:
+            self.log(f"✅ Booking cancelled: {self.booking_id}")
+            
+            # Check audit logs for booking.cancel action
+            success, response = self.run_test(
+                "Check Audit Logs for Booking Cancel",
+                "GET",
+                f"api/audit/logs?action=booking.cancel&limit=10",
+                200,
+                token=self.super_admin_token or self.agency_token
+            )
+            
+            if success:
+                logs = response
+                booking_cancel_found = False
+                
+                for log in logs:
+                    if log.get('target', {}).get('id') == self.booking_id:
+                        booking_cancel_found = True
+                        self.log(f"✅ Booking cancel audit log found")
+                        break
+                
+                if booking_cancel_found:
+                    self.log(f"✅ BOOKING.CANCELLED EVENT VERIFIED (via audit log)")
+                    return True
+                else:
+                    self.log(f"❌ No booking cancel audit log found")
+                    return False
+        
+        return False
+
+    def test_super_admin_audit_logs(self):
+        """10) Login super_admin ve GET /api/audit/logs kontrol et"""
+        self.log("\n=== 10) SUPER ADMIN AUDIT LOGS ===")
+        
+        # Login as super admin
+        success, response = self.run_test(
+            "Super Admin Login",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "admin@acenta.test", "password": "admin123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        
+        if success and 'access_token' in response:
+            self.super_admin_token = response['access_token']
+            
+            # Get audit logs
+            success, response = self.run_test(
+                "Get Audit Logs",
+                "GET",
+                "api/audit/logs?limit=50",
+                200,
+                token=self.super_admin_token
+            )
+            
+            if success:
+                logs = response
+                self.log(f"✅ Retrieved {len(logs)} audit logs")
+                
+                # Check for expected actions
+                expected_actions = [
+                    "booking.confirm", "booking.cancel", "stop_sell.create", 
+                    "allocation.create", "booking.note", "booking.guest_note", 
+                    "booking.cancel_request"
+                ]
+                
+                found_actions = set()
+                for log in logs:
+                    action = log.get('action')
+                    if action in expected_actions:
+                        found_actions.add(action)
+                        self.log(f"   ✅ Found action: {action}")
+                
+                missing_actions = set(expected_actions) - found_actions
+                if missing_actions:
+                    self.log(f"   ⚠️  Missing actions: {missing_actions}")
+                
+                if len(found_actions) >= 4:  # At least some key actions found
+                    self.log(f"✅ AUDIT LOGS WORKING - Found {len(found_actions)} expected actions")
+                    return True
+                else:
+                    self.log(f"❌ AUDIT LOGS INCOMPLETE - Only found {len(found_actions)} actions")
+                    return False
+        
+        return False
+
+    def print_summary(self):
+        """Print test summary"""
+        self.log("\n" + "="*60)
+        self.log("FAZ-7 AUDIT + CACHE + EVENTS TEST SUMMARY")
+        self.log("="*60)
+        self.log(f"Total Tests: {self.tests_run}")
+        self.log(f"✅ Passed: {self.tests_passed}")
+        self.log(f"❌ Failed: {self.tests_failed}")
+        self.log(f"Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%")
+        
+        if self.failed_tests:
+            self.log("\n❌ FAILED TESTS:")
+            for i, test in enumerate(self.failed_tests, 1):
+                self.log(f"  {i}. {test}")
+        
+        self.log("="*60)
+
+    def run_faz7_tests(self):
+        """Run all FAZ-7 tests in sequence"""
+        self.log("🚀 Starting FAZ-7 Audit + Cache + Events Tests")
+        self.log(f"Base URL: {self.base_url}")
+        
+        # 1) Hotel admin login
+        if not self.test_hotel_admin_login():
+            self.log("❌ Hotel admin login failed - stopping tests")
+            self.print_summary()
+            return 1
+
+        # 2-3) Create stop-sell and allocation
+        self.test_stop_sell_creation()
+        self.test_allocation_creation()
+
+        # 4) Booking actions (note, guest-note, cancel-request)
+        self.test_booking_actions()
+
+        # 5) Agency login
+        if not self.test_agency_login():
+            self.log("❌ Agency login failed - stopping search tests")
+        else:
+            # 6) Search cache test
+            self.test_search_cache_hit()
+            
+            # 7) Booking creation with date hygiene
+            self.test_booking_creation_with_dates()
+            
+            # 8) Check booking.created events
+            self.test_booking_events_created()
+            
+            # 9) Cancel booking and check events
+            self.test_booking_cancel_and_events()
+
+        # 10) Super admin audit logs
+        self.test_super_admin_audit_logs()
+
+        # Summary
+        self.print_summary()
+
+        return 0 if self.tests_failed == 0 else 1
+
+
 def main():
     if len(sys.argv) > 1:
         if sys.argv[1] == "faz5":
@@ -2126,6 +2715,10 @@ def main():
         elif sys.argv[1] == "faz6":
             tester = FAZ6CommissionTester()
             exit_code = tester.run_faz6_tests()
+            sys.exit(exit_code)
+        elif sys.argv[1] == "faz7":
+            tester = FAZ7AuditCacheEventsTester()
+            exit_code = tester.run_faz7_tests()
             sys.exit(exit_code)
     else:
         tester = AcentaAPITester()

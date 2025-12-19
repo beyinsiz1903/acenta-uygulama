@@ -512,6 +512,7 @@ async def ensure_seed_data() -> None:
             "_id": str(uuid.uuid4()),
             "tenant_id": hotels[0]["_id"],
             "organization_id": org_id,
+            "source": "local",
             "room_type": "deluxe",
             "start_date": "2025-12-30",
             "end_date": "2026-01-02",

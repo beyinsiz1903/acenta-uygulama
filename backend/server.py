@@ -9284,21 +9284,6 @@ async def get_bookings(
     cursor = db.bookings.find(query).sort('check_in', -1).skip(offset).limit(limit)
     bookings_raw = await cursor.to_list(length=limit)
 
-    # Push CM event (best-effort)
-    await cm_push_event({
-        "type": "booking.created",
-        "tenant_id": current_user.tenant_id,
-        "booking_id": booking.id,
-        "room_id": booking.room_id,
-        "check_in": booking_dict['check_in'],
-        "check_out": booking_dict['check_out'],
-        "status": booking.status,
-        "source_channel": booking_dict.get('source_channel', 'direct'),
-        "origin": booking_dict.get('origin', 'ui'),
-        "hold_status": booking_dict.get('hold_status', 'none'),
-        "allocation_source": booking_dict.get('allocation_source', 'manual'),
-        "created_at": booking_dict['created_at'],
-    })
 
     
     # Process bookings

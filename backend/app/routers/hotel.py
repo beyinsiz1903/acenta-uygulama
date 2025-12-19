@@ -111,6 +111,30 @@ async def list_hotel_bookings(
     return out
 
 
+@router.get(
+    "/bookings/{booking_id}",
+    dependencies=[Depends(require_roles(["hotel_admin", "hotel_staff"]))],
+)
+async def get_hotel_booking(booking_id: str, user=Depends(get_current_user)):
+    """Get single booking for this hotel (normalized view)."""
+    db = await get_db()
+    hotel_id = _ensure_hotel_id(user)
+
+    booking = await db.bookings.find_one(
+        {
+            "organization_id": user["organization_id"],
+            "hotel_id": hotel_id,
+            "_id": booking_id,
+        }
+    )
+
+    if not booking:
+        raise HTTPException(status_code=404, detail="BOOKING_NOT_FOUND")
+
+    return build_booking_public_view(booking)
+
+
+
 class BookingNoteIn(BaseModel):
     note: str = Field(min_length=1, max_length=4000)
 

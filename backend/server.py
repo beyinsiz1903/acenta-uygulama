@@ -2745,22 +2745,6 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
         print(f"Auth error: {str(e)}")
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication failed")
 
-async def require_super_admin(current_user: User = Depends(get_current_user)) -> User:
-    """Allow only super admin users (platform yöneticileri) to access super admin endpoints.
-    
-    Super admin can:
-    - View all hotels/tenants
-    - Create new hotels
-    - Manage module subscriptions for all hotels
-    - View system-wide reports
-    """
-    if current_user.role != UserRole.SUPER_ADMIN:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Bu işlemi sadece platform yöneticileri yapabilir",
-        )
-    return current_user
-
 def generate_qr_code(data: str) -> str:
     qr = qrcode.QRCode(version=1, box_size=10, border=5)
     qr.add_data(data)

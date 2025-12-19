@@ -165,7 +165,7 @@ async def get_booking_draft(draft_id: str, user=Depends(get_current_user)):
 
 
 @router.post("/confirm", dependencies=[Depends(require_roles(["agency_admin", "agency_agent"]))])
-async def confirm_booking(payload: BookingConfirmIn, user=Depends(get_current_user)):
+async def confirm_booking(payload: BookingConfirmIn, request: Request, user=Depends(get_current_user)):
     """
     FAZ-3.1: Confirm booking draft
     FAZ-3.2: Check expiration + price recheck
@@ -223,6 +223,9 @@ async def confirm_booking(payload: BookingConfirmIn, user=Depends(get_current_us
         raise HTTPException(
             status_code=409,
             detail={
+
+    before_draft = dict(draft)
+
                 "code": "PRICE_CHANGED",
                 "old_total": draft_total,
                 "new_total": new_total,
@@ -240,7 +243,12 @@ async def confirm_booking(payload: BookingConfirmIn, user=Depends(get_current_us
     commission_type = (link or {}).get("commission_type") or "percent"
     commission_value = (link or {}).get("commission_value") or 0.0
 
-    from app.services.commission import compute_commission, month_from_check_in, create_financial_entry
+    from fastapi import Request
+
+from app.services.commission import compute_commission, month_from_check_in, create_financial_entry
+from app.services.audit import write_audit_log
+from app.services.events import write_booking_event
+from app.utils import date_to_utc_midnight
 
     gross_total = float(draft.get("rate_snapshot", {}).get("price", {}).get("total", 0) or 0)
     currency = draft.get("rate_snapshot", {}).get("price", {}).get("currency", "TRY")
@@ -278,10 +286,46 @@ async def confirm_booking(payload: BookingConfirmIn, user=Depends(get_current_us
         # FAZ-6: financial snapshot
         "gross_amount": round(gross_total, 2),
         "commission_amount": round(commission_amount, 2),
+
+
+    await db.bookings.update_one({"_id": booking_id}, {"$set": {"check_in_date": booking.get("check_in_date"), "check_out_date": booking.get("check_out_date")}})
+
+    # FAZ-7: data hygiene - parsed date fields on booking (UTC midnight)
+    stay = booking.get("stay") or {}
+    if stay.get("check_in"):
+        booking["check_in_date"] = date_to_utc_midnight(stay["check_in"])
+    if stay.get("check_out"):
+        booking["check_out_date"] = date_to_utc_midnight(stay["check_out"])
+
         "net_amount": round(net_amount, 2),
         "currency": currency,
         "commission_type_snapshot": commission_type_norm,
         "commission_value_snapshot": float(commission_value or 0),
+
+    # FAZ-7: events + audit
+    await write_booking_event(
+        db,
+        organization_id=user["organization_id"],
+        event_type="booking.created",
+        booking_id=booking_id,
+        hotel_id=draft["hotel_id"],
+        agency_id=agency_id,
+        payload={"channel": "agency_extranet"},
+    )
+
+    await write_audit_log(
+        db,
+        organization_id=user["organization_id"],
+        actor={"actor_type": "user", "email": user.get("email"), "roles": user.get("roles")},
+        request=request,
+        action="booking.confirm",
+        target_type="booking",
+        target_id=booking_id,
+        before=before_draft,
+        after=booking,
+        meta={"draft_id": payload.draft_id},
+    )
+
         "commission_reversed": False,
     }
     

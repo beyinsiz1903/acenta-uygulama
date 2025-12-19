@@ -70,6 +70,7 @@ export default function App() {
             <Route path="hotels" element={<AdminHotelsPage />} />
             <Route path="links" element={<AdminLinksPage />} />
             <Route path="audit" element={<AdminAuditLogsPage />} />
+            <Route path="audit" element={<AdminAuditLogsPage />} />
           </Route>
         </Route>
 

@@ -503,9 +503,6 @@ async def ensure_seed_data() -> None:
     # FAZ-2.3: Create stop-sell rules + channel allocations if none exist
     stop_sell_count = await db.stop_sell_rules.count_documents({"organization_id": org_id})
     if stop_sell_count == 0 and len(hotels) >= 1:
-
-                "source": "local",
-
         import uuid
 
         now = now_utc()

@@ -283,7 +283,12 @@ async def confirm_booking(payload: BookingConfirmIn, request: Request, user=Depe
         # FAZ-6: financial snapshot
         "gross_amount": round(gross_total, 2),
         "commission_amount": round(commission_amount, 2),
-
+        "net_amount": round(net_amount, 2),
+        "currency": currency,
+        "commission_type_snapshot": commission_type_norm,
+        "commission_value_snapshot": float(commission_value or 0),
+        "commission_reversed": False,
+    }
 
     # FAZ-7: data hygiene - parsed date fields on booking (UTC midnight)
     stay = booking.get("stay") or {}
@@ -291,11 +296,6 @@ async def confirm_booking(payload: BookingConfirmIn, request: Request, user=Depe
         booking["check_in_date"] = date_to_utc_midnight(stay["check_in"])
     if stay.get("check_out"):
         booking["check_out_date"] = date_to_utc_midnight(stay["check_out"])
-
-        "net_amount": round(net_amount, 2),
-        "currency": currency,
-        "commission_type_snapshot": commission_type_norm,
-        "commission_value_snapshot": float(commission_value or 0),
 
     # FAZ-7: events + audit
     await write_booking_event(
@@ -320,9 +320,6 @@ async def confirm_booking(payload: BookingConfirmIn, request: Request, user=Depe
         after=booking,
         meta={"draft_id": payload.draft_id},
     )
-
-        "commission_reversed": False,
-    }
     
     await db.bookings.insert_one(booking)
 

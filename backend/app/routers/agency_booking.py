@@ -235,6 +235,7 @@ async def confirm_booking(payload: BookingConfirmIn, user=Depends(get_current_us
         "organization_id": user["organization_id"],
         "agency_id": agency_id,
         "hotel_id": draft["hotel_id"],
+        "active": True,
     })
     commission_type = (link or {}).get("commission_type") or "percent"
     commission_value = (link or {}).get("commission_value") or 0.0

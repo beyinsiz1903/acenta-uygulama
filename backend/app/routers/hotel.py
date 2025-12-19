@@ -497,6 +497,19 @@ async def update_allocation(allocation_id: str, payload: AllocationIn, request: 
         actor={"actor_type": "user", "email": user.get("email"), "roles": user.get("roles")},
         request=request,
         action="allocation.update",
+
+    await write_audit_log(
+        db,
+        organization_id=user["organization_id"],
+        actor={"actor_type": "user", "email": user.get("email"), "roles": user.get("roles")},
+        request=request,
+        action="allocation.update",
+        target_type="allocation",
+        target_id=allocation_id,
+        before=before,
+        after=update_doc,
+    )
+
         target_type="allocation",
         target_id=allocation_id,
         before=before,

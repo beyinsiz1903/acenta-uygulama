@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+import logging
+
 from app.db import get_db
 from app.auth import hash_password
 from app.utils import now_utc
+
+logger = logging.getLogger("acenta-master")
 
 DEFAULT_ADMIN_EMAIL = "admin@acenta.test"
 DEFAULT_ADMIN_PASSWORD = "admin123"

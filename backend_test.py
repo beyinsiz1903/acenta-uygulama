@@ -2613,12 +2613,14 @@ class FAZ7AuditCacheEventsTester:
             self.log("❌ No booking_id for cancel test")
             return False
         
-        # Cancel booking
+        # Cancel booking with reason
+        cancel_data = {"reason": "FAZ7 test iptal"}
         success, response = self.run_test(
             "Cancel Booking",
             "POST",
             f"api/bookings/{self.booking_id}/cancel",
             200,
+            data=cancel_data,
             token=self.agency_token
         )
         

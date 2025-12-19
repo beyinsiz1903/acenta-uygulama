@@ -119,7 +119,7 @@ class BookingNoteIn(BaseModel):
     "/bookings/{booking_id}/note",
     dependencies=[Depends(require_roles(["hotel_admin", "hotel_staff"]))],
 )
-async def add_booking_note(booking_id: str, payload: BookingNoteIn, user=Depends(get_current_user)):
+async def add_booking_note(booking_id: str, payload: BookingNoteIn, request: Request, user=Depends(get_current_user)):
     db = await get_db()
     hotel_id = _ensure_hotel_id(user)
 
@@ -150,7 +150,7 @@ async def add_booking_note(booking_id: str, payload: BookingNoteIn, user=Depends
     "/bookings/{booking_id}/guest-note",
     dependencies=[Depends(require_roles(["hotel_admin", "hotel_staff"]))],
 )
-async def add_guest_note(booking_id: str, payload: BookingNoteIn, user=Depends(get_current_user)):
+async def add_guest_note(booking_id: str, payload: BookingNoteIn, request: Request, user=Depends(get_current_user)):
     db = await get_db()
     hotel_id = _ensure_hotel_id(user)
 
@@ -177,7 +177,7 @@ class CancelRequestIn(BaseModel):
     "/bookings/{booking_id}/cancel-request",
     dependencies=[Depends(require_roles(["hotel_admin", "hotel_staff"]))],
 )
-async def request_cancel(booking_id: str, payload: CancelRequestIn, user=Depends(get_current_user)):
+async def request_cancel(booking_id: str, payload: CancelRequestIn, request: Request, user=Depends(get_current_user)):
     db = await get_db()
     hotel_id = _ensure_hotel_id(user)
 

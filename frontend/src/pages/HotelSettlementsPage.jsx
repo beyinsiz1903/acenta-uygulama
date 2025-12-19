@@ -50,11 +50,30 @@ export default function HotelSettlementsPage() {
 
   const rows = useMemo(() => data?.totals || [], [data]);
 
-  function downloadCsv() {
-    const params = new URLSearchParams({ month, export: "csv" });
-    if (status) params.set("status", status);
-    if (agencyId) params.set("agency_id", agencyId);
-    window.open(`/api/hotel/settlements?${params.toString()}`, "_blank");
+  async function downloadCsv() {
+    try {
+      const params = { month, export: "csv" };
+      if (status) params.status = status;
+      if (agencyId) params.agency_id = agencyId;
+
+      const resp = await api.get("/hotel/settlements", {
+        params,
+        responseType: "blob",
+      });
+
+      const blob = new Blob([resp.data], { type: "text/csv;charset=utf-8" });
+      const url = window.URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `hotel-settlements-${month}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (e) {
+      setError(apiErrorMessage(e));
+    }
   }
 
   return (

@@ -42,6 +42,7 @@ const iconMap = {
   "Oteller": Hotel,
   "Link Yönetimi": LinkIcon,
   "Otellerim": Hotel,
+  "Mutabakat": FileText,
 };
 
 function userHasRole(user, allowed) {

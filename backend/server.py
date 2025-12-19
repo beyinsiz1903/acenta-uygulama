@@ -2072,6 +2072,12 @@ class BookingCreate(BaseModel):
     check_out: str
     adults: int = 1
     children: int = 0
+
+    # CM / integration semantics (optional; defaults applied in Booking model)
+    source_channel: Optional[str] = None
+    origin: Optional[str] = None
+    hold_status: Optional[str] = None
+    allocation_source: Optional[str] = None
     children_ages: List[int] = []
     guests_count: int  # Total: adults + children
     total_amount: float

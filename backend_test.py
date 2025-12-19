@@ -1662,78 +1662,95 @@ class FAZ6CommissionTester:
             
         confirm_data = {"draft_id": self.draft_id}
         
-        success, response = self.run_test(
-            "Confirm Booking",
-            "POST",
-            "api/agency/bookings/confirm",
-            200,
-            data=confirm_data,
-            token=self.agency_token
-        )
-        
-        if success:
-            booking_id = response.get('id')
-            gross_amount = response.get('gross_amount')
-            commission_amount = response.get('commission_amount')
-            net_amount = response.get('net_amount')
-            currency = response.get('currency')
-            commission_type_snapshot = response.get('commission_type_snapshot')
-            commission_value_snapshot = response.get('commission_value_snapshot')
+        # Try confirmation up to 3 times to handle price change simulation
+        for attempt in range(3):
+            if attempt > 0:
+                self.log(f"   Retry attempt {attempt + 1}")
+                
+            success, response = self.run_test(
+                f"Confirm Booking (attempt {attempt + 1})",
+                "POST",
+                "api/agency/bookings/confirm",
+                200,
+                data=confirm_data,
+                token=self.agency_token
+            )
             
-            if booking_id:
-                self.booking_id = booking_id
-                self.log(f"✅ Booking confirmed: {booking_id}")
+            # If we get 409 (price changed), that's expected behavior, try again
+            if not success and hasattr(response, 'get') and isinstance(response, dict):
+                detail = response.get('detail', {})
+                if isinstance(detail, dict) and detail.get('code') == 'PRICE_CHANGED':
+                    self.log(f"   Price changed: {detail.get('old_total')} → {detail.get('new_total')}")
+                    continue
+            
+            if success:
+                booking_id = response.get('id')
+                gross_amount = response.get('gross_amount')
+                commission_amount = response.get('commission_amount')
+                net_amount = response.get('net_amount')
+                currency = response.get('currency')
+                commission_type_snapshot = response.get('commission_type_snapshot')
+                commission_value_snapshot = response.get('commission_value_snapshot')
                 
-                # Verify commission calculations
-                rate_snapshot = response.get('rate_snapshot', {})
-                rate_total = rate_snapshot.get('price', {}).get('total', 0)
-                
-                self.log(f"   Rate snapshot total: {rate_total}")
-                self.log(f"   Gross amount: {gross_amount}")
-                self.log(f"   Commission amount: {commission_amount}")
-                self.log(f"   Net amount: {net_amount}")
-                self.log(f"   Currency: {currency}")
-                self.log(f"   Commission type: {commission_type_snapshot}")
-                self.log(f"   Commission value: {commission_value_snapshot}")
-                
-                # Verify calculations
-                if abs(float(gross_amount or 0) - float(rate_total or 0)) < 0.01:
-                    self.log(f"✅ Gross amount matches rate snapshot")
-                else:
-                    self.log(f"❌ Gross amount mismatch: {gross_amount} vs {rate_total}")
-                    return False
-                
-                if commission_type_snapshot == "percent":
-                    expected_commission = round(float(gross_amount) * float(commission_value_snapshot) / 100.0, 2)
-                    if abs(float(commission_amount) - expected_commission) < 0.01:
-                        self.log(f"✅ Commission calculation correct")
+                if booking_id:
+                    self.booking_id = booking_id
+                    self.log(f"✅ Booking confirmed: {booking_id}")
+                    
+                    # Verify commission calculations
+                    rate_snapshot = response.get('rate_snapshot', {})
+                    rate_total = rate_snapshot.get('price', {}).get('total', 0)
+                    
+                    self.log(f"   Rate snapshot total: {rate_total}")
+                    self.log(f"   Gross amount: {gross_amount}")
+                    self.log(f"   Commission amount: {commission_amount}")
+                    self.log(f"   Net amount: {net_amount}")
+                    self.log(f"   Currency: {currency}")
+                    self.log(f"   Commission type: {commission_type_snapshot}")
+                    self.log(f"   Commission value: {commission_value_snapshot}")
+                    
+                    # Verify calculations
+                    if abs(float(gross_amount or 0) - float(rate_total or 0)) < 0.01:
+                        self.log(f"✅ Gross amount matches rate snapshot")
                     else:
-                        self.log(f"❌ Commission calculation wrong: {commission_amount} vs {expected_commission}")
+                        self.log(f"❌ Gross amount mismatch: {gross_amount} vs {rate_total}")
                         return False
-                
-                expected_net = round(float(gross_amount) - float(commission_amount), 2)
-                if abs(float(net_amount) - expected_net) < 0.01:
-                    self.log(f"✅ Net amount calculation correct")
+                    
+                    if commission_type_snapshot == "percent":
+                        expected_commission = round(float(gross_amount) * float(commission_value_snapshot) / 100.0, 2)
+                        if abs(float(commission_amount) - expected_commission) < 0.01:
+                            self.log(f"✅ Commission calculation correct")
+                        else:
+                            self.log(f"❌ Commission calculation wrong: {commission_amount} vs {expected_commission}")
+                            return False
+                    
+                    expected_net = round(float(gross_amount) - float(commission_amount), 2)
+                    if abs(float(net_amount) - expected_net) < 0.01:
+                        self.log(f"✅ Net amount calculation correct")
+                    else:
+                        self.log(f"❌ Net amount calculation wrong: {net_amount} vs {expected_net}")
+                        return False
+                    
+                    if currency:
+                        self.log(f"✅ Currency populated: {currency}")
+                    else:
+                        self.log(f"❌ Currency missing")
+                        return False
+                    
+                    if commission_type_snapshot and commission_value_snapshot is not None:
+                        self.log(f"✅ Commission snapshots populated")
+                    else:
+                        self.log(f"❌ Commission snapshots missing")
+                        return False
+                    
+                    return True
                 else:
-                    self.log(f"❌ Net amount calculation wrong: {net_amount} vs {expected_net}")
+                    self.log(f"❌ No booking ID in response")
                     return False
-                
-                if currency:
-                    self.log(f"✅ Currency populated: {currency}")
-                else:
-                    self.log(f"❌ Currency missing")
-                    return False
-                
-                if commission_type_snapshot and commission_value_snapshot is not None:
-                    self.log(f"✅ Commission snapshots populated")
-                else:
-                    self.log(f"❌ Commission snapshots missing")
-                    return False
-                
-                return True
             else:
-                self.log(f"❌ No booking ID in response")
-                return False
+                # If not a price change error, break and fail
+                break
+        
+        self.log(f"❌ Failed to confirm booking after 3 attempts")
         return False
 
     def test_hotel_admin_login(self):

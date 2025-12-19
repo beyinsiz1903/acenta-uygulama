@@ -113,6 +113,20 @@
 ##     file: "/app/backend/app/schemas.py, /app/backend/app/routers/admin.py, /app/backend/app/routers/agency_booking.py, /app/backend/app/routers/settlements.py, /app/backend/app/routers/bookings.py, /app/backend/app/services/commission.py, /app/backend/app/seed.py, /app/backend/server.py"
 ##     stuck_count: 0
 ##     priority: "high"
+
+## backend:
+##   - task: "FAZ-7 Operasyonel sağlamlık: audit log + search cache (5dk TTL) + booking events outbox + date hygiene"
+##     implemented: true
+##     working: "NA"
+##     file: "/app/backend/app/services/audit.py, /app/backend/app/services/events.py, /app/backend/app/services/search_cache.py, /app/backend/app/routers/audit.py, /app/backend/app/routers/search.py, /app/backend/app/routers/agency_booking.py, /app/backend/app/routers/bookings.py, /app/backend/app/routers/hotel.py, /app/backend/app/routers/admin.py, /app/backend/app/utils.py, /app/backend/app/seed.py, /app/backend/server.py"
+##     stuck_count: 0
+##     priority: "high"
+##     needs_retesting: true
+##     status_history:
+##       - working: "NA"
+##         agent: "main"
+##         comment: "Audit log gerçek eklendi (diff/light snapshot): booking confirm/cancel + hotel booking note/guest-note/cancel-request + stop-sell CRUD + allocation CRUD + agency-hotel link create/update. Origin: ip+user-agent+path+X-App-Version (+X-Request-Id opsiyonel). Search cache: /api/agency/search canonical payload ile Mongo cache + TTL index (5dk). Events: booking.created/updated/cancelled outbox (booking_events) delivered=false. Data hygiene: date_to_utc_midnight helper; booking confirm’de check_in_date/check_out_date; stop-sell/allocation create/update’de *_dt alanları." 
+
 ##     needs_retesting: false
 ##     status_history:
 ##       - working: "NA"

@@ -255,7 +255,7 @@
 ## frontend:
   - task: "FAZ-6 Mutabakat UI smoke test"
     implemented: true
-    working: false
+    working: true
     file: "/app/frontend/src/pages/AgencySettlementsPage.jsx, /app/frontend/src/pages/HotelSettlementsPage.jsx, /app/frontend/src/config/menuConfig.js"
     stuck_count: 0
     priority: "high"
@@ -264,3 +264,6 @@
       - working: false
         agent: "testing"
         comment: "FAZ-6 MUTABAKAT UI SMOKE TEST COMPLETED - MIXED RESULTS. AGENCY SIDE FULLY FUNCTIONAL: ✅ Login successful (agency1@demo.test/agency123), ✅ Mutabakat menu item visible in agency menu, ✅ Agency settlements page loads correctly with proper title, ✅ Month filtering working (2026-03 input and Filtrele button functional), ✅ Table displays data (1 settlement row with hotel data), ✅ All agency functionality production-ready. HOTEL SIDE HAS CRITICAL ISSUES: ✅ Login successful (hoteladmin@acenta.test/admin123), ❌ Hotel Mutabakat menu item NOT FOUND in hotel menu, ❌ Navigation to /app/hotel/settlements redirects back to login page (authentication/authorization issue), ❌ Hotel settlements page inaccessible. ROOT CAUSE: Hotel admin user lacks proper permissions or hotel role configuration issue preventing access to settlements functionality. CSV exports also failing due to authentication token not being passed to new tabs (affects both sides but API endpoints work when called with proper auth headers)."
+      - working: true
+        agent: "testing"
+        comment: "✅ FAZ-6 MUTABAKAT UI RE-TEST COMPLETE - ALL ISSUES RESOLVED! HOTEL SIDE NOW FULLY FUNCTIONAL: ✅ Hotel admin login successful (hoteladmin@acenta.test/admin123), ✅ Hotel 'Mutabakat' menu item FOUND in menu, ✅ Hotel settlements page accessible (/app/hotel/settlements), ✅ Month filtering working (2026-03), ✅ CSV download working with blob download (hotel-settlements-2026-03.csv), ⚠️ No settlement data for 2026-03 (expected - no bookings for that month). AGENCY SIDE CONFIRMED WORKING: ✅ Agency admin login successful (agency1@demo.test/agency123), ✅ Agency settlements page accessible, ✅ Month filtering working (2026-03), ✅ Found 1 settlement row for 2026-03 (Demo Hotel 2: gross=12600, commission=1260, net=11340, count=7), ✅ CSV download working with blob download (agency-settlements-2026-03.csv). CRITICAL FIXES VERIFIED: Both hotel and agency CSV downloads now use proper blob download mechanism (not window.open), no 401 errors, authentication working correctly for both user types. All previously failed items now PASS."

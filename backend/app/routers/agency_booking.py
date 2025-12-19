@@ -245,12 +245,7 @@ async def confirm_booking(payload: BookingConfirmIn, request: Request, user=Depe
     commission_type = (link or {}).get("commission_type") or "percent"
     commission_value = (link or {}).get("commission_value") or 0.0
 
-    from fastapi import Request
-
-from app.services.commission import compute_commission, month_from_check_in, create_financial_entry
-from app.services.audit import write_audit_log
-from app.services.events import write_booking_event
-from app.utils import date_to_utc_midnight
+    from app.services.commission import compute_commission, month_from_check_in, create_financial_entry
 
     gross_total = float(draft.get("rate_snapshot", {}).get("price", {}).get("total", 0) or 0)
     currency = draft.get("rate_snapshot", {}).get("price", {}).get("currency", "TRY")

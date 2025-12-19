@@ -61,6 +61,10 @@ class RatePlanIn(BaseModel):
     actions: list[dict[str, Any]] = Field(default_factory=list)  # [{type, value, start,end}]
 
 
+    # FAZ-8: data ownership marker
+    source: str = "local"  # local|pms
+
+
 class RatePlanOut(RatePlanIn):
     id: str
     created_at: datetime
@@ -71,12 +75,20 @@ class InventoryUpsertIn(BaseModel):
     product_id: str
     date: str  # YYYY-MM-DD
     capacity_total: int
+
+    # FAZ-8: data ownership marker
+    source: str = "local"  # local|pms
+
     capacity_available: int
     price: Optional[float] = None
     restrictions: dict[str, Any] = Field(default_factory=lambda: {"closed": False, "cta": False, "ctd": False})
 
 
 class InventoryBulkUpsertIn(BaseModel):
+
+    # FAZ-8: data ownership marker
+    source: str = "local"  # local|pms
+
     product_id: str
     start_date: str  # YYYY-MM-DD
     end_date: str  # YYYY-MM-DD (inclusive)

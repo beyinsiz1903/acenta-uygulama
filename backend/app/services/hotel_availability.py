@@ -197,12 +197,11 @@ async def compute_availability(
         elif allocation_limit is not None:
             # Count sold on this channel (for this room_type in date range)
             sold_on_channel = await db.bookings.count_documents({
-                "tenant_id": hotel_id,
+                "hotel_id": hotel_id,
                 "organization_id": organization_id,
                 "channel": channel,
                 "status": {"$in": ACTIVE_BOOKING_STATUSES},
-                # Note: Would need room_id → room_type join for accurate count
-                # For now, simplified
+                "rate_snapshot.room_type_id": f"rt_{room_type}",
             })
             final_available = max(0, min(base_available, allocation_limit - sold_on_channel))
         else:

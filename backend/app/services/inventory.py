@@ -87,6 +87,8 @@ async def bulk_upsert_inventory(org_id: str, user_email: str, payload: dict[str,
                         "capacity_available": cap_avail,
                         "price": price,
                         "restrictions": {"closed": closed, "cta": False, "ctd": False},
+                        # FAZ-8
+                        "source": payload.get("source") or "local",
                         "updated_at": now_utc(),
                         "updated_by": user_email,
                     },

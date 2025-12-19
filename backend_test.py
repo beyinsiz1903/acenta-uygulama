@@ -1956,7 +1956,7 @@ class FAZ6CommissionTester:
         if success:
             after_totals = {}
             for total in after_response.get('totals', []):
-                if total.get('agency_id') == self.agency_id:
+                if total.get('agency_id') == self.target_agency_id:
                     after_totals = total
                     break
             

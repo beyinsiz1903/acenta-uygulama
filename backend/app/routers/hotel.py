@@ -150,6 +150,29 @@ async def add_booking_note(booking_id: str, payload: BookingNoteIn, request: Req
     "/bookings/{booking_id}/guest-note",
     dependencies=[Depends(require_roles(["hotel_admin", "hotel_staff"]))],
 )
+
+    await write_audit_log(
+        db,
+        organization_id=user["organization_id"],
+        actor={"actor_type": "user", "email": user.get("email"), "roles": user.get("roles")},
+        request=request,
+        action="booking.note",
+        target_type="booking",
+        target_id=booking_id,
+        before=None,
+        after={"note": payload.note},
+    )
+
+    await write_booking_event(
+        db,
+        organization_id=user["organization_id"],
+        event_type="booking.updated",
+        booking_id=booking_id,
+        hotel_id=str(user.get("hotel_id")),
+        agency_id=str((await db.bookings.find_one({"_id": booking_id}) or {}).get("agency_id") or ""),
+        payload={"field": "hotel_notes"},
+    )
+
 async def add_guest_note(booking_id: str, payload: BookingNoteIn, request: Request, user=Depends(get_current_user)):
     db = await get_db()
     hotel_id = _ensure_hotel_id(user)
@@ -172,6 +195,29 @@ async def add_guest_note(booking_id: str, payload: BookingNoteIn, request: Reque
 class CancelRequestIn(BaseModel):
     reason: Optional[str] = Field(default=None, max_length=2000)
 
+    await write_audit_log(
+        db,
+        organization_id=user["organization_id"],
+        actor={"actor_type": "user", "email": user.get("email"), "roles": user.get("roles")},
+        request=request,
+        action="booking.guest_note",
+        target_type="booking",
+        target_id=booking_id,
+        before=None,
+        after={"guest_note": payload.note},
+    )
+
+    await write_booking_event(
+        db,
+        organization_id=user["organization_id"],
+        event_type="booking.updated",
+        booking_id=booking_id,
+        hotel_id=str(user.get("hotel_id")),
+        agency_id=str((await db.bookings.find_one({"_id": booking_id}) or {}).get("agency_id") or ""),
+        payload={"field": "guest_note"},
+    )
+
+
 
 @router.post(
     "/bookings/{booking_id}/cancel-request",
@@ -191,6 +237,29 @@ async def request_cancel(booking_id: str, payload: CancelRequestIn, request: Req
                     "status": "pending",
                     "reason": payload.reason,
                     "requested_at": now,
+
+    await write_audit_log(
+        db,
+        organization_id=user["organization_id"],
+        actor={"actor_type": "user", "email": user.get("email"), "roles": user.get("roles")},
+        request=request,
+        action="booking.cancel_request",
+        target_type="booking",
+        target_id=booking_id,
+        before=None,
+        after={"cancel_request": {"status": "pending", "reason": payload.reason}},
+    )
+
+    await write_booking_event(
+        db,
+        organization_id=user["organization_id"],
+        event_type="booking.updated",
+        booking_id=booking_id,
+        hotel_id=str(user.get("hotel_id")),
+        agency_id=str((await db.bookings.find_one({"_id": booking_id}) or {}).get("agency_id") or ""),
+        payload={"field": "cancel_request"},
+    )
+
                     "requested_by": user.get("email"),
                 },
             }

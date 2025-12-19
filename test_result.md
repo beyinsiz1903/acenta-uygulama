@@ -182,6 +182,9 @@
 ##       - "/app/backend/server.py"
 ##     stuck_count: 0
 ##     priority: "high"
+##   - agent: "main"
+##     message: "FAZ-5 için hotel extranet eklendi: /api/hotel/* endpointleri + UI route/menu. Lütfen backend testinde (1) hoteladmin@acenta.test/admin123 login (hotel_admin, hotel_id) (2) stop-sell create/toggle/delete (3) allocation create/toggle/delete (4) agency search sonucuna anlık etkisi (stop-sell deluxe kapat → deluxe görünmesin; allocation standard=2 → 2 booking sonrası 0) (5) hotel bookings list + note/guest-note/cancel-request aksiyonlarını doğrulayın." 
+
 ##     status_history:
 ##       - working: "NA"
 ##         agent: "main"

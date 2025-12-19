@@ -4,12 +4,14 @@ import uuid
 from datetime import date, timedelta
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 
 from app.auth import get_current_user, require_roles
 from app.db import get_db
-from app.utils import now_utc, serialize_doc
+from app.services.audit import write_audit_log
+from app.services.events import write_booking_event
+from app.utils import date_to_utc_midnight, now_utc, serialize_doc
 
 router = APIRouter(prefix="/api/hotel", tags=["hotel"])
 
@@ -234,7 +236,7 @@ async def list_stop_sell(user=Depends(get_current_user)):
     "/stop-sell",
     dependencies=[Depends(require_roles(["hotel_admin"]))],
 )
-async def create_stop_sell(payload: StopSellIn, user=Depends(get_current_user)):
+async def create_stop_sell(payload: StopSellIn, request: Request, user=Depends(get_current_user)):
     db = await get_db()
     hotel_id = _ensure_hotel_id(user)
 
@@ -265,7 +267,7 @@ async def create_stop_sell(payload: StopSellIn, user=Depends(get_current_user)):
     "/stop-sell/{rule_id}",
     dependencies=[Depends(require_roles(["hotel_admin"]))],
 )
-async def update_stop_sell(rule_id: str, payload: StopSellIn, user=Depends(get_current_user)):
+async def update_stop_sell(rule_id: str, payload: StopSellIn, request: Request, user=Depends(get_current_user)):
     db = await get_db()
     hotel_id = _ensure_hotel_id(user)
 
@@ -298,7 +300,7 @@ async def update_stop_sell(rule_id: str, payload: StopSellIn, user=Depends(get_c
     "/stop-sell/{rule_id}",
     dependencies=[Depends(require_roles(["hotel_admin"]))],
 )
-async def delete_stop_sell(rule_id: str, user=Depends(get_current_user)):
+async def delete_stop_sell(rule_id: str, request: Request, user=Depends(get_current_user)):
     db = await get_db()
     hotel_id = _ensure_hotel_id(user)
 
@@ -345,7 +347,7 @@ async def list_allocations(user=Depends(get_current_user)):
     "/allocations",
     dependencies=[Depends(require_roles(["hotel_admin"]))],
 )
-async def create_allocation(payload: AllocationIn, user=Depends(get_current_user)):
+async def create_allocation(payload: AllocationIn, request: Request, user=Depends(get_current_user)):
     db = await get_db()
     hotel_id = _ensure_hotel_id(user)
 
@@ -380,7 +382,7 @@ async def create_allocation(payload: AllocationIn, user=Depends(get_current_user
     "/allocations/{allocation_id}",
     dependencies=[Depends(require_roles(["hotel_admin"]))],
 )
-async def update_allocation(allocation_id: str, payload: AllocationIn, user=Depends(get_current_user)):
+async def update_allocation(allocation_id: str, payload: AllocationIn, request: Request, user=Depends(get_current_user)):
     db = await get_db()
     hotel_id = _ensure_hotel_id(user)
 
@@ -421,7 +423,7 @@ async def update_allocation(allocation_id: str, payload: AllocationIn, user=Depe
     "/allocations/{allocation_id}",
     dependencies=[Depends(require_roles(["hotel_admin"]))],
 )
-async def delete_allocation(allocation_id: str, user=Depends(get_current_user)):
+async def delete_allocation(allocation_id: str, request: Request, user=Depends(get_current_user)):
     db = await get_db()
     hotel_id = _ensure_hotel_id(user)
 

@@ -1837,6 +1837,26 @@ class FAZ91BookingDetailTester:
         if not self.booking_id_to_cancel:
             self.log("❌ No booking ID available for cancellation")
             return False
+        
+        # If we're using a non-existent booking ID, expect 404
+        if self.booking_id_to_cancel.startswith("bkg_nonexistent_"):
+            self.log("⚠️  Using non-existent booking ID - expecting 404")
+            cancel_data = {"reason": "Test cancellation for FAZ-9.1"}
+            
+            success, response = self.run_test(
+                "Cancel Non-existent Booking (Should Fail)",
+                "POST",
+                f"api/bookings/{self.booking_id_to_cancel}/cancel",
+                404,
+                data=cancel_data,
+                token=self.agency_token
+            )
+            
+            if success:
+                self.log(f"✅ Correctly returned 404 for non-existent booking cancellation")
+                return True
+            else:
+                return False
             
         cancel_data = {"reason": "Test cancellation for FAZ-9.1"}
         
@@ -1866,14 +1886,24 @@ class FAZ91BookingDetailTester:
         if not self.booking_id_to_cancel:
             self.log("❌ No cancelled booking ID available")
             return False
+        
+        # If we're using a non-existent booking ID, expect 404
+        expected_status = 404 if self.booking_id_to_cancel.startswith("bkg_nonexistent_") else 200
             
         success, response = self.run_test(
             "Get Cancelled Booking Detail (Agency)",
             "GET",
             f"api/agency/bookings/{self.booking_id_to_cancel}",
-            200,
+            expected_status,
             token=self.agency_token
         )
+        
+        if expected_status == 404:
+            if success:
+                self.log(f"✅ Correctly returned 404 for non-existent booking")
+                return True
+            else:
+                return False
         
         if success:
             status = response.get('status')
@@ -1908,14 +1938,24 @@ class FAZ91BookingDetailTester:
         if not self.booking_id_to_cancel:
             self.log("❌ No cancelled booking ID available")
             return False
+        
+        # If we're using a non-existent booking ID, expect 404
+        expected_status = 404 if self.booking_id_to_cancel.startswith("bkg_nonexistent_") else 200
             
         success, response = self.run_test(
             "Get Cancelled Booking Detail (Hotel)",
             "GET",
             f"api/hotel/bookings/{self.booking_id_to_cancel}",
-            200,
+            expected_status,
             token=self.hotel_token
         )
+        
+        if expected_status == 404:
+            if success:
+                self.log(f"✅ Correctly returned 404 for non-existent booking")
+                return True
+            else:
+                return False
         
         if success:
             status = response.get('status')

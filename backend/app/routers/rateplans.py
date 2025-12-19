@@ -32,6 +32,7 @@ async def create_rateplan(payload: RatePlanIn, user=Depends(get_current_user)):
     doc.update(
         {
             "organization_id": user["organization_id"],
+            "source": doc.get("source") or "local",
             "created_at": now_utc(),
             "updated_at": now_utc(),
             "created_by": user.get("email"),

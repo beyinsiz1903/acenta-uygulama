@@ -107,3 +107,89 @@ def require_env(name: str) -> str:
     if not v:
         raise RuntimeError(f"Missing env var {name}")
     return v
+
+
+
+BOOKING_STATUS_LABELS_TR = {
+    "confirmed": "Onaylandı",
+    "cancelled": "İptal Edildi",
+    "completed": "Tamamlandı",
+}
+
+BOOKING_STATUS_LABELS_EN = {
+    "confirmed": "Confirmed",
+    "cancelled": "Cancelled",
+    "completed": "Completed",
+}
+
+
+def build_booking_public_view(doc: dict[str, Any]) -> dict[str, Any]:
+    """Normalize booking document for drawer/voucher/email use.
+
+    Returns a serializable dict matching BookingPublicView schema.
+    """
+    if not doc:
+        return {}
+
+    booking_id = str(doc.get("_id") or "")
+    stay = doc.get("stay") or {}
+    occupancy = doc.get("occupancy") or {}
+    guest = doc.get("guest") or {}
+    rate = doc.get("rate_snapshot") or {}
+    price = rate.get("price") or {}
+
+    status_raw = (doc.get("status") or "").lower() or "confirmed"
+    status_tr = BOOKING_STATUS_LABELS_TR.get(status_raw, status_raw)
+    status_en = BOOKING_STATUS_LABELS_EN.get(status_raw, status_raw.capitalize())
+
+    check_in = stay.get("check_in") or doc.get("check_in") or ""
+    check_out = stay.get("check_out") or doc.get("check_out") or ""
+
+    nights = stay.get("nights")
+    if nights is None and check_in and check_out:
+        try:
+            from datetime import date
+
+            d_in = date.fromisoformat(str(check_in)[:10])
+            d_out = date.fromisoformat(str(check_out)[:10])
+            nights = (d_out - d_in).days
+        except Exception:
+            nights = None
+
+    room_type = rate.get("room_type_name") or rate.get("room_type_id")
+    board_type = rate.get("board")
+
+    total_amount = doc.get("gross_amount")
+    if total_amount is None:
+        total_amount = price.get("total")
+
+    currency = doc.get("currency") or price.get("currency")
+
+    destination = doc.get("hotel_city") or doc.get("city")
+
+    return {
+        "id": booking_id,
+        "code": booking_id,
+        "status": status_raw,
+        "status_tr": status_tr,
+        "status_en": status_en,
+        "hotel_name": doc.get("hotel_name"),
+        "destination": destination,
+        "agency_name": doc.get("agency_name"),
+        "guest_name": guest.get("full_name") or doc.get("guest_name"),
+        "guest_email": guest.get("email"),
+        "guest_phone": guest.get("phone"),
+        "check_in_date": str(check_in) if check_in else None,
+        "check_out_date": str(check_out) if check_out else None,
+        "nights": nights,
+        "room_type": room_type,
+        "board_type": board_type,
+        "adults": int(occupancy.get("adults") or 0) if occupancy else None,
+        "children": int(occupancy.get("children") or 0) if occupancy else None,
+        "total_amount": float(total_amount) if total_amount is not None else None,
+        "currency": currency,
+        "source": doc.get("source"),
+        "payment_status": doc.get("payment_status"),
+        "created_at": doc.get("created_at"),
+        "updated_at": doc.get("updated_at"),
+    }

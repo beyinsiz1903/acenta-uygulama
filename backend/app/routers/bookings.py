@@ -88,6 +88,31 @@ async def cancel_booking(booking_id: str, payload: BookingCancelIn, request: Req
             hotel_id=str(booking.get("hotel_id")),
             entry_type="reversal",
             month=month,
+
+    # FAZ-7: event outbox + audit
+    await write_booking_event(
+        db,
+        organization_id=user["organization_id"],
+        event_type="booking.cancelled",
+        booking_id=booking_id,
+        hotel_id=str(booking.get("hotel_id")),
+        agency_id=str(booking.get("agency_id")),
+        payload={"reason": payload.reason},
+    )
+
+    await write_audit_log(
+        db,
+        organization_id=user["organization_id"],
+        actor={"actor_type": "user", "email": user.get("email"), "roles": user.get("roles")},
+        request=request,
+        action="booking.cancel",
+        target_type="booking",
+        target_id=booking_id,
+        before=booking,
+        after=updated,
+        meta={"reason": payload.reason},
+    )
+
             currency=currency,
             gross_amount=-gross_amount,
             commission_amount=-commission_amount,

@@ -436,4 +436,4 @@ async def get_booking(booking_id: str, user=Depends(get_current_user)):
     if not booking:
         raise HTTPException(status_code=404, detail="BOOKING_NOT_FOUND")
     
-    return serialize_doc(booking)
+    return build_booking_public_view(booking)

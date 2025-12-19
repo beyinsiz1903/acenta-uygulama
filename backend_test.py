@@ -1910,7 +1910,7 @@ class FAZ6CommissionTester:
         before_totals = {}
         if success:
             for total in before_response.get('totals', []):
-                if total.get('agency_id') == self.agency_id:
+                if total.get('agency_id') == self.target_agency_id:
                     before_totals = total
                     break
         

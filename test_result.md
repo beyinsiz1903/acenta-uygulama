@@ -107,15 +107,18 @@
 ## backend:
 ##   - task: "FAZ-5 Hotel Extranet: /api/hotel/bookings + stop-sell + allocations + booking aksiyonları"
 ##     implemented: true
-##     working: "NA"
+##     working: true
 ##     file: "/app/backend/app/routers/hotel.py, /app/backend/app/services/hotel_availability.py, /app/backend/app/routers/agency_booking.py, /app/backend/app/seed.py, /app/backend/server.py"
 ##     stuck_count: 0
 ##     priority: "high"
-##     needs_retesting: true
+##     needs_retesting: false
 ##     status_history:
 ##       - working: "NA"
 ##         agent: "main"
 ##         comment: "Hotel router eklendi: GET /api/hotel/bookings (hotel_id ownership + filtreler), stop-sell CRUD (/api/hotel/stop-sell), allocations CRUD (/api/hotel/allocations). Booking aksiyonları: POST /api/hotel/bookings/{id}/note, /guest-note, /cancel-request. Seed: hoteladmin@acenta.test/admin123 (hotel_admin) hotels[0] ile ilişkilendirildi. Agency booking confirm artık channel=agency_extranet, agency_name snapshot ve hotel_availability allocation sold-count room_type+date overlap ile hesaplıyor."
+##       - working: true
+##         agent: "testing"
+##         comment: "✅ FAZ-5 HOTEL EXTRANET COMPREHENSIVE TEST COMPLETE - All 24 test scenarios passed (100% success rate). CRITICAL FUNCTIONALITY VERIFIED: A) Auth/Context: hoteladmin@acenta.test login successful with hotel_admin role and hotel_id populated. B) Hotel Endpoints: GET /api/hotel/bookings working, Stop-sell CRUD (create/list/update/delete) fully functional, Allocation CRUD (create/list/update/delete) fully functional. C) Search Impact (CRITICAL): Stop-sell correctly blocks deluxe rooms from agency search results, Allocation limits working (standard rooms limited to allotment=2), Agency booking flow working (draft creation + confirmation), Allocation exhaustion verified (inventory_left=0 after 2 bookings). D) Booking Actions: Hotel admin can list bookings, add booking notes, add guest notes, and create cancel requests. All endpoints return 200, stop-sell/allocation rules properly impact search results, booking actions successfully update booking documents. Hotel extranet backend fully functional and production-ready."
 
 ## frontend:
 ##   - task: "FAZ-5 Hotel Extranet UI: /app/hotel routes + Stop-sell + Allocation + Bookings aksiyonları"

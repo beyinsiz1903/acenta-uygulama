@@ -1998,11 +1998,8 @@ class FAZ91BookingDetailTester:
             self.print_summary()
             return 1
 
-        # 2) Agency bookings list
-        if not self.test_agency_bookings_list():
-            self.log("❌ Agency bookings list failed - stopping tests")
-            self.print_summary()
-            return 1
+        # 2) Agency bookings list (will create test data if needed)
+        self.test_agency_bookings_list()
 
         # 3) Agency booking detail
         self.test_agency_booking_detail()

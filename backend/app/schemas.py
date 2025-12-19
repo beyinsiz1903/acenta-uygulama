@@ -225,3 +225,32 @@ class AgencyHotelLinkPatchIn(BaseModel):
     # FAZ-6: Commission settings
     commission_type: Optional[str] = None
     commission_value: Optional[float] = None
+
+
+
+class BookingPublicView(BaseModel):
+    id: str
+    code: str
+    status: str
+    status_tr: str
+    status_en: str
+    hotel_name: str | None = None
+    destination: str | None = None
+    agency_name: str | None = None
+    guest_name: str | None = None
+    guest_email: str | None = None
+    guest_phone: str | None = None
+    check_in_date: str | None = None
+    check_out_date: str | None = None
+    nights: int | None = None
+    room_type: str | None = None
+    board_type: str | None = None
+    adults: int | None = None
+    children: int | None = None
+    total_amount: float | None = None
+    currency: str | None = None
+    source: str | None = None
+    payment_status: str | None = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+

@@ -37,6 +37,26 @@ class SearchRequestIn(BaseModel):
 @router.post("/search", dependencies=[Depends(require_roles(["agency_admin", "agency_agent"]))])
 async def search_availability(payload: SearchRequestIn, user=Depends(get_current_user)):
     """
+
+    # ------------------------------
+    # FAZ-7: Search result caching (TTL 5 min)
+    # Keyed by organization + agency + canonical payload (hotel/date/occupancy/currency/channel)
+    # ------------------------------
+    normalized = canonical_search_payload(
+        {
+            "hotel_id": payload.hotel_id,
+            "check_in": payload.check_in,
+            "check_out": payload.check_out,
+            "currency": payload.currency,
+            "occupancy": payload.occupancy.model_dump(),
+            "channel": "agency_extranet",
+        }
+    )
+    key = cache_key(user["organization_id"], agency_id, normalized)
+    cached = await db.search_cache.find_one({"_id": key})
+    if cached and cached.get("response"):
+        return cached["response"]
+
     FAZ-2.1: Mock availability search
     Returns mock room availability and rates
     """

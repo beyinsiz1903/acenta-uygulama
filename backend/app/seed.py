@@ -104,6 +104,11 @@ async def ensure_seed_data() -> None:
     await db.booking_events.create_index([("organization_id", 1), ("delivered", 1), ("created_at", 1)])
     await db.booking_events.create_index([("organization_id", 1), ("entity_id", 1), ("event_type", 1)])
 
+
+    # FAZ-8: PMS mock collections indexes
+    await db.pms_idempotency.create_index([( "organization_id", 1), ("idempotency_key", 1)], unique=True)
+    await db.pms_bookings.create_index([( "organization_id", 1), ("hotel_id", 1), ("created_at", -1)])
+
     # FAZ-7: search cache indexes (TTL by expires_at)
     await db.search_cache.create_index([("expires_at", 1)], expireAfterSeconds=0)
     await db.search_cache.create_index([("organization_id", 1), ("agency_id", 1), ("created_at", -1)])

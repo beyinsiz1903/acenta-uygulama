@@ -211,26 +211,21 @@ async def confirm_booking(payload: BookingConfirmIn, request: Request, user=Depe
         if existing_booking:
             return serialize_doc(existing_booking)
     
-    # FAZ-3.2: Price recheck
-    # Re-fetch current price from search (mock simulation)
-    draft_total = draft.get("rate_snapshot", {}).get("price", {}).get("total", 0)
-    
-    # Mock: Simulate price recheck by adding 5% variance randomly
-    # In real implementation, call /search endpoint with same params
-    import random
-    price_variance = random.choice([0, 0, 0, 0.05])  # 20% chance of 5% increase
-    
-    if price_variance > 0:
-        new_total = round(draft_total * (1 + price_variance), 2)
-        raise HTTPException(
-            status_code=409,
-            detail={
-                "code": "PRICE_CHANGED",
-                "old_total": draft_total,
-                "new_total": new_total,
-                "currency": draft.get("rate_snapshot", {}).get("price", {}).get("currency", "TRY"),
-            },
-        )
+    # FAZ-8: PMS-side validation via Connect Layer create_booking()
+    from app.services.connect_layer import create_booking as pms_create_booking
+    from app.services.pms_booking_mapper import draft_to_pms_create_payload
+
+    idempotency_key = payload.draft_id  # critical: stable across retries
+
+    pms_result = await pms_create_booking(
+        organization_id=user["organization_id"],
+        channel="agency_extranet",
+        idempotency_key=idempotency_key,
+        payload=draft_to_pms_create_payload(draft=draft, agency_id=agency_id),
+    )
+
+    pms_booking_id = pms_result.get("pms_booking_id")
+    pms_status = pms_result.get("status") or "created"
     
     before_draft = dict(draft)
     
@@ -257,6 +252,9 @@ async def confirm_booking(payload: BookingConfirmIn, request: Request, user=Depe
     confirmed_at = now_utc()
     
     booking = {
+        "pms_booking_id": pms_booking_id,
+        "pms_status": pms_status,
+        "source": "pms",
         "_id": booking_id,
         "organization_id": user["organization_id"],
         "tenant_id": draft["hotel_id"],
@@ -295,6 +293,8 @@ async def confirm_booking(payload: BookingConfirmIn, request: Request, user=Depe
         booking["check_in_date"] = date_to_utc_midnight(stay["check_in"])
     if stay.get("check_out"):
         booking["check_out_date"] = date_to_utc_midnight(stay["check_out"])
+
+    # If PMS creation succeeded, create local booking record (source=pms)
 
     # FAZ-7: events + audit
     await write_booking_event(

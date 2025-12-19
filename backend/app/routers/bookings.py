@@ -49,6 +49,18 @@ async def cancel_booking(booking_id: str, payload: BookingCancelIn, request: Req
     if booking.get("status") == "cancelled":
         return serialize_doc(booking)
 
+    # FAZ-8: cancel in PMS first (block if PMS fails)
+    pms_booking_id = booking.get("pms_booking_id")
+    if pms_booking_id:
+        from app.services.connect_layer import cancel_booking as pms_cancel_booking
+
+        await pms_cancel_booking(
+            organization_id=user["organization_id"],
+            channel=str(booking.get("channel") or "agency_extranet"),
+            pms_booking_id=str(pms_booking_id),
+            reason=payload.reason,
+        )
+
     if booking.get("commission_reversed") is True:
         # Already reversed; still set status cancelled if needed
         await db.bookings.update_one(

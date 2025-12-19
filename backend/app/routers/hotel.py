@@ -237,29 +237,6 @@ async def request_cancel(booking_id: str, payload: CancelRequestIn, request: Req
                     "status": "pending",
                     "reason": payload.reason,
                     "requested_at": now,
-
-    await write_audit_log(
-        db,
-        organization_id=user["organization_id"],
-        actor={"actor_type": "user", "email": user.get("email"), "roles": user.get("roles")},
-        request=request,
-        action="booking.cancel_request",
-        target_type="booking",
-        target_id=booking_id,
-        before=None,
-        after={"cancel_request": {"status": "pending", "reason": payload.reason}},
-    )
-
-    await write_booking_event(
-        db,
-        organization_id=user["organization_id"],
-        event_type="booking.updated",
-        booking_id=booking_id,
-        hotel_id=str(user.get("hotel_id")),
-        agency_id=str((await db.bookings.find_one({"_id": booking_id}) or {}).get("agency_id") or ""),
-        payload={"field": "cancel_request"},
-    )
-
                     "requested_by": user.get("email"),
                 },
             }

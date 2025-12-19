@@ -387,25 +387,7 @@ async def list_allocations(user=Depends(get_current_user)):
     db = await get_db()
     hotel_id = _ensure_hotel_id(user)
 
-
-    # FAZ-7: data hygiene (parsed dates)
-    doc["start_date_dt"] = date_to_utc_midnight(payload.start_date)
-    doc["end_date_dt"] = date_to_utc_midnight(payload.end_date)
-
     docs = await db.channel_allocations.find(
-
-    await write_audit_log(
-        db,
-        organization_id=user["organization_id"],
-        actor={"actor_type": "user", "email": user.get("email"), "roles": user.get("roles")},
-        request=request,
-        action="allocation.create",
-        target_type="allocation",
-        target_id=doc["_id"],
-        before=None,
-        after=doc,
-    )
-
         {"organization_id": user["organization_id"], "tenant_id": hotel_id, "channel": "agency_extranet"}
     ).sort("updated_at", -1).to_list(500)
 

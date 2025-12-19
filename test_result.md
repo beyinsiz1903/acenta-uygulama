@@ -317,3 +317,15 @@
       - working: true
         agent: "testing"
         comment: "✅ FAZ-6 MUTABAKAT UI RE-TEST COMPLETE - ALL ISSUES RESOLVED! HOTEL SIDE NOW FULLY FUNCTIONAL: ✅ Hotel admin login successful (hoteladmin@acenta.test/admin123), ✅ Hotel 'Mutabakat' menu item FOUND in menu, ✅ Hotel settlements page accessible (/app/hotel/settlements), ✅ Month filtering working (2026-03), ✅ CSV download working with blob download (hotel-settlements-2026-03.csv), ⚠️ No settlement data for 2026-03 (expected - no bookings for that month). AGENCY SIDE CONFIRMED WORKING: ✅ Agency admin login successful (agency1@demo.test/agency123), ✅ Agency settlements page accessible, ✅ Month filtering working (2026-03), ✅ Found 1 settlement row for 2026-03 (Demo Hotel 2: gross=12600, commission=1260, net=11340, count=7), ✅ CSV download working with blob download (agency-settlements-2026-03.csv). CRITICAL FIXES VERIFIED: Both hotel and agency CSV downloads now use proper blob download mechanism (not window.open), no 401 errors, authentication working correctly for both user types. All previously failed items now PASS."
+
+  - task: "FAZ-8 Frontend Smoke Test (PMS Connect Layer Effect)"
+    implemented: true
+    working: false
+    file: "/app/frontend/src/pages/AgencyHotelsPage.jsx, /app/frontend/src/pages/AgencyHotelDetailPage.jsx, /app/frontend/src/pages/AgencySearchResultsPage.jsx, /app/frontend/src/pages/AgencyBookingNewPage.jsx, /app/frontend/src/pages/AgencyBookingDraftPage.jsx, /app/frontend/src/pages/AgencyBookingsListPage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "✅ FAZ-8 FRONTEND SMOKE TEST PARTIAL SUCCESS - Agency tarafında temel UI akışı çalışıyor ancak backend API hatası nedeniyle tam akış tamamlanamadı. BAŞARILI KISIMLARI: 1) LOGIN: agency1@demo.test/agency123 ile giriş başarılı, agency_admin rolü ile /app/agency/hotels sayfasına yönlendirme çalışıyor 2) HOTELS PAGE: 'Otellerim' sayfası yüklendi, 2 aktif otel görünüyor (Demo Hotel 1 - Istanbul, Demo Hotel 2 - Antalya) 3) HOTEL DETAIL: Otel detay sayfasına navigasyon çalışıyor 4) SEARCH FORM: Tarih (2026-03-10 to 2026-03-12) ve occupancy (adults=2, children=0) form alanları çalışıyor. ❌ BACKEND API HATASI: MockPmsClient compute_availability() çağrısında TypeError: compute_availability() got an unexpected keyword argument 'occupancy' hatası var, bu yüzden search results sayfasına geçiş yapılamıyor. Frontend UI akışı tamamen hazır, backend API düzeltmesi gerekiyor. Error mapping (409) UI testleri backend düzeltildikten sonra yapılabilir."

@@ -1677,11 +1677,23 @@ class FAZ6CommissionTester:
             )
             
             # If we get 409 (price changed), that's expected behavior, try again
-            if not success and hasattr(response, 'get') and isinstance(response, dict):
-                detail = response.get('detail', {})
-                if isinstance(detail, dict) and detail.get('code') == 'PRICE_CHANGED':
-                    self.log(f"   Price changed: {detail.get('old_total')} → {detail.get('new_total')}")
-                    continue
+            if not success:
+                # Check if this was a price change error by making a direct request
+                url = f"{self.base_url}/api/agency/bookings/confirm"
+                headers = {'Content-Type': 'application/json', 'Authorization': f'Bearer {self.agency_token}'}
+                try:
+                    import requests
+                    resp = requests.post(url, json=confirm_data, headers=headers, timeout=10)
+                    if resp.status_code == 409:
+                        try:
+                            error_detail = resp.json().get('detail', {})
+                            if isinstance(error_detail, dict) and error_detail.get('code') == 'PRICE_CHANGED':
+                                self.log(f"   Price changed: {error_detail.get('old_total')} → {error_detail.get('new_total')}")
+                                continue
+                        except:
+                            pass
+                except:
+                    pass
             
             if success:
                 booking_id = response.get('id')

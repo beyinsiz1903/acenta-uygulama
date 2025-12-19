@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 
 from app.auth import get_current_user, require_roles
 from app.db import get_db
+from app.services.audit import write_audit_log
 from app.schemas import (
     AgencyHotelLinkCreateIn,
     AgencyHotelLinkPatchIn,

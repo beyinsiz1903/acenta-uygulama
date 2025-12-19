@@ -19,6 +19,17 @@ export const MENU_CONFIG = {
       ],
     },
   ],
+
+  hotel: [
+    {
+      label: "Otel",
+      children: [
+        { label: "Rezervasyonlarım", path: "/app/hotel/bookings" },
+        { label: "Stop-sell", path: "/app/hotel/stop-sell" },
+        { label: "Allocation", path: "/app/hotel/allocations" },
+      ],
+    },
+  ],
 };
 
 export function getMenuForUser(user) {

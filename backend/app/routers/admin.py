@@ -165,4 +165,17 @@ async def patch_link(link_id: str, payload: AgencyHotelLinkPatchIn, request: Req
 
     await db.agency_hotel_links.update_one({"_id": link_id}, {"$set": update})
     saved = await db.agency_hotel_links.find_one({"_id": link_id})
+
+    await write_audit_log(
+        db,
+        organization_id=user["organization_id"],
+        actor={"actor_type": "user", "email": user.get("email"), "roles": user.get("roles")},
+        request=request,
+        action="link.update",
+        target_type="agency_hotel_link",
+        target_id=link_id,
+        before=existing,
+        after=saved,
+    )
+
     return serialize_doc(saved)

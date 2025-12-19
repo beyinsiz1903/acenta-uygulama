@@ -460,6 +460,19 @@ async def update_allocation(allocation_id: str, payload: AllocationIn, request: 
 
     now = now_utc()
     res = await db.channel_allocations.update_one(
+
+    update_doc = {
+        "room_type": payload.room_type,
+        "start_date": payload.start_date,
+        "end_date": payload.end_date,
+        "allotment": int(payload.allotment),
+        "is_active": bool(payload.is_active),
+        "start_date_dt": date_to_utc_midnight(payload.start_date),
+        "end_date_dt": date_to_utc_midnight(payload.end_date),
+        "updated_at": now,
+        "updated_by": user.get("email"),
+    }
+
         {
             "organization_id": user["organization_id"],
 

@@ -20,11 +20,13 @@ import AgencyBookingNewPage from "./pages/AgencyBookingNewPage";
 import AgencyBookingDraftPage from "./pages/AgencyBookingDraftPage";
 import AgencyBookingConfirmedPage from "./pages/AgencyBookingConfirmedPage";
 import AgencyBookingsListPage from "./pages/AgencyBookingsListPage";
+import AgencySettlementsPage from "./pages/AgencySettlementsPage";
 
 // Hotel pages
 import HotelBookingsPage from "./pages/HotelBookingsPage";
 import HotelStopSellPage from "./pages/HotelStopSellPage";
 import HotelAllocationsPage from "./pages/HotelAllocationsPage";
+import HotelSettlementsPage from "./pages/HotelSettlementsPage";
 
 // Legacy pages (hidden from main menu)
 import DashboardPage from "./pages/DashboardPage";
@@ -86,6 +88,7 @@ export default function App() {
             <Route path="booking/draft/:draftId" element={<AgencyBookingDraftPage />} />
             <Route path="booking/confirmed/:bookingId" element={<AgencyBookingConfirmedPage />} />
             <Route path="bookings" element={<AgencyBookingsListPage />} />
+            <Route path="settlements" element={<AgencySettlementsPage />} />
           </Route>
         </Route>
 
@@ -102,6 +105,7 @@ export default function App() {
             <Route path="bookings" element={<HotelBookingsPage />} />
             <Route path="stop-sell" element={<HotelStopSellPage />} />
             <Route path="allocations" element={<HotelAllocationsPage />} />
+            <Route path="settlements" element={<HotelSettlementsPage />} />
           </Route>
         </Route>
 

@@ -171,7 +171,7 @@ async def search_availability(payload: SearchRequestIn, user=Depends(get_current
             "rate_plans": rate_plans_list,
         })
     
-    # Generate mock response (FAZ-2.1)
+    # Generate response
     search_id = f"srch_{uuid.uuid4().hex[:16]}"
     
     response = {

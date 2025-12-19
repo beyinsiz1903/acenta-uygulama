@@ -15,6 +15,12 @@ def now_utc() -> datetime:
     return datetime.now(timezone.utc)
 
 
+def date_to_utc_midnight(date_str: str) -> datetime:
+    """Convert YYYY-MM-DD to timezone-aware UTC midnight datetime."""
+    y, m, d = date_str.split("-")
+    return datetime(int(y), int(m), int(d), tzinfo=timezone.utc)
+
+
 def serialize_doc(doc: Any) -> Any:
     """Recursively convert MongoDB docs into JSON-serializable structures."""
     if doc is None:

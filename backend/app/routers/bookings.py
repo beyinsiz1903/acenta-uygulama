@@ -1,0 +1,98 @@
+from __future__ import annotations
+
+from typing import Any, Optional
+
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
+
+from app.auth import get_current_user, require_roles
+from app.db import get_db
+from app.services.commission import create_financial_entry, month_from_check_in
+from app.utils import now_utc, serialize_doc
+
+router = APIRouter(prefix="/api/bookings", tags=["bookings"])
+
+
+class BookingCancelIn(BaseModel):
+    reason: Optional[str] = None
+
+
+@router.post(
+    "/{booking_id}/cancel",
+    dependencies=[Depends(require_roles(["agency_admin", "agency_agent", "hotel_admin", "hotel_staff"]))],
+)
+async def cancel_booking(booking_id: str, payload: BookingCancelIn, user=Depends(get_current_user)):
+    """FAZ-6: Cancel booking and create reversal financial entry.
+
+    - allowed: agency or hotel side
+    - ownership: agency can cancel its own booking; hotel can cancel bookings for its hotel.
+    - creates a negative reversal entry for the booking month.
+    """
+    db = await get_db()
+
+    booking = await db.bookings.find_one({"organization_id": user["organization_id"], "_id": booking_id})
+    if not booking:
+        raise HTTPException(status_code=404, detail="BOOKING_NOT_FOUND")
+
+    roles = set(user.get("roles") or [])
+    if roles.intersection({"agency_admin", "agency_agent"}):
+        if str(booking.get("agency_id")) != str(user.get("agency_id")):
+            raise HTTPException(status_code=403, detail="FORBIDDEN")
+    elif roles.intersection({"hotel_admin", "hotel_staff"}):
+        if str(booking.get("hotel_id")) != str(user.get("hotel_id")):
+            raise HTTPException(status_code=403, detail="FORBIDDEN")
+    else:
+        raise HTTPException(status_code=403, detail="FORBIDDEN")
+
+    if booking.get("status") == "cancelled":
+        return serialize_doc(booking)
+
+    if booking.get("commission_reversed") is True:
+        # Already reversed; still set status cancelled if needed
+        await db.bookings.update_one(
+            {"_id": booking_id},
+            {"$set": {"status": "cancelled", "updated_at": now_utc(), "cancel_reason": payload.reason}},
+        )
+        updated = await db.bookings.find_one({"_id": booking_id})
+        return serialize_doc(updated)
+
+    gross_amount = float(booking.get("gross_amount") or 0)
+    commission_amount = float(booking.get("commission_amount") or 0)
+    net_amount = float(booking.get("net_amount") or 0)
+    currency = booking.get("currency") or booking.get("rate_snapshot", {}).get("price", {}).get("currency") or "TRY"
+    month = month_from_check_in((booking.get("stay") or {}).get("check_in") or "")
+
+    now = now_utc()
+
+    await db.bookings.update_one(
+        {"_id": booking_id},
+        {
+            "$set": {
+                "status": "cancelled",
+                "cancel_reason": payload.reason,
+                "cancelled_at": now,
+                "commission_reversed": True,
+                "updated_at": now,
+            }
+        },
+    )
+
+    if month:
+        await create_financial_entry(
+            db,
+            organization_id=user["organization_id"],
+            booking_id=booking_id,
+            agency_id=str(booking.get("agency_id")),
+            hotel_id=str(booking.get("hotel_id")),
+            entry_type="reversal",
+            month=month,
+            currency=currency,
+            gross_amount=-gross_amount,
+            commission_amount=-commission_amount,
+            net_amount=-net_amount,
+            source_status="cancelled",
+            created_at=now,
+        )
+
+    updated = await db.bookings.find_one({"_id": booking_id})
+    return serialize_doc(updated)

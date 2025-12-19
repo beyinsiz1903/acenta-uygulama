@@ -202,8 +202,7 @@
 ##   test_sequence: 1
 ##   run_ui: false
 ## test_plan:
-##   current_focus:
-##     - "FAZ-5 Hotel Extranet: /api/hotel/bookings + stop-sell + allocations + booking aksiyonları"
+##   current_focus: []
 ##   stuck_tasks: []
 ##   test_all: false
 ##   test_priority: "high_first"
@@ -216,3 +215,7 @@
 ##     message: "✅ REZERVASYON AKIŞI TEST TAMAMLANDI - Demo seed ile rezervasyon oluşturma akışı mükemmel çalışıyor. Odaklanılan 8 test senaryosunun tamamı başarılı (100% success rate). Önemli bulgular: 1) Demo ürün ve müşteri seed data mevcut 2) 60 günlük inventory kaydı oluşturulmuş 3) Rezervasyon oluşturma API'si çalışıyor 4) Due amount hesaplaması doğru 5) Tüm CRUD operasyonları stabil. Kapsamlı backend testi de 38/38 başarılı. Backend tamamen hazır."
 ##   - agent: "testing"
 ##     message: "✅ PHASE-1 MULTI-TENANT TEST COMPLETE - All 15 test scenarios passed with 100% success rate. Multi-tenant omurga fully functional: 1) Super admin authentication and role verification working 2) Admin CRUD endpoints for agencies/hotels/links working 3) Agency-hotel link activation/deactivation working 4) Agency admin authentication working for both agencies 5) Visibility rules working correctly (agencies see only their linked active hotels) 6) Security working (agencies cannot access admin endpoints). Fixed seed data issues during testing. Backend multi-tenant infrastructure is production-ready."
+##   - agent: "main"
+##     message: "FAZ-5 için hotel extranet eklendi: /api/hotel/* endpointleri + UI route/menu. Lütfen backend testinde (1) hoteladmin@acenta.test/admin123 login (hotel_admin, hotel_id) (2) stop-sell create/toggle/delete (3) allocation create/toggle/delete (4) agency search sonucuna anlık etkisi (stop-sell deluxe kapat → deluxe görünmesin; allocation standard=2 → 2 booking sonrası 0) (5) hotel bookings list + note/guest-note/cancel-request aksiyonlarını doğrulayın."
+##   - agent: "testing"
+##     message: "✅ FAZ-5 HOTEL EXTRANET TEST COMPLETE - All 24 test scenarios passed with 100% success rate. CRITICAL FUNCTIONALITY VERIFIED: Hotel admin authentication working with proper role and hotel_id. All hotel endpoints functional (bookings list, stop-sell CRUD, allocation CRUD). SEARCH IMPACT WORKING: Stop-sell correctly blocks room types from agency search, allocation limits properly enforced (inventory capped at allotment), booking flow working (draft+confirm), allocation exhaustion verified after bookings. Booking actions working (notes, guest notes, cancel requests). Hotel extranet backend is production-ready with all business logic functioning correctly."

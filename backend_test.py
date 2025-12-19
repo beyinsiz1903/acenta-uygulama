@@ -1873,33 +1873,29 @@ class FAZ8PMSTester:
         )
         
         if success:
-            source = response.get('source')
+            # The upsert response doesn't contain the source, so we need to check the actual record
+            self.log(f"✅ Inventory upsert successful: {response}")
             
-            if source == "local":
-                self.log(f"✅ Inventory upserted with source=local")
-                
-                # Verify by getting the inventory
-                success, get_response = self.run_test(
-                    "Get Inventory (verify source)",
-                    "GET",
-                    f"api/inventory?product_id={product_id}&start=2026-03-15&end=2026-03-15",
-                    200,
-                    token=self.super_admin_token
-                )
-                
-                if success and len(get_response) > 0:
-                    inventory_item = get_response[0]
-                    if inventory_item.get('source') == 'local':
-                        self.log(f"✅ Source field persisted correctly in inventory")
-                        return True
-                    else:
-                        self.log(f"❌ Source field not found or incorrect in persisted inventory")
-                        return False
+            # Verify by getting the inventory
+            success, get_response = self.run_test(
+                "Get Inventory (verify source)",
+                "GET",
+                f"api/inventory?product_id={product_id}&start=2026-03-15&end=2026-03-15",
+                200,
+                token=self.super_admin_token
+            )
+            
+            if success and len(get_response) > 0:
+                inventory_item = get_response[0]
+                source = inventory_item.get('source')
+                if source == 'local':
+                    self.log(f"✅ Source field persisted correctly in inventory: {source}")
+                    return True
                 else:
-                    self.log(f"❌ Could not retrieve inventory to verify source")
+                    self.log(f"❌ Source field not found or incorrect in persisted inventory: {source}")
                     return False
             else:
-                self.log(f"❌ Inventory source incorrect: {source} (expected 'local')")
+                self.log(f"❌ Could not retrieve inventory to verify source")
                 return False
         return False
 

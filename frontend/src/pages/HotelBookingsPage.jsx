@@ -49,26 +49,6 @@ export default function HotelBookingsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function loadBookings() {
-    setLoading(true);
-    setError("");
-    try {
-      const resp = await api.get("/hotel/bookings");
-      console.log("[HotelBookings] Loaded:", resp.data?.length || 0);
-      
-      const sorted = (resp.data || []).sort(
-        (a, b) => new Date(b.created_at) - new Date(a.created_at)
-      );
-      
-      setBookings(sorted);
-    } catch (err) {
-      console.error("[HotelBookings] Load error:", err);
-      setError(apiErrorMessage(err));
-    } finally {
-      setLoading(false);
-    }
-  }
-
   const filtered = useMemo(() => {
     const q = (agencyQuery || "").trim().toLowerCase();
     const sorted = [...(bookings || [])].sort(

@@ -92,6 +92,7 @@ async def ensure_seed_data() -> None:
     await db.hotels.create_index([("organization_id", 1), ("name", 1)])
     await db.agency_hotel_links.create_index(
         [("organization_id", 1), ("agency_id", 1), ("hotel_id", 1)], unique=True
+    )
 
     # FAZ-6: booking_financial_entries indexes
     await db.booking_financial_entries.create_index(
@@ -102,8 +103,6 @@ async def ensure_seed_data() -> None:
     )
     await db.booking_financial_entries.create_index(
         [("organization_id", 1), ("booking_id", 1), ("type", 1)]
-    )
-
     )
 
     # Create 2 agencies if none

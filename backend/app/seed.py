@@ -90,6 +90,14 @@ async def ensure_seed_data() -> None:
     # -------------------------------
     await db.agencies.create_index([("organization_id", 1), ("name", 1)])
     await db.hotels.create_index([("organization_id", 1), ("name", 1)])
+
+    # FAZ-8: indexes for PMS/mock + source
+    await db.rate_plans.create_index([("organization_id", 1), ("source", 1)])
+    await db.rate_periods.create_index([("organization_id", 1), ("source", 1)])
+    await db.inventory.create_index([("organization_id", 1), ("source", 1)])
+    await db.stop_sell_rules.create_index([("organization_id", 1), ("source", 1)])
+    await db.channel_allocations.create_index([("organization_id", 1), ("source", 1)])
+
     await db.agency_hotel_links.create_index(
         [("organization_id", 1), ("agency_id", 1), ("hotel_id", 1)], unique=True
     )

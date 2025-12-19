@@ -132,7 +132,7 @@ async def list_links(user=Depends(get_current_user)):
 
 
 @router.patch("/agency-hotel-links/{link_id}", dependencies=[Depends(require_roles(["super_admin"]))])
-async def patch_link(link_id: str, payload: AgencyHotelLinkPatchIn, user=Depends(get_current_user)):
+async def patch_link(link_id: str, payload: AgencyHotelLinkPatchIn, request: Request, user=Depends(get_current_user)):
     db = await get_db()
     existing = await db.agency_hotel_links.find_one({"organization_id": user["organization_id"], "_id": link_id})
     if not existing:

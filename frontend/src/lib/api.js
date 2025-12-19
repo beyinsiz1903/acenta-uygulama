@@ -44,7 +44,20 @@ api.interceptors.response.use(
   (resp) => resp,
   (err) => {
     if (err?.response?.status === 401) {
-      // don't hard-redirect; let UI handle
+      // Session expired / unauthorized
+      try {
+        clearToken();
+      } catch {
+        // ignore
+      }
+
+      // Avoid infinite redirect loops
+      if (typeof window !== "undefined") {
+        const pathname = window.location?.pathname || "";
+        if (!pathname.startsWith("/login")) {
+          window.location.replace("/login");
+        }
+      }
     }
     return Promise.reject(err);
   }

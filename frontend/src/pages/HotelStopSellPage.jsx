@@ -107,12 +107,17 @@ export default function HotelStopSellPage() {
   }
 
   async function onDelete(item) {
-    if (!window.confirm("Bu stop-sell kaydını silmek istiyor musunuz?") ) return;
+    if (!window.confirm("Bu stop-sell kaydını silmek istiyor musunuz?")) return;
+
+    // Optimistic remove to avoid “silindi ama listede kaldı” hissi
+    setItems((prev) => (prev || []).filter((x) => x.id !== item.id));
+
     try {
       await api.delete(`/hotel/stop-sell/${item.id}`);
       await load();
     } catch (e) {
       setError(apiErrorMessage(e));
+      await load();
     }
   }
 

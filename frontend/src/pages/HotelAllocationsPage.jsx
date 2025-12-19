@@ -109,12 +109,16 @@ export default function HotelAllocationsPage() {
   }
 
   async function onDelete(item) {
-    if (!window.confirm("Bu allocation kaydını silmek istiyor musunuz?") ) return;
+    if (!window.confirm("Bu allocation kaydını silmek istiyor musunuz?")) return;
+
+    setItems((prev) => (prev || []).filter((x) => x.id !== item.id));
+
     try {
       await api.delete(`/hotel/allocations/${item.id}`);
       await load();
     } catch (e) {
       setError(apiErrorMessage(e));
+      await load();
     }
   }
 

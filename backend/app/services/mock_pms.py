@@ -37,7 +37,6 @@ class MockPmsClient(PmsClient):
             hotel_id=hotel_id,
             check_in=check_in,
             check_out=check_out,
-            occupancy=occupancy,
             organization_id=organization_id,
             channel=channel,
         )

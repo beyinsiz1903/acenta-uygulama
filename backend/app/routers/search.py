@@ -65,9 +65,6 @@ async def search_availability(payload: SearchRequestIn, user=Depends(get_current
     if cached and cached.get("response"):
         return cached["response"]
     
-    if not agency_id:
-        raise HTTPException(status_code=403, detail="NOT_LINKED_TO_AGENCY")
-    
     # Validate hotel is linked to agency
     link = await db.agency_hotel_links.find_one({
         "organization_id": user["organization_id"],

@@ -36,7 +36,16 @@ class SearchRequestIn(BaseModel):
 
 @router.post("/search", dependencies=[Depends(require_roles(["agency_admin", "agency_agent"]))])
 async def search_availability(payload: SearchRequestIn, user=Depends(get_current_user)):
+    """Availability search (agency_extranet).
+
+    FAZ-7: Adds response caching (TTL 5 min) keyed by canonical request payload.
     """
+
+    db = await get_db()
+    agency_id = user.get("agency_id")
+
+    if not agency_id:
+        raise HTTPException(status_code=403, detail="NOT_LINKED_TO_AGENCY")
 
     # ------------------------------
     # FAZ-7: Search result caching (TTL 5 min)
@@ -56,12 +65,6 @@ async def search_availability(payload: SearchRequestIn, user=Depends(get_current
     cached = await db.search_cache.find_one({"_id": key})
     if cached and cached.get("response"):
         return cached["response"]
-
-    FAZ-2.1: Mock availability search
-    Returns mock room availability and rates
-    """
-    db = await get_db()
-    agency_id = user.get("agency_id")
     
     if not agency_id:
         raise HTTPException(status_code=403, detail="NOT_LINKED_TO_AGENCY")

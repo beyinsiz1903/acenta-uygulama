@@ -341,22 +341,43 @@ async def get_cm_actor(
     }
 
 
-class CMARIResponseDay(BaseModel):
+class CMRestrictions(BaseModel):
+    stop_sell: bool = False
+    min_stay: int = 1
+    cta: bool = False
+    ctd: bool = False
+    max_stay: Optional[int] = None
+
+
+class CMRateInfo(BaseModel):
+    amount: Optional[float] = None
+    currency: str = "TRY"
+    tax_included: bool = True
+    source: Optional[str] = None  # rate_periods|rate_plans|rooms.base_price
+    rate_plan_id: Optional[str] = None
+    board_code: Optional[str] = None  # RO/BB/HB/FB
+
+
+class CMARIDay(BaseModel):
     date: str  # YYYY-MM-DD
-    room_type: str
     available: int
     sold: int
-    stop_sell: bool = False
-    rate: Optional[float] = None
-    currency: str = "EUR"
-    rate_source: Optional[str] = None  # rate_periods|rate_plans|rooms.base_price
+    restrictions: CMRestrictions
+    rate: CMRateInfo
 
 
-class CMARIResponse(BaseModel):
-    tenant_id: str
-    start_date: str
-    end_date: str
-    days: List[CMARIResponseDay]
+class CMARIRoomType(BaseModel):
+    room_type_id: str  # for now equals room_type
+    name: str
+    days: List[CMARIDay]
+
+
+class CMARIV2Response(BaseModel):
+    hotel_id: str  # tenant_id
+    currency: str = "TRY"
+    date_from: str
+    date_to: str
+    room_types: List[CMARIRoomType]
 
 
 @api_router.get("/cm/ari", response_model=CMARIResponse)

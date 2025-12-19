@@ -114,8 +114,9 @@ async def search_availability(payload: SearchRequestIn, user=Depends(get_current
         channel="agency_extranet",  # FAZ-2.3: Channel context
     )
     
-    # Generate search_id
-    search_id = f"srch_{uuid.uuid4().hex[:16]}"
+    # PMS-like response already includes search_id; ensure exists
+    search_id = response.get("search_id") or f"srch_{uuid.uuid4().hex[:16]}"
+    response["search_id"] = search_id
     
     # Map availability to gateway format
     rooms_response = []
@@ -170,11 +171,7 @@ async def search_availability(payload: SearchRequestIn, user=Depends(get_current
             "rate_plans": rate_plans_list,
         })
 
-    # Generate response
-    search_id = f"srch_{uuid.uuid4().hex[:16]}"
-    
-    response = {
-        "search_id": search_id,
+    # Response comes from connect layer
         "hotel": {
             "id": hotel["_id"],
             "name": hotel.get("name"),

@@ -15,6 +15,7 @@ export const MENU_CONFIG = {
       label: "Acenta",
       children: [
         { label: "Otellerim", path: "/app/agency/hotels" },
+        { label: "Rezervasyonlarım", path: "/app/agency/bookings" },
       ],
     },
   ],

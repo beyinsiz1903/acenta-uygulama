@@ -189,11 +189,6 @@ async def add_guest_note(booking_id: str, payload: BookingNoteIn, request: Reque
         raise HTTPException(status_code=404, detail="BOOKING_NOT_FOUND")
 
     doc = await db.bookings.find_one({"_id": booking_id})
-    return serialize_doc(doc)
-
-
-class CancelRequestIn(BaseModel):
-    reason: Optional[str] = Field(default=None, max_length=2000)
 
     await write_audit_log(
         db,
@@ -213,10 +208,15 @@ class CancelRequestIn(BaseModel):
         event_type="booking.updated",
         booking_id=booking_id,
         hotel_id=str(user.get("hotel_id")),
-        agency_id=str((await db.bookings.find_one({"_id": booking_id}) or {}).get("agency_id") or ""),
+        agency_id=str((doc or {}).get("agency_id") or ""),
         payload={"field": "guest_note"},
     )
 
+    return serialize_doc(doc)
+
+
+class CancelRequestIn(BaseModel):
+    reason: Optional[str] = Field(default=None, max_length=2000)
 
 
 @router.post(

@@ -89,7 +89,7 @@ async def list_hotels(active: Optional[bool] = None, user=Depends(get_current_us
 
 
 @router.post("/agency-hotel-links", dependencies=[Depends(require_roles(["super_admin"]))])
-async def create_link(payload: AgencyHotelLinkCreateIn, user=Depends(get_current_user)):
+async def create_link(payload: AgencyHotelLinkCreateIn, request: Request, user=Depends(get_current_user)):
     db = await get_db()
 
     agency = await db.agencies.find_one({"organization_id": user["organization_id"], "_id": payload.agency_id})

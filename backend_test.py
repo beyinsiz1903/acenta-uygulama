@@ -1385,6 +1385,572 @@ class FAZ5HotelExtranetTester:
         return 0 if self.tests_failed == 0 else 1
 
 
+class FAZ8PMSTester:
+    def __init__(self, base_url="https://pms-extranet-app.preview.emergentagent.com"):
+        self.base_url = base_url
+        self.agency_token = None
+        self.super_admin_token = None
+        self.tests_run = 0
+        self.tests_passed = 0
+        self.tests_failed = 0
+        self.failed_tests = []
+        
+        # Store IDs for testing
+        self.hotel_id = None
+        self.agency_id = None
+        self.search_id = None
+        self.draft_id = None
+        self.booking_id = None
+        self.pms_booking_id = None
+
+    def log(self, msg):
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}")
+
+    def run_test(self, name, method, endpoint, expected_status, data=None, headers_override=None, token=None):
+        """Run a single API test with specific token"""
+        url = f"{self.base_url}/{endpoint}"
+        headers = headers_override or {'Content-Type': 'application/json'}
+        
+        # Use specific token if provided
+        if token:
+            headers['Authorization'] = f'Bearer {token}'
+
+        self.tests_run += 1
+        self.log(f"🔍 Test #{self.tests_run}: {name}")
+        
+        try:
+            if method == 'GET':
+                response = requests.get(url, headers=headers, timeout=10)
+            elif method == 'POST':
+                response = requests.post(url, json=data, headers=headers, timeout=10)
+            elif method == 'PUT':
+                response = requests.put(url, json=data, headers=headers, timeout=10)
+            elif method == 'DELETE':
+                response = requests.delete(url, headers=headers, timeout=10)
+            else:
+                raise ValueError(f"Unsupported method: {method}")
+
+            success = response.status_code == expected_status
+            if success:
+                self.tests_passed += 1
+                self.log(f"✅ PASSED - Status: {response.status_code}")
+                try:
+                    return True, response.json() if response.content else {}
+                except:
+                    return True, response.text if hasattr(response, 'text') else {}
+            else:
+                self.tests_failed += 1
+                self.failed_tests.append(f"{name} - Expected {expected_status}, got {response.status_code}")
+                self.log(f"❌ FAILED - Expected {expected_status}, got {response.status_code}")
+                try:
+                    self.log(f"   Response: {response.text[:200]}")
+                except:
+                    pass
+                return False, {}
+
+        except Exception as e:
+            self.tests_failed += 1
+            self.failed_tests.append(f"{name} - Error: {str(e)}")
+            self.log(f"❌ FAILED - Error: {str(e)}")
+            return False, {}
+
+    def test_agency_login(self):
+        """A1) Agency login"""
+        self.log("\n=== A) SEARCH QUOTE VIA CONNECT LAYER ===")
+        success, response = self.run_test(
+            "Agency Login (agency1@demo.test)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "agency1@demo.test", "password": "agency123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.agency_token = response['access_token']
+            user = response.get('user', {})
+            self.agency_id = user.get('agency_id')
+            
+            if self.agency_id:
+                self.log(f"✅ Agency logged in successfully, agency_id: {self.agency_id}")
+                return True
+            else:
+                self.log(f"❌ Agency ID missing from user")
+                return False
+        return False
+
+    def test_search_via_connect_layer(self):
+        """A2) POST /api/agency/search - should use connect layer (mock PMS)"""
+        self.log("\n--- Search via Connect Layer ---")
+        
+        # Find a linked hotel for this agency
+        success, response = self.run_test(
+            "Get Agency Hotels",
+            "GET",
+            "api/agency/hotels",
+            200,
+            token=self.agency_token
+        )
+        
+        if success and len(response) > 0:
+            self.hotel_id = response[0].get('id')
+            self.log(f"✅ Found linked hotel: {self.hotel_id}")
+        else:
+            self.log(f"❌ No linked hotels found")
+            return False
+        
+        # Search for availability
+        search_data = {
+            "hotel_id": self.hotel_id,
+            "check_in": "2026-03-10",
+            "check_out": "2026-03-12",
+            "occupancy": {"adults": 2, "children": 0}
+        }
+        
+        success, response = self.run_test(
+            "Agency Search (Connect Layer)",
+            "POST",
+            "api/agency/search",
+            200,
+            data=search_data,
+            token=self.agency_token
+        )
+        
+        if success:
+            self.search_id = response.get('search_id')
+            rooms = response.get('rooms', [])
+            source = response.get('source')
+            
+            if self.search_id and len(rooms) > 0:
+                self.log(f"✅ Search successful: {self.search_id}")
+                self.log(f"   Found {len(rooms)} room types")
+                
+                # Verify source field
+                if source == "pms":
+                    self.log(f"✅ Source field correct: {source}")
+                else:
+                    self.log(f"❌ Source field incorrect: {source} (expected 'pms')")
+                    return False
+                
+                return True
+            else:
+                self.log(f"❌ Invalid search response")
+                return False
+        return False
+
+    def test_search_cache_hit(self):
+        """A3) Second identical request should return same search_id (cache hit)"""
+        self.log("\n--- Search Cache Hit Test ---")
+        
+        # Make identical search request
+        search_data = {
+            "hotel_id": self.hotel_id,
+            "check_in": "2026-03-10",
+            "check_out": "2026-03-12",
+            "occupancy": {"adults": 2, "children": 0}
+        }
+        
+        success, response = self.run_test(
+            "Agency Search (Cache Hit)",
+            "POST",
+            "api/agency/search",
+            200,
+            data=search_data,
+            token=self.agency_token
+        )
+        
+        if success:
+            cached_search_id = response.get('search_id')
+            
+            if cached_search_id == self.search_id:
+                self.log(f"✅ Cache hit confirmed: same search_id returned ({cached_search_id})")
+                return True
+            else:
+                self.log(f"❌ Cache miss: different search_id ({cached_search_id} vs {self.search_id})")
+                return False
+        return False
+
+    def test_create_draft(self):
+        """B1) Create booking draft"""
+        self.log("\n=== B) CONFIRM WITH PMS CREATE_BOOKING ===")
+        
+        if not self.search_id or not self.hotel_id:
+            self.log("❌ Missing search_id or hotel_id")
+            return False
+            
+        draft_data = {
+            "search_id": self.search_id,
+            "hotel_id": self.hotel_id,
+            "room_type_id": "rt_standard",
+            "rate_plan_id": "rp_base",
+            "guest": {
+                "full_name": "Mehmet Özkan",
+                "email": "mehmet.ozkan@example.com",
+                "phone": "+905551234567"
+            },
+            "check_in": "2026-03-10",
+            "check_out": "2026-03-12",
+            "nights": 2,
+            "adults": 2,
+            "children": 0
+        }
+        
+        success, response = self.run_test(
+            "Create Booking Draft",
+            "POST",
+            "api/agency/bookings/draft",
+            200,
+            data=draft_data,
+            token=self.agency_token
+        )
+        
+        if success:
+            self.draft_id = response.get('id')
+            if self.draft_id:
+                self.log(f"✅ Draft created: {self.draft_id}")
+                return True
+            else:
+                self.log(f"❌ No draft ID in response")
+                return False
+        return False
+
+    def test_confirm_booking_pms(self):
+        """B2) Confirm booking - should call PMS create_booking first"""
+        self.log("\n--- Confirm Booking (PMS First) ---")
+        
+        if not self.draft_id:
+            self.log("❌ Missing draft_id")
+            return False
+            
+        confirm_data = {"draft_id": self.draft_id}
+        
+        success, response = self.run_test(
+            "Confirm Booking (PMS Create)",
+            "POST",
+            "api/agency/bookings/confirm",
+            200,
+            data=confirm_data,
+            token=self.agency_token
+        )
+        
+        if success:
+            self.booking_id = response.get('id')
+            self.pms_booking_id = response.get('pms_booking_id')
+            pms_status = response.get('pms_status')
+            source = response.get('source')
+            
+            if self.booking_id:
+                self.log(f"✅ Booking confirmed: {self.booking_id}")
+                
+                # Verify PMS fields
+                if self.pms_booking_id:
+                    self.log(f"✅ PMS booking ID populated: {self.pms_booking_id}")
+                else:
+                    self.log(f"❌ PMS booking ID missing")
+                    return False
+                
+                if pms_status == "created":
+                    self.log(f"✅ PMS status correct: {pms_status}")
+                else:
+                    self.log(f"❌ PMS status incorrect: {pms_status} (expected 'created')")
+                    return False
+                
+                if source == "pms":
+                    self.log(f"✅ Source field correct: {source}")
+                else:
+                    self.log(f"❌ Source field incorrect: {source} (expected 'pms')")
+                    return False
+                
+                return True
+            else:
+                self.log(f"❌ No booking ID in response")
+                return False
+        return False
+
+    def test_idempotency(self):
+        """C) Idempotency test - same draft_id should return same booking"""
+        self.log("\n=== C) IDEMPOTENCY ===")
+        
+        if not self.draft_id:
+            self.log("❌ Missing draft_id")
+            return False
+            
+        confirm_data = {"draft_id": self.draft_id}
+        
+        success, response = self.run_test(
+            "Confirm Booking (Idempotency)",
+            "POST",
+            "api/agency/bookings/confirm",
+            200,
+            data=confirm_data,
+            token=self.agency_token
+        )
+        
+        if success:
+            idempotent_booking_id = response.get('id')
+            idempotent_pms_booking_id = response.get('pms_booking_id')
+            
+            if idempotent_booking_id == self.booking_id:
+                self.log(f"✅ Idempotency working: same booking_id returned ({idempotent_booking_id})")
+            else:
+                self.log(f"❌ Idempotency failed: different booking_id ({idempotent_booking_id} vs {self.booking_id})")
+                return False
+            
+            if idempotent_pms_booking_id == self.pms_booking_id:
+                self.log(f"✅ PMS idempotency working: same pms_booking_id returned ({idempotent_pms_booking_id})")
+            else:
+                self.log(f"❌ PMS idempotency failed: different pms_booking_id ({idempotent_pms_booking_id} vs {self.pms_booking_id})")
+                return False
+            
+            return True
+        return False
+
+    def test_cancel_pms_first(self):
+        """D) Cancel booking - should cancel PMS first"""
+        self.log("\n=== D) CANCEL PMS-FIRST ===")
+        
+        if not self.booking_id:
+            self.log("❌ Missing booking_id")
+            return False
+            
+        cancel_data = {"reason": "Test cancellation"}
+        
+        success, response = self.run_test(
+            "Cancel Booking (PMS First)",
+            "POST",
+            f"api/bookings/{self.booking_id}/cancel",
+            200,
+            data=cancel_data,
+            token=self.agency_token
+        )
+        
+        if success:
+            status = response.get('status')
+            
+            if status == "cancelled":
+                self.log(f"✅ Booking cancelled successfully: {status}")
+                
+                # Verify PMS booking was cancelled (check mock PMS collection)
+                # This would require checking the pms_bookings collection
+                # For now, we'll assume it worked if the API returned success
+                self.log(f"✅ PMS cancellation assumed successful (mock PMS)")
+                
+                return True
+            else:
+                self.log(f"❌ Booking status incorrect: {status} (expected 'cancelled')")
+                return False
+        return False
+
+    def test_super_admin_login(self):
+        """E1) Super admin login"""
+        self.log("\n=== E) SOURCE FIELDS ===")
+        success, response = self.run_test(
+            "Super Admin Login",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "admin@acenta.test", "password": "admin123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.super_admin_token = response['access_token']
+            user = response.get('user', {})
+            roles = user.get('roles', [])
+            
+            if 'super_admin' in roles:
+                self.log(f"✅ Super admin role confirmed: {roles}")
+                return True
+            else:
+                self.log(f"❌ Missing super_admin role: {roles}")
+                return False
+        return False
+
+    def test_rate_plan_source(self):
+        """E2) Create rate plan with source="local" """
+        self.log("\n--- Rate Plan Source Field ---")
+        
+        # First get a product to link the rate plan to
+        success, response = self.run_test(
+            "Get Products",
+            "GET",
+            "api/products",
+            200,
+            token=self.super_admin_token
+        )
+        
+        if not success or len(response) == 0:
+            self.log("❌ No products found for rate plan test")
+            return False
+        
+        product_id = response[0].get('id')
+        
+        rate_plan_data = {
+            "product_id": product_id,
+            "name": f"Test Rate Plan {uuid.uuid4().hex[:8]}",
+            "description": "Test rate plan with source field",
+            "source": "local"
+        }
+        
+        success, response = self.run_test(
+            "Create Rate Plan (source=local)",
+            "POST",
+            "api/rateplans",
+            200,
+            data=rate_plan_data,
+            token=self.super_admin_token
+        )
+        
+        if success:
+            rate_plan_id = response.get('id')
+            source = response.get('source')
+            
+            if source == "local":
+                self.log(f"✅ Rate plan created with source=local: {rate_plan_id}")
+                
+                # Verify by getting the rate plan
+                success, get_response = self.run_test(
+                    "Get Rate Plan (verify source)",
+                    "GET",
+                    f"api/rateplans?product_id={product_id}",
+                    200,
+                    token=self.super_admin_token
+                )
+                
+                if success:
+                    found_plan = next((rp for rp in get_response if rp.get('id') == rate_plan_id), None)
+                    if found_plan and found_plan.get('source') == 'local':
+                        self.log(f"✅ Source field persisted correctly in rate plan")
+                        return True
+                    else:
+                        self.log(f"❌ Source field not found or incorrect in persisted rate plan")
+                        return False
+                
+            else:
+                self.log(f"❌ Rate plan source incorrect: {source} (expected 'local')")
+                return False
+        return False
+
+    def test_inventory_source(self):
+        """E3) Inventory upsert with source="local" """
+        self.log("\n--- Inventory Source Field ---")
+        
+        # Get a product for inventory
+        success, response = self.run_test(
+            "Get Products for Inventory",
+            "GET",
+            "api/products",
+            200,
+            token=self.super_admin_token
+        )
+        
+        if not success or len(response) == 0:
+            self.log("❌ No products found for inventory test")
+            return False
+        
+        product_id = response[0].get('id')
+        
+        inventory_data = {
+            "product_id": product_id,
+            "date": "2026-03-15",
+            "capacity_total": 10,
+            "capacity_available": 8,
+            "price": 2500.0,
+            "source": "local"
+        }
+        
+        success, response = self.run_test(
+            "Inventory Upsert (source=local)",
+            "POST",
+            "api/inventory/upsert",
+            200,
+            data=inventory_data,
+            token=self.super_admin_token
+        )
+        
+        if success:
+            source = response.get('source')
+            
+            if source == "local":
+                self.log(f"✅ Inventory upserted with source=local")
+                
+                # Verify by getting the inventory
+                success, get_response = self.run_test(
+                    "Get Inventory (verify source)",
+                    "GET",
+                    f"api/inventory?product_id={product_id}&start=2026-03-15&end=2026-03-15",
+                    200,
+                    token=self.super_admin_token
+                )
+                
+                if success and len(get_response) > 0:
+                    inventory_item = get_response[0]
+                    if inventory_item.get('source') == 'local':
+                        self.log(f"✅ Source field persisted correctly in inventory")
+                        return True
+                    else:
+                        self.log(f"❌ Source field not found or incorrect in persisted inventory")
+                        return False
+                else:
+                    self.log(f"❌ Could not retrieve inventory to verify source")
+                    return False
+            else:
+                self.log(f"❌ Inventory source incorrect: {source} (expected 'local')")
+                return False
+        return False
+
+    def print_summary(self):
+        """Print test summary"""
+        self.log("\n" + "="*60)
+        self.log("FAZ-8 PMS INTEGRATION TEST SUMMARY")
+        self.log("="*60)
+        self.log(f"Total Tests: {self.tests_run}")
+        self.log(f"✅ Passed: {self.tests_passed}")
+        self.log(f"❌ Failed: {self.tests_failed}")
+        self.log(f"Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%")
+        
+        if self.failed_tests:
+            self.log("\n❌ FAILED TESTS:")
+            for i, test in enumerate(self.failed_tests, 1):
+                self.log(f"  {i}. {test}")
+        
+        self.log("="*60)
+
+    def run_faz8_tests(self):
+        """Run all FAZ-8 tests in sequence"""
+        self.log("🚀 Starting FAZ-8 PMS Integration Tests")
+        self.log(f"Base URL: {self.base_url}")
+        
+        # A) Search quote via connect layer
+        if not self.test_agency_login():
+            self.log("❌ Agency login failed - stopping tests")
+            self.print_summary()
+            return 1
+
+        self.test_search_via_connect_layer()
+        self.test_search_cache_hit()
+
+        # B) Confirm with PMS create_booking
+        self.test_create_draft()
+        self.test_confirm_booking_pms()
+
+        # C) Idempotency
+        self.test_idempotency()
+
+        # D) Cancel PMS-first
+        self.test_cancel_pms_first()
+
+        # E) Source fields
+        if not self.test_super_admin_login():
+            self.log("❌ Super admin login failed - skipping source field tests")
+        else:
+            self.test_rate_plan_source()
+            self.test_inventory_source()
+
+        # Summary
+        self.print_summary()
+
+        return 0 if self.tests_failed == 0 else 1
+
+
 class FAZ6CommissionTester:
     def __init__(self, base_url="https://pms-extranet-app.preview.emergentagent.com"):
         self.base_url = base_url

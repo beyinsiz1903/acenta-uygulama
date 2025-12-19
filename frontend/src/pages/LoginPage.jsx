@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("admin@acenta.test");
+  const [email, setEmail] = useState("hoteladmin@acenta.test");
   const [password, setPassword] = useState("admin123");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");

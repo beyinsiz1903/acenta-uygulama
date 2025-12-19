@@ -21,6 +21,11 @@ import AgencyBookingDraftPage from "./pages/AgencyBookingDraftPage";
 import AgencyBookingConfirmedPage from "./pages/AgencyBookingConfirmedPage";
 import AgencyBookingsListPage from "./pages/AgencyBookingsListPage";
 
+// Hotel pages
+import HotelBookingsPage from "./pages/HotelBookingsPage";
+import HotelStopSellPage from "./pages/HotelStopSellPage";
+import HotelAllocationsPage from "./pages/HotelAllocationsPage";
+
 // Legacy pages (hidden from main menu)
 import DashboardPage from "./pages/DashboardPage";
 import ProductsPage from "./pages/ProductsPage";
@@ -35,6 +40,7 @@ import SettingsPage from "./pages/SettingsPage";
 
 import AdminLayout from "./layouts/AdminLayout";
 import AgencyLayout from "./layouts/AgencyLayout";
+import HotelLayout from "./layouts/HotelLayout";
 
 import { Toaster } from "./components/ui/sonner";
 
@@ -80,6 +86,22 @@ export default function App() {
             <Route path="booking/draft/:draftId" element={<AgencyBookingDraftPage />} />
             <Route path="booking/confirmed/:bookingId" element={<AgencyBookingConfirmedPage />} />
             <Route path="bookings" element={<AgencyBookingsListPage />} />
+          </Route>
+        </Route>
+
+        {/* Hotel Routes */}
+        <Route
+          path="/app/hotel/*"
+          element={
+            <RequireAuth roles={["hotel_admin", "hotel_staff"]}>
+              <AppShell />
+            </RequireAuth>
+          }
+        >
+          <Route element={<HotelLayout />}>
+            <Route path="bookings" element={<HotelBookingsPage />} />
+            <Route path="stop-sell" element={<HotelStopSellPage />} />
+            <Route path="allocations" element={<HotelAllocationsPage />} />
           </Route>
         </Route>
 

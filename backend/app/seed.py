@@ -219,6 +219,28 @@ async def ensure_seed_data() -> None:
     dg = await db.discount_groups.find_one({"organization_id": org_id, "name": "B2B İndirim"})
 
 
+    # -------------------------------
+    # FAZ-5: Seed 1 hotel_admin user (separate from super_admin)
+    # -------------------------------
+    if len(hotels) >= 1:
+        hotel_admin_email = "hoteladmin@acenta.test"
+        existing_hotel_admin = await db.users.find_one({"organization_id": org_id, "email": hotel_admin_email})
+        if not existing_hotel_admin:
+            await db.users.insert_one(
+                {
+                    "organization_id": org_id,
+                    "email": hotel_admin_email,
+                    "name": "Hotel Admin",
+                    "password_hash": hash_password("admin123"),
+                    "roles": ["hotel_admin"],
+                    "hotel_id": hotels[0]["_id"],
+                    "created_at": now_utc(),
+                    "updated_at": now_utc(),
+                    "is_active": True,
+                }
+            )
+
+
     # FAZ-2.2.1: Create rooms for hotels if none exist
     rooms_count = await db.rooms.count_documents({"organization_id": org_id})
     if rooms_count == 0 and len(hotels) >= 3:

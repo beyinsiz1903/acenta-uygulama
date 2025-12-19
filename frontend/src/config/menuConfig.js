@@ -35,5 +35,9 @@ export function getMenuForUser(user) {
     return MENU_CONFIG.agency;
   }
 
+  if (user.roles?.includes("hotel_admin") || user.roles?.includes("hotel_staff")) {
+    return MENU_CONFIG.hotel;
+  }
+
   return [];
 }

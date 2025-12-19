@@ -10,7 +10,7 @@ export function redirectByRole(user) {
   }
 
   if (user.roles.includes("hotel_admin") || user.roles.includes("hotel_staff")) {
-    return "/app/hotel"; // şimdilik placeholder
+    return "/app/hotel/bookings";
   }
 
   return "/unauthorized";

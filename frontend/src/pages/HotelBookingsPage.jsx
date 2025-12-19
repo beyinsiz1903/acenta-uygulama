@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Hotel, Calendar, Users, Loader2, AlertCircle, Building2 } from "lucide-react";
-import { api, apiErrorMessage, getUser } from "../lib/api";
+import React, { useEffect, useMemo, useState } from "react";
+import { Calendar, Loader2, AlertCircle, XCircle, StickyNote } from "lucide-react";
+import { api, apiErrorMessage } from "../lib/api";
 import {
   Table,
   TableBody,
@@ -16,20 +15,41 @@ import { formatMoney } from "../lib/format";
 import { formatDateTime } from "../utils/formatters";
 
 export default function HotelBookingsPage() {
-  const navigate = useNavigate();
-  const user = getUser();
-
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const [status, setStatus] = useState("");
+  const [agencyQuery, setAgencyQuery] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+
+  const [actionError, setActionError] = useState("");
+
+  async function loadBookings() {
+    setLoading(true);
+    setError("");
+    setActionError("");
+    try {
+      const params = {};
+      if (status) params.status = status;
+      if (dateFrom) params.date_from = dateFrom;
+      if (dateTo) params.date_to = dateTo;
+      // Note: agency filter via agency_id would require selecting exact agency; for MVP we do client-side by name.
+
+      const resp = await api.get("/hotel/bookings", { params });
+      const list = resp.data || [];
+      setBookings(list);
+    } catch (err) {
+      setError(apiErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  }
+
   useEffect(() => {
-    console.log("[HotelBookings] User context:", {
-      email: user?.email,
-      hotel_id: user?.hotel_id,
-      roles: user?.roles,
-    });
     loadBookings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function loadBookings() {
@@ -52,14 +72,61 @@ export default function HotelBookingsPage() {
     }
   }
 
+  const filtered = useMemo(() => {
+    const q = (agencyQuery || "").trim().toLowerCase();
+    const sorted = [...(bookings || [])].sort(
+      (a, b) => new Date(b.created_at) - new Date(a.created_at)
+    );
+
+    if (!q) return sorted;
+
+    return sorted.filter((b) => {
+      const name = (b.agency_name || "").toLowerCase();
+      return name.includes(q);
+    });
+  }, [bookings, agencyQuery]);
+
+  async function doCancelRequest(booking) {
+    setActionError("");
+    const reason = window.prompt("İptal talebi sebebi (opsiyonel):") || "";
+    try {
+      await api.post(`/hotel/bookings/${booking.id}/cancel-request`, { reason });
+      await loadBookings();
+    } catch (e) {
+      setActionError(apiErrorMessage(e));
+    }
+  }
+
+  async function doAddHotelNote(booking) {
+    setActionError("");
+    const note = window.prompt("Not:");
+    if (!note) return;
+    try {
+      await api.post(`/hotel/bookings/${booking.id}/note`, { note });
+      await loadBookings();
+    } catch (e) {
+      setActionError(apiErrorMessage(e));
+    }
+  }
+
+  async function doSetGuestNote(booking) {
+    setActionError("");
+    const note = window.prompt("Misafir notu:");
+    if (!note) return;
+    try {
+      await api.post(`/hotel/bookings/${booking.id}/guest-note`, { note });
+      await loadBookings();
+    } catch (e) {
+      setActionError(apiErrorMessage(e));
+    }
+  }
+
   if (loading) {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Acenta Rezervasyonları</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Otel rezervasyonları
-          </p>
+          <h1 className="text-2xl font-bold text-foreground">Otel Rezervasyonları</h1>
+          <p className="text-sm text-muted-foreground mt-1">Acenta kanalı rezervasyonları</p>
         </div>
 
         <div className="rounded-2xl border bg-card shadow-sm p-12 flex flex-col items-center justify-center gap-4">
@@ -74,7 +141,7 @@ export default function HotelBookingsPage() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Acenta Rezervasyonları</h1>
+          <h1 className="text-2xl font-bold text-foreground">Otel Rezervasyonları</h1>
         </div>
 
         <div className="rounded-2xl border border-destructive/50 bg-destructive/5 p-8 flex flex-col items-center justify-center gap-4">
@@ -91,106 +158,174 @@ export default function HotelBookingsPage() {
     );
   }
 
-  if (bookings.length === 0) {
-    return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Acenta Rezervasyonları</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Otel rezervasyonları
-          </p>
-        </div>
-
-        <div className="rounded-2xl border bg-card shadow-sm p-12 flex flex-col items-center justify-center gap-4">
-          <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center">
-            <Hotel className="h-8 w-8 text-muted-foreground" />
-          </div>
-          <div className="text-center max-w-md">
-            <p className="font-semibold text-foreground">
-              Henüz rezervasyon yok
-            </p>
-            <p className="text-sm text-muted-foreground mt-2">
-              Acentalardan rezervasyon geldiğinde burada görünecek.
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Acenta Rezervasyonları</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {bookings.length} rezervasyon
-          </p>
+          <h1 className="text-2xl font-bold text-foreground">Otel Rezervasyonları</h1>
+          <p className="text-sm text-muted-foreground mt-1">{filtered.length} kayıt</p>
         </div>
+
+        <button
+          onClick={loadBookings}
+          className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition"
+        >
+          Yenile
+        </button>
+      </div>
+
+      <div className="rounded-2xl border bg-card shadow-sm p-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+          <div className="grid gap-1">
+            <div className="text-xs text-muted-foreground">Tarih (from)</div>
+            <input
+              type="date"
+              className="h-10 rounded-md border bg-background px-3 text-sm"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+            />
+          </div>
+          <div className="grid gap-1">
+            <div className="text-xs text-muted-foreground">Tarih (to)</div>
+            <input
+              type="date"
+              className="h-10 rounded-md border bg-background px-3 text-sm"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+            />
+          </div>
+          <div className="grid gap-1">
+            <div className="text-xs text-muted-foreground">Durum</div>
+            <select
+              className="h-10 rounded-md border bg-background px-3 text-sm"
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+            >
+              <option value="">Tümü</option>
+              <option value="confirmed">confirmed</option>
+              <option value="cancelled">cancelled</option>
+            </select>
+          </div>
+          <div className="grid gap-1">
+            <div className="text-xs text-muted-foreground">Acenta (isim)</div>
+            <input
+              className="h-10 rounded-md border bg-background px-3 text-sm"
+              value={agencyQuery}
+              onChange={(e) => setAgencyQuery(e.target.value)}
+              placeholder="örn: Demo"
+            />
+          </div>
+        </div>
+
+        <div className="mt-3 flex items-center gap-2">
+          <button
+            onClick={loadBookings}
+            className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition"
+          >
+            Filtrele
+          </button>
+          <button
+            onClick={() => {
+              setStatus("");
+              setAgencyQuery("");
+              setDateFrom("");
+              setDateTo("");
+              setTimeout(loadBookings, 0);
+            }}
+            className="px-4 py-2 rounded-lg border hover:bg-accent transition"
+          >
+            Sıfırla
+          </button>
+        </div>
+
+        {actionError ? (
+          <div className="mt-3 rounded-xl border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm">
+            {actionError}
+          </div>
+        ) : null}
       </div>
 
       <div className="rounded-2xl border bg-card shadow-sm overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="font-semibold">Booking ID</TableHead>
               <TableHead className="font-semibold">Check-in / Check-out</TableHead>
               <TableHead className="font-semibold">Misafir</TableHead>
-              <TableHead className="font-semibold">Oda</TableHead>
-              <TableHead className="font-semibold">Tutar</TableHead>
               <TableHead className="font-semibold">Durum</TableHead>
-              <TableHead className="font-semibold">Oluşturma</TableHead>
+              <TableHead className="font-semibold">Tutar</TableHead>
+              <TableHead className="font-semibold">Acenta</TableHead>
+              <TableHead className="font-semibold">Aksiyon</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {bookings.map((booking) => {
-              const stay = booking.stay || {};
-              const guest = booking.guest || {};
-              const rateSnapshot = booking.rate_snapshot || {};
-              const price = rateSnapshot.price || {};
-              
-              return (
-                <TableRow key={booking.id} className="hover:bg-accent/50">
-                  <TableCell className="font-mono text-xs">{booking.id}</TableCell>
-                  <TableCell className="text-sm">
-                    <div className="flex items-center gap-1">
-                      <Calendar className="h-3 w-3 text-muted-foreground" />
-                      {stay.check_in}
-                    </div>
-                    <div className="flex items-center gap-1 text-muted-foreground">
-                      <Calendar className="h-3 w-3" />
-                      {stay.check_out}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {stay.nights} gece
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="font-medium">{guest.full_name || "-"}</div>
-                    {guest.email && (
-                      <div className="text-xs text-muted-foreground">{guest.email}</div>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-sm">
-                    <div>{rateSnapshot.room_type_name || "-"}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {rateSnapshot.rate_plan_name}
-                    </div>
-                  </TableCell>
-                  <TableCell className="font-semibold">
-                    {formatMoney(price.total || 0, price.currency || "TRY")}
-                  </TableCell>
-                  <TableCell>
-                    <Badge className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20">
-                      {booking.status === "confirmed" ? "Onaylı" : booking.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {formatDateTime(booking.created_at)}
-                  </TableCell>
-                </TableRow>
-              );
-            })}
+            {filtered.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground">
+                  Kayıt yok.
+                </TableCell>
+              </TableRow>
+            ) : (
+              filtered.map((booking) => {
+                const stay = booking.stay || {};
+                const guest = booking.guest || {};
+                const rateSnapshot = booking.rate_snapshot || {};
+                const price = rateSnapshot.price || {};
+
+                return (
+                  <TableRow key={booking.id} className="hover:bg-accent/50">
+                    <TableCell className="text-sm">
+                      <div className="flex items-center gap-1">
+                        <Calendar className="h-3 w-3 text-muted-foreground" />
+                        {stay.check_in}
+                      </div>
+                      <div className="flex items-center gap-1 text-muted-foreground">
+                        <Calendar className="h-3 w-3" />
+                        {stay.check_out}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {stay.nights} gece
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="font-medium">{guest.full_name || "-"}</div>
+                      {guest.email ? (
+                        <div className="text-xs text-muted-foreground">{guest.email}</div>
+                      ) : null}
+                    </TableCell>
+                    <TableCell className="text-sm">{booking.status}</TableCell>
+                    <TableCell className="font-semibold">
+                      {formatMoney(price.total || 0, price.currency || "TRY")}
+                    </TableCell>
+                    <TableCell className="text-sm">{booking.agency_name || "-"}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          onClick={() => doCancelRequest(booking)}
+                          className="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm hover:bg-accent transition"
+                        >
+                          <XCircle className="h-4 w-4" />
+                          İptal talebi
+                        </button>
+                        <button
+                          onClick={() => doAddHotelNote(booking)}
+                          className="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm hover:bg-accent transition"
+                        >
+                          <StickyNote className="h-4 w-4" />
+                          Not ekle
+                        </button>
+                        <button
+                          onClick={() => doSetGuestNote(booking)}
+                          className="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm hover:bg-accent transition"
+                        >
+                          <StickyNote className="h-4 w-4" />
+                          Misafir notu
+                        </button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            )}
           </TableBody>
         </Table>
       </div>

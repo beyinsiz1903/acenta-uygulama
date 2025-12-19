@@ -101,6 +101,7 @@ async def create_booking_draft(payload: BookingDraftCreateIn, user=Depends(get_c
         "_id": draft_id,
         "organization_id": user["organization_id"],
         "agency_id": agency_id,
+        "agency_name": (await db.agencies.find_one({"organization_id": user["organization_id"], "_id": agency_id}) or {}).get("name"),
         "search_id": payload.search_id,
         "hotel_id": payload.hotel_id,
         "hotel_name": hotel.get("name"),
@@ -236,11 +237,13 @@ async def confirm_booking(payload: BookingConfirmIn, user=Depends(get_current_us
     booking = {
         "_id": booking_id,
         "organization_id": user["organization_id"],
+        "tenant_id": draft["hotel_id"],
         "agency_id": agency_id,
         "draft_id": payload.draft_id,
         "search_id": draft.get("search_id"),
         "hotel_id": draft["hotel_id"],
         "hotel_name": draft.get("hotel_name"),
+        "agency_name": draft.get("agency_name"),
         "status": "confirmed",
         "stay": draft.get("stay"),
         "occupancy": draft.get("occupancy"),
@@ -252,6 +255,7 @@ async def confirm_booking(payload: BookingConfirmIn, user=Depends(get_current_us
         "updated_at": confirmed_at,
         "created_by": user.get("email"),
         "payment_status": "pending",  # pending|paid|partial
+        "channel": "agency_extranet",
     }
     
     await db.bookings.insert_one(booking)

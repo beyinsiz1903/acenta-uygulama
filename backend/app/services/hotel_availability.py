@@ -67,7 +67,7 @@ async def compute_availability(
     # 2) Fetch overlapping bookings
     # Overlap: booking.check_in < search_check_out AND booking.check_out > search_check_in
     bookings = await db.bookings.find({
-        "tenant_id": hotel_id,
+        "hotel_id": hotel_id,
         "organization_id": organization_id,
         "status": {"$in": ACTIVE_BOOKING_STATUSES},
     }).to_list(5000)

@@ -1782,7 +1782,7 @@ class FAZ6CommissionTester:
             # Look for our agency in totals
             agency_found = False
             for total in totals:
-                if total.get('agency_id') == self.agency_id:
+                if total.get('agency_id') == self.target_agency_id:
                     agency_found = True
                     gross_total = total.get('gross_total', 0)
                     commission_total = total.get('commission_total', 0)

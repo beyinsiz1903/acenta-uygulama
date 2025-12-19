@@ -416,6 +416,9 @@ async def create_allocation(payload: AllocationIn, request: Request, user=Depend
         "channel": "agency_extranet",
         "start_date": payload.start_date,
         "end_date": payload.end_date,
+        # FAZ-7: data hygiene (parsed dates)
+        "start_date_dt": date_to_utc_midnight(payload.start_date),
+        "end_date_dt": date_to_utc_midnight(payload.end_date),
         "allotment": int(payload.allotment),
         "is_active": bool(payload.is_active),
         "created_at": now,
@@ -425,6 +428,19 @@ async def create_allocation(payload: AllocationIn, request: Request, user=Depend
     }
 
     await db.channel_allocations.insert_one(doc)
+
+    await write_audit_log(
+        db,
+        organization_id=user["organization_id"],
+        actor={"actor_type": "user", "email": user.get("email"), "roles": user.get("roles")},
+        request=request,
+        action="allocation.create",
+        target_type="allocation",
+        target_id=doc["_id"],
+        before=None,
+        after=doc,
+    )
+
     saved = await db.channel_allocations.find_one({"_id": doc["_id"]})
     return serialize_doc(saved)
 

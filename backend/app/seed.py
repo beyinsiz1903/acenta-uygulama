@@ -302,6 +302,133 @@ async def ensure_seed_data() -> None:
         await db.rooms.insert_many(rooms_to_create)
         logger.info(f"Created {len(rooms_to_create)} rooms for demo hotels")
 
+
+    # FAZ-2.2.2: Create rate_plans and rate_periods if none exist
+    rate_plans_count = await db.rate_plans.count_documents({"organization_id": org_id})
+    if rate_plans_count == 0 and len(hotels) >= 3:
+        from bson import ObjectId
+
+        now = now_utc()
+        plans_to_create = []
+        periods_to_create = []
+
+        # Hotel 1: 2 rate plans (RO flexible, BB flexible)
+        plan_ro_h1 = ObjectId()
+        plans_to_create.append({
+            "_id": plan_ro_h1,
+            "tenant_id": hotels[0]["_id"],
+            "organization_id": org_id,
+            "name": "Room Only - Flexible",
+            "board": "RO",
+            "cancellation_policy_type": "H24",
+            "is_active": True,
+            "priority": 10,
+            "applies_to_room_types": None,  # All room types
+            "created_at": now,
+            "updated_at": now,
+        })
+
+        plan_bb_h1 = ObjectId()
+        plans_to_create.append({
+            "_id": plan_bb_h1,
+            "tenant_id": hotels[0]["_id"],
+            "organization_id": org_id,
+            "name": "Bed & Breakfast",
+            "board": "BB",
+            "cancellation_policy_type": "H24",
+            "is_active": True,
+            "priority": 20,
+            "applies_to_room_types": ["standard", "deluxe"],
+            "created_at": now,
+            "updated_at": now,
+        })
+
+        # Periods for Hotel 1
+        # Weekend premium (Fri-Sat-Sun)
+        periods_to_create.append({
+            "_id": str(uuid.uuid4()),
+            "tenant_id": hotels[0]["_id"],
+            "organization_id": org_id,
+            "rate_plan_id": plan_ro_h1,
+            "start_date": "2025-01-01",
+            "end_date": "2026-12-31",
+            "days_of_week": [4, 5, 6],  # Fri, Sat, Sun
+            "min_stay": None,
+            "price_per_night": 2800.0,
+            "is_active": True,
+            "priority": 5,
+            "created_at": now,
+        })
+
+        # Weekday (Mon-Thu)
+        periods_to_create.append({
+            "_id": str(uuid.uuid4()),
+            "tenant_id": hotels[0]["_id"],
+            "organization_id": org_id,
+            "rate_plan_id": plan_ro_h1,
+            "start_date": "2025-01-01",
+            "end_date": "2026-12-31",
+            "days_of_week": [0, 1, 2, 3],  # Mon-Thu
+            "min_stay": None,
+            "price_per_night": 2200.0,
+            "is_active": True,
+            "priority": 10,
+            "created_at": now,
+        })
+
+        # BB Plan - All days
+        periods_to_create.append({
+            "_id": str(uuid.uuid4()),
+            "tenant_id": hotels[0]["_id"],
+            "organization_id": org_id,
+            "rate_plan_id": plan_bb_h1,
+            "start_date": "2025-01-01",
+            "end_date": "2026-12-31",
+            "days_of_week": None,  # All days
+            "min_stay": 2,  # Min 2 nights
+            "price_per_night": 2900.0,
+            "is_active": True,
+            "priority": 15,
+            "created_at": now,
+        })
+
+        # Hotel 2: 1 simple rate plan
+        plan_ro_h2 = ObjectId()
+        plans_to_create.append({
+            "_id": plan_ro_h2,
+            "tenant_id": hotels[1]["_id"],
+            "organization_id": org_id,
+            "name": "Standard Rate",
+            "board": "RO",
+            "cancellation_policy_type": "same_day",
+            "is_active": True,
+            "priority": 10,
+            "applies_to_room_types": None,
+            "created_at": now,
+            "updated_at": now,
+        })
+
+        # All days, no min stay
+        periods_to_create.append({
+            "_id": str(uuid.uuid4()),
+            "tenant_id": hotels[1]["_id"],
+            "organization_id": org_id,
+            "rate_plan_id": plan_ro_h2,
+            "start_date": "2025-01-01",
+            "end_date": None,  # Open-ended
+            "days_of_week": None,
+            "min_stay": None,
+            "price_per_night": 2000.0,
+            "is_active": True,
+            "priority": 10,
+            "created_at": now,
+        })
+
+        await db.rate_plans.insert_many(plans_to_create)
+        await db.rate_periods.insert_many(periods_to_create)
+        logger.info(f"Created {len(plans_to_create)} rate plans and {len(periods_to_create)} rate periods")
+
+
     if not dg:
         await db.discount_groups.insert_one(
             {

@@ -225,15 +225,14 @@ async def confirm_booking(payload: BookingConfirmIn, request: Request, user=Depe
         raise HTTPException(
             status_code=409,
             detail={
-
-    before_draft = dict(draft)
-
                 "code": "PRICE_CHANGED",
                 "old_total": draft_total,
                 "new_total": new_total,
                 "currency": draft.get("rate_snapshot", {}).get("price", {}).get("currency", "TRY"),
             },
         )
+    
+    before_draft = dict(draft)
     
     # FAZ-6: Commission snapshot from link (gross=rate_snapshot.price.total)
     link = await db.agency_hotel_links.find_one({

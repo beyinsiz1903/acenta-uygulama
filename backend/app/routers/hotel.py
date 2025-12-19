@@ -143,13 +143,6 @@ async def add_booking_note(booking_id: str, payload: BookingNoteIn, request: Req
         raise HTTPException(status_code=404, detail="BOOKING_NOT_FOUND")
 
     doc = await db.bookings.find_one({"_id": booking_id})
-    return serialize_doc(doc)
-
-
-@router.post(
-    "/bookings/{booking_id}/guest-note",
-    dependencies=[Depends(require_roles(["hotel_admin", "hotel_staff"]))],
-)
 
     await write_audit_log(
         db,
@@ -169,10 +162,17 @@ async def add_booking_note(booking_id: str, payload: BookingNoteIn, request: Req
         event_type="booking.updated",
         booking_id=booking_id,
         hotel_id=str(user.get("hotel_id")),
-        agency_id=str((await db.bookings.find_one({"_id": booking_id}) or {}).get("agency_id") or ""),
+        agency_id=str((doc or {}).get("agency_id") or ""),
         payload={"field": "hotel_notes"},
     )
 
+    return serialize_doc(doc)
+
+
+@router.post(
+    "/bookings/{booking_id}/guest-note",
+    dependencies=[Depends(require_roles(["hotel_admin", "hotel_staff"]))],
+)
 async def add_guest_note(booking_id: str, payload: BookingNoteIn, request: Request, user=Depends(get_current_user)):
     db = await get_db()
     hotel_id = _ensure_hotel_id(user)

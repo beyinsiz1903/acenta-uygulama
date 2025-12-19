@@ -9,10 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "../components/ui/table";
-import { Badge } from "../components/ui/badge";
-import { Button } from "../components/ui/button";
 import { formatMoney } from "../lib/format";
-import { formatDateTime } from "../utils/formatters";
 
 export default function HotelBookingsPage() {
   const [bookings, setBookings] = useState([]);

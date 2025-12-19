@@ -1662,10 +1662,16 @@ class FAZ6CommissionTester:
             
         confirm_data = {"draft_id": self.draft_id}
         
-        # Try confirmation up to 3 times to handle price change simulation
-        for attempt in range(3):
+        # Try confirmation up to 5 times to handle price change simulation
+        for attempt in range(5):
             if attempt > 0:
                 self.log(f"   Retry attempt {attempt + 1}")
+                
+                # Create a new draft for retry (since price changed)
+                if not self.test_create_draft():
+                    self.log(f"❌ Failed to create new draft for retry")
+                    return False
+                confirm_data = {"draft_id": self.draft_id}
                 
             success, response = self.run_test(
                 f"Confirm Booking (attempt {attempt + 1})",
@@ -1678,7 +1684,7 @@ class FAZ6CommissionTester:
             
             # If we get 409 (price changed), that's expected behavior, try again
             if not success:
-                # Check if this was a price change error by making a direct request
+                # Check the last response to see if it was a price change
                 url = f"{self.base_url}/api/agency/bookings/confirm"
                 headers = {'Content-Type': 'application/json', 'Authorization': f'Bearer {self.agency_token}'}
                 try:

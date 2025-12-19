@@ -1488,17 +1488,23 @@ class FAZ6CommissionTester:
             token=self.super_admin_token
         )
         if success and isinstance(response, list) and len(response) > 0:
+            self.log(f"✅ Found {len(response)} agency-hotel links")
+            
+            # Store all links for reference
+            self.all_links = response
+            
             # Find a link with commission settings
             for link in response:
                 if link.get('commission_type') and link.get('commission_value') is not None:
                     self.agency_hotel_link_id = link.get('id')
-                    self.agency_id = link.get('agency_id')
+                    self.target_agency_id = link.get('agency_id')
                     self.hotel_id = link.get('hotel_id')
                     commission_type = link.get('commission_type')
                     commission_value = link.get('commission_value')
                     
                     self.log(f"✅ Found link with commission: {commission_type}={commission_value}%")
-                    self.log(f"   Agency ID: {self.agency_id}")
+                    self.log(f"   Link ID: {self.agency_hotel_link_id}")
+                    self.log(f"   Target Agency ID: {self.target_agency_id}")
                     self.log(f"   Hotel ID: {self.hotel_id}")
                     return True
             

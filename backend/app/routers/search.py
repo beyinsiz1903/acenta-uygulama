@@ -10,8 +10,7 @@ from pydantic import BaseModel
 
 from app.auth import get_current_user, require_roles
 from app.db import get_db
-from app.services.hotel_availability import compute_availability
-from app.services.rate_pricing import compute_rate_for_stay
+# Availability & rates come from PMS connect layer in FAZ-8
 
 
 from app.services.search_cache import canonical_search_payload, cache_key

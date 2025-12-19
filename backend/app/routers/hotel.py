@@ -459,8 +459,7 @@ async def update_allocation(allocation_id: str, payload: AllocationIn, request: 
     _validate_range(payload.start_date, payload.end_date)
 
     now = now_utc()
-    res = await db.channel_allocations.update_one(
-
+    
     update_doc = {
         "room_type": payload.room_type,
         "start_date": payload.start_date,
@@ -473,8 +472,24 @@ async def update_allocation(allocation_id: str, payload: AllocationIn, request: 
         "updated_by": user.get("email"),
     }
 
+    before = await db.channel_allocations.find_one(
         {
             "organization_id": user["organization_id"],
+            "tenant_id": hotel_id,
+            "channel": "agency_extranet",
+            "_id": allocation_id,
+        }
+    )
+
+    res = await db.channel_allocations.update_one(
+        {
+            "organization_id": user["organization_id"],
+            "tenant_id": hotel_id,
+            "channel": "agency_extranet",
+            "_id": allocation_id,
+        },
+        {"$set": update_doc},
+    )
 
     await write_audit_log(
         db,
@@ -484,15 +499,8 @@ async def update_allocation(allocation_id: str, payload: AllocationIn, request: 
         action="allocation.update",
         target_type="allocation",
         target_id=allocation_id,
-        before=await db.channel_allocations.find_one({"_id": allocation_id}),
+        before=before,
         after=update_doc,
-    )
-
-            "tenant_id": hotel_id,
-            "channel": "agency_extranet",
-            "_id": allocation_id,
-        },
-        {"$set": update_doc},
     )
 
     if res.matched_count == 0:

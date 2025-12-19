@@ -503,6 +503,9 @@ async def ensure_seed_data() -> None:
     # FAZ-2.3: Create stop-sell rules + channel allocations if none exist
     stop_sell_count = await db.stop_sell_rules.count_documents({"organization_id": org_id})
     if stop_sell_count == 0 and len(hotels) >= 1:
+
+                "source": "local",
+
         import uuid
 
         now = now_utc()
@@ -536,6 +539,9 @@ async def ensure_seed_data() -> None:
             "organization_id": org_id,
             "room_type": "standard",
             "channel": "agency_extranet",
+
+                "source": "local",
+
             "start_date": "2026-03-01",
             "end_date": "2026-03-31",
             "allotment": 2,
@@ -558,6 +564,9 @@ async def ensure_seed_data() -> None:
                 "created_at": now_utc(),
                 "updated_at": now_utc(),
             }
+
+                "source": "local",
+
         )
 
     # -------------------------------

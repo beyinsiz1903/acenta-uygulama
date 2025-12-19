@@ -112,7 +112,7 @@ async def compute_rate_for_stay(
             
             total_price += price
             night_count += 1
-            current_date = current_date.replace(day=current_date.day + 1)
+            current_date = current_date + timedelta(days=1)
         
         # If no periods matched, skip this plan (will fallback to base_price)
         if total_price == 0:

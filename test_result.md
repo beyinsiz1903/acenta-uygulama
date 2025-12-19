@@ -105,6 +105,20 @@
 ## user_problem_statement: "Müsaitlik ekranını takvim/grid görünümüne, Lead pipeline'ı drag-drop Kanban'a, Rezervasyon detayını drawer'a çevir. Ayrıca agentis.com.tr referansıyla tüm uygulamanın tasarımını daha kurumsal/modern hale getir."
 
 ## backend:
+
+## backend:
+##   - task: "FAZ-6 Komisyon & Mutabakat (model + hesaplama + settlements API + cancel reversal)"
+##     implemented: true
+##     working: "NA"
+##     file: "/app/backend/app/schemas.py, /app/backend/app/routers/admin.py, /app/backend/app/routers/agency_booking.py, /app/backend/app/routers/settlements.py, /app/backend/app/routers/bookings.py, /app/backend/app/services/commission.py, /app/backend/app/seed.py, /app/backend/server.py"
+##     stuck_count: 0
+##     priority: "high"
+##     needs_retesting: true
+##     status_history:
+##       - working: "NA"
+##         agent: "main"
+##         comment: "Agency-hotel link’e commission_type/value eklendi. Booking confirm anında gross/commission/net hesaplanıp booking’e snapshot yazılıyor + booking_financial_entries kaydı (month=stay.check_in[:7], settlement_status=open). Booking cancel endpoint’i eklendi: POST /api/bookings/{booking_id}/cancel (ownership kontrol + reversal negatif financial entry + booking.commission_reversed=true). Mutabakat endpointleri eklendi: GET /api/hotel/settlements ve GET /api/agency/settlements (month/status filtre + export=csv). Seed: link commission backfill + booking_financial_entries indexleri."
+
 ##   - task: "FAZ-5 Hotel Extranet: /api/hotel/bookings + stop-sell + allocations + booking aksiyonları"
 ##     implemented: true
 ##     working: true

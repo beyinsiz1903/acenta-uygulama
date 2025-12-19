@@ -22,7 +22,9 @@ def _oid_or_400(id_str: str) -> ObjectId:
 @router.post("/upsert", dependencies=[Depends(get_current_user)])
 async def upsert(payload: InventoryUpsertIn, user=Depends(get_current_user)):
     try:
-        result = await upsert_inventory(user["organization_id"], user.get("email"), payload.model_dump())
+        doc = payload.model_dump()
+    doc["source"] = doc.get("source") or "local"
+    result = await upsert_inventory(user["organization_id"], user.get("email"), doc)
     except ValueError:
         raise HTTPException(status_code=400, detail="Geçersiz veri")
     return result

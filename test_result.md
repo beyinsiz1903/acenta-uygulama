@@ -135,6 +135,10 @@
 ##       - working: true
 ##         agent: "testing"
 ##         comment: "✅ FAZ-5 HOTEL EXTRANET UI SMOKE TEST BAŞARILI - Kapsamlı UI testi tamamlandı (16 test senaryosu). TEMEL FONKSİYONLAR DOĞRULANDI: A) Authentication: hoteladmin@acenta.test/admin123 login başarılı, hotel_admin rolü ile /app/hotel/bookings'e yönlendirme çalışıyor. B) Navigation: Sol menüde 'Rezervasyonlarım', 'Stop-sell', 'Allocation' linkleri mevcut ve çalışıyor. C) Stop-sell Sayfası: Yeni stop-sell oluşturma (deluxe, 2026-03-10 to 2026-03-12, reason='bakım') başarılı, listede görünüyor, aktif/pasif toggle çalışıyor. D) Allocation Sayfası: Modal açılıyor, form alanları çalışıyor. E) Bookings Sayfası: 3 booking mevcut, aksiyon butonları (İptal talebi, Not ekle, Misafir notu) çalışıyor, prompt dialog'ları handle ediliyor. Minor: Stop-sell silme işlemi ve session timeout sonrası allocation testleri tamamlanamadı, ancak core functionality tamamen çalışıyor. Hotel extranet UI production-ready."
+##       - working: true
+##         agent: "main"
+##         comment: "Follow-up fix: Stop-sell/Allocation delete aksiyonları optimistic UI ile güncellendi (silince anında listeden düşer + sonra reload). Ayrıca axios 401 interceptor: token temizlenir ve /login'e redirect edilir (session timeout UX)." 
+
 
 ## backend:
 ##   - task: "Lead Kanban drag-drop sonrası stage/status ve sıralama (sort_index) kalıcılığı"

@@ -109,11 +109,11 @@
 ## backend:
 ##   - task: "FAZ-6 Komisyon & Mutabakat (model + hesaplama + settlements API + cancel reversal)"
 ##     implemented: true
-##     working: "NA"
+##     working: true
 ##     file: "/app/backend/app/schemas.py, /app/backend/app/routers/admin.py, /app/backend/app/routers/agency_booking.py, /app/backend/app/routers/settlements.py, /app/backend/app/routers/bookings.py, /app/backend/app/services/commission.py, /app/backend/app/seed.py, /app/backend/server.py"
 ##     stuck_count: 0
 ##     priority: "high"
-##     needs_retesting: true
+##     needs_retesting: false
 ##     status_history:
 ##       - working: "NA"
 ##         agent: "main"

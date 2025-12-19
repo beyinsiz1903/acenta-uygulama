@@ -1528,10 +1528,10 @@ class FAZ6CommissionTester:
         if success and 'access_token' in response:
             self.agency_token = response['access_token']
             user = response.get('user', {})
-            agency_id = user.get('agency_id')
+            self.agency_id = user.get('agency_id')
             
-            if agency_id:
-                self.log(f"✅ Agency logged in successfully, agency_id: {agency_id}")
+            if self.agency_id:
+                self.log(f"✅ Agency logged in successfully, agency_id: {self.agency_id}")
                 return True
             else:
                 self.log(f"❌ Agency ID missing from user")

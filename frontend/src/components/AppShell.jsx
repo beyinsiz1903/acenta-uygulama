@@ -157,47 +157,68 @@ export default function AppShell() {
 
           <div className="px-4 py-4 pb-32">
             <div className="grid grid-cols-3 gap-2">
-              <NavLink
-                to={isHotel ? "/app/hotel/bookings" : isAgency ? "/app/agency/bookings" : "/app"}
-                onClick={() => setMobileNavOpen(false)}
-                className={({ isActive }) =>
-                  cn(
-                    "rounded-xl border bg-background/50 p-2 transition hover:bg-accent/40 hover:shadow-sm",
-                    isActive ? "ring-1 ring-ring" : ""
-                  )
-                }
-              >
-                <div className="text-[11px] text-muted-foreground">Toplam</div>
-                <div className="text-sm font-semibold text-foreground">{sidebarStats.total}</div>
-              </NavLink>
+              {isAgency ? (
+                <div className="rounded-xl border bg-background/50 p-2 opacity-70 cursor-default">
+                  <div className="text-[11px] text-muted-foreground">Toplam</div>
+                  <div className="text-sm font-semibold text-foreground">{sidebarStats.total}</div>
+                </div>
+              ) : (
+                <NavLink
+                  to={isHotel ? "/app/hotel/bookings" : "/app"}
+                  onClick={() => setMobileNavOpen(false)}
+                  className={({ isActive }) =>
+                    cn(
+                      "rounded-xl border bg-background/50 p-2 transition hover:bg-accent/40 hover:shadow-sm",
+                      isActive ? "ring-1 ring-ring" : ""
+                    )
+                  }
+                >
+                  <div className="text-[11px] text-muted-foreground">Toplam</div>
+                  <div className="text-sm font-semibold text-foreground">{sidebarStats.total}</div>
+                </NavLink>
+              )}
 
-              <NavLink
-                to={isHotel ? "/app/hotel/bookings?status=pending" : isAgency ? "/app/agency/bookings?status=pending" : "/app"}
-                onClick={() => setMobileNavOpen(false)}
-                className={({ isActive }) =>
-                  cn(
-                    "rounded-xl border bg-background/50 p-2 transition hover:bg-accent/40 hover:shadow-sm",
-                    isActive ? "ring-1 ring-ring" : ""
-                  )
-                }
-              >
-                <div className="text-[11px] text-muted-foreground">Bekleyen</div>
-                <div className="text-sm font-semibold text-foreground">{sidebarStats.pending}</div>
-              </NavLink>
+              {isAgency ? (
+                <div className="rounded-xl border bg-background/50 p-2 opacity-70 cursor-default">
+                  <div className="text-[11px] text-muted-foreground">Bekleyen</div>
+                  <div className="text-sm font-semibold text-foreground">{sidebarStats.pending}</div>
+                </div>
+              ) : (
+                <NavLink
+                  to={isHotel ? "/app/hotel/bookings?status=pending" : "/app"}
+                  onClick={() => setMobileNavOpen(false)}
+                  className={({ isActive }) =>
+                    cn(
+                      "rounded-xl border bg-background/50 p-2 transition hover:bg-accent/40 hover:shadow-sm",
+                      isActive ? "ring-1 ring-ring" : ""
+                    )
+                  }
+                >
+                  <div className="text-[11px] text-muted-foreground">Bekleyen</div>
+                  <div className="text-sm font-semibold text-foreground">{sidebarStats.pending}</div>
+                </NavLink>
+              )}
 
-              <NavLink
-                to={isHotel ? "/app/hotel/settlements" : isAgency ? "/app/agency/settlements" : "/app"}
-                onClick={() => setMobileNavOpen(false)}
-                className={({ isActive }) =>
-                  cn(
-                    "rounded-xl border bg-background/50 p-2 transition hover:bg-accent/40 hover:shadow-sm",
-                    isActive ? "ring-1 ring-ring" : ""
-                  )
-                }
-              >
-                <div className="text-[11px] text-muted-foreground">Ciro 7G</div>
-                <div className="text-sm font-semibold text-foreground">{formatMoneyCompact(sidebarStats.revenue7d, "TRY")}</div>
-              </NavLink>
+              {isAgency ? (
+                <div className="rounded-xl border bg-background/50 p-2 opacity-70 cursor-default">
+                  <div className="text-[11px] text-muted-foreground">Ciro 7G</div>
+                  <div className="text-sm font-semibold text-foreground">{formatMoneyCompact(sidebarStats.revenue7d, "TRY")}</div>
+                </div>
+              ) : (
+                <NavLink
+                  to={isHotel ? "/app/hotel/settlements" : "/app"}
+                  onClick={() => setMobileNavOpen(false)}
+                  className={({ isActive }) =>
+                    cn(
+                      "rounded-xl border bg-background/50 p-2 transition hover:bg-accent/40 hover:shadow-sm",
+                      isActive ? "ring-1 ring-ring" : ""
+                    )
+                  }
+                >
+                  <div className="text-[11px] text-muted-foreground">Ciro 7G</div>
+                  <div className="text-sm font-semibold text-foreground">{formatMoneyCompact(sidebarStats.revenue7d, "TRY")}</div>
+                </NavLink>
+              )}
             </div>
 
             <div className="mt-4 rounded-2xl border bg-card p-2 shadow-sm">

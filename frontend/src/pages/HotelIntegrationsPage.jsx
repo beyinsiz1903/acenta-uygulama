@@ -45,6 +45,8 @@ export default function HotelIntegrationsPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
+  const user = getUser();
+
   const [provider, setProvider] = useState("");
   const [status, setStatus] = useState("not_configured");
   const [lastSyncAt, setLastSyncAt] = useState(null);

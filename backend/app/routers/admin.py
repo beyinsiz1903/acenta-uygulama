@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import uuid
-from typing import Optional
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 

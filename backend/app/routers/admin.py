@@ -12,6 +12,7 @@ from app.schemas import (
     AgencyHotelLinkCreateIn,
     AgencyHotelLinkPatchIn,
     HotelCreateIn,
+    HotelForceSalesOverrideIn,
 )
 from app.utils import now_utc, serialize_doc, to_object_id
 

@@ -95,10 +95,34 @@ export default function DashboardPage() {
       ) : null}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard title="Toplam Rezervasyon" value={totals.total} icon={Ticket} to="/app/reservations" testId="stat-total" />
-        <StatCard title="Beklemede" value={totals.pending} icon={CalendarDays} to="/app/reservations?status=pending" testId="stat-pending" />
-        <StatCard title="Onaylı" value={totals.confirmed} icon={Ticket} to="/app/reservations?status=confirmed" testId="stat-confirmed" />
-        <StatCard title="Ödendi" value={totals.paid} icon={Ticket} to="/app/reservations?status=paid" testId="stat-paid" />
+        <StatCard
+          title="Toplam Rezervasyon"
+          value={totals.total}
+          icon={Ticket}
+          to={isHotel ? "/app/hotel/bookings" : isAgency ? "/app/agency/bookings" : undefined}
+          testId="stat-total"
+        />
+        <StatCard
+          title="Beklemede"
+          value={totals.pending}
+          icon={CalendarDays}
+          to={isHotel ? "/app/hotel/bookings?status=pending" : isAgency ? "/app/agency/bookings?status=pending" : undefined}
+          testId="stat-pending"
+        />
+        <StatCard
+          title="Onaylı"
+          value={totals.confirmed}
+          icon={Ticket}
+          to={isHotel ? "/app/hotel/bookings?status=confirmed" : isAgency ? "/app/agency/bookings?status=confirmed" : undefined}
+          testId="stat-confirmed"
+        />
+        <StatCard
+          title="Ödendi"
+          value={totals.paid}
+          icon={Ticket}
+          to={isHotel ? "/app/hotel/bookings?status=paid" : isAgency ? "/app/agency/bookings?status=paid" : undefined}
+          testId="stat-paid"
+        />
       </div>
 
       <Card className="rounded-2xl shadow-sm">

@@ -153,6 +153,45 @@ export default function AgencyBookingsListPage() {
             <p className="text-sm text-muted-foreground mt-1">
               Acentanızın rezervasyonları
             </p>
+      <div className="rounded-2xl border bg-card shadow-sm p-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="grid gap-1">
+            <div className="text-xs text-muted-foreground">Arama</div>
+            <input
+              className="h-9 rounded-md border bg-background px-3 text-sm"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Misafir, otel veya Booking ID ara..."
+            />
+          </div>
+          <div className="grid gap-1">
+            <div className="text-xs text-muted-foreground">Durum</div>
+            <select
+              className="h-9 rounded-md border bg-background px-3 text-sm"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              <option value="">Tüm durumlar</option>
+              <option value="confirmed">Onaylı</option>
+              <option value="cancelled">İptal</option>
+              <option value="draft">Taslak</option>
+            </select>
+          </div>
+          <div className="grid gap-1">
+            <div className="text-xs text-muted-foreground">Giriş Tarihi</div>
+            <select
+              className="h-9 rounded-md border bg-background px-3 text-sm"
+              value={arrivalFilter}
+              onChange={(e) => setArrivalFilter(e.target.value)}
+            >
+              <option value="all">Tümü</option>
+              <option value="today">Bugün giriş</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+
           </div>
           <Button onClick={() => navigate("/app/agency/hotels")} className="gap-2">
             <Search className="h-4 w-4" />

@@ -97,6 +97,11 @@ async def _startup() -> None:
     await ensure_seed_data()
     logger.info("Startup complete")
 
+    # Start background email dispatch loop (FAZ-9.3)
+    import asyncio
+
+    asyncio.create_task(email_dispatch_loop())
+
 
 @app.on_event("shutdown")
 async def _shutdown() -> None:

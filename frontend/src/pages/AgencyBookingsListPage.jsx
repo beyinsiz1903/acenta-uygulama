@@ -250,7 +250,7 @@ export default function AgencyBookingsListPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {bookings.map((booking) => {
+            {filteredBookings.map((booking) => {
               const stay = booking.stay || {};
               const guest = booking.guest || {};
               const rateSnapshot = booking.rate_snapshot || {};

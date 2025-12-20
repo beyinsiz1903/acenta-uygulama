@@ -320,6 +320,8 @@ async def confirm_booking(payload: BookingConfirmIn, request: Request, user=Depe
         before=before_draft,
         after=booking,
         meta={"draft_id": payload.draft_id},
+    )
+
     # FAZ-9.3: enqueue booking.confirmed email for hotel (only)
     try:
         hotel_id = draft["hotel_id"]
@@ -347,9 +349,6 @@ async def confirm_booking(payload: BookingConfirmIn, request: Request, user=Depe
         import logging
 
         logging.getLogger("email_outbox").error("Failed to enqueue booking.confirmed email: %s", e, exc_info=True)
-
-
-    )
     
     await db.bookings.insert_one(booking)
 

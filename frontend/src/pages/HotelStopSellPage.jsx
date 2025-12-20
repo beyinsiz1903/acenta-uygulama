@@ -149,6 +149,14 @@ export default function HotelStopSellPage() {
           <div className="text-sm text-foreground">{error}</div>
         </div>
       ) : null}
+      <div className="rounded-2xl border bg-muted/20 p-4 text-xs text-muted-foreground space-y-1">
+        <div className="font-medium text-foreground">Varsayılan davranış</div>
+        <p>
+          Hiç stop-sell eklemezseniz, tüm odalar ve tarihler satışa açıktır. Buraya eklediğiniz kurallar,
+          acenta panelindeki satışları <span className="font-semibold">engeller</span>.
+        </p>
+      </div>
+
 
       <div className="rounded-2xl border bg-card shadow-sm overflow-hidden">
         <Table>

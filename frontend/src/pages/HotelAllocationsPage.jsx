@@ -150,6 +150,14 @@ export default function HotelAllocationsPage() {
           <div className="text-sm text-foreground">{error}</div>
         </div>
       ) : null}
+      <div className="rounded-2xl border bg-muted/20 p-4 text-xs text-muted-foreground space-y-1">
+        <div className="font-medium text-foreground">Varsayılan davranış</div>
+        <p>
+          Hiç allocation eklemezseniz, sistem oda satışı için varsayılan kapasiteyi kullanır. Buraya eklediğiniz
+          allotment kuralları, acenta tarafında aynı anda satılabilecek oda sayısını <span className="font-semibold">sınırlar</span>.
+        </p>
+      </div>
+
 
       <div className="rounded-2xl border bg-card shadow-sm overflow-hidden">
         <Table>

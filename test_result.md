@@ -415,6 +415,19 @@
   test_all: false
   test_priority: "high_first"
 
+## frontend:
+  - task: "Admin Email Logs UI (Email Aktiviteleri) ve NotFoundPage düzeltmesi"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/AdminEmailLogsPage.jsx, /app/frontend/src/pages/NotFoundPage.jsx, /app/frontend/src/config/menuConfig.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ ADMIN EMAIL LOGS VE NAVIGATION SMOKE TEST BAŞARILI - Kapsamlı test tamamlandı (5 ana senaryo). TEMEL FONKSİYONLAR DOĞRULANDI: 1) NOTFOUNDPAGE FİX: /fake-route navigasyonu 'Sayfa bulunamadı' başlığı ve 'Giriş ekranına dön' butonu ile doğru çalışıyor, /login sayfasına yönlendirme başarılı. 2) ADMIN EMAIL LOGS ERİŞİMİ: admin@acenta.test/admin123 login başarılı, admin paneline yönlendirme çalışıyor, 'Email Aktiviteleri' menü öğesi görünür ve çalışıyor, /app/admin/email-logs sayfası başarıyla yükleniyor. 3) SAYFA İÇERİĞİ: 'Email Aktiviteleri' başlığı mevcut, Status/Event filtre alanları (2 select) çalışıyor, arama input'u görünür, tablo başlıkları (Tarih, Event, Booking, To, Status, Attempts, Aksiyon) tam, 3 veri satırı mevcut. 4) FİLTRE FONKSİYONALİTESİ: Status='Failed' filtresi çalışıyor, Filtrele butonu çalışıyor, hata yok, retry butonları veri yokken beklenen şekilde gizli. 5) YETKİ KONTROLÜ: Agency kullanıcısı (agency1@demo.test/agency123) email-logs sayfasına erişmeye çalışınca /unauthorized sayfasına yönlendiriliyor (güvenlik çalışıyor). DÜZELTMELER: Backend WeasyPrint dependency sorunu çözüldü (libpangoft2-1.0-0 kuruldu), menuConfig.js'e 'Email Aktiviteleri' menü öğesi eklendi. Tüm navigation ve email logs functionality production-ready."
+
 ## agent_communication:
   - agent: "main"
     message: "Backend'de lead Kanban kalıcılığı için sort_index alanı eklendi ve status patch endpoint'i sort_index kabul edecek şekilde genişletildi. Lütfen auth ile login olup lead oluşturma, listeleme sıralaması, status+sort_index patch akışını test edin."
@@ -442,3 +455,5 @@
     message: "✅ FAZ-9.3 EMAIL OUTBOX + DISPATCHER + SES INTEGRATION TEST COMPLETE - Comprehensive testing completed with 9/10 test scenarios passed (90% success rate). CRITICAL FUNCTIONALITY VERIFIED: Email outbox collection working with proper job creation for booking.confirmed and booking.cancelled events, dispatcher processing pending jobs with retry logic, SES integration structure properly implemented, voucher integration working for email links, background worker running, TR+EN email content with voucher links generated correctly. All core email outbox functionality production-ready with proper error handling, retry logic, and audit integration. Minor limitation: Full SES testing requires AWS credentials (expected in test environment)."
   - agent: "testing"
     message: "✅ FAZ-9.3 ADMIN EMAIL OUTBOX API TEST COMPLETE - All 19 test scenarios passed (100% success rate). COMPREHENSIVE FUNCTIONALITY VERIFIED: Super admin authentication working, GET /api/admin/email-outbox endpoint functional with proper JSON structure and all required fields, filtering by status/event_type working, search by booking_id/email working, POST /api/admin/email-outbox/{job_id}/retry endpoint working with proper error handling (400 for sent jobs, 404 for invalid IDs), pagination with next_cursor working, ObjectId conversion fixed and working correctly. All admin email outbox monitoring functionality production-ready."
+  - agent: "testing"
+    message: "✅ ADMIN EMAIL LOGS UI VE NAVIGATION SMOKE TEST BAŞARILI - Kapsamlı test tamamlandı (5 ana senaryo, 100% başarı). TEMEL BULGULAR: 1) NotFoundPage düzeltmesi çalışıyor (/fake-route → 'Sayfa bulunamadı' + 'Giriş ekranına dön' → /login) 2) Admin Email Logs erişimi tam çalışıyor (admin@acenta.test login → menüde 'Email Aktiviteleri' → /app/admin/email-logs sayfası) 3) Sayfa içeriği tam (başlık, filtreler, tablo başlıkları, 3 veri satırı) 4) Filtre functionality çalışıyor (Status=Failed + Filtrele butonu) 5) Güvenlik çalışıyor (agency kullanıcısı → /unauthorized). DÜZELTMELER YAPILDI: Backend WeasyPrint dependency sorunu çözüldü, menuConfig.js'e Email Aktiviteleri eklendi. Production-ready."

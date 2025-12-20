@@ -155,12 +155,6 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
     }
   };
 
-
-    } catch {
-      toast.error("Kopyalama başarısız oldu");
-    }
-  };
-
   const titleHotel = booking?.hotel_name || "Rezervasyon Detayı";
   const subtitleParts = [];
   if (booking?.guest_name) subtitleParts.push(booking.guest_name);

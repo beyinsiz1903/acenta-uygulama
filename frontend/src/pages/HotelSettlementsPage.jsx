@@ -234,9 +234,15 @@ export default function HotelSettlementsPage() {
                     <div className="text-xs text-muted-foreground">{r.agency_id}</div>
                   </TableCell>
                   <TableCell>{r.currency || "TRY"}</TableCell>
-                  <TableCell className="text-right font-semibold">{r.gross_total}</TableCell>
-                  <TableCell className="text-right">{r.commission_total}</TableCell>
-                  <TableCell className="text-right">{r.net_total}</TableCell>
+                  <TableCell className="text-right font-semibold">
+                    {formatMoney(r.gross_total || 0, r.currency || "TRY")}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {formatMoney(r.commission_total || 0, r.currency || "TRY")}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {formatMoney(r.net_total || 0, r.currency || "TRY")}
+                  </TableCell>
                   <TableCell className="text-right">{r.count}</TableCell>
                 </TableRow>
               ))

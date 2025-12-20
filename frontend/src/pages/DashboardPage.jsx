@@ -33,6 +33,11 @@ function StatCard({ title, value, icon: Icon, to, testId }) {
 }
 
 export default function DashboardPage() {
+  const user = getUser();
+  const isHotel = (user?.roles || []).includes("hotel_admin") || (user?.roles || []).includes("hotel_staff");
+  const isAgency = (user?.roles || []).includes("agency_admin") || (user?.roles || []).includes("agency_agent");
+
+
   const [resSummary, setResSummary] = useState([]);
   const [sales, setSales] = useState([]);
   const [error, setError] = useState("");

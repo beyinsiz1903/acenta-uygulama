@@ -173,6 +173,11 @@ export default function AgencyHotelsPage() {
             Anlaşmalı olduğunuz ve satış yapabileceğiniz {hotels.length} tesis
           </p>
         </div>
+        <div>
+          <Button variant="outline" size="sm" onClick={loadHotels} disabled={loading}>
+            Yenile
+          </Button>
+        </div>
       </div>
 
       <Card className="rounded-2xl border bg-card shadow-sm p-4 mb-2">

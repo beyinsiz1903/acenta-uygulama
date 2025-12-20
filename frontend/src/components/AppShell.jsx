@@ -186,7 +186,7 @@ export default function AppShell() {
               </NavLink>
 
               <NavLink
-                to="/app/reports"
+                to={isHotel ? "/app/hotel/settlements" : isAgency ? "/app/agency/settlements" : "/app"}
                 onClick={() => setMobileNavOpen(false)}
                 className={({ isActive }) =>
                   cn(

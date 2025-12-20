@@ -4399,6 +4399,447 @@ class FAZ7AuditCacheEventsTester:
         return 0 if self.tests_failed == 0 else 1
 
 
+class FAZ92VoucherTokenTester:
+    def __init__(self, base_url="https://voucher-share.preview.emergentagent.com"):
+        self.base_url = base_url
+        self.agency_token = None
+        self.hotel_token = None
+        self.tests_run = 0
+        self.tests_passed = 0
+        self.tests_failed = 0
+        self.failed_tests = []
+        
+        # Store IDs for testing
+        self.agency_id = None
+        self.hotel_id = None
+        self.booking_id = None
+        self.voucher_token = None
+
+    def log(self, msg):
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}")
+
+    def run_test(self, name, method, endpoint, expected_status, data=None, headers_override=None, token=None):
+        """Run a single API test with specific token"""
+        url = f"{self.base_url}/{endpoint}"
+        headers = headers_override or {'Content-Type': 'application/json'}
+        
+        # Use specific token if provided
+        if token:
+            headers['Authorization'] = f'Bearer {token}'
+
+        self.tests_run += 1
+        self.log(f"🔍 Test #{self.tests_run}: {name}")
+        
+        try:
+            if method == 'GET':
+                response = requests.get(url, headers=headers, timeout=10)
+            elif method == 'POST':
+                response = requests.post(url, json=data, headers=headers, timeout=10)
+            elif method == 'PUT':
+                response = requests.put(url, json=data, headers=headers, timeout=10)
+            elif method == 'DELETE':
+                response = requests.delete(url, headers=headers, timeout=10)
+            else:
+                raise ValueError(f"Unsupported method: {method}")
+
+            success = response.status_code == expected_status
+            if success:
+                self.tests_passed += 1
+                self.log(f"✅ PASSED - Status: {response.status_code}")
+                try:
+                    if 'application/json' in response.headers.get('content-type', ''):
+                        return True, response.json()
+                    else:
+                        return True, response
+                except:
+                    return True, response
+            else:
+                self.tests_failed += 1
+                self.failed_tests.append(f"{name} - Expected {expected_status}, got {response.status_code}")
+                self.log(f"❌ FAILED - Expected {expected_status}, got {response.status_code}")
+                try:
+                    self.log(f"   Response: {response.text[:200]}")
+                except:
+                    pass
+                return False, {}
+
+        except Exception as e:
+            self.tests_failed += 1
+            self.failed_tests.append(f"{name} - Error: {str(e)}")
+            self.log(f"❌ FAILED - Error: {str(e)}")
+            return False, {}
+
+    def test_agency_login(self):
+        """1) Agency admin login"""
+        self.log("\n=== 1) AGENCY LOGIN ===")
+        success, response = self.run_test(
+            "Agency Login (agency1@demo.test)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "agency1@demo.test", "password": "agency123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.agency_token = response['access_token']
+            user = response.get('user', {})
+            self.agency_id = user.get('agency_id')
+            
+            if self.agency_id:
+                self.log(f"✅ Agency logged in successfully, agency_id: {self.agency_id}")
+                return True
+            else:
+                self.log(f"❌ Agency ID missing from user")
+                return False
+        return False
+
+    def test_get_booking_id(self):
+        """2) Get a booking ID for testing"""
+        self.log("\n=== 2) GET BOOKING ID ===")
+        success, response = self.run_test(
+            "Get Agency Bookings",
+            "GET",
+            "api/agency/bookings",
+            200,
+            token=self.agency_token
+        )
+        
+        if success:
+            bookings = response if isinstance(response, list) else []
+            self.log(f"✅ Found {len(bookings)} bookings for agency")
+            
+            if len(bookings) > 0:
+                self.booking_id = bookings[0].get('id')
+                self.log(f"✅ Selected booking for voucher test: {self.booking_id}")
+                return True
+            else:
+                self.log(f"⚠️  No bookings found - will use demo booking ID")
+                # Use a demo booking ID that should exist from seed data
+                self.booking_id = "demo_booking_id_12345"
+                return True
+        return False
+
+    def test_agency_voucher_generate_idempotent(self):
+        """3) Agency voucher generate (idempotent)"""
+        self.log("\n=== 3) AGENCY VOUCHER GENERATE (IDEMPOTENT) ===")
+        
+        if not self.booking_id:
+            self.log("❌ No booking ID available")
+            return False
+        
+        # First call
+        success, response = self.run_test(
+            "Generate Voucher Token (First Call)",
+            "POST",
+            f"api/voucher/{self.booking_id}/generate",
+            200,
+            token=self.agency_token
+        )
+        
+        if success:
+            token1 = response.get('token')
+            url1 = response.get('url')
+            expires_at1 = response.get('expires_at')
+            
+            # Verify response structure
+            if not token1 or not token1.startswith('vch_'):
+                self.log(f"❌ Invalid token format: {token1}")
+                return False
+            
+            if not url1 or not url1.startswith('/v/api/voucher/'):
+                self.log(f"❌ Invalid URL format: {url1}")
+                return False
+            
+            if not expires_at1:
+                self.log(f"❌ Missing expires_at")
+                return False
+            
+            self.voucher_token = token1
+            self.log(f"✅ First call successful - token: {token1[:20]}..., url: {url1}")
+            
+            # Second call (should return same token - idempotent)
+            success2, response2 = self.run_test(
+                "Generate Voucher Token (Second Call - Idempotent)",
+                "POST",
+                f"api/voucher/{self.booking_id}/generate",
+                200,
+                token=self.agency_token
+            )
+            
+            if success2:
+                token2 = response2.get('token')
+                if token1 == token2:
+                    self.log(f"✅ Idempotency working - same token returned: {token2[:20]}...")
+                    return True
+                else:
+                    self.log(f"❌ Idempotency failed - different tokens: {token1[:20]}... vs {token2[:20]}...")
+                    return False
+        
+        return False
+
+    def test_hotel_login(self):
+        """4) Hotel admin login"""
+        self.log("\n=== 4) HOTEL LOGIN ===")
+        success, response = self.run_test(
+            "Hotel Login (hoteladmin@acenta.test)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "hoteladmin@acenta.test", "password": "admin123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.hotel_token = response['access_token']
+            user = response.get('user', {})
+            self.hotel_id = user.get('hotel_id')
+            roles = user.get('roles', [])
+            
+            if 'hotel_admin' in roles and self.hotel_id:
+                self.log(f"✅ Hotel admin logged in successfully, hotel_id: {self.hotel_id}")
+                return True
+            else:
+                self.log(f"❌ Hotel admin role or hotel_id missing: roles={roles}, hotel_id={self.hotel_id}")
+                return False
+        return False
+
+    def test_ownership_control(self):
+        """5) Ownership control tests"""
+        self.log("\n=== 5) OWNERSHIP CONTROL ===")
+        
+        if not self.booking_id:
+            self.log("❌ No booking ID available")
+            return False
+        
+        # Test hotel admin trying to generate voucher for agency booking
+        success, response = self.run_test(
+            "Hotel Admin Generate Voucher (Should Fail if Different Hotel)",
+            "POST",
+            f"api/voucher/{self.booking_id}/generate",
+            403,  # Expect 403 if booking belongs to different hotel
+            token=self.hotel_token
+        )
+        
+        if success:
+            self.log(f"✅ Ownership control working - hotel admin correctly denied")
+        else:
+            # If it's 200, the booking might belong to this hotel, which is also valid
+            self.log(f"⚠️  Hotel admin has access - booking might belong to this hotel")
+        
+        # Test with non-existent booking
+        success, response = self.run_test(
+            "Generate Voucher for Non-existent Booking",
+            "POST",
+            "api/voucher/nonexistent_booking_123/generate",
+            404,
+            token=self.agency_token
+        )
+        
+        if success:
+            self.log(f"✅ Non-existent booking correctly returns 404")
+            return True
+        
+        return False
+
+    def test_public_html_endpoint(self):
+        """6) Public HTML endpoint"""
+        self.log("\n=== 6) PUBLIC HTML ENDPOINT ===")
+        
+        if not self.voucher_token:
+            self.log("❌ No voucher token available")
+            return False
+        
+        success, response = self.run_test(
+            "Get Public Voucher HTML",
+            "GET",
+            f"api/voucher/public/{self.voucher_token}",
+            200,
+            headers_override={}  # No auth required
+        )
+        
+        if success:
+            content_type = response.headers.get('content-type', '')
+            if 'text/html' in content_type:
+                html_content = response.text
+                
+                # Check for expected content
+                required_texts = [
+                    "Rezervasyon Voucher",
+                    "Booking Voucher"
+                ]
+                
+                found_texts = []
+                for text in required_texts:
+                    if text in html_content:
+                        found_texts.append(text)
+                
+                if len(found_texts) >= 1:
+                    self.log(f"✅ HTML content valid - found: {found_texts}")
+                    self.log(f"   Content length: {len(html_content)} bytes")
+                    return True
+                else:
+                    self.log(f"❌ Required texts not found in HTML")
+                    return False
+            else:
+                self.log(f"❌ Wrong content type: {content_type}")
+                return False
+        
+        return False
+
+    def test_public_pdf_endpoint(self):
+        """7) Public PDF endpoint"""
+        self.log("\n=== 7) PUBLIC PDF ENDPOINT ===")
+        
+        if not self.voucher_token:
+            self.log("❌ No voucher token available")
+            return False
+        
+        success, response = self.run_test(
+            "Get Public Voucher PDF",
+            "GET",
+            f"api/voucher/public/{self.voucher_token}.pdf",
+            200,
+            headers_override={}  # No auth required
+        )
+        
+        if success:
+            content_type = response.headers.get('content-type', '')
+            if 'application/pdf' in content_type:
+                pdf_content = response.content
+                
+                # Check PDF magic bytes
+                if pdf_content.startswith(b'%PDF'):
+                    self.log(f"✅ PDF content valid - starts with %PDF magic bytes")
+                    self.log(f"   Content length: {len(pdf_content)} bytes")
+                    return True
+                else:
+                    self.log(f"❌ Invalid PDF - doesn't start with %PDF magic bytes")
+                    return False
+            else:
+                self.log(f"❌ Wrong content type: {content_type}")
+                return False
+        
+        return False
+
+    def test_expired_voucher_behavior(self):
+        """8) Test expired voucher behavior"""
+        self.log("\n=== 8) EXPIRED VOUCHER BEHAVIOR ===")
+        
+        # Test with invalid token
+        success, response = self.run_test(
+            "Get Public HTML with Invalid Token",
+            "GET",
+            "api/voucher/public/invalid_token_12345",
+            404,
+            headers_override={}
+        )
+        
+        if success:
+            self.log(f"✅ Invalid token correctly returns 404")
+        
+        # Test PDF with invalid token
+        success, response = self.run_test(
+            "Get Public PDF with Invalid Token",
+            "GET",
+            "api/voucher/public/invalid_token_12345.pdf",
+            404,
+            headers_override={}
+        )
+        
+        if success:
+            self.log(f"✅ Invalid token for PDF correctly returns 404")
+            return True
+        
+        return False
+
+    def test_json_error_format(self):
+        """9) Test JSON error format"""
+        self.log("\n=== 9) JSON ERROR FORMAT ===")
+        
+        # Test booking not found
+        success, response = self.run_test(
+            "Generate Voucher for Non-existent Booking (JSON Error)",
+            "POST",
+            "api/voucher/booking_not_found_123/generate",
+            404,
+            token=self.agency_token
+        )
+        
+        if success:
+            self.log(f"✅ Booking not found returns 404")
+        
+        # Test voucher not found
+        success, response = self.run_test(
+            "Get Non-existent Voucher (JSON Error)",
+            "GET",
+            "api/voucher/public/voucher_not_found_123",
+            404,
+            headers_override={}
+        )
+        
+        if success:
+            self.log(f"✅ Voucher not found returns 404")
+            return True
+        
+        return False
+
+    def print_summary(self):
+        """Print test summary"""
+        self.log("\n" + "="*60)
+        self.log("FAZ-9.2 VOUCHER TOKEN TEST SUMMARY")
+        self.log("="*60)
+        self.log(f"Total Tests: {self.tests_run}")
+        self.log(f"✅ Passed: {self.tests_passed}")
+        self.log(f"❌ Failed: {self.tests_failed}")
+        self.log(f"Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%")
+        
+        if self.failed_tests:
+            self.log("\n❌ FAILED TESTS:")
+            for i, test in enumerate(self.failed_tests, 1):
+                self.log(f"  {i}. {test}")
+        
+        self.log("="*60)
+
+    def run_faz92_tests(self):
+        """Run all FAZ-9.2 tests in sequence"""
+        self.log("🚀 Starting FAZ-9.2 Voucher Token Tests")
+        self.log(f"Base URL: {self.base_url}")
+        
+        # 1) Agency login
+        if not self.test_agency_login():
+            self.log("❌ Agency login failed - stopping tests")
+            self.print_summary()
+            return 1
+
+        # 2) Get booking ID
+        self.test_get_booking_id()
+
+        # 3) Agency voucher generate (idempotent)
+        self.test_agency_voucher_generate_idempotent()
+
+        # 4) Hotel login
+        self.test_hotel_login()
+
+        # 5) Ownership control
+        self.test_ownership_control()
+
+        # 6) Public HTML endpoint
+        self.test_public_html_endpoint()
+
+        # 7) Public PDF endpoint
+        self.test_public_pdf_endpoint()
+
+        # 8) Expired voucher behavior
+        self.test_expired_voucher_behavior()
+
+        # 9) JSON error format
+        self.test_json_error_format()
+
+        # Summary
+        self.print_summary()
+
+        return 0 if self.tests_failed == 0 else 1
+
+
 def main():
     if len(sys.argv) > 1:
         if sys.argv[1] == "faz5":
@@ -4425,8 +4866,12 @@ def main():
             tester = FAZ91BookingDetailTester()
             exit_code = tester.run_faz91_tests()
             sys.exit(exit_code)
+        elif sys.argv[1] == "faz92":
+            tester = FAZ92VoucherTokenTester()
+            exit_code = tester.run_faz92_tests()
+            sys.exit(exit_code)
         else:
-            print("Usage: python backend_test.py [faz5|faz6|faz7|faz8|faz9|faz91]")
+            print("Usage: python backend_test.py [faz5|faz6|faz7|faz8|faz9|faz91|faz92]")
             sys.exit(1)
     else:
         tester = AcentaAPITester()

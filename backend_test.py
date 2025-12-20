@@ -6914,6 +6914,423 @@ class FAZ10HotelIntegrationsTester:
         return 0 if self.tests_failed == 0 else 1
 
 
+class FAZ101IntegrationSyncTester:
+    def __init__(self, base_url="https://voucher-share.preview.emergentagent.com"):
+        self.base_url = base_url
+        self.hotel_token = None
+        self.agency_token = None
+        self.tests_run = 0
+        self.tests_passed = 0
+        self.tests_failed = 0
+        self.failed_tests = []
+        
+        # Store IDs for testing
+        self.hotel_id = None
+        self.job_id = None
+
+    def log(self, msg):
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}")
+
+    def run_test(self, name, method, endpoint, expected_status, data=None, headers_override=None, token=None):
+        """Run a single API test with specific token"""
+        url = f"{self.base_url}/{endpoint}"
+        headers = headers_override or {'Content-Type': 'application/json'}
+        
+        # Use specific token if provided
+        if token:
+            headers['Authorization'] = f'Bearer {token}'
+
+        self.tests_run += 1
+        self.log(f"🔍 Test #{self.tests_run}: {name}")
+        
+        try:
+            if method == 'GET':
+                response = requests.get(url, headers=headers, timeout=10)
+            elif method == 'POST':
+                response = requests.post(url, json=data, headers=headers, timeout=10)
+            elif method == 'PUT':
+                response = requests.put(url, json=data, headers=headers, timeout=10)
+            elif method == 'DELETE':
+                response = requests.delete(url, headers=headers, timeout=10)
+            else:
+                raise ValueError(f"Unsupported method: {method}")
+
+            success = response.status_code == expected_status
+            if success:
+                self.tests_passed += 1
+                self.log(f"✅ PASSED - Status: {response.status_code}")
+                try:
+                    return True, response.json() if response.content else {}
+                except:
+                    return True, response.text if hasattr(response, 'text') else {}
+            else:
+                self.tests_failed += 1
+                self.failed_tests.append(f"{name} - Expected {expected_status}, got {response.status_code}")
+                self.log(f"❌ FAILED - Expected {expected_status}, got {response.status_code}")
+                try:
+                    self.log(f"   Response: {response.text[:200]}")
+                except:
+                    pass
+                return False, {}
+
+        except Exception as e:
+            self.tests_failed += 1
+            self.failed_tests.append(f"{name} - Error: {str(e)}")
+            self.log(f"❌ FAILED - Error: {str(e)}")
+            return False, {}
+
+    def test_hotel_admin_login(self):
+        """1) Test hotel admin login"""
+        self.log("\n=== A) BAŞARILI SYNC REQUEST ===")
+        success, response = self.run_test(
+            "Hotel Admin Login (hoteladmin@acenta.test)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "hoteladmin@acenta.test", "password": "admin123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.hotel_token = response['access_token']
+            user = response.get('user', {})
+            roles = user.get('roles', [])
+            hotel_id = user.get('hotel_id')
+            
+            if 'hotel_admin' in roles:
+                self.log(f"✅ User has hotel_admin role: {roles}")
+            else:
+                self.log(f"❌ Missing hotel_admin role: {roles}")
+                return False
+                
+            if hotel_id:
+                self.hotel_id = hotel_id
+                self.log(f"✅ Hotel ID populated: {hotel_id}")
+            else:
+                self.log(f"❌ Hotel ID missing")
+                return False
+                
+            return True
+        return False
+
+    def test_configure_cm_integration(self):
+        """2) Configure CM integration to configured/connected state"""
+        self.log("\n--- Configure CM Integration ---")
+        
+        # First get current integration state
+        success, response = self.run_test(
+            "Get Current CM Integration",
+            "GET",
+            "api/hotel/integrations",
+            200,
+            token=self.hotel_token
+        )
+        
+        if success:
+            items = response.get('items', [])
+            if items:
+                integration = items[0]
+                self.log(f"✅ Current integration status: {integration.get('status')}")
+            else:
+                self.log("❌ No integration found")
+                return False
+        
+        # Configure the integration
+        config_data = {
+            "provider": "channex",
+            "status": "configured",
+            "config": {
+                "mode": "pull",
+                "channels": ["booking"]
+            }
+        }
+        success, response = self.run_test(
+            "Configure CM Integration",
+            "PUT",
+            "api/hotel/integrations/channel-manager",
+            200,
+            data=config_data,
+            token=self.hotel_token
+        )
+        
+        if success:
+            self.log("✅ CM integration configured successfully")
+            return True
+        else:
+            self.log("❌ Failed to configure CM integration")
+            return False
+
+    def test_sync_request_success(self):
+        """3) Test successful sync request"""
+        self.log("\n--- Sync Request ---")
+        
+        success, response = self.run_test(
+            "POST /api/hotel/integrations/channel-manager/sync",
+            "POST",
+            "api/hotel/integrations/channel-manager/sync",
+            200,
+            data={},  # Empty body as per MVP
+            token=self.hotel_token
+        )
+        
+        if success:
+            if response.get('ok') and response.get('job_id') and response.get('status') == 'pending':
+                self.job_id = response.get('job_id')
+                self.log(f"✅ Sync request successful - job_id: {self.job_id}, status: {response.get('status')}")
+                return True
+            else:
+                self.log(f"❌ Invalid response structure: {response}")
+                return False
+        else:
+            self.log("❌ Sync request failed")
+            return False
+
+    def test_idempotent_behavior(self):
+        """B) Test idempotent behavior - second sync request should return same job"""
+        self.log("\n=== B) İDEMPOTENT DAVRANIŞ ===")
+        
+        # Make second sync request
+        success, response = self.run_test(
+            "Second POST /api/hotel/integrations/channel-manager/sync (Idempotent)",
+            "POST",
+            "api/hotel/integrations/channel-manager/sync",
+            200,
+            data={},
+            token=self.hotel_token
+        )
+        
+        if success:
+            second_job_id = response.get('job_id')
+            if second_job_id == self.job_id:
+                self.log(f"✅ Idempotent behavior working - same job_id returned: {second_job_id}")
+                return True
+            else:
+                self.log(f"❌ Idempotent behavior failed - different job_id: {second_job_id} vs {self.job_id}")
+                return False
+        else:
+            self.log("❌ Second sync request failed")
+            return False
+
+    def test_not_configured_error(self):
+        """C) Test not_configured / provider missing error"""
+        self.log("\n=== C) NOT_CONFIGURED / PROVIDER YOK DURUMU ===")
+        
+        # Set integration to not_configured state
+        config_data = {
+            "provider": None,
+            "status": "not_configured",
+            "config": {
+                "mode": "pull",
+                "channels": []
+            }
+        }
+        success, response = self.run_test(
+            "Set CM Integration to not_configured",
+            "PUT",
+            "api/hotel/integrations/channel-manager",
+            200,
+            data=config_data,
+            token=self.hotel_token
+        )
+        
+        if not success:
+            self.log("❌ Failed to set integration to not_configured")
+            return False
+        
+        # Try sync request - should fail with 400
+        success, response = self.run_test(
+            "POST /sync with not_configured (Should Fail 400)",
+            "POST",
+            "api/hotel/integrations/channel-manager/sync",
+            400,
+            data={},
+            token=self.hotel_token
+        )
+        
+        if success:
+            self.log("✅ not_configured error handling working (400 INTEGRATION_NOT_CONFIGURED)")
+            return True
+        else:
+            self.log("❌ not_configured error handling failed")
+            return False
+
+    def test_disabled_error(self):
+        """D) Test disabled status error"""
+        self.log("\n=== D) DISABLED DURUMU ===")
+        
+        # Set integration to disabled state
+        config_data = {
+            "provider": "channex",
+            "status": "disabled",
+            "config": {
+                "mode": "pull",
+                "channels": ["booking"]
+            }
+        }
+        success, response = self.run_test(
+            "Set CM Integration to disabled",
+            "PUT",
+            "api/hotel/integrations/channel-manager",
+            200,
+            data=config_data,
+            token=self.hotel_token
+        )
+        
+        if not success:
+            self.log("❌ Failed to set integration to disabled")
+            return False
+        
+        # Try sync request - should fail with 400
+        success, response = self.run_test(
+            "POST /sync with disabled (Should Fail 400)",
+            "POST",
+            "api/hotel/integrations/channel-manager/sync",
+            400,
+            data={},
+            token=self.hotel_token
+        )
+        
+        if success:
+            self.log("✅ disabled error handling working (400 INTEGRATION_DISABLED)")
+            return True
+        else:
+            self.log("❌ disabled error handling failed")
+            return False
+
+    def test_worker_behavior(self):
+        """E) Test worker behavior"""
+        self.log("\n=== E) WORKER DAVRANIŞI ===")
+        
+        # First, reconfigure integration to working state and create a new job
+        config_data = {
+            "provider": "channex",
+            "status": "configured",
+            "config": {
+                "mode": "pull",
+                "channels": ["booking"]
+            }
+        }
+        success, response = self.run_test(
+            "Reconfigure CM Integration for Worker Test",
+            "PUT",
+            "api/hotel/integrations/channel-manager",
+            200,
+            data=config_data,
+            token=self.hotel_token
+        )
+        
+        if not success:
+            self.log("❌ Failed to reconfigure integration")
+            return False
+        
+        # Create a new sync job
+        success, response = self.run_test(
+            "Create Sync Job for Worker Test",
+            "POST",
+            "api/hotel/integrations/channel-manager/sync",
+            200,
+            data={},
+            token=self.hotel_token
+        )
+        
+        if not success:
+            self.log("❌ Failed to create sync job for worker test")
+            return False
+        
+        worker_job_id = response.get('job_id')
+        self.log(f"✅ Created sync job for worker test: {worker_job_id}")
+        
+        # Wait a bit for worker to process (in real scenario, worker runs every 10 seconds)
+        import time
+        self.log("⏳ Waiting 15 seconds for worker to process job...")
+        time.sleep(15)
+        
+        # Check if job was processed by checking integration last_sync_at
+        success, response = self.run_test(
+            "Check Integration After Worker Processing",
+            "GET",
+            "api/hotel/integrations",
+            200,
+            token=self.hotel_token
+        )
+        
+        if success:
+            items = response.get('items', [])
+            if items:
+                integration = items[0]
+                last_sync_at = integration.get('last_sync_at')
+                last_error = integration.get('last_error')
+                
+                if last_sync_at:
+                    self.log(f"✅ Worker processed job - last_sync_at: {last_sync_at}")
+                    if last_error is None:
+                        self.log("✅ Worker processing successful - last_error is None")
+                        return True
+                    else:
+                        self.log(f"❌ Worker processing had error: {last_error}")
+                        return False
+                else:
+                    self.log("❌ Worker did not process job - last_sync_at is None")
+                    return False
+            else:
+                self.log("❌ No integration found after worker test")
+                return False
+        else:
+            self.log("❌ Failed to check integration after worker processing")
+            return False
+
+    def print_summary(self):
+        """Print test summary"""
+        self.log("\n" + "="*60)
+        self.log("FAZ-10.1 INTEGRATION SYNC TEST SUMMARY")
+        self.log("="*60)
+        self.log(f"Total Tests: {self.tests_run}")
+        self.log(f"✅ Passed: {self.tests_passed}")
+        self.log(f"❌ Failed: {self.tests_failed}")
+        self.log(f"Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%")
+        
+        if self.failed_tests:
+            self.log("\n❌ FAILED TESTS:")
+            for i, test in enumerate(self.failed_tests, 1):
+                self.log(f"  {i}. {test}")
+        
+        self.log("="*60)
+
+    def run_faz101_tests(self):
+        """Run all FAZ-10.1 tests in sequence"""
+        self.log("🚀 Starting FAZ-10.1 Integration Sync Tests")
+        self.log(f"Base URL: {self.base_url}")
+        
+        # A) Successful sync request
+        if not self.test_hotel_admin_login():
+            self.log("❌ Hotel admin login failed - stopping tests")
+            self.print_summary()
+            return 1
+
+        if not self.test_configure_cm_integration():
+            self.log("❌ CM integration configuration failed - stopping tests")
+            self.print_summary()
+            return 1
+
+        self.test_sync_request_success()
+
+        # B) Idempotent behavior
+        self.test_idempotent_behavior()
+
+        # C) not_configured error
+        self.test_not_configured_error()
+
+        # D) disabled error
+        self.test_disabled_error()
+
+        # E) Worker behavior
+        self.test_worker_behavior()
+
+        # Summary
+        self.print_summary()
+
+        return 0 if self.tests_failed == 0 else 1
+
+
 def main():
     if len(sys.argv) > 1:
         if sys.argv[1] == "faz5":

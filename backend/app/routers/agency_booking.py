@@ -320,6 +320,35 @@ async def confirm_booking(payload: BookingConfirmIn, request: Request, user=Depe
         before=before_draft,
         after=booking,
         meta={"draft_id": payload.draft_id},
+    # FAZ-9.3: enqueue booking.confirmed email for hotel (only)
+    try:
+        hotel_id = draft["hotel_id"]
+        org_id = user["organization_id"]
+
+        # Collect hotel recipients (hotel_admin + hotel_staff)
+        hotel_users = db.users.find(
+            {
+                "organization_id": org_id,
+                "hotel_id": hotel_id,
+                "roles": {"$in": ["hotel_admin", "hotel_staff"]},
+                "is_active": True,
+            }
+        )
+        to_addresses = [u.get("email") for u in await hotel_users.to_list(length=50)]
+
+        await enqueue_booking_email(
+            db,
+            organization_id=org_id,
+            booking=booking,
+            event_type="booking.confirmed",
+            to_addresses=to_addresses,
+        )
+    except Exception as e:  # pragma: no cover - email errors shouldn't break booking
+        import logging
+
+        logging.getLogger("email_outbox").error("Failed to enqueue booking.confirmed email: %s", e, exc_info=True)
+
+
     )
     
     await db.bookings.insert_one(booking)

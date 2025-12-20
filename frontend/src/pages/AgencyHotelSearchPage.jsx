@@ -131,6 +131,7 @@ export default function AgencyHotelSearchPage() {
   async function handleSearch(e) {
     e.preventDefault();
     setFormError("");
+    setSearchError("");
 
     const validationError = validateForm();
     if (validationError) {
@@ -158,12 +159,22 @@ export default function AgencyHotelSearchPage() {
 
       console.log("[AgencyHotelSearch] Search response:", searchData);
 
-      navigate(`/app/agency/search?search_id=${searchData.search_id}`, {
-        state: { searchData },
-      });
+      // Canonical key for frontend-only cache hint
+      const key = JSON.stringify(payload);
+      setLastSearchKey((prev) => (prev && prev === key ? prev : key));
+
+      // Reset selection & filters on new search
+      setSearchResult(searchData || null);
+      setSelected(null);
+      setBoardFilter("all");
+      setRoomFilter("all");
+      setPriceSort("none");
+      setOnlyAvailable(true);
     } catch (err) {
       console.error("[AgencyHotelSearch] Search error:", err);
-      setFormError(apiErrorMessage(err));
+      const msg = apiErrorMessage(err);
+      setSearchError(msg || "Müsaitlik aranırken bir hata oluştu");
+      // Önceki sonuçları koruyoruz; sadece error gösteriyoruz
     } finally {
       setSearchLoading(false);
     }

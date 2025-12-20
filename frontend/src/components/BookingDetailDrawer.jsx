@@ -85,6 +85,77 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
         textarea.remove();
       }
       toast.success("Rezervasyon bilgisi kopyalandı");
+  const ensureVoucherToken = async () => {
+    if (!bookingId) return null;
+    if (voucherToken) return voucherToken;
+
+    setVoucherLoading(true);
+    try {
+      const resp = await api.post(`/voucher/${bookingId}/generate`);
+      const token = resp?.data?.token;
+      if (token) {
+        setVoucherToken(token);
+        return token;
+      }
+      throw new Error("TOKEN_MISSING");
+    } catch (e) {
+      toast.error(apiErrorMessage(e) || "Voucher oluşturulamadı");
+      return null;
+    } finally {
+      setVoucherLoading(false);
+    }
+  };
+
+  const getBackendBaseUrl = () => {
+    // CRA: process.env.REACT_APP_BACKEND_URL, Vite: import.meta.env.VITE_BACKEND_URL
+    if (typeof import.meta !== "undefined" && import.meta.env && import.meta.env.VITE_BACKEND_URL) {
+      return import.meta.env.VITE_BACKEND_URL;
+    }
+    if (process.env.REACT_APP_BACKEND_URL) {
+      return process.env.REACT_APP_BACKEND_URL;
+    }
+    // Fallback: relative (aynı origin). Public voucher endpoint yine çalışır.
+    return "";
+  };
+
+  const handleCopyVoucherLink = async () => {
+    const token = await ensureVoucherToken();
+    if (!token) return;
+    const base = getBackendBaseUrl();
+    const url = `${base}/api/voucher/public/${token}?format=html`;
+
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(url);
+      } else {
+        const textarea = document.createElement("textarea");
+        textarea.value = url;
+        textarea.style.position = "fixed";
+        textarea.style.left = "-9999px";
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        textarea.remove();
+      }
+      toast.success("Voucher linki kopyalandı");
+    } catch {
+      toast.error("Voucher linki kopyalanamadı");
+    }
+  };
+
+  const handleOpenVoucherPdf = async () => {
+    const token = await ensureVoucherToken();
+    if (!token) return;
+    const base = getBackendBaseUrl();
+    const url = `${base}/api/voucher/public/${token}?format=pdf`;
+    try {
+      window.open(url, "_blank", "noopener,noreferrer");
+    } catch {
+      toast.error("PDF açılamadı");
+    }
+  };
+
+
     } catch {
       toast.error("Kopyalama başarısız oldu");
     }

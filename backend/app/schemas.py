@@ -211,6 +211,8 @@ class HotelCreateIn(BaseModel):
 
 class HotelForceSalesOverrideIn(BaseModel):
     force_sales_open: bool
+    ttl_hours: Optional[int] = Field(default=6, ge=1, le=48)
+    reason: Optional[str] = Field(default=None, max_length=280)
 
 
 class AgencyHotelLinkCreateIn(BaseModel):

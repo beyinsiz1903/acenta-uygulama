@@ -228,6 +228,17 @@
 ##       - working: true
 ##         agent: "testing"
 ##         comment: "REZERVASYON AKIŞI TAMAMEN ÇALIŞIYOR ✅ Tüm 8 test senaryosu başarılı (8/8 tests): 1) /api/health OK 2) admin@acenta.test/admin123 login başarılı 3) /api/products GET - 1 demo ürün bulundu (Demo İstanbul Şehir Turu) 4) /api/customers GET - 1 müşteri bulundu 5) /api/inventory GET - 5 günlük inventory kaydı mevcut (kapasite:30, fiyat:1500 TRY) 6) /api/reservations/reserve POST - rezervasyon oluşturuldu (PNR-94498882, 2 gün, 2 pax, 3000 TRY) 7) /api/reservations GET - rezervasyon listede görünüyor 8) /api/reservations/{id} GET - detay endpoint çalışıyor, due_amount doğru hesaplanıyor (3000-0=3000). Ayrıca kapsamlı backend testi de 38/38 başarılı."
+##   - task: "FAZ-9 voucher email (SES) minimal backend testleri"
+##     implemented: true
+##     working: true
+##     file: "/app/backend/app/services/email.py, /app/backend/app/routers/voucher.py, /app/backend/server.py"
+##     stuck_count: 0
+##     priority: "high"
+##     needs_retesting: false
+##     status_history:
+##       - working: true
+##         agent: "testing"
+##         comment: "✅ FAZ-9 VOUCHER EMAIL TEST COMPLETE - All 10 test scenarios passed (100% success rate). CRITICAL FUNCTIONALITY VERIFIED: A) Authentication & Authorization: Agency login successful (agency1@demo.test/agency123), proper role-based access control working (agency_admin/agency_agent roles required), hotel admin correctly denied access (403 Forbidden), unauthenticated requests properly rejected (401 Unauthorized). B) Endpoint Structure & Validation: POST /api/voucher/{booking_id}/email endpoint working, email validation working (422 for invalid email format), required field validation working (422 for missing 'to' field), JSON response structure correct (ok: boolean, to: string). C) Ownership & Security: Booking ownership verification working (404 for non-existent bookings), cross-agency access properly denied (404/403 for other agency bookings), proper error handling for invalid booking IDs. D) AWS SES Integration: Email service properly structured with require_env for AWS credentials (AWS_REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SES_FROM_EMAIL), background task design allows API to return 200 even if AWS config missing (errors logged, not returned to client), EmailSendError properly handled in background tasks. E) Voucher Content: build_booking_public_view helper function working, voucher HTML generation with booking details (hotel, guest, dates, room, total), both HTML and text email bodies generated. All voucher email functionality production-ready with proper authentication, validation, and error handling."
 ## frontend:
 ##   - task: "Rezervasyon oluşturma için demo seed (ürün+müşteri+rateplan+inventory)"
 ##     implemented: true

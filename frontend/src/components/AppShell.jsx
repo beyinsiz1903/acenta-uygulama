@@ -172,7 +172,7 @@ export default function AppShell() {
               </NavLink>
 
               <NavLink
-                to="/app/reservations?status=pending"
+                to={isHotel ? "/app/hotel/bookings?status=pending" : isAgency ? "/app/agency/bookings?status=pending" : "/app"}
                 onClick={() => setMobileNavOpen(false)}
                 className={({ isActive }) =>
                   cn(

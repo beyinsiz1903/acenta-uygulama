@@ -138,8 +138,6 @@ async def patch_hotel_force_sales(
 
     return serialize_doc(saved)
 
-    return [serialize_doc(d) for d in docs]
-
 
 @router.post("/agency-hotel-links", dependencies=[Depends(require_roles(["super_admin"]))])
 async def create_link(payload: AgencyHotelLinkCreateIn, request: Request, user=Depends(get_current_user)):

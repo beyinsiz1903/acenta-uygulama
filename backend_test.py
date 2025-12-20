@@ -4417,12 +4417,16 @@ def main():
             tester = FAZ8PMSTester()
             exit_code = tester.run_faz8_tests()
             sys.exit(exit_code)
+        elif sys.argv[1] == "faz9":
+            tester = FAZ9VoucherEmailTester()
+            exit_code = tester.run_faz9_tests()
+            sys.exit(exit_code)
         elif sys.argv[1] == "faz91":
             tester = FAZ91BookingDetailTester()
             exit_code = tester.run_faz91_tests()
             sys.exit(exit_code)
         else:
-            print("Usage: python backend_test.py [faz5|faz6|faz7|faz8|faz91]")
+            print("Usage: python backend_test.py [faz5|faz6|faz7|faz8|faz9|faz91]")
             sys.exit(1)
     else:
         tester = AcentaAPITester()

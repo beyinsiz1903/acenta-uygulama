@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Calendar, Loader2, AlertCircle, XCircle, StickyNote } from "lucide-react";
 import { api, apiErrorMessage } from "../lib/api";
+import { BookingDetailDrawer } from "../components/BookingDetailDrawer";
 import {
   Table,
   TableBody,
@@ -20,6 +21,9 @@ export default function HotelBookingsPage() {
   const [agencyQuery, setAgencyQuery] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [selectedId, setSelectedId] = useState(null);
 
   const [actionError, setActionError] = useState("");
 
@@ -249,7 +253,14 @@ export default function HotelBookingsPage() {
                 const price = rateSnapshot.price || {};
 
                 return (
-                  <TableRow key={booking.id} className="hover:bg-accent/50">
+                  <TableRow
+                    key={booking.id}
+                    className="cursor-pointer hover:bg-accent/50"
+                    onClick={() => {
+                      setSelectedId(booking.id);
+                      setDrawerOpen(true);
+                    }}
+                  >
                     <TableCell className="text-sm">
                       <div className="flex items-center gap-1">
                         <Calendar className="h-3 w-3 text-muted-foreground" />

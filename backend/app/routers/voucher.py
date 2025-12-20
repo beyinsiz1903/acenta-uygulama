@@ -1,0 +1,125 @@
+from __future__ import annotations
+
+import uuid
+from datetime import datetime, timezone
+from typing import Any, Optional
+
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
+from pydantic import BaseModel, EmailStr
+
+from app.auth import get_current_user, require_roles
+from app.db import get_db
+from app.schemas import BookingPublicView
+from app.services.email import EmailSendError, send_email_ses
+from app.utils import build_booking_public_view, serialize_doc
+
+router = APIRouter(prefix="/api/voucher", tags=["voucher"])
+
+
+class VoucherEmailRequest(BaseModel):
+    to: EmailStr
+    language: str = "tr_en"  # future-proof
+
+
+async def _get_booking_for_voucher(db, organization_id: str, booking_id: str) -> dict[str, Any]:
+    booking = await db.bookings.find_one({
+        "organization_id": organization_id,
+        "_id": booking_id,
+    })
+    if not booking:
+        raise HTTPException(status_code=404, detail="BOOKING_NOT_FOUND")
+
+    return booking
+
+
+def _build_voucher_html(view: dict[str, Any]) -> str:
+    # Very simple HTML for now; FAZ-9.2 üzerinde geliştirilecek
+    hotel = view.get("hotel_name") or "-"
+    guest = view.get("guest_name") or "-"
+    check_in = view.get("check_in_date") or "-"
+    check_out = view.get("check_out_date") or "-"
+    room = view.get("room_type") or "-"
+    board = view.get("board_type") or "-"
+    total = view.get("total_amount")
+    currency = view.get("currency") or ""
+    status_tr = view.get("status_tr") or view.get("status") or "-"
+    status_en = view.get("status_en") or "-"
+
+    if total is not None:
+        total_str = f"{total:.2f} {currency}".strip()
+    else:
+        total_str = "-"
+
+    return f"""<html><body>
+<h1>Rezervasyon Voucher / Booking Voucher</h1>
+<p><strong>Otel / Hotel:</strong> {hotel}</p>
+<p><strong>Misafir / Guest:</strong> {guest}</p>
+<p><strong>Check-in:</strong> {check_in}</p>
+<p><strong>Check-out:</strong> {check_out}</p>
+<p><strong>Oda / Room:</strong> {room}</p>
+<p><strong>Pansiyon / Board:</strong> {board}</p>
+<p><strong>Tutar / Total:</strong> {total_str}</p>
+<p><strong>Durum / Status:</strong> {status_tr} / {status_en}</p>
+<p><small>Bu email FAZ-9 demo voucher bildirimidir.</small></p>
+</body></html>"""
+
+
+@router.post(
+    "/{booking_id}/email",
+    dependencies=[Depends(require_roles(["agency_admin", "agency_agent"]))],
+)
+async def send_voucher_email(
+    booking_id: str,
+    payload: VoucherEmailRequest,
+    background_tasks: BackgroundTasks,
+    request: Request,
+    user=Depends(get_current_user),
+):
+    """Send voucher email for a booking via AWS SES.
+
+    FAZ-9.3: İlk adım olarak email gönderimini bağlıyoruz. Public token'lı
+    share link ve PDF FAZ-9.2 kapsamında ayrıntılandırılacak.
+    """
+
+    db = await get_db()
+
+    agency_id = user.get("agency_id")
+    if not agency_id:
+        raise HTTPException(status_code=403, detail="NOT_LINKED_TO_AGENCY")
+
+    booking = await _get_booking_for_voucher(db, user["organization_id"], booking_id)
+
+    if str(booking.get("agency_id")) != str(agency_id):
+        raise HTTPException(status_code=403, detail="FORBIDDEN")
+
+    view = build_booking_public_view(booking)
+
+    html = _build_voucher_html(view)
+    text = (
+        f"Rezervasyon voucher\n"
+        f"Hotel: {view.get('hotel_name') or '-'}\n"
+        f"Guest: {view.get('guest_name') or '-'}\n"
+        f"Check-in: {view.get('check_in_date') or '-'}\n"
+        f"Check-out: {view.get('check_out_date') or '-'}\n"
+        f"Total: {view.get('total_amount') or '-'} {view.get('currency') or ''}\n"
+    )
+
+    subject = "Rezervasyon Voucher / Booking Voucher"
+
+    def _send():
+        try:
+            send_email_ses(
+                to_address=payload.to,
+                subject=subject,
+                html_body=html,
+                text_body=text,
+            )
+        except EmailSendError as e:
+            # Background task; sadece logluyoruz. İleride outbox'a da yazılabilir.
+            import logging
+
+            logging.getLogger("email").error("Voucher email failed: %s", e)
+
+    background_tasks.add_task(_send)
+
+    return {"ok": True, "to": str(payload.to)}

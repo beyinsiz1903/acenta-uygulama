@@ -210,7 +210,7 @@ export default function HotelBookingsPage() {
           </div>
         </div>
 
-        <div className="mt-3 flex items-center gap-2">
+        <div className="mt-3 flex flex-wrap items-center gap-2">
           <button
             onClick={loadBookings}
             className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition"
@@ -228,6 +228,26 @@ export default function HotelBookingsPage() {
             className="px-4 py-2 rounded-lg border hover:bg-accent transition"
           >
             Sıfırla
+          </button>
+          <button
+            onClick={() => {
+              setDateFrom(todayStr);
+              setDateTo(todayStr);
+              setTimeout(loadBookings, 0);
+            }}
+            className="px-3 py-1.5 rounded-lg border text-xs hover:bg-accent/60 transition"
+          >
+            Bugün girişler
+          </button>
+          <button
+            onClick={() => {
+              setDateFrom(tomorrowStr);
+              setDateTo(tomorrowStr);
+              setTimeout(loadBookings, 0);
+            }}
+            className="px-3 py-1.5 rounded-lg border text-xs hover:bg-accent/60 transition"
+          >
+            Yarın girişler
           </button>
         </div>
 
@@ -292,7 +312,29 @@ export default function HotelBookingsPage() {
                         <div className="text-xs text-muted-foreground">{guest.email}</div>
                       ) : null}
                     </TableCell>
-                    <TableCell className="text-sm">{booking.status}</TableCell>
+                    <TableCell className="text-sm">
+                      {(() => {
+                        const status = booking.status;
+                        if (["confirmed", "guaranteed", "checked_in"].includes(status)) {
+                          return (
+                            <Badge className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20">
+                              Onaylı
+                            </Badge>
+                          );
+                        }
+                        if (status === "cancelled") {
+                          return (
+                            <Badge className="bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20">
+                              İptal
+                            </Badge>
+                          );
+                        }
+                        if (status === "draft") {
+                          return <Badge variant="secondary">Taslak</Badge>;
+                        }
+                        return <Badge variant="outline">{status}</Badge>;
+                      })()}
+                    </TableCell>
                     <TableCell className="font-semibold">
                       {formatMoney(price.total || 0, price.currency || "TRY")}
                     </TableCell>

@@ -17,7 +17,7 @@ import {
   SelectContent,
   SelectItem,
 } from "../components/ui/select";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from "../components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetTrigger } from "../components/ui/sheet";
 
 // /app/agency/hotels/:hotelId/search
 // Amaç: Otel seçildikten sonra tarih + pax girip /api/agency/search çağrısını yapmak

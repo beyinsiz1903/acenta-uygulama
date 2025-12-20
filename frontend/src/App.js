@@ -26,6 +26,7 @@ import HotelBookingsPage from "./pages/HotelBookingsPage";
 import HotelStopSellPage from "./pages/HotelStopSellPage";
 import HotelAllocationsPage from "./pages/HotelAllocationsPage";
 import HotelSettlementsPage from "./pages/HotelSettlementsPage";
+import HotelIntegrationsPage from "./pages/HotelIntegrationsPage";
 import NotFoundPage from "./pages/NotFoundPage";
 import { Toaster } from "./components/ui/sonner";
 

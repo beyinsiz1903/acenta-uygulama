@@ -92,6 +92,7 @@ function App() {
             <Route path="stop-sell" element={<HotelStopSellPage />} />
             <Route path="allocations" element={<HotelAllocationsPage />} />
             <Route path="settlements" element={<HotelSettlementsPage />} />
+            <Route path="integrations" element={<HotelIntegrationsPage />} />
           </Route>
         </Route>
 

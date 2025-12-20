@@ -17,6 +17,13 @@ const CM_META = {
   not_configured: { label: "CM: Not configured", variant: "outline" },
 };
 
+function isLinkActive(hotel) {
+  if (typeof hotel?.active === "boolean") return hotel.active;
+  const status = (hotel?.status_label || "").toLowerCase();
+  if (status === "satışa açık") return true;
+  return false;
+}
+
 export default function AgencyHotelsPage() {
   const navigate = useNavigate();
   const [hotels, setHotels] = useState([]);

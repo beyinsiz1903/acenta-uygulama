@@ -62,6 +62,9 @@ def _build_voucher_html(view: dict[str, Any]) -> str:
 
     return f"""<html><body>
 <h1>Rezervasyon Voucher / Booking Voucher</h1>
+<p>Bu belge konaklama bilgilerinizi özetler. Lütfen otele girişte bu sayfayı veya PDF halini referans olarak gösterin.</p>
+<p>This document summarizes your stay. Please present this page or the PDF version at check-in as a reference.</p>
+<hr />
 <p><strong>Otel / Hotel:</strong> {hotel}</p>
 <p><strong>Misafir / Guest:</strong> {guest}</p>
 <p><strong>Check-in:</strong> {check_in}</p>

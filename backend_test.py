@@ -1764,6 +1764,575 @@ class FAZ101IntegrationSyncTester:
         return 0 if self.tests_failed == 0 else 1
 
 
+class AdminOverrideTester:
+    def __init__(self, base_url="https://ne-asamadayiz.preview.emergentagent.com"):
+        self.base_url = base_url
+        self.admin_token = None
+        self.agency_token = None
+        self.hotel_token = None
+        self.tests_run = 0
+        self.tests_passed = 0
+        self.tests_failed = 0
+        self.failed_tests = []
+        
+        # Store IDs for testing
+        self.hotel_id = None
+        self.stop_sell_id = None
+        self.allocation_id = None
+
+    def log(self, msg):
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}")
+
+    def run_test(self, name, method, endpoint, expected_status, data=None, headers_override=None, token=None):
+        """Run a single API test with specific token"""
+        url = f"{self.base_url}/{endpoint}"
+        headers = headers_override or {'Content-Type': 'application/json'}
+        
+        # Use specific token if provided
+        if token:
+            headers['Authorization'] = f'Bearer {token}'
+
+        self.tests_run += 1
+        self.log(f"🔍 Test #{self.tests_run}: {name}")
+        
+        try:
+            if method == 'GET':
+                response = requests.get(url, headers=headers, timeout=10)
+            elif method == 'POST':
+                response = requests.post(url, json=data, headers=headers, timeout=10)
+            elif method == 'PUT':
+                response = requests.put(url, json=data, headers=headers, timeout=10)
+            elif method == 'PATCH':
+                response = requests.patch(url, json=data, headers=headers, timeout=10)
+            elif method == 'DELETE':
+                response = requests.delete(url, headers=headers, timeout=10)
+            else:
+                raise ValueError(f"Unsupported method: {method}")
+
+            success = response.status_code == expected_status
+            if success:
+                self.tests_passed += 1
+                self.log(f"✅ PASSED - Status: {response.status_code}")
+                try:
+                    return True, response.json() if response.content else {}
+                except:
+                    return True, response.text if hasattr(response, 'text') else {}
+            else:
+                self.tests_failed += 1
+                self.failed_tests.append(f"{name} - Expected {expected_status}, got {response.status_code}")
+                self.log(f"❌ FAILED - Expected {expected_status}, got {response.status_code}")
+                try:
+                    self.log(f"   Response: {response.text[:200]}")
+                except:
+                    pass
+                return False, {}
+
+        except Exception as e:
+            self.tests_failed += 1
+            self.failed_tests.append(f"{name} - Error: {str(e)}")
+            self.log(f"❌ FAILED - Error: {str(e)}")
+            return False, {}
+
+    def test_admin_login(self):
+        """Test super admin login"""
+        self.log("\n=== 1) ADMIN HOTELS LIST & FORCE_SALES_OPEN FIELD ===")
+        success, response = self.run_test(
+            "Super Admin Login (admin@acenta.test)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "admin@acenta.test", "password": "admin123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.admin_token = response['access_token']
+            user = response.get('user', {})
+            roles = user.get('roles', [])
+            
+            if 'super_admin' in roles:
+                self.log(f"✅ User has super_admin role: {roles}")
+                return True
+            else:
+                self.log(f"❌ Missing super_admin role: {roles}")
+                return False
+        return False
+
+    def test_hotels_list_force_sales_field(self):
+        """Test /api/admin/hotels list and check for force_sales_open field"""
+        success, response = self.run_test(
+            "GET /api/admin/hotels - Check force_sales_open field",
+            "GET",
+            "api/admin/hotels",
+            200,
+            token=self.admin_token
+        )
+        if success and isinstance(response, list) and len(response) > 0:
+            hotel = response[0]
+            self.hotel_id = hotel.get('id')
+            force_sales_open = hotel.get('force_sales_open', False)  # Default false if field doesn't exist
+            self.log(f"✅ Found {len(response)} hotels, first hotel force_sales_open: {force_sales_open}")
+            self.log(f"✅ Using hotel_id: {self.hotel_id}")
+            return True
+        else:
+            self.log(f"❌ No hotels found or invalid response")
+            return False
+
+    def test_agency_login(self):
+        """Test agency login"""
+        self.log("\n=== 2) NORMAL AVAILABILITY FLOW WITH STOP-SELL + ALLOCATION ===")
+        success, response = self.run_test(
+            "Agency Login (agency1@demo.test)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "agency1@demo.test", "password": "agency123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.agency_token = response['access_token']
+            self.log(f"✅ Agency logged in successfully")
+            return True
+        return False
+
+    def test_hotel_login(self):
+        """Test hotel admin login"""
+        success, response = self.run_test(
+            "Hotel Admin Login (hoteladmin@acenta.test)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "hoteladmin@acenta.test", "password": "admin123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.hotel_token = response['access_token']
+            user = response.get('user', {})
+            hotel_id = user.get('hotel_id')
+            if hotel_id:
+                self.hotel_id = hotel_id  # Use hotel admin's hotel_id
+                self.log(f"✅ Hotel admin logged in, hotel_id: {hotel_id}")
+                return True
+        return False
+
+    def test_setup_stop_sell_and_allocation(self):
+        """Setup stop-sell and allocation rules for testing"""
+        self.log("\n--- Setup Stop-sell and Allocation Rules ---")
+        
+        # Create stop-sell for deluxe rooms
+        stop_sell_data = {
+            "room_type": "deluxe",
+            "start_date": "2026-03-10",
+            "end_date": "2026-03-12",
+            "reason": "admin override test",
+            "is_active": True
+        }
+        success, response = self.run_test(
+            "Create Stop-sell for deluxe rooms",
+            "POST",
+            "api/hotel/stop-sell",
+            200,
+            data=stop_sell_data,
+            token=self.hotel_token
+        )
+        if success:
+            self.stop_sell_id = response.get('id')
+            self.log(f"✅ Stop-sell created: {self.stop_sell_id}")
+        
+        # Create allocation for standard rooms (limit to 2)
+        allocation_data = {
+            "room_type": "standard",
+            "start_date": "2026-03-10",
+            "end_date": "2026-03-12",
+            "allotment": 2,
+            "is_active": True,
+            "channel": "agency_extranet"
+        }
+        success, response = self.run_test(
+            "Create Allocation for standard rooms (limit=2)",
+            "POST",
+            "api/hotel/allocations",
+            200,
+            data=allocation_data,
+            token=self.hotel_token
+        )
+        if success:
+            self.allocation_id = response.get('id')
+            self.log(f"✅ Allocation created: {self.allocation_id}")
+        
+        return True
+
+    def test_normal_search_with_rules(self):
+        """2a) Test normal search with stop-sell and allocation rules applied"""
+        self.log("\n--- 2a) Normal Search with Rules Applied ---")
+        
+        search_data = {
+            "hotel_id": self.hotel_id,
+            "check_in": "2026-03-10",
+            "check_out": "2026-03-12",
+            "occupancy": {"adults": 2, "children": 0}
+        }
+        success, response = self.run_test(
+            "Agency Search (Normal - Rules Applied)",
+            "POST",
+            "api/agency/search",
+            200,
+            data=search_data,
+            token=self.agency_token
+        )
+        
+        if success:
+            rooms = response.get('rooms', [])
+            self.log(f"✅ Search successful, found {len(rooms)} room types")
+            
+            # Check if deluxe rooms are blocked by stop-sell
+            deluxe_available = 0
+            standard_available = 0
+            
+            for room in rooms:
+                room_type_id = room.get('room_type_id', '')
+                inventory_left = room.get('inventory_left', 0)
+                
+                if 'deluxe' in room_type_id.lower():
+                    deluxe_available = inventory_left
+                elif 'standard' in room_type_id.lower():
+                    standard_available = inventory_left
+            
+            self.log(f"✅ Deluxe availability: {deluxe_available} (should be 0 due to stop-sell)")
+            self.log(f"✅ Standard availability: {standard_available} (should be limited by allocation)")
+            
+            # Store for comparison later
+            self.normal_deluxe_availability = deluxe_available
+            self.normal_standard_availability = standard_available
+            
+            return True
+        return False
+
+    def test_enable_force_sales_override(self):
+        """2b) Enable force_sales_open override"""
+        self.log("\n=== 2b) ENABLE FORCE SALES OVERRIDE ===")
+        
+        success, response = self.run_test(
+            "PATCH /api/admin/hotels/{hotel_id}/force-sales (enable)",
+            "PATCH",
+            f"api/admin/hotels/{self.hotel_id}/force-sales",
+            200,
+            data={"force_sales_open": True},
+            token=self.admin_token
+        )
+        
+        if success:
+            force_sales_open = response.get('force_sales_open')
+            self.log(f"✅ Force sales override enabled: {force_sales_open}")
+            return True
+        return False
+
+    def test_search_with_override_enabled(self):
+        """2c) Test search with override enabled - rules should be bypassed"""
+        self.log("\n--- 2c) Search with Override Enabled (Rules Bypassed) ---")
+        
+        search_data = {
+            "hotel_id": self.hotel_id,
+            "check_in": "2026-03-10",
+            "check_out": "2026-03-12",
+            "occupancy": {"adults": 2, "children": 0}
+        }
+        success, response = self.run_test(
+            "Agency Search (Override Enabled - Rules Bypassed)",
+            "POST",
+            "api/agency/search",
+            200,
+            data=search_data,
+            token=self.agency_token
+        )
+        
+        if success:
+            rooms = response.get('rooms', [])
+            self.log(f"✅ Search successful, found {len(rooms)} room types")
+            
+            # Check if rules are bypassed
+            deluxe_available = 0
+            standard_available = 0
+            
+            for room in rooms:
+                room_type_id = room.get('room_type_id', '')
+                inventory_left = room.get('inventory_left', 0)
+                
+                if 'deluxe' in room_type_id.lower():
+                    deluxe_available = inventory_left
+                elif 'standard' in room_type_id.lower():
+                    standard_available = inventory_left
+            
+            self.log(f"✅ Deluxe availability: {deluxe_available} (should be > 0, stop-sell bypassed)")
+            self.log(f"✅ Standard availability: {standard_available} (should be base_available, allocation bypassed)")
+            
+            # Verify rules are bypassed
+            if deluxe_available > self.normal_deluxe_availability:
+                self.log(f"✅ Stop-sell rule bypassed successfully")
+            else:
+                self.log(f"❌ Stop-sell rule not bypassed")
+                return False
+                
+            if standard_available >= self.normal_standard_availability:
+                self.log(f"✅ Allocation rule bypassed successfully")
+            else:
+                self.log(f"❌ Allocation rule not bypassed")
+                return False
+            
+            return True
+        return False
+
+    def test_disable_force_sales_override(self):
+        """2d) Disable force_sales_open override"""
+        self.log("\n--- 2d) DISABLE FORCE SALES OVERRIDE ---")
+        
+        success, response = self.run_test(
+            "PATCH /api/admin/hotels/{hotel_id}/force-sales (disable)",
+            "PATCH",
+            f"api/admin/hotels/{self.hotel_id}/force-sales",
+            200,
+            data={"force_sales_open": False},
+            token=self.admin_token
+        )
+        
+        if success:
+            force_sales_open = response.get('force_sales_open')
+            self.log(f"✅ Force sales override disabled: {force_sales_open}")
+            return True
+        return False
+
+    def test_search_with_override_disabled(self):
+        """2e) Test search with override disabled - rules should be re-applied"""
+        self.log("\n--- 2e) Search with Override Disabled (Rules Re-applied) ---")
+        
+        search_data = {
+            "hotel_id": self.hotel_id,
+            "check_in": "2026-03-10",
+            "check_out": "2026-03-12",
+            "occupancy": {"adults": 2, "children": 0}
+        }
+        success, response = self.run_test(
+            "Agency Search (Override Disabled - Rules Re-applied)",
+            "POST",
+            "api/agency/search",
+            200,
+            data=search_data,
+            token=self.agency_token
+        )
+        
+        if success:
+            rooms = response.get('rooms', [])
+            self.log(f"✅ Search successful, found {len(rooms)} room types")
+            
+            # Check if rules are re-applied
+            deluxe_available = 0
+            standard_available = 0
+            
+            for room in rooms:
+                room_type_id = room.get('room_type_id', '')
+                inventory_left = room.get('inventory_left', 0)
+                
+                if 'deluxe' in room_type_id.lower():
+                    deluxe_available = inventory_left
+                elif 'standard' in room_type_id.lower():
+                    standard_available = inventory_left
+            
+            self.log(f"✅ Deluxe availability: {deluxe_available} (should be 0, stop-sell re-applied)")
+            self.log(f"✅ Standard availability: {standard_available} (should be limited, allocation re-applied)")
+            
+            # Verify rules are re-applied
+            if deluxe_available == self.normal_deluxe_availability:
+                self.log(f"✅ Stop-sell rule re-applied successfully")
+            else:
+                self.log(f"❌ Stop-sell rule not re-applied")
+                return False
+                
+            if standard_available == self.normal_standard_availability:
+                self.log(f"✅ Allocation rule re-applied successfully")
+            else:
+                self.log(f"❌ Allocation rule not re-applied")
+                return False
+            
+            return True
+        return False
+
+    def test_wrong_organization_hotel(self):
+        """3) Test 404 for wrong organization hotel_id"""
+        self.log("\n=== 3) WRONG ORGANIZATION HOTEL_ID (404) ===")
+        
+        fake_hotel_id = "fake-hotel-id-12345"
+        success, response = self.run_test(
+            "PATCH /api/admin/hotels/{fake_hotel_id}/force-sales (should return 404)",
+            "PATCH",
+            f"api/admin/hotels/{fake_hotel_id}/force-sales",
+            404,
+            data={"force_sales_open": True},
+            token=self.admin_token
+        )
+        
+        if success:
+            self.log(f"✅ Correctly returned 404 for non-existent hotel")
+            return True
+        return False
+
+    def test_audit_log_verification(self):
+        """Verify audit log entry for force_sales_override action"""
+        self.log("\n--- Audit Log Verification ---")
+        
+        # First enable override to create audit log entry
+        success, response = self.run_test(
+            "Enable Override for Audit Log Test",
+            "PATCH",
+            f"api/admin/hotels/{self.hotel_id}/force-sales",
+            200,
+            data={"force_sales_open": True},
+            token=self.admin_token
+        )
+        
+        if success:
+            # Check audit logs
+            success, response = self.run_test(
+                "GET /api/audit/logs - Check for hotel.force_sales_override action",
+                "GET",
+                "api/audit/logs?action=hotel.force_sales_override&limit=10",
+                200,
+                token=self.admin_token
+            )
+            
+            if success and isinstance(response, list) and len(response) > 0:
+                audit_entry = response[0]
+                action = audit_entry.get('action')
+                target_type = audit_entry.get('target_type')
+                target_id = audit_entry.get('target_id')
+                
+                if action == 'hotel.force_sales_override' and target_type == 'hotel' and target_id == self.hotel_id:
+                    self.log(f"✅ Audit log entry found: action={action}, target_type={target_type}, target_id={target_id}")
+                    return True
+                else:
+                    self.log(f"❌ Audit log entry incorrect: action={action}, target_type={target_type}")
+                    return False
+            else:
+                self.log(f"❌ No audit log entries found for hotel.force_sales_override")
+                return False
+        return False
+
+    def test_admin_endpoints_smoke_test(self):
+        """4) Smoke test other admin endpoints to ensure they still work"""
+        self.log("\n=== 4) ADMIN ENDPOINTS SMOKE TEST ===")
+        
+        # Test agencies endpoint
+        success, response = self.run_test(
+            "GET /api/admin/agencies (smoke test)",
+            "GET",
+            "api/admin/agencies",
+            200,
+            token=self.admin_token
+        )
+        if success:
+            self.log(f"✅ Agencies endpoint working - found {len(response)} agencies")
+        
+        # Test hotels endpoint
+        success, response = self.run_test(
+            "GET /api/admin/hotels (smoke test)",
+            "GET",
+            "api/admin/hotels",
+            200,
+            token=self.admin_token
+        )
+        if success:
+            self.log(f"✅ Hotels endpoint working - found {len(response)} hotels")
+        
+        # Test agency-hotel-links endpoint
+        success, response = self.run_test(
+            "GET /api/admin/agency-hotel-links (smoke test)",
+            "GET",
+            "api/admin/agency-hotel-links",
+            200,
+            token=self.admin_token
+        )
+        if success:
+            self.log(f"✅ Agency-hotel-links endpoint working - found {len(response)} links")
+        
+        # Test email-outbox endpoint
+        success, response = self.run_test(
+            "GET /api/admin/email-outbox (smoke test)",
+            "GET",
+            "api/admin/email-outbox",
+            200,
+            token=self.admin_token
+        )
+        if success:
+            items = response.get('items', [])
+            self.log(f"✅ Email-outbox endpoint working - found {len(items)} jobs")
+        
+        return True
+
+    def print_summary(self):
+        """Print test summary"""
+        self.log("\n" + "="*60)
+        self.log("ADMIN OVERRIDE FEATURE TEST SUMMARY")
+        self.log("="*60)
+        self.log(f"Total Tests: {self.tests_run}")
+        self.log(f"✅ Passed: {self.tests_passed}")
+        self.log(f"❌ Failed: {self.tests_failed}")
+        self.log(f"Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%")
+        
+        if self.failed_tests:
+            self.log("\n❌ FAILED TESTS:")
+            for i, test in enumerate(self.failed_tests, 1):
+                self.log(f"  {i}. {test}")
+        
+        self.log("="*60)
+
+    def run_admin_override_tests(self):
+        """Run all admin override tests in sequence"""
+        self.log("🚀 Starting Admin Override Feature Tests")
+        self.log(f"Base URL: {self.base_url}")
+        
+        # 1) Admin hotels list and force_sales_open field
+        if not self.test_admin_login():
+            self.log("❌ Admin login failed - stopping tests")
+            self.print_summary()
+            return 1
+
+        if not self.test_hotels_list_force_sales_field():
+            self.log("❌ Hotels list failed - stopping tests")
+            self.print_summary()
+            return 1
+
+        # Setup authentication for agency and hotel
+        if not self.test_agency_login():
+            self.log("❌ Agency login failed - stopping tests")
+            self.print_summary()
+            return 1
+
+        if not self.test_hotel_login():
+            self.log("❌ Hotel login failed - stopping tests")
+            self.print_summary()
+            return 1
+
+        # 2) Test availability flow with override
+        self.test_setup_stop_sell_and_allocation()
+        self.test_normal_search_with_rules()
+        self.test_enable_force_sales_override()
+        self.test_search_with_override_enabled()
+        self.test_disable_force_sales_override()
+        self.test_search_with_override_disabled()
+
+        # 3) Test wrong organization
+        self.test_wrong_organization_hotel()
+
+        # Audit log verification
+        self.test_audit_log_verification()
+
+        # 4) Smoke test other endpoints
+        self.test_admin_endpoints_smoke_test()
+
+        # Summary
+        self.print_summary()
+
+        return 0 if self.tests_failed == 0 else 1
+
+
 class FAZ93AdminEmailOutboxTester:
     def __init__(self, base_url="https://ne-asamadayiz.preview.emergentagent.com"):
         self.base_url = base_url

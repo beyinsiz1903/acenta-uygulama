@@ -1385,6 +1385,555 @@ class FAZ5HotelExtranetTester:
         return 0 if self.tests_failed == 0 else 1
 
 
+class FAZ93AdminEmailOutboxTester:
+    def __init__(self, base_url="https://voucher-share.preview.emergentagent.com"):
+        self.base_url = base_url
+        self.admin_token = None
+        self.agency_token = None
+        self.tests_run = 0
+        self.tests_passed = 0
+        self.tests_failed = 0
+        self.failed_tests = []
+        
+        # Store IDs for testing
+        self.booking_id = None
+        self.email_job_id = None
+
+    def log(self, msg):
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}")
+
+    def run_test(self, name, method, endpoint, expected_status, data=None, headers_override=None, token=None):
+        """Run a single API test with specific token"""
+        url = f"{self.base_url}/{endpoint}"
+        headers = headers_override or {'Content-Type': 'application/json'}
+        
+        # Use specific token if provided
+        if token:
+            headers['Authorization'] = f'Bearer {token}'
+
+        self.tests_run += 1
+        self.log(f"🔍 Test #{self.tests_run}: {name}")
+        
+        try:
+            if method == 'GET':
+                response = requests.get(url, headers=headers, timeout=10)
+            elif method == 'POST':
+                response = requests.post(url, json=data, headers=headers, timeout=10)
+            elif method == 'PUT':
+                response = requests.put(url, json=data, headers=headers, timeout=10)
+            elif method == 'DELETE':
+                response = requests.delete(url, headers=headers, timeout=10)
+            else:
+                raise ValueError(f"Unsupported method: {method}")
+
+            success = response.status_code == expected_status
+            if success:
+                self.tests_passed += 1
+                self.log(f"✅ PASSED - Status: {response.status_code}")
+                try:
+                    return True, response.json() if response.content else {}
+                except:
+                    return True, response.text if hasattr(response, 'text') else {}
+            else:
+                self.tests_failed += 1
+                self.failed_tests.append(f"{name} - Expected {expected_status}, got {response.status_code}")
+                self.log(f"❌ FAILED - Expected {expected_status}, got {response.status_code}")
+                try:
+                    self.log(f"   Response: {response.text[:200]}")
+                except:
+                    pass
+                return False, {}
+
+        except Exception as e:
+            self.tests_failed += 1
+            self.failed_tests.append(f"{name} - Error: {str(e)}")
+            self.log(f"❌ FAILED - Error: {str(e)}")
+            return False, {}
+
+    def test_admin_login(self):
+        """A1) Test super admin login"""
+        self.log("\n=== A) AUTH KONTROLÜ ===")
+        success, response = self.run_test(
+            "Super Admin Login (admin@acenta.test)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "admin@acenta.test", "password": "admin123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.admin_token = response['access_token']
+            user = response.get('user', {})
+            roles = user.get('roles', [])
+            
+            if 'super_admin' in roles:
+                self.log(f"✅ User has super_admin role: {roles}")
+                return True
+            else:
+                self.log(f"❌ Missing super_admin role: {roles}")
+                return False
+        return False
+
+    def test_admin_email_outbox_access(self):
+        """A2) Test admin access to email outbox endpoint"""
+        success, response = self.run_test(
+            "GET /api/admin/email-outbox (Super Admin)",
+            "GET",
+            "api/admin/email-outbox",
+            200,
+            token=self.admin_token
+        )
+        if success:
+            if 'items' in response and 'next_cursor' in response:
+                self.log(f"✅ Email outbox endpoint working - found {len(response['items'])} jobs")
+                return True, response
+            else:
+                self.log(f"❌ Invalid response structure: {list(response.keys())}")
+                return False, {}
+        return False, {}
+
+    def test_non_admin_access_denied(self):
+        """A3) Test non-admin access is denied"""
+        # First login as agency user
+        success, response = self.run_test(
+            "Agency Login (agency1@demo.test)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "agency1@demo.test", "password": "agency123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        
+        if success and 'access_token' in response:
+            agency_token = response['access_token']
+            
+            # Try to access admin endpoint with agency token
+            success, response = self.run_test(
+                "GET /api/admin/email-outbox (Agency User - Should Fail)",
+                "GET",
+                "api/admin/email-outbox",
+                403,
+                token=agency_token
+            )
+            if success:
+                self.log("✅ Non-admin access properly denied (403)")
+                return True
+            else:
+                self.log("❌ Non-admin access not properly denied")
+                return False
+        else:
+            self.log("❌ Agency login failed")
+            return False
+
+    def test_status_filter(self):
+        """B2) Test status filter functionality"""
+        self.log("\n=== B) LISTING DAVRANIŞI ===")
+        
+        # Test status=pending filter
+        success, response = self.run_test(
+            "Filter by status=pending",
+            "GET",
+            "api/admin/email-outbox?status=pending",
+            200,
+            token=self.admin_token
+        )
+        if success:
+            items = response.get('items', [])
+            pending_items = [item for item in items if item.get('status') == 'pending']
+            if len(pending_items) == len(items):
+                self.log(f"✅ Status filter working - all {len(items)} items have status=pending")
+            else:
+                self.log(f"❌ Status filter not working - found mixed statuses")
+                return False
+        
+        # Test status=sent filter
+        success, response = self.run_test(
+            "Filter by status=sent",
+            "GET",
+            "api/admin/email-outbox?status=sent",
+            200,
+            token=self.admin_token
+        )
+        if success:
+            items = response.get('items', [])
+            sent_items = [item for item in items if item.get('status') == 'sent']
+            if len(sent_items) == len(items):
+                self.log(f"✅ Status filter working - all {len(items)} items have status=sent")
+            else:
+                self.log(f"⚠️  Status filter: found {len(sent_items)} sent items out of {len(items)} total")
+        
+        return True
+
+    def test_event_type_filter(self):
+        """B3) Test event_type filter functionality"""
+        
+        # Test event_type=booking.confirmed filter
+        success, response = self.run_test(
+            "Filter by event_type=booking.confirmed",
+            "GET",
+            "api/admin/email-outbox?event_type=booking.confirmed",
+            200,
+            token=self.admin_token
+        )
+        if success:
+            items = response.get('items', [])
+            confirmed_items = [item for item in items if item.get('event_type') == 'booking.confirmed']
+            if len(confirmed_items) == len(items):
+                self.log(f"✅ Event type filter working - all {len(items)} items have event_type=booking.confirmed")
+            else:
+                self.log(f"❌ Event type filter not working - found mixed event types")
+                return False
+        
+        # Test event_type=booking.cancelled filter
+        success, response = self.run_test(
+            "Filter by event_type=booking.cancelled",
+            "GET",
+            "api/admin/email-outbox?event_type=booking.cancelled",
+            200,
+            token=self.admin_token
+        )
+        if success:
+            items = response.get('items', [])
+            cancelled_items = [item for item in items if item.get('event_type') == 'booking.cancelled']
+            if len(cancelled_items) == len(items):
+                self.log(f"✅ Event type filter working - all {len(items)} items have event_type=booking.cancelled")
+            else:
+                self.log(f"⚠️  Event type filter: found {len(cancelled_items)} cancelled items out of {len(items)} total")
+        
+        return True
+
+    def test_q_search_filter(self):
+        """B4) Test q (search) filter functionality"""
+        
+        # First get some items to search for
+        success, response = self.run_test(
+            "Get items for search test",
+            "GET",
+            "api/admin/email-outbox?limit=10",
+            200,
+            token=self.admin_token
+        )
+        
+        if not success or not response.get('items'):
+            self.log("⚠️  No email outbox items found for search test")
+            return True
+        
+        items = response['items']
+        
+        # Try searching by booking_id if available
+        if items and items[0].get('booking_id'):
+            booking_id = items[0]['booking_id']
+            success, response = self.run_test(
+                f"Search by booking_id: {booking_id}",
+                "GET",
+                f"api/admin/email-outbox?q={booking_id}",
+                200,
+                token=self.admin_token
+            )
+            if success:
+                found_items = response.get('items', [])
+                matching_items = [item for item in found_items if item.get('booking_id') == booking_id]
+                if matching_items:
+                    self.log(f"✅ Search by booking_id working - found {len(matching_items)} matching items")
+                else:
+                    self.log(f"❌ Search by booking_id not working - no matches found")
+                    return False
+        
+        # Try searching by email address in 'to' field
+        if items and items[0].get('to'):
+            to_emails = items[0]['to']
+            if to_emails and len(to_emails) > 0:
+                # Search for part of the first email
+                email_part = to_emails[0].split('@')[0] if '@' in to_emails[0] else to_emails[0][:5]
+                success, response = self.run_test(
+                    f"Search by email part: {email_part}",
+                    "GET",
+                    f"api/admin/email-outbox?q={email_part}",
+                    200,
+                    token=self.admin_token
+                )
+                if success:
+                    found_items = response.get('items', [])
+                    if found_items:
+                        self.log(f"✅ Search by email part working - found {len(found_items)} items")
+                    else:
+                        self.log(f"⚠️  Search by email part returned no results")
+        
+        return True
+
+    def test_retry_endpoint_success(self):
+        """C2) Test retry endpoint with valid job"""
+        self.log("\n=== C) RETRY ENDPOINT ===")
+        
+        # First get a job that can be retried (status != "sent")
+        success, response = self.run_test(
+            "Get jobs for retry test",
+            "GET",
+            "api/admin/email-outbox?status=pending&limit=5",
+            200,
+            token=self.admin_token
+        )
+        
+        if not success:
+            self.log("❌ Failed to get jobs for retry test")
+            return False
+        
+        items = response.get('items', [])
+        retry_job = None
+        
+        # Look for a job that's not sent
+        for item in items:
+            if item.get('status') != 'sent':
+                retry_job = item
+                break
+        
+        if not retry_job:
+            self.log("⚠️  No retryable jobs found - will create test scenario")
+            # For testing purposes, we'll still test the endpoint structure
+            # Try with a fake ID to test error handling
+            success, response = self.run_test(
+                "Retry non-existent job (should return 404)",
+                "POST",
+                "api/admin/email-outbox/fake-job-id/retry",
+                404,
+                token=self.admin_token
+            )
+            if success:
+                self.log("✅ Retry endpoint properly handles non-existent job (404)")
+                return True
+            else:
+                return False
+        
+        job_id = retry_job['id']
+        self.email_job_id = job_id
+        
+        # Test retry
+        success, response = self.run_test(
+            f"Retry job {job_id}",
+            "POST",
+            f"api/admin/email-outbox/{job_id}/retry",
+            200,
+            token=self.admin_token
+        )
+        
+        if success and response.get('ok'):
+            self.log(f"✅ Job retry successful: {job_id}")
+            
+            # Verify the job was updated
+            success, response = self.run_test(
+                "Verify job was updated after retry",
+                "GET",
+                f"api/admin/email-outbox?q={job_id}",
+                200,
+                token=self.admin_token
+            )
+            
+            if success:
+                items = response.get('items', [])
+                updated_job = None
+                for item in items:
+                    if item.get('id') == job_id:
+                        updated_job = item
+                        break
+                
+                if updated_job:
+                    if updated_job.get('status') == 'pending' and updated_job.get('last_error') is None:
+                        self.log("✅ Job properly updated: status=pending, last_error=null")
+                        return True
+                    else:
+                        self.log(f"❌ Job not properly updated: status={updated_job.get('status')}, last_error={updated_job.get('last_error')}")
+                        return False
+                else:
+                    self.log("❌ Updated job not found")
+                    return False
+            else:
+                self.log("❌ Failed to verify job update")
+                return False
+        else:
+            self.log(f"❌ Job retry failed")
+            return False
+
+    def test_retry_sent_job_error(self):
+        """C4) Test retry endpoint with sent job (should return 400)"""
+        
+        # Look for a sent job
+        success, response = self.run_test(
+            "Get sent jobs for error test",
+            "GET",
+            "api/admin/email-outbox?status=sent&limit=5",
+            200,
+            token=self.admin_token
+        )
+        
+        if success:
+            items = response.get('items', [])
+            sent_job = None
+            
+            for item in items:
+                if item.get('status') == 'sent':
+                    sent_job = item
+                    break
+            
+            if sent_job:
+                job_id = sent_job['id']
+                success, response = self.run_test(
+                    f"Retry sent job {job_id} (should return 400)",
+                    "POST",
+                    f"api/admin/email-outbox/{job_id}/retry",
+                    400,
+                    token=self.admin_token
+                )
+                
+                if success:
+                    self.log("✅ Retry endpoint properly rejects sent jobs (400 EMAIL_ALREADY_SENT)")
+                    return True
+                else:
+                    self.log("❌ Retry endpoint should reject sent jobs")
+                    return False
+            else:
+                self.log("⚠️  No sent jobs found for error test")
+                return True
+        else:
+            self.log("❌ Failed to get sent jobs")
+            return False
+
+    def test_retry_invalid_job_error(self):
+        """C5) Test retry endpoint with invalid job ID (should return 404)"""
+        
+        success, response = self.run_test(
+            "Retry invalid job ID (should return 404)",
+            "POST",
+            "api/admin/email-outbox/invalid-job-id-12345/retry",
+            404,
+            token=self.admin_token
+        )
+        
+        if success:
+            self.log("✅ Retry endpoint properly handles invalid job ID (404 EMAIL_JOB_NOT_FOUND)")
+            return True
+        else:
+            self.log("❌ Retry endpoint should return 404 for invalid job ID")
+            return False
+
+    def test_pagination_cursor(self):
+        """D) Test next_cursor pagination"""
+        self.log("\n=== D) NEXT_CURSOR PAGINATION ===")
+        
+        # Get first page with small limit
+        success, response = self.run_test(
+            "Get first page (limit=2)",
+            "GET",
+            "api/admin/email-outbox?limit=2",
+            200,
+            token=self.admin_token
+        )
+        
+        if not success:
+            self.log("❌ Failed to get first page")
+            return False
+        
+        items = response.get('items', [])
+        next_cursor = response.get('next_cursor')
+        
+        if len(items) == 0:
+            self.log("⚠️  No items found for pagination test")
+            return True
+        
+        if len(items) < 2:
+            self.log("⚠️  Not enough items for pagination test")
+            return True
+        
+        if not next_cursor:
+            self.log("⚠️  No next_cursor returned (may be expected if only 2 items total)")
+            return True
+        
+        self.log(f"✅ First page: {len(items)} items, next_cursor: {next_cursor}")
+        
+        # Get second page using cursor
+        success, response = self.run_test(
+            f"Get second page (cursor={next_cursor})",
+            "GET",
+            f"api/admin/email-outbox?limit=2&cursor={next_cursor}",
+            200,
+            token=self.admin_token
+        )
+        
+        if success:
+            second_page_items = response.get('items', [])
+            
+            if second_page_items:
+                # Verify items are different (created_at should be less than cursor)
+                first_page_ids = {item['id'] for item in items}
+                second_page_ids = {item['id'] for item in second_page_items}
+                
+                if first_page_ids.isdisjoint(second_page_ids):
+                    self.log(f"✅ Pagination working: second page has {len(second_page_items)} different items")
+                    return True
+                else:
+                    self.log(f"❌ Pagination not working: pages contain overlapping items")
+                    return False
+            else:
+                self.log("✅ Second page empty (expected if only 2 items total)")
+                return True
+        else:
+            self.log("❌ Failed to get second page")
+            return False
+
+    def print_summary(self):
+        """Print test summary"""
+        self.log("\n" + "="*60)
+        self.log("FAZ-9.3 ADMIN EMAIL OUTBOX API TEST SUMMARY")
+        self.log("="*60)
+        self.log(f"Total Tests: {self.tests_run}")
+        self.log(f"✅ Passed: {self.tests_passed}")
+        self.log(f"❌ Failed: {self.tests_failed}")
+        self.log(f"Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%")
+        
+        if self.failed_tests:
+            self.log("\n❌ FAILED TESTS:")
+            for i, test in enumerate(self.failed_tests, 1):
+                self.log(f"  {i}. {test}")
+        
+        self.log("="*60)
+
+    def run_admin_email_outbox_tests(self):
+        """Run all admin email outbox tests in sequence"""
+        self.log("🚀 Starting FAZ-9.3 Admin Email Outbox API Tests")
+        self.log(f"Base URL: {self.base_url}")
+        
+        # A) Auth kontrolü
+        if not self.test_admin_login():
+            self.log("❌ Admin login failed - stopping tests")
+            self.print_summary()
+            return 1
+
+        success, outbox_response = self.test_admin_email_outbox_access()
+        if not success:
+            self.log("❌ Admin email outbox access failed - stopping tests")
+            self.print_summary()
+            return 1
+
+        self.test_non_admin_access_denied()
+
+        # B) Listing davranışı
+        self.test_status_filter()
+        self.test_event_type_filter()
+        self.test_q_search_filter()
+
+        # C) Retry endpoint
+        self.test_retry_endpoint_success()
+        self.test_retry_sent_job_error()
+        self.test_retry_invalid_job_error()
+
+        # D) Pagination
+        self.test_pagination_cursor()
+
+        # Summary
+        self.print_summary()
+
+        return 0 if self.tests_failed == 0 else 1
+
+
 class FAZ93EmailOutboxTester:
     def __init__(self, base_url="https://voucher-share.preview.emergentagent.com"):
         self.base_url = base_url

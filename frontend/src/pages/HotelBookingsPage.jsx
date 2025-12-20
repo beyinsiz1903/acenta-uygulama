@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Calendar, Loader2, AlertCircle, XCircle, StickyNote } from "lucide-react";
 import { api, apiErrorMessage } from "../lib/api";
 import { BookingDetailDrawer } from "../components/BookingDetailDrawer";
+import { Badge } from "../components/ui/badge";
 import {
   Table,
   TableBody,
@@ -52,6 +53,15 @@ export default function HotelBookingsPage() {
     loadBookings();
     // eslint-disable-next-line
   }, []);
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const tomorrowStr = new Date(Date.now() + 24 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 10);
+
+  const todayArrivals = bookings.filter((b) => (b.stay || {}).check_in === todayStr).length;
+  const tomorrowArrivals = bookings.filter((b) => (b.stay || {}).check_in === tomorrowStr).length;
+
+
 
   const filtered = useMemo(() => {
     const q = (agencyQuery || "").trim().toLowerCase();

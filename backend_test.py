@@ -2089,10 +2089,10 @@ class AdminOverrideTester:
                 self.log(f"❌ Stop-sell rule not bypassed")
                 return False
                 
-            if standard_available > self.normal_standard_availability:  # Should be higher than allocation limit
+            if standard_available > 2:  # Should be > allocation limit (2) when bypassed
                 self.log(f"✅ Allocation rule bypassed successfully")
             else:
-                self.log(f"❌ Allocation rule not bypassed")
+                self.log(f"❌ Allocation rule not bypassed (expected > 2, got {standard_available})")
                 return False
             
             return True

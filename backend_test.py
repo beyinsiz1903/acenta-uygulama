@@ -2164,10 +2164,10 @@ class AdminOverrideTester:
                 self.log(f"❌ Stop-sell rule not re-applied")
                 return False
                 
-            if standard_available == self.normal_standard_availability:  # Should match allocation limit
+            if standard_available == 2:  # Should match allocation limit (2)
                 self.log(f"✅ Allocation rule re-applied successfully")
             else:
-                self.log(f"❌ Allocation rule not re-applied")
+                self.log(f"❌ Allocation rule not re-applied (expected 2, got {standard_available})")
                 return False
             
             return True

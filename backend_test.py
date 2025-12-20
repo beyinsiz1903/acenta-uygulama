@@ -1480,9 +1480,25 @@ class FAZ93EmailOutboxTester:
         """2) Test booking.confirmed → email_outbox job creation"""
         self.log("\n=== 2) BOOKING.CONFIRMED EMAIL OUTBOX ===")
         
+        # First get available hotels for this agency
+        success, hotels_response = self.run_test(
+            "Get Agency Hotels",
+            "GET",
+            "api/agency/hotels",
+            200,
+            token=self.agency_token
+        )
+        
+        if not success or not hotels_response:
+            self.log("❌ No hotels available for agency")
+            return False
+        
+        hotel_id = hotels_response[0]['id']
+        self.log(f"✅ Using hotel: {hotel_id}")
+        
         # First create a draft booking
         search_data = {
-            "hotel_id": "cba3117f-1ccf-44d7-8da7-ef7124222211",  # Demo Hotel 1
+            "hotel_id": hotel_id,
             "check_in": "2026-03-15",
             "check_out": "2026-03-17",
             "occupancy": {"adults": 2, "children": 0}

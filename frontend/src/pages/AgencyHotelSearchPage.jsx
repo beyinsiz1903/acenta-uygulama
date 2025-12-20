@@ -61,6 +61,12 @@ export default function AgencyHotelSearchPage() {
 
   const [formError, setFormError] = useState("");
 
+  // Frontend-only filters
+  const [boardFilter, setBoardFilter] = useState("all");
+  const [roomFilter, setRoomFilter] = useState("all");
+  const [priceSort, setPriceSort] = useState("none"); // none | asc | desc
+  const [onlyAvailable, setOnlyAvailable] = useState(true);
+
   useEffect(() => {
     if (!initialHotelFromState) {
       loadHotel();

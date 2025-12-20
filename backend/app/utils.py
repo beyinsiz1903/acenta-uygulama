@@ -203,6 +203,8 @@ def build_booking_public_view(doc: dict[str, Any]) -> dict[str, Any]:
         "currency": currency,
         "source": doc.get("source"),
         "payment_status": doc.get("payment_status"),
+        "special_requests": doc.get("special_requests"),
+        "confirmed_at": confirmed_at,
         "created_at": created_at,
         "updated_at": updated_at,
     }

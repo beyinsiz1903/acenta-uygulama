@@ -150,3 +150,103 @@ async def update_channel_manager(
     )
 
     return {"ok": True}
+
+
+@router.post(
+    "/channel-manager/sync",
+    dependencies=[Depends(require_roles(["hotel_admin", "hotel_staff"]))],
+)
+async def request_channel_manager_sync(
+    request: Request,
+    user=Depends(get_current_user),
+):
+    """Enqueue a CM sync job (idempotent).
+
+    - If there is already a pending/running job for this hotel+kind, return it.
+    - Validates integration status/provider.
+    """
+    db = await get_db()
+    org_id = user["organization_id"]
+    hotel_id = user.get("hotel_id")
+
+    if not hotel_id:
+        raise HTTPException(status_code=400, detail="HOTEL_ID_MISSING")
+
+    # Ensure integration exists
+    cm = await _ensure_cm_integration(db, org_id, str(hotel_id))
+
+    status = cm.get("status") or "not_configured"
+    provider = cm.get("provider")
+
+    if status == "disabled":
+        raise HTTPException(status_code=400, detail="INTEGRATION_DISABLED")
+
+    if status == "not_configured" or not provider:
+        raise HTTPException(status_code=400, detail="INTEGRATION_NOT_CONFIGURED")
+
+    now = _utc_now()
+
+    # Idempotent: existing pending/running job
+    existing = await db.integration_sync_outbox.find_one(
+        {
+            "organization_id": org_id,
+            "hotel_id": str(hotel_id),
+            "kind": "channel_manager",
+            "status": {"$in": ["pending", "running"]},
+        },
+        sort=[("created_at", -1)],
+    )
+
+    if existing:
+        job_id = str(existing.get("_id"))
+        return {"ok": True, "job_id": job_id, "status": existing.get("status") or "pending"}
+
+    job_doc: dict[str, Any] = {
+        "organization_id": org_id,
+        "hotel_id": str(hotel_id),
+        "kind": "channel_manager",
+        "provider": provider,
+        "status": "pending",
+        "attempt_count": 0,
+        "last_error": None,
+        "next_retry_at": now,
+        "created_at": now,
+        "updated_at": now,
+        "started_at": None,
+        "finished_at": None,
+        "meta": {
+            "reason": "manual_retry",
+            "requested_by_user_id": user.get("_id") or user.get("id"),
+            "requested_by_role": (user.get("roles") or [None])[0],
+        },
+    }
+
+    ins = await db.integration_sync_outbox.insert_one(job_doc)
+    job_id = str(ins.inserted_id)
+
+    try:
+        await write_audit_log(
+            db,
+            organization_id=org_id,
+            actor={
+                "actor_type": "user",
+                "email": user.get("email"),
+                "roles": user.get("roles"),
+            },
+            request=request,
+            action="integration.cm.sync.requested",
+            target_type="hotel_integration",
+            target_id=str(hotel_id),
+            before=None,
+            after=None,
+            meta={
+                "kind": "channel_manager",
+                "provider": provider,
+                "job_id": job_id,
+            },
+        )
+    except Exception:  # pragma: no cover - audit failures should not break sync
+        pass
+
+    return {"ok": True, "job_id": job_id, "status": "pending"}
+

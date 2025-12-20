@@ -34,11 +34,29 @@ export default function AdminHotelsPage() {
   async function handleToggleForceSales(hotel) {
     const current = Boolean(hotel.force_sales_open);
     try {
-      const payload = { force_sales_open: !current };
+      let payload;
+      if (!current) {
+        const reason = window.prompt(
+          "Geçici satış açma sebebi (kısa not):",
+          hotel.force_sales_open_reason || ""
+        );
+        if (reason === null) {
+          return; // kullanıcı iptal etti
+        }
+        const trimmed = reason.trim();
+        if (!trimmed) {
+          toast.error("Override açmak için kısa bir sebep yazmalısınız.");
+          return;
+        }
+        payload = { force_sales_open: true, ttl_hours: 6, reason: trimmed };
+      } else {
+        payload = { force_sales_open: false };
+      }
+
       await api.patch(`/admin/hotels/${hotel.id}/force-sales`, payload);
       toast.success(
         !current
-          ? "Otel geçici olarak full satışa açıldı (stop-sell & allotment yok sayılacak)."
+          ? "Otel geçici olarak full satışa açıldı (stop-sell & allotment yok sayılacak, 6 saat sonra otomatik kapanır)."
           : "Otel satış override ayarı kapatıldı. Stop-sell ve allotment kuralları tekrar devrede."
       );
       await loadHotels();

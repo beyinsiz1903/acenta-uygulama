@@ -36,7 +36,7 @@ export default function AgencyHotelSearchPage() {
     if (!initialHotelFromState) {
       loadHotel();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line
   }, [hotelId]);
 
   async function loadHotel() {

@@ -1,19 +1,23 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, Response
+from weasyprint import HTML
+import os
 from pydantic import BaseModel, EmailStr
 
 from app.auth import get_current_user, require_roles
 from app.db import get_db
 from app.schemas import BookingPublicView
 from app.services.email import EmailSendError, send_email_ses
-from app.utils import build_booking_public_view, serialize_doc
+from app.utils import build_booking_public_view, now_utc
 
 router = APIRouter(prefix="/api/voucher", tags=["voucher"])
+
+VOUCHER_TTL_DAYS = int(os.environ.get("VOUCHER_TTL_DAYS", "30"))
 
 
 class VoucherEmailRequest(BaseModel):

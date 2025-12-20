@@ -232,11 +232,17 @@ async def get_voucher_public_html(token: str):
 async def get_voucher_public_pdf(token: str):
     """Public PDF view for voucher (no auth)."""
     from app.db import get_db
+    import logging
+    
+    logger = logging.getLogger("voucher")
+    logger.info(f"PDF endpoint called with token: {token}")
 
     db = await get_db()
     now = now_utc()
 
     voucher = await db.vouchers.find_one({"token": token, "expires_at": {"$gt": now}, "revoked_at": None})
+    logger.info(f"Voucher found: {voucher is not None}")
+    
     if not voucher:
         raise HTTPException(status_code=404, detail="VOUCHER_NOT_FOUND")
 

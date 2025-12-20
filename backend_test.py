@@ -6287,7 +6287,7 @@ class FAZ9xAgencyHotelsTester:
             
         hotel_token = response['access_token']
         
-        # First, clean up all existing allocations for this hotel
+        # First, clean up all existing allocations and stop-sell rules for this hotel
         success, response = self.run_test(
             "List Existing Allocations",
             "GET",
@@ -6304,6 +6304,27 @@ class FAZ9xAgencyHotelsTester:
                         f"Delete Existing Allocation {alloc.get('id')}",
                         "DELETE",
                         f"api/hotel/allocations/{alloc.get('id')}",
+                        200,
+                        token=hotel_token
+                    )
+        
+        # Also clean up any existing stop-sell rules
+        success, response = self.run_test(
+            "List Existing Stop-sell Rules",
+            "GET",
+            "api/hotel/stop-sell",
+            200,
+            token=hotel_token
+        )
+        
+        if success:
+            existing_stop_sells = response
+            for stop_sell in existing_stop_sells:
+                if stop_sell.get('is_active'):
+                    success, response = self.run_test(
+                        f"Delete Existing Stop-sell {stop_sell.get('id')}",
+                        "DELETE",
+                        f"api/hotel/stop-sell/{stop_sell.get('id')}",
                         200,
                         token=hotel_token
                     )

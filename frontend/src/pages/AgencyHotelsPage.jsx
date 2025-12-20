@@ -41,7 +41,8 @@ export default function AgencyHotelsPage() {
     try {
       const resp = await api.get("/agency/hotels");
       console.log("[AgencyHotelsPage] Loaded hotels:", resp.data);
-      setHotels(resp.data || []);
+      const items = resp.data?.items || resp.data || [];
+      setHotels(items);
     } catch (err) {
       console.error("[AgencyHotelsPage] Load error:", err);
       setError(apiErrorMessage(err));

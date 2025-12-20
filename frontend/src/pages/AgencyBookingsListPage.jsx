@@ -210,6 +210,13 @@ export default function AgencyBookingsListPage() {
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
                     {formatDateTime(booking.created_at)}
+      <BookingDetailDrawer
+        bookingId={selectedId}
+        mode="agency"
+        open={drawerOpen}
+        onOpenChange={setDrawerOpen}
+      />
+
                   </TableCell>
                 </TableRow>
               );

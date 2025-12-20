@@ -274,20 +274,29 @@ export default function AgencyHotelsPage() {
               </div>
 
               <div className="flex flex-col gap-2 shrink-0">
-                <button
-                  className="inline-flex items-center rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition"
+                <Button
+                  className="px-3 py-1.5 text-xs font-medium"
                   onClick={() => navigate(`/app/agency/hotels/${hotel.hotel_id}/search`)}
-                  disabled={hotel.status_label === "Satışa Kapalı"}
+                  disabled={!isLinkActive(hotel) || hotel.status_label === "Satışa Kapalı"}
                 >
                   Rezervasyon Oluştur
-                </button>
-                <button
-                  className="inline-flex items-center rounded-lg border border-input bg-background/60 px-3 py-1.5 text-xs font-medium text-foreground hover:bg-accent/40 transition"
+                </Button>
+                <Button
+                  variant="outline"
+                  className="px-3 py-1.5 text-xs font-medium"
                   type="button"
-                  onClick={() => console.log("Detaylar tıklandı", hotel.hotel_id)}
+                  onClick={() => goHotelBookings(hotel.hotel_id)}
                 >
-                  Detaylar
-                </button>
+                  Rezervasyonlar
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="px-3 py-1.5 text-xs font-medium"
+                  type="button"
+                  onClick={() => goHotelDetail(hotel.hotel_id)}
+                >
+                  Detay
+                </Button>
               </div>
             </CardContent>
           </Card>

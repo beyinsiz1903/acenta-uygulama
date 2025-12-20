@@ -95,38 +95,6 @@ export default function AgencyBookingsListPage() {
         </div>
 
         <div className="rounded-2xl border border-destructive/50 bg-destructive/5 p-8 flex flex-col items-center justify-center gap-4">
-  const today = todayIso();
-
-  const todayArrivals = bookings.filter((b) => {
-    const stay = b.stay || {};
-    return stay.check_in === today;
-  }).length;
-
-  const filteredBookings = bookings.filter((booking) => {
-    const stay = booking.stay || {};
-    const guest = booking.guest || {};
-
-    // Search filter
-    if (search.trim()) {
-      const q = search.trim().toLowerCase();
-      const hay = `${booking.id} ${booking.hotel_name || ""} ${guest.full_name || ""}`.toLowerCase();
-      if (!hay.includes(q)) return false;
-    }
-
-    // Status filter
-    if (statusFilter) {
-      if (booking.status !== statusFilter) return false;
-    }
-
-    // Arrival filter
-    if (arrivalFilter === "today") {
-      if (stay.check_in !== today) return false;
-    }
-
-    return true;
-  });
-
-
           <AlertCircle className="h-10 w-10 text-destructive" />
           <div className="text-center">
             <p className="font-semibold text-foreground">Rezervasyonlar yüklenemedi</p>

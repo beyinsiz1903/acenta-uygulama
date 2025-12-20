@@ -35,6 +35,7 @@ from app.routers.bookings import router as bookings_router
 from app.routers.audit import router as audit_router
 from app.routers.voucher import router as voucher_router
 from app.email_worker import email_dispatch_loop
+from app.integration_sync_worker import integration_sync_loop
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / ".env")

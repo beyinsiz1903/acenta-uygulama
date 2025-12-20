@@ -217,7 +217,7 @@ export default function AgencyHotelsPage() {
           <Card key={hotel.hotel_id} className="rounded-2xl border bg-card shadow-sm">
             <CardContent className="p-5 flex items-start justify-between gap-4">
               <div className="space-y-1">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <div className="text-lg font-semibold">{hotel.hotel_name || "-"}</div>
                   <Badge
                     className={
@@ -230,6 +230,13 @@ export default function AgencyHotelsPage() {
                   >
                     {hotel.status_label || "-"}
                   </Badge>
+                  {(() => {
+                    const cmStatus = hotel.cm_status || "not_configured";
+                    const meta = CM_META[cmStatus] || CM_META.not_configured;
+                    return (
+                      <Badge variant={meta.variant}>{meta.label}</Badge>
+                    );
+                  })()}
                 </div>
                 <div className="text-sm text-muted-foreground">
                   {hotel.location || "-"}

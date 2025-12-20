@@ -85,6 +85,9 @@ export default function AppShell() {
     };
   }, [resSummary, sales]);
 
+  const isHotel = (user?.roles || []).includes("hotel_admin") || (user?.roles || []).includes("hotel_staff");
+  const isAgency = (user?.roles || []).includes("agency_admin") || (user?.roles || []).includes("agency_agent");
+
   // Role-based menu (new structure)
   const roleBasedMenu = getMenuForUser(user);
   

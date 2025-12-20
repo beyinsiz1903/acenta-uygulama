@@ -121,6 +121,57 @@ async def send_voucher_email(
     booking_id: str,
     payload: VoucherEmailRequest,
     background_tasks: BackgroundTasks,
+    request: Request,
+    user=Depends(get_current_user),
+):
+    """Send voucher email for a booking via AWS SES.
+
+    FAZ-9.3: İlk adım olarak email gönderimini bağlıyoruz. Public token'lı
+    share link ve PDF FAZ-9.2 kapsamında ayrıntılandırılacak.
+    """
+
+    db = await get_db()
+
+    agency_id = user.get("agency_id")
+    if not agency_id:
+        raise HTTPException(status_code=403, detail="NOT_LINKED_TO_AGENCY")
+
+    booking = await _get_booking_for_voucher(db, user["organization_id"], booking_id)
+
+    if str(booking.get("agency_id")) != str(agency_id):
+        raise HTTPException(status_code=403, detail="FORBIDDEN")
+
+    view = build_booking_public_view(booking)
+
+    html = _build_voucher_html(view)
+    text = (
+        f"Rezervasyon voucher\n"
+        f"Hotel: {view.get('hotel_name') or '-'}\n"
+        f"Guest: {view.get('guest_name') or '-'}\n"
+        f"Check-in: {view.get('check_in_date') or '-'}\n"
+        f"Check-out: {view.get('check_out_date') or '-'}\n"
+        f"Total: {view.get('total_amount') or '-'} {view.get('currency') or ''}\n"
+    )
+
+    subject = "Rezervasyon Voucher / Booking Voucher"
+
+    def _send():
+        try:
+            send_email_ses(
+                to_address=payload.to,
+                subject=subject,
+                html_body=html,
+                text_body=text,
+            )
+        except EmailSendError as e:
+            # Background task; sadece logluyoruz. İleride outbox'a da yazılabilir.
+            import logging
+
+            logging.getLogger("email").error("Voucher email failed: %s", e)
+
+    background_tasks.add_task(_send)
+
+    return {"ok": True, "to": str(payload.to)}
 
 
 @router.post(
@@ -200,55 +251,3 @@ async def get_voucher_public_pdf(token: str):
     }
 
     return Response(content=pdf_bytes, media_type="application/pdf", headers=headers)
-
-    request: Request,
-    user=Depends(get_current_user),
-):
-    """Send voucher email for a booking via AWS SES.
-
-    FAZ-9.3: İlk adım olarak email gönderimini bağlıyoruz. Public token'lı
-    share link ve PDF FAZ-9.2 kapsamında ayrıntılandırılacak.
-    """
-
-    db = await get_db()
-
-    agency_id = user.get("agency_id")
-    if not agency_id:
-        raise HTTPException(status_code=403, detail="NOT_LINKED_TO_AGENCY")
-
-    booking = await _get_booking_for_voucher(db, user["organization_id"], booking_id)
-
-    if str(booking.get("agency_id")) != str(agency_id):
-        raise HTTPException(status_code=403, detail="FORBIDDEN")
-
-    view = build_booking_public_view(booking)
-
-    html = _build_voucher_html(view)
-    text = (
-        f"Rezervasyon voucher\n"
-        f"Hotel: {view.get('hotel_name') or '-'}\n"
-        f"Guest: {view.get('guest_name') or '-'}\n"
-        f"Check-in: {view.get('check_in_date') or '-'}\n"
-        f"Check-out: {view.get('check_out_date') or '-'}\n"
-        f"Total: {view.get('total_amount') or '-'} {view.get('currency') or ''}\n"
-    )
-
-    subject = "Rezervasyon Voucher / Booking Voucher"
-
-    def _send():
-        try:
-            send_email_ses(
-                to_address=payload.to,
-                subject=subject,
-                html_body=html,
-                text_body=text,
-            )
-        except EmailSendError as e:
-            # Background task; sadece logluyoruz. İleride outbox'a da yazılabilir.
-            import logging
-
-            logging.getLogger("email").error("Voucher email failed: %s", e)
-
-    background_tasks.add_task(_send)
-
-    return {"ok": True, "to": str(payload.to)}

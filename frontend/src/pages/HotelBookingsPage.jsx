@@ -117,7 +117,9 @@ export default function HotelBookingsPage() {
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Otel Rezervasyonları</h1>
-          <p className="text-sm text-muted-foreground mt-1">Acenta kanalı rezervasyonları</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            {filtered.length} kayıt - Bugün giriş: {todayArrivals}, Yarın giriş: {tomorrowArrivals}
+          </p>
         </div>
 
         <div className="rounded-2xl border bg-card shadow-sm p-12 flex flex-col items-center justify-center gap-4">

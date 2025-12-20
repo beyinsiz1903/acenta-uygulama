@@ -13,7 +13,7 @@ from app.schemas import (
     AgencyHotelLinkPatchIn,
     HotelCreateIn,
 )
-from app.utils import now_utc, serialize_doc
+from app.utils import now_utc, serialize_doc, to_object_id
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 

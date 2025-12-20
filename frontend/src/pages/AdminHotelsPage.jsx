@@ -287,11 +287,32 @@ export default function AdminHotelsPage() {
                       <Badge variant="secondary">Pasif</Badge>
                     )}
                   </TableCell>
+                  <TableCell>
+                    {hotel.force_sales_open ? (
+                      <Badge className="bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20 text-[11px]">
+                        Override: Açık (full satış)
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-[11px]">
+                        Override: Kapalı
+                      </Badge>
+                    )}
+                  </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
                     {formatDateTime(hotel.created_at)}
                   </TableCell>
                   <TableCell className="text-xs text-muted-foreground">
                     {hotel.created_by || "-"}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      variant={hotel.force_sales_open ? "outline" : "secondary"}
+                      size="sm"
+                      className="text-[11px]"
+                      onClick={() => handleToggleForceSales(hotel)}
+                    >
+                      {hotel.force_sales_open ? "Override Kapat" : "Override Aç"}
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}

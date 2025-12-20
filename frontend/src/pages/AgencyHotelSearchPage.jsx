@@ -21,7 +21,8 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from "../co
 
 // /app/agency/hotels/:hotelId/search
 // Amaç: Otel seçildikten sonra tarih + pax girip /api/agency/search çağrısını yapmak
-// ve /app/agency/search?search_id=... sayfasına yönlendirmek.
+// ve SONUÇ + teklif seçimini aynı ekranda yönetmek.
+// Eski /app/agency/search sayfası fallback/debug amaçlı korunur.
 
 export default function AgencyHotelSearchPage() {
   const { hotelId } = useParams();

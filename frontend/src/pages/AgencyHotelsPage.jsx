@@ -35,6 +35,14 @@ export default function AgencyHotelsPage() {
 
   const user = getUser();
 
+  const goHotelBookings = (hotelId) => {
+    navigate(`/app/agency/bookings?hotel_id=${encodeURIComponent(hotelId)}`);
+  };
+
+  const goHotelDetail = (hotelId) => {
+    navigate(`/app/agency/hotels/${encodeURIComponent(hotelId)}`);
+  };
+
   useEffect(() => {
     // Debug: agency_id kontrolü
     console.log("[AgencyHotelsPage] User context:", {

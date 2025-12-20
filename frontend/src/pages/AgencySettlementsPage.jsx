@@ -51,6 +51,38 @@ export default function AgencySettlementsPage() {
 
   const rows = useMemo(() => data?.totals || [], [data]);
 
+  const summary = useMemo(() => {
+    const entries = data?.entries || [];
+    if (!entries.length) {
+      return {
+        currency: "TRY",
+        totalCommission: 0,
+        openCommission: 0,
+        settledCommission: 0,
+      };
+    }
+
+    let currency = entries[0].currency || "TRY";
+    let totalCommission = 0;
+    let openCommission = 0;
+    let settledCommission = 0;
+
+    for (const e of entries) {
+      if (e.currency) {
+        currency = e.currency;
+      }
+      const c = Number(e.commission_amount || 0);
+      totalCommission += c;
+      if (e.settlement_status === "open") {
+        openCommission += c;
+      } else if (e.settlement_status === "settled") {
+        settledCommission += c;
+      }
+    }
+
+    return { currency, totalCommission, openCommission, settledCommission };
+  }, [data]);
+
   async function downloadCsv() {
     try {
       const params = { month, export: "csv" };

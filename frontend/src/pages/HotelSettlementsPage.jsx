@@ -51,6 +51,38 @@ export default function HotelSettlementsPage() {
 
   const rows = useMemo(() => data?.totals || [], [data]);
 
+  const summary = useMemo(() => {
+    const entries = data?.entries || [];
+    if (!entries.length) {
+      return {
+        currency: "TRY",
+        totalNet: 0,
+        openNet: 0,
+        settledNet: 0,
+      };
+    }
+
+    let currency = entries[0].currency || "TRY";
+    let totalNet = 0;
+    let openNet = 0;
+    let settledNet = 0;
+
+    for (const e of entries) {
+      if (e.currency) {
+        currency = e.currency;
+      }
+      const n = Number(e.net_amount || 0);
+      totalNet += n;
+      if (e.settlement_status === "open") {
+        openNet += n;
+      } else if (e.settlement_status === "settled") {
+        settledNet += n;
+      }
+    }
+
+    return { currency, totalNet, openNet, settledNet };
+  }, [data]);
+
   async function downloadCsv() {
     try {
       const params = { month, export: "csv" };

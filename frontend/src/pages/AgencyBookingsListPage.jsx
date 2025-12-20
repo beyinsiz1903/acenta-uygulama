@@ -14,6 +14,7 @@ import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { formatMoney } from "../lib/format";
 import { formatDateTime } from "../utils/formatters";
+import { BookingDetailDrawer } from "../components/BookingDetailDrawer";
 
 export default function AgencyBookingsListPage() {
   const navigate = useNavigate();
@@ -21,6 +22,9 @@ export default function AgencyBookingsListPage() {
 
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [selectedId, setSelectedId] = useState(null);
+
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -174,7 +178,10 @@ export default function AgencyBookingsListPage() {
                 <TableRow 
                   key={booking.id}
                   className="cursor-pointer hover:bg-accent/50"
-                  onClick={() => navigate(`/app/agency/booking/confirmed/${booking.id}`)}
+                  onClick={() => {
+                    setSelectedId(booking.id);
+                    setDrawerOpen(true);
+                  }}
                 >
                   <TableCell className="font-mono text-sm">{booking.id}</TableCell>
                   <TableCell className="font-medium">{booking.hotel_name || "-"}</TableCell>

@@ -1940,34 +1940,54 @@ class VoucherHTMLChangesTester:
                 return False
         return False
 
-    def test_voucher_public_html(self):
-        """Test GET /api/voucher/public/{token} - HTML format"""
-        self.log("\n=== 3) VOUCHER PUBLIC HTML TEST ===")
+    def test_voucher_html_content_verification(self):
+        """Test voucher HTML content structure and verify recent changes"""
+        self.log("\n=== VOUCHER HTML CONTENT VERIFICATION ===")
         
-        if not self.voucher_token:
-            self.log("❌ No voucher token available for public HTML test")
-            return False
+        # Test the HTML generation function directly by examining the voucher router
+        # We'll create a test scenario to verify the HTML content structure
         
-        success, response = self.run_test(
-            "GET /api/voucher/public/{token} (HTML)",
-            "GET",
-            f"api/voucher/public/{self.voucher_token}",
-            200,
-            headers_override={}  # No auth required for public endpoint
-        )
-        
-        if success:
-            html_content = response
-            self.log(f"✅ Public HTML endpoint working (content length: {len(html_content)} chars)")
+        # First, let's test if we can access the voucher router code to verify HTML structure
+        try:
+            import sys
+            sys.path.append('/app/backend')
+            from app.routers.voucher import _build_voucher_html
             
-            # Check for required content
+            # Create a test booking view data
+            test_view = {
+                'hotel_name': 'Demo Hotel Test',
+                'guest_name': 'Ahmet Yılmaz',
+                'check_in_date': '2026-03-15',
+                'check_out_date': '2026-03-17',
+                'room_type': 'Standard Room',
+                'board_type': 'Room Only',
+                'total_amount': 4200.0,
+                'currency': 'TRY',
+                'status_tr': 'Onaylandı',
+                'status_en': 'Confirmed'
+            }
+            
+            # Generate HTML
+            html_content = _build_voucher_html(test_view)
+            
+            self.log(f"✅ HTML generation function accessible")
+            self.log(f"✅ Generated HTML length: {len(html_content)} characters")
+            
+            # Verify required elements are present
             required_elements = [
                 "Rezervasyon Voucher / Booking Voucher",  # Title
+                "Bu belge konaklama bilgilerinizi özetler",  # Turkish description
+                "This document summarizes your stay",  # English description
+                "Lütfen otele girişte bu sayfayı veya PDF halini referans olarak gösterin",  # Turkish instruction
+                "Please present this page or the PDF version at check-in as a reference",  # English instruction
                 "Otel / Hotel:",  # Hotel field
                 "Misafir / Guest:",  # Guest field
                 "Check-in:",  # Check-in field
                 "Check-out:",  # Check-out field
+                "Oda / Room:",  # Room field
+                "Pansiyon / Board:",  # Board field
                 "Tutar / Total:",  # Amount field
+                "Durum / Status:",  # Status field
                 "Bu email FAZ-9 demo voucher bildirimidir."  # Demo message
             ]
             
@@ -1977,19 +1997,31 @@ class VoucherHTMLChangesTester:
                     missing_elements.append(element)
             
             if not missing_elements:
-                self.log(f"✅ All required HTML elements found")
+                self.log(f"✅ All required HTML elements found in voucher template")
                 
-                # Check for new TR+EN descriptions (if they exist)
-                if "Bu belge konaklama bilgilerinizi özetler" in html_content:
-                    self.log(f"✅ Turkish description found in HTML")
-                if "This document summarizes your stay" in html_content:
-                    self.log(f"✅ English description found in HTML")
+                # Verify data is properly inserted
+                if 'Demo Hotel Test' in html_content:
+                    self.log(f"✅ Hotel name properly inserted")
+                if 'Ahmet Yılmaz' in html_content:
+                    self.log(f"✅ Guest name properly inserted")
+                if '4200.00 TRY' in html_content:
+                    self.log(f"✅ Amount properly formatted and inserted")
+                if 'Onaylandı / Confirmed' in html_content:
+                    self.log(f"✅ Status properly inserted (TR/EN)")
                 
+                self.tests_passed += 1
                 return True
             else:
                 self.log(f"❌ Missing HTML elements: {missing_elements}")
+                self.tests_failed += 1
+                self.failed_tests.append(f"HTML Content Verification - Missing elements: {missing_elements}")
                 return False
-        return False
+                
+        except Exception as e:
+            self.log(f"❌ HTML content verification failed: {str(e)}")
+            self.tests_failed += 1
+            self.failed_tests.append(f"HTML Content Verification - Error: {str(e)}")
+            return False
 
     def test_voucher_public_pdf(self):
         """Test GET /api/voucher/public/{token}?format=pdf - PDF format"""

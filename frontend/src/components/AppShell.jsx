@@ -309,7 +309,7 @@ export default function AppShell() {
 
             <div className="mt-3 grid grid-cols-3 gap-2">
               <NavLink
-                to="/app/reservations"
+                to={isHotel ? "/app/hotel/bookings" : isAgency ? "/app/agency/bookings" : "/app"}
                 className={({ isActive }) =>
 
                   cn(
@@ -325,7 +325,7 @@ export default function AppShell() {
               </NavLink>
 
               <NavLink
-                to="/app/reservations?status=pending"
+                to={isHotel ? "/app/hotel/bookings?status=pending" : isAgency ? "/app/agency/bookings?status=pending" : "/app"}
                 className={({ isActive }) =>
                   cn(
                     "rounded-xl border bg-background/50 p-2 transition hover:bg-accent/40 hover:shadow-sm",
@@ -340,7 +340,7 @@ export default function AppShell() {
               </NavLink>
 
               <NavLink
-                to="/app/reports"
+                to={isHotel ? "/app/hotel/settlements" : isAgency ? "/app/agency/settlements" : "/app"}
                 className={({ isActive }) =>
                   cn(
                     "rounded-xl border bg-background/50 p-2 transition hover:bg-accent/40 hover:shadow-sm",

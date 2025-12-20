@@ -50,7 +50,6 @@ class MockPmsClient(PmsClient):
         # Attach rate plans per room type
         rooms_out: list[dict[str, Any]] = []
         for room_type, room_data in availability.items():
-        for room_type, room_data in availability.items():
             room_type_id = f"rt_{room_type}"
             room_type_name = room_type.title()
             max_occupancy = 4  # Default max occupancy

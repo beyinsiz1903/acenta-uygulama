@@ -109,6 +109,49 @@ async def cancel_booking(booking_id: str, payload: BookingCancelIn, request: Req
             created_at=now,
         )
 
+    # FAZ-9.3: enqueue booking.cancelled email for hotel + agency
+    try:
+        org_id = user["organization_id"]
+
+        # Hotel recipients (hotel_admin + hotel_staff)
+        hotel_users_cursor = db.users.find(
+            {
+                "organization_id": org_id,
+                "hotel_id": str(booking.get("hotel_id")),
+                "roles": {"$in": ["hotel_admin", "hotel_staff"]},
+                "is_active": True,
+            }
+        )
+        hotel_users = await hotel_users_cursor.to_list(length=50)
+        hotel_emails = [u.get("email") for u in hotel_users]
+
+        # Agency recipients (agency_admin + agency_agent)
+        agency_users_cursor = db.users.find(
+            {
+                "organization_id": org_id,
+                "agency_id": str(booking.get("agency_id")),
+                "roles": {"$in": ["agency_admin", "agency_agent"]},
+                "is_active": True,
+            }
+        )
+        agency_users = await agency_users_cursor.to_list(length=50)
+        agency_emails = [u.get("email") for u in agency_users]
+
+        to_addresses = hotel_emails + agency_emails
+
+        await enqueue_booking_email(
+            db,
+            organization_id=org_id,
+            booking=updated,
+            event_type="booking.cancelled",
+            to_addresses=to_addresses,
+        )
+    except Exception as e:  # pragma: no cover - email errors shouldn't break cancel
+        import logging
+
+        logging.getLogger("email_outbox").error("Failed to enqueue booking.cancelled email: %s", e, exc_info=True)
+
+
     updated = await db.bookings.find_one({"_id": booking_id})
 
     # FAZ-7: event outbox + audit

@@ -253,6 +253,11 @@ export default function HotelStopSellPage() {
             </div>
 
             <div className="grid gap-2">
+            <p className="text-[11px] text-muted-foreground">
+              Bu stop-sell kuralı, Syroce üzerinden satış yapan <span className="font-semibold">tüm acentaları</span> etkiler.
+              Yanlış tarih veya oda seçimi, ilgili dönemde satış kaybına yol açabilir.
+            </p>
+
               <Label>Reason</Label>
               <Input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="örn: bakım" />
             </div>

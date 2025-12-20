@@ -4696,7 +4696,7 @@ class FAZ92VoucherTokenTester:
         success, response = self.run_test(
             "Get Public Voucher PDF",
             "GET",
-            f"api/voucher/public/{self.voucher_token}.pdf",
+            f"api/voucher/public/{self.voucher_token}?format=pdf",
             200,
             headers_override={}  # No auth required
         )

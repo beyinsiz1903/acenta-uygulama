@@ -6519,8 +6519,12 @@ def main():
             tester = FAZ93AdminEmailOutboxTester()
             exit_code = tester.run_admin_email_outbox_tests()
             sys.exit(exit_code)
+        elif sys.argv[1] == "faz9x":
+            tester = FAZ9xAgencyHotelsTester()
+            exit_code = tester.run_faz9x_tests()
+            sys.exit(exit_code)
         else:
-            print("Usage: python backend_test.py [faz5|faz6|faz7|faz8|faz9|faz91|faz92|faz93|faz93admin]")
+            print("Usage: python backend_test.py [faz5|faz6|faz7|faz8|faz9|faz91|faz92|faz93|faz93admin|faz9x]")
             sys.exit(1)
     else:
         tester = AcentaAPITester()

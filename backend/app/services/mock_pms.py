@@ -50,14 +50,20 @@ class MockPmsClient(PmsClient):
         # Attach rate plans per room type
         rooms_out: list[dict[str, Any]] = []
         for room_type, room_data in availability.items():
-            room_type_id = r.get("room_type")
-            room_type_name = r.get("room_type_name")
-            max_occupancy = r.get("max_occupancy")
+        for room_type, room_data in availability.items():
+            room_type_id = f"rt_{room_type}"
+            room_type_name = room_type.title()
+            max_occupancy = 4  # Default max occupancy
+            available_rooms = room_data.get("available_rooms", 0)
+
+            # Skip room types with no availability
+            if available_rooms <= 0:
+                continue
 
             # compute rates for this room type
             rates = await compute_rate_for_stay(
                 tenant_id=hotel_id,
-                room_type=room_type_id,
+                room_type=room_type,
                 check_in=check_in,
                 check_out=check_out,
                 nights=nights,
@@ -70,7 +76,7 @@ class MockPmsClient(PmsClient):
                     "room_type_id": room_type_id,
                     "name": room_type_name,
                     "max_occupancy": max_occupancy,
-                    "inventory_left": r.get("available_rooms", 0),
+                    "inventory_left": available_rooms,
                     "rate_plans": rates,
                 }
             )

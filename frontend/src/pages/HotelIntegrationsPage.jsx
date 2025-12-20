@@ -66,6 +66,7 @@ export default function HotelIntegrationsPage() {
       const cm = items[0] || null;
 
       if (cm) {
+        setIntegration(cm);
         setProvider(cm.provider || "");
         setStatus(cm.status || "not_configured");
         setLastSyncAt(cm.last_sync_at || null);

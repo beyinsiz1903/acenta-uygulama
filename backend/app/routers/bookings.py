@@ -110,6 +110,8 @@ async def cancel_booking(booking_id: str, payload: BookingCancelIn, request: Req
         )
 
     # FAZ-9.3: enqueue booking.cancelled email for hotel + agency
+    updated = await db.bookings.find_one({"_id": booking_id})
+    
     try:
         org_id = user["organization_id"]
 
@@ -150,9 +152,6 @@ async def cancel_booking(booking_id: str, payload: BookingCancelIn, request: Req
         import logging
 
         logging.getLogger("email_outbox").error("Failed to enqueue booking.cancelled email: %s", e, exc_info=True)
-
-
-    updated = await db.bookings.find_one({"_id": booking_id})
 
     # FAZ-7: event outbox + audit
     await write_booking_event(

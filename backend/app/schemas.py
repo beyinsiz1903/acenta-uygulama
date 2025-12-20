@@ -209,6 +209,10 @@ class HotelCreateIn(BaseModel):
     active: bool = True
 
 
+class HotelForceSalesOverrideIn(BaseModel):
+    force_sales_open: bool
+
+
 class AgencyHotelLinkCreateIn(BaseModel):
     agency_id: str
     hotel_id: str

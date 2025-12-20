@@ -174,8 +174,8 @@ export default function DashboardPage() {
           <CardContent className="text-sm text-muted-foreground">
             Kapasite ve fiyatı tarih bazında güncelle.
             <div className="mt-3">
-              <Button asChild variant="outline" size="sm">
-                <Link to="/app/inventory">Takvimi Aç</Link>
+              <Button variant="outline" size="sm" disabled>
+                Yakında
               </Button>
             </div>
           </CardContent>

@@ -514,6 +514,8 @@ async def ensure_seed_data() -> None:
 
         await db.rate_plans.insert_many(plans_to_create)
         await db.rate_periods.insert_many(periods_to_create)
+        
+        logger.info(f"Created {len(plans_to_create)} rate plans and {len(periods_to_create)} rate periods")
 
 
     # FAZ-2.3: Create stop-sell rules + channel allocations if none exist

@@ -1,17 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Hotel, AlertCircle, Loader2 } from "lucide-react";
 import { api, apiErrorMessage, getUser } from "../lib/api";
 import { useNavigate } from "react-router-dom";
 import { Input } from "../components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../components/ui/table";
 import { Badge } from "../components/ui/badge";
+import { Card, CardContent } from "../components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 
 export default function AgencyHotelsPage() {
   const navigate = useNavigate();

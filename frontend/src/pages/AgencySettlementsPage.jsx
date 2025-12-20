@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Download, RefreshCw, AlertCircle } from "lucide-react";
 import { api, apiErrorMessage } from "../lib/api";
+import { formatMoney } from "../lib/format";
 import {
   Table,
   TableBody,

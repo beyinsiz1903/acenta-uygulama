@@ -107,6 +107,21 @@ async def my_hotels(user=Depends(get_current_user)):
         key = str(hid)
         alloc_by_hotel[key] = alloc_by_hotel.get(key, 0) + float(a.get("allotment", 0) or 0)
 
+    # Join hotel integrations (channel manager status)
+    integ_docs = await db.hotel_integrations.find(
+        {
+            "organization_id": org_id,
+            "hotel_id": {"$in": hotel_ids},
+            "kind": "channel_manager",
+        }
+    ).to_list(2000)
+    cm_status_by_hotel: dict[str, str] = {}
+    for integ in integ_docs:
+        hid = integ.get("hotel_id")
+        if not hid:
+            continue
+        cm_status_by_hotel[str(hid)] = integ.get("status") or "not_configured"
+
     items = []
     for h in hotels:
         hid = h["_id"]
@@ -114,6 +129,8 @@ async def my_hotels(user=Depends(get_current_user)):
             "stop_sell_active": stop_by_hotel.get(hid, False),
             "allocation_limit": alloc_by_hotel.get(hid),
         }
-        items.append(_normalize_agency_hotel(h, link_by_hotel.get(hid), agg))
+        row = _normalize_agency_hotel(h, link_by_hotel.get(hid), agg)
+        row["cm_status"] = cm_status_by_hotel.get(hid, "not_configured")
+        items.append(row)
 
     return {"items": items}

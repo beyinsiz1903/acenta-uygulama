@@ -286,9 +286,31 @@ export default function AgencyBookingsListPage() {
                     {formatMoney(price.total || 0, price.currency || "TRY")}
                   </TableCell>
                   <TableCell>
-                    <Badge className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20">
-                      {booking.status === "confirmed" ? "Onaylı" : booking.status}
-                    </Badge>
+                    {(() => {
+                      const status = booking.status;
+                      if (["confirmed", "guaranteed", "checked_in"].includes(status)) {
+                        return (
+                          <Badge className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20">
+                            Onaylı
+                          </Badge>
+                        );
+                      }
+                      if (status === "cancelled") {
+                        return (
+                          <Badge className="bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20">
+                            İptal
+                          </Badge>
+                        );
+                      }
+                      if (status === "draft") {
+                        return (
+                          <Badge variant="secondary">
+                            Taslak
+                          </Badge>
+                        );
+                      }
+                      return <Badge variant="outline">{status}</Badge>;
+                    })()}
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
                     {formatDateTime(booking.created_at)}

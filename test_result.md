@@ -345,6 +345,18 @@
         agent: "testing"
         comment: "✅ FAZ-10.0 HOTEL INTEGRATIONS API + AGENCY CM_STATUS ENRICH TEST COMPLETE - All 9 test scenarios passed (100% success rate). CRITICAL FUNCTIONALITY VERIFIED: A) Hotel Integration Auto-Creation: Hotel admin login successful (hoteladmin@acenta.test/admin123), GET /api/hotel/integrations auto-creates channel_manager integration with status='not_configured', proper integration structure (kind=channel_manager, display_name='Channel Manager'). B) Integration Update & Validation: PUT /api/hotel/integrations/channel-manager working with provider='channex', status='configured', config validation (mode='pull', channels=['booking']), GET verification confirms update persistence. C) Provider Validation: Invalid provider 'foo' properly rejected with 422 INVALID_PROVIDER error, whitelist validation working (channex, siteminder, cloudbeds, hotelrunner, custom). D) Agency Hotels CM_Status Enrichment: Agency login successful (agency1@demo.test/agency123), GET /api/agency/hotels returns items with cm_status field, configured hotel shows cm_status='configured', other hotels show cm_status='not_configured', all hotels have valid cm_status values. E) Authentication & Authorization: Agency users properly denied access to hotel integrations (403 Forbidden), unauthenticated requests properly rejected (401 Unauthorized), role-based access control working correctly. F) Database Integration: hotel_integrations collection working with proper indexes (organization_id, hotel_id, kind unique), audit logging working for integration updates, _ensure_cm_integration helper creating integrations on-demand. All hotel integrations API and agency cm_status enrichment functionality production-ready with proper validation, security, and error handling."
 
+  - task: "FAZ-10.1 integration sync outbox + /sync endpoint + worker davranışı testleri"
+    implemented: false
+    working: false
+    file: "/app/backend/app/routers/hotel_integrations.py, /app/backend/app/integration_sync_worker.py, /app/backend/app/seed.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "❌ FAZ-10.1 INTEGRATION SYNC TEST FAILED - MISSING SYNC ENDPOINT. CRITICAL FINDINGS: A) Authentication & Setup: Hotel admin login successful (hoteladmin@acenta.test/admin123), hotel_id populated correctly, CM integration configuration working (PUT /api/hotel/integrations/channel-manager). B) MISSING IMPLEMENTATION: POST /api/hotel/integrations/channel-manager/sync endpoint returns 404 Not Found - endpoint not implemented. C) Database & Worker Infrastructure: integration_sync_outbox collection indexes exist in seed.py, integration_sync_worker.py exists with dispatch_pending_integration_sync function, integration_sync_loop background task started in server.py. D) Test Coverage: Comprehensive test suite created covering all 5 scenarios (successful sync, idempotent behavior, not_configured error, disabled error, worker behavior). E) REQUIRED IMPLEMENTATION: Need to add POST /api/hotel/integrations/channel-manager/sync endpoint to hotel_integrations.py router with proper authentication (hotel_admin/hotel_staff), integration status validation (disabled→400 INTEGRATION_DISABLED, not_configured→400 INTEGRATION_NOT_CONFIGURED), idempotent job creation in integration_sync_outbox collection, proper response format {ok: true, job_id, status: 'pending'}. Worker infrastructure is ready but sync endpoint is completely missing."
+
   - task: "FAZ-9.3 booking email outbox + dispatcher + SES integration"
     implemented: true
     working: true

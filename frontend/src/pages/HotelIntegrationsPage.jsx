@@ -49,6 +49,8 @@ export default function HotelIntegrationsPage() {
   const [status, setStatus] = useState("not_configured");
   const [lastSyncAt, setLastSyncAt] = useState(null);
   const [lastError, setLastError] = useState(null);
+  const [integration, setIntegration] = useState(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   useEffect(() => {
     load();

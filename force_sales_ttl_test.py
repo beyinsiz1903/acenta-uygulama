@@ -204,7 +204,7 @@ class ForceSalesOverrideTTLTester:
         )
         
         if success:
-            items = response.get('items', [])
+            items = response if isinstance(response, list) else response.get('items', [])
             if items:
                 latest_audit = items[0]  # Most recent
                 action = latest_audit.get('action')

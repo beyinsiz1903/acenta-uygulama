@@ -12,6 +12,8 @@ from app.db import get_db
 from app.services.audit import write_audit_log
 from app.services.events import write_booking_event
 from app.utils import date_to_utc_midnight, now_utc, serialize_doc, build_booking_public_view
+from app.services.email_outbox import enqueue_booking_email
+
 
 router = APIRouter(prefix="/api/agency/bookings", tags=["agency-bookings"])
 

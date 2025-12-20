@@ -162,10 +162,7 @@ export default function AgencyHotelSearchPage() {
 
       // Canonical key for frontend-only cache hint (aynı kriterlerle tekrar aramada)
       const key = JSON.stringify(payload);
-      setCacheLikely((prevKey) => {
-        // prevKey burada son bilinen anahtarı temsil etmiyor, o yüzden aşağıda lastSearchKey'i kullanıyoruz
-        return lastSearchKey && lastSearchKey === key;
-      });
+      setCacheLikely(Boolean(lastSearchKey && lastSearchKey === key));
       setLastSearchKey(key);
 
       // Reset selection & filters on new search

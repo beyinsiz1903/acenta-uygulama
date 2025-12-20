@@ -179,3 +179,94 @@ async def patch_link(link_id: str, payload: AgencyHotelLinkPatchIn, request: Req
     )
 
     return serialize_doc(saved)
+
+
+
+@router.get("/email-outbox", dependencies=[Depends(require_roles(["super_admin"]))])
+async def list_email_outbox(
+    status: Optional[str] = None,
+    event_type: Optional[str] = None,
+    q: Optional[str] = None,
+    limit: int = 50,
+    cursor: Optional[str] = None,
+    user=Depends(get_current_user),
+):
+    """List email outbox jobs for admin monitoring.
+
+    This is a lightweight view: bodies are not returned.
+    """
+    db = await get_db()
+
+    limit = max(1, min(limit, 200))
+
+    query: dict[str, Any] = {"organization_id": user["organization_id"]}
+
+    if status:
+        query["status"] = status
+    if event_type:
+        query["event_type"] = event_type
+
+    if q:
+        # basic search on booking_id, to and subject
+        query["$or"] = [
+            {"booking_id": q},
+            {"to": {"$elemMatch": {"$regex": q, "$options": "i"}}},
+            {"subject": {"$regex": q, "$options": "i"}},
+        ]
+
+    sort = [("created_at", -1)]
+
+    if cursor:
+        # simple cursor based on created_at ISO string
+        try:
+            from datetime import datetime
+
+            cursor_dt = datetime.fromisoformat(cursor)
+            query["created_at"] = {"$lt": cursor_dt}
+        except Exception:
+            pass
+
+    docs = await db.email_outbox.find(query).sort(sort).limit(limit).to_list(length=limit)
+
+    items = []
+    next_cursor_val = None
+    for d in docs:
+        items.append(
+            {
+                "id": str(d.get("_id")),
+                "organization_id": d.get("organization_id"),
+                "booking_id": d.get("booking_id"),
+                "event_type": d.get("event_type"),
+                "to": d.get("to") or [],
+                "subject": d.get("subject"),
+                "status": d.get("status"),
+                "attempt_count": d.get("attempt_count", 0),
+                "last_error": d.get("last_error"),
+                "next_retry_at": d.get("next_retry_at"),
+                "created_at": d.get("created_at"),
+                "sent_at": d.get("sent_at"),
+            }
+        )
+        next_cursor_val = d.get("created_at")
+
+    return {"items": items, "next_cursor": next_cursor_val}
+
+
+@router.post("/email-outbox/{job_id}/retry", dependencies=[Depends(require_roles(["super_admin"]))])
+async def retry_email_outbox_job(job_id: str, user=Depends(get_current_user)):
+    """Force retry of an email outbox job (set next_retry_at to now)."""
+    db = await get_db()
+
+    job = await db.email_outbox.find_one({"_id": job_id, "organization_id": user["organization_id"]})
+    if not job:
+        raise HTTPException(status_code=404, detail="EMAIL_JOB_NOT_FOUND")
+
+    if job.get("status") == "sent":
+        raise HTTPException(status_code=400, detail="EMAIL_ALREADY_SENT")
+
+    await db.email_outbox.update_one(
+        {"_id": job_id},
+        {"$set": {"status": "pending", "next_retry_at": now_utc(), "last_error": None}},
+    )
+
+    return {"ok": True}

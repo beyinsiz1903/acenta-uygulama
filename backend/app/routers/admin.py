@@ -94,6 +94,7 @@ async def list_hotels(active: Optional[bool] = None, user=Depends(get_current_us
     if active is not None:
         q["active"] = active
     docs = await db.hotels.find(q).sort("created_at", -1).to_list(500)
+    return [serialize_doc(d) for d in docs]
 
 
 @router.patch("/hotels/{hotel_id}/force-sales", dependencies=[Depends(require_roles(["super_admin"]))])

@@ -75,7 +75,7 @@ async def my_hotels(user=Depends(get_current_user)):
     ).sort("name", 1).to_list(2000)
 
     # Build map for quick lookup
-    link_by_hotel = {l["hotel_id"]: l for l in links}
+    link_by_hotel = {link_doc["hotel_id"]: link_doc for link_doc in links}
 
     # For MVP we don't join complex availability; placeholder agg is None
     items = []

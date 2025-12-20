@@ -122,6 +122,86 @@ async def send_voucher_email(
     booking_id: str,
     payload: VoucherEmailRequest,
     background_tasks: BackgroundTasks,
+
+
+@router.post(
+    "/{booking_id}/generate",
+    response_model=VoucherGenerateResponse,
+    dependencies=[Depends(require_roles(["agency_admin", "agency_agent", "hotel_admin", "hotel_staff"]))],
+)
+async def generate_voucher_token(booking_id: str, user=Depends(get_current_user)):
+    """Generate (or reuse) a voucher token for a booking.
+
+    Idempotent: existing, non-expired voucher is reused.
+    """
+    db = await get_db()
+
+    roles = set(user.get("roles") or [])
+    org_id = user["organization_id"]
+
+    booking = await _get_booking_for_voucher(db, org_id, booking_id)
+
+    # Ownership: agency or hotel
+    if roles.intersection({"agency_admin", "agency_agent"}):
+        if str(booking.get("agency_id")) != str(user.get("agency_id")):
+            raise HTTPException(status_code=403, detail="FORBIDDEN")
+    elif roles.intersection({"hotel_admin", "hotel_staff"}):
+        if str(booking.get("hotel_id")) != str(user.get("hotel_id")):
+            raise HTTPException(status_code=403, detail="FORBIDDEN")
+    else:
+        raise HTTPException(status_code=403, detail="FORBIDDEN")
+
+    voucher = await _get_or_create_voucher_for_booking(db, org_id, booking_id)
+
+    return VoucherGenerateResponse(
+        token=voucher["token"],
+        url=f"/v/api/voucher/{voucher['token']}",
+        expires_at=voucher["expires_at"],
+    )
+
+
+@router.get("/public/{token}")
+async def get_voucher_public_html(token: str):
+    """Public HTML view for voucher (no auth)."""
+    from app.db import get_db  # local import to avoid circular at module import
+
+    db = await get_db()
+    now = now_utc()
+
+    voucher = await db.vouchers.find_one({"token": token, "expires_at": {"$gt": now}, "revoked_at": None})
+    if not voucher:
+        raise HTTPException(status_code=404, detail="VOUCHER_NOT_FOUND")
+
+    view = voucher.get("snapshot") or {}
+    html = _build_voucher_html(view)
+
+    return Response(content=html, media_type="text/html; charset=utf-8")
+
+
+@router.get("/public/{token}.pdf")
+async def get_voucher_public_pdf(token: str):
+    """Public PDF view for voucher (no auth)."""
+    from app.db import get_db
+
+    db = await get_db()
+    now = now_utc()
+
+    voucher = await db.vouchers.find_one({"token": token, "expires_at": {"$gt": now}, "revoked_at": None})
+    if not voucher:
+        raise HTTPException(status_code=404, detail="VOUCHER_NOT_FOUND")
+
+    view = voucher.get("snapshot") or {}
+    html = _build_voucher_html(view)
+
+    pdf_bytes = HTML(string=html).write_pdf()
+
+    filename_code = (view.get("code") or token).replace("\n", " ")
+    headers = {
+        "Content-Disposition": f"inline; filename=\"voucher-{filename_code}.pdf\"",
+    }
+
+    return Response(content=pdf_bytes, media_type="application/pdf", headers=headers)
+
     request: Request,
     user=Depends(get_current_user),
 ):

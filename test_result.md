@@ -333,6 +333,19 @@
 ##     message: "✅ FAZ-9.2 VOUCHER TOKEN + PUBLIC HTML/PDF TEST COMPLETE - All 13 test scenarios passed (100% success rate). COMPREHENSIVE FUNCTIONALITY VERIFIED: A) Authentication & Authorization: Agency login successful (agency1@demo.test/agency123), proper role-based access control working (agency_admin/agency_agent/hotel_admin/hotel_staff roles required), ownership control working correctly (agencies can only access their bookings, hotels can only access their bookings). B) Voucher Generation (Idempotent): POST /api/voucher/{booking_id}/generate endpoint working, idempotency confirmed (same token returned on multiple calls), token format validation (vch_ prefix), URL format validation (/v/api/voucher/{token}), expires_at field populated correctly (30 days TTL). C) Public Endpoints (No Auth Required): GET /api/voucher/public/{token} HTML endpoint working (returns text/html with booking details), GET /api/voucher/public/{token}?format=pdf PDF endpoint working (returns application/pdf with %PDF magic bytes), both endpoints contain expected content (hotel name, guest name, dates, amounts). D) Error Handling & Security: Non-existent booking returns 404 BOOKING_NOT_FOUND, invalid voucher token returns 404 VOUCHER_NOT_FOUND, proper JSON error format for all error cases. E) Database Integration: Voucher collection working with proper indexes, token uniqueness enforced, expires_at TTL functionality, snapshot field contains normalized booking data. F) WeasyPrint PDF Generation: PDF generation working correctly (10KB+ file size), proper Content-Disposition headers, HTML to PDF conversion successful. All voucher token and public sharing functionality production-ready with proper security, validation, and error handling."
 
 ## backend:
+  - task: "Admin Override Feature (force_sales_open) - Bypass stop-sell and allocation rules"
+    implemented: true
+    working: true
+    file: "/app/backend/app/routers/admin.py, /app/backend/app/services/hotel_availability.py, /app/backend/app/schemas.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ ADMIN OVERRIDE FEATURE TEST COMPLETE - All 19 test scenarios passed (100% success rate). CRITICAL FUNCTIONALITY VERIFIED: A) Admin Hotels List: GET /api/admin/hotels returns force_sales_open field (defaults to false for new field), super admin authentication working. B) Force Sales Override Endpoint: PATCH /api/admin/hotels/{hotel_id}/force-sales working with proper authentication (super_admin role required), enables/disables force_sales_open flag, returns updated hotel document. C) Availability Rule Bypass: When force_sales_open=true, stop-sell rules bypassed (deluxe rooms: 0→3 availability), allocation rules bypassed (standard rooms: 2→5 availability, allocation limit ignored). D) Rule Re-application: When force_sales_open=false, stop-sell rules re-applied (deluxe rooms: 3→0 availability), allocation rules re-applied (standard rooms: 5→2 availability, limited by allotment). E) Security & Validation: Wrong organization hotel_id returns 404 HOTEL_NOT_FOUND, proper organization_id scoping working. F) Audit Logging: hotel.force_sales_override action logged with proper target_type and target_id. G) Admin Endpoints Smoke Test: All existing admin endpoints working (agencies, hotels, agency-hotel-links, email-outbox) - new override endpoint doesn't break existing functionality. TECHNICAL DETAILS: Fixed admin router bugs (unreachable return statement, missing return in list_hotels), fixed MockPMS availability computation to handle new room type structure, search cache clearing between tests to ensure fresh results. Admin override feature production-ready with complete bypass functionality for emergency sales scenarios."
+
+## backend:
   - task: "FAZ-10.0 hotel integrations API + agency cm_status enrich"
     implemented: true
     working: true

@@ -50,7 +50,8 @@ async def compute_availability(
     force_sales_open = bool(hotel and hotel.get("force_sales_open"))
     if force_sales_open:
         expires_at = hotel.get("force_sales_open_expires_at")
-        if expires_at and expires_at < datetime.utcnow():
+        now = now_utc()
+        if expires_at and expires_at < now:
             # TTL dolmuş; override'ı kapalı say ve kendini iyileştir
             force_sales_open = False
             await db.hotels.update_one(
@@ -64,7 +65,7 @@ async def compute_availability(
                         "force_sales_open": False,
                         "force_sales_open_expires_at": None,
                         "force_sales_open_reason": None,
-                        "force_sales_open_updated_at": datetime.utcnow(),
+                        "force_sales_open_updated_at": now,
                     }
                 },
             )

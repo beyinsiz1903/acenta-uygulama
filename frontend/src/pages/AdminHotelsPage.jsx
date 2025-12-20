@@ -307,9 +307,19 @@ export default function AdminHotelsPage() {
                   </TableCell>
                   <TableCell>
                     {hotel.force_sales_open ? (
-                      <Badge className="bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20 text-[11px]">
-                        Override: Açık (full satış)
-                      </Badge>
+                      <div className="space-y-1 text-[11px]">
+                        <Badge className="bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20">
+                          Override: Açık (full satış)
+                        </Badge>
+                        <div className="text-[10px] text-muted-foreground">
+                          Bitiş: {hotel.force_sales_open_expires_at ? formatDateTime(hotel.force_sales_open_expires_at) : "-"}
+                          {hotel.force_sales_open_reason && (
+                            <>
+                              <br />Sebep: {hotel.force_sales_open_reason}
+                            </>
+                          )}
+                        </div>
+                      </div>
                     ) : (
                       <Badge variant="outline" className="text-[11px]">
                         Override: Kapalı

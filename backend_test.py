@@ -4442,7 +4442,12 @@ class FAZ92VoucherTokenTester:
             else:
                 raise ValueError(f"Unsupported method: {method}")
 
-            success = response.status_code == expected_status
+            # Handle multiple expected status codes
+            if isinstance(expected_status, list):
+                success = response.status_code in expected_status
+            else:
+                success = response.status_code == expected_status
+                
             if success:
                 self.tests_passed += 1
                 self.log(f"✅ PASSED - Status: {response.status_code}")
@@ -4455,8 +4460,9 @@ class FAZ92VoucherTokenTester:
                     return True, response
             else:
                 self.tests_failed += 1
-                self.failed_tests.append(f"{name} - Expected {expected_status}, got {response.status_code}")
-                self.log(f"❌ FAILED - Expected {expected_status}, got {response.status_code}")
+                expected_str = str(expected_status) if not isinstance(expected_status, list) else f"one of {expected_status}"
+                self.failed_tests.append(f"{name} - Expected {expected_str}, got {response.status_code}")
+                self.log(f"❌ FAILED - Expected {expected_str}, got {response.status_code}")
                 try:
                     self.log(f"   Response: {response.text[:200]}")
                 except:

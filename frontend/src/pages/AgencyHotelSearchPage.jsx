@@ -218,10 +218,10 @@ export default function AgencyHotelSearchPage() {
   const source = searchResult?.source;
 
   const cacheHint = useMemo(() => {
-    if (!hasSearch || !lastSearchKey) return null;
+    if (!hasSearch || !cacheLikely) return null;
     // Sadece aynı kriterlerle tekrar arama yapıldığında gösteriyoruz
     return "Aynı kriterler (cache olabilir)";
-  }, [hasSearch, lastSearchKey]);
+  }, [hasSearch, cacheLikely]);
 
   const availableBoards = useMemo(() => {
     const set = new Set();

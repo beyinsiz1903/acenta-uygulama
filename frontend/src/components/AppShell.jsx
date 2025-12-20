@@ -308,51 +308,78 @@ export default function AppShell() {
             </div>
 
             <div className="mt-3 grid grid-cols-3 gap-2">
-              <NavLink
-                to={isHotel ? "/app/hotel/bookings" : isAgency ? "/app/agency/bookings" : "/app"}
-                className={({ isActive }) =>
-
-                  cn(
-                    "rounded-xl border bg-background/50 p-2 transition hover:bg-accent/40 hover:shadow-sm",
-                    isActive ? "ring-1 ring-ring" : ""
-                  )
-                }
-              >
-                <div className="text-[11px] text-muted-foreground">Toplam</div>
-                <div className="text-sm font-semibold text-foreground" data-testid="sb-total">
-                  {sidebarStats.total}
+              {isAgency ? (
+                <div className="rounded-xl border bg-background/50 p-2 opacity-70 cursor-default">
+                  <div className="text-[11px] text-muted-foreground">Toplam</div>
+                  <div className="text-sm font-semibold text-foreground" data-testid="sb-total">
+                    {sidebarStats.total}
+                  </div>
                 </div>
-              </NavLink>
+              ) : (
+                <NavLink
+                  to={isHotel ? "/app/hotel/bookings" : "/app"}
+                  className={({ isActive }) =>
 
-              <NavLink
-                to={isHotel ? "/app/hotel/bookings?status=pending" : isAgency ? "/app/agency/bookings?status=pending" : "/app"}
-                className={({ isActive }) =>
-                  cn(
-                    "rounded-xl border bg-background/50 p-2 transition hover:bg-accent/40 hover:shadow-sm",
-                    isActive ? "ring-1 ring-ring" : ""
-                  )
-                }
-              >
-                <div className="text-[11px] text-muted-foreground">Bekleyen</div>
-                <div className="text-sm font-semibold text-foreground" data-testid="sb-pending">
-                  {sidebarStats.pending}
-                </div>
-              </NavLink>
+                    cn(
+                      "rounded-xl border bg-background/50 p-2 transition hover:bg-accent/40 hover:shadow-sm",
+                      isActive ? "ring-1 ring-ring" : ""
+                    )
+                  }
+                >
+                  <div className="text-[11px] text-muted-foreground">Toplam</div>
+                  <div className="text-sm font-semibold text-foreground" data-testid="sb-total">
+                    {sidebarStats.total}
+                  </div>
+                </NavLink>
+              )}
 
-              <NavLink
-                to={isHotel ? "/app/hotel/settlements" : isAgency ? "/app/agency/settlements" : "/app"}
-                className={({ isActive }) =>
-                  cn(
-                    "rounded-xl border bg-background/50 p-2 transition hover:bg-accent/40 hover:shadow-sm",
-                    isActive ? "ring-1 ring-ring" : ""
-                  )
-                }
-              >
-                <div className="text-[11px] text-muted-foreground">Ciro 7G</div>
-                <div className="text-sm font-semibold text-foreground truncate" title={formatMoney(sidebarStats.revenue7d, "TRY")} data-testid="sb-rev7">
-                  {formatMoneyCompact(sidebarStats.revenue7d, "TRY")}
+              {isAgency ? (
+                <div className="rounded-xl border bg-background/50 p-2 opacity-70 cursor-default">
+                  <div className="text-[11px] text-muted-foreground">Bekleyen</div>
+                  <div className="text-sm font-semibold text-foreground" data-testid="sb-pending">
+                    {sidebarStats.pending}
+                  </div>
                 </div>
-              </NavLink>
+              ) : (
+                <NavLink
+                  to={isHotel ? "/app/hotel/bookings?status=pending" : "/app"}
+                  className={({ isActive }) =>
+                    cn(
+                      "rounded-xl border bg-background/50 p-2 transition hover:bg-accent/40 hover:shadow-sm",
+                      isActive ? "ring-1 ring-ring" : ""
+                    )
+                  }
+                >
+                  <div className="text-[11px] text-muted-foreground">Bekleyen</div>
+                  <div className="text-sm font-semibold text-foreground" data-testid="sb-pending">
+                    {sidebarStats.pending}
+                  </div>
+                </NavLink>
+              )}
+
+              {isAgency ? (
+                <div className="rounded-xl border bg-background/50 p-2 opacity-70 cursor-default">
+                  <div className="text-[11px] text-muted-foreground">Ciro 7G</div>
+                  <div className="text-sm font-semibold text-foreground truncate" title={formatMoney(sidebarStats.revenue7d, "TRY")} data-testid="sb-rev7">
+                    {formatMoneyCompact(sidebarStats.revenue7d, "TRY")}
+                  </div>
+                </div>
+              ) : (
+                <NavLink
+                  to={isHotel ? "/app/hotel/settlements" : "/app"}
+                  className={({ isActive }) =>
+                    cn(
+                      "rounded-xl border bg-background/50 p-2 transition hover:bg-accent/40 hover:shadow-sm",
+                      isActive ? "ring-1 ring-ring" : ""
+                    )
+                  }
+                >
+                  <div className="text-[11px] text-muted-foreground">Ciro 7G</div>
+                  <div className="text-sm font-semibold text-foreground truncate" title={formatMoney(sidebarStats.revenue7d, "TRY")} data-testid="sb-rev7">
+                    {formatMoneyCompact(sidebarStats.revenue7d, "TRY")}
+                  </div>
+                </NavLink>
+              )}
             </div>
 
             <div className="mt-2 flex items-center justify-between text-[11px] text-muted-foreground">

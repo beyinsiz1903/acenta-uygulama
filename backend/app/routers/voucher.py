@@ -211,8 +211,8 @@ async def generate_voucher_token(booking_id: str, user=Depends(get_current_user)
 
 
 @router.get("/public/{token}")
-async def get_voucher_public_html(token: str):
-    """Public HTML view for voucher (no auth)."""
+async def get_voucher_public_html(token: str, format: str = "html"):
+    """Public HTML/PDF view for voucher (no auth)."""
     from app.db import get_db  # local import to avoid circular at module import
 
     db = await get_db()
@@ -225,7 +225,15 @@ async def get_voucher_public_html(token: str):
     view = voucher.get("snapshot") or {}
     html = _build_voucher_html(view)
 
-    return Response(content=html, media_type="text/html; charset=utf-8")
+    if format.lower() == "pdf":
+        pdf_bytes = HTML(string=html).write_pdf()
+        filename_code = (view.get("code") or token).replace("\n", " ")
+        headers = {
+            "Content-Disposition": f"inline; filename=\"voucher-{filename_code}.pdf\"",
+        }
+        return Response(content=pdf_bytes, media_type="application/pdf", headers=headers)
+    else:
+        return Response(content=html, media_type="text/html; charset=utf-8")
 
 
 @router.get("/public/{token}.pdf")

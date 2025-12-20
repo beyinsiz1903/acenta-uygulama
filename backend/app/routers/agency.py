@@ -77,9 +77,43 @@ async def my_hotels(user=Depends(get_current_user)):
     # Build map for quick lookup
     link_by_hotel = {link_doc["hotel_id"]: link_doc for link_doc in links}
 
-    # For MVP we don't join complex availability; placeholder agg is None
+    org_id = user["organization_id"]
+
+    # Aggregate stop-sell rules per hotel (any active rule marks hotel as stop_sell_active)
+    stop_rules = await db.stop_sell_rules.find(
+        {"organization_id": org_id, "tenant_id": {"$in": hotel_ids}, "is_active": True}
+    ).to_list(2000)
+    stop_by_hotel: dict[str, bool] = {}
+    for r in stop_rules:
+        hid = r.get("tenant_id")
+        if not hid:
+            continue
+        stop_by_hotel[str(hid)] = True
+
+    # Aggregate channel allocations per hotel for agency_extranet
+    alloc_docs = await db.channel_allocations.find(
+        {
+            "organization_id": org_id,
+            "tenant_id": {"$in": hotel_ids},
+            "channel": "agency_extranet",
+            "is_active": True,
+        }
+    ).to_list(2000)
+    alloc_by_hotel: dict[str, float] = {}
+    for a in alloc_docs:
+        hid = a.get("tenant_id")
+        if not hid:
+            continue
+        key = str(hid)
+        alloc_by_hotel[key] = alloc_by_hotel.get(key, 0) + float(a.get("allotment", 0) or 0)
+
     items = []
     for h in hotels:
-        items.append(_normalize_agency_hotel(h, link_by_hotel.get(h["_id"]), None))
+        hid = h["_id"]
+        agg = {
+            "stop_sell_active": stop_by_hotel.get(hid, False),
+            "allocation_limit": alloc_by_hotel.get(hid),
+        }
+        items.append(_normalize_agency_hotel(h, link_by_hotel.get(hid), agg))
 
     return {"items": items}

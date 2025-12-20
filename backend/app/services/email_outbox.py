@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import os
 from typing import Any, Iterable
+from datetime import timedelta
 
 from app.services.email import EmailSendError, send_email_ses
 from app.services.events import write_booking_event

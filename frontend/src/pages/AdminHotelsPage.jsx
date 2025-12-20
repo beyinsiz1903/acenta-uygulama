@@ -31,6 +31,23 @@ export default function AdminHotelsPage() {
   });
   const [formError, setFormError] = useState("");
 
+  async function handleToggleForceSales(hotel) {
+    const current = Boolean(hotel.force_sales_open);
+    try {
+      const payload = { force_sales_open: !current };
+      await api.patch(`/admin/hotels/${hotel.id}/force-sales`, payload);
+      toast.success(
+        !current
+          ? "Otel geçici olarak full satışa açıldı (stop-sell & allotment yok sayılacak)."
+          : "Otel satış override ayarı kapatıldı. Stop-sell ve allotment kuralları tekrar devrede."
+      );
+      await loadHotels();
+    } catch (err) {
+      console.error("[AdminHotels] Force sales toggle error:", err);
+      toast.error(apiErrorMessage(err));
+    }
+  }
+
   useEffect(() => {
     loadHotels();
   }, []);

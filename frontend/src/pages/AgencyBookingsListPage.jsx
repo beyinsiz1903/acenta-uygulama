@@ -16,6 +16,12 @@ import { formatMoney } from "../lib/format";
 import { formatDateTime } from "../utils/formatters";
 import { BookingDetailDrawer } from "../components/BookingDetailDrawer";
 
+
+function todayIso() {
+  const d = new Date();
+  return d.toISOString().slice(0, 10);
+}
+
 export default function AgencyBookingsListPage() {
   const navigate = useNavigate();
   const user = getUser();
@@ -26,6 +32,11 @@ export default function AgencyBookingsListPage() {
   const [selectedId, setSelectedId] = useState(null);
 
   const [error, setError] = useState("");
+
+  // Filters
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [arrivalFilter, setArrivalFilter] = useState("all"); // all|today
 
   useEffect(() => {
     loadBookings();

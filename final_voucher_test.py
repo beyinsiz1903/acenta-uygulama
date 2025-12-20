@@ -176,7 +176,7 @@ class FinalVoucherTest:
                 "demo voucher",
                 "Bu email FAZ-9 demo voucher bildirimidir",
                 "demo satırı",
-                "demo",  # General demo text
+                "demo bildirimidir",  # Specific demo message text
             ]
             
             demo_found = []

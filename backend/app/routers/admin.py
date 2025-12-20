@@ -117,14 +117,41 @@ async def patch_hotel_force_sales(
     if not existing:
         raise HTTPException(status_code=404, detail="Otel bulunamadı")
 
-    update = {
-        "force_sales_open": payload.force_sales_open,
-        "updated_at": now_utc(),
-        "updated_by": user.get("email"),
-    }
+    now = now_utc()
+
+    if payload.force_sales_open:
+        expires_at = now + timedelta(hours=payload.ttl_hours or 6)
+        update = {
+            "force_sales_open": True,
+            "force_sales_open_expires_at": expires_at,
+            "force_sales_open_reason": (payload.reason or "").strip() or None,
+            "force_sales_open_updated_by": user.get("email"),
+            "force_sales_open_updated_at": now,
+            "updated_at": now,
+            "updated_by": user.get("email"),
+        }
+    else:
+        update = {
+            "force_sales_open": False,
+            "force_sales_open_expires_at": None,
+            "force_sales_open_reason": None,
+            "force_sales_open_updated_by": user.get("email"),
+            "force_sales_open_updated_at": now,
+            "updated_at": now,
+            "updated_by": user.get("email"),
+        }
 
     await db.hotels.update_one({"_id": hotel_id}, {"$set": update})
     saved = await db.hotels.find_one({"_id": hotel_id})
+
+    meta = {
+        "force_sales_open": payload.force_sales_open,
+        "ttl_hours": payload.ttl_hours if payload.force_sales_open else None,
+        "expires_at": (expires_at.isoformat() if payload.force_sales_open else None)
+        if payload.force_sales_open
+        else None,
+        "reason": (payload.reason or "").strip() or None,
+    }
 
     await write_audit_log(
         db,
@@ -136,6 +163,7 @@ async def patch_hotel_force_sales(
         target_id=hotel_id,
         before=existing,
         after=saved,
+        meta=meta,
     )
 
     return serialize_doc(saved)

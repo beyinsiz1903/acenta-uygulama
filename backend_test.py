@@ -1764,6 +1764,386 @@ class FAZ101IntegrationSyncTester:
         return 0 if self.tests_failed == 0 else 1
 
 
+class VoucherHTMLChangesTester:
+    def __init__(self, base_url="https://ne-asamadayiz.preview.emergentagent.com"):
+        self.base_url = base_url
+        self.agency_token = None
+        self.hotel_token = None
+        self.tests_run = 0
+        self.tests_passed = 0
+        self.tests_failed = 0
+        self.failed_tests = []
+        
+        # Store IDs for testing
+        self.booking_id = None
+        self.voucher_token = None
+
+    def log(self, msg):
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}")
+
+    def run_test(self, name, method, endpoint, expected_status, data=None, headers_override=None, token=None):
+        """Run a single API test with specific token"""
+        url = f"{self.base_url}/{endpoint}"
+        headers = headers_override or {'Content-Type': 'application/json'}
+        
+        # Use specific token if provided
+        if token:
+            headers['Authorization'] = f'Bearer {token}'
+
+        self.tests_run += 1
+        self.log(f"🔍 Test #{self.tests_run}: {name}")
+        
+        try:
+            if method == 'GET':
+                response = requests.get(url, headers=headers, timeout=10)
+            elif method == 'POST':
+                response = requests.post(url, json=data, headers=headers, timeout=10)
+            elif method == 'PUT':
+                response = requests.put(url, json=data, headers=headers, timeout=10)
+            elif method == 'PATCH':
+                response = requests.patch(url, json=data, headers=headers, timeout=10)
+            elif method == 'DELETE':
+                response = requests.delete(url, headers=headers, timeout=10)
+            else:
+                raise ValueError(f"Unsupported method: {method}")
+
+            success = response.status_code == expected_status
+            if success:
+                self.tests_passed += 1
+                self.log(f"✅ PASSED - Status: {response.status_code}")
+                try:
+                    if 'application/json' in response.headers.get('content-type', ''):
+                        return True, response.json()
+                    else:
+                        return True, response.text
+                except:
+                    return True, response.text if hasattr(response, 'text') else {}
+            else:
+                self.tests_failed += 1
+                self.failed_tests.append(f"{name} - Expected {expected_status}, got {response.status_code}")
+                self.log(f"❌ FAILED - Expected {expected_status}, got {response.status_code}")
+                try:
+                    self.log(f"   Response: {response.text[:200]}")
+                except:
+                    pass
+                return False, {}
+
+        except Exception as e:
+            self.tests_failed += 1
+            self.failed_tests.append(f"{name} - Error: {str(e)}")
+            self.log(f"❌ FAILED - Error: {str(e)}")
+            return False, {}
+
+    def test_agency_login(self):
+        """Test agency login to get access to bookings"""
+        self.log("\n=== 1) AGENCY LOGIN & BOOKING ACCESS ===")
+        success, response = self.run_test(
+            "Agency Login (agency1@demo.test)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "agency1@demo.test", "password": "agency123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.agency_token = response['access_token']
+            user = response.get('user', {})
+            roles = user.get('roles', [])
+            agency_id = user.get('agency_id')
+            
+            if agency_id and ('agency_admin' in roles or 'agency_agent' in roles):
+                self.log(f"✅ Agency login successful - agency_id: {agency_id}, roles: {roles}")
+                return True
+            else:
+                self.log(f"❌ Missing agency_id or proper roles: {roles}")
+                return False
+        return False
+
+    def test_get_booking_for_voucher(self):
+        """Get a booking to test voucher functionality"""
+        self.log("\n--- Get Booking for Voucher Test ---")
+        
+        success, response = self.run_test(
+            "Get Agency Bookings",
+            "GET",
+            "api/agency/bookings",
+            200,
+            token=self.agency_token
+        )
+        
+        if success and isinstance(response, list) and len(response) > 0:
+            # Find a confirmed booking
+            for booking in response:
+                if booking.get('status') == 'confirmed':
+                    self.booking_id = booking.get('id')
+                    self.log(f"✅ Found confirmed booking for voucher test: {self.booking_id}")
+                    return True
+            
+            # If no confirmed booking, use the first one
+            self.booking_id = response[0].get('id')
+            self.log(f"✅ Using first available booking for voucher test: {self.booking_id}")
+            return True
+        else:
+            self.log("❌ No bookings found for voucher testing")
+            return False
+
+    def test_voucher_generate(self):
+        """Test POST /api/voucher/{booking_id}/generate"""
+        self.log("\n=== 2) VOUCHER GENERATION TEST ===")
+        
+        if not self.booking_id:
+            self.log("❌ No booking_id available for voucher generation")
+            return False
+        
+        success, response = self.run_test(
+            "POST /api/voucher/{booking_id}/generate",
+            "POST",
+            f"api/voucher/{self.booking_id}/generate",
+            200,
+            token=self.agency_token
+        )
+        
+        if success:
+            token = response.get('token')
+            url = response.get('url')
+            expires_at = response.get('expires_at')
+            
+            if token and url and expires_at:
+                self.voucher_token = token
+                self.log(f"✅ Voucher generated successfully:")
+                self.log(f"   Token: {token}")
+                self.log(f"   URL: {url}")
+                self.log(f"   Expires: {expires_at}")
+                
+                # Verify token format
+                if token.startswith('vch_'):
+                    self.log(f"✅ Token format correct (vch_ prefix)")
+                else:
+                    self.log(f"❌ Token format incorrect: {token}")
+                    return False
+                
+                return True
+            else:
+                self.log(f"❌ Missing required fields in response: {response}")
+                return False
+        return False
+
+    def test_voucher_public_html(self):
+        """Test GET /api/voucher/public/{token} - HTML format"""
+        self.log("\n=== 3) VOUCHER PUBLIC HTML TEST ===")
+        
+        if not self.voucher_token:
+            self.log("❌ No voucher token available for public HTML test")
+            return False
+        
+        success, response = self.run_test(
+            "GET /api/voucher/public/{token} (HTML)",
+            "GET",
+            f"api/voucher/public/{self.voucher_token}",
+            200,
+            headers_override={}  # No auth required for public endpoint
+        )
+        
+        if success:
+            html_content = response
+            self.log(f"✅ Public HTML endpoint working (content length: {len(html_content)} chars)")
+            
+            # Check for required content
+            required_elements = [
+                "Rezervasyon Voucher / Booking Voucher",  # Title
+                "Otel / Hotel:",  # Hotel field
+                "Misafir / Guest:",  # Guest field
+                "Check-in:",  # Check-in field
+                "Check-out:",  # Check-out field
+                "Tutar / Total:",  # Amount field
+                "Bu email FAZ-9 demo voucher bildirimidir."  # Demo message
+            ]
+            
+            missing_elements = []
+            for element in required_elements:
+                if element not in html_content:
+                    missing_elements.append(element)
+            
+            if not missing_elements:
+                self.log(f"✅ All required HTML elements found")
+                
+                # Check for new TR+EN descriptions (if they exist)
+                if "Bu belge konaklama bilgilerinizi özetler" in html_content:
+                    self.log(f"✅ Turkish description found in HTML")
+                if "This document summarizes your stay" in html_content:
+                    self.log(f"✅ English description found in HTML")
+                
+                return True
+            else:
+                self.log(f"❌ Missing HTML elements: {missing_elements}")
+                return False
+        return False
+
+    def test_voucher_public_pdf(self):
+        """Test GET /api/voucher/public/{token}?format=pdf - PDF format"""
+        self.log("\n=== 4) VOUCHER PUBLIC PDF TEST ===")
+        
+        if not self.voucher_token:
+            self.log("❌ No voucher token available for public PDF test")
+            return False
+        
+        success, response = self.run_test(
+            "GET /api/voucher/public/{token}?format=pdf",
+            "GET",
+            f"api/voucher/public/{self.voucher_token}?format=pdf",
+            200,
+            headers_override={}  # No auth required for public endpoint
+        )
+        
+        if success:
+            pdf_content = response
+            self.log(f"✅ Public PDF endpoint working (content length: {len(pdf_content)} bytes)")
+            
+            # Check if it's actually a PDF (starts with %PDF)
+            if isinstance(pdf_content, str) and pdf_content.startswith('%PDF'):
+                self.log(f"✅ Response is valid PDF format")
+                return True
+            elif isinstance(pdf_content, bytes) and pdf_content.startswith(b'%PDF'):
+                self.log(f"✅ Response is valid PDF format (bytes)")
+                return True
+            else:
+                self.log(f"❌ Response is not valid PDF format")
+                self.log(f"   First 50 chars: {str(pdf_content)[:50]}")
+                return False
+        return False
+
+    def test_voucher_email_functionality(self):
+        """Test POST /api/voucher/{booking_id}/email"""
+        self.log("\n=== 5) VOUCHER EMAIL FUNCTIONALITY TEST ===")
+        
+        if not self.booking_id:
+            self.log("❌ No booking_id available for email test")
+            return False
+        
+        email_data = {
+            "to": "test@example.com",
+            "language": "tr_en"
+        }
+        
+        success, response = self.run_test(
+            "POST /api/voucher/{booking_id}/email",
+            "POST",
+            f"api/voucher/{self.booking_id}/email",
+            200,
+            data=email_data,
+            token=self.agency_token
+        )
+        
+        if success:
+            ok = response.get('ok')
+            to = response.get('to')
+            
+            if ok and to == "test@example.com":
+                self.log(f"✅ Email endpoint working - ok: {ok}, to: {to}")
+                self.log(f"✅ Email sent successfully (background task)")
+                return True
+            else:
+                self.log(f"❌ Invalid email response: {response}")
+                return False
+        return False
+
+    def test_smoke_other_endpoints(self):
+        """Smoke test other endpoints to ensure no regression"""
+        self.log("\n=== 6) SMOKE TEST OTHER ENDPOINTS ===")
+        
+        # Test agency bookings endpoint
+        success, response = self.run_test(
+            "Smoke Test: GET /api/agency/bookings",
+            "GET",
+            "api/agency/bookings",
+            200,
+            token=self.agency_token
+        )
+        
+        if success:
+            self.log(f"✅ Agency bookings endpoint working ({len(response)} bookings)")
+        
+        # Test agency hotels endpoint
+        success, response = self.run_test(
+            "Smoke Test: GET /api/agency/hotels",
+            "GET",
+            "api/agency/hotels",
+            200,
+            token=self.agency_token
+        )
+        
+        if success:
+            self.log(f"✅ Agency hotels endpoint working ({len(response)} hotels)")
+        
+        # Test settlements endpoint
+        success, response = self.run_test(
+            "Smoke Test: GET /api/agency/settlements",
+            "GET",
+            "api/agency/settlements",
+            200,
+            token=self.agency_token
+        )
+        
+        if success:
+            self.log(f"✅ Agency settlements endpoint working")
+        
+        return True
+
+    def print_summary(self):
+        """Print test summary"""
+        self.log("\n" + "="*60)
+        self.log("VOUCHER HTML CHANGES TEST SUMMARY")
+        self.log("="*60)
+        self.log(f"Total Tests: {self.tests_run}")
+        self.log(f"✅ Passed: {self.tests_passed}")
+        self.log(f"❌ Failed: {self.tests_failed}")
+        self.log(f"Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%")
+        
+        if self.failed_tests:
+            self.log("\n❌ FAILED TESTS:")
+            for i, test in enumerate(self.failed_tests, 1):
+                self.log(f"  {i}. {test}")
+        
+        self.log("="*60)
+
+    def run_voucher_tests(self):
+        """Run all voucher HTML changes tests"""
+        self.log("🚀 Starting Voucher HTML Changes Verification Tests")
+        self.log(f"Base URL: {self.base_url}")
+        
+        # 1) Agency login and booking access
+        if not self.test_agency_login():
+            self.log("❌ Agency login failed - stopping tests")
+            self.print_summary()
+            return 1
+
+        if not self.test_get_booking_for_voucher():
+            self.log("❌ No bookings available for testing - stopping tests")
+            self.print_summary()
+            return 1
+
+        # 2) Test voucher generation
+        if not self.test_voucher_generate():
+            self.log("❌ Voucher generation failed")
+        
+        # 3) Test public HTML view
+        self.test_voucher_public_html()
+        
+        # 4) Test public PDF view
+        self.test_voucher_public_pdf()
+        
+        # 5) Test email functionality
+        self.test_voucher_email_functionality()
+        
+        # 6) Smoke test other endpoints
+        self.test_smoke_other_endpoints()
+
+        # Summary
+        self.print_summary()
+
+        return 0 if self.tests_failed == 0 else 1
+
+
 class AdminOverrideTester:
     def __init__(self, base_url="https://ne-asamadayiz.preview.emergentagent.com"):
         self.base_url = base_url

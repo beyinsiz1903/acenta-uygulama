@@ -73,7 +73,6 @@ def _build_voucher_html(view: dict[str, Any]) -> str:
 <p><strong>Pansiyon / Board:</strong> {board}</p>
 <p><strong>Tutar / Total:</strong> {total_str}</p>
 <p><strong>Durum / Status:</strong> {status_tr} / {status_en}</p>
-<p><small>Bu email FAZ-9 demo voucher bildirimidir.</small></p>
 </body></html>"""
 
 

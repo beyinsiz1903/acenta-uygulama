@@ -133,8 +133,8 @@ export default function AgencyHotelsPage() {
     );
   }
 
-  // Empty state
-  if (!loading && filtered.length === 0) {
+  // Empty state (hiç hotel yok)
+  if (!loading && hotels.length === 0) {
     return (
       <div className="space-y-6">
         <div>
@@ -153,13 +153,15 @@ export default function AgencyHotelsPage() {
               Henüz size tanımlı bir tesis yok
             </p>
             <p className="text-sm text-muted-foreground">
-              Bu ekranda satış yapabileceğiniz oteller listelenir. Lütfen çalıştığınız tesisin Syroce panelinden sizi acenta olarak tanımlamasını isteyin.
+              Bu ekranda satış yapabileceğiniz oteller listelenir. Merkez ekip otel eklediğinde burada göreceksiniz.
             </p>
           </div>
         </div>
       </div>
     );
   }
+
+  const hasFiltered = filtered.length > 0;
 
   // Data table
   return (

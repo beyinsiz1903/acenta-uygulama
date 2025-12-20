@@ -6287,6 +6287,27 @@ class FAZ9xAgencyHotelsTester:
             
         hotel_token = response['access_token']
         
+        # First, clean up all existing allocations for this hotel
+        success, response = self.run_test(
+            "List Existing Allocations",
+            "GET",
+            "api/hotel/allocations",
+            200,
+            token=hotel_token
+        )
+        
+        if success:
+            existing_allocations = response
+            for alloc in existing_allocations:
+                if alloc.get('channel') == 'agency_extranet':
+                    success, response = self.run_test(
+                        f"Delete Existing Allocation {alloc.get('id')}",
+                        "DELETE",
+                        f"api/hotel/allocations/{alloc.get('id')}",
+                        200,
+                        token=hotel_token
+                    )
+        
         # Test scenarios
         scenarios = [
             {"allotment": 10, "expected_status": "Satışa Açık", "description": "allotment=10 → Satışa Açık"},
@@ -6350,11 +6371,11 @@ class FAZ9xAgencyHotelsTester:
                         allocation_available = target_hotel.get('allocation_available')
                         status_label = target_hotel.get('status_label')
                         
-                        # Check allocation_available value (should be >= expected since there might be existing allocations)
-                        if allocation_available >= scenario["allotment"]:
-                            self.log(f"✅ allocation_available correct: {allocation_available} (>= {scenario['allotment']})")
+                        # Check allocation_available value (should match exactly since we cleaned up existing ones)
+                        if allocation_available == scenario["allotment"]:
+                            self.log(f"✅ allocation_available correct: {allocation_available}")
                         else:
-                            self.log(f"❌ allocation_available incorrect: expected >= {scenario['allotment']}, got {allocation_available}")
+                            self.log(f"❌ allocation_available incorrect: expected {scenario['allotment']}, got {allocation_available}")
                             return False
                         
                         # Check status_label

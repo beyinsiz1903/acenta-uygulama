@@ -1981,6 +1981,16 @@ class AdminOverrideTester:
         """2a) Test normal search with stop-sell and allocation rules applied"""
         self.log("\n--- 2a) Normal Search with Rules Applied ---")
         
+        # First ensure override is disabled to get proper baseline
+        success, response = self.run_test(
+            "Disable Override for Baseline Test",
+            "PATCH",
+            f"api/admin/hotels/{self.hotel_id}/force-sales",
+            200,
+            data={"force_sales_open": False},
+            token=self.admin_token
+        )
+        
         search_data = {
             "hotel_id": self.hotel_id,
             "check_in": "2026-03-10",

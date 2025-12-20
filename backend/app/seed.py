@@ -126,6 +126,10 @@ async def ensure_seed_data() -> None:
     await db.vouchers.create_index([("organization_id", 1), ("booking_id", 1)])
     await db.vouchers.create_index([("token", 1)], unique=True)
 
+    # FAZ-9.3: email outbox for booking events
+    await db.email_outbox.create_index([("status", 1), ("next_retry_at", 1)])
+    await db.email_outbox.create_index([("organization_id", 1), ("booking_id", 1)])
+
     await db.booking_financial_entries.create_index(
         [("organization_id", 1), ("hotel_id", 1), ("month", 1), ("settlement_status", 1)]
     )

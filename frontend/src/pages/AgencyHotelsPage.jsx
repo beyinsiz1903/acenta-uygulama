@@ -83,39 +83,6 @@ export default function AgencyHotelsPage() {
     return (
       <div className="space-y-6">
         <div>
-  const locationOptions = useMemo(() => {
-    const uniq = new Set();
-    hotels.forEach((h) => {
-      const loc = (h?.location || "").trim();
-      if (loc) uniq.add(loc);
-    });
-    return ["all", ...Array.from(uniq).sort((a, b) => a.localeCompare(b))];
-  }, [hotels]);
-
-  const filtered = useMemo(() => {
-    const query = search.trim().toLowerCase();
-
-    return hotels.filter((h) => {
-      const statusKey = (h.status_label || "").toLowerCase();
-
-      const matchesQuery =
-        !query ||
-        (h?.hotel_name || "").toLowerCase().includes(query) ||
-        (h?.location || "").toLowerCase().includes(query);
-
-      const matchesLocation =
-        locationFilter === "all" || (h?.location || "") === locationFilter;
-
-      const matchesStatus =
-        statusFilter === "all" ||
-        (statusFilter === "open" && statusKey === "satışa açık") ||
-        (statusFilter === "restricted" && statusKey === "kısıtlı") ||
-        (statusFilter === "closed" && statusKey === "satışa kapalı");
-
-      return matchesQuery && matchesLocation && matchesStatus;
-    });
-  }, [hotels, search, locationFilter, statusFilter]);
-
           <h1 className="text-2xl font-bold text-foreground">Otellerim</h1>
           <p className="text-sm text-muted-foreground mt-1">
             Acentanıza bağlı oteller

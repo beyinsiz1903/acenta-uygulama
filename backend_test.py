@@ -4740,7 +4740,7 @@ class FAZ92VoucherTokenTester:
         success, response = self.run_test(
             "Get Public PDF with Invalid Token",
             "GET",
-            "api/voucher/public/invalid_token_12345.pdf",
+            "api/voucher/public/invalid_token_12345?format=pdf",
             404,
             headers_override={}
         )

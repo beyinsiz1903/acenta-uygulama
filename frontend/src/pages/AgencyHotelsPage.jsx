@@ -7,6 +7,15 @@ import { Badge } from "../components/ui/badge";
 import { Card, CardContent } from "../components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 
+
+const CM_META = {
+  connected: { label: "CM: Connected", variant: "default" },
+  configured: { label: "CM: Configured", variant: "secondary" },
+  error: { label: "CM: Error", variant: "destructive" },
+  disabled: { label: "CM: Disabled", variant: "outline" },
+  not_configured: { label: "CM: Not configured", variant: "outline" },
+};
+
 export default function AgencyHotelsPage() {
   const navigate = useNavigate();
   const [hotels, setHotels] = useState([]);

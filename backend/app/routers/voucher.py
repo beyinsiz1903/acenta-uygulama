@@ -62,6 +62,16 @@ def _build_voucher_html(view: dict[str, Any]) -> str:
 
     return f"""<html><body>
 <h1>Rezervasyon Voucher / Booking Voucher</h1>
+<p><strong>Otel / Hotel:</strong> {hotel}</p>
+<p><strong>Misafir / Guest:</strong> {guest}</p>
+<p><strong>Check-in:</strong> {check_in}</p>
+<p><strong>Check-out:</strong> {check_out}</p>
+<p><strong>Oda / Room:</strong> {room}</p>
+<p><strong>Pansiyon / Board:</strong> {board}</p>
+<p><strong>Tutar / Total:</strong> {total_str}</p>
+<p><strong>Durum / Status:</strong> {status_tr} / {status_en}</p>
+<p><small>Bu email FAZ-9 demo voucher bildirimidir.</small></p>
+</body></html>"""
 
 
 async def _get_or_create_voucher_for_booking(db, organization_id: str, booking_id: str) -> dict[str, Any]:
@@ -101,17 +111,6 @@ async def _get_or_create_voucher_for_booking(db, organization_id: str, booking_i
 
     await db.vouchers.insert_one(doc)
     return doc
-
-<p><strong>Otel / Hotel:</strong> {hotel}</p>
-<p><strong>Misafir / Guest:</strong> {guest}</p>
-<p><strong>Check-in:</strong> {check_in}</p>
-<p><strong>Check-out:</strong> {check_out}</p>
-<p><strong>Oda / Room:</strong> {room}</p>
-<p><strong>Pansiyon / Board:</strong> {board}</p>
-<p><strong>Tutar / Total:</strong> {total_str}</p>
-<p><strong>Durum / Status:</strong> {status_tr} / {status_en}</p>
-<p><small>Bu email FAZ-9 demo voucher bildirimidir.</small></p>
-</body></html>"""
 
 
 @router.post(

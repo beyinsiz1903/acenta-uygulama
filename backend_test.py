@@ -1723,7 +1723,7 @@ class FAZ93AdminEmailOutboxTester:
             success, response = self.run_test(
                 "Verify job was updated after retry",
                 "GET",
-                f"api/admin/email-outbox?q={job_id}",
+                f"api/admin/email-outbox?status=pending&limit=10",
                 200,
                 token=self.admin_token
             )
@@ -1744,7 +1744,7 @@ class FAZ93AdminEmailOutboxTester:
                         self.log(f"❌ Job not properly updated: status={updated_job.get('status')}, last_error={updated_job.get('last_error')}")
                         return False
                 else:
-                    self.log("❌ Updated job not found")
+                    self.log("❌ Updated job not found in pending jobs list")
                     return False
             else:
                 self.log("❌ Failed to verify job update")

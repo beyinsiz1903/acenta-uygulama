@@ -317,6 +317,13 @@ export default function HotelBookingsPage() {
           </TableBody>
         </Table>
       </div>
+
+      <BookingDetailDrawer
+        bookingId={selectedId}
+        mode="hotel"
+        open={drawerOpen}
+        onOpenChange={setDrawerOpen}
+      />
     </div>
   );
 }

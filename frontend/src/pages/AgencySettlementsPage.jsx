@@ -12,6 +12,32 @@ import {
 } from "../components/ui/table";
 import { Button } from "../components/ui/button";
 
+const OPEN_SET = new Set(["open", "unpaid"]);
+const SETTLED_SET = new Set(["settled", "paid", "closed"]);
+
+function normalizeStatus(v) {
+  return String(v || "").trim().toLowerCase();
+}
+
+function summarizeEntriesByCurrency(entries, amountKey) {
+  const byCur = new Map(); // cur -> { total, open, settled, other }
+  for (const e of entries || []) {
+    const cur = e.currency || "TRY";
+    const existing = byCur.get(cur) || { total: 0, open: 0, settled: 0, other: 0 };
+    const amount = Number(e?.[amountKey] || 0);
+
+    existing.total += amount;
+    const st = normalizeStatus(e.settlement_status);
+    if (OPEN_SET.has(st)) existing.open += amount;
+    else if (SETTLED_SET.has(st)) existing.settled += amount;
+    else existing.other += amount;
+
+    byCur.set(cur, existing);
+  }
+  return byCur;
+}
+
+
 function currentMonth() {
   const d = new Date();
   const y = d.getFullYear();
@@ -53,34 +79,35 @@ export default function AgencySettlementsPage() {
 
   const summary = useMemo(() => {
     const entries = data?.entries || [];
+    const byCur = summarizeEntriesByCurrency(entries, "commission_amount");
+    const currencies = Array.from(byCur.keys());
+
     if (!entries.length) {
       return {
-        currency: "TRY",
-        totalCommission: 0,
-        openCommission: 0,
-        settledCommission: 0,
+        isMulti: false,
+        currencies: [],
+        byCur,
+        single: { currency: "TRY", total: 0, open: 0, settled: 0, other: 0 },
       };
     }
 
-    let currency = entries[0].currency || "TRY";
-    let totalCommission = 0;
-    let openCommission = 0;
-    let settledCommission = 0;
-
-    for (const e of entries) {
-      if (e.currency) {
-        currency = e.currency;
-      }
-      const c = Number(e.commission_amount || 0);
-      totalCommission += c;
-      if (e.settlement_status === "open") {
-        openCommission += c;
-      } else if (e.settlement_status === "settled") {
-        settledCommission += c;
-      }
+    if (currencies.length === 1) {
+      const cur = currencies[0];
+      const row = byCur.get(cur) || { total: 0, open: 0, settled: 0, other: 0 };
+      return {
+        isMulti: false,
+        currencies,
+        byCur,
+        single: { currency: cur, ...row },
+      };
     }
 
-    return { currency, totalCommission, openCommission, settledCommission };
+    return {
+      isMulti: true,
+      currencies,
+      byCur,
+      single: null,
+    };
   }, [data]);
 
   async function downloadCsv() {

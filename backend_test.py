@@ -5927,6 +5927,560 @@ class FAZ92VoucherTokenTester:
         return 0 if self.tests_failed == 0 else 1
 
 
+class FAZ9xAgencyHotelsTester:
+    def __init__(self, base_url="https://voucher-share.preview.emergentagent.com"):
+        self.base_url = base_url
+        self.agency_token = None
+        self.tests_run = 0
+        self.tests_passed = 0
+        self.tests_failed = 0
+        self.failed_tests = []
+        
+        # Store IDs for testing
+        self.hotel_id = None
+        self.link_id = None
+        self.stop_sell_id = None
+        self.allocation_id = None
+
+    def log(self, msg):
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}")
+
+    def run_test(self, name, method, endpoint, expected_status, data=None, headers_override=None, token=None):
+        """Run a single API test with specific token"""
+        url = f"{self.base_url}/{endpoint}"
+        headers = headers_override or {'Content-Type': 'application/json'}
+        
+        # Use specific token if provided
+        if token:
+            headers['Authorization'] = f'Bearer {token}'
+        elif self.agency_token:
+            headers['Authorization'] = f'Bearer {self.agency_token}'
+
+        self.tests_run += 1
+        self.log(f"🔍 Test #{self.tests_run}: {name}")
+        
+        try:
+            if method == 'GET':
+                response = requests.get(url, headers=headers, timeout=10)
+            elif method == 'POST':
+                response = requests.post(url, json=data, headers=headers, timeout=10)
+            elif method == 'PUT':
+                response = requests.put(url, json=data, headers=headers, timeout=10)
+            elif method == 'PATCH':
+                response = requests.patch(url, json=data, headers=headers, timeout=10)
+            elif method == 'DELETE':
+                response = requests.delete(url, headers=headers, timeout=10)
+            else:
+                raise ValueError(f"Unsupported method: {method}")
+
+            success = response.status_code == expected_status
+            if success:
+                self.tests_passed += 1
+                self.log(f"✅ PASSED - Status: {response.status_code}")
+                try:
+                    return True, response.json() if response.content else {}
+                except:
+                    return True, {}
+            else:
+                self.tests_failed += 1
+                self.failed_tests.append(f"{name} - Expected {expected_status}, got {response.status_code}")
+                self.log(f"❌ FAILED - Expected {expected_status}, got {response.status_code}")
+                try:
+                    self.log(f"   Response: {response.text[:200]}")
+                except:
+                    pass
+                return False, {}
+
+        except Exception as e:
+            self.tests_failed += 1
+            self.failed_tests.append(f"{name} - Error: {str(e)}")
+            self.log(f"❌ FAILED - Error: {str(e)}")
+            return False, {}
+
+    def test_agency_login(self):
+        """1) Test agency login"""
+        self.log("\n=== 1) TEMEL RESPONSE ŞEKLİ ===")
+        success, response = self.run_test(
+            "Agency Login (agency1@demo.test)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "agency1@demo.test", "password": "agency123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.agency_token = response['access_token']
+            user = response.get('user', {})
+            roles = user.get('roles', [])
+            agency_id = user.get('agency_id')
+            
+            if 'agency_admin' in roles or 'agency_agent' in roles:
+                self.log(f"✅ User has agency role: {roles}")
+            else:
+                self.log(f"❌ Missing agency role: {roles}")
+                return False
+                
+            if agency_id:
+                self.log(f"✅ Agency ID populated: {agency_id}")
+            else:
+                self.log(f"❌ Agency ID missing")
+                return False
+                
+            return True
+        return False
+
+    def test_hotels_endpoint_structure(self):
+        """1) Test /api/agency/hotels endpoint structure"""
+        success, response = self.run_test(
+            "GET /api/agency/hotels - Response Structure",
+            "GET",
+            "api/agency/hotels",
+            200
+        )
+        
+        if not success:
+            return False
+            
+        # Check if response has items array (not flat array)
+        if not isinstance(response, dict) or 'items' not in response:
+            self.log(f"❌ Response should be {{items: [...]}} format, got: {type(response)}")
+            self.failed_tests.append("Response format - Expected {items: [...]}, got flat array or other format")
+            return False
+        
+        items = response.get('items', [])
+        if not isinstance(items, list):
+            self.log(f"❌ items should be array, got: {type(items)}")
+            return False
+            
+        self.log(f"✅ Response format correct: {{items: [...]}}, found {len(items)} hotels")
+        
+        if len(items) == 0:
+            self.log("⚠️  No hotels found for schema validation")
+            return True
+            
+        # Validate first item schema
+        first_item = items[0]
+        required_fields = [
+            'hotel_id', 'hotel_name', 'location', 'channel', 'source', 
+            'sales_mode', 'is_active', 'stop_sell_active', 
+            'allocation_available', 'status_label'
+        ]
+        
+        missing_fields = []
+        for field in required_fields:
+            if field not in first_item:
+                missing_fields.append(field)
+        
+        if missing_fields:
+            self.log(f"❌ Missing required fields in first item: {missing_fields}")
+            self.failed_tests.append(f"Schema validation - Missing fields: {missing_fields}")
+            return False
+        
+        # Store hotel_id for later tests
+        self.hotel_id = first_item.get('hotel_id')
+        
+        self.log(f"✅ Schema validation passed - all required fields present")
+        self.log(f"   Sample item: hotel_id={first_item.get('hotel_id')}, status_label='{first_item.get('status_label')}'")
+        
+        return True
+
+    def test_is_active_and_stop_sell_impact(self):
+        """2) Test is_active & stop_sell impact on status_label"""
+        self.log("\n=== 2) IS_ACTIVE & STOP_SELL ETKİSİ ===")
+        
+        if not self.hotel_id:
+            self.log("⚠️  No hotel_id available for testing")
+            return False
+        
+        # First, get admin token to manipulate data
+        success, response = self.run_test(
+            "Admin Login for Data Manipulation",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "admin@acenta.test", "password": "admin123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        
+        if not success or 'access_token' not in response:
+            self.log("❌ Admin login failed")
+            return False
+            
+        admin_token = response['access_token']
+        
+        # Get current agency-hotel links
+        success, response = self.run_test(
+            "Get Agency-Hotel Links",
+            "GET",
+            "api/admin/agency-hotel-links",
+            200,
+            token=admin_token
+        )
+        
+        if not success:
+            return False
+            
+        links = response
+        target_link = None
+        for link in links:
+            if link.get('hotel_id') == self.hotel_id:
+                target_link = link
+                break
+        
+        if not target_link:
+            self.log(f"❌ No agency-hotel link found for hotel_id: {self.hotel_id}")
+            return False
+            
+        self.link_id = target_link.get('id')
+        original_active = target_link.get('active', True)
+        
+        # Test 2a: Set link active=false
+        self.log("\n--- Test 2a: Set agency_hotel_link active=false ---")
+        success, response = self.run_test(
+            "Set Agency-Hotel Link active=false",
+            "PATCH",
+            f"api/admin/agency-hotel-links/{self.link_id}",
+            200,
+            data={"active": False},
+            token=admin_token
+        )
+        
+        if success:
+            # Check hotels endpoint
+            success, response = self.run_test(
+                "GET /api/agency/hotels after link deactivation",
+                "GET",
+                "api/agency/hotels",
+                200
+            )
+            
+            if success:
+                items = response.get('items', [])
+                target_hotel = None
+                for item in items:
+                    if item.get('hotel_id') == self.hotel_id:
+                        target_hotel = item
+                        break
+                
+                if target_hotel:
+                    is_active = target_hotel.get('is_active')
+                    status_label = target_hotel.get('status_label')
+                    
+                    if not is_active and status_label == "Satışa Kapalı":
+                        self.log(f"✅ Link deactivation working: is_active=False, status_label='Satışa Kapalı'")
+                    else:
+                        self.log(f"❌ Link deactivation not working: is_active={is_active}, status_label='{status_label}'")
+                        return False
+                else:
+                    self.log(f"⚠️  Hotel not found in response after link deactivation (expected behavior)")
+        
+        # Restore original state
+        success, response = self.run_test(
+            "Restore Agency-Hotel Link active state",
+            "PATCH",
+            f"api/admin/agency-hotel-links/{self.link_id}",
+            200,
+            data={"active": original_active},
+            token=admin_token
+        )
+        
+        # Test 2b: Add stop-sell rule
+        self.log("\n--- Test 2b: Add active stop-sell rule ---")
+        
+        # First login as hotel admin to create stop-sell
+        success, response = self.run_test(
+            "Hotel Admin Login for Stop-sell",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "hoteladmin@acenta.test", "password": "admin123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        
+        if success and 'access_token' in response:
+            hotel_token = response['access_token']
+            
+            # Create stop-sell rule
+            stop_sell_data = {
+                "room_type": "standard",
+                "start_date": "2026-03-01",
+                "end_date": "2026-03-31",
+                "reason": "test stop-sell",
+                "is_active": True
+            }
+            
+            success, response = self.run_test(
+                "Create Stop-sell Rule",
+                "POST",
+                "api/hotel/stop-sell",
+                200,
+                data=stop_sell_data,
+                token=hotel_token
+            )
+            
+            if success:
+                self.stop_sell_id = response.get('id')
+                self.log(f"✅ Stop-sell rule created: {self.stop_sell_id}")
+                
+                # Check hotels endpoint
+                success, response = self.run_test(
+                    "GET /api/agency/hotels after stop-sell activation",
+                    "GET",
+                    "api/agency/hotels",
+                    200
+                )
+                
+                if success:
+                    items = response.get('items', [])
+                    target_hotel = None
+                    for item in items:
+                        if item.get('hotel_id') == self.hotel_id:
+                            target_hotel = item
+                            break
+                    
+                    if target_hotel:
+                        stop_sell_active = target_hotel.get('stop_sell_active')
+                        status_label = target_hotel.get('status_label')
+                        
+                        if stop_sell_active and status_label == "Satışa Kapalı":
+                            self.log(f"✅ Stop-sell working: stop_sell_active=True, status_label='Satışa Kapalı'")
+                        else:
+                            self.log(f"❌ Stop-sell not working: stop_sell_active={stop_sell_active}, status_label='{status_label}'")
+                            return False
+                    else:
+                        self.log(f"❌ Hotel not found after stop-sell activation")
+                        return False
+                
+                # Clean up stop-sell rule
+                if self.stop_sell_id:
+                    success, response = self.run_test(
+                        "Delete Stop-sell Rule",
+                        "DELETE",
+                        f"api/hotel/stop-sell/{self.stop_sell_id}",
+                        200,
+                        token=hotel_token
+                    )
+        
+        return True
+
+    def test_allocation_and_status_label(self):
+        """3) Test allocation_available & status_label scenarios"""
+        self.log("\n=== 3) ALLOCATION_AVAILABLE & STATUS_LABEL ===")
+        
+        if not self.hotel_id:
+            self.log("⚠️  No hotel_id available for testing")
+            return False
+        
+        # Get hotel admin token
+        success, response = self.run_test(
+            "Hotel Admin Login for Allocation Tests",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "hoteladmin@acenta.test", "password": "admin123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        
+        if not success or 'access_token' not in response:
+            self.log("❌ Hotel admin login failed")
+            return False
+            
+        hotel_token = response['access_token']
+        
+        # Test scenarios
+        scenarios = [
+            {"allotment": 10, "expected_status": "Satışa Açık", "description": "allotment=10 → Satışa Açık"},
+            {"allotment": 3, "expected_status": "Kısıtlı", "description": "allotment=3 → Kısıtlı"},
+            {"allotment": 0, "expected_status": "Satışa Kapalı", "description": "allotment=0 → Satışa Kapalı"}
+        ]
+        
+        for i, scenario in enumerate(scenarios, 1):
+            self.log(f"\n--- Test 3{chr(96+i)}: {scenario['description']} ---")
+            
+            # Clean up any existing allocation first
+            if hasattr(self, 'allocation_id') and self.allocation_id:
+                success, response = self.run_test(
+                    "Delete Previous Allocation",
+                    "DELETE",
+                    f"api/hotel/allocations/{self.allocation_id}",
+                    200,
+                    token=hotel_token
+                )
+            
+            # Create allocation with specific allotment
+            allocation_data = {
+                "room_type": "standard",
+                "start_date": "2026-03-01",
+                "end_date": "2026-03-31",
+                "allotment": scenario["allotment"],
+                "is_active": True,
+                "channel": "agency_extranet"
+            }
+            
+            success, response = self.run_test(
+                f"Create Allocation (allotment={scenario['allotment']})",
+                "POST",
+                "api/hotel/allocations",
+                200,
+                data=allocation_data,
+                token=hotel_token
+            )
+            
+            if success:
+                self.allocation_id = response.get('id')
+                self.log(f"✅ Allocation created: {self.allocation_id}")
+                
+                # Check hotels endpoint
+                success, response = self.run_test(
+                    f"GET /api/agency/hotels with allotment={scenario['allotment']}",
+                    "GET",
+                    "api/agency/hotels",
+                    200
+                )
+                
+                if success:
+                    items = response.get('items', [])
+                    target_hotel = None
+                    for item in items:
+                        if item.get('hotel_id') == self.hotel_id:
+                            target_hotel = item
+                            break
+                    
+                    if target_hotel:
+                        allocation_available = target_hotel.get('allocation_available')
+                        status_label = target_hotel.get('status_label')
+                        
+                        # Check allocation_available value
+                        if allocation_available == scenario["allotment"]:
+                            self.log(f"✅ allocation_available correct: {allocation_available}")
+                        else:
+                            self.log(f"❌ allocation_available incorrect: expected {scenario['allotment']}, got {allocation_available}")
+                            return False
+                        
+                        # Check status_label
+                        if status_label == scenario["expected_status"]:
+                            self.log(f"✅ status_label correct: '{status_label}'")
+                        else:
+                            self.log(f"❌ status_label incorrect: expected '{scenario['expected_status']}', got '{status_label}'")
+                            return False
+                    else:
+                        self.log(f"❌ Hotel not found in response")
+                        return False
+                else:
+                    return False
+            else:
+                return False
+        
+        # Clean up final allocation
+        if hasattr(self, 'allocation_id') and self.allocation_id:
+            success, response = self.run_test(
+                "Delete Final Allocation",
+                "DELETE",
+                f"api/hotel/allocations/{self.allocation_id}",
+                200,
+                token=hotel_token
+            )
+        
+        return True
+
+    def test_multiple_hotels_fields(self):
+        """4) Test multiple hotels have all required fields"""
+        self.log("\n=== 4) ÇOKLU OTEL ALAN KONTROLÜ ===")
+        
+        success, response = self.run_test(
+            "GET /api/agency/hotels - Multiple Hotels Field Check",
+            "GET",
+            "api/agency/hotels",
+            200
+        )
+        
+        if not success:
+            return False
+            
+        items = response.get('items', [])
+        
+        if len(items) == 0:
+            self.log("⚠️  No hotels found for multiple hotel test")
+            return True
+        
+        required_fields = [
+            'hotel_id', 'hotel_name', 'location', 'channel', 'source', 
+            'sales_mode', 'is_active', 'stop_sell_active', 
+            'allocation_available', 'status_label'
+        ]
+        
+        all_valid = True
+        for i, item in enumerate(items):
+            missing_fields = []
+            undefined_fields = []
+            
+            for field in required_fields:
+                if field not in item:
+                    missing_fields.append(field)
+                elif item[field] is None and field not in ['allocation_available']:  # allocation_available can be None
+                    undefined_fields.append(field)
+            
+            if missing_fields or undefined_fields:
+                self.log(f"❌ Hotel {i+1} ({item.get('hotel_name', 'Unknown')}): missing={missing_fields}, undefined={undefined_fields}")
+                all_valid = False
+            else:
+                self.log(f"✅ Hotel {i+1} ({item.get('hotel_name', 'Unknown')}): all fields present")
+                self.log(f"   status_label='{item.get('status_label')}', is_active={item.get('is_active')}, allocation_available={item.get('allocation_available')}")
+        
+        if all_valid:
+            self.log(f"✅ All {len(items)} hotels have complete field structure")
+            return True
+        else:
+            self.failed_tests.append("Multiple hotels field validation - Some hotels missing required fields")
+            return False
+
+    def print_summary(self):
+        """Print test summary"""
+        self.log("\n" + "="*60)
+        self.log("FAZ-9.x /api/agency/hotels STATUS_LABEL TEST SUMMARY")
+        self.log("="*60)
+        self.log(f"Total Tests: {self.tests_run}")
+        self.log(f"✅ Passed: {self.tests_passed}")
+        self.log(f"❌ Failed: {self.tests_failed}")
+        self.log(f"Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%")
+        
+        if self.failed_tests:
+            self.log("\n❌ FAILED TESTS:")
+            for i, test in enumerate(self.failed_tests, 1):
+                self.log(f"  {i}. {test}")
+        
+        self.log("="*60)
+
+    def run_faz9x_tests(self):
+        """Run all FAZ-9.x tests in sequence"""
+        self.log("🚀 Starting FAZ-9.x /api/agency/hotels Status Label Tests")
+        self.log(f"Base URL: {self.base_url}")
+        
+        # 1) Basic response structure and login
+        if not self.test_agency_login():
+            self.log("❌ Agency login failed - stopping tests")
+            self.print_summary()
+            return 1
+
+        if not self.test_hotels_endpoint_structure():
+            self.log("❌ Hotels endpoint structure test failed")
+            # Continue with other tests even if this fails
+        
+        # 2) is_active & stop_sell impact
+        self.test_is_active_and_stop_sell_impact()
+        
+        # 3) allocation_available & status_label scenarios
+        self.test_allocation_and_status_label()
+        
+        # 4) Multiple hotels field validation
+        self.test_multiple_hotels_fields()
+
+        # Summary
+        self.print_summary()
+
+        return 0 if self.tests_failed == 0 else 1
+
+
 def main():
     if len(sys.argv) > 1:
         if sys.argv[1] == "faz5":

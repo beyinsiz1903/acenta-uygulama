@@ -265,7 +265,8 @@ async def retry_email_outbox_job(job_id: str, user=Depends(get_current_user)):
     """Force retry of an email outbox job (set next_retry_at to now)."""
     db = await get_db()
 
-    job = await db.email_outbox.find_one({"_id": job_id, "organization_id": user["organization_id"]})
+    job_oid = _oid_or_404(job_id)
+    job = await db.email_outbox.find_one({"_id": job_oid, "organization_id": user["organization_id"]})
     if not job:
         raise HTTPException(status_code=404, detail="EMAIL_JOB_NOT_FOUND")
 
@@ -273,7 +274,7 @@ async def retry_email_outbox_job(job_id: str, user=Depends(get_current_user)):
         raise HTTPException(status_code=400, detail="EMAIL_ALREADY_SENT")
 
     await db.email_outbox.update_one(
-        {"_id": job_id},
+        {"_id": job_oid},
         {"$set": {"status": "pending", "next_retry_at": now_utc(), "last_error": None}},
     )
 

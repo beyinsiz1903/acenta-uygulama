@@ -28,6 +28,7 @@ from app.routers.agency_booking import router as agency_booking_router
 from app.routers.reports import router as reports_router
 from app.routers.settings import router as settings_router
 from app.routers.hotel import router as hotel_router
+from app.routers.hotel_integrations import router as hotel_integrations_router
 from app.routers.settlements import hotel_router as hotel_settlements_router
 from app.routers.settlements import agency_router as agency_settlements_router
 from app.routers.bookings import router as bookings_router

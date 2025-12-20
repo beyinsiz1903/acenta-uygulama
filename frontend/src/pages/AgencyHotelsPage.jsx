@@ -125,13 +125,6 @@ export default function AgencyHotelsPage() {
     );
   }
 
-  const filtered = hotels.filter((h) => {
-    const nameMatch = !search || (h.hotel_name || "").toLowerCase().includes(search.toLowerCase());
-    const locMatch = !locationFilter || (h.location || "").toLowerCase().includes(locationFilter.toLowerCase());
-    const statusMatch = !statusFilter || (h.status_label || "").toLowerCase().includes(statusFilter.toLowerCase());
-    return nameMatch && locMatch && statusMatch;
-  });
-
   // Empty state
   if (!loading && filtered.length === 0) {
     return (

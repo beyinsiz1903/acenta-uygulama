@@ -13,8 +13,8 @@ export default function AgencyHotelsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
-  const [locationFilter, setLocationFilter] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
+  const [locationFilter, setLocationFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
 
   const user = getUser();
 

@@ -36,6 +36,12 @@ export default function AgencyHotelSearchPage() {
   const [error, setError] = useState("");
   const [searchLoading, setSearchLoading] = useState(false);
 
+  // Search & selection state
+  const [searchResult, setSearchResult] = useState(null);
+  const [searchError, setSearchError] = useState("");
+  const [selected, setSelected] = useState(null); // { room_type_id, rate_plan_id }
+  const [lastSearchKey, setLastSearchKey] = useState(null);
+
   const [formData, setFormData] = useState({
     check_in: "",
     check_out: "",

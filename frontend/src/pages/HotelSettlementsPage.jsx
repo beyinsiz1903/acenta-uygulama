@@ -189,6 +189,46 @@ export default function HotelSettlementsPage() {
 
         <div className="mt-3">
           <Button onClick={load} disabled={loading}>
+      {rows.length > 0 && (
+        <div className="rounded-2xl border bg-card shadow-sm p-4 space-y-2">
+          <div className="text-sm font-medium">Acenta bazlı net dağılım (bu ay)</div>
+          <div className="text-xs text-muted-foreground">
+            Çubuk uzunluğu, seçili ay için her acentanın net tutarına (otelin alacağı) göre orantılıdır.
+          </div>
+          <div className="mt-2 space-y-2">
+            {(() => {
+              const maxNet = rows.reduce(
+                (max, r) => Math.max(max, Number(r.net_total || 0)),
+                0
+              );
+              return rows.map((r) => {
+                const net = Number(r.net_total || 0);
+                const ratio = maxNet > 0 ? net / maxNet : 0;
+                const width = `${10 + ratio * 90}%`;
+                return (
+                  <div key={r.agency_id} className="space-y-1">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-medium truncate mr-2">
+                        {r.agency_name || "-"}
+                      </span>
+                      <span className="text-muted-foreground">
+                        {formatMoney(net, r.currency || "TRY")}
+                      </span>
+                    </div>
+                    <div className="h-2 rounded-full bg-muted overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-primary/70"
+                        style={{ width }}
+                      />
+                    </div>
+                  </div>
+                );
+              });
+            })()}
+          </div>
+        </div>
+      )}
+
             Filtrele
           </Button>
         </div>

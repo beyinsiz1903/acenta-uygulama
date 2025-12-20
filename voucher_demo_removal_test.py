@@ -533,7 +533,7 @@ class VoucherDemoRemovalTester:
         endpoints_to_test = [
             ("GET /api/agency/bookings", "GET", "api/agency/bookings", 200),
             ("GET /api/agency/hotels", "GET", "api/agency/hotels", 200),
-            ("GET /api/agency/settlements", "GET", "api/agency/settlements", 200),
+            ("GET /api/agency/settlements?month=2026-03", "GET", "api/agency/settlements?month=2026-03", 200),
             ("GET /api/health", "GET", "api/health", 200),
         ]
         

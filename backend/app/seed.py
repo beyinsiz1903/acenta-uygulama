@@ -566,8 +566,6 @@ async def ensure_seed_data() -> None:
 
         logger.info("Created demo channel allocation")
 
-        logger.info(f"Created {len(plans_to_create)} rate plans and {len(periods_to_create)} rate periods")
-
 
     if not dg:
         await db.discount_groups.insert_one(

@@ -121,6 +121,11 @@ async def ensure_seed_data() -> None:
     await db.search_cache.create_index([("expires_at", 1)], expireAfterSeconds=0)
     await db.search_cache.create_index([("organization_id", 1), ("agency_id", 1), ("created_at", -1)])
 
+    # FAZ-9.2: voucher tokens (public share links)
+    await db.vouchers.create_index([("expires_at", 1)], expireAfterSeconds=0)
+    await db.vouchers.create_index([("organization_id", 1), ("booking_id", 1)])
+    await db.vouchers.create_index([("token", 1)], unique=True)
+
     await db.booking_financial_entries.create_index(
         [("organization_id", 1), ("hotel_id", 1), ("month", 1), ("settlement_status", 1)]
     )

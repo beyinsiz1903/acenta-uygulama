@@ -7,6 +7,7 @@ export const MENU_CONFIG = {
         { label: "Oteller", path: "/app/admin/hotels" },
         { label: "Link Yönetimi", path: "/app/admin/links" },
         { label: "Audit Logs", path: "/app/admin/audit" },
+        { label: "Email Aktiviteleri", path: "/app/admin/email-logs" },
       ],
     },
   ],

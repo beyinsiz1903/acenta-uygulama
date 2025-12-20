@@ -107,6 +107,19 @@ export default function HotelIntegrationsPage() {
     }
   }
 
+  // Hotel staff bu ekrana erişemesin (sadece hotel_admin için)
+  if (user?.roles?.includes("hotel_staff") && !user?.roles?.includes("hotel_admin")) {
+    return (
+      <div className="space-y-6">
+        <Card className="rounded-2xl border bg-card shadow-sm">
+          <CardContent className="p-8 text-sm text-muted-foreground">
+            Bu sayfa teknik entegrasyon ayarları içindir ve sadece otel yöneticileri tarafından kullanılabilir.
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -123,10 +136,10 @@ export default function HotelIntegrationsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Entegrasyonlar</h1>
+        <h1 className="text-2xl font-bold text-foreground">Teknik Entegrasyon (Ops)</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Kanal yöneticisi bağlantınızı buradan yönetin. Credential bilgileri güvenli bir şekilde
-          saklanır ve acenta tarafında gösterilmez.
+          Bu ekran teknik ekip ve Syroce operasyonları içindir. Şu anda kanal yöneticisi entegrasyonunuzun temel
+          durumu gösterilir; acenta ve son kullanıcılar bu bilgilere erişemez.
         </p>
       </div>
 

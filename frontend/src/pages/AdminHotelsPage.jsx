@@ -266,8 +266,10 @@ export default function AdminHotelsPage() {
                 <TableHead className="font-semibold">Şehir</TableHead>
                 <TableHead className="font-semibold">Ülke</TableHead>
                 <TableHead className="font-semibold">Durum</TableHead>
+                <TableHead className="font-semibold text-xs">Override (Satış)</TableHead>
                 <TableHead className="font-semibold">Oluşturma</TableHead>
                 <TableHead className="font-semibold text-xs">Oluşturan</TableHead>
+                <TableHead className="font-semibold text-xs text-right">Aksiyon</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

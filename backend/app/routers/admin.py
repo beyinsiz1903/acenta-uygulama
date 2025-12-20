@@ -94,6 +94,50 @@ async def list_hotels(active: Optional[bool] = None, user=Depends(get_current_us
     if active is not None:
         q["active"] = active
     docs = await db.hotels.find(q).sort("created_at", -1).to_list(500)
+
+
+@router.patch("/hotels/{hotel_id}/force-sales", dependencies=[Depends(require_roles(["super_admin"]))])
+async def patch_hotel_force_sales(
+    hotel_id: str,
+    payload: HotelForceSalesOverrideIn,
+    request: Request,
+    user=Depends(get_current_user),
+):
+    """Toggle force_sales_open flag on a hotel.
+
+    When force_sales_open is True, availability computation bypasses stop-sell and
+    channel allocation rules and uses base inventory.
+    """
+    db = await get_db()
+    existing = await db.hotels.find_one(
+        {"organization_id": user["organization_id"], "_id": hotel_id}
+    )
+    if not existing:
+        raise HTTPException(status_code=404, detail="Otel bulunamadı")
+
+    update = {
+        "force_sales_open": payload.force_sales_open,
+        "updated_at": now_utc(),
+        "updated_by": user.get("email"),
+    }
+
+    await db.hotels.update_one({"_id": hotel_id}, {"$set": update})
+    saved = await db.hotels.find_one({"_id": hotel_id})
+
+    await write_audit_log(
+        db,
+        organization_id=user["organization_id"],
+        actor={"actor_type": "user", "email": user.get("email"), "roles": user.get("roles")},
+        request=request,
+        action="hotel.force_sales_override",
+        target_type="hotel",
+        target_id=hotel_id,
+        before=existing,
+        after=saved,
+    )
+
+    return serialize_doc(saved)
+
     return [serialize_doc(d) for d in docs]
 
 

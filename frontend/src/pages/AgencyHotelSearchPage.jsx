@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { CalendarDays, Users, Loader2, AlertCircle, Search } from "lucide-react";
 
@@ -30,6 +30,17 @@ export default function AgencyHotelSearchPage() {
     adults: 2,
     children: 0,
   });
+  const nights = useMemo(() => {
+    const { check_in, check_out } = formData;
+    if (!check_in || !check_out) return null;
+    const start = new Date(check_in);
+    const end = new Date(check_out);
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return null;
+    const diffMs = end.getTime() - start.getTime();
+    const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+    return diffDays > 0 ? diffDays : null;
+  }, [formData.check_in, formData.check_out]);
+
   const [formError, setFormError] = useState("");
 
   useEffect(() => {
@@ -186,6 +197,9 @@ export default function AgencyHotelSearchPage() {
             <div className="text-sm text-muted-foreground">
               {hotel.location || "Lokasyon bilgisi yok"}
             </div>
+            <div className="text-xs text-muted-foreground">
+              Entegrasyon: {hotel.source === "pms" ? "PMS" : hotel.source === "local" ? "Local" : "-"}. Kanal bağlantıları otel panelinden yönetilir.
+            </div>
           </div>
 
           <form onSubmit={handleSearch} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
@@ -227,6 +241,10 @@ export default function AgencyHotelSearchPage() {
                 value={formData.adults}
                 onChange={(e) => setFormData({ ...formData, adults: Number(e.target.value || 0) })}
               />
+            </div>
+
+            <div className="md:col-span-4 text-xs text-muted-foreground">
+              Gece sayısı: <span className="font-medium">{nights ?? "-"}</span>
             </div>
 
             <div className="space-y-1">

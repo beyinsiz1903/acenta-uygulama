@@ -165,56 +165,54 @@ export default function AgencyHotelsPage() {
         </div>
       </div>
 
-      <div className="rounded-2xl border bg-card shadow-sm p-4 mb-2 flex flex-wrap items-center gap-3">
-        <div className="flex-1 min-w-[200px]">
-          <Input
-            placeholder="🔍 Otel ara..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          <select
-            className="h-10 rounded-md border bg-background px-3 text-sm"
-            value={locationFilter}
-            onChange={(e) => setLocationFilter(e.target.value)}
-          >
-            <option value="">Lokasyon (Tümü)</option>
-            {[...new Set(hotels.map((h) => h.location).filter(Boolean))].map((loc) => (
-              <option key={loc} value={loc}>{loc}</option>
-            ))}
-          </select>
-          <select
-            className="h-10 rounded-md border bg-background px-3 text-sm"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-          >
-            <option value="">Durum (Tümü)</option>
-            <option value="Satışa Açık">Açık</option>
-            <option value="Kısıtlı">Kısıtlı</option>
-            <option value="Satışa Kapalı">Kapalı</option>
-          </select>
-        </div>
-      </div>
+      <Card className="rounded-2xl border bg-card shadow-sm p-4 mb-2">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex-1 min-w-[200px]">
+            <Input
+              placeholder="🔍 Otel ara... (ad / lokasyon)"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <Select value={locationFilter} onValueChange={setLocationFilter}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Lokasyon" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tüm Lokasyonlar</SelectItem>
+                {locationOptions
+                  .filter((x) => x !== "all")
+                  .map((loc) => (
+                    <SelectItem key={loc} value={loc}>
+                      {loc}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
 
-      <div className="rounded-2xl border bg-card shadow-sm overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="font-semibold">Otel Adı</TableHead>
-              <TableHead className="font-semibold">Lokasyon</TableHead>
-              <TableHead className="font-semibold">Kanal</TableHead>
-              <TableHead className="font-semibold">Durum</TableHead>
-              <TableHead className="font-semibold text-right">Aksiyon</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filtered.map((hotel) => (
-              <TableRow key={hotel.hotel_id} className="hover:bg-accent/40">
-                <TableCell className="font-medium">{hotel.hotel_name}</TableCell>
-                <TableCell className="text-muted-foreground">{hotel.location || "-"}</TableCell>
-                <TableCell className="text-muted-foreground">{hotel.channel || "agency_extranet"}</TableCell>
-                <TableCell>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Durum" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tüm Durumlar</SelectItem>
+                <SelectItem value="open">Satışa Açık</SelectItem>
+                <SelectItem value="restricted">Kısıtlı</SelectItem>
+                <SelectItem value="closed">Satışa Kapalı</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </Card>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+        {filtered.map((hotel) => (
+          <Card key={hotel.hotel_id} className="rounded-2xl border bg-card shadow-sm">
+            <CardContent className="p-5 flex items-start justify-between gap-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <div className="text-lg font-semibold">{hotel.hotel_name || "-"}</div>
                   <Badge
                     className={
                       hotel.status_label === "Satışa Açık"
@@ -226,19 +224,38 @@ export default function AgencyHotelsPage() {
                   >
                     {hotel.status_label || "-"}
                   </Badge>
-                </TableCell>
-                <TableCell className="text-right">
-                  <button
-                    className="inline-flex items-center rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition"
-                    onClick={() => navigate(`/app/agency/hotels/${hotel.hotel_id}/search`)}
-                  >
-                    Rezervasyon Oluştur
-                  </button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  {hotel.location || "-"}
+                </div>
+                <div className="flex flex-wrap gap-2 pt-2 text-xs">
+                  <Badge variant="outline">Kanal: {hotel.channel || "agency_extranet"}</Badge>
+                  <Badge variant="outline">Satış: {hotel.sales_mode || "free_sale"}</Badge>
+                  {typeof hotel.allocation_available === "number" && hotel.sales_mode === "allocation" ? (
+                    <Badge variant="outline">Allotment: {hotel.allocation_available}</Badge>
+                  ) : null}
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2 shrink-0">
+                <button
+                  className="inline-flex items-center rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition"
+                  onClick={() => navigate(`/app/agency/hotels/${hotel.hotel_id}/search`)}
+                  disabled={hotel.status_label === "Satışa Kapalı"}
+                >
+                  Rezervasyon Oluştur
+                </button>
+                <button
+                  className="inline-flex items-center rounded-lg border border-input bg-background/60 px-3 py-1.5 text-xs font-medium text-foreground hover:bg-accent/40 transition"
+                  type="button"
+                  onClick={() => console.log("Detaylar tıklandı", hotel.hotel_id)}
+                >
+                  Detaylar
+                </button>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
     </div>
   );

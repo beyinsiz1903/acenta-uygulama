@@ -45,15 +45,6 @@ export default function AgencyHotelsPage() {
     }
   }
 
-  const locationOptions = useMemo(() => {
-    const uniq = new Set();
-    hotels.forEach((h) => {
-      const loc = (h?.location || "").trim();
-      if (loc) uniq.add(loc);
-    });
-    return ["all", ...Array.from(uniq).sort((a, b) => a.localeCompare(b))];
-  }, [hotels]);
-
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase();
 

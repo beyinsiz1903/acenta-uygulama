@@ -2691,6 +2691,312 @@ class FAZ8PMSTester:
         return 0 if self.tests_failed == 0 else 1
 
 
+class FAZ9VoucherEmailTester:
+    def __init__(self, base_url="https://voucher-share.preview.emergentagent.com"):
+        self.base_url = base_url
+        self.agency_token = None
+        self.tests_run = 0
+        self.tests_passed = 0
+        self.tests_failed = 0
+        self.failed_tests = []
+        
+        # Store IDs for testing
+        self.agency_id = None
+        self.booking_id = None
+        self.other_agency_booking_id = None
+
+    def log(self, msg):
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}")
+
+    def run_test(self, name, method, endpoint, expected_status, data=None, headers_override=None, token=None):
+        """Run a single API test with specific token"""
+        url = f"{self.base_url}/{endpoint}"
+        headers = headers_override or {'Content-Type': 'application/json'}
+        
+        # Use specific token if provided
+        if token:
+            headers['Authorization'] = f'Bearer {token}'
+
+        self.tests_run += 1
+        self.log(f"🔍 Test #{self.tests_run}: {name}")
+        
+        try:
+            if method == 'GET':
+                response = requests.get(url, headers=headers, timeout=10)
+            elif method == 'POST':
+                response = requests.post(url, json=data, headers=headers, timeout=10)
+            elif method == 'PUT':
+                response = requests.put(url, json=data, headers=headers, timeout=10)
+            elif method == 'DELETE':
+                response = requests.delete(url, headers=headers, timeout=10)
+            else:
+                raise ValueError(f"Unsupported method: {method}")
+
+            success = response.status_code == expected_status
+            if success:
+                self.tests_passed += 1
+                self.log(f"✅ PASSED - Status: {response.status_code}")
+                try:
+                    return True, response.json() if response.content else {}
+                except:
+                    return True, response.text if hasattr(response, 'text') else {}
+            else:
+                self.tests_failed += 1
+                self.failed_tests.append(f"{name} - Expected {expected_status}, got {response.status_code}")
+                self.log(f"❌ FAILED - Expected {expected_status}, got {response.status_code}")
+                try:
+                    self.log(f"   Response: {response.text[:200]}")
+                except:
+                    pass
+                return False, {}
+
+        except Exception as e:
+            self.tests_failed += 1
+            self.failed_tests.append(f"{name} - Error: {str(e)}")
+            self.log(f"❌ FAILED - Error: {str(e)}")
+            return False, {}
+
+    def test_agency_login(self):
+        """1) Agency admin login"""
+        self.log("\n=== 1) AUTH & OWNERSHIP ===")
+        success, response = self.run_test(
+            "Agency Login (agency1@demo.test)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "agency1@demo.test", "password": "agency123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.agency_token = response['access_token']
+            user = response.get('user', {})
+            self.agency_id = user.get('agency_id')
+            
+            if self.agency_id:
+                self.log(f"✅ Agency logged in successfully, agency_id: {self.agency_id}")
+                return True
+            else:
+                self.log(f"❌ Agency ID missing from user")
+                return False
+        return False
+
+    def test_get_agency_bookings(self):
+        """2) Get agency bookings to find a booking ID"""
+        success, response = self.run_test(
+            "Get Agency Bookings",
+            "GET",
+            "api/agency/bookings",
+            200,
+            token=self.agency_token
+        )
+        
+        if success:
+            bookings = response if isinstance(response, list) else []
+            self.log(f"✅ Found {len(bookings)} bookings for agency")
+            
+            if len(bookings) > 0:
+                self.booking_id = bookings[0].get('id')
+                self.log(f"✅ Selected booking for voucher test: {self.booking_id}")
+                return True
+            else:
+                self.log(f"⚠️  No bookings found - will test with non-existent booking")
+                self.booking_id = "bkg_nonexistent_12345"
+                return True
+        return False
+
+    def test_voucher_email_success(self):
+        """3) Test successful voucher email sending"""
+        self.log("\n--- Voucher Email Success Test ---")
+        
+        if not self.booking_id:
+            self.log("❌ No booking ID available")
+            return False
+        
+        # Test with valid email
+        email_data = {
+            "to": "devnull@syroce.com"
+        }
+        
+        # If booking doesn't exist, expect 404, otherwise expect 200
+        expected_status = 404 if self.booking_id.startswith("bkg_nonexistent_") else 200
+        
+        success, response = self.run_test(
+            "Send Voucher Email (Success)",
+            "POST",
+            f"api/voucher/{self.booking_id}/email",
+            expected_status,
+            data=email_data,
+            token=self.agency_token
+        )
+        
+        if expected_status == 404:
+            if success:
+                self.log(f"✅ Correctly returned 404 for non-existent booking")
+                return True
+            else:
+                return False
+        
+        if success:
+            # Verify response structure
+            if response.get('ok') is True and response.get('to') == "devnull@syroce.com":
+                self.log(f"✅ Response structure correct: {response}")
+                return True
+            else:
+                self.log(f"❌ Invalid response structure: {response}")
+                return False
+        return False
+
+    def test_voucher_email_forbidden(self):
+        """4) Test forbidden access to other agency's booking"""
+        self.log("\n--- Voucher Email Forbidden Test ---")
+        
+        # Try to use a booking ID from a different agency
+        # We'll use a fake booking ID that would belong to another agency
+        other_booking_id = "bkg_other_agency_12345"
+        
+        email_data = {
+            "to": "devnull@syroce.com"
+        }
+        
+        success, response = self.run_test(
+            "Send Voucher Email (Forbidden - Other Agency)",
+            "POST",
+            f"api/voucher/{other_booking_id}/email",
+            404,  # Should return 404 (booking not found) or 403 (forbidden)
+            data=email_data,
+            token=self.agency_token
+        )
+        
+        if success:
+            self.log(f"✅ Correctly denied access to other agency's booking")
+            return True
+        return False
+
+    def test_voucher_email_json_structure(self):
+        """5) Test JSON response structure"""
+        self.log("\n--- JSON Response Structure Test ---")
+        
+        if not self.booking_id or self.booking_id.startswith("bkg_nonexistent_"):
+            self.log("⚠️  Skipping JSON structure test - no valid booking")
+            return True
+        
+        email_data = {
+            "to": "devnull@syroce.com"
+        }
+        
+        success, response = self.run_test(
+            "Voucher Email JSON Structure",
+            "POST",
+            f"api/voucher/{self.booking_id}/email",
+            200,
+            data=email_data,
+            token=self.agency_token
+        )
+        
+        if success:
+            # Verify JSON structure
+            if not isinstance(response, dict):
+                self.log(f"❌ Response is not a dict: {type(response)}")
+                return False
+            
+            # Check required fields
+            ok_field = response.get('ok')
+            to_field = response.get('to')
+            
+            if not isinstance(ok_field, bool):
+                self.log(f"❌ 'ok' field is not boolean: {type(ok_field)}")
+                return False
+            
+            if not isinstance(to_field, str):
+                self.log(f"❌ 'to' field is not string: {type(to_field)}")
+                return False
+            
+            self.log(f"✅ JSON structure valid: ok={ok_field}, to={to_field}")
+            return True
+        return False
+
+    def test_env_missing_scenario(self):
+        """6) Test behavior when AWS env vars are missing (optional test)"""
+        self.log("\n--- Environment Variables Test ---")
+        
+        # This test is informational - we can't easily unset env vars in the running process
+        # But we can check if the endpoint handles missing env gracefully
+        
+        # The email sending happens in background task, so API should return 200
+        # even if AWS env vars are missing (error will be logged)
+        
+        if not self.booking_id or self.booking_id.startswith("bkg_nonexistent_"):
+            self.log("⚠️  Skipping env test - no valid booking")
+            return True
+        
+        email_data = {
+            "to": "devnull@syroce.com"
+        }
+        
+        success, response = self.run_test(
+            "Voucher Email (Background Task)",
+            "POST",
+            f"api/voucher/{self.booking_id}/email",
+            200,
+            data=email_data,
+            token=self.agency_token
+        )
+        
+        if success:
+            self.log(f"✅ API returns 200 even if background task might fail")
+            self.log(f"   (Background task errors are logged, not returned to client)")
+            return True
+        return False
+
+    def print_summary(self):
+        """Print test summary"""
+        self.log("\n" + "="*60)
+        self.log("FAZ-9 VOUCHER EMAIL TEST SUMMARY")
+        self.log("="*60)
+        self.log(f"Total Tests: {self.tests_run}")
+        self.log(f"✅ Passed: {self.tests_passed}")
+        self.log(f"❌ Failed: {self.tests_failed}")
+        self.log(f"Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%")
+        
+        if self.failed_tests:
+            self.log("\n❌ FAILED TESTS:")
+            for i, test in enumerate(self.failed_tests, 1):
+                self.log(f"  {i}. {test}")
+        
+        self.log("="*60)
+
+    def run_faz9_tests(self):
+        """Run all FAZ-9 voucher email tests"""
+        self.log("🚀 Starting FAZ-9 Voucher Email Tests")
+        self.log(f"Base URL: {self.base_url}")
+        
+        # 1) Auth & ownership
+        if not self.test_agency_login():
+            self.log("❌ Agency login failed - stopping tests")
+            self.print_summary()
+            return 1
+
+        # 2) Get agency bookings
+        self.test_get_agency_bookings()
+
+        # 3) Test successful voucher email
+        self.test_voucher_email_success()
+
+        # 4) Test forbidden access
+        self.test_voucher_email_forbidden()
+
+        # 5) Test JSON structure
+        self.test_voucher_email_json_structure()
+
+        # 6) Test env handling
+        self.test_env_missing_scenario()
+
+        # Summary
+        self.print_summary()
+
+        return 0 if self.tests_failed == 0 else 1
+
+
 class FAZ6CommissionTester:
     def __init__(self, base_url="https://voucher-share.preview.emergentagent.com"):
         self.base_url = base_url

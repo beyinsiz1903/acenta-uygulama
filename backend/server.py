@@ -104,6 +104,7 @@ async def _startup() -> None:
     import asyncio
 
     asyncio.create_task(email_dispatch_loop())
+    asyncio.create_task(integration_sync_loop())
 
 
 @app.on_event("shutdown")

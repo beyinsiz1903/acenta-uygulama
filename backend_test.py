@@ -2178,19 +2178,22 @@ class VoucherHTMLChangesTester:
         # 2) Test voucher generation (will test error handling if no real booking)
         self.test_voucher_generate()
         
-        # 3) Test public HTML view (only if we have a real voucher token)
+        # 3) Test voucher HTML content verification (direct function test)
+        self.test_voucher_html_content_verification()
+        
+        # 4) Test public HTML view (only if we have a real voucher token)
         if self.voucher_token:
             self.test_voucher_public_html()
         else:
             self.log("⚠️  Skipping public HTML test - no voucher token available")
         
-        # 4) Test public PDF view (only if we have a real voucher token)
+        # 5) Test public PDF view (only if we have a real voucher token)
         if self.voucher_token:
             self.test_voucher_public_pdf()
         else:
             self.log("⚠️  Skipping public PDF test - no voucher token available")
         
-        # 5) Test email functionality (will test error handling if no real booking)
+        # 6) Test email functionality (will test error handling if no real booking)
         self.test_voucher_email_functionality()
         
         # 6) Smoke test other endpoints

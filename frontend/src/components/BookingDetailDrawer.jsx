@@ -256,6 +256,20 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
             <Button variant="outline" onClick={handleCopy} disabled={!booking}>
               Bilgileri Kopyala
             </Button>
+            <Button
+              variant="outline"
+              onClick={handleCopyVoucherLink}
+              disabled={!booking || voucherLoading}
+            >
+              {voucherLoading ? "Voucher oluşturuluyor..." : "Voucher Linkini Kopyala"}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleOpenVoucherPdf}
+              disabled={!booking || voucherLoading}
+            >
+              PDF İndir
+            </Button>
           </div>
         </SheetFooter>
       </SheetContent>

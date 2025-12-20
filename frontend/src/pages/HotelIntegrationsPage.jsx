@@ -205,6 +205,13 @@ export default function HotelIntegrationsPage() {
               </Button>
               <Button onClick={handleSave} disabled={saving}>
                 {saving ? "Kaydediliyor..." : "Kaydet"}
+      <IntegrationDetailDrawer
+        open={drawerOpen}
+        onOpenChange={setDrawerOpen}
+        integration={integration}
+        onRefresh={load}
+      />
+
               </Button>
             </div>
           </div>

@@ -1631,7 +1631,13 @@ class FAZ93EmailOutboxTester:
         try:
             # Import the dispatcher function
             import sys
+            import os
             sys.path.append('/app/backend')
+            
+            # Set required environment variables for the test
+            os.environ['MONGO_URL'] = 'mongodb://localhost:27017'
+            os.environ['DB_NAME'] = 'test_database'
+            
             from app.services.email_outbox import dispatch_pending_emails
             from app.db import get_db
             import asyncio

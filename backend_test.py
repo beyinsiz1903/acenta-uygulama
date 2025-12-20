@@ -7377,8 +7377,12 @@ def main():
             tester = FAZ10HotelIntegrationsTester()
             exit_code = tester.run_faz10_tests()
             sys.exit(exit_code)
+        elif sys.argv[1] == "faz101":
+            tester = FAZ101IntegrationSyncTester()
+            exit_code = tester.run_faz101_tests()
+            sys.exit(exit_code)
         else:
-            print("Usage: python backend_test.py [faz5|faz6|faz7|faz8|faz9|faz91|faz92|faz93|faz93admin|faz9x|faz10]")
+            print("Usage: python backend_test.py [faz5|faz6|faz7|faz8|faz9|faz91|faz92|faz93|faz93admin|faz9x|faz10|faz101]")
             sys.exit(1)
     else:
         tester = AcentaAPITester()

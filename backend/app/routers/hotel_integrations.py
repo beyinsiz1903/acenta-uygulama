@@ -83,7 +83,9 @@ async def get_hotel_integrations(user=Depends(get_current_user)):
         "display_name": cm.get("display_name") or "Channel Manager",
         "last_sync_at": cm.get("last_sync_at"),
         "last_error": cm.get("last_error"),
+        "updated_at": cm.get("updated_at"),
         "config": cm.get("config") or {},
+        "secrets_ref": cm.get("secrets_ref") or None,
     }
 
     return {"items": [item]}

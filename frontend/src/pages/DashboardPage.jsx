@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { ArrowRight, CalendarDays, Ticket, Users, Layers } from "lucide-react";
 
-import { api, apiErrorMessage } from "../lib/api";
+import { api, apiErrorMessage, getUser } from "../lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 

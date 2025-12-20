@@ -51,7 +51,14 @@ async def compute_availability(
     if force_sales_open:
         expires_at = hotel.get("force_sales_open_expires_at")
         now = now_utc()
-        if expires_at and expires_at < now:
+        # Ensure both datetimes are timezone-aware for comparison
+        if expires_at:
+            # If expires_at is timezone-naive, make it timezone-aware (UTC)
+            if expires_at.tzinfo is None:
+                from datetime import timezone
+                expires_at = expires_at.replace(tzinfo=timezone.utc)
+            
+            if expires_at < now:
             # TTL dolmuş; override'ı kapalı say ve kendini iyileştir
             force_sales_open = False
             await db.hotels.update_one(

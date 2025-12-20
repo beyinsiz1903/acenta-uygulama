@@ -25,6 +25,12 @@ class VoucherEmailRequest(BaseModel):
     language: str = "tr_en"  # future-proof
 
 
+class VoucherGenerateResponse(BaseModel):
+    token: str
+    url: str
+    expires_at: datetime
+
+
 async def _get_booking_for_voucher(db, organization_id: str, booking_id: str) -> dict[str, Any]:
     booking = await db.bookings.find_one({
         "organization_id": organization_id,

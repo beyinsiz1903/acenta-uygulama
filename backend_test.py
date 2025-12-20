@@ -6523,6 +6523,397 @@ class FAZ9xAgencyHotelsTester:
         return 0 if self.tests_failed == 0 else 1
 
 
+class FAZ10HotelIntegrationsTester:
+    def __init__(self, base_url="https://voucher-share.preview.emergentagent.com"):
+        self.base_url = base_url
+        self.hotel_token = None
+        self.agency_token = None
+        self.tests_run = 0
+        self.tests_passed = 0
+        self.tests_failed = 0
+        self.failed_tests = []
+        
+        # Store IDs for testing
+        self.hotel_id = None
+        self.integration_id = None
+
+    def log(self, msg):
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}")
+
+    def run_test(self, name, method, endpoint, expected_status, data=None, headers_override=None, token=None):
+        """Run a single API test with specific token"""
+        url = f"{self.base_url}/{endpoint}"
+        headers = headers_override or {'Content-Type': 'application/json'}
+        
+        # Use specific token if provided
+        if token:
+            headers['Authorization'] = f'Bearer {token}'
+
+        self.tests_run += 1
+        self.log(f"🔍 Test #{self.tests_run}: {name}")
+        
+        try:
+            if method == 'GET':
+                response = requests.get(url, headers=headers, timeout=10)
+            elif method == 'POST':
+                response = requests.post(url, json=data, headers=headers, timeout=10)
+            elif method == 'PUT':
+                response = requests.put(url, json=data, headers=headers, timeout=10)
+            elif method == 'DELETE':
+                response = requests.delete(url, headers=headers, timeout=10)
+            else:
+                raise ValueError(f"Unsupported method: {method}")
+
+            success = response.status_code == expected_status
+            if success:
+                self.tests_passed += 1
+                self.log(f"✅ PASSED - Status: {response.status_code}")
+                try:
+                    return True, response.json() if response.content else {}
+                except:
+                    return True, response.text if hasattr(response, 'text') else {}
+            else:
+                self.tests_failed += 1
+                self.failed_tests.append(f"{name} - Expected {expected_status}, got {response.status_code}")
+                self.log(f"❌ FAILED - Expected {expected_status}, got {response.status_code}")
+                try:
+                    self.log(f"   Response: {response.text[:200]}")
+                except:
+                    pass
+                return False, {}
+
+        except Exception as e:
+            self.tests_failed += 1
+            self.failed_tests.append(f"{name} - Error: {str(e)}")
+            self.log(f"❌ FAILED - Error: {str(e)}")
+            return False, {}
+
+    def test_hotel_admin_login(self):
+        """A) Test hotel admin login"""
+        self.log("\n=== A) İLK GET ÇAĞRISI ===")
+        success, response = self.run_test(
+            "Hotel Admin Login (hoteladmin@acenta.test)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "hoteladmin@acenta.test", "password": "admin123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.hotel_token = response['access_token']
+            user = response.get('user', {})
+            roles = user.get('roles', [])
+            hotel_id = user.get('hotel_id')
+            
+            if 'hotel_admin' in roles:
+                self.log(f"✅ User has hotel_admin role: {roles}")
+            else:
+                self.log(f"❌ Missing hotel_admin role: {roles}")
+                return False
+                
+            if hotel_id:
+                self.hotel_id = hotel_id
+                self.log(f"✅ Hotel ID populated: {hotel_id}")
+            else:
+                self.log(f"❌ Hotel ID missing")
+                return False
+                
+            return True
+        return False
+
+    def test_first_get_integrations(self):
+        """A) Test first GET call - should auto-create integration"""
+        success, response = self.run_test(
+            "GET /api/hotel/integrations (First Call - Auto Create)",
+            "GET",
+            "api/hotel/integrations",
+            200,
+            token=self.hotel_token
+        )
+        
+        if success:
+            items = response.get('items', [])
+            if len(items) == 1:
+                item = items[0]
+                self.integration_id = item.get('id')
+                
+                # Verify expected structure
+                if (item.get('kind') == 'channel_manager' and 
+                    item.get('status') == 'not_configured' and
+                    item.get('display_name') == 'Channel Manager'):
+                    self.log(f"✅ Auto-created integration: kind={item.get('kind')}, status={item.get('status')}")
+                    self.log(f"✅ Integration ID: {self.integration_id}")
+                    return True
+                else:
+                    self.log(f"❌ Invalid integration structure: {item}")
+                    return False
+            else:
+                self.log(f"❌ Expected 1 integration, got {len(items)}")
+                return False
+        return False
+
+    def test_put_update_integration(self):
+        """B) Test PUT update + GET"""
+        self.log("\n=== B) PUT UPDATE + GET ===")
+        
+        # PUT update
+        update_data = {
+            "provider": "channex",
+            "status": "configured",
+            "config": {
+                "mode": "pull",
+                "channels": ["booking"]
+            }
+        }
+        success, response = self.run_test(
+            "PUT /api/hotel/integrations/channel-manager",
+            "PUT",
+            "api/hotel/integrations/channel-manager",
+            200,
+            data=update_data,
+            token=self.hotel_token
+        )
+        
+        if success and response.get('ok'):
+            self.log(f"✅ Integration updated successfully")
+        else:
+            self.log(f"❌ Integration update failed")
+            return False
+        
+        # GET to verify update
+        success, response = self.run_test(
+            "GET /api/hotel/integrations (After Update)",
+            "GET",
+            "api/hotel/integrations",
+            200,
+            token=self.hotel_token
+        )
+        
+        if success:
+            items = response.get('items', [])
+            if len(items) == 1:
+                item = items[0]
+                config = item.get('config', {})
+                
+                if (item.get('provider') == 'channex' and 
+                    item.get('status') == 'configured' and
+                    config.get('mode') == 'pull' and
+                    config.get('channels') == ['booking']):
+                    self.log(f"✅ Update verified: provider={item.get('provider')}, status={item.get('status')}")
+                    self.log(f"✅ Config verified: mode={config.get('mode')}, channels={config.get('channels')}")
+                    return True
+                else:
+                    self.log(f"❌ Update not reflected: {item}")
+                    return False
+            else:
+                self.log(f"❌ Expected 1 integration after update, got {len(items)}")
+                return False
+        return False
+
+    def test_invalid_provider(self):
+        """C) Test INVALID_PROVIDER"""
+        self.log("\n=== C) INVALID_PROVIDER ===")
+        
+        invalid_data = {
+            "provider": "foo",
+            "status": "configured",
+            "config": {
+                "mode": "pull",
+                "channels": ["booking"]
+            }
+        }
+        success, response = self.run_test(
+            "PUT /api/hotel/integrations/channel-manager (Invalid Provider)",
+            "PUT",
+            "api/hotel/integrations/channel-manager",
+            422,
+            data=invalid_data,
+            token=self.hotel_token
+        )
+        
+        if success:
+            self.log(f"✅ Invalid provider properly rejected (422 INVALID_PROVIDER)")
+            return True
+        else:
+            self.log(f"❌ Invalid provider should be rejected with 422")
+            return False
+
+    def test_agency_login(self):
+        """D) Test agency login"""
+        self.log("\n=== D) AGENCY HOTELS CM_STATUS ENRICH ===")
+        success, response = self.run_test(
+            "Agency Login (agency1@demo.test)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "agency1@demo.test", "password": "agency123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.agency_token = response['access_token']
+            user = response.get('user', {})
+            roles = user.get('roles', [])
+            agency_id = user.get('agency_id')
+            
+            if 'agency_admin' in roles or 'agency_agent' in roles:
+                self.log(f"✅ Agency user has proper role: {roles}")
+            else:
+                self.log(f"❌ Missing agency role: {roles}")
+                return False
+                
+            if agency_id:
+                self.log(f"✅ Agency ID populated: {agency_id}")
+            else:
+                self.log(f"❌ Agency ID missing")
+                return False
+                
+            return True
+        return False
+
+    def test_agency_hotels_cm_status(self):
+        """D) Test agency hotels with cm_status enrichment"""
+        success, response = self.run_test(
+            "GET /api/agency/hotels (cm_status enrichment)",
+            "GET",
+            "api/agency/hotels",
+            200,
+            token=self.agency_token
+        )
+        
+        if success:
+            items = response.get('items', [])
+            if len(items) > 0:
+                self.log(f"✅ Found {len(items)} hotels for agency")
+                
+                # Check if cm_status field exists
+                has_cm_status = all('cm_status' in item for item in items)
+                if has_cm_status:
+                    self.log(f"✅ All hotels have cm_status field")
+                    
+                    # Find the hotel we just configured
+                    configured_hotel = None
+                    for item in items:
+                        if item.get('hotel_id') == self.hotel_id:
+                            configured_hotel = item
+                            break
+                    
+                    if configured_hotel:
+                        cm_status = configured_hotel.get('cm_status')
+                        if cm_status == 'configured':
+                            self.log(f"✅ Configured hotel has cm_status='configured': {cm_status}")
+                        else:
+                            self.log(f"❌ Expected cm_status='configured', got '{cm_status}'")
+                            return False
+                    else:
+                        self.log(f"⚠️  Configured hotel not found in agency hotels list")
+                    
+                    # Check other hotels have cm_status
+                    for item in items:
+                        cm_status = item.get('cm_status')
+                        if cm_status in ['not_configured', 'configured', 'connected', 'error', 'disabled']:
+                            self.log(f"✅ Hotel {item.get('hotel_name')} has valid cm_status: {cm_status}")
+                        else:
+                            self.log(f"❌ Hotel {item.get('hotel_name')} has invalid cm_status: {cm_status}")
+                            return False
+                    
+                    return True
+                else:
+                    self.log(f"❌ Not all hotels have cm_status field")
+                    return False
+            else:
+                self.log(f"⚠️  No hotels found for agency")
+                return True
+        return False
+
+    def test_auth_controls(self):
+        """E) Test authentication controls"""
+        self.log("\n=== E) AUTH KONTROLÜ ===")
+        
+        # Test agency user cannot access hotel integrations
+        success, response = self.run_test(
+            "Agency User Access Hotel Integrations (Should Fail)",
+            "GET",
+            "api/hotel/integrations",
+            403,
+            token=self.agency_token
+        )
+        
+        if success:
+            self.log(f"✅ Agency user properly denied access to hotel integrations (403)")
+        else:
+            self.log(f"❌ Agency user should be denied access to hotel integrations")
+            return False
+        
+        # Test unauthenticated access
+        success, response = self.run_test(
+            "Unauthenticated Access Hotel Integrations (Should Fail)",
+            "GET",
+            "api/hotel/integrations",
+            401,
+            headers_override={'Content-Type': 'application/json'}
+        )
+        
+        if success:
+            self.log(f"✅ Unauthenticated access properly denied (401)")
+            return True
+        else:
+            self.log(f"❌ Unauthenticated access should be denied with 401")
+            return False
+
+    def print_summary(self):
+        """Print test summary"""
+        self.log("\n" + "="*60)
+        self.log("FAZ-10.0 HOTEL INTEGRATIONS TEST SUMMARY")
+        self.log("="*60)
+        self.log(f"Total Tests: {self.tests_run}")
+        self.log(f"✅ Passed: {self.tests_passed}")
+        self.log(f"❌ Failed: {self.tests_failed}")
+        self.log(f"Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%")
+        
+        if self.failed_tests:
+            self.log("\n❌ FAILED TESTS:")
+            for i, test in enumerate(self.failed_tests, 1):
+                self.log(f"  {i}. {test}")
+        
+        self.log("="*60)
+
+    def run_faz10_tests(self):
+        """Run all FAZ-10.0 tests in sequence"""
+        self.log("🚀 Starting FAZ-10.0 Hotel Integrations Tests")
+        self.log(f"Base URL: {self.base_url}")
+        
+        # A) Hotel admin login and first GET
+        if not self.test_hotel_admin_login():
+            self.log("❌ Hotel admin login failed - stopping tests")
+            self.print_summary()
+            return 1
+
+        if not self.test_first_get_integrations():
+            self.log("❌ First GET integrations failed - stopping tests")
+            self.print_summary()
+            return 1
+
+        # B) PUT update + GET verification
+        self.test_put_update_integration()
+
+        # C) Invalid provider test
+        self.test_invalid_provider()
+
+        # D) Agency cm_status enrichment
+        if not self.test_agency_login():
+            self.log("❌ Agency login failed - skipping cm_status tests")
+        else:
+            self.test_agency_hotels_cm_status()
+
+        # E) Auth controls
+        self.test_auth_controls()
+
+        # Summary
+        self.print_summary()
+
+        return 0 if self.tests_failed == 0 else 1
+
+
 def main():
     if len(sys.argv) > 1:
         if sys.argv[1] == "faz5":

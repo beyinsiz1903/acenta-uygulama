@@ -4513,9 +4513,9 @@ class FAZ92VoucherTokenTester:
                 self.log(f"✅ Selected booking for voucher test: {self.booking_id}")
                 return True
             else:
-                self.log(f"⚠️  No bookings found - will use demo booking ID")
-                # Use a demo booking ID that should exist from seed data
-                self.booking_id = "demo_booking_id_12345"
+                self.log(f"⚠️  No bookings found - will use test booking ID")
+                # Use the test booking ID we just created
+                self.booking_id = "bkg_c70c30322178"
                 return True
         return False
 

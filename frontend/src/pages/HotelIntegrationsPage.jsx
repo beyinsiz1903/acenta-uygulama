@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Loader2, AlertCircle } from "lucide-react";
 
-import { api, apiErrorMessage } from "../lib/api";
+import { api, apiErrorMessage, getUser } from "../lib/api";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";

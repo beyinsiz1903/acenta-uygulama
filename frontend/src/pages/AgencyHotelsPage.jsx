@@ -253,23 +253,9 @@ export default function AgencyHotelsPage() {
                   >
                     {hotel.status_label || "-"}
                   </Badge>
-                  {(() => {
-                    const cmStatus = hotel.cm_status || "not_configured";
-                    const meta = CM_META[cmStatus] || CM_META.not_configured;
-                    return (
-                      <Badge variant={meta.variant}>{meta.label}</Badge>
-                    );
-                  })()}
                 </div>
                 <div className="text-sm text-muted-foreground">
                   {hotel.location || "-"}
-                </div>
-                <div className="flex flex-wrap gap-2 pt-2 text-xs">
-                  <Badge variant="outline">Kanal: {hotel.channel || "agency_extranet"}</Badge>
-                  <Badge variant="outline">Satış: {hotel.sales_mode || "free_sale"}</Badge>
-                  {typeof hotel.allocation_available === "number" && hotel.sales_mode === "allocation" ? (
-                    <Badge variant="outline">Allotment: {hotel.allocation_available}</Badge>
-                  ) : null}
                 </div>
               </div>
 

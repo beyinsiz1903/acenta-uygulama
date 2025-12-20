@@ -191,8 +191,8 @@ export default function DashboardPage() {
           <CardContent className="text-sm text-muted-foreground">
             Lead ve teklif akışını yönet.
             <div className="mt-3">
-              <Button asChild variant="outline" size="sm">
-                <Link to="/app/crm">CRM&apos;e Git</Link>
+              <Button variant="outline" size="sm" disabled>
+                Yakında
               </Button>
             </div>
           </CardContent>

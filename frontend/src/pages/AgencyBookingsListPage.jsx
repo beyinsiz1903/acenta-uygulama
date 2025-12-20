@@ -52,6 +52,38 @@ export default function AgencyBookingsListPage() {
       
       // Sort by created_at desc
       const sorted = (resp.data || []).sort(
+  const today = todayIso();
+
+  const todayArrivals = bookings.filter((b) => {
+    const stay = b.stay || {};
+    return stay.check_in === today;
+  }).length;
+
+  const filteredBookings = bookings.filter((booking) => {
+    const stay = booking.stay || {};
+    const guest = booking.guest || {};
+
+    // Search filter
+    if (search.trim()) {
+      const q = search.trim().toLowerCase();
+      const hay = `${booking.id} ${booking.hotel_name || ""} ${guest.full_name || ""}`.toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+
+    // Status filter
+    if (statusFilter) {
+      if (booking.status !== statusFilter) return false;
+    }
+
+    // Arrival filter
+    if (arrivalFilter === "today") {
+      if (stay.check_in !== today) return false;
+    }
+
+    return true;
+  });
+
+
         (a, b) => new Date(b.created_at) - new Date(a.created_at)
       );
       

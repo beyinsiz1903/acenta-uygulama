@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Hotel, AlertCircle, Loader2 } from "lucide-react";
 import { api, apiErrorMessage, getUser } from "../lib/api";
 import { useNavigate } from "react-router-dom";
+import { Input } from "../components/ui/input";
 import {
   Table,
   TableBody,

@@ -167,6 +167,15 @@ def build_booking_public_view(doc: dict[str, Any]) -> dict[str, Any]:
 
     destination = doc.get("hotel_city") or doc.get("city")
 
+    # Serialize datetime objects to ISO format strings
+    created_at = doc.get("created_at")
+    if hasattr(created_at, 'isoformat'):
+        created_at = created_at.isoformat()
+    
+    updated_at = doc.get("updated_at")
+    if hasattr(updated_at, 'isoformat'):
+        updated_at = updated_at.isoformat()
+
     return {
         "id": booking_id,
         "code": booking_id,
@@ -190,6 +199,6 @@ def build_booking_public_view(doc: dict[str, Any]) -> dict[str, Any]:
         "currency": currency,
         "source": doc.get("source"),
         "payment_status": doc.get("payment_status"),
-        "created_at": doc.get("created_at"),
-        "updated_at": doc.get("updated_at"),
+        "created_at": created_at,
+        "updated_at": updated_at,
     }

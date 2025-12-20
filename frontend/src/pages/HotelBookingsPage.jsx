@@ -305,13 +305,6 @@ export default function HotelBookingsPage() {
                           onClick={() => doSetGuestNote(booking)}
                           className="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm hover:bg-accent transition"
                         >
-      <BookingDetailDrawer
-        bookingId={selectedId}
-        mode="hotel"
-        open={drawerOpen}
-        onOpenChange={setDrawerOpen}
-      />
-
                           <StickyNote className="h-4 w-4" />
                           Misafir notu
                         </button>

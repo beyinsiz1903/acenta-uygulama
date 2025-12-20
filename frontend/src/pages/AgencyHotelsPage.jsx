@@ -172,8 +172,14 @@ export default function AgencyHotelsPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tüm Lokasyonlar</SelectItem>
-                {locationOptions
-                  .filter((x) => x !== "all")
+                {(() => {
+                  const uniq = new Set();
+                  hotels.forEach((h) => {
+                    const loc = (h?.location || "").trim();
+                    if (loc) uniq.add(loc);
+                  });
+                  return Array.from(uniq).sort((a, b) => a.localeCompare(b));
+                })()
                   .map((loc) => (
                     <SelectItem key={loc} value={loc}>
                       {loc}

@@ -217,6 +217,13 @@ export default function AgencyBookingsListPage() {
           </TableBody>
         </Table>
       </div>
+
+      <BookingDetailDrawer
+        bookingId={selectedId}
+        mode="agency"
+        open={drawerOpen}
+        onOpenChange={setDrawerOpen}
+      />
     </div>
   );
 }

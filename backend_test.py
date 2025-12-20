@@ -2130,11 +2130,11 @@ class VoucherHTMLChangesTester:
         if success:
             self.log(f"✅ Agency hotels endpoint working ({len(response)} hotels)")
         
-        # Test settlements endpoint
+        # Test settlements endpoint with required month parameter
         success, response = self.run_test(
             "Smoke Test: GET /api/agency/settlements",
             "GET",
-            "api/agency/settlements",
+            "api/agency/settlements?month=2026-03",
             200,
             token=self.agency_token
         )

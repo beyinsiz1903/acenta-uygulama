@@ -41,10 +41,15 @@ class MockPmsClient(PmsClient):
             channel=channel,
         )
 
+        # Calculate nights from dates
+        from datetime import datetime
+        check_in_date = datetime.fromisoformat(check_in)
+        check_out_date = datetime.fromisoformat(check_out)
+        nights = (check_out_date - check_in_date).days
+
         # Attach rate plans per room type
-        nights = int((availability.get("nights") or 0) or 0)
         rooms_out: list[dict[str, Any]] = []
-        for r in availability.get("rooms") or []:
+        for room_type, room_data in availability.items():
             room_type_id = r.get("room_type")
             room_type_name = r.get("room_type_name")
             max_occupancy = r.get("max_occupancy")

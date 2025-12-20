@@ -62,6 +62,46 @@ def _build_voucher_html(view: dict[str, Any]) -> str:
 
     return f"""<html><body>
 <h1>Rezervasyon Voucher / Booking Voucher</h1>
+
+
+async def _get_or_create_voucher_for_booking(db, organization_id: str, booking_id: str) -> dict[str, Any]:
+    """Idempotent helper: return existing non-expired voucher or create a new one."""
+    now = now_utc()
+
+    existing = await db.vouchers.find_one(
+        {
+            "organization_id": organization_id,
+            "booking_id": booking_id,
+            "expires_at": {"$gt": now},
+            "revoked_at": None,
+        }
+    )
+    if existing:
+        return existing
+
+    # Load booking and build snapshot
+    booking = await _get_booking_for_voucher(db, organization_id, booking_id)
+    view = build_booking_public_view(booking)
+
+    token = f"vch_{uuid.uuid4().hex[:24]}"
+    expires_at = now + timedelta(days=VOUCHER_TTL_DAYS)
+
+    doc = {
+        "_id": token,
+        "token": token,
+        "organization_id": organization_id,
+        "booking_id": booking_id,
+        "hotel_id": booking.get("hotel_id"),
+        "agency_id": booking.get("agency_id"),
+        "snapshot": view,
+        "created_at": now,
+        "expires_at": expires_at,
+        "revoked_at": None,
+    }
+
+    await db.vouchers.insert_one(doc)
+    return doc
+
 <p><strong>Otel / Hotel:</strong> {hotel}</p>
 <p><strong>Misafir / Guest:</strong> {guest}</p>
 <p><strong>Check-in:</strong> {check_in}</p>

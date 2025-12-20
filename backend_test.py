@@ -1525,7 +1525,7 @@ class FAZ93EmailOutboxTester:
         # Create draft booking
         draft_data = {
             "search_id": search_id,
-            "hotel_id": "cba3117f-1ccf-44d7-8da7-ef7124222211",
+            "hotel_id": hotel_id,
             "room_type_id": "rt_standard",
             "rate_plan_id": "rp_base",
             "guest": {

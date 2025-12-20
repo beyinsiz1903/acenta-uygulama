@@ -434,8 +434,10 @@
   run_ui: false
 
 ## test_plan:
-  current_focus: []
-  stuck_tasks: []
+  current_focus:
+    - "FAZ-10.1 integration sync outbox + /sync endpoint + worker davranışı testleri"
+  stuck_tasks:
+    - "FAZ-10.1 integration sync outbox + /sync endpoint + worker davranışı testleri"
   test_all: false
   test_priority: "high_first"
 

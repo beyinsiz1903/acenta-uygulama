@@ -70,5 +70,16 @@ async def my_hotels(user=Depends(get_current_user)):
     if not hotel_ids:
         return []
 
-    hotels = await db.hotels.find({"organization_id": user["organization_id"], "_id": {"$in": hotel_ids}, "active": True}).sort("name", 1).to_list(2000)
-    return [serialize_doc(h) for h in hotels]
+    hotels = await db.hotels.find(
+        {"organization_id": user["organization_id"], "_id": {"$in": hotel_ids}, "active": True}
+    ).sort("name", 1).to_list(2000)
+
+    # Build map for quick lookup
+    link_by_hotel = {l["hotel_id"]: l for l in links}
+
+    # For MVP we don't join complex availability; placeholder agg is None
+    items = []
+    for h in hotels:
+        items.append(_normalize_agency_hotel(h, link_by_hotel.get(h["_id"]), None))
+
+    return {"items": items}

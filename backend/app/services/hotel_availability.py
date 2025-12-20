@@ -4,6 +4,7 @@ from datetime import datetime, date, timedelta
 from typing import Any
 
 from app.db import get_db
+from app.utils import now_utc
 
 
 ACTIVE_BOOKING_STATUSES = ["confirmed", "guaranteed", "checked_in"]

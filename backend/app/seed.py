@@ -130,6 +130,13 @@ async def ensure_seed_data() -> None:
     await db.email_outbox.create_index([("status", 1), ("next_retry_at", 1)])
     await db.email_outbox.create_index([("organization_id", 1), ("booking_id", 1)])
 
+    # FAZ-10.0: hotel integrations (channel manager, ota, etc.)
+    await db.hotel_integrations.create_index(
+        [("organization_id", 1), ("hotel_id", 1), ("kind", 1)], unique=True
+    )
+    await db.hotel_integrations.create_index([("status", 1), ("provider", 1)])
+    await db.hotel_integrations.create_index([("organization_id", 1), ("kind", 1), ("updated_at", -1)])
+
     await db.booking_financial_entries.create_index(
         [("organization_id", 1), ("hotel_id", 1), ("month", 1), ("settlement_status", 1)]
     )

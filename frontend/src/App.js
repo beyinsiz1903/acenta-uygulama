@@ -15,6 +15,7 @@ import AdminAuditLogsPage from "./pages/AdminAuditLogsPage";
 import AdminEmailLogsPage from "./pages/AdminEmailLogsPage";
 import AgencyHotelsPage from "./pages/AgencyHotelsPage";
 import AgencyHotelDetailPage from "./pages/AgencyHotelDetailPage";
+import AgencyHotelSearchPage from "./pages/AgencyHotelSearchPage";
 import AgencySearchResultsPage from "./pages/AgencySearchResultsPage";
 import AgencyBookingNewPage from "./pages/AgencyBookingNewPage";
 import AgencyBookingDraftPage from "./pages/AgencyBookingDraftPage";
@@ -66,6 +67,7 @@ function App() {
           <Route element={<AgencyLayout />}>
             <Route path="hotels" element={<AgencyHotelsPage />} />
             <Route path="hotels/:hotelId" element={<AgencyHotelDetailPage />} />
+            <Route path="hotels/:hotelId/search" element={<AgencyHotelSearchPage />} />
             <Route path="search" element={<AgencySearchResultsPage />} />
             <Route path="booking/new" element={<AgencyBookingNewPage />} />
             <Route path="booking/draft/:draftId" element={<AgencyBookingDraftPage />} />

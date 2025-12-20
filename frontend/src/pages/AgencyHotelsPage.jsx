@@ -98,14 +98,21 @@ export default function AgencyHotelsPage() {
     );
   }
 
+  const filtered = hotels.filter((h) => {
+    const nameMatch = !search || (h.hotel_name || "").toLowerCase().includes(search.toLowerCase());
+    const locMatch = !locationFilter || (h.location || "").toLowerCase().includes(locationFilter.toLowerCase());
+    const statusMatch = !statusFilter || (h.status_label || "").toLowerCase().includes(statusFilter.toLowerCase());
+    return nameMatch && locMatch && statusMatch;
+  });
+
   // Empty state
-  if (hotels.length === 0) {
+  if (!loading && filtered.length === 0) {
     return (
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Otellerim</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Acentanıza bağlı oteller
+            Anlaşmalı olduğunuz ve satış yapabileceğiniz tesisler
           </p>
         </div>
 
@@ -113,12 +120,12 @@ export default function AgencyHotelsPage() {
           <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center">
             <Hotel className="h-8 w-8 text-muted-foreground" />
           </div>
-          <div className="text-center max-w-md">
+          <div className="text-center max-w-md space-y-2">
             <p className="font-semibold text-foreground">
-              Henüz acentanıza bağlı bir otel bulunmuyor
+              Henüz size tanımlı bir tesis yok
             </p>
-            <p className="text-sm text-muted-foreground mt-2">
-              Lütfen yöneticinizle iletişime geçin.
+            <p className="text-sm text-muted-foreground">
+              Bu ekranda satış yapabileceğiniz oteller listelenir. Lütfen çalıştığınız tesisin Syroce panelinden sizi acenta olarak tanımlamasını isteyin.
             </p>
           </div>
         </div>
@@ -133,8 +140,40 @@ export default function AgencyHotelsPage() {
         <div>
           <h1 className="text-2xl font-bold text-foreground">Otellerim</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Acentanıza bağlı {hotels.length} otel
+            Anlaşmalı olduğunuz ve satış yapabileceğiniz {hotels.length} tesis
           </p>
+        </div>
+      </div>
+
+      <div className="rounded-2xl border bg-card shadow-sm p-4 mb-2 flex flex-wrap items-center gap-3">
+        <div className="flex-1 min-w-[200px]">
+          <Input
+            placeholder="🔍 Otel ara..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <select
+            className="h-10 rounded-md border bg-background px-3 text-sm"
+            value={locationFilter}
+            onChange={(e) => setLocationFilter(e.target.value)}
+          >
+            <option value="">Lokasyon (Tümü)</option>
+            {[...new Set(hotels.map((h) => h.location).filter(Boolean))].map((loc) => (
+              <option key={loc} value={loc}>{loc}</option>
+            ))}
+          </select>
+          <select
+            className="h-10 rounded-md border bg-background px-3 text-sm"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
+            <option value="">Durum (Tümü)</option>
+            <option value="Satışa Açık">Açık</option>
+            <option value="Kısıtlı">Kısıtlı</option>
+            <option value="Satışa Kapalı">Kapalı</option>
+          </select>
         </div>
       </div>
 
@@ -143,29 +182,38 @@ export default function AgencyHotelsPage() {
           <TableHeader>
             <TableRow>
               <TableHead className="font-semibold">Otel Adı</TableHead>
-              <TableHead className="font-semibold">Şehir</TableHead>
-              <TableHead className="font-semibold">Ülke</TableHead>
+              <TableHead className="font-semibold">Lokasyon</TableHead>
+              <TableHead className="font-semibold">Kanal</TableHead>
               <TableHead className="font-semibold">Durum</TableHead>
+              <TableHead className="font-semibold text-right">Aksiyon</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {hotels.map((hotel) => (
-              <TableRow 
-                key={hotel.id} 
-                className="cursor-pointer hover:bg-accent/50"
-                onClick={() => navigate(`/app/agency/hotels/${hotel.id}`)}
-              >
-                <TableCell className="font-medium">{hotel.name}</TableCell>
-                <TableCell className="text-muted-foreground">{hotel.city}</TableCell>
-                <TableCell className="text-muted-foreground">{hotel.country}</TableCell>
+            {filtered.map((hotel) => (
+              <TableRow key={hotel.hotel_id} className="hover:bg-accent/40">
+                <TableCell className="font-medium">{hotel.hotel_name}</TableCell>
+                <TableCell className="text-muted-foreground">{hotel.location || "-"}</TableCell>
+                <TableCell className="text-muted-foreground">{hotel.channel || "agency_extranet"}</TableCell>
                 <TableCell>
-                  {hotel.active ? (
-                    <Badge className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20">
-                      Aktif
-                    </Badge>
-                  ) : (
-                    <Badge variant="secondary">Pasif</Badge>
-                  )}
+                  <Badge
+                    className={
+                      hotel.status_label === "Satışa Açık"
+                        ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20"
+                        : hotel.status_label === "Kısıtlı"
+                        ? "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20"
+                        : "bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20"
+                    }
+                  >
+                    {hotel.status_label || "-"}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-right">
+                  <button
+                    className="inline-flex items-center rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition"
+                    onClick={() => navigate(`/app/agency/hotels/${hotel.hotel_id}/search`)}
+                  >
+                    Rezervasyon Oluştur
+                  </button>
                 </TableCell>
               </TableRow>
             ))}

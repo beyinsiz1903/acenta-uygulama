@@ -2196,7 +2196,7 @@ class VoucherHTMLChangesTester:
         # 6) Test email functionality (will test error handling if no real booking)
         self.test_voucher_email_functionality()
         
-        # 6) Smoke test other endpoints
+        # 7) Smoke test other endpoints
         self.test_smoke_other_endpoints()
 
         # Summary

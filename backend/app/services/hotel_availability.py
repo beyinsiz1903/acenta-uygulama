@@ -41,6 +41,14 @@ async def compute_availability(
     search_check_in = parse_date(check_in)
     search_check_out = parse_date(check_out)
     
+    # Optional admin override: force full sales open (bypass stop-sell & allocations)
+    hotel = await db.hotels.find_one({
+        "_id": hotel_id,
+        "organization_id": organization_id,
+    })
+    force_sales_open = bool(hotel and hotel.get("force_sales_open"))
+
+
     # 1) Fetch all active rooms for hotel
     rooms = await db.rooms.find({
         "tenant_id": hotel_id,
@@ -139,20 +147,24 @@ async def compute_availability(
     # 5) Calculate availability per room_type
     availability: dict[str, Any] = {}
     
-    # FAZ-2.3: Fetch stop-sell rules
-    stop_sell_rules = await db.stop_sell_rules.find({
-        "tenant_id": hotel_id,
-        "organization_id": organization_id,
-        "is_active": True,
-    }).to_list(100)
-    
-    # FAZ-2.3: Fetch channel allocations
-    channel_allocations = await db.channel_allocations.find({
-        "tenant_id": hotel_id,
-        "organization_id": organization_id,
-        "channel": channel,
-        "is_active": True,
-    }).to_list(100)
+    # FAZ-2.3: Fetch stop-sell rules & channel allocations
+    # Admin override: if force_sales_open is True, we bypass these rules.
+    if not force_sales_open:
+        stop_sell_rules = await db.stop_sell_rules.find({
+            "tenant_id": hotel_id,
+            "organization_id": organization_id,
+            "is_active": True,
+        }).to_list(100)
+        
+        channel_allocations = await db.channel_allocations.find({
+            "tenant_id": hotel_id,
+            "organization_id": organization_id,
+            "channel": channel,
+            "is_active": True,
+        }).to_list(100)
+    else:
+        stop_sell_rules = []
+        channel_allocations = []
     
     for room_type, room_list in rooms_by_type.items():
         total_count = len(room_list)

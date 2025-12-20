@@ -195,8 +195,8 @@ export default function HotelBookingsPage() {
               onChange={(e) => setStatus(e.target.value)}
             >
               <option value="">Tümü</option>
-              <option value="confirmed">confirmed</option>
-              <option value="cancelled">cancelled</option>
+              <option value="confirmed">Onaylı</option>
+              <option value="cancelled">İptal</option>
             </select>
           </div>
           <div className="grid gap-1">

@@ -85,6 +85,11 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
         textarea.remove();
       }
       toast.success("Rezervasyon bilgisi kopyalandı");
+    } catch {
+      toast.error("Kopyalama başarısız oldu");
+    }
+  };
+
   const ensureVoucherToken = async () => {
     if (!bookingId) return null;
     if (voucherToken) return voucherToken;

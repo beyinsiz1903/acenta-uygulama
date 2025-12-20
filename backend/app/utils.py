@@ -169,12 +169,16 @@ def build_booking_public_view(doc: dict[str, Any]) -> dict[str, Any]:
 
     # Serialize datetime objects to ISO format strings
     created_at = doc.get("created_at")
-    if hasattr(created_at, 'isoformat'):
+    if hasattr(created_at, "isoformat"):
         created_at = created_at.isoformat()
-    
+
     updated_at = doc.get("updated_at")
-    if hasattr(updated_at, 'isoformat'):
+    if hasattr(updated_at, "isoformat"):
         updated_at = updated_at.isoformat()
+
+    confirmed_at = doc.get("confirmed_at")
+    if hasattr(confirmed_at, "isoformat"):
+        confirmed_at = confirmed_at.isoformat()
 
     return {
         "id": booking_id,

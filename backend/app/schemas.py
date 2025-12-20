@@ -251,6 +251,8 @@ class BookingPublicView(BaseModel):
     currency: str | None = None
     source: str | None = None
     payment_status: str | None = None
+    special_requests: str | None = None
+    confirmed_at: datetime | None = None
     created_at: datetime | None = None
     updated_at: datetime | None = None
 

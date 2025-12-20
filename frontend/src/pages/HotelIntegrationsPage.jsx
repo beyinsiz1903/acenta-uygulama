@@ -200,8 +200,8 @@ export default function HotelIntegrationsPage() {
               Test bağlantı ve credential yönetimi bir sonraki fazda eklenecektir.
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" disabled>
-                Test Connection
+              <Button variant="outline" type="button" onClick={() => setDrawerOpen(true)}>
+                Detay
               </Button>
               <Button onClick={handleSave} disabled={saving}>
                 {saving ? "Kaydediliyor..." : "Kaydet"}

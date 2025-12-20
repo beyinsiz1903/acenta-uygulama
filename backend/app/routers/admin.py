@@ -22,6 +22,14 @@ def _new_id() -> str:
     return str(uuid.uuid4())
 
 
+def _oid_or_404(id_str: str):
+    """Convert string ID to ObjectId or raise 404"""
+    try:
+        return to_object_id(id_str)
+    except Exception:
+        raise HTTPException(status_code=404, detail="EMAIL_JOB_NOT_FOUND")
+
+
 @router.post("/agencies", dependencies=[Depends(require_roles(["super_admin"]))])
 async def create_agency(payload: dict, user=Depends(get_current_user)):
     """Create an agency.

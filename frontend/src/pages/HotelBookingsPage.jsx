@@ -3,6 +3,11 @@ import { Calendar, Loader2, AlertCircle, XCircle, StickyNote, Info } from "lucid
 import { api, apiErrorMessage } from "../lib/api";
 import { BookingDetailDrawer } from "../components/BookingDetailDrawer";
 import { Badge } from "../components/ui/badge";
+import { Button } from "../components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../components/ui/dialog";
+import { Label } from "../components/ui/label";
+import { Textarea } from "../components/ui/textarea";
+import { useToast } from "../components/ui/use-toast";
 import {
   Table,
   TableBody,

@@ -455,25 +455,25 @@ export default function HotelBookingsPage() {
                     </TableCell>
                     <TableCell className="text-sm">
                       {(() => {
-                        const status = booking.status;
-                        if (["confirmed", "guaranteed", "checked_in"].includes(status)) {
-                          return (
-                            <Badge className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20">
-                              Onaylı
-                            </Badge>
-                          );
-                        }
-                        if (status === "cancelled") {
-                          return (
-                            <Badge className="bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20">
-                              İptal
-                            </Badge>
-                          );
-                        }
-                        if (status === "draft") {
+                        const info = statusInfo(booking.status);
+                        if (booking.status === "draft") {
                           return <Badge variant="secondary">Taslak</Badge>;
                         }
-                        return <Badge variant="outline">{status}</Badge>;
+
+                        const toneClass =
+                          info.tone === "green"
+                            ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20"
+                            : info.tone === "red"
+                            ? "bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20"
+                            : info.tone === "yellow"
+                            ? "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20"
+                            : "bg-muted text-foreground border-muted-foreground/20";
+
+                        return (
+                          <Badge className={toneClass}>
+                            {info.text}
+                          </Badge>
+                        );
                       })()}
                     </TableCell>
                     <TableCell className="font-semibold">

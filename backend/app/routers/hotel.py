@@ -219,7 +219,7 @@ async def approve_hotel_booking(booking_id: str, request: Request, user=Depends(
         action="booking.approve",
         target_type="booking",
         target_id=booking_id,
-        before=booking,
+        before=before,
         after=updated,
         meta={"source": "hotel_panel"},
     )

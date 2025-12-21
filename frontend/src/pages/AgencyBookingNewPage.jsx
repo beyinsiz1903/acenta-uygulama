@@ -10,6 +10,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Badge } from "../components/ui/badge";
 import { formatMoney } from "../lib/format";
 import { toast } from "sonner";
+import StepBar from "../components/StepBar";
+
 
 export default function AgencyBookingNewPage() {
   const [searchParams] = useSearchParams();

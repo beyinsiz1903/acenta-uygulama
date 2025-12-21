@@ -198,22 +198,37 @@ export default function AgencyBookingConfirmedPage() {
               </div>
             </div>
 
-            <div className="border-t pt-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-semibold">Toplam Ücret</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {rate_snapshot.board} • {rate_snapshot.cancellation === "NON_REFUNDABLE" ? "İade edilemez" : "Ücretsiz iptal"}
+            <div className="border-t pt-4 grid grid-cols-1 md:grid-cols-3 gap-4 items-center text-sm">
+              <div>
+                <p className="text-sm font-semibold">Toplam Ücret</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {rate_snapshot.board} • {rate_snapshot.cancellation === "NON_REFUNDABLE" ? "İade edilemez" : "Ücretsiz iptal"}
+                </p>
+              </div>
+              <div className="text-left md:text-center">
+                <p className="text-xs text-muted-foreground">Toplam ({stay.nights} gece)</p>
+                <p className="text-3xl font-bold text-emerald-600">
+                  {formatMoney(total, currency)}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {stay.nights} gece × {formatMoney(perNight, currency)}
+                </p>
+              </div>
+              <div className="text-left md:text-right">
+                {typeof netAmount === "number" && (
+                  <p className="text-sm font-semibold text-foreground">
+                    Net: {formatMoney(netAmount, currency)}
                   </p>
-                </div>
-                <div className="text-right">
-                  <p className="text-3xl font-bold text-emerald-600">
-                    {formatMoney(rate_snapshot.price.total, rate_snapshot.price.currency)}
-                  </p>
+                )}
+                {typeof commissionAmount === "number" && (
                   <p className="text-xs text-muted-foreground">
-                    {stay.nights} gece × {formatMoney(rate_snapshot.price.per_night, rate_snapshot.price.currency)}
+                    Komisyon: {formatMoney(commissionAmount, currency)}
+                    {typeof commissionRate === "number" && ` (%${commissionRate})`}
                   </p>
-                </div>
+                )}
+                {!netAmount && !commissionAmount && (
+                  <p className="text-xs text-muted-foreground">Net/komisyon detayları mutabakatta gösterilecek.</p>
+                )}
               </div>
             </div>
           </CardContent>

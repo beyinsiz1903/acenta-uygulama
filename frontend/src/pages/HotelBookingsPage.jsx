@@ -536,12 +536,12 @@ export default function HotelBookingsPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {actionType === "confirm" ? "Talebi Onayla" : "Talebi İptal Et"}
+              {actionType === "confirm" ? "Talebi Onayla" : "Talebi Reddet"}
             </DialogTitle>
             <DialogDescription>
               {actionType === "confirm"
                 ? "Bu talep acentaya onaylandı olarak iletilir."
-                : "Bu talep iptal edildi olarak iletilir. İsterseniz sebep ekleyebilirsiniz."}
+                : "Bu talep acentaya reddedildi olarak iletilir. İsterseniz sebep ekleyebilirsiniz."}
             </DialogDescription>
           </DialogHeader>
 

@@ -68,6 +68,69 @@ export default function AgencyBookingConfirmedPage() {
 
   const { hotel_name, guest, rate_snapshot, status, stay, occupancy, confirmed_at } = booking;
 
+  const total = rate_snapshot?.price?.total;
+  const currency = rate_snapshot?.price?.currency;
+  const perNight = rate_snapshot?.price?.per_night;
+  const commissionAmount = rate_snapshot?.commission_amount ?? rate_snapshot?.commission;
+  const commissionRate =
+    rate_snapshot?.commission_rate ??
+    rate_snapshot?.commission_percent ??
+    rate_snapshot?.commission_pct;
+  const netAmount = rate_snapshot?.net_amount ?? rate_snapshot?.net_total ?? rate_snapshot?.net;
+
+  function buildWhatsAppMessage() {
+    const lines = [];
+
+    lines.push("✅ Rezervasyon Talebi");
+    lines.push("");
+
+    if (hotel_name) lines.push(`🏨 ${hotel_name}`);
+    if (stay?.check_in && stay?.check_out) {
+      const nightsText = stay.nights ? ` (${stay.nights} gece)` : "";
+      lines.push(`📅 ${stay.check_in} – ${stay.check_out}${nightsText}`);
+    }
+
+    const occupancyLine = occupancy
+      ? `${occupancy.adults || 0}Y${occupancy.children ? ` ${occupancy.children}Ç` : ""}`
+      : "";
+    if (guest?.full_name) {
+      lines.push(`👤 ${guest.full_name}${occupancyLine ? ` • ${occupancyLine}` : ""}`);
+    }
+
+    const roomBoard = [rate_snapshot?.room_type_name, rate_snapshot?.rate_plan_name]
+      .filter(Boolean)
+      .join(" / ");
+    if (roomBoard) {
+      lines.push(`🛏️ ${roomBoard}`);
+    }
+
+    lines.push("");
+
+    if (typeof total === "number" && currency) {
+      lines.push(`💰 Toplam: ${formatMoney(total, currency)}`);
+    }
+    if (typeof netAmount === "number" && currency) {
+      lines.push(`💵 Net: ${formatMoney(netAmount, currency)}`);
+    }
+    if (typeof commissionAmount === "number" && currency) {
+      const pctPart = typeof commissionRate === "number" ? ` (%${commissionRate})` : "";
+      lines.push(`🤝 Komisyon: ${formatMoney(commissionAmount, currency)}${pctPart}`);
+    }
+
+    if (status) {
+      lines.push("");
+      lines.push("🟢 Durum: Onaylandı");
+    }
+
+    return lines.join("\n");
+  }
+
+  function openWhatsApp() {
+    const text = buildWhatsAppMessage();
+    const url = "https://wa.me/?text=" + encodeURIComponent(text);
+    window.open(url, "_blank", "noopener,noreferrer");
+  }
+
   return (
     <div className="space-y-6">
       {/* Success Banner */}

@@ -559,8 +559,10 @@ function App() {
           <Route
             path="/marketplace"
             element={
-              isAuthenticated ? (
+              isAuthenticated && hasFeature('hidden_marketplace') ? (
                 <MarketplaceModule user={user} tenant={tenant} onLogout={handleLogout} />
+              ) : isAuthenticated ? (
+                <Navigate to="/" replace />
               ) : (
                 <Navigate to="/auth" replace />
               )

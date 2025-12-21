@@ -176,9 +176,9 @@ export default function AgencyHotelsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Otellerim</h1>
+          <h1 className="text-2xl font-bold text-foreground">Hızlı Rezervasyon</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Anlaşmalı olduğunuz ve satış yapabileceğiniz {hotels.length} tesis
+            Adım 1/3 — Anlaşmalı olduğunuz ve satış yapabileceğiniz {hotels.length} tesis arasından seçim yapın.
           </p>
         </div>
         <div>

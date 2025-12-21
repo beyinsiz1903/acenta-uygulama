@@ -1,43 +1,56 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { Separator } from "../components/ui/separator";
-import { AlertCircle, Clock, CheckCircle2, MessageCircle, TrendingUp } from "lucide-react";
+import { AlertCircle, Clock, CheckCircle2, MessageCircle, TrendingUp, Loader2 } from "lucide-react";
+import axios from "axios";
 
-// NOTE: Şu an tüm veriler mock. Pilot sonrası gerçek API entegrasyonuna dönüştürülebilir.
-// Expected API shape (örnek):
-// {
-//   range: { from: "2025-12-14", to: "2025-12-21" },
-//   kpis: {
-//     totalRequests,
-//     avgRequestsPerAgency,
-//     whatsappShareRate,
-//     hotelPanelActionRate,
-//     avgApprovalMinutes,
-//     agenciesViewedSettlements,
-//     hotelsViewedSettlements,
-//     flowCompletionRate,
-//   },
-//   breakdown: {
-//     dailyRequests: [
-//       { date: "2025-12-14", count: 3 },
-//       { date: "2025-12-15", count: 5 },
-//     ],
-//     statusCounts: { confirmed: 8, cancelled: 2, pending: 2 },
-//   },
-// }
-const MOCK_KPIS = {
-  totalRequests: 12,
-  avgRequestsPerAgency: 2.4,
-  whatsappShareRate: 0.75,
-  hotelPanelActionRate: 0.82,
-  avgApprovalMinutes: 47,
-  agenciesViewedSettlements: 0.5,
-  hotelsViewedSettlements: 1.0,
-  flowCompletionRate: 0.73,
-};
+const BACKEND_URL = import.meta.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
 
 export default function AdminPilotDashboardPage() {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [data, setData] = useState(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const token = localStorage.getItem("token");
+        const response = await axios.get(`${BACKEND_URL}/api/admin/pilot/summary?days=7`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setData(response.data);
+        setError(null);
+      } catch (err) {
+        console.error("Failed to fetch pilot summary:", err);
+        setError(err.response?.data?.detail || "Veri yüklenemedi");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="text-center space-y-2">
+          <AlertCircle className="h-12 w-12 text-destructive mx-auto" />
+          <p className="text-sm text-muted-foreground">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
   const {
     totalRequests,
     avgRequestsPerAgency,
@@ -47,7 +60,7 @@ export default function AdminPilotDashboardPage() {
     agenciesViewedSettlements,
     hotelsViewedSettlements,
     flowCompletionRate,
-  } = MOCK_KPIS;
+  } = data?.kpis || {};
 
   return (
     <div className="space-y-6">

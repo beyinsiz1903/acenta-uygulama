@@ -519,8 +519,8 @@ async def pilot_summary(days: int = 7, user=Depends(get_current_user)):
         "kpis": {
             "totalRequests": total_bookings,
             "avgRequestsPerAgency": avg_requests_per_agency,
-            "whatsappShareRate": whatsapp_share_rate,
-            "hotelPanelActionRate": hotel_panel_action_rate,
+            "whatsappShareRate": whatsapp_share_rate,  # Primary: clicks / total
+            "hotelPanelActionRate": hotel_panel_action_rate,  # confirmed + cancelled / total
             "avgApprovalMinutes": avg_approval_minutes,
             "agenciesViewedSettlements": agencies_viewed_settlements,
             "hotelsViewedSettlements": hotels_viewed_settlements,
@@ -530,7 +530,12 @@ async def pilot_summary(days: int = 7, user=Depends(get_current_user)):
             "activeAgenciesCount": active_agencies_count,
             "activeHotelsCount": active_hotels_count,
             "confirmedBookings": confirmed_bookings,
-            "whatsappClickedCount": whatsapp_clicked_count
+            "cancelledBookings": cancelled_bookings,
+            "whatsappClickedCount": whatsapp_clicked_count,
+            "whatsappShareRateConfirmed": whatsapp_share_rate_confirmed,  # Secondary metric
+            "hotelConfirmedCount": confirmed_bookings,
+            "hotelCancelledCount": cancelled_bookings,
+            "hotelActionCount": hotel_action_count
         }
     }
 

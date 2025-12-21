@@ -107,7 +107,9 @@ export default function AgencyHelpPage() {
         </CardHeader>
         <CardContent className="space-y-2 text-sm text-muted-foreground">
           <ul className="list-disc list-inside space-y-1">
-            <li>Syroce Acenta bir <strong>OTA değildir</strong>; satış kontrolü oteldedir.</li>
+            <li>
+              <strong>Syroce Acenta bir OTA değildir; acenta satış yapar, otel onaylar.</strong>
+            </li>
             <li>WhatsApp entegrasyonu süreci hızlandırmak içindir; resmi kayıt sistemdedir.</li>
             <li>
               Pilot hedefi: <strong>1 rezervasyonu 5 dakikadan kısa sürede</strong> sisteme girmek ve paylaşmak.

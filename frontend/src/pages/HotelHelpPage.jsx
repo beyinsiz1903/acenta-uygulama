@@ -99,6 +99,9 @@ export default function HotelHelpPage() {
         </CardHeader>
         <CardContent className="space-y-2 text-sm text-muted-foreground">
           <ul className="list-disc list-inside space-y-1">
+            <li>
+              <strong>Syroce Acenta bir OTA değildir; acenta satış yapar, otel onaylar.</strong>
+            </li>
             <li>Syroce Acenta sizin için bir <strong>acenta extranet&apos;i</strong> gibi çalışır; kontrol sizdedir.</li>
             <li>Acenta sadece talep gönderir; siz <strong>Onayla / Reddet</strong> kararı verirsiniz.</li>
             <li>

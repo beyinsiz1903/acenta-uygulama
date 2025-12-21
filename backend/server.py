@@ -17256,9 +17256,25 @@ async def startup_db_seed():
     except Exception as e:
         print(f"⚠️ Cache warmer initialization: {str(e)}")
     
-    # Initialize optimization systems
+    # Initialize optimization systems (only if any tenant has RMS enabled)
     try:
         print("🚀 Initializing enterprise optimization systems...")
+
+        # Check if any tenant has RMS feature enabled (plan/override)
+        any_rms_enabled = await db.tenants.find_one(
+            {
+                "$or": [
+                    {"plan": "enterprise"},
+                    {"subscription_tier": "enterprise"},
+                    {"features.hidden_rms": True},
+                ]
+            },
+            {"_id": 1},
+        )
+        if not any_rms_enabled:
+            print("ℹ️ No tenants with RMS enabled; skipping optimization init")
+            return
+
         import redis
         from optimization_endpoints import init_optimization_managers
         
@@ -17268,7 +17284,7 @@ async def startup_db_seed():
             port=6379,
             db=0,
             socket_connect_timeout=2,
-            decode_responses=False  # Keep as bytes for now
+            decode_responses=False
         )
         
         # Test Redis connection

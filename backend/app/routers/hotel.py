@@ -135,6 +135,87 @@ async def get_hotel_booking(booking_id: str, user=Depends(get_current_user)):
 
 
 
+@router.post(
+    "/bookings/{booking_id}/approve",
+    dependencies=[Depends(require_roles(["hotel_admin", "hotel_staff"]))],
+)
+async def approve_hotel_booking(booking_id: str, request: Request, user=Depends(get_current_user)):
+    """Hotel panelinden gelen onay aksiyonu.
+
+    - Sadece ilgili otelin rezervasyonlarını onaylar
+    - Idempotent: zaten confirmed ise mevcut kaydı döner
+    - cancelled durumundaki rezervasyonlar için 409 döner
+    """
+    db = await get_db()
+    hotel_id = _ensure_hotel_id(user)
+
+    booking = await db.bookings.find_one(
+        {
+            "organization_id": user["organization_id"],
+            "hotel_id": hotel_id,
+            "_id": booking_id,
+        }
+    )
+
+    if not booking:
+        raise HTTPException(status_code=404, detail="BOOKING_NOT_FOUND")
+
+    status = (booking.get("status") or "").lower()
+    if status == "cancelled":
+        raise HTTPException(status_code=409, detail="CANNOT_APPROVE_CANCELLED_BOOKING")
+
+    if status == "confirmed":
+        # Idempotent davranış: zaten onaylı ise mevcut kaydı döndür
+        return build_booking_public_view(booking)
+
+    now = now_utc()
+
+    await db.bookings.update_one(
+        {
+            "organization_id": user["organization_id"],
+            "hotel_id": hotel_id,
+            "_id": booking_id,
+        },
+        {
+            "$set": {
+                "status": "confirmed",
+                "confirmed_at": now,
+                "updated_at": now,
+            }
+        },
+    )
+
+    updated = await db.bookings.find_one({"_id": booking_id})
+
+    # Event outbox
+    await write_booking_event(
+        db,
+        organization_id=user["organization_id"],
+        event_type="booking.confirmed",
+        booking_id=booking_id,
+        hotel_id=str(updated.get("hotel_id")),
+        agency_id=str(updated.get("agency_id")),
+        payload={"source": "hotel_panel"},
+    )
+
+    # Audit log
+    await write_audit_log(
+        db,
+        organization_id=user["organization_id"],
+        actor={"actor_type": "user", "email": user.get("email"), "roles": user.get("roles")},
+        request=request,
+        action="booking.approve",
+        target_type="booking",
+        target_id=booking_id,
+        before=booking,
+        after=updated,
+        meta={"source": "hotel_panel"},
+    )
+
+    return build_booking_public_view(updated)
+
+
+
 class BookingNoteIn(BaseModel):
     note: str = Field(min_length=1, max_length=4000)
 

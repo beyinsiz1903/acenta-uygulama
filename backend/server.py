@@ -22699,7 +22699,7 @@ async def get_purchase_orders(
     
     return {'orders': orders, 'count': len(orders)}
 
-@api_router.post("/marketplace/purchase-orders")
+@api_router.post("/marketplace/purchase-orders", dependencies=[Depends(require_feature("hidden_marketplace"))])
 async def create_purchase_order(
     request: CreatePurchaseOrderRequest,
     current_user: User = Depends(get_current_user)

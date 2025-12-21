@@ -151,9 +151,9 @@ export default function HotelBookingsPage() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Otel Rezervasyonları</h1>
+          <h1 className="text-2xl font-bold text-foreground">Gelen Rezervasyon Talepleri</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            {filtered.length} kayıt - Bugün giriş: {todayArrivals}, Yarın giriş: {tomorrowArrivals}
+            Oteliniz için kayıtlı rezervasyon talepleri yükleniyor...
           </p>
         </div>
 

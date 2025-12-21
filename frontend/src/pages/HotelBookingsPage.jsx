@@ -85,7 +85,6 @@ export default function HotelBookingsPage() {
   const [actionBooking, setActionBooking] = useState(null);
   const [rejectReason, setRejectReason] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
-  const [actionError, setActionError] = useState("");
 
 
   const todayArrivals = bookings.filter((b) => (b.stay || {}).check_in === todayStr).length;

@@ -22,11 +22,13 @@ import AgencyBookingDraftPage from "./pages/AgencyBookingDraftPage";
 import AgencyBookingConfirmedPage from "./pages/AgencyBookingConfirmedPage";
 import AgencyBookingsListPage from "./pages/AgencyBookingsListPage";
 import AgencySettlementsPage from "./pages/AgencySettlementsPage";
+import AgencyHelpPage from "./pages/AgencyHelpPage";
 import HotelBookingsPage from "./pages/HotelBookingsPage";
 import HotelStopSellPage from "./pages/HotelStopSellPage";
 import HotelAllocationsPage from "./pages/HotelAllocationsPage";
 import HotelSettlementsPage from "./pages/HotelSettlementsPage";
 import HotelIntegrationsPage from "./pages/HotelIntegrationsPage";
+import HotelHelpPage from "./pages/HotelHelpPage";
 import NotFoundPage from "./pages/NotFoundPage";
 import { Toaster } from "./components/ui/sonner";
 

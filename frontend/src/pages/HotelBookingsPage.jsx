@@ -60,8 +60,6 @@ export default function HotelBookingsPage() {
       if (dateFrom) params.date_from = dateFrom;
       if (dateTo) params.date_to = dateTo;
       // Note: agency filter via agency_id would require selecting exact agency; for MVP we do client-side by name.
-  const { toast } = useToast();
-
 
       const resp = await api.get("/hotel/bookings", { params });
       const list = resp.data || [];

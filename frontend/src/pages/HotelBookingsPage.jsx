@@ -104,6 +104,43 @@ export default function HotelBookingsPage() {
     for (const b of enrichedBookings) {
       base.total += 1;
       const g = b.__group || "new";
+  function openAction(type, booking) {
+    setActionType(type);
+    setActionBooking(booking);
+    setRejectReason("");
+    setActionOpen(true);
+  }
+
+  async function submitAction() {
+    if (!actionBooking || !actionType) return;
+    setActionLoading(true);
+    setActionError("");
+
+    try {
+      if (actionType === "confirm") {
+        await api.post(`/hotel/bookings/${actionBooking.id}/confirm`, {});
+      } else if (actionType === "reject") {
+        await api.post(`/bookings/${actionBooking.id}/cancel`, {
+          reason: rejectReason?.trim() || undefined,
+        });
+      }
+
+      setActionOpen(false);
+      await loadBookings();
+      toast({
+        title: actionType === "confirm" ? "Talep onaylandı" : "Talep iptal edildi",
+        duration: 2500,
+      });
+    } catch (err) {
+      const msg = apiErrorMessage(err);
+      setActionError(msg);
+      toast({ title: "İşlem sırasında hata oluştu", description: msg, variant: "destructive" });
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
+
       base[g] = (base[g] || 0) + 1;
     }
     return base;

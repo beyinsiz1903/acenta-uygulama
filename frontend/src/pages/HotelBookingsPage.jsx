@@ -377,10 +377,13 @@ export default function HotelBookingsPage() {
                 const price = rateSnapshot.price || {};
 
                 return (
-                  <TableRow
-                    key={booking.id}
-                    className="cursor-pointer hover:bg-accent/50"
-                    onClick={() => {
+                  const isNew = booking.__group === "new";
+
+                  return (
+                    <TableRow
+                      key={booking.id}
+                      className={`cursor-pointer hover:bg-accent/50 transition-colors ${isNew ? "bg-muted/30" : ""}`}
+                      onClick={() => {
                       setSelectedId(booking.id);
                       setDrawerOpen(true);
                     }}

@@ -62,6 +62,8 @@ export default function HotelBookingsPage() {
   const tomorrowArrivals = bookings.filter((b) => (b.stay || {}).check_in === tomorrowStr).length;
 
 
+  const [filterGroup, setFilterGroup] = useState("all");
+
 
   const filtered = useMemo(() => {
     const q = (agencyQuery || "").trim().toLowerCase();

@@ -510,6 +510,176 @@ async def pilot_summary(days: int = 7, user=Depends(get_current_user)):
     # 7) Flow completion rate: confirmed / total
     flow_completion_rate = round(confirmed_bookings / total_bookings, 2) if total_bookings > 0 else 0
     
+    # ====================================================================================
+    # FAZ-2.1: BREAKDOWN AGGREGATIONS
+    # ====================================================================================
+    
+    # 1) BY DAY: Daily total/confirmed/cancelled/whatsapp
+    by_day_pipeline = [
+        {"$match": {"organization_id": org_id, "created_at": {"$gte": cutoff}}},
+        {
+            "$group": {
+                "_id": {"$dateToString": {"format": "%Y-%m-%d", "date": "$created_at"}},
+                "total": {"$sum": 1},
+                "confirmed": {"$sum": {"$cond": [{"$eq": ["$status", "confirmed"]}, 1, 0]}},
+                "cancelled": {"$sum": {"$cond": [{"$eq": ["$status", "cancelled"]}, 1, 0]}}
+            }
+        },
+        {"$sort": {"_id": 1}}
+    ]
+    by_day_result = await db.bookings.aggregate(by_day_pipeline).to_list(100)
+    
+    # Get whatsapp clicks by day
+    whatsapp_by_day_pipeline = [
+        {"$match": {"organization_id": org_id, "event_type": "booking.whatsapp_clicked", "created_at": {"$gte": cutoff}}},
+        {
+            "$group": {
+                "_id": {"$dateToString": {"format": "%Y-%m-%d", "date": "$created_at"}},
+                "whatsapp": {"$sum": 1}
+            }
+        }
+    ]
+    whatsapp_by_day_result = await db.booking_events.aggregate(whatsapp_by_day_pipeline).to_list(100)
+    whatsapp_by_day_map = {r["_id"]: r["whatsapp"] for r in whatsapp_by_day_result}
+    
+    breakdown_by_day = [
+        {
+            "date": row["_id"],
+            "total": row["total"],
+            "confirmed": row["confirmed"],
+            "cancelled": row["cancelled"],
+            "whatsapp": whatsapp_by_day_map.get(row["_id"], 0)
+        }
+        for row in by_day_result
+    ]
+    
+    # 2) BY HOTEL: Hotel-based performance
+    by_hotel_pipeline = [
+        {"$match": {"organization_id": org_id, "created_at": {"$gte": cutoff}}},
+        {
+            "$group": {
+                "_id": "$hotel_id",
+                "hotel_name": {"$first": "$hotel_name"},
+                "total": {"$sum": 1},
+                "confirmed": {"$sum": {"$cond": [{"$eq": ["$status", "confirmed"]}, 1, 0]}},
+                "cancelled": {"$sum": {"$cond": [{"$eq": ["$status", "cancelled"]}, 1, 0]}},
+                "approval_times": {
+                    "$push": {
+                        "$cond": [
+                            {"$eq": ["$status", "confirmed"]},
+                            {"$divide": [{"$subtract": ["$updated_at", "$created_at"]}, 60000]},
+                            None
+                        ]
+                    }
+                }
+            }
+        },
+        {
+            "$project": {
+                "hotel_id": "$_id",
+                "hotel_name": 1,
+                "total": 1,
+                "confirmed": 1,
+                "cancelled": 1,
+                "action_count": {"$add": ["$confirmed", "$cancelled"]},
+                "action_rate": {"$divide": [{"$add": ["$confirmed", "$cancelled"]}, "$total"]},
+                "approval_times": {
+                    "$filter": {
+                        "input": "$approval_times",
+                        "cond": {"$ne": ["$$this", None]}
+                    }
+                }
+            }
+        },
+        {
+            "$project": {
+                "hotel_id": 1,
+                "hotel_name": 1,
+                "total": 1,
+                "confirmed": 1,
+                "cancelled": 1,
+                "action_count": 1,
+                "action_rate": {"$round": ["$action_rate", 2]},
+                "avg_approval_minutes": {
+                    "$cond": [
+                        {"$gt": [{"$size": "$approval_times"}, 0]},
+                        {"$round": [{"$avg": "$approval_times"}, 1]},
+                        0
+                    ]
+                }
+            }
+        }
+    ]
+    by_hotel_result = await db.bookings.aggregate(by_hotel_pipeline).to_list(100)
+    
+    breakdown_by_hotel = [
+        {
+            "hotel_id": str(row["hotel_id"]),
+            "hotel_name": row.get("hotel_name", "Unknown"),
+            "total": row["total"],
+            "confirmed": row["confirmed"],
+            "cancelled": row.get("cancelled", 0),
+            "action_count": row.get("action_count", 0),
+            "action_rate": row.get("action_rate", 0),
+            "avg_approval_minutes": row.get("avg_approval_minutes", 0)
+        }
+        for row in by_hotel_result
+    ]
+    
+    # 3) BY AGENCY: Agency-based conversion
+    by_agency_pipeline = [
+        {"$match": {"organization_id": org_id, "created_at": {"$gte": cutoff}}},
+        {
+            "$group": {
+                "_id": "$agency_id",
+                "total": {"$sum": 1},
+                "confirmed": {"$sum": {"$cond": [{"$eq": ["$status", "confirmed"]}, 1, 0]}}
+            }
+        },
+        {
+            "$project": {
+                "agency_id": "$_id",
+                "total": 1,
+                "confirmed": 1,
+                "conversion_rate": {
+                    "$round": [
+                        {"$cond": [{"$gt": ["$total", 0]}, {"$divide": ["$confirmed", "$total"]}, 0]},
+                        2
+                    ]
+                }
+            }
+        }
+    ]
+    by_agency_result = await db.bookings.aggregate(by_agency_pipeline).to_list(100)
+    
+    # Get agency names
+    agency_ids = [str(r["agency_id"]) for r in by_agency_result]
+    agencies_docs = await db.agencies.find({"_id": {"$in": agency_ids}}).to_list(100)
+    agency_name_map = {str(a["_id"]): a.get("name", "Unknown") for a in agencies_docs}
+    
+    # Get whatsapp clicks by agency
+    whatsapp_by_agency_pipeline = [
+        {"$match": {"organization_id": org_id, "event_type": "booking.whatsapp_clicked", "created_at": {"$gte": cutoff}}},
+        {"$group": {"_id": "$agency_id", "whatsapp_clicks": {"$sum": 1}}}
+    ]
+    whatsapp_by_agency_result = await db.booking_events.aggregate(whatsapp_by_agency_pipeline).to_list(100)
+    whatsapp_by_agency_map = {str(r["_id"]): r["whatsapp_clicks"] for r in whatsapp_by_agency_result}
+    
+    breakdown_by_agency = [
+        {
+            "agency_id": str(row["agency_id"]),
+            "agency_name": agency_name_map.get(str(row["agency_id"]), "Unknown"),
+            "total": row["total"],
+            "confirmed": row["confirmed"],
+            "whatsapp_clicks": whatsapp_by_agency_map.get(str(row["agency_id"]), 0),
+            "conversion_rate": row.get("conversion_rate", 0),
+            "whatsapp_rate": round(
+                whatsapp_by_agency_map.get(str(row["agency_id"]), 0) / row["total"], 2
+            ) if row["total"] > 0 else 0
+        }
+        for row in by_agency_result
+    ]
+    
     return {
         "range": {
             "from": cutoff.isoformat(),
@@ -519,8 +689,8 @@ async def pilot_summary(days: int = 7, user=Depends(get_current_user)):
         "kpis": {
             "totalRequests": total_bookings,
             "avgRequestsPerAgency": avg_requests_per_agency,
-            "whatsappShareRate": whatsapp_share_rate,  # Primary: clicks / total
-            "hotelPanelActionRate": hotel_panel_action_rate,  # confirmed + cancelled / total
+            "whatsappShareRate": whatsapp_share_rate,
+            "hotelPanelActionRate": hotel_panel_action_rate,
             "avgApprovalMinutes": avg_approval_minutes,
             "agenciesViewedSettlements": agencies_viewed_settlements,
             "hotelsViewedSettlements": hotels_viewed_settlements,
@@ -532,10 +702,15 @@ async def pilot_summary(days: int = 7, user=Depends(get_current_user)):
             "confirmedBookings": confirmed_bookings,
             "cancelledBookings": cancelled_bookings,
             "whatsappClickedCount": whatsapp_clicked_count,
-            "whatsappShareRateConfirmed": whatsapp_share_rate_confirmed,  # Secondary metric
+            "whatsappShareRateConfirmed": whatsapp_share_rate_confirmed,
             "hotelConfirmedCount": confirmed_bookings,
             "hotelCancelledCount": cancelled_bookings,
             "hotelActionCount": hotel_action_count
+        },
+        "breakdown": {
+            "by_day": breakdown_by_day,
+            "by_hotel": breakdown_by_hotel,
+            "by_agency": breakdown_by_agency
         }
     }
 

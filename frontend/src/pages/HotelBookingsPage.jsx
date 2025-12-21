@@ -375,15 +375,13 @@ export default function HotelBookingsPage() {
                 const guest = booking.guest || {};
                 const rateSnapshot = booking.rate_snapshot || {};
                 const price = rateSnapshot.price || {};
+                const isNew = booking.__group === "new";
 
                 return (
-                  const isNew = booking.__group === "new";
-
-                  return (
-                    <TableRow
-                      key={booking.id}
-                      className={`cursor-pointer hover:bg-accent/50 transition-colors ${isNew ? "bg-muted/30" : ""}`}
-                      onClick={() => {
+                  <TableRow
+                    key={booking.id}
+                    className={`cursor-pointer hover:bg-accent/50 transition-colors ${isNew ? "bg-muted/30" : ""}`}
+                    onClick={() => {
                       setSelectedId(booking.id);
                       setDrawerOpen(true);
                     }}

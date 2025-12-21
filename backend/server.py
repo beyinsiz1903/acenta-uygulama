@@ -9927,7 +9927,7 @@ async def create_product(product: Product):
     await db.products.insert_one(product_dict)
     return product
 
-@api_router.get("/marketplace/products", response_model=List[Product])
+@api_router.get("/marketplace/products", response_model=List[Product], dependencies=[Depends(require_feature("hidden_marketplace"))])
 @cached(ttl=300, key_prefix="marketplace_products")  # Cache for 5 min
 async def get_products():
     products = await db.products.find({}, {'_id': 0}).to_list(1000)

@@ -135,9 +135,9 @@ export default function AgencySearchResultsPage() {
                 const total = ratePlan.price.total;
                 const currency = ratePlan.price.currency;
                 const perNight = ratePlan.price.per_night;
-                const commissionAmount = ratePlan.commission_amount;
-                const commissionRate = ratePlan.commission_rate; // % olarak (örn: 10)
-                const netAmount = ratePlan.net_amount;
+                const commissionAmount = ratePlan.commission_amount ?? ratePlan.commission;
+                const commissionRate = ratePlan.commission_rate ?? ratePlan.commission_percent ?? ratePlan.commission_pct;
+                const netAmount = ratePlan.net_amount ?? ratePlan.net_total ?? ratePlan.net;
 
                 return (
                   <div

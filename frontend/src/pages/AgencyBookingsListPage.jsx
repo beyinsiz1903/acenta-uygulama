@@ -166,7 +166,7 @@ export default function AgencyBookingsListPage() {
               Henüz rezervasyon yok
             </p>
             <p className="text-sm text-muted-foreground mt-2">
-              Otellerim sayfasından arama yapıp rezervasyon oluşturabilirsiniz.
+              Hızlı Rezervasyon ekranından arama yapıp rezervasyon oluşturabilirsiniz.
             </p>
           </div>
           <Button onClick={() => navigate("/app/agency/hotels")} className="mt-4 gap-2">

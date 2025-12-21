@@ -59,7 +59,7 @@ export default function AgencyBookingConfirmedPage() {
             <p className="text-sm text-muted-foreground mt-1">{error || "Rezervasyon bilgisi bulunamadı"}</p>
           </div>
           <Button onClick={() => navigate("/app/agency/hotels")}>
-            Otellerime Dön
+            Yeni Rezervasyon
           </Button>
         </div>
       </div>

@@ -54,7 +54,7 @@ export default function AgencySearchResultsPage() {
                 Lütfen yeni bir arama yapın.
               </p>
               <Button onClick={() => navigate("/app/agency/hotels")} className="mt-4">
-                Otellerime Dön
+                Aramaya Dön
               </Button>
             </div>
           )}

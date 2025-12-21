@@ -105,7 +105,7 @@ export default function AgencyBookingNewPage() {
               Lütfen yeni bir arama yapın.
             </p>
             <Button onClick={() => navigate("/app/agency/hotels")} className="mt-4">
-              Otellerime Dön
+              Sonuçlara Dön
             </Button>
           </div>
         </div>

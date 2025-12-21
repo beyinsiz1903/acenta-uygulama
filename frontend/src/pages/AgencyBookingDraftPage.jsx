@@ -128,7 +128,7 @@ export default function AgencyBookingDraftPage() {
             <p className="text-sm text-muted-foreground mt-1">{error || "Rezervasyon taslağı bulunamadı"}</p>
           </div>
           <Button onClick={() => navigate("/app/agency/hotels")}>
-            Otellerime Dön
+            Sonuçlara Dön
           </Button>
         </div>
       </div>

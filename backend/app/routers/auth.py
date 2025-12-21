@@ -28,6 +28,14 @@ async def login(payload: LoginRequest):
 
     token = create_access_token(subject=user["email"], organization_id=org_id, roles=user.get("roles") or ["admin"])
     user_out = serialize_doc(user)
+    
+    # FAZ-1: Load organization with merged features
+    from app.auth import load_org_doc, resolve_org_features
+    org_doc = await load_org_doc(org_id)
+    if org_doc:
+        org_doc["features"] = resolve_org_features(org_doc)
+        org_doc["plan"] = org_doc.get("plan") or org_doc.get("subscription_tier") or "core_small_hotel"
+    
     return LoginResponse(
         access_token=token,
         user=AuthUser(
@@ -39,6 +47,7 @@ async def login(payload: LoginRequest):
             agency_id=user_out.get("agency_id"),
             hotel_id=user_out.get("hotel_id"),
         ),
+        organization=org_doc
     )
 
 

@@ -25,6 +25,7 @@ class LoginResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     user: AuthUser
+    organization: Optional[dict] = None  # FAZ-1: Organization with merged features
 
 
 class CustomerIn(BaseModel):

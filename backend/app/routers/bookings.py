@@ -184,6 +184,7 @@ async def cancel_booking(booking_id: str, payload: BookingCancelIn, request: Req
 async def track_whatsapp_click(booking_id: str, user=Depends(get_current_user)):
     """Track when user clicks WhatsApp share button on booking confirmed page.
     
+    Idempotent: same booking_id + actor can only create one event (prevents spam)
     Used for pilot KPI: whatsappShareRate
     """
     db = await get_db()
@@ -196,7 +197,19 @@ async def track_whatsapp_click(booking_id: str, user=Depends(get_current_user)):
     if str(booking.get("agency_id")) != str(user.get("agency_id")):
         raise HTTPException(status_code=403, detail="FORBIDDEN")
     
-    # Write event
+    # Check if event already exists for this booking + actor (idempotency)
+    existing_event = await db.booking_events.find_one({
+        "organization_id": user["organization_id"],
+        "event_type": "booking.whatsapp_clicked",
+        "booking_id": booking_id,
+        "payload.actor_email": user.get("email")
+    })
+    
+    if existing_event:
+        # Already tracked, return success (idempotent)
+        return {"ok": True, "already_tracked": True}
+    
+    # Write new event
     await write_booking_event(
         db,
         organization_id=user["organization_id"],
@@ -207,5 +220,5 @@ async def track_whatsapp_click(booking_id: str, user=Depends(get_current_user)):
         payload={"actor_email": user.get("email")}
     )
     
-    return {"ok": True}
+    return {"ok": True, "already_tracked": False}
 

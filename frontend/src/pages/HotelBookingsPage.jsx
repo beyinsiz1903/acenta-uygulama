@@ -34,6 +34,8 @@ function mapStatusToGroup(status) {
 }
 
 export default function HotelBookingsPage() {
+  const { toast } = useToast();
+  
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");

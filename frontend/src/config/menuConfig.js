@@ -37,6 +37,7 @@ export const MENU_CONFIG = {
         { label: "Satışa Kapat", path: "/app/hotel/stop-sell" },
         { label: "Acenta Kotası", path: "/app/hotel/allocations" },
         { label: "Mutabakat", path: "/app/hotel/settlements" },
+        { label: "Yardım", path: "/app/hotel/help" },
       ],
     },
   ],

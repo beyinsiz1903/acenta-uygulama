@@ -190,7 +190,7 @@ export default function AgencySearchResultsPage() {
                         </p>
                       )}
                       {!netAmount && !commissionAmount && (
-                        <p className="text-xs text-muted-foreground">Net/komisyon detayları onay ekranında gösterilecek.</p>
+                        <p className="text-xs text-muted-foreground">Net/komisyon detayı mutabakat ekranında netleşir.</p>
                       )}
 
                       <Button

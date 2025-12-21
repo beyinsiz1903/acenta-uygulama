@@ -5,6 +5,27 @@ import { Separator } from "../components/ui/separator";
 import { AlertCircle, Clock, CheckCircle2, MessageCircle, TrendingUp } from "lucide-react";
 
 // NOTE: Şu an tüm veriler mock. Pilot sonrası gerçek API entegrasyonuna dönüştürülebilir.
+// Expected API shape (örnek):
+// {
+//   range: { from: "2025-12-14", to: "2025-12-21" },
+//   kpis: {
+//     totalRequests,
+//     avgRequestsPerAgency,
+//     whatsappShareRate,
+//     hotelPanelActionRate,
+//     avgApprovalMinutes,
+//     agenciesViewedSettlements,
+//     hotelsViewedSettlements,
+//     flowCompletionRate,
+//   },
+//   breakdown: {
+//     dailyRequests: [
+//       { date: "2025-12-14", count: 3 },
+//       { date: "2025-12-15", count: 5 },
+//     ],
+//     statusCounts: { confirmed: 8, cancelled: 2, pending: 2 },
+//   },
+// }
 const MOCK_KPIS = {
   totalRequests: 12,
   avgRequestsPerAgency: 2.4,

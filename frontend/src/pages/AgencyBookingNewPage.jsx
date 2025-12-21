@@ -293,7 +293,7 @@ export default function AgencyBookingNewPage() {
             </Button>
 
             <p className="text-xs text-muted-foreground text-center mt-1">
-              Rezervasyonu gönderdikten sonra otel paneline düşer; durumunu Rezervasyonlarım ekranından takip edebilirsiniz.
+              Rezervasyonu gönderdikten sonra otele iletilir; durumunu Rezervasyonlarım ekranından takip edebilirsiniz.
             </p>
           </form>
         </CardContent>

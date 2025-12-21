@@ -80,35 +80,37 @@ export default function HotelBookingsPage() {
   const [filterGroup, setFilterGroup] = useState("all");
 
 
+  const enrichedBookings = useMemo(() => {
+    const list = bookings || [];
+    return list.map((b) => ({ ...b, __group: mapStatusToGroup(b.status) }));
+  }, [bookings]);
+
+  const counts = useMemo(() => {
+    const base = { total: 0, new: 0, confirmed: 0, cancelled: 0 };
+    for (const b of enrichedBookings) {
+      base.total += 1;
+      const g = b.__group || "new";
+      base[g] = (base[g] || 0) + 1;
+    }
+    return base;
+  }, [enrichedBookings]);
+
   const filtered = useMemo(() => {
     const q = (agencyQuery || "").trim().toLowerCase();
-    const sorted = [...(bookings || [])].sort(
+    const sorted = [...enrichedBookings].sort(
       (a, b) => new Date(b.created_at) - new Date(a.created_at)
     );
 
-    if (!q) return sorted;
+    const byGroup =
+      filterGroup === "all" ? sorted : sorted.filter((b) => (b.__group || "new") === filterGroup);
 
-    return sorted.filter((b) => {
+    if (!q) return byGroup;
+
+    return byGroup.filter((b) => {
       const name = (b.agency_name || "").toLowerCase();
       return name.includes(q);
     });
-  const STATUS_GROUPS = {
-    all: null,
-    new: new Set(["pending", "awaiting_confirmation", "requested", "created", "new", "" ]),
-    confirmed: new Set(["confirmed", "approved", "guaranteed", "checked_in"]),
-    cancelled: new Set(["cancelled", "rejected", "declined"]),
-  };
-
-  function mapStatusToGroup(status) {
-    const s = String(status || "").toLowerCase();
-    if (STATUS_GROUPS.new.has(s)) return "new";
-    if (STATUS_GROUPS.confirmed.has(s)) return "confirmed";
-    if (STATUS_GROUPS.cancelled.has(s)) return "cancelled";
-    return "new";
-  }
-
-
-  }, [bookings, agencyQuery]);
+  }, [enrichedBookings, agencyQuery, filterGroup]);
 
   async function doCancelRequest(booking) {
     setActionError("");

@@ -8,26 +8,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from "recharts";
+import { getToken } from "../lib/api";
 
-/**
- * Env strategy:
- * - Vite: import.meta.env.VITE_BACKEND_URL
- * - CRA fallback: process.env.REACT_APP_BACKEND_URL
- */
-const BACKEND_URL =
-  (typeof import.meta !== "undefined" && import.meta.env && import.meta.env.VITE_BACKEND_URL) ||
-  process.env.REACT_APP_BACKEND_URL ||
-  "";
-
-/** Token key fallback (projelerde farklı olabiliyor) */
-function getAuthToken() {
-  return (
-    localStorage.getItem("token") ||
-    localStorage.getItem("access_token") ||
-    localStorage.getItem("jwt") ||
-    ""
-  );
-}
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || "";
 
 /**
  * Safer date key generator:
@@ -96,9 +79,9 @@ export default function AdminPilotDashboardPage() {
         setLoading(true);
         setError("");
 
-        const token = getAuthToken();
-        if (!BACKEND_URL) throw new Error("BACKEND_URL tanımlı değil (VITE_BACKEND_URL / REACT_APP_BACKEND_URL).");
-        if (!token) throw new Error("Token bulunamadı (localStorage: token/access_token/jwt).");
+        const token = getToken();
+        if (!BACKEND_URL) throw new Error("BACKEND_URL tanımlı değil.");
+        if (!token) throw new Error("Token bulunamadı. Lütfen tekrar giriş yapın.");
 
         const resp = await axios.get(`${BACKEND_URL}/api/admin/pilot/summary?days=7`, {
           headers: { Authorization: `Bearer ${token}` },
@@ -110,7 +93,7 @@ export default function AdminPilotDashboardPage() {
         const msg =
           e?.response?.data?.detail ||
           e?.message ||
-          "Veri yüklenemedi (bilinmeyen hata)";
+          "Veri yüklenemedi";
         setError(String(msg));
       } finally {
         setLoading(false);

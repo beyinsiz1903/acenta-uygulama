@@ -157,38 +157,37 @@ export default function AdminPilotDashboardPage() {
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex flex-col gap-2">
         <div className="flex items-center gap-3">
           <h1 className="text-2xl font-bold text-foreground">Pilot Dashboard</h1>
-          <Badge variant="outline" className="text-xs border-emerald-500/50 text-emerald-700 dark:text-emerald-300">
+          <Badge variant="outline" className="text-xs">
             Canlı Veri · Son 7 Gün
           </Badge>
         </div>
+
         <p className="text-sm text-muted-foreground max-w-2xl">
-          Syroce Acenta pilotunun ilk 7 günündeki <strong>davranışsal KPI&apos;larını</strong> özetler.
-          Veriler gerçek zamanlı olarak hesaplanmaktadır.
+          Pilot KPI'larını ve detaylı breakdown'ları görüntüleyin.
         </p>
-        {data?.meta && (
-          <p className="text-xs text-muted-foreground">
-            <strong>{data.meta.activeAgenciesCount}</strong> aktif acenta, <strong>{data.meta.activeHotelsCount}</strong> aktif otel
-          </p>
-        )}
+
+        <p className="text-xs text-muted-foreground">
+          <strong>{meta.activeAgenciesCount ?? 0}</strong> aktif acenta ·{" "}
+          <strong>{meta.activeHotelsCount ?? 0}</strong> aktif otel ·{" "}
+          <strong>{meta.whatsappClickedCount ?? 0}</strong> WhatsApp click
+        </p>
       </div>
 
-      {/* Üst satır: Aktivasyon & hacim */}
+      {/* KPI Cards */}
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
             <CardTitle className="text-sm font-medium">Deneme Rezervasyonları</CardTitle>
-            <TrendingUp className="h-4 w-4 text-emerald-500" />
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalRequests}</div>
+            <div className="text-2xl font-bold">{kpis.totalRequests ?? 0}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              Toplam talep · Hedef: ≥ 10 (7 günde)
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Acenta başına ortalama <strong>{avgRequestsPerAgency.toFixed(1)}</strong> talep
+              Acenta başına ortalama <strong>{Number(kpis.avgRequestsPerAgency ?? 0).toFixed(1)}</strong> talep
             </p>
           </CardContent>
         </Card>
@@ -196,12 +195,12 @@ export default function AdminPilotDashboardPage() {
         <Card>
           <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
             <CardTitle className="text-sm font-medium">WhatsApp Kullanımı</CardTitle>
-            <MessageCircle className="h-4 w-4 text-emerald-500" />
+            <MessageCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{Math.round(whatsappShareRate * 100)}%</div>
+            <div className="text-2xl font-bold">{pct(kpis.whatsappShareRate)}%</div>
             <p className="text-xs text-muted-foreground mt-1">
-              Confirmed ekranda <strong>WhatsApp&apos;a Gönder</strong> kullanımı · Hedef: ≥ 70%
+              Toplam rezervasyonlarda WhatsApp paylaşım oranı
             </p>
           </CardContent>
         </Card>
@@ -209,99 +208,171 @@ export default function AdminPilotDashboardPage() {
         <Card>
           <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
             <CardTitle className="text-sm font-medium">Otel Panel Aksiyonu</CardTitle>
-            <CheckCircle2 className="h-4 w-4 text-sky-500" />
+            <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{Math.round(hotelPanelActionRate * 100)}%</div>
+            <div className="text-2xl font-bold">{pct(kpis.hotelPanelActionRate)}%</div>
             <p className="text-xs text-muted-foreground mt-1">
-              Taleplerin panelden <strong>Onayla / Reddet</strong> ile işlem görme oranı · Hedef: ≥ 80%
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Orta satır: Hız & güven */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
-            <CardTitle className="text-sm font-medium">Ortalama Onay Süresi</CardTitle>
-            <Clock className="h-4 w-4 text-orange-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{avgApprovalMinutes} dk</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Talep → Otel onayı ortalama süresi · Hedef: &lt; 120 dk (ideal: &lt; 30 dk)
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Mutabakat Ekranı Kullanımı</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="flex items-baseline justify-between text-sm">
-              <span className="text-muted-foreground">Acentalar</span>
-              <span className="font-semibold">{Math.round(agenciesViewedSettlements * 100)}%</span>
-            </div>
-            <div className="flex items-baseline justify-between text-sm">
-              <span className="text-muted-foreground">Oteller</span>
-              <span className="font-semibold">{Math.round(hotelsViewedSettlements * 100)}%</span>
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              En az bir kez <strong>Mutabakat</strong> ekranına giren aktif kullanıcı oranı.
+              Otel aksiyon alma oranı (onay + iptal)
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
-            <CardTitle className="text-sm font-medium">Akış Tamamlama Oranı</CardTitle>
-            <AlertCircle className="h-4 w-4 text-purple-500" />
+            <CardTitle className="text-sm font-medium">Ortalama Onay Süresi</CardTitle>
+            <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{Math.round(flowCompletionRate * 100)}%</div>
+            <div className="text-2xl font-bold">{Number(kpis.avgApprovalMinutes ?? 0)} dk</div>
+            <p className="text-xs text-muted-foreground mt-1">Talep → Otel onayı ortalama süresi</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
+            <CardTitle className="text-sm font-medium">Akış Tamamlama</CardTitle>
+            <AlertCircle className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{pct(kpis.flowCompletionRate)}%</div>
+            <p className="text-xs text-muted-foreground mt-1">Onaylı rezervasyon oranı</p>
+          </CardContent>
+        </Card>
+
+        {/* Optional extra meta card */}
+        <Card>
+          <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
+            <CardTitle className="text-sm font-medium">Confirmed Bazlı WhatsApp</CardTitle>
+            <MessageCircle className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{pct(meta.whatsappShareRateConfirmed)}%</div>
             <p className="text-xs text-muted-foreground mt-1">
-              Hızlı Rezervasyon akışını <strong>BookingConfirmed</strong> ile bitirenlerin oranı · Hedef: ≥ 70%
+              Confirmed booking'lerde WhatsApp oranı (secondary)
             </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Alt: Yorum / karar matrisi */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Pilot Sonu Yorum Matrisi</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4 text-sm text-muted-foreground">
-          <p>
-            Bu tablo, ilk 7 gün sonunda <strong>"pilot çalışıyor mu?"</strong> sorusuna net cevap vermek için
-            kullanılabilir. Rakamları gerçek verilerle değiştirdiğinizde hangi alana odaklanmanız gerektiği
-            hemen ortaya çıkar.
-          </p>
-          <Separator />
-          <div className="grid gap-3 md:grid-cols-2">
-            <div className="space-y-1">
-              <p className="font-medium text-foreground">KPI yorumu</p>
-              <ul className="list-disc list-inside space-y-1">
-                <li>KPI-1 &amp; KPI-2 yüksekse → Acenta ürünü benimsemiş demektir.</li>
-                <li>KPI-3 düşükse → Otel UI / bildirim / alışkanlık tarafına odaklanın.</li>
-                <li>KPI-4 yüksekse → Otel onay süreçleri yavaş; hız için görüşme yapın.</li>
-                <li>KPI-5 açılıyorsa → Mutabakat güven veriyor; parasal ilişki kuruluyor.</li>
-                <li>KPI-6 düşükse → Akıştaki sürtünme noktasını (özellikle Adım 2 &amp; 3) inceleyin.</li>
-              </ul>
-            </div>
-            <div className="space-y-1">
-              <p className="font-medium text-foreground">Sonraki adım önerileri</p>
-              <ul className="list-disc list-inside space-y-1">
-                <li>Acenta güçlü, otel zayıfsa → <strong>Gelen Rezervasyonlar</strong> ekranını parlatın.</li>
-                <li>Her iki taraf da düşükse → Pilot iletişimi ve onboarding&apos;i gözden geçirin.</li>
-                <li>Metrix iyi, ama kullanım azsa → Fiyatlama / ticari model konuşma zamanı gelmiş demektir.</li>
-              </ul>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <Separator />
+
+      {!hasBreakdown ? (
+        <EmptyState title="Breakdown verisi yok" subtitle="API breakdown alanı dönmüyor veya boş." />
+      ) : (
+        <div className="space-y-6">
+          {/* Daily Trend */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Günlük Rezervasyon Trendi</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={320}>
+                <LineChart data={filledByDay}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Line type="monotone" dataKey="total" stroke={chartColors.total} name="Toplam" strokeWidth={2} />
+                  <Line type="monotone" dataKey="confirmed" stroke={chartColors.confirmed} name="Onaylı" strokeWidth={2} />
+                  <Line type="monotone" dataKey="cancelled" stroke={chartColors.cancelled} name="İptal" strokeWidth={2} />
+                  <Line type="monotone" dataKey="whatsapp" stroke={chartColors.whatsapp} name="WhatsApp" strokeWidth={2} />
+                </LineChart>
+              </ResponsiveContainer>
+              <p className="mt-3 text-xs text-muted-foreground">
+                Not: Günler zero-fill ile 7 gün sabit gösterilir.
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Hotel Performance */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Otel Bazlı Performans</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {Array.isArray(breakdown.by_hotel) && breakdown.by_hotel.length > 0 ? (
+                <>
+                  <ResponsiveContainer width="100%" height={320}>
+                    <BarChart data={breakdown.by_hotel}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis
+                        dataKey="hotel_name"
+                        tick={{ fontSize: 12 }}
+                        interval={0}
+                        angle={-10}
+                        height={50}
+                      />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Bar dataKey="confirmed" fill={chartColors.confirmed} name="Onaylı" />
+                      <Bar dataKey="cancelled" fill={chartColors.cancelled} name="İptal" />
+                    </BarChart>
+                  </ResponsiveContainer>
+
+                  <div className="mt-4 grid gap-2 md:grid-cols-3 text-sm text-muted-foreground">
+                    <div>
+                      <span className="font-medium text-foreground">Action Rate:</span>{" "}
+                      {pct(breakdown.by_hotel[0]?.action_rate)}%
+                    </div>
+                    <div>
+                      <span className="font-medium text-foreground">Avg Approval:</span>{" "}
+                      {Number(breakdown.by_hotel[0]?.avg_approval_minutes ?? 0)} dk
+                    </div>
+                    <div>
+                      <span className="font-medium text-foreground">Action Count:</span>{" "}
+                      {Number(breakdown.by_hotel[0]?.action_count ?? 0)}
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <EmptyState title="Otel breakdown boş" subtitle="Bu aralıkta otel bazlı veri yok." />
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Agency Table */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Acenta Bazlı Performans</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {Array.isArray(breakdown.by_agency) && breakdown.by_agency.length > 0 ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Acenta</TableHead>
+                      <TableHead>Toplam</TableHead>
+                      <TableHead>Onaylı</TableHead>
+                      <TableHead>Conversion</TableHead>
+                      <TableHead>WhatsApp</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {breakdown.by_agency.map((a) => (
+                      <TableRow key={a.agency_id}>
+                        <TableCell className="font-medium">{a.agency_name}</TableCell>
+                        <TableCell>{a.total}</TableCell>
+                        <TableCell>{a.confirmed}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{pct(a.conversion_rate)}%</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{pct(a.whatsapp_rate)}%</Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <EmptyState title="Acenta breakdown boş" subtitle="Bu aralıkta acenta bazlı veri yok." />
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

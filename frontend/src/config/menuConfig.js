@@ -24,6 +24,7 @@ export const MENU_CONFIG = {
         { label: "Hızlı Rezervasyon", path: "/app/agency/hotels" },
         { label: "Rezervasyonlarım", path: "/app/agency/bookings" },
         { label: "Mutabakat", path: "/app/agency/settlements" },
+        { label: "Yardım", path: "/app/agency/help" },
       ],
     },
   ],

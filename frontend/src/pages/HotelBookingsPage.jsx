@@ -101,6 +101,11 @@ export default function HotelBookingsPage() {
     for (const b of enrichedBookings) {
       base.total += 1;
       const g = b.__group || "new";
+      base[g] = (base[g] || 0) + 1;
+    }
+    return base;
+  }, [enrichedBookings]);
+
   function openAction(type, booking) {
     setActionType(type);
     setActionBooking(booking);
@@ -136,12 +141,6 @@ export default function HotelBookingsPage() {
       setActionLoading(false);
     }
   }
-
-
-      base[g] = (base[g] || 0) + 1;
-    }
-    return base;
-  }, [enrichedBookings]);
 
   const filtered = useMemo(() => {
     const q = (agencyQuery || "").trim().toLowerCase();

@@ -280,12 +280,15 @@ export default function AgencyBookingConfirmedPage() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Button onClick={() => navigate("/app/agency/hotels")} className="gap-2">
-                <Search className="h-4 w-4" />
-                Yeni Arama Yap
+              <Button onClick={openWhatsApp} className="gap-2">
+                WhatsApp'a Gönder
               </Button>
-              <Button variant="outline" disabled>
-                Voucher İndir (FAZ-3.2)
+              <Button onClick={() => navigate("/app/agency/hotels")} variant="outline" className="gap-2">
+                <Search className="h-4 w-4" />
+                Yeni Rezervasyon
+              </Button>
+              <Button variant="ghost" onClick={() => navigate("/app/agency/bookings")}>
+                Rezervasyonlarım
               </Button>
             </div>
           </div>

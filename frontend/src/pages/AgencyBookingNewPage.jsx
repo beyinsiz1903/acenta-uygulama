@@ -118,9 +118,9 @@ export default function AgencyBookingNewPage() {
   const total = selectedRatePlan.price.total;
   const currency = selectedRatePlan.price.currency;
   const perNight = selectedRatePlan.price.per_night;
-  const commissionAmount = selectedRatePlan.commission_amount;
-  const commissionRate = selectedRatePlan.commission_rate; // % olarak (örn: 10)
-  const netAmount = selectedRatePlan.net_amount;
+  const commissionAmount = selectedRatePlan.commission_amount ?? selectedRatePlan.commission;
+  const commissionRate = selectedRatePlan.commission_rate ?? selectedRatePlan.commission_percent ?? selectedRatePlan.commission_pct; // % olarak (örn: 10)
+  const netAmount = selectedRatePlan.net_amount ?? selectedRatePlan.net_total ?? selectedRatePlan.net;
 
   return (
     <div className="space-y-6">

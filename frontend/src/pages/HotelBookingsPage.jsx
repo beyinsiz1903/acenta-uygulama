@@ -240,12 +240,20 @@ export default function HotelBookingsPage() {
           <div>
             Yeni: <span className="font-semibold text-foreground">{counts.new}</span>
           </div>
-          <button
-            onClick={loadBookings}
-            className="mt-1 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition"
-          >
-            Yenile
-          </button>
+          <div className="flex items-center gap-2 mt-1">
+            <button
+              onClick={loadBookings}
+              className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition"
+            >
+              Yenile
+            </button>
+            <button
+              onClick={() => window.location.assign("/app/hotel/help")}
+              className="px-3 py-2 rounded-lg border text-xs hover:bg-accent/60 transition"
+            >
+              Yardım
+            </button>
+          </div>
         </div>
       </div>
 

@@ -124,28 +124,6 @@ export default function AgencySettlementsPage() {
       const blob = new Blob([resp.data], { type: "text/csv;charset=utf-8" });
       const url = window.URL.createObjectURL(blob);
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="rounded-2xl border bg-card shadow-sm p-4 space-y-1">
-          <div className="text-xs text-muted-foreground">Bu ay kazandığın</div>
-          <div className="text-lg font-semibold">
-            {formatMoney(summary.totalCommission, summary.currency)}
-          </div>
-        </div>
-        <div className="rounded-2xl border bg-card shadow-sm p-4 space-y-1">
-          <div className="text-xs text-muted-foreground">Bu ay tahsil edilecek</div>
-          <div className="text-lg font-semibold">
-            {formatMoney(summary.openCommission, summary.currency)}
-          </div>
-        </div>
-        <div className="rounded-2xl border bg-card shadow-sm p-4 space-y-1">
-          <div className="text-xs text-muted-foreground">Ödenen</div>
-          <div className="text-lg font-semibold">
-            {formatMoney(summary.settledCommission, summary.currency)}
-          </div>
-        </div>
-      </div>
-
-
       const a = document.createElement("a");
       a.href = url;
       a.download = `agency-settlements-${month}.csv`;

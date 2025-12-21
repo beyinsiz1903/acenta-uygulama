@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Calendar, Loader2, AlertCircle, XCircle, StickyNote } from "lucide-react";
+import { Calendar, Loader2, AlertCircle, XCircle, StickyNote, Info } from "lucide-react";
 import { api, apiErrorMessage } from "../lib/api";
 import { BookingDetailDrawer } from "../components/BookingDetailDrawer";
 import { Badge } from "../components/ui/badge";

@@ -67,14 +67,19 @@ export default function AdminPilotDashboardPage() {
       <div className="flex flex-col gap-2">
         <div className="flex items-center gap-3">
           <h1 className="text-2xl font-bold text-foreground">Pilot Dashboard</h1>
-          <Badge variant="outline" className="text-xs border-amber-500/50 text-amber-700 dark:text-amber-300">
-            Mock Veri · Son 7 Gün
+          <Badge variant="outline" className="text-xs border-emerald-500/50 text-emerald-700 dark:text-emerald-300">
+            Canlı Veri · Son 7 Gün
           </Badge>
         </div>
         <p className="text-sm text-muted-foreground max-w-2xl">
           Syroce Acenta pilotunun ilk 7 günündeki <strong>davranışsal KPI&apos;larını</strong> özetler.
-          Şu anda metrikler örnek/mock değerlerdir; pilot sonrasında gerçek verilere bağlanabilir.
+          Veriler gerçek zamanlı olarak hesaplanmaktadır.
         </p>
+        {data?.meta && (
+          <p className="text-xs text-muted-foreground">
+            <strong>{data.meta.activeAgenciesCount}</strong> aktif acenta, <strong>{data.meta.activeHotelsCount}</strong> aktif otel
+          </p>
+        )}
       </div>
 
       {/* Üst satır: Aktivasyon & hacim */}

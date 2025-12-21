@@ -92,9 +92,6 @@ export default function HotelBookingsPage() {
   const tomorrowArrivals = bookings.filter((b) => (b.stay || {}).check_in === tomorrowStr).length;
 
 
-  const [filterGroup, setFilterGroup] = useState("all");
-
-
   const enrichedBookings = useMemo(() => {
     const list = bookings || [];
     return list.map((b) => ({ ...b, __group: mapStatusToGroup(b.status) }));

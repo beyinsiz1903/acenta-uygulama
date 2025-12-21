@@ -144,6 +144,18 @@ async def ensure_seed_data() -> None:
     await db.hotel_integrations.create_index([("status", 1), ("provider", 1)])
     await db.hotel_integrations.create_index([("organization_id", 1), ("kind", 1), ("updated_at", -1)])
 
+    # FAZ-2: booking_drafts collection (TTL 15 minutes)
+    await db.booking_drafts.create_index([("expires_at", 1)], expireAfterSeconds=0)
+    await db.booking_drafts.create_index([("organization_id", 1), ("created_at", -1)])
+    await db.booking_drafts.create_index([("submitted_booking_id", 1)])  # Idempotency
+    
+    # FAZ-2: bookings indexes for pending workflow
+    await db.bookings.create_index([("organization_id", 1), ("status", 1), ("submitted_at", -1)])
+    await db.bookings.create_index([("agency_id", 1), ("status", 1), ("submitted_at", -1)])
+    await db.bookings.create_index([("hotel_id", 1), ("status", 1), ("submitted_at", -1)])
+    await db.bookings.create_index([("approval_deadline_at", 1)])  # SLA tracking
+
+
     # FAZ-10.1: integration sync outbox
     await db.integration_sync_outbox.create_index([("status", 1), ("next_retry_at", 1)])
     await db.integration_sync_outbox.create_index([

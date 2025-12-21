@@ -166,36 +166,6 @@ export default function HotelBookingsPage() {
   }
 
   if (error) {
-      <div className="flex flex-wrap items-center gap-2">
-        <div className="inline-flex rounded-full bg-muted px-1 py-1 text-xs">
-          <button
-            className={`px-3 py-1 rounded-full ${filterGroup === "all" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"}`}
-            onClick={() => setFilterGroup("all")}
-          >
-            Hepsi ({counts.total})
-          </button>
-          <button
-            className={`px-3 py-1 rounded-full ${filterGroup === "new" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"}`}
-            onClick={() => setFilterGroup("new")}
-          >
-            Yeni ({counts.new})
-          </button>
-          <button
-            className={`px-3 py-1 rounded-full ${filterGroup === "confirmed" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"}`}
-            onClick={() => setFilterGroup("confirmed")}
-          >
-            Onaylı ({counts.confirmed})
-          </button>
-          <button
-            className={`px-3 py-1 rounded-full ${filterGroup === "cancelled" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"}`}
-            onClick={() => setFilterGroup("cancelled")}
-          >
-            İptal ({counts.cancelled})
-          </button>
-        </div>
-      </div>
-
-
     return (
       <div className="space-y-6">
         <div>

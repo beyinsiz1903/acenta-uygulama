@@ -21,7 +21,7 @@ export const MENU_CONFIG = {
     {
       label: "Acenta",
       children: [
-        { label: "Otellerim", path: "/app/agency/hotels" },
+        { label: "Hızlı Rezervasyon", path: "/app/agency/hotels" },
         { label: "Rezervasyonlarım", path: "/app/agency/bookings" },
         { label: "Mutabakat", path: "/app/agency/settlements" },
       ],
@@ -33,8 +33,8 @@ export const MENU_CONFIG = {
       label: "Otel",
       children: [
         { label: "Rezervasyonlarım", path: "/app/hotel/bookings" },
-        { label: "Stop-sell", path: "/app/hotel/stop-sell" },
-        { label: "Allocation", path: "/app/hotel/allocations" },
+        { label: "Satışa Kapat", path: "/app/hotel/stop-sell" },
+        { label: "Acenta Kotası", path: "/app/hotel/allocations" },
         { label: "Mutabakat", path: "/app/hotel/settlements" },
       ],
     },

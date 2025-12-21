@@ -523,6 +523,46 @@ export default function HotelBookingsPage() {
                             onClick={() => doSetGuestNote(booking)}
                             className="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm hover:bg-accent transition"
                           >
+      <Dialog open={actionOpen} onOpenChange={setActionOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {actionType === "confirm" ? "Talebi Onayla" : "Talebi İptal Et"}
+            </DialogTitle>
+            <DialogDescription>
+              {actionType === "confirm"
+                ? "Bu talep acentaya onaylandı olarak iletilir."
+                : "Bu talep iptal edildi olarak iletilir. İsterseniz sebep ekleyebilirsiniz."}
+            </DialogDescription>
+          </DialogHeader>
+
+          {actionType === "reject" && (
+            <div className="space-y-2 mt-3">
+              <Label>İptal sebebi (opsiyonel)</Label>
+              <Textarea
+                value={rejectReason}
+                onChange={(e) => setRejectReason(e.target.value)}
+                placeholder="Örn: Kapalı tarih, fiyat uyuşmazlığı, minimum konaklama..."
+                rows={3}
+              />
+            </div>
+          )}
+
+          <DialogFooter className="mt-4 gap-2">
+            <Button variant="ghost" onClick={() => setActionOpen(false)} disabled={actionLoading}>
+              Vazgeç
+            </Button>
+            <Button onClick={submitAction} disabled={actionLoading}>
+              {actionLoading
+                ? "İşleniyor..."
+                : actionType === "confirm"
+                ? "Onayla"
+                : "İptal Et"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
                             <StickyNote className="h-4 w-4" />
                             Misafir notu
                           </button>

@@ -131,6 +131,9 @@ export default function AgencyBookingNewPage() {
           <p className="text-sm text-muted-foreground">
             Adım 3/3 — Misafir bilgilerini girip rezervasyonu gönderin.
           </p>
+          <div className="mt-4">
+            <StepBar current={3} />
+          </div>
         </div>
         <Button
           onClick={() => navigate(-1)}

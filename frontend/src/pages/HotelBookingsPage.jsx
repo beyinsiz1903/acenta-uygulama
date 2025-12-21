@@ -77,6 +77,22 @@ export default function HotelBookingsPage() {
       const name = (b.agency_name || "").toLowerCase();
       return name.includes(q);
     });
+  const STATUS_GROUPS = {
+    all: null,
+    new: new Set(["pending", "awaiting_confirmation", "requested", "created", "new", "" ]),
+    confirmed: new Set(["confirmed", "approved", "guaranteed", "checked_in"]),
+    cancelled: new Set(["cancelled", "rejected", "declined"]),
+  };
+
+  function mapStatusToGroup(status) {
+    const s = String(status || "").toLowerCase();
+    if (STATUS_GROUPS.new.has(s)) return "new";
+    if (STATUS_GROUPS.confirmed.has(s)) return "confirmed";
+    if (STATUS_GROUPS.cancelled.has(s)) return "cancelled";
+    return "new";
+  }
+
+
   }, [bookings, agencyQuery]);
 
   async function doCancelRequest(booking) {

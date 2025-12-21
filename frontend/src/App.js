@@ -35,6 +35,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         {/* Public Routes */}
+        <Route path="/" element={<LoginPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/unauthorized" element={<UnauthorizedPage />} />
 

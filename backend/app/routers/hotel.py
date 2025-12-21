@@ -160,6 +160,8 @@ async def approve_hotel_booking(booking_id: str, request: Request, user=Depends(
     if not booking:
         raise HTTPException(status_code=404, detail="BOOKING_NOT_FOUND")
 
+    before = dict(booking)
+
     status = (booking.get("status") or "").lower()
     if status == "cancelled":
         raise HTTPException(status_code=409, detail="CANNOT_APPROVE_CANCELLED_BOOKING")

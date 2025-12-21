@@ -1406,6 +1406,7 @@ class Tenant(BaseModel):
     subscription_start_date: Optional[str] = None
     subscription_end_date: Optional[str] = None
     subscription_tier: Optional[str] = "basic"
+    plan: str = "core_small_hotel"
     location: Optional[str] = None
     amenities: List[str] = []
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
@@ -1417,6 +1418,7 @@ class Tenant(BaseModel):
             "ai": True,
         }
     )
+    features: Optional[Dict[str, bool]] = None
 
 class User(BaseModel):
     model_config = ConfigDict(extra="allow")  # Changed from "ignore" to "allow" to fix tenant_id loading

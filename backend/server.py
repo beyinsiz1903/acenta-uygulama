@@ -19776,7 +19776,7 @@ async def get_multi_property_dashboard(
     }
 
 # 6. Marketplace Inventory
-@api_router.get("/marketplace/inventory")
+@api_router.get("/marketplace/inventory", dependencies=[Depends(require_feature("hidden_marketplace"))])
 async def get_marketplace_inventory(current_user: User = Depends(get_current_user)):
     products = await db.marketplace_inventory.find({'tenant_id': current_user.tenant_id}, {'_id': 0}).to_list(1000)
     return {'products': products}

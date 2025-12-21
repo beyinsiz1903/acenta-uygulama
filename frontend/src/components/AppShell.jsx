@@ -330,21 +330,46 @@ export default function AppShell() {
 
             <div className="mt-3 grid grid-cols-3 gap-2">
               <div className="rounded-xl border bg-background/50 p-2 opacity-70 cursor-default">
-                <div className="text-[11px] text-muted-foreground">Toplam</div>
-                <div className="text-sm font-semibold text-foreground" data-testid="sb-total">
-                  {sidebarStats.total}
+                <div className="flex items-baseline justify-between gap-1">
+                  <div className="text-[11px] text-muted-foreground">Toplam</div>
+                  <div className="text-[10px] text-muted-foreground/80">adet</div>
+                </div>
+                <div
+                  className="text-sm font-semibold text-foreground truncate"
+                  title={sidebarStats.total?.toLocaleString("tr-TR")}
+                  data-testid="sb-total"
+                >
+                  {sidebarStats.total >= 1000
+                    ? `${(sidebarStats.total / (sidebarStats.total >= 1_000_000 ? 1_000_000 : 1_000)).toFixed(1)}${
+                        sidebarStats.total >= 1_000_000 ? "M" : "K"
+                      }`
+                    : sidebarStats.total}
                 </div>
               </div>
 
               <div className="rounded-xl border bg-background/50 p-2 opacity-70 cursor-default">
-                <div className="text-[11px] text-muted-foreground">Bekleyen</div>
-                <div className="text-sm font-semibold text-foreground" data-testid="sb-pending">
-                  {sidebarStats.pending}
+                <div className="flex items-baseline justify-between gap-1">
+                  <div className="text-[11px] text-muted-foreground">Bekleyen</div>
+                  <div className="text-[10px] text-muted-foreground/80">adet</div>
+                </div>
+                <div
+                  className="text-sm font-semibold text-foreground truncate"
+                  title={sidebarStats.pending?.toLocaleString("tr-TR")}
+                  data-testid="sb-pending"
+                >
+                  {sidebarStats.pending >= 1000
+                    ? `${(sidebarStats.pending / (sidebarStats.pending >= 1_000_000 ? 1_000_000 : 1_000)).toFixed(1)}${
+                        sidebarStats.pending >= 1_000_000 ? "M" : "K"
+                      }`
+                    : sidebarStats.pending}
                 </div>
               </div>
 
               <div className="rounded-xl border bg-background/50 p-2 opacity-70 cursor-default">
-                <div className="text-[11px] text-muted-foreground">Ciro 7G</div>
+                <div className="flex items-baseline justify-between gap-1">
+                  <div className="text-[11px] text-muted-foreground">Ciro 7G</div>
+                  <div className="text-[10px] text-muted-foreground/80">₺</div>
+                </div>
                 <div
                   className="text-sm font-semibold text-foreground truncate"
                   title={formatMoney(sidebarStats.revenue7d, "TRY")}

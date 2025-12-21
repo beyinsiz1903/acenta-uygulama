@@ -133,10 +133,19 @@ export default function AgencyBookingConfirmedPage() {
     return lines.join("\n");
   }
 
-  function openWhatsApp() {
+  async function openWhatsApp() {
     const text = buildWhatsAppMessage();
     const url = "https://wa.me/?text=" + encodeURIComponent(text);
     window.open(url, "_blank", "noopener,noreferrer");
+    
+    // Track WhatsApp click for pilot KPI
+    try {
+      await api.post(`/bookings/${bookingId}/track/whatsapp-click`);
+      console.log("[BookingConfirmed] WhatsApp click tracked");
+    } catch (err) {
+      console.error("[BookingConfirmed] WhatsApp tracking failed:", err);
+      // Don't block user experience if tracking fails
+    }
   }
 
   return (

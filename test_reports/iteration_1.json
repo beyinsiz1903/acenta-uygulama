@@ -89,8 +89,8 @@
     }
   ],
   "test_environment": {
-    "backend_url": "https://ne-asamadayiz.preview.emergentagent.com/api",
-    "frontend_url": "https://ne-asamadayiz.preview.emergentagent.com",
+    "backend_url": "https://status-tracker-79.preview.emergentagent.com/api",
+    "frontend_url": "https://status-tracker-79.preview.emergentagent.com",
     "test_credentials": {
       "admin": "admin@acenta.test / admin123"
     },

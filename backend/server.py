@@ -3207,6 +3207,14 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
         print(f"Auth error: {str(e)}")
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication failed")
 
+
+def _is_super_admin(current_user: User) -> bool:
+    role = getattr(current_user, "role", None)
+    if role == UserRole.SUPER_ADMIN:
+        return True
+    roles = getattr(current_user, "roles", None) or []
+    return "super_admin" in roles
+
 def generate_qr_code(data: str) -> str:
     qr = qrcode.QRCode(version=1, box_size=10, border=5)
     qr.add_data(data)

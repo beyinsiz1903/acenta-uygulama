@@ -34,6 +34,8 @@ export default function AgencyHotelsPage() {
   const [statusFilter, setStatusFilter] = useState("all");
 
   const user = getUser();
+import StepBar from "../components/StepBar";
+
 
   const goHotelBookings = (hotelId) => {
     navigate(`/app/agency/bookings?hotel_id=${encodeURIComponent(hotelId)}`);

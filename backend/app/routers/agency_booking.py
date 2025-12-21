@@ -168,6 +168,187 @@ async def get_booking_draft(draft_id: str, user=Depends(get_current_user)):
     return serialize_doc(draft)
 
 
+
+# ============================================================================
+# FAZ-2: SUBMIT (Draft → Pending)
+# ============================================================================
+
+class BookingSubmitIn(BaseModel):
+    note_to_hotel: Optional[str] = None
+
+
+@router.post("/{draft_id}/submit", dependencies=[Depends(require_roles(["agency_admin", "agency_agent"]))])
+async def submit_booking(draft_id: str, payload: BookingSubmitIn, request: Request, user=Depends(get_current_user)):
+    """
+    FAZ-2: Submit draft to hotel (creates pending booking)
+    
+    - Converts draft → pending status
+    - Sets SLA deadline (60 minutes)
+    - Idempotent (same draft → same pending booking)
+    - Does NOT call PMS yet (that happens on approve)
+    - Does NOT create financial entry yet
+    """
+    db = await get_db()
+    agency_id = user.get("agency_id")
+    
+    if not agency_id:
+        raise HTTPException(status_code=403, detail="NOT_LINKED_TO_AGENCY")
+    
+    # 1. Get draft
+    draft = await db.booking_drafts.find_one({
+        "organization_id": user["organization_id"],
+        "agency_id": agency_id,
+        "_id": draft_id,
+    })
+    
+    if not draft:
+        raise HTTPException(status_code=404, detail="DRAFT_NOT_FOUND")
+    
+    # 2. Check expiration
+    if draft.get("expires_at"):
+        expires_at = draft["expires_at"]
+        now = now_utc()
+        
+        # Normalize timezone-naive datetimes
+        if hasattr(expires_at, 'tzinfo') and expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=timezone.utc)
+        
+        if now > expires_at:
+            raise HTTPException(status_code=410, detail="DRAFT_EXPIRED")
+    
+    # 3. Idempotency check: Already submitted?
+    if draft.get("submitted_booking_id"):
+        existing_booking = await db.bookings.find_one({
+            "_id": draft["submitted_booking_id"],
+            "organization_id": user["organization_id"]
+        })
+        if existing_booking:
+            return serialize_doc(existing_booking)
+    
+    # 4. Create pending booking
+    now = now_utc()
+    booking_id = str(uuid.uuid4())
+    
+    # Calculate commission from link
+    link = await db.agency_hotel_links.find_one({
+        "organization_id": user["organization_id"],
+        "agency_id": agency_id,
+        "hotel_id": draft["hotel_id"],
+        "active": True
+    })
+    
+    gross = draft["rate_snapshot"]["price"]["total"]
+    commission = 0.0
+    if link:
+        if link.get("commission_type") == "percent":
+            commission = gross * link.get("commission_value", 0) / 100
+        elif link.get("commission_type") == "fixed_per_booking":
+            commission = link.get("commission_value", 0)
+    
+    net = gross - commission
+    
+    pending_booking = {
+        "_id": booking_id,
+        "organization_id": user["organization_id"],
+        "agency_id": agency_id,
+        "agency_name": draft.get("agency_name"),
+        "hotel_id": draft["hotel_id"],
+        "hotel_name": draft.get("hotel_name"),
+        
+        # Status & SLA
+        "status": "pending",
+        "submitted_at": now,
+        "approval_deadline_at": now + timedelta(minutes=60),  # FAZ-2: 60 minute SLA
+        
+        # Draft reference
+        "draft_id": draft_id,
+        
+        # Guest & Stay (from draft)
+        "guest": draft.get("guest"),
+        "stay": draft.get("stay"),
+        "occupancy": draft.get("occupancy"),
+        "special_requests": draft.get("special_requests"),
+        "note_to_hotel": payload.note_to_hotel,
+        
+        # Rate snapshot (immutable)
+        "rate_snapshot": draft.get("rate_snapshot"),
+        
+        # Commission snapshot
+        "gross": gross,
+        "commission": commission,
+        "net": net,
+        "currency": draft["rate_snapshot"]["price"]["currency"],
+        
+        # Approval placeholders
+        "approved_at": None,
+        "approved_by_user_id": None,
+        "rejected_at": None,
+        "rejected_by_user_id": None,
+        "rejection": None,
+        
+        # PMS fields (will be filled on approve)
+        "pms_booking_id": None,
+        "pms_status": None,
+        "source": "syroce_agency",
+        
+        # Audit
+        "created_at": now,
+        "updated_at": now,
+        "created_by": user.get("email"),
+        
+        # UTC midnight dates for check_in/out
+        "check_in_date": date_to_utc_midnight(draft["stay"]["check_in"]),
+        "check_out_date": date_to_utc_midnight(draft["stay"]["check_out"]),
+    }
+    
+    await db.bookings.insert_one(pending_booking)
+    
+    # 5. Update draft with backlink (idempotency)
+    await db.booking_drafts.update_one(
+        {"_id": draft_id},
+        {"$set": {
+            "submitted_booking_id": booking_id,
+            "submitted_at": now,
+            "submitted_by_user_id": user.get("id")
+        }}
+    )
+    
+    # 6. Event: booking.submitted
+    await write_booking_event(
+        db,
+        organization_id=user["organization_id"],
+        event_type="booking.submitted",
+        booking_id=booking_id,
+        hotel_id=draft["hotel_id"],
+        agency_id=agency_id,
+        payload={
+            "draft_id": draft_id,
+            "sla_deadline": pending_booking["approval_deadline_at"].isoformat(),
+            "note_to_hotel": payload.note_to_hotel
+        }
+    )
+    
+    # 7. Audit log
+    await write_audit_log(
+        db,
+        organization_id=user["organization_id"],
+        actor={"actor_type": "user", "email": user.get("email"), "roles": user.get("roles")},
+        request=request,
+        action="booking.submitted",
+        target_type="booking",
+        target_id=booking_id,
+        before=None,
+        after=pending_booking,
+        meta={
+            "draft_id": draft_id,
+            "sla_minutes": 60,
+            "note_to_hotel": payload.note_to_hotel
+        }
+    )
+    
+    return serialize_doc(pending_booking)
+
+
 @router.post("/confirm", dependencies=[Depends(require_roles(["agency_admin", "agency_agent"]))])
 async def confirm_booking(payload: BookingConfirmIn, request: Request, user=Depends(get_current_user)):
     """

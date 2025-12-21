@@ -119,7 +119,13 @@ export default function AgencyBookingConfirmedPage() {
 
     if (status) {
       lines.push("");
-      lines.push("🟢 Durum: Onaylandı");
+      if (status === "cancelled") {
+        lines.push("🔴 Durum: İptal edildi");
+      } else if (status === "confirmed") {
+        lines.push("🟢 Durum: Onaylandı");
+      } else {
+        lines.push("🟡 Durum: Otel onayı bekleniyor");
+      }
     }
 
     return lines.join("\n");

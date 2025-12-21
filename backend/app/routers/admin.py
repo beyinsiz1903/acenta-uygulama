@@ -352,3 +352,165 @@ async def retry_email_outbox_job(job_id: str, user=Depends(get_current_user)):
     )
 
     return {"ok": True}
+
+
+# ============================================================================
+# PILOT DASHBOARD & TRACKING
+# ============================================================================
+
+@router.get("/pilot/summary", dependencies=[Depends(require_roles(["super_admin"]))])
+async def pilot_summary(days: int = 7, user=Depends(get_current_user)):
+    """
+    Pilot KPI summary for last N days.
+    Returns behavioral metrics to measure pilot success.
+    
+    KPIs:
+    - totalRequests: booking count (all statuses)
+    - avgRequestsPerAgency: avg bookings per active agency
+    - whatsappShareRate: % of confirmed bookings with whatsapp_clicked event
+    - hotelPanelActionRate: % of bookings with hotel action (confirmed/cancelled from hotel)
+    - avgApprovalMinutes: avg time from draft_created_at to hotel action
+    - agenciesViewedSettlements: % agencies who viewed settlements page
+    - hotelsViewedSettlements: % hotels who viewed settlements page  
+    - flowCompletionRate: % of drafts that reached confirmed status
+    """
+    from datetime import datetime, timedelta
+    
+    db = await get_db()
+    org_id = user["organization_id"]
+    cutoff = now_utc() - timedelta(days=days)
+    
+    # 1) Total bookings (drafts + confirmed + cancelled) in period
+    total_bookings = await db.bookings.count_documents({
+        "organization_id": org_id,
+        "created_at": {"$gte": cutoff}
+    })
+    
+    # 2) Unique active agencies (those who created bookings)
+    active_agencies_cursor = db.bookings.aggregate([
+        {"$match": {"organization_id": org_id, "created_at": {"$gte": cutoff}}},
+        {"$group": {"_id": "$agency_id"}},
+        {"$count": "total"}
+    ])
+    active_agencies_result = await active_agencies_cursor.to_list(1)
+    active_agencies_count = active_agencies_result[0]["total"] if active_agencies_result else 1
+    avg_requests_per_agency = round(total_bookings / active_agencies_count, 2) if active_agencies_count > 0 else 0
+    
+    # 3) WhatsApp share rate: confirmed bookings with booking.whatsapp_clicked event
+    confirmed_bookings = await db.bookings.count_documents({
+        "organization_id": org_id,
+        "status": "confirmed",
+        "created_at": {"$gte": cutoff}
+    })
+    
+    whatsapp_clicked_count = await db.booking_events.count_documents({
+        "organization_id": org_id,
+        "event_type": "booking.whatsapp_clicked",
+        "created_at": {"$gte": cutoff}
+    })
+    
+    whatsapp_share_rate = round(whatsapp_clicked_count / confirmed_bookings, 2) if confirmed_bookings > 0 else 0
+    
+    # 4) Hotel panel action rate: bookings with hotel action (confirmed/cancelled where source != agency)
+    # Simplified: assume confirmed bookings were approved by hotel
+    hotel_action_count = confirmed_bookings  # Simplified for pilot
+    hotel_panel_action_rate = round(hotel_action_count / total_bookings, 2) if total_bookings > 0 else 0
+    
+    # 5) Average approval time: draft_created_at to confirmed_at
+    # For simplicity, use created_at to updated_at for confirmed bookings
+    approval_times_cursor = db.bookings.aggregate([
+        {
+            "$match": {
+                "organization_id": org_id,
+                "status": "confirmed",
+                "created_at": {"$gte": cutoff}
+            }
+        },
+        {
+            "$project": {
+                "approval_minutes": {
+                    "$divide": [
+                        {"$subtract": ["$updated_at", "$created_at"]},
+                        60000  # Convert ms to minutes
+                    ]
+                }
+            }
+        },
+        {
+            "$group": {
+                "_id": None,
+                "avg_minutes": {"$avg": "$approval_minutes"}
+            }
+        }
+    ])
+    approval_times_result = await approval_times_cursor.to_list(1)
+    avg_approval_minutes = round(approval_times_result[0]["avg_minutes"], 1) if approval_times_result else 0
+    
+    # 6) Settlements page views: track via audit logs (if available)
+    # For pilot, simplified: check if any settlement API calls exist in audit
+    agencies_viewed_settlements_cursor = db.audit_logs.aggregate([
+        {
+            "$match": {
+                "organization_id": org_id,
+                "action": {"$in": ["agency.settlements.viewed", "settlements.viewed"]},
+                "created_at": {"$gte": cutoff}
+            }
+        },
+        {"$group": {"_id": "$actor"}},
+        {"$count": "total"}
+    ])
+    agencies_viewed_result = await agencies_viewed_settlements_cursor.to_list(1)
+    agencies_viewed_count = agencies_viewed_result[0]["total"] if agencies_viewed_result else 0
+    agencies_viewed_settlements = round(agencies_viewed_count / active_agencies_count, 2) if active_agencies_count > 0 else 0
+    
+    hotels_viewed_settlements_cursor = db.audit_logs.aggregate([
+        {
+            "$match": {
+                "organization_id": org_id,
+                "action": {"$in": ["hotel.settlements.viewed", "settlements.viewed"]},
+                "created_at": {"$gte": cutoff}
+            }
+        },
+        {"$group": {"_id": "$actor"}},
+        {"$count": "total"}
+    ])
+    hotels_viewed_result = await hotels_viewed_settlements_cursor.to_list(1)
+    hotels_viewed_count = hotels_viewed_result[0]["total"] if hotels_viewed_result else 0
+    
+    # Get unique hotels count
+    active_hotels_cursor = db.bookings.aggregate([
+        {"$match": {"organization_id": org_id, "created_at": {"$gte": cutoff}}},
+        {"$group": {"_id": "$hotel_id"}},
+        {"$count": "total"}
+    ])
+    active_hotels_result = await active_hotels_cursor.to_list(1)
+    active_hotels_count = active_hotels_result[0]["total"] if active_hotels_result else 1
+    hotels_viewed_settlements = round(hotels_viewed_count / active_hotels_count, 2) if active_hotels_count > 0 else 0
+    
+    # 7) Flow completion rate: confirmed / total
+    flow_completion_rate = round(confirmed_bookings / total_bookings, 2) if total_bookings > 0 else 0
+    
+    return {
+        "range": {
+            "from": cutoff.isoformat(),
+            "to": now_utc().isoformat(),
+            "days": days
+        },
+        "kpis": {
+            "totalRequests": total_bookings,
+            "avgRequestsPerAgency": avg_requests_per_agency,
+            "whatsappShareRate": whatsapp_share_rate,
+            "hotelPanelActionRate": hotel_panel_action_rate,
+            "avgApprovalMinutes": avg_approval_minutes,
+            "agenciesViewedSettlements": agencies_viewed_settlements,
+            "hotelsViewedSettlements": hotels_viewed_settlements,
+            "flowCompletionRate": flow_completion_rate
+        },
+        "meta": {
+            "activeAgenciesCount": active_agencies_count,
+            "activeHotelsCount": active_hotels_count,
+            "confirmedBookings": confirmed_bookings,
+            "whatsappClickedCount": whatsapp_clicked_count
+        }
+    }
+

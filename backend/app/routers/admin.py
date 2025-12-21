@@ -396,24 +396,44 @@ async def pilot_summary(days: int = 7, user=Depends(get_current_user)):
     active_agencies_count = active_agencies_result[0]["total"] if active_agencies_result else 1
     avg_requests_per_agency = round(total_bookings / active_agencies_count, 2) if active_agencies_count > 0 else 0
     
-    # 3) WhatsApp share rate: confirmed bookings with booking.whatsapp_clicked event
+    # 3) WhatsApp share rate: FIXED - use totalRequests as denominator (not just confirmed)
+    # Rationale: if hotel doesn't approve, whatsapp action should still count
     confirmed_bookings = await db.bookings.count_documents({
         "organization_id": org_id,
         "status": "confirmed",
         "created_at": {"$gte": cutoff}
     })
     
-    whatsapp_clicked_count = await db.booking_events.count_documents({
+    cancelled_bookings = await db.bookings.count_documents({
         "organization_id": org_id,
-        "event_type": "booking.whatsapp_clicked",
+        "status": "cancelled",
         "created_at": {"$gte": cutoff}
     })
     
-    whatsapp_share_rate = round(whatsapp_clicked_count / confirmed_bookings, 2) if confirmed_bookings > 0 else 0
+    # Count unique whatsapp clicks (by booking_id to avoid spam)
+    whatsapp_clicks_cursor = db.booking_events.aggregate([
+        {
+            "$match": {
+                "organization_id": org_id,
+                "event_type": "booking.whatsapp_clicked",
+                "created_at": {"$gte": cutoff}
+            }
+        },
+        {"$group": {"_id": "$booking_id"}},
+        {"$count": "total"}
+    ])
+    whatsapp_clicks_result = await whatsapp_clicks_cursor.to_list(1)
+    whatsapp_clicked_count = whatsapp_clicks_result[0]["total"] if whatsapp_clicks_result else 0
     
-    # 4) Hotel panel action rate: bookings with hotel action (confirmed/cancelled where source != agency)
-    # Simplified: assume confirmed bookings were approved by hotel
-    hotel_action_count = confirmed_bookings  # Simplified for pilot
+    # Primary metric: whatsapp clicks / total requests (pilot behavior tracking)
+    whatsapp_share_rate = round(whatsapp_clicked_count / total_bookings, 2) if total_bookings > 0 else 0
+    
+    # Secondary metric: whatsapp clicks / confirmed bookings (engagement after success)
+    whatsapp_share_rate_confirmed = round(whatsapp_clicked_count / confirmed_bookings, 2) if confirmed_bookings > 0 else 0
+    
+    # 4) Hotel panel action rate: FIXED - include cancelled as action
+    # Rationale: cancelled can be hotel rejection (until we have proper rejected status)
+    hotel_action_count = confirmed_bookings + cancelled_bookings
     hotel_panel_action_rate = round(hotel_action_count / total_bookings, 2) if total_bookings > 0 else 0
     
     # 5) Average approval time: draft_created_at to confirmed_at

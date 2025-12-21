@@ -6,6 +6,7 @@ import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { formatMoney } from "../lib/format";
+import { statusInfo } from "../utils/bookingStatus";
 
 export default function AgencyBookingConfirmedPage() {
   const { bookingId } = useParams();

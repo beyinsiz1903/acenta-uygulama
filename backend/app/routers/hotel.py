@@ -185,7 +185,17 @@ async def approve_hotel_booking(booking_id: str, request: Request, user=Depends(
         },
     )
 
-    updated = await db.bookings.find_one({"_id": booking_id})
+    updated = await db.bookings.find_one(
+        {
+            "organization_id": user["organization_id"],
+            "hotel_id": hotel_id,
+            "_id": booking_id,
+        }
+    )
+
+    if not updated:
+        # Beklenmeyen durum: update başarılı görünmesine rağmen kayıt okunamıyor
+        raise HTTPException(status_code=500, detail="BOOKING_UPDATE_FAILED")
 
     # Event outbox
     await write_booking_event(

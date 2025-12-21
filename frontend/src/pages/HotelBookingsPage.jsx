@@ -356,7 +356,10 @@ export default function HotelBookingsPage() {
             {filtered.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground">
-                  Kayıt yok.
+                  {filterGroup === "new" && "Şu an yeni talep yok."}
+                  {filterGroup === "confirmed" && "Onaylı talep bulunmuyor."}
+                  {filterGroup === "cancelled" && "İptal edilmiş talep bulunmuyor."}
+                  {filterGroup === "all" && "Henüz acentalardan talep gelmedi."}
                 </TableCell>
               </TableRow>
             ) : (

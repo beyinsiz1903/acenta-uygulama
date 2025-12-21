@@ -1,36 +1,130 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import axios from "axios";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { Separator } from "../components/ui/separator";
 import { AlertCircle, Clock, CheckCircle2, MessageCircle, TrendingUp, Loader2 } from "lucide-react";
-import axios from "axios";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
+import {
+  LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+} from "recharts";
 
-const BACKEND_URL = import.meta.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
+/**
+ * Env strategy:
+ * - Vite: import.meta.env.VITE_BACKEND_URL
+ * - CRA fallback: process.env.REACT_APP_BACKEND_URL
+ */
+const BACKEND_URL =
+  (typeof import.meta !== "undefined" && import.meta.env && import.meta.env.VITE_BACKEND_URL) ||
+  process.env.REACT_APP_BACKEND_URL ||
+  "";
+
+/** Token key fallback (projelerde farklı olabiliyor) */
+function getAuthToken() {
+  return (
+    localStorage.getItem("token") ||
+    localStorage.getItem("access_token") ||
+    localStorage.getItem("jwt") ||
+    ""
+  );
+}
+
+/**
+ * Safer date key generator:
+ * - Backend by_day date format: YYYY-MM-DD
+ * - We generate the same format in local timezone (TR) to avoid UTC shift.
+ */
+function formatLocalYYYYMMDD(date) {
+  // Use Intl to format parts reliably in local time
+  const parts = new Intl.DateTimeFormat("en-CA", { // en-CA => YYYY-MM-DD
+    timeZone: "Europe/Istanbul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
+  return parts; // already YYYY-MM-DD
+}
+
+/** Helper: Fill missing days with zeros (keeps order, last N days) */
+function fillMissingDays(byDayData = [], days = 7) {
+  const map = new Map(byDayData.map((d) => [d.date, d]));
+  const filled = [];
+
+  const now = new Date();
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+
+    const dateStr = formatLocalYYYYMMDD(d);
+    const existing = map.get(dateStr);
+
+    filled.push(
+      existing || { date: dateStr, total: 0, confirmed: 0, cancelled: 0, whatsapp: 0 }
+    );
+  }
+
+  return filled;
+}
+
+/** Small helper */
+function pct(x) {
+  const v = Number.isFinite(x) ? x : 0;
+  return Math.round(v * 100);
+}
+
+/** Empty state */
+function EmptyState({ title, subtitle }) {
+  return (
+    <div className="flex items-center justify-center py-14">
+      <div className="text-center space-y-2">
+        <AlertCircle className="h-10 w-10 text-muted-foreground mx-auto" />
+        <p className="text-sm font-medium">{title}</p>
+        {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
+      </div>
+    </div>
+  );
+}
 
 export default function AdminPilotDashboardPage() {
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState("");
   const [data, setData] = useState(null);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const run = async () => {
       try {
         setLoading(true);
-        const token = localStorage.getItem("token");
-        const response = await axios.get(`${BACKEND_URL}/api/admin/pilot/summary?days=7`, {
-          headers: { Authorization: `Bearer ${token}` }
+        setError("");
+
+        const token = getAuthToken();
+        if (!BACKEND_URL) throw new Error("BACKEND_URL tanımlı değil (VITE_BACKEND_URL / REACT_APP_BACKEND_URL).");
+        if (!token) throw new Error("Token bulunamadı (localStorage: token/access_token/jwt).");
+
+        const resp = await axios.get(`${BACKEND_URL}/api/admin/pilot/summary?days=7`, {
+          headers: { Authorization: `Bearer ${token}` },
         });
-        setData(response.data);
-        setError(null);
-      } catch (err) {
-        console.error("Failed to fetch pilot summary:", err);
-        setError(err.response?.data?.detail || "Veri yüklenemedi");
+
+        setData(resp.data);
+      } catch (e) {
+        console.error("Pilot summary fetch failed:", e);
+        const msg =
+          e?.response?.data?.detail ||
+          e?.message ||
+          "Veri yüklenemedi (bilinmeyen hata)";
+        setError(String(msg));
       } finally {
         setLoading(false);
       }
     };
-    fetchData();
+
+    run();
   }, []);
+
+  const kpis = data?.kpis || {};
+  const meta = data?.meta || {};
+  const breakdown = data?.breakdown || {};
+
+  const filledByDay = useMemo(() => fillMissingDays(breakdown.by_day || [], 7), [breakdown.by_day]);
 
   if (loading) {
     return (
@@ -41,26 +135,25 @@ export default function AdminPilotDashboardPage() {
   }
 
   if (error) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <div className="text-center space-y-2">
-          <AlertCircle className="h-12 w-12 text-destructive mx-auto" />
-          <p className="text-sm text-muted-foreground">{error}</p>
-        </div>
-      </div>
-    );
+    return <EmptyState title="Dashboard yüklenemedi" subtitle={error} />;
   }
 
-  const {
-    totalRequests,
-    avgRequestsPerAgency,
-    whatsappShareRate,
-    hotelPanelActionRate,
-    avgApprovalMinutes,
-    agenciesViewedSettlements,
-    hotelsViewedSettlements,
-    flowCompletionRate,
-  } = data?.kpis || {};
+  if (!data) {
+    return <EmptyState title="Veri yok" subtitle="API boş response döndü." />;
+  }
+
+  const hasBreakdown =
+    Array.isArray(breakdown.by_day) ||
+    Array.isArray(breakdown.by_hotel) ||
+    Array.isArray(breakdown.by_agency);
+
+  // Theme-friendly chart colors via CSS variables (fallbacks included)
+  const chartColors = {
+    total: "hsl(var(--primary, 222 84% 58%))",
+    confirmed: "hsl(var(--success, 142 71% 45%))",
+    cancelled: "hsl(var(--warning, 38 92% 50%))",
+    whatsapp: "hsl(var(--accent, 262 83% 58%))",
+  };
 
   return (
     <div className="space-y-6">

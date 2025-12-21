@@ -188,18 +188,35 @@ export default function HotelBookingsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Otel Rezervasyonları</h1>
-          <p className="text-sm text-muted-foreground mt-1">{filtered.length} kayıt</p>
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div className="space-y-1 max-w-xl">
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-foreground">Gelen Rezervasyon Talepleri</h1>
+            <span className="inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs text-muted-foreground">
+              <Info className="h-3 w-3" />
+              Acentadan gelen talepler
+            </span>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Bu ekranda yalnızca <strong>acentalardan gelen rezervasyon taleplerini</strong> görürsünüz. Her talep için
+            Onayla / Reddet işlemi yapabilirsiniz.
+          </p>
         </div>
 
-        <button
-          onClick={loadBookings}
-          className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition"
-        >
-          Yenile
-        </button>
+        <div className="flex flex-col items-end gap-2 text-sm text-muted-foreground">
+          <div>
+            Toplam: <span className="font-semibold text-foreground">{counts.total}</span>
+          </div>
+          <div>
+            Yeni: <span className="font-semibold text-foreground">{counts.new}</span>
+          </div>
+          <button
+            onClick={loadBookings}
+            className="mt-1 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition"
+          >
+            Yenile
+          </button>
+        </div>
       </div>
 
       <div className="rounded-2xl border bg-card shadow-sm p-4">

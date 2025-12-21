@@ -97,6 +97,7 @@ function App() {
             <Route path="allocations" element={<HotelAllocationsPage />} />
             <Route path="settlements" element={<HotelSettlementsPage />} />
             <Route path="integrations" element={<HotelIntegrationsPage />} />
+            <Route path="help" element={<HotelHelpPage />} />
           </Route>
         </Route>
 

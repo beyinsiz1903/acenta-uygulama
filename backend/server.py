@@ -468,8 +468,6 @@ async def cm_get_ari(
         BookingStatus.CHECKED_IN.value,
     ]
 
-    ]
-
     # Overlap: booking.check_in < end_date AND booking.check_out > start_date
     bookings = await db.bookings.find(
         {

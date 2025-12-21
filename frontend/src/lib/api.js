@@ -33,9 +33,20 @@ export const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-  const token = getToken();
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+  const url = config.url || "";
+  const isAuthRoute =
+    url.includes("/auth/login") ||
+    url.includes("/auth/register") ||
+    url.includes("/auth/refresh");
+
+  if (!isAuthRoute) {
+    const token = getToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+  } else if (config.headers && config.headers.Authorization) {
+    // Login/register isteklerinde eski token taşınmasın
+    delete config.headers.Authorization;
   }
 
   // FAZ-7: app version for audit origin

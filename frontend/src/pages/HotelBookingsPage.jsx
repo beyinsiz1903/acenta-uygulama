@@ -79,6 +79,13 @@ export default function HotelBookingsPage() {
   const tomorrowStr = new Date(Date.now() + 24 * 60 * 60 * 1000)
     .toISOString()
     .slice(0, 10);
+  const [filterGroup, setFilterGroup] = useState("all");
+  const [actionOpen, setActionOpen] = useState(false);
+  const [actionType, setActionType] = useState(null); // "confirm" | "reject"
+  const [actionBooking, setActionBooking] = useState(null);
+  const [rejectReason, setRejectReason] = useState("");
+  const [actionLoading, setActionLoading] = useState(false);
+
 
   const todayArrivals = bookings.filter((b) => (b.stay || {}).check_in === todayStr).length;
   const tomorrowArrivals = bookings.filter((b) => (b.stay || {}).check_in === tomorrowStr).length;

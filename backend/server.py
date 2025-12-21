@@ -3085,6 +3085,49 @@ def create_excel_workbook(title: str, headers: List[str], data: List[List[Any]],
             cell.value = value
             cell.border = border
             cell.alignment = Alignment(horizontal="left", vertical="center")
+
+
+def require_feature(feature_key: str, not_found: bool = True):
+    """Belirli bir feature açık değilse 404/403 döner.
+
+    - super_admin her zaman geçer
+    - tenant.features None ise plan defaults üzerinden resolve edilir
+    """
+    async def _guard(current_user: User = Depends(get_current_user)):
+        # super_admin bypass
+        if getattr(current_user, "role", None) == UserRole.SUPER_ADMIN:
+            return current_user
+
+        tenant_doc = await load_tenant_doc(current_user.tenant_id)
+        if not tenant_doc:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tenant not found")
+
+        features = resolve_tenant_features(tenant_doc)
+        enabled = bool(features.get(feature_key))
+
+        if not enabled:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND if not_found else status.HTTP_403_FORBIDDEN,
+                detail="Not found" if not_found else "Forbidden",
+            )
+        return current_user
+
+    return _guard
+
+
+def require_super_admin(not_found: bool = True):
+    """Sadece super_admin erişebilsin (world/advanced/comprehensive gibi)."""
+    async def _guard(current_user: User = Depends(get_current_user)):
+        if getattr(current_user, "role", None) == UserRole.SUPER_ADMIN:
+            return current_user
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND if not_found else status.HTTP_403_FORBIDDEN,
+            detail="Not found" if not_found else "Forbidden",
+        )
+
+    return _guard
+
+
             
             # Alternate row colors
             if row_num % 2 == 0:

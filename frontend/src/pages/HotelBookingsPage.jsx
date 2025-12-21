@@ -484,6 +484,52 @@ export default function HotelBookingsPage() {
                     </TableCell>
                     <TableCell className="text-sm">{booking.agency_name || "-"}</TableCell>
                     <TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
+                      {isNew ? (
+                        <div className="flex items-center justify-end gap-2">
+                          <Button
+                            size="sm"
+                            className="gap-2"
+                            onClick={() => openAction("confirm", booking)}
+                          >
+                            Onayla
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="gap-2"
+                            onClick={() => openAction("reject", booking)}
+                          >
+                            Reddet
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            onClick={() => doCancelRequest(booking)}
+                            className="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm hover:bg-accent transition"
+                          >
+                            <XCircle className="h-4 w-4" />
+                            İptal talebi
+                          </button>
+                          <button
+                            onClick={() => doAddHotelNote(booking)}
+                            className="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm hover:bg-accent transition"
+                          >
+                            <StickyNote className="h-4 w-4" />
+                            Not ekle
+                          </button>
+                          <button
+                            onClick={() => doSetGuestNote(booking)}
+                            className="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm hover:bg-accent transition"
+                          >
+                            <StickyNote className="h-4 w-4" />
+                            Misafir notu
+                          </button>
+                        </div>
+                      )}
+                    </TableCell>
+
                       <div className="flex flex-wrap gap-2">
                         <button
                           onClick={() => doCancelRequest(booking)}

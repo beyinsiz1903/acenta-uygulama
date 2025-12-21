@@ -169,7 +169,7 @@ export default function HotelBookingsPage() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Otel Rezervasyonları</h1>
+          <h1 className="text-2xl font-bold text-foreground">Gelen Rezervasyon Talepleri</h1>
         </div>
 
         <div className="rounded-2xl border border-destructive/50 bg-destructive/5 p-8 flex flex-col items-center justify-center gap-4">

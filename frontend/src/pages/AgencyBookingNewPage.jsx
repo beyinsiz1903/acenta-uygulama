@@ -115,21 +115,35 @@ export default function AgencyBookingNewPage() {
 
   const { hotel, stay, occupancy } = searchData;
 
+  const total = selectedRatePlan.price.total;
+  const currency = selectedRatePlan.price.currency;
+  const perNight = selectedRatePlan.price.per_night;
+  const commissionAmount = selectedRatePlan.commission_amount;
+  const commissionRate = selectedRatePlan.commission_rate; // % olarak (örn: 10)
+  const netAmount = selectedRatePlan.net_amount;
+
   return (
     <div className="space-y-6">
+      {/* Header + Back */}
       <div className="flex items-center justify-between">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-bold text-foreground">Hızlı Rezervasyon</h1>
+          <p className="text-sm text-muted-foreground">
+            Adım 3/3 — Misafir bilgilerini girip rezervasyonu gönderin.
+          </p>
+        </div>
         <Button
           onClick={() => navigate(-1)}
           variant="outline"
           className="gap-2"
         >
           <ArrowLeft className="h-4 w-4" />
-          Geri
+          Sonuçlara Dön
         </Button>
       </div>
 
-      {/* Booking Summary */}
-      <Card>
+      {/* Özet Kart: Oda + Fiyat */}
+      <Card className="border rounded-2xl">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <ShoppingCart className="h-5 w-5" />
@@ -161,29 +175,44 @@ export default function AgencyBookingNewPage() {
             </div>
           </div>
 
-          <div className="border-t pt-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">{selectedRatePlan.name}</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {selectedRatePlan.board} • {selectedRatePlan.cancellation === "NON_REFUNDABLE" ? "İade edilemez" : "Ücretsiz iptal"}
+          <div className="border-t pt-4 grid grid-cols-1 md:grid-cols-3 gap-4 items-center text-sm">
+            <div>
+              <p className="font-medium">{selectedRatePlan.name}</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {selectedRatePlan.board} · {selectedRatePlan.cancellation === "NON_REFUNDABLE" ? "İade edilemez" : "Ücretsiz iptal"}
+              </p>
+            </div>
+            <div className="text-left md:text-center">
+              <p className="text-xs text-muted-foreground">Toplam ({stay.nights} gece)</p>
+              <p className="text-xl font-bold text-primary">
+                {formatMoney(total, currency)}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Gecelik: {formatMoney(perNight, currency)}
+              </p>
+            </div>
+            <div className="text-left md:text-right">
+              {typeof netAmount === "number" && (
+                <p className="text-sm font-semibold text-foreground">
+                  Net: {formatMoney(netAmount, currency)}
                 </p>
-              </div>
-              <div className="text-right">
-                <p className="text-2xl font-bold text-primary">
-                  {formatMoney(selectedRatePlan.price.total, selectedRatePlan.price.currency)}
-                </p>
+              )}
+              {typeof commissionAmount === "number" && (
                 <p className="text-xs text-muted-foreground">
-                  Gecelik: {formatMoney(selectedRatePlan.price.per_night, selectedRatePlan.price.currency)}
+                  Komisyon: {formatMoney(commissionAmount, currency)}
+                  {typeof commissionRate === "number" && ` (%${commissionRate})`}
                 </p>
-              </div>
+              )}
+              {!netAmount && !commissionAmount && (
+                <p className="text-xs text-muted-foreground">Net/komisyon detayları mutabakatta gösterilecek.</p>
+              )}
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Guest Form */}
-      <Card>
+      {/* Misafir Formu */}
+      <Card className="border rounded-2xl">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <User className="h-5 w-5" />
@@ -208,21 +237,6 @@ export default function AgencyBookingNewPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="guest-email" className="flex items-center gap-2">
-                  <Mail className="h-4 w-4" />
-                  Email
-                </Label>
-                <Input
-                  id="guest-email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  placeholder="ornek@email.com"
-                  disabled={loading}
-                />
-              </div>
-
-              <div className="space-y-2">
                 <Label htmlFor="guest-phone" className="flex items-center gap-2">
                   <Phone className="h-4 w-4" />
                   Telefon
@@ -235,12 +249,27 @@ export default function AgencyBookingNewPage() {
                   disabled={loading}
                 />
               </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="guest-email" className="flex items-center gap-2">
+                  <Mail className="h-4 w-4" />
+                  Email (opsiyonel)
+                </Label>
+                <Input
+                  id="guest-email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  placeholder="ornek@email.com"
+                  disabled={loading}
+                />
+              </div>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="special-requests" className="flex items-center gap-2">
                 <FileText className="h-4 w-4" />
-                Özel İstekler
+                Özel İstekler (opsiyonel)
               </Label>
               <Textarea
                 id="special-requests"
@@ -260,11 +289,11 @@ export default function AgencyBookingNewPage() {
 
             <Button type="submit" disabled={loading} className="w-full gap-2">
               {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-              {loading ? "Oluşturuluyor..." : "Rezervasyon Taslağı Oluştur"}
+              {loading ? "Gönderiliyor..." : "Rezervasyonu Gönder"}
             </Button>
 
-            <p className="text-xs text-muted-foreground text-center">
-              FAZ-3.0: Taslak oluşturulacak (henüz ödeme yok)
+            <p className="text-xs text-muted-foreground text-center mt-1">
+              Rezervasyonu gönderdikten sonra otel paneline düşer; durumunu Rezervasyonlarım ekranından takip edebilirsiniz.
             </p>
           </form>
         </CardContent>

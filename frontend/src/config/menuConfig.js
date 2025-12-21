@@ -6,6 +6,7 @@ export const MENU_CONFIG = {
         { label: "Acentalar", path: "/app/admin/agencies" },
         { label: "Oteller", path: "/app/admin/hotels" },
         { label: "Link Yönetimi", path: "/app/admin/links" },
+        { label: "Pilot Dashboard", path: "/app/admin/pilot-dashboard" },
       ],
     },
     {

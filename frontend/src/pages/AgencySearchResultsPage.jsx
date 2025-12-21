@@ -79,6 +79,10 @@ export default function AgencySearchResultsPage() {
             Adım 2/3 — Fiyatları seçin (Net &amp; komisyon dahil).
           </p>
         </div>
+          <div className="mt-4">
+            <StepBar current={2} />
+          </div>
+
         <Button
           onClick={() => navigate(`/app/agency/hotels/${hotel.id}`)}
           variant="outline"

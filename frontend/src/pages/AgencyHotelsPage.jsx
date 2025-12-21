@@ -102,6 +102,10 @@ export default function AgencyHotelsPage() {
           <h1 className="text-2xl font-bold text-foreground">Hızlı Rezervasyon</h1>
           <p className="text-sm text-muted-foreground mt-1">
             Adım 1/3 — Otel seçin, tarih & kişi bilgisini girerek fiyatları görün.
+          <div className="mt-4">
+            <StepBar current={1} />
+          </div>
+
           </p>
         </div>
 

@@ -111,6 +111,13 @@ async def ensure_seed_data() -> None:
     # FAZ-7: booking events outbox indexes
     await db.booking_events.create_index([("organization_id", 1), ("delivered", 1), ("created_at", 1)])
     await db.booking_events.create_index([("organization_id", 1), ("entity_id", 1), ("event_type", 1)])
+    
+    # FAZ-2.0.1: WhatsApp tracking idempotency index
+    await db.booking_events.create_index([
+        ("booking_id", 1), 
+        ("event_type", 1), 
+        ("payload.actor_email", 1)
+    ])
 
 
     # FAZ-8: PMS mock collections indexes

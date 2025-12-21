@@ -204,7 +204,7 @@ export default function AgencyBookingNewPage() {
                 </p>
               )}
               {!netAmount && !commissionAmount && (
-                <p className="text-xs text-muted-foreground">Net/komisyon detayları mutabakatta gösterilecek.</p>
+                <p className="text-xs text-muted-foreground">Net/komisyon detayı mutabakat ekranında netleşir.</p>
               )}
             </div>
           </div>

@@ -178,3 +178,34 @@ async def cancel_booking(booking_id: str, payload: BookingCancelIn, request: Req
     )
 
     return serialize_doc(updated)
+
+
+@router.post("/{booking_id}/track/whatsapp-click", dependencies=[Depends(require_roles(["agency_admin", "agency_agent"]))])
+async def track_whatsapp_click(booking_id: str, user=Depends(get_current_user)):
+    """Track when user clicks WhatsApp share button on booking confirmed page.
+    
+    Used for pilot KPI: whatsappShareRate
+    """
+    db = await get_db()
+    
+    booking = await db.bookings.find_one({"organization_id": user["organization_id"], "_id": booking_id})
+    if not booking:
+        raise HTTPException(status_code=404, detail="BOOKING_NOT_FOUND")
+    
+    # Ownership check
+    if str(booking.get("agency_id")) != str(user.get("agency_id")):
+        raise HTTPException(status_code=403, detail="FORBIDDEN")
+    
+    # Write event
+    await write_booking_event(
+        db,
+        organization_id=user["organization_id"],
+        event_type="booking.whatsapp_clicked",
+        booking_id=booking_id,
+        hotel_id=str(booking.get("hotel_id")),
+        agency_id=str(booking.get("agency_id")),
+        payload={"actor_email": user.get("email")}
+    )
+    
+    return {"ok": True}
+

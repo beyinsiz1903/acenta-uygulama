@@ -136,16 +136,41 @@ export default function AgencyBookingConfirmedPage() {
   async function openWhatsApp() {
     const text = buildWhatsAppMessage();
     const url = "https://wa.me/?text=" + encodeURIComponent(text);
-    window.open(url, "_blank", "noopener,noreferrer");
     
-    // Track WhatsApp click for pilot KPI
+    // Track WhatsApp click BEFORE opening window (prevents request drop)
+    // Use sendBeacon for reliability (or keepalive fetch as fallback)
     try {
-      await api.post(`/bookings/${bookingId}/track/whatsapp-click`);
+      const token = localStorage.getItem("token");
+      const trackingUrl = `${import.meta.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_BACKEND_URL}/api/bookings/${bookingId}/track/whatsapp-click`;
+      
+      // Try sendBeacon first (most reliable for navigation scenarios)
+      if (navigator.sendBeacon) {
+        const blob = new Blob([JSON.stringify({})], { type: "application/json" });
+        const headers = new Headers();
+        headers.append("Authorization", `Bearer ${token}`);
+        
+        // sendBeacon doesn't support custom headers directly, fallback to fetch with keepalive
+        await fetch(trackingUrl, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({}),
+          keepalive: true  // Critical: ensures request completes even if page navigates
+        });
+      } else {
+        // Fallback for older browsers
+        await api.post(`/bookings/${bookingId}/track/whatsapp-click`);
+      }
       console.log("[BookingConfirmed] WhatsApp click tracked");
     } catch (err) {
       console.error("[BookingConfirmed] WhatsApp tracking failed:", err);
       // Don't block user experience if tracking fails
     }
+    
+    // Open WhatsApp AFTER tracking to avoid race condition
+    window.open(url, "_blank", "noopener,noreferrer");
   }
 
   return (

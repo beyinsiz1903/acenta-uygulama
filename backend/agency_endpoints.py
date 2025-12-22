@@ -289,7 +289,7 @@ async def create_agency_booking_request(
     payload: CreateAgencyBookingRequestIn,
     request: Request,
     Idempotency_Key: Optional[str] = Header(None, alias="Idempotency-Key"),
-    # current_user: User = Depends(get_current_user)  # Uncomment after integration
+    current_user = Depends(lambda: __import__('server').get_current_user)  # Import dynamically
 ):
     """
     Acenta booking request oluştur (idempotent).
@@ -309,15 +309,16 @@ async def create_agency_booking_request(
     """
     from server import db  # Import here to avoid circular dependency
     
-    # TODO: Auth check - Uncomment after integration
-    # if current_user.role not in ["AGENCY_ADMIN", "AGENCY_AGENT"]:
-    #     raise HTTPException(403, "Agency role required")
-    # agency_id = current_user.agency_id or current_user.tenant_id
-    # user_id = current_user.id
+    # Auth check
+    current_user = await current_user()  # Call the dependency
+    if current_user.role.value not in ["agency_admin", "agency_agent"]:
+        raise HTTPException(403, "Agency role required")
     
-    # PLACEHOLDER - Replace with real auth
-    agency_id = "AGENCY_ID_PLACEHOLDER"
-    user_id = "AGENCY_USER_ID_PLACEHOLDER"
+    agency_id = current_user.agency_id or current_user.tenant_id
+    user_id = current_user.id
+    
+    if not agency_id:
+        raise HTTPException(400, "User must have agency_id or tenant_id")
     
     if not Idempotency_Key:
         raise HTTPException(400, "Missing Idempotency-Key header")

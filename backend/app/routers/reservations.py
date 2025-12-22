@@ -138,7 +138,7 @@ async def voucher(reservation_id: str, user=Depends(get_current_user)):
     <div class=\"muted\" style=\"margin-top:18px\">Not: Bu belge bilgilendirme amaçlıdır.</div>
 
     <div class=\"no-print\" style=\"margin-top:18px\">
-      <button onclick=\"window.print()\" style=\"background:#0e7490;color:#fff;border:none;border-radius:10px;padding:10px 14px;cursor:pointer\">Yazdır</button>
+      <button onclick="window.print()" style="background:#0e7490;color:#fff;border:none;border-radius:10px;padding:10px 14px;cursor:pointer">Yazdır</button>
     </div>
   </div>
 </body>

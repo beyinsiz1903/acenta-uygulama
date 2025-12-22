@@ -38,7 +38,12 @@ from app.email_worker import email_dispatch_loop
 from app.integration_sync_worker import integration_sync_loop
 
 ROOT_DIR = Path(__file__).parent
-load_dotenv(ROOT_DIR / ".env")
+
+# Load .env only if exists (development fallback)
+# Production: Kubernetes secrets inject env vars directly
+env_path = ROOT_DIR / ".env"
+if env_path.exists():
+    load_dotenv(env_path)
 
 logging.basicConfig(
     level=logging.INFO,

@@ -9698,7 +9698,7 @@ async def approve_booking(
         print(f"⚠️ audit log failed (approve_booking): {e}")
 
     final = await db.bookings.find_one({"id": booking_id, "tenant_id": tenant_id}, {"_id": 0})
-    return {"status": "ok", "booking": final}
+    return {"status": "ok", "booking": final, "booking_id": booking_id}
 
 
 @api_router.post("/bookings/{booking_id}/reject")
@@ -9777,7 +9777,7 @@ async def reject_booking(
         print(f"⚠️ audit log failed (reject_booking): {e}")
 
     final = await db.bookings.find_one({"id": booking_id, "tenant_id": tenant_id}, {"_id": 0})
-    return {"status": "ok", "booking": final}
+    return {"status": "ok", "booking": final, "booking_id": booking_id}
 
 
 async def create_rate_override(

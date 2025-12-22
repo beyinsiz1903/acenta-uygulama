@@ -137,6 +137,10 @@ client = AsyncIOMotorClient(
 )
 db = client[os.environ['DB_NAME']]
 
+# Expose db via app.state for use in health checks and other components
+app.state.db = db
+
+
 JWT_SECRET = os.environ.get('JWT_SECRET', 'hotel-pms-super-secret-key-change-in-production-2025')
 JWT_ALGORITHM = 'HS256'
 JWT_EXPIRATION_HOURS = 168  # 7 days (24 * 7)

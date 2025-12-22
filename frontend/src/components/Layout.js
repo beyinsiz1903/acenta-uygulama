@@ -45,6 +45,7 @@ const Layout = ({ children, user, tenant, onLogout, currentModule }) => {
     { name: t('nav.dashboard'), path: '/', icon: Home, id: 'dashboard' },
     { name: t('nav.pms'), path: '/pms', icon: Hotel, id: 'pms', moduleKey: 'pms' },
     { name: 'Calendar', path: '/reservation-calendar', icon: Calendar, id: 'calendar', moduleKey: 'pms' },
+    { name: 'Acenta Talepleri', path: '/agency-requests', icon: Building2, id: 'agency-requests', moduleKey: 'pms', badge: true },
     { name: t('nav.invoices'), path: '/invoices', icon: FileText, id: 'invoices', moduleKey: 'invoices' },
     { name: 'Pending AR', path: '/pending-ar', icon: DollarSign, id: 'pending-ar', moduleKey: 'invoices' },
     { name: 'Cost Management', path: '/cost-management', icon: TrendingUp, id: 'cost-management', moduleKey: 'invoices' },

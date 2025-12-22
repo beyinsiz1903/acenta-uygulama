@@ -1424,26 +1424,6 @@ def _ensure_hotel_context(user: User):
         raise HTTPException(status_code=403, detail="Hotel context required")
 
 
-        return None
-
-    # 1) id alanı (UUID/string) ile dene
-    doc = await db.tenants.find_one({"id": tenant_id}, {"_id": 0})
-    if doc:
-        return doc
-
-    # 2) _id (ObjectId) ile dene
-    try:
-        oid = ObjectId(tenant_id)
-        doc = await db.tenants.find_one({"_id": oid})
-        if doc:
-            doc.pop("_id", None)
-            return doc
-    except Exception:
-        pass
-
-    return None
-
-
 # ============= MODELS =============
 
 class Tenant(BaseModel):

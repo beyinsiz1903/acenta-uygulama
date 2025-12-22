@@ -25,7 +25,12 @@ async def connect_mongo() -> None:
     if _mongo_client is not None and _db is not None:
         return
 
-    _mongo_client = AsyncIOMotorClient(_mongo_url())
+    # DEPLOYMENT FIX: Short timeout to fail fast if MongoDB unreachable
+    # Prevents hanging on startup in production
+    _mongo_client = AsyncIOMotorClient(
+        _mongo_url(),
+        serverSelectionTimeoutMS=5000  # 5 second timeout instead of default 30s
+    )
     _db = _mongo_client[_db_name()]
 
 

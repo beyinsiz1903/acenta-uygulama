@@ -41,13 +41,16 @@ from agency_models import (
     is_pending_status
 )
 
-# Import from main server (will be available after integration)
-# from server import db, get_current_user, User, UserRole
-
 DEFAULT_REQUEST_TTL_MINUTES = 30
 
 # Router
 agency_router = APIRouter(prefix="/api", tags=["Agency Booking Requests"])
+
+# Helper to get db and auth from server module (avoids circular import)
+def get_server_deps():
+    """Import server dependencies lazily to avoid circular imports"""
+    from server import db, get_current_user
+    return db, get_current_user
 
 # ============= HELPER FUNCTIONS =============
 

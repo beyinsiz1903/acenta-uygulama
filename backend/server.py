@@ -89,22 +89,23 @@ app.include_router(voucher_router)
 
 @app.get("/api/health")
 async def health() -> dict[str, Any]:
+    """Main health check with database ping"""
     db = await get_db()
     ok = False
     try:
         await db.command("ping")
-
-
-# Deployment health check endpoints (multiple paths for compatibility)
-@app.get("/api/health")
-@app.get("/api/health/")
-async def api_health() -> dict[str, Any]:
-    """Health check for Emergent/Kubernetes deployments"""
-    return {"ok": True, "service": "acenta-master", "status": "healthy"}
         ok = True
     except Exception:
         ok = False
     return {"ok": ok, "service": "acenta-master"}
+
+
+# Deployment health check aliases (for Emergent/Kubernetes compatibility)
+@app.get("/health")
+@app.get("/health/")
+async def deployment_health() -> dict[str, Any]:
+    """Simple health check for deployment platforms"""
+    return {"ok": True, "service": "acenta-master", "status": "healthy"}
 
 
 @app.on_event("startup")

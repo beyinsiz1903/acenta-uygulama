@@ -17262,7 +17262,7 @@ async def startup_db_seed():
         print("🚀 Initializing enterprise optimization systems...")
 
         # Check if any tenant has RMS feature enabled (plan/override)
-        any_rms_enabled = await db.tenants.find_one(
+        any_rms_enabled = await db.organizations.find_one(
             {
                 "$or": [
                     {"plan": "enterprise"},
@@ -17273,45 +17273,44 @@ async def startup_db_seed():
             {"_id": 1},
         )
         if not any_rms_enabled:
-            print("ℹ️ No tenants with RMS enabled; skipping optimization init")
-            return
-
-        import redis
-        from optimization_endpoints import init_optimization_managers
-        
-        # Initialize Redis connection
-        redis_client = redis.Redis(
-            host='127.0.0.1',
-            port=6379,
-            db=0,
-            socket_connect_timeout=2,
-            decode_responses=False
-        )
-        
-        # Test Redis connection
-        redis_client.ping()
-        print("✅ Redis connection established")
-        
-        # Initialize optimization managers
-        init_optimization_managers(db, redis_client)
-        print("✅ Optimization managers initialized")
-        
-        # Setup indexes for optimization collections
-        from optimization_endpoints import archival_manager, materialized_views_manager
-        if archival_manager:
-            await archival_manager.setup_indexes()
-            print("✅ Archive indexes created")
-        
-        if materialized_views_manager:
-            await materialized_views_manager.setup_indexes()
-            print("✅ Materialized view indexes created")
+            print("ℹ️ No orgs with RMS enabled; skipping optimization init")
+        else:
+            import redis
+            from optimization_endpoints import init_optimization_managers
             
-            # Initial refresh of dashboard metrics
-            print("🔄 Refreshing dashboard metrics...")
-            await materialized_views_manager.refresh_dashboard_metrics()
-            print("✅ Dashboard metrics refreshed")
-        
-        print("🎉 Enterprise optimization systems ready!")
+            # Initialize Redis connection
+            redis_client = redis.Redis(
+                host='127.0.0.1',
+                port=6379,
+                db=0,
+                socket_connect_timeout=2,
+                decode_responses=False
+            )
+            
+            # Test Redis connection
+            redis_client.ping()
+            print("✅ Redis connection established")
+            
+            # Initialize optimization managers
+            init_optimization_managers(db, redis_client)
+            print("✅ Optimization managers initialized")
+            
+            # Setup indexes for optimization collections
+            from optimization_endpoints import archival_manager, materialized_views_manager
+            if archival_manager:
+                await archival_manager.setup_indexes()
+                print("✅ Archive indexes created")
+            
+            if materialized_views_manager:
+                await materialized_views_manager.setup_indexes()
+                print("✅ Materialized view indexes created")
+                
+                # Initial refresh of dashboard metrics
+                print("🔄 Refreshing dashboard metrics...")
+                await materialized_views_manager.refresh_dashboard_metrics()
+                print("✅ Dashboard metrics refreshed")
+            
+            print("🎉 Enterprise optimization systems ready!")
         
     except Exception as e:
         print(f"⚠️ Optimization system initialization error: {str(e)}")

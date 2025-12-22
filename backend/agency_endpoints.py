@@ -261,16 +261,25 @@ async def get_commission_pct_for_link(
     hotel_id: str
 ) -> float:
     """
-    TODO: Bu fonksiyonu agency_hotel_links collection'ından oku.
+    Agency-Hotel link'ten komisyon oranını oku.
     
-    Şimdilik sabit 15% döndürüyor.
+    İlk MVP'de sabit %15 döndürür.
+    İleride agency_hotel_links collection eklendiğinde:
+    - commission_pct_default field'ından okur
+    - Her acenta-otel için farklı komisyon olabilir
     """
-    # PLACEHOLDER
-    return 15.0
+    # TODO (Future): Read from agency_hotel_links collection
+    # link = await db.agency_hotel_links.find_one({
+    #     "agency_id": agency_id,
+    #     "hotel_id": hotel_id,
+    #     "status": "active"
+    # }, {"_id": 0, "commission_pct_default": 1})
+    # 
+    # if link and link.get("commission_pct_default") is not None:
+    #     return float(link["commission_pct_default"])
     
-    # TODO: Real implementation:
-    # link = await db.agency_hotel_links.find_one({"agency_id": agency_id, "hotel_id": hotel_id})
-    # return link.get("commission_pct_default", 15.0) if link else 15.0
+    # MVP: Fixed 15% commission
+    return 15.0
 
 
 # ============= ENDPOINTS =============

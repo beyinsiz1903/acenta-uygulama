@@ -1376,6 +1376,26 @@ def resolve_tenant_features(tenant_doc: Dict[str, Any]) -> Dict[str, bool]:
 async def load_tenant_doc(tenant_id: str) -> Optional[Dict[str, Any]]:
     """tenant_id hem id alanı hem de _id(ObjectId) için çalışsın."""
     if not tenant_id:
+
+RejectReasonCode = Literal[
+    "NO_AVAILABILITY",
+    "PRICE_MISMATCH",
+    "OVERBOOK",
+    "POLICY",
+    "OTHER",
+]
+
+
+class RejectRequest(BaseModel):
+    reason_code: RejectReasonCode
+    reason_note: Optional[str] = Field(default=None, max_length=500)
+
+
+def _ensure_hotel_context(user: User):
+    if not getattr(user, "tenant_id", None):
+        raise HTTPException(status_code=403, detail="Hotel context required")
+
+
         return None
 
     # 1) id alanı (UUID/string) ile dene

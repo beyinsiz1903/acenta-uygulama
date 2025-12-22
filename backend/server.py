@@ -2261,6 +2261,8 @@ class Booking(BaseModel):
 
 REJECTED_STATUS = "rejected"
 
+class BookingExtended(BaseModel):
+    """Extended booking model with CM/integration fields"""
     # CM / integration semantics (defaults chosen by user)
     source_channel: str = "direct"  # direct|agency|airbnb|booking|expedia|manual
     origin: str = "ui"  # ui|api|webhook|import

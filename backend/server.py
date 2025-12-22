@@ -1384,7 +1384,8 @@ def resolve_tenant_features(tenant_doc: Dict[str, Any]) -> Dict[str, bool]:
 async def load_tenant_doc(tenant_id: str) -> Optional[Dict[str, Any]]:
     """tenant_id hem id alanı hem de _id(ObjectId) için çalışsın."""
     if not tenant_id:
-
+        return None
+    
 RejectReasonCode = Literal[
     "NO_AVAILABILITY",
     "PRICE_MISMATCH",

@@ -1,23 +1,24 @@
 from __future__ import annotations
 
+import hashlib
+import secrets
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 from typing import Any, Optional
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, Response
-from weasyprint import HTML
-import os
+from fastapi import APIRouter, Depends, HTTPException, Response
 from pydantic import BaseModel, EmailStr
 
 from app.auth import get_current_user, require_roles
 from app.db import get_db
-from app.schemas import BookingPublicView
-from app.services.email import EmailSendError, send_email_ses
-from app.utils import build_booking_public_view, now_utc
+from app.utils import now_utc, serialize_doc, build_booking_public_view
+
+# DEPLOYMENT FIX: WeasyPrint lazy import (prevents crash if libpangoft2 missing)
+# from weasyprint import HTML  ❌ REMOVED - will be imported lazily when needed
 
 router = APIRouter(prefix="/api/voucher", tags=["voucher"])
 
-VOUCHER_TTL_DAYS = int(os.environ.get("VOUCHER_TTL_DAYS", "30"))
+VOUCHER_TTL_DAYS = 30  # Hardcoded to avoid env dependency
 
 
 class VoucherEmailRequest(BaseModel):

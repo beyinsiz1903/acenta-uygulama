@@ -11,7 +11,8 @@ _db: Optional[AsyncIOMotorDatabase] = None
 
 
 def _mongo_url() -> str:
-    return os.environ["MONGO_URL"]
+    # Deployment-safe: fallback to localhost (will fail gracefully at runtime if Atlas not available)
+    return os.environ.get("MONGO_URL", "mongodb://localhost:27017")
 
 
 def _db_name() -> str:

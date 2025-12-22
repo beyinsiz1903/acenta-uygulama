@@ -93,6 +93,14 @@ async def health() -> dict[str, Any]:
     ok = False
     try:
         await db.command("ping")
+
+
+# Deployment health check endpoints (multiple paths for compatibility)
+@app.get("/api/health")
+@app.get("/api/health/")
+async def api_health() -> dict[str, Any]:
+    """Health check for Emergent/Kubernetes deployments"""
+    return {"ok": True, "service": "acenta-master", "status": "healthy"}
         ok = True
     except Exception:
         ok = False

@@ -90,9 +90,12 @@ async def dispatch_pending_integration_sync(db, *, limit: int = 10) -> int:
 
 
 async def integration_sync_loop() -> None:
-    db = await get_db()
+    """Background loop to process integration sync jobs periodically."""
     while True:
         try:
+            # DEPLOYMENT FIX: Move get_db() inside try block
+            # Prevents crash if MongoDB connection fails at startup
+            db = await get_db()
             processed = await dispatch_pending_integration_sync(db, limit=10)
             if processed:
                 logger.info("Integration sync worker processed %s jobs", processed)

@@ -2,7 +2,7 @@
 Comprehensive Health Check System
 Kubernetes/Docker ready health endpoints
 """
-from fastapi import APIRouter, Response, status
+from fastapi import APIRouter, Response, status, Request
 from datetime import datetime
 import psutil
 import redis

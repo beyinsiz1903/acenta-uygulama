@@ -9767,7 +9767,7 @@ async def reject_booking(
             entity_type="booking",
             entity_id=booking_id,
             changes={
-                "status": "rejected",
+                "status": REJECTED_STATUS,
                 "reason_code": payload.reason_code,
                 "reason_note": payload.reason_note,
             },

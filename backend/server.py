@@ -190,6 +190,8 @@ class UserRole(str, Enum):
     FINANCE = "finance"  # Accounting, invoices, AR
     STAFF = "staff"  # Limited access
     GUEST = "guest"  # Guest portal
+    AGENCY_ADMIN = "agency_admin"  # Agency admin - can manage agency
+    AGENCY_AGENT = "agency_agent"  # Agency staff - can create requests
 
 class Permission(str, Enum):
     # Booking permissions

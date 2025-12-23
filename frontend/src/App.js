@@ -43,6 +43,7 @@ function App() {
         <Route path="/" element={<LoginPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/test/booking" element={<AgencyBookingTestPage />} />
+        <Route path="/test/simple" element={<SimpleBookingTest />} />
         <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
         {/* Admin Routes */}

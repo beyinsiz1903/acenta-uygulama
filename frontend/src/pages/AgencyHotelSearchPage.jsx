@@ -283,7 +283,7 @@ export default function AgencyHotelSearchPage() {
       name: r.name,
       key: roomTypeKeyOf(r),
     }));
-  }, [rooms, filteredRatePlansByRoomKey]);
+  }, [rooms]);
 
   const filteredRooms = useMemo(() => {
     if (!rooms.length) return [];
@@ -414,6 +414,12 @@ export default function AgencyHotelSearchPage() {
       );
     }
 
+    const paxTotal = (occupancy?.adults || 0) + (occupancy?.children || 0);
+    const maxAdults = selectedRoom?.max_occupancy?.adults ?? 0;
+    const maxChildren = selectedRoom?.max_occupancy?.children ?? 0;
+    const maxTotal = maxAdults + maxChildren;
+    const overCapacity = maxTotal > 0 && paxTotal > maxTotal;
+
     return (
       <div className="space-y-3">
         <div className="space-y-1 text-sm">
@@ -467,6 +473,15 @@ export default function AgencyHotelSearchPage() {
             )}
           </div>
         </div>
+
+        {overCapacity && (
+          <div
+            className="mt-2 text-xs text-destructive bg-destructive/10 border border-destructive/20 rounded-md p-2"
+            data-testid="pax-max-occupancy-warning"
+          >
+            Seçilen oda için kişi sayısı kapasiteyi aşıyor. Kapasite: {maxTotal} kişi, Pax: {paxTotal} kişi.
+          </div>
+        )}
 
         {!compact && renderRuleSummary()}
       </div>

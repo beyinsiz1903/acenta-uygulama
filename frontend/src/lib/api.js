@@ -33,8 +33,10 @@ export function setUser(user) {
   localStorage.setItem("acenta_user", JSON.stringify(user));
 }
 
+// If backendEnv is empty, axios will call relative to current origin, and
+// we manually ensure all paths start with /api when calling.
 export const api = axios.create({
-  baseURL: `${backendUrl}/api`,
+  baseURL: backendEnv ? `${backendEnv}/api` : "/api",
 });
 
 api.interceptors.request.use((config) => {

@@ -39,8 +39,21 @@ export default function AgencyBookingNewPage() {
   const selectedRoom = searchData?.rooms?.find((r) => r.room_type_id === context.room_type_id);
   const selectedRatePlan = selectedRoom?.rate_plans?.find((rp) => rp.rate_plan_id === context.rate_plan_id);
 
+  function handleFormKeyDown(e) {
+    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault();
+      if (!loading) {
+        void submitDraft();
+      }
+    }
+  }
+
   async function handleCreateDraft(e) {
     e.preventDefault();
+    await submitDraft();
+  }
+
+  async function submitDraft() {
     setFormError("");
 
     // Validation
@@ -131,7 +144,7 @@ export default function AgencyBookingNewPage() {
         <div className="space-y-1">
           <h1 className="text-2xl font-bold text-foreground">Hızlı Rezervasyon</h1>
           <p className="text-sm text-muted-foreground">
-            Adım 3/3 — Misafir bilgilerini girip rezervasyonu gönderin.
+            Adım 3/3 — Misafir bilgilerini girip rezervasyonu oluşturun ve gönderin.
           </p>
           <div className="mt-4">
             <StepBar current={3} />
@@ -225,7 +238,12 @@ export default function AgencyBookingNewPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleCreateDraft} className="space-y-4">
+          <form
+            onSubmit={handleCreateDraft}
+            onKeyDown={handleFormKeyDown}
+            className="space-y-4"
+            data-testid="booking-wizard-form"
+          >
             <div className="space-y-2">
               <Label htmlFor="guest-name" className="flex items-center gap-2">
                 <User className="h-4 w-4" />
@@ -287,18 +305,29 @@ export default function AgencyBookingNewPage() {
             </div>
 
             {formError && (
-              <div className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-lg p-3">
+              <div
+                className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-lg p-3"
+                data-testid="booking-wizard-error"
+              >
                 {formError}
               </div>
             )}
 
-            <Button type="submit" disabled={loading} className="w-full gap-2">
+            <Button
+              type="submit"
+              disabled={loading}
+              className="w-full gap-2"
+              data-testid="booking-wizard-create-send"
+            >
               {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-              {loading ? "Gönderiliyor..." : "Rezervasyonu Gönder"}
+              {loading ? "Gönderiliyor..." : "Oluştur & Gönder"}
             </Button>
 
             <p className="text-xs text-muted-foreground text-center mt-1">
               Rezervasyonu gönderdikten sonra otele iletilir; durumunu Rezervasyonlarım ekranından takip edebilirsiniz.
+              <span className="block mt-1" data-testid="booking-wizard-shortcut-hint">
+                Kısayol: <span className="font-mono">Ctrl/⌘ + Enter</span>
+              </span>
             </p>
           </form>
         </CardContent>

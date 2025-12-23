@@ -292,9 +292,9 @@ export default function AgencyBookingConfirmedPage() {
             data-testid="booking-summary-copy"
             onClick={async () => {
               const ok = await copyText(shareSummary);
-              setCopied(ok);
+              setCopiedSummary(ok);
               if (ok) {
-                window.setTimeout(() => setCopied(false), 1200);
+                window.setTimeout(() => setCopiedSummary(false), 1200);
               }
             }}
             disabled={!shareSummary}

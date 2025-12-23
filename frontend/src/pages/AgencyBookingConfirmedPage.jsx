@@ -45,7 +45,8 @@ export default function AgencyBookingConfirmedPage() {
   const [booking, setBooking] = useState(location.state?.booking || null);
   const [loading, setLoading] = useState(!booking);
   const [error, setError] = useState("");
-  const [copied, setCopied] = useState(false);
+  const [copiedId, setCopiedId] = useState(false);
+  const [copiedSummary, setCopiedSummary] = useState(false);
 
   useEffect(() => {
     console.log("[BookingConfirmed] booking_id:", bookingId);
@@ -275,14 +276,14 @@ export default function AgencyBookingConfirmedPage() {
             onClick={async () => {
               const id = booking?.id || bookingId;
               const ok = await copyText(id);
-              setCopied(ok);
+              setCopiedId(ok);
               if (ok) {
-                window.setTimeout(() => setCopied(false), 1200);
+                window.setTimeout(() => setCopiedId(false), 1200);
               }
             }}
             disabled={!(booking?.id || bookingId)}
           >
-            {copied ? "Kopyalandı" : "Kopyala"}
+            {copiedId ? "Kopyalandı" : "Kopyala"}
           </button>
 
           <button
@@ -299,7 +300,7 @@ export default function AgencyBookingConfirmedPage() {
             disabled={!shareSummary}
             title="Paylaşılabilir özeti kopyala"
           >
-            Özeti Kopyala
+            {copiedSummary ? "Kopyalandı" : "Özeti Kopyala"}
           </button>
         </div>
       </div>

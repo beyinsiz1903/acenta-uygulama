@@ -219,7 +219,7 @@ export default function AgencyHotelSearchPage() {
             <p className="font-semibold text-foreground">{error || "Otel bulunamadı"}</p>
           </div>
           <Button onClick={() => navigate("/app/agency/hotels")} variant="outline">
-            Hızlı Rezervasyon'a Dön
+            Hızlı Rezervasyon&apos;a Dön
           </Button>
         </div>
       </div>

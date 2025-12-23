@@ -69,6 +69,34 @@ export default function AgencyBookingConfirmedPage() {
     } finally {
       setLoading(false);
     }
+  useEffect(() => {
+    if (!noteStorageKey) return;
+    try {
+      const saved = localStorage.getItem(noteStorageKey);
+      if (saved != null && saved !== hotelNote) {
+        setHotelNote(saved);
+      }
+    } catch {
+      // ignore
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [noteStorageKey]);
+
+  useEffect(() => {
+    if (!noteStorageKey) return;
+    try {
+      const v = (hotelNote || "").trim();
+      if (!v) {
+        localStorage.removeItem(noteStorageKey);
+        return;
+      }
+      localStorage.setItem(noteStorageKey, v);
+    } catch {
+      // ignore
+    }
+  }, [noteStorageKey, hotelNote]);
+
+
   }
 
   if (loading) {
@@ -102,6 +130,8 @@ export default function AgencyBookingConfirmedPage() {
   const { hotel_name, guest, rate_snapshot, status, stay, occupancy, confirmed_at } = booking;
 
   const referenceId = booking?.id || bookingId || "";
+  const noteStorageKey =
+    booking?.id || bookingId ? `agency_booking_hotel_note:${booking?.id || bookingId}` : "";
 
   const paxTotal = (occupancy?.adults || 0) + (occupancy?.children || 0);
 

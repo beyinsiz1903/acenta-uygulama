@@ -303,6 +303,15 @@ export default function AgencyBookingConfirmedPage() {
               if (ok) {
                 window.setTimeout(() => setCopiedSummary(false), 1200);
               }
+            }}
+            disabled={!shareSummary}
+            title="Paylaşılabilir özeti kopyala"
+          >
+            {copiedSummary ? "Kopyalandı" : "Özeti Kopyala"}
+          </button>
+        </div>
+      </div>
+
       {/* Hotel Note */}
       <div className="rounded-xl border bg-background p-4">
         <div className="text-sm font-medium">Otele Not (opsiyonel)</div>
@@ -317,16 +326,6 @@ export default function AgencyBookingConfirmedPage() {
           onChange={(e) => setHotelNote(e.target.value)}
           data-testid="hotel-note-input"
         />
-      </div>
-
-
-            }}
-            disabled={!shareSummary}
-            title="Paylaşılabilir özeti kopyala"
-          >
-            {copiedSummary ? "Kopyalandı" : "Özeti Kopyala"}
-          </button>
-        </div>
       </div>
 
       {/* Success Banner */}

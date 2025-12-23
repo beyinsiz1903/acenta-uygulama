@@ -69,6 +69,8 @@ export default function AgencyBookingConfirmedPage() {
     } finally {
       setLoading(false);
     }
+  }
+
   useEffect(() => {
     if (!noteStorageKey) return;
     try {

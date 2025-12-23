@@ -99,6 +99,8 @@ export default function AgencyBookingConfirmedPage() {
 
   const { hotel_name, guest, rate_snapshot, status, stay, occupancy, confirmed_at } = booking;
 
+  const referenceId = booking?.id || bookingId || "";
+
   const total = rate_snapshot?.price?.total;
   const currency = rate_snapshot?.price?.currency;
   const perNight = rate_snapshot?.price?.per_night;
@@ -113,6 +115,9 @@ export default function AgencyBookingConfirmedPage() {
     const lines = [];
 
     lines.push("✅ Rezervasyon Talebi");
+    if (referenceId) {
+      lines.push(`Referans: ${referenceId}`);
+    }
     lines.push("");
 
     if (hotel_name) lines.push(`🏨 ${hotel_name}`);
@@ -395,7 +400,7 @@ export default function AgencyBookingConfirmedPage() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Button onClick={openWhatsApp} className="gap-2">
+              <Button onClick={openWhatsApp} className="gap-2" data-testid="whatsapp-send">
                 WhatsApp&apos;a Gönder
               </Button>
               <Button onClick={() => navigate("/app/agency/hotels")} variant="outline" className="gap-2">

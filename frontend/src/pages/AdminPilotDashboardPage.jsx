@@ -10,7 +10,11 @@ import {
 } from "recharts";
 import { getToken } from "../lib/api";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || "";
+// Backend URL: önce env, yoksa aynı origin (/api)
+const BACKEND_URL =
+  (typeof import.meta !== "undefined" && import.meta.env && import.meta.env.REACT_APP_BACKEND_URL)
+    || process.env.REACT_APP_BACKEND_URL
+    || "";
 
 /**
  * Safer date key generator:

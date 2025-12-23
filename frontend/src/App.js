@@ -41,6 +41,7 @@ function App() {
         {/* Public Routes */}
         <Route path="/" element={<LoginPage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/test/booking" element={<AgencyBookingTestPage />} />
         <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
         {/* Admin Routes */}

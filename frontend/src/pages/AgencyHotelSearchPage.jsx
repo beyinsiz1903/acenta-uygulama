@@ -232,6 +232,41 @@ export default function AgencyHotelSearchPage() {
   const stay = searchResult?.stay;
   const occupancy = searchResult?.occupancy;
   const hotelFromSearch = searchResult?.hotel;
+  const roomTypeOptions = useMemo(() => {
+    return (rooms || []).map((room) => ({
+      ...room,
+      _key: roomTypeKeyOf(room),
+      _label: room.name || room.title || room.label || room.room_type_id,
+    }));
+  }, [rooms]);
+
+  const filteredRatePlansByRoomKey = useMemo(() => {
+    if (!selectedRoomTypeKey) return {};
+
+    const result = {};
+    (rooms || []).forEach((room) => {
+      const roomKey = roomTypeKeyOf(room);
+      const basePlans = room.rate_plans || [];
+
+      if (!roomKey) {
+        result[room.room_type_id] = basePlans;
+        return;
+      }
+
+      const filtered = basePlans.filter((rp) => {
+        const applies = rp?.applies_to_room_types;
+        if (!applies) return true; // None -> tüm odalara uygulanır
+        const list = Array.isArray(applies) ? applies : [applies];
+        const normalizedList = list.map((x) => normalizeKey(x));
+        return normalizedList.includes(normalizeKey(roomKey));
+      });
+
+      result[room.room_type_id] = filtered;
+    });
+
+    return result;
+  }, [rooms, selectedRoomTypeKey]);
+
   const source = searchResult?.source;
 
   const cacheHint = useMemo(() => {

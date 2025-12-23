@@ -84,10 +84,12 @@ export default function AdminPilotDashboardPage() {
         setError("");
 
         const token = getToken();
-        if (!BACKEND_URL) throw new Error("BACKEND_URL tanımlı değil.");
         if (!token) throw new Error("Token bulunamadı. Lütfen tekrar giriş yapın.");
 
-        const resp = await axios.get(`${BACKEND_URL}/api/admin/pilot/summary?days=7`, {
+        const base = BACKEND_URL || "";
+        const url = base ? `${base}/api/admin/pilot/summary?days=7` : "/api/admin/pilot/summary?days=7";
+
+        const resp = await axios.get(url, {
           headers: { Authorization: `Bearer ${token}` },
         });
 

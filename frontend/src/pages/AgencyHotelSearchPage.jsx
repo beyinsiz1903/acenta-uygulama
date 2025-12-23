@@ -700,10 +700,12 @@ export default function AgencyHotelSearchPage() {
                     <div className="space-y-1">
                       <Label className="text-xs">Oda Tipi</Label>
                       <Select
-                        value={selectedRoomTypeKey}
+                        value={selectedRoomTypeKey || "all"}
                         onValueChange={(val) => {
-                          setSelectedRoomTypeKey(val);
+                          const next = val === "all" ? "" : val;
+                          setSelectedRoomTypeKey(next);
                           setSelectedRatePlanId("");
+                          setSelected(null);
                         }}
                         disabled={!rooms.length}
                         data-testid="room-type-select"

@@ -396,7 +396,7 @@ export default function AgencyBookingConfirmedPage() {
 
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Button onClick={openWhatsApp} className="gap-2">
-                WhatsApp'a Gönder
+                WhatsApp&apos;a Gönder
               </Button>
               <Button onClick={() => navigate("/app/agency/hotels")} variant="outline" className="gap-2">
                 <Search className="h-4 w-4" />

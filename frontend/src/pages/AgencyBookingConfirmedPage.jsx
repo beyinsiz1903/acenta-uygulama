@@ -132,8 +132,7 @@ export default function AgencyBookingConfirmedPage() {
       : null,
   ]
     .filter(Boolean)
-    .join("
-");
+    .join("\n");
 
   const total = rate_snapshot?.price?.total;
   const currency = rate_snapshot?.price?.currency;

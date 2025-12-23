@@ -283,7 +283,7 @@ export default function AgencyHotelSearchPage() {
       name: r.name,
       key: roomTypeKeyOf(r),
     }));
-  }, [rooms]);
+  }, [rooms, filteredRatePlansByRoomKey]);
 
   const filteredRooms = useMemo(() => {
     if (!rooms.length) return [];

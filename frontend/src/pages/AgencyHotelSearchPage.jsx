@@ -270,6 +270,8 @@ export default function AgencyHotelSearchPage() {
   const source = searchResult?.source;
 
   const cacheHint = useMemo(() => {
+    // Frontend oda filtresi (select)
+
     if (!hasSearch || !cacheLikely) return null;
     // Sadece aynı kriterlerle tekrar arama yapıldığında gösteriyoruz
     return "Aynı kriterler (cache olabilir)";

@@ -714,7 +714,7 @@ export default function AgencyHotelSearchPage() {
                           <SelectValue placeholder="Tümü" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">Tümü</SelectItem>
+                          <SelectItem value="all">Tümü</SelectItem>
                           {availableRoomTypes.map((rt) => (
                             <SelectItem key={rt.id} value={rt.key}>
                               {rt.name}

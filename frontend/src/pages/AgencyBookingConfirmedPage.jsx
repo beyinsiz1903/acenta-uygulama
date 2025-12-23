@@ -8,6 +8,35 @@ import { Badge } from "../components/ui/badge";
 import { formatMoney } from "../lib/format";
 import { statusInfo, badgeToneClass } from "../utils/bookingStatus";
 
+
+// Safe clipboard helper (modern API + fallback)
+async function copyText(text) {
+  try {
+    if (!text) return false;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(String(text));
+      return true;
+    }
+  } catch {
+    // ignore and try fallback
+  }
+
+  try {
+    const ta = document.createElement("textarea");
+    ta.value = String(text ?? "");
+    ta.setAttribute("readonly", "");
+    ta.style.position = "absolute";
+    ta.style.left = "-9999px";
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand("copy");
+    document.body.removeChild(ta);
+    return ok;
+  } catch {
+    return false;
+  }
+}
+
 export default function AgencyBookingConfirmedPage() {
   const { bookingId } = useParams();
   const navigate = useNavigate();
@@ -16,6 +45,7 @@ export default function AgencyBookingConfirmedPage() {
   const [booking, setBooking] = useState(location.state?.booking || null);
   const [loading, setLoading] = useState(!booking);
   const [error, setError] = useState("");
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     console.log("[BookingConfirmed] booking_id:", bookingId);
@@ -175,6 +205,48 @@ export default function AgencyBookingConfirmedPage() {
 
   return (
     <div className="space-y-6">
+      {/* Booking ID Banner */}
+      <div
+        className="rounded-xl border bg-muted/40 px-4 py-3 flex items-center justify-between gap-3"
+        data-testid="booking-id-banner"
+      >
+        <div className="min-w-0">
+          <div className="text-xs text-muted-foreground">Rezervasyon ID</div>
+          <div className="truncate font-mono text-sm">
+            {booking?.id || bookingId || "-"}
+          </div>
+          {booking?.hotel_extranet_url && (
+            <div className="mt-1">
+              <a
+                href={booking.hotel_extranet_url}
+                target="_blank"
+                rel="noreferrer"
+                className="text-[11px] underline text-muted-foreground"
+                data-testid="open-hotel-extranet"
+              >
+                Otel panelinde aç
+              </a>
+            </div>
+          )}
+        </div>
+        <button
+          type="button"
+          className="shrink-0 inline-flex items-center justify-center rounded-md border bg-background px-3 py-2 text-xs font-medium"
+          data-testid="booking-id-copy"
+          onClick={async () => {
+            const id = booking?.id || bookingId;
+            const ok = await copyText(id);
+            setCopied(ok);
+            if (ok) {
+              window.setTimeout(() => setCopied(false), 1200);
+            }
+          }}
+          disabled={!(booking?.id || bookingId)}
+        >
+          {copied ? "Kopyalandı" : "Kopyala"}
+        </button>
+      </div>
+
       {/* Success Banner */}
       <div className="rounded-2xl border-2 border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 p-8">
         <div className="flex flex-col items-center text-center gap-4">

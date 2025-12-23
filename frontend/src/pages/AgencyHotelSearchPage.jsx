@@ -710,17 +710,21 @@ export default function AgencyHotelSearchPage() {
                     <div className="space-y-1">
                       <Label className="text-xs">Oda Tipi</Label>
                       <Select
-                        value={roomFilter}
-                        onValueChange={setRoomFilter}
+                        value={selectedRoomTypeKey}
+                        onValueChange={(val) => {
+                          setSelectedRoomTypeKey(val);
+                          setSelectedRatePlanId("");
+                        }}
                         disabled={!rooms.length}
+                        data-testid="room-type-select"
                       >
                         <SelectTrigger className="h-8 text-xs">
                           <SelectValue placeholder="Tümü" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="all">Tümü</SelectItem>
+                          <SelectItem value="">Tümü</SelectItem>
                           {availableRoomTypes.map((rt) => (
-                            <SelectItem key={rt.id} value={rt.id}>
+                            <SelectItem key={rt.id} value={rt.key}>
                               {rt.name}
                             </SelectItem>
                           ))}

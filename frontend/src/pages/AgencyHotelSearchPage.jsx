@@ -486,7 +486,8 @@ export default function AgencyHotelSearchPage() {
             className="mt-2 text-xs text-destructive bg-destructive/10 border border-destructive/20 rounded-md p-2"
             data-testid="pax-max-occupancy-warning"
           >
-            Seçilen oda için kişi sayısı kapasiteyi aşıyor. Kapasite: {maxTotal} kişi, Pax: {paxTotal} kişi.
+            Seçilen oda için kişi sayısı kapasiteyi aşıyor. Kapasite: {maxTotalFallback} kişi, Pax: {paxTotal} kişi.
+            Gerekirse otele not ekleyerek durumu belirtmenizi öneririz.
           </div>
         )}
 

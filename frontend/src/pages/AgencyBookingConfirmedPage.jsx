@@ -47,6 +47,7 @@ export default function AgencyBookingConfirmedPage() {
   const [error, setError] = useState("");
   const [copiedId, setCopiedId] = useState(false);
   const [copiedSummary, setCopiedSummary] = useState(false);
+  const [hotelNote, setHotelNote] = useState("");
 
   useEffect(() => {
     console.log("[BookingConfirmed] booking_id:", bookingId);
@@ -109,6 +110,9 @@ export default function AgencyBookingConfirmedPage() {
       ? `${stay.check_in} → ${stay.check_out}`
       : "";
 
+  const hotelNoteClean = (hotelNote || "").trim();
+  const hotelNoteLine = hotelNoteClean ? `Not: ${hotelNoteClean}` : null;
+
   const roomLine =
     booking?.rate_snapshot?.room_type_name
       ? `Oda: ${booking.rate_snapshot.room_type_name}`
@@ -130,6 +134,7 @@ export default function AgencyBookingConfirmedPage() {
     typeof rate_snapshot?.price?.total === "number"
       ? `Tutar: ${formatMoney(rate_snapshot.price.total, rate_snapshot.price.currency || "TRY")}`
       : null,
+    hotelNoteLine,
   ]
     .filter(Boolean)
     .join("\n");
@@ -150,6 +155,9 @@ export default function AgencyBookingConfirmedPage() {
     lines.push("✅ Rezervasyon Talebi");
     if (referenceId) {
       lines.push(`Referans: ${referenceId}`);
+    }
+    if (hotelNoteClean) {
+      lines.push(`Not: ${hotelNoteClean}`);
     }
     lines.push("");
 
@@ -295,6 +303,23 @@ export default function AgencyBookingConfirmedPage() {
               if (ok) {
                 window.setTimeout(() => setCopiedSummary(false), 1200);
               }
+      {/* Hotel Note */}
+      <div className="rounded-xl border bg-background p-4">
+        <div className="text-sm font-medium">Otele Not (opsiyonel)</div>
+        <div className="mt-1 text-xs text-muted-foreground">
+          Otel ekibinin görmesi için kısa bir not ekleyebilirsiniz (örn: kapasite aşıyor, bebek var, geç giriş).
+        </div>
+
+        <textarea
+          className="mt-3 w-full min-h-[90px] rounded-md border bg-background p-3 text-sm"
+          placeholder="Notunuz…"
+          value={hotelNote}
+          onChange={(e) => setHotelNote(e.target.value)}
+          data-testid="hotel-note-input"
+        />
+      </div>
+
+
             }}
             disabled={!shareSummary}
             title="Paylaşılabilir özeti kopyala"

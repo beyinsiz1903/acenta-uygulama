@@ -19,6 +19,20 @@ import {
 } from "../components/ui/select";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetTrigger } from "../components/ui/sheet";
 
+// room_type title/name -> string key ("standard" gibi) üretmek için
+const normalizeKey = (s) =>
+  String(s ?? "")
+    .toLowerCase()
+    .trim()
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+
+// room_type objesinden eşleştirme anahtarı çıkar
+const roomTypeKeyOf = (rt) =>
+  // varsa explicit alanı kullan (ileride backend eklenirse)
+  rt?.key || rt?.room_type_key || normalizeKey(rt?.title || rt?.name || rt?.label);
+
 // /app/agency/hotels/:hotelId/search
 // Amaç: Otel seçildikten sonra tarih + pax girip /api/agency/search çağrısını yapmak
 // ve SONUÇ + teklif seçimini aynı ekranda yönetmek.
@@ -53,6 +67,9 @@ export default function AgencyHotelSearchPage() {
     const { check_in, check_out } = formData;
     if (!check_in || !check_out) return null;
     const start = new Date(check_in);
+  const [selectedRoomTypeKey, setSelectedRoomTypeKey] = useState("");
+  const [selectedRatePlanId, setSelectedRatePlanId] = useState("");
+
     const end = new Date(check_out);
     if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return null;
     const diffMs = end.getTime() - start.getTime();

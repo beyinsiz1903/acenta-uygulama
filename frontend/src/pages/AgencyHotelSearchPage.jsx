@@ -297,7 +297,9 @@ export default function AgencyHotelSearchPage() {
     if (!rooms.length) return [];
 
     let nextRooms = rooms.map((room) => {
-      let ratePlans = room.rate_plans || [];
+      // FAZ-2: room_type → rate_plan filtre (applies_to_room_types)
+      const filteredByKey = filteredRatePlansByRoomKey[room.room_type_id];
+      let ratePlans = (filteredByKey ?? room.rate_plans) || [];
 
       if (boardFilter !== "all") {
         ratePlans = ratePlans.filter((rp) => rp.board === boardFilter);

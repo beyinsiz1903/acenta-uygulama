@@ -1,6 +1,11 @@
 import axios from "axios";
 
-const backendUrl = process.env.REACT_APP_BACKEND_URL;
+// Backend base URL: prefer REACT_APP_BACKEND_URL from env, fallback to same-origin /api
+// This prevents broken URLs like "undefined/api" when env is not set in certain environments.
+const backendEnv =
+  (typeof import.meta !== "undefined" && import.meta.env && import.meta.env.REACT_APP_BACKEND_URL)
+    || process.env.REACT_APP_BACKEND_URL
+    || "";
 
 export function getToken() {
   return localStorage.getItem("acenta_token") || "";

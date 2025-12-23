@@ -67,15 +67,15 @@ export default function AgencyHotelSearchPage() {
     const { check_in, check_out } = formData;
     if (!check_in || !check_out) return null;
     const start = new Date(check_in);
-  const [selectedRoomTypeKey, setSelectedRoomTypeKey] = useState("");
-  const [selectedRatePlanId, setSelectedRatePlanId] = useState("");
-
     const end = new Date(check_out);
     if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return null;
     const diffMs = end.getTime() - start.getTime();
     const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
     return diffDays > 0 ? diffDays : null;
-  }, [formData.check_in, formData.check_out]);
+  }, [formData]);
+
+  const [selectedRoomTypeKey, setSelectedRoomTypeKey] = useState("");
+  const [selectedRatePlanId, setSelectedRatePlanId] = useState("");
 
   const [formError, setFormError] = useState("");
 

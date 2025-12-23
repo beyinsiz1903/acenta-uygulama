@@ -19,6 +19,7 @@ import AgencyHotelDetailPage from "./pages/AgencyHotelDetailPage";
 import AgencyHotelSearchPage from "./pages/AgencyHotelSearchPage";
 import AgencySearchResultsPage from "./pages/AgencySearchResultsPage";
 import AgencyBookingNewPage from "./pages/AgencyBookingNewPage";
+import AgencyBookingTestPage from "./pages/AgencyBookingTestPage";
 import AgencyBookingDraftPage from "./pages/AgencyBookingDraftPage";
 import AgencyBookingConfirmedPage from "./pages/AgencyBookingConfirmedPage";
 import AgencyBookingsListPage from "./pages/AgencyBookingsListPage";

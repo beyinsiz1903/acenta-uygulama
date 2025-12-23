@@ -286,7 +286,11 @@ export default function AgencyHotelSearchPage() {
   }, [rooms]);
 
   const availableRoomTypes = useMemo(() => {
-    return rooms.map((r) => ({ id: r.room_type_id, name: r.name }));
+    return rooms.map((r) => ({
+      id: r.room_type_id,
+      name: r.name,
+      key: roomTypeKeyOf(r),
+    }));
   }, [rooms]);
 
   const filteredRooms = useMemo(() => {

@@ -232,14 +232,6 @@ export default function AgencyHotelSearchPage() {
   const stay = searchResult?.stay;
   const occupancy = searchResult?.occupancy;
   const hotelFromSearch = searchResult?.hotel;
-  const roomTypeOptions = useMemo(() => {
-    return (rooms || []).map((room) => ({
-      ...room,
-      _key: roomTypeKeyOf(room),
-      _label: room.name || room.title || room.label || room.room_type_id,
-    }));
-  }, [rooms]);
-
   const filteredRatePlansByRoomKey = useMemo(() => {
     if (!selectedRoomTypeKey) return {};
 

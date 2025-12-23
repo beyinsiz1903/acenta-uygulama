@@ -343,7 +343,19 @@ export default function AgencyBookingConfirmedPage() {
 
       {/* Hotel Note */}
       <div className="rounded-xl border bg-background p-4">
-        <div className="text-sm font-medium">Otele Not (opsiyonel)</div>
+        <div className="flex items-center justify-between gap-3">
+          <div className="text-sm font-medium">Otele Not (opsiyonel)</div>
+          <button
+            type="button"
+            className="text-xs underline text-muted-foreground hover:text-foreground"
+            data-testid="hotel-note-clear"
+            onClick={() => setHotelNote("")}
+            disabled={!hotelNote?.trim()}
+            title="Notu temizle"
+          >
+            Temizle
+          </button>
+        </div>
         <div className="mt-1 text-xs text-muted-foreground">
           Otel ekibinin görmesi için kısa bir not ekleyebilirsiniz (örn: kapasite aşıyor, bebek var, geç giriş).
         </div>

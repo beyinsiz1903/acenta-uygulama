@@ -415,10 +415,17 @@ export default function AgencyHotelSearchPage() {
     }
 
     const paxTotal = (occupancy?.adults || 0) + (occupancy?.children || 0);
-    const maxAdults = selectedRoom?.max_occupancy?.adults ?? 0;
-    const maxChildren = selectedRoom?.max_occupancy?.children ?? 0;
+
+    const maxAdults = Number(selectedRoom?.max_occupancy?.adults ?? 0) || 0;
+    const maxChildren = Number(selectedRoom?.max_occupancy?.children ?? 0) || 0;
     const maxTotal = maxAdults + maxChildren;
-    const overCapacity = maxTotal > 0 && paxTotal > maxTotal;
+
+    const maxTotalFallback =
+      maxTotal > 0
+        ? maxTotal
+        : (Number(selectedRoom?.max_occupancy ?? 0) || 0);
+
+    const overCapacity = maxTotalFallback > 0 && paxTotal > maxTotalFallback;
 
     return (
       <div className="space-y-3">

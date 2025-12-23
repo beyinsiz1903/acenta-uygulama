@@ -98,9 +98,6 @@ export default function AgencyBookingConfirmedPage() {
     }
   }, [noteStorageKey, hotelNote]);
 
-
-  }
-
   if (loading) {
     return (
       <div className="space-y-6">

@@ -488,7 +488,7 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "";
  * - login-email-input / login-password-input / login-submit-button kullanır
  * - login sonrası /app/admin/** bekler (role routing)
  */
-async function loginAsAdmin(page: Page) {
+async function loginAsAdmin(page) {
   if (!ADMIN_EMAIL || !ADMIN_PASSWORD) {
     test.skip();
   }

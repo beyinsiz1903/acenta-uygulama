@@ -90,7 +90,7 @@ export default function AgencyBookingNewPage() {
           phone: formData.phone.trim() || undefined,
         },
         special_requests: formData.special_requests.trim() || undefined,
-        intent: submitMode,
+        intent: mode,
       };
 
       console.log("[BookingDraft] Creating draft:", payload);

@@ -71,6 +71,7 @@ export default function AgencyBookingNewPage() {
     }
 
     setLoading(true);
+    setLoadingMode(mode);
     try {
       const payload = {
         search_id: context.search_id,

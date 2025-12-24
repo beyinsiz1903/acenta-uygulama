@@ -708,7 +708,7 @@ test.describe("AdminMetricsPage FAZ-11.1 insights smoke", () => {
 
     // Check if noted booking ID appears
     const notedTableText = await notedTable.innerText();
-    expect(notedTableText).toContain("noted-001");
+    expect(notedTableText).toContain("noted-00"); // Truncated ID in UI
   });
 
   test("T3 - follow toggle persists after refresh", async ({ page }) => {

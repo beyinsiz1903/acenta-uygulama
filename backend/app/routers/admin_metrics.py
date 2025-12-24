@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 
 from app.db import get_db
 from app.auth import get_current_user, require_roles
-from app.utils.date_range import parse_date_range, format_date_range, DateRangePeriod
+from app.utils import parse_date_range, format_date_range, DateRangePeriod
 
 
 router = APIRouter(prefix="/api/admin/metrics", tags=["admin-metrics"])

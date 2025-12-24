@@ -601,7 +601,12 @@ export default function AdminMetricsPage() {
                 const filename = `queues_filtered_${activeQueueTab}_${today}.csv`;
                 triggerCsvDownload(filename, csv);
               }}
-              disabled={loading}
+              disabled={!getFilteredQueueItems(activeQueueTab, normalizedQueues, {
+                hotel: dqHotel,
+                minAge: dqMinAge,
+                hasNote: dqHasNote,
+                search: dqSearch,
+              }).filtered.length || loading}
               data-testid="metrics-export-queues-filtered"
             >
               Export Filtered CSV

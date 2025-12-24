@@ -89,6 +89,7 @@ export default function AgencyBookingNewPage() {
           phone: formData.phone.trim() || undefined,
         },
         special_requests: formData.special_requests.trim() || undefined,
+        intent: submitMode,
       };
 
       console.log("[BookingDraft] Creating draft:", payload);
@@ -99,10 +100,32 @@ export default function AgencyBookingNewPage() {
       console.log("[BookingDraft] Draft created:", draft.id);
       toast.success("Rezervasyon taslağı oluşturuldu");
 
-      // Navigate to draft confirmation
-      navigate(`/app/agency/booking/draft/${draft.id}`, {
-        state: { draft },
-      });
+      if (submitMode === "pending") {
+        try {
+          const submitResp = await api.post(`/agency/bookings/${draft.id}/submit`, {
+            intent: submitMode,
+          });
+          const pendingBooking = submitResp.data;
+          const pid = pendingBooking.id || pendingBooking.booking_id || pendingBooking._id;
+
+          navigate(`/app/agency/booking/pending/${pid}`, {
+            state: { booking: pendingBooking },
+          });
+        } catch (submitErr) {
+          console.error("[BookingDraft] Submit error:", submitErr);
+          toast.error(
+            "Rezervasyon taslağı oluşturuldu fakat otele gönderilemedi. Taslağı taslak ekranından yönetebilirsiniz.",
+          );
+          navigate(`/app/agency/booking/draft/${draft.id}`, {
+            state: { draft },
+          });
+        }
+      } else {
+        // Navigate to draft confirmation (mevcut confirmed akış)
+        navigate(`/app/agency/booking/draft/${draft.id}`, {
+          state: { draft },
+        });
+      }
     } catch (err) {
       console.error("[BookingDraft] Create error:", err);
       setFormError(apiErrorMessage(err));

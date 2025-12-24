@@ -63,7 +63,7 @@ class TrendRowOut(BaseModel):
 
 
 class MetricsTrendsOut(BaseModel):
-    period_days: int
+    period: DateRangePeriod
     daily_trends: List[TrendRowOut] = Field(default_factory=list)
 
 

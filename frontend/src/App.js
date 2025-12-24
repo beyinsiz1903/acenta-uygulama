@@ -64,6 +64,7 @@ function App() {
             <Route path="audit" element={<AdminAuditLogsPage />} />
             <Route path="email-logs" element={<AdminEmailLogsPage />} />
             <Route path="pilot-dashboard" element={<AdminPilotDashboardPage />} />
+            <Route path="metrics" element={<AdminMetricsPage />} />
           </Route>
         </Route>
 

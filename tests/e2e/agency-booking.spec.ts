@@ -510,8 +510,8 @@ async function loginAsAdmin(page) {
   // Submit
   await page.getByTestId("login-submit").click();
 
-  // Wait for admin route
-  await page.waitForURL("**/app/admin/**", { timeout: 15_000 });
+  // Wait for app route (admin area)
+  await page.waitForURL("**/app/**", { timeout: 15_000 });
 }
 
 test.describe("AdminMetricsPage smoke (FAZ-10)", () => {

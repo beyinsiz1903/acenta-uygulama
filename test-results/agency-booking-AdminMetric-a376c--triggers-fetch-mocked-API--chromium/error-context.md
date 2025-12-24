@@ -14,12 +14,11 @@
           - text: Email
           - textbox "Email" [ref=e15]:
             - /placeholder: ornek@acenta.com
-            - text: admin@acenta.test
+            - text: hoteladmin@acenta.test
         - generic [ref=e16]:
           - text: Şifre
           - textbox "Şifre" [ref=e17]: admin123
-        - generic [ref=e18]: Request failed with status code 404
-        - button "Giriş Yap" [ref=e19] [cursor=pointer]
-        - generic [ref=e20]: "Demo: admin@acenta.test / admin123"
+        - button "Giriş Yap" [ref=e18] [cursor=pointer]
+        - generic [ref=e19]: "Demo: admin@acenta.test / admin123"
   - region "Notifications alt+T"
 ```

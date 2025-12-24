@@ -76,7 +76,6 @@ function triggerCsvDownload(filename, csv) {
     URL.revokeObjectURL(url);
   } catch (e) {
     // Best-effort; CSV export is non-critical
-    // eslint-disable-next-line no-console
     console.error("CSV export failed", e);
   }
 }

@@ -184,3 +184,27 @@ test.describe("HotelBookingsPage smoke", () => {
   });
 });
 
+
+test.describe("AgencyBookingNewPage FAZ-8 smoke", () => {
+  test("wizard pending/confirmed buttons and shortcut hint are visible", async ({ page }) => {
+    const TEST_BOOKING_WIZARD_URL = process.env.TEST_BOOKING_WIZARD_URL;
+    if (!TEST_BOOKING_WIZARD_URL) test.skip();
+
+    await loginAsAgency(page);
+
+    await page.goto(`${BASE_URL}${TEST_BOOKING_WIZARD_URL}`);
+
+    const pendingBtn = page.getByTestId("wizard-submit-pending");
+    const confirmedBtn = page.getByTestId("wizard-submit-confirmed");
+    const shortcutHint = page.getByTestId("booking-wizard-shortcut-hint");
+
+    await expect(pendingBtn).toBeVisible();
+    await expect(confirmedBtn).toBeVisible();
+    await expect(shortcutHint).toBeVisible();
+
+    await expect(pendingBtn).toBeEnabled();
+    await expect(confirmedBtn).toBeEnabled();
+  });
+});
+
+

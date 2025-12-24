@@ -298,10 +298,11 @@
 ## metadata:
 ##   created_by: "main_agent"
 ##   version: "1.0"
-##   test_sequence: 1
-##   run_ui: false
+##   test_sequence: 2
+##   run_ui: true
 ## test_plan:
-##   current_focus: []
+##   current_focus:
+##     - "FAZ-12.1 AdminMetricsPage - date range + period normalize + CSV + smoke test"
 ##   stuck_tasks: []
 ##   test_all: false
 ##   test_priority: "high_first"

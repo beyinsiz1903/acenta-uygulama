@@ -224,6 +224,125 @@ export default function AdminMetricsPage() {
         />
       </div>
 
+      {/* FAZ-11: Operational Insights */}
+      <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <StatCard
+          title="⏳ Yavaş Onaylar"
+          value={queues?.slow_pending?.length || 0}
+          subtitle="24+ saat bekliyor"
+          testId="metrics-insight-slow-count"
+        />
+        <StatCard
+          title="📝 Notlu Talepler"
+          value={queues?.noted_pending?.length || 0}
+          subtitle="not içeren pending"
+          testId="metrics-insight-noted-count"
+        />
+        <StatCard
+          title="📈 Dönüşüm Oranı"
+          value={`%${funnel?.conversion_pct || 0}`}
+          subtitle={`${funnel?.confirmed || 0} / ${funnel?.total || 0} confirmed`}
+          testId="metrics-funnel-conversion"
+        />
+      </div>
+
+      {/* FAZ-11: Action Queue Table */}
+      {queues && (queues.slow_pending?.length > 0 || queues.noted_pending?.length > 0) && (
+        <div className="mt-5 rounded-xl border bg-card p-4">
+          <div className="flex items-center gap-3 border-b pb-3">
+            <button
+              type="button"
+              className={`px-3 py-1.5 text-sm font-medium rounded-md ${
+                activeTab === "slow"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+              onClick={() => setActiveTab("slow")}
+            >
+              ⏳ Yavaş Onaylar ({queues.slow_pending?.length || 0})
+            </button>
+            <button
+              type="button"
+              className={`px-3 py-1.5 text-sm font-medium rounded-md ${
+                activeTab === "noted"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+              onClick={() => setActiveTab("noted")}
+            >
+              📝 Notlu Talepler ({queues.noted_pending?.length || 0})
+            </button>
+          </div>
+
+          <div className="mt-4 overflow-x-auto">
+            <table
+              className="w-full text-sm"
+              data-testid={activeTab === "slow" ? "metrics-queue-slow-table" : "metrics-queue-noted-table"}
+            >
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left py-2 px-2 font-medium">Otel</th>
+                  <th className="text-left py-2 px-2 font-medium">Booking ID</th>
+                  <th className="text-left py-2 px-2 font-medium">Yaş (saat)</th>
+                  <th className="text-left py-2 px-2 font-medium">Takip</th>
+                  <th className="text-left py-2 px-2 font-medium">Aksiyon</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(activeTab === "slow" ? queues.slow_pending : queues.noted_pending)?.map((booking) => {
+                  const isFollowed = followedBookings.has(booking.booking_id);
+                  return (
+                    <tr key={booking.booking_id} className="border-b last:border-0 hover:bg-muted/50">
+                      <td className="py-2 px-2">
+                        <div className="font-medium">{booking.hotel_name || booking.hotel_id}</div>
+                        <div className="text-xs text-muted-foreground">{booking.hotel_id}</div>
+                      </td>
+                      <td className="py-2 px-2">
+                        <button
+                          type="button"
+                          className="text-xs font-mono hover:underline"
+                          onClick={() => navigator.clipboard.writeText(booking.booking_id)}
+                          title="Kopyala"
+                        >
+                          {booking.booking_id.slice(0, 8)}...
+                        </button>
+                      </td>
+                      <td className="py-2 px-2">
+                        <span className={booking.age_hours > 48 ? "text-destructive font-semibold" : ""}>
+                          {booking.age_hours.toFixed(1)}h
+                        </span>
+                      </td>
+                      <td className="py-2 px-2">
+                        <button
+                          type="button"
+                          className="text-lg hover:scale-110 transition-transform"
+                          onClick={() => toggleFollow(booking.booking_id)}
+                          data-testid="metrics-follow-toggle"
+                          title={isFollowed ? "Takipten çıkar" : "Takibe al"}
+                        >
+                          {isFollowed ? "⭐" : "☆"}
+                        </button>
+                      </td>
+                      <td className="py-2 px-2">
+                        <button
+                          type="button"
+                          className="px-2 py-1 text-xs rounded border hover:bg-muted"
+                          onClick={() => openWhatsAppFollow(booking)}
+                          data-testid="metrics-wa-follow"
+                          title="WhatsApp ile takip"
+                        >
+                          💬 WhatsApp
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
       <div className="mt-4 grid grid-cols-1 lg:grid-cols-3 gap-3">
         <div className="lg:col-span-2">
           <TrendChart data={trendData} testId="metrics-trend-chart" />

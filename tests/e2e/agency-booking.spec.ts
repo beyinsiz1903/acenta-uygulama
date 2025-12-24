@@ -208,3 +208,273 @@ test.describe("AgencyBookingNewPage FAZ-8 smoke", () => {
 });
 
 
+test.describe("AgencyBookingNewPage FAZ-8.2 mocked submit wiring", () => {
+  test("8.2-A: pending button → draft + submit API calls", async ({ page }) => {
+    const TEST_BOOKING_WIZARD_URL = process.env.TEST_BOOKING_WIZARD_URL;
+    if (!TEST_BOOKING_WIZARD_URL) test.skip();
+
+    await loginAsAgency(page);
+
+    // Mock draft creation
+    const mockDraftId = "draft-mock-001";
+    let draftCalled = false;
+    await page.route("**/api/agency/bookings/draft", async (route) => {
+      draftCalled = true;
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          draft_id: mockDraftId,
+          hotel_id: "hotel-001",
+          search_id: "search-001",
+        }),
+      });
+    });
+
+    // Mock submit (pending)
+    const mockPendingBookingId = "pending-mock-001";
+    let submitCalled = false;
+    await page.route("**/api/agency/bookings/*/submit", async (route) => {
+      submitCalled = true;
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          booking_id: mockPendingBookingId,
+          status: "pending",
+          code: "PND-12345",
+        }),
+      });
+    });
+
+    await page.goto(`${BASE_URL}${TEST_BOOKING_WIZARD_URL}`);
+
+    const pendingBtn = page.getByTestId("wizard-submit-pending");
+    await expect(pendingBtn).toBeVisible();
+
+    // Click pending button
+    await pendingBtn.click();
+
+    // Assert: both APIs should be called
+    await page.waitForTimeout(1000); // Give time for API calls
+    expect(draftCalled).toBe(true);
+    expect(submitCalled).toBe(true);
+  });
+
+  test("8.2-A: confirmed button → only draft API call", async ({ page }) => {
+    const TEST_BOOKING_WIZARD_URL = process.env.TEST_BOOKING_WIZARD_URL;
+    if (!TEST_BOOKING_WIZARD_URL) test.skip();
+
+    await loginAsAgency(page);
+
+    // Mock draft creation
+    const mockDraftId = "draft-mock-002";
+    let draftCalled = false;
+    await page.route("**/api/agency/bookings/draft", async (route) => {
+      draftCalled = true;
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          draft_id: mockDraftId,
+          hotel_id: "hotel-001",
+          search_id: "search-001",
+        }),
+      });
+    });
+
+    // Mock submit (should NOT be called for confirmed)
+    let submitCalled = false;
+    await page.route("**/api/agency/bookings/*/submit", async (route) => {
+      submitCalled = true;
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({}),
+      });
+    });
+
+    await page.goto(`${BASE_URL}${TEST_BOOKING_WIZARD_URL}`);
+
+    const confirmedBtn = page.getByTestId("wizard-submit-confirmed");
+    await expect(confirmedBtn).toBeVisible();
+
+    // Click confirmed button
+    await confirmedBtn.click();
+
+    // Assert: only draft should be called
+    await page.waitForTimeout(1000);
+    expect(draftCalled).toBe(true);
+    expect(submitCalled).toBe(false);
+  });
+
+  test("8.2-B: pending button → navigates to /app/agency/booking/pending/:id", async ({ page }) => {
+    const TEST_BOOKING_WIZARD_URL = process.env.TEST_BOOKING_WIZARD_URL;
+    if (!TEST_BOOKING_WIZARD_URL) test.skip();
+
+    await loginAsAgency(page);
+
+    const mockDraftId = "draft-mock-003";
+    const mockPendingBookingId = "pending-mock-003";
+
+    // Mock draft
+    await page.route("**/api/agency/bookings/draft", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          draft_id: mockDraftId,
+          hotel_id: "hotel-001",
+          search_id: "search-001",
+        }),
+      });
+    });
+
+    // Mock submit
+    await page.route("**/api/agency/bookings/*/submit", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          booking_id: mockPendingBookingId,
+          status: "pending",
+          code: "PND-12345",
+        }),
+      });
+    });
+
+    await page.goto(`${BASE_URL}${TEST_BOOKING_WIZARD_URL}`);
+
+    const pendingBtn = page.getByTestId("wizard-submit-pending");
+    await pendingBtn.click();
+
+    // Assert: should navigate to pending page
+    await expect(page).toHaveURL(
+      new RegExp(`/app/agency/booking/pending/${mockPendingBookingId}`),
+      { timeout: 10_000 }
+    );
+  });
+
+  test("8.2-B: confirmed button → navigates to /app/agency/booking/draft/:id", async ({ page }) => {
+    const TEST_BOOKING_WIZARD_URL = process.env.TEST_BOOKING_WIZARD_URL;
+    if (!TEST_BOOKING_WIZARD_URL) test.skip();
+
+    await loginAsAgency(page);
+
+    const mockDraftId = "draft-mock-004";
+
+    // Mock draft
+    await page.route("**/api/agency/bookings/draft", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          draft_id: mockDraftId,
+          hotel_id: "hotel-001",
+          search_id: "search-001",
+        }),
+      });
+    });
+
+    await page.goto(`${BASE_URL}${TEST_BOOKING_WIZARD_URL}`);
+
+    const confirmedBtn = page.getByTestId("wizard-submit-confirmed");
+    await confirmedBtn.click();
+
+    // Assert: should navigate to draft page
+    await expect(page).toHaveURL(
+      new RegExp(`/app/agency/booking/draft/${mockDraftId}`),
+      { timeout: 10_000 }
+    );
+  });
+
+  test("8.2-C: loading state shows on correct button (pending)", async ({ page }) => {
+    const TEST_BOOKING_WIZARD_URL = process.env.TEST_BOOKING_WIZARD_URL;
+    if (!TEST_BOOKING_WIZARD_URL) test.skip();
+
+    await loginAsAgency(page);
+
+    // Mock draft with delay
+    await page.route("**/api/agency/bookings/draft", async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          draft_id: "draft-mock-005",
+          hotel_id: "hotel-001",
+          search_id: "search-001",
+        }),
+      });
+    });
+
+    // Mock submit with delay
+    await page.route("**/api/agency/bookings/*/submit", async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          booking_id: "pending-mock-005",
+          status: "pending",
+          code: "PND-12345",
+        }),
+      });
+    });
+
+    await page.goto(`${BASE_URL}${TEST_BOOKING_WIZARD_URL}`);
+
+    const pendingBtn = page.getByTestId("wizard-submit-pending");
+    const confirmedBtn = page.getByTestId("wizard-submit-confirmed");
+
+    // Click pending button
+    const clickPromise = pendingBtn.click();
+
+    // During loading: pending should be disabled, confirmed should remain enabled
+    await page.waitForTimeout(200);
+    await expect(pendingBtn).toBeDisabled();
+    await expect(confirmedBtn).toBeEnabled();
+
+    // Wait for completion
+    await clickPromise;
+  });
+
+  test("8.2-C: loading state shows on correct button (confirmed)", async ({ page }) => {
+    const TEST_BOOKING_WIZARD_URL = process.env.TEST_BOOKING_WIZARD_URL;
+    if (!TEST_BOOKING_WIZARD_URL) test.skip();
+
+    await loginAsAgency(page);
+
+    // Mock draft with delay
+    await page.route("**/api/agency/bookings/draft", async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          draft_id: "draft-mock-006",
+          hotel_id: "hotel-001",
+          search_id: "search-001",
+        }),
+      });
+    });
+
+    await page.goto(`${BASE_URL}${TEST_BOOKING_WIZARD_URL}`);
+
+    const pendingBtn = page.getByTestId("wizard-submit-pending");
+    const confirmedBtn = page.getByTestId("wizard-submit-confirmed");
+
+    // Click confirmed button
+    const clickPromise = confirmedBtn.click();
+
+    // During loading: confirmed should be disabled, pending should remain enabled
+    await page.waitForTimeout(200);
+    await expect(confirmedBtn).toBeDisabled();
+    await expect(pendingBtn).toBeEnabled();
+
+    // Wait for completion
+    await clickPromise;
+  });
+});
+
+

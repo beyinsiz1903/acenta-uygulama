@@ -23,6 +23,7 @@ from app.routers.payments import router as payments_router
 from app.routers.b2b import router as b2b_router
 from app.routers.admin import router as admin_router
 from app.routers.admin_metrics import router as admin_metrics_router
+from app.routers.admin_demo_seed import router as admin_demo_seed_router
 from app.routers.agency import router as agency_router
 from app.routers.search import router as search_router
 from app.routers.agency_booking import router as agency_booking_router

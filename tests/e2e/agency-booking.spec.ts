@@ -844,6 +844,101 @@ test.describe("AdminMetricsPage FAZ-12.1+13.2 metrics smoke", () => {
           period: { start: "2025-01-01", end: "2025-01-07", days: 7 },
           daily_trends: [],
         }),
+
+  test("T5 - Export filtered queues button visible", async ({ page }) => {
+    const TEST_ADMIN_METRICS_URL = process.env.TEST_ADMIN_METRICS_URL || "/app/admin/metrics";
+    const BASE_URL = process.env.E2E_BASE_URL || "http://localhost:3000";
+
+    await page.addInitScript(() => {
+      const token = "e2e-admin-token";
+      window.localStorage.setItem("acenta_token", token);
+      window.localStorage.setItem(
+        "acenta_user",
+        JSON.stringify({
+          id: "e2e-admin",
+          email: "admin@acenta.test",
+          roles: ["super_admin"],
+        })
+      );
+    });
+
+    await page.route("**/api/admin/insights/queues**", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          period_days: 30,
+          slow_hours: 24,
+          slow_pending: [
+            {
+              booking_id: "SLOW-1",
+              hotel_id: "H1",
+              hotel_name: "Hotel One",
+              age_hours: 30,
+              has_note: false,
+            },
+          ],
+          noted_pending: [
+            {
+              booking_id: "NOTE-1",
+              hotel_id: "H2",
+              hotel_name: "Hotel Two",
+              age_hours: 10,
+              has_note: true,
+            },
+          ],
+        }),
+      });
+    });
+
+    // Minimal mocks for other endpoints
+    await page.route("**/api/admin/metrics/overview**", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          period: { start: "2025-01-01", end: "2025-01-07", days: 7 },
+          bookings: { total: 10, pending: 3, confirmed: 6, cancelled: 1 },
+          avg_approval_time_hours: 5,
+          bookings_with_notes_pct: 12,
+          top_hotels: [],
+        }),
+      });
+    });
+
+    await page.route("**/api/admin/metrics/trends**", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          period: { start: "2025-01-01", end: "2025-01-07", days: 7 },
+          daily_trends: [],
+        }),
+      });
+    });
+
+    await page.route("**/api/admin/insights/funnel**", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          period_days: 30,
+          total: 10,
+          pending: 3,
+          confirmed: 6,
+          cancelled: 1,
+          conversion_pct: 60,
+        }),
+      });
+    });
+
+    await page.goto(`${BASE_URL}${TEST_ADMIN_METRICS_URL}`);
+
+    await page.getByTestId("metrics-tab-detailed-queues").click();
+
+    await expect(page.getByTestId("metrics-export-queues-filtered")).toBeVisible();
+  });
+
       });
     });
 

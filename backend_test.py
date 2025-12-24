@@ -1867,8 +1867,8 @@ class FAZ8BookingSubmitIntentTester:
             200
         )
         
-        if success and len(response) > 0:
-            self.hotel_id = response[0]['id']
+        if success and response.get('items') and len(response['items']) > 0:
+            self.hotel_id = response['items'][0]['hotel_id']
             self.log(f"✅ Found hotel for testing: {self.hotel_id}")
         else:
             self.log("❌ No hotels found for agency")

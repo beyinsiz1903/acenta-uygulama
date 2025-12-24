@@ -5,7 +5,7 @@ const AGENCY_EMAIL = process.env.AGENCY_EMAIL || "agency@example.com";
 const AGENCY_PASSWORD = process.env.AGENCY_PASSWORD || "password";
 const TEST_BOOKING_ID = process.env.TEST_CONFIRMED_BOOKING_ID;
 
-async function loginAsAgency(page: Page) {
+async function loginAsAgency(page) {
   await page.goto(`${BASE_URL}/login`);
 
   await page.getByTestId("login-email-input").fill(AGENCY_EMAIL);

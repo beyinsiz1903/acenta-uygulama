@@ -363,7 +363,9 @@ export default function AdminMetricsPage() {
         <StatCard
           title="Toplam"
           value={cards.total}
-          subtitle={`Son ${overview?.period_days ?? daysOverview} gün`}
+          subtitle={normalizedPeriod.start && normalizedPeriod.end
+            ? `${normalizedPeriod.start} → ${normalizedPeriod.end}`
+            : `Son ${normalizedPeriod.days} gün`}
           testId="metrics-stat-total"
         />
         <StatCard

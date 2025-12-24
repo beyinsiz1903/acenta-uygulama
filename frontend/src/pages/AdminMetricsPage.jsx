@@ -552,6 +552,116 @@ export default function AdminMetricsPage() {
                           {booking.booking_id.slice(0, 8)}...
                         </button>
                       </td>
+      {/* Tab: Detailed Queues */}
+      {activeTab === "queues" && (
+        <div className="mt-5">
+          {/* Queue sub-tabs */}
+          <div className="flex items-center gap-3 border-b pb-3">
+            <button
+              type="button"
+              className={`px-3 py-1.5 text-sm font-medium rounded-md ${
+                activeQueueTab === "slow"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+              onClick={() => setActiveQueueTab("slow")}
+            >
+              ⏳ Slow Approvals ({normalizedQueues.slow.length})
+            </button>
+            <button
+              type="button"
+              className={`px-3 py-1.5 text-sm font-medium rounded-md ${
+                activeQueueTab === "noted"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+              onClick={() => setActiveQueueTab("noted")}
+            >
+              📝 With Notes ({normalizedQueues.noted.length})
+            </button>
+          </div>
+
+          {/* Filter bar */}
+          <div className="mt-4 flex flex-wrap items-center gap-3 text-xs">
+            <div className="flex items-center gap-1">
+              <span className="text-muted-foreground">Hotel:</span>
+              <select
+                className="h-8 rounded-md border bg-background px-2"
+                value={dqHotel}
+                onChange={(e) => setDqHotel(e.target.value)}
+                data-testid="metrics-dq-filter-hotel"
+              >
+                <option value="all">Tümü</option>
+                {Array.from(
+                  new Map(
+                    [...normalizedQueues.slow, ...normalizedQueues.noted]
+                      .filter((x) => x.hotel_id || x.hotelId)
+                      .map((x) => {
+                        const id = String(x.hotel_id || x.hotelId);
+                        const name = x.hotel_name || x.hotelName || id;
+                        return [id, name];
+                      })
+                  ).entries()
+                ).map(([id, name]) => (
+                  <option key={id} value={id}>
+                    {name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex items-center gap-1">
+              <span className="text-muted-foreground">Min yaş (saat):</span>
+              <input
+                type="number"
+                min="0"
+                className="h-8 w-20 rounded-md border bg-background px-2"
+                value={dqMinAge}
+                onChange={(e) => setDqMinAge(e.target.value)}
+                data-testid="metrics-dq-filter-min-age"
+              />
+            </div>
+
+            <div className="flex items-center gap-1">
+              <span className="text-muted-foreground">Not:</span>
+              <select
+                className="h-8 rounded-md border bg-background px-2"
+                value={dqHasNote}
+                onChange={(e) => setDqHasNote(e.target.value)}
+                data-testid="metrics-dq-filter-has-note"
+              >
+                <option value="all">Tümü</option>
+                <option value="yes">Sadece notlu</option>
+                <option value="no">Sadece notsuz</option>
+              </select>
+            </div>
+
+            <div className="flex items-center gap-1 flex-1 min-w-[160px]">
+              <span className="text-muted-foreground">Ara:</span>
+              <input
+                type="text"
+                className="h-8 flex-1 rounded-md border bg-background px-2"
+                placeholder="Otel veya Booking ID"
+                value={dqSearch}
+                onChange={(e) => setDqSearch(e.target.value)}
+                data-testid="metrics-dq-filter-search"
+              />
+            </div>
+          </div>
+
+          {/* Filtered table */}
+          <DetailedQueuesTable
+            activeQueueTab={activeQueueTab}
+            normalizedQueues={normalizedQueues}
+            dqHotel={dqHotel}
+            dqMinAge={dqMinAge}
+            dqHasNote={dqHasNote}
+            dqSearch={dqSearch}
+          />
+        </div>
+      )}
+
+
                       <td className="py-2 px-2">
                         <span className={booking.age_hours > 48 ? "text-destructive font-semibold" : ""}>
                           {booking.age_hours.toFixed(1)}h

@@ -34,12 +34,6 @@ def to_iso_date(d: datetime) -> str:
 
 # ---------- Response Models ----------
 
-class DateRangePeriod(BaseModel):
-    start: str  # YYYY-MM-DD
-    end: str    # YYYY-MM-DD
-    days: int
-
-
 class TopHotelOut(BaseModel):
     hotel_id: str
     hotel_name: Optional[str] = None

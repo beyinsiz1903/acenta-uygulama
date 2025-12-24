@@ -478,3 +478,76 @@ test.describe("AgencyBookingNewPage FAZ-8.2 mocked submit wiring", () => {
 });
 
 
+// ========== FAZ-10.1: Admin Metrics Dashboard E2E Smoke ==========
+
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "";
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "";
+
+/**
+ * Admin login helper
+ * - login-email-input / login-password-input / login-submit-button kullanır
+ * - login sonrası /app/admin/** bekler (role routing)
+ */
+async function loginAsAdmin(page: Page) {
+  if (!ADMIN_EMAIL || !ADMIN_PASSWORD) {
+    test.skip();
+  }
+
+  await page.goto(`${BASE_URL}/login`);
+
+  // Clear and fill email
+  const emailInput = page.getByTestId("login-email-input");
+  await emailInput.click();
+  await emailInput.fill("");
+  await emailInput.fill(ADMIN_EMAIL);
+
+  // Fill password
+  const passwordInput = page.getByTestId("login-password-input");
+  await passwordInput.click();
+  await passwordInput.fill("");
+  await passwordInput.fill(ADMIN_PASSWORD);
+
+  // Submit
+  await page.getByTestId("login-submit-button").click();
+
+  // Wait for admin route
+  await page.waitForURL("**/app/admin/**", { timeout: 15_000 });
+}
+
+test.describe("AdminMetricsPage FAZ-10.1 smoke", () => {
+  test("admin metrics page renders stats, trend chart and top hotels", async ({ page }) => {
+    const TEST_ADMIN_METRICS_URL = process.env.TEST_ADMIN_METRICS_URL;
+    if (!TEST_ADMIN_METRICS_URL) test.skip();
+
+    await loginAsAdmin(page);
+
+    await page.goto(`${BASE_URL}${TEST_ADMIN_METRICS_URL}`);
+    await page.waitForTimeout(2000); // Wait for data load
+
+    // 1) Stat cards render
+    const statTotal = page.getByTestId("metrics-stat-total");
+    const statPending = page.getByTestId("metrics-stat-pending");
+    const statConfirmed = page.getByTestId("metrics-stat-confirmed");
+    const statAvg = page.getByTestId("metrics-stat-avg-time");
+
+    await expect(statTotal).toBeVisible();
+    await expect(statPending).toBeVisible();
+    await expect(statConfirmed).toBeVisible();
+    await expect(statAvg).toBeVisible();
+
+    // 2) Trend chart + Top hotels list render
+    await expect(page.getByTestId("metrics-trend-chart")).toBeVisible();
+    await expect(page.getByTestId("metrics-top-hotels")).toBeVisible();
+
+    // 3) Soft assert: total is not empty text (demo data varsa >0 beklenebilir)
+    // Kırılgan olmamak için parse etmiyoruz; sadece boş değil.
+    const totalText = (await statTotal.innerText()).trim();
+    expect(totalText).not.toEqual("");
+
+    // 4) Demo seed button visible (super_admin için)
+    const seedBtn = page.getByTestId("metrics-seed-demo");
+    await expect(seedBtn).toBeVisible();
+  });
+});
+
+

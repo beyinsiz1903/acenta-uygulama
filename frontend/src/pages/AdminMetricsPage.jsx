@@ -189,6 +189,9 @@ export default function AdminMetricsPage() {
         const next = new Set(prev);
         next.delete(bookingId);
         return next;
+  const normalizedPeriod = useMemo(() => normalizePeriod(overview, appliedRange.days || 7), [overview, appliedRange]);
+
+
       });
       {/* Date Range Controls (FAZ-12.1) */}
       <div className="mt-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">

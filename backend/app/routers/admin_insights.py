@@ -90,6 +90,10 @@ async def get_action_queues(
     cutoff_date = now_utc() - timedelta(days=days)
     slow_cutoff = now_utc() - timedelta(hours=slow_hours)
     
+    # Ensure slow_cutoff is timezone-aware
+    if slow_cutoff.tzinfo is None:
+        slow_cutoff = slow_cutoff.replace(tzinfo=timezone.utc)
+    
     # Get all pending bookings in period
     pending_bookings = await db.bookings.find({
         "organization_id": org_id,

@@ -19,6 +19,7 @@ export default function AgencyBookingNewPage() {
   const location = useLocation();
 
   const [loading, setLoading] = useState(false);
+  const [loadingMode, setLoadingMode] = useState(null); // "pending" | "confirmed" | null
   const [submitMode, setSubmitMode] = useState("confirmed"); // "confirmed" | "pending"
   const [formData, setFormData] = useState({
     full_name: "",

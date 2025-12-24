@@ -127,6 +127,17 @@ export default function AdminMetricsPage() {
           >
             {loading ? "Yükleniyor..." : "Yenile"}
           </button>
+
+          <button
+            type="button"
+            className="ml-2 h-9 rounded-md border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 px-3 text-sm font-medium"
+            onClick={() => void seedDemoData()}
+            disabled={seeding || loading}
+            data-testid="metrics-seed-demo"
+            title="Demo verisi oluştur (20 kayıt)"
+          >
+            {seeding ? "Oluşturuluyor..." : "🎲 Demo Verisi"}
+          </button>
         </div>
       </div>
 

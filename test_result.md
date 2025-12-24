@@ -429,6 +429,18 @@
         agent: "testing"
         comment: "✅ VOUCHER DEMO REMOVAL COMPREHENSIVE TEST COMPLETE - All 11 test scenarios passed (100% success rate). CRITICAL VERIFICATION COMPLETED: A) Demo Text Removal Confirmed: HTML template successfully cleaned of all demo text ('FAZ-9 demo', 'demo voucher', 'Bu email FAZ-9 demo voucher bildirimidir'), no demo-related text found in voucher HTML output, original demo message completely removed as requested. B) Core Functionality Preserved: All basic fields still present (hotel, guest, check-in/out, amount, status), proper data insertion working (hotel name, guest name, amounts, status TR/EN), bilingual content maintained (Turkish/English field labels), voucher title and descriptions preserved. C) API Endpoints Working: POST /api/voucher/{booking_id}/generate returns proper token+url+expires_at structure, GET /api/voucher/public/{token} HTML endpoint working with clean content, GET /api/voucher/public/{token}?format=pdf returns application/pdf format, POST /api/voucher/{booking_id}/email validates properly and generates subject/body. D) Error Handling Intact: 404 responses for non-existent bookings/tokens, 422 validation errors for invalid email formats, proper JSON error response formats maintained. E) No Regression: All other endpoints unaffected (bookings, settlements, hotels, health), authentication and authorization working correctly. DEMO TEXT REMOVAL SUCCESSFUL - Voucher functionality fully operational without any demo references."
 
+  - task: "FAZ-8 Booking Submit Intent Field - Minimal backend değişikliği test"
+    implemented: true
+    working: true
+    file: "/app/backend/app/routers/agency_booking.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ FAZ-8 BOOKING SUBMIT INTENT TEST COMPLETE - All 14 test scenarios passed (100% success rate). CRITICAL FUNCTIONALITY VERIFIED: A) FAZ-2 Regression Tests: Agency login successful (agency1@demo.test/agency123), search and draft creation working, submit without body working (creates pending booking with approval deadline), submit with note_to_hotel only working (note persisted correctly). B) Intent Field Tolerance: intent='pending' field accepted and parsed (no behavior change as expected), intent='confirmed' field accepted and parsed (still creates pending booking, no special behavior yet), combined note_to_hotel + intent working correctly. C) Backward Compatibility: BookingSubmitIn schema accepts optional intent field, existing FAZ-2 flow unaffected (empty body and note-only submissions work), all submissions create pending bookings with proper status and approval_deadline_at. D) Idempotency: Same draft returns same booking ID when submitted multiple times, draft.submitted_booking_id properly maintained. E) Field Parsing: Intent field parsed as _intent variable in code (line 233), no branching logic implemented yet (as requested), field validation working (accepts 'pending'|'confirmed' values). All FAZ-8 minimal backend changes production-ready with full backward compatibility maintained."
+
 ## frontend:
   - task: "FAZ-6 Mutabakat UI smoke test"
     implemented: true

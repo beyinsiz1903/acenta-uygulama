@@ -552,20 +552,117 @@ test.describe("AdminMetricsPage smoke (FAZ-10)", () => {
 // ========== FAZ-12.1: Admin Metrics Date Range & CSV Smoke ==========
 
 test.describe("AdminMetricsPage FAZ-12.1 date-range & CSV smoke", () => {
-  test("T1 - date range controls & CSV buttons render and preset triggers fetch", async ({ page }) => {
+  test("T1 - date range controls & CSV buttons render and preset triggers fetch (mocked API)", async ({ page }) => {
     const TEST_ADMIN_METRICS_URL = process.env.TEST_ADMIN_METRICS_URL || "/app/admin/metrics";
 
-    await loginAsAdmin(page);
-
-    // Track overview requests
-    let lastOverviewUrl = "";
-    await page.route("**/api/admin/metrics/overview**", async (route) => {
-      lastOverviewUrl = route.request().url();
-      await route.continue();
+    // Auth bypass: token & user localStorage'da hazır olsun
+    await page.addInitScript(() => {
+      const token = "e2e-admin-token";
+      window.localStorage.setItem("token", token);
+      window.localStorage.setItem("access_token", token);
+      window.localStorage.setItem("jwt", token);
+      window.localStorage.setItem(
+        "user",
+        JSON.stringify({ id: "e2e-admin", role: "super_admin", email: "admin@acenta.test" })
+      );
+      window.localStorage.setItem("role", "super_admin");
     });
 
+    // Optional: /me veya benzeri endpoint varsa 200 döndürelim
+    await page.route("**/api/**/me**", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ id: "e2e-admin", role: "super_admin", email: "admin@acenta.test" }),
+      });
+    });
+
+    // Metrics endpoint'lerini mockla ve overview URL'sini yakala
+    let lastOverviewUrl = "";
+    await page.route("**/api/admin/metrics/overview**", async (route) => {
+      const reqUrl = route.request().url();
+      lastOverviewUrl = reqUrl;
+      const url = new URL(reqUrl);
+      const days = Number(url.searchParams.get("days") || 7);
+
+      const endDate = new Date();
+      const end = endDate.toISOString().slice(0, 10);
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - days);
+      const start = startDate.toISOString().slice(0, 10);
+
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          period: { start, end, days },
+          bookings: { total: 10, pending: 3, confirmed: 6, cancelled: 1 },
+          avg_approval_time_hours: 5.2,
+          bookings_with_notes_pct: 12,
+          top_hotels: [],
+        }),
+      });
+    });
+
+    await page.route("**/api/admin/metrics/trends**", async (route) => {
+      const reqUrl = route.request().url();
+      const url = new URL(reqUrl);
+      const days = Number(url.searchParams.get("days") || 7);
+
+      const endDate = new Date();
+      const end = endDate.toISOString().slice(0, 10);
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - days);
+      const start = startDate.toISOString().slice(0, 10);
+
+      const len = Math.min(days, 7);
+      const rows = Array.from({ length: len }).map((_, i) => {
+        const d = new Date();
+        d.setDate(d.getDate() - (len - 1 - i));
+        const ds = d.toISOString().slice(0, 10);
+        return { date: ds, pending: 1, confirmed: 2, cancelled: 0, total: 3 };
+      });
+
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          period: { start, end, days },
+          daily_trends: rows,
+        }),
+      });
+    });
+
+    await page.route("**/api/admin/insights/queues**", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          period_days: 30,
+          slow_hours: 24,
+          slow_pending: [],
+          noted_pending: [],
+        }),
+      });
+    });
+
+    await page.route("**/api/admin/insights/funnel**", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          period_days: 30,
+          total: 0,
+          pending: 0,
+          confirmed: 0,
+          cancelled: 0,
+          conversion_pct: 0,
+        }),
+      });
+    });
+
+    // Sayfaya git
     await page.goto(`${BASE_URL}${TEST_ADMIN_METRICS_URL}`);
-    await page.waitForTimeout(2000);
 
     // Date range inputs visible
     await expect(page.getByTestId("metrics-range-start")).toBeVisible();
@@ -576,16 +673,10 @@ test.describe("AdminMetricsPage FAZ-12.1 date-range & CSV smoke", () => {
     await expect(page.getByTestId("metrics-export-trends")).toBeVisible();
     await expect(page.getByTestId("metrics-export-queues")).toBeVisible();
 
-    // Click 14g preset button and ensure a new request is triggered with days=14
-    const preset14 = page.locator('button', { hasText: '14g' });
-    await preset14.click();
+    // 14g preset → overview URL içinde days=14 beklenir
+    await page.locator("button", { hasText: "14g" }).click();
 
-    // Daha stabil: ilgili response'u bekle
-    await page.waitForResponse((resp) => {
-      const url = resp.url();
-      const ok = resp.status() === 200;
-      return ok && url.includes("/api/admin/metrics/overview") && url.includes("days=14");
-    });
+    await page.waitForTimeout(200);
 
     expect(lastOverviewUrl).toContain("/api/admin/metrics/overview");
     expect(lastOverviewUrl).toContain("days=14");

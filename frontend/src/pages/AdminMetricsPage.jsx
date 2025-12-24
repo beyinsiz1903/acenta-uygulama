@@ -518,6 +518,131 @@ export default function AdminMetricsPage() {
               : `Son ${normalizedPeriod.days} gün`}
           </div>
 
+      {/* CSV Export Buttons (FAZ-12.1) */}
+      <div className="mt-4 flex flex-wrap gap-2">
+        <button
+          type="button"
+          className="h-8 rounded-md border bg-background px-3 text-xs"
+          onClick={() => {
+            if (!overview) return;
+            const period = normalizedPeriod;
+            const headers = [
+              "period_start",
+              "period_end",
+              "period_days",
+              "total",
+              "pending",
+              "confirmed",
+              "cancelled",
+              "avg_approval_hours",
+              "bookings_with_notes_pct",
+            ];
+            const row = {
+              period_start: period.start || "",
+              period_end: period.end || "",
+              period_days: period.days,
+              total: cards.total,
+              pending: cards.pending,
+              confirmed: cards.confirmed,
+              cancelled: cards.cancelled,
+              avg_approval_hours: cards.avg ?? "",
+              bookings_with_notes_pct: cards.notesPct ?? "",
+            };
+            const csv = toCsv(headers, [row]);
+            triggerCsvDownload("admin-metrics-overview.csv", csv);
+          }}
+          data-testid="metrics-export-overview"
+        >
+          Export Overview CSV
+        </button>
+
+        <button
+          type="button"
+          className="h-8 rounded-md border bg-background px-3 text-xs"
+          onClick={() => {
+            if (!trends || !trends.daily_trends) return;
+            const period = normalizedPeriod;
+            const headers = [
+              "period_start",
+              "period_end",
+              "period_days",
+              "date",
+              "pending",
+              "confirmed",
+              "cancelled",
+              "total",
+            ];
+            const rows = trends.daily_trends.map((d) => ({
+              period_start: period.start || "",
+              period_end: period.end || "",
+              period_days: period.days,
+              date: d.date,
+              pending: d.pending,
+              confirmed: d.confirmed,
+              cancelled: d.cancelled,
+              total: d.total,
+            }));
+            const csv = toCsv(headers, rows);
+            triggerCsvDownload("admin-metrics-trends.csv", csv);
+          }}
+          data-testid="metrics-export-trends"
+        >
+          Export Trends CSV
+        </button>
+
+        <button
+          type="button"
+          className="h-8 rounded-md border bg-background px-3 text-xs"
+          onClick={() => {
+            if (!queues) return;
+            const period = normalizedPeriod;
+            const headers = [
+              "queue_type",
+              "period_start",
+              "period_end",
+              "period_days",
+              "booking_id",
+              "hotel_id",
+              "hotel_name",
+              "age_hours",
+              "has_note",
+            ];
+            const rows = [];
+            (queues.slow_pending || []).forEach((b) => {
+              rows.push({
+                queue_type: "slow_pending",
+                period_start: period.start || "",
+                period_end: period.end || "",
+                period_days: period.days,
+                booking_id: b.booking_id,
+                hotel_id: b.hotel_id,
+                hotel_name: b.hotel_name,
+                age_hours: b.age_hours,
+                has_note: b.has_note,
+              });
+            });
+            (queues.noted_pending || []).forEach((b) => {
+              rows.push({
+                queue_type: "noted_pending",
+                period_start: period.start || "",
+                period_end: period.end || "",
+                period_days: period.days,
+                booking_id: b.booking_id,
+                hotel_id: b.hotel_id,
+                hotel_name: b.hotel_name,
+                age_hours: b.age_hours,
+                has_note: b.has_note,
+              });
+            });
+            const csv = toCsv(headers, rows);
+            triggerCsvDownload("admin-metrics-queues.csv", csv);
+          }}
+          data-testid="metrics-export-queues"
+        >
+          Export Queues CSV
+        </button>
+      </div>
+
           <div className="mt-4 space-y-2">
             {topHotels.length === 0 ? (
               <div className="text-sm text-muted-foreground py-8 text-center">

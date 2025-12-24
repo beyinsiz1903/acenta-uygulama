@@ -44,7 +44,7 @@ export default function AgencyBookingNewPage() {
     if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
       e.preventDefault();
       if (!loading) {
-        void submitDraft();
+        void submitDraft("pending");
       }
     }
   }
@@ -54,7 +54,8 @@ export default function AgencyBookingNewPage() {
     await submitDraft();
   }
 
-  async function submitDraft() {
+  async function submitDraft(modeOverride) {
+    const mode = modeOverride || submitMode;
     setFormError("");
 
     // Validation

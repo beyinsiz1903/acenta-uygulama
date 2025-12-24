@@ -175,7 +175,7 @@ export default function AdminMetricsPage() {
       </div>
 
       <div className="mt-4 text-[11px] text-muted-foreground">
-        Not: Bu ekran read-only'dır. Metrikler booking kayıtlarından hesaplanır.
+        Not: Bu ekran read-only&apos;dır. Metrikler booking kayıtlarından hesaplanır.
       </div>
     </div>
   );

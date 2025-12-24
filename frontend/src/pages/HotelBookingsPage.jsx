@@ -509,11 +509,12 @@ export default function HotelBookingsPage() {
 
                 return (
                   <TableRow
-                    key={booking.id}
+                    key={booking.id || booking.booking_id || booking._id}
                     className={`cursor-pointer hover:bg-accent/50 transition-colors ${isNew ? "bg-muted/30" : ""}`}
                     onClick={() => {
                       setSelectedId(booking.id);
                       setDrawerOpen(true);
+                      setSelectedForHeader(booking);
                     }}
                   >
                     <TableCell className="text-sm">

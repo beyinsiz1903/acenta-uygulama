@@ -229,6 +229,9 @@ async def submit_booking(draft_id: str, payload: BookingSubmitIn, request: Reque
         if existing_booking:
             return serialize_doc(existing_booking)
     
+    # Intent: default pending (current behavior), allow explicit flag
+    intent = payload.intent or "pending"
+    
     # 4. Create pending booking
     now = now_utc()
     booking_id = str(uuid.uuid4())

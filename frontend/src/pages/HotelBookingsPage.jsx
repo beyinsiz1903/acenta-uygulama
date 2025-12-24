@@ -445,6 +445,8 @@ export default function HotelBookingsPage() {
           <div className="mt-3 rounded-xl border border-destructive/50 bg-destructive/5 px-3 py-2 text-sm">
             {actionError}
           </div>
+        ) : null}
+
       {selectedForHeader && (
         <>
           <BookingReferenceBanner

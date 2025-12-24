@@ -111,6 +111,31 @@ function applyQueueFilters(items, filters) {
   });
 }
 
+function normalizeHotels(overview) {
+  const raw = overview?.top_hotels ?? overview?.topHotels ?? [];
+  return (raw || []).map((h) => {
+    const hotel_id = h.hotel_id ?? h.hotelId ?? h.id ?? "";
+    const hotel_name = h.hotel_name ?? h.hotelName ?? h.name ?? "—";
+    const total = h.total ?? h.bookings_total ?? h.count ?? 0;
+    const confirmed = h.confirmed ?? h.bookings_confirmed ?? 0;
+    const pending = h.pending ?? h.bookings_pending ?? 0;
+    const cancelled = h.cancelled ?? h.bookings_cancelled ?? 0;
+    const avg_approval_hours = h.avg_approval_hours ?? h.avgApprovalHours ?? null;
+    const notes_pct = h.notes_pct ?? h.bookings_with_notes_pct ?? null;
+
+    return {
+      hotel_id,
+      hotel_name,
+      total,
+      confirmed,
+      pending,
+      cancelled,
+      avg_approval_hours,
+      notes_pct,
+    };
+  });
+}
+
 function DetailedQueuesTable({ activeQueueTab, normalizedQueues, dqHotel, dqMinAge, dqHasNote, dqSearch }) {
   const baseItems = activeQueueTab === "slow" ? normalizedQueues.slow : normalizedQueues.noted;
   const filtered = applyQueueFilters(baseItems, {
@@ -217,6 +242,11 @@ export default function AdminMetricsPage() {
   const [dqMinAge, setDqMinAge] = useState("");
   const [dqHasNote, setDqHasNote] = useState("all");
   const [dqSearch, setDqSearch] = useState("");
+
+  // FAZ-13: Hotels performance filters
+  const [hotelsSearch, setHotelsSearch] = useState("");
+  const [hotelsSort, setHotelsSort] = useState("total"); // total | confirmed | pending | cancelled | avg_approval_hours
+  const [hotelsOrder, setHotelsOrder] = useState("desc"); // desc | asc
 
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
@@ -337,10 +367,31 @@ export default function AdminMetricsPage() {
     };
   }, [overview]);
 
-  const topHotels = overview?.top_hotels || [];
+  const topHotelsRaw = overview?.top_hotels || [];
   const trendData = trends?.daily_trends || [];
 
   const normalizedQueues = useMemo(() => normalizeQueues(queues), [queues]);
+  const normalizedHotels = useMemo(() => normalizeHotels(overview), [overview]);
+
+  const filteredHotels = useMemo(() => {
+    const s = hotelsSearch.trim().toLowerCase();
+    let items = normalizedHotels || [];
+    if (s) {
+      items = items.filter((h) => {
+        const name = String(h.hotel_name || "").toLowerCase();
+        const id = String(h.hotel_id || "").toLowerCase();
+        return name.includes(s) || id.includes(s);
+      });
+    }
+    const field = hotelsSort;
+    const sorted = [...items].sort((a, b) => {
+      const av = Number(a[field] ?? 0);
+      const bv = Number(b[field] ?? 0);
+      if (av === bv) return 0;
+      return hotelsOrder === "asc" ? av - bv : bv - av;
+    });
+    return sorted;
+  }, [normalizedHotels, hotelsSearch, hotelsSort, hotelsOrder]);
 
   return (
     <div className="p-4 md:p-6">
@@ -545,11 +596,15 @@ export default function AdminMetricsPage() {
         </button>
         <button
           type="button"
-          className="px-3 py-2 -mb-px border-b-2 border-transparent text-muted-foreground cursor-not-allowed"
-          disabled
+          className={`px-3 py-2 -mb-px border-b-2 ${
+            activeTab === "hotels"
+              ? "border-primary text-primary font-medium"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+          }`}
+          onClick={() => setActiveTab("hotels")}
           data-testid="metrics-tab-hotels"
         >
-          Hotels Performance (yakında)
+          Hotels Performance
         </button>
       </div>
 
@@ -863,6 +918,105 @@ export default function AdminMetricsPage() {
             />
             <StatCard
               title="Onaylı"
+      {/* Tab: Hotels Performance */}
+      {activeTab === "hotels" && (
+        <div className="mt-5 space-y-4">
+          <div className="text-xs text-muted-foreground">
+            <div>
+              Dönem: {normalizedPeriod.start && normalizedPeriod.end
+                ? `${normalizedPeriod.start} → ${normalizedPeriod.end}`
+                : `Son ${normalizedPeriod.days} gün`}
+            </div>
+            <div>
+              Son güncelleme: {lastUpdated ? new Date(lastUpdated).toLocaleString() : "—"}
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3 text-xs">
+            <div className="flex items-center gap-1 flex-1 min-w-[160px]">
+              <span className="text-muted-foreground">Ara:</span>
+              <input
+                type="text"
+                className="h-8 flex-1 rounded-md border bg-background px-2"
+                placeholder="Otel adı veya ID"
+                value={hotelsSearch}
+                onChange={(e) => setHotelsSearch(e.target.value)}
+                data-testid="metrics-hotels-search"
+              />
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="text-muted-foreground">Sırala:</span>
+              <select
+                className="h-8 rounded-md border bg-background px-2"
+                value={hotelsSort}
+                onChange={(e) => setHotelsSort(e.target.value)}
+                data-testid="metrics-hotels-sort"
+              >
+                <option value="total">Toplam</option>
+                <option value="confirmed">Onaylı</option>
+                <option value="pending">Beklemede</option>
+                <option value="cancelled">İptal</option>
+                <option value="avg_approval_hours">Ortalama Onay Süresi</option>
+              </select>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="text-muted-foreground">Sıra:</span>
+              <select
+                className="h-8 rounded-md border bg-background px-2"
+                value={hotelsOrder}
+                onChange={(e) => setHotelsOrder(e.target.value)}
+                data-testid="metrics-hotels-order"
+              >
+                <option value="desc">Azalan</option>
+                <option value="asc">Artan</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="mt-2 rounded-xl border bg-card p-4 overflow-x-auto">
+            {normalizedHotels.length === 0 ? (
+              <div className="text-sm text-muted-foreground text-center py-6">
+                Bu dönem için otel performans verisi yok.
+              </div>
+            ) : (
+              <table className="w-full text-sm" data-testid="metrics-hotels-table">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left py-2 px-2 font-medium">Hotel</th>
+                    <th className="text-left py-2 px-2 font-medium">Toplam</th>
+                    <th className="text-left py-2 px-2 font-medium">Onaylı</th>
+                    <th className="text-left py-2 px-2 font-medium">Beklemede</th>
+                    <th className="text-left py-2 px-2 font-medium">İptal</th>
+                    <th className="text-left py-2 px-2 font-medium">Ort. Onay (saat)</th>
+                    <th className="text-left py-2 px-2 font-medium">Notlu %</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredHotels.map((h) => (
+                    <tr key={h.hotel_id} className="border-b last:border-0 hover:bg-muted/50">
+                      <td className="py-2 px-2">
+                        <div className="font-medium truncate max-w-[200px]">{h.hotel_name}</div>
+                        <div className="text-xs text-muted-foreground">{h.hotel_id}</div>
+                      </td>
+                      <td className="py-2 px-2 font-medium">{h.total}</td>
+                      <td className="py-2 px-2">{h.confirmed}</td>
+                      <td className="py-2 px-2">{h.pending}</td>
+                      <td className="py-2 px-2">{h.cancelled}</td>
+                      <td className="py-2 px-2">
+                        {h.avg_approval_hours != null ? formatHours(h.avg_approval_hours) : "—"}
+                      </td>
+                      <td className="py-2 px-2">
+                        {h.notes_pct != null ? `%${h.notes_pct}` : "—"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </div>
+      )}
+
               value={funnel?.confirmed ?? "—"}
               subtitle="confirmed"
               testId="metrics-conv-confirmed"

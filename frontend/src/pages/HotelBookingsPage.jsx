@@ -9,6 +9,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "../components/ui/label";
 import { Textarea } from "../components/ui/textarea";
 import { useToast } from "../hooks/use-toast";
+import { BookingReferenceBanner } from "../components/BookingReferenceBanner";
+import { buildBookingShareSummary } from "../utils/bookingShareSummary";
 import {
   Table,
   TableBody,
@@ -271,6 +273,50 @@ export default function HotelBookingsPage() {
   }
 
   return (
+      {selectedForHeader && (
+        <>
+          <BookingReferenceBanner
+            testIdPrefix="hotel-"
+            bookingId={selectedForHeader.id || selectedForHeader.booking_id || selectedForHeader._id}
+            extranetUrl={null}
+            shareSummary={buildBookingShareSummary({
+              booking: selectedForHeader,
+              bookingIdFallback:
+                selectedForHeader.id || selectedForHeader.booking_id || selectedForHeader._id,
+              hotelNote,
+            })}
+          />
+
+          <div className="rounded-xl border bg-background p-4 mt-3">
+            <div className="flex items-center justify-between gap-3">
+              <div className="text-sm font-medium">Acente Notu (opsiyonel)</div>
+              <button
+                type="button"
+                className="text-xs underline text-muted-foreground hover:text-foreground"
+                data-testid="hotel-pending-note-clear"
+                onClick={() => setHotelNote("")}
+                disabled={!hotelNote?.trim()}
+                title="Notu temizle"
+              >
+                Temizle
+              </button>
+            </div>
+            <div className="mt-1 text-xs text-muted-foreground">
+              İç operasyon için kısa bir not ekleyebilirsiniz (örn: kapasite aşıyor, özel istek, overbooking riski).
+            </div>
+
+            <textarea
+              className="mt-3 w-full min-h-[90px] rounded-md border bg-background p-3 text-sm"
+              placeholder="Notunuz…"
+              value={hotelNote}
+              onChange={(e) => setHotelNote(e.target.value)}
+              data-testid="hotel-pending-note-input"
+            />
+          </div>
+        </>
+      )}
+
+
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="space-y-1 max-w-xl">

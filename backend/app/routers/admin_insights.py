@@ -61,6 +61,11 @@ def calculate_age_hours(created_at: datetime) -> float:
     """Calculate age in hours from created_at to now"""
     if not created_at:
         return 0.0
+    
+    # Ensure created_at is timezone-aware
+    if created_at.tzinfo is None:
+        created_at = created_at.replace(tzinfo=timezone.utc)
+    
     delta = now_utc() - created_at
     return delta.total_seconds() / 3600.0
 

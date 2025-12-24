@@ -14,6 +14,7 @@ import AdminLinksPage from "./pages/AdminLinksPage";
 import AdminAuditLogsPage from "./pages/AdminAuditLogsPage";
 import AdminEmailLogsPage from "./pages/AdminEmailLogsPage";
 import AdminPilotDashboardPage from "./pages/AdminPilotDashboardPage";
+import AdminMetricsPage from "./pages/AdminMetricsPage";
 import AgencyHotelsPage from "./pages/AgencyHotelsPage";
 import AgencyHotelDetailPage from "./pages/AgencyHotelDetailPage";
 import AgencyHotelSearchPage from "./pages/AgencyHotelSearchPage";

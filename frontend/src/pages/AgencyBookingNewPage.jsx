@@ -134,6 +134,7 @@ export default function AgencyBookingNewPage() {
       setFormError(apiErrorMessage(err));
     } finally {
       setLoading(false);
+      setLoadingMode(null);
     }
   }
 

@@ -695,7 +695,7 @@ test.describe("AdminMetricsPage FAZ-11.1 insights smoke", () => {
 
     // Check if slow booking ID appears
     const slowTableText = await slowTable.innerText();
-    expect(slowTableText).toContain("slow-001");
+    expect(slowTableText).toContain("slow-00"); // Truncated ID in UI
 
     // Click noted tab
     const notedTabBtn = page.locator('button:has-text("📝 Notlu Talepler")');

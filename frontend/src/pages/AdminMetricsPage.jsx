@@ -135,6 +135,12 @@ export default function AdminMetricsPage() {
   // FAZ-13: high-level metrics tabs (overview, detailed queues, future: conversion, hotels)
   const [activeTab, setActiveTab] = useState("overview"); // "overview" | "queues" | "conversion" | "hotels"
 
+  // FAZ-13: Detailed queues filter state
+  const [dqHotel, setDqHotel] = useState("all");
+  const [dqMinAge, setDqMinAge] = useState("");
+  const [dqHasNote, setDqHasNote] = useState("all");
+  const [dqSearch, setDqSearch] = useState("");
+
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
   const [seeding, setSeeding] = useState(false);

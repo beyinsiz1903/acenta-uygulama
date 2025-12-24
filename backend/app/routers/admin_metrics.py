@@ -223,21 +223,25 @@ async def aggregate_daily_trends(db, org_id: str, cutoff: datetime) -> List[Tren
 
 @router.get("/overview", response_model=MetricsOverviewOut, dependencies=[Depends(require_roles(["super_admin", "admin"]))])
 async def metrics_overview(
-    days: int = Query(7, ge=1, le=365),
+    days: Optional[int] = Query(None, ge=1, le=365),
+    start: Optional[str] = Query(None, regex=r"^\d{4}-\d{2}-\d{2}$"),
+    end: Optional[str] = Query(None, regex=r"^\d{4}-\d{2}-\d{2}$"),
     db=Depends(get_db),
     user=Depends(get_current_user),
 ):
     org_id = user.get("organization_id")
-    period_days = parse_days(days, default=7, max_days=365)
-    cutoff = now_utc() - timedelta(days=period_days)
+    
+    # Parse date range (backward compatible)
+    cutoff_date, end_date, actual_days = parse_date_range(start, end, days, default_days=7)
+    period = format_date_range(cutoff_date, end_date)
 
-    bookings = await aggregate_status_counts(db, org_id, cutoff)
-    avg_hours = await aggregate_avg_approval_hours(db, org_id, cutoff)
-    notes_pct = await aggregate_notes_pct(db, org_id, cutoff)
-    top_hotels = await aggregate_top_hotels(db, org_id, cutoff, limit=5)
+    bookings = await aggregate_status_counts(db, org_id, cutoff_date)
+    avg_hours = await aggregate_avg_approval_hours(db, org_id, cutoff_date)
+    notes_pct = await aggregate_notes_pct(db, org_id, cutoff_date)
+    top_hotels = await aggregate_top_hotels(db, org_id, cutoff_date, limit=5)
 
     return MetricsOverviewOut(
-        period_days=period_days,
+        period=DateRangePeriod(**period),
         bookings=bookings,
         avg_approval_time_hours=None if avg_hours is None else round(avg_hours, 2),
         bookings_with_notes_pct=notes_pct,

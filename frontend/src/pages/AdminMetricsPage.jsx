@@ -476,11 +476,11 @@ export default function AdminMetricsPage() {
             <button
               type="button"
               className={`px-3 py-1.5 text-sm font-medium rounded-md ${
-                activeTab === "noted"
+                activeQueueTab === "noted"
                   ? "bg-primary text-primary-foreground"
                   : "text-muted-foreground hover:text-foreground"
               }`}
-              onClick={() => setActiveTab("noted")}
+              onClick={() => setActiveQueueTab("noted")}
             >
               📝 Notlu Talepler ({queues.noted_pending?.length || 0})
             </button>

@@ -1764,6 +1764,283 @@ class FAZ101IntegrationSyncTester:
         return 0 if self.tests_failed == 0 else 1
 
 
+class FAZ121AdminMetricsSmokeTest:
+    def __init__(self, base_url="https://trip-manager-34.preview.emergentagent.com"):
+        self.base_url = base_url
+        self.admin_token = None
+        self.tests_run = 0
+        self.tests_passed = 0
+        self.tests_failed = 0
+        self.failed_tests = []
+
+    def log(self, msg):
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}")
+
+    def run_test(self, name, method, endpoint, expected_status, data=None, headers_override=None):
+        """Run a single API test"""
+        url = f"{self.base_url}/{endpoint}"
+        headers = headers_override or {'Content-Type': 'application/json'}
+        if self.admin_token and not headers_override:
+            headers['Authorization'] = f'Bearer {self.admin_token}'
+
+        self.tests_run += 1
+        self.log(f"🔍 Test #{self.tests_run}: {name}")
+        
+        try:
+            if method == 'GET':
+                response = requests.get(url, headers=headers, timeout=10)
+            elif method == 'POST':
+                response = requests.post(url, json=data, headers=headers, timeout=10)
+            elif method == 'PUT':
+                response = requests.put(url, json=data, headers=headers, timeout=10)
+            elif method == 'DELETE':
+                response = requests.delete(url, headers=headers, timeout=10)
+            else:
+                raise ValueError(f"Unsupported method: {method}")
+
+            success = response.status_code == expected_status
+            if success:
+                self.tests_passed += 1
+                self.log(f"✅ PASSED - Status: {response.status_code}")
+                try:
+                    return True, response.json() if response.content else {}
+                except:
+                    return True, {}
+            else:
+                self.tests_failed += 1
+                self.failed_tests.append(f"{name} - Expected {expected_status}, got {response.status_code}")
+                self.log(f"❌ FAILED - Expected {expected_status}, got {response.status_code}")
+                try:
+                    self.log(f"   Response: {response.text[:200]}")
+                except:
+                    pass
+                return False, {}
+
+        except Exception as e:
+            self.tests_failed += 1
+            self.failed_tests.append(f"{name} - Error: {str(e)}")
+            self.log(f"❌ FAILED - Error: {str(e)}")
+            return False, {}
+
+    def test_admin_login(self):
+        """Test super admin login"""
+        self.log("\n=== ADMIN AUTHENTICATION ===")
+        success, response = self.run_test(
+            "Super Admin Login (admin@acenta.test/admin123)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "admin@acenta.test", "password": "admin123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.admin_token = response['access_token']
+            user = response.get('user', {})
+            roles = user.get('roles', [])
+            
+            if 'super_admin' in roles:
+                self.log(f"✅ Super admin login successful - roles: {roles}")
+                return True
+            else:
+                self.log(f"❌ Missing super_admin role: {roles}")
+                return False
+        return False
+
+    def test_metrics_overview_days_param(self):
+        """Test /api/admin/metrics/overview with ?days=7"""
+        self.log("\n=== METRICS OVERVIEW - DAYS PARAMETER ===")
+        success, response = self.run_test(
+            "GET /api/admin/metrics/overview?days=7",
+            "GET",
+            "api/admin/metrics/overview?days=7",
+            200
+        )
+        
+        if success:
+            # Check for required period fields
+            period = response.get('period', {})
+            if all(field in period for field in ['start', 'end', 'days']):
+                self.log(f"✅ Period structure correct: start={period.get('start')}, end={period.get('end')}, days={period.get('days')}")
+                return True
+            else:
+                self.log(f"❌ Missing period fields. Got: {period}")
+                return False
+        return False
+
+    def test_metrics_overview_custom_range(self):
+        """Test /api/admin/metrics/overview with custom date range"""
+        self.log("\n=== METRICS OVERVIEW - CUSTOM DATE RANGE ===")
+        success, response = self.run_test(
+            "GET /api/admin/metrics/overview?start=2025-01-01&end=2025-01-15",
+            "GET",
+            "api/admin/metrics/overview?start=2025-01-01&end=2025-01-15",
+            200
+        )
+        
+        if success:
+            # Check for required period fields
+            period = response.get('period', {})
+            if all(field in period for field in ['start', 'end', 'days']):
+                start = period.get('start')
+                end = period.get('end')
+                days = period.get('days')
+                self.log(f"✅ Custom range period structure correct: start={start}, end={end}, days={days}")
+                
+                # Verify the dates match our request
+                if start == '2025-01-01' and end == '2025-01-15':
+                    self.log(f"✅ Custom date range correctly applied")
+                    return True
+                else:
+                    self.log(f"❌ Date range mismatch. Expected start=2025-01-01, end=2025-01-15. Got start={start}, end={end}")
+                    return False
+            else:
+                self.log(f"❌ Missing period fields. Got: {period}")
+                return False
+        return False
+
+    def test_metrics_trends_days_param(self):
+        """Test /api/admin/metrics/trends with ?days=30"""
+        self.log("\n=== METRICS TRENDS - DAYS PARAMETER ===")
+        success, response = self.run_test(
+            "GET /api/admin/metrics/trends?days=30",
+            "GET",
+            "api/admin/metrics/trends?days=30",
+            200
+        )
+        
+        if success:
+            # Check for required period fields in body.period
+            period = response.get('period', {})
+            if all(field in period for field in ['start', 'end', 'days']):
+                self.log(f"✅ Trends period structure correct: start={period.get('start')}, end={period.get('end')}, days={period.get('days')}")
+                return True
+            else:
+                self.log(f"❌ Missing period fields in trends response. Got: {period}")
+                return False
+        return False
+
+    def test_metrics_trends_custom_range(self):
+        """Test /api/admin/metrics/trends with custom date range"""
+        self.log("\n=== METRICS TRENDS - CUSTOM DATE RANGE ===")
+        success, response = self.run_test(
+            "GET /api/admin/metrics/trends?start=2025-01-01&end=2025-01-15",
+            "GET",
+            "api/admin/metrics/trends?start=2025-01-01&end=2025-01-15",
+            200
+        )
+        
+        if success:
+            # Check for consistent body.period structure
+            period = response.get('period', {})
+            if all(field in period for field in ['start', 'end', 'days']):
+                start = period.get('start')
+                end = period.get('end')
+                days = period.get('days')
+                self.log(f"✅ Trends custom range period structure consistent: start={start}, end={end}, days={days}")
+                
+                # Verify the dates match our request
+                if start == '2025-01-01' and end == '2025-01-15':
+                    self.log(f"✅ Trends custom date range correctly applied")
+                    return True
+                else:
+                    self.log(f"❌ Trends date range mismatch. Expected start=2025-01-01, end=2025-01-15. Got start={start}, end={end}")
+                    return False
+            else:
+                self.log(f"❌ Missing period fields in trends response. Got: {period}")
+                return False
+        return False
+
+    def test_insights_queues(self):
+        """Test /api/admin/insights/queues with ?days=30 (should not be affected by FAZ-12.1)"""
+        self.log("\n=== INSIGHTS QUEUES - UNAFFECTED BY FAZ-12.1 ===")
+        success, response = self.run_test(
+            "GET /api/admin/insights/queues?days=30",
+            "GET",
+            "api/admin/insights/queues?days=30",
+            200
+        )
+        
+        if success:
+            # Check basic structure
+            if 'period_days' in response and 'slow_hours' in response:
+                period_days = response.get('period_days')
+                slow_hours = response.get('slow_hours')
+                self.log(f"✅ Insights queues working: period_days={period_days}, slow_hours={slow_hours}")
+                return True
+            else:
+                self.log(f"❌ Missing expected fields in queues response. Got: {list(response.keys())}")
+                return False
+        return False
+
+    def test_insights_funnel(self):
+        """Test /api/admin/insights/funnel with ?days=30 (should not be affected by FAZ-12.1)"""
+        self.log("\n=== INSIGHTS FUNNEL - UNAFFECTED BY FAZ-12.1 ===")
+        success, response = self.run_test(
+            "GET /api/admin/insights/funnel?days=30",
+            "GET",
+            "api/admin/insights/funnel?days=30",
+            200
+        )
+        
+        if success:
+            # Check basic structure
+            if 'period_days' in response and 'total' in response:
+                period_days = response.get('period_days')
+                total = response.get('total')
+                conversion_pct = response.get('conversion_pct', 0)
+                self.log(f"✅ Insights funnel working: period_days={period_days}, total={total}, conversion_pct={conversion_pct}%")
+                return True
+            else:
+                self.log(f"❌ Missing expected fields in funnel response. Got: {list(response.keys())}")
+                return False
+        return False
+
+    def print_summary(self):
+        """Print test summary"""
+        self.log("\n" + "="*60)
+        self.log("FAZ-12.1 ADMIN METRICS SMOKE TEST SUMMARY")
+        self.log("="*60)
+        self.log(f"Total Tests: {self.tests_run}")
+        self.log(f"✅ Passed: {self.tests_passed}")
+        self.log(f"❌ Failed: {self.tests_failed}")
+        self.log(f"Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%")
+        
+        if self.failed_tests:
+            self.log("\n❌ FAILED TESTS:")
+            for i, test in enumerate(self.failed_tests, 1):
+                self.log(f"  {i}. {test}")
+        
+        self.log("="*60)
+
+    def run_faz121_tests(self):
+        """Run all FAZ-12.1 admin metrics smoke tests"""
+        self.log("🚀 Starting FAZ-12.1 Admin Metrics Smoke Tests")
+        self.log(f"Base URL: {self.base_url}")
+        
+        # Authentication
+        if not self.test_admin_login():
+            self.log("❌ Admin login failed - stopping tests")
+            self.print_summary()
+            return 1
+
+        # Test metrics/overview endpoints
+        self.test_metrics_overview_days_param()
+        self.test_metrics_overview_custom_range()
+        
+        # Test metrics/trends endpoints
+        self.test_metrics_trends_days_param()
+        self.test_metrics_trends_custom_range()
+        
+        # Test insights endpoints (should be unaffected)
+        self.test_insights_queues()
+        self.test_insights_funnel()
+
+        # Summary
+        self.print_summary()
+
+        return 0 if self.tests_failed == 0 else 1
+
+
 class FAZ8BookingSubmitIntentTester:
     def __init__(self, base_url="http://localhost:8001"):
         self.base_url = base_url

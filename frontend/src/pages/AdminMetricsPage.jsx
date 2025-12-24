@@ -257,6 +257,8 @@ export default function AdminMetricsPage() {
   const topHotels = overview?.top_hotels || [];
   const trendData = trends?.daily_trends || [];
 
+  const normalizedQueues = useMemo(() => normalizeQueues(queues), [queues]);
+
   return (
     <div className="p-4 md:p-6">
       <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3">

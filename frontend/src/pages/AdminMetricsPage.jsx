@@ -114,7 +114,8 @@ export default function AdminMetricsPage() {
   function openWhatsAppFollow(booking) {
     const hotelName = booking.hotel_name || booking.hotel_id || "Otel";
     const ageHours = booking.age_hours || 0;
-    const message = `🔔 Takip: ${booking.booking_id}\n🏨 ${hotelName}\n⏱️ ${ageHours.toFixed(1)} saat bekliyor`;
+    // Use text instead of emojis for better URL encoding
+    const message = `Takip: ${booking.booking_id}\nOtel: ${hotelName}\nBekliyor: ${ageHours.toFixed(1)} saat`;
     const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
     window.open(url, "_blank", "noopener,noreferrer");
   }

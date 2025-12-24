@@ -6,9 +6,9 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
 
-# Projedeki mevcut import isimlerine göre 2 satırı uyarlaman gerekebilir:
-from app.db import get_db  # motor / db provider
-from app.auth import get_current_user, require_roles  # auth helpers
+from app.db import get_db
+from app.auth import get_current_user, require_roles
+from app.utils.date_range import parse_date_range, format_date_range
 
 
 router = APIRouter(prefix="/api/admin/metrics", tags=["admin-metrics"])

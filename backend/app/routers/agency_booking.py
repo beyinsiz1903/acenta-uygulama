@@ -37,6 +37,7 @@ class BookingDraftCreateIn(BaseModel):
     nights: int
     adults: int
     children: int = 0
+    intent: Optional[Literal["confirmed", "pending"]] = None
 
 
 class BookingConfirmIn(BaseModel):

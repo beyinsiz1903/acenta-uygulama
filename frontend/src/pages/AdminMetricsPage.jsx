@@ -154,7 +154,7 @@ function DetailedQueuesTable({ activeQueueTab, normalizedQueues, dqHotel, dqMinA
     search: dqSearch,
   });
 
-  if (!baseItems || baseItems.length === 0) {
+  if (!base || base.length === 0) {
     return (
       <div className="mt-4 rounded-xl border bg-card p-6 text-center text-sm text-muted-foreground">
         Bu kategoride henüz kayıt yok.

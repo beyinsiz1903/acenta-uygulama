@@ -104,7 +104,7 @@ export default function AgencyBookingNewPage() {
       if (mode === "pending") {
         try {
           const submitResp = await api.post(`/agency/bookings/${draft.id}/submit`, {
-            intent: submitMode,
+            intent: mode,
           });
           const pendingBooking = submitResp.data;
           const pid = pendingBooking.id || pendingBooking.booking_id || pendingBooking._id;

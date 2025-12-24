@@ -1,0 +1,169 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - generic [ref=e5]:
+      - generic [ref=e6]: Acenta Master
+      - generic [ref=e7]:
+        - button "Tema" [ref=e8] [cursor=pointer]:
+          - img
+          - generic [ref=e9]: Tema
+        - generic [ref=e10]:
+          - generic [ref=e11]: admin@acenta.test
+          - generic [ref=e12]: super_admin
+        - button "Çıkış" [ref=e13] [cursor=pointer]:
+          - img
+          - text: Çıkış
+    - generic [ref=e14]:
+      - complementary [ref=e15]:
+        - generic [ref=e16]:
+          - generic [ref=e17]:
+            - generic [ref=e18]:
+              - generic [ref=e19]: A
+              - generic [ref=e20]:
+                - generic [ref=e21]: Acenta Master
+                - generic [ref=e22]: Kurumsal Panel
+            - generic "Online" [ref=e23]
+          - generic [ref=e24]:
+            - generic [ref=e25]:
+              - generic [ref=e26]:
+                - generic [ref=e27]: Toplam
+                - generic [ref=e28]: adet
+              - generic "0" [ref=e29]
+            - generic [ref=e30]:
+              - generic [ref=e31]:
+                - generic [ref=e32]: Bekleyen
+                - generic [ref=e33]: adet
+              - generic "0" [ref=e34]
+            - generic [ref=e35]:
+              - generic [ref=e36]:
+                - generic [ref=e37]: Ciro 7G
+                - generic [ref=e38]: ₺
+              - generic "₺0,00" [ref=e39]: ₺0
+          - generic [ref=e40]:
+            - generic [ref=e41]: "Rol: super_admin"
+            - generic [ref=e42]: 24.12.2025
+          - navigation [ref=e44]:
+            - generic [ref=e45]:
+              - generic [ref=e46]: Admin
+              - link "Acentalar" [ref=e47] [cursor=pointer]:
+                - /url: /app/admin/agencies
+                - img [ref=e48]
+                - text: Acentalar
+              - link "Oteller" [ref=e52] [cursor=pointer]:
+                - /url: /app/admin/hotels
+                - img [ref=e53]
+                - text: Oteller
+              - link "Link Yönetimi" [ref=e56] [cursor=pointer]:
+                - /url: /app/admin/links
+                - img [ref=e57]
+                - text: Link Yönetimi
+              - link "Pilot Dashboard" [ref=e60] [cursor=pointer]:
+                - /url: /app/admin/pilot-dashboard
+                - img [ref=e61]
+                - text: Pilot Dashboard
+              - link "Metrikler" [ref=e65] [cursor=pointer]:
+                - /url: /app/admin/metrics
+                - img [ref=e66]
+                - text: Metrikler
+            - generic [ref=e70]:
+              - generic [ref=e71]: Ops (Gelişmiş)
+              - link "Audit Logs" [ref=e72] [cursor=pointer]:
+                - /url: /app/admin/audit
+                - img [ref=e73]
+                - text: Audit Logs
+              - link "Email Aktiviteleri" [ref=e77] [cursor=pointer]:
+                - /url: /app/admin/email-logs
+                - img [ref=e78]
+                - text: Email Aktiviteleri
+        - generic [ref=e82]:
+          - generic [ref=e83]: Hızlı İpuçları
+          - generic [ref=e84]: Müsaitlik ekranında kapasite ve fiyatı güncelleyip rezervasyon akışını hızlıca test edebilirsin.
+      - main [ref=e85]:
+        - generic [ref=e87]:
+          - generic [ref=e88]:
+            - generic [ref=e89]:
+              - generic [ref=e90]: 📊 Dashboard Metrikleri
+              - generic [ref=e91]: Admin / Super Admin için rezervasyon operasyon metrikleri
+            - generic [ref=e92]:
+              - button "Yenile" [ref=e93] [cursor=pointer]
+              - button "🎲 Demo Verisi" [ref=e94] [cursor=pointer]
+          - generic [ref=e95]:
+            - generic [ref=e96]:
+              - generic [ref=e97]: Toplam
+              - generic [ref=e98]: "10"
+              - generic [ref=e99]: 2025-01-01 → 2025-01-07
+            - generic [ref=e100]:
+              - generic [ref=e101]: Beklemede
+              - generic [ref=e102]: "3"
+              - generic [ref=e103]: pending
+            - generic [ref=e104]:
+              - generic [ref=e105]: Onaylı
+              - generic [ref=e106]: "6"
+              - generic [ref=e107]: confirmed
+            - generic [ref=e108]:
+              - generic [ref=e109]: Ortalama Onay
+              - generic [ref=e110]: 5.00 saat
+              - generic [ref=e111]: "Notlu: %12"
+          - generic [ref=e112]:
+            - generic [ref=e113]:
+              - generic [ref=e114]: "Dönem: 2025-01-01 → 2025-01-07"
+              - generic [ref=e115]: "Son güncelleme: 12/24/2025, 9:46:29 PM"
+            - generic [ref=e116]:
+              - generic [ref=e117]:
+                - generic [ref=e118]: "Preset:"
+                - button "7g" [ref=e119] [cursor=pointer]
+                - button "14g" [ref=e120] [cursor=pointer]
+                - button "30g" [ref=e121] [cursor=pointer]
+                - button "90g" [ref=e122] [cursor=pointer]
+              - generic [ref=e123]:
+                - generic [ref=e124]: "Custom:"
+                - textbox [ref=e125]
+                - generic [ref=e126]: "-"
+                - textbox [ref=e127]
+                - button "Uygula" [disabled] [ref=e128]
+                - button "Temizle" [ref=e129] [cursor=pointer]
+          - generic [ref=e130]:
+            - button "Genel Bakış" [ref=e131] [cursor=pointer]
+            - button "Detailed Queues" [ref=e132] [cursor=pointer]
+            - button "Conversion" [ref=e133] [cursor=pointer]
+            - button "Hotels Performance" [ref=e134] [cursor=pointer]
+          - generic [ref=e135]:
+            - button "Export Overview CSV" [ref=e136] [cursor=pointer]
+            - button "Export Trends CSV" [ref=e137] [cursor=pointer]
+            - button "Export Queues CSV" [ref=e138] [cursor=pointer]
+          - generic [ref=e139]:
+            - generic [ref=e140]:
+              - generic [ref=e141]: ⏳ Yavaş Onaylar
+              - generic [ref=e142]: "0"
+              - generic [ref=e143]: 24+ saat bekliyor
+            - generic [ref=e144]:
+              - generic [ref=e145]: 📝 Notlu Talepler
+              - generic [ref=e146]: "0"
+              - generic [ref=e147]: not içeren pending
+            - generic [ref=e148]:
+              - generic [ref=e149]: 📈 Dönüşüm Oranı
+              - generic [ref=e150]: "%60"
+              - generic [ref=e151]: 6 / 10 confirmed
+          - generic [ref=e152]:
+            - generic [ref=e154]:
+              - generic [ref=e155]:
+                - generic [ref=e156]: 📈 Son Günler Trend
+                - generic [ref=e157]: confirmed / pending
+              - img "Booking trends" [ref=e159]:
+                - generic [ref=e161]: "0"
+                - generic [ref=e163]: "0"
+                - generic [ref=e165]: "1"
+                - generic [ref=e167]: "1"
+                - generic [ref=e169]: "1"
+              - generic [ref=e170]: "Çizgiler: confirmed (kesikli) / pending (düz)"
+            - generic [ref=e171]:
+              - generic [ref=e172]: 🏨 En Çok Rezervasyon Alan Oteller
+              - generic [ref=e173]: 2025-01-01 → 2025-01-07
+              - generic [ref=e175]: Henüz veri yok.
+          - generic [ref=e176]: "Not: Bu ekran read-only'dır. Metrikler booking kayıtlarından hesaplanır."
+    - contentinfo [ref=e177]:
+      - generic [ref=e178]: © 2025 — v1
+  - region "Notifications alt+T"
+```

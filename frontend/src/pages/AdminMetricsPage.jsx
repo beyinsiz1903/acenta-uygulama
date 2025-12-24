@@ -822,7 +822,7 @@ export default function AdminMetricsPage() {
                 "has_note",
               ];
               const rows = [];
-              (queues.slow_pending || []).forEach((b) => {
+              (queues?.slow_pending || []).forEach((b) => {
                 rows.push({
                   queue_type: "slow_pending",
                   period_start: period.start || "",

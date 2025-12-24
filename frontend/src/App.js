@@ -23,6 +23,7 @@ import AgencyBookingTestPage from "./pages/AgencyBookingTestPage";
 import SimpleBookingTest from "./pages/SimpleBookingTest";
 import AgencyBookingDraftPage from "./pages/AgencyBookingDraftPage";
 import AgencyBookingConfirmedPage from "./pages/AgencyBookingConfirmedPage";
+import AgencyBookingPendingPage from "./pages/AgencyBookingPendingPage";
 import AgencyBookingsListPage from "./pages/AgencyBookingsListPage";
 import AgencySettlementsPage from "./pages/AgencySettlementsPage";
 import AgencyHelpPage from "./pages/AgencyHelpPage";

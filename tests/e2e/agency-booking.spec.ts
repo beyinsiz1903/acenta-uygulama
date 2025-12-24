@@ -551,3 +551,248 @@ test.describe("AdminMetricsPage FAZ-10.1 smoke", () => {
 });
 
 
+// ========== FAZ-11.1: Admin Insights Mock-Based E2E ==========
+
+test.describe("AdminMetricsPage FAZ-11.1 insights smoke", () => {
+  test("T1 - insight cards render with mock data", async ({ page }) => {
+    const TEST_ADMIN_METRICS_URL = process.env.TEST_ADMIN_METRICS_URL;
+    if (!TEST_ADMIN_METRICS_URL) test.skip();
+
+    await loginAsAdmin(page);
+
+    // Mock insights endpoints
+    await page.route("**/api/admin/insights/queues**", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          period_days: 30,
+          slow_hours: 24,
+          slow_pending: [
+            {
+              booking_id: "slow-mock-001",
+              hotel_id: "hotel-1",
+              hotel_name: "Mock Hotel 1",
+              created_at: "2025-01-10T10:00:00Z",
+              age_hours: 48.5,
+              status: "pending",
+              has_note: true,
+            },
+          ],
+          noted_pending: [
+            {
+              booking_id: "noted-mock-001",
+              hotel_id: "hotel-2",
+              hotel_name: "Mock Hotel 2",
+              created_at: "2025-01-15T12:00:00Z",
+              age_hours: 12.3,
+              status: "pending",
+              has_note: true,
+            },
+          ],
+        }),
+      });
+    });
+
+    await page.route("**/api/admin/insights/funnel**", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          period_days: 30,
+          total: 20,
+          pending: 9,
+          confirmed: 9,
+          cancelled: 2,
+          conversion_pct: 45.0,
+        }),
+      });
+    });
+
+    await page.goto(`${BASE_URL}${TEST_ADMIN_METRICS_URL}`);
+    await page.waitForTimeout(2000);
+
+    // Assert insight cards
+    const slowCard = page.getByTestId("metrics-insight-slow-count");
+    const notedCard = page.getByTestId("metrics-insight-noted-count");
+    const conversionCard = page.getByTestId("metrics-funnel-conversion");
+
+    await expect(slowCard).toBeVisible();
+    await expect(notedCard).toBeVisible();
+    await expect(conversionCard).toBeVisible();
+
+    // Check values (soft match - mock has 1 in each array but UI shows count)
+    const slowText = await slowCard.innerText();
+    const notedText = await notedCard.innerText();
+    const conversionText = await conversionCard.innerText();
+
+    expect(slowText).toContain("1"); // 1 slow pending in mock
+    expect(notedText).toContain("1"); // 1 noted pending in mock
+    expect(conversionText).toContain("45"); // 45% conversion
+  });
+
+  test("T2 - tabs switch table content", async ({ page }) => {
+    const TEST_ADMIN_METRICS_URL = process.env.TEST_ADMIN_METRICS_URL;
+    if (!TEST_ADMIN_METRICS_URL) test.skip();
+
+    await loginAsAdmin(page);
+
+    // Mock with multiple bookings
+    await page.route("**/api/admin/insights/queues**", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          period_days: 30,
+          slow_hours: 24,
+          slow_pending: [
+            {
+              booking_id: "slow-001",
+              hotel_id: "h1",
+              hotel_name: "Slow Hotel",
+              created_at: "2025-01-10T10:00:00Z",
+              age_hours: 50.0,
+              status: "pending",
+              has_note: false,
+            },
+          ],
+          noted_pending: [
+            {
+              booking_id: "noted-001",
+              hotel_id: "h2",
+              hotel_name: "Noted Hotel",
+              created_at: "2025-01-15T12:00:00Z",
+              age_hours: 10.0,
+              status: "pending",
+              has_note: true,
+            },
+          ],
+        }),
+      });
+    });
+
+    await page.route("**/api/admin/insights/funnel**", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          period_days: 30,
+          total: 20,
+          pending: 9,
+          confirmed: 9,
+          cancelled: 2,
+          conversion_pct: 45.0,
+        }),
+      });
+    });
+
+    await page.goto(`${BASE_URL}${TEST_ADMIN_METRICS_URL}`);
+    await page.waitForTimeout(2000);
+
+    // Check slow table is visible by default
+    const slowTable = page.getByTestId("metrics-queue-slow-table");
+    await expect(slowTable).toBeVisible();
+
+    // Check if slow booking ID appears
+    const slowTableText = await slowTable.innerText();
+    expect(slowTableText).toContain("slow-001");
+
+    // Click noted tab
+    const notedTabBtn = page.locator('button:has-text("📝 Notlu Talepler")');
+    await notedTabBtn.click();
+    await page.waitForTimeout(500);
+
+    // Check noted table now visible
+    const notedTable = page.getByTestId("metrics-queue-noted-table");
+    await expect(notedTable).toBeVisible();
+
+    // Check if noted booking ID appears
+    const notedTableText = await notedTable.innerText();
+    expect(notedTableText).toContain("noted-001");
+  });
+
+  test("T3 - follow toggle persists after refresh", async ({ page }) => {
+    const TEST_ADMIN_METRICS_URL = process.env.TEST_ADMIN_METRICS_URL;
+    if (!TEST_ADMIN_METRICS_URL) test.skip();
+
+    await loginAsAdmin(page);
+
+    // Mock data
+    await page.route("**/api/admin/insights/queues**", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          period_days: 30,
+          slow_hours: 24,
+          slow_pending: [
+            {
+              booking_id: "follow-test-001",
+              hotel_id: "h1",
+              hotel_name: "Test Hotel",
+              created_at: "2025-01-10T10:00:00Z",
+              age_hours: 30.0,
+              status: "pending",
+              has_note: false,
+            },
+          ],
+          noted_pending: [],
+        }),
+      });
+    });
+
+    await page.route("**/api/admin/insights/funnel**", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          period_days: 30,
+          total: 20,
+          pending: 9,
+          confirmed: 9,
+          cancelled: 2,
+          conversion_pct: 45.0,
+        }),
+      });
+    });
+
+    await page.goto(`${BASE_URL}${TEST_ADMIN_METRICS_URL}`);
+    await page.waitForTimeout(2000);
+
+    // Find first follow toggle
+    const followToggle = page.getByTestId("metrics-follow-toggle").first();
+    await expect(followToggle).toBeVisible();
+
+    // Get initial state
+    const initialText = await followToggle.innerText();
+
+    // Click toggle
+    await followToggle.click();
+    await page.waitForTimeout(500);
+
+    // Check state changed
+    const afterToggleText = await followToggle.innerText();
+    expect(initialText).not.toBe(afterToggleText);
+
+    // Check localStorage
+    const lsValue = await page.evaluate(() => {
+      return localStorage.getItem("admin_follow_booking:follow-test-001");
+    });
+    expect(lsValue).toBe("1"); // Should be followed now
+
+    // Reload page
+    await page.reload();
+    await page.waitForTimeout(2000);
+
+    // Check state persisted
+    const followToggleAfter = page.getByTestId("metrics-follow-toggle").first();
+    const afterReloadText = await followToggleAfter.innerText();
+    expect(afterReloadText).toBe(afterToggleText); // Should match toggled state
+
+    // Verify localStorage still has it
+    const lsValueAfter = await page.evaluate(() => {
+      return localStorage.getItem("admin_follow_booking:follow-test-001");
+    });
+    expect(lsValueAfter).toBe("1");
+  });
+});

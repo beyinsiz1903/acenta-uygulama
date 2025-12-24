@@ -844,6 +844,28 @@ test.describe("AdminMetricsPage FAZ-12.1+13.2 metrics smoke", () => {
           period: { start: "2025-01-01", end: "2025-01-07", days: 7 },
           daily_trends: [],
         }),
+      });
+    });
+
+    await page.route("**/api/admin/insights/queues**", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          period_days: 30,
+          slow_hours: 24,
+          slow_pending: [],
+          noted_pending: [],
+        }),
+      });
+    });
+
+    await page.goto(`${BASE_URL}${TEST_ADMIN_METRICS_URL}`);
+
+    await page.getByTestId("metrics-tab-detailed-queues").click();
+
+    await expect(page.getByTestId("metrics-export-queues-filtered")).toBeVisible();
+  });
 
   test("T5 - Export filtered queues button visible", async ({ page }) => {
     const TEST_ADMIN_METRICS_URL = process.env.TEST_ADMIN_METRICS_URL || "/app/admin/metrics";

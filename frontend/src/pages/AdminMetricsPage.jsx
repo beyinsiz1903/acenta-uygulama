@@ -105,20 +105,26 @@ export default function AdminMetricsPage() {
   const [err, setErr] = useState("");
   const [seeding, setSeeding] = useState(false);
 
-  async function load() {
+  async function load(nextRange) {
+    const range = nextRange || appliedRange;
+    const overviewQuery = buildMetricsQuery(range);
+    const trendsQuery = buildMetricsQuery(range);
+    const daysForInsights = range && range.days ? range.days : 30;
+
     setErr("");
     setLoading(true);
     try {
       const [o, t, q, f] = await Promise.all([
-        api.get(`/admin/metrics/overview?days=${daysOverview}`),
-        api.get(`/admin/metrics/trends?days=${daysTrends}`),
-        api.get(`/admin/insights/queues?days=30&slow_hours=24&limit=50`),
-        api.get(`/admin/insights/funnel?days=30`),
+        api.get(`/admin/metrics/overview${overviewQuery}`),
+        api.get(`/admin/metrics/trends${trendsQuery}`),
+        api.get(`/admin/insights/queues?days=${daysForInsights}&slow_hours=24&limit=50`),
+        api.get(`/admin/insights/funnel?days=${daysForInsights}`),
       ]);
       setOverview(o.data);
       setTrends(t.data);
       setQueues(q.data);
       setFunnel(f.data);
+      setLastUpdated(new Date().toISOString());
     } catch (e) {
       setErr(apiErrorMessage ? apiErrorMessage(e) : (e?.message || "Bir hata oluştu"));
     } finally {

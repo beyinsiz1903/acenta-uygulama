@@ -215,8 +215,7 @@ async def aggregate_daily_trends(db, org_id: str, cutoff: datetime) -> List[Tren
 
 # ---------- Endpoints ----------
 
-@router.get("/overview", response_model=MetricsOverviewOut)
-@require_roles(["super_admin", "admin"])
+@router.get("/overview", response_model=MetricsOverviewOut, dependencies=[Depends(require_roles(["super_admin", "admin"]))])
 async def metrics_overview(
     days: int = Query(7, ge=1, le=365),
     db=Depends(get_db),
@@ -240,8 +239,7 @@ async def metrics_overview(
     )
 
 
-@router.get("/trends", response_model=MetricsTrendsOut)
-@require_roles(["super_admin", "admin"])
+@router.get("/trends", response_model=MetricsTrendsOut, dependencies=[Depends(require_roles(["super_admin", "admin"]))])
 async def metrics_trends(
     days: int = Query(30, ge=1, le=365),
     db=Depends(get_db),

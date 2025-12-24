@@ -251,13 +251,17 @@ async def metrics_overview(
 
 @router.get("/trends", response_model=MetricsTrendsOut, dependencies=[Depends(require_roles(["super_admin", "admin"]))])
 async def metrics_trends(
-    days: int = Query(30, ge=1, le=365),
+    days: Optional[int] = Query(None, ge=1, le=365),
+    start: Optional[str] = Query(None, regex=r"^\d{4}-\d{2}-\d{2}$"),
+    end: Optional[str] = Query(None, regex=r"^\d{4}-\d{2}-\d{2}$"),
     db=Depends(get_db),
     user=Depends(get_current_user),
 ):
     org_id = user.get("organization_id")
-    period_days = parse_days(days, default=30, max_days=365)
-    cutoff = now_utc() - timedelta(days=period_days)
+    
+    # Parse date range (backward compatible)
+    cutoff_date, end_date, actual_days = parse_date_range(start, end, days, default_days=30)
+    period = format_date_range(cutoff_date, end_date)
 
-    series = await aggregate_daily_trends(db, org_id, cutoff)
-    return MetricsTrendsOut(period_days=period_days, daily_trends=series)
+    series = await aggregate_daily_trends(db, org_id, cutoff_date)
+    return MetricsTrendsOut(period=DateRangePeriod(**period), daily_trends=series)

@@ -81,6 +81,37 @@ function triggerCsvDownload(filename, csv) {
   }
 }
 
+function normalizeQueues(q) {
+  const slow = q?.slow_pending ?? q?.slow ?? [];
+  const noted = q?.noted_pending ?? q?.noted ?? [];
+  return { slow, noted };
+}
+
+function applyQueueFilters(items, filters) {
+  const { hotel, minAge, hasNote, search } = filters;
+  const min = minAge ? Number(minAge) : null;
+  const s = (search || "").trim().toLowerCase();
+
+  return (items || []).filter((x) => {
+    const hid = x.hotel_id || x.hotelId || "";
+    const hotelOk = hotel === "all" ? true : String(hid) === String(hotel);
+
+    const rawAge = x.age_hours ?? x.ageHours ?? 0;
+    const age = Number.isNaN(Number(rawAge)) ? 0 : Number(rawAge);
+    const ageOk = min == null ? true : age >= min;
+
+    const noteFlag = Boolean(x.has_note ?? x.hasNote);
+    const noteOk =
+      hasNote === "all" ? true : hasNote === "yes" ? noteFlag : !noteFlag;
+
+    const name = String(x.hotel_name ?? x.hotelName ?? "").toLowerCase();
+    const id = String(x.booking_id ?? x.bookingId ?? "").toLowerCase();
+    const searchOk = !s ? true : name.includes(s) || id.includes(s);
+
+    return hotelOk && ageOk && noteOk && searchOk;
+  });
+}
+
 export default function AdminMetricsPage() {
   const [overview, setOverview] = useState(null);
   const [trends, setTrends] = useState(null);

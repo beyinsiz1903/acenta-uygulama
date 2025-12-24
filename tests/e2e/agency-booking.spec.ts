@@ -514,7 +514,7 @@ async function loginAsAdmin(page: Page) {
   await page.waitForURL("**/app/admin/**", { timeout: 15_000 });
 }
 
-test.describe("AdminMetricsPage FAZ-10.1 smoke", () => {
+test.describe("AdminMetricsPage smoke (FAZ-10)", () => {
   test("admin metrics page renders stats, trend chart and top hotels", async ({ page }) => {
     const TEST_ADMIN_METRICS_URL = process.env.TEST_ADMIN_METRICS_URL;
     if (!TEST_ADMIN_METRICS_URL) test.skip();

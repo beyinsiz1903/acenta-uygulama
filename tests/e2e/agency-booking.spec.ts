@@ -594,6 +594,113 @@ test.describe("AdminMetricsPage FAZ-12.1+13.2 metrics smoke", () => {
 
       await route.fulfill({
         status: 200,
+
+  test("T2 - Detailed Queues tab shows filters and table", async ({ page }) => {
+    const TEST_ADMIN_METRICS_URL = process.env.TEST_ADMIN_METRICS_URL || "/app/admin/metrics";
+
+    await page.addInitScript(() => {
+      const token = "e2e-admin-token";
+      window.localStorage.setItem("acenta_token", token);
+      window.localStorage.setItem(
+        "acenta_user",
+        JSON.stringify({
+          id: "e2e-admin",
+          email: "admin@acenta.test",
+          roles: ["super_admin"],
+        })
+      );
+    });
+
+    // Mock queues endpoint with slow & noted data
+    await page.route("**/api/admin/insights/queues**", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          period_days: 30,
+          slow_hours: 24,
+          slow_pending: [
+            {
+              booking_id: "SLOW-1",
+              hotel_id: "H1",
+              hotel_name: "Hotel One",
+              age_hours: 30,
+              has_note: false,
+            },
+          ],
+          noted_pending: [
+            {
+              booking_id: "NOTE-1",
+              hotel_id: "H2",
+              hotel_name: "Hotel Two",
+              age_hours: 10,
+              has_note: true,
+            },
+          ],
+        }),
+      });
+    });
+
+    // Other endpoints minimal mocks to keep page happy
+    await page.route("**/api/admin/metrics/overview**", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          period: { start: "2025-01-01", end: "2025-01-07", days: 7 },
+          bookings: { total: 2, pending: 1, confirmed: 1, cancelled: 0 },
+          avg_approval_time_hours: 5,
+          bookings_with_notes_pct: 50,
+          top_hotels: [],
+        }),
+      });
+    });
+
+    await page.route("**/api/admin/metrics/trends**", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          period: { start: "2025-01-01", end: "2025-01-07", days: 7 },
+          daily_trends: [],
+        }),
+      });
+    });
+
+    await page.route("**/api/admin/insights/funnel**", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          period_days: 30,
+          total: 0,
+          pending: 0,
+          confirmed: 0,
+          cancelled: 0,
+          conversion_pct: 0,
+        }),
+      });
+    });
+
+    const BASE_URL = process.env.E2E_BASE_URL || "http://localhost:3000";
+    await page.goto(`${BASE_URL}${TEST_ADMIN_METRICS_URL}`);
+
+    // Overview default tab
+    await expect(page.getByTestId("metrics-tab-overview")).toBeVisible();
+
+    // Switch to Detailed Queues tab
+    await page.getByTestId("metrics-tab-detailed-queues").click();
+
+    // Filters visible
+    await expect(page.getByTestId("metrics-dq-filter-hotel")).toBeVisible();
+    await expect(page.getByTestId("metrics-dq-filter-min-age")).toBeVisible();
+    await expect(page.getByTestId("metrics-dq-filter-has-note")).toBeVisible();
+    await expect(page.getByTestId("metrics-dq-filter-search")).toBeVisible();
+
+    // Table rendered
+    await expect(page.getByTestId("metrics-dq-table")).toBeVisible();
+  });
+
         contentType: "application/json",
         body: JSON.stringify({
           period: { start, end, days },

@@ -317,8 +317,6 @@ export default function HotelBookingsPage() {
         </>
       )}
 
-
-    <div className="space-y-6">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="space-y-1 max-w-xl">
           <div className="flex items-center gap-2">

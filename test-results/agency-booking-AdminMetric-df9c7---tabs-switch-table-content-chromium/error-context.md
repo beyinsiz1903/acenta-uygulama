@@ -1,0 +1,200 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - generic [ref=e5]:
+      - generic [ref=e6]: Acenta Master
+      - generic [ref=e7]:
+        - button "Tema" [ref=e8] [cursor=pointer]:
+          - img
+          - generic [ref=e9]: Tema
+        - generic [ref=e10]:
+          - generic [ref=e11]: Admin
+          - generic [ref=e12]: super_admin
+        - button "Çıkış" [ref=e13] [cursor=pointer]:
+          - img
+          - text: Çıkış
+    - generic [ref=e14]:
+      - complementary [ref=e15]:
+        - generic [ref=e16]:
+          - generic [ref=e17]:
+            - generic [ref=e18]:
+              - generic [ref=e19]: A
+              - generic [ref=e20]:
+                - generic [ref=e21]: Acenta Master
+                - generic [ref=e22]: Kurumsal Panel
+            - generic "Online" [ref=e23]
+          - generic [ref=e24]:
+            - generic [ref=e25]:
+              - generic [ref=e26]:
+                - generic [ref=e27]: Toplam
+                - generic [ref=e28]: adet
+              - generic "0" [ref=e29]
+            - generic [ref=e30]:
+              - generic [ref=e31]:
+                - generic [ref=e32]: Bekleyen
+                - generic [ref=e33]: adet
+              - generic "0" [ref=e34]
+            - generic [ref=e35]:
+              - generic [ref=e36]:
+                - generic [ref=e37]: Ciro 7G
+                - generic [ref=e38]: ₺
+              - generic "₺0,00" [ref=e39]: ₺0
+          - generic [ref=e40]:
+            - generic [ref=e41]: "Rol: super_admin"
+            - generic [ref=e42]: 24.12.2025
+          - navigation [ref=e44]:
+            - generic [ref=e45]:
+              - generic [ref=e46]: Admin
+              - link "Acentalar" [ref=e47] [cursor=pointer]:
+                - /url: /app/admin/agencies
+                - img [ref=e48]
+                - text: Acentalar
+              - link "Oteller" [ref=e52] [cursor=pointer]:
+                - /url: /app/admin/hotels
+                - img [ref=e53]
+                - text: Oteller
+              - link "Link Yönetimi" [ref=e56] [cursor=pointer]:
+                - /url: /app/admin/links
+                - img [ref=e57]
+                - text: Link Yönetimi
+              - link "Pilot Dashboard" [ref=e60] [cursor=pointer]:
+                - /url: /app/admin/pilot-dashboard
+                - img [ref=e61]
+                - text: Pilot Dashboard
+              - link "Metrikler" [ref=e65] [cursor=pointer]:
+                - /url: /app/admin/metrics
+                - img [ref=e66]
+                - text: Metrikler
+            - generic [ref=e70]:
+              - generic [ref=e71]: Ops (Gelişmiş)
+              - link "Audit Logs" [ref=e72] [cursor=pointer]:
+                - /url: /app/admin/audit
+                - img [ref=e73]
+                - text: Audit Logs
+              - link "Email Aktiviteleri" [ref=e77] [cursor=pointer]:
+                - /url: /app/admin/email-logs
+                - img [ref=e78]
+                - text: Email Aktiviteleri
+        - generic [ref=e82]:
+          - generic [ref=e83]: Hızlı İpuçları
+          - generic [ref=e84]: Müsaitlik ekranında kapasite ve fiyatı güncelleyip rezervasyon akışını hızlıca test edebilirsin.
+      - main [ref=e85]:
+        - generic [ref=e87]:
+          - generic [ref=e88]:
+            - generic [ref=e89]:
+              - generic [ref=e90]: 📊 Dashboard Metrikleri
+              - generic [ref=e91]: Admin / Super Admin için rezervasyon operasyon metrikleri
+            - generic [ref=e92]:
+              - generic [ref=e93]: Overview
+              - combobox [ref=e94]:
+                - option "7 gün" [selected]
+                - option "14 gün"
+                - option "30 gün"
+                - option "90 gün"
+              - generic [ref=e95]: Trend
+              - combobox [ref=e96]:
+                - option "7 gün"
+                - option "14 gün"
+                - option "30 gün" [selected]
+                - option "90 gün"
+              - button "Yenile" [ref=e97] [cursor=pointer]
+              - button "🎲 Demo Verisi" [ref=e98] [cursor=pointer]
+          - generic [ref=e99]:
+            - generic [ref=e100]:
+              - generic [ref=e101]: Toplam
+              - generic [ref=e102]: "11"
+              - generic [ref=e103]: Son 7 gün
+            - generic [ref=e104]:
+              - generic [ref=e105]: Beklemede
+              - generic [ref=e106]: "3"
+              - generic [ref=e107]: pending
+            - generic [ref=e108]:
+              - generic [ref=e109]: Onaylı
+              - generic [ref=e110]: "6"
+              - generic [ref=e111]: confirmed
+            - generic [ref=e112]:
+              - generic [ref=e113]: Ortalama Onay
+              - generic [ref=e114]: 14.00 saat
+              - generic [ref=e115]: "Notlu: %36.4"
+          - generic [ref=e116]:
+            - generic [ref=e117]:
+              - generic [ref=e118]: ⏳ Yavaş Onaylar
+              - generic [ref=e119]: "1"
+              - generic [ref=e120]: 24+ saat bekliyor
+            - generic [ref=e121]:
+              - generic [ref=e122]: 📝 Notlu Talepler
+              - generic [ref=e123]: "1"
+              - generic [ref=e124]: not içeren pending
+            - generic [ref=e125]:
+              - generic [ref=e126]: 📈 Dönüşüm Oranı
+              - generic [ref=e127]: "%45"
+              - generic [ref=e128]: 9 / 20 confirmed
+          - generic [ref=e129]:
+            - generic [ref=e130]:
+              - button "⏳ Yavaş Onaylar (1)" [ref=e131] [cursor=pointer]
+              - button "📝 Notlu Talepler (1)" [active] [ref=e132] [cursor=pointer]
+            - table [ref=e134]:
+              - rowgroup [ref=e135]:
+                - row "Otel Booking ID Yaş (saat) Takip Aksiyon" [ref=e136]:
+                  - columnheader "Otel" [ref=e137]
+                  - columnheader "Booking ID" [ref=e138]
+                  - columnheader "Yaş (saat)" [ref=e139]
+                  - columnheader "Takip" [ref=e140]
+                  - columnheader "Aksiyon" [ref=e141]
+              - rowgroup [ref=e142]:
+                - row "Noted Hotel h2 noted-00... 10.0h ☆ 💬 WhatsApp" [ref=e143]:
+                  - cell "Noted Hotel h2" [ref=e144]:
+                    - generic [ref=e145]: Noted Hotel
+                    - generic [ref=e146]: h2
+                  - cell "noted-00..." [ref=e147]:
+                    - button "noted-00..." [ref=e148] [cursor=pointer]
+                  - cell "10.0h" [ref=e149]:
+                    - generic [ref=e150]: 10.0h
+                  - cell "☆" [ref=e151]:
+                    - button "☆" [ref=e152] [cursor=pointer]
+                  - cell "💬 WhatsApp" [ref=e153]:
+                    - button "💬 WhatsApp" [ref=e154] [cursor=pointer]
+          - generic [ref=e155]:
+            - generic [ref=e157]:
+              - generic [ref=e158]:
+                - generic [ref=e159]: 📈 Son Günler Trend
+                - generic [ref=e160]: confirmed / pending
+              - img "Booking trends" [ref=e162]:
+                - generic [ref=e164]: "0"
+                - generic [ref=e166]: "1"
+                - generic [ref=e168]: "2"
+                - generic [ref=e170]: "2"
+                - generic [ref=e172]: "3"
+                - generic [ref=e175]: 12-11
+                - generic [ref=e176]: 12-13
+                - generic [ref=e177]: 12-15
+                - generic [ref=e178]: 12-18
+                - generic [ref=e179]: 12-21
+                - generic [ref=e180]: 12-23
+              - generic [ref=e181]: "Çizgiler: confirmed (kesikli) / pending (düz)"
+            - generic [ref=e182]:
+              - generic [ref=e183]: 🏨 En Çok Rezervasyon Alan Oteller
+              - generic [ref=e184]: Son 7 gün
+              - generic [ref=e185]:
+                - generic [ref=e186]:
+                  - generic [ref=e187]:
+                    - generic [ref=e188]: 1. Demo Hotel 1
+                    - generic [ref=e189]: 241b0eb0-2392-4c95-b38d-467a6f7e39e5
+                  - generic [ref=e190]: "5"
+                - generic [ref=e191]:
+                  - generic [ref=e192]:
+                    - generic [ref=e193]: 2. Demo Hotel 2
+                    - generic [ref=e194]: ea4f3aa6-613e-46d9-97c1-fef3a122b5ca
+                  - generic [ref=e195]: "4"
+                - generic [ref=e196]:
+                  - generic [ref=e197]:
+                    - generic [ref=e198]: 3. Demo Hotel 3
+                    - generic [ref=e199]: a01e3586-a5c3-4a0e-8e84-0ef12d3b2b72
+                  - generic [ref=e200]: "2"
+          - generic [ref=e201]: "Not: Bu ekran read-only'dır. Metrikler booking kayıtlarından hesaplanır."
+    - contentinfo [ref=e202]:
+      - generic [ref=e203]: © 2025 — v1
+  - region "Notifications alt+T"
+```

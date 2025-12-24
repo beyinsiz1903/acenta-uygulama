@@ -967,17 +967,6 @@ test.describe("AdminMetricsPage FAZ-12.1+13.2 metrics smoke", () => {
     await expect(page.getByTestId("metrics-hotels-search")).toBeVisible();
     await expect(page.getByTestId("metrics-hotels-table")).toBeVisible();
   });
-
-    });
-
-    await page.goto(`${BASE_URL}${TEST_ADMIN_METRICS_URL}`);
-
-    await page.getByTestId("metrics-tab-conversion").click();
-
-    await expect(page.getByTestId("metrics-conv-total")).toBeVisible();
-    await expect(page.getByTestId("metrics-conv-rate")).toBeVisible();
-    await expect(page.getByTestId("metrics-conv-last-updated")).toBeVisible();
-  });
 });
 
 

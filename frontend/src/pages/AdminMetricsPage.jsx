@@ -550,6 +550,51 @@ export default function AdminMetricsPage() {
               onClick={() => {
                 setStartDate("");
                 setEndDate("");
+          <button
+            type="button"
+            className="h-8 rounded-md border bg-background px-3 text-xs"
+            onClick={() => {
+              const { filtered } = getFilteredQueueItems(activeQueueTab, normalizedQueues, {
+                hotel: dqHotel,
+                minAge: dqMinAge,
+                hasNote: dqHasNote,
+                search: dqSearch,
+              });
+              if (!filtered || filtered.length === 0) return;
+              const period = normalizedPeriod;
+              const headers = [
+                "queue_type",
+                "period_start",
+                "period_end",
+                "period_days",
+                "booking_id",
+                "hotel_id",
+                "hotel_name",
+                "age_hours",
+                "has_note",
+              ];
+              const rows = filtered.map((b) => ({
+                queue_type: activeQueueTab === "slow" ? "slow" : "noted",
+                period_start: period.start || "",
+                period_end: period.end || "",
+                period_days: period.days,
+                booking_id: b.booking_id || b.bookingId,
+                hotel_id: b.hotel_id || b.hotelId,
+                hotel_name: b.hotel_name || b.hotelName,
+                age_hours: b.age_hours ?? b.ageHours,
+                has_note: b.has_note ?? b.hasNote,
+              }));
+              const csv = toCsv(headers, rows);
+              const today = new Date().toISOString().slice(0, 10);
+              const filename = `queues_filtered_${activeQueueTab}_${today}.csv`;
+              triggerCsvDownload(filename, csv);
+            }}
+            disabled={loading}
+            data-testid="metrics-export-queues-filtered"
+          >
+            Export Filtered CSV
+          </button>
+
                 setRangeMode("preset");
                 const next = { mode: "preset", days: 7 };
                 setPresetDays(7);

@@ -533,11 +533,15 @@ export default function AdminMetricsPage() {
         </button>
         <button
           type="button"
-          className="px-3 py-2 -mb-px border-b-2 border-transparent text-muted-foreground cursor-not-allowed"
-          disabled
+          className={`px-3 py-2 -mb-px border-b-2 ${
+            activeTab === "conversion"
+              ? "border-primary text-primary font-medium"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+          }`}
+          onClick={() => setActiveTab("conversion")}
           data-testid="metrics-tab-conversion"
         >
-          Conversion (yakında)
+          Conversion
         </button>
         <button
           type="button"

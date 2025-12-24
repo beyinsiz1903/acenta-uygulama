@@ -15,7 +15,7 @@ async function loginAsAgency(page) {
   await page.waitForURL("**/app/agency/**", { timeout: 15_000 });
 }
 
-async function readClipboardBestEffort(page: Page) {
+async function readClipboardBestEffort(page) {
   try {
     return await page.evaluate(async () => {
       if (!navigator.clipboard?.readText) return "";

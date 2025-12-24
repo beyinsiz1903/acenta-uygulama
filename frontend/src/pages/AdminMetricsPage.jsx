@@ -136,9 +136,18 @@ function normalizeHotels(overview) {
   });
 }
 
+function getActiveQueueItems(activeQueueTab, normalizedQueues) {
+  return activeQueueTab === "slow" ? normalizedQueues.slow : normalizedQueues.noted;
+}
+
+function getFilteredQueueItems(activeQueueTab, normalizedQueues, filters) {
+  const base = getActiveQueueItems(activeQueueTab, normalizedQueues);
+  const filtered = applyQueueFilters(base, filters);
+  return { base, filtered };
+}
+
 function DetailedQueuesTable({ activeQueueTab, normalizedQueues, dqHotel, dqMinAge, dqHasNote, dqSearch }) {
-  const baseItems = activeQueueTab === "slow" ? normalizedQueues.slow : normalizedQueues.noted;
-  const filtered = applyQueueFilters(baseItems, {
+  const { base, filtered } = getFilteredQueueItems(activeQueueTab, normalizedQueues, {
     hotel: dqHotel,
     minAge: dqMinAge,
     hasNote: dqHasNote,

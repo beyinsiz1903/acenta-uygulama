@@ -495,6 +495,49 @@ export default function HotelBookingsPage() {
         ) : null}
       </div>
 
+      {selectedForHeader && (
+        <>
+          <BookingReferenceBanner
+            testIdPrefix="hotel-"
+            bookingId={selectedForHeader.id || selectedForHeader.booking_id || selectedForHeader._id}
+            extranetUrl={null}
+            shareSummary={buildBookingShareSummary({
+              booking: selectedForHeader,
+              bookingIdFallback:
+                selectedForHeader.id || selectedForHeader.booking_id || selectedForHeader._id,
+              hotelNote,
+            })}
+          />
+
+          <div className="rounded-xl border bg-background p-4 mt-3">
+            <div className="flex items-center justify-between gap-3">
+              <div className="text-sm font-medium">Acente Notu (opsiyonel)</div>
+              <button
+                type="button"
+                className="text-xs underline text-muted-foreground hover:text-foreground"
+                data-testid="hotel-pending-note-clear"
+                onClick={() => setHotelNote("")}
+                disabled={!hotelNote?.trim()}
+                title="Notu temizle"
+              >
+                Temizle
+              </button>
+            </div>
+            <div className="mt-1 text-xs text-muted-foreground">
+              İç operasyon için kısa bir not ekleyebilirsiniz (örn: kapasite aşıyor, özel istek, overbooking riski).
+            </div>
+
+            <textarea
+              className="mt-3 w-full min-h-[90px] rounded-md border bg-background p-3 text-sm"
+              placeholder="Notunuz…"
+              value={hotelNote}
+              onChange={(e) => setHotelNote(e.target.value)}
+              data-testid="hotel-pending-note-input"
+            />
+          </div>
+        </>
+      )}
+
       <div className="flex flex-wrap items-center gap-2">
         <div className="inline-flex rounded-full bg-muted px-1 py-1 text-xs">
           <button

@@ -124,3 +124,63 @@ test.describe("AgencyBookingConfirmedPage smoke", () => {
     await expect(page.getByTestId("hotel-note-input")).toHaveValue("");
   });
 });
+
+
+test.describe("HotelBookingsPage smoke", () => {
+  test("hotel banner + note input/clear + summary copy", async ({ page }) => {
+    const TEST_HOTEL_BOOKINGS_URL = process.env.TEST_HOTEL_BOOKINGS_URL;
+    if (!TEST_HOTEL_BOOKINGS_URL) test.skip();
+
+    await loginAsAgency(page); // Eğer ayrı hotel user gerekiyorsa loginAsHotel'a alınabilir.
+
+    await page.goto(`${BASE_URL}${TEST_HOTEL_BOOKINGS_URL}`);
+
+    // 1) Listeden bir satır seç (banner için selectedForHeader set edilmeli)
+    const rows = page.locator("tbody tr");
+    const rowCount = await rows.count();
+    expect(rowCount).toBeGreaterThan(0);
+
+    // Header satırını atlamak için tbody kullanıyoruz; ilk satırı tıkla
+    await rows.first().click();
+
+    // 2) Banner görünür olmalı (hotel prefix'li)
+    const banner = page.getByTestId("hotel-booking-id-banner");
+    await expect(banner).toBeVisible();
+
+    const idCopy = page.getByTestId("hotel-booking-id-copy");
+    const summaryCopy = page.getByTestId("hotel-booking-summary-copy");
+
+    await expect(idCopy).toBeEnabled();
+    await expect(summaryCopy).toBeEnabled();
+
+    // 3) Not alanı + temizle
+    const noteInput = page.getByTestId("hotel-pending-note-input");
+    const noteClear = page.getByTestId("hotel-pending-note-clear");
+
+    await expect(noteInput).toBeVisible();
+    await expect(noteClear).toBeDisabled();
+
+    const noteText = "Overbooking riski, kapasite kontrolü rica.";
+    await noteInput.fill(noteText);
+    await expect(noteClear).toBeEnabled();
+
+    // 4) Özeti Kopyala -> Not satırı (clipboard okunabiliyorsa)
+    await summaryCopy.click();
+    await expect(summaryCopy).toHaveText(/Kopyalandı/i);
+
+    const summaryClipboard = await readClipboardBestEffort(page);
+    if (summaryClipboard) {
+      expect(summaryClipboard).toMatch(/✅ Rezervasyon Özeti/);
+      expect(summaryClipboard).toMatch(/Not:\s*Overbooking riski/);
+    }
+
+    // 5) Temizle -> textarea boş, refresh sonrası da boş (localStorage temiz)
+    await noteClear.click();
+    await expect(noteInput).toHaveValue("");
+    await expect(noteClear).toBeDisabled();
+
+    await page.reload();
+    await expect(page.getByTestId("hotel-pending-note-input")).toHaveValue("");
+  });
+});
+

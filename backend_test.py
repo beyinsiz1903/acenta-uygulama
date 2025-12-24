@@ -9257,7 +9257,7 @@ def main():
             exit_code = tester.run_faz7_tests()
             sys.exit(exit_code)
         elif sys.argv[1] == "faz8":
-            tester = FAZ8PMSTester()
+            tester = FAZ8BookingSubmitIntentTester()
             exit_code = tester.run_faz8_tests()
             sys.exit(exit_code)
         elif sys.argv[1] == "faz9":

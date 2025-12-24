@@ -121,6 +121,10 @@ async def get_action_queues(
         if not booking_id or not created_at:
             continue
         
+        # Ensure created_at is timezone-aware
+        if hasattr(created_at, 'tzinfo') and created_at.tzinfo is None:
+            created_at = created_at.replace(tzinfo=timezone.utc)
+        
         age_hours = calculate_age_hours(created_at)
         has_note = has_note_fields(booking)
         

@@ -92,6 +92,7 @@ app.include_router(agency_settlements_router)
 app.include_router(bookings_router)
 app.include_router(audit_router)
 app.include_router(voucher_router)
+app.include_router(web_booking_router)
 
 
 @app.get("/api/health")

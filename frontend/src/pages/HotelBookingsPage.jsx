@@ -492,12 +492,7 @@ export default function HotelBookingsPage() {
       )}
 
 
-        ) : null}
-      </div>
-
-      {selectedForHeader && (
-        <>
-          <BookingReferenceBanner
+      <div className="flex flex-wrap items-center gap-2">
             testIdPrefix="hotel-"
             bookingId={selectedForHeader.id || selectedForHeader.booking_id || selectedForHeader._id}
             extranetUrl={null}

@@ -109,7 +109,7 @@
           - generic [ref=e112]:
             - generic [ref=e113]:
               - generic [ref=e114]: "Dönem: 2025-01-01 → 2025-01-07"
-              - generic [ref=e115]: "Son güncelleme: 12/24/2025, 9:57:00 PM"
+              - generic [ref=e115]: "Son güncelleme: 12/24/2025, 9:59:10 PM"
             - generic [ref=e116]:
               - generic [ref=e117]:
                 - generic [ref=e118]: "Preset:"
@@ -124,59 +124,62 @@
                 - textbox [ref=e127]
                 - button "Uygula" [disabled] [ref=e128]
                 - button "Temizle" [ref=e129] [cursor=pointer]
-          - generic [ref=e130]:
-            - button "Genel Bakış" [ref=e131] [cursor=pointer]
-            - button "Detailed Queues" [active] [ref=e132] [cursor=pointer]
-            - button "Conversion" [ref=e133] [cursor=pointer]
-            - button "Hotels Performance" [ref=e134] [cursor=pointer]
-          - generic [ref=e135]:
-            - button "Export Overview CSV" [ref=e136] [cursor=pointer]
-            - button "Export Trends CSV" [ref=e137] [cursor=pointer]
-            - button "Export Queues CSV" [ref=e138] [cursor=pointer]
-          - generic [ref=e139]:
-            - generic [ref=e140]:
-              - button "⏳ Slow Approvals (1)" [ref=e141] [cursor=pointer]
-              - button "📝 With Notes (1)" [ref=e142] [cursor=pointer]
+                - button "Export Filtered CSV" [ref=e130] [cursor=pointer]
+                - button "Export Filtered CSV" [ref=e131] [cursor=pointer]
+                - button "Temizle" [ref=e132] [cursor=pointer]
+          - generic [ref=e133]:
+            - button "Genel Bakış" [ref=e134] [cursor=pointer]
+            - button "Detailed Queues" [active] [ref=e135] [cursor=pointer]
+            - button "Conversion" [ref=e136] [cursor=pointer]
+            - button "Hotels Performance" [ref=e137] [cursor=pointer]
+          - generic [ref=e138]:
+            - button "Export Overview CSV" [ref=e139] [cursor=pointer]
+            - button "Export Trends CSV" [ref=e140] [cursor=pointer]
+            - button "Export Queues CSV" [ref=e141] [cursor=pointer]
+          - generic [ref=e142]:
             - generic [ref=e143]:
-              - generic [ref=e144]:
-                - generic [ref=e145]: "Hotel:"
-                - combobox [ref=e146]:
+              - button "⏳ Slow Approvals (1)" [ref=e144] [cursor=pointer]
+              - button "📝 With Notes (1)" [ref=e145] [cursor=pointer]
+            - generic [ref=e146]:
+              - generic [ref=e147]:
+                - generic [ref=e148]: "Hotel:"
+                - combobox [ref=e149]:
                   - option "Tümü" [selected]
                   - option "Hotel One"
                   - option "Hotel Two"
-              - generic [ref=e147]:
-                - generic [ref=e148]: "Min yaş (saat):"
-                - spinbutton [ref=e149]
               - generic [ref=e150]:
-                - generic [ref=e151]: "Not:"
-                - combobox [ref=e152]:
+                - generic [ref=e151]: "Min yaş (saat):"
+                - spinbutton [ref=e152]
+              - generic [ref=e153]:
+                - generic [ref=e154]: "Not:"
+                - combobox [ref=e155]:
                   - option "Tümü" [selected]
                   - option "Sadece notlu"
                   - option "Sadece notsuz"
-              - generic [ref=e153]:
-                - generic [ref=e154]: "Ara:"
-                - textbox "Otel veya Booking ID" [ref=e155]
-            - generic [ref=e156]:
-              - generic [ref=e157]: 1 kayıt listeleniyor
-              - table [ref=e158]:
-                - rowgroup [ref=e159]:
-                  - row "Hotel Booking ID Yaş (saat) Not" [ref=e160]:
-                    - columnheader "Hotel" [ref=e161]
-                    - columnheader "Booking ID" [ref=e162]
-                    - columnheader "Yaş (saat)" [ref=e163]
-                    - columnheader "Not" [ref=e164]
-                - rowgroup [ref=e165]:
-                  - row "Hotel One H1 SLOW-1 30.0h Yok" [ref=e166]:
-                    - cell "Hotel One H1" [ref=e167]:
-                      - generic [ref=e168]: Hotel One
-                      - generic [ref=e169]: H1
-                    - cell "SLOW-1" [ref=e170]:
-                      - generic [ref=e171]: SLOW-1
-                    - cell "30.0h" [ref=e172]:
-                      - generic [ref=e173]: 30.0h
-                    - cell "Yok" [ref=e174]
-          - generic [ref=e175]: "Not: Bu ekran read-only'dır. Metrikler booking kayıtlarından hesaplanır."
-    - contentinfo [ref=e176]:
-      - generic [ref=e177]: © 2025 — v1
+              - generic [ref=e156]:
+                - generic [ref=e157]: "Ara:"
+                - textbox "Otel veya Booking ID" [ref=e158]
+            - generic [ref=e159]:
+              - generic [ref=e160]: 1 kayıt listeleniyor
+              - table [ref=e161]:
+                - rowgroup [ref=e162]:
+                  - row "Hotel Booking ID Yaş (saat) Not" [ref=e163]:
+                    - columnheader "Hotel" [ref=e164]
+                    - columnheader "Booking ID" [ref=e165]
+                    - columnheader "Yaş (saat)" [ref=e166]
+                    - columnheader "Not" [ref=e167]
+                - rowgroup [ref=e168]:
+                  - row "Hotel One H1 SLOW-1 30.0h Yok" [ref=e169]:
+                    - cell "Hotel One H1" [ref=e170]:
+                      - generic [ref=e171]: Hotel One
+                      - generic [ref=e172]: H1
+                    - cell "SLOW-1" [ref=e173]:
+                      - generic [ref=e174]: SLOW-1
+                    - cell "30.0h" [ref=e175]:
+                      - generic [ref=e176]: 30.0h
+                    - cell "Yok" [ref=e177]
+          - generic [ref=e178]: "Not: Bu ekran read-only'dır. Metrikler booking kayıtlarından hesaplanır."
+    - contentinfo [ref=e179]:
+      - generic [ref=e180]: © 2025 — v1
   - region "Notifications alt+T"
 ```

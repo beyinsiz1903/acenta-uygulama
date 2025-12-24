@@ -8,10 +8,14 @@ from pydantic import BaseModel
 
 from app.auth import get_current_user, require_roles
 from app.db import get_db
-from app.utils.date_range import parse_date_range, format_date_range, DateRangePeriod
+from app.utils.date_range import parse_date_range, format_date_range
 
 
 router = APIRouter(prefix="/api/admin/insights", tags=["admin-insights"])
+
+
+# Import DateRangePeriod from metrics (to avoid duplication)
+from app.routers.admin_metrics import DateRangePeriod
 
 
 def now_utc() -> datetime:

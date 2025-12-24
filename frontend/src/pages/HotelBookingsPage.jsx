@@ -685,6 +685,8 @@ export default function HotelBookingsPage() {
         </DialogContent>
       </Dialog>
 
+      </div>
+
       <BookingDetailDrawer
         bookingId={selectedId}
         mode="hotel"

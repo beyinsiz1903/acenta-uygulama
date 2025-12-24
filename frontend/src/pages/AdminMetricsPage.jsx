@@ -501,7 +501,7 @@ export default function AdminMetricsPage() {
                 </tr>
               </thead>
               <tbody>
-                {(activeTab === "slow" ? queues.slow_pending : queues.noted_pending)?.map((booking) => {
+                {(activeQueueTab === "slow" ? queues.slow_pending : queues.noted_pending)?.map((booking) => {
                   const isFollowed = followedBookings.has(booking.booking_id);
                   return (
                     <tr key={booking.booking_id} className="border-b last:border-0 hover:bg-muted/50">

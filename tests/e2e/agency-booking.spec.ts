@@ -553,8 +553,7 @@ test.describe("AdminMetricsPage smoke (FAZ-10)", () => {
 
 test.describe("AdminMetricsPage FAZ-12.1 date-range & CSV smoke", () => {
   test("T1 - date range controls & CSV buttons render and preset triggers fetch", async ({ page }) => {
-    const TEST_ADMIN_METRICS_URL = process.env.TEST_ADMIN_METRICS_URL;
-    if (!TEST_ADMIN_METRICS_URL) test.skip();
+    const TEST_ADMIN_METRICS_URL = process.env.TEST_ADMIN_METRICS_URL || "/app/admin/metrics";
 
     await loginAsAdmin(page);
 
@@ -580,7 +579,13 @@ test.describe("AdminMetricsPage FAZ-12.1 date-range & CSV smoke", () => {
     // Click 14g preset button and ensure a new request is triggered with days=14
     const preset14 = page.locator('button', { hasText: '14g' });
     await preset14.click();
-    await page.waitForTimeout(1000);
+
+    // Daha stabil: ilgili response'u bekle
+    await page.waitForResponse((resp) => {
+      const url = resp.url();
+      const ok = resp.status() === 200;
+      return ok && url.includes("/api/admin/metrics/overview") && url.includes("days=14");
+    });
 
     expect(lastOverviewUrl).toContain("/api/admin/metrics/overview");
     expect(lastOverviewUrl).toContain("days=14");

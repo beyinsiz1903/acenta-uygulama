@@ -558,14 +558,15 @@ test.describe("AdminMetricsPage FAZ-12.1 date-range & CSV smoke", () => {
     // Auth bypass: token & user localStorage'da hazır olsun
     await page.addInitScript(() => {
       const token = "e2e-admin-token";
-      window.localStorage.setItem("token", token);
-      window.localStorage.setItem("access_token", token);
-      window.localStorage.setItem("jwt", token);
+      window.localStorage.setItem("acenta_token", token);
       window.localStorage.setItem(
-        "user",
-        JSON.stringify({ id: "e2e-admin", role: "super_admin", email: "admin@acenta.test" })
+        "acenta_user",
+        JSON.stringify({
+          id: "e2e-admin",
+          email: "admin@acenta.test",
+          roles: ["super_admin"],
+        })
       );
-      window.localStorage.setItem("role", "super_admin");
     });
 
     // Optional: /me veya benzeri endpoint varsa 200 döndürelim

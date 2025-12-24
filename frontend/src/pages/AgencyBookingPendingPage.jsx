@@ -4,6 +4,35 @@ import { BookingReferenceBanner } from "../components/BookingReferenceBanner";
 import { buildBookingShareSummary } from "../utils/bookingShareSummary";
 import { api, apiErrorMessage } from "../lib/api";
 
+// --- FAZ-9 helpers: WhatsApp message (best-effort) ---
+function buildPendingWhatsAppMessage({ booking, bookingIdFallback, shareSummary }) {
+  const referenceId = booking?.id || bookingIdFallback || "";
+
+  // Kısa, operasyonel: özet + referans
+  // shareSummary zaten "✅ Rezervasyon Özeti" ile başlıyor; onu kullanıyoruz.
+  const lines = [];
+
+  lines.push("✅ Rezervasyon Talebi (Beklemede)");
+  if (referenceId) lines.push(`Referans: ${referenceId}`);
+  lines.push("");
+
+  if (shareSummary) {
+    // shareSummary içinde "✅ Rezervasyon Özeti" var; aynen ekleyelim
+    lines.push(shareSummary);
+  }
+
+  return lines.filter(Boolean).join("\n");
+}
+
+function openWhatsAppWithText(text) {
+  const msg = String(text || "").trim();
+  if (!msg) return;
+
+  // wa.me universal
+  const url = `https://wa.me/?text=${encodeURIComponent(msg)}`;
+  window.open(url, "_blank", "noopener,noreferrer");
+}
+
 export default function AgencyBookingPendingPage() {
   const { bookingId } = useParams();
   const location = useLocation();
@@ -12,6 +41,9 @@ export default function AgencyBookingPendingPage() {
   const [booking, setBooking] = useState(location.state?.booking || null);
   const [loading, setLoading] = useState(!booking);
   const [error, setError] = useState("");
+  
+  // FAZ-9: pending note (localStorage)
+  const [pendingNote, setPendingNote] = useState("");
 
   useEffect(() => {
     if (booking) return;

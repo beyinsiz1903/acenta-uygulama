@@ -3,6 +3,15 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Tuple
 
+from pydantic import BaseModel
+
+
+class DateRangePeriod(BaseModel):
+    """Date range period for API responses"""
+    start: str  # YYYY-MM-DD
+    end: str    # YYYY-MM-DD
+    days: int
+
 
 def now_utc() -> datetime:
     """Get current UTC time"""

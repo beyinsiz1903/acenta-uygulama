@@ -918,6 +918,70 @@ export default function AdminMetricsPage() {
             />
             <StatCard
               title="Onaylı"
+              value={funnel?.confirmed ?? "—"}
+              subtitle="confirmed"
+              testId="metrics-conv-confirmed"
+            />
+            <StatCard
+              title="İptal"
+              value={funnel?.cancelled ?? "—"}
+              subtitle="cancelled"
+              testId="metrics-conv-cancelled"
+            />
+            <StatCard
+              title="Dönüşüm %"
+              value={funnel ? `%${funnel.conversion_pct}` : "—"}
+              subtitle="confirmed / total"
+              testId="metrics-conv-rate"
+            />
+          </div>
+
+          <div className="text-xs text-muted-foreground">
+            <div>
+              Dönem: {normalizedPeriod.start && normalizedPeriod.end
+                ? `${normalizedPeriod.start} → ${normalizedPeriod.end}`
+                : `Son ${normalizedPeriod.days} gün`}
+            </div>
+            <div data-testid="metrics-conv-last-updated">
+              Son güncelleme: {lastUpdated ? new Date(lastUpdated).toLocaleString() : "—"}
+            </div>
+          </div>
+
+          <div className="mt-2 rounded-xl border bg-card p-4 text-sm">
+            {funnel ? (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <div className="text-xs text-muted-foreground mb-1">Toplam</div>
+                  <div className="text-lg font-semibold">{funnel.total}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-muted-foreground mb-1">Onaylı</div>
+                  <div className="text-lg font-semibold">{funnel.confirmed}</div>
+                  <div className="text-xs text-muted-foreground">
+                    %{funnel.conversion_pct} conversion
+                  </div>
+                </div>
+                <div>
+                  <div className="text-xs text-muted-foreground mb-1">İptal / Pending</div>
+                  <div className="text-sm">
+                    <span className="font-semibold mr-2">{funnel.cancelled}</span>
+                    <span className="text-muted-foreground">cancelled</span>
+                  </div>
+                  <div className="text-sm">
+                    <span className="font-semibold mr-2">{funnel.pending}</span>
+                    <span className="text-muted-foreground">pending</span>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="text-muted-foreground">
+                Henüz funnel verisi yok. Tarih aralığını değiştirerek tekrar deneyin.
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Tab: Hotels Performance */}
       {activeTab === "hotels" && (
         <div className="mt-5 space-y-4">
@@ -1012,70 +1076,6 @@ export default function AdminMetricsPage() {
                   ))}
                 </tbody>
               </table>
-            )}
-          </div>
-        </div>
-      )}
-
-              value={funnel?.confirmed ?? "—"}
-              subtitle="confirmed"
-              testId="metrics-conv-confirmed"
-            />
-            <StatCard
-              title="İptal"
-              value={funnel?.cancelled ?? "—"}
-              subtitle="cancelled"
-              testId="metrics-conv-cancelled"
-            />
-            <StatCard
-              title="Dönüşüm %"
-              value={funnel ? `%${funnel.conversion_pct}` : "—"}
-              subtitle="confirmed / total"
-              testId="metrics-conv-rate"
-            />
-          </div>
-
-          <div className="text-xs text-muted-foreground">
-            <div>
-              Dönem: {normalizedPeriod.start && normalizedPeriod.end
-                ? `${normalizedPeriod.start} → ${normalizedPeriod.end}`
-                : `Son ${normalizedPeriod.days} gün`}
-            </div>
-            <div data-testid="metrics-conv-last-updated">
-              Son güncelleme: {lastUpdated ? new Date(lastUpdated).toLocaleString() : "—"}
-            </div>
-          </div>
-
-          <div className="mt-2 rounded-xl border bg-card p-4 text-sm">
-            {funnel ? (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <div className="text-xs text-muted-foreground mb-1">Toplam</div>
-                  <div className="text-lg font-semibold">{funnel.total}</div>
-                </div>
-                <div>
-                  <div className="text-xs text-muted-foreground mb-1">Onaylı</div>
-                  <div className="text-lg font-semibold">{funnel.confirmed}</div>
-                  <div className="text-xs text-muted-foreground">
-                    %{funnel.conversion_pct} conversion
-                  </div>
-                </div>
-                <div>
-                  <div className="text-xs text-muted-foreground mb-1">İptal / Pending</div>
-                  <div className="text-sm">
-                    <span className="font-semibold mr-2">{funnel.cancelled}</span>
-                    <span className="text-muted-foreground">cancelled</span>
-                  </div>
-                  <div className="text-sm">
-                    <span className="font-semibold mr-2">{funnel.pending}</span>
-                    <span className="text-muted-foreground">pending</span>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="text-muted-foreground">
-                Henüz funnel verisi yok. Tarih aralığını değiştirerek tekrar deneyin.
-              </div>
             )}
           </div>
         </div>

@@ -82,6 +82,7 @@ function App() {
             <Route path="booking/new" element={<AgencyBookingNewPage />} />
             <Route path="booking/draft/:draftId" element={<AgencyBookingDraftPage />} />
             <Route path="booking/confirmed/:bookingId" element={<AgencyBookingConfirmedPage />} />
+            <Route path="booking/pending/:bookingId" element={<AgencyBookingPendingPage />} />
             <Route path="bookings" element={<AgencyBookingsListPage />} />
             <Route path="settlements" element={<AgencySettlementsPage />} />
             <Route path="help" element={<AgencyHelpPage />} />

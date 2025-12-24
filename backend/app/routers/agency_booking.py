@@ -17,6 +17,8 @@ from app.services.email_outbox import enqueue_booking_email
 
 router = APIRouter(prefix="/api/agency/bookings", tags=["agency-bookings"])
 
+from typing import Literal
+
 
 class GuestInfoIn(BaseModel):
     full_name: str

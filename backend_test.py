@@ -1764,6 +1764,500 @@ class FAZ101IntegrationSyncTester:
         return 0 if self.tests_failed == 0 else 1
 
 
+class FAZ8BookingSubmitIntentTester:
+    def __init__(self, base_url="https://arch-review-7.preview.emergentagent.com"):
+        self.base_url = base_url
+        self.agency_token = None
+        self.tests_run = 0
+        self.tests_passed = 0
+        self.tests_failed = 0
+        self.failed_tests = []
+        
+        # Store IDs for testing
+        self.hotel_id = None
+        self.search_id = None
+        self.draft_id = None
+        self.booking_id = None
+
+    def log(self, msg):
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}")
+
+    def run_test(self, name, method, endpoint, expected_status, data=None, headers_override=None):
+        """Run a single API test"""
+        url = f"{self.base_url}/{endpoint}"
+        headers = headers_override or {'Content-Type': 'application/json'}
+        if self.agency_token and not headers_override:
+            headers['Authorization'] = f'Bearer {self.agency_token}'
+
+        self.tests_run += 1
+        self.log(f"🔍 Test #{self.tests_run}: {name}")
+        
+        try:
+            if method == 'GET':
+                response = requests.get(url, headers=headers, timeout=10)
+            elif method == 'POST':
+                response = requests.post(url, json=data, headers=headers, timeout=10)
+            elif method == 'PUT':
+                response = requests.put(url, json=data, headers=headers, timeout=10)
+            elif method == 'PATCH':
+                response = requests.patch(url, json=data, headers=headers, timeout=10)
+            elif method == 'DELETE':
+                response = requests.delete(url, headers=headers, timeout=10)
+            else:
+                raise ValueError(f"Unsupported method: {method}")
+
+            success = response.status_code == expected_status
+            if success:
+                self.tests_passed += 1
+                self.log(f"✅ PASSED - Status: {response.status_code}")
+                try:
+                    return True, response.json() if response.content else {}
+                except:
+                    return True, {}
+            else:
+                self.tests_failed += 1
+                self.failed_tests.append(f"{name} - Expected {expected_status}, got {response.status_code}")
+                self.log(f"❌ FAILED - Expected {expected_status}, got {response.status_code}")
+                try:
+                    self.log(f"   Response: {response.text[:200]}")
+                except:
+                    pass
+                return False, {}
+
+        except Exception as e:
+            self.tests_failed += 1
+            self.failed_tests.append(f"{name} - Error: {str(e)}")
+            self.log(f"❌ FAILED - Error: {str(e)}")
+            return False, {}
+
+    def test_agency_login(self):
+        """Test agency login"""
+        self.log("\n=== 1) AGENCY LOGIN ===")
+        success, response = self.run_test(
+            "Agency Login (agency1@demo.test/agency123)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "agency1@demo.test", "password": "agency123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.agency_token = response['access_token']
+            user = response.get('user', {})
+            roles = user.get('roles', [])
+            agency_id = user.get('agency_id')
+            
+            if agency_id and ('agency_admin' in roles or 'agency_agent' in roles):
+                self.log(f"✅ Agency login successful - agency_id: {agency_id}, roles: {roles}")
+                return True
+            else:
+                self.log(f"❌ Missing agency_id or proper roles: {roles}")
+                return False
+        return False
+
+    def test_search_and_draft_creation(self):
+        """Create search and draft for testing submit endpoint"""
+        self.log("\n=== 2) SEARCH & DRAFT CREATION ===")
+        
+        # Get agency hotels first
+        success, response = self.run_test(
+            "Get Agency Hotels",
+            "GET",
+            "api/agency/hotels",
+            200
+        )
+        
+        if success and len(response) > 0:
+            self.hotel_id = response[0]['id']
+            self.log(f"✅ Found hotel for testing: {self.hotel_id}")
+        else:
+            self.log("❌ No hotels found for agency")
+            return False
+        
+        # Create search
+        search_data = {
+            "hotel_id": self.hotel_id,
+            "check_in": "2026-03-15",
+            "check_out": "2026-03-17",
+            "occupancy": {"adults": 2, "children": 0}
+        }
+        success, response = self.run_test(
+            "Create Search",
+            "POST",
+            "api/agency/search",
+            200,
+            data=search_data
+        )
+        
+        if success:
+            self.search_id = response.get('search_id')
+            self.log(f"✅ Search created: {self.search_id}")
+        else:
+            return False
+        
+        # Create draft
+        draft_data = {
+            "search_id": self.search_id,
+            "hotel_id": self.hotel_id,
+            "room_type_id": "rt_standard",
+            "rate_plan_id": "rp_base",
+            "guest": {
+                "full_name": "Test Guest FAZ8",
+                "email": "testguest@faz8.com",
+                "phone": "+905551234567"
+            },
+            "check_in": "2026-03-15",
+            "check_out": "2026-03-17",
+            "nights": 2,
+            "adults": 2,
+            "children": 0
+        }
+        
+        success, response = self.run_test(
+            "Create Booking Draft",
+            "POST",
+            "api/agency/bookings/draft",
+            200,
+            data=draft_data
+        )
+        
+        if success:
+            self.draft_id = response.get('id')
+            self.log(f"✅ Draft created: {self.draft_id}")
+            return True
+        return False
+
+    def test_faz2_regression_no_body(self):
+        """Test FAZ-2 regression: submit without body should work"""
+        self.log("\n=== 3) FAZ-2 REGRESSION: NO BODY ===")
+        
+        success, response = self.run_test(
+            "Submit Booking (No Body)",
+            "POST",
+            f"api/agency/bookings/{self.draft_id}/submit",
+            200,
+            data={}
+        )
+        
+        if success:
+            self.booking_id = response.get('id')
+            status = response.get('status')
+            approval_deadline = response.get('approval_deadline_at')
+            
+            if status == 'pending' and approval_deadline:
+                self.log(f"✅ Booking submitted successfully - ID: {self.booking_id}, Status: {status}")
+                self.log(f"✅ Approval deadline set: {approval_deadline}")
+                return True
+            else:
+                self.log(f"❌ Invalid booking state - Status: {status}, Deadline: {approval_deadline}")
+                return False
+        return False
+
+    def test_faz2_regression_note_only(self):
+        """Test FAZ-2 regression: submit with note_to_hotel only should work"""
+        self.log("\n=== 4) FAZ-2 REGRESSION: NOTE ONLY ===")
+        
+        # Create another draft for this test
+        draft_data = {
+            "search_id": self.search_id,
+            "hotel_id": self.hotel_id,
+            "room_type_id": "rt_standard",
+            "rate_plan_id": "rp_base",
+            "guest": {
+                "full_name": "Test Guest FAZ8-2",
+                "email": "testguest2@faz8.com",
+                "phone": "+905551234568"
+            },
+            "check_in": "2026-03-15",
+            "check_out": "2026-03-17",
+            "nights": 2,
+            "adults": 2,
+            "children": 0
+        }
+        
+        success, response = self.run_test(
+            "Create Second Draft",
+            "POST",
+            "api/agency/bookings/draft",
+            200,
+            data=draft_data
+        )
+        
+        if not success:
+            return False
+        
+        draft_id_2 = response.get('id')
+        
+        success, response = self.run_test(
+            "Submit Booking (Note Only)",
+            "POST",
+            f"api/agency/bookings/{draft_id_2}/submit",
+            200,
+            data={"note_to_hotel": "Test note for hotel"}
+        )
+        
+        if success:
+            booking_id_2 = response.get('id')
+            status = response.get('status')
+            note = response.get('note_to_hotel')
+            
+            if status == 'pending' and note == "Test note for hotel":
+                self.log(f"✅ Booking with note submitted - ID: {booking_id_2}, Note: {note}")
+                return True
+            else:
+                self.log(f"❌ Invalid booking state - Status: {status}, Note: {note}")
+                return False
+        return False
+
+    def test_intent_pending_tolerance(self):
+        """Test new intent field tolerance: intent=pending should work"""
+        self.log("\n=== 5) INTENT FIELD TOLERANCE: PENDING ===")
+        
+        # Create another draft for this test
+        draft_data = {
+            "search_id": self.search_id,
+            "hotel_id": self.hotel_id,
+            "room_type_id": "rt_standard",
+            "rate_plan_id": "rp_base",
+            "guest": {
+                "full_name": "Test Guest FAZ8-3",
+                "email": "testguest3@faz8.com",
+                "phone": "+905551234569"
+            },
+            "check_in": "2026-03-15",
+            "check_out": "2026-03-17",
+            "nights": 2,
+            "adults": 2,
+            "children": 0
+        }
+        
+        success, response = self.run_test(
+            "Create Third Draft",
+            "POST",
+            "api/agency/bookings/draft",
+            200,
+            data=draft_data
+        )
+        
+        if not success:
+            return False
+        
+        draft_id_3 = response.get('id')
+        
+        success, response = self.run_test(
+            "Submit Booking (Intent Pending)",
+            "POST",
+            f"api/agency/bookings/{draft_id_3}/submit",
+            200,
+            data={"intent": "pending"}
+        )
+        
+        if success:
+            booking_id_3 = response.get('id')
+            status = response.get('status')
+            
+            # Should still create pending booking (no behavior change yet)
+            if status == 'pending':
+                self.log(f"✅ Booking with intent=pending submitted - ID: {booking_id_3}, Status: {status}")
+                return True
+            else:
+                self.log(f"❌ Invalid booking state - Status: {status}")
+                return False
+        return False
+
+    def test_intent_confirmed_tolerance(self):
+        """Test new intent field tolerance: intent=confirmed should work (no special behavior yet)"""
+        self.log("\n=== 6) INTENT FIELD TOLERANCE: CONFIRMED ===")
+        
+        # Create another draft for this test
+        draft_data = {
+            "search_id": self.search_id,
+            "hotel_id": self.hotel_id,
+            "room_type_id": "rt_standard",
+            "rate_plan_id": "rp_base",
+            "guest": {
+                "full_name": "Test Guest FAZ8-4",
+                "email": "testguest4@faz8.com",
+                "phone": "+905551234570"
+            },
+            "check_in": "2026-03-15",
+            "check_out": "2026-03-17",
+            "nights": 2,
+            "adults": 2,
+            "children": 0
+        }
+        
+        success, response = self.run_test(
+            "Create Fourth Draft",
+            "POST",
+            "api/agency/bookings/draft",
+            200,
+            data=draft_data
+        )
+        
+        if not success:
+            return False
+        
+        draft_id_4 = response.get('id')
+        
+        success, response = self.run_test(
+            "Submit Booking (Intent Confirmed)",
+            "POST",
+            f"api/agency/bookings/{draft_id_4}/submit",
+            200,
+            data={"intent": "confirmed"}
+        )
+        
+        if success:
+            booking_id_4 = response.get('id')
+            status = response.get('status')
+            
+            # Should still create pending booking (no behavior change yet)
+            if status == 'pending':
+                self.log(f"✅ Booking with intent=confirmed submitted - ID: {booking_id_4}, Status: {status}")
+                self.log("✅ No special behavior for intent=confirmed yet (as expected)")
+                return True
+            else:
+                self.log(f"❌ Invalid booking state - Status: {status}")
+                return False
+        return False
+
+    def test_combined_note_and_intent(self):
+        """Test combined note_to_hotel and intent fields"""
+        self.log("\n=== 7) COMBINED NOTE + INTENT ===")
+        
+        # Create another draft for this test
+        draft_data = {
+            "search_id": self.search_id,
+            "hotel_id": self.hotel_id,
+            "room_type_id": "rt_standard",
+            "rate_plan_id": "rp_base",
+            "guest": {
+                "full_name": "Test Guest FAZ8-5",
+                "email": "testguest5@faz8.com",
+                "phone": "+905551234571"
+            },
+            "check_in": "2026-03-15",
+            "check_out": "2026-03-17",
+            "nights": 2,
+            "adults": 2,
+            "children": 0
+        }
+        
+        success, response = self.run_test(
+            "Create Fifth Draft",
+            "POST",
+            "api/agency/bookings/draft",
+            200,
+            data=draft_data
+        )
+        
+        if not success:
+            return False
+        
+        draft_id_5 = response.get('id')
+        
+        success, response = self.run_test(
+            "Submit Booking (Note + Intent)",
+            "POST",
+            f"api/agency/bookings/{draft_id_5}/submit",
+            200,
+            data={
+                "note_to_hotel": "Combined test note",
+                "intent": "pending"
+            }
+        )
+        
+        if success:
+            booking_id_5 = response.get('id')
+            status = response.get('status')
+            note = response.get('note_to_hotel')
+            
+            if status == 'pending' and note == "Combined test note":
+                self.log(f"✅ Booking with note+intent submitted - ID: {booking_id_5}")
+                self.log(f"✅ Status: {status}, Note: {note}")
+                return True
+            else:
+                self.log(f"❌ Invalid booking state - Status: {status}, Note: {note}")
+                return False
+        return False
+
+    def test_idempotency_behavior(self):
+        """Test idempotency: same draft should return same booking"""
+        self.log("\n=== 8) IDEMPOTENCY CHECK ===")
+        
+        # Submit the first draft again
+        success, response = self.run_test(
+            "Submit Same Draft Again",
+            "POST",
+            f"api/agency/bookings/{self.draft_id}/submit",
+            200,
+            data={"note_to_hotel": "Different note"}
+        )
+        
+        if success:
+            returned_booking_id = response.get('id')
+            
+            if returned_booking_id == self.booking_id:
+                self.log(f"✅ Idempotency working - same booking ID returned: {returned_booking_id}")
+                return True
+            else:
+                self.log(f"❌ Idempotency broken - different booking ID: {returned_booking_id} vs {self.booking_id}")
+                return False
+        return False
+
+    def print_summary(self):
+        """Print test summary"""
+        self.log("\n" + "="*60)
+        self.log("FAZ-8 BOOKING SUBMIT INTENT TEST SUMMARY")
+        self.log("="*60)
+        self.log(f"Total Tests: {self.tests_run}")
+        self.log(f"✅ Passed: {self.tests_passed}")
+        self.log(f"❌ Failed: {self.tests_failed}")
+        self.log(f"Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%")
+        
+        if self.failed_tests:
+            self.log("\n❌ FAILED TESTS:")
+            for i, test in enumerate(self.failed_tests, 1):
+                self.log(f"  {i}. {test}")
+        
+        self.log("="*60)
+
+    def run_faz8_tests(self):
+        """Run all FAZ-8 tests in sequence"""
+        self.log("🚀 Starting FAZ-8 Booking Submit Intent Tests")
+        self.log(f"Base URL: {self.base_url}")
+        
+        # 1) Agency login
+        if not self.test_agency_login():
+            self.log("❌ Agency login failed - stopping tests")
+            self.print_summary()
+            return 1
+
+        # 2) Search and draft creation
+        if not self.test_search_and_draft_creation():
+            self.log("❌ Search/draft creation failed - stopping tests")
+            self.print_summary()
+            return 1
+
+        # 3) FAZ-2 regression tests
+        self.test_faz2_regression_no_body()
+        self.test_faz2_regression_note_only()
+
+        # 4) New intent field tolerance tests
+        self.test_intent_pending_tolerance()
+        self.test_intent_confirmed_tolerance()
+        self.test_combined_note_and_intent()
+
+        # 5) Idempotency check
+        self.test_idempotency_behavior()
+
+        # Summary
+        self.print_summary()
+
+        return 0 if self.tests_failed == 0 else 1
+
+
 class VoucherHTMLChangesTester:
     def __init__(self, base_url="https://arch-review-7.preview.emergentagent.com"):
         self.base_url = base_url

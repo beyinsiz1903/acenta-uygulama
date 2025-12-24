@@ -9,7 +9,7 @@ import uuid
 from datetime import datetime, timedelta
 
 class AcentaAPITester:
-    def __init__(self, base_url="https://arch-review-7.preview.emergentagent.com"):
+    def __init__(self, base_url="https://trip-manager-34.preview.emergentagent.com"):
         self.base_url = base_url
         self.token = None
         self.tests_run = 0
@@ -826,7 +826,7 @@ class AcentaAPITester:
 
 
 class FAZ5HotelExtranetTester:
-    def __init__(self, base_url="https://arch-review-7.preview.emergentagent.com"):
+    def __init__(self, base_url="https://trip-manager-34.preview.emergentagent.com"):
         self.base_url = base_url
         self.hotel_token = None
         self.agency_token = None
@@ -1386,7 +1386,7 @@ class FAZ5HotelExtranetTester:
 
 
 class FAZ101IntegrationSyncTester:
-    def __init__(self, base_url="https://arch-review-7.preview.emergentagent.com"):
+    def __init__(self, base_url="https://trip-manager-34.preview.emergentagent.com"):
         self.base_url = base_url
         self.hotel_token = None
         self.tests_run = 0
@@ -2259,7 +2259,7 @@ class FAZ8BookingSubmitIntentTester:
 
 
 class VoucherHTMLChangesTester:
-    def __init__(self, base_url="https://arch-review-7.preview.emergentagent.com"):
+    def __init__(self, base_url="https://trip-manager-34.preview.emergentagent.com"):
         self.base_url = base_url
         self.agency_token = None
         self.hotel_token = None
@@ -2700,7 +2700,7 @@ class VoucherHTMLChangesTester:
 
 
 class AdminOverrideTester:
-    def __init__(self, base_url="https://arch-review-7.preview.emergentagent.com"):
+    def __init__(self, base_url="https://trip-manager-34.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.agency_token = None
@@ -3297,7 +3297,7 @@ class AdminOverrideTester:
 
 
 class FAZ93AdminEmailOutboxTester:
-    def __init__(self, base_url="https://arch-review-7.preview.emergentagent.com"):
+    def __init__(self, base_url="https://trip-manager-34.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.agency_token = None
@@ -3846,7 +3846,7 @@ class FAZ93AdminEmailOutboxTester:
 
 
 class FAZ93EmailOutboxTester:
-    def __init__(self, base_url="https://arch-review-7.preview.emergentagent.com"):
+    def __init__(self, base_url="https://trip-manager-34.preview.emergentagent.com"):
         self.base_url = base_url
         self.agency_token = None
         self.hotel_token = None
@@ -4376,7 +4376,7 @@ class FAZ93EmailOutboxTester:
 
 
 class FAZ91BookingDetailTester:
-    def __init__(self, base_url="https://arch-review-7.preview.emergentagent.com"):
+    def __init__(self, base_url="https://trip-manager-34.preview.emergentagent.com"):
         self.base_url = base_url
         self.agency_token = None
         self.hotel_token = None
@@ -5023,7 +5023,7 @@ class FAZ91BookingDetailTester:
 
 
 class FAZ8PMSTester:
-    def __init__(self, base_url="https://arch-review-7.preview.emergentagent.com"):
+    def __init__(self, base_url="https://trip-manager-34.preview.emergentagent.com"):
         self.base_url = base_url
         self.agency_token = None
         self.super_admin_token = None
@@ -5682,7 +5682,7 @@ class FAZ8PMSTester:
 
 
 class FAZ9VoucherEmailTester:
-    def __init__(self, base_url="https://arch-review-7.preview.emergentagent.com"):
+    def __init__(self, base_url="https://trip-manager-34.preview.emergentagent.com"):
         self.base_url = base_url
         self.agency_token = None
         self.tests_run = 0
@@ -5988,7 +5988,7 @@ class FAZ9VoucherEmailTester:
 
 
 class FAZ6CommissionTester:
-    def __init__(self, base_url="https://arch-review-7.preview.emergentagent.com"):
+    def __init__(self, base_url="https://trip-manager-34.preview.emergentagent.com"):
         self.base_url = base_url
         self.super_admin_token = None
         self.agency_token = None
@@ -6720,7 +6720,7 @@ class FAZ6CommissionTester:
 
 
 class FAZ7AuditCacheEventsTester:
-    def __init__(self, base_url="https://arch-review-7.preview.emergentagent.com"):
+    def __init__(self, base_url="https://trip-manager-34.preview.emergentagent.com"):
         self.base_url = base_url
         self.hotel_token = None
         self.agency_token = None
@@ -7390,7 +7390,7 @@ class FAZ7AuditCacheEventsTester:
 
 
 class FAZ92VoucherTokenTester:
-    def __init__(self, base_url="https://arch-review-7.preview.emergentagent.com"):
+    def __init__(self, base_url="https://trip-manager-34.preview.emergentagent.com"):
         self.base_url = base_url
         self.agency_token = None
         self.hotel_token = None
@@ -7839,7 +7839,7 @@ class FAZ92VoucherTokenTester:
 
 
 class FAZ9xAgencyHotelsTester:
-    def __init__(self, base_url="https://arch-review-7.preview.emergentagent.com"):
+    def __init__(self, base_url="https://trip-manager-34.preview.emergentagent.com"):
         self.base_url = base_url
         self.agency_token = None
         self.tests_run = 0
@@ -8435,7 +8435,7 @@ class FAZ9xAgencyHotelsTester:
 
 
 class FAZ10HotelIntegrationsTester:
-    def __init__(self, base_url="https://arch-review-7.preview.emergentagent.com"):
+    def __init__(self, base_url="https://trip-manager-34.preview.emergentagent.com"):
         self.base_url = base_url
         self.hotel_token = None
         self.agency_token = None
@@ -8826,7 +8826,7 @@ class FAZ10HotelIntegrationsTester:
 
 
 class FAZ101IntegrationSyncTester:
-    def __init__(self, base_url="https://arch-review-7.preview.emergentagent.com"):
+    def __init__(self, base_url="https://trip-manager-34.preview.emergentagent.com"):
         self.base_url = base_url
         self.hotel_token = None
         self.agency_token = None

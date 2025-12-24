@@ -328,30 +328,6 @@ export default function AdminMetricsPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <label className="text-xs text-muted-foreground">Overview</label>
-          <select
-            className="h-9 rounded-md border bg-background px-2 text-sm"
-            value={daysOverview}
-            onChange={(e) => setDaysOverview(Number(e.target.value))}
-          >
-            <option value={7}>7 gün</option>
-            <option value={14}>14 gün</option>
-            <option value={30}>30 gün</option>
-            <option value={90}>90 gün</option>
-          </select>
-
-          <label className="ml-2 text-xs text-muted-foreground">Trend</label>
-          <select
-            className="h-9 rounded-md border bg-background px-2 text-sm"
-            value={daysTrends}
-            onChange={(e) => setDaysTrends(Number(e.target.value))}
-          >
-            <option value={7}>7 gün</option>
-            <option value={14}>14 gün</option>
-            <option value={30}>30 gün</option>
-            <option value={90}>90 gün</option>
-          </select>
-
           <button
             type="button"
             className="ml-2 h-9 rounded-md border bg-background px-3 text-sm"

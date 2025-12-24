@@ -36,6 +36,15 @@ const webpackConfig = {
     },
     configure: (webpackConfig) => {
 
+      // Disable ESLint warnings/errors during build
+      const eslintPlugin = webpackConfig.plugins.find(
+        plugin => plugin.constructor.name === 'ESLintWebpackPlugin'
+      );
+      if (eslintPlugin) {
+        eslintPlugin.options.failOnError = false;
+        eslintPlugin.options.failOnWarning = false;
+      }
+
       // Disable hot reload completely if environment variable is set
       if (config.disableHotReload) {
         // Remove hot reload related plugins

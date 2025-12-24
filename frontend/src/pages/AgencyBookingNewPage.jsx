@@ -52,7 +52,7 @@ export default function AgencyBookingNewPage() {
 
   async function handleCreateDraft(e) {
     e.preventDefault();
-    await submitDraft();
+    await submitDraft("confirmed");
   }
 
   async function submitDraft(modeOverride) {

@@ -19,6 +19,7 @@ export default function AdminMetricsPage() {
 
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
+  const [seeding, setSeeding] = useState(false);
 
   async function load() {
     setErr("");
@@ -34,6 +35,32 @@ export default function AdminMetricsPage() {
       setErr(apiErrorMessage ? apiErrorMessage(e) : (e?.message || "Bir hata oluştu"));
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function seedDemoData() {
+    if (!window.confirm("Demo verisi oluşturulsun mu? (Mevcut demo verisi silinecek)")) {
+      return;
+    }
+
+    setSeeding(true);
+    setErr("");
+    try {
+      const res = await api.post("/admin/demo/seed-bookings", {
+        count: 20,
+        days_back: 14,
+        wipe_existing_seed: true,
+      });
+
+      if (res.data?.ok) {
+        // Reload metrics
+        await load();
+        alert(`✅ Demo verisi oluşturuldu!\n${res.data.inserted} kayıt eklendi.`);
+      }
+    } catch (e) {
+      setErr(apiErrorMessage ? apiErrorMessage(e) : (e?.message || "Demo verisi oluşturulamadı"));
+    } finally {
+      setSeeding(false);
     }
   }
 

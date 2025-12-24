@@ -548,6 +548,7 @@ test.describe("AdminMetricsPage smoke (FAZ-10)", () => {
     const seedBtn = page.getByTestId("metrics-seed-demo");
     await expect(seedBtn).toBeVisible();
   });
+});
 
 // ========== FAZ-12.1: Admin Metrics Date Range & CSV Smoke ==========
 

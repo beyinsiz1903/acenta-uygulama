@@ -138,10 +138,90 @@ export default function AgencyBookingPendingPage() {
   return (
     <div className="space-y-6">
       <BookingReferenceBanner
-        bookingId={booking.id || bookingId}
+        bookingId={referenceId}
         extranetUrl={booking.hotel_extranet_url}
         shareSummary={shareSummary}
       />
+
+      {/* FAZ-9: Pending Note + Badge */}
+      <div className="rounded-xl border bg-background p-4">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <div className="text-sm font-medium">Otele Not (opsiyonel)</div>
+
+            {!!pendingNote?.trim() && (
+              <span
+                className="text-[11px] px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/20 text-amber-700"
+                data-testid="pending-note-badge"
+              >
+                Not var
+              </span>
+            )}
+          </div>
+
+          <button
+            type="button"
+            className="text-xs underline text-muted-foreground hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed"
+            data-testid="pending-note-clear"
+            onClick={() => setPendingNote("")}
+            disabled={!pendingNote?.trim()}
+            title="Notu temizle"
+          >
+            Temizle
+          </button>
+        </div>
+
+        <div className="mt-1 text-xs text-muted-foreground">
+          Otel ekibinin görmesi için kısa bir not ekleyebilirsiniz (örn: geç giriş, bebek beşiği, özel istek).
+        </div>
+
+        <textarea
+          className="mt-3 w-full min-h-[90px] rounded-md border bg-background p-3 text-sm"
+          placeholder="Notunuz…"
+          value={pendingNote}
+          onChange={(e) => setPendingNote(e.target.value)}
+          data-testid="pending-note-input"
+        />
+      </div>
+
+      {/* FAZ-9: WhatsApp actions */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <button
+          type="button"
+          className="inline-flex items-center justify-center rounded-md border bg-background px-4 py-2 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+          data-testid="whatsapp-send"
+          onClick={() => {
+            const text = buildPendingWhatsAppMessage({
+              booking,
+              bookingIdFallback: bookingId,
+              shareSummary,
+            });
+            openWhatsAppWithText(text);
+          }}
+          disabled={!shareSummary}
+          title="WhatsApp mesajı oluştur"
+        >
+          WhatsApp&apos;a Gönder
+        </button>
+
+        <button
+          type="button"
+          className="inline-flex items-center justify-center rounded-md border bg-background px-4 py-2 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+          data-testid="whatsapp-resend"
+          onClick={() => {
+            const text = buildPendingWhatsAppMessage({
+              booking,
+              bookingIdFallback: bookingId,
+              shareSummary,
+            });
+            openWhatsAppWithText(text);
+          }}
+          disabled={!shareSummary}
+          title="Aynı mesajı tekrar aç"
+        >
+          Tekrar Gönder
+        </button>
+      </div>
 
       <div className="rounded-2xl border-2 border-amber-500/40 bg-gradient-to-br from-amber-500/10 to-amber-500/5 p-8">
         <div className="flex flex-col items-center text-center gap-4">

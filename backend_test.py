@@ -1765,7 +1765,7 @@ class FAZ101IntegrationSyncTester:
 
 
 class FAZ8BookingSubmitIntentTester:
-    def __init__(self, base_url="https://arch-review-7.preview.emergentagent.com"):
+    def __init__(self, base_url="http://localhost:8001"):
         self.base_url = base_url
         self.agency_token = None
         self.tests_run = 0

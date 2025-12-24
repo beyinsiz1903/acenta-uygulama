@@ -846,8 +846,7 @@ export default function AdminMetricsPage() {
                 : `Son ${normalizedPeriod.days} gün`}
             </div>
 
-        {/* CSV Export Buttons (FAZ-12.1) */}
-        <div className="mt-4 flex flex-wrap gap-2">
+            <div className="mt-4 space-y-2">
           <button
             type="button"
             className="h-8 rounded-md border bg-background px-3 text-xs"

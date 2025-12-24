@@ -389,43 +389,90 @@ export default function AdminMetricsPage() {
         </div>
       </div>
 
-      {/* FAZ-11: Operational Insights */}
-      <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <StatCard
-          title="⏳ Yavaş Onaylar"
-          value={queues?.slow_pending?.length || 0}
-          subtitle="24+ saat bekliyor"
-          testId="metrics-insight-slow-count"
-        />
-        <StatCard
-          title="📝 Notlu Talepler"
-          value={queues?.noted_pending?.length || 0}
-          subtitle="not içeren pending"
-          testId="metrics-insight-noted-count"
-        />
-        <StatCard
-          title="📈 Dönüşüm Oranı"
-          value={`%${funnel?.conversion_pct || 0}`}
-          subtitle={`${funnel?.confirmed || 0} / ${funnel?.total || 0} confirmed`}
-          testId="metrics-funnel-conversion"
-        />
+      {/* FAZ-13: High-level tabs (below CSV export) */}
+      <div className="mt-6 border-b flex items-center gap-2 text-sm">
+        <button
+          type="button"
+          className={`px-3 py-2 -mb-px border-b-2 ${
+            activeTab === "overview"
+              ? "border-primary text-primary font-medium"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+          }`}
+          onClick={() => setActiveTab("overview")}
+          data-testid="metrics-tab-overview"
+        >
+          Genel Bakış
+        </button>
+        <button
+          type="button"
+          className={`px-3 py-2 -mb-px border-b-2 ${
+            activeTab === "queues"
+              ? "border-primary text-primary font-medium"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+          }`}
+          onClick={() => setActiveTab("queues")}
+          data-testid="metrics-tab-detailed-queues"
+        >
+          Detailed Queues
+        </button>
+        <button
+          type="button"
+          className="px-3 py-2 -mb-px border-b-2 border-transparent text-muted-foreground cursor-not-allowed"
+          disabled
+          data-testid="metrics-tab-conversion"
+        >
+          Conversion (yakında)
+        </button>
+        <button
+          type="button"
+          className="px-3 py-2 -mb-px border-b-2 border-transparent text-muted-foreground cursor-not-allowed"
+          disabled
+          data-testid="metrics-tab-hotels"
+        >
+          Hotels Performance (yakında)
+        </button>
       </div>
 
-      {/* FAZ-11: Action Queue Table */}
-      {queues && (queues.slow_pending?.length > 0 || queues.noted_pending?.length > 0) && (
-        <div className="mt-5 rounded-xl border bg-card p-4">
-          <div className="flex items-center gap-3 border-b pb-3">
-            <button
-              type="button"
-              className={`px-3 py-1.5 text-sm font-medium rounded-md ${
-                activeTab === "slow"
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-              onClick={() => setActiveTab("slow")}
-            >
-              ⏳ Yavaş Onaylar ({queues.slow_pending?.length || 0})
-            </button>
+      {/* Tab: Overview (existing content) */}
+      {activeTab === "overview" && (
+        <>
+          {/* FAZ-11: Operational Insights */}
+          <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <StatCard
+              title="⏳ Yavaş Onaylar"
+              value={queues?.slow_pending?.length || 0}
+              subtitle="24+ saat bekliyor"
+              testId="metrics-insight-slow-count"
+            />
+            <StatCard
+              title="📝 Notlu Talepler"
+              value={queues?.noted_pending?.length || 0}
+              subtitle="not içeren pending"
+              testId="metrics-insight-noted-count"
+            />
+            <StatCard
+              title="📈 Dönüşüm Oranı"
+              value={`%${funnel?.conversion_pct || 0}`}
+              subtitle={`${funnel?.confirmed || 0} / ${funnel?.total || 0} confirmed`}
+              testId="metrics-funnel-conversion"
+            />
+          </div>
+
+          {/* FAZ-11: Action Queue Table */}
+          {queues && (queues.slow_pending?.length > 0 || queues.noted_pending?.length > 0) && (
+            <div className="mt-5 rounded-xl border bg-card p-4">
+              <div className="flex items-center gap-3 border-b pb-3">
+                <button
+                  type="button"
+                  className={`px-3 py-1.5 text-sm font-medium rounded-md ${
+                    activeQueueTab === "slow"
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                  onClick={() => setActiveQueueTab("slow")}
+                >
+                  ⏳ Yavaş Onaylar ({queues.slow_pending?.length || 0})
+                </button>
             <button
               type="button"
               className={`px-3 py-1.5 text-sm font-medium rounded-md ${

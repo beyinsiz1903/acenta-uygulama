@@ -273,6 +273,7 @@ export default function HotelBookingsPage() {
   }
 
   return (
+    <div className="space-y-6">
       {selectedForHeader && (
         <>
           <BookingReferenceBanner

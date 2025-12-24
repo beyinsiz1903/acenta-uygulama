@@ -162,7 +162,7 @@ function DetailedQueuesTable({ activeQueueTab, normalizedQueues, dqHotel, dqMinA
     );
   }
 
-  if (filtered.length === 0) {
+  if (!filtered || filtered.length === 0) {
     return (
       <div className="mt-4 rounded-xl border bg-card p-6 text-center text-sm text-muted-foreground">
         Bu filtrelerle sonuç bulunamadı.

@@ -178,6 +178,8 @@ export default function AdminMetricsPage() {
     setFollowedBookings(followed);
   }, []);
 
+  const normalizedPeriod = useMemo(() => normalizePeriod(overview, appliedRange.days || 7), [overview, appliedRange]);
+
   // FAZ-11: Toggle follow status
   function toggleFollow(bookingId) {
     const key = `admin_follow_booking:${bookingId}`;
@@ -189,106 +191,7 @@ export default function AdminMetricsPage() {
         const next = new Set(prev);
         next.delete(bookingId);
         return next;
-  const normalizedPeriod = useMemo(() => normalizePeriod(overview, appliedRange.days || 7), [overview, appliedRange]);
-
-
       });
-      {/* Date Range Controls (FAZ-12.1) */}
-      <div className="mt-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-        <div className="text-xs text-muted-foreground">
-          <div>
-            Dönem: {normalizedPeriod.start && normalizedPeriod.end
-              ? `${normalizedPeriod.start} → ${normalizedPeriod.end}`
-              : `Son ${normalizedPeriod.days} gün`}
-          </div>
-          <div data-testid="metrics-last-updated">
-            Son güncelleme: {lastUpdated ? new Date(lastUpdated).toLocaleString() : "—"}
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-            <span>Preset:</span>
-            {[7, 14, 30, 90].map((d) => (
-              <button
-                key={d}
-                type="button"
-                className={`px-2 py-1 rounded border text-xs ${
-                  presetDays === d ? "bg-primary text-primary-foreground" : "bg-background hover:bg-muted"
-                }`}
-                onClick={() => {
-                  setRangeMode("preset");
-                  setPresetDays(d);
-                  const next = { mode: "preset", days: d };
-                  setAppliedRange(next);
-                  void load(next);
-                }}
-              >
-                {d}g
-              </button>
-            ))}
-          </div>
-
-          <div className="flex items-center gap-2 text-xs">
-            <span>Custom:</span>
-            <input
-              type="date"
-              className="h-8 rounded-md border bg-background px-2 text-xs"
-              value={startDate}
-              onChange={(e) => {
-                setRangeMode("custom");
-                setStartDate(e.target.value);
-              }}
-              data-testid="metrics-range-start"
-            />
-            <span>-</span>
-            <input
-              type="date"
-              className="h-8 rounded-md border bg-background px-2 text-xs"
-              value={endDate}
-              onChange={(e) => {
-                setRangeMode("custom");
-                setEndDate(e.target.value);
-              }}
-              data-testid="metrics-range-end"
-            />
-            <button
-              type="button"
-              className="h-8 rounded-md border bg-background px-2 text-xs"
-              onClick={() => {
-                if (startDate && endDate) {
-                  const next = { mode: "custom", start: startDate, end: endDate };
-                  setAppliedRange(next);
-                  void load(next);
-                }
-              }}
-              disabled={!startDate || !endDate || loading}
-              data-testid="metrics-range-apply"
-            >
-              Uygula
-            </button>
-            <button
-              type="button"
-              className="h-8 rounded-md border bg-background px-2 text-xs"
-              onClick={() => {
-                setStartDate("");
-                setEndDate("");
-                setRangeMode("preset");
-                const next = { mode: "preset", days: 7 };
-                setPresetDays(7);
-                setAppliedRange(next);
-                void load(next);
-              }}
-              disabled={loading}
-              data-testid="metrics-range-clear"
-            >
-              Temizle
-            </button>
-          </div>
-        </div>
-      </div>
-
-
     } else {
       localStorage.setItem(key, "1");
       setFollowedBookings((prev) => new Set(prev).add(bookingId));

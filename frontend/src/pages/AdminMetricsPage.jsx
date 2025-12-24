@@ -838,6 +838,85 @@ export default function AdminMetricsPage() {
               (queues.noted_pending || []).forEach((b) => {
                 rows.push({
                   queue_type: "noted_pending",
+
+function DetailedQueuesTable({ activeQueueTab, normalizedQueues, dqHotel, dqMinAge, dqHasNote, dqSearch }) {
+  const baseItems = activeQueueTab === "slow" ? normalizedQueues.slow : normalizedQueues.noted;
+  const filtered = applyQueueFilters(baseItems, {
+    hotel: dqHotel,
+    minAge: dqMinAge,
+    hasNote: dqHasNote,
+    search: dqSearch,
+  });
+
+  if (!baseItems || baseItems.length === 0) {
+    return (
+      <div className="mt-4 rounded-xl border bg-card p-6 text-center text-sm text-muted-foreground">
+        Bu kategoride henüz kayıt yok.
+      </div>
+    );
+  }
+
+  if (filtered.length === 0) {
+    return (
+      <div className="mt-4 rounded-xl border bg-card p-6 text-center text-sm text-muted-foreground">
+        Bu filtrelerle sonuç bulunamadı.
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-4 rounded-xl border bg-card p-4 overflow-x-auto">
+      <div className="mb-2 text-xs text-muted-foreground">
+        {filtered.length} kayıt listeleniyor
+      </div>
+      <table className="w-full text-sm" data-testid="metrics-dq-table">
+        <thead>
+          <tr className="border-b">
+            <th className="text-left py-2 px-2 font-medium">Hotel</th>
+            <th className="text-left py-2 px-2 font-medium">Booking ID</th>
+            <th className="text-left py-2 px-2 font-medium">Yaş (saat)</th>
+            <th className="text-left py-2 px-2 font-medium">Not</th>
+          </tr>
+        </thead>
+        <tbody>
+          {filtered.map((b) => {
+            const hotelId = b.hotel_id || b.hotelId || "";
+            const hotelName = b.hotel_name || b.hotelName || hotelId;
+            const age = Number(b.age_hours ?? b.ageHours ?? 0);
+            const hasNote = Boolean(b.has_note ?? b.hasNote);
+
+            return (
+              <tr key={b.booking_id || b.bookingId} className="border-b last:border-0 hover:bg-muted/50">
+                <td className="py-2 px-2">
+                  <div className="font-medium truncate max-w-[180px]">{hotelName}</div>
+                  <div className="text-xs text-muted-foreground">{hotelId}</div>
+                </td>
+                <td className="py-2 px-2">
+                  <span className="font-mono text-xs truncate max-w-[120px] inline-block">
+                    {String(b.booking_id || b.bookingId)}
+                  </span>
+                </td>
+                <td className="py-2 px-2">
+                  <span className={age > 48 ? "text-destructive font-semibold" : ""}>{age.toFixed(1)}h</span>
+                </td>
+                <td className="py-2 px-2">
+                  {hasNote ? (
+                    <span className="inline-flex items-center rounded-full bg-amber-500/10 px-2 py-0.5 text-[11px] font-medium text-amber-700">
+                      Not var
+                    </span>
+                  ) : (
+                    <span className="text-[11px] text-muted-foreground">Yok</span>
+                  )}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
                   period_start: period.start || "",
                   period_end: period.end || "",
                   period_days: period.days,

@@ -98,8 +98,11 @@ export default function AdminMetricsPage() {
   // FAZ-11: Insights state
   const [queues, setQueues] = useState(null);
   const [funnel, setFunnel] = useState(null);
-  const [activeTab, setActiveTab] = useState("slow"); // "slow" | "noted"
+  const [activeQueueTab, setActiveQueueTab] = useState("slow"); // "slow" | "noted"
   const [followedBookings, setFollowedBookings] = useState(new Set());
+
+  // FAZ-13: high-level metrics tabs (overview, detailed queues, future: conversion, hotels)
+  const [activeTab, setActiveTab] = useState("overview"); // "overview" | "queues" | "conversion" | "hotels"
 
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");

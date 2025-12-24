@@ -82,12 +82,19 @@ function triggerCsvDownload(filename, csv) {
 }
 
 export default function AdminMetricsPage() {
-  const [daysOverview, setDaysOverview] = useState(7);
-  const [daysTrends, setDaysTrends] = useState(30);
-
   const [overview, setOverview] = useState(null);
   const [trends, setTrends] = useState(null);
-  
+
+  // Shared date range state (FAZ-12.1)
+  const [presetDays, setPresetDays] = useState(7); // UI preset selection
+  const [rangeMode, setRangeMode] = useState("preset"); // "preset" | "custom"
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [appliedRange, setAppliedRange] = useState({ mode: "preset", days: 7 });
+
+  // Last updated timestamp
+  const [lastUpdated, setLastUpdated] = useState(null);
+
   // FAZ-11: Insights state
   const [queues, setQueues] = useState(null);
   const [funnel, setFunnel] = useState(null);

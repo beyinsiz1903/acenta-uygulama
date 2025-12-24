@@ -551,7 +551,7 @@ test.describe("AdminMetricsPage smoke (FAZ-10)", () => {
 
 // ========== FAZ-12.1: Admin Metrics Date Range & CSV Smoke ==========
 
-test.describe("AdminMetricsPage FAZ-12.1 date-range & CSV smoke", () => {
+test.describe("AdminMetricsPage FAZ-12.1+13.2 metrics smoke", () => {
   test("T1 - date range controls & CSV buttons render and preset triggers fetch (mocked API)", async ({ page }) => {
     const TEST_ADMIN_METRICS_URL = process.env.TEST_ADMIN_METRICS_URL || "/app/admin/metrics";
 

@@ -554,7 +554,8 @@ export default function HotelBookingsPage() {
                     key={booking.id || booking.booking_id || booking._id}
                     className={`cursor-pointer hover:bg-accent/50 transition-colors ${isNew ? "bg-muted/30" : ""}`}
                     onClick={() => {
-                      setSelectedId(booking.id);
+                      const bookingKey = booking.id || booking.booking_id || booking._id;
+                      setSelectedId(bookingKey);
                       setDrawerOpen(true);
                       setSelectedForHeader(booking);
                     }}

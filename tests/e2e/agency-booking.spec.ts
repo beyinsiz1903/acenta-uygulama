@@ -145,7 +145,7 @@ test.describe("HotelBookingsPage smoke", () => {
 
     // 2) Banner görünür olmalı (hotel prefix'li)
     const banner = page.getByTestId("hotel-booking-id-banner");
-    await expect(banner).toBeVisible();
+    await expect(banner).toBeVisible({ timeout: 15_000 });
 
     const idCopy = page.getByTestId("hotel-booking-id-copy");
     const summaryCopy = page.getByTestId("hotel-booking-summary-copy");

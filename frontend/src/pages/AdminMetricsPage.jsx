@@ -367,7 +367,7 @@ export default function AdminMetricsPage() {
     };
   }, [overview]);
 
-  const topHotelsRaw = overview?.top_hotels || [];
+  const topHotels = overview?.top_hotels || [];
   const trendData = trends?.daily_trends || [];
 
   const normalizedQueues = useMemo(() => normalizeQueues(queues), [queues]);

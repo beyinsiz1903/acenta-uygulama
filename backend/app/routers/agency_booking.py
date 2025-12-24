@@ -178,6 +178,7 @@ async def get_booking_draft(draft_id: str, user=Depends(get_current_user)):
 
 class BookingSubmitIn(BaseModel):
     note_to_hotel: Optional[str] = None
+    intent: Optional[Literal["confirmed", "pending"]] = None
 
 
 @router.post("/{draft_id}/submit", dependencies=[Depends(require_roles(["agency_admin", "agency_agent"]))])

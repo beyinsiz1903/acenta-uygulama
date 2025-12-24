@@ -515,7 +515,9 @@ export default function AdminMetricsPage() {
         <div className="rounded-xl border bg-card p-4" data-testid="metrics-top-hotels">
           <div className="text-sm font-medium">🏨 En Çok Rezervasyon Alan Oteller</div>
           <div className="mt-1 text-xs text-muted-foreground">
-            Son {overview?.period_days ?? daysOverview} gün
+            {normalizedPeriod.start && normalizedPeriod.end
+              ? `${normalizedPeriod.start} → ${normalizedPeriod.end}`
+              : `Son ${normalizedPeriod.days} gün`}
           </div>
 
           <div className="mt-4 space-y-2">

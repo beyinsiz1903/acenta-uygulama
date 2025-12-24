@@ -548,6 +548,45 @@ test.describe("AdminMetricsPage smoke (FAZ-10)", () => {
     const seedBtn = page.getByTestId("metrics-seed-demo");
     await expect(seedBtn).toBeVisible();
   });
+
+// ========== FAZ-12.1: Admin Metrics Date Range & CSV Smoke ==========
+
+test.describe("AdminMetricsPage FAZ-12.1 date-range & CSV smoke", () => {
+  test("T1 - date range controls & CSV buttons render and preset triggers fetch", async ({ page }) => {
+    const TEST_ADMIN_METRICS_URL = process.env.TEST_ADMIN_METRICS_URL;
+    if (!TEST_ADMIN_METRICS_URL) test.skip();
+
+    await loginAsAdmin(page);
+
+    // Track overview requests
+    let lastOverviewUrl = "";
+    await page.route("**/api/admin/metrics/overview**", async (route) => {
+      lastOverviewUrl = route.request().url();
+      await route.continue();
+    });
+
+    await page.goto(`${BASE_URL}${TEST_ADMIN_METRICS_URL}`);
+    await page.waitForTimeout(2000);
+
+    // Date range inputs visible
+    await expect(page.getByTestId("metrics-range-start")).toBeVisible();
+    await expect(page.getByTestId("metrics-range-end")).toBeVisible();
+
+    // CSV buttons visible
+    await expect(page.getByTestId("metrics-export-overview")).toBeVisible();
+    await expect(page.getByTestId("metrics-export-trends")).toBeVisible();
+    await expect(page.getByTestId("metrics-export-queues")).toBeVisible();
+
+    // Click 14g preset button and ensure a new request is triggered with days=14
+    const preset14 = page.locator('button', { hasText: '14g' });
+    await preset14.click();
+    await page.waitForTimeout(1000);
+
+    expect(lastOverviewUrl).toContain("/api/admin/metrics/overview");
+    expect(lastOverviewUrl).toContain("days=14");
+  });
+});
+
 });
 
 

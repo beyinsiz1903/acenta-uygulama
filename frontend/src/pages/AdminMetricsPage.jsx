@@ -835,7 +835,7 @@ export default function AdminMetricsPage() {
                   has_note: b.has_note,
                 });
               });
-              (queues.noted_pending || []).forEach((b) => {
+              (queues?.noted_pending || []).forEach((b) => {
                 rows.push({
                   queue_type: "noted_pending",
 

@@ -7,35 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Badge } from "../components/ui/badge";
 import { formatMoney } from "../lib/format";
 import { statusInfo, badgeToneClass } from "../utils/bookingStatus";
-
-
-// Safe clipboard helper (modern API + fallback)
-async function copyText(text) {
-  try {
-    if (!text) return false;
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      await navigator.clipboard.writeText(String(text));
-      return true;
-    }
-  } catch {
-    // ignore and try fallback
-  }
-
-  try {
-    const ta = document.createElement("textarea");
-    ta.value = String(text ?? "");
-    ta.setAttribute("readonly", "");
-    ta.style.position = "absolute";
-    ta.style.left = "-9999px";
-    document.body.appendChild(ta);
-    ta.select();
-    const ok = document.execCommand("copy");
-    document.body.removeChild(ta);
-    return ok;
-  } catch {
-    return false;
-  }
-}
+import { safeCopyText } from "../utils/copyText";
+import { buildBookingShareSummary } from "../utils/bookingShareSummary";
+import { BookingReferenceBanner } from "../components/BookingReferenceBanner";
 
 export default function AgencyBookingConfirmedPage() {
   const { bookingId } = useParams();
@@ -45,8 +19,6 @@ export default function AgencyBookingConfirmedPage() {
   const [booking, setBooking] = useState(location.state?.booking || null);
   const [loading, setLoading] = useState(!booking);
   const [error, setError] = useState("");
-  const [copiedId, setCopiedId] = useState(false);
-  const [copiedSummary, setCopiedSummary] = useState(false);
   const [hotelNote, setHotelNote] = useState("");
 
   useEffect(() => {
@@ -128,45 +100,14 @@ export default function AgencyBookingConfirmedPage() {
 
   const { hotel_name, guest, rate_snapshot, status, stay, occupancy, confirmed_at } = booking;
 
-  const referenceId = booking?.id || bookingId || "";
   const noteStorageKey =
     booking?.id || bookingId ? `agency_booking_hotel_note:${booking?.id || bookingId}` : "";
 
-  const paxTotal = (occupancy?.adults || 0) + (occupancy?.children || 0);
-
-  const dateRangeText =
-    stay?.check_in && stay?.check_out
-      ? `${stay.check_in} → ${stay.check_out}`
-      : "";
-
-  const hotelNoteClean = (hotelNote || "").trim();
-  const hotelNoteLine = hotelNoteClean ? `Not: ${hotelNoteClean}` : null;
-
-  const roomLine =
-    booking?.rate_snapshot?.room_type_name
-      ? `Oda: ${booking.rate_snapshot.room_type_name}`
-      : null;
-
-  const planLine =
-    booking?.rate_snapshot?.rate_plan_name
-      ? `Plan: ${booking.rate_snapshot.rate_plan_name}`
-      : null;
-
-  const shareSummary = [
-    "✅ Rezervasyon Özeti",
-    referenceId ? `Referans: ${referenceId}` : null,
-    hotel_name ? `Otel: ${hotel_name}` : null,
-    dateRangeText ? `Tarih: ${dateRangeText}` : null,
-    paxTotal ? `Kişi: ${paxTotal}` : null,
-    roomLine,
-    planLine,
-    typeof rate_snapshot?.price?.total === "number"
-      ? `Tutar: ${formatMoney(rate_snapshot.price.total, rate_snapshot.price.currency || "TRY")}`
-      : null,
-    hotelNoteLine,
-  ]
-    .filter(Boolean)
-    .join("\n");
+  const shareSummary = buildBookingShareSummary({
+    booking,
+    bookingIdFallback: bookingId,
+    hotelNote,
+  });
 
   const total = rate_snapshot?.price?.total;
   const currency = rate_snapshot?.price?.currency;
@@ -177,6 +118,9 @@ export default function AgencyBookingConfirmedPage() {
     rate_snapshot?.commission_percent ??
     rate_snapshot?.commission_pct;
   const netAmount = rate_snapshot?.net_amount ?? rate_snapshot?.net_total ?? rate_snapshot?.net;
+
+  const referenceId = booking?.id || bookingId || "";
+  const hotelNoteClean = (hotelNote || "").trim();
 
   function buildWhatsAppMessage() {
     const lines = [];
@@ -280,66 +224,11 @@ export default function AgencyBookingConfirmedPage() {
 
   return (
     <div className="space-y-6">
-      {/* Booking ID Banner */}
-      <div
-        className="rounded-xl border bg-muted/40 px-4 py-3 flex items-center justify-between gap-3"
-        data-testid="booking-id-banner"
-      >
-        <div className="min-w-0">
-          <div className="text-xs text-muted-foreground">Rezervasyon ID</div>
-          <div className="truncate font-mono text-sm">
-            {booking?.id || bookingId || "-"}
-          </div>
-          {booking?.hotel_extranet_url && (
-            <div className="mt-1">
-              <a
-                href={booking.hotel_extranet_url}
-                target="_blank"
-                rel="noreferrer"
-                className="text-[11px] underline text-muted-foreground"
-                data-testid="open-hotel-extranet"
-              >
-                Otel panelinde aç
-              </a>
-            </div>
-          )}
-        </div>
-        <div className="shrink-0 flex items-center gap-2">
-          <button
-            type="button"
-            className="inline-flex items-center justify-center rounded-md border bg-background px-3 py-2 text-xs font-medium"
-            data-testid="booking-id-copy"
-            onClick={async () => {
-              const id = booking?.id || bookingId;
-              const ok = await copyText(id);
-              setCopiedId(ok);
-              if (ok) {
-                window.setTimeout(() => setCopiedId(false), 1200);
-              }
-            }}
-            disabled={!(booking?.id || bookingId)}
-          >
-            {copiedId ? "Kopyalandı" : "Kopyala"}
-          </button>
-
-          <button
-            type="button"
-            className="inline-flex items-center justify-center rounded-md border bg-background px-3 py-2 text-xs font-medium"
-            data-testid="booking-summary-copy"
-            onClick={async () => {
-              const ok = await copyText(shareSummary);
-              setCopiedSummary(ok);
-              if (ok) {
-                window.setTimeout(() => setCopiedSummary(false), 1200);
-              }
-            }}
-            disabled={!shareSummary}
-            title="Paylaşılabilir özeti kopyala"
-          >
-            {copiedSummary ? "Kopyalandı" : "Özeti Kopyala"}
-          </button>
-        </div>
-      </div>
+      <BookingReferenceBanner
+        bookingId={booking?.id || bookingId}
+        extranetUrl={booking?.hotel_extranet_url}
+        shareSummary={shareSummary}
+      />
 
       {/* Hotel Note */}
       <div className="rounded-xl border bg-background p-4">

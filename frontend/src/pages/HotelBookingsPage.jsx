@@ -86,6 +86,42 @@ export default function HotelBookingsPage() {
   const [actionBooking, setActionBooking] = useState(null);
   const [rejectReason, setRejectReason] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
+  const [selectedForHeader, setSelectedForHeader] = useState(null);
+  const [hotelNote, setHotelNote] = useState("");
+
+  const noteStorageKey =
+    selectedForHeader?.id || selectedForHeader?.booking_id || selectedForHeader?._id
+      ? `hotel_booking_note:${selectedForHeader.id || selectedForHeader.booking_id || selectedForHeader._id}`
+      : "";
+
+  useEffect(() => {
+    if (!noteStorageKey) return;
+    try {
+      const saved = localStorage.getItem(noteStorageKey);
+      if (saved != null && saved !== hotelNote) {
+        setHotelNote(saved);
+      }
+    } catch {
+      // ignore
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [noteStorageKey]);
+
+  useEffect(() => {
+    if (!noteStorageKey) return;
+    try {
+      const v = (hotelNote || "").trim();
+      if (!v) {
+        localStorage.removeItem(noteStorageKey);
+        return;
+      }
+      localStorage.setItem(noteStorageKey, v);
+    } catch {
+      // ignore
+    }
+  }, [noteStorageKey, hotelNote]);
+
+
 
 
   const todayArrivals = bookings.filter((b) => (b.stay || {}).check_in === todayStr).length;

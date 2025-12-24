@@ -9288,6 +9288,10 @@ def main():
             tester = FAZ10HotelIntegrationsTester()
             exit_code = tester.run_faz10_tests()
             sys.exit(exit_code)
+        elif sys.argv[1] == "faz8":
+            tester = FAZ8BookingSubmitIntentTester()
+            exit_code = tester.run_faz8_tests()
+            sys.exit(exit_code)
         elif sys.argv[1] == "faz101":
             tester = FAZ101IntegrationSyncTester()
             exit_code = tester.run_faz101_tests()

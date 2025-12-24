@@ -45,6 +45,10 @@ export default function AgencyBookingPendingPage() {
   // FAZ-9: pending note (localStorage)
   const [pendingNote, setPendingNote] = useState("");
 
+  // FAZ-9: localStorage key
+  const referenceId = booking?.id || bookingId || "";
+  const noteStorageKey = referenceId ? `agency_pending_note:${referenceId}` : "";
+
   useEffect(() => {
     if (booking) return;
     if (!bookingId) {
@@ -67,6 +71,34 @@ export default function AgencyBookingPendingPage() {
 
     void load();
   }, [booking, bookingId]);
+
+  // FAZ-9: load note for this booking
+  useEffect(() => {
+    if (!noteStorageKey) return;
+    try {
+      const saved = localStorage.getItem(noteStorageKey);
+      if (saved != null && saved !== pendingNote) {
+        setPendingNote(saved);
+      }
+    } catch {
+      // ignore
+    }
+  }, [noteStorageKey, pendingNote]);
+
+  // FAZ-9: persist note
+  useEffect(() => {
+    if (!noteStorageKey) return;
+    try {
+      const v = (pendingNote || "").trim();
+      if (!v) {
+        localStorage.removeItem(noteStorageKey);
+        return;
+      }
+      localStorage.setItem(noteStorageKey, v);
+    } catch {
+      // ignore
+    }
+  }, [noteStorageKey, pendingNote]);
 
   if (loading) {
     return (

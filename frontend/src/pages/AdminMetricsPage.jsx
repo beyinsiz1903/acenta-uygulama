@@ -10,6 +10,77 @@ function formatHours(v) {
   return `${n.toFixed(2)} saat`;
 }
 
+function normalizePeriod(overview, fallbackDays) {
+  const period = overview?.period;
+  if (period && typeof period.days === "number") {
+    return {
+      start: period.start || null,
+      end: period.end || null,
+      days: period.days,
+    };
+  }
+
+  // Backward compatibility: older responses may only have period_days
+  const days = overview?.period_days ?? fallbackDays ?? 7;
+  return {
+    start: null,
+    end: null,
+    days,
+  };
+}
+
+function buildMetricsQuery(range) {
+  if (!range) {
+    return "?days=7";
+  }
+
+  if (range.mode === "custom" && range.start && range.end) {
+    return `?start=${range.start}&end=${range.end}`;
+  }
+
+  const days = range.days || 7;
+  return `?days=${days}`;
+}
+
+function toCsv(fieldnames, rows) {
+  if (!rows || rows.length === 0) return "";
+
+  const escape = (value) => {
+    if (value == null) return "";
+    const str = String(value);
+    if (str.includes(";") || str.includes("\"") || str.includes("\n")) {
+      return `"${str.replace(/"/g, '""')}"`;
+    }
+    return str;
+  };
+
+  const header = fieldnames.join(";");
+  const body = rows
+    .map((row) => fieldnames.map((name) => escape(row[name])).join(";"))
+    .join("\n");
+
+  return `${header}\n${body}`;
+}
+
+function triggerCsvDownload(filename, csv) {
+  if (!csv) return;
+  try {
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  } catch (e) {
+    // Best-effort; CSV export is non-critical
+    // eslint-disable-next-line no-console
+    console.error("CSV export failed", e);
+  }
+}
+
 export default function AdminMetricsPage() {
   const [daysOverview, setDaysOverview] = useState(7);
   const [daysTrends, setDaysTrends] = useState(30);

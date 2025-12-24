@@ -16,6 +16,12 @@ export default function AdminMetricsPage() {
 
   const [overview, setOverview] = useState(null);
   const [trends, setTrends] = useState(null);
+  
+  // FAZ-11: Insights state
+  const [queues, setQueues] = useState(null);
+  const [funnel, setFunnel] = useState(null);
+  const [activeTab, setActiveTab] = useState("slow"); // "slow" | "noted"
+  const [followedBookings, setFollowedBookings] = useState(new Set());
 
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");

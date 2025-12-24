@@ -489,7 +489,7 @@ export default function AdminMetricsPage() {
           <div className="mt-4 overflow-x-auto">
             <table
               className="w-full text-sm"
-              data-testid={activeTab === "slow" ? "metrics-queue-slow-table" : "metrics-queue-noted-table"}
+              data-testid={activeQueueTab === "slow" ? "metrics-queue-slow-table" : "metrics-queue-noted-table"}
             >
               <thead>
                 <tr className="border-b">

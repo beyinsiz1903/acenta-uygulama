@@ -124,11 +124,16 @@ export default function AgencyBookingPendingPage() {
     );
   }
 
-  const shareSummary = buildBookingShareSummary({
+  // FAZ-9: shareSummary with "Durum: Beklemede" + pendingNote
+  const shareSummaryBase = buildBookingShareSummary({
     booking,
     bookingIdFallback: bookingId,
-    hotelNote: "",
+    hotelNote: pendingNote,
   });
+
+  const shareSummary = shareSummaryBase
+    ? `Durum: Beklemede\n${shareSummaryBase}`
+    : "";
 
   return (
     <div className="space-y-6">

@@ -257,6 +257,17 @@
 ##     files: ["/app/backend/app/seed.py"]
 ##     needs_retesting: false
 ##     comment: "Seed artık org içinde ürün/müşteri yoksa demo veri ekliyor; demo ürün için rate plan ve 60 günlük inventory oluşturuyor. Amaç: Rezervasyon form dropdown'larının boş kalmaması ve side-drawer canlı test. Backend testleri ile doğrulandı." 
+##   - task: "FAZ-12.1 AdminMetricsPage - date range + period normalize + CSV + smoke test"
+##     implemented: true
+##     working: "NA"
+##     files: ["/app/frontend/src/pages/AdminMetricsPage.jsx", "/app/tests/e2e/agency-booking.spec.ts"]
+##     stuck_count: 0
+##     priority: "high"
+##     needs_retesting: true
+##     status_history:
+##       - working: "NA"
+##         agent: "main"
+##         comment: "AdminMetricsPage'e FAZ-12.1 kapsamında tarih aralığı desteği eklendi: normalizePeriod() helper ile backend'in yeni period {start,end,days} alanı okunuyor, eski period_days şekline backward compatible. buildMetricsQuery() ile preset (days=X) veya custom (start&end) query string'leri üretiliyor. UI'ya preset (7/14/30/90), custom date picker, Apply/Clear butonları ve 'Last updated' etiketi eklendi. Overview/Trends/Queues için frontend-only CSV export butonları (metrics-export-*) eklendi. Yeni Playwright smoke testi: tarih alanları + CSV butonları görünür, 14g preset'e tıklanınca overview isteği ?days=14 ile gidiyor."
 
 ## backend:
 ##   - task: "Phase-1 multi-tenant omurga (agencies/hotels/agency_hotel_links) + RBAC role normalization + /api/admin + /api/agency/hotels"

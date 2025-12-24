@@ -958,7 +958,7 @@ test.describe("AdminMetricsPage FAZ-12.1+13.2 metrics smoke", () => {
 
     await page.getByTestId("metrics-tab-detailed-queues").click();
 
-    await expect(page.getByTestId("metrics-export-queues-filtered")).toBeVisible();
+    await expect(page.getByTestId("metrics-export-queues-filtered").first()).toBeVisible();
   });
 });
 

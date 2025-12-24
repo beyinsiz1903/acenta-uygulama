@@ -79,6 +79,46 @@ export default function AdminMetricsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [daysOverview, daysTrends]);
 
+  // FAZ-11: Load followed bookings from localStorage
+  useEffect(() => {
+    const followed = new Set();
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith("admin_follow_booking:")) {
+        const bookingId = key.replace("admin_follow_booking:", "");
+        followed.add(bookingId);
+      }
+    }
+    setFollowedBookings(followed);
+  }, []);
+
+  // FAZ-11: Toggle follow status
+  function toggleFollow(bookingId) {
+    const key = `admin_follow_booking:${bookingId}`;
+    const isFollowed = followedBookings.has(bookingId);
+
+    if (isFollowed) {
+      localStorage.removeItem(key);
+      setFollowedBookings((prev) => {
+        const next = new Set(prev);
+        next.delete(bookingId);
+        return next;
+      });
+    } else {
+      localStorage.setItem(key, "1");
+      setFollowedBookings((prev) => new Set(prev).add(bookingId));
+    }
+  }
+
+  // FAZ-11: WhatsApp follow message
+  function openWhatsAppFollow(booking) {
+    const hotelName = booking.hotel_name || booking.hotel_id || "Otel";
+    const ageHours = booking.age_hours || 0;
+    const message = `🔔 Takip: ${booking.booking_id}\n🏨 ${hotelName}\n⏱️ ${ageHours.toFixed(1)} saat bekliyor`;
+    const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    window.open(url, "_blank", "noopener,noreferrer");
+  }
+
   const cards = useMemo(() => {
     const b = overview?.bookings || {};
     return {

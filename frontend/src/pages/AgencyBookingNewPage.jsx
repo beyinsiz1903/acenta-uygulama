@@ -101,7 +101,7 @@ export default function AgencyBookingNewPage() {
       console.log("[BookingDraft] Draft created:", draft.id);
       toast.success("Rezervasyon taslağı oluşturuldu");
 
-      if (submitMode === "pending") {
+      if (mode === "pending") {
         try {
           const submitResp = await api.post(`/agency/bookings/${draft.id}/submit`, {
             intent: submitMode,

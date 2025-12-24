@@ -700,23 +700,6 @@ export default function AdminMetricsPage() {
         </>
       )}
 
-      {/* Tab: Detailed Queues */}
-      {activeTab === "queues" && (
-        <div className="mt-5">
-          <div className="text-lg font-semibold mb-4">Detailed Queue Analysis</div>
-          <div className="text-sm text-muted-foreground mb-4">
-            Bu sekme gelecekte daha detaylı queue analizi içerecek.
-          </div>
-          
-          {/* Placeholder content for detailed queues */}
-          <div className="rounded-xl border bg-card p-6 text-center">
-            <div className="text-muted-foreground">
-              🚧 Detailed Queues analizi yakında eklenecek
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Tab: Overview (existing content) - Charts and Hotels */}
       {activeTab === "overview" && (
         <div className="mt-4 grid grid-cols-1 lg:grid-cols-3 gap-3">

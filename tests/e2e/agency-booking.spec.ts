@@ -496,19 +496,19 @@ async function loginAsAdmin(page: Page) {
   await page.goto(`${BASE_URL}/login`);
 
   // Clear and fill email
-  const emailInput = page.getByTestId("login-email-input");
+  const emailInput = page.getByTestId("login-email");
   await emailInput.click();
   await emailInput.fill("");
   await emailInput.fill(ADMIN_EMAIL);
 
   // Fill password
-  const passwordInput = page.getByTestId("login-password-input");
+  const passwordInput = page.getByTestId("login-password");
   await passwordInput.click();
   await passwordInput.fill("");
   await passwordInput.fill(ADMIN_PASSWORD);
 
   // Submit
-  await page.getByTestId("login-submit-button").click();
+  await page.getByTestId("login-submit").click();
 
   // Wait for admin route
   await page.waitForURL("**/app/admin/**", { timeout: 15_000 });

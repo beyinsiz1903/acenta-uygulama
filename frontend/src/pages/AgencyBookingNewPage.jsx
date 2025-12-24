@@ -341,62 +341,44 @@ export default function AgencyBookingNewPage() {
               </div>
             )}
 
-            {/* Gönderim tipi toggle */}
-            <div className="rounded-lg border bg-muted/40 p-3 space-y-2">
-              <div className="text-xs font-medium text-muted-foreground">Gönderim tipi</div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  className={`w-full rounded-md border px-3 py-2 text-left text-xs ${
-                    submitMode === "confirmed"
-                      ? "border-primary bg-primary/5"
-                      : "border-border bg-background"
-                  }`}
-                  data-testid="submit-mode-confirmed"
-                  onClick={() => setSubmitMode("confirmed")}
-                >
-                  <div className="font-medium text-foreground">Oluştur & Gönder (Onaylı)</div>
-                  <div className="text-[11px] text-muted-foreground">
-                    Rezervasyon hemen onaylanır ve otele iletilir.
-                  </div>
-                </button>
+            {/* Gönderim aksiyonları */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button
+                type="button"
+                disabled={loading}
+                className="w-full sm:w-auto gap-2"
+                data-testid="wizard-submit-pending"
+                onClick={() => submitDraft("pending")}
+              >
+                {loading && loadingMode === "pending" && (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                )}
+                {loading && loadingMode === "pending"
+                  ? "Gönderiliyor..."
+                  : "Otele Gönder (Beklemede)"}
+              </Button>
 
-                <button
-                  type="button"
-                  className={`w-full rounded-md border px-3 py-2 text-left text-xs ${
-                    submitMode === "pending"
-                      ? "border-primary bg-primary/5"
-                      : "border-border bg-background"
-                  }`}
-                  data-testid="submit-mode-pending"
-                  onClick={() => setSubmitMode("pending")}
-                >
-                  <div className="font-medium text-foreground">Otele Gönder (Beklemede)</div>
-                  <div className="text-[11px] text-muted-foreground">
-                    Otel onayı bekleyen rezervasyon talebi oluşturur.
-                  </div>
-                </button>
-              </div>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={loading}
+                className="w-full sm:w-auto gap-2"
+                data-testid="wizard-submit-confirmed"
+                onClick={() => submitDraft("confirmed")}
+              >
+                {loading && loadingMode === "confirmed" && (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                )}
+                {loading && loadingMode === "confirmed"
+                  ? "Gönderiliyor..."
+                  : "Oluştur & Gönder (Onaylı)"}
+              </Button>
             </div>
-
-            <Button
-              type="submit"
-              disabled={loading}
-              className="w-full gap-2"
-              data-testid="booking-wizard-create-send"
-            >
-              {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-              {loading
-                ? "Gönderiliyor..."
-                : submitMode === "pending"
-                  ? "Otele Gönder (Beklemede)"
-                  : "Oluştur & Gönder"}
-            </Button>
 
             <p className="text-xs text-muted-foreground text-center mt-1">
               Rezervasyonu gönderdikten sonra otele iletilir; durumunu Rezervasyonlarım ekranından takip edebilirsiniz.
               <span className="block mt-1" data-testid="booking-wizard-shortcut-hint">
-                Kısayol: <span className="font-mono">Ctrl/⌘ + Enter</span>
+                Kısayol: <span className="font-mono">Ctrl/⌘ + Enter</span> (Otele Gönder - Beklemede)
               </span>
             </p>
           </form>

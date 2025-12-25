@@ -457,6 +457,18 @@
         agent: "testing"
         comment: "✅ FAZ-8 BOOKING SUBMIT INTENT TEST COMPLETE - All 14 test scenarios passed (100% success rate). CRITICAL FUNCTIONALITY VERIFIED: A) FAZ-2 Regression Tests: Agency login successful (agency1@demo.test/agency123), search and draft creation working, submit without body working (creates pending booking with approval deadline), submit with note_to_hotel only working (note persisted correctly). B) Intent Field Tolerance: intent='pending' field accepted and parsed (no behavior change as expected), intent='confirmed' field accepted and parsed (still creates pending booking, no special behavior yet), combined note_to_hotel + intent working correctly. C) Backward Compatibility: BookingSubmitIn schema accepts optional intent field, existing FAZ-2 flow unaffected (empty body and note-only submissions work), all submissions create pending bookings with proper status and approval_deadline_at. D) Idempotency: Same draft returns same booking ID when submitted multiple times, draft.submitted_booking_id properly maintained. E) Field Parsing: Intent field parsed as _intent variable in code (line 233), no branching logic implemented yet (as requested), field validation working (accepts 'pending'|'confirmed' values). All FAZ-8 minimal backend changes production-ready with full backward compatibility maintained."
 
+  - task: "FAZ-D Web Booking Public Endpoint - /api/web/bookings implementation and testing"
+    implemented: true
+    working: true
+    file: "/app/backend/app/routers/web_booking.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ FAZ-D WEB BOOKING TEST COMPLETE - All 12 test scenarios passed (100% success rate). CRITICAL FUNCTIONALITY VERIFIED: A) Happy Path Web Booking Creation: Admin login successful (admin@acenta.test/admin123), hotel ID retrieved from admin/hotels endpoint, POST /api/web/bookings working without authentication (public endpoint), booking created with correct structure (id, hotel_id, status=pending, source=web, guest details), all required fields populated correctly (check_in/out dates, adults/children, price_total, currency, guest info). B) Validation Error Handling: Invalid date range (check_out < check_in) correctly rejected with 422 INVALID_DATE_RANGE, invalid price (price_total <= 0) correctly rejected with 422 Pydantic validation, invalid email format correctly rejected with 422 EmailStr validation, all validation working as expected. C) Hotel Panel Integration: Hotel admin login successful (hoteladmin@acenta.test/admin123), GET /api/hotel/bookings?status=pending working correctly, web booking appears in hotel panel with proper source=web and status=pending, booking details correctly displayed (guest name, hotel_id match), hotel panel can see and manage web bookings. D) AdminMetrics Integration Unaffected: GET /api/admin/metrics/overview?days=7 working with proper period structure, GET /api/admin/metrics/trends?days=7 working with proper period structure, existing metrics functionality not broken by web booking addition. E) Security Verification: Public endpoint /api/web/bookings works without Authorization header, protected endpoints still require authentication (401 for /api/agency/bookings without auth), security model maintained correctly. All FAZ-D web booking functionality production-ready with proper validation, hotel panel integration, and security controls."
+
 ## frontend:
   - task: "FAZ-6 Mutabakat UI smoke test"
     implemented: true

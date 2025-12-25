@@ -5,7 +5,6 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.db import get_db
-from app.utils import serialize_doc
 
 router = APIRouter(prefix="/api/web", tags=["web-catalog"])
 
@@ -49,6 +48,32 @@ async def list_public_rooms(hotel_id: str, db=Depends(get_db)) -> list[dict[str,
         "name": d.get("room_type") or d.get("name") or "Room",
         "max_adults": max_occ.get("adults"),
         "max_children": max_occ.get("children"),
+      }
+    )
+  return out
+
+
+@router.get("/hotels/{hotel_id}/packages")
+async def list_public_packages(hotel_id: str, db=Depends(get_db)) -> list[dict[str, Any]]:
+  """Public package catalog per hotel (optional add-on for web booking).
+
+  Returns only active packages for an active hotel, minimal fields.
+  """
+  hotel = await db.hotels.find_one({"_id": hotel_id, "active": True})
+  if not hotel:
+    raise HTTPException(status_code=404, detail="HOTEL_NOT_FOUND")
+
+  docs = await db.packages.find({"hotel_id": hotel_id, "active": True}).sort("name", 1).to_list(500)
+  out: list[dict[str, Any]] = []
+  for d in docs:
+    out.append(
+      {
+        "id": str(d.get("_id")),
+        "name": d.get("name"),
+        "description": d.get("description"),
+        "price": d.get("price"),
+        "currency": d.get("currency") or "TRY",
+        "includes": d.get("includes") or [],
       }
     )
   return out

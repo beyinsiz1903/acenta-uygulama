@@ -31,6 +31,7 @@ class WebBookingCreateIn(BaseModel):
   price_total: float = Field(..., gt=0)
   currency: str = Field("TRY", min_length=3, max_length=3)
   guest: WebGuestIn
+  package_id: str | None = None
 
 
 async def _get_default_org_id(db) -> str:
@@ -72,6 +73,22 @@ async def create_web_booking(payload: WebBookingCreateIn, db=Depends(get_db)) ->
   if not hotel:
     raise HTTPException(status_code=404, detail="HOTEL_NOT_FOUND")
 
+  # Optional package validation + snapshot
+  package_snapshot: dict[str, Any] | None = None
+  if payload.package_id:
+    pkg = await db.packages.find_one(
+      {"_id": payload.package_id, "hotel_id": payload.hotel_id, "active": True}
+    )
+    if not pkg:
+      raise HTTPException(status_code=400, detail="PACKAGE_NOT_FOUND")
+    package_snapshot = {
+      "id": str(pkg.get("_id")),
+      "name": pkg.get("name"),
+      "price": pkg.get("price"),
+      "currency": pkg.get("currency") or "TRY",
+      "includes": pkg.get("includes") or [],
+    }
+
   check_in, check_out, nights = _parse_dates(payload.check_in, payload.check_out)
 
   now = now_utc()
@@ -111,6 +128,12 @@ async def create_web_booking(payload: WebBookingCreateIn, db=Depends(get_db)) ->
   # Optional room_type_id if provided (hotel tarafı isterse kullanabilir)
   if payload.room_type_id:
     doc["room_type_id"] = payload.room_type_id
+
+  # Optional package info
+  if payload.package_id:
+    doc["package_id"] = payload.package_id
+  if package_snapshot:
+    doc["package_snapshot"] = package_snapshot
 
   ins = await db.bookings.insert_one(doc)
   saved = await db.bookings.find_one({"_id": ins.inserted_id})

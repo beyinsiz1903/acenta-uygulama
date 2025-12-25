@@ -4,6 +4,7 @@ import { api, apiErrorMessage } from "../lib/api";
 export default function WebBookingPage() {
   const [hotels, setHotels] = useState([]);
   const [rooms, setRooms] = useState([]);
+  const [packages, setPackages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");

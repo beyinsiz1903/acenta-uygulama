@@ -9518,6 +9518,474 @@ class FAZ101IntegrationSyncTester:
 
         return 0 if self.tests_failed == 0 else 1
 
+class FAZDWebBookingTester:
+    def __init__(self, base_url="https://trip-manager-34.preview.emergentagent.com"):
+        self.base_url = base_url
+        self.admin_token = None
+        self.hotel_admin_token = None
+        self.tests_run = 0
+        self.tests_passed = 0
+        self.tests_failed = 0
+        self.failed_tests = []
+        
+        # Store IDs for testing
+        self.hotel_id = None
+        self.web_booking_id = None
+
+    def log(self, msg):
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}")
+
+    def run_test(self, name, method, endpoint, expected_status, data=None, headers_override=None, token=None):
+        """Run a single API test with specific token"""
+        url = f"{self.base_url}/{endpoint}"
+        headers = headers_override or {'Content-Type': 'application/json'}
+        
+        # Use specific token if provided
+        if token:
+            headers['Authorization'] = f'Bearer {token}'
+
+        self.tests_run += 1
+        self.log(f"🔍 Test #{self.tests_run}: {name}")
+        
+        try:
+            if method == 'GET':
+                response = requests.get(url, headers=headers, timeout=10)
+            elif method == 'POST':
+                response = requests.post(url, json=data, headers=headers, timeout=10)
+            elif method == 'PUT':
+                response = requests.put(url, json=data, headers=headers, timeout=10)
+            elif method == 'DELETE':
+                response = requests.delete(url, headers=headers, timeout=10)
+            else:
+                raise ValueError(f"Unsupported method: {method}")
+
+            success = response.status_code == expected_status
+            if success:
+                self.tests_passed += 1
+                self.log(f"✅ PASSED - Status: {response.status_code}")
+                try:
+                    return True, response.json() if response.content else {}
+                except:
+                    return True, response.text if hasattr(response, 'text') else {}
+            else:
+                self.tests_failed += 1
+                self.failed_tests.append(f"{name} - Expected {expected_status}, got {response.status_code}")
+                self.log(f"❌ FAILED - Expected {expected_status}, got {response.status_code}")
+                try:
+                    self.log(f"   Response: {response.text[:200]}")
+                except:
+                    pass
+                return False, {}
+
+        except Exception as e:
+            self.tests_failed += 1
+            self.failed_tests.append(f"{name} - Error: {str(e)}")
+            self.log(f"❌ FAILED - Error: {str(e)}")
+            return False, {}
+
+    def test_admin_login_and_get_hotel(self):
+        """1) Admin login and get hotel ID"""
+        self.log("\n=== 1) ADMIN LOGIN & HOTEL ID ===")
+        success, response = self.run_test(
+            "Admin Login (admin@acenta.test)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "admin@acenta.test", "password": "admin123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.admin_token = response['access_token']
+            self.log(f"✅ Admin login successful")
+            
+            # Get hotels to find a hotel ID
+            success, response = self.run_test(
+                "GET /api/admin/hotels",
+                "GET",
+                "api/admin/hotels",
+                200,
+                token=self.admin_token
+            )
+            
+            if success and isinstance(response, list) and len(response) > 0:
+                self.hotel_id = response[0].get('id')
+                hotel_name = response[0].get('name', 'Unknown')
+                self.log(f"✅ Found hotel for testing: {hotel_name} (ID: {self.hotel_id})")
+                return True
+            else:
+                self.log(f"❌ No hotels found")
+                return False
+        return False
+
+    def test_web_booking_happy_path(self):
+        """2) Happy path: Create web booking"""
+        self.log("\n=== 2) HAPPY PATH: WEB BOOKING OLUŞTURMA ===")
+        
+        if not self.hotel_id:
+            self.log("❌ No hotel_id available for web booking test")
+            return False
+        
+        booking_data = {
+            "hotel_id": self.hotel_id,
+            "room_type_id": None,
+            "check_in": "2026-03-10",
+            "check_out": "2026-03-12",
+            "adults": 2,
+            "children": 1,
+            "price_total": 5200,
+            "currency": "TRY",
+            "guest": {
+                "full_name": "John Doe",
+                "email": "john@doe.com",
+                "phone": "+905551112233"
+            }
+        }
+        
+        success, response = self.run_test(
+            "POST /api/web/bookings (Happy Path)",
+            "POST",
+            "api/web/bookings",
+            201,
+            data=booking_data,
+            headers_override={'Content-Type': 'application/json'}  # No auth required
+        )
+        
+        if success:
+            booking_id = response.get('id')
+            hotel_id = response.get('hotel_id')
+            status = response.get('status')
+            source = response.get('source')
+            guest_name = response.get('guest', {}).get('full_name')
+            
+            if booking_id and hotel_id == self.hotel_id and status == "pending" and source == "web":
+                self.web_booking_id = booking_id
+                self.log(f"✅ Web booking created successfully:")
+                self.log(f"   ID: {booking_id}")
+                self.log(f"   Hotel ID: {hotel_id}")
+                self.log(f"   Status: {status}")
+                self.log(f"   Source: {source}")
+                self.log(f"   Guest: {guest_name}")
+                return True
+            else:
+                self.log(f"❌ Invalid booking response: {response}")
+                return False
+        return False
+
+    def test_validation_errors(self):
+        """3) Test validation errors"""
+        self.log("\n=== 3) VALIDATION HATALARI ===")
+        
+        # 3.1) Invalid date range: check_out < check_in
+        self.log("\n--- 3.1) Hatalı tarih: check_out < check_in ---")
+        invalid_date_data = {
+            "hotel_id": self.hotel_id,
+            "check_in": "2026-03-12",
+            "check_out": "2026-03-10",
+            "adults": 2,
+            "children": 0,
+            "price_total": 3000,
+            "currency": "TRY",
+            "guest": {
+                "full_name": "Test User",
+                "email": "test@example.com",
+                "phone": "+905551234567"
+            }
+        }
+        
+        success, response = self.run_test(
+            "POST /api/web/bookings (Invalid Date Range)",
+            "POST",
+            "api/web/bookings",
+            422,
+            data=invalid_date_data,
+            headers_override={'Content-Type': 'application/json'}
+        )
+        
+        if success:
+            detail = response.get('detail')
+            if detail == "INVALID_DATE_RANGE":
+                self.log(f"✅ Invalid date range correctly rejected: {detail}")
+            else:
+                self.log(f"❌ Unexpected error detail: {detail}")
+                return False
+        
+        # 3.2) Invalid price: price_total <= 0
+        self.log("\n--- 3.2) Fiyat <= 0 ---")
+        invalid_price_data = {
+            "hotel_id": self.hotel_id,
+            "check_in": "2026-03-10",
+            "check_out": "2026-03-12",
+            "adults": 2,
+            "children": 0,
+            "price_total": 0,
+            "currency": "TRY",
+            "guest": {
+                "full_name": "Test User",
+                "email": "test@example.com",
+                "phone": "+905551234567"
+            }
+        }
+        
+        success, response = self.run_test(
+            "POST /api/web/bookings (Invalid Price)",
+            "POST",
+            "api/web/bookings",
+            422,
+            data=invalid_price_data,
+            headers_override={'Content-Type': 'application/json'}
+        )
+        
+        if success:
+            self.log(f"✅ Invalid price correctly rejected (422)")
+        
+        # 3.3) Invalid email
+        self.log("\n--- 3.3) Geçersiz email ---")
+        invalid_email_data = {
+            "hotel_id": self.hotel_id,
+            "check_in": "2026-03-10",
+            "check_out": "2026-03-12",
+            "adults": 2,
+            "children": 0,
+            "price_total": 3000,
+            "currency": "TRY",
+            "guest": {
+                "full_name": "Test User",
+                "email": "not-an-email",
+                "phone": "+905551234567"
+            }
+        }
+        
+        success, response = self.run_test(
+            "POST /api/web/bookings (Invalid Email)",
+            "POST",
+            "api/web/bookings",
+            422,
+            data=invalid_email_data,
+            headers_override={'Content-Type': 'application/json'}
+        )
+        
+        if success:
+            self.log(f"✅ Invalid email correctly rejected (422)")
+        
+        return True
+
+    def test_hotel_admin_login(self):
+        """4) Hotel admin login for booking panel test"""
+        self.log("\n=== 4) HOTEL ADMIN LOGIN ===")
+        success, response = self.run_test(
+            "Hotel Admin Login (hoteladmin@acenta.test)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "hoteladmin@acenta.test", "password": "admin123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.hotel_admin_token = response['access_token']
+            user = response.get('user', {})
+            roles = user.get('roles', [])
+            
+            if 'hotel_admin' in roles:
+                self.log(f"✅ Hotel admin login successful - roles: {roles}")
+                return True
+            else:
+                self.log(f"❌ Missing hotel_admin role: {roles}")
+                return False
+        return False
+
+    def test_web_booking_in_hotel_panel(self):
+        """5) Test web booking appears in hotel panel"""
+        self.log("\n=== 5) WEB BOOKING HOTEL PANELINDE GÖRÜNÜYOR MU? ===")
+        
+        if not self.hotel_admin_token:
+            self.log("❌ No hotel admin token available")
+            return False
+        
+        success, response = self.run_test(
+            "GET /api/hotel/bookings?status=pending",
+            "GET",
+            "api/hotel/bookings?status=pending",
+            200,
+            token=self.hotel_admin_token
+        )
+        
+        if success:
+            bookings = response if isinstance(response, list) else []
+            self.log(f"✅ Hotel bookings endpoint working - found {len(bookings)} pending bookings")
+            
+            # Look for our web booking
+            web_booking_found = False
+            for booking in bookings:
+                if (booking.get('source') == 'web' and 
+                    booking.get('status') == 'pending' and
+                    booking.get('id') == self.web_booking_id):
+                    web_booking_found = True
+                    guest_name = booking.get('guest', {}).get('full_name')
+                    hotel_id = booking.get('hotel_id')
+                    self.log(f"✅ Web booking found in hotel panel:")
+                    self.log(f"   ID: {booking.get('id')}")
+                    self.log(f"   Source: {booking.get('source')}")
+                    self.log(f"   Status: {booking.get('status')}")
+                    self.log(f"   Guest: {guest_name}")
+                    self.log(f"   Hotel ID: {hotel_id}")
+                    break
+            
+            if web_booking_found:
+                self.log(f"✅ Web booking successfully appears in hotel panel")
+                return True
+            else:
+                self.log(f"❌ Web booking not found in hotel panel")
+                # List all bookings for debugging
+                for booking in bookings:
+                    self.log(f"   Found booking: source={booking.get('source')}, status={booking.get('status')}, id={booking.get('id')}")
+                return False
+        return False
+
+    def test_admin_metrics_integration(self):
+        """6) Test AdminMetrics integration is not broken"""
+        self.log("\n=== 6) ADMINMETRICS ENTEGRASYONU BOZULMAMIŞ MI? ===")
+        
+        if not self.admin_token:
+            self.log("❌ No admin token available")
+            return False
+        
+        # Test overview endpoint
+        success, response = self.run_test(
+            "GET /api/admin/metrics/overview?days=7",
+            "GET",
+            "api/admin/metrics/overview?days=7",
+            200,
+            token=self.admin_token
+        )
+        
+        if success:
+            period = response.get('period', {})
+            if all(field in period for field in ['start', 'end', 'days']):
+                self.log(f"✅ Metrics overview working - period: {period}")
+            else:
+                self.log(f"❌ Invalid period structure: {period}")
+                return False
+        
+        # Test trends endpoint
+        success, response = self.run_test(
+            "GET /api/admin/metrics/trends?days=7",
+            "GET",
+            "api/admin/metrics/trends?days=7",
+            200,
+            token=self.admin_token
+        )
+        
+        if success:
+            period = response.get('period', {})
+            if all(field in period for field in ['start', 'end', 'days']):
+                self.log(f"✅ Metrics trends working - period: {period}")
+                return True
+            else:
+                self.log(f"❌ Invalid period structure: {period}")
+                return False
+        return False
+
+    def test_security_public_endpoint(self):
+        """7) Test security: public endpoint works without auth"""
+        self.log("\n=== 7) GÜVENLİK TESTİ ===")
+        
+        # Test that web booking endpoint works without Authorization header
+        booking_data = {
+            "hotel_id": self.hotel_id,
+            "check_in": "2026-03-15",
+            "check_out": "2026-03-17",
+            "adults": 1,
+            "children": 0,
+            "price_total": 2500,
+            "currency": "TRY",
+            "guest": {
+                "full_name": "Security Test User",
+                "email": "security@test.com",
+                "phone": "+905559876543"
+            }
+        }
+        
+        success, response = self.run_test(
+            "POST /api/web/bookings (No Auth Required)",
+            "POST",
+            "api/web/bookings",
+            201,
+            data=booking_data,
+            headers_override={'Content-Type': 'application/json'}  # Explicitly no auth
+        )
+        
+        if success:
+            self.log(f"✅ Public endpoint works without authentication")
+        
+        # Test that protected endpoints still require auth
+        success, response = self.run_test(
+            "GET /api/agency/bookings (Should Require Auth)",
+            "GET",
+            "api/agency/bookings",
+            401,
+            headers_override={'Content-Type': 'application/json'}  # No auth
+        )
+        
+        if success:
+            self.log(f"✅ Protected endpoints still require authentication")
+            return True
+        else:
+            self.log(f"❌ Protected endpoint security broken")
+            return False
+
+    def print_summary(self):
+        """Print test summary"""
+        self.log("\n" + "="*60)
+        self.log("FAZ-D WEB BOOKING TEST SUMMARY")
+        self.log("="*60)
+        self.log(f"Total Tests: {self.tests_run}")
+        self.log(f"✅ Passed: {self.tests_passed}")
+        self.log(f"❌ Failed: {self.tests_failed}")
+        self.log(f"Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%")
+        
+        if self.failed_tests:
+            self.log("\n❌ FAILED TESTS:")
+            for i, test in enumerate(self.failed_tests, 1):
+                self.log(f"  {i}. {test}")
+        
+        self.log("="*60)
+
+    def run_fazd_tests(self):
+        """Run all FAZ-D Web Booking tests in sequence"""
+        self.log("🚀 Starting FAZ-D Web Booking Tests")
+        self.log(f"Base URL: {self.base_url}")
+        
+        # 1) Admin login and get hotel ID
+        if not self.test_admin_login_and_get_hotel():
+            self.log("❌ Admin login or hotel setup failed - stopping tests")
+            self.print_summary()
+            return 1
+
+        # 2) Happy path: Create web booking
+        if not self.test_web_booking_happy_path():
+            self.log("❌ Web booking creation failed - continuing with other tests")
+
+        # 3) Validation errors
+        self.test_validation_errors()
+
+        # 4) Hotel admin login
+        if not self.test_hotel_admin_login():
+            self.log("❌ Hotel admin login failed - skipping hotel panel test")
+        else:
+            # 5) Test web booking appears in hotel panel
+            self.test_web_booking_in_hotel_panel()
+
+        # 6) Test AdminMetrics integration
+        self.test_admin_metrics_integration()
+
+        # 7) Security test
+        self.test_security_public_endpoint()
+
+        # Summary
+        self.print_summary()
+
+        return 0 if self.tests_failed == 0 else 1
+
 
 def main():
     if len(sys.argv) > 1:

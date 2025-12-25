@@ -41,7 +41,7 @@ export default function WebBookingPage() {
         return;
       }
       try {
-        const res = await api.get(`/admin/hotels/${form.hotel_id}/rooms`);
+        const res = await api.get(`/web/hotels/${form.hotel_id}/rooms`);
         setRooms(res.data || []);
       } catch (e) {
         console.error("[WebBooking] rooms load error", e);

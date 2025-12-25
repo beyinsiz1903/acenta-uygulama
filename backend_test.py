@@ -9519,7 +9519,7 @@ class FAZ101IntegrationSyncTester:
         return 0 if self.tests_failed == 0 else 1
 
 class FAZDWebBookingTester:
-    def __init__(self, base_url="https://trip-manager-34.preview.emergentagent.com"):
+    def __init__(self, base_url="http://localhost:8001"):
         self.base_url = base_url
         self.admin_token = None
         self.hotel_admin_token = None

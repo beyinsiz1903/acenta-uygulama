@@ -21,7 +21,7 @@ async def list_public_hotels(db=Depends(get_db)) -> list[dict[str, Any]]:
   for d in docs:
     out.append(
       {
-        "id": d.get("_id"),
+        "id": str(d.get("_id")),
         "name": d.get("name"),
         "city": d.get("city"),
       }
@@ -45,7 +45,7 @@ async def list_public_rooms(hotel_id: str, db=Depends(get_db)) -> list[dict[str,
     max_occ = d.get("max_occupancy") or {}
     out.append(
       {
-        "id": d.get("_id"),
+        "id": str(d.get("_id")),
         "name": d.get("room_type") or d.get("name") or "Room",
         "max_adults": max_occ.get("adults"),
         "max_children": max_occ.get("children"),

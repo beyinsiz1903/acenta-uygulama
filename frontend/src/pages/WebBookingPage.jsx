@@ -178,6 +178,43 @@ export default function WebBookingPage() {
                 value={form.check_in}
                 onChange={handleChange}
                 className="w-full h-9 rounded-md border bg-white px-2 text-sm"
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-slate-700">Paket (opsiyonel)</label>
+            <select
+              name="package_id"
+              value={form.package_id}
+              onChange={handleChange}
+              className="w-full h-9 rounded-md border bg-white px-2 text-sm"
+            >
+              <option value="">Paket seçmeden devam et</option>
+              {packages.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                  {p.price != null ? ` — ${p.price} ${p.currency || "TRY"}` : ""}
+                </option>
+              ))}
+            </select>
+            {form.package_id && (
+              <div className="mt-1 text-xs text-slate-600">
+                {(() => {
+                  const selected = packages.find((x) => x.id === form.package_id);
+                  if (!selected) return null;
+                  return (
+                    <>
+                      {selected.description ? <div>{selected.description}</div> : null}
+                      {Array.isArray(selected.includes) && selected.includes.length ? (
+                        <div className="mt-1">
+                          Dahil: {selected.includes.join(", ")}
+                        </div>
+                      ) : null}
+                    </>
+                  );
+                })()}
+              </div>
+            )}
+          </div>
+
+
                 required
               />
             </div>

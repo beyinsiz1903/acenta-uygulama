@@ -214,7 +214,6 @@ export default function WebBookingPage() {
             )}
           </div>
 
-
                 required
               />
             </div>

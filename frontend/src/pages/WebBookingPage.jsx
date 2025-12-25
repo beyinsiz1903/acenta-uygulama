@@ -25,7 +25,7 @@ export default function WebBookingPage() {
   useEffect(() => {
     async function loadHotels() {
       try {
-        const res = await api.get("/admin/hotels");
+        const res = await api.get("/web/hotels");
         setHotels(res.data || []);
       } catch (e) {
         console.error("[WebBooking] hotels load error", e);

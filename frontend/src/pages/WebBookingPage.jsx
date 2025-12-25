@@ -12,6 +12,7 @@ export default function WebBookingPage() {
   const [form, setForm] = useState({
     hotel_id: "",
     room_type_id: "",
+    package_id: "",
     check_in: "",
     check_out: "",
     adults: 2,
@@ -36,20 +37,29 @@ export default function WebBookingPage() {
   }, []);
 
   useEffect(() => {
-    async function loadRooms() {
+    async function loadHotelDeps() {
       if (!form.hotel_id) {
         setRooms([]);
+        setPackages([]);
+        setForm((prev) => ({ ...prev, room_type_id: "", package_id: "" }));
         return;
       }
       try {
-        const res = await api.get(`/web/hotels/${form.hotel_id}/rooms`);
-        setRooms(res.data || []);
+        const [roomsRes, packagesRes] = await Promise.all([
+          api.get(`/web/hotels/${form.hotel_id}/rooms`),
+          api.get(`/web/hotels/${form.hotel_id}/packages`),
+        ]);
+        setRooms(roomsRes.data || []);
+        setPackages(packagesRes.data || []);
+        setForm((prev) => ({ ...prev, room_type_id: "", package_id: "" }));
       } catch (e) {
-        console.error("[WebBooking] rooms load error", e);
+        console.error("[WebBooking] hotel deps load error", e);
         setRooms([]);
+        setPackages([]);
       }
     }
-    void loadRooms();
+    void loadHotelDeps();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.hotel_id]);
 
   function handleChange(e) {
@@ -78,6 +88,7 @@ export default function WebBookingPage() {
         children: Number(form.children) || 0,
         price_total: Number(form.price_total) || 0,
         currency: form.currency || "TRY",
+        package_id: form.package_id || undefined,
         guest: {
           full_name: form.full_name,
           email: form.email,

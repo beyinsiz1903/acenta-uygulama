@@ -185,24 +185,6 @@ export default function WebBookingPage() {
                 </option>
               ))}
             </select>
-            {form.package_id && (
-              <div className="mt-1 text-xs text-slate-600">
-                {(() => {
-                  const selected = packages.find((x) => x.id === form.package_id);
-                  if (!selected) return null;
-                  return (
-                    <>
-                      {selected.description ? <div>{selected.description}</div> : null}
-                      {Array.isArray(selected.includes) && selected.includes.length ? (
-                        <div className="mt-1">
-                          Dahil: {selected.includes.join(", ")}
-                        </div>
-                      ) : null}
-                    </>
-                  );
-                })()}
-              </div>
-            )}
           </div>
 
           <div className="grid grid-cols-2 gap-3">

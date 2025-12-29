@@ -236,15 +236,15 @@ export default function AgencyTourBookingDetailPage() {
               >
                 Referans Kodunu Kopyala
               </Button>
-              <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              data-testid="btn-copy-payment-note"
-              onClick={() => copyWithToast("Ödeme açıklaması", filledNote)}
-            >
-              Ödeme Açıklamasını Kopyala
-            </Button>
+                <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                data-testid="btn-copy-payment-note"
+                onClick={() => copyWithToast("Ödeme açıklaması", filledNote)}
+              >
+                Ödeme Açıklamasını Kopyala
+              </Button>
             </div>
             {isPaid && (
               <Button

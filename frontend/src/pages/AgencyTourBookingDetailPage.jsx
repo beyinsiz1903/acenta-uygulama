@@ -157,8 +157,16 @@ export default function AgencyTourBookingDetailPage() {
         >
           <div className="flex items-center justify-between gap-2">
             <div className="font-medium">Offline Ödeme (IBAN)</div>
-            <div className="text-[11px] text-muted-foreground">
-              {offline.status === "unpaid" ? "Ödeme bekleniyor" : offline.status}
+            <div className="flex flex-col items-end text-[11px] text-muted-foreground gap-0.5">
+              <span className={isPaid ? "text-emerald-700" : ""}>
+                {isPaid ? "Ödendi" : "Ödeme bekleniyor"}
+              </span>
+              {isPaid && (
+                <span>
+                  {paidAt && <span>{paidAt}</span>}
+                  {paidByName && <span className="ml-1">({paidByName})</span>}
+                </span>
+              )}
             </div>
           </div>
 

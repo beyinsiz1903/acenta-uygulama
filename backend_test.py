@@ -631,52 +631,289 @@ class TourVoucherPDFTester:
         
         self.log("="*60)
 
+    def test_agency_tour_bookings_list_for_voucher(self):
+        """Test GET /api/agency/tour-bookings to find bookings for voucher testing"""
+        self.log("\n=== VOUCHER TEST: GET TOUR BOOKINGS ===")
+        
+        success, response = self.run_test(
+            "GET /api/agency/tour-bookings (for voucher testing)",
+            "GET",
+            "api/agency/tour-bookings?limit=50",
+            200,
+            token=self.agency_admin_token
+        )
+        
+        if success:
+            if isinstance(response, dict) and 'items' in response:
+                items = response['items']
+                self.log(f"✅ Found {len(items)} tour bookings for voucher testing")
+                
+                # Look for bookings with different payment/voucher states
+                booking_with_voucher = None
+                booking_without_voucher = None
+                
+                for item in items:
+                    payment = item.get('payment', {})
+                    voucher = item.get('voucher', {})
+                    
+                    # Check if this booking has payment + voucher already
+                    if (payment.get('mode') == 'offline' and 
+                        payment.get('reference_code') and 
+                        voucher.get('voucher_id') and 
+                        voucher.get('pdf_url')):
+                        booking_with_voucher = item
+                        self.log(f"✅ Found booking with existing voucher: {item.get('id')} (voucher_id: {voucher.get('voucher_id')})")
+                    
+                    # Check if this booking has payment but no voucher
+                    elif (payment.get('mode') == 'offline' and 
+                          payment.get('reference_code') and 
+                          not voucher.get('voucher_id')):
+                        booking_without_voucher = item
+                        self.log(f"✅ Found booking with payment but no voucher: {item.get('id')}")
+                    
+                    # Check if this booking has no payment (for prepare-offline-payment test)
+                    elif not payment.get('mode'):
+                        if not booking_without_voucher:  # Use this if we don't have a better candidate
+                            booking_without_voucher = item
+                            self.log(f"✅ Found booking without payment: {item.get('id')} (can be used for prepare-offline-payment)")
+                
+                # Store the bookings for later tests
+                self.booking_with_voucher = booking_with_voucher
+                self.booking_without_voucher = booking_without_voucher
+                
+                return True
+            else:
+                self.log(f"❌ Expected dict with 'items' key, got: {type(response)}")
+                return False
+        return False
+
+    def test_existing_voucher_pdf_access(self):
+        """Test GET /api/public/vouchers/{voucher_id}.pdf for existing voucher"""
+        self.log("\n=== VOUCHER TEST: EXISTING VOUCHER PDF ACCESS ===")
+        
+        if not hasattr(self, 'booking_with_voucher') or not self.booking_with_voucher:
+            self.log("⚠️  No booking with existing voucher found - skipping test")
+            return True  # Not a failure, just no data to test
+        
+        voucher = self.booking_with_voucher.get('voucher', {})
+        voucher_id = voucher.get('voucher_id')
+        
+        if not voucher_id:
+            self.log("❌ Booking has voucher but no voucher_id")
+            return False
+        
+        # Test public PDF access (no auth required)
+        url = f"{self.base_url}/api/public/vouchers/{voucher_id}.pdf"
+        self.log(f"🔍 Testing PDF access: {url}")
+        
+        try:
+            response = requests.get(url, timeout=15)
+            
+            if response.status_code == 200:
+                content_type = response.headers.get('Content-Type', '')
+                content = response.content
+                
+                # Verify it's actually a PDF
+                if content.startswith(b'%PDF'):
+                    self.log(f"✅ PDF access successful - Status: 200, Content-Type: {content_type}, Size: {len(content)} bytes")
+                    self.log(f"✅ PDF content verified - starts with '%PDF' as expected")
+                    self.tests_passed += 1
+                    return True
+                else:
+                    self.log(f"❌ Response is not a valid PDF - starts with: {content[:20]}")
+                    self.tests_failed += 1
+                    self.failed_tests.append(f"Existing voucher PDF - Invalid PDF content")
+                    return False
+            else:
+                self.log(f"❌ PDF access failed - Status: {response.status_code}")
+                self.log(f"   Response: {response.text[:500]}")
+                self.tests_failed += 1
+                self.failed_tests.append(f"Existing voucher PDF - Expected 200, got {response.status_code}")
+                return False
+                
+        except Exception as e:
+            self.log(f"❌ PDF access error: {str(e)}")
+            self.tests_failed += 1
+            self.failed_tests.append(f"Existing voucher PDF - Error: {str(e)}")
+            return False
+        finally:
+            self.tests_run += 1
+
+    def test_prepare_offline_payment_and_voucher(self):
+        """Test POST /api/agency/tour-bookings/{id}/prepare-offline-payment"""
+        self.log("\n=== VOUCHER TEST: PREPARE OFFLINE PAYMENT ===")
+        
+        if not hasattr(self, 'booking_without_voucher') or not self.booking_without_voucher:
+            self.log("⚠️  No booking without voucher found - skipping test")
+            return True  # Not a failure, just no data to test
+        
+        booking_id = self.booking_without_voucher.get('id')
+        if not booking_id:
+            self.log("❌ Booking without voucher has no ID")
+            return False
+        
+        success, response = self.run_test(
+            f"POST /api/agency/tour-bookings/{booking_id}/prepare-offline-payment",
+            "POST",
+            f"api/agency/tour-bookings/{booking_id}/prepare-offline-payment",
+            200,
+            token=self.agency_admin_token
+        )
+        
+        if success:
+            # Verify response structure
+            payment = response.get('payment', {})
+            voucher = response.get('voucher', {})
+            
+            required_payment_fields = ['mode', 'status', 'reference_code', 'due_at', 'iban_snapshot']
+            required_voucher_fields = ['enabled', 'voucher_id', 'pdf_url']
+            
+            missing_payment = [f for f in required_payment_fields if f not in payment]
+            missing_voucher = [f for f in required_voucher_fields if f not in voucher]
+            
+            if not missing_payment and not missing_voucher:
+                if (payment.get('mode') == 'offline' and 
+                    voucher.get('enabled') is True and 
+                    voucher.get('voucher_id') and 
+                    voucher.get('pdf_url')):
+                    
+                    self.log(f"✅ Offline payment prepared successfully:")
+                    self.log(f"   - Payment mode: {payment.get('mode')}")
+                    self.log(f"   - Reference code: {payment.get('reference_code')}")
+                    self.log(f"   - Voucher enabled: {voucher.get('enabled')}")
+                    self.log(f"   - Voucher ID: {voucher.get('voucher_id')}")
+                    self.log(f"   - PDF URL: {voucher.get('pdf_url')}")
+                    
+                    # Store voucher_id for next test
+                    self.new_voucher_id = voucher.get('voucher_id')
+                    return True
+                else:
+                    self.log(f"❌ Invalid payment/voucher values in response")
+                    return False
+            else:
+                self.log(f"❌ Missing fields - Payment: {missing_payment}, Voucher: {missing_voucher}")
+                return False
+        return False
+
+    def test_new_voucher_pdf_access(self):
+        """Test GET /api/public/vouchers/{voucher_id}.pdf for newly created voucher"""
+        self.log("\n=== VOUCHER TEST: NEW VOUCHER PDF ACCESS ===")
+        
+        if not hasattr(self, 'new_voucher_id') or not self.new_voucher_id:
+            self.log("⚠️  No new voucher ID available - skipping test")
+            return True  # Not a failure, just no data to test
+        
+        # Test public PDF access (no auth required)
+        url = f"{self.base_url}/api/public/vouchers/{self.new_voucher_id}.pdf"
+        self.log(f"🔍 Testing new PDF access: {url}")
+        
+        try:
+            response = requests.get(url, timeout=15)
+            
+            if response.status_code == 200:
+                content_type = response.headers.get('Content-Type', '')
+                content = response.content
+                
+                # Verify it's actually a PDF
+                if content.startswith(b'%PDF'):
+                    self.log(f"✅ New PDF access successful - Status: 200, Content-Type: {content_type}, Size: {len(content)} bytes")
+                    self.log(f"✅ New PDF content verified - starts with '%PDF' as expected")
+                    self.tests_passed += 1
+                    return True
+                else:
+                    self.log(f"❌ Response is not a valid PDF - starts with: {content[:20]}")
+                    self.tests_failed += 1
+                    self.failed_tests.append(f"New voucher PDF - Invalid PDF content")
+                    return False
+            else:
+                self.log(f"❌ New PDF access failed - Status: {response.status_code}")
+                self.log(f"   Response: {response.text[:500]}")
+                self.tests_failed += 1
+                self.failed_tests.append(f"New voucher PDF - Expected 200, got {response.status_code}")
+                return False
+                
+        except Exception as e:
+            self.log(f"❌ New PDF access error: {str(e)}")
+            self.tests_failed += 1
+            self.failed_tests.append(f"New voucher PDF - Error: {str(e)}")
+            return False
+        finally:
+            self.tests_run += 1
+
+    def test_voucher_not_found_error(self):
+        """Test GET /api/public/vouchers/{non_existent_id}.pdf error handling"""
+        self.log("\n=== VOUCHER TEST: VOUCHER NOT FOUND ERROR ===")
+        
+        fake_voucher_id = "vtr_nonexistent123456789012"
+        url = f"{self.base_url}/api/public/vouchers/{fake_voucher_id}.pdf"
+        
+        try:
+            response = requests.get(url, timeout=15)
+            
+            if response.status_code == 404:
+                try:
+                    error_data = response.json()
+                    detail = error_data.get('detail', {})
+                    
+                    if detail.get('code') == 'VOUCHER_NOT_FOUND':
+                        self.log(f"✅ Voucher not found error handled correctly:")
+                        self.log(f"   - Status: 404")
+                        self.log(f"   - Error code: {detail.get('code')}")
+                        self.log(f"   - Error message: {detail.get('message')}")
+                        self.tests_passed += 1
+                        return True
+                    else:
+                        self.log(f"❌ Wrong error code - Expected 'VOUCHER_NOT_FOUND', got: {detail.get('code')}")
+                        self.tests_failed += 1
+                        self.failed_tests.append(f"Voucher not found - Wrong error code")
+                        return False
+                except:
+                    self.log(f"❌ Invalid JSON response for 404 error")
+                    self.tests_failed += 1
+                    self.failed_tests.append(f"Voucher not found - Invalid JSON response")
+                    return False
+            else:
+                self.log(f"❌ Wrong status code - Expected 404, got: {response.status_code}")
+                self.tests_failed += 1
+                self.failed_tests.append(f"Voucher not found - Expected 404, got {response.status_code}")
+                return False
+                
+        except Exception as e:
+            self.log(f"❌ Voucher not found test error: {str(e)}")
+            self.tests_failed += 1
+            self.failed_tests.append(f"Voucher not found - Error: {str(e)}")
+            return False
+        finally:
+            self.tests_run += 1
+
     def run_all_tests(self):
-        """Run all Tour Booking backend tests in sequence"""
-        self.log("🚀 Starting Tour Booking Requests Backend Tests")
+        """Run all Tour Voucher PDF backend tests in sequence"""
+        self.log("🚀 Starting Tour Voucher PDF Backend Tests")
         self.log(f"Base URL: {self.base_url}")
         
-        # A) Agency admin login
+        # 1) Agency admin login
         if not self.test_agency_admin_login():
             self.log("❌ Agency admin login failed - stopping tests")
             self.print_summary()
             return 1
         
-        # B) Get active tours for booking
-        if not self.test_get_active_tours():
-            self.log("❌ No active tours found - stopping tests")
+        # 2) Get tour bookings for voucher testing
+        if not self.test_agency_tour_bookings_list_for_voucher():
+            self.log("❌ Failed to get tour bookings - stopping tests")
             self.print_summary()
             return 1
         
-        # C) Test public booking creation
-        self.test_public_tour_booking_creation()
+        # 3) Test existing voucher PDF access (scenario a)
+        self.test_existing_voucher_pdf_access()
         
-        # D) Test agency listing endpoint
-        self.test_agency_tour_bookings_list()
+        # 4) Test prepare offline payment for booking without voucher (scenario b)
+        self.test_prepare_offline_payment_and_voucher()
         
-        # E) Test status update endpoint
-        self.test_tour_booking_status_update()
+        # 5) Test new voucher PDF access (scenario b continued)
+        self.test_new_voucher_pdf_access()
         
-        # F) Verify status update worked
-        self.test_tour_booking_status_verification()
-        
-        # G) Test permission and validation checks
-        self.test_permission_checks()
-        
-        # H) Test tour booking detail endpoint (C3)
-        self.test_tour_booking_detail_endpoint()
-        
-        # I) Test add internal note endpoint (C3)
-        self.test_add_internal_note_endpoint()
-        
-        # J) Verify internal note appears in detail (C3)
-        self.test_verify_internal_note_in_detail()
-        
-        # K) Test add note validation errors (C3)
-        self.test_add_note_validation_errors()
-        
-        # L) Test authorization checks for C3 endpoints
-        self.test_authorization_checks_c3()
+        # 6) Test error handling for non-existent voucher
+        self.test_voucher_not_found_error()
         
         # Summary
         self.print_summary()

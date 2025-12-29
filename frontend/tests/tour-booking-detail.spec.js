@@ -161,6 +161,14 @@ test.describe("C3 - Tour booking detail E2E", () => {
           timeout: 8000,
         });
       }
+
+      // Paid -> unpaid geri alma (varsa)
+      if (await undoBtn.count()) {
+        await undoBtn.click();
+        await expect(page.locator("body")).toContainText(/Offline ödeme geri alındı/i, {
+          timeout: 8000,
+        });
+      }
     }
 
     // 8) Voucher PDF butonu ve signed URL + PDF response doğrulaması (varsa)

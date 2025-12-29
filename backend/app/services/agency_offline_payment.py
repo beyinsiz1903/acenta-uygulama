@@ -160,6 +160,10 @@ async def prepare_offline_payment_for_tour_booking(
   update_payment = {
     "mode": "offline",
     "status": payment.get("status") or "unpaid",
+    "paid_at": payment.get("paid_at"),
+    "paid_by": payment.get("paid_by"),
+    "paid_note": payment.get("paid_note"),
+    "paid_method": payment.get("paid_method") or "manual",
     "currency": iban_snapshot["currency"],
     "due_at": due_at,
     "reference_code": reference_code,

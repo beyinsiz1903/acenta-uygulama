@@ -189,4 +189,53 @@ async def prepare_offline_payment(
     result["id"] = _sid(result.pop("_id"))
     return result
 
-    return {"ok": True}
+
+@router.post("/tour-bookings/{request_id}/voucher-signed-url")
+async def create_tour_voucher_signed_url(
+    request_id: str,
+    db=Depends(get_db),
+    user: Dict[str, Any] = Depends(require_roles(["agency_admin", "agency_agent"])),
+):
+    """Generate a short-lived signed URL for tour voucher PDF.
+
+    - Scope: agency_admin / agency_agent for their own agency's booking
+    - Requires existing voucher metadata with enabled=True
+    - Returns relative URL like /api/public/vouchers/{voucher_id}.pdf?t=...
+    """
+    agency_id = _sid(user.get("agency_id"))
+    org_id = _sid(user.get("organization_id"))
+    if not agency_id:
+        raise HTTPException(status_code=400, detail="USER_NOT_IN_AGENCY")
+
+    request_oid = _oid_or_404(request_id)
+
+    doc = await db.tour_booking_requests.find_one({"_id": request_oid, "agency_id": agency_id})
+    if not doc:
+        raise HTTPException(status_code=404, detail="TOUR_BOOKING_REQUEST_NOT_FOUND")
+
+    voucher = doc.get("voucher") or {}
+    voucher_id = voucher.get("voucher_id")
+    pdf_url = voucher.get("pdf_url")
+
+    if not voucher_id or not pdf_url:
+        raise HTTPException(
+            status_code=409,
+            detail={"code": "VOUCHER_NOT_READY", "message": "Bu talep için voucher henüz hazır değil."},
+        )
+
+    if voucher.get("enabled") is False:
+        raise HTTPException(
+            status_code=409,
+            detail={"code": "VOUCHER_DISABLED", "message": "Bu voucher devre dışı bırakılmış."},
+        )
+
+    now = now_utc()
+    ttl_min = get_voucher_ttl_minutes()
+    from datetime import timedelta
+
+    expires_at = now + timedelta(minutes=max(ttl_min, 1))
+
+    token = sign_voucher(voucher_id, expires_at=expires_at)
+    url = f"{pdf_url}?t={token}"
+
+    return {"url": url, "expires_at": expires_at.isoformat()}

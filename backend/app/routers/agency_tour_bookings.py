@@ -332,14 +332,17 @@ async def send_tour_voucher_email_endpoint(
         "desired_date": doc.get("desired_date"),
         "pax": doc.get("pax"),
         "status": doc.get("status"),
-        "guest": guest,
+        "guest_full_name": guest.get("full_name"),
+        "guest_phone": guest.get("phone"),
+        "guest_email": guest.get("email"),
         "payment": payment,
         "reference_code": ref,
-        "organization_id": doc.get("organization_id"),
-        "agency_id": doc.get("agency_id"),
+        "request_id": str(doc.get("_id")),
+        "agency_name": None,
     }
 
-    pdf_bytes, pdf_filename = render_tour_voucher_pdf(model)
+    pdf_bytes = render_tour_voucher_pdf(model)
+    pdf_filename = f"tour-voucher-{ref or 'reservation'}.pdf"
 
     # Simple HTML email body
     snap = iban_snapshot

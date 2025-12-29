@@ -1,0 +1,677 @@
+from __future__ import annotations
+
+import uuid
+from datetime import datetime, timedelta, timezone
+from typing import Optional
+
+from fastapi import APIRouter, Depends, HTTPException, Request
+from pydantic import BaseModel
+
+from app.auth import get_current_user, require_roles
+from app.db import get_db
+from app.services.audit import write_audit_log
+from app.services.events import write_booking_event
+from app.utils import date_to_utc_midnight, now_utc, serialize_doc, build_booking_public_view
+from app.services.email_outbox import enqueue_booking_email
+
+
+router = APIRouter(prefix="/api/agency/bookings", tags=["agency-bookings"])
+
+from typing import Literal
+
+
+class GuestInfoIn(BaseModel):
+    full_name: str
+    email: Optional[str] = None
+    phone: Optional[str] = None
+
+
+class BookingDraftCreateIn(BaseModel):
+    search_id: str
+    hotel_id: str
+    room_type_id: str
+    rate_plan_id: str
+    guest: GuestInfoIn
+    special_requests: Optional[str] = None
+    # Stay and occupancy snapshot (from search context)
+    check_in: str
+    check_out: str
+    nights: int
+    adults: int
+    children: int = 0
+    intent: Optional[Literal["confirmed", "pending"]] = None
+
+
+class BookingConfirmIn(BaseModel):
+    draft_id: str
+
+
+@router.post("/draft", dependencies=[Depends(require_roles(["agency_admin", "agency_agent"]))])
+async def create_booking_draft(payload: BookingDraftCreateIn, user=Depends(get_current_user)):
+    """
+    FAZ-3.0: Create booking draft with TTL
+    FAZ-3.2: Added 15-minute expiration
+    """
+    db = await get_db()
+    agency_id = user.get("agency_id")
+    
+    if not agency_id:
+        raise HTTPException(status_code=403, detail="NOT_LINKED_TO_AGENCY")
+    
+    # Validate hotel link
+    link = await db.agency_hotel_links.find_one({
+        "organization_id": user["organization_id"],
+        "agency_id": agency_id,
+        "hotel_id": payload.hotel_id,
+        "active": True,
+    })
+    
+    if not link:
+        raise HTTPException(status_code=403, detail="NOT_LINKED_TO_HOTEL")
+    
+    # Get hotel
+    hotel = await db.hotels.find_one({
+        "organization_id": user["organization_id"],
+        "_id": payload.hotel_id,
+    })
+    
+    if not hotel:
+        raise HTTPException(status_code=404, detail="HOTEL_NOT_FOUND")
+    
+    draft_id = f"draft_{uuid.uuid4().hex[:16]}"
+    
+    # FAZ-3.2: Set 15-minute TTL (UTC aware)
+    now = now_utc()
+    expires_at = now + timedelta(minutes=15)
+    
+    # Calculate total price based on nights
+    base_price_per_night = 2450.0 if payload.rate_plan_id == "rp_refundable" else 2100.0
+    total_price = base_price_per_night * payload.nights
+    
+    # Mock rate snapshot
+    mock_rate_snapshot = {
+        "room_type_id": payload.room_type_id,
+        "room_type_name": "Standart Oda" if payload.room_type_id == "rt_standard" else "Deluxe Oda",
+        "rate_plan_id": payload.rate_plan_id,
+        "rate_plan_name": "İade Edilebilir" if payload.rate_plan_id == "rp_refundable" else "İade Edilemez",
+        "board": "RO",
+        "price": {
+            "currency": "TRY",
+            "total": total_price,
+            "per_night": base_price_per_night,
+            "tax_included": True,
+        },
+        "cancellation": "FREE_CANCEL" if payload.rate_plan_id == "rp_refundable" else "NON_REFUNDABLE",
+    }
+    
+    draft = {
+        "_id": draft_id,
+        "organization_id": user["organization_id"],
+        "agency_id": agency_id,
+        "agency_name": (await db.agencies.find_one({"organization_id": user["organization_id"], "_id": agency_id}) or {}).get("name"),
+        "search_id": payload.search_id,
+        "hotel_id": payload.hotel_id,
+        "hotel_name": hotel.get("name"),
+        "status": "draft",
+        "stay": {
+            "check_in": payload.check_in,
+            "check_out": payload.check_out,
+            "nights": payload.nights,
+        },
+        "occupancy": {
+            "adults": payload.adults,
+            "children": payload.children,
+        },
+        "guest": payload.guest.model_dump(),
+        "special_requests": payload.special_requests,
+        "rate_snapshot": mock_rate_snapshot,
+        "created_at": now,
+        "updated_at": now,
+        "created_by": user.get("email"),
+        "expires_at": expires_at,  # FAZ-3.2: 15 min TTL
+    }
+    
+    await db.booking_drafts.insert_one(draft)
+    
+    saved = await db.booking_drafts.find_one({"_id": draft_id})
+    return serialize_doc(saved)
+
+
+@router.get("/draft/{draft_id}", dependencies=[Depends(require_roles(["agency_admin", "agency_agent"]))])
+async def get_booking_draft(draft_id: str, user=Depends(get_current_user)):
+    """
+    Get booking draft details
+    FAZ-3.2: Check expiration
+    """
+    db = await get_db()
+    agency_id = user.get("agency_id")
+    
+    # FAZ-3.2: Check expiration BEFORE not-found check
+    draft = await db.booking_drafts.find_one({
+        "organization_id": user["organization_id"],
+        "agency_id": agency_id,
+        "_id": draft_id,
+    })
+    
+    if not draft:
+        raise HTTPException(status_code=404, detail="DRAFT_NOT_FOUND")
+    
+    # FAZ-3.2: Check expiration (normalize timezone)
+    if draft.get("expires_at"):
+        expires_at = draft["expires_at"]
+        now = now_utc()
+        
+        # Normalize timezone-naive datetimes from MongoDB
+        if hasattr(expires_at, 'tzinfo') and expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=timezone.utc)
+        
+        if now > expires_at:
+            raise HTTPException(status_code=410, detail="DRAFT_EXPIRED")
+    
+    return serialize_doc(draft)
+
+
+
+# ============================================================================
+# FAZ-2: SUBMIT (Draft → Pending)
+# ============================================================================
+
+class BookingSubmitIn(BaseModel):
+    note_to_hotel: Optional[str] = None
+    intent: Optional[Literal["confirmed", "pending"]] = None
+    idempotency_key: Optional[str] = None
+
+
+@router.post("/{draft_id}/submit", dependencies=[Depends(require_roles(["agency_admin", "agency_agent"]))])
+async def submit_booking(draft_id: str, payload: BookingSubmitIn, request: Request, user=Depends(get_current_user)):
+    """
+    FAZ-2: Submit draft to hotel (creates pending booking)
+    
+    - Converts draft → pending status
+    - Sets SLA deadline (60 minutes)
+    - Idempotent (same draft → same pending booking)
+    - Does NOT call PMS yet (that happens on approve)
+    - Does NOT create financial entry yet
+    """
+    db = await get_db()
+    agency_id = user.get("agency_id")
+    
+    if not agency_id:
+        raise HTTPException(status_code=403, detail="NOT_LINKED_TO_AGENCY")
+    
+    # 1. Get draft
+    draft = await db.booking_drafts.find_one({
+        "organization_id": user["organization_id"],
+        "agency_id": agency_id,
+        "_id": draft_id,
+    })
+    
+    if not draft:
+        raise HTTPException(status_code=404, detail="DRAFT_NOT_FOUND")
+    
+    # 2. Check expiration
+    if draft.get("expires_at"):
+        expires_at = draft["expires_at"]
+        now = now_utc()
+        
+        # Normalize timezone-naive datetimes
+        if hasattr(expires_at, 'tzinfo') and expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=timezone.utc)
+        
+        if now > expires_at:
+            raise HTTPException(status_code=410, detail="DRAFT_EXPIRED")
+    
+    # 3. Idempotency check: Already submitted via draft backlink?
+    if draft.get("submitted_booking_id"):
+        existing_booking = await db.bookings.find_one(
+            {
+                "_id": draft["submitted_booking_id"],
+                "organization_id": user["organization_id"],
+            }
+        )
+        if existing_booking:
+            return serialize_doc(existing_booking)
+
+    # 3b. Idempotency by explicit key (optional)
+    if payload.idempotency_key:
+        existing_booking = await db.bookings.find_one(
+            {
+                "organization_id": user["organization_id"],
+                "idempotency_key": payload.idempotency_key,
+            }
+        )
+        if existing_booking:
+            return serialize_doc(existing_booking)
+
+    # Intent: default pending (current behavior), allow explicit flag (reserved for future variants)
+    _intent = payload.intent or "pending"
+
+    # 4. Create pending booking
+    now = now_utc()
+    booking_id = str(uuid.uuid4())
+    
+    # Calculate commission from link
+    link = await db.agency_hotel_links.find_one({
+        "organization_id": user["organization_id"],
+        "agency_id": agency_id,
+        "hotel_id": draft["hotel_id"],
+        "active": True
+    })
+    
+    gross = draft["rate_snapshot"]["price"]["total"]
+    commission = 0.0
+    if link:
+        if link.get("commission_type") == "percent":
+            commission = gross * link.get("commission_value", 0) / 100
+        elif link.get("commission_type") == "fixed_per_booking":
+            commission = link.get("commission_value", 0)
+    
+    net = gross - commission
+    
+    pending_booking = {
+        "_id": booking_id,
+        "organization_id": user["organization_id"],
+        "agency_id": agency_id,
+        "agency_name": draft.get("agency_name"),
+        "hotel_id": draft["hotel_id"],
+        "hotel_name": draft.get("hotel_name"),
+        
+        # Status & SLA
+        "status": "pending",
+        "submitted_at": now,
+        "approval_deadline_at": now + timedelta(minutes=60),  # FAZ-2: 60 minute SLA
+        
+        # Draft reference
+        "draft_id": draft_id,
+        "submitted_from_draft_id": draft_id,
+        
+        # Guest & Stay (from draft)
+        "guest": draft.get("guest"),
+        "stay": draft.get("stay"),
+        "occupancy": draft.get("occupancy"),
+        "special_requests": draft.get("special_requests"),
+        "note_to_hotel": payload.note_to_hotel,
+        
+        # Rate snapshot (immutable)
+        "rate_snapshot": draft.get("rate_snapshot"),
+        
+        # Commission snapshot
+        "gross": gross,
+        "commission": commission,
+        "net": net,
+        "currency": draft["rate_snapshot"]["price"]["currency"],
+        
+        # Approval placeholders
+        "approved_at": None,
+        "approved_by_user_id": None,
+        "rejected_at": None,
+        "rejected_by_user_id": None,
+        "rejection": None,
+        "rejection_reason": None,
+        
+        # PMS fields (will be filled on approve)
+        "pms_booking_id": None,
+        "pms_status": None,
+        "source": "syroce_agency",
+        
+        # Audit
+        "created_at": now,
+        "updated_at": now,
+        "created_by": user.get("email"),
+        
+        # UTC midnight dates for check_in/out
+        "check_in_date": date_to_utc_midnight(draft["stay"]["check_in"]),
+        "check_out_date": date_to_utc_midnight(draft["stay"]["check_out"]),
+    }
+    
+    # Optional idempotency key for submit-level idempotency
+    if payload.idempotency_key:
+        pending_booking["idempotency_key"] = payload.idempotency_key
+
+    await db.bookings.insert_one(pending_booking)
+    
+    # 5. Update draft with backlink (idempotency)
+    await db.booking_drafts.update_one(
+        {"_id": draft_id},
+        {"$set": {
+            "submitted_booking_id": booking_id,
+            "submitted_at": now,
+            "submitted_by_user_id": user.get("id")
+        }}
+    )
+    
+    # 6. Event: booking.submitted
+    await write_booking_event(
+        db,
+        organization_id=user["organization_id"],
+        event_type="booking.submitted",
+        booking_id=booking_id,
+        hotel_id=draft["hotel_id"],
+        agency_id=agency_id,
+        payload={
+            "draft_id": draft_id,
+            "sla_deadline": pending_booking["approval_deadline_at"].isoformat(),
+            "note_to_hotel": payload.note_to_hotel
+        }
+    )
+    
+    # 7. Audit log
+    await write_audit_log(
+        db,
+        organization_id=user["organization_id"],
+        actor={"actor_type": "user", "email": user.get("email"), "roles": user.get("roles")},
+        request=request,
+        action="booking.submitted",
+        target_type="booking",
+        target_id=booking_id,
+        before=None,
+        after=pending_booking,
+        meta={
+            "draft_id": draft_id,
+            "sla_minutes": 60,
+            "note_to_hotel": payload.note_to_hotel
+        }
+    )
+    
+    return serialize_doc(pending_booking)
+
+
+@router.post("/confirm", dependencies=[Depends(require_roles(["agency_admin", "agency_agent"]))])
+async def confirm_booking(payload: BookingConfirmIn, request: Request, user=Depends(get_current_user)):
+    """
+    FAZ-3.1: Confirm booking draft
+    FAZ-3.2: Check expiration + price recheck
+    Idempotent: returns same booking if already confirmed
+    """
+    db = await get_db()
+    agency_id = user.get("agency_id")
+    
+    if not agency_id:
+        raise HTTPException(status_code=403, detail="NOT_LINKED_TO_AGENCY")
+    
+    # Get draft
+    draft = await db.booking_drafts.find_one({
+        "organization_id": user["organization_id"],
+        "agency_id": agency_id,
+        "_id": payload.draft_id,
+    })
+    
+    if not draft:
+        raise HTTPException(status_code=404, detail="DRAFT_NOT_FOUND")
+    
+    # FAZ-3.2: Check expiration (normalize timezone)
+    if draft.get("expires_at"):
+        expires_at = draft["expires_at"]
+        now = now_utc()
+        
+        # Normalize timezone-naive datetimes from MongoDB
+        if hasattr(expires_at, 'tzinfo') and expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=timezone.utc)
+        
+        if now > expires_at:
+            raise HTTPException(status_code=410, detail="DRAFT_EXPIRED")
+    
+    # Check if cancelled
+    if draft.get("status") == "cancelled":
+        raise HTTPException(status_code=409, detail="DRAFT_CANCELLED")
+    
+    # Idempotency: if already confirmed, return existing booking
+    if draft.get("status") == "confirmed" and draft.get("confirmed_booking_id"):
+        existing_booking = await db.bookings.find_one({"_id": draft["confirmed_booking_id"]})
+        if existing_booking:
+            return serialize_doc(existing_booking)
+    
+    # FAZ-8: PMS-side validation via Connect Layer create_booking()
+    from app.services.connect_layer import create_booking as pms_create_booking
+    from app.services.pms_booking_mapper import draft_to_pms_create_payload
+
+    idempotency_key = payload.draft_id  # critical: stable across retries
+
+    pms_result = await pms_create_booking(
+        organization_id=user["organization_id"],
+        channel="agency_extranet",
+        idempotency_key=idempotency_key,
+        payload=draft_to_pms_create_payload(draft=draft, agency_id=agency_id),
+    )
+
+    pms_booking_id = pms_result.get("pms_booking_id")
+    pms_status = pms_result.get("status") or "created"
+    
+    before_draft = dict(draft)
+    
+    # FAZ-6: Commission snapshot from link (gross=rate_snapshot.price.total)
+    link = await db.agency_hotel_links.find_one({
+        "organization_id": user["organization_id"],
+        "agency_id": agency_id,
+        "hotel_id": draft["hotel_id"],
+        "active": True,
+    })
+    commission_type = (link or {}).get("commission_type") or "percent"
+    commission_value = (link or {}).get("commission_value") or 0.0
+
+    from app.services.commission import compute_commission, month_from_check_in, create_financial_entry
+
+    gross_total = float(draft.get("rate_snapshot", {}).get("price", {}).get("total", 0) or 0)
+    currency = draft.get("rate_snapshot", {}).get("price", {}).get("currency", "TRY")
+    commission_type_norm, commission_amount = compute_commission(gross_total, commission_type, commission_value)
+    net_amount = round(gross_total - commission_amount, 2)
+    month = month_from_check_in((draft.get("stay") or {}).get("check_in") or "")
+
+    # Create confirmed booking
+    booking_id = f"bkg_{uuid.uuid4().hex[:16]}"
+    confirmed_at = now_utc()
+    
+    booking = {
+        "pms_booking_id": pms_booking_id,
+        "pms_status": pms_status,
+        "source": "pms",
+        "_id": booking_id,
+        "organization_id": user["organization_id"],
+        "tenant_id": draft["hotel_id"],
+        "agency_id": agency_id,
+        "draft_id": payload.draft_id,
+        "search_id": draft.get("search_id"),
+        "hotel_id": draft["hotel_id"],
+        "hotel_name": draft.get("hotel_name"),
+        "agency_name": draft.get("agency_name"),
+        "status": "confirmed",
+        "stay": draft.get("stay"),
+        "occupancy": draft.get("occupancy"),
+        "guest": draft.get("guest"),
+        "special_requests": draft.get("special_requests"),
+        "rate_snapshot": draft.get("rate_snapshot"),
+        "confirmed_at": confirmed_at,
+        "created_at": confirmed_at,
+        "updated_at": confirmed_at,
+        "created_by": user.get("email"),
+        "payment_status": "pending",  # pending|paid|partial
+        "channel": "agency_extranet",
+
+        # FAZ-6: financial snapshot
+        "gross_amount": round(gross_total, 2),
+        "commission_amount": round(commission_amount, 2),
+        "net_amount": round(net_amount, 2),
+        "currency": currency,
+        "commission_type_snapshot": commission_type_norm,
+        "commission_value_snapshot": float(commission_value or 0),
+        "commission_reversed": False,
+    }
+
+    # FAZ-7: data hygiene - parsed date fields on booking (UTC midnight)
+    stay = booking.get("stay") or {}
+    if stay.get("check_in"):
+        booking["check_in_date"] = date_to_utc_midnight(stay["check_in"])
+    if stay.get("check_out"):
+        booking["check_out_date"] = date_to_utc_midnight(stay["check_out"])
+
+    # If PMS creation succeeded, create local booking record (source=pms)
+
+    # FAZ-7: events + audit
+    await write_booking_event(
+        db,
+        organization_id=user["organization_id"],
+        event_type="booking.created",
+        booking_id=booking_id,
+        hotel_id=draft["hotel_id"],
+        agency_id=agency_id,
+        payload={"channel": "agency_extranet"},
+    )
+
+    await write_audit_log(
+        db,
+        organization_id=user["organization_id"],
+        actor={"actor_type": "user", "email": user.get("email"), "roles": user.get("roles")},
+        request=request,
+        action="booking.confirm",
+        target_type="booking",
+        target_id=booking_id,
+        before=before_draft,
+        after=booking,
+        meta={"draft_id": payload.draft_id},
+    )
+
+    # FAZ-9.3: enqueue booking.confirmed email for hotel (only)
+    try:
+        hotel_id = draft["hotel_id"]
+        org_id = user["organization_id"]
+
+        # Collect hotel recipients (hotel_admin + hotel_staff)
+        hotel_users = db.users.find(
+            {
+                "organization_id": org_id,
+                "hotel_id": hotel_id,
+                "roles": {"$in": ["hotel_admin", "hotel_staff"]},
+                "is_active": True,
+            }
+        )
+        to_addresses = [u.get("email") for u in await hotel_users.to_list(length=50)]
+
+        await enqueue_booking_email(
+            db,
+            organization_id=org_id,
+            booking=booking,
+            event_type="booking.confirmed",
+            to_addresses=to_addresses,
+        )
+    except Exception as e:  # pragma: no cover - email errors shouldn't break booking
+        import logging
+
+        logging.getLogger("email_outbox").error("Failed to enqueue booking.confirmed email: %s", e, exc_info=True)
+    
+    await db.bookings.insert_one(booking)
+
+    # FAZ-6: Create financial entry for settlements (month based on stay.check_in)
+    if month:
+        await create_financial_entry(
+            db,
+            organization_id=user["organization_id"],
+            booking_id=booking_id,
+            agency_id=agency_id,
+            hotel_id=draft["hotel_id"],
+            entry_type="booking",
+            month=month,
+            currency=currency,
+            gross_amount=gross_total,
+            commission_amount=commission_amount,
+            net_amount=net_amount,
+            source_status="confirmed",
+            created_at=confirmed_at,
+        )
+
+    
+    # Update draft status
+    await db.booking_drafts.update_one(
+        {"_id": payload.draft_id},
+        {
+            "$set": {
+                "status": "confirmed",
+                "confirmed_booking_id": booking_id,
+                "updated_at": confirmed_at,
+            }
+        },
+    )
+    
+    saved = await db.bookings.find_one({"_id": booking_id})
+    return build_booking_public_view(saved)
+
+
+@router.delete("/draft/{draft_id}", dependencies=[Depends(require_roles(["agency_admin", "agency_agent"]))])
+async def cancel_booking_draft(draft_id: str, user=Depends(get_current_user)):
+
+
+    """
+    FAZ-3.1: Cancel booking draft
+    Sets status to cancelled (does not delete)
+    """
+    db = await get_db()
+    agency_id = user.get("agency_id")
+    
+    if not agency_id:
+        raise HTTPException(status_code=403, detail="NOT_LINKED_TO_AGENCY")
+    
+    # Get draft
+    draft = await db.booking_drafts.find_one({
+        "organization_id": user["organization_id"],
+        "agency_id": agency_id,
+        "_id": draft_id,
+    })
+    
+    if not draft:
+        raise HTTPException(status_code=404, detail="DRAFT_NOT_FOUND")
+    
+    # Cannot cancel confirmed draft
+    if draft.get("status") == "confirmed":
+        raise HTTPException(status_code=409, detail="DRAFT_ALREADY_CONFIRMED")
+    
+    # Update status to cancelled
+    await db.booking_drafts.update_one(
+        {"_id": draft_id},
+        {
+            "$set": {
+                "status": "cancelled",
+                "updated_at": now_utc(),
+            }
+        },
+    )
+    
+    saved = await db.booking_drafts.find_one({"_id": draft_id})
+    return serialize_doc(saved)
+
+
+@router.get("", dependencies=[Depends(require_roles(["agency_admin", "agency_agent"]))])
+async def list_agency_bookings(user=Depends(get_current_user)):
+    """
+    FAZ-4: List all confirmed bookings for this agency
+    """
+    db = await get_db()
+    agency_id = user.get("agency_id")
+    
+    if not agency_id:
+        raise HTTPException(status_code=403, detail="NOT_LINKED_TO_AGENCY")
+    
+    bookings = await db.bookings.find({
+        "organization_id": user["organization_id"],
+        "agency_id": agency_id,
+    }).sort("created_at", -1).to_list(500)
+    
+    return [serialize_doc(b) for b in bookings]
+
+
+@router.get("/{booking_id}", dependencies=[Depends(require_roles(["agency_admin", "agency_agent"]))])
+async def get_booking(booking_id: str, user=Depends(get_current_user)):
+    """
+    FAZ-3.2: Get confirmed booking details
+    """
+    db = await get_db()
+    agency_id = user.get("agency_id")
+    
+    booking = await db.bookings.find_one({
+        "organization_id": user["organization_id"],
+        "agency_id": agency_id,
+        "_id": booking_id,
+    })
+    
+    if not booking:
+        raise HTTPException(status_code=404, detail="BOOKING_NOT_FOUND")
+    
+    return build_booking_public_view(booking)

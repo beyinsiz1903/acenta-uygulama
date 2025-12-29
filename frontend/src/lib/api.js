@@ -1,0 +1,100 @@
+import axios from "axios";
+
+// Backend base URL: prefer REACT_APP_BACKEND_URL from env, fallback to same-origin /api
+// This prevents broken URLs like "undefined/api" when env is not set in certain environments.
+const backendEnv =
+  (typeof import.meta !== "undefined" && import.meta.env && import.meta.env.REACT_APP_BACKEND_URL)
+    || process.env.REACT_APP_BACKEND_URL
+    || "";
+
+export function getToken() {
+  return localStorage.getItem("acenta_token") || "";
+}
+
+export function setToken(token) {
+  localStorage.setItem("acenta_token", token);
+}
+
+export function clearToken() {
+  localStorage.removeItem("acenta_token");
+  localStorage.removeItem("acenta_user");
+}
+
+export function getUser() {
+  try {
+    const raw = localStorage.getItem("acenta_user");
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function setUser(user) {
+  localStorage.setItem("acenta_user", JSON.stringify(user));
+}
+
+// If backendEnv is empty, axios will call relative to current origin, and
+// we manually ensure all paths start with /api when calling.
+export const api = axios.create({
+  baseURL: backendEnv ? `${backendEnv}/api` : "/api",
+});
+
+api.interceptors.request.use((config) => {
+  const url = config.url || "";
+  const isAuthRoute =
+    url.includes("/auth/login") ||
+    url.includes("/auth/register") ||
+    url.includes("/auth/refresh");
+
+  if (!isAuthRoute) {
+    const token = getToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+  } else if (config.headers && config.headers.Authorization) {
+    // Login/register isteklerinde eski token taşınmasın
+    delete config.headers.Authorization;
+  }
+
+  // FAZ-7: app version for audit origin
+  try {
+    // lazy import to avoid circular deps issues
+    const { APP_VERSION } = require("../utils/appVersion");
+    config.headers["X-App-Version"] = APP_VERSION;
+  } catch {
+    // ignore
+  }
+
+  return config;
+});
+
+api.interceptors.response.use(
+  (resp) => resp,
+  (err) => {
+    if (err?.response?.status === 401) {
+      // Session expired / unauthorized
+      try {
+        clearToken();
+      } catch {
+        // ignore
+      }
+
+      // Avoid infinite redirect loops
+      if (typeof window !== "undefined") {
+        const pathname = window.location?.pathname || "";
+        if (!pathname.startsWith("/login")) {
+          window.location.replace("/login");
+        }
+      }
+    }
+    return Promise.reject(err);
+  }
+);
+
+export function apiErrorMessage(err) {
+  return (
+    err?.response?.data?.detail ||
+    err?.message ||
+    "Beklenmeyen bir hata oluştu"
+  );
+}

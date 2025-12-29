@@ -243,6 +243,26 @@ export default function AgencyTourBookingDetailPage() {
               data-testid="btn-copy-payment-note"
               onClick={() => copyWithToast("Ödeme açıklaması", filledNote)}
             >
+            {isPaid && (
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="ml-auto"
+                onClick={async () => {
+                  try {
+                    await api.post(`/agency/tour-bookings/${item.id}/mark-offline-unpaid`);
+                    toast.success("Offline ödeme geri alındı.");
+                    await load();
+                  } catch (err) {
+                    toast.error(apiErrorMessage(err) || "Offline ödeme geri alınamadı.");
+                  }
+                }}
+              >
+                Ödemeyi Geri Al
+              </Button>
+            )}
+
               Ödeme Açıklamasını Kopyala
             </Button>
             </div>

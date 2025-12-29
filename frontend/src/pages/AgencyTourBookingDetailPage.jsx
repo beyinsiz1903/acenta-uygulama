@@ -412,6 +412,42 @@ export default function AgencyTourBookingDetailPage() {
           <div className="flex flex-wrap gap-2">
             <Button
               type="button"
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              data-testid="btn-send-voucher-email"
+              onClick={async () => {
+                try {
+                  const to = item.guest?.email || "";
+                  if (!to) {
+                    toast.error("Misafir e-posta adresi bulunamadı.");
+                    return;
+                  }
+                  const resp = await api.post(`/agency/tour-bookings/${item.id}/send-voucher-email`, {
+                    to_email: to,
+                  });
+                  toast.success("Voucher e-postası gönderildi.");
+                } catch (err) {
+                  const detail = err?.response?.data?.detail;
+                  const code = typeof detail === "object" ? detail.code : null;
+                  if (code === "EMAIL_MISSING") {
+                    toast.error("Misafir e-posta adresi bulunamadı.");
+                  } else if (code === "OFFLINE_PAYMENT_NOT_PREPARED") {
+                    toast.error("Önce offline ödeme talimatını hazırlayın.");
+                  } else if (code === "VOUCHER_NOT_READY") {
+                    toast.error("Voucher henüz hazır değil.");
+                  } else if (code === "RESEND_NOT_CONFIGURED") {
+                    toast.error("E-posta servisi yapılandırılmamış.");
+                  } else {
+                    toast.error(apiErrorMessage(err) || "Voucher e-postası gönderilemedi.");
+                  }
+                }
+              }}
+            >
+              Voucher + Ödeme Talimatını E-posta ile Gönder
+            </Button>
+
               size="sm"
               variant="outline"
               data-testid="btn-open-tour-voucher-pdf"

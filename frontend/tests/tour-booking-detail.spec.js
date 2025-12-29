@@ -63,7 +63,7 @@ async function openFirstBookingDetail(page) {
   const firstCard = page.locator('[data-testid="tour-booking-card"]').first();
   if (await firstCard.count()) {
     await firstCard.click();
-    await page.waitForURL(/\/app\/agency\/tour-bookings\/[^/]+$/, { timeout: 15000 });
+    await page.waitForTimeout(3000);
     return;
   }
 

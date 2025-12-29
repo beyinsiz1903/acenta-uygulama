@@ -906,6 +906,128 @@ class TourVoucherPDFTester:
         finally:
             self.tests_run += 1
 
+    def test_idempotency_prepare_offline_payment(self):
+        """Test idempotency of prepare-offline-payment endpoint"""
+        self.log("\n=== VOUCHER TEST: IDEMPOTENCY CHECK ===")
+        
+        if not hasattr(self, 'booking_without_voucher') or not self.booking_without_voucher:
+            self.log("⚠️  No booking available for idempotency test - skipping")
+            return True
+        
+        booking_id = self.booking_without_voucher.get('id')
+        if not booking_id:
+            self.log("❌ Booking has no ID for idempotency test")
+            return False
+        
+        # Call prepare-offline-payment again on the same booking
+        success, response = self.run_test(
+            f"POST /api/agency/tour-bookings/{booking_id}/prepare-offline-payment (idempotency)",
+            "POST",
+            f"api/agency/tour-bookings/{booking_id}/prepare-offline-payment",
+            200,
+            token=self.agency_admin_token
+        )
+        
+        if success:
+            # Verify that we get the same voucher_id and reference_code
+            payment = response.get('payment', {})
+            voucher = response.get('voucher', {})
+            
+            if (hasattr(self, 'new_voucher_id') and 
+                voucher.get('voucher_id') == self.new_voucher_id):
+                self.log(f"✅ Idempotency verified - same voucher_id returned: {voucher.get('voucher_id')}")
+                self.log(f"   - Reference code: {payment.get('reference_code')}")
+                return True
+            else:
+                self.log(f"❌ Idempotency failed - different voucher_id returned")
+                self.log(f"   - Expected: {getattr(self, 'new_voucher_id', 'N/A')}")
+                self.log(f"   - Got: {voucher.get('voucher_id')}")
+                return False
+        return False
+
+    def test_pdf_content_validation(self):
+        """Test PDF content validation for both existing and new vouchers"""
+        self.log("\n=== VOUCHER TEST: PDF CONTENT VALIDATION ===")
+        
+        all_passed = True
+        
+        # Test existing voucher PDF content
+        if hasattr(self, 'booking_with_voucher') and self.booking_with_voucher:
+            voucher = self.booking_with_voucher.get('voucher', {})
+            voucher_id = voucher.get('voucher_id')
+            
+            if voucher_id:
+                url = f"{self.base_url}/api/public/vouchers/{voucher_id}.pdf"
+                try:
+                    response = requests.get(url, timeout=15)
+                    if response.status_code == 200:
+                        content = response.content
+                        
+                        # Check PDF header
+                        if content.startswith(b'%PDF'):
+                            # Check for some expected content in the PDF
+                            content_str = content.decode('latin-1', errors='ignore')
+                            
+                            # Look for Turkish text that should be in the voucher
+                            expected_texts = ['Tur Voucher', 'Rezervasyon', 'Misafir Bilgileri', 'IBAN']
+                            found_texts = [text for text in expected_texts if text in content_str]
+                            
+                            if len(found_texts) >= 2:  # At least 2 expected texts found
+                                self.log(f"✅ Existing PDF content validation passed - found texts: {found_texts}")
+                            else:
+                                self.log(f"⚠️  Existing PDF content validation - limited text found: {found_texts}")
+                                all_passed = False
+                        else:
+                            self.log(f"❌ Existing PDF content validation failed - not a valid PDF")
+                            all_passed = False
+                    else:
+                        self.log(f"❌ Existing PDF content validation failed - status {response.status_code}")
+                        all_passed = False
+                except Exception as e:
+                    self.log(f"❌ Existing PDF content validation error: {str(e)}")
+                    all_passed = False
+        
+        # Test new voucher PDF content
+        if hasattr(self, 'new_voucher_id') and self.new_voucher_id:
+            url = f"{self.base_url}/api/public/vouchers/{self.new_voucher_id}.pdf"
+            try:
+                response = requests.get(url, timeout=15)
+                if response.status_code == 200:
+                    content = response.content
+                    
+                    # Check PDF header
+                    if content.startswith(b'%PDF'):
+                        # Check for some expected content in the PDF
+                        content_str = content.decode('latin-1', errors='ignore')
+                        
+                        # Look for Turkish text that should be in the voucher
+                        expected_texts = ['Tur Voucher', 'Rezervasyon', 'Misafir Bilgileri', 'IBAN']
+                        found_texts = [text for text in expected_texts if text in content_str]
+                        
+                        if len(found_texts) >= 2:  # At least 2 expected texts found
+                            self.log(f"✅ New PDF content validation passed - found texts: {found_texts}")
+                        else:
+                            self.log(f"⚠️  New PDF content validation - limited text found: {found_texts}")
+                            all_passed = False
+                    else:
+                        self.log(f"❌ New PDF content validation failed - not a valid PDF")
+                        all_passed = False
+                else:
+                    self.log(f"❌ New PDF content validation failed - status {response.status_code}")
+                    all_passed = False
+            except Exception as e:
+                self.log(f"❌ New PDF content validation error: {str(e)}")
+                all_passed = False
+        
+        if all_passed:
+            self.tests_passed += 1
+        else:
+            self.tests_failed += 1
+            self.failed_tests.append("PDF content validation - Some validations failed")
+        
+        self.tests_run += 1
+        return all_passed
+
     def run_all_tests(self):
         """Run all Tour Voucher PDF backend tests in sequence"""
         self.log("🚀 Starting Tour Voucher PDF Backend Tests")

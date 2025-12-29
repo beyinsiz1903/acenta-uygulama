@@ -1,0 +1,135 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - generic [ref=e5]:
+      - generic [ref=e6]: Acenta Master
+      - generic [ref=e7]:
+        - button "Tema" [ref=e8] [cursor=pointer]:
+          - img
+          - generic [ref=e9]: Tema
+        - generic [ref=e10]:
+          - generic [ref=e11]: Agency Admin 1
+          - generic [ref=e12]: agency_admin
+        - button "Çıkış" [ref=e13] [cursor=pointer]:
+          - img
+          - text: Çıkış
+    - generic [ref=e14]:
+      - complementary [ref=e15]:
+        - generic [ref=e16]:
+          - generic [ref=e17]:
+            - generic [ref=e18]:
+              - generic [ref=e19]: A
+              - generic [ref=e20]:
+                - generic [ref=e21]: Acenta Master
+                - generic [ref=e22]: Agency Paneli
+            - generic "Online" [ref=e23]
+          - generic [ref=e24]:
+            - generic [ref=e25]:
+              - generic [ref=e26]:
+                - generic [ref=e27]: Toplam
+                - generic [ref=e28]: adet
+              - generic "0" [ref=e29]
+            - generic [ref=e30]:
+              - generic [ref=e31]:
+                - generic [ref=e32]: Bekleyen
+                - generic [ref=e33]: adet
+              - generic "0" [ref=e34]
+            - generic [ref=e35]:
+              - generic [ref=e36]:
+                - generic [ref=e37]: Ciro 7G
+                - generic [ref=e38]: ₺
+              - generic "₺0,00" [ref=e39]: ₺0
+          - generic [ref=e40]:
+            - generic [ref=e41]: "Rol: agency_admin"
+            - generic [ref=e42]: 29.12.2025
+          - navigation [ref=e44]:
+            - generic [ref=e45]:
+              - generic [ref=e46]: Acenta
+              - link "Hızlı Rezervasyon" [ref=e47] [cursor=pointer]:
+                - /url: /app/agency/hotels
+                - img [ref=e48]
+                - text: Hızlı Rezervasyon
+              - link "Rezervasyonlarım" [ref=e52] [cursor=pointer]:
+                - /url: /app/agency/bookings
+                - img [ref=e53]
+                - text: Rezervasyonlarım
+              - link "Mutabakat" [ref=e57] [cursor=pointer]:
+                - /url: /app/agency/settlements
+                - img [ref=e58]
+                - text: Mutabakat
+              - link "Ödeme Ayarları" [ref=e61] [cursor=pointer]:
+                - /url: /app/agency/settings/payment
+                - img [ref=e62]
+                - text: Ödeme Ayarları
+              - link "Yardım" [ref=e66] [cursor=pointer]:
+                - /url: /app/agency/help
+                - img [ref=e67]
+                - text: Yardım
+            - generic [ref=e71]:
+              - generic [ref=e72]: Ürünler
+              - link "Oteller" [ref=e73] [cursor=pointer]:
+                - /url: /app/agency/products/hotels
+                - img [ref=e74]
+                - text: Oteller
+              - link "Turlarım" [ref=e77] [cursor=pointer]:
+                - /url: /app/agency/tours
+                - img [ref=e78]
+                - text: Turlarım
+              - link "Tur Talepleri" [ref=e82] [cursor=pointer]:
+                - /url: /app/agency/tour-bookings
+                - img [ref=e83]
+                - text: Tur Talepleri
+        - generic [ref=e87]:
+          - generic [ref=e88]: Hızlı İpuçları
+          - generic [ref=e89]: Müsaitlik ekranında kapasite ve fiyatı güncelleyip rezervasyon akışını hızlıca test edebilirsin.
+      - main [ref=e90]:
+        - generic [ref=e92]:
+          - generic [ref=e93]:
+            - heading "Tur Rezervasyon Talepleri" [level=1] [ref=e94]
+            - generic [ref=e95]:
+              - button "Yeni" [ref=e96] [cursor=pointer]
+              - button "Onaylandı" [ref=e97] [cursor=pointer]
+              - button "Reddedildi" [active] [ref=e98] [cursor=pointer]
+              - button "İptal" [ref=e99] [cursor=pointer]
+              - button "Tümü" [ref=e100] [cursor=pointer]
+          - generic [ref=e101]:
+            - generic [ref=e102]:
+              - generic [ref=e103]:
+                - generic [ref=e104]: Arama
+                - textbox "İsim, telefon, tur adı, not..." [ref=e105]
+              - generic [ref=e106]:
+                - generic [ref=e107]:
+                  - generic [ref=e108]: Başlangıç
+                  - textbox [ref=e109]
+                - generic [ref=e110]:
+                  - generic [ref=e111]: Bitiş
+                  - textbox [ref=e112]
+            - button "Filtreleri Temizle" [ref=e114] [cursor=pointer]
+          - generic [ref=e115]:
+            - generic [ref=e116] [cursor=pointer]:
+              - generic [ref=e117]:
+                - generic [ref=e118]: Test Tour for Booking
+                - generic [ref=e119]: Test User | +905551112233
+                - generic [ref=e120]: "Tarih: 2025-12-30 | Kişi sayısı: 2"
+                - generic [ref=e121]: "Not: Testing tour booking request"
+              - generic [ref=e123]: Reddedildi
+            - generic [ref=e124] [cursor=pointer]:
+              - generic [ref=e125]:
+                - generic [ref=e126]: Test Tour for Booking
+                - generic [ref=e127]: Test User | +905551112233
+                - generic [ref=e128]: "Tarih: 2025-12-30 | Kişi sayısı: 2"
+                - generic [ref=e129]: "Not: Testing tour booking request"
+              - generic [ref=e131]: Reddedildi
+            - generic [ref=e132] [cursor=pointer]:
+              - generic [ref=e133]:
+                - generic [ref=e134]: Test Tour for Booking
+                - generic [ref=e135]: Test User | 05551234567
+                - generic [ref=e136]: "Tarih: 2026-01-02 | Kişi sayısı: 2"
+                - generic [ref=e137]: "Not: Test note"
+              - generic [ref=e139]: Reddedildi
+    - contentinfo [ref=e140]:
+      - generic [ref=e141]: © 2025 — v1
+  - region "Notifications alt+T"
+```

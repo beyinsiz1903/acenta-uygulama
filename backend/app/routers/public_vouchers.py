@@ -74,9 +74,9 @@ async def get_public_voucher_pdf(voucher_id: str):
       detail={"code": "PDF_RENDER_FAILED", "message": "Voucher PDF oluşturulamadı."},
     ) from e
 
-  from .booking_voucher import _safe_filename_from_reference  # reuse helper if exists
-
-  filename = _safe_filename_from_reference(model["reference_code"])
+  # Simple, safe filename based on reference code (fallback if helper not available)
+  ref = (model.get("reference_code") or "voucher").replace("/", "-").replace(" ", "_")
+  filename = f"tour-voucher-{ref}.pdf"
   headers = {
     "Content-Disposition": f'inline; filename="{filename}"',
     "Cache-Control": "no-store",

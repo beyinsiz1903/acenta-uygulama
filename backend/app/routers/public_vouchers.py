@@ -7,17 +7,48 @@ from fastapi import APIRouter, Depends, HTTPException, Response
 from app.db import get_db
 from app.utils import now_utc
 from app.services.tour_voucher_pdf import render_tour_voucher_pdf
+from app.utils.voucher_signing import (
+  VoucherTokenExpired,
+  VoucherTokenInvalid,
+  VoucherTokenMissing,
+  verify_voucher_token,
+)
 
 router = APIRouter(prefix="/api/public/vouchers", tags=["public-vouchers"])
 
 
 @router.get("/{voucher_id}.pdf")
-async def get_public_voucher_pdf(voucher_id: str):
+async def get_public_voucher_pdf(voucher_id: str, t: str | None = None):
   """Public voucher PDF for tour booking request.
 
-  - No auth (public) for now
+  - Public endpoint, but protected with short-lived HMAC token (?t=...)
   - Uses tour_booking_requests.voucher + payment snapshot
   """
+  if not t:
+    raise HTTPException(
+      status_code=401,
+      detail={"code": "VOUCHER_TOKEN_MISSING", "message": "Geçerli bir voucher erişim token'ı gerekli."},
+    )
+
+  now = now_utc()
+  try:
+    verify_voucher_token(voucher_id, t, now)
+  except VoucherTokenMissing:
+    raise HTTPException(
+      status_code=401,
+      detail={"code": "VOUCHER_TOKEN_MISSING", "message": "Geçerli bir voucher erişim token'ı gerekli."},
+    )
+  except VoucherTokenExpired:
+    raise HTTPException(
+      status_code=403,
+      detail={"code": "VOUCHER_TOKEN_EXPIRED", "message": "Voucher erişim süresi dolmuş."},
+    )
+  except VoucherTokenInvalid:
+    raise HTTPException(
+      status_code=403,
+      detail={"code": "VOUCHER_TOKEN_INVALID", "message": "Voucher token'ı geçersiz."},
+    )
+
   db = await get_db()
 
   doc = await db.tour_booking_requests.find_one({"voucher.voucher_id": voucher_id})

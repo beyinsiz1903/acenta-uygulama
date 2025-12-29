@@ -7,7 +7,7 @@ import sys
 from datetime import datetime
 
 class C3AuthorizationTester:
-    def __init__(self, base_url="https://syroce-booking.preview.emergentagent.com"):
+    def __init__(self, base_url="https://syroce-tours.preview.emergentagent.com"):
         self.base_url = base_url
         self.agency1_token = None
         self.agency2_token = None

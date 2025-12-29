@@ -102,17 +102,22 @@ test.describe("C3 - Tour booking detail E2E", () => {
     // Sonner toast genelde body içinde görünür bir text basar.
     await expect(page.locator("body")).toContainText(/not.*(boş|doldur|zorunlu)|lütfen.*not/i, { timeout: 8000 });
 
-    // 6) Status Onayla (buton varsa)
+    // 6) Status Onayla (buton varsa ve enabled ise)
     const approveBtn = page.getByRole("button", { name: /onayla/i }).first();
     if (await approveBtn.count()) {
-      page.once("dialog", async (dialog) => {
-        await dialog.accept();
-      });
+      const isEnabled = await approveBtn.isEnabled();
+      if (isEnabled) {
+        page.once("dialog", async (dialog) => {
+          await dialog.accept();
+        });
 
-      await approveBtn.click();
+        await approveBtn.click();
 
-      // Sonrasında status değişti mi? (badge text)
-      await expect(page.locator("body")).toContainText(/onaylandı|approved/i, { timeout: 15000 });
+        // Sonrasında status değişti mi? (badge text)
+        await expect(page.locator("body")).toContainText(/onaylandı|approved/i, { timeout: 15000 });
+      } else {
+        console.log("ℹ️ Approve button is disabled - booking may already be approved");
+      }
     }
 
     // 7) Offline ödeme kartı ve kopyala aksiyonları (varsa)

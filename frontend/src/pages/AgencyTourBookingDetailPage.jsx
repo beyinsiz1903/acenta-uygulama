@@ -393,7 +393,7 @@ export default function AgencyTourBookingDetailPage() {
                 }
               }}
             >
-              Voucher PDFyi Aç
+              Voucher PDF&apos;yi Aç
             </Button>
           </div>
         </div>

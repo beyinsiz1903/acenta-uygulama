@@ -129,6 +129,8 @@ export default function AgencyTourBookingDetailPage() {
     }
   };
 
+  const voucher = item?.voucher || null;
+
   const renderOfflinePaymentCard = () => {
     if (!item) return null;
 

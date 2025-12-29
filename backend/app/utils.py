@@ -283,13 +283,6 @@ def parse_date_range(
         except ValueError:
             # Invalid date format, fall back to days
             pass
-
-            
-            return start_dt, end_dt, actual_days
-            
-        except ValueError:
-            # Invalid date format, fall back to days
-            pass
     
     # Priority 2: Days parameter (backward compatible)
     days_val = days or default_days

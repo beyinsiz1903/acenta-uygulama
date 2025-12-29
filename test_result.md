@@ -159,6 +159,8 @@
 ##     message: "Dizin yapısı kontrol edildi, /app/repo arşiv olarak bırakıldı. Lütfen temel smoke test yap: /api/health, login ve ana sayfa yüklenmesi."
 ##   - agent: "testing"
 ##     message: "Backend smoke tests completed successfully - all 3 tests passed (health check, admin login, admin hotels). Frontend dependencies fixed and service restarted. Both services now running properly. External URL not accessible but local backend fully functional. Ready for frontend UI testing if needed."
+##   - agent: "main"
+##     message: "Tur offline ödeme akışı için yeni public voucher PDF endpoint'i (/api/public/vouchers/{voucher_id}.pdf) stabilize edildi ve AgencyTourBookingDetailPage üzerinde 'Voucher PDF&apos;yi Aç' butonu eklendi. Lütfen aşağıdaki akışı test et: 1) agency1@demo.test ile login, 2) Tur rezervasyon listesinde offline ödemesi hazırlanmış ve voucher'ı olan bir kayıt aç, 3) Offline Ödeme kartında IBAN/ref kopyalama butonlarını ve 'Voucher PDF&apos;yi Aç' butonunu doğrula, 4) 'Voucher PDF&apos;yi Aç' tıklandığında yeni sekmede PDF'in açıldığını kontrol et."
 
 ## frontend:
 ##   - task: "Hotel paneli için Copy/Summary/Print ve print sayfası (HotelBookingPrintPage)"

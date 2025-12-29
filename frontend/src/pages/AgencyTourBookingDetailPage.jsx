@@ -381,15 +381,31 @@ export default function AgencyTourBookingDetailPage() {
               size="sm"
               variant="outline"
               data-testid="btn-open-tour-voucher-pdf"
-              onClick={() => {
-                const url = voucher.pdf_url;
-                if (url) {
-                  const finalUrl = url.startsWith("http")
-                    ? url
-                    : `${process.env.REACT_APP_BACKEND_URL}${url}`;
+              onClick={async () => {
+                try {
+                  const resp = await api.post(
+                    `/agency/tour-bookings/${item.id}/voucher-signed-url`,
+                  );
+                  const signedUrl = resp?.data?.url;
+                  if (!signedUrl) {
+                    toast.error("Voucher PDF linki alınamadı.");
+                    return;
+                  }
+                  const base = process.env.REACT_APP_BACKEND_URL || window.origin || "";
+                  const finalUrl = signedUrl.startsWith("http")
+                    ? signedUrl
+                    : `${base}${signedUrl}`;
                   window.open(finalUrl, "_blank", "noopener,noreferrer");
-                } else {
-                  toast.error("Voucher PDF linki bulunamadı.");
+                } catch (err) {
+                  const detail = err?.response?.data?.detail;
+                  const code = typeof detail === "object" ? detail.code : null;
+                  if (code === "VOUCHER_NOT_READY") {
+                    toast.error("Bu talep için önce offline ödemeyi hazırlayın.");
+                  } else if (code === "VOUCHER_DISABLED") {
+                    toast.error("Bu voucher devre dışı bırakılmış.");
+                  } else {
+                    toast.error(apiErrorMessage(err) || "Voucher PDF açılamadı.");
+                  }
                 }
               }}
             >

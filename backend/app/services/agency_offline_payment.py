@@ -69,6 +69,26 @@ async def prepare_offline_payment_for_tour_booking(
   ref = payment.get("reference_code")
   iban_snapshot = payment.get("iban_snapshot") or {}
 
+  # Ensure new payment fields exist with backwards-compatible defaults
+  if "status" not in payment:
+    payment["status"] = "unpaid"
+
+  if "paid_at" not in payment:
+    payment["paid_at"] = None
+
+  if "paid_by" not in payment:
+    payment["paid_by"] = {
+      "user_id": None,
+      "name": None,
+      "role": None,
+    }
+
+  if "paid_note" not in payment:
+    payment["paid_note"] = None
+
+  if "paid_method" not in payment:
+    payment["paid_method"] = "manual"
+
   def has_offline_payment_snapshot() -> bool:
     return (
       mode == "offline"

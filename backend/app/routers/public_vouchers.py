@@ -38,33 +38,49 @@ async def get_public_voucher_pdf(voucher_id: str):
   payment = doc.get("payment") or {}
   guest = doc.get("guest") or {}
 
+  # Agency/organization name if needed for header branding
+  org_name = "-"
+  agency_name = doc.get("agency_name") or None
+  org_display = doc.get("organization_name") or None
+  if agency_name:
+    org_name = agency_name
+  elif org_display:
+    org_name = org_display
+
   model: Dict[str, Any] = {
-    "reference": payment.get("reference_code") or voucher.get("voucher_id") or "-",
+    "agency_name": org_name,
+    "reference_code": payment.get("reference_code") or voucher.get("voucher_id") or "-",
+    "request_id": str(doc.get("_id") or doc.get("id") or "-"),
     "guest_full_name": guest.get("full_name") or "-",
     "guest_phone": guest.get("phone") or "-",
     "guest_email": guest.get("email") or "-",
     "tour_title": doc.get("tour_title") or "-",
-    "desired_date": doc.get("desired_date") or "-",
+    "desired_date": doc.get("desired_date"),
     "pax": doc.get("pax") or "-",
     "status": doc.get("status") or "-",
-    "amount": payment.get("amount"),
-    "currency": payment.get("currency") or "TRY",
-    "due_at": payment.get("due_at"),
-    "iban_snapshot": payment.get("iban_snapshot") or {},
+    "payment": {
+      "amount": payment.get("amount"),
+      "currency": (payment.get("currency") or (payment.get("iban_snapshot") or {}).get("currency") or "TRY"),
+      "due_at": payment.get("due_at"),
+      "iban_snapshot": payment.get("iban_snapshot") or {},
+    },
   }
 
   try:
-    pdf_bytes = render_voucher_pdf_reportlab(model)  # reuse existing renderer with compatible model
+    pdf_bytes = render_tour_voucher_pdf(model)
   except Exception as e:
     raise HTTPException(
       status_code=500,
       detail={"code": "PDF_RENDER_FAILED", "message": "Voucher PDF oluşturulamadı."},
     ) from e
 
-  filename = f"voucher-{model['reference']}.pdf"
+  from .booking_voucher import _safe_filename_from_reference  # reuse helper if exists
+
+  filename = _safe_filename_from_reference(model["reference_code"])
   headers = {
     "Content-Disposition": f'inline; filename="{filename}"',
     "Cache-Control": "no-store",
+    "X-Content-Type-Options": "nosniff",
     "Content-Length": str(len(pdf_bytes)),
   }
   return Response(content=pdf_bytes, media_type="application/pdf", headers=headers)

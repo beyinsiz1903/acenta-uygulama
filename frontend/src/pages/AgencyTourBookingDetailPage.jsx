@@ -412,8 +412,6 @@ export default function AgencyTourBookingDetailPage() {
           <div className="flex flex-wrap gap-2">
             <Button
               type="button"
-            <Button
-              type="button"
               size="sm"
               variant="outline"
               data-testid="btn-send-voucher-email"
@@ -448,6 +446,8 @@ export default function AgencyTourBookingDetailPage() {
               Voucher + Ödeme Talimatını E-posta ile Gönder
             </Button>
 
+            <Button
+              type="button"
               size="sm"
               variant="outline"
               data-testid="btn-open-tour-voucher-pdf"

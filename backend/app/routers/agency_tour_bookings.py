@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from bson import ObjectId
@@ -242,3 +242,186 @@ async def create_tour_voucher_signed_url(
     url = f"{pdf_url}?t={token}"
 
     return {"url": url, "expires_at": expires_at.isoformat()}
+
+
+
+@router.post("/tour-bookings/{request_id}/mark-offline-paid")
+async def mark_offline_paid(
+    request_id: str,
+    body: Dict[str, Any] | None = None,
+    db=Depends(get_db),
+    user: Dict[str, Any] = Depends(require_roles(["agency_admin"])),
+):
+    """Mark offline payment as paid for an approved tour booking.
+
+    - Only agency_admin can perform this action
+    - Booking must belong to same agency + organization
+    - Booking status must be 'approved'
+    - Payment.mode must be 'offline' and snapshot must exist
+    - Idempotent: if already paid, returns current document without changes
+    """
+    agency_id = _sid(user.get("agency_id"))
+    org_id = _sid(user.get("organization_id"))
+    if not agency_id:
+        raise HTTPException(status_code=400, detail="USER_NOT_IN_AGENCY")
+
+    request_oid = _oid_or_404(request_id)
+
+    doc = await db.tour_booking_requests.find_one(
+        {"_id": request_oid, "agency_id": agency_id, "organization_id": org_id}
+    )
+    if not doc:
+        raise HTTPException(status_code=404, detail="TOUR_BOOKING_REQUEST_NOT_FOUND")
+
+    status = (doc.get("status") or "").lower()
+    if status != "approved":
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "code": "OFFLINE_PAYMENT_NOT_APPROVED",
+                "message": "Ödeme yalnızca Onaylandı durumundaki taleplerde işaretlenebilir.",
+            },
+        )
+
+    payment = doc.get("payment") or {}
+    mode = (payment.get("mode") or "").lower()
+    ref = payment.get("reference_code")
+    iban_snapshot = payment.get("iban_snapshot") or {}
+
+    has_snapshot = (
+        mode == "offline"
+        and bool(ref)
+        and bool(payment.get("due_at"))
+        and bool(iban_snapshot.get("iban"))
+    )
+    if not has_snapshot:
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "code": "OFFLINE_PAYMENT_NOT_PREPARED",
+                "message": "Önce offline ödeme talimatını hazırlayın.",
+            },
+        )
+
+    # Idempotent: if already paid, return current document without changes
+    if (payment.get("status") or "").lower() == "paid":
+        result = dict(doc)
+        result["id"] = _sid(result.pop("_id"))
+        return result
+
+    note: Optional[str] = None
+    method: Optional[str] = None
+    if body:
+        raw_note = (body.get("note") or "").strip()
+        note = raw_note or None
+        method = (body.get("method") or "manual").strip() or "manual"
+
+    now = now_utc()
+    # Internal note timestamp as ISO string
+    note_created_at = datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
+
+    actor = {
+        "user_id": _sid(user.get("id")),
+        "name": user.get("name", "Unknown"),
+        "role": (user.get("roles") or ["unknown"])[0],
+    }
+
+    updates = {
+        "payment.status": "paid",
+        "payment.paid_at": now,
+        "payment.paid_by": actor,
+        "payment.paid_note": note,
+        "payment.paid_method": method or "manual",
+        "updated_at": now,
+    }
+
+    internal_note = {
+        "text": "Offline ödeme ödendi olarak işaretlendi.",
+        "created_at": note_created_at,
+        "actor": actor,
+    }
+
+    await db.tour_booking_requests.update_one(
+        {"_id": request_oid, "agency_id": agency_id, "organization_id": org_id},
+        {"$set": updates, "$push": {"internal_notes": internal_note}},
+    )
+
+    updated = await db.tour_booking_requests.find_one(
+        {"_id": request_oid, "agency_id": agency_id, "organization_id": org_id}
+    )
+    assert updated is not None
+    result = dict(updated)
+    result["id"] = _sid(result.pop("_id"))
+    return result
+
+
+@router.post("/tour-bookings/{request_id}/mark-offline-unpaid")
+async def mark_offline_unpaid(
+    request_id: str,
+    db=Depends(get_db),
+    user: Dict[str, Any] = Depends(require_roles(["agency_admin"])),
+):
+    """Revert offline payment back to unpaid.
+
+    - Only agency_admin can perform this action
+    - Booking must belong to same agency + organization
+    - Idempotent: if not paid, returns current document without changes
+    """
+    agency_id = _sid(user.get("agency_id"))
+    org_id = _sid(user.get("organization_id"))
+    if not agency_id:
+        raise HTTPException(status_code=400, detail="USER_NOT_IN_AGENCY")
+
+    request_oid = _oid_or_404(request_id)
+
+    doc = await db.tour_booking_requests.find_one(
+        {"_id": request_oid, "agency_id": agency_id, "organization_id": org_id}
+    )
+    if not doc:
+        raise HTTPException(status_code=404, detail="TOUR_BOOKING_REQUEST_NOT_FOUND")
+
+    payment = doc.get("payment") or {}
+    mode = (payment.get("mode") or "").lower()
+
+    # If not offline or already unpaid, behave idempotently
+    if mode != "offline" or (payment.get("status") or "unpaid").lower() != "paid":
+        result = dict(doc)
+        result["id"] = _sid(result.pop("_id"))
+        return result
+
+    now = now_utc()
+    note_created_at = datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
+
+    actor = {
+        "user_id": _sid(user.get("id")),
+        "name": user.get("name", "Unknown"),
+        "role": (user.get("roles") or ["unknown"])[0],
+    }
+
+    updates = {
+        "payment.status": "unpaid",
+        "payment.paid_at": None,
+        "payment.paid_by": None,
+        "payment.paid_note": None,
+        "payment.paid_method": None,
+        "updated_at": now,
+    }
+
+    internal_note = {
+        "text": "Offline ödeme geri alındı.",
+        "created_at": note_created_at,
+        "actor": actor,
+    }
+
+    await db.tour_booking_requests.update_one(
+        {"_id": request_oid, "agency_id": agency_id, "organization_id": org_id},
+        {"$set": updates, "$push": {"internal_notes": internal_note}},
+    )
+
+    updated = await db.tour_booking_requests.find_one(
+        {"_id": request_oid, "agency_id": agency_id, "organization_id": org_id}
+    )
+    assert updated is not None
+    result = dict(updated)
+    result["id"] = _sid(result.pop("_id"))
+    return result

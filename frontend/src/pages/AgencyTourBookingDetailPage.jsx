@@ -114,7 +114,6 @@ export default function AgencyTourBookingDetailPage() {
   const notes = Array.isArray(item.internal_notes) ? item.internal_notes : [];
   const payment = item.payment || null;
   const offline = payment && payment.mode === "offline" ? payment : null;
-  const voucher = item.voucher || null;
 
   const copyWithToast = async (label, value) => {
     if (!value) {

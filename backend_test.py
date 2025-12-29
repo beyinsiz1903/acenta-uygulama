@@ -672,18 +672,20 @@ class TourVoucherPDFTester:
                         booking_with_voucher = item
                         self.log(f"✅ Found booking with existing voucher: {item.get('id')} (voucher_id: {voucher.get('voucher_id')})")
                     
-                    # Check if this booking has payment but no voucher
-                    elif (payment.get('mode') == 'offline' and 
-                          payment.get('reference_code') and 
-                          not voucher.get('voucher_id')):
-                        booking_without_voucher = item
-                        self.log(f"✅ Found booking with payment but no voucher: {item.get('id')}")
-                    
-                    # Check if this booking has no payment and status allows payment (new/approved)
-                    elif (not payment.get('mode') and status in ['new', 'approved']):
-                        if not booking_without_voucher:  # Use this if we don't have a better candidate
+                    # Prioritize bookings with valid status for payment preparation
+                    elif status in ['new', 'approved']:
+                        # Check if this booking has payment but no voucher
+                        if (payment.get('mode') == 'offline' and 
+                            payment.get('reference_code') and 
+                            not voucher.get('voucher_id')):
                             booking_without_voucher = item
-                            self.log(f"✅ Found booking without payment (status={status}): {item.get('id')} (can be used for prepare-offline-payment)")
+                            self.log(f"✅ Found booking with payment but no voucher (status={status}): {item.get('id')}")
+                        
+                        # Check if this booking has no payment
+                        elif not payment.get('mode'):
+                            if not booking_without_voucher:  # Use this if we don't have a better candidate
+                                booking_without_voucher = item
+                                self.log(f"✅ Found booking without payment (status={status}): {item.get('id')} (can be used for prepare-offline-payment)")
                 
                 # Store the bookings for later tests
                 self.booking_with_voucher = booking_with_voucher
@@ -695,7 +697,7 @@ class TourVoucherPDFTester:
                     self.log("⚠️  No booking with existing voucher found")
                     
                 if booking_without_voucher:
-                    self.log(f"✅ Will test prepare offline payment: {booking_without_voucher.get('id')}")
+                    self.log(f"✅ Will test prepare offline payment: {booking_without_voucher.get('id')} (status: {booking_without_voucher.get('status')})")
                 else:
                     self.log("⚠️  No suitable booking for prepare offline payment found")
                 

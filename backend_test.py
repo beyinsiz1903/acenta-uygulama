@@ -20,6 +20,11 @@ class TourVoucherPDFTester:
         # Store tour and booking request IDs for testing
         self.active_tour_id = None
         self.created_request_id = None
+        
+        # Store bookings for voucher testing
+        self.booking_with_voucher = None
+        self.booking_without_voucher = None
+        self.new_voucher_id = None
 
     def log(self, msg):
         print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}")

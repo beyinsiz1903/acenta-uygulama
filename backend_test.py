@@ -622,7 +622,7 @@ class TourVoucherPDFTester:
     def print_summary(self):
         """Print test summary"""
         self.log("\n" + "="*60)
-        self.log("TOUR BOOKING REQUESTS BACKEND TEST SUMMARY")
+        self.log("TOUR VOUCHER PDF BACKEND TEST SUMMARY")
         self.log("="*60)
         self.log(f"Total Tests: {self.tests_run}")
         self.log(f"✅ Passed: {self.tests_passed}")

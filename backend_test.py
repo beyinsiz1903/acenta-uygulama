@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """
-Tour Booking Requests Backend Test (Sprint-C C3)
-Tests the tour booking request endpoints including detail view and internal notes
+Tour Voucher PDF Endpoint Backend Test
+Tests the new tour voucher PDF endpoint flow including offline payment preparation and public PDF access
 """
 import requests
 import sys
 import uuid
 from datetime import datetime, timedelta, date
 
-class TourBookingBackendTester:
+class TourVoucherPDFTester:
     def __init__(self, base_url="https://syroce-tours.preview.emergentagent.com"):
         self.base_url = base_url
         self.agency_admin_token = None

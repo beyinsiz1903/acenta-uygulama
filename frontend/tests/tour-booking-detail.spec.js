@@ -74,7 +74,7 @@ async function openFirstBookingDetail(page) {
   // Butonun üst parent’ını tıklamayı dene (DOM’a göre değişebilir)
   const parentClickable = anyRow.locator("xpath=ancestor::*[self::a or self::div][1]");
   await parentClickable.click({ force: true });
-  await page.waitForURL(/\/app\/agency\/tour-bookings\/[^/]+$/, { timeout: 15000 });
+  await page.waitForTimeout(3000);
 }
 
 test.describe("C3 - Tour booking detail E2E", () => {

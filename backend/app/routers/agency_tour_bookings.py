@@ -8,8 +8,9 @@ from bson import ObjectId
 
 from app.auth import require_roles
 from app.db import get_db
-from app.utils import to_object_id
+from app.utils import now_utc, to_object_id
 from app.services.agency_offline_payment import prepare_offline_payment_for_tour_booking
+from app.utils.voucher_signing import get_voucher_ttl_minutes, sign_voucher
 
 router = APIRouter(prefix="/api/agency", tags=["agency:tours:booking"])
 

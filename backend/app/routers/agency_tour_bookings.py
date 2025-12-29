@@ -245,6 +245,197 @@ async def create_tour_voucher_signed_url(
 
 
 
+@router.post("/tour-bookings/{request_id}/send-voucher-email")
+async def send_tour_voucher_email_endpoint(
+    request_id: str,
+    body: Dict[str, Any] | None = None,
+    db=Depends(get_db),
+    user: Dict[str, Any] = Depends(require_roles(["agency_admin"])),
+):
+    """Send tour voucher + offline payment instructions via email using Resend.
+
+    Preconditions:
+    - Booking belongs to same agency + organization
+    - guest.email or override to_email exists
+    - offline payment snapshot prepared (payment.mode == 'offline')
+    - voucher metadata exists and enabled
+    """
+    from app.services.tour_voucher_pdf import render_tour_voucher_pdf
+    from app.utils import VoucherTokenError  # type: ignore[attr-defined]
+    from app.services.email_resend import (
+        ResendEmailError,
+        ResendNotConfigured,
+        send_tour_voucher_email,
+    )
+
+    agency_id = _sid(user.get("agency_id"))
+    org_id = _sid(user.get("organization_id"))
+    if not agency_id:
+        raise HTTPException(status_code=400, detail="USER_NOT_IN_AGENCY")
+
+    request_oid = _oid_or_404(request_id)
+
+    doc = await db.tour_booking_requests.find_one(
+        {"_id": request_oid, "agency_id": agency_id, "organization_id": org_id}
+    )
+    if not doc:
+        raise HTTPException(status_code=404, detail="TOUR_BOOKING_REQUEST_NOT_FOUND")
+
+    guest = doc.get("guest") or {}
+    default_email = (guest.get("email") or "").strip()
+
+    to_email = (body or {}).get("to_email") or default_email
+    note_text = ((body or {}).get("note") or "").strip() or None
+
+    if not to_email:
+        raise HTTPException(
+            status_code=409,
+            detail={"code": "EMAIL_MISSING", "message": "Misafir e-posta adresi bulunamadı."},
+        )
+
+    payment = doc.get("payment") or {}
+    mode = (payment.get("mode") or "").lower()
+    ref = payment.get("reference_code")
+    iban_snapshot = payment.get("iban_snapshot") or {}
+
+    has_snapshot = (
+        mode == "offline"
+        and bool(ref)
+        and bool(payment.get("due_at"))
+        and bool(iban_snapshot.get("iban"))
+    )
+    if not has_snapshot:
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "code": "OFFLINE_PAYMENT_NOT_PREPARED",
+                "message": "Önce offline ödeme talimatını hazırlayın.",
+            },
+        )
+
+    voucher = doc.get("voucher") or {}
+    if not voucher.get("voucher_id"):
+        raise HTTPException(
+            status_code=409,
+            detail={"code": "VOUCHER_NOT_READY", "message": "Bu talep için voucher henüz hazır değil."},
+        )
+    if voucher.get("enabled") is False:
+        raise HTTPException(
+            status_code=409,
+            detail={"code": "VOUCHER_DISABLED", "message": "Bu voucher devre dışı bırakılmış."},
+        )
+
+    # Build model for PDF renderer
+    model = {
+        "tour_title": doc.get("tour_title"),
+        "tour_id": doc.get("tour_id"),
+        "desired_date": doc.get("desired_date"),
+        "pax": doc.get("pax"),
+        "status": doc.get("status"),
+        "guest": guest,
+        "payment": payment,
+        "reference_code": ref,
+        "organization_id": doc.get("organization_id"),
+        "agency_id": doc.get("agency_id"),
+    }
+
+    pdf_bytes, pdf_filename = await render_tour_voucher_pdf(model)
+
+    # Simple HTML email body
+    snap = iban_snapshot
+    currency = payment.get("currency") or snap.get("currency") or "TRY"
+    due = payment.get("due_at")
+    filled_note = (snap.get("note_template") or "Rezervasyon: {reference_code}").replace(
+        "{reference_code}", ref or "",
+    )
+
+    guest_name = guest.get("full_name") or "Misafir"
+    tour_title = doc.get("tour_title") or "Tur"
+    desired_date = doc.get("desired_date") or "-"
+    pax = doc.get("pax") or 1
+
+    extra_note_html = f"<p>{note_text}</p>" if note_text else ""
+
+    html = f"""
+    <div style='font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size:14px; color:#111827;'>
+      <p>Merhaba {guest_name},</p>
+      {extra_note_html}
+      <p>Bu e-postanın ekinde tur rezervasyonunuza ait voucher PDF ve offline ödeme talimatı bulunmaktadır.</p>
+
+      <h3 style="margin-top:16px; font-size:15px;">Rezervasyon Özeti</h3>
+      <ul>
+        <li><strong>Tur:</strong> {tour_title}</li>
+        <li><strong>Tarih:</strong> {desired_date}</li>
+        <li><strong>Kişi sayısı:</strong> {pax}</li>
+      </ul>
+
+      <h3 style="margin-top:16px; font-size:15px;">Ödeme Bilgileri</h3>
+      <ul>
+        <li><strong>Hesap Sahibi:</strong> {snap.get("account_name") or "-"}</li>
+        <li><strong>Banka Adı:</strong> {snap.get("bank_name") or "-"}</li>
+        <li><strong>IBAN:</strong> {snap.get("iban") or "-"}</li>
+        <li><strong>Para Birimi / SWIFT:</strong> {currency} {" / " + snap.get("swift") if snap.get("swift") else ""}</li>
+        <li><strong>Son Ödeme Tarihi:</strong> {due or "-"}</li>
+        <li><strong>Referans Kodu:</strong> {ref or "-"}</li>
+        <li><strong>Ödeme Açıklaması Önerisi:</strong> {filled_note}</li>
+      </ul>
+
+      <p style="margin-top:16px;">Lütfen ödemenizi yaparken yukarıdaki referans kodunu ve açıklamayı kullanın.</p>
+      <p>Teşekkürler.</p>
+    </div>
+    """
+
+    subject = f"Tur Voucher - {ref or tour_title}"
+
+    try:
+        resend_resp = await send_tour_voucher_email(
+            to_email=to_email,
+            subject=subject,
+            html=html,
+            pdf_bytes=pdf_bytes,
+            pdf_filename=pdf_filename,
+        )
+    except ResendNotConfigured as exc:
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "code": "RESEND_NOT_CONFIGURED",
+                "message": "E-posta servisi yapılandırılmamış (RESEND_API_KEY / RESEND_FROM_EMAIL).",
+            },
+        ) from exc
+    except ResendEmailError as exc:
+        raise HTTPException(
+            status_code=502,
+            detail={"code": "EMAIL_SEND_FAILED", "message": "E-posta gönderimi başarısız oldu."},
+        ) from exc
+
+    # Internal note for audit
+    note_created_at = datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
+    actor = {
+        "user_id": _sid(user.get("id")),
+        "name": user.get("name", "Unknown"),
+        "role": (user.get("roles") or ["unknown"])[0],
+    }
+    internal_note = {
+        "text": f"Voucher e-posta ile gönderildi: {to_email}",
+        "created_at": note_created_at,
+        "actor": actor,
+    }
+    await db.tour_booking_requests.update_one(
+        {"_id": request_oid, "agency_id": agency_id, "organization_id": org_id},
+        {"$push": {"internal_notes": internal_note}},
+    )
+
+    return {
+        "ok": True,
+        "to_email": to_email,
+        "sent_at": now_utc().isoformat(),
+        "provider": "resend",
+        "provider_id": resend_resp.get("id"),
+    }
+
+
+
 @router.post("/tour-bookings/{request_id}/mark-offline-paid")
 async def mark_offline_paid(
     request_id: str,

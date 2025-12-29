@@ -227,16 +227,16 @@ export default function AgencyTourBookingDetailPage() {
             >
               IBAN Kopyala
             </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              data-testid="btn-copy-reference"
-              onClick={() => copyWithToast("Referans kodu", ref)}
-            >
-              Referans Kodunu Kopyala
-            </Button>
-            <Button
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                data-testid="btn-copy-reference"
+                onClick={() => copyWithToast("Referans kodu", ref)}
+              >
+                Referans Kodunu Kopyala
+              </Button>
+              <Button
               type="button"
               size="sm"
               variant="outline"

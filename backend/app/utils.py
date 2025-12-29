@@ -424,7 +424,7 @@ def _parse_voucher_token(token: str) -> Tuple[int, str]:
     except Exception as e:  # pragma: no cover
         raise VoucherTokenInvalid("Invalid exp in token") from e
 
-    if not sig or len(sig) < 16:
+    if not sig or len(sig) != 64:
         raise VoucherTokenInvalid("Invalid signature in token")
 
     return exp_unix, sig

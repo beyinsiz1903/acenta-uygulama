@@ -245,6 +245,7 @@ export default function AgencyTourBookingDetailPage() {
             >
               Ödeme Açıklamasını Kopyala
             </Button>
+            </div>
           </div>
         </div>
       );

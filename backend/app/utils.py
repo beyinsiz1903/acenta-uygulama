@@ -279,6 +279,11 @@ def parse_date_range(
             delta = end_dt - start_dt
             actual_days = max(1, delta.days)
 
+            return start_dt, end_dt, actual_days
+        except ValueError:
+            # Invalid date format, fall back to days
+            pass
+
 # ========== Voucher signing helpers (tour voucher security) ==========
 
 DEFAULT_VOUCHER_TTL_MINUTES = 60

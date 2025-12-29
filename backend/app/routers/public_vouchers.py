@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Response
 from app.db import get_db
 from app.utils import now_utc
 from app.services.tour_voucher_pdf import render_tour_voucher_pdf
-from app.utils.voucher_signing import (
+from .voucher_signing import (
   VoucherTokenExpired,
   VoucherTokenInvalid,
   VoucherTokenMissing,

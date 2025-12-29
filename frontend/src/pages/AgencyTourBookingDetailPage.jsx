@@ -216,7 +216,8 @@ export default function AgencyTourBookingDetailPage() {
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-2 pt-2 text-xs">
+          <div className="flex flex-wrap gap-2 pt-2 text-xs items-center justify-between">
+            <div className="flex flex-wrap gap-2">
             <Button
               type="button"
               size="sm"

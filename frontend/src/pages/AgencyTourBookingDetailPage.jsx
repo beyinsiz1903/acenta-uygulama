@@ -389,11 +389,11 @@ export default function AgencyTourBookingDetailPage() {
                     : `${process.env.REACT_APP_BACKEND_URL}${url}`;
                   window.open(finalUrl, "_blank", "noopener,noreferrer");
                 } else {
-                  toast.error("Voucher PDF linki bulunamad31.");
+                  toast.error("Voucher PDF linki bulunamadı.");
                 }
               }}
             >
-              PDF Voucher31 A87
+              Voucher PDF'yi Aç
             </Button>
           </div>
         </div>

@@ -482,3 +482,19 @@
 
 ##   - agent: "testing"
 ##     message: "Modül-1 Step-2 backend offline payment prepare endpoint comprehensive testing completed successfully. All 16 tests passed (100% success rate). ✅ COMPREHENSIVE SCENARIO TESTING completed as requested: 1) SUCCESSFUL FLOW with agency1@demo.test: Payment settings configured (offline.enabled=true, IBAN: TR330006100519786457841326, bank: Garanti BBVA), tour booking preparation successful with proper response structure including payment.mode='offline', payment.status='unpaid', reference_code='SYR-TOUR-XXXXXXXX', due_at with 3-day default, complete iban_snapshot preservation, 2) IDEMPOTENCY VERIFICATION: Second and third calls return identical reference_code and iban_snapshot confirming idempotent behavior as specified, 3) PAYMENT_SETTINGS_MISSING: agency2@demo.test (no payment settings) correctly returns HTTP 404 with detail.code='PAYMENT_SETTINGS_MISSING' and Turkish message 'Offline ödeme ayarları tanımlı değil.', 4) OFFLINE_PAYMENT_DISABLED: agency1 with offline.enabled=false correctly returns HTTP 409 with detail.code='OFFLINE_PAYMENT_DISABLED' and message 'Offline ödeme kapalı.', 5) INVALID_STATUS_FOR_PAYMENT: Bookings with status='rejected' and 'cancelled' both correctly return HTTP 409 with detail.code='INVALID_STATUS_FOR_PAYMENT' and message 'Bu durumda ödeme hazırlanamaz.' ✅ All error scenarios, success scenarios, and idempotency requirements fully validated. Step-2 contract completely verified and ready for frontend implementation."
+
+## backend:
+##   - task: "Tour voucher PDF endpoint (GET /api/public/vouchers/{voucher_id}.pdf)"
+##     implemented: true
+##     working: true
+##     file: "/app/backend/app/routers/public_vouchers.py, /app/backend/app/services/agency_offline_payment.py, /app/backend/app/services/tour_voucher_pdf.py"
+##     stuck_count: 0
+##     priority: "high"
+##     needs_retesting: false
+##     status_history:
+##       - working: "NA"
+##         agent: "main"
+##         comment: "Yeni tur voucher PDF endpoint akışı stabilize edildi. /api/public/vouchers/{voucher_id}.pdf endpoint'i public_vouchers.py içinde tanımlandı, tour_voucher_pdf.render_tour_voucher_pdf kullanılıyor. Agency offline payment service'i voucher metadata üretimi için güncellendi."
+##       - working: true
+##         agent: "testing"
+##         comment: "Tour voucher PDF endpoint comprehensive testing completed successfully. All 8 tests passed (100% success rate). ✅ SCENARIO A (existing voucher): Found booking with existing voucher (vtr_6baecf98587446c58325b7dc), GET /api/public/vouchers/{voucher_id}.pdf returns HTTP 200 with valid PDF content (2322 bytes, starts with '%PDF'), no authentication required as expected. ✅ SCENARIO B (prepare + new voucher): Found booking with status='new' without payment, POST /api/agency/tour-bookings/{id}/prepare-offline-payment successfully creates payment.mode='offline' with reference_code='SYR-TOUR-DEDDF0FB' and voucher.enabled=true with voucher_id='vtr_e7337f7102f94b9e979e3b17', subsequent GET /api/public/vouchers/{voucher_id}.pdf returns HTTP 200 with valid PDF (2317 bytes). ✅ ERROR HANDLING: GET /api/public/vouchers/vtr_nonexistent123456789012.pdf correctly returns HTTP 404 with detail.code='VOUCHER_NOT_FOUND' and Turkish message 'Voucher bulunamadı.' ✅ IDEMPOTENCY: Multiple calls to prepare-offline-payment return identical voucher_id and reference_code as required. ✅ PDF VALIDATION: Both existing and new PDFs have valid structure with '%PDF' header, '%%EOF' footer, and proper page elements. Complete voucher PDF flow from offline payment preparation to public PDF access is fully functional and ready for production use."

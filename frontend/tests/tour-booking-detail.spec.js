@@ -136,6 +136,7 @@ test.describe("C3 - Tour booking detail E2E", () => {
       const copyIban = page.locator('[data-testid="btn-copy-iban"]').first();
       const copyRef = page.locator('[data-testid="btn-copy-reference"]').first();
       const copyNote = page.locator('[data-testid="btn-copy-payment-note"]').first();
+      const undoBtn = page.getByRole("button", { name: /ödemeyi geri al/i }).first();
 
       // IBAN kopyala
       if (await copyIban.count()) {

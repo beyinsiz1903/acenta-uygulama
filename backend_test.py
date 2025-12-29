@@ -927,6 +927,6 @@ class TourVoucherPDFTester:
 
 
 if __name__ == "__main__":
-    tester = TourBookingBackendTester()
+    tester = TourVoucherPDFTester()
     exit_code = tester.run_all_tests()
     sys.exit(exit_code)

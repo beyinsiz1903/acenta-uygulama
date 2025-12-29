@@ -177,20 +177,33 @@ test.describe("C3 - Tour booking detail E2E", () => {
       }
     }
 
-    // 8) Voucher PDF butonu ve PDF response doğrulaması (varsa)
+    // 8) Voucher PDF butonu ve signed URL + PDF response doğrulaması (varsa)
     const voucherBtn = page.locator('[data-testid="btn-open-tour-voucher-pdf"]').first();
     if (await voucherBtn.count()) {
       await expect(voucherBtn).toBeVisible({ timeout: 10000 });
 
-      // Sayfadaki voucher PDF path'ini DOM'dan oku (örn: /api/public/vouchers/....pdf)
-      const voucherUrlNode = page.locator('text=/\\/api\\/public\\/vouchers\\//').first();
-      const pdfPathRaw = (await voucherUrlNode.textContent()) || "";
-      const pdfPath = pdfPathRaw.trim();
+      const [signedResp] = await Promise.all([
+        page.waitForResponse((res) => {
+          const url = res.url();
+          return (
+            url.includes("/api/agency/tour-bookings/") &&
+            url.includes("/voucher-signed-url") &&
+            res.request().method() === "POST"
+          );
+        }),
+        voucherBtn.click(),
+      ]);
 
-      expect(pdfPath).toBeTruthy();
+      expect(signedResp.ok()).toBeTruthy();
+      const body = await signedResp.json();
+      const signedUrl = body.url;
+      expect(signedUrl).toBeTruthy();
 
-      const backendBase = process.env.REACT_APP_BACKEND_URL || process.env.PW_BACKEND_URL || BASE_URL;
-      const fullUrl = pdfPath.startsWith("http") ? pdfPath : `${backendBase}${pdfPath}`;
+      const backendBase =
+        process.env.REACT_APP_BACKEND_URL || process.env.PW_BACKEND_URL || BASE_URL;
+      const fullUrl = signedUrl.startsWith("http")
+        ? signedUrl
+        : `${backendBase}${signedUrl}`;
 
       const res = await page.request.get(fullUrl);
       expect(res.status()).toBe(200);

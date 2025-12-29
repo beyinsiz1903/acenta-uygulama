@@ -166,7 +166,6 @@ async def prepare_offline_payment(
     - Idempotent if snapshot already exists
     """
     agency_id = _sid(user.get("agency_id"))
-    org_id = _sid(user.get("organization_id"))
     if not agency_id:
         raise HTTPException(status_code=400, detail="USER_NOT_IN_AGENCY")
 
@@ -203,7 +202,6 @@ async def create_tour_voucher_signed_url(
     - Returns relative URL like /api/public/vouchers/{voucher_id}.pdf?t=...
     """
     agency_id = _sid(user.get("agency_id"))
-    org_id = _sid(user.get("organization_id"))
     if not agency_id:
         raise HTTPException(status_code=400, detail="USER_NOT_IN_AGENCY")
 

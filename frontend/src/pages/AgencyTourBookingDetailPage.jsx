@@ -139,6 +139,11 @@ export default function AgencyTourBookingDetailPage() {
       const ref = offline.reference_code;
       const currency = offline.currency || snap.currency || "TRY";
       const due = offline.due_at;
+      const status = offline.status || "unpaid";
+      const isPaid = status === "paid";
+      const paidAt = offline.paid_at;
+      const paidBy = offline.paid_by || {};
+      const paidByName = paidBy.name || paidBy.role || null;
 
       const filledNote = (() => {
         const tpl = snap.note_template || "Rezervasyon: {reference_code}";

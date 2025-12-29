@@ -1057,6 +1057,12 @@ class TourVoucherPDFTester:
         # 6) Test error handling for non-existent voucher
         self.test_voucher_not_found_error()
         
+        # 7) Test idempotency of prepare-offline-payment
+        self.test_idempotency_prepare_offline_payment()
+        
+        # 8) Test PDF content validation
+        self.test_pdf_content_validation()
+        
         # Summary
         self.print_summary()
         

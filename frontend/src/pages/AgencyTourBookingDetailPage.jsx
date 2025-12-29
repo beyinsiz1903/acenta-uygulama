@@ -366,6 +366,38 @@ export default function AgencyTourBookingDetailPage() {
 
       {renderOfflinePaymentCard()}
 
+      {voucher && voucher.voucher_id && voucher.pdf_url && (
+        <div className="rounded-xl border bg-white p-4 flex items-center justify-between gap-2 text-sm">
+          <div className="space-y-0.5">
+            <div className="font-medium">Voucher PDF</div>
+            <div className="text-[11px] text-muted-foreground break-all">
+              {voucher.pdf_url}
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              data-testid="btn-open-tour-voucher-pdf"
+              onClick={() => {
+                const url = voucher.pdf_url;
+                if (url) {
+                  const finalUrl = url.startsWith("http")
+                    ? url
+                    : `${process.env.REACT_APP_BACKEND_URL}${url}`;
+                  window.open(finalUrl, "_blank", "noopener,noreferrer");
+                } else {
+                  toast.error("Voucher PDF linki bulunamad31.");
+                }
+              }}
+            >
+              PDF Voucher31 A87
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Internal notes */}
       <div className="rounded-xl border bg-white p-4 space-y-3 text-sm">
         <div className="font-medium">İç Notlar</div>

@@ -339,7 +339,7 @@ async def send_tour_voucher_email_endpoint(
         "agency_id": doc.get("agency_id"),
     }
 
-    pdf_bytes, pdf_filename = await render_tour_voucher_pdf(model)
+    pdf_bytes, pdf_filename = render_tour_voucher_pdf(model)
 
     # Simple HTML email body
     snap = iban_snapshot

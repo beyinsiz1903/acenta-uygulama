@@ -214,6 +214,8 @@ def build_booking_public_view(doc: dict[str, Any]) -> dict[str, Any]:
 
 
 # ========== FAZ-12.1: Date Range Helpers ==========
+_secret_warned = False
+
 
 from datetime import timedelta
 from typing import Optional

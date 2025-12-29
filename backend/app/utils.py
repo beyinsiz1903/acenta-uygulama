@@ -359,12 +359,24 @@ def get_voucher_secret() -> str:
     """Return HMAC secret for voucher signing.
 
     - In production, VOUCHER_SIGNING_SECRET should be set via env.
-    - In development, we fall back to a static dev secret to avoid crashes.
+    - In development/preview, we fall back to a static dev secret to avoid crashes,
+      but emit a warning so it can be spotted in logs.
     """
 
     secret = _voucher_env("VOUCHER_SIGNING_SECRET")
     if secret:
         return secret
+
+    # Dev/preview fallback – log once so it is visible in logs
+    global _secret_warned  # type: ignore[name-defined]
+    if not _secret_warned:
+        import logging
+
+        logger = logging.getLogger("voucher-signing")
+        logger.warning(
+            "VOUCHER_SIGNING_SECRET missing; using dev fallback secret (NOT FOR PROD).",
+        )
+        _secret_warned = True
 
     return "dev-voucher-secret"
 

@@ -5,14 +5,14 @@ from typing import Any, Dict
 from fastapi import APIRouter, Depends, HTTPException, Response
 
 from app.db import get_db
-from app.utils import now_utc
-from app.services.tour_voucher_pdf import render_tour_voucher_pdf
-from app.utils.voucher_signing import (
+from app.utils import (
+  now_utc,
   VoucherTokenExpired,
   VoucherTokenInvalid,
   VoucherTokenMissing,
   verify_voucher_token,
 )
+from app.services.tour_voucher_pdf import render_tour_voucher_pdf
 
 router = APIRouter(prefix="/api/public/vouchers", tags=["public-vouchers"])
 

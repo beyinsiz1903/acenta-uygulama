@@ -402,7 +402,7 @@ export default function AgencyTourBookingDetailPage() {
       {renderOfflinePaymentCard()}
 
       {voucher && voucher.voucher_id && voucher.pdf_url && (
-        <div className="rounded-xl border bg-white p-4 flex items-center justify-between gap-2 text-sm">
+        <div className="rounded-xl border bg-white p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-sm">
           <div className="space-y-0.5">
             <div className="font-medium">Voucher PDF</div>
             <div className="text-[11px] text-muted-foreground break-all">

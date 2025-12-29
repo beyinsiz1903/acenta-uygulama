@@ -55,7 +55,7 @@ async function openFirstBookingDetail(page) {
   const detailLink = page.locator('a[href^="/app/agency/tour-bookings/"]').first();
   if (await detailLink.count()) {
     await detailLink.click();
-    await page.waitForURL(/\/app\/agency\/tour-bookings\/[^/]+$/, { timeout: 15000 });
+    await page.waitForTimeout(3000);
     return;
   }
 

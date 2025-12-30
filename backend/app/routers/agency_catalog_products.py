@@ -80,7 +80,7 @@ async def list_catalog_products(
     return {"items": items}
 
 
-@router.post("/")
+@router.post("")
 async def create_catalog_product(
     body: Dict[str, Any],
     db=Depends(get_db),

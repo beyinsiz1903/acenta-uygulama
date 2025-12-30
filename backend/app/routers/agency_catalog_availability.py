@@ -87,8 +87,12 @@ async def get_catalog_availability(
         pax=pax,
     )
 
+    capacity = variant.get("capacity") or {}
+    overbook_allowed = bool(capacity.get("overbook", False))
+
     return {
         "product_id": product_id,
         "variant_id": variant_id,
+        "overbook_allowed": overbook_allowed,
         **result,
     }

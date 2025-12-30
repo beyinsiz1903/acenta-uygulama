@@ -18,6 +18,35 @@ router = APIRouter(prefix="/api/agency/catalog/bookings", tags=["agency:catalog:
 def _sid(x: Any) -> str:
     return str(x)
 
+async def _get_catalog_booking_or_404(db, booking_oid, org_id, agency_id):
+    doc = await db.agency_catalog_booking_requests.find_one(
+        {"_id": booking_oid, "organization_id": org_id, "agency_id": agency_id}
+    )
+    if not doc:
+        raise HTTPException(
+            status_code=404,
+            detail={"code": "CATALOG_BOOKING_NOT_FOUND", "message": "Rezervasyon bulunamadı."},
+        )
+    return doc
+
+
+def _build_offer_snapshot(booking: Dict[str, Any], note: str = "", expires_at=None) -> Dict[str, Any]:
+    pricing = booking.get("pricing") or {}
+    subtotal = float(pricing.get("subtotal") or 0.0)
+    commission_amount = float(pricing.get("commission_amount") or 0.0)
+    total = float(pricing.get("total") or (subtotal + commission_amount))
+    currency = pricing.get("currency") or "TRY"
+    return {
+        "status": "draft",
+        "expires_at": expires_at,
+        "net_price": subtotal,
+        "commission_amount": commission_amount,
+        "gross_price": total,
+        "currency": currency,
+        "note": note or "",
+    }
+
+
 
 def _oid_or_404(id_str: str, code: str = "CATALOG_BOOKING_NOT_FOUND", message: str = "Rezervasyon bulunamadı.") -> ObjectId:
     try:

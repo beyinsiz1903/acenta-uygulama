@@ -127,14 +127,11 @@ test("Capacity dashboard shows full day as Dolu", async ({ page, request, baseUR
   // Go to capacity page
   await page.goto("/app/agency/catalog/capacity", { waitUntil: "networkidle" });
 
-  // Select product
+  // Select product (first option in list, since we just created/ensured it)
   await page.locator("label:has-text('Ürün')").locator("..//button").click();
-  await page
-    .locator("[role='option']", { hasText: /Dashboard Capacity Product|Capacity Test Product|Product/ })
-    .first()
-    .click();
+  await page.locator("[role='option']").first().click();
 
-  // Select variant - pick the one we set capacity on by matching price/currency is enough
+  // Select variant (first option)
   await page.locator("label:has-text('Variant')").locator("..//button").click();
   await page.locator("[role='option']").first().click();
 

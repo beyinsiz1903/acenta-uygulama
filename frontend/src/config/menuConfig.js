@@ -38,6 +38,13 @@ export const MENU_CONFIG = {
         { label: "Tur Talepleri", path: "/app/agency/tour-bookings" },
       ],
     },
+    {
+      label: "Katalog",
+      children: [
+        { label: "Ürünler", path: "/app/agency/catalog/products" },
+        { label: "Rezervasyonlar", path: "/app/agency/catalog/bookings" },
+      ],
+    },
   ],
 
   hotel: [

@@ -52,7 +52,7 @@ export default function AgencyCatalogProductsPage() {
     setLoading(true);
     try {
       const params = new URLSearchParams();
-      if (type) params.set("type", type);
+      if (type && type !== "all") params.set("type", type);
       if (q) params.set("q", q);
       if (activeOnly) params.set("active", "true");
       const resp = await api.get(`/agency/catalog/products?${params.toString()}`);

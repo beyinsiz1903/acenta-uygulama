@@ -323,6 +323,7 @@ export default function AgencyCatalogBookingsPage() {
                     min={1}
                     value={form.pax}
                     onChange={(e) => setForm((p) => ({ ...p, pax: e.target.value }))}
+                    data-testid="catalog-booking-pax"
                   />
                 </div>
               </div>

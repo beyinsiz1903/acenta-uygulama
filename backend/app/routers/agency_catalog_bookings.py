@@ -506,13 +506,6 @@ async def send_catalog_offer(
     return {"ok": True, "offer": offer, "public_url": public_url}
 
 
-    booking_id: str,
-    db=Depends(get_db),
-    user: Dict[str, Any] = Depends(require_roles(["agency_admin"])),
-):
-    """Reject booking: only allowed from new -> rejected."""
-
-
 @router.post("/{booking_id}/offer/accept")
 async def accept_catalog_offer(
     booking_id: str,

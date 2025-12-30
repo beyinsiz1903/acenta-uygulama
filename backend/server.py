@@ -131,6 +131,7 @@ app.include_router(agency_catalog_products_router)
 app.include_router(agency_catalog_variants_router)
 app.include_router(agency_catalog_bookings_router)
 app.include_router(agency_catalog_availability_router)
+app.include_router(agency_catalog_capacity_dashboard_router)
 app.include_router(public_vouchers_router)
 app.include_router(public_catalog_offers_router)
 

@@ -127,7 +127,7 @@ async function createBookingViaUI(page) {
   }
 
   await page.locator('[data-testid="catalog-booking-guest-fullname"]').fill("Capacity Guest");
-  await page.locator('[data-testid="catalog-booking-start-date"]').fill("2026-01-10");
+  await page.locator('[data-testid="catalog-booking-start-date"]').fill(TEST_DATE);
   await page.locator('[data-testid="catalog-booking-pax"]').fill("2");
 
   // Wait for availability to say can_book true

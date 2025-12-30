@@ -35,6 +35,8 @@ export default function AgencyCatalogBookingsPage() {
     pax: 1,
     commission_rate: 0.1,
   });
+  const [availability, setAvailability] = useState(null);
+  const [availabilityLoading, setAvailabilityLoading] = useState(false);
 
   const navigate = useNavigate();
 

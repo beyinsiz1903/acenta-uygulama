@@ -112,7 +112,14 @@ async function ensureCapacitySetup(request, baseURL) {
       },
     }
   );
-  expect(createBookingResp.ok()).toBeTruthy();
+  if (!createBookingResp.ok()) {
+    const status = createBookingResp.status();
+    const body = await createBookingResp.json().catch(() => ({}));
+    // Allow case where day is already full from previous runs (CAPACITY_NOT_AVAILABLE)
+    if (!(status === 409 && body.detail?.code === "CAPACITY_NOT_AVAILABLE")) {
+      throw new Error(`Unexpected booking create failure: ${status} ${JSON.stringify(body)}`);
+    }
+  }
 
   return { productId, variantId };
 }

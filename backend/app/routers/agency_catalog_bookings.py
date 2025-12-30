@@ -130,7 +130,7 @@ async def get_catalog_booking_detail(
     return d
 
 
-@router.post("/")
+@router.post("")
 async def create_catalog_booking(
     body: Dict[str, Any],
     db=Depends(get_db),

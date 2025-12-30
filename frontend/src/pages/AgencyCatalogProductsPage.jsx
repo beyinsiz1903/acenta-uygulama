@@ -232,35 +232,168 @@ export default function AgencyCatalogProductsPage() {
           items.map((p) => (
             <Card
               key={p.id}
-              className="p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2"
+              className="p-3 space-y-2"
               data-testid="catalog-product-row"
             >
-              <div className="space-y-1 text-sm">
-                <div className="font-medium">
-                  {p.title}{" "}
-                  <span className="text-xs text-muted-foreground">[{p.type}]</span>
-                </div>
-                {p.location?.city && (
-                  <div className="text-xs text-muted-foreground">
-                    {p.location.city} {p.location.country ? `(${p.location.country})` : ""}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div className="space-y-1 text-sm">
+                  <div className="font-medium">
+                    {p.title}{" "}
+                    <span className="text-xs text-muted-foreground">[{p.type}]</span>
                   </div>
-                )}
-              </div>
-              <div className="flex flex-wrap gap-2 items-center">
-                <span className="text-xs px-2 py-1 rounded-full border bg-muted">
-                  {p.active ? "Aktif" : "Pasif"}
-                </span>
-                {admin && (
+                  {p.location?.city && (
+                    <div className="text-xs text-muted-foreground">
+                      {p.location.city} {p.location.country ? `(${p.location.country})` : ""}
+                    </div>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-2 items-center">
+                  <span className="text-xs px-2 py-1 rounded-full border bg-muted">
+                    {p.active ? "Aktif" : "Pasif"}
+                  </span>
+                  {admin && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => toggleActive(p)}
+                    >
+                      {p.active ? "Pasife Al" : "Aktife Al"}
+                    </Button>
+                  )}
                   <Button
                     type="button"
                     size="sm"
                     variant="outline"
-                    onClick={() => toggleActive(p)}
+                    data-testid="btn-catalog-open-variants"
+                    onClick={async () => {
+                      if (openVariantsFor === p.id) {
+                        setOpenVariantsFor(null);
+                        return;
+                      }
+                      setOpenVariantsFor(p.id);
+                      await loadVariants(p.id);
+                    }}
                   >
-                    {p.active ? "Pasife Al" : "Aktife Al"}
+                    Variantlar
                   </Button>
-                )}
+                </div>
               </div>
+
+              {openVariantsFor === p.id && (
+                <div className="mt-3 rounded-md border p-3 space-y-3 bg-muted/30">
+                  {(variants[p.id] || []).map((v) => (
+                    <div
+                      key={v.id}
+                      className="flex items-center justify-between text-sm border-b pb-1"
+                      data-testid="catalog-variant-row"
+                    >
+                      <div>
+                        <div className="font-medium">{v.name}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {v.price} {v.currency} · pax {v.rules?.min_pax}–
+                          {v.rules?.max_pax}
+                        </div>
+                      </div>
+                      {admin && (
+                        <Button
+                          size="xs"
+                          variant="outline"
+                          onClick={async () => {
+                            await api.post(
+                              `/agency/catalog/variants/${v.id}/toggle-active`,
+                              { active: !v.active }
+                            );
+                            await loadVariants(p.id);
+                          }}
+                        >
+                          {v.active ? "Pasif Yap" : "Aktif Yap"}
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+
+                  {admin && (
+                    <div className="pt-2 space-y-2">
+                      <Input
+                        placeholder="Variant adı"
+                        value={newVariant.name}
+                        onChange={(e) =>
+                          setNewVariant({ ...newVariant, name: e.target.value })
+                        }
+                      />
+                      <div className="flex gap-2">
+                        <Input
+                          type="number"
+                          placeholder="Fiyat"
+                          value={newVariant.price}
+                          onChange={(e) =>
+                            setNewVariant({ ...newVariant, price: e.target.value })
+                          }
+                        />
+                        <Input
+                          placeholder="Para birimi"
+                          value={newVariant.currency}
+                          onChange={(e) =>
+                            setNewVariant({ ...newVariant, currency: e.target.value })
+                          }
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <Input
+                          type="number"
+                          placeholder="Min pax"
+                          value={newVariant.min_pax}
+                          onChange={(e) =>
+                            setNewVariant({ ...newVariant, min_pax: e.target.value })
+                          }
+                        />
+                        <Input
+                          type="number"
+                          placeholder="Max pax"
+                          value={newVariant.max_pax}
+                          onChange={(e) =>
+                            setNewVariant({ ...newVariant, max_pax: e.target.value })
+                          }
+                        />
+                      </div>
+
+                      <Button
+                        size="sm"
+                        data-testid="btn-catalog-create-variant"
+                        onClick={async () => {
+                          try {
+                            await api.post(`/agency/catalog/variants`, {
+                              product_id: p.id,
+                              name: newVariant.name,
+                              price: Number(newVariant.price),
+                              currency: newVariant.currency,
+                              rules: {
+                                min_pax: Number(newVariant.min_pax),
+                                max_pax: Number(newVariant.max_pax),
+                              },
+                              active: true,
+                            });
+                            setNewVariant({
+                              name: "",
+                              price: "",
+                              currency: p.base_currency || "TRY",
+                              min_pax: 1,
+                              max_pax: 1,
+                            });
+                            await loadVariants(p.id);
+                            toast.success("Variant oluşturuldu.");
+                          } catch (err) {
+                            toast.error(apiErrorMessage(err));
+                          }
+                        }}
+                      >
+                        Variant Ekle
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
             </Card>
           ))}
       </div>

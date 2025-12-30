@@ -283,6 +283,7 @@ export default function AgencyCatalogBookingsPage() {
                   <Input
                     value={form.phone}
                     onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))}
+                    data-testid="catalog-booking-guest-phone"
                   />
                 </div>
                 <div className="space-y-1">

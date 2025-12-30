@@ -1,0 +1,139 @@
+# Page snapshot
+
+```yaml
+- generic:
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic: Acenta Master
+          - generic:
+            - button:
+              - img
+              - generic: Tema
+            - generic:
+              - generic: Agency Admin 1
+              - generic: agency_admin
+            - button:
+              - img
+              - text: Çıkış
+      - generic:
+        - complementary:
+          - generic:
+            - generic:
+              - generic:
+                - generic: A
+                - generic:
+                  - generic: Acenta Master
+                  - generic: Agency Paneli
+            - generic:
+              - generic:
+                - generic:
+                  - generic: Toplam
+                  - generic: adet
+                - generic: "0"
+              - generic:
+                - generic:
+                  - generic: Bekleyen
+                  - generic: adet
+                - generic: "0"
+              - generic:
+                - generic:
+                  - generic: Ciro 7G
+                  - generic: ₺
+                - generic: ₺0
+            - generic:
+              - generic: "Rol: agency_admin"
+              - generic: 30.12.2025
+            - generic:
+              - navigation:
+                - generic:
+                  - generic: Acenta
+                  - link:
+                    - /url: /app/agency/hotels
+                    - img
+                    - text: Hızlı Rezervasyon
+                  - link:
+                    - /url: /app/agency/bookings
+                    - img
+                    - text: Rezervasyonlarım
+                  - link:
+                    - /url: /app/agency/settlements
+                    - img
+                    - text: Mutabakat
+                  - link:
+                    - /url: /app/agency/settings/payment
+                    - img
+                    - text: Ödeme Ayarları
+                  - link:
+                    - /url: /app/agency/help
+                    - img
+                    - text: Yardım
+                - generic:
+                  - generic: Ürünler
+                  - link:
+                    - /url: /app/agency/products/hotels
+                    - img
+                    - text: Oteller
+                  - link:
+                    - /url: /app/agency/tours
+                    - img
+                    - text: Turlarım
+                  - link:
+                    - /url: /app/agency/tour-bookings
+                    - img
+                    - text: Tur Talepleri
+                - generic:
+                  - generic: Katalog
+                  - link:
+                    - /url: /app/agency/catalog/products
+                    - img
+                    - text: Ürünler
+                  - link:
+                    - /url: /app/agency/catalog/bookings
+                    - img
+                    - text: Rezervasyonlar
+                  - link:
+                    - /url: /app/agency/catalog/capacity
+                    - img
+                    - text: Kapasite
+          - generic:
+            - generic: Hızlı İpuçları
+            - generic: Müsaitlik ekranında kapasite ve fiyatı güncelleyip rezervasyon akışını hızlıca test edebilirsin.
+        - main:
+          - generic:
+            - generic:
+              - generic:
+                - generic:
+                  - heading [level=1]: Katalog Kapasite Takvimi
+                  - paragraph: Variant bazlı kapasite kullanımını tarih aralığında özetleyen basit takvim görünümü.
+              - generic:
+                - generic:
+                  - text: Ürün
+                  - combobox [expanded]:
+                    - generic: Ürün seçin
+                    - img
+                  - combobox
+                - generic:
+                  - text: Variant
+                  - combobox:
+                    - generic: Variant seçin
+                    - img
+                  - combobox
+                - generic:
+                  - text: Başlangıç
+                  - textbox: 2025-12-30
+                - generic:
+                  - text: Bitiş
+                  - textbox: 2026-01-29
+                - generic:
+                  - button: Göster
+      - contentinfo:
+        - generic: © 2025 — v1
+    - region "Notifications alt+T"
+  - listbox [ref=e1]:
+    - option "API Proof Katalog Turu [tour]" [active] [ref=e2]:
+      - generic [ref=e4]: API Proof Katalog Turu [tour]
+    - option "Test Katalog Turu [tour]" [ref=e5]:
+      - generic [ref=e7]: Test Katalog Turu [tour]
+```

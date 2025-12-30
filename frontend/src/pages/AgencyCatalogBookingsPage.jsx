@@ -305,6 +305,7 @@ export default function AgencyCatalogBookingsPage() {
                     value={form.start}
                     onChange={(e) => setForm((p) => ({ ...p, start: e.target.value }))}
                     required
+                    data-testid="catalog-booking-start-date"
                   />
                 </div>
                 <div className="space-y-1">

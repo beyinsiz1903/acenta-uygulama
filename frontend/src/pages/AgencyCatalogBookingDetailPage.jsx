@@ -60,6 +60,49 @@ export default function AgencyCatalogBookingDetailPage() {
   async function changeStatus(action) {
     try {
       await api.post(`/agency/catalog/bookings/${id}/${action}`);
+  async function createOffer() {
+    try {
+      await api.post(`/agency/catalog/bookings/${id}/offer/create`, {});
+      toast.success("Teklif taslağı oluşturuldu.");
+      await load();
+    } catch (err) {
+      toast.error(apiErrorMessage(err));
+    }
+  }
+
+  async function sendOffer() {
+    try {
+      const resp = await api.post(`/agency/catalog/bookings/${id}/offer/send`, {});
+      const url = resp.data?.public_url || "";
+      setOfferUrl(url);
+      toast.success("Teklif linki üretildi.");
+      await load();
+    } catch (err) {
+      toast.error(apiErrorMessage(err));
+    }
+  }
+
+  async function acceptOffer() {
+    try {
+      await api.post(`/agency/catalog/bookings/${id}/offer/accept`, {});
+      toast.success("Teklif kabul edildi.");
+      await load();
+    } catch (err) {
+      toast.error(apiErrorMessage(err));
+    }
+  }
+
+  function openOfferPdf() {
+    if (!offerUrl) {
+      toast.error("Önce teklif linki oluşturun.");
+      return;
+    }
+    const base = (process.env.REACT_APP_BACKEND_URL || window.location.origin || "").replace(/\/$/, "");
+    const fullUrl = offerUrl.startsWith("http") ? offerUrl : `${base}${offerUrl}`;
+    window.open(fullUrl, "_blank", "noopener,noreferrer");
+  }
+
+
       await load();
     } catch (err) {
       toast.error(apiErrorMessage(err));

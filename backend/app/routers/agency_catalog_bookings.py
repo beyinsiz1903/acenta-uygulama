@@ -555,17 +555,6 @@ async def accept_catalog_offer(
     return {"ok": True, "offer": offer}
 
 
-    return await _change_status(
-        booking_id,
-        "rejected",
-        allowed_from=["new"],
-        reason_code="CATALOG_REJECT_INVALID_STATE",
-        reason_message="Sadece 'Yeni' durumundaki talepler reddedilebilir.",
-        db=db,
-        user=user,
-    )
-
-
 @router.post("/{booking_id}/cancel")
 async def cancel_catalog_booking(
     booking_id: str,

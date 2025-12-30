@@ -24,7 +24,7 @@ def _oid_or_404(id_str: str) -> ObjectId:
         raise HTTPException(status_code=404, detail={"code": "CATALOG_PRODUCT_NOT_FOUND", "message": "Ürün bulunamadı."})
 
 
-@router.get("/")
+@router.get("")
 async def list_catalog_products(
     type: Optional[str] = Query(default=None),
     q: Optional[str] = Query(default=None),

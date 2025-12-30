@@ -4,10 +4,11 @@ import { test, expect } from "@playwright/test";
 
 async function loginAsAgency(page) {
   await page.goto("/login");
-  await page.fill('input[type="email"]', "agency1@demo.test");
-  await page.fill('input[type="password"]', "agency123");
-  await page.click('button[type="submit"]');
-  await expect(page).toHaveURL(/\/app\/agency/);
+  await page.waitForLoadState('networkidle');
+  await page.fill('[data-testid="login-email"]', "agency1@demo.test");
+  await page.fill('[data-testid="login-password"]', "agency123");
+  await page.click('[data-testid="login-submit"]');
+  await expect(page).toHaveURL(/\/app\/agency/, { timeout: 15000 });
 }
 
 test("Catalog Products → Variants → Booking full flow", async ({ page }) => {

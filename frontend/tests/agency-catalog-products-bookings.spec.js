@@ -69,42 +69,56 @@ test("Catalog Products  Variants  Booking full flow", async ({ page }) => {
 
   await createBtn.click();
 
-  // Modal içinde temel alanlar (mevcut DOM'a göre)
-  const modal = page.locator(".fixed >> text=Yeni Katalog Rezervasyonu");
+  // Modal içinde temel alanlar (artık data-testid kullanıyoruz)
+  const modal = page.locator('[data-testid="catalog-booking-create-modal"]');
   await expect(modal).toBeVisible({ timeout: 30_000 });
 
-  // Ürün select: fixed container içindeki ilk select
-  const selects = page.locator(".fixed select");
-  await expect(selects.first()).toBeVisible({ timeout: 30_000 });
+  // Ürün & variant select
+  await page
+    .locator('[data-testid="catalog-booking-select-product"]')
+    .click({ timeout: 30_000 });
+  await page
+    .locator('[data-testid="catalog-booking-product-item"]')
+    .first()
+    .click({ timeout: 30_000 });
 
-  const selectCount = await selects.count();
-  if (selectCount >= 1) {
-    await selects.nth(0).selectOption({ index: 0 });
+  const hasVariantItem = await page
+    .locator('[data-testid="catalog-booking-variant-item"]')
+    .count();
+  if (hasVariantItem > 0) {
+    await page
+      .locator('[data-testid="catalog-booking-select-variant"]')
+      .click({ timeout: 30_000 });
+    await page
+      .locator('[data-testid="catalog-booking-variant-item"]')
+      .first()
+      .click({ timeout: 30_000 });
   }
-  if (selectCount >= 2) {
-    const hasVariantOptions = await selects
-      .nth(1)
-      .locator("option")
-      .count();
-    if (hasVariantOptions > 0) {
-      await selects.nth(1).selectOption({ index: 0 });
-    }
-  }
 
-  // Guest & booking fields (mevcut placeholder ve tiplere göre)
-  const requiredTextInputs = page.locator('.fixed input[required][type="text"]');
-  await requiredTextInputs.first().fill("Playwright Guest");
-
-  const dateInputs = page.locator('.fixed input[type="date"]');
-  await dateInputs.nth(0).fill("2026-01-10");
-
-  const paxInput = page.locator('.fixed input[type="number"]').first();
-  await paxInput.fill("2");
+  // Guest & booking fields (tamamen data-testid üzerinden)
+  await page
+    .locator('[data-testid="catalog-booking-guest-fullname"]')
+    .fill("Playwright Guest", { timeout: 30_000 });
+  await page
+    .locator('[data-testid="catalog-booking-guest-phone"]')
+    .fill("05550000000", { timeout: 30_000 });
+  await page
+    .locator('[data-testid="catalog-booking-guest-email"]')
+    .fill("pwguest@example.com", { timeout: 30_000 });
+  await page
+    .locator('[data-testid="catalog-booking-start-date"]')
+    .fill("2026-01-10", { timeout: 30_000 });
+  await page
+    .locator('[data-testid="catalog-booking-pax"]')
+    .fill("2", { timeout: 30_000 });
+  await page
+    .locator('[data-testid="catalog-booking-commission"]')
+    .fill("0.10", { timeout: 30_000 });
 
   // Kaydet
   await Promise.all([
     page.waitForURL(/\/app\/agency\/catalog\/bookings\//, { timeout: 30_000 }),
-    page.click('.fixed button:has-text("Oluştur")'),
+    page.locator('[data-testid="btn-catalog-submit-booking"]').click(),
   ]);
 
   // DETAIL PAGE

@@ -82,24 +82,6 @@ export default function AgencyCatalogBookingsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
-    if (!createOpen) {
-      setAvailability(null);
-      return;
-    }
-    const handler = setTimeout(() => {
-      checkAvailability(form);
-    }, 400);
-    return () => clearTimeout(handler);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [createOpen, form.product_id, form.variant_id, form.start, form.end, form.pax]);
-
-  async function openCreate() {
-    setCreateOpen(true);
-    await loadProducts();
-  }
-
-
   async function checkAvailability(currentForm) {
     const { product_id, variant_id, start, end, pax } = currentForm;
     if (!product_id || !variant_id || !start || !pax) {

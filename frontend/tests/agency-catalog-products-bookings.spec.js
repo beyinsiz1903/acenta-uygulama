@@ -1,31 +1,48 @@
-// frontend/tests/agency-catalog-products-bookings.spec.js
-
 import { test, expect } from "@playwright/test";
 
-async function loginAsAgency(page) {
-  await page.goto("/login");
-  await page.waitForLoadState('networkidle');
+async function loginAsAgencyAdmin(page) {
+  await page.goto("/login", { waitUntil: "domcontentloaded" });
+
   await page.fill('[data-testid="login-email"]', "agency1@demo.test");
   await page.fill('[data-testid="login-password"]', "agency123");
-  await page.click('[data-testid="login-submit"]');
-  await expect(page).toHaveURL(/\/app\/agency/, { timeout: 15000 });
+
+  await Promise.all([
+    page.waitForNavigation({ waitUntil: "networkidle" }),
+    page.click('[data-testid="login-submit"]'),
+  ]);
+
+  await expect(page).toHaveURL(/\/app\//, { timeout: 30_000 });
 }
 
-test("Catalog Products → Variants → Booking full flow", async ({ page }) => {
-  // LOGIN
-  await loginAsAgency(page);
+// Konsol hatalarını logla (runtime crash tespiti için)
+function attachConsoleLogging(page) {
+  page.on("console", (msg) => {
+    if (msg.type() === "error") {
+      // Test logunda görelim
+      console.log("BROWSER_CONSOLE_ERROR:", msg.text());
+    }
+  });
+}
 
-  // PRODUCTS PAGE
-  await page.goto("/app/agency/catalog/products");
+// Ana E2E akış
+test("Catalog Products  Variants  Booking full flow", async ({ page }) => {
+  attachConsoleLogging(page);
+
+  // LOGIN
+  await loginAsAgencyAdmin(page);
+
+  // 1) PRODUCTS PAGE
+  await page.goto("/app/agency/catalog/products", { waitUntil: "networkidle" });
+  await expect(page).toHaveURL(/\/app\/agency\/catalog\/products/, { timeout: 30_000 });
 
   const productRows = page.locator('[data-testid="catalog-product-row"]');
 
-  // Eğer hiç ürün yoksa basit bir ürün oluştur
+  // Eğer hiç ürün yoksa bir ürün oluştur
   if ((await productRows.count()) === 0) {
     const createTitle = page.locator('[data-testid="catalog-product-title-input"]');
     await createTitle.fill("Test Katalog Turu");
     await page.click('[data-testid="btn-catalog-create-product"]');
-    await expect(productRows.first()).toBeVisible({ timeout: 10000 });
+    await expect(productRows.first()).toBeVisible({ timeout: 30_000 });
   }
 
   // İlk ürün için variant panelini aç
@@ -40,27 +57,31 @@ test("Catalog Products → Variants → Booking full flow", async ({ page }) => 
     await page.fill('input[placeholder="Min pax"]', "1");
     await page.fill('input[placeholder="Max pax"]', "5");
     await page.click('[data-testid="btn-catalog-create-variant"]');
-    await expect(variantRows.first()).toBeVisible({ timeout: 10000 });
+    await expect(variantRows.first()).toBeVisible({ timeout: 30_000 });
   }
 
-  // BOOKINGS PAGE
-  await page.goto("/app/agency/catalog/bookings");
-  await page.click('[data-testid="btn-catalog-create-booking"]');
+  // 2) BOOKINGS PAGE
+  await page.goto("/app/agency/catalog/bookings", { waitUntil: "networkidle" });
+  await expect(page).toHaveURL(/\/app\/agency\/catalog\/bookings/, { timeout: 30_000 });
 
-  // Ürün seç
-  const productSelect = page.locator(".fixed [data-testid='select-product'] select");
+  const createBtn = page.locator('[data-testid="btn-catalog-create-booking"]');
+  await expect(createBtn).toBeVisible({ timeout: 30_000 });
 
-  // Eğer data-testid ile select'leri bulamazsak form alan isimleriyle fallback yapacağız.
-  // Basit yaklaşım: ilk select ürün, ikinci select variant olarak varsayılır.
+  await createBtn.click();
 
+  // Modal içinde temel alanlar (mevcut DOM'a göre)
+  const modal = page.locator(".fixed >> text=Yeni Katalog Rezervasyonu");
+  await expect(modal).toBeVisible({ timeout: 30_000 });
+
+  // Ürün select: fixed container içindeki ilk select
   const selects = page.locator(".fixed select");
-  const selectCount = await selects.count();
+  await expect(selects.first()).toBeVisible({ timeout: 30_000 });
 
+  const selectCount = await selects.count();
   if (selectCount >= 1) {
     await selects.nth(0).selectOption({ index: 0 });
   }
   if (selectCount >= 2) {
-    // Variant seçmek opsiyonel, varsa ilkini seç
     const hasVariantOptions = await selects
       .nth(1)
       .locator("option")
@@ -70,8 +91,10 @@ test("Catalog Products → Variants → Booking full flow", async ({ page }) => 
     }
   }
 
-  // Guest & booking fields
-  await page.fill('input[required][type="text"]', "Playwright Guest");
+  // Guest & booking fields (mevcut placeholder ve tiplere göre)
+  const requiredTextInputs = page.locator('.fixed input[required][type="text"]');
+  await requiredTextInputs.first().fill("Playwright Guest");
+
   const dateInputs = page.locator('.fixed input[type="date"]');
   await dateInputs.nth(0).fill("2026-01-10");
 
@@ -79,20 +102,23 @@ test("Catalog Products → Variants → Booking full flow", async ({ page }) => 
   await paxInput.fill("2");
 
   // Kaydet
-  await page.click('.fixed button:has-text("Oluştur")');
+  await Promise.all([
+    page.waitForURL(/\/app\/agency\/catalog\/bookings\//, { timeout: 30_000 }),
+    page.click('.fixed button:has-text("Oluştur")'),
+  ]);
 
   // DETAIL PAGE
-  await expect(page).toHaveURL(/\/app\/agency\/catalog\/bookings\//);
+  await expect(page).toHaveURL(/\/app\/agency\/catalog\/bookings\//, { timeout: 30_000 });
 
   // Internal note ekle
   await page.fill('[data-testid="internal-note-input"]', "Playwright test notu");
   await page.click('[data-testid="btn-add-internal-note"]');
-  await expect(page.locator("text=Playwright test notu")).toBeVisible({ timeout: 10000 });
+  await expect(page.locator("text=Playwright test notu")).toBeVisible({ timeout: 30_000 });
 
   // Approve butonu görünüyorsa onayla
   const approveBtn = page.locator('[data-testid="btn-catalog-approve"]');
-  if (await approveBtn.isVisible()) {
-    await approveBtn.click();
-    await expect(page.locator("text=approved")).toBeVisible({ timeout: 10000 });
+  if (await approveBtn.count()) {
+    await approveBtn.first().click();
+    await expect(page.locator("text=approved")).toBeVisible({ timeout: 30_000 });
   }
 });

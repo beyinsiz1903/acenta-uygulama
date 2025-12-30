@@ -119,6 +119,9 @@ function App() {
             <Route path="tours/:id" element={<AgencyTourEditPage />} />
             <Route path="tour-bookings" element={<AgencyTourBookingsPage />} />
             <Route path="tour-bookings/:id" element={<AgencyTourBookingDetailPage />} />
+            <Route path="catalog/products" element={<AgencyCatalogProductsPage />} />
+            <Route path="catalog/bookings" element={<AgencyCatalogBookingsPage />} />
+            <Route path="catalog/bookings/:id" element={<AgencyCatalogBookingDetailPage />} />
             <Route path="settings/payment" element={<AgencyPaymentSettingsPage />} />
           </Route>
         </Route>

@@ -26,7 +26,7 @@ async def get_public_catalog_offer_pdf(booking_id: str, t: Optional[str] = None)
             status_code=401,
             detail={
                 "code": "OFFER_TOKEN_MISSING",
-                "message": "Ge3erli bir teklif eri5fim token' gerekli.",
+                "message": "Geçerli bir teklif erişim token'ı gerekli.",
             },
         )
 
@@ -39,7 +39,7 @@ async def get_public_catalog_offer_pdf(booking_id: str, t: Optional[str] = None)
             status_code=401,
             detail={
                 "code": "OFFER_TOKEN_MISSING",
-                "message": "Ge3erli bir teklif eri5fim token' gerekli.",
+                "message": "Geçerli bir teklif erişim token'ı gerekli.",
             },
         )
     except VoucherTokenExpired:
@@ -47,7 +47,7 @@ async def get_public_catalog_offer_pdf(booking_id: str, t: Optional[str] = None)
             status_code=403,
             detail={
                 "code": "OFFER_TOKEN_INVALID_OR_EXPIRED",
-                "message": "Teklif linkinin sfcresi dolmu5f.",
+                "message": "Teklif linkinin süresi dolmuş.",
             },
         )
     except VoucherTokenInvalid:
@@ -55,7 +55,7 @@ async def get_public_catalog_offer_pdf(booking_id: str, t: Optional[str] = None)
             status_code=403,
             detail={
                 "code": "OFFER_TOKEN_INVALID_OR_EXPIRED",
-                "message": "Teklif linki gee7ersiz.",
+                "message": "Teklif linki geçersiz.",
             },
         )
 
@@ -66,14 +66,14 @@ async def get_public_catalog_offer_pdf(booking_id: str, t: Optional[str] = None)
     except Exception:
         raise HTTPException(
             status_code=404,
-            detail={"code": "CATALOG_BOOKING_NOT_FOUND", "message": "Rezervasyon bulunamad31."},
+            detail={"code": "CATALOG_BOOKING_NOT_FOUND", "message": "Rezervasyon bulunamadı."},
         )
 
     booking = await db.agency_catalog_booking_requests.find_one({"_id": booking_oid})
     if not booking:
         raise HTTPException(
             status_code=404,
-            detail={"code": "CATALOG_BOOKING_NOT_FOUND", "message": "Rezervasyon bulunamad31."},
+            detail={"code": "CATALOG_BOOKING_NOT_FOUND", "message": "Rezervasyon bulunamadı."},
         )
 
     product = None
@@ -86,7 +86,7 @@ async def get_public_catalog_offer_pdf(booking_id: str, t: Optional[str] = None)
     if product is None:
         raise HTTPException(
             status_code=404,
-            detail={"code": "CATALOG_PRODUCT_NOT_FOUND", "message": "dcrfcn bulunamad31."},
+            detail={"code": "CATALOG_PRODUCT_NOT_FOUND", "message": "Ürün bulunamadı."},
         )
 
     try:
@@ -94,7 +94,7 @@ async def get_public_catalog_offer_pdf(booking_id: str, t: Optional[str] = None)
     except Exception as e:  # pragma: no cover - defensive
         raise HTTPException(
             status_code=500,
-            detail={"code": "OFFER_PDF_RENDER_FAILED", "message": "Teklif PDF'i olu5fturulamad31."},
+            detail={"code": "OFFER_PDF_RENDER_FAILED", "message": "Teklif PDF'i oluşturulamadı."},
         ) from e
 
     filename = f"catalog-offer-{booking_id}.pdf"

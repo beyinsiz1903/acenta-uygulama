@@ -21,6 +21,7 @@ import AgencyCatalogProductsPage from "./pages/AgencyCatalogProductsPage";
 import AgencyCatalogBookingsPage from "./pages/AgencyCatalogBookingsPage";
 import AgencyCatalogBookingDetailPage from "./pages/AgencyCatalogBookingDetailPage";
 import AgencyCatalogCapacityPage from "./pages/AgencyCatalogCapacityPage";
+import AgencyCatalogOverbooksPage from "./pages/AgencyCatalogOverbooksPage";
 
 import AgencyHotelDetailPage from "./pages/AgencyHotelDetailPage";
 import AgencyHotelSearchPage from "./pages/AgencyHotelSearchPage";

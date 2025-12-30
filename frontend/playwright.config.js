@@ -19,19 +19,21 @@ module.exports = defineConfig({
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL: 'https://travel-platform-11.preview.emergentagent.com',
+    baseURL: process.env.PW_BASE_URL || 'https://travel-platform-11.preview.emergentagent.com',
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: 'on-first-retry',
-    
+    trace: 'retain-on-failure',
+    screenshot: 'only-on-failure',
+    video: 'retain-on-failure',
+
     /* Run in headless mode */
     headless: true,
-    
+
     /* Increase timeout */
     actionTimeout: 30000,
     navigationTimeout: 30000,
   },
-  
+
   /* Global test timeout */
   timeout: 60000,
 

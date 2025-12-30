@@ -113,8 +113,8 @@ test("Catalog Offer: create, send, public PDF works", async ({ page, request }) 
 
   // Build absolute URL using PW_BASE_URL
   const base = process.env.PW_BASE_URL || "http://localhost:3000";
-  const backendBase = base.replace(/\/$/, "");
-  const fullUrl = relativeUrl.startsWith("http") ? relativeUrl : backendBase.replace(/:3000$/, "") + relativeUrl;
+  const origin = base.replace(/\/$/, "");
+  const fullUrl = relativeUrl.startsWith("http") ? relativeUrl : origin + relativeUrl;
 
   const response = await request.get(fullUrl);
   expect(response.status()).toBe(200);

@@ -20,6 +20,7 @@ import AgencyCatalogHotelsPage from "./pages/AgencyCatalogHotelsPage";
 import AgencyCatalogProductsPage from "./pages/AgencyCatalogProductsPage";
 import AgencyCatalogBookingsPage from "./pages/AgencyCatalogBookingsPage";
 import AgencyCatalogBookingDetailPage from "./pages/AgencyCatalogBookingDetailPage";
+import AgencyCatalogCapacityPage from "./pages/AgencyCatalogCapacityPage";
 
 import AgencyHotelDetailPage from "./pages/AgencyHotelDetailPage";
 import AgencyHotelSearchPage from "./pages/AgencyHotelSearchPage";

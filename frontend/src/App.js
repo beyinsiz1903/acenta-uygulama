@@ -123,6 +123,7 @@ function App() {
             <Route path="catalog/products" element={<AgencyCatalogProductsPage />} />
             <Route path="catalog/bookings" element={<AgencyCatalogBookingsPage />} />
             <Route path="catalog/bookings/:id" element={<AgencyCatalogBookingDetailPage />} />
+            <Route path="catalog/capacity" element={<AgencyCatalogCapacityPage />} />
             <Route path="settings/payment" element={<AgencyPaymentSettingsPage />} />
           </Route>
         </Route>

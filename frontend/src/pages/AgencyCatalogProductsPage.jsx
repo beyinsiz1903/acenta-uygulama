@@ -29,6 +29,15 @@ export default function AgencyCatalogProductsPage() {
   const [activeOnly, setActiveOnly] = useState(true);
   const [q, setQ] = useState("");
   const [creating, setCreating] = useState(false);
+  const [openVariantsFor, setOpenVariantsFor] = useState(null);
+  const [variants, setVariants] = useState({});
+  const [newVariant, setNewVariant] = useState({
+    name: "",
+    price: "",
+    currency: "TRY",
+    min_pax: 1,
+    max_pax: 1,
+  });
   const [newProduct, setNewProduct] = useState({
     type: "tour",
     title: "",
@@ -45,6 +54,19 @@ export default function AgencyCatalogProductsPage() {
       const params = new URLSearchParams();
       if (type) params.set("type", type);
       if (q) params.set("q", q);
+  const loadVariants = async (productId) => {
+    try {
+      const res = await api.get(`/agency/catalog/products/${productId}/variants`);
+      setVariants((prev) => ({
+        ...prev,
+        [productId]: res.data.items || [],
+      }));
+    } catch (err) {
+      toast.error(apiErrorMessage(err));
+    }
+  };
+
+
       if (activeOnly) params.set("active", "true");
       const resp = await api.get(`/agency/catalog/products?${params.toString()}`);
       setItems(resp.data?.items || []);

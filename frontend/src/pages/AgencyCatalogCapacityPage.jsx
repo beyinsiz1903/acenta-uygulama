@@ -264,6 +264,14 @@ export default function AgencyCatalogCapacityPage() {
                         >
                           {d.max != null && d.used >= d.max ? "Dolu" : "Uygun"}
                         </div>
+                        {d.overbooked && (
+                          <div
+                            className="text-[11px] text-amber-800 mt-0.5"
+                            data-testid={`capacity-overbooked-${iso}`}
+                          >
+                            Overbook
+                          </div>
+                        )}
                       </div>
                     );
                   })}

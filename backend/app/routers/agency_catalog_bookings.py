@@ -418,6 +418,20 @@ async def create_catalog_booking(
         "updated_at": now,
     }
 
+    # Overbook audit note: attach to doc before insert
+    if allocation and allocation.get("overbook"):
+        overbook_at = now
+        allocation["overbook_at"] = overbook_at
+        overbook_days = ", ".join(allocation.get("days") or [])
+        note_text = f"Overbook yapıldı ({overbook_days}, pax={pax})"
+        note_doc = {
+            "text": note_text,
+            "created_at": overbook_at,
+            "actor": created_by,
+        }
+        doc.setdefault("internal_notes", []).append(note_doc)
+
+
     res = await db.agency_catalog_booking_requests.insert_one(doc)
     saved = await db.agency_catalog_booking_requests.find_one({"_id": res.inserted_id})
     assert saved is not None

@@ -397,6 +397,13 @@ export default function AgencyCatalogBookingsPage() {
                       >
                         Uygun (mode={availability.mode}, requested={availability.requested_units})
                       </span>
+                    ) : availability.overbook_allowed ? (
+                      <span
+                        className="text-orange-700"
+                        data-testid="availability-status"
+                      >
+                        Overbook edilecek
+                      </span>
                     ) : (
                       <span
                         className="text-red-700"
@@ -405,7 +412,15 @@ export default function AgencyCatalogBookingsPage() {
                         Kapasite dolu
                       </span>
                     )}
-                    {!availability.summary?.can_book && availability.summary?.blocking_day && (
+                    {!availability.summary?.can_book && availability.overbook_allowed && (
+                      <div
+                        className="text-orange-700"
+                        data-testid="availability-overbook-warning"
+                      >
+                        Bu gün için kapasite dolu, overbook ile rezervasyon alınacak.
+                      </div>
+                    )}
+                    {!availability.summary?.can_book && !availability.overbook_allowed && availability.summary?.blocking_day && (
                       <div
                         className="text-red-700"
                         data-testid="availability-blocking-day"

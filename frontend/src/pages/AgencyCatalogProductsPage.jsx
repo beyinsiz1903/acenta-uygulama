@@ -147,7 +147,7 @@ export default function AgencyCatalogProductsPage() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {PRODUCT_TYPES.filter((t) => t.value).map((t) => (
+                {PRODUCT_TYPES.filter((t) => t.value !== "all").map((t) => (
                   <SelectItem key={t.value} value={t.value}>
                     {t.label}
                   </SelectItem>

@@ -54,6 +54,16 @@ export default function AgencyCatalogProductsPage() {
       const params = new URLSearchParams();
       if (type) params.set("type", type);
       if (q) params.set("q", q);
+      if (activeOnly) params.set("active", "true");
+      const resp = await api.get(`/agency/catalog/products?${params.toString()}`);
+      setItems(resp.data?.items || []);
+    } catch (err) {
+      toast.error(apiErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  }
+
   const loadVariants = async (productId) => {
     try {
       const res = await api.get(`/agency/catalog/products/${productId}/variants`);
@@ -65,17 +75,6 @@ export default function AgencyCatalogProductsPage() {
       toast.error(apiErrorMessage(err));
     }
   };
-
-
-      if (activeOnly) params.set("active", "true");
-      const resp = await api.get(`/agency/catalog/products?${params.toString()}`);
-      setItems(resp.data?.items || []);
-    } catch (err) {
-      toast.error(apiErrorMessage(err));
-    } finally {
-      setLoading(false);
-    }
-  }
 
   useEffect(() => {
     load();

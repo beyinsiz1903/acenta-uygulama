@@ -174,7 +174,7 @@ test("Catalog availability: capacity blocks second booking on same day", async (
   }
 
   await page.locator('[data-testid="catalog-booking-guest-fullname"]').fill("Capacity Guest 2");
-  await page.locator('[data-testid="catalog-booking-start-date"]').fill("2026-01-10");
+  await page.locator('[data-testid="catalog-booking-start-date"]').fill(TEST_DATE);
   await page.locator('[data-testid="catalog-booking-pax"]').fill("1");
 
   const availStatus2 = page.locator('[data-testid="availability-status"]');

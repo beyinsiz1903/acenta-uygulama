@@ -51,6 +51,9 @@ from app.routers.public_tours import router as public_tours_router
 from app.routers.agency_tours import router as agency_tours_router
 from app.routers.public_tour_bookings import router as public_tour_bookings_router
 from app.routers.agency_tour_bookings import router as agency_tour_bookings_router
+from app.routers.agency_catalog_products import router as agency_catalog_products_router
+from app.routers.agency_catalog_variants import router as agency_catalog_variants_router
+from app.routers.agency_catalog_bookings import router as agency_catalog_bookings_router
 from app.routers.public_vouchers import router as public_vouchers_router
 from app.routers.dev_tools import router as dev_tools_router
 from app.email_worker import email_dispatch_loop

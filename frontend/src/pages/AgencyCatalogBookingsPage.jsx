@@ -8,7 +8,7 @@ import { toast } from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
 
 const STATUS_OPTIONS = [
-  { value: "", label: "Tümü" },
+  { value: "all", label: "Tümü" },
   { value: "new", label: "Yeni" },
   { value: "approved", label: "Onaylandı" },
   { value: "rejected", label: "Reddedildi" },
@@ -18,7 +18,7 @@ const STATUS_OPTIONS = [
 export default function AgencyCatalogBookingsPage() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [status, setStatus] = useState("");
+  const [status, setStatus] = useState("all");
   const [type, setType] = useState("");
   const [creating, setCreating] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
@@ -42,7 +42,7 @@ export default function AgencyCatalogBookingsPage() {
     setLoading(true);
     try {
       const params = new URLSearchParams();
-      if (status) params.set("status", status);
+      if (status && status !== "all") params.set("status", status);
       if (type) params.set("product_type", type);
       const resp = await api.get(`/agency/catalog/bookings?${params.toString()}`);
       setItems(resp.data?.items || []);

@@ -375,6 +375,7 @@ async def create_catalog_booking(
             "commission_amount": commission_amount,
             "total": total,
         },
+        "allocation": allocation,
         "offer": {
             "status": "draft",
             "expires_at": None,

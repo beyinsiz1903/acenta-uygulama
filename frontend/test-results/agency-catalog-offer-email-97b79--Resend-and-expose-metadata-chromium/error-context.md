@@ -1,0 +1,145 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - generic [ref=e5]:
+      - generic [ref=e6]: Acenta Master
+      - generic [ref=e7]:
+        - button "Tema" [ref=e8] [cursor=pointer]:
+          - img
+          - generic [ref=e9]: Tema
+        - generic [ref=e10]:
+          - generic [ref=e11]: Agency Admin 1
+          - generic [ref=e12]: agency_admin
+        - button "Çıkış" [ref=e13] [cursor=pointer]:
+          - img
+          - text: Çıkış
+    - generic [ref=e14]:
+      - complementary [ref=e15]:
+        - generic [ref=e16]:
+          - generic [ref=e17]:
+            - generic [ref=e18]:
+              - generic [ref=e19]: A
+              - generic [ref=e20]:
+                - generic [ref=e21]: Acenta Master
+                - generic [ref=e22]: Agency Paneli
+            - generic "Online" [ref=e23]
+          - generic [ref=e24]:
+            - generic [ref=e25]:
+              - generic [ref=e26]:
+                - generic [ref=e27]: Toplam
+                - generic [ref=e28]: adet
+              - generic "0" [ref=e29]
+            - generic [ref=e30]:
+              - generic [ref=e31]:
+                - generic [ref=e32]: Bekleyen
+                - generic [ref=e33]: adet
+              - generic "0" [ref=e34]
+            - generic [ref=e35]:
+              - generic [ref=e36]:
+                - generic [ref=e37]: Ciro 7G
+                - generic [ref=e38]: ₺
+              - generic "₺0,00" [ref=e39]: ₺0
+          - generic [ref=e40]:
+            - generic [ref=e41]: "Rol: agency_admin"
+            - generic [ref=e42]: 30.12.2025
+          - navigation [ref=e44]:
+            - generic [ref=e45]:
+              - generic [ref=e46]: Acenta
+              - link "Hızlı Rezervasyon" [ref=e47] [cursor=pointer]:
+                - /url: /app/agency/hotels
+                - img [ref=e48]
+                - text: Hızlı Rezervasyon
+              - link "Rezervasyonlarım" [ref=e52] [cursor=pointer]:
+                - /url: /app/agency/bookings
+                - img [ref=e53]
+                - text: Rezervasyonlarım
+              - link "Mutabakat" [ref=e57] [cursor=pointer]:
+                - /url: /app/agency/settlements
+                - img [ref=e58]
+                - text: Mutabakat
+              - link "Ödeme Ayarları" [ref=e61] [cursor=pointer]:
+                - /url: /app/agency/settings/payment
+                - img [ref=e62]
+                - text: Ödeme Ayarları
+              - link "Yardım" [ref=e66] [cursor=pointer]:
+                - /url: /app/agency/help
+                - img [ref=e67]
+                - text: Yardım
+            - generic [ref=e71]:
+              - generic [ref=e72]: Ürünler
+              - link "Oteller" [ref=e73] [cursor=pointer]:
+                - /url: /app/agency/products/hotels
+                - img [ref=e74]
+                - text: Oteller
+              - link "Turlarım" [ref=e77] [cursor=pointer]:
+                - /url: /app/agency/tours
+                - img [ref=e78]
+                - text: Turlarım
+              - link "Tur Talepleri" [ref=e82] [cursor=pointer]:
+                - /url: /app/agency/tour-bookings
+                - img [ref=e83]
+                - text: Tur Talepleri
+            - generic [ref=e87]:
+              - generic [ref=e88]: Katalog
+              - link "Ürünler" [ref=e89] [cursor=pointer]:
+                - /url: /app/agency/catalog/products
+                - img [ref=e90]
+                - text: Ürünler
+              - link "Rezervasyonlar" [ref=e94] [cursor=pointer]:
+                - /url: /app/agency/catalog/bookings
+                - img [ref=e95]
+                - text: Rezervasyonlar
+              - link "Kapasite" [ref=e99] [cursor=pointer]:
+                - /url: /app/agency/catalog/capacity
+                - img [ref=e100]
+                - text: Kapasite
+        - generic [ref=e104]:
+          - generic [ref=e105]: Hızlı İpuçları
+          - generic [ref=e106]: Müsaitlik ekranında kapasite ve fiyatı güncelleyip rezervasyon akışını hızlıca test edebilirsin.
+      - main [ref=e107]:
+        - generic [ref=e109]:
+          - generic [ref=e110]:
+            - generic [ref=e111]:
+              - heading "Katalog Rezervasyon Detayı" [level=1] [ref=e112]
+              - paragraph [ref=e113]: Offer Email Guest • tour • 2030-03-10
+            - generic [ref=e114]:
+              - generic [ref=e115]: new
+              - button "Onayla" [ref=e116] [cursor=pointer]
+              - button "Reddet" [ref=e117] [cursor=pointer]
+              - button "İptal Et" [ref=e118] [cursor=pointer]
+          - generic [ref=e119]:
+            - generic [ref=e120]:
+              - generic [ref=e121]: Misafir
+              - generic [ref=e122]: Offer Email Guest
+              - generic [ref=e123]: pwguest@example.com
+            - generic [ref=e124]:
+              - generic [ref=e125]: Rezervasyon
+              - generic [ref=e126]: "Tarihler: 2030-03-10"
+              - generic [ref=e127]: "Kişi sayısı: 2"
+              - generic [ref=e128]: "Fiyatlandırma: 2000 TRY + komisyon %10 → toplam 2200 TRY"
+          - generic [ref=e129]:
+            - generic [ref=e130]:
+              - generic [ref=e131]: Teklif
+              - generic [ref=e132]:
+                - generic [ref=e134]: draft
+                - generic [ref=e135]: "Net: 2000 TRY \x00b7 Komisyon: 200 TRY \x00b7 Toplam: 2200 TRY"
+                - generic [ref=e136]:
+                  - button "Teklif Oluştur" [ref=e137] [cursor=pointer]
+                  - button "Teklifi Gönder" [disabled]
+                  - button "E-posta ile Gönder" [disabled]
+                  - button "Teklifi Kabul Et" [disabled]
+                  - button "PDF Önizle" [disabled]
+            - generic [ref=e138]:
+              - generic [ref=e139]: İç Notlar
+              - generic [ref=e140]: Henüz iç not yok.
+            - generic [ref=e141]:
+              - generic [ref=e142]: Yeni Not Ekle
+              - generic [ref=e143]:
+                - textbox [ref=e144]
+                - button "Not Ekle" [ref=e145] [cursor=pointer]
+    - contentinfo [ref=e146]:
+      - generic [ref=e147]: © 2025 — v1
+  - region "Notifications alt+T"
+```

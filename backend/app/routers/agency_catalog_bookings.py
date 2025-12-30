@@ -402,6 +402,8 @@ async def approve_catalog_booking(
         reason_code="CATALOG_APPROVE_INVALID_STATE",
         reason_message="Sadece 'Yeni' durumundaki talepler onaylanabilir.",
         db=db,
+        user=user,
+    )
 
 
 @router.post("/{booking_id}/offer/create")

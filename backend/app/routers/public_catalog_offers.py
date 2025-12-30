@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Response
 
 from app.db import get_db
 from app.utils import now_utc
-from app.utils.voucher_signing import VoucherTokenExpired, VoucherTokenInvalid, VoucherTokenMissing, verify_voucher_token, sign_voucher
+from app.utils_package.voucher_signing import VoucherTokenExpired, VoucherTokenInvalid, VoucherTokenMissing, verify_voucher_token, sign_voucher
 from app.services.catalog_offer_pdf import render_catalog_offer_pdf
 from app.utils import to_object_id
 

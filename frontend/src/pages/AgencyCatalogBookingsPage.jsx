@@ -232,7 +232,7 @@ export default function AgencyCatalogBookingsPage() {
                     await loadVariants(v);
                   }}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger data-testid="catalog-booking-select-product">
                     <SelectValue placeholder="Ürün seçin" />
                   </SelectTrigger>
                   <SelectContent>

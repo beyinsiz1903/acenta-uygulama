@@ -35,21 +35,11 @@ module.exports = defineConfig({
   /* Global test timeout */
   timeout: 60000,
 
-  /* Configure projects for major browsers */
+  /* Configure projects for major browsers (MVP: chromium only) */
   projects: [
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
-    },
-
-    {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
-    },
-
-    {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
     },
 
     /* Test against mobile viewports. */

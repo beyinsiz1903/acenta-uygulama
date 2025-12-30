@@ -99,6 +99,8 @@ async function ensureProductAndVariant(request, baseURL) {
 }
 
 
+const TEST_DATE = "2030-01-10";
+
 async function createBookingViaUI(page) {
   await page.goto("/app/agency/catalog/bookings", { waitUntil: "networkidle" });
 

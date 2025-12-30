@@ -136,8 +136,9 @@ export default function AgencyCatalogBookingsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [createOpen, form.product_id, form.variant_id, form.start, form.end, form.pax]);
 
-
-    await loadProducts();
+  async function openCreate() {
+    setCreateOpen(true);
+    loadProducts();
   }
 
   async function handleCreate(e) {

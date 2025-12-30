@@ -17,6 +17,7 @@ export default function AgencyCatalogBookingDetailPage() {
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(false);
   const [noteText, setNoteText] = useState("");
+  const [offerUrl, setOfferUrl] = useState("");
   const admin = isAdmin();
 
   async function load() {

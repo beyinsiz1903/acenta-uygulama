@@ -580,12 +580,209 @@ async def send_catalog_offer(
         "actor": created_by,
     }
 
+    # Persist offer + internal note
     await db.agency_catalog_booking_requests.update_one(
         {"_id": booking_oid, "organization_id": org_id, "agency_id": agency_id},
         {"$set": {"offer": offer, "updated_at": now}, "$push": {"internal_notes": note_doc}},
     )
 
     return {"ok": True, "offer": offer, "public_url": public_url}
+
+
+@router.post("/{booking_id}/offer/send-email")
+async def send_catalog_offer_email_endpoint(
+    booking_id: str,
+    db=Depends(get_db),
+    user: Dict[str, Any] = Depends(require_roles(["agency_admin", "agency_agent"])),
+):
+    """Send catalog offer link via Resend to the guest's email.
+
+    - Requires booking.status == approved
+    - Requires guest.email present
+    - Uses signed public catalog-offer PDF URL
+    """
+    from app.services.email_resend import (
+        ResendEmailError,
+        ResendNotConfigured,
+        send_catalog_offer_email,
+    )
+
+    org_id, agency_id = _ensure_agency(user)
+    booking_oid = _oid_or_404(booking_id)
+
+    booking = await _get_catalog_booking_or_404(db, booking_oid, org_id, agency_id)
+
+    status = (booking.get("status") or "").lower()
+    if status != "approved":
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "code": "BOOKING_NOT_APPROVED",
+                "message": "Teklif göndermek için rezervasyon onaylanmış olmalı.",
+            },
+        )
+
+    guest = booking.get("guest") or {}
+    to_email = (guest.get("email") or "").strip()
+    if not to_email:
+        raise HTTPException(
+            status_code=400,
+            detail={"code": "INVALID_GUEST_EMAIL", "message": "Misafir e-posta adresi bulunamadı."},
+        )
+
+    now = now_utc()
+    offer = booking.get("offer") or {}
+    note_text = (offer.get("note") or "").strip() or None
+
+    # Ensure expires_at
+    expires_at = offer.get("expires_at")
+    if expires_at is None:
+        from datetime import timedelta
+
+        expires_at_dt = now + timedelta(days=3)
+        offer = _build_offer_snapshot(booking, note=note_text or "", expires_at=expires_at_dt)
+        offer["status"] = offer.get("status", "draft")
+        expires_at = offer["expires_at"]
+        await db.agency_catalog_booking_requests.update_one(
+            {"_id": booking_oid, "organization_id": org_id, "agency_id": agency_id},
+            {"$set": {"offer": offer, "updated_at": now}},
+        )
+
+    # Signed URL (reuse voucher signing)
+    from datetime import datetime as dt
+
+    # expires_at stored as ISO string with Z
+    if isinstance(expires_at, str):
+        exp_str = expires_at
+        if exp_str.endswith("Z"):
+            exp_str = exp_str[:-1] + "+00:00"
+        expires_dt = dt.fromisoformat(exp_str)
+    else:
+        expires_dt = now
+
+    token = sign_voucher(booking_id, expires_at=expires_dt)
+    public_url = f"/api/public/catalog-offers/{booking_id}.pdf?t={token}"
+
+    # Absolute URL for email
+    import os
+
+    backend_base = os.environ.get("PUBLIC_BACKEND_BASE_URL") or os.environ.get("REACT_APP_BACKEND_URL")
+    if backend_base:
+        backend_base = backend_base.rstrip("/")
+        public_url_abs = f"{backend_base}{public_url}"
+    else:
+        public_url_abs = public_url
+
+    product_title = (booking.get("product_title") or "Katalog Ürün")
+    dates = booking.get("dates") or {}
+    start_date = dates.get("start") or "-"
+    end_date = dates.get("end") or None
+    pax = booking.get("pax") or 1
+    pricing = booking.get("pricing") or {}
+    total = pricing.get("total") or pricing.get("subtotal") or 0
+    currency = pricing.get("currency") or "TRY"
+
+    subject = f"Teklifiniz hazır: {product_title}"
+
+    guest_name = guest.get("full_name") or "Misafir"
+    expiry_text = expires_at or "-"
+
+    html = f"""
+    <div style='font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size:14px; color:#111827;'>
+      <p>Merhaba {guest_name},</p>
+      <p>Sizin için hazırlanan teklif detaylarını aşağıda bulabilirsiniz.</p>
+      <h3 style="margin-top:16px; font-size:15px;">Rezervasyon Özeti</h3>
+      <ul>
+        <li><strong>Ürün:</strong> {product_title}</li>
+        <li><strong>Tarih:</strong> {start_date}{(" - " + end_date) if end_date else ""}</li>
+        <li><strong>Kişi sayısı:</strong> {pax}</li>
+        <li><strong>Toplam:</strong> {total} {currency}</li>
+      </ul>
+      <p style="margin-top:12px;">Teklif detaylarını PDF olarak görüntülemek için aşağıdaki bağlantıyı kullanabilirsiniz:</p>
+      <p><a href="{public_url_abs}" target="_blank" rel="noopener noreferrer">Teklifi PDF olarak aç</a></p>
+      <p>Bu teklif {expiry_text} tarihine kadar geçerlidir.</p>
+      <p>Teşekkürler.</p>
+    </div>
+    """
+
+    text = (
+        f"Merhaba {guest_name},\n\n"
+        f"Ürün: {product_title}\n"
+        f"Tarih: {start_date}{(' - ' + end_date) if end_date else ''}\n"
+        f"Kişi sayısı: {pax}\n"
+        f"Toplam: {total} {currency}\n\n"
+        f"Teklif PDF bağlantısı: {public_url_abs}\n"
+        f"Geçerlilik: {expiry_text}\n"
+    )
+
+    tags = []
+    tag_env = os.environ.get("RESEND_TAG")
+    if tag_env:
+        tags.append(tag_env)
+    tags.append("catalog-offer")
+
+    try:
+        resend_resp = await send_catalog_offer_email(
+            to_email=to_email,
+            subject=subject,
+            html=html,
+            text=text,
+            tags=tags,
+        )
+    except ResendNotConfigured as exc:
+        raise HTTPException(
+            status_code=503,
+            detail={
+                "code": "EMAIL_PROVIDER_NOT_CONFIGURED",
+                "message": "E-posta servisi yapılandırılmamış (RESEND_API_KEY / RESEND_FROM_EMAIL).",
+            },
+        ) from exc
+    except ResendEmailError as exc:
+        raise HTTPException(
+            status_code=502,
+            detail={
+                "code": "EMAIL_SEND_FAILED",
+                "message": "Teklif e-postası gönderilemedi.",
+                "meta": {"provider": "resend"},
+            },
+        ) from exc
+
+    provider_id = resend_resp.get("id")
+
+    # Internal note + offer.last_email snapshot
+    actor = {
+        "user_id": _sid(user.get("id")),
+        "name": user.get("name", "Unknown"),
+        "role": (user.get("roles") or ["unknown"])[0],
+    }
+
+    note_doc = {
+        "text": f"Teklif e-posta ile gönderildi: {to_email} (provider_id={provider_id}, expires_at={expiry_text})",
+        "created_at": now,
+        "actor": actor,
+    }
+
+    last_email = {
+        "provider": "resend",
+        "provider_id": provider_id,
+        "to_email": to_email,
+        "sent_at": now,
+    }
+
+    await db.agency_catalog_booking_requests.update_one(
+        {"_id": booking_oid, "organization_id": org_id, "agency_id": agency_id},
+        {"$set": {"offer.last_email": last_email, "updated_at": now}, "$push": {"internal_notes": note_doc}},
+    )
+
+    return {
+        "ok": True,
+        "provider": "resend",
+        "provider_id": provider_id,
+        "to_email": to_email,
+        "public_url": public_url,
+        "public_url_abs": public_url_abs,
+        "offer": offer,
+    }
 
 
 @router.post("/{booking_id}/offer/accept")

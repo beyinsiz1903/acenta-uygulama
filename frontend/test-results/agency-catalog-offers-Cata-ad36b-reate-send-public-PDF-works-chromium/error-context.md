@@ -98,101 +98,50 @@
         - generic [ref=e104]:
           - generic [ref=e105]:
             - generic [ref=e106]:
-              - heading "Katalog Rezervasyonları" [level=1] [ref=e107]
-              - paragraph [ref=e108]: Agentis-benzeri yeni rezervasyon omurgası. Mevcut otel rezervasyon listesinden bağımsızdır.
-            - button "Yeni Rezervasyon" [active] [ref=e109] [cursor=pointer]
-          - generic [ref=e110]:
-            - generic [ref=e111]:
-              - generic [ref=e112]: Durum
-              - combobox [ref=e113] [cursor=pointer]:
-                - generic: Tümü
-                - img [ref=e114]
-            - button "Filtrele" [ref=e116] [cursor=pointer]
-          - generic [ref=e117]:
+              - heading "Katalog Rezervasyon Detayı" [level=1] [ref=e107]
+              - paragraph [ref=e108]: Offer Flow Guest • tour • 2026-01-10
+            - generic [ref=e109]:
+              - generic [ref=e110]: approved
+              - button "Onayla" [ref=e111] [cursor=pointer]
+              - button "Reddet" [ref=e112] [cursor=pointer]
+              - button "İptal Et" [ref=e113] [cursor=pointer]
+          - generic [ref=e114]:
+            - generic [ref=e115]:
+              - generic [ref=e116]: Misafir
+              - generic [ref=e117]: Offer Flow Guest
             - generic [ref=e118]:
-              - generic [ref=e119]:
-                - generic [ref=e120]: Offer API Guest
-                - generic [ref=e121]: tour • 2026-01-10 • 2 kişi
-              - generic [ref=e122]:
-                - generic [ref=e123]: approved
-                - link "Detay" [ref=e124] [cursor=pointer]:
-                  - /url: /app/agency/catalog/bookings/6953ab2ee9fa410abef40938
-            - generic [ref=e125]:
+              - generic [ref=e119]: Rezervasyon
+              - generic [ref=e120]: "Tarihler: 2026-01-10"
+              - generic [ref=e121]: "Kişi sayısı: 2"
+              - generic [ref=e122]: "Fiyatlandırma: 2000 TRY + komisyon %10 → toplam 2200 TRY"
+          - generic [ref=e123]:
+            - generic [ref=e124]:
+              - generic [ref=e125]: Teklif
               - generic [ref=e126]:
-                - generic [ref=e127]: Playwright Guest
-                - generic [ref=e128]: tour • 2026-01-10 • 2 kişi
-              - generic [ref=e129]:
-                - generic [ref=e130]: approved
-                - link "Detay" [ref=e131] [cursor=pointer]:
-                  - /url: /app/agency/catalog/bookings/69536d60d3f310895579e571
-            - generic [ref=e132]:
-              - generic [ref=e133]:
-                - generic [ref=e134]: PW Guest
-                - generic [ref=e135]: tour • 2026-01-10 • 2 kişi
-              - generic [ref=e136]:
-                - generic [ref=e137]: new
-                - link "Detay" [ref=e138] [cursor=pointer]:
-                  - /url: /app/agency/catalog/bookings/695368a7d3f310895579e56b
+                - generic [ref=e127]:
+                  - generic [ref=e128]: sent
+                  - generic [ref=e129]: "Geçerlilik: 2026-01-02T10:38:08.334912Z"
+                - generic [ref=e130]: "Net: 2000 TRY \x00b7 Komisyon: 200 TRY \x00b7 Toplam: 2200 TRY"
+                - generic [ref=e131]:
+                  - button "Teklif Oluştur" [ref=e132] [cursor=pointer]
+                  - button "Teklifi Gönder" [active] [ref=e133] [cursor=pointer]
+                  - button "Teklifi Kabul Et" [ref=e134] [cursor=pointer]
+                  - button "PDF Önizle" [ref=e135] [cursor=pointer]
+                - generic [ref=e136]:
+                  - generic [ref=e137]: Public offer URL
+                  - textbox [ref=e138]: /api/public/catalog-offers/6953ab90e9fa410abef4093b.pdf?t=1767350288.452a0687ad5115c491ac6131c2e2bb7342516b9773aeeee916e92aa47609a996
             - generic [ref=e139]:
-              - generic [ref=e140]:
-                - generic [ref=e141]: API Proof Misafir
-                - generic [ref=e142]: tour • 2026-01-10 • 2 kişi
-              - generic [ref=e143]:
-                - generic [ref=e144]: new
-                - link "Detay" [ref=e145] [cursor=pointer]:
-                  - /url: /app/agency/catalog/bookings/695366dbd3f310895579e569
+              - generic [ref=e140]: İç Notlar
+              - generic [ref=e142]:
+                - generic [ref=e143]: Agency Admin 1
+                - generic [ref=e144]: 2025-12-30T10:38:08.334000
+                - generic [ref=e145]: Teklif gönderildi (expires_at=2026-01-02T10:38:08.334912+00:00)
             - generic [ref=e146]:
-              - generic [ref=e147]:
-                - generic [ref=e148]: API Guest
-                - generic [ref=e149]: tour • 2026-01-10 • 2 kişi
-              - generic [ref=e150]:
-                - generic [ref=e151]: new
-                - link "Detay" [ref=e152] [cursor=pointer]:
-                  - /url: /app/agency/catalog/bookings/695360cfae0b7ac6b4f57506
-          - generic [ref=e154]:
-            - generic [ref=e155]:
-              - heading "Yeni Katalog Rezervasyonu" [level=2] [ref=e156]
-              - button "Kapat" [ref=e157] [cursor=pointer]
-            - generic [ref=e158]:
-              - generic [ref=e159]:
-                - text: Ürün
-                - combobox [ref=e160] [cursor=pointer]:
-                  - generic: API Proof Katalog Turu [tour]
-                  - img [ref=e161]
-                - combobox [ref=e163]
-              - generic [ref=e164]:
-                - text: Variant
-                - combobox [ref=e165] [cursor=pointer]:
-                  - generic: Offer Variant - 1000 TRY
-                  - img [ref=e166]
-                - combobox [ref=e168]
-              - generic [ref=e169]:
-                - generic [ref=e170]:
-                  - text: Misafir Adı
-                  - textbox [ref=e171]
-                - generic [ref=e172]:
-                  - text: Telefon
-                  - textbox [ref=e173]
-                - generic [ref=e174]:
-                  - text: E-posta
-                  - textbox [ref=e175]
-              - generic [ref=e176]:
-                - generic [ref=e177]:
-                  - text: Başlangıç Tarihi
-                  - textbox [ref=e178]
-                - generic [ref=e179]:
-                  - text: Bitiş Tarihi
-                  - textbox [ref=e180]
-                - generic [ref=e181]:
-                  - text: Kişi Sayısı
-                  - spinbutton [ref=e182]: "1"
-              - generic [ref=e183]:
-                - text: Komisyon Oranı
-                - spinbutton [ref=e184]: "0.1"
-              - generic [ref=e185]:
-                - button "Vazgeç" [ref=e186] [cursor=pointer]
-                - button "Oluştur" [ref=e187] [cursor=pointer]
-    - contentinfo [ref=e188]:
-      - generic [ref=e189]: © 2025 — v1
+              - generic [ref=e147]: Yeni Not Ekle
+              - generic [ref=e148]:
+                - textbox [ref=e149]
+                - button "Not Ekle" [ref=e150] [cursor=pointer]
+    - contentinfo [ref=e151]:
+      - generic [ref=e152]: © 2025 — v1
   - region "Notifications alt+T"
 ```

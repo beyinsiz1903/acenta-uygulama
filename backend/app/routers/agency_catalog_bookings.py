@@ -434,12 +434,23 @@ async def create_catalog_offer(
     return {"ok": True, "offer": offer}
 
 
-        user=user,
-    )
-
-
 @router.post("/{booking_id}/reject")
 async def reject_catalog_booking(
+    booking_id: str,
+    db=Depends(get_db),
+    user: Dict[str, Any] = Depends(require_roles(["agency_admin"])),
+):
+    """Reject booking: only allowed from new -> rejected."""
+
+    return await _change_status(
+        booking_id,
+        "rejected",
+        allowed_from=["new"],
+        reason_code="CATALOG_REJECT_INVALID_STATE",
+        reason_message="Sadece 'Yeni' durumundaki talepler reddedilebilir.",
+        db=db,
+        user=user,
+    )
 
 
 @router.post("/{booking_id}/offer/send")

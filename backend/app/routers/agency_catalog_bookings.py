@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from app.auth import require_roles
 from app.db import get_db
 from app.utils import now_utc, to_object_id
-from app.utils.voucher_signing import sign_voucher
+from app.utils_package.voucher_signing import sign_voucher
 
 
 router = APIRouter(prefix="/api/agency/catalog/bookings", tags=["agency:catalog:bookings"])

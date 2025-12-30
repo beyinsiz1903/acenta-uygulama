@@ -206,7 +206,10 @@ export default function AgencyCatalogBookingsPage() {
       </div>
 
       {createOpen && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+        <div
+          className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+          data-testid="catalog-booking-create-modal"
+        >
           <div className="bg-white rounded-lg shadow-lg w-full max-w-lg p-4 space-y-3">
             <div className="flex items-center justify-between">
               <h2 className="text-base font-semibold">Yeni Katalog Rezervasyonu</h2>
@@ -234,7 +237,11 @@ export default function AgencyCatalogBookingsPage() {
                   </SelectTrigger>
                   <SelectContent>
                     {products.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>
+                      <SelectItem
+                        key={p.id}
+                        value={p.id}
+                        data-testid="catalog-booking-product-item"
+                      >
                         {p.title} [{p.type}]
                       </SelectItem>
                     ))}

@@ -263,6 +263,16 @@ async def create_catalog_booking(
             "commission_amount": commission_amount,
             "total": total,
         },
+        "offer": {
+            "status": "draft",
+            "expires_at": None,
+            "net_price": subtotal,
+            "commission_amount": commission_amount,
+            "gross_price": total,
+            "currency": currency,
+            "note": "",
+        },
+
         "status": "new",
         "internal_notes": [],
         "created_at": now,

@@ -367,6 +367,39 @@ export default function AgencyCatalogBookingsPage() {
                 </div>
               </div>
 
+              <div className="text-xs mt-1 min-h-[20px]">
+                {availabilityLoading && (
+                  <span data-testid="availability-status">Müsaitlik hesaplanıyor...</span>
+                )}
+                {!availabilityLoading && availability && (
+                  <>
+                    {availability.summary?.can_book ? (
+                      <span
+                        className="text-green-700"
+                        data-testid="availability-status"
+                      >
+                        Uygun (mode={availability.mode}, requested={availability.requested_units})
+                      </span>
+                    ) : (
+                      <span
+                        className="text-red-700"
+                        data-testid="availability-status"
+                      >
+                        Kapasite dolu
+                      </span>
+                    )}
+                    {!availability.summary?.can_book && availability.summary?.blocking_day && (
+                      <div
+                        className="text-red-700"
+                        data-testid="availability-blocking-day"
+                      >
+                        Engelleyen gün: {availability.summary.blocking_day}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+
               <div className="space-y-1 text-sm">
                 <label className="font-medium">Komisyon Oranı</label>
                 <Input

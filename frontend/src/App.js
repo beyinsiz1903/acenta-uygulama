@@ -17,6 +17,9 @@ import AdminPilotDashboardPage from "./pages/AdminPilotDashboardPage";
 import AdminMetricsPage from "./pages/AdminMetricsPage";
 import AgencyHotelsPage from "./pages/AgencyHotelsPage";
 import AgencyCatalogHotelsPage from "./pages/AgencyCatalogHotelsPage";
+import AgencyCatalogProductsPage from "./pages/AgencyCatalogProductsPage";
+import AgencyCatalogBookingsPage from "./pages/AgencyCatalogBookingsPage";
+import AgencyCatalogBookingDetailPage from "./pages/AgencyCatalogBookingDetailPage";
 
 import AgencyHotelDetailPage from "./pages/AgencyHotelDetailPage";
 import AgencyHotelSearchPage from "./pages/AgencyHotelSearchPage";

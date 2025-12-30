@@ -402,6 +402,36 @@ async def approve_catalog_booking(
         reason_code="CATALOG_APPROVE_INVALID_STATE",
         reason_message="Sadece 'Yeni' durumundaki talepler onaylanabilir.",
         db=db,
+
+
+@router.post("/{booking_id}/offer/create")
+async def create_catalog_offer(
+    booking_id: str,
+    body: Dict[str, Any],
+    db=Depends(get_db),
+    user: Dict[str, Any] = Depends(require_roles(["agency_admin", "agency_agent"])),
+):
+    org_id, agency_id = _ensure_agency(user)
+    booking_oid = _oid_or_404(booking_id)
+
+    booking = await _get_catalog_booking_or_404(db, booking_oid, org_id, agency_id)
+
+    note = (body.get("note") or "").strip()
+    expires_at = body.get("expires_at") or None
+
+    offer = _build_offer_snapshot(booking, note=note, expires_at=expires_at)
+
+    now = now_utc()
+    await db.agency_catalog_booking_requests.update_one(
+        {"_id": booking_oid, "organization_id": org_id, "agency_id": agency_id},
+        {"$set": {"offer": offer, "updated_at": now}},
+    )
+
+    booking["offer"] = offer
+
+    return {"ok": True, "offer": offer}
+
+
         user=user,
     )
 

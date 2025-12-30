@@ -98,20 +98,26 @@ async def get_capacity_dashboard(
 
     day_rows = []
     full_days = 0
+    overbooked_days = 0
     total_used = 0
 
     for d in days:
         used = int(used_map.get(d, 0))
         remaining: Optional[int]
         can_book: bool
+        overbooked = False
         if max_per_day is None:
             remaining = None
             can_book = True
         else:
             remaining = max_per_day - used
+            if used > max_per_day:
+                overbooked = True
             can_book = remaining > 0
             if remaining <= 0:
                 full_days += 1
+            if overbooked:
+                overbooked_days += 1
         total_used += used
 
         day_rows.append(
@@ -122,6 +128,7 @@ async def get_capacity_dashboard(
                 "remaining": remaining,
                 "can_book": can_book,
                 "mode": mode,
+                "overbooked": overbooked,
             }
         )
 
@@ -138,6 +145,7 @@ async def get_capacity_dashboard(
         "summary": {
             "total_days": total_days,
             "full_days": full_days,
+            "overbooked_days": overbooked_days,
             "avg_used": round(avg_used, 2),
         },
     }

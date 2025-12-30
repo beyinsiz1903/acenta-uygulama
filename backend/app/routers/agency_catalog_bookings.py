@@ -277,8 +277,10 @@ async def create_catalog_booking(
 
     # Capacity check if variant is present
     allocation = None
+    overbook_flag = False
+    overbook_day: Optional[str] = None
     if variant is not None:
-        from app.services.catalog_availability import expand_dates, compute_availability
+        from app.services.catalog_availability import expand_dates, compute_availability, compute_units
 
         dates_dict = {"start": start, "end": (dates.get("end") or None)}
         try:
@@ -303,8 +305,31 @@ async def create_catalog_booking(
             pax=pax,
         )
         summary = availability.get("summary") or {}
-        if summary.get("can_book") is False and not bool((capacity.get("overbook", False))):
-            blocking_day = summary.get("blocking_day")
+        requested_units = availability.get("requested_units") or compute_units(mode, pax)
+
+        # Determine potential overbook days (where remaining < requested_units)
+        days_info = availability.get("days") or []
+        max_per_day_val = capacity.get("max_per_day")
+        try:
+            max_per_day = int(max_per_day_val) if max_per_day_val is not None else None
+        except Exception:
+            max_per_day = None
+
+        for d in days_info:
+            rem = d.get("remaining")
+            day_max = d.get("max", max_per_day)
+            if day_max is None or rem is None:
+                continue
+            if rem < requested_units:
+                overbook_flag = True
+                overbook_day = d.get("day")
+                break
+
+        overbook_allowed = bool(capacity.get("overbook", False))
+
+        if not overbook_allowed and (summary.get("can_book") is False or overbook_flag):
+            # Capacity not available and overbook not allowed
+            blocking_day = overbook_day or summary.get("blocking_day")
             raise HTTPException(
                 status_code=409,
                 detail={
@@ -313,16 +338,17 @@ async def create_catalog_booking(
                     "meta": {
                         "blocking_day": blocking_day,
                         "mode": mode,
-                        "requested_units": availability.get("requested_units"),
+                        "requested_units": requested_units,
                     },
                 },
             )
 
         # Build allocation snapshot for new bookings
-        from app.services.catalog_availability import compute_units
-
         units = compute_units(mode, pax)
         allocation = {"mode": mode, "units": units, "days": days}
+        if overbook_flag:
+            allocation["overbook"] = True
+            allocation["overbook_reason"] = "capacity"
 
     try:
         commission_rate = float(body.get("commission_rate", 0.10) or 0.10)

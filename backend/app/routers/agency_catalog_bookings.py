@@ -35,7 +35,7 @@ def _ensure_agency(user: Dict[str, Any]) -> tuple[str, str]:
     return org_id, agency_id
 
 
-@router.get("/")
+@router.get("")
 async def list_catalog_bookings(
     status: Optional[str] = Query(default=None),
     type: Optional[str] = Query(default=None, alias="product_type"),

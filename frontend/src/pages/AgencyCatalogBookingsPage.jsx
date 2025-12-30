@@ -350,7 +350,12 @@ export default function AgencyCatalogBookingsPage() {
                 >
                   Vazgeç
                 </Button>
-                <Button type="submit" size="sm" disabled={creating}>
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={creating}
+                  data-testid="btn-catalog-submit-booking"
+                >
                   {creating ? "Kaydediliyor..." : "Oluştur"}
                 </Button>
               </div>

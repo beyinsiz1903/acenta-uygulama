@@ -255,7 +255,7 @@ export default function AgencyCatalogBookingsPage() {
                   value={form.variant_id}
                   onValueChange={(v) => setForm((p) => ({ ...p, variant_id: v }))}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger data-testid="catalog-booking-select-variant">
                     <SelectValue placeholder="Variant seçin (opsiyonel)" />
                   </SelectTrigger>
                   <SelectContent>

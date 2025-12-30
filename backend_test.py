@@ -9,7 +9,7 @@ import uuid
 from datetime import datetime, timedelta, date
 
 class SyroceCatalogTester:
-    def __init__(self, base_url="https://syroce-tours.preview.emergentagent.com"):
+    def __init__(self, base_url="https://travel-platform-11.preview.emergentagent.com"):
         self.base_url = base_url
         self.agency_admin_token = None
         self.tests_run = 0

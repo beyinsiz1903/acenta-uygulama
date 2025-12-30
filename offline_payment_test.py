@@ -9,7 +9,7 @@ import uuid
 from datetime import datetime, timedelta, date
 
 class OfflinePaymentBackendTester:
-    def __init__(self, base_url="https://syroce-tours.preview.emergentagent.com"):
+    def __init__(self, base_url="https://travel-platform-11.preview.emergentagent.com"):
         self.base_url = base_url
         self.agency1_admin_token = None
         self.agency2_admin_token = None

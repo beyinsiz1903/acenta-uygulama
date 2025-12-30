@@ -82,8 +82,6 @@ export default function AgencyCatalogBookingsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function openCreate() {
-    setCreateOpen(true);
   async function checkAvailability(currentForm) {
     const { product_id, variant_id, start, end, pax } = currentForm;
     if (!product_id || !variant_id || !start || !pax) {

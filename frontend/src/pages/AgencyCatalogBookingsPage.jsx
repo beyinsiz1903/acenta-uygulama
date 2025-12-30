@@ -275,6 +275,7 @@ export default function AgencyCatalogBookingsPage() {
                     value={form.full_name}
                     onChange={(e) => setForm((p) => ({ ...p, full_name: e.target.value }))}
                     required
+                    data-testid="catalog-booking-guest-fullname"
                   />
                 </div>
                 <div className="space-y-1">

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
 from bson import ObjectId
@@ -8,8 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app.auth import require_roles
 from app.db import get_db
-from app.utils import now_utc, to_object_id
-from app.utils import sign_voucher
+from app.utils import now_utc, to_object_id, sign_voucher
 
 
 router = APIRouter(prefix="/api/agency/catalog/bookings", tags=["agency:catalog:bookings"])
@@ -17,6 +16,7 @@ router = APIRouter(prefix="/api/agency/catalog/bookings", tags=["agency:catalog:
 
 def _sid(x: Any) -> str:
     return str(x)
+
 
 async def _get_catalog_booking_or_404(db, booking_oid, org_id, agency_id):
     doc = await db.agency_catalog_booking_requests.find_one(
@@ -30,15 +30,26 @@ async def _get_catalog_booking_or_404(db, booking_oid, org_id, agency_id):
     return doc
 
 
-def _build_offer_snapshot(booking: Dict[str, Any], note: str = "", expires_at=None) -> Dict[str, Any]:
+def parse_iso_dt(s: Optional[str]):
+    if not s:
+        return None
+    try:
+        if s.endswith("Z"):
+            s = s[:-1] + "+00:00"
+        return datetime.fromisoformat(s)
+    except Exception:
+        return None
+
+
+def _offer_from_pricing(booking: Dict[str, Any], note: str = "", expires_at: Optional[datetime] = None) -> Dict[str, Any]:
     pricing = booking.get("pricing") or {}
+    currency = pricing.get("currency") or "TRY"
     subtotal = float(pricing.get("subtotal") or 0.0)
     commission_amount = float(pricing.get("commission_amount") or 0.0)
     total = float(pricing.get("total") or (subtotal + commission_amount))
-    currency = pricing.get("currency") or "TRY"
     return {
-        "status": "draft",
-        "expires_at": expires_at,
+        "status": "draft",  # draft | sent | accepted | expired
+        "expires_at": (expires_at.isoformat().replace("+00:00", "Z") if expires_at else None),
         "net_price": subtotal,
         "commission_amount": commission_amount,
         "gross_price": total,
@@ -46,6 +57,25 @@ def _build_offer_snapshot(booking: Dict[str, Any], note: str = "", expires_at=No
         "note": note or "",
     }
 
+
+def _build_offer_snapshot(booking: Dict[str, Any], note: str = "", expires_at: Optional[datetime] = None) -> Dict[str, Any]:
+    return _offer_from_pricing(booking, note=note, expires_at=expires_at)
+
+
+async def _maybe_expire_offer(db, booking: Dict[str, Any]) -> Dict[str, Any]:
+    offer = booking.get("offer") or None
+    if not offer:
+        return booking
+    status = (offer.get("status") or "").lower()
+    exp = parse_iso_dt(offer.get("expires_at"))
+    if status in ("draft", "sent") and exp and exp < now_utc():
+        offer["status"] = "expired"
+        booking["offer"] = offer
+        await db.agency_catalog_booking_requests.update_one(
+            {"_id": booking["_id"]},
+            {"$set": {"offer.status": "expired", "updated_at": now_utc()}},
+        )
+    return booking
 
 
 def _oid_or_404(id_str: str, code: str = "CATALOG_BOOKING_NOT_FOUND", message: str = "Rezervasyon bulunamadı.") -> ObjectId:
@@ -145,6 +175,8 @@ async def get_catalog_booking_detail(
             status_code=404,
             detail={"code": "CATALOG_BOOKING_NOT_FOUND", "message": "Rezervasyon bulunamadı."},
         )
+
+    doc = await _maybe_expire_offer(db, doc)
 
     d = dict(doc)
     d["id"] = _sid(d.pop("_id"))

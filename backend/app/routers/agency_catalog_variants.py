@@ -142,6 +142,32 @@ async def update_catalog_variant(
             max_pax = min_pax
         update["rules"] = {"min_pax": min_pax, "max_pax": max_pax}
 
+    if "capacity" in body:
+        cap = body.get("capacity") or {}
+        mode = (cap.get("mode") or "pax").lower()
+        if mode not in {"pax", "bookings"}:
+            raise HTTPException(
+                status_code=400,
+                detail={"code": "INVALID_CAPACITY", "message": "Geçersiz capacity.mode (pax/bookings olmalı)."},
+            )
+        max_per_day = cap.get("max_per_day")
+        if max_per_day is not None:
+            try:
+                max_per_day_int = int(max_per_day)
+            except Exception:
+                raise HTTPException(
+                    status_code=400,
+                    detail={"code": "INVALID_CAPACITY", "message": "capacity.max_per_day sayısal olmalı."},
+                )
+            if max_per_day_int < 1:
+                raise HTTPException(
+                    status_code=400,
+                    detail={"code": "INVALID_CAPACITY", "message": "capacity.max_per_day en az 1 olmalı."},
+                )
+            max_per_day = max_per_day_int
+        overbook = bool(cap.get("overbook", False))
+        update["capacity"] = {"mode": mode, "max_per_day": max_per_day, "overbook": overbook}
+
     if not update:
         out = dict(existing)
         out["id"] = _sid(out.pop("_id"))

@@ -56,6 +56,7 @@ from app.routers.agency_catalog_variants import router as agency_catalog_variant
 from app.routers.agency_catalog_bookings import router as agency_catalog_bookings_router
 from app.routers.agency_catalog_availability import router as agency_catalog_availability_router
 from app.routers.agency_catalog_capacity_dashboard import router as agency_catalog_capacity_dashboard_router
+from app.routers.agency_catalog_overbooks import router as agency_catalog_overbooks_router
 from app.routers.public_vouchers import router as public_vouchers_router
 from app.routers.public_catalog_offers import router as public_catalog_offers_router
 from app.routers.dev_tools import router as dev_tools_router

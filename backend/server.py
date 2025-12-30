@@ -129,6 +129,7 @@ app.include_router(agency_catalog_products_router)
 app.include_router(agency_catalog_variants_router)
 app.include_router(agency_catalog_bookings_router)
 app.include_router(public_vouchers_router)
+app.include_router(public_catalog_offers_router)
 
 if os.getenv("ENABLE_DEV_ROUTERS") == "true":
     app.include_router(dev_tools_router)

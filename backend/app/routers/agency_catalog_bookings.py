@@ -499,6 +499,56 @@ async def send_catalog_offer(
 ):
     """Reject booking: only allowed from new -> rejected."""
 
+
+@router.post("/{booking_id}/offer/accept")
+async def accept_catalog_offer(
+    booking_id: str,
+    db=Depends(get_db),
+    user: Dict[str, Any] = Depends(require_roles(["agency_admin", "agency_agent"])),
+):
+    org_id, agency_id = _ensure_agency(user)
+    booking_oid = _oid_or_404(booking_id)
+
+    booking = await _get_catalog_booking_or_404(db, booking_oid, org_id, agency_id)
+
+    offer = booking.get("offer") or {}
+    status = (offer.get("status") or "").lower()
+    if status != "sent":
+        raise HTTPException(
+            status_code=409,
+            detail={"code": "OFFER_NOT_SENT", "message": "Teklif gönderilmeden kabul edilemez."},
+        )
+
+    expires_at = offer.get("expires_at")
+    now = now_utc()
+    if expires_at and isinstance(expires_at, datetime) and expires_at < now:
+        raise HTTPException(
+            status_code=409,
+            detail={"code": "OFFER_EXPIRED", "message": "Teklifin süresi dolmuş."},
+        )
+
+    offer["status"] = "accepted"
+
+    created_by = {
+        "user_id": _sid(user.get("id")),
+        "name": user.get("name", "Unknown"),
+        "role": (user.get("roles") or ["unknown"])[0],
+    }
+
+    note_doc = {
+        "text": "Teklif kabul edildi.",
+        "created_at": now,
+        "actor": created_by,
+    }
+
+    await db.agency_catalog_booking_requests.update_one(
+        {"_id": booking_oid, "organization_id": org_id, "agency_id": agency_id},
+        {"$set": {"offer": offer, "updated_at": now}, "$push": {"internal_notes": note_doc}},
+    )
+
+    return {"ok": True, "offer": offer}
+
+
     return await _change_status(
         booking_id,
         "rejected",

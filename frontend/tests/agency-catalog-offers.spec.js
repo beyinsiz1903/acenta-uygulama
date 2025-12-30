@@ -42,29 +42,42 @@ async function ensureCatalogBooking(page) {
   await expect(createBtn).toBeVisible({ timeout: 30000 });
   await createBtn.click();
 
-  // Use existing FAZ-2 booking modal selectors
-  await page.locator(".fixed select").first().selectOption({ index: 0 });
-  const selects = page.locator(".fixed select");
-  if ((await selects.count()) > 1) {
-    const hasVariantOptions = await selects
-      .nth(1)
-      .locator("option")
-      .count();
-    if (hasVariantOptions > 0) {
-      await selects.nth(1).selectOption({ index: 0 });
+  // Select product
+  await page
+    .locator('[data-testid="catalog-booking-select-product"]')
+    .click({ timeout: 30000 });
+  await page
+    .locator('[data-testid="catalog-booking-product-item"]')
+    .first()
+    .click({ timeout: 30000 });
+
+  // Variant is optional
+  const variantItemCount = await page
+    .locator('[data-testid="catalog-booking-select-variant"]')
+    .count();
+  if (variantItemCount > 0) {
+    const variantTrigger = page.locator('[data-testid="catalog-booking-select-variant"]');
+    await variantTrigger.click({ timeout: 30000 });
+    // We didn't add testid to variant items, so select first option via role
+    const variantOptions = page.locator("[role='option']");
+    if ((await variantOptions.count()) > 0) {
+      await variantOptions.first().click({ timeout: 30000 });
     }
   }
 
-  const requiredTextInputs = page.locator('.fixed input[required][type="text"]');
-  await requiredTextInputs.first().fill("Offer Flow Guest");
-  const dateInputs = page.locator('.fixed input[type="date"]');
-  await dateInputs.first().fill("2026-01-10");
-  const paxInput = page.locator('.fixed input[type="number"]').first();
-  await paxInput.fill("2");
+  await page
+    .locator('[data-testid="catalog-booking-guest-fullname"]')
+    .fill("Offer Flow Guest", { timeout: 30000 });
+  await page
+    .locator('[data-testid="catalog-booking-start-date"]')
+    .fill("2026-01-10", { timeout: 30000 });
+  await page
+    .locator('[data-testid="catalog-booking-pax"]')
+    .fill("2", { timeout: 30000 });
 
   await Promise.all([
     page.waitForURL(/\/app\/agency\/catalog\/bookings\//, { timeout: 30000 }),
-    page.click('.fixed button:has-text("Oluştur")'),
+    page.locator('[data-testid="btn-catalog-submit-booking"]').click(),
   ]);
 
   await expect(page).toHaveURL(/\/app\/agency\/catalog\/bookings\//, { timeout: 30000 });

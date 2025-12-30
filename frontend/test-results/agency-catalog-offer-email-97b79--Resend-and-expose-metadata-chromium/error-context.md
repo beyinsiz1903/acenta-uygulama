@@ -128,18 +128,18 @@
                 - generic [ref=e136]:
                   - button "Teklif Oluştur" [ref=e137] [cursor=pointer]
                   - button "Teklifi Gönder" [disabled]
-                  - button "E-posta ile Gönder" [disabled]
+                  - button "E-posta ile Gönder" [active] [ref=e138] [cursor=pointer]
                   - button "Teklifi Kabul Et" [disabled]
                   - button "PDF Önizle" [disabled]
-            - generic [ref=e138]:
-              - generic [ref=e139]: İç Notlar
-              - generic [ref=e140]: Henüz iç not yok.
-            - generic [ref=e141]:
-              - generic [ref=e142]: Yeni Not Ekle
-              - generic [ref=e143]:
-                - textbox [ref=e144]
-                - button "Not Ekle" [ref=e145] [cursor=pointer]
-    - contentinfo [ref=e146]:
-      - generic [ref=e147]: © 2025 — v1
+            - generic [ref=e139]:
+              - generic [ref=e140]: İç Notlar
+              - generic [ref=e141]: Henüz iç not yok.
+            - generic [ref=e142]:
+              - generic [ref=e143]: Yeni Not Ekle
+              - generic [ref=e144]:
+                - textbox [ref=e145]
+                - button "Not Ekle" [ref=e146] [cursor=pointer]
+    - contentinfo [ref=e147]:
+      - generic [ref=e148]: © 2025 — v1
   - region "Notifications alt+T"
 ```

@@ -395,7 +395,7 @@
 
 ## test_plan:
 ##   current_focus:
-##     - "Agency Tours & Public Tours sayfalarında tur listesinin görünürlüğünün doğrulanması (login → tur oluştur → /app/agency/tours ve /tours kontrolleri)" # COMPLETED ✅
+##     - "Syroce Catalog Module Frontend - AgencyCatalogProductsPage.jsx (Products + Variants + Bookings E2E)"
 ##   stuck_tasks: []
 ##   test_all: false
 ##   test_priority: "high_first"

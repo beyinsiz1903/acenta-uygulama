@@ -390,20 +390,6 @@ async def create_catalog_booking(
             "email": (guest.get("email") or "").strip(),
         },
         "dates": {
-    # Overbook audit note: attach to doc before insert
-    if allocation and allocation.get("overbook"):
-        overbook_at = now
-        allocation["overbook_at"] = overbook_at
-        overbook_days = ", ".join(allocation.get("days") or [])
-        note_text = f"Overbook yapıldı ({overbook_days}, pax={pax})"
-        note_doc = {
-            "text": note_text,
-            "created_at": overbook_at,
-            "actor": created_by,
-        }
-        doc.setdefault("internal_notes", []).append(note_doc)
-
-
             "start": start,
             "end": (dates.get("end") or None),
         },

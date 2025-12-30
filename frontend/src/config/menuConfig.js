@@ -43,6 +43,7 @@ export const MENU_CONFIG = {
       children: [
         { label: "Ürünler", path: "/app/agency/catalog/products" },
         { label: "Rezervasyonlar", path: "/app/agency/catalog/bookings" },
+        { label: "Kapasite", path: "/app/agency/catalog/capacity" },
       ],
     },
   ],

@@ -292,6 +292,7 @@ export default function AgencyCatalogBookingsPage() {
                     type="email"
                     value={form.email}
                     onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
+                    data-testid="catalog-booking-guest-email"
                   />
                 </div>
               </div>

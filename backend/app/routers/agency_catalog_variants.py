@@ -24,7 +24,7 @@ def _oid_or_404(id_str: str) -> ObjectId:
         raise HTTPException(status_code=404, detail={"code": "CATALOG_VARIANT_NOT_FOUND", "message": "Variant bulunamadı."})
 
 
-@router.post("/")
+@router.post("")
 async def create_catalog_variant(
     body: Dict[str, Any],
     db=Depends(get_db),

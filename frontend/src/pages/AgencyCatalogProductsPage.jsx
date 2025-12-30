@@ -9,7 +9,7 @@ import { Card } from "../components/ui/card";
 import { toast } from "react-hot-toast";
 
 const PRODUCT_TYPES = [
-  { value: "", label: "Tümü" },
+  { value: "all", label: "Tümü" },
   { value: "tour", label: "Tur" },
   { value: "hotel", label: "Otel" },
   { value: "transfer", label: "Transfer" },

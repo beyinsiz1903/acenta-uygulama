@@ -25,6 +25,10 @@ export default function AgencyCatalogBookingDetailPage() {
     try {
       const resp = await api.get(`/agency/catalog/bookings/${id}`);
       setItem(resp.data);
+      const offer = resp.data.offer;
+      if (offer && offer.public_url) {
+        setOfferUrl(offer.public_url);
+      }
     } catch (err) {
       toast.error(apiErrorMessage(err));
     } finally {

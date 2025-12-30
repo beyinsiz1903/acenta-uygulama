@@ -438,6 +438,61 @@ async def create_catalog_offer(
 
 @router.post("/{booking_id}/reject")
 async def reject_catalog_booking(
+
+
+@router.post("/{booking_id}/offer/send")
+async def send_catalog_offer(
+    booking_id: str,
+    db=Depends(get_db),
+    user: Dict[str, Any] = Depends(require_roles(["agency_admin", "agency_agent"])),
+):
+    org_id, agency_id = _ensure_agency(user)
+    booking_oid = _oid_or_404(booking_id)
+
+    booking = await _get_catalog_booking_or_404(db, booking_oid, org_id, agency_id)
+
+    status = (booking.get("status") or "").lower()
+    if status != "approved":
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "code": "BOOKING_NOT_APPROVED",
+                "message": "Teklif göndermek için rezervasyon onaylanmış olmalı.",
+            },
+        )
+
+    body_offer = booking.get("offer") or {}
+    note = (body_offer.get("note") or "").strip()
+
+    now = now_utc()
+    # default 3 days expiry
+    expires_at = body_offer.get("expires_at") or (now + timedelta(days=3))
+
+    offer = _build_offer_snapshot(booking, note=note, expires_at=expires_at)
+    offer["status"] = "sent"
+
+    token = sign_voucher(booking_id, expires_at=expires_at)
+    public_url = f"/api/public/catalog-offers/{booking_id}.pdf?t={token}"
+
+    created_by = {
+        "user_id": _sid(user.get("id")),
+        "name": user.get("name", "Unknown"),
+        "role": (user.get("roles") or ["unknown"])[0],
+    }
+    note_doc = {
+        "text": f"Teklif gönderildi (expires_at={expires_at.isoformat()})",
+        "created_at": now,
+        "actor": created_by,
+    }
+
+    await db.agency_catalog_booking_requests.update_one(
+        {"_id": booking_oid, "organization_id": org_id, "agency_id": agency_id},
+        {"$set": {"offer": offer, "updated_at": now}, "$push": {"internal_notes": note_doc}},
+    )
+
+    return {"ok": True, "offer": offer, "public_url": public_url}
+
+
     booking_id: str,
     db=Depends(get_db),
     user: Dict[str, Any] = Depends(require_roles(["agency_admin"])),

@@ -279,6 +279,41 @@ async def ensure_seed_data() -> None:
         name="idx_agency_hotel_catalog_org_agency_hotel",
     )
 
+    # Ensure indexes for other collections
+
+    # Catalog module indexes
+    await db.agency_catalog_products.create_index(
+        [
+            ("organization_id", 1),
+            ("agency_id", 1),
+            ("type", 1),
+            ("active", 1),
+        ]
+    )
+    await db.agency_catalog_variants.create_index(
+        [
+            ("organization_id", 1),
+            ("agency_id", 1),
+            ("product_id", 1),
+            ("active", 1),
+        ]
+    )
+    await db.agency_catalog_booking_requests.create_index(
+        [
+            ("organization_id", 1),
+            ("agency_id", 1),
+            ("status", 1),
+            ("created_at", -1),
+        ]
+    )
+    await db.agency_catalog_booking_requests.create_index(
+        [
+            ("organization_id", 1),
+            ("agency_id", 1),
+            ("product_id", 1),
+        ]
+    )
+
 
     # Create 2 agencies if none
     agencies = await db.agencies.find({"organization_id": org_id}).to_list(10)

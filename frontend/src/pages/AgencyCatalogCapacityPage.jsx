@@ -204,15 +204,6 @@ export default function AgencyCatalogCapacityPage() {
 
           <div className="space-y-2">
             <div className="text-xs text-muted-foreground">
-                        {d.overbooked && (
-                          <div
-                            className="text-[11px] text-amber-800 mt-0.5"
-                            data-testid={`capacity-overbooked-${iso}`}
-                          >
-                            Overbook
-                          </div>
-                        )}
-
               Mod: {dashboard.mode} • Günlük kapasite: {dashboard.max_per_day ?? "∞"}
             </div>
             <div className="border rounded-md overflow-hidden">

@@ -275,6 +275,55 @@ async def create_catalog_booking(
     price = float(variant.get("price", 0.0) or 0.0) if variant else 0.0
     subtotal = round(price * pax, 2)
 
+    # Capacity check if variant is present
+    allocation = None
+    if variant is not None:
+        from app.services.catalog_availability import expand_dates, compute_availability
+
+        dates_dict = {"start": start, "end": (dates.get("end") or None)}
+        try:
+            days = expand_dates(dates_dict["start"], dates_dict["end"])
+        except ValueError:
+            raise HTTPException(
+                status_code=400,
+                detail={"code": "INVALID_DATES", "message": "Geçersiz tarih aralığı."},
+            )
+
+        capacity = variant.get("capacity") or {}
+        mode_raw = (capacity.get("mode") or "pax").lower()
+        mode = mode_raw if mode_raw in {"pax", "bookings"} else "pax"
+
+        availability = await compute_availability(
+            db,
+            org_id=org_id,
+            agency_id=agency_id,
+            product_oid=product_oid,
+            variant=variant,
+            days=days,
+            pax=pax,
+        )
+        summary = availability.get("summary") or {}
+        if summary.get("can_book") is False and not bool((capacity.get("overbook", False))):
+            blocking_day = summary.get("blocking_day")
+            raise HTTPException(
+                status_code=409,
+                detail={
+                    "code": "CAPACITY_NOT_AVAILABLE",
+                    "message": "Seçilen tarih(ler) için kapasite dolu.",
+                    "meta": {
+                        "blocking_day": blocking_day,
+                        "mode": mode,
+                        "requested_units": availability.get("requested_units"),
+                    },
+                },
+            )
+
+        # Build allocation snapshot for new bookings
+        from app.services.catalog_availability import compute_units
+
+        units = compute_units(mode, pax)
+        allocation = {"mode": mode, "units": units, "days": days}
+
     try:
         commission_rate = float(body.get("commission_rate", 0.10) or 0.10)
     except Exception:

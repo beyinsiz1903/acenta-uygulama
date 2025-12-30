@@ -337,6 +337,7 @@ export default function AgencyCatalogBookingsPage() {
                   max="0.5"
                   value={form.commission_rate}
                   onChange={(e) => setForm((p) => ({ ...p, commission_rate: e.target.value }))}
+                  data-testid="catalog-booking-commission"
                 />
               </div>
 

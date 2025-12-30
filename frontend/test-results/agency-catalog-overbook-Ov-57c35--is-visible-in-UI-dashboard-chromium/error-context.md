@@ -120,23 +120,23 @@
               - generic [ref=e127]:
                 - generic [ref=e128]: new
                 - link "Detay" [ref=e129] [cursor=pointer]:
-                  - /url: /app/agency/catalog/bookings/6953daf312825a45a4ba95d7
+                  - /url: /app/agency/catalog/bookings/6953db9512825a45a4ba95d8
             - generic [ref=e130]:
               - generic [ref=e131]:
-                - generic [ref=e132]: Email Guest
-                - generic [ref=e133]: tour • 2030-04-10 • 2 kişi
+                - generic [ref=e132]: Overbook Guest
+                - generic [ref=e133]: tour • 2030-05-10 • 2 kişi
               - generic [ref=e134]:
-                - generic [ref=e135]: approved
+                - generic [ref=e135]: new
                 - link "Detay" [ref=e136] [cursor=pointer]:
-                  - /url: /app/agency/catalog/bookings/6953cb55d8f254d0b604427a
+                  - /url: /app/agency/catalog/bookings/6953daf312825a45a4ba95d7
             - generic [ref=e137]:
               - generic [ref=e138]:
-                - generic [ref=e139]: Offer Email Guest
-                - generic [ref=e140]: tour • 2030-03-10 • 2 kişi
+                - generic [ref=e139]: Email Guest
+                - generic [ref=e140]: tour • 2030-04-10 • 2 kişi
               - generic [ref=e141]:
-                - generic [ref=e142]: new
+                - generic [ref=e142]: approved
                 - link "Detay" [ref=e143] [cursor=pointer]:
-                  - /url: /app/agency/catalog/bookings/6953cb26d8f254d0b6044279
+                  - /url: /app/agency/catalog/bookings/6953cb55d8f254d0b604427a
             - generic [ref=e144]:
               - generic [ref=e145]:
                 - generic [ref=e146]: Offer Email Guest
@@ -144,7 +144,7 @@
               - generic [ref=e148]:
                 - generic [ref=e149]: new
                 - link "Detay" [ref=e150] [cursor=pointer]:
-                  - /url: /app/agency/catalog/bookings/6953cad2d8f254d0b6044278
+                  - /url: /app/agency/catalog/bookings/6953cb26d8f254d0b6044279
             - generic [ref=e151]:
               - generic [ref=e152]:
                 - generic [ref=e153]: Offer Email Guest
@@ -152,47 +152,47 @@
               - generic [ref=e155]:
                 - generic [ref=e156]: new
                 - link "Detay" [ref=e157] [cursor=pointer]:
-                  - /url: /app/agency/catalog/bookings/6953ca94d8f254d0b6044276
+                  - /url: /app/agency/catalog/bookings/6953cad2d8f254d0b6044278
             - generic [ref=e158]:
               - generic [ref=e159]:
-                - generic [ref=e160]: Dash Guest
-                - generic [ref=e161]: tour • 2030-02-10 • 2 kişi
+                - generic [ref=e160]: Offer Email Guest
+                - generic [ref=e161]: tour • 2030-03-10 • 2 kişi
               - generic [ref=e162]:
                 - generic [ref=e163]: new
                 - link "Detay" [ref=e164] [cursor=pointer]:
-                  - /url: /app/agency/catalog/bookings/6953c62e9cb6a42be5b09fc9
+                  - /url: /app/agency/catalog/bookings/6953ca94d8f254d0b6044276
             - generic [ref=e165]:
               - generic [ref=e166]:
-                - generic [ref=e167]: Capacity Guest
-                - generic [ref=e168]: tour • 2030-01-10 • 2 kişi
+                - generic [ref=e167]: Dash Guest
+                - generic [ref=e168]: tour • 2030-02-10 • 2 kişi
               - generic [ref=e169]:
                 - generic [ref=e170]: new
                 - link "Detay" [ref=e171] [cursor=pointer]:
-                  - /url: /app/agency/catalog/bookings/6953be86a339ff956b4279f3
+                  - /url: /app/agency/catalog/bookings/6953c62e9cb6a42be5b09fc9
             - generic [ref=e172]:
               - generic [ref=e173]:
-                - generic [ref=e174]: Cap FAIL
-                - generic [ref=e175]: tour • 2026-01-10 • 2 kişi
+                - generic [ref=e174]: Capacity Guest
+                - generic [ref=e175]: tour • 2030-01-10 • 2 kişi
               - generic [ref=e176]:
                 - generic [ref=e177]: new
                 - link "Detay" [ref=e178] [cursor=pointer]:
-                  - /url: /app/agency/catalog/bookings/6953be14a339ff956b4279f2
+                  - /url: /app/agency/catalog/bookings/6953be86a339ff956b4279f3
             - generic [ref=e179]:
               - generic [ref=e180]:
-                - generic [ref=e181]: Cap OK
-                - generic [ref=e182]: tour • 2026-01-10 • 1 kişi
+                - generic [ref=e181]: Cap FAIL
+                - generic [ref=e182]: tour • 2026-01-10 • 2 kişi
               - generic [ref=e183]:
                 - generic [ref=e184]: new
                 - link "Detay" [ref=e185] [cursor=pointer]:
-                  - /url: /app/agency/catalog/bookings/6953be14a339ff956b4279f1
+                  - /url: /app/agency/catalog/bookings/6953be14a339ff956b4279f2
             - generic [ref=e186]:
               - generic [ref=e187]:
-                - generic [ref=e188]: Offer Flow Guest
-                - generic [ref=e189]: tour • 2026-01-10 • 2 kişi
+                - generic [ref=e188]: Cap OK
+                - generic [ref=e189]: tour • 2026-01-10 • 1 kişi
               - generic [ref=e190]:
-                - generic [ref=e191]: approved
+                - generic [ref=e191]: new
                 - link "Detay" [ref=e192] [cursor=pointer]:
-                  - /url: /app/agency/catalog/bookings/6953abcee9fa410abef4093c
+                  - /url: /app/agency/catalog/bookings/6953be14a339ff956b4279f1
             - generic [ref=e193]:
               - generic [ref=e194]:
                 - generic [ref=e195]: Offer Flow Guest
@@ -200,92 +200,100 @@
               - generic [ref=e197]:
                 - generic [ref=e198]: approved
                 - link "Detay" [ref=e199] [cursor=pointer]:
-                  - /url: /app/agency/catalog/bookings/6953ab90e9fa410abef4093b
+                  - /url: /app/agency/catalog/bookings/6953abcee9fa410abef4093c
             - generic [ref=e200]:
               - generic [ref=e201]:
-                - generic [ref=e202]: Offer API Guest
+                - generic [ref=e202]: Offer Flow Guest
                 - generic [ref=e203]: tour • 2026-01-10 • 2 kişi
               - generic [ref=e204]:
                 - generic [ref=e205]: approved
                 - link "Detay" [ref=e206] [cursor=pointer]:
-                  - /url: /app/agency/catalog/bookings/6953ab2ee9fa410abef40938
+                  - /url: /app/agency/catalog/bookings/6953ab90e9fa410abef4093b
             - generic [ref=e207]:
               - generic [ref=e208]:
-                - generic [ref=e209]: Playwright Guest
+                - generic [ref=e209]: Offer API Guest
                 - generic [ref=e210]: tour • 2026-01-10 • 2 kişi
               - generic [ref=e211]:
                 - generic [ref=e212]: approved
                 - link "Detay" [ref=e213] [cursor=pointer]:
-                  - /url: /app/agency/catalog/bookings/69536d60d3f310895579e571
+                  - /url: /app/agency/catalog/bookings/6953ab2ee9fa410abef40938
             - generic [ref=e214]:
               - generic [ref=e215]:
-                - generic [ref=e216]: PW Guest
+                - generic [ref=e216]: Playwright Guest
                 - generic [ref=e217]: tour • 2026-01-10 • 2 kişi
               - generic [ref=e218]:
-                - generic [ref=e219]: new
+                - generic [ref=e219]: approved
                 - link "Detay" [ref=e220] [cursor=pointer]:
-                  - /url: /app/agency/catalog/bookings/695368a7d3f310895579e56b
+                  - /url: /app/agency/catalog/bookings/69536d60d3f310895579e571
             - generic [ref=e221]:
               - generic [ref=e222]:
-                - generic [ref=e223]: API Proof Misafir
+                - generic [ref=e223]: PW Guest
                 - generic [ref=e224]: tour • 2026-01-10 • 2 kişi
               - generic [ref=e225]:
                 - generic [ref=e226]: new
                 - link "Detay" [ref=e227] [cursor=pointer]:
-                  - /url: /app/agency/catalog/bookings/695366dbd3f310895579e569
+                  - /url: /app/agency/catalog/bookings/695368a7d3f310895579e56b
             - generic [ref=e228]:
               - generic [ref=e229]:
-                - generic [ref=e230]: API Guest
+                - generic [ref=e230]: API Proof Misafir
                 - generic [ref=e231]: tour • 2026-01-10 • 2 kişi
               - generic [ref=e232]:
                 - generic [ref=e233]: new
                 - link "Detay" [ref=e234] [cursor=pointer]:
+                  - /url: /app/agency/catalog/bookings/695366dbd3f310895579e569
+            - generic [ref=e235]:
+              - generic [ref=e236]:
+                - generic [ref=e237]: API Guest
+                - generic [ref=e238]: tour • 2026-01-10 • 2 kişi
+              - generic [ref=e239]:
+                - generic [ref=e240]: new
+                - link "Detay" [ref=e241] [cursor=pointer]:
                   - /url: /app/agency/catalog/bookings/695360cfae0b7ac6b4f57506
-          - generic [ref=e236]:
-            - generic [ref=e237]:
-              - heading "Yeni Katalog Rezervasyonu" [level=2] [ref=e238]
-              - button "Kapat" [ref=e239] [cursor=pointer]
-            - generic [ref=e240]:
-              - generic [ref=e241]:
+          - generic [ref=e243]:
+            - generic [ref=e244]:
+              - heading "Yeni Katalog Rezervasyonu" [level=2] [ref=e245]
+              - button "Kapat" [ref=e246] [cursor=pointer]
+            - generic [ref=e247]:
+              - generic [ref=e248]:
                 - text: Ürün
-                - combobox [ref=e242] [cursor=pointer]:
+                - combobox [ref=e249] [cursor=pointer]:
                   - generic: API Proof Katalog Turu [tour]
-                  - img [ref=e243]
-                - combobox [ref=e245]
-              - generic [ref=e246]:
+                  - img [ref=e250]
+                - combobox [ref=e252]
+              - generic [ref=e253]:
                 - text: Variant
-                - combobox [ref=e247] [cursor=pointer]:
+                - combobox [ref=e254] [cursor=pointer]:
                   - generic: Email Variant - 1000 TRY
-                  - img [ref=e248]
-                - combobox [ref=e250]
-              - generic [ref=e251]:
-                - generic [ref=e252]:
-                  - text: Misafir Adı
-                  - textbox [ref=e253]: Overbook Guest 2
-                - generic [ref=e254]:
-                  - text: Telefon
-                  - textbox [ref=e255]
-                - generic [ref=e256]:
-                  - text: E-posta
-                  - textbox [ref=e257]
+                  - img [ref=e255]
+                - combobox [ref=e257]
               - generic [ref=e258]:
                 - generic [ref=e259]:
-                  - text: Başlangıç Tarihi
-                  - textbox [ref=e260]: 2030-05-10
+                  - text: Misafir Adı
+                  - textbox [ref=e260]: Overbook Guest 2
                 - generic [ref=e261]:
-                  - text: Bitiş Tarihi
+                  - text: Telefon
                   - textbox [ref=e262]
                 - generic [ref=e263]:
+                  - text: E-posta
+                  - textbox [ref=e264]
+              - generic [ref=e265]:
+                - generic [ref=e266]:
+                  - text: Başlangıç Tarihi
+                  - textbox [ref=e267]: 2030-05-10
+                - generic [ref=e268]:
+                  - text: Bitiş Tarihi
+                  - textbox [ref=e269]
+                - generic [ref=e270]:
                   - text: Kişi Sayısı
-                  - spinbutton [active] [ref=e264]: "1"
-              - generic [ref=e266]: Uygun (mode=pax, requested=1)
-              - generic [ref=e267]:
+                  - spinbutton [active] [ref=e271]: "1"
+              - generic [ref=e273]: Uygun (mode=pax, requested=1)
+              - generic [ref=e274]:
                 - text: Komisyon Oranı
-                - spinbutton [ref=e268]: "0.1"
-              - generic [ref=e269]:
-                - button "Vazgeç" [ref=e270] [cursor=pointer]
-                - button "Oluştur" [ref=e271] [cursor=pointer]
-    - contentinfo [ref=e272]:
-      - generic [ref=e273]: © 2025 — v1
+                - spinbutton [ref=e275]: "0.1"
+              - generic [ref=e276]:
+                - button "Vazgeç" [ref=e277] [cursor=pointer]
+                - button "Oluştur" [ref=e278] [cursor=pointer]
+    - contentinfo [ref=e279]:
+      - generic [ref=e280]: © 2025 — v1
   - region "Notifications alt+T"
 ```

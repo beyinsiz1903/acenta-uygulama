@@ -2,7 +2,7 @@
 import requests
 import json
 
-BACKEND_URL = 'https://uygulama-ilerleme.preview.emergentagent.com/api'
+BACKEND_URL = 'https://mimari-analiz.preview.emergentagent.com/api'
 
 # Login
 response = requests.post(f'{BACKEND_URL}/auth/login', json={

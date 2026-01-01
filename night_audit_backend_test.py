@@ -21,7 +21,7 @@ import sys
 import os
 
 # Configuration
-BASE_URL = "https://uygulama-ilerleme.preview.emergentagent.com"
+BASE_URL = "https://mimari-analiz.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api"
 
 # Demo credentials

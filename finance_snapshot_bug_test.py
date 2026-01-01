@@ -10,7 +10,7 @@ import sys
 from datetime import datetime, timedelta
 
 # Configuration
-BACKEND_URL = "https://uygulama-ilerleme.preview.emergentagent.com/api"
+BACKEND_URL = "https://mimari-analiz.preview.emergentagent.com/api"
 TEST_EMAIL = "financetest@hotel.com"
 TEST_PASSWORD = "test123456"
 

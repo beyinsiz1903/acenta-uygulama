@@ -35,7 +35,7 @@ from typing import Dict, List, Any, Optional
 import uuid
 
 # Configuration
-BACKEND_URL = "https://uygulama-ilerleme.preview.emergentagent.com/api"
+BACKEND_URL = "https://mimari-analiz.preview.emergentagent.com/api"
 TEST_EMAIL = "muratsutay@hotmail.com"
 TEST_PASSWORD = "murat1903"
 
@@ -389,7 +389,7 @@ C102,standard,1,2,90,city,queen,wifi"""
         """Run comprehensive CSV Import backend testing"""
         print("🚀 CSV IMPORT ENDPOINT BACKEND TESTING")
         print("Testing the new CSV import endpoint for rooms")
-        print("Base URL: https://uygulama-ilerleme.preview.emergentagent.com/api")
+        print("Base URL: https://mimari-analiz.preview.emergentagent.com/api")
         print("Login: muratsutay@hotmail.com / murat1903")
         print("=" * 80)
         

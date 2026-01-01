@@ -163,7 +163,7 @@
        **COMPREHENSIVE VERIFICATION COMPLETED:**
        
        ✅ **PAGE LOADING:**
-       - Landing page loads successfully at https://uygulama-ilerleme.preview.emergentagent.com/
+       - Landing page loads successfully at https://mimari-analiz.preview.emergentagent.com/
        - Page title: "Emergent | Fullstack App"
        - No critical loading errors
        
@@ -684,7 +684,7 @@
        🏆 FINAL COMPREHENSIVE VALIDATION COMPLETED - PRODUCTION READY ✅
        
        **TEST OBJECTIVE:** 100% validation for production deployment
-       **BASE URL:** https://uygulama-ilerleme.preview.emergentagent.com
+       **BASE URL:** https://mimari-analiz.preview.emergentagent.com
        **LOGIN:** demo@hotel.com / demo123
        
        **COMPREHENSIVE TEST RESULTS:**
@@ -857,7 +857,7 @@
        🏨 SYROCE HOTEL PMS DASHBOARD UI COMPREHENSIVE TEST COMPLETED - PRODUCTION READY ✅
        
        **TEST OBJECTIVE:** Complete Dashboard UI verification after login with demo@hotel.com / demo123
-       **BASE URL:** https://uygulama-ilerleme.preview.emergentagent.com
+       **BASE URL:** https://mimari-analiz.preview.emergentagent.com
        
        **COMPREHENSIVE TEST RESULTS:**
        
@@ -955,7 +955,7 @@
        🏨 PMS GUESTS TAB UI COMPREHENSIVE TEST COMPLETED - PRODUCTION READY ✅
        
        **TEST OBJECTIVE:** Complete PMS → Guests tab UI verification for Syroce Hotel PMS app
-       **BASE URL:** https://uygulama-ilerleme.preview.emergentagent.com
+       **BASE URL:** https://mimari-analiz.preview.emergentagent.com
        **LOGIN:** demo@hotel.com / demo123
        
        **COMPREHENSIVE TEST RESULTS:**
@@ -1090,7 +1090,7 @@
        **TEST OBJECTIVE:** Playwright UI test for two improvements:
        A) PMS loadData robustness after bulk room create
        B) Header hotel name truncation
-       **BASE URL:** https://uygulama-ilerleme.preview.emergentagent.com
+       **BASE URL:** https://mimari-analiz.preview.emergentagent.com
        **DATE:** December 18, 2025
        
        **COMPREHENSIVE TEST RESULTS:**
@@ -1199,7 +1199,7 @@ agent_communication:
        🏨 BULK ROOMS CREATION FLOW UI TEST COMPLETED - CRITICAL ISSUE IDENTIFIED ❌
        
        **TEST OBJECTIVE:** Playwright UI test for the new Bulk Rooms creation flow
-       **BASE URL:** https://uygulama-ilerleme.preview.emergentagent.com
+       **BASE URL:** https://mimari-analiz.preview.emergentagent.com
        **LOGIN:** muratsutay@hotmail.com / murat1903
        **DATE:** December 17, 2025
        
@@ -1308,7 +1308,7 @@ agent_communication:
        🔐 AUTH LOGIN FLOW TESTING COMPLETED - PRODUCTION READY ✅
        
        **TEST OBJECTIVE:** Test the auth login flow on the running backend for preview environment
-       **BASE URL:** https://uygulama-ilerleme.preview.emergentagent.com/api
+       **BASE URL:** https://mimari-analiz.preview.emergentagent.com/api
        **DATE:** December 17, 2025
        
        **COMPREHENSIVE TEST RESULTS:**
@@ -1394,7 +1394,7 @@ agent_communication:
        🏨 BULK DELETE ROOMS FEATURE UI TEST COMPLETED - MOSTLY SUCCESSFUL ✅
        
        **TEST OBJECTIVE:** Playwright UI test for bulk delete rooms feature
-       **BASE URL:** https://uygulama-ilerleme.preview.emergentagent.com
+       **BASE URL:** https://mimari-analiz.preview.emergentagent.com
        **LOGIN:** demo@hotel.com / demo123
        **DATE:** December 18, 2025
        
@@ -1548,7 +1548,7 @@ agent_communication:
        🔐 AUDIT LOGS ENDPOINT PERMISSION TESTING COMPLETED - PRODUCTION READY ✅
        
        **TEST OBJECTIVE:** Test audit logs endpoint permission changes for different user roles
-       **BASE URL:** https://uygulama-ilerleme.preview.emergentagent.com/api
+       **BASE URL:** https://mimari-analiz.preview.emergentagent.com/api
        **DATE:** December 17, 2025
        
        **COMPREHENSIVE TEST RESULTS:**
@@ -1637,7 +1637,7 @@ agent_communication:
        
        **USER REQUEST (Turkish):** PMS Bookings backend akışını test et
        **OBJECTIVE:** /api/pms/bookings ve BookingsTab/VirtualizedBookingList veri yapısı doğrulaması
-       **BASE URL:** https://uygulama-ilerleme.preview.emergentagent.com/api
+       **BASE URL:** https://mimari-analiz.preview.emergentagent.com/api
        **LOGIN:** demo@hotel.com / demo123
        
        **COMPREHENSIVE TEST RESULTS:**
@@ -1700,7 +1700,7 @@ agent_communication:
        🏨 RESERVATION CALENDAR PANEL TESTING COMPLETED - PRODUCTION READY ✅
        
        **TEST OBJECTIVE:** Comprehensive UI testing of Reservation Calendar panels for empty dataset scenario
-       **BASE URL:** https://uygulama-ilerleme.preview.emergentagent.com
+       **BASE URL:** https://mimari-analiz.preview.emergentagent.com
        **LOGIN:** muratsutay@hotmail.com / murat1903
        **DATE:** December 17, 2025
        
@@ -1818,7 +1818,7 @@ agent_communication:
        🚨 PMS → BOOKINGS TAB UI CRITICAL FAILURE - REACT RUNTIME ERRORS BLOCKING FUNCTIONALITY
        
        **TEST OBJECTIVE:** Complete PMS → Bookings tab UI verification for Syroce Hotel PMS app
-       **BASE URL:** https://uygulama-ilerleme.preview.emergentagent.com
+       **BASE URL:** https://mimari-analiz.preview.emergentagent.com
        **LOGIN:** demo@hotel.com / demo123
        
        **CRITICAL ISSUES IDENTIFIED:**
@@ -1897,7 +1897,7 @@ agent_communication:
        🏨 RESERVATION CALENDAR ENTERPRISE/AI/DELUXE+ MODULES DATA VERIFICATION COMPLETED ✅
        
        **TEST OBJECTIVE:** Verify whether Reservation Calendar Enterprise/AI/Deluxe+ modules are using real data or returning empty due to tenant/date range issues
-       **BASE URL:** https://uygulama-ilerleme.preview.emergentagent.com/api
+       **BASE URL:** https://mimari-analiz.preview.emergentagent.com/api
        **LOGIN:** demo@hotel.com / demo123
        **DATE RANGES:** Historical (2024-01-01 to 2024-02-15), Future (2025-12-01 to 2025-12-15)
        
@@ -2005,7 +2005,7 @@ agent_communication:
        🚨 AI PREDICTION PATTERNS FIX VERIFICATION - CRITICAL ISSUE STILL PRESENT ❌
        
        **RE-TEST OBJECTIVE:** Verify PMS → Bookings tab UI after AI prediction patterns fix
-       **BASE URL:** https://uygulama-ilerleme.preview.emergentagent.com
+       **BASE URL:** https://mimari-analiz.preview.emergentagent.com
        **LOGIN:** demo@hotel.com / demo123
        **DATE:** December 3, 2025
        
@@ -2079,7 +2079,7 @@ agent_communication:
        
        **RE-TEST DATE:** December 3, 2025 - 09:48 AM
        **OBJECTIVE:** Re-test PMS → Bookings tab UI focusing on React child object rendering from AI-related components
-       **BASE URL:** https://uygulama-ilerleme.preview.emergentagent.com
+       **BASE URL:** https://mimari-analiz.preview.emergentagent.com
        **LOGIN:** demo@hotel.com / demo123
        
        **CRITICAL SUCCESS CONFIRMATION:**
@@ -2471,7 +2471,7 @@ agent_communication:
       🏨 MODÜL BAZLI YETKİLENDİRME SİSTEMİ TEST COMPLETED - EXCELLENT SUCCESS ✅
       
       **TEST OBJECTIVE:** Comprehensive testing of the new module-based authorization system
-      **BASE URL:** https://uygulama-ilerleme.preview.emergentagent.com/api
+      **BASE URL:** https://mimari-analiz.preview.emergentagent.com/api
       **LOGIN:** demo@hotel.com / demo123
       
       **COMPREHENSIVE TEST RESULTS:**
@@ -3010,7 +3010,7 @@ backend:
     status_history:
       - working: "NA"
         agent: "user"
-        comment: "Turkish request: PMS Bookings backend akışını test et. Test /api/pms/bookings ve BookingsTab/VirtualizedBookingList'in dayandığı veri yapısının stabil olduğunu, hata vermediğini ve performans hedeflerini karşıladığını doğrulamak. Base URL: https://uygulama-ilerleme.preview.emergentagent.com/api. Login: demo@hotel.com / demo123. Test endpoints: GET /pms/bookings (default), GET /pms/bookings?limit=100, GET /pms/bookings?start_date&end_date (7-day period), folio/payment endpoints if available."
+        comment: "Turkish request: PMS Bookings backend akışını test et. Test /api/pms/bookings ve BookingsTab/VirtualizedBookingList'in dayandığı veri yapısının stabil olduğunu, hata vermediğini ve performans hedeflerini karşıladığını doğrulamak. Base URL: https://mimari-analiz.preview.emergentagent.com/api. Login: demo@hotel.com / demo123. Test endpoints: GET /pms/bookings (default), GET /pms/bookings?limit=100, GET /pms/bookings?start_date&end_date (7-day period), folio/payment endpoints if available."
       - working: true
         agent: "testing"
         comment: "🎉 PMS BOOKINGS BACKEND: PRODUCTION-READY ✅ - 100% SUCCESS RATE (7/7 endpoints). COMPREHENSIVE TESTING COMPLETED: ✅ GET /api/pms/bookings (default): 7.4ms avg - All required fields present (id, guest_id, room_id, status, total_amount, check_in, check_out), optional fields working (guest_name, room_number), 8 bookings returned. ✅ GET /api/pms/bookings?limit=100: 7.9ms avg - Pagination working correctly, limit parameter respected. ✅ GET /api/pms/bookings?start_date&end_date (7-day period): 15.8ms avg - Date range filtering working, 11 bookings found in range 2025-11-30 to 2025-12-07. ✅ GET /api/folio/booking/{booking_id}: 8.8ms avg - Folio endpoint working, returns proper structure. ✅ GET /api/payments/booking/{booking_id}: 9.5ms avg - Payments endpoint accessible. PERFORMANCE EXCELLENT: Default bookings 11.7ms avg (6.8-18.6ms range), Limit=100: 10.2ms avg (7.0-11.6ms range), Date range: 22.9ms avg (16.2-27.1ms range). NO HTTP 500/ValidationError found. BookingsTab/VirtualizedBookingList veri yapısı completely stable and production-ready."
@@ -6197,7 +6197,7 @@ frontend:
     status_history:
       - working: "NA"
         agent: "testing"
-        comment: "User requested testing of AR/Finance endpoints: Company aging report (GET /reports/company-aging + Excel export), Pending AR (GET /folio/pending-ar), City Ledger management (GET/POST /cashiering/city-ledger, AR aging report, payments, transactions). Base URL: https://uygulama-ilerleme.preview.emergentagent.com/api, Auth: demo@hotel.com / demo123"
+        comment: "User requested testing of AR/Finance endpoints: Company aging report (GET /reports/company-aging + Excel export), Pending AR (GET /folio/pending-ar), City Ledger management (GET/POST /cashiering/city-ledger, AR aging report, payments, transactions). Base URL: https://mimari-analiz.preview.emergentagent.com/api, Auth: demo@hotel.com / demo123"
       - working: true
         agent: "testing"
         comment: "🎉 AR/FINANCE BACKEND TESTING COMPLETED - 100% SUCCESS RATE (8/8 tests passed). ✅ COMPANY AGING REPORT: GET /reports/company-aging returns proper structure with report_date, total_ar (5345.4), company_count (5), companies array with aging buckets (0-7 days, 8-14 days, 15-30 days, 30+ days), folio_count per company (32.4ms). ✅ EXCEL EXPORT: GET /reports/company-aging/excel generates proper Excel file (5552 bytes) with correct content-type (59.1ms) - FIXED merged cell issue in Excel generation. ✅ PENDING AR: GET /folio/pending-ar returns array structure with company_id, company_name, total_outstanding, open_folios_count, days_outstanding, aging object (12.0ms). ✅ CITY LEDGER ACCOUNTS: GET /cashiering/city-ledger returns accounts array and total_count (9.2ms). ✅ CREATE ACCOUNT: POST /cashiering/city-ledger creates account with success=true, account_id, credit_limit=10000 (27.8ms). ✅ AR AGING REPORT: GET /cashiering/ar-aging-report returns aging_buckets (current, 30_days, 60_days, 90_plus), totals, generated_at (10.8ms). ✅ CITY LEDGER PAYMENT: POST /cashiering/city-ledger-payment processes payment with new_balance calculation - FIXED query parameter format (22.6ms). ✅ TRANSACTIONS: GET /cashiering/city-ledger/{account_id}/transactions returns summary with total_charges, total_payments, current_balance, transaction_count (12.4ms). AUTHENTICATION: Successfully tested with demo@hotel.com / demo123. BUG FIXES: Fixed Excel merged cell AttributeError, corrected payment endpoint parameter format. All AR/Finance functionality working perfectly for Turkish hotel finance operations."
@@ -7131,7 +7131,7 @@ agent_communication:
       - This blocks access to ALL application features and modules
       
       🔍 TECHNICAL FINDINGS:
-      - Frontend URL working: https://uygulama-ilerleme.preview.emergentagent.com
+      - Frontend URL working: https://mimari-analiz.preview.emergentagent.com
       - Auth page renders correctly with proper form fields and styling
       - Backend error detected: ValueError in daily flash report endpoint (Invalid isoformat string: 'invalid-date')
       - Frontend shows no visible error messages to users
@@ -11795,7 +11795,7 @@ agent_communication:
         **COMPREHENSIVE VERIFICATION COMPLETED:**
         
         ✅ **AUTH PAGE NAVIGATION:**
-        - Successfully navigated to https://uygulama-ilerleme.preview.emergentagent.com/auth
+        - Successfully navigated to https://mimari-analiz.preview.emergentagent.com/auth
         - Page loaded without errors
         - All UI elements rendered correctly
         
@@ -12616,7 +12616,7 @@ agent_communication:
       🏨 PMS GUESTS BACKEND FLOW TEST COMPLETED - PRODUCTION READY ✅
       
       **USER REQUEST:** Turkish language request to test PMS Guests backend flow
-      **BASE URL:** https://uygulama-ilerleme.preview.emergentagent.com/api
+      **BASE URL:** https://mimari-analiz.preview.emergentagent.com/api
       **CREDENTIALS:** demo@hotel.com / demo123
       
       **COMPREHENSIVE TEST RESULTS:**
@@ -14143,7 +14143,7 @@ agent_communication:
       🏦 AR/FINANCE BACKEND TESTING COMPLETED - 100% SUCCESS RATE!
       
       **TEST OBJECTIVE:** Comprehensive testing of AR (Accounts Receivable) and City Ledger endpoints
-      **BASE URL:** https://uygulama-ilerleme.preview.emergentagent.com/api
+      **BASE URL:** https://mimari-analiz.preview.emergentagent.com/api
       **AUTHENTICATION:** demo@hotel.com / demo123 ✅
       
       **COMPREHENSIVE AR/FINANCE TESTING RESULTS (8/8 PASSED - 100% SUCCESS):**
@@ -14212,7 +14212,7 @@ agent_communication:
       🏨 GROUPS BLOCKS ENDPOINT FILTER TESTING COMPLETED - 100% SUCCESS!
       
       **TEST OBJECTIVE:** Verify new filter parameters for /api/groups/blocks endpoint
-      **BASE URL:** https://uygulama-ilerleme.preview.emergentagent.com/api
+      **BASE URL:** https://mimari-analiz.preview.emergentagent.com/api
       **AUTHENTICATION:** demo@hotel.com / demo123 ✅
       
       **COMPREHENSIVE FILTER TESTING RESULTS (6/6 PASSED - 100% SUCCESS):**
@@ -14544,7 +14544,7 @@ agent_communication:
        🎯 COMPREHENSIVE FRONTEND TESTING COMPLETED - PRODUCTION READY!
        
        **TEST EXECUTION DATE:** November 26, 2025
-       **BASE URL:** https://uygulama-ilerleme.preview.emergentagent.com
+       **BASE URL:** https://mimari-analiz.preview.emergentagent.com
        **CREDENTIALS:** demo@hotel.com / demo123
        
        ═══════════════════════════════════════════════════════════════════════════
@@ -14794,7 +14794,7 @@ agent_communication:
        
        **TEST EXECUTION DATE:** November 27, 2025
        **TEST TYPE:** Fresh browser session with cleared cache/storage
-       **URL:** https://uygulama-ilerleme.preview.emergentagent.com/reservation-calendar
+       **URL:** https://mimari-analiz.preview.emergentagent.com/reservation-calendar
        **CREDENTIALS:** demo@hotel.com / demo123
        
        ═══════════════════════════════════════════════════════════════════════════
@@ -15087,7 +15087,7 @@ agent_communication:
       🌙 NIGHT AUDIT BACKEND TESTING COMPLETED - 100% SUCCESS RATE!
       
       **TEST OBJECTIVE:** Comprehensive testing of Night Audit flow as requested by user
-      **BASE URL:** https://uygulama-ilerleme.preview.emergentagent.com/api
+      **BASE URL:** https://mimari-analiz.preview.emergentagent.com/api
       **AUTHENTICATION:** demo@hotel.com / demo123 ✅
       **AUDIT DATE:** 2025-11-29 (yesterday's date)
       
@@ -15173,7 +15173,7 @@ agent_communication:
       🔍 SETTINGS OTA TAB TESTING COMPLETED - CRITICAL FRONTEND LOADING ISSUE IDENTIFIED
       
       **TEST OBJECTIVE:** Verify Settings page OTA tab for Booking.com integration settings
-      **URL TESTED:** https://uygulama-ilerleme.preview.emergentagent.com/settings
+      **URL TESTED:** https://mimari-analiz.preview.emergentagent.com/settings
       **CREDENTIALS:** demo@hotel.com / demo123
       
       **CRITICAL FINDINGS:**
@@ -15259,7 +15259,7 @@ agent_communication:
       🏨 PMS FRONT DESK COMPREHENSIVE WORKFLOW TEST COMPLETED - 100% SUCCESS RATE
       
       **TEST OBJECTIVE:** Complete Front Desk section testing as requested in Turkish
-      **BASE URL:** https://uygulama-ilerleme.preview.emergentagent.com
+      **BASE URL:** https://mimari-analiz.preview.emergentagent.com
       **CREDENTIALS:** demo@hotel.com / demo123
       
       **COMPREHENSIVE TEST RESULTS:**
@@ -15538,7 +15538,7 @@ agent_communication:
       🎯 AI DASHBOARD BRIEFING ENDPOINT TEST COMPLETED - 100% SUCCESS!
       
       **TEST OBJECTIVE:** Validate /api/ai/dashboard/briefing endpoint response structure for Dashboard.js compatibility
-      **BASE URL:** https://uygulama-ilerleme.preview.emergentagent.com/api
+      **BASE URL:** https://mimari-analiz.preview.emergentagent.com/api
       **AUTHENTICATION:** demo@hotel.com / demo123 ✅
       
       **COMPREHENSIVE VALIDATION RESULTS:**
@@ -15604,7 +15604,7 @@ agent_communication:
       🏨 HOUSEKEEPING DASHBOARD ENDPOINTS TEST COMPLETED - 100% SUCCESS ✅
       
       **TEST OBJECTIVE:** Test newly added Housekeeping Dashboard endpoints
-      **BASE URL:** https://uygulama-ilerleme.preview.emergentagent.com/api
+      **BASE URL:** https://mimari-analiz.preview.emergentagent.com/api
       **LOGIN:** demo@hotel.com / demo123
       **TEST DATE:** 2025-12-14 15:15:15
       
@@ -15793,7 +15793,7 @@ backend:
       🏨 HOTEL CREATION AND LOGIN FLOW TEST COMPLETED - 100% SUCCESS ✅
       
       **TEST OBJECTIVE:** Test hotel creation and login flow (Turkish request: Yeni otel oluşturma ve giriş yapma akışını test et)
-      **BASE URL:** https://uygulama-ilerleme.preview.emergentagent.com/api
+      **BASE URL:** https://mimari-analiz.preview.emergentagent.com/api
       **TEST DATE:** 2025-12-14 16:18:45
       
       **TEST SCENARIO:**
@@ -15959,7 +15959,7 @@ test_plan:
        🏨 HOTEL LOGIN FLOW TEST COMPLETED - feith@test.com
        
        **TEST OBJECTIVE:** Test newly created hotel login flow with feith@test.com / feith123
-       **BASE URL:** https://uygulama-ilerleme.preview.emergentagent.com/auth
+       **BASE URL:** https://mimari-analiz.preview.emergentagent.com/auth
        **DATE:** December 14, 2025
        
        **COMPREHENSIVE TEST RESULTS:**
@@ -16395,7 +16395,7 @@ agent_communication:
        🎯 SUBSCRIPTION MANUAL DATES ENDPOINT TESTING COMPLETED - PRODUCTION READY ✅
        
        **TEST OBJECTIVE:** Test the updated subscription endpoint with manual date setting functionality
-       **BASE URL:** https://uygulama-ilerleme.preview.emergentagent.com/api
+       **BASE URL:** https://mimari-analiz.preview.emergentagent.com/api
        **LOGIN:** muratsutay@hotmail.com / murat1903
        
        **COMPREHENSIVE TEST RESULTS:**
@@ -16552,7 +16552,7 @@ agent_communication:
        
        **USER REQUEST:** Test the new CSV import endpoint for rooms
        **OBJECTIVE:** Complete CSV import functionality verification as requested
-       **BASE URL:** https://uygulama-ilerleme.preview.emergentagent.com/api
+       **BASE URL:** https://mimari-analiz.preview.emergentagent.com/api
        **LOGIN:** muratsutay@hotmail.com / murat1903
        **DATE:** December 17, 2025
        
@@ -16618,7 +16618,7 @@ agent_communication:
        🗑️ BULK DELETE ENDPOINT BACKEND TESTING COMPLETED - PRODUCTION READY ✅
        
        **TEST OBJECTIVE:** Test the new bulk delete endpoint for rooms as requested
-       **BASE URL:** https://uygulama-ilerleme.preview.emergentagent.com/api
+       **BASE URL:** https://mimari-analiz.preview.emergentagent.com/api
        **LOGIN:** demo@hotel.com / demo123
        **DATE:** December 18, 2025
        
@@ -17158,7 +17158,7 @@ agent_communication:
       🎯 CM ARI V2 ENDPOINT TESTING COMPLETED - PERFECT SUCCESS! 
       
       **TEST OBJECTIVE:** Test CM ARI v2 endpoint (nested) as requested in review
-      **BASE URL:** https://uygulama-ilerleme.preview.emergentagent.com/api
+      **BASE URL:** https://mimari-analiz.preview.emergentagent.com/api
       **DATE:** December 18, 2025
       
       **COMPREHENSIVE TEST RESULTS:**

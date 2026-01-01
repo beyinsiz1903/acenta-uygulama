@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 
 def test_frontdesk_operations():
     # Test Front Desk Operations
-    base_url = 'https://uygulama-ilerleme.preview.emergentagent.com/api'
+    base_url = 'https://mimari-analiz.preview.emergentagent.com/api'
 
     # First register a hotel and get token
     timestamp = datetime.now().strftime('%H%M%S')

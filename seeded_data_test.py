@@ -21,7 +21,7 @@ from datetime import datetime, timezone, timedelta
 from typing import Dict, List, Any, Optional
 
 # Configuration
-BACKEND_URL = "https://uygulama-ilerleme.preview.emergentagent.com/api"
+BACKEND_URL = "https://mimari-analiz.preview.emergentagent.com/api"
 
 # Test user credentials
 TEST_USERS = [

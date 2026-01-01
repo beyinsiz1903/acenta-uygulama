@@ -14,7 +14,7 @@ from datetime import datetime
 from typing import Dict, List, Tuple
 
 # Configuration
-BACKEND_URL = "https://uygulama-ilerleme.preview.emergentagent.com/api"
+BACKEND_URL = "https://mimari-analiz.preview.emergentagent.com/api"
 REDIS_URL = "redis://localhost:6379/0"
 
 # Test endpoints with their cache TTL

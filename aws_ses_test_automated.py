@@ -9,7 +9,7 @@ from datetime import datetime
 import subprocess
 
 # Backend URL from environment
-BACKEND_URL = "https://uygulama-ilerleme.preview.emergentagent.com/api"
+BACKEND_URL = "https://mimari-analiz.preview.emergentagent.com/api"
 
 # Test configuration
 TEST_EMAIL = "testuser_ses_" + str(int(time.time())) + "@gmail.com"

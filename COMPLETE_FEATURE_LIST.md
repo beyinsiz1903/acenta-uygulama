@@ -218,7 +218,7 @@
 ## 📋 QUICK START GUIDE
 
 **Login:**
-- URL: https://uygulama-ilerleme.preview.emergentagent.com
+- URL: https://mimari-analiz.preview.emergentagent.com
 - Demo: demo@hotel.com / demo123
 
 **New User Registration:**

@@ -244,7 +244,14 @@ const AdminLeads = ({ user, tenant, onLogout }) => {
                       <td className="px-2 py-1 align-top">{lead.full_name}</td>
                       <td className="px-2 py-1 align-top">{lead.phone}</td>
                       <td className="px-2 py-1 align-top">
-                        <Badge variant="outline">{statusLabel[lead.status] || lead.status}</Badge>
+                        <span
+                          className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] border ${
+                            STATUS_COLOR[lead.status] ||
+                            "bg-slate-500/10 text-slate-300 border-slate-500/30"
+                          }`}
+                        >
+                          {statusLabel[lead.status] || lead.status}
+                        </span>
                       </td>
                       <td className="px-2 py-1 align-top text-xs text-slate-300">{lastOp}</td>
                       <td className="px-2 py-1 align-top w-48">

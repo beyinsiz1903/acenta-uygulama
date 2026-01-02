@@ -37,15 +37,28 @@ const Layout = ({ children, user, tenant, onLogout, currentModule }) => {
   // Normalize feature flags from tenant.features (supports both core_* and lite keys)
   const normalizedFeatures = normalizeFeatures(tenant?.features || {});
 
-  // Filter navigation items based on feature flags and super admin rules
+  const plan =
+    tenant?.subscription_plan ||
+    tenant?.plan ||
+    tenant?.subscription_tier ||
+    'core_small_hotel';
+
+  const isLite = plan === 'pms_lite';
+
+  // Filter navigation items based on plan, feature flags and super admin rules
   const navigation = NAV_ITEMS.filter((item) => {
+    // Lite planda sadece whitelist key'ler görünsün
+    if (isLite && !PMS_LITE_NAV_KEYS.has(item.key)) {
+      return false;
+    }
+
     // Super admin only items
     if (item.requireSuperAdmin && user?.role !== 'super_admin') {
       return false;
     }
 
-    // Feature-based visibility
-    if (item.feature && normalizedFeatures) {
+    // Full planlarda feature-based visibility
+    if (!isLite && item.feature && normalizedFeatures) {
       if (!normalizedFeatures[item.feature]) {
         return false;
       }

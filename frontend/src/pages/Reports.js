@@ -184,6 +184,68 @@ const Reports = ({ user, tenant, onLogout }) => {
       link.download = filename;
       document.body.appendChild(link);
       link.click();
+
+  if (isReportsLite) {
+    return (
+      <Layout user={user} tenant={tenant} onLogout={onLogout} currentModule="reports">
+        <div className="p-6 max-w-4xl mx-auto space-y-6">
+          <div>
+            <h1 className="text-2xl font-semibold text-gray-900">Raporlar (PMS Lite)</h1>
+            <p className="mt-1 text-sm text-gray-600">
+              Son 7 ve 30 güne ait doluluk ve ciro özetlerini görebilirsiniz.
+            </p>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Doluluk (7 Gün)</CardTitle>
+                <CardDescription>Son 7 gün ortalama doluluk oranı</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-gray-900">%--</div>
+                <p className="mt-1 text-xs text-gray-500">Bu versiyonda özet metrikler gösterilir.</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Ciro (7 Gün)</CardTitle>
+                <CardDescription>Son 7 gün toplam oda geliri</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-gray-900">₺--</div>
+                <p className="mt-1 text-xs text-gray-500">Detaylı kırılımlar full paketlerde mevcuttur.</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Doluluk (30 Gün)</CardTitle>
+                <CardDescription>Son 30 gün ortalama doluluk oranı</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-gray-900">%--</div>
+                <p className="mt-1 text-xs text-gray-500">Gelişmiş raporlar için üst pakete geçebilirsiniz.</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Ciro (30 Gün)</CardTitle>
+                <CardDescription>Son 30 gün toplam oda geliri</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-gray-900">₺--</div>
+                <p className="mt-1 text-xs text-gray-500">Muhasebe / AR raporları full paketlerde yer alır.</p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
       document.body.removeChild(link);
       window.URL.revokeObjectURL(downloadUrl);
       

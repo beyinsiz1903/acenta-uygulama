@@ -32420,6 +32420,12 @@ async def create_tenant(
         end_date = start_date + timedelta(days=payload.subscription_days)
     # If None, unlimited subscription
     
+    # Determine subscription plan (core_small_hotel by default, or pms_lite etc.)
+    normalized_plan = (
+        payload.subscription_plan
+        or "core_small_hotel"
+    )
+
     # Create new tenant
     new_tenant = Tenant(
         property_name=payload.property_name,
@@ -32431,7 +32437,8 @@ async def create_tenant(
         subscription_tier="basic",
         subscription_start_date=start_date.isoformat(),
         subscription_end_date=end_date.isoformat() if end_date else None,
-        subscription_status="active"
+        subscription_status="active",
+        subscription_plan=normalized_plan,
     )
     
     tenant_dict = new_tenant.model_dump()

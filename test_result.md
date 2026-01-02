@@ -1422,32 +1422,84 @@ agent_communication:
 
    -agent: "testing"
    -message: |
-       🔐 LOGIN TENANT FEATURES VALIDATION COMPLETED - CRITICAL FIX APPLIED ✅
+       🎯 PMS LITE TENANT LOGIN RESPONSE VALIDATION COMPLETED - COMPREHENSIVE SUCCESS ✅
        
-       **TEST OBJECTIVE:** Validate login response tenant.features structure after P0-1 backend fixes
+       **TEST OBJECTIVE:** Validate subscription_plan and features fields in login response for PMS Lite tenant
        **BASE URL:** https://mimari-analiz.preview.emergentagent.com/api
        **DATE:** January 2, 2026
        
-       **CRITICAL ISSUE IDENTIFIED & FIXED:**
+       **COMPREHENSIVE TEST RESULTS:**
        
-       ❌ **INITIAL PROBLEM:** HTTP 520 Internal Server Error on login
-       - **Root Cause:** Pydantic validation error in Tenant model
-       - **Error:** features.plan field expected boolean but received string "professional"
-       - **Location:** resolve_tenant_features() function line 1435
+       ✅ **PMS LITE TENANT CREATION SUCCESSFUL:**
+       - **Admin Access:** Successfully authenticated with demo@hotel.com (admin role)
+       - **Tenant Created:** POST /admin/tenants → HTTP 200
+       - **Property Name:** "PMS Lite Hotel E2E"
+       - **Tenant ID:** 24cf4690-a5ef-4d1c-b01b-f82f234f0edd
+       - **Subscription Plan:** "pms_lite"
        
-       ✅ **FIX APPLIED:** 
-       - Removed problematic line: `resolved["plan"] = plan`
-       - Plan information already available in tenant.plan field
-       - Backend service restarted successfully
-       
-       **POST-FIX VALIDATION RESULTS:**
-       
-       ✅ **LOGIN ENDPOINT WORKING:**
-       - **Credentials:** demo@hotel.com / demo123
-       - **Response Time:** 328.7ms
+       ✅ **PMS LITE LOGIN VALIDATION:**
+       - **Credentials:** pmslite-e2e@testhotel.com / testpass123
+       - **Response Time:** 249.8ms
        - **HTTP Status:** 200 ✅
-       - **Tenant ID:** 5414b50e-d20a-4d60-b4a8-d89b1c9afb6d
-       - **Property Name:** Demo Hotel
+       - **User Role:** admin
+       
+       **CRITICAL FINDINGS - LOGIN RESPONSE STRUCTURE:**
+       
+       ✅ **subscription_plan Field:**
+       - **Present:** ✅ YES
+       - **Value:** "pms_lite" (correct)
+       - **Type:** string
+       
+       ✅ **features Field:**
+       - **Present:** ✅ YES  
+       - **Type:** dict (object)
+       - **Total Features:** 32
+       
+       ✅ **PMS Lite Specific Features (All Boolean):**
+       - **dashboard:** true ✅
+       - **pms:** true ✅
+       - **reservation_calendar:** true ✅
+       - **reports_lite:** true ✅
+       - **settings_lite:** true ✅
+       
+       **COMPARISON WITH DEMO TENANT:**
+       
+       ✅ **Demo Tenant (demo@hotel.com):**
+       - **subscription_plan:** "professional"
+       - **features:** 32 total (11 enabled, 21 disabled)
+       - **Structure:** Identical to PMS Lite
+       
+       **VALIDATION SUMMARY:**
+       
+       🎉 **RESULT: 100% SUCCESSFUL VALIDATION**
+       
+       **JSON Response Structure Confirmed:**
+       ```json
+       {
+         "plan": "pms_lite",
+         "hasFeatures": true,
+         "sampleFeatures": {
+           "dashboard": true,
+           "pms": true,
+           "reservation_calendar": true,
+           "reports_lite": true,
+           "settings_lite": true
+         }
+       }
+       ```
+       
+       **KEY VALIDATION POINTS:**
+       1. ✅ subscription_plan field exists in login response
+       2. ✅ subscription_plan value is "pms_lite" for PMS Lite tenants
+       3. ✅ features field contains boolean values for all keys
+       4. ✅ PMS Lite features (dashboard, pms, reservation_calendar, reports_lite, settings_lite) are all enabled (true)
+       5. ✅ Response structure is consistent across different tenant types
+       
+       **BUSINESS IMPACT:**
+       - PMS Lite tenant creation and authentication working perfectly
+       - Feature-based access control properly implemented
+       - Login response provides all necessary tenant configuration data
+       - Frontend can reliably determine available features based on boolean flags
        
        ✅ **TENANT STRUCTURE VALIDATED:**
        - **Subscription Plan:** core_small_hotel

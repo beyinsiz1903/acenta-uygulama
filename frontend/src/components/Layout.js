@@ -139,7 +139,7 @@ const Layout = ({ children, user, tenant, onLogout, currentModule }) => {
                     }`}
                     data-testid={`nav-${item.id}`}
                   >
-                    <Icon className="w-3.5 h-3.5" />
+                    {Icon ? <Icon className="w-3.5 h-3.5" /> : null}
                     <span className="font-medium">{item.name}</span>
                   </Button>
                 );
@@ -220,7 +220,7 @@ const Layout = ({ children, user, tenant, onLogout, currentModule }) => {
                     }}
                     className="w-full justify-start flex items-center space-x-2"
                   >
-                    <Icon className="w-4 h-4" />
+                    {Icon ? <Icon className="w-4 h-4" /> : null}
                     <span>{item.name}</span>
                   </Button>
                 );

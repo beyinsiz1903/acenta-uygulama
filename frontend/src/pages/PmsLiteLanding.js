@@ -300,6 +300,55 @@ const PmsLiteLanding = () => {
             </CardContent>
           </Card>
         </section>
+
+        {/* Success Message */}
+        {lastLead && (
+          <section className="space-y-4">
+            <Card className="bg-slate-900/80 border-slate-700">
+              <CardHeader>
+                <div className="flex items-center justify-between gap-2">
+                  <CardTitle className="text-sm">Talebiniz alındı</CardTitle>
+                  {lastLead.deduped && (
+                    <span className="inline-flex items-center rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-medium text-amber-300 border border-amber-500/30">
+                      Daha önce alındı
+                    </span>
+                  )}
+                </div>
+                <CardDescription className="text-xs text-slate-400">
+                  Aşağıdaki mesajı WhatsApp üzerinden de gönderebilirsiniz.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="bg-slate-950/50 p-3 rounded-md border border-slate-700">
+                  <pre className="text-xs text-slate-300 whitespace-pre-wrap font-mono">
+                    {lastLead.message}
+                  </pre>
+                </div>
+                <div className="flex gap-2 mt-3">
+                  <Button
+                    size="sm"
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                    onClick={() => {
+                      const phone = "+905555555555";
+                      const text = encodeURIComponent(lastLead.message);
+                      window.open(`https://wa.me/${phone}?text=${text}`, "_blank");
+                    }}
+                  >
+                    WhatsApp'a Gönder
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="border-slate-600 text-slate-300 hover:bg-slate-800"
+                    onClick={() => setLastLead(null)}
+                  >
+                    Kapat
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </section>
+        )}
       </div>
     </div>
   );

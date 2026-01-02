@@ -1,6 +1,7 @@
 import { useState, useEffect, Suspense, lazy } from "react";
 import "@/App.css";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import PlanRouteGuard from "@/components/PlanRouteGuard";
 import axios from "axios";
 import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';

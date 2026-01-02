@@ -436,6 +436,7 @@ function App() {
               )
             }
           />
+          <Route path="/pms-lite" element={<PmsLiteLanding />} />
           <Route
             path="/gm-classic"
             element={

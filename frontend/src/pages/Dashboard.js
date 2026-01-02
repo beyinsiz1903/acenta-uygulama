@@ -1047,6 +1047,12 @@ const Dashboard = ({ user, tenant, modules, onLogout }) => {
                 ))}
               </Accordion>
             </div>
+          </>
+        )}
+      </div>
+    </Layout>
+  );
+};
 
 const DashboardLite = ({ user, tenant, stats }) => {
   return (

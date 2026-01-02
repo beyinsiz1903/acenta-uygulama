@@ -66,32 +66,6 @@ const Layout = ({ children, user, tenant, onLogout, currentModule }) => {
     }
   }, [currentModule]);
 
-  const navigation = [
-    { name: t('nav.dashboard'), path: '/', icon: Home, id: 'dashboard' },
-    { name: t('nav.pms'), path: '/pms', icon: Hotel, id: 'pms', moduleKey: 'pms' },
-    { name: 'Calendar', path: '/reservation-calendar', icon: Calendar, id: 'calendar', moduleKey: 'pms' },
-    { name: 'Acenta Talepleri', path: '/agency-requests', icon: Building2, id: 'agency-requests', moduleKey: 'pms', badge: true },
-    { name: t('nav.invoices'), path: '/invoices', icon: FileText, id: 'invoices', moduleKey: 'invoices' },
-    { name: 'Pending AR', path: '/pending-ar', icon: DollarSign, id: 'pending-ar', moduleKey: 'invoices' },
-    { name: 'Cost Management', path: '/cost-management', icon: TrendingUp, id: 'cost-management', moduleKey: 'invoices' },
-    { name: 'Reports', path: '/reports', icon: FileText, id: 'reports', moduleKey: 'reports' },
-    { name: t('nav.rms'), path: '/rms', icon: TrendingUp, id: 'rms', moduleKey: 'pms' },
-    { name: 'Housekeeping', path: '/housekeeping', icon: Home, id: 'housekeeping', moduleKey: 'pms' },
-    { name: 'Maintenance', path: '/maintenance/work-orders', icon: Wrench, id: 'maintenance', moduleKey: 'pms' },
-    { name: 'F&B', path: '/fnb-complete', icon: ChefHat, id: 'fnb', moduleKey: 'pms' },
-    { name: 'POS Restaurant', path: '/pos', icon: ShoppingCart, id: 'pos', moduleKey: 'pms' },
-    { name: 'Channel Manager', path: '/channel-manager', icon: Network, id: 'channel-manager', moduleKey: 'pms' },
-    { name: t('nav.loyalty'), path: '/loyalty', icon: Award, id: 'loyalty', moduleKey: 'pms' },
-    { name: t('nav.marketplace'), path: '/marketplace', icon: ShoppingCart, id: 'marketplace', moduleKey: 'pms' },
-    { name: '⚙️ Settings', path: '/settings', icon: SettingsIcon, id: 'settings' },
-    // SADECE SUPER_ADMIN için - Platform yönetimi
-    { name: '👥 User Role Yönetimi', path: '/admin/user-roles', icon: SettingsIcon, id: 'admin-user-roles', requireSuperAdmin: true },
-    { name: '🏢 Admin - Modül Yönetimi', path: '/admin/tenants', icon: SettingsIcon, id: 'admin-tenants', requireSuperAdmin: true },
-    { name: '📊 Admin - Modül Raporu', path: '/admin/module-report', icon: SettingsIcon, id: 'admin-module-report', requireSuperAdmin: true },
-    { name: '✨ New Features', path: '/features', icon: Award, id: 'features', highlight: true },
-    { name: '📱 Mobile App', path: '/mobile', icon: Smartphone, id: 'mobile', highlight: true, moduleKey: 'pms_mobile' },
-  ];
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Header */}

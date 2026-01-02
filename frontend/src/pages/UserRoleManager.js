@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 
-const UserRoleManager = ({ user, tenant, onLogout }) => {
+const UserRoleManager = ({ user, tenant, onLogout, roleOptions }) => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);

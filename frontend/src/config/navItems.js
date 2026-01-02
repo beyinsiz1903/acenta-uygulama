@@ -5,31 +5,31 @@ export const NAV_ITEMS = [
   {
     key: "dashboard",
     label: "Dashboard",
-    path: "/dashboard",
+    path: "/app/dashboard",
     feature: "dashboard",
   },
   {
     key: "reservation_calendar",
     label: "Takvim",
-    path: "/reservation-calendar",
+    path: "/app/reservation-calendar",
     feature: "reservation_calendar",
   },
   {
     key: "pms",
     label: "PMS",
-    path: "/pms",
+    path: "/app/pms",
     feature: "pms",
   },
   {
     key: "reports",
     label: "Raporlar",
-    path: "/reports",
+    path: "/app/reports",
     feature: "reports_lite",
   },
   {
     key: "settings",
     label: "Ayarlar",
-    path: "/settings",
+    path: "/app/settings",
     feature: "settings_lite",
   },
 

@@ -1422,6 +1422,91 @@ agent_communication:
 
    -agent: "testing"
    -message: |
+       🚨 PREVIEW ENVIRONMENT BACKEND SERVICE DOWN - CRITICAL INFRASTRUCTURE FAILURE ❌
+       
+       **TEST OBJECTIVE:** Test /auth/login endpoint in preview environment with demo@hotel.com credentials
+       **BASE URL:** https://mimari-analiz.preview.emergentagent.com/api
+       **DATE:** January 2, 2026
+       **TIME:** 21:50 UTC
+       
+       **CRITICAL INFRASTRUCTURE FAILURE IDENTIFIED:**
+       
+       ❌ **BACKEND SERVICE COMPLETELY DOWN:**
+       - **Frontend Status:** ✅ Working (HTTP 200) - Landing page accessible
+       - **Backend API Status:** ❌ FAILED (HTTP 520) - All API endpoints returning "Web server returned an unknown error"
+       - **Health Check:** ❌ FAILED - /api/health returns HTTP 520
+       - **Auth Endpoint:** ❌ FAILED - /api/auth/login returns HTTP 520
+       
+       **DETAILED TEST RESULTS:**
+       
+       ❌ **LOGIN TEST FAILURE:**
+       - **URL:** https://mimari-analiz.preview.emergentagent.com/api/auth/login
+       - **Method:** POST
+       - **Body:** {"email": "demo@hotel.com", "password": "demo123"}
+       - **Expected:** HTTP 200 with user/tenant data
+       - **Actual:** HTTP 520 "Web server returned an unknown error"
+       - **Response Time:** 17.9ms (fast failure)
+       
+       **CONNECTIVITY ANALYSIS:**
+       
+       ✅ **WORKING COMPONENTS:**
+       - Landing Page: HTTP 200 (39.1ms) - Frontend service operational
+       - SSL Certificate: Valid (*.preview.emergentagent.com)
+       - DNS Resolution: Working (34.107.197.154)
+       - Network Connectivity: Established
+       
+       ❌ **FAILED COMPONENTS:**
+       - API Health Check: HTTP 520 (8.3ms)
+       - Auth Login Endpoint: HTTP 520 (17.9ms)
+       - All /api/* routes: HTTP 520 errors
+       
+       **ROOT CAUSE ANALYSIS:**
+       
+       🔍 **HTTP 520 Error Indicates:**
+       - Backend service (FastAPI) is not responding
+       - Web server (nginx/proxy) cannot connect to backend
+       - Possible causes:
+         * Backend service crashed or stopped
+         * Database connection failure
+         * Container/pod restart loop
+         * Resource exhaustion (memory/CPU)
+         * Configuration error in deployment
+       
+       **BUSINESS IMPACT:**
+       
+       🚨 **CRITICAL SEVERITY:**
+       - **Complete API Unavailability:** No backend functionality accessible
+       - **Authentication Broken:** Users cannot login to the system
+       - **Hotel Operations Blocked:** All PMS functionality unavailable
+       - **Demo Environment Down:** Cannot demonstrate system to clients
+       - **Testing Blocked:** All backend testing impossible
+       
+       **IMMEDIATE ACTION REQUIRED:**
+       
+       1. **INFRASTRUCTURE TEAM ALERT:** Backend service needs immediate investigation
+       2. **SERVICE RESTART:** Attempt to restart backend containers/pods
+       3. **LOG ANALYSIS:** Check backend service logs for crash/error details
+       4. **RESOURCE CHECK:** Verify CPU/memory/disk resources
+       5. **DATABASE CONNECTIVITY:** Verify MongoDB connection
+       6. **DEPLOYMENT ROLLBACK:** Consider rolling back to last working version
+       
+       **TESTING STATUS:**
+       
+       ❌ **CANNOT COMPLETE REQUESTED TEST:**
+       - Login flow testing impossible due to backend service failure
+       - Unable to verify user.email, user.role, tenant.subscription_plan
+       - All API endpoints returning infrastructure errors
+       
+       **FINAL ASSESSMENT:**
+       
+       🚨 **RESULT: PREVIEW ENVIRONMENT COMPLETELY BROKEN - BACKEND SERVICE DOWN**
+       
+       The preview environment is currently unusable due to complete backend service failure. All API endpoints are returning HTTP 520 errors, indicating the FastAPI backend service is not responding. This is a critical infrastructure issue that requires immediate attention from the deployment/DevOps team.
+       
+       **RECOMMENDATION:** Fix backend service deployment before attempting any further testing.
+
+   -agent: "testing"
+   -message: |
        🎯 PMS LITE TENANT LOGIN RESPONSE VALIDATION COMPLETED - COMPREHENSIVE SUCCESS ✅
        
        **TEST OBJECTIVE:** Validate subscription_plan and features fields in login response for PMS Lite tenant

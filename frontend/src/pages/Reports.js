@@ -27,6 +27,7 @@ import {
   X,
   Trash2
 } from 'lucide-react';
+import { normalizeFeatures } from '@/utils/featureFlags';
 
 const Reports = ({ user, tenant, onLogout }) => {
   const [loading, setLoading] = useState(false);
@@ -34,6 +35,16 @@ const Reports = ({ user, tenant, onLogout }) => {
   const [selectedReports, setSelectedReports] = useState([]);
   const [showSelector, setShowSelector] = useState(false);
   const [activeSection, setActiveSection] = useState('excel'); // 'excel' | 'night_audit'
+
+  const plan =
+    tenant?.subscription_plan ||
+    tenant?.plan ||
+    tenant?.subscription_tier ||
+    'core_small_hotel';
+
+  const isLite = plan === 'pms_lite';
+  const features = normalizeFeatures(tenant?.features || {});
+  const isReportsLite = !!features.reports_lite || isLite;
 
   // All available reports
   const availableReports = [

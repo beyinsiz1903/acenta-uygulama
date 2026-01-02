@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Backend API Test for Login Response Tenant Features
-Testing tenant.subscription_plan and tenant.features structure
+Auth Login Flow Test - Turkish Request
+Testing POST /auth/login endpoint for preview backend status
 """
 
 import asyncio
@@ -16,9 +16,9 @@ TEST_CREDENTIALS = {
     "password": "demo123"
 }
 
-async def test_login_tenant_features():
-    """Test login endpoint and analyze tenant.features structure"""
-    print("🔐 TESTING LOGIN RESPONSE TENANT FEATURES")
+async def test_auth_login():
+    """Test auth login endpoint as requested in Turkish"""
+    print("🔐 AUTH LOGIN AKIŞI TEST - PREVIEW BACKEND DURUMU")
     print("=" * 60)
     
     async with aiohttp.ClientSession() as session:

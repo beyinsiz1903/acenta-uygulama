@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { TabsContent } from '@/components/ui/tabs';
 import { Home, Plus } from 'lucide-react';
 import VirtualizedBookingList from '@/components/VirtualizedBookingList';
+import LiteSetupBanner from '@/components/LiteSetupBanner';
+import { useNavigate } from 'react-router-dom';
 
 /**
  * Bookings tab content extracted from PMSModule.

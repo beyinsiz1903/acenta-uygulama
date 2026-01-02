@@ -78,4 +78,10 @@ export const NAV_ITEMS = [
     path: "/app/marketplace",
     feature: "marketplace",
   },
+  {
+    key: "admin_leads",
+    label: "Leads",
+    path: "/app/admin/leads",
+    requireSuperAdmin: true,
+  },
 ];

@@ -1,6 +1,14 @@
 // Central navigation configuration for main sidebar/top nav
 // Each item is controlled by a feature flag key coming from normalized tenant.features
 
+export const PMS_LITE_NAV_KEYS = new Set([
+  'dashboard',
+  'reservation_calendar',
+  'pms',
+  'reports',
+  'settings',
+]);
+
 export const NAV_ITEMS = [
   {
     key: "dashboard",

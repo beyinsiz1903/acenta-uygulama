@@ -180,21 +180,21 @@ const Settings = ({ user, tenant, onLogout }) => {
             <CardContent className="space-y-3">
               <div>
                 <Label>Otel Adı</Label>
-                <Input value={tenant?.property_name || ''} disabled />
+                <Input value={tenant?.property_name || ''} readOnly />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
                   <Label>Telefon</Label>
-                  <Input value={tenant?.phone || ''} disabled />
+                  <Input value={tenant?.phone || ''} readOnly />
                 </div>
                 <div>
                   <Label>E-posta</Label>
-                  <Input value={tenant?.email || ''} disabled />
+                  <Input value={tenant?.email || ''} readOnly />
                 </div>
               </div>
               <div>
                 <Label>Adres</Label>
-                <Input value={tenant?.address || ''} disabled />
+                <Input value={tenant?.address || ''} readOnly />
               </div>
             </CardContent>
           </Card>

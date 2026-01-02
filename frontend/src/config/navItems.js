@@ -41,24 +41,41 @@ export const NAV_ITEMS = [
     feature: "settings_lite",
   },
 
-  // Full / advanced modules (examples). These will be visible only if corresponding
-  // normalized feature flag is true for the tenant.
+  // FULL MODÜLLER (Lite'ta gizli kalacak)
+  {
+    key: "invoices",
+    label: "Fatura",
+    path: "/app/invoices",
+    feature: "invoices",
+  },
+  {
+    key: "cost_management",
+    label: "Cost Management",
+    path: "/app/cost-management",
+    feature: "cost_management",
+  },
+  {
+    key: "channel_manager",
+    label: "Channel Manager",
+    path: "/app/channel-manager",
+    feature: "channel_manager",
+  },
   {
     key: "rms",
     label: "RMS",
-    path: "/rms",
+    path: "/app/rms",
     feature: "rms",
   },
   {
     key: "ai",
     label: "AI",
-    path: "/ai",
+    path: "/app/ai",
     feature: "ai",
   },
   {
     key: "marketplace",
     label: "Marketplace",
-    path: "/marketplace",
+    path: "/app/marketplace",
     feature: "marketplace",
   },
 ];

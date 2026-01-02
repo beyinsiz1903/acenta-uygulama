@@ -57,7 +57,16 @@ export default function PmsLiteOnboarding({ tenant }) {
       n: 1,
       title: "Oda Ekleyin",
       desc: "İlk kurulum için oda(lar)ınızı ekleyin.",
-      primary: { label: "Odalara Git", action: () => navigate("/app/pms#rooms") },
+      primary: {
+        label: "Hızlı / Çoklu Oda Ekle",
+        action: () => {
+          const tenantId = tenant?.id || tenant?._id || tenant?.tenant_id || "unknown";
+          if (typeof window !== "undefined" && typeof window.localStorage !== "undefined") {
+            window.localStorage.setItem(`pms_open_dialog_once:${tenantId}`, "bulk-rooms");
+          }
+          navigate("/app/pms#rooms");
+        },
+      },
     },
     {
       n: 2,

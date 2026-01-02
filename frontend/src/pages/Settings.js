@@ -12,6 +12,15 @@ import { Settings as SettingsIcon, Mail, MessageSquare, Phone, Key, AlertCircle,
 import { normalizeFeatures } from '@/utils/featureFlags';
 
 const Settings = ({ user, tenant, onLogout }) => {
+  const plan =
+    tenant?.subscription_plan ||
+    tenant?.plan ||
+    tenant?.subscription_tier ||
+    'core_small_hotel';
+
+  const isLite = plan === 'pms_lite';
+  const features = normalizeFeatures(tenant?.features || {});
+
   const [integrations, setIntegrations] = useState({
     sendgrid: { enabled: false, api_key: '' },
     twilio: { enabled: false, account_sid: '', auth_token: '', phone_number: '' },

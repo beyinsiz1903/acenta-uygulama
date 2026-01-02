@@ -1059,6 +1059,8 @@ const Dashboard = ({ user, tenant, modules, onLogout }) => {
 };
 
 const DashboardLite = ({ user, tenant, stats }) => {
+  const navigate = useNavigate();
+
   return (
     <Layout user={user} tenant={tenant} onLogout={() => {}} currentModule="dashboard">
       <div className="p-4 md:p-6 space-y-4">

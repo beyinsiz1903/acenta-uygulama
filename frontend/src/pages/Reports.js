@@ -204,7 +204,7 @@ const Reports = ({ user, tenant, onLogout }) => {
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold text-gray-900">%--</div>
-                <p className="mt-1 text-xs text-gray-500">Bu versiyonda özet metrikler gösterilir.</p>
+                <p className="mt-1 text-xs text-gray-500">Bu ekranda özet metrikler gösterilir.</p>
               </CardContent>
             </Card>
 
@@ -215,7 +215,7 @@ const Reports = ({ user, tenant, onLogout }) => {
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold text-gray-900">₺--</div>
-                <p className="mt-1 text-xs text-gray-500">Detaylı kırılımlar full paketlerde mevcuttur.</p>
+                <p className="mt-1 text-xs text-gray-500">Detaylı kırılımlar ileride eklenebilir.</p>
               </CardContent>
             </Card>
 
@@ -226,7 +226,7 @@ const Reports = ({ user, tenant, onLogout }) => {
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold text-gray-900">%--</div>
-                <p className="mt-1 text-xs text-gray-500">Gelişmiş raporlar için üst pakete geçebilirsiniz.</p>
+                <p className="mt-1 text-xs text-gray-500">Bu alanda daha fazla detay daha sonra eklenebilir.</p>
               </CardContent>
             </Card>
 
@@ -237,7 +237,7 @@ const Reports = ({ user, tenant, onLogout }) => {
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold text-gray-900">₺--</div>
-                <p className="mt-1 text-xs text-gray-500">Muhasebe / AR raporları full paketlerde yer alır.</p>
+                <p className="mt-1 text-xs text-gray-500">Muhasebe / AR raporları burada gösterilmiyor.</p>
               </CardContent>
             </Card>
           </div>

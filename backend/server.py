@@ -50031,16 +50031,21 @@ async def create_public_pms_lite_lead(request: PmsLiteLeadCreateRequest, user_ag
     now = datetime.now(timezone.utc)
     five_minutes_ago = now - timedelta(minutes=5)
 
-    # Reuse same lead if same phone & source in last 5 minutes
+    # Reuse same lead if same phone + property_name + source in last 5 minutes
     existing = await db.leads.find_one(
         {
             "contact.phone": phone,
+            "hotel.property_name": request.hotel.property_name.strip(),
             "source": "pms_lite_landing",
             "created_at": {"$gte": five_minutes_ago.isoformat()},
         }
     )
     if existing:
-        return {"ok": True, "lead_id": existing.get("lead_id") or existing.get("id")}
+        return {
+            "ok": True,
+            "lead_id": existing.get("lead_id") or existing.get("id"),
+            "deduped": True,
+        }
 
     lead_uuid = str(uuid.uuid4())
 

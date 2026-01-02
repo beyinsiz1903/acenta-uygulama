@@ -75,6 +75,13 @@ export default function PmsLiteOnboarding({ tenant }) {
 
   const current = steps.find((s) => s.n === step) || steps[0];
 
+  const roomsDone = status.rooms_count > 0;
+  const bookingsDone = status.bookings_count > 0;
+
+  if (!loading && roomsDone && bookingsDone && done) {
+    return null;
+  }
+
   return (
     <div className="mb-6">
       <Card className="rounded-2xl">

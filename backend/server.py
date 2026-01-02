@@ -49975,6 +49975,183 @@ async def update_lead_stage(
     }
 
 
+# ========== PMS LITE MARKETING LEADS ==========
+
+class PmsLiteLeadStatus(str, Enum):
+    NEW = "new"
+    CONTACTED = "contacted"
+    QUALIFIED = "qualified"
+    LOST = "lost"
+    WON = "won"
+
+
+class PmsLiteLeadContact(BaseModel):
+    full_name: str
+    phone: str
+    email: Optional[EmailStr] = None
+
+
+class PmsLiteLeadHotel(BaseModel):
+    property_name: str
+    location: Optional[str] = None
+    rooms_count: conint(ge=1, le=200)
+
+
+class PmsLiteLeadMetadata(BaseModel):
+    utm_source: Optional[str] = None
+    utm_medium: Optional[str] = None
+    utm_campaign: Optional[str] = None
+    user_agent: Optional[str] = None
+    ip: Optional[str] = None
+
+
+class PmsLiteLeadCreateRequest(BaseModel):
+    contact: PmsLiteLeadContact
+    hotel: PmsLiteLeadHotel
+    metadata: Optional[PmsLiteLeadMetadata] = None
+
+
+class PmsLiteLeadAdminUpdateRequest(BaseModel):
+    status: Optional[PmsLiteLeadStatus] = None
+    note: Optional[str] = None
+
+
+@api_router.post("/leads")
+async def create_public_pms_lite_lead(request: PmsLiteLeadCreateRequest, user_agent: Optional[str] = Header(None), x_forwarded_for: Optional[str] = Header(None)):
+    """Public endpoint for PMS Lite landing leads (no auth).
+
+    Idempotent for same phone within 5 minutes.
+    """
+    from datetime import timedelta
+
+    phone = request.contact.phone.strip()
+    if not phone:
+        raise HTTPException(status_code=400, detail="Phone is required")
+
+    now = datetime.now(timezone.utc)
+    five_minutes_ago = now - timedelta(minutes=5)
+
+    # Reuse same lead if same phone & source in last 5 minutes
+    existing = await db.leads.find_one(
+        {
+            "contact.phone": phone,
+            "source": "pms_lite_landing",
+            "created_at": {"$gte": five_minutes_ago.isoformat()},
+        }
+    )
+    if existing:
+        return {"ok": True, "lead_id": existing.get("lead_id") or existing.get("id")}
+
+    lead_uuid = str(uuid.uuid4())
+
+    meta = request.metadata or PmsLiteLeadMetadata()
+    # Fill headers if not provided
+    if user_agent and not meta.user_agent:
+        meta.user_agent = user_agent
+    if x_forwarded_for and not meta.ip:
+        meta.ip = x_forwarded_for.split(",")[0].strip()
+
+    doc = {
+        "id": lead_uuid,
+        "lead_id": lead_uuid,
+        "created_at": now.isoformat(),
+        "source": "pms_lite_landing",
+        "status": PmsLiteLeadStatus.NEW.value,
+        "note": None,
+        "contact": request.contact.model_dump(),
+        "hotel": request.hotel.model_dump(),
+        "metadata": meta.model_dump(),
+    }
+
+    await db.leads.insert_one(doc)
+
+    return {"ok": True, "lead_id": lead_uuid}
+
+
+@api_router.get("/admin/leads")
+async def admin_list_pms_lite_leads(
+    status: Optional[PmsLiteLeadStatus] = None,
+    q: Optional[str] = None,
+    limit: int = 50,
+    offset: int = 0,
+    current_user: User = Depends(get_current_user),
+):
+    """List PMS Lite marketing leads for super admin."""
+    if current_user.role != UserRole.SUPER_ADMIN:
+        raise HTTPException(status_code=403, detail="Only super_admin can access leads")
+
+    query: Dict[str, Any] = {"source": "pms_lite_landing"}
+    if status:
+        query["status"] = status.value
+
+    if q:
+        regex = {"$regex": q, "$options": "i"}
+        query["$or"] = [
+            {"contact.full_name": regex},
+            {"contact.phone": regex},
+            {"contact.email": regex},
+            {"hotel.property_name": regex},
+            {"hotel.location": regex},
+        ]
+
+    total = await db.leads.count_documents(query)
+
+    cursor = (
+        db.leads.find(query)
+        .sort("created_at", -1)
+        .skip(max(offset, 0))
+        .limit(max(limit, 1))
+    )
+
+    leads: List[Dict[str, Any]] = []
+    async for lead in cursor:
+        leads.append(
+            {
+                "lead_id": lead.get("lead_id") or lead.get("id"),
+                "created_at": lead.get("created_at"),
+                "status": lead.get("status", PmsLiteLeadStatus.NEW.value),
+                "note": lead.get("note"),
+                "full_name": lead.get("contact", {}).get("full_name"),
+                "phone": lead.get("contact", {}).get("phone"),
+                "email": lead.get("contact", {}).get("email"),
+                "property_name": lead.get("hotel", {}).get("property_name"),
+                "location": lead.get("hotel", {}).get("location"),
+                "rooms_count": lead.get("hotel", {}).get("rooms_count"),
+            }
+        )
+
+    return {"leads": leads, "count": total}
+
+
+@api_router.patch("/admin/leads/{lead_id}")
+async def admin_update_pms_lite_lead(
+    lead_id: str,
+    payload: PmsLiteLeadAdminUpdateRequest,
+    current_user: User = Depends(get_current_user),
+):
+    """Update status/note of a PMS Lite marketing lead (super_admin only)."""
+    if current_user.role != UserRole.SUPER_ADMIN:
+        raise HTTPException(status_code=403, detail="Only super_admin can update leads")
+
+    update: Dict[str, Any] = {}
+    if payload.status is not None:
+        update["status"] = payload.status.value
+    if payload.note is not None:
+        update["note"] = payload.note
+
+    if not update:
+        return {"ok": True}
+
+    result = await db.leads.update_one(
+        {"lead_id": lead_id, "source": "pms_lite_landing"}, {"$set": update}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Lead not found")
+
+    return {"ok": True, "lead_id": lead_id}
+
+
+
 # 6. GET /api/sales/follow-ups - Follow-up reminders
 @api_router.get("/sales/follow-ups")
 async def get_follow_ups(

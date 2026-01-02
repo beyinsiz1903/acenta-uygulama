@@ -208,11 +208,10 @@ const Settings = ({ user, tenant, onLogout }) => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-gray-500">
-                Bu sürümde kullanıcı rolleri sadeleştirilmiştir. Detaylı rol yönetimi üst paketlerde
-                değerlendirilir.
+              <p className="text-sm text-gray-500 mb-3">
+                Roller bu sürümde sade tutulmuştur.
               </p>
-              {/* Mevcut kullanıcı yönetimi UI’niz burada daha sonra bağlanabilir */}
+              {/* Kullanıcı yönetimi bileşeni buraya bağlanacak */}
             </CardContent>
           </Card>
 

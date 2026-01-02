@@ -1512,6 +1512,95 @@ agent_communication:
 
    -agent: "testing"
    -message: |
+       🏨 ADMIN TENANT CREATE SUBSCRIPTION_PLAN VALIDATION COMPLETED ✅
+       
+       **TEST OBJECTIVE:** Validate /admin/tenants endpoint subscription_plan field support
+       **BASE URL:** https://mimari-analiz.preview.emergentagent.com/api
+       **DATE:** January 2, 2026
+       
+       **COMPREHENSIVE TEST RESULTS:**
+       
+       ✅ **AUTHENTICATION SUCCESSFUL:**
+       - **Credentials:** demo@hotel.com / demo123 (admin role)
+       - **Access Level:** Successfully accessed /admin/tenants endpoint
+       - **No super_admin requirement issue**
+       
+       ✅ **SUBSCRIPTION_PLAN FIELD ACCEPTANCE:**
+       - **HTTP Status:** 200 (tenant creation successful)
+       - **No 422 Validation Errors:** subscription_plan field accepted by API
+       - **TenantRegister Model:** Properly includes subscription_plan: Optional[str] field
+       - **API Endpoint:** /admin/tenants accepts subscription_plan: "pms_lite" without errors
+       
+       ✅ **BACKEND CODE VERIFICATION:**
+       - **TenantRegister Model (Line 1544):** subscription_plan: Optional[str] = None
+       - **Create Endpoint (Line 32441):** subscription_plan=normalized_plan assignment
+       - **Field Processing:** payload.subscription_plan properly handled in creation logic
+       
+       ⚠️ **STORAGE LIMITATION IDENTIFIED:**
+       - **Tenant Model Issue:** model_config = ConfigDict(extra="ignore") on line 1487
+       - **Result:** subscription_plan field accepted but not stored in database
+       - **Fallback Behavior:** Value defaults to plan: "core_small_hotel"
+       - **Database Verification:** Created tenants show subscription_plan: null, plan: "core_small_hotel"
+       
+       **TECHNICAL FINDINGS:**
+       
+       🔍 **Root Cause Analysis:**
+       1. **TenantRegister Model:** ✅ Accepts subscription_plan field
+       2. **API Validation:** ✅ No 422 errors generated
+       3. **Endpoint Logic:** ✅ Processes subscription_plan value
+       4. **Tenant Model:** ❌ ConfigDict(extra="ignore") drops the field
+       5. **Database Storage:** ❌ subscription_plan not persisted
+       
+       **TEST EVIDENCE:**
+       
+       ✅ **API Acceptance Test:**
+       ```json
+       POST /admin/tenants
+       {
+         "property_name": "Test Hotel",
+         "subscription_plan": "pms_lite"
+       }
+       Response: HTTP 200 (Success)
+       ```
+       
+       ✅ **Database Verification:**
+       ```json
+       GET /admin/tenants
+       {
+         "tenants": [
+           {
+             "id": "17c7fae3-d9bd-4f60-8cf7-6a90a51786a0",
+             "property_name": "PMS Lite Hotel",
+             "subscription_plan": null,
+             "plan": "core_small_hotel"
+           }
+         ]
+       }
+       ```
+       
+       **FINAL ASSESSMENT:**
+       
+       ❓ **subscription_plan alanı backend tarafından kabul ediliyor mu?**
+       ✅ **EVET** - subscription_plan alanı API tarafından kabul ediliyor
+       
+       ❓ **422 validation hatası üretiyor mu?**
+       ✅ **HAYIR** - subscription_plan için 422 hatası üretmiyor
+       
+       **BUSINESS IMPACT:**
+       - ✅ API endpoint subscription_plan field'ını kabul ediyor
+       - ✅ Validation errors yok, model tarafından tanınıyor
+       - ⚠️ Database'de saklanmıyor (Tenant model konfigürasyonu nedeniyle)
+       - ⚠️ Değer plan field'ına fallback yapıyor
+       
+       **RECOMMENDATION:**
+       To fully support subscription_plan storage, the Tenant model needs to be updated to include:
+       ```python
+       subscription_plan: Optional[str] = None
+       ```
+       And change ConfigDict from "ignore" to "allow" or explicitly include the field.
+
+   -agent: "testing"
+   -message: |
        🔐 AUTH LOGIN FLOW TESTING COMPLETED - PRODUCTION READY ✅
        
        **TEST OBJECTIVE:** Test the auth login flow on the running backend for preview environment

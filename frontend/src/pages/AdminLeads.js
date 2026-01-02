@@ -84,7 +84,41 @@ const AdminLeads = ({ user, tenant, onLogout }) => {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm">Filtreler</CardTitle>
+            <CardTitle className="text-sm flex items-center justify-between">
+              <span>Filtreler</span>
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs"
+                onClick={async () => {
+                  try {
+                    const params = new URLSearchParams();
+                    if (statusFilter) params.append("status", statusFilter);
+                    if (search) params.append("q", search);
+                    const qs = params.toString();
+                    const res = await fetch(`/api/admin/leads/export.csv${qs ? `?${qs}` : ""}`);
+                    if (!res.ok) {
+                      toast.error("CSV indirilemedi");
+                      return;
+                    }
+                    const blob = await res.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = "pms-lite-leads.csv";
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    window.URL.revokeObjectURL(url);
+                  } catch (e) {
+                    console.error(e);
+                    toast.error("CSV indirilemedi");
+                  }
+                }}
+              >
+                CSV indir
+              </Button>
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="grid md:grid-cols-3 gap-3">

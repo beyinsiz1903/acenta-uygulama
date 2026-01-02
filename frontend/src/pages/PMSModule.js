@@ -192,6 +192,39 @@ const PMSModule = ({ user, tenant, onLogout }) => {
     }
   }, [isLite, tenant, activeTab]);
 
+  // Apply first booking prefill for Lite when booking dialog opens
+  useEffect(() => {
+    if (!isLite) return;
+    if (openDialog !== 'booking') return;
+    if (typeof window === 'undefined' || typeof window.localStorage === 'undefined') return;
+
+    const tenantId = tenant?.id || tenant?._id || tenant?.tenant_id || 'unknown';
+    const key = `pms_booking_prefill:${tenantId}`;
+    const raw = window.localStorage.getItem(key);
+    if (!raw) return;
+
+    try {
+      const p = JSON.parse(raw);
+      if (p.mode && p.mode !== 'lite_first_booking') return;
+
+      const today = new Date();
+      const tomorrow = new Date();
+      tomorrow.setDate(today.getDate() + 1);
+      const fmt = (d) => d.toISOString().split('T')[0];
+
+      setNewBooking((prev) => ({
+        ...prev,
+        check_in: fmt(today),
+        check_out: fmt(tomorrow),
+        adults: prev?.adults || 2,
+      }));
+
+      window.localStorage.removeItem(key);
+    } catch (e) {
+      console.warn('Failed to apply booking prefill', e);
+    }
+  }, [isLite, tenant, openDialog]);
+
   const [newRoom, setNewRoom] = useState({
     room_number: '',
     room_type: 'standard',

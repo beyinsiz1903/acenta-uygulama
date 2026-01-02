@@ -154,17 +154,38 @@ async def test_auth_login():
 
 async def main():
     """Main test execution"""
-    print("🏨 HOTEL PMS LOGIN TENANT FEATURES TEST")
+    print("🏨 HOTEL PMS AUTH LOGIN TEST - PREVIEW BACKEND DURUMU")
     print(f"🌐 Base URL: {BASE_URL}")
-    print(f"📅 Test Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"📅 Test Tarihi: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print()
+    print("🎯 HEDEF: Preview backend tekrar ayakta mı, login başarılı mı?")
+    print("📋 Döndürülecek Alanlar:")
+    print("   - HTTP status")
+    print("   - user.email")
+    print("   - user.role") 
+    print("   - tenant.subscription_plan")
     print()
     
     # Run the test
-    result = await test_login_tenant_features()
+    result = await test_auth_login()
     
     print("\n" + "=" * 60)
-    print("🎯 FINAL RESULT:")
-    print(json.dumps(result, indent=2))
+    print("🎯 FİNAL SONUÇ:")
+    
+    if result.get("status") == "success":
+        print("✅ PREVIEW BACKEND ÇALIŞIYOR!")
+        print("✅ LOGIN BAŞARILI!")
+        print()
+        print("📊 Döndürülen Değerler:")
+        print(f"   HTTP Status: {result.get('http_status')}")
+        print(f"   user.email: {result['user']['email']}")
+        print(f"   user.role: {result['user']['role']}")
+        print(f"   tenant.subscription_plan: {result['tenant']['subscription_plan']}")
+    else:
+        print("❌ PREVIEW BACKEND SORUNU VAR!")
+        print(f"   HTTP Status: {result.get('http_status', 'N/A')}")
+        print(f"   Hata: {result.get('error', 'N/A')}")
+        print(f"   Detay: {result.get('detail', 'N/A')}")
     
     return result
 

@@ -33,10 +33,21 @@ import {
 } from 'lucide-react';
 import FloatingActionButton from '@/components/FloatingActionButton';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
+import { useSetupStatus } from '@/hooks/useSetupStatus';
+import LiteSetupBanner from '@/components/LiteSetupBanner';
 
 
 const PMSModule = ({ user, tenant, onLogout }) => {
   const { t } = useTranslation();
+  const plan =
+    tenant?.subscription_plan ||
+    tenant?.plan ||
+    tenant?.subscription_tier ||
+    'core_small_hotel';
+  const isLite = plan === 'pms_lite';
+
+  const { data: setup } = useSetupStatus({ enabled: isLite });
+  const roomsCount = setup?.rooms_count ?? 0;
   const [rooms, setRooms] = useState([]);
   const [guests, setGuests] = useState([]);
   const [groupedBookings, setGroupedBookings] = useState([]);

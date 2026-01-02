@@ -25063,6 +25063,14 @@ async def create_role(
     
     return role
 
+@api_router.get("/pms/setup-status")
+async def pms_setup_status(current_user: User = Depends(get_current_user)):
+    """Return minimal setup status for PMS Lite onboarding (rooms/bookings counts)."""
+    rooms_count = await db.rooms.count_documents({"tenant_id": current_user.tenant_id})
+    bookings_count = await db.bookings.count_documents({"tenant_id": current_user.tenant_id})
+    return {"rooms_count": rooms_count, "bookings_count": bookings_count}
+
+
 @api_router.post("/admin/users/{user_id}/assign-role")
 async def assign_role_to_user(
     user_id: str,

@@ -415,10 +415,20 @@ function App() {
           <Route path="/system-status" element={<SimpleAdminPanel />} />
           
           <Route
-            path="/"
+            path="/app/dashboard"
             element={
               isAuthenticated ? (
                 <Dashboard user={user} tenant={tenant} modules={modules} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/auth" replace />
+              )
+            }
+          />
+          <Route
+            path="/"
+            element={
+              isAuthenticated ? (
+                <Navigate to="/app/dashboard" replace />
               ) : (
                 <LandingPage />
               )

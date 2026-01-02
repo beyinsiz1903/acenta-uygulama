@@ -160,6 +160,72 @@ const Settings = ({ user, tenant, onLogout }) => {
       toast.error('Failed to add room mapping');
     }
   };
+  if (isLite) {
+    return (
+      <Layout user={user} tenant={tenant} onLogout={onLogout} currentModule="settings">
+        <div className="p-6 space-y-6 max-w-4xl mx-auto">
+          <div>
+            <h1 className="text-2xl font-semibold text-gray-900">Ayarlar (PMS Lite)</h1>
+            <p className="mt-1 text-sm text-gray-600">
+              Otel bilgileriniz ve temel kullanıcı yönetimi.
+            </p>
+          </div>
+
+          {/* Otel Bilgileri */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Otel Bilgileri</CardTitle>
+              <CardDescription>İsim, adres ve iletişim bilgileri</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div>
+                <Label>Otel Adı</Label>
+                <Input value={tenant?.property_name || ''} disabled />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <Label>Telefon</Label>
+                  <Input value={tenant?.phone || ''} disabled />
+                </div>
+                <div>
+                  <Label>E-posta</Label>
+                  <Input value={tenant?.email || ''} disabled />
+                </div>
+              </div>
+              <div>
+                <Label>Adres</Label>
+                <Input value={tenant?.address || ''} disabled />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Kullanıcılar (rol sadeleştirilmiş) */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Kullanıcılar</CardTitle>
+              <CardDescription>
+                PMS Lite için önerilen roller: Yönetici, Resepsiyon, Kat Hizmetleri.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-gray-500">
+                Bu sürümde kullanıcı rolleri sadeleştirilmiştir. Detaylı rol yönetimi üst paketlerde
+                değerlendirilir.
+              </p>
+              {/* Mevcut kullanıcı yönetimi UI’niz burada daha sonra bağlanabilir */}
+            </CardContent>
+          </Card>
+
+          <div className="flex justify-end">
+            <Button variant="outline" onClick={onLogout}>
+              Çıkış Yap
+            </Button>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
 
   const removeRoomMapping = async (mappingId) => {
     try {

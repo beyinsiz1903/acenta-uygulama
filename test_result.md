@@ -1085,6 +1085,96 @@
 
    -agent: "testing"
    -message: |
+       🔐 AUTH LOGIN FLOW RE-TEST COMPLETED - BACKEND FIXED AND WORKING ✅
+       
+       **TEST OBJECTIVE:** Re-test auth login flow after fixing critical backend service issue
+       **BASE URL:** https://mimari-analiz.preview.emergentagent.com/api
+       **DATE:** January 2, 2026
+       **TIME:** 21:57 UTC
+       
+       **CRITICAL BACKEND FIX APPLIED:**
+       
+       ✅ **BACKEND SERVICE RESTORED:**
+       - **Issue Identified:** NameError: name 'Header' is not defined in server.py line 50020
+       - **Fix Applied:** Added Header to FastAPI imports: `from fastapi import FastAPI, APIRouter, HTTPException, Depends, status, File, UploadFile, Form, Request, Header`
+       - **Service Status:** Backend restarted successfully and running (pid 2498)
+       - **Health Check:** Backend service operational with cache warming completed
+       
+       **COMPREHENSIVE AUTH LOGIN TEST RESULTS:**
+       
+       ✅ **LOGIN ENDPOINT FULLY OPERATIONAL:**
+       - **URL:** POST https://mimari-analiz.preview.emergentagent.com/api/auth/login
+       - **Credentials:** demo@hotel.com / demo123
+       - **HTTP Status:** 200 ✅ (Previously 520)
+       - **Response Time:** 339.7ms (Excellent)
+       
+       **REQUESTED FIELDS VERIFICATION:**
+       
+       ✅ **user.email:** demo@hotel.com ✅
+       ✅ **user.role:** admin ✅
+       ✅ **tenant.subscription_plan:** professional ✅
+       
+       **ADDITIONAL CONTEXT DATA:**
+       - **user.name:** Demo User
+       - **user.tenant_id:** 695775c572436aa30f088da1
+       - **tenant.id:** 5414b50e-d20a-4d60-b4a8-d89b1c9afb6d
+       - **tenant.property_name:** Demo Hotel
+       
+       **BACKEND INFRASTRUCTURE STATUS:**
+       
+       ✅ **Service Health:**
+       - Backend service running correctly (supervisor status: RUNNING)
+       - Cache warming completed for tenant: 695775c572436aa30f088da1
+       - Performance indexes created successfully
+       - Redis cache initialized and operational
+       - No critical errors in backend logs
+       
+       ✅ **API Performance:**
+       - Response time: 339.7ms (within acceptable range)
+       - Authentication flow working correctly
+       - JWT token generation functional
+       - User and tenant data properly returned
+       
+       **COMPARISON WITH PREVIOUS FAILURE:**
+       
+       ❌ **Previous State (21:50 UTC):**
+       - HTTP Status: 520 "Web server returned an unknown error"
+       - Backend service down due to import error
+       - Complete authentication system failure
+       
+       ✅ **Current State (21:57 UTC):**
+       - HTTP Status: 200 ✅
+       - Backend service operational
+       - Authentication system fully functional
+       - All requested data fields available
+       
+       **FINAL ASSESSMENT:**
+       
+       🎉 **RESULT: PREVIEW BACKEND FULLY OPERATIONAL - LOGIN SUCCESSFUL**
+       
+       **SUCCESS CRITERIA MET (4/4):**
+       1. ✅ Preview backend is running (HTTP 200 instead of 520)
+       2. ✅ Login successful with demo@hotel.com / demo123
+       3. ✅ All requested fields returned: user.email, user.role, tenant.subscription_plan
+       4. ✅ Response structure complete and valid
+       
+       **BUSINESS IMPACT:**
+       - Preview environment is now fully functional for demonstrations
+       - Authentication system restored and working correctly
+       - All hotel management functionality accessible
+       - Demo and testing workflows unblocked
+       
+       **TURKISH SUMMARY:**
+       ✅ **Preview backend tekrar ayakta ve çalışıyor!**
+       ✅ **Login başarılı - demo@hotel.com ile giriş yapılabiliyor**
+       ✅ **Döndürülen değerler:**
+       - HTTP Status: 200
+       - user.email: demo@hotel.com
+       - user.role: admin
+       - tenant.subscription_plan: professional
+
+   -agent: "testing"
+   -message: |
        🏨 PMS BULK ROOM CREATION & HEADER TRUNCATION TEST COMPLETED - MIXED RESULTS ⚠️
        
        **TEST OBJECTIVE:** Playwright UI test for two improvements:

@@ -18,6 +18,14 @@ const BookingsTab = ({
 }) => {
   return (
     <TabsContent value="bookings" className="space-y-4">
+      {isLite && roomsCount === 0 && activeTab === 'bookings' && (
+        <LiteSetupBanner
+          title="Rezervasyon için önce odaları ekleyin"
+          desc="Önce odaları ekleyin, ardından rezervasyon oluşturabilirsiniz."
+          actionLabel="Odalara Git"
+          onAction={() => navigate('/app/pms#rooms')}
+        />
+      )}
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-semibold">Bookings ({bookingStats?.total ?? 0})</h2>
         <div className="flex gap-2">

@@ -1572,6 +1572,12 @@ const PMSModule = ({ user, tenant, onLogout }) => {
 
           {/* ROOMS TAB */}
           <TabsContent value="rooms" className="space-y-4">
+            {isLite && roomsCount === 0 && activeTab === 'rooms' && (
+              <LiteSetupBanner
+                title="Başlamak için oda ekleyin"
+                desc="Oda ekledikten sonra rezervasyon ve takvim ekranları anlamlı şekilde dolacaktır."
+              />
+            )}
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-semibold">Rooms ({rooms.length})</h2>
               <div className="flex gap-2">

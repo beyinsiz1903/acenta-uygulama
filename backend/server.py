@@ -1497,6 +1497,7 @@ class Tenant(BaseModel):
     subscription_end_date: Optional[str] = None
     subscription_tier: Optional[str] = "basic"
     plan: str = "core_small_hotel"
+    subscription_plan: Optional[str] = None
     location: Optional[str] = None
     amenities: List[str] = []
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

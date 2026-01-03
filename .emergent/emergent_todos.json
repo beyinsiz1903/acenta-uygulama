@@ -1,6 +1,10 @@
 [
   {
     "content": "Mevcut backend finansal yapıyı analiz et (bookings, settlements, vouchers, reports, payment_status, commission alanları)",
+    "status": "completed"
+  },
+  {
+    "content": "Mevcut frontend finansal ekranları analiz et (AgencySettlementsPage, HotelSettlementsPage, raporlar, dashboard, voucher akışı)",
     "status": "in_progress"
   }
 ]

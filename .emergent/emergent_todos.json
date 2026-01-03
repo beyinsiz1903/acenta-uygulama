@@ -1,6 +1,10 @@
 [
   {
     "content": "testing_agent_v3 ile uçtan uca finansal akışların test edilmesini sağla ve tüm hataları düzelt",
-    "status": "in_progress"
+    "status": "completed"
+  },
+  {
+    "content": "Phase 2: All user stories covered in Development and testing.",
+    "status": "completed"
   }
 ]

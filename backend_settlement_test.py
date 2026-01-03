@@ -106,8 +106,35 @@ class SyroceSettlementTester:
         """Test 1) GET /api/agency/settlements - check status field and skipped_count"""
         self.log("\n=== 1) AGENCY SETTLEMENTS LISTING ===")
         
-        # Get current month in YYYY-MM format
-        current_month = datetime.now().strftime("%Y-%m")
+        # Try multiple months to find data
+        test_months = [
+            datetime.now().strftime("%Y-%m"),  # Current month
+            "2025-12",  # December 2025
+            "2025-11",  # November 2025
+        ]
+        
+        current_month = None
+        entries = []
+        
+        for month in test_months:
+            self.log(f"   Trying month: {month}")
+            success, response = self.run_test(
+                f"GET /api/agency/settlements (month={month})",
+                "GET",
+                "api/agency/settlements",
+                200,
+                params={"month": month},
+                token=self.agency_token
+            )
+            if success and response.get('entries'):
+                current_month = month
+                entries = response.get('entries', [])
+                self.log(f"   ✅ Found {len(entries)} entries in {month}")
+                break
+        
+        if not current_month:
+            # Use current month even if no data
+            current_month = datetime.now().strftime("%Y-%m")
         
         success, response = self.run_test(
             "GET /api/agency/settlements",

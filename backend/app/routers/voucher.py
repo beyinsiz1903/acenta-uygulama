@@ -1,20 +1,17 @@
 from __future__ import annotations
 
-import hashlib
-import secrets
-import uuid
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException, Response, BackgroundTasks, Request
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, EmailStr
 
 from app.auth import get_current_user, require_roles
 from app.db import get_db
 from app.utils import now_utc, serialize_doc, build_booking_public_view
-
-# DEPLOYMENT FIX: WeasyPrint lazy import (prevents crash if libpangoft2 missing)
-# from weasyprint import HTML  ❌ REMOVED - will be imported lazily when needed
+from app.services.email import send_email_ses, EmailSendError
+from app.services.voucher_pdf import generate_voucher_pdf
 
 router = APIRouter(prefix="/api/voucher", tags=["voucher"])
 
@@ -33,52 +30,21 @@ class VoucherGenerateResponse(BaseModel):
 
 
 async def _get_booking_for_voucher(db, organization_id: str, booking_id: str) -> dict[str, Any]:
-    booking = await db.bookings.find_one({
-        "organization_id": organization_id,
-        "_id": booking_id,
-    })
+    booking = await db.bookings.find_one(
+        {
+            "organization_id": organization_id,
+            "_id": booking_id,
+        }
+    )
     if not booking:
         raise HTTPException(status_code=404, detail="BOOKING_NOT_FOUND")
 
     return booking
 
 
-def _build_voucher_html(view: dict[str, Any]) -> str:
-    # Very simple HTML for now; FAZ-9.2 üzerinde geliştirilecek
-    hotel = view.get("hotel_name") or "-"
-    guest = view.get("guest_name") or "-"
-    check_in = view.get("check_in_date") or "-"
-    check_out = view.get("check_out_date") or "-"
-    room = view.get("room_type") or "-"
-    board = view.get("board_type") or "-"
-    total = view.get("total_amount")
-    currency = view.get("currency") or ""
-    status_tr = view.get("status_tr") or view.get("status") or "-"
-    status_en = view.get("status_en") or "-"
-
-    if total is not None:
-        total_str = f"{total:.2f} {currency}".strip()
-    else:
-        total_str = "-"
-
-    return f"""<html><body>
-<h1>Rezervasyon Voucher / Booking Voucher</h1>
-<p>Bu belge konaklama bilgilerinizi özetler. Lütfen otele girişte bu sayfayı veya PDF halini referans olarak gösterin.</p>
-<p>This document summarizes your stay. Please present this page or the PDF version at check-in as a reference.</p>
-<hr />
-<p><strong>Otel / Hotel:</strong> {hotel}</p>
-<p><strong>Misafir / Guest:</strong> {guest}</p>
-<p><strong>Check-in:</strong> {check_in}</p>
-<p><strong>Check-out:</strong> {check_out}</p>
-<p><strong>Oda / Room:</strong> {room}</p>
-<p><strong>Pansiyon / Board:</strong> {board}</p>
-<p><strong>Tutar / Total:</strong> {total_str}</p>
-<p><strong>Durum / Status:</strong> {status_tr} / {status_en}</p>
-</body></html>"""
-
-
 async def _get_or_create_voucher_for_booking(db, organization_id: str, booking_id: str) -> dict[str, Any]:
     """Idempotent helper: return existing non-expired voucher or create a new one."""
+
     now = now_utc()
 
     existing = await db.vouchers.find_one(
@@ -96,7 +62,7 @@ async def _get_or_create_voucher_for_booking(db, organization_id: str, booking_i
     booking = await _get_booking_for_voucher(db, organization_id, booking_id)
     view = build_booking_public_view(booking)
 
-    token = f"vch_{uuid.uuid4().hex[:24]}"
+    token = f"vch_{booking_id}"
     expires_at = now + timedelta(days=VOUCHER_TTL_DAYS)
 
     doc = {
@@ -116,85 +82,23 @@ async def _get_or_create_voucher_for_booking(db, organization_id: str, booking_i
     return doc
 
 
-@router.post(
-    "/{booking_id}/email",
-    dependencies=[Depends(require_roles(["agency_admin", "agency_agent"]))],
+@router.get(
+    "/{booking_id}/voucher.pdf",
+    dependencies=[Depends(require_roles(["hotel_admin", "hotel_staff", "agency_admin", "agency_agent"]))],
 )
-async def send_voucher_email(
-    booking_id: str,
-    payload: VoucherEmailRequest,
-    background_tasks: BackgroundTasks,
-    request: Request,
-    user=Depends(get_current_user),
-):
-    """Send voucher email for a booking via AWS SES.
+async def get_booking_voucher_pdf(booking_id: str, user=Depends(get_current_user)):
+    """Return accommodation voucher PDF for a confirmed booking.
 
-    FAZ-9.3: İlk adım olarak email gönderimini bağlıyoruz. Public token'lı
-    share link ve PDF FAZ-9.2 kapsamında ayrıntılandırılacak.
+    - Reuses existing ReportLab-based generate_voucher_pdf
+    - Ownership: agency or hotel must own the booking
     """
 
     db = await get_db()
-
-    agency_id = user.get("agency_id")
-    if not agency_id:
-        raise HTTPException(status_code=403, detail="NOT_LINKED_TO_AGENCY")
-
-    booking = await _get_booking_for_voucher(db, user["organization_id"], booking_id)
-
-    if str(booking.get("agency_id")) != str(agency_id):
-        raise HTTPException(status_code=403, detail="FORBIDDEN")
-
-    view = build_booking_public_view(booking)
-
-    html = _build_voucher_html(view)
-    text = (
-        f"Rezervasyon voucher\n"
-        f"Hotel: {view.get('hotel_name') or '-'}\n"
-        f"Guest: {view.get('guest_name') or '-'}\n"
-        f"Check-in: {view.get('check_in_date') or '-'}\n"
-        f"Check-out: {view.get('check_out_date') or '-'}\n"
-        f"Total: {view.get('total_amount') or '-'} {view.get('currency') or ''}\n"
-    )
-
-    subject = "Rezervasyon Voucher / Booking Voucher"
-
-    def _send():
-        try:
-            send_email_ses(
-                to_address=payload.to,
-                subject=subject,
-                html_body=html,
-                text_body=text,
-            )
-        except EmailSendError as e:
-            # Background task; sadece logluyoruz. İleride outbox'a da yazılabilir.
-            import logging
-
-            logging.getLogger("email").error("Voucher email failed: %s", e)
-
-    background_tasks.add_task(_send)
-
-    return {"ok": True, "to": str(payload.to)}
-
-
-@router.post(
-    "/{booking_id}/generate",
-    response_model=VoucherGenerateResponse,
-    dependencies=[Depends(require_roles(["agency_admin", "agency_agent", "hotel_admin", "hotel_staff"]))],
-)
-async def generate_voucher_token(booking_id: str, user=Depends(get_current_user)):
-    """Generate (or reuse) a voucher token for a booking.
-
-    Idempotent: existing, non-expired voucher is reused.
-    """
-    db = await get_db()
-
-    roles = set(user.get("roles") or [])
-    org_id = user["organization_id"]
+    org_id = str(user["organization_id"])
 
     booking = await _get_booking_for_voucher(db, org_id, booking_id)
 
-    # Ownership: agency or hotel
+    roles = set(user.get("roles") or [])
     if roles.intersection({"agency_admin", "agency_agent"}):
         if str(booking.get("agency_id")) != str(user.get("agency_id")):
             raise HTTPException(status_code=403, detail="FORBIDDEN")
@@ -204,36 +108,152 @@ async def generate_voucher_token(booking_id: str, user=Depends(get_current_user)
     else:
         raise HTTPException(status_code=403, detail="FORBIDDEN")
 
-    voucher = await _get_or_create_voucher_for_booking(db, org_id, booking_id)
+    org = await db.organizations.find_one({"_id": org_id}) or {}
 
-    return VoucherGenerateResponse(
-        token=voucher["token"],
-        url=f"/v/api/voucher/{voucher['token']}",
-        expires_at=voucher["expires_at"],
+    hotel: Optional[dict[str, Any]] = None
+    hotel_id = booking.get("hotel_id")
+    if hotel_id:
+        hotel = await db.hotels.find_one({"_id": hotel_id, "organization_id": org_id})
+
+    pdf_bytes, filename = await generate_voucher_pdf(org_id, booking, org, hotel)
+
+    return StreamingResponse(
+        iter([pdf_bytes]),
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'inline; filename="{filename}"',
+            "Cache-Control": "no-store",
+        },
     )
 
 
-@router.get("/public/{token}")
-async def get_voucher_public_html(token: str, format: str = "html"):
-    """Public HTML/PDF view for voucher (no auth)."""
-    from app.db import get_db  # local import to avoid circular at module import
+@router.post(
+    "/{booking_id}/voucher/email",
+    dependencies=[Depends(require_roles(["agency_admin", "agency_agent"]))],
+)
+async def send_booking_voucher_email(
+    booking_id: str,
+    payload: VoucherEmailRequest,
+    background_tasks: BackgroundTasks,
+    request: Request,
+    user=Depends(get_current_user),
+):
+    """Send voucher email for a booking via SES.
+
+    - Agent side: must own the booking
+    - Email content is simple TR/EN info + link to PDF endpoint
+    """
 
     db = await get_db()
-    now = now_utc()
+    org_id = str(user["organization_id"])
 
-    voucher = await db.vouchers.find_one({"token": token, "expires_at": {"$gt": now}, "revoked_at": None})
-    if not voucher:
-        raise HTTPException(status_code=404, detail="VOUCHER_NOT_FOUND")
+    agency_id = user.get("agency_id")
+    if not agency_id:
+        raise HTTPException(status_code=403, detail="NOT_LINKED_TO_AGENCY")
 
-    view = voucher.get("snapshot") or {}
-    html = _build_voucher_html(view)
+    booking = await _get_booking_for_voucher(db, org_id, booking_id)
 
-    if format.lower() == "pdf":
-        pdf_bytes = HTML(string=html).write_pdf()
-        filename_code = (view.get("code") or token).replace("\n", " ")
-        headers = {
-            "Content-Disposition": f"inline; filename=\"voucher-{filename_code}.pdf\"",
-        }
-        return Response(content=pdf_bytes, media_type="application/pdf", headers=headers)
+    if str(booking.get("agency_id")) != str(agency_id):
+        raise HTTPException(status_code=403, detail="FORBIDDEN")
+
+    view = build_booking_public_view(booking)
+
+    hotel_name = view.get("hotel_name") or "-"
+    guest_name = view.get("guest_name") or "-"
+    check_in = view.get("check_in_date") or "-"
+    check_out = view.get("check_out_date") or "-"
+    currency = view.get("currency") or ""
+    total = view.get("total_amount")
+    total_str = f"{total:.2f} {currency}" if total is not None else "-"
+
+    pdf_url = f"{request.base_url}api/voucher/{booking_id}/voucher.pdf".rstrip("/")
+
+    subject = "Konaklama Voucher'ı / Accommodation Voucher"
+
+    text_body = (
+        "Rezervasyon voucher'ınız ekli bağlantıdadır.\n"
+        f"Otel: {hotel_name}\n"
+        f"Misafir: {guest_name}\n"
+        f"Check-in: {check_in}\n"
+        f"Check-out: {check_out}\n"
+        f"Tutar: {total_str}\n"
+        f"PDF: {pdf_url}\n"
+    )
+
+    html_body = f"""
+    <p>Merhaba,</p>
+    <p>Rezervasyon voucher'ınız aşağıdaki özet ile birlikte PDF olarak görüntülenebilir.</p>
+    <ul>
+      <li><strong>Otel:</strong> {hotel_name}</li>
+      <li><strong>Misafir:</strong> {guest_name}</li>
+      <li><strong>Check-in:</strong> {check_in}</li>
+      <li><strong>Check-out:</strong> {check_out}</li>
+      <li><strong>Tutar:</strong> {total_str}</li>
+    </ul>
+    <p>Voucher PDF'i görmek için <a href="{pdf_url}">buraya tıklayın</a>.</p>
+    <p>Sevgiler,<br />Acenteniz</p>
+    """
+
+    def _send():
+        try:
+            send_email_ses(
+                to_address=str(payload.to),
+                subject=subject,
+                html_body=html_body,
+                text_body=text_body,
+            )
+        except EmailSendError as e:
+            import logging
+
+            logging.getLogger("email").error("Voucher email failed: %s", e, exc_info=True)
+
+    background_tasks.add_task(_send)
+
+    return {"ok": True, "to": str(payload.to)}
+
+
+@router.get(
+    "/{booking_id}/self-billing.pdf",
+    dependencies=[Depends(require_roles(["agency_admin", "agency_agent", "hotel_admin", "hotel_staff"]))],
+)
+async def get_self_billing_pdf(booking_id: str, user=Depends(get_current_user)):
+    """Placeholder self-billing PDF.
+
+    For now, we reuse the voucher PDF generator as an informational statement.
+    """
+
+    db = await get_db()
+    org_id = str(user["organization_id"])
+
+    booking = await _get_booking_for_voucher(db, org_id, booking_id)
+
+    roles = set(user.get("roles") or [])
+    if roles.intersection({"agency_admin", "agency_agent"}):
+        if str(booking.get("agency_id")) != str(user.get("agency_id")):
+            raise HTTPException(status_code=403, detail="FORBIDDEN")
+    elif roles.intersection({"hotel_admin", "hotel_staff"])):
+        if str(booking.get("hotel_id")) != str(user.get("hotel_id")):
+            raise HTTPException(status_code=403, detail="FORBIDDEN")
     else:
-        return Response(content=html, media_type="text/html; charset=utf-8")
+        raise HTTPException(status_code=403, detail="FORBIDDEN")
+
+    org = await db.organizations.find_one({"_id": org_id}) or {}
+
+    hotel: Optional[dict[str, Any]] = None
+    hotel_id = booking.get("hotel_id")
+    if hotel_id:
+        hotel = await db.hotels.find_one({"_id": hotel_id, "organization_id": org_id})
+
+    pdf_bytes, filename = await generate_voucher_pdf(org_id, booking, org, hotel)
+
+    # Add disclaimer page? For now, just return same PDF with different filename
+    filename = filename.replace("voucher-", "self-billing-")
+
+    return StreamingResponse(
+        iter([pdf_bytes]),
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'inline; filename="{filename}"',
+            "Cache-Control": "no-store",
+        },
+    )

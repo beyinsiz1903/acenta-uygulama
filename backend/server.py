@@ -46,6 +46,7 @@ from app.routers.voucher import router as voucher_router
 from app.routers.web_booking import router as web_booking_router
 from app.routers.booking_payments import router as booking_payments_router
 from app.routers.booking_voucher import router as booking_voucher_router
+from app.routers.booking_documents import router as booking_documents_router
 from app.routers.web_catalog import router as web_catalog_router
 from app.routers.public_tours import router as public_tours_router
 from app.routers.agency_tours import router as agency_tours_router
@@ -124,6 +125,7 @@ app.include_router(voucher_router)
 app.include_router(web_booking_router)
 app.include_router(booking_payments_router)
 app.include_router(booking_voucher_router)
+app.include_router(booking_documents_router)
 app.include_router(web_catalog_router)
 app.include_router(public_tours_router)
 app.include_router(agency_tours_router)

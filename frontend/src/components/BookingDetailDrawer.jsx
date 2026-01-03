@@ -447,13 +447,6 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
             >
               {voucherLoading ? "Voucher oluşturuluyor..." : "Voucher Linkini Kopyala"}
             </Button>
-            <Button
-              variant="outline"
-              onClick={handleCopyVoucherLink}
-              disabled={!booking || voucherLoading}
-            >
-              {voucherLoading ? "Voucher oluşturuluyor..." : "Voucher Linkini Kopyala"}
-            </Button>
 
             <Button
               variant="outline"

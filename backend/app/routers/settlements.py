@@ -190,3 +190,117 @@ async def agency_settlements(
         "totals": totals_list,
         "entries": [serialize_doc(e) for e in entries[:200]],
     }
+
+
+@agency_router.post(
+    "/settlements/{settlement_id}/confirm",
+    dependencies=[Depends(require_roles(["agency_admin", "agency_agent", "hotel_admin", "hotel_staff"]))],
+)
+async def confirm_settlement(settlement_id: str, user=Depends(get_current_user)):
+    """Mark a settlement as confirmed by agency or hotel side.
+
+    - agency: sets agency_confirmed_at
+    - hotel: sets hotel_confirmed_at
+    """
+
+    db = await get_db()
+
+    settlement = await db.booking_financial_entries.find_one({"_id": settlement_id, "organization_id": user["organization_id"]})
+    if not settlement:
+        raise HTTPException(status_code=404, detail="SETTLEMENT_NOT_FOUND")
+
+    roles = set(user.get("roles") or [])
+    update: dict[str, Any] = {}
+
+    if roles.intersection({"agency_admin", "agency_agent"}):
+        if str(settlement.get("agency_id")) != str(user.get("agency_id")):
+            raise HTTPException(status_code=403, detail="FORBIDDEN")
+        update["agency_confirmed_at"] = now_utc()
+    elif roles.intersection({"hotel_admin", "hotel_staff"}):
+        if str(settlement.get("hotel_id")) != str(user.get("hotel_id")):
+            raise HTTPException(status_code=403, detail="FORBIDDEN")
+        update["hotel_confirmed_at"] = now_utc()
+    else:
+        raise HTTPException(status_code=403, detail="FORBIDDEN")
+
+    await db.booking_financial_entries.update_one(
+        {"_id": settlement_id},
+        {"$set": update},
+    )
+
+    updated = await db.booking_financial_entries.find_one({"_id": settlement_id})
+    return serialize_doc(updated)
+
+
+class SettlementDisputeIn(BaseModel):
+    reason: str
+
+
+@agency_router.post(
+    "/settlements/{settlement_id}/dispute",
+    dependencies=[Depends(require_roles(["agency_admin", "agency_agent", "hotel_admin", "hotel_staff"]))],
+)
+async def dispute_settlement(settlement_id: str, payload: SettlementDisputeIn, user=Depends(get_current_user)):
+    """Raise a dispute on a settlement entry with a reason."""
+
+    db = await get_db()
+
+    settlement = await db.booking_financial_entries.find_one({"_id": settlement_id, "organization_id": user["organization_id"]})
+    if not settlement:
+        raise HTTPException(status_code=404, detail="SETTLEMENT_NOT_FOUND")
+
+    roles = set(user.get("roles") or [])
+    if roles.intersection({"agency_admin", "agency_agent"}):
+        if str(settlement.get("agency_id")) != str(user.get("agency_id")):
+            raise HTTPException(status_code=403, detail="FORBIDDEN")
+    elif roles.intersection({"hotel_admin", "hotel_staff"}):
+        if str(settlement.get("hotel_id")) != str(user.get("hotel_id")):
+            raise HTTPException(status_code=403, detail="FORBIDDEN")
+    else:
+        raise HTTPException(status_code=403, detail="FORBIDDEN")
+
+    await db.booking_financial_entries.update_one(
+        {"_id": settlement_id},
+        {
+            "$set": {
+                "disputed": True,
+                "dispute_reason": payload.reason,
+                "disputed_at": now_utc(),
+                "disputed_by": user.get("email"),
+            }
+        },
+    )
+
+    updated = await db.booking_financial_entries.find_one({"_id": settlement_id})
+    return serialize_doc(updated)
+
+
+@agency_router.post(
+    "/settlements/{settlement_id}/reopen",
+    dependencies=[Depends(require_roles(["super_admin"]))],
+)
+async def reopen_settlement(settlement_id: str, user=Depends(get_current_user)):
+    """Super-admin only: clear confirmation and dispute flags."""
+
+    db = await get_db()
+
+    await db.booking_financial_entries.update_one(
+        {"_id": settlement_id, "organization_id": user["organization_id"]},
+        {
+            "$set": {
+                "agency_confirmed_at": None,
+                "hotel_confirmed_at": None,
+                "disputed": False,
+                "dispute_reason": None,
+                "disputed_at": None,
+                "disputed_by": None,
+            }
+        },
+    )
+
+    updated = await db.booking_financial_entries.find_one({"_id": settlement_id})
+    if not updated:
+        raise HTTPException(status_code=404, detail="SETTLEMENT_NOT_FOUND")
+
+    return serialize_doc(updated)
+

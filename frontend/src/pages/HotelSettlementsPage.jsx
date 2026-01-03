@@ -301,6 +301,42 @@ export default function HotelSettlementsPage() {
                     {formatMoney(r.net_total || 0, r.currency || "TRY")}
                   </TableCell>
                   <TableCell className="text-right">{r.count}</TableCell>
+                  <TableCell className="text-right space-x-2">
+                    <Button
+                      size="xs"
+                      variant="outline"
+                      data-testid="hotel-settlement-confirm-button"
+                      disabled={r.status === "closed" || r.status === "disputed"}
+                      title={r.status === "closed" ? "Mutabakat kapandı" : undefined}
+                      onClick={async () => {
+                        try {
+                          setActionLoading(true);
+                          await api.post(`/agency/settlements/${r.settlement_id || r.id || r._id}/confirm`);
+                          await load();
+                        } catch (e) {
+                          setError(apiErrorMessage(e));
+                        } finally {
+                          setActionLoading(false);
+                        }
+                      }}
+                    >
+                      Onayla
+                    </Button>
+                    <Button
+                      size="xs"
+                      variant="outline"
+                      data-testid="hotel-settlement-dispute-button"
+                      disabled={r.status === "closed" || r.status === "disputed"}
+                      title={r.status === "closed" ? "Mutabakat kapandı" : undefined}
+                      onClick={() => {
+                        setActiveSettlement(r);
+                        setDisputeReason("");
+                        setDisputeOpen(true);
+                      }}
+                    >
+                      İtiraz
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))
             )}

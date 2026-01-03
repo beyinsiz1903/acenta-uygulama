@@ -89,11 +89,11 @@ class SyroceSettlementTester:
         """Login as hotel user"""
         self.log("\n=== HOTEL LOGIN ===")
         success, response = self.run_test(
-            "Hotel Login (hotel1@demo.test)",
+            "Hotel Login (hoteladmin@acenta.test)",
             "POST",
             "api/auth/login",
             200,
-            data={"email": "hotel1@demo.test", "password": "hotel123"}
+            data={"email": "hoteladmin@acenta.test", "password": "admin123"}
         )
         if success and 'access_token' in response:
             self.hotel_token = response['access_token']

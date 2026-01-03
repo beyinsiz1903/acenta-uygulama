@@ -4,7 +4,7 @@ import { Badge } from "./ui/badge";
 import { Separator } from "./ui/separator";
 import { Button } from "./ui/button";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "./ui/select";
-import { FileText, Percent } from "lucide-react";
+import { FileText, Percent, Ticket, Send } from "lucide-react";
 import { formatMoney } from "../lib/format";
 
 export function FinanceSummaryCard({

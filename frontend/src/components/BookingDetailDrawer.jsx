@@ -6,6 +6,7 @@ import { Separator } from "./ui/separator";
 import { toast } from "sonner";
 import { buildBookingCopyText } from "../utils/buildBookingCopyText";
 import { api, apiErrorMessage } from "../lib/api";
+import { FinanceSummaryCard } from "./FinanceSummaryCard";
 
 function StatusBadge({ status_tr, status }) {
   if (!status_tr && !status) return null;
@@ -243,22 +244,58 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
 
           {!loading && !error && booking && (
             <div className="space-y-4">
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-2">
-                  Özet / Summary
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
-                  {infoRows.map(([label, value]) => (
-                    <div key={label} className="flex flex-col">
-                      <span className="text-xs text-muted-foreground uppercase tracking-wide">
-                        {label}
-                      </span>
-                      <span className="text-foreground">
-                        {value === null || value === undefined || value === "" ? "-" : value}
-                      </span>
-                    </div>
-                  ))}
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground mb-2">
+                    Özet / Summary
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
+                    {infoRows.map(([label, value]) => (
+                      <div key={label} className="flex flex-col">
+                        <span className="text-xs text-muted-foreground uppercase tracking-wide">
+                          {label}
+                        </span>
+                        <span className="text-foreground">
+                          {value === null || value === undefined || value === "" ? "-" : value}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
+
+                {/* Finansal Özet Kartı */}
+                {booking && (
+                  <div>
+                    <h3 className="text-sm font-medium text-muted-foreground mb-2">
+                      Finans
+                    </h3>
+                    <FinanceSummaryCard
+                      gross={booking.gross_amount ?? booking.total_amount ?? 0}
+                      commissionPercent={booking.commission_value_snapshot ?? booking.commission_percent ?? 0}
+                      commissionAmount={booking.commission_amount ?? 0}
+                      netToHotel={booking.net_amount ?? 0}
+                      paymentStatus={booking.payment_status || "unpaid"}
+                      onStatusChange={(next) => {
+                        setBooking((prev) => (prev ? { ...prev, payment_status: next } : prev));
+                      }}
+                      onSave={async () => {
+                        if (!booking) return;
+                        try {
+                          const id = booking.id || booking._id || booking.booking_id || bookingId;
+                          const resp = await api.post(`/bookings/${id}/payment-status`, {
+                            status: booking.payment_status || "unpaid",
+                          });
+                          const updated = resp.data || {};
+                          setBooking((prev) => (prev ? { ...prev, payment_status: updated.payment_status } : prev));
+                          toast.success("Ödeme durumu güncellendi");
+                        } catch (e) {
+                          toast.error(apiErrorMessage(e) || "Ödeme durumu güncellenemedi");
+                        }
+                      }}
+                      onDownloadPdf={handleOpenVoucherPdfDirect}
+                    />
+                  </div>
+                )}
               </div>
 
               {/* Müşteri Bloğu */}

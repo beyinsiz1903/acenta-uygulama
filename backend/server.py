@@ -62,6 +62,7 @@ from app.routers.public_vouchers import router as public_vouchers_router
 from app.routers.public_catalog_offers import router as public_catalog_offers_router
 from app.routers.dev_tools import router as dev_tools_router
 from app.routers.dev_seed_bookings import router as dev_seed_bookings_router
+from app.routers.dev_seed_settlements import router as dev_seed_settlements_router
 from app.email_worker import email_dispatch_loop
 from app.integration_sync_worker import integration_sync_loop
 
@@ -143,6 +144,7 @@ app.include_router(public_catalog_offers_router)
 if os.getenv("ENABLE_DEV_ROUTERS") == "true":
     app.include_router(dev_tools_router)
     app.include_router(dev_seed_bookings_router)
+    app.include_router(dev_seed_settlements_router)
 
 
 @app.get("/api/health")

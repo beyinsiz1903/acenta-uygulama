@@ -247,6 +247,7 @@ export default function HotelSettlementsPage() {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead>Durum</TableHead>
               <TableHead>Acenta</TableHead>
               <TableHead>Para Birimi</TableHead>
               <TableHead className="text-right">Brüt</TableHead>

@@ -234,6 +234,7 @@ export default function AgencySettlementsPage() {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead>Durum</TableHead>
               <TableHead>Otel</TableHead>
               <TableHead>Para Birimi</TableHead>
               <TableHead className="text-right">Brüt</TableHead>

@@ -1,10 +1,10 @@
 [
   {
-    "content": "Voucher & self-billing için /api/bookings/{id}/... bridge endpointleri ekle ve frontend çağrılarını bu URI’lara hizala",
+    "content": "Settlement status alanını ve confirm/dispute/reopen workflow’unu statü mantığı ile tamamla",
     "status": "completed"
   },
   {
-    "content": "Settlement status alanını ve confirm/dispute/reopen workflow’unu statü mantığı ile tamamla",
+    "content": "Agency ve Hotel settlements UI’da confirm/dispute modalları, butonları ve status badge’lerini bağla",
     "status": "in_progress"
   }
 ]

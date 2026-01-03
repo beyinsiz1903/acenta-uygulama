@@ -241,19 +241,18 @@ export default function AgencySettlementsPage() {
               <TableHead className="text-right">Komisyon</TableHead>
               <TableHead className="text-right">Net (Otel Alacağı)</TableHead>
               <TableHead className="text-right">Adet</TableHead>
-              <TableHead className="text-right">İşlemler</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground">
+                <TableCell colSpan={7} className="py-10 text-center text-sm text-muted-foreground">
                   Yükleniyor...
                 </TableCell>
               </TableRow>
             ) : rows.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground">
+                <TableCell colSpan={7} className="py-10 text-center text-sm text-muted-foreground">
                   Kayıt yok.
                 </TableCell>
               </TableRow>
@@ -289,42 +288,6 @@ export default function AgencySettlementsPage() {
                     {formatMoney(r.net_total || 0, r.currency || "TRY")}
                   </TableCell>
                   <TableCell className="text-right">{r.count}</TableCell>
-                  <TableCell className="text-right space-x-2">
-                    <Button
-                      size="xs"
-                      variant="outline"
-                      data-testid="agency-settlement-confirm-button"
-                      disabled={r.status === "closed" || r.status === "disputed"}
-                      title={r.status === "closed" ? "Mutabakat kapandı" : undefined}
-                      onClick={async () => {
-                        try {
-                          setActionLoading(true);
-                          await api.post(`/agency/settlements/${r.settlement_id || r.id || r._id}/confirm`);
-                          await load();
-                        } catch (e) {
-                          setError(apiErrorMessage(e));
-                        } finally {
-                          setActionLoading(false);
-                        }
-                      }}
-                    >
-                      Onayla
-                    </Button>
-                    <Button
-                      size="xs"
-                      variant="outline"
-                      data-testid="agency-settlement-dispute-button"
-                      disabled={r.status === "closed" || r.status === "disputed"}
-                      title={r.status === "closed" ? "Mutabakat kapandı" : undefined}
-                      onClick={() => {
-                        setActiveSettlement(r);
-                        setDisputeReason("");
-                        setDisputeOpen(true);
-                      }}
-                    >
-                      İtiraz
-                    </Button>
-                  </TableCell>
                 </TableRow>
               ))
             )}

@@ -136,24 +136,6 @@ async def hotel_settlements(
     return {
         "month": month,
         "status": status or "all",
-    # Backfill status for old entries without explicit status
-    for e in entries:
-        if "status" not in e or not e.get("status"):
-            if e.get("disputed"):
-                e["status"] = "disputed"
-            else:
-                agency_conf = bool(e.get("agency_confirmed_at"))
-                hotel_conf = bool(e.get("hotel_confirmed_at"))
-                if agency_conf and hotel_conf:
-                    e["status"] = "closed"
-                elif agency_conf:
-                    e["status"] = "confirmed_by_agency"
-                elif hotel_conf:
-                    e["status"] = "confirmed_by_hotel"
-                else:
-                    e["status"] = "open"
-
-
         "hotel_id": str(user["hotel_id"]),
         "totals": totals_list,
         "entries": [serialize_doc(e) for e in filtered_entries[:200]],

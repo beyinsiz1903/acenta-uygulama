@@ -136,8 +136,9 @@ class SyroceSettlementTester:
             # Use current month even if no data
             current_month = datetime.now().strftime("%Y-%m")
         
+        # Final test with the selected month
         success, response = self.run_test(
-            "GET /api/agency/settlements",
+            f"GET /api/agency/settlements (final, month={current_month})",
             "GET",
             "api/agency/settlements",
             200,

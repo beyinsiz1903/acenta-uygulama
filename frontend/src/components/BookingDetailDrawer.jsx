@@ -365,7 +365,7 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
                   try {
                     setVoucherEmailSending(true);
                     const id = booking.id || booking._id || booking.booking_id || bookingId;
-                    await api.post(`/voucher/${id}/voucher/email`, { to: voucherEmail });
+                    await api.post(`/bookings/${id}/voucher/email`, { to: voucherEmail });
                     toast.success("Voucher e-posta ile gönderildi");
                     setVoucherEmailDialogOpen(false);
                   } catch (e) {

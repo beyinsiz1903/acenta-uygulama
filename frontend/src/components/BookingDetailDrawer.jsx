@@ -297,7 +297,16 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
                           toast.error(apiErrorMessage(e) || "Ödeme durumu güncellenemedi");
                         }
                       }}
-                      onDownloadPdf={handleOpenVoucherPdfDirect}
+                      onDownloadPdf={async () => {
+                        if (!booking) return;
+                        try {
+                          const id = booking.id || booking._id || booking.booking_id || bookingId;
+                          const url = `${api.defaults.baseURL}/bookings/${id}/self-billing.pdf`;
+                          window.open(url, "_blank", "noopener,noreferrer");
+                        } catch (e) {
+                          toast.error("Self-billing indirilemedi");
+                        }
+                      }}
                       onDownloadVoucher={async () => {
                         if (!booking) return;
                         try {

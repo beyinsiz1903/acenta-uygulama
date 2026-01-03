@@ -318,6 +318,60 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
               </div>
 
               {/* Müşteri Bloğu */}
+
+        {/* Voucher email dialog */}
+        <Dialog open={voucherEmailDialogOpen} onOpenChange={setVoucherEmailDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Voucher E-posta Gönder</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3 py-2">
+              <label className="text-xs text-muted-foreground" htmlFor="voucher-email-input">
+                E-posta adresi
+              </label>
+              <Input
+                id="voucher-email-input"
+                data-testid="voucher-email-input"
+                type="email"
+                autoComplete="email"
+                value={voucherEmail}
+                onChange={(e) => setVoucherEmail(e.target.value)}
+                placeholder="ornek@misafir.com"
+              />
+            </div>
+            <DialogFooter className="mt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setVoucherEmailDialogOpen(false)}
+              >
+                Vazgeç
+              </Button>
+              <Button
+                type="button"
+                data-testid="voucher-email-send"
+                disabled={!voucherEmail || voucherEmailSending}
+                onClick={async () => {
+                  if (!booking || !voucherEmail) return;
+                  try {
+                    setVoucherEmailSending(true);
+                    const id = booking.id || booking._id || booking.booking_id || bookingId;
+                    await api.post(`/voucher/${id}/voucher/email`, { to: voucherEmail });
+                    toast.success("Voucher e-posta ile gönderildi");
+                    setVoucherEmailDialogOpen(false);
+                  } catch (e) {
+                    toast.error(apiErrorMessage(e) || "Voucher e-posta ile gönderilemedi");
+                  } finally {
+                    setVoucherEmailSending(false);
+                  }
+                }}
+              >
+                Gönder
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
               {customer ? (
                 <div className="mt-4 rounded-md border p-3">
                   <div className="text-sm font-medium mb-2">Müşteri</div>

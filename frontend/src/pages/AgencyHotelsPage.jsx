@@ -240,6 +240,8 @@ export default function AgencyHotelsPage() {
           </div>
         </div>
       </Card>
+      {/* CRM Tabs will be shown when navigating to hotel detail in a separate page in future */}
+
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
         {filtered.map((hotel) => (

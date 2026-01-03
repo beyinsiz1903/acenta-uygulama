@@ -185,6 +185,24 @@ async def agency_settlements(
     entries = await db.booking_financial_entries.find(q).sort("created_at", -1).to_list(5000)
 
     skipped_count = 0
+    # Backfill status for old entries without explicit status
+    for e in entries:
+        if "status" not in e or not e.get("status"):
+            if e.get("disputed"):
+                e["status"] = "disputed"
+            else:
+                agency_conf = bool(e.get("agency_confirmed_at"))
+                hotel_conf = bool(e.get("hotel_confirmed_at"))
+                if agency_conf and hotel_conf:
+                    e["status"] = "closed"
+                elif agency_conf:
+                    e["status"] = "confirmed_by_agency"
+                elif hotel_conf:
+                    e["status"] = "confirmed_by_hotel"
+                else:
+                    e["status"] = "open"
+
+
     filtered_entries = []
     for e in entries:
         if e.get("gross_amount") is None or e.get("commission_amount") is None or e.get("net_amount") is None:

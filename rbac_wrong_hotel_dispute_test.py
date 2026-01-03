@@ -91,10 +91,10 @@ class RBACWrongHotelDisputeTester:
             "POST",
             "api/auth/login",
             200,
-            data={"email": "super@demo.test", "password": "demo123"}
+            data={"email": "admin@acenta.test", "password": "admin123"}
         )
-        if success and 'token' in response:
-            self.super_admin_token = response['token']
+        if success and 'access_token' in response:
+            self.super_admin_token = response['access_token']
             self.log(f"   ✓ Super admin token obtained")
             return True
         return False

@@ -20,6 +20,10 @@ class BookingCancelIn(BaseModel):
     reason: Optional[str] = None
 
 
+class PaymentStatusIn(BaseModel):
+    status: str
+
+
 @router.post(
     "/{booking_id}/cancel",
     dependencies=[Depends(require_roles(["agency_admin", "agency_agent", "hotel_admin", "hotel_staff"]))],
@@ -111,7 +115,7 @@ async def cancel_booking(booking_id: str, payload: BookingCancelIn, request: Req
 
     # FAZ-9.3: enqueue booking.cancelled email for hotel + agency
     updated = await db.bookings.find_one({"_id": booking_id})
-    
+
     try:
         org_id = user["organization_id"]
 
@@ -180,6 +184,43 @@ async def cancel_booking(booking_id: str, payload: BookingCancelIn, request: Req
     return serialize_doc(updated)
 
 
+@router.post("/{booking_id}/payment-status", dependencies=[Depends(require_roles(["agency_admin", "agency_agent", "hotel_admin", "hotel_staff"]))])
+async def update_payment_status(booking_id: str, payload: PaymentStatusIn, user=Depends(get_current_user)):
+    """Manuel ödeme durumu güncellemesi (unpaid|partially_paid|paid).
+
+    - allowed roles: agency_admin/agency_agent + hotel_admin/hotel_staff
+    - ownership: agency kendi booking'ini; hotel kendi booking'ini güncelleyebilir.
+    - sadece booking.payment_status alanını günceller; finansal entry yaratmaz.
+    """
+    db = await get_db()
+
+    booking = await db.bookings.find_one({"organization_id": user["organization_id"], "_id": booking_id})
+    if not booking:
+        raise HTTPException(status_code=404, detail="BOOKING_NOT_FOUND")
+
+    roles = set(user.get("roles") or [])
+    if roles.intersection({"agency_admin", "agency_agent"}):
+        if str(booking.get("agency_id")) != str(user.get("agency_id")):
+            raise HTTPException(status_code=403, detail="FORBIDDEN")
+    elif roles.intersection({"hotel_admin", "hotel_staff"}):
+        if str(booking.get("hotel_id")) != str(user.get("hotel_id")):
+            raise HTTPException(status_code=403, detail="FORBIDDEN")
+    else:
+        raise HTTPException(status_code=403, detail="FORBIDDEN")
+
+    normalized = (payload.status or "").strip().lower()
+    if normalized not in {"unpaid", "partially_paid", "paid"}:
+        raise HTTPException(status_code=422, detail="INVALID_PAYMENT_STATUS")
+
+    await db.bookings.update_one(
+        {"_id": booking_id},
+        {"$set": {"payment_status": normalized, "updated_at": now_utc()}},
+    )
+
+    updated = await db.bookings.find_one({"_id": booking_id})
+    return serialize_doc(updated)
+
+
 @router.post("/{booking_id}/track/whatsapp-click", dependencies=[Depends(require_roles(["agency_admin", "agency_agent"]))])
 async def track_whatsapp_click(booking_id: str, user=Depends(get_current_user)):
     """Track when user clicks WhatsApp share button on booking confirmed page.
@@ -221,4 +262,3 @@ async def track_whatsapp_click(booking_id: str, user=Depends(get_current_user)):
     )
     
     return {"ok": True, "already_tracked": False}
-

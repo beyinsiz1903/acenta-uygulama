@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -131,10 +131,11 @@ async def get_hotel_booking(booking_id: str, user=Depends(get_current_user)):
     if not booking:
         raise HTTPException(status_code=404, detail="BOOKING_NOT_FOUND")
 
-
-
     return build_booking_public_view(booking)
 
+
+class BookingRejectIn(BaseModel):
+    reason: Optional[str] = Field(default=None, max_length=2000)
 
 
 @router.post(
@@ -227,107 +228,6 @@ async def approve_hotel_booking(booking_id: str, request: Request, user=Depends(
         },
     )
 
-
-
-class BookingRejectIn(BaseModel):
-    reason: Optional[str] = Field(default=None, max_length=2000)
-
-
-@router.post(
-    "/bookings/{booking_id}/reject",
-    dependencies=[Depends(require_roles(["hotel_admin", "hotel_staff"]))],
-)
-async def reject_hotel_booking(booking_id: str, payload: BookingRejectIn, request: Request, user=Depends(get_current_user)):
-    """Hotel panelinden gelen red aksiyonu.
-
-    - Sadece ilgili otelin rezervasyonlarını reddeder
-    - Sadece pending durumundaki rezervasyonlar için geçerlidir
-    - Idempotent: zaten rejected ise mevcut kaydı döner
-    """
-    db = await get_db()
-    hotel_id = _ensure_hotel_id(user)
-
-    booking = await db.bookings.find_one(
-        {
-            "organization_id": user["organization_id"],
-            "hotel_id": hotel_id,
-            "_id": booking_id,
-        }
-    )
-
-    if not booking:
-        raise HTTPException(status_code=404, detail="BOOKING_NOT_FOUND")
-
-    before = dict(booking)
-
-    status = (booking.get("status") or "").lower()
-
-    if status == "rejected":
-        # Idempotent: already rejected
-        return build_booking_public_view(booking)
-
-    if status != "pending":
-        raise HTTPException(status_code=409, detail="INVALID_STATE_TRANSITION")
-
-    now = now_utc()
-
-    await db.bookings.update_one(
-        {
-            "organization_id": user["organization_id"],
-            "hotel_id": hotel_id,
-            "_id": booking_id,
-        },
-        {
-            "$set": {
-                "status": "rejected",
-                "rejected_at": now,
-                "updated_at": now,
-                "rejection_reason": payload.reason,
-                "approval_decision_at": now,
-                "approval_decided_by": {
-                    "user_id": user.get("id"),
-                    "email": user.get("email"),
-                },
-            }
-        },
-    )
-
-    updated = await db.bookings.find_one(
-        {
-            "organization_id": user["organization_id"],
-            "hotel_id": hotel_id,
-            "_id": booking_id,
-        }
-    )
-
-    if not updated:
-        raise HTTPException(status_code=500, detail="BOOKING_UPDATE_FAILED")
-
-    await write_booking_event(
-        db,
-        organization_id=user["organization_id"],
-        event_type="booking.rejected",
-        booking_id=booking_id,
-        hotel_id=str(updated.get("hotel_id")),
-        agency_id=str(updated.get("agency_id")),
-        payload={"source": "hotel_panel"},
-    )
-
-    await write_audit_log(
-        db,
-        organization_id=user["organization_id"],
-        actor={"actor_type": "user", "email": user.get("email"), "roles": user.get("roles")},
-        request=request,
-        action="booking.reject",
-        target_type="booking",
-        target_id=booking_id,
-        before=before,
-        after=updated,
-        meta={"source": "hotel_panel"},
-    )
-
-    return build_booking_public_view(updated)
-
     updated = await db.bookings.find_one(
         {
             "organization_id": user["organization_id"],
@@ -366,7 +266,6 @@ async def reject_hotel_booking(booking_id: str, payload: BookingRejectIn, reques
     )
 
     return build_booking_public_view(updated)
-
 
 
 class BookingNoteIn(BaseModel):
@@ -650,7 +549,6 @@ async def update_stop_sell(rule_id: str, payload: StopSellIn, request: Request, 
         after=update_doc,
     )
 
-
     if res.matched_count == 0:
         raise HTTPException(status_code=404, detail="STOP_SELL_NOT_FOUND")
 
@@ -858,7 +756,6 @@ async def delete_allocation(allocation_id: str, request: Request, user=Depends(g
         }
     )
 
-
     await write_audit_log(
         db,
         organization_id=user["organization_id"],
@@ -875,3 +772,119 @@ async def delete_allocation(allocation_id: str, request: Request, user=Depends(g
         raise HTTPException(status_code=404, detail="ALLOCATION_NOT_FOUND")
 
     return {"ok": True}
+
+
+@router.get(
+    "/dashboard/financial",
+    dependencies=[Depends(require_roles(["hotel_admin", "hotel_staff"]))],
+)
+async def hotel_financial_dashboard(
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
+    user=Depends(get_current_user),
+):
+    """Simple hotel-side financial dashboard.
+
+    Aggregates bookings for this hotel by agency.
+    """
+
+    db = await get_db()
+    hotel_id = _ensure_hotel_id(user)
+
+    if date_from and date_to:
+        start = _parse_date(date_from)
+        end = _parse_date(date_to)
+        if end < start:
+            raise HTTPException(status_code=422, detail="INVALID_DATE_RANGE")
+    elif date_from:
+        _parse_date(date_from)
+    elif date_to:
+        _parse_date(date_to)
+
+    match: dict[str, Any] = {
+        "organization_id": user["organization_id"],
+        "hotel_id": hotel_id,
+    }
+
+    if date_from:
+        match["created_at"] = {"$gte": datetime.fromisoformat(date_from + "T00:00:00")}
+    if date_to:
+        created_filter = match.get("created_at", {})
+        created_filter["$lte"] = datetime.fromisoformat(date_to + "T23:59:59")
+        match["created_at"] = created_filter
+
+    # Aggregate by agency
+    pipeline_by_agency = [
+        {"$match": match},
+        {
+            "$group": {
+                "_id": "$agency_id",
+                "net_total": {"$sum": {"$toDouble": {"$ifNull": ["$net_amount", 0]}}},
+            }
+        },
+    ]
+
+    by_agency_rows = await db.bookings.aggregate(pipeline_by_agency).to_list(200)
+
+    # Load agency names
+    agency_ids = [r["_id"] for r in by_agency_rows if r.get("_id")]
+    agency_map: dict[str, str] = {}
+    if agency_ids:
+        agencies = await db.agencies.find(
+            {"organization_id": user["organization_id"], "_id": {"$in": agency_ids}}
+        ).to_list(200)
+        agency_map = {str(a["_id"]): a.get("name") or "-" for a in agencies}
+
+    by_agency = [
+        {
+            "agency_id": str(r.get("_id") or ""),
+            "agency_name": agency_map.get(str(r.get("_id")), "-"),
+            "net_total": float(r.get("net_total") or 0),
+            "currency": "TRY",
+        }
+        for r in by_agency_rows
+    ]
+
+    # Overall aggregates
+    pipeline_overall = [
+        {"$match": match},
+        {
+            "$group": {
+                "_id": None,
+                "count": {"$sum": 1},
+                "gross_total": {"$sum": {"$toDouble": {"$ifNull": ["$gross_amount", 0]}}},
+                "net_total": {"$sum": {"$toDouble": {"$ifNull": ["$net_amount", 0]}}},
+            }
+        },
+    ]
+
+    overall_rows = await db.bookings.aggregate(pipeline_overall).to_list(1)
+    overall = overall_rows[0] if overall_rows else {}
+
+    total_bookings = overall.get("count", 0)
+    total_gross = float(overall.get("gross_total") or 0)
+    total_net = float(overall.get("net_total") or 0)
+
+    # For now we treat paid vs unpaid by payment_status flag.
+    pipeline_paid = [
+        {"$match": {**match, "payment_status": "paid"}},
+        {
+            "$group": {
+                "_id": None,
+                "net_total": {"$sum": {"$toDouble": {"$ifNull": ["$net_amount", 0]}}},
+            }
+        },
+    ]
+    paid_rows = await db.bookings.aggregate(pipeline_paid).to_list(1)
+    total_paid = float((paid_rows[0] or {}).get("net_total", 0)) if paid_rows else 0.0
+    total_unpaid = total_net - total_paid
+
+    return {
+        "total_bookings": total_bookings,
+        "total_gross": round(total_gross, 2),
+        "total_net": round(total_net, 2),
+        "total_paid": round(total_paid, 2),
+        "total_unpaid": round(total_unpaid, 2),
+        "by_agency": by_agency,
+        "currency": "TRY",
+    }

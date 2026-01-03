@@ -79,7 +79,7 @@ export function FinanceSummaryCard({
             </SelectContent>
           </Select>
         </div>
-        <div className="flex gap-2 justify-end">
+        <div className="flex flex-wrap gap-2 justify-end">
           <Button
             data-testid="payment-status-save-button"
             onClick={onSave}
@@ -88,11 +88,25 @@ export function FinanceSummaryCard({
             Kaydet
           </Button>
           <Button
+            data-testid="voucher-download-button"
+            variant="outline"
+            onClick={onDownloadVoucher}
+          >
+            <Ticket className="h-4 w-4 mr-2" /> Voucher
+          </Button>
+          <Button
+            data-testid="voucher-email-button"
+            variant="outline"
+            onClick={onSendVoucherEmail}
+          >
+            <Send className="h-4 w-4 mr-2" /> Email
+          </Button>
+          <Button
             data-testid="self-billing-download-button"
             variant="outline"
             onClick={onDownloadPdf}
           >
-            <FileText className="h-4 w-4 mr-2" /> PDF
+            <FileText className="h-4 w-4 mr-2" /> Self-billing
           </Button>
         </div>
       </CardFooter>

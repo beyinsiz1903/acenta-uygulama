@@ -108,13 +108,14 @@ class RBACWrongHotelDisputeTester:
             200,
             token=self.super_admin_token
         )
-        if success and 'hotels' in response and len(response['hotels']) >= 2:
-            self.hotel1_id = response['hotels'][0]['id']
-            self.hotel2_id = response['hotels'][1]['id']
+        # Response is a list directly, not wrapped in 'hotels' key
+        if success and isinstance(response, list) and len(response) >= 2:
+            self.hotel1_id = response[0]['id']
+            self.hotel2_id = response[1]['id']
             self.log(f"   ✓ Hotel1 ID: {self.hotel1_id}")
             self.log(f"   ✓ Hotel2 ID: {self.hotel2_id}")
             return True
-        elif success and 'hotels' in response and len(response['hotels']) == 1:
+        elif success and isinstance(response, list) and len(response) == 1:
             self.log(f"   ⚠️  Only 1 hotel found, need at least 2 for testing")
             return False
         return False

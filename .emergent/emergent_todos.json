@@ -1,10 +1,10 @@
 [
   {
-    "content": "Komisyon, financial_snapshot, payment_status, voucher ve self-billing PDF için backend modelleri ve API uçlarını tasarla ve uygula",
+    "content": "Mutabakat ekranları, rezervasyon finans özeti, ödeme durumu takibi, agency raporları ve hotel financial dashboard için frontend UI/akışlarını uygula",
     "status": "completed"
   },
   {
-    "content": "Mutabakat ekranları, rezervasyon finans özeti, ödeme durumu takibi, agency raporları ve hotel financial dashboard için frontend UI/akışlarını uygula",
+    "content": "Backend ve frontend için lint ve otomatik testleri çalıştır",
     "status": "in_progress"
   }
 ]

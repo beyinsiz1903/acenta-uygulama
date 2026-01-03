@@ -329,7 +329,7 @@ export default function AgencySettlementsPage() {
                 if (!activeSettlement) return;
                 try {
                   setActionLoading(true);
-                  const id = activeSettlement.settlement_id || activeSettlement.id || activeSettlement._id;
+                  const id = activeSettlement.id || activeSettlement._id || activeSettlement.settlement_id;
                   await api.post(`/agency/settlements/${id}/dispute`, { reason: disputeReason });
       {/* Entries (actionable) table */}
       <div className="rounded-2xl border bg-card shadow-sm overflow-hidden">

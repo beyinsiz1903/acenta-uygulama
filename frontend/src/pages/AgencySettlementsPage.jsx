@@ -21,6 +21,23 @@ function normalizeStatus(v) {
   return String(v || "").trim().toLowerCase();
 }
 
+function settlementBadge(status) {
+  const s = normalizeStatus(status);
+  switch (s) {
+    case "confirmed_by_agency":
+      return { label: "Acenta Onayladı", variant: "outline" };
+    case "confirmed_by_hotel":
+      return { label: "Otel Onayladı", variant: "outline" };
+    case "closed":
+      return { label: "Kapandı", variant: "default" };
+    case "disputed":
+      return { label: "İtiraz", variant: "destructive" };
+    case "open":
+    default:
+      return { label: "Açık", variant: "secondary" };
+  }
+}
+
 function summarizeEntriesByCurrency(entries, amountKey) {
   const byCur = new Map(); // cur -> { total, open, settled, other }
   for (const e of entries || []) {

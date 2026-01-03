@@ -283,6 +283,7 @@ async def dispute_settlement(settlement_id: str, payload: SettlementDisputeIn, u
     else:
         raise HTTPException(status_code=403, detail="FORBIDDEN")
 
+    # When disputed, status is always disputed
     await db.booking_financial_entries.update_one(
         {"_id": settlement_id},
         {
@@ -291,6 +292,7 @@ async def dispute_settlement(settlement_id: str, payload: SettlementDisputeIn, u
                 "dispute_reason": payload.reason,
                 "disputed_at": now_utc(),
                 "disputed_by": user.get("email"),
+                "status": "disputed",
             }
         },
     )

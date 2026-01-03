@@ -231,7 +231,7 @@ async def get_self_billing_pdf(booking_id: str, user=Depends(get_current_user)):
     if roles.intersection({"agency_admin", "agency_agent"}):
         if str(booking.get("agency_id")) != str(user.get("agency_id")):
             raise HTTPException(status_code=403, detail="FORBIDDEN")
-    elif roles.intersection({"hotel_admin", "hotel_staff"])):
+    elif roles.intersection({"hotel_admin", "hotel_staff"}):
         if str(booking.get("hotel_id")) != str(user.get("hotel_id")):
             raise HTTPException(status_code=403, detail="FORBIDDEN")
     else:

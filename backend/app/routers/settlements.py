@@ -207,7 +207,8 @@ async def agency_settlements(
         "status": status or "all",
         "agency_id": str(user["agency_id"]),
         "totals": totals_list,
-        "entries": [serialize_doc(e) for e in entries[:200]],
+        "entries": [serialize_doc(e) for e in filtered_entries[:200]],
+        "skipped_count": skipped_count,
     }
 
 

@@ -189,6 +189,36 @@ export default function AgencyHotelDetailPage() {
               Geri
             </Button>
           </div>
+      {/* CRM Tabs */}
+      <Card>
+        <CardContent className="pt-4">
+          <Tabs defaultValue="notes" data-testid="crm-tabs">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="contacts">Kişiler</TabsTrigger>
+              <TabsTrigger value="notes">Notlar</TabsTrigger>
+              <TabsTrigger value="tasks">Görevler</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="notes" className="mt-3">
+              <HotelNotesTab
+                hotelId={hotelId}
+                agencyId={user?.agency_id}
+                user={user}
+              />
+            </TabsContent>
+
+            <TabsContent value="contacts" className="mt-3">
+              <div className="text-xs text-slate-400">Yakında: Kişiler</div>
+            </TabsContent>
+
+            <TabsContent value="tasks" className="mt-3">
+              <div className="text-xs text-slate-400">Yakında: Görevler</div>
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
+
+
         </CardHeader>
       </Card>
 

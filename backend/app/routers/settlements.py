@@ -59,6 +59,24 @@ async def hotel_settlements(
     if agency_id:
         q["agency_id"] = agency_id
     # Backfill status for old entries without explicit status
+    # Backfill status for old entries without explicit status
+    for e in entries:
+        if "status" not in e or not e.get("status"):
+            if e.get("disputed"):
+                e["status"] = "disputed"
+            else:
+                agency_conf = bool(e.get("agency_confirmed_at"))
+                hotel_conf = bool(e.get("hotel_confirmed_at"))
+                if agency_conf and hotel_conf:
+                    e["status"] = "closed"
+                elif agency_conf:
+                    e["status"] = "confirmed_by_agency"
+                elif hotel_conf:
+                    e["status"] = "confirmed_by_hotel"
+                else:
+                    e["status"] = "open"
+
+
     for e in entries:
         if "status" not in e or not e.get("status"):
             if e.get("disputed"):

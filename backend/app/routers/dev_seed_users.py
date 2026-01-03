@@ -46,7 +46,7 @@ async def seed_hotel_user(hotel_id: str, email: str, password: str = "demo123", 
         "organization_id": org_id,
         "hotel_id": hotel_id,
         "email": email,
-        "password_hash": password,  # NOTE: in real system this should be hashed; for dev only
+        "password_hash": hash_password(password),  # Properly hash the password
         "roles": ["hotel_admin"],
         "is_active": True,
         "created_at": now,

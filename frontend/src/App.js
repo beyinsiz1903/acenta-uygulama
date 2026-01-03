@@ -47,6 +47,7 @@ import HotelBookingPrintPage from "./pages/HotelBookingPrintPage";
 import HotelStopSellPage from "./pages/HotelStopSellPage";
 import HotelAllocationsPage from "./pages/HotelAllocationsPage";
 import HotelSettlementsPage from "./pages/HotelSettlementsPage";
+import HotelDashboardPage from "./pages/HotelDashboardPage";
 import HotelIntegrationsPage from "./pages/HotelIntegrationsPage";
 import HotelHelpPage from "./pages/HotelHelpPage";
 import HotelPublicBookingPage from "./pages/HotelPublicBookingPage";

@@ -1,10 +1,22 @@
 [
   {
-    "content": "testing_agent_v3 ile uçtan uca finansal akışların test edilmesini sağla ve tüm hataları düzelt",
-    "status": "completed"
+    "content": "Dev ortamı için seed endpointi ekle: POST /api/dev/seed/agency-bookings ile demo booking, agency ve hotel verisi üret",
+    "status": "in_progress"
   },
   {
-    "content": "Phase 2: All user stories covered in Development and testing.",
-    "status": "completed"
+    "content": "Voucher parity: /api/bookings/{id}/voucher.pdf, /api/bookings/{id}/voucher/email, /api/bookings/{id}/self-billing.pdf backend + FinanceSummaryCard içinde voucher indirme/email UI",
+    "status": "pending"
+  },
+  {
+    "content": "Settlement confirm/dispute/reopen workflowunu backend ve Agency/Hotel settlements UI üzerinde uygula",
+    "status": "pending"
+  },
+  {
+    "content": "Settlement hesaplama ve raporlarında financial_snapshot eksikliği için warnings guard ekle",
+    "status": "pending"
+  },
+  {
+    "content": "Yeni özellikler için testing_agent_v3 ile uçtan uca test yap ve tüm hataları düzelt",
+    "status": "pending"
   }
 ]

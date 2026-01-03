@@ -1,10 +1,10 @@
 [
   {
-    "content": "Mutabakat ekranları, rezervasyon finans özeti, ödeme durumu takibi, agency raporları ve hotel financial dashboard için frontend UI/akışlarını uygula",
+    "content": "Backend ve frontend için lint ve otomatik testleri çalıştır",
     "status": "completed"
   },
   {
-    "content": "Backend ve frontend için lint ve otomatik testleri çalıştır",
+    "content": "testing_agent_v3 ile uçtan uca finansal akışların test edilmesini sağla ve tüm hataları düzelt",
     "status": "in_progress"
   }
 ]

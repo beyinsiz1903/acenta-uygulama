@@ -1,10 +1,22 @@
 [
   {
-    "content": "Dev ortamı için seed endpointi ekle: POST /api/dev/seed/agency-bookings ile demo booking, agency ve hotel verisi üret",
-    "status": "completed"
+    "content": "Voucher & self-billing için /api/bookings/{id}/... bridge endpointleri ekle ve frontend çağrılarını bu URI’lara hizala",
+    "status": "in_progress"
   },
   {
-    "content": "Voucher parity: /api/bookings/{id}/voucher.pdf, /api/bookings/{id}/voucher/email, /api/bookings/{id}/self-billing.pdf backend + FinanceSummaryCard içinde voucher indirme/email UI",
-    "status": "in_progress"
+    "content": "Settlement status alanını ve confirm/dispute/reopen workflow’unu statü mantığı ile tamamla",
+    "status": "pending"
+  },
+  {
+    "content": "Agency ve Hotel settlements UI’da confirm/dispute modalları, butonları ve status badge’lerini bağla",
+    "status": "pending"
+  },
+  {
+    "content": "Settlement hesaplamasına sessiz guard (skipped_count) ekle ve UI’da göstergesi olsun",
+    "status": "pending"
+  },
+  {
+    "content": "Yeni voucher & settlement akışları için testing_agent_v3 ile uçtan uca test et",
+    "status": "pending"
   }
 ]

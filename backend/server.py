@@ -60,6 +60,9 @@ from app.routers.agency_catalog_capacity_dashboard import router as agency_catal
 from app.routers.agency_catalog_overbooks import router as agency_catalog_overbooks_router
 from app.routers.public_vouchers import router as public_vouchers_router
 from app.routers.public_catalog_offers import router as public_catalog_offers_router
+from app.routers.crm_hotel_contacts import router as crm_hotel_contacts_router
+from app.routers.crm_hotel_notes import router as crm_hotel_notes_router
+from app.routers.crm_hotel_tasks import router as crm_hotel_tasks_router
 from app.routers.dev_tools import router as dev_tools_router
 from app.routers.dev_seed_bookings import router as dev_seed_bookings_router
 from app.routers.dev_seed_settlements import router as dev_seed_settlements_router
@@ -141,6 +144,9 @@ app.include_router(agency_catalog_capacity_dashboard_router)
 app.include_router(agency_catalog_overbooks_router)
 app.include_router(public_vouchers_router)
 app.include_router(public_catalog_offers_router)
+app.include_router(crm_hotel_contacts_router)
+app.include_router(crm_hotel_notes_router)
+app.include_router(crm_hotel_tasks_router)
 
 if os.getenv("ENABLE_DEV_ROUTERS") == "true":
     app.include_router(dev_tools_router)

@@ -7,7 +7,7 @@ import json
 from datetime import datetime
 
 class C3ResponseDemo:
-    def __init__(self, base_url="https://travel-platform-11.preview.emergentagent.com"):
+    def __init__(self, base_url="https://uygulama-bilgi.preview.emergentagent.com"):
         self.base_url = base_url
         self.token = None
         self.booking_id = None

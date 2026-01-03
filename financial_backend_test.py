@@ -103,7 +103,7 @@ class FinancialFeaturesTester:
             "POST",
             "api/auth/login",
             200,
-            data={"email": "hotel1@demo.test", "password": "hotel123"}
+            data={"email": "hoteladmin@acenta.test", "password": "admin123"}
         )
         if success and 'access_token' in response:
             self.hotel_token = response['access_token']

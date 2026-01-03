@@ -268,56 +268,6 @@ export default function HotelSettlementsPage() {
                 <TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground">
                   Kayıt yok.
                 </TableCell>
-      <Dialog open={disputeOpen} onOpenChange={setDisputeOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>İtiraz Aç</DialogTitle>
-          </DialogHeader>
-          <div className="mt-2">
-            <label className="text-xs text-muted-foreground" htmlFor="hotel-dispute-reason">
-              İtiraz nedeni
-            </label>
-            <textarea
-              id="hotel-dispute-reason"
-              data-testid="hotel-settlement-dispute-reason"
-              className="mt-1 w-full min-h-[80px] rounded-md border bg-background px-3 py-2 text-sm"
-              value={disputeReason}
-              onChange={(e) => setDisputeReason(e.target.value)}
-            />
-          </div>
-          <DialogFooter className="mt-3">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setDisputeOpen(false)}
-            >
-              Vazgeç
-            </Button>
-            <Button
-              type="button"
-              data-testid="hotel-settlement-dispute-submit"
-              disabled={!disputeReason || actionLoading || !activeSettlement}
-              onClick={async () => {
-                if (!activeSettlement) return;
-                try {
-                  setActionLoading(true);
-                  const id = activeSettlement.settlement_id || activeSettlement.id || activeSettlement._id;
-                  await api.post(`/agency/settlements/${id}/dispute`, { reason: disputeReason });
-                  setDisputeOpen(false);
-                  await load();
-                } catch (e) {
-                  setError(apiErrorMessage(e));
-                } finally {
-                  setActionLoading(false);
-                }
-              }}
-            >
-              Gönder
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
               </TableRow>
             ) : (
               rows.map((r) => (

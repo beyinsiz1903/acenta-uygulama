@@ -361,6 +361,10 @@ def main():
     if not tester.test_seed_settlements_hotel2():
         tester.log("\n⚠️  Failed to seed hotel2 settlements")
     
+    if not tester.test_create_hotel1_admin():
+        tester.log("\n❌ Cannot proceed without hotel1 admin user")
+        return tester.print_summary()
+    
     if not tester.test_create_hotel2_admin():
         tester.log("\n❌ Cannot proceed without hotel2 admin user")
         return tester.print_summary()

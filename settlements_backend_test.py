@@ -230,6 +230,26 @@ class SettlementsTester:
         if success:
             entries = response.get('entries', [])
             self.log(f"✅ Hotel settlements list - found {len(entries)} entries")
+            # Store hotel settlement IDs for testing
+            if len(entries) > 0:
+                for entry in entries[:5]:
+                    entry_id = entry.get('id') or entry.get('_id') or entry.get('settlement_id')
+                    if entry_id:
+                        # Check if this settlement already exists in our list
+                        existing = False
+                        for s in self.settlement_ids:
+                            if s['id'] == entry_id:
+                                existing = True
+                                break
+                        if not existing:
+                            self.settlement_ids.append({
+                                'id': entry_id,
+                                'status': entry.get('status'),
+                                'agency_id': entry.get('agency_id'),
+                                'hotel_id': entry.get('hotel_id'),
+                                'source': 'hotel'  # Mark as from hotel list
+                            })
+                self.log(f"✅ Total settlement IDs stored: {len(self.settlement_ids)}")
             return len(entries) > 0
         return False
 

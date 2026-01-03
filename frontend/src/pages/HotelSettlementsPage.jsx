@@ -272,6 +272,20 @@ export default function HotelSettlementsPage() {
             ) : (
               rows.map((r) => (
                 <TableRow key={r.agency_id} className="hover:bg-accent/40">
+                  <TableCell>
+                    {(() => {
+                      const b = settlementBadge(r.status);
+                      return (
+                        <Badge
+                          data-testid="settlement-status-badge"
+                          variant={b.variant}
+                          className="text-xs"
+                        >
+                          {b.label}
+                        </Badge>
+                      );
+                    })()}
+                  </TableCell>
                   <TableCell className="font-medium">
                     <div>{r.agency_name || "-"}</div>
                     <div className="text-xs text-muted-foreground">{r.agency_id}</div>

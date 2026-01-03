@@ -22,10 +22,20 @@ def _is_dev_env() -> bool:
     "/seed/settlements",
     dependencies=[Depends(require_roles(["super_admin"]))],
 )
-async def seed_settlements(month: str, count: int = 10, user=Depends(get_current_user)):
+async def seed_settlements(
+    month: str,
+    count: int = 10,
+    hotel_id: str | None = None,
+    agency_id: str | None = None,
+    user=Depends(get_current_user),
+):
     """Seed booking_financial_entries documents for a given month.
 
     This is purely for demo/testing so that settlement UI has data to work with.
+
+    Optional query params:
+    - hotel_id: force all entries to use this hotel
+    - agency_id: force all entries to use this agency
     """
 
     if not _is_dev_env():
@@ -35,8 +45,16 @@ async def seed_settlements(month: str, count: int = 10, user=Depends(get_current
     org_id = str(user["organization_id"])
 
     # Ensure some agencies and hotels exist
-    agencies = await db.agencies.find({"organization_id": org_id}).to_list(10)
-    hotels = await db.hotels.find({"organization_id": org_id}).to_list(10)
+    agencies_query = {"organization_id": org_id}
+    hotels_query = {"organization_id": org_id}
+
+    if agency_id:
+        agencies_query["_id"] = agency_id
+    if hotel_id:
+        hotels_query["_id"] = hotel_id
+
+    agencies = await db.agencies.find(agencies_query).to_list(10)
+    hotels = await db.hotels.find(hotels_query).to_list(10)
 
     if not agencies or not hotels:
         raise HTTPException(status_code=400, detail="NEED_AGENCIES_AND_HOTELS_FIRST")
@@ -47,8 +65,8 @@ async def seed_settlements(month: str, count: int = 10, user=Depends(get_current
     now = now_utc()
 
     for _ in range(max(count, 1)):
-        agency = random.choice(agencies)
-        hotel = random.choice(hotels)
+        agency = agencies[0] if agency_id else random.choice(agencies)
+        hotel = hotels[0] if hotel_id else random.choice(hotels)
 
         gross = random.randint(8000, 25000)
         commission_percent = random.choice([8.0, 10.0, 12.0])
@@ -88,4 +106,4 @@ async def seed_settlements(month: str, count: int = 10, user=Depends(get_current
         await db.booking_financial_entries.insert_one(doc)
         created += 1
 
-    return {"ok": True, "created": created, "month": month}
+    return {"ok": True, "created": created, "month": month, "agency_id": agency_id, "hotel_id": hotel_id}

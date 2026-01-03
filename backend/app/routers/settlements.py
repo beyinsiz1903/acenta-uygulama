@@ -31,9 +31,10 @@ def _settlement_query_base(user: dict[str, Any], month: str, status: Optional[st
         "month": month,
     }
     if status:
-        if status not in {"open", "settled"}:
+        allowed = {"open", "confirmed_by_agency", "confirmed_by_hotel", "closed", "disputed"}
+        if status not in allowed:
             raise HTTPException(status_code=422, detail="INVALID_STATUS")
-        q["settlement_status"] = status
+        q["status"] = status
     return q
 
 

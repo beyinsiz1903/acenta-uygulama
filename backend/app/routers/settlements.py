@@ -61,8 +61,16 @@ async def hotel_settlements(
 
     entries = await db.booking_financial_entries.find(q).sort("created_at", -1).to_list(5000)
 
+    skipped_count = 0
+    filtered_entries = []
+    for e in entries:
+        if e.get("gross_amount") is None or e.get("commission_amount") is None or e.get("net_amount") is None:
+            skipped_count += 1
+            continue
+        filtered_entries.append(e)
+
     # totals by agency
-    agency_ids = list({e.get("agency_id") for e in entries if e.get("agency_id")})
+    agency_ids = list({e.get("agency_id") for e in filtered_entries if e.get("agency_id")})
     agency_map: dict[str, str] = {}
     if agency_ids:
         agencies = await db.agencies.find({"organization_id": user["organization_id"], "_id": {"$in": agency_ids}}).to_list(200)
@@ -112,7 +120,8 @@ async def hotel_settlements(
         "status": status or "all",
         "hotel_id": str(user["hotel_id"]),
         "totals": totals_list,
-        "entries": [serialize_doc(e) for e in entries[:200]],
+        "entries": [serialize_doc(e) for e in filtered_entries[:200]],
+        "skipped_count": skipped_count,
     }
 
 

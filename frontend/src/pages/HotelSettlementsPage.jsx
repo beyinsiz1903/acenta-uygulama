@@ -446,7 +446,7 @@ export default function HotelSettlementsPage() {
         </Table>
       </div>
 
-                  const id = activeSettlement.settlement_id || activeSettlement.id || activeSettlement._id;
+                  const id = activeSettlement.id || activeSettlement._id || activeSettlement.settlement_id;
                   await api.post(`/agency/settlements/${id}/dispute`, { reason: disputeReason });
                   setDisputeOpen(false);
                   await load();

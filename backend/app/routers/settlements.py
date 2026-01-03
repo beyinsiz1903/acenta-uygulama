@@ -3,10 +3,11 @@ from __future__ import annotations
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Response
+from pydantic import BaseModel
 
 from app.auth import get_current_user, require_roles
 from app.db import get_db
-from app.utils import serialize_doc, to_csv
+from app.utils import serialize_doc, to_csv, now_utc
 
 hotel_router = APIRouter(prefix="/api/hotel", tags=["hotel-settlements"])
 agency_router = APIRouter(prefix="/api/agency", tags=["agency-settlements"])

@@ -5,7 +5,7 @@ import uuid
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from app.auth import get_current_user, require_roles
+from app.auth import get_current_user, require_roles, hash_password
 from app.db import get_db
 from app.utils import now_utc
 

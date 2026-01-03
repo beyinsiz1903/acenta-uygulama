@@ -1,26 +1,6 @@
 [
   {
     "content": "Mevcut backend finansal yapıyı analiz et (bookings, settlements, vouchers, reports, payment_status, commission alanları)",
-    "status": "pending"
-  },
-  {
-    "content": "Mevcut frontend finansal ekranları analiz et (AgencySettlementsPage, HotelSettlementsPage, raporlar, dashboard, voucher akışı)",
-    "status": "pending"
-  },
-  {
-    "content": "Komisyon, financial_snapshot, payment_status, voucher ve self-billing PDF için backend modelleri ve API uçlarını tasarla ve uygula",
-    "status": "pending"
-  },
-  {
-    "content": "Mutabakat ekranları, rezervasyon finans özeti, ödeme durumu takibi, agency raporları ve hotel financial dashboard için frontend UI/akışlarını uygula",
-    "status": "pending"
-  },
-  {
-    "content": "Backend ve frontend için lint ve otomatik testleri çalıştır",
-    "status": "pending"
-  },
-  {
-    "content": "testing_agent_v3 ile uçtan uca finansal akışların test edilmesini sağla ve tüm hataları düzelt",
-    "status": "pending"
+    "status": "in_progress"
   }
 ]

@@ -1,10 +1,14 @@
 [
   {
-    "content": "Settlement status alanını ve confirm/dispute/reopen workflow’unu statü mantığı ile tamamla",
+    "content": "Agency ve Hotel settlements UI’da confirm/dispute modalları, butonları ve status badge’lerini bağla",
     "status": "completed"
   },
   {
-    "content": "Agency ve Hotel settlements UI’da confirm/dispute modalları, butonları ve status badge’lerini bağla",
+    "content": "Settlement hesaplamasına sessiz guard (skipped_count) ekle ve UI’da göstergesi olsun",
+    "status": "completed"
+  },
+  {
+    "content": "Yeni voucher & settlement akışları için testing_agent_v3 ile uçtan uca test et",
     "status": "in_progress"
   }
 ]

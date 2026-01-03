@@ -296,19 +296,26 @@ class SettlementsTester:
         """Test 3: Hotel dispute positive"""
         self.log("\n=== TEST 3: HOTEL DISPUTE POSITIVE ===")
         
-        # Find an open or confirmed_by_agency settlement
+        # Find an open or confirmed_by_agency settlement that belongs to the hotel
         target_settlement = None
         for s in self.settlement_ids:
-            if s['status'] in ['open', 'confirmed_by_agency']:
+            # Only select settlements from hotel list or that match hotel_id
+            if s.get('source') == 'hotel' and s['status'] in ['open', 'confirmed_by_agency']:
+                target_settlement = s
+                break
+            elif s['hotel_id'] == self.hotel1_id and s['status'] in ['open', 'confirmed_by_agency']:
                 target_settlement = s
                 break
         
         if not target_settlement:
             self.log("❌ No suitable settlement found for hotel dispute test")
+            self.log(f"   Available settlements: {len(self.settlement_ids)}")
+            for s in self.settlement_ids[:3]:
+                self.log(f"   - id: {s['id']}, status: {s['status']}, hotel_id: {s.get('hotel_id')}, source: {s.get('source')}")
             return False
         
         settlement_id = target_settlement['id']
-        self.log(f"Testing with settlement_id: {settlement_id}, status: {target_settlement['status']}")
+        self.log(f"Testing with settlement_id: {settlement_id}, status: {target_settlement['status']}, hotel_id: {target_settlement.get('hotel_id')}")
         
         success, response = self.run_test(
             f"POST /api/agency/settlements/{settlement_id}/dispute",

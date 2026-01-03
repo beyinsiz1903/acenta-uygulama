@@ -1,9 +1,5 @@
 [
   {
-    "content": "Backend ve frontend için lint ve otomatik testleri çalıştır",
-    "status": "completed"
-  },
-  {
     "content": "testing_agent_v3 ile uçtan uca finansal akışların test edilmesini sağla ve tüm hataları düzelt",
     "status": "in_progress"
   }

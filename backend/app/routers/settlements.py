@@ -225,6 +225,28 @@ async def confirm_settlement(settlement_id: str, user=Depends(get_current_user))
     else:
         raise HTTPException(status_code=403, detail="FORBIDDEN")
 
+
+    # Derive status based on confirmation flags and dispute flag
+    status = "open"
+    agency_confirmed = bool(update.get("agency_confirmed_at") or settlement.get("agency_confirmed_at"))
+    hotel_confirmed = bool(update.get("hotel_confirmed_at") or settlement.get("hotel_confirmed_at"))
+    if settlement.get("disputed"):
+        status = "disputed"
+    elif agency_confirmed and hotel_confirmed:
+        status = "closed"
+    elif agency_confirmed:
+        status = "confirmed_by_agency"
+    elif hotel_confirmed:
+        status = "confirmed_by_hotel"
+
+    await db.booking_financial_entries.update_one(
+        {"_id": settlement_id},
+        {"$set": {**update, "status": status}},
+    )
+
+    updated = await db.booking_financial_entries.find_one({"_id": settlement_id})
+    return serialize_doc(updated)
+
     await db.booking_financial_entries.update_one(
         {"_id": settlement_id},
         {"$set": update},

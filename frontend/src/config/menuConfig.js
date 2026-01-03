@@ -26,6 +26,7 @@ export const MENU_CONFIG = {
         { label: "Hızlı Rezervasyon", path: "/app/agency/hotels" },
         { label: "Rezervasyonlarım", path: "/app/agency/bookings" },
         { label: "Mutabakat", path: "/app/agency/settlements" },
+        { label: "Finansal Raporlar", path: "/app/agency/reports" },
         { label: "Ödeme Ayarları", path: "/app/agency/settings/payment" },
         { label: "Yardım", path: "/app/agency/help" },
       ],
@@ -53,6 +54,7 @@ export const MENU_CONFIG = {
       label: "Otel",
       children: [
         { label: "Rezervasyonlarım", path: "/app/hotel/bookings" },
+        { label: "Finansal Özet", path: "/app/hotel/dashboard" },
         { label: "Satışa Kapat", path: "/app/hotel/stop-sell" },
         { label: "Acenta Kotası", path: "/app/hotel/allocations" },
         { label: "Mutabakat", path: "/app/hotel/settlements" },

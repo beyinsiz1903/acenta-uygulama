@@ -36,6 +36,7 @@ import AgencyBookingPendingPage from "./pages/AgencyBookingPendingPage";
 import AgencyBookingsListPage from "./pages/AgencyBookingsListPage";
 import AgencyBookingPrintPage from "./pages/AgencyBookingPrintPage";
 import AgencySettlementsPage from "./pages/AgencySettlementsPage";
+import AgencyReportsPage from "./pages/AgencyReportsPage";
 import AgencyHelpPage from "./pages/AgencyHelpPage";
 import AgencyToursPage from "./pages/AgencyToursPage";
 import AgencyTourEditPage from "./pages/AgencyTourEditPage";

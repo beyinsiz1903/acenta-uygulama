@@ -73,6 +73,11 @@ export default function AgencySettlementsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const [activeSettlement, setActiveSettlement] = useState(null);
+  const [disputeOpen, setDisputeOpen] = useState(false);
+  const [disputeReason, setDisputeReason] = useState("");
+  const [actionLoading, setActionLoading] = useState(false);
+
   async function load() {
     setLoading(true);
     setError("");

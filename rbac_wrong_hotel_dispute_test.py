@@ -150,6 +150,23 @@ class RBACWrongHotelDisputeTester:
             return True
         return False
 
+    def test_create_hotel1_admin(self):
+        """Create hotel1 admin user via dev seed endpoint"""
+        success, response = self.run_test(
+            "Create Hotel1 Admin User",
+            "POST",
+            "api/dev/seed/users/hotel",
+            200,
+            token=self.super_admin_token,
+            params={"hotel_id": self.hotel1_id, "email": "hotel1@demo.test", "password": "demo123"}
+        )
+        if success and response.get('ok'):
+            self.log(f"   ✓ Hotel1 admin user created (user_id: {response.get('user_id')})")
+            if response.get('already_exists'):
+                self.log(f"   ℹ️  User already existed")
+            return True
+        return False
+
     def test_create_hotel2_admin(self):
         """Create hotel2 admin user via dev seed endpoint"""
         success, response = self.run_test(

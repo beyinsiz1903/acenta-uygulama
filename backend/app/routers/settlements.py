@@ -320,6 +320,7 @@ async def reopen_settlement(settlement_id: str, user=Depends(get_current_user)):
                 "dispute_reason": None,
                 "disputed_at": None,
                 "disputed_by": None,
+                "status": "open",
             }
         },
     )

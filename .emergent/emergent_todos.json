@@ -1,10 +1,10 @@
 [
   {
-    "content": "Mevcut backend finansal yapıyı analiz et (bookings, settlements, vouchers, reports, payment_status, commission alanları)",
+    "content": "Mevcut frontend finansal ekranları analiz et (AgencySettlementsPage, HotelSettlementsPage, raporlar, dashboard, voucher akışı)",
     "status": "completed"
   },
   {
-    "content": "Mevcut frontend finansal ekranları analiz et (AgencySettlementsPage, HotelSettlementsPage, raporlar, dashboard, voucher akışı)",
+    "content": "Komisyon, financial_snapshot, payment_status, voucher ve self-billing PDF için backend modelleri ve API uçlarını tasarla ve uygula",
     "status": "in_progress"
   }
 ]

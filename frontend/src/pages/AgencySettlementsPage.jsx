@@ -250,6 +250,11 @@ export default function AgencySettlementsPage() {
                     {formatMoney(r.net_total || 0, r.currency || "TRY")}
                   </TableCell>
                   <TableCell className="text-right">{r.count}</TableCell>
+                  <TableCell className="text-right">
+                    <button className="text-xs text-primary underline" data-testid="agency-settlement-confirm-button">
+                      Onayla / İtiraz
+                    </button>
+                  </TableCell>
                 </TableRow>
               ))
             )}

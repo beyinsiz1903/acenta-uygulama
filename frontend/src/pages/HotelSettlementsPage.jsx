@@ -21,6 +21,23 @@ function currentMonth() {
   return `${y}-${m}`;
 }
 
+function settlementBadge(status) {
+  const s = String(status || "").trim().toLowerCase();
+  switch (s) {
+    case "confirmed_by_agency":
+      return { label: "Acenta Onayladı", variant: "outline" };
+    case "confirmed_by_hotel":
+      return { label: "Otel Onayladı", variant: "outline" };
+    case "closed":
+      return { label: "Kapandı", variant: "default" };
+    case "disputed":
+      return { label: "İtiraz", variant: "destructive" };
+    case "open":
+    default:
+      return { label: "Açık", variant: "secondary" };
+  }
+}
+
 export default function HotelSettlementsPage() {
   const [month, setMonth] = useState(currentMonth());
   const [status, setStatus] = useState("");
@@ -29,6 +46,11 @@ export default function HotelSettlementsPage() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const [activeSettlement, setActiveSettlement] = useState(null);
+  const [disputeOpen, setDisputeOpen] = useState(false);
+  const [disputeReason, setDisputeReason] = useState("");
+  const [actionLoading, setActionLoading] = useState(false);
 
   async function load() {
     setLoading(true);

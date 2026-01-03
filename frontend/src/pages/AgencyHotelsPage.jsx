@@ -8,6 +8,8 @@ import { Card, CardContent } from "../components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { Button } from "../components/ui/button";
 import StepBar from "../components/StepBar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+import HotelNotesTab from "../components/crm/HotelNotesTab";
 
 const CM_META = {
   connected: { label: "CM: Connected", variant: "default" },

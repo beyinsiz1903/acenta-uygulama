@@ -216,6 +216,7 @@ export default function AgencySettlementsPage() {
               <TableHead className="text-right">Komisyon</TableHead>
               <TableHead className="text-right">Net (Otel Alacağı)</TableHead>
               <TableHead className="text-right">Adet</TableHead>
+              <TableHead className="text-right">İşlemler</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

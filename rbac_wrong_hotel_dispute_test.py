@@ -177,8 +177,8 @@ class RBACWrongHotelDisputeTester:
             200,
             data={"email": "hotel1@demo.test", "password": "demo123"}
         )
-        if success and 'token' in response:
-            self.hotel1_admin_token = response['token']
+        if success and 'access_token' in response:
+            self.hotel1_admin_token = response['access_token']
             user = response.get('user', {})
             self.log(f"   ✓ Hotel1 admin token obtained")
             self.log(f"   ✓ User hotel_id: {user.get('hotel_id')}")

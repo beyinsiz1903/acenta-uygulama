@@ -293,6 +293,20 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
                         }
                       }}
                       onDownloadPdf={handleOpenVoucherPdfDirect}
+                      onDownloadVoucher={async () => {
+                        if (!booking) return;
+                        try {
+                          const id = booking.id || booking._id || booking.booking_id || bookingId;
+                          const url = `${api.defaults.baseURL}/bookings/${id}/voucher.pdf`;
+                          window.open(url, "_blank", "noopener,noreferrer");
+                        } catch (e) {
+                          toast.error("Voucher indirilemedi");
+                        }
+                      }}
+                      onSendVoucherEmail={() => {
+                        setVoucherEmail(booking?.guest?.email || "");
+                        setVoucherEmailDialogOpen(true);
+                      }}
                     />
                   </div>
                 )}

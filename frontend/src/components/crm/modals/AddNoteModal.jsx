@@ -5,9 +5,7 @@ import { Button } from "../../ui/button";
 import { Input } from "../../ui/input";
 import { Textarea } from "../../ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select";
-import { useToast } from ""; // placeholder, adjust if toast hook exists
-
-// NOTE: If you already use sonner/toast in project, wire it here instead of placeholder
+// NOTE: Wire your toast/notification system here if available
 
 export default function AddNoteModal({ open, onOpenChange, hotelId, agencyId, onCreated }) {
   const [type, setType] = useState("note");

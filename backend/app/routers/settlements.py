@@ -164,7 +164,7 @@ async def agency_settlements(
         hotel_map = {str(h["_id"]): h.get("name") or "-" for h in hotels}
 
     totals: dict[str, dict[str, Any]] = {}
-    for e in entries:
+    for e in filtered_entries:
         hid = str(e.get("hotel_id") or "")
         if not hid:
             continue

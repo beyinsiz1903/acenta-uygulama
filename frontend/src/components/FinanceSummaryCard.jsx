@@ -16,6 +16,8 @@ export function FinanceSummaryCard({
   onStatusChange,
   onSave,
   onDownloadPdf,
+  onDownloadVoucher,
+  onSendVoucherEmail,
 }) {
   const prettyStatus = (paymentStatus || "-").replace("_", " ");
 

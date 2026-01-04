@@ -183,6 +183,20 @@ async def ensure_seed_data() -> None:
         ("updated_at", -1),
     ])
 
+    # Alerting v0: match_alert_policies & match_alert_deliveries indexes
+    await db.match_alert_policies.create_index([
+        ("organization_id", 1)
+    ], unique=True)
+    await db.match_alert_deliveries.create_index([
+        ("organization_id", 1),
+        ("match_id", 1),
+        ("fingerprint", 1),
+    ], unique=True)
+    await db.match_alert_deliveries.create_index([
+        ("organization_id", 1),
+        ("sent_at", -1),
+    ])
+
     # Create 2 agencies if none
     agencies = await db.agencies.find({"organization_id": org_id}).to_list(10)
     if len(agencies) == 0:

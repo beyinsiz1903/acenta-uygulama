@@ -97,6 +97,48 @@ async def enqueue_booking_email(
     await db.email_outbox.insert_one(doc)
 
 
+async def enqueue_generic_email(
+    db,
+    *,
+    organization_id: str,
+    to_addresses: Iterable[str],
+    subject: str,
+    html_body: str,
+    text_body: str | None = None,
+    event_type: str = "generic",
+) -> None:
+    """Create a generic email_outbox job (non-booking specific).
+
+    Used for alerts/notifications where we don't have a booking_id.
+    Reuses the same outbox + worker pipeline.
+    """
+
+    to_clean = sorted({a.strip() for a in to_addresses if a and "@" in a})
+    if not to_clean:
+        return
+
+    now = now_utc()
+
+    doc = {
+        "organization_id": organization_id,
+        "booking_id": None,
+        "event_type": event_type,
+        "to": to_clean,
+        "subject": subject,
+        "html_body": html_body,
+        "text_body": text_body,
+        "status": "pending",
+        "attempt_count": 0,
+        "last_error": None,
+        "next_retry_at": now,
+        "created_at": now,
+        "sent_at": None,
+    }
+
+    await db.email_outbox.insert_one(doc)
+
+
+
 async def dispatch_pending_emails(db, *, limit: int = 10) -> int:
     """Send pending emails from email_outbox via SES.
 

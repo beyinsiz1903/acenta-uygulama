@@ -377,6 +377,19 @@ async def create_catalog_booking(
         "role": (user.get("roles") or ["unknown"])[0],
     }
 
+    # Derive target (receiving) hotel id from variant or product if available
+    target_hotel_id = None
+    if variant is not None:
+        target_hotel_id = variant.get("hotel_id") or variant.get("to_hotel_id")
+    if target_hotel_id is None:
+        target_hotel_id = prod.get("hotel_id") or prod.get("to_hotel_id")
+
+    if target_hotel_id is not None:
+        target_hotel_id = str(target_hotel_id)
+
+    from_hotel_raw = body.get("source_hotel_id") or user.get("hotel_id") or None
+    from_hotel_id = str(from_hotel_raw) if from_hotel_raw is not None else None
+
     doc: Dict[str, Any] = {
         "organization_id": org_id,
         "agency_id": agency_id,

@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { AlertTriangle, Check, Copy } from "lucide-react";
 import { api, apiErrorMessage } from "../lib/api";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../components/ui/tooltip";
 
 function todayIsoDate() {
   return new Date().toISOString().slice(0, 10);
@@ -61,6 +63,7 @@ export default function AdminMatchRiskPage() {
   const [activeRow, setActiveRow] = useState(null);
 
   const [view, setView] = useState("main"); // future: can add charts
+  const [copied, setCopied] = useState("");
 
   const periodLabel = useMemo(() => {
     if (!from || !to) return "Tarih aralığı seçilmedi";
@@ -119,6 +122,29 @@ export default function AdminMatchRiskPage() {
       setDrillErr(apiErrorMessage(e));
     } finally {
       setDrillLoading(false);
+    }
+  }
+
+  async function copyText(value) {
+    const str = String(value || "");
+    if (!str) return;
+    try {
+      await navigator.clipboard.writeText(str);
+      setCopied(str);
+      window.setTimeout(() => setCopied(""), 1200);
+    } catch (e) {
+      try {
+        const el = document.createElement("textarea");
+        el.value = str;
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand("copy");
+        document.body.removeChild(el);
+        setCopied(str);
+        window.setTimeout(() => setCopied(""), 1200);
+      } catch {
+        // ignore
+      }
     }
   }
 
@@ -270,6 +296,7 @@ export default function AdminMatchRiskPage() {
                 const rate = Number(row.not_arrived_rate || 0);
                 const level = deriveRiskLevel(rate);
                 const label = formatPercent(row.not_arrived_rate);
+                const isHighRisk = rate >= 0.5;
 
                 let groupLabel = "";
                 if (groupBy === "pair") {
@@ -287,20 +314,38 @@ export default function AdminMatchRiskPage() {
                     onClick={() => openDrilldown(row)}
                     data-testid="match-risk-row"
                   >
-                    <td className="py-2 px-2">
-                      <div className="font-medium truncate max-w-[260px]">{groupLabel}</div>
-                      <div className="text-[11px] text-muted-foreground">
-                        group_by: {groupBy}
+                    <td className="py-2 px-2 text-xs">
+                      <div className="flex items-center gap-2">
+                        {isHighRisk ? (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span
+                                  className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-border/60 bg-background"
+                                  data-testid="match-risk-high-flag"
+                                  aria-label="Yüksek risk"
+                                >
+                                  <AlertTriangle className="h-3.5 w-3.5 text-red-600" />
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent side="right" className="max-w-xs">
+                                <p className="text-[11px] leading-snug">
+                                  Yüksek risk sinyali: not_arrived_rate ≥ 50%. Öncelikli inceleme önerilir.
+                                </p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        ) : null}
+                        <span className="font-medium truncate max-w-[260px]">{groupLabel}</span>
                       </div>
+                      <div className="text-[11px] text-muted-foreground">group_by: {groupBy}</div>
                     </td>
                     <td className="py-2 px-2 font-medium">{row.matches_total}</td>
                     <td className="py-2 px-2 text-xs">
                       {row.outcome_known} / {row.outcome_missing}
                     </td>
                     <td className="py-2 px-2 text-xs">{row.not_arrived}</td>
-                    <td className="py-2 px-2 text-xs">
-                      {riskBadge(level, label)}
-                    </td>
+                    <td className="py-2 px-2 text-xs">{riskBadge(level, label)}</td>
                     <td className="py-2 px-2 text-xs">{row.repeat_not_arrived_7 ?? "—"}</td>
                     <td className="py-2 px-2 text-xs">
                       <button
@@ -337,9 +382,7 @@ export default function AdminMatchRiskPage() {
             <div className="flex items-center justify-between border-b px-4 py-3">
               <div>
                 <div className="text-sm font-semibold">Drilldown</div>
-                <div className="text-[11px] text-muted-foreground">
-                  {periodLabel}
-                </div>
+                <div className="text-[11px] text-muted-foreground">{periodLabel}</div>
                 <div className="mt-1 text-[11px] text-muted-foreground max-w-md">
                   Outcome istatistik amaçlıdır; ücretlendirmeyi etkilemez.
                 </div>
@@ -367,9 +410,7 @@ export default function AdminMatchRiskPage() {
               {drillLoading ? (
                 <div className="text-sm text-muted-foreground">Yükleniyor...</div>
               ) : drillItems.length === 0 ? (
-                <div className="text-sm text-muted-foreground">
-                  Bu grup için kayıt bulunamadı.
-                </div>
+                <div className="text-sm text-muted-foreground">Bu grup için kayıt bulunamadı.</div>
               ) : (
                 <table className="w-full text-xs" data-testid="match-risk-drill-table">
                   <thead>
@@ -385,11 +426,13 @@ export default function AdminMatchRiskPage() {
                     {drillItems.map((m, idx) => {
                       const createdAt = m.created_at || m.createdAt || null;
                       const markedAt = m.outcome_marked_at || m.marked_at || null;
-                      const ref = m.reference_code || m.reference || m.match_id || m.id || idx;
+                      const refVal = m.reference_code || m.reference || m.match_id || m.id || idx;
                       const fromId = m.from_hotel_id || "?";
                       const toId = m.to_hotel_id || "?";
                       const outcome = m.outcome || "unknown";
                       const note = m.outcome_note || m.note || "";
+
+                      const copiedForThis = copied && copied === String(refVal || "");
 
                       return (
                         <tr key={idx} className="border-b last:border-0">
@@ -400,9 +443,32 @@ export default function AdminMatchRiskPage() {
                             </div>
                           </td>
                           <td className="py-2 px-2">
-                            <span className="font-mono text-[11px] truncate max-w-[120px] inline-block">
-                              {String(ref)}
-                            </span>
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono text-[11px] truncate max-w-[120px] inline-block">
+                                {String(refVal)}
+                              </span>
+                              {refVal ? (
+                                <button
+                                  type="button"
+                                  className="inline-flex items-center gap-1 rounded-md border border-border/60 bg-background px-2 py-1 text-[11px]"
+                                  onClick={() => void copyText(refVal)}
+                                  data-testid="match-risk-copy-ref"
+                                  aria-label="Referansı kopyala"
+                                >
+                                  {copiedForThis ? (
+                                    <>
+                                      <Check className="h-3 w-3" />
+                                      Kopyalandı
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Copy className="h-3 w-3" />
+                                      Kopyala
+                                    </>
+                                  )}
+                                </button>
+                              ) : null}
+                            </div>
                           </td>
                           <td className="py-2 px-2">
                             <div className="font-mono text-[11px] truncate max-w-[160px]">

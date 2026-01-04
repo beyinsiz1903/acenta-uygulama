@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, Literal, Optional
+from typing import Any, Literal, Optional, Set
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
@@ -18,7 +18,39 @@ MatchOutcome = Literal["arrived", "not_arrived", "cancelled", "duplicate"]
 
 class MatchOutcomeIn(BaseModel):
     outcome: MatchOutcome
-    note: Optional[str] = Field(default=None, max_length=2000)
+    note: Optional[str] = Field(default=None, max_length=500)
+
+
+def _role_set(user: dict[str, Any]) -> Set[str]:
+    roles = set(user.get("roles") or [])
+    role = user.get("role")
+    if role:
+        roles.add(str(role))
+    return roles
+
+
+def _primary_role(user_roles: Set[str], explicit_role: Optional[str]) -> Optional[str]:
+    if explicit_role:
+        return explicit_role
+    for k in ("super_admin", "hotel_admin", "hotel_staff", "agency_admin", "agency_agent"):
+        if k in user_roles:
+            return k
+    return next(iter(user_roles), None) if user_roles else None
+
+
+def _match_to_hotel_id(match_doc: dict[str, Any]) -> str:
+    """Normalize how we read the receiving hotel id for a match.
+
+    In current proxy model, this is stored as hotel_id or to_hotel_id.
+    """
+
+    return str(match_doc.get("to_hotel_id") or match_doc.get("hotel_id") or "")
+
+
+def _match_from_hotel_id(match_doc: dict[str, Any]) -> str:
+    """Normalize how we read the sending hotel id for a match."""
+
+    return str(match_doc.get("from_hotel_id") or match_doc.get("from_hotel") or "")
 
 
 async def _load_match_or_404(db, organization_id: str, match_id: str) -> dict[str, Any]:

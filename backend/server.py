@@ -68,6 +68,8 @@ from app.routers.dev_seed_bookings import router as dev_seed_bookings_router
 from app.routers.dev_seed_settlements import router as dev_seed_settlements_router
 from app.routers.dev_seed_users import router as dev_seed_users_router
 from app.email_worker import email_dispatch_loop
+from app.services.crm_indexes import ensure_crm_indexes
+
 from app.integration_sync_worker import integration_sync_loop
 
 ROOT_DIR = Path(__file__).parent
@@ -179,6 +181,11 @@ async def deployment_health() -> dict[str, Any]:
 @app.on_event("startup")
 async def _startup() -> None:
     await connect_mongo()
+
+    # Ensure CRM indexes (controlled by ENSURE_CRM_INDEXES env flag)
+    db = await get_db()
+    await ensure_crm_indexes(db)
+
     await ensure_seed_data()
     logger.info("Startup complete")
 

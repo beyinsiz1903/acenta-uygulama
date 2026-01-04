@@ -1764,6 +1764,511 @@ class FAZ101IntegrationSyncTester:
         return 0 if self.tests_failed == 0 else 1
 
 
+class WebhookV1BackendTester:
+    def __init__(self, base_url="https://risk-dashboard-26.preview.emergentagent.com"):
+        self.base_url = base_url
+        self.admin_token = None
+        self.agency_token = None
+        self.hotel_token = None
+        self.tests_run = 0
+        self.tests_passed = 0
+        self.tests_failed = 0
+        self.failed_tests = []
+
+    def log(self, msg):
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}")
+
+    def run_test(self, name, method, endpoint, expected_status, data=None, headers_override=None, token=None):
+        """Run a single API test with specific token"""
+        url = f"{self.base_url}/{endpoint}"
+        headers = headers_override or {'Content-Type': 'application/json'}
+        
+        # Use specific token if provided
+        if token:
+            headers['Authorization'] = f'Bearer {token}'
+        elif self.admin_token and not headers_override:
+            headers['Authorization'] = f'Bearer {self.admin_token}'
+
+        self.tests_run += 1
+        self.log(f"🔍 Test #{self.tests_run}: {name}")
+        
+        try:
+            if method == 'GET':
+                response = requests.get(url, headers=headers, timeout=10)
+            elif method == 'POST':
+                response = requests.post(url, json=data, headers=headers, timeout=10)
+            elif method == 'PUT':
+                response = requests.put(url, json=data, headers=headers, timeout=10)
+            elif method == 'DELETE':
+                response = requests.delete(url, headers=headers, timeout=10)
+            else:
+                raise ValueError(f"Unsupported method: {method}")
+
+            success = response.status_code == expected_status
+            if success:
+                self.tests_passed += 1
+                self.log(f"✅ PASSED - Status: {response.status_code}")
+                try:
+                    return True, response.json() if response.content else {}
+                except:
+                    return True, {}
+            else:
+                self.tests_failed += 1
+                self.failed_tests.append(f"{name} - Expected {expected_status}, got {response.status_code}")
+                self.log(f"❌ FAILED - Expected {expected_status}, got {response.status_code}")
+                try:
+                    self.log(f"   Response: {response.text[:200]}")
+                except:
+                    pass
+                return False, {}
+
+        except Exception as e:
+            self.tests_failed += 1
+            self.failed_tests.append(f"{name} - Error: {str(e)}")
+            self.log(f"❌ FAILED - Error: {str(e)}")
+            return False, {}
+
+    def test_admin_login(self):
+        """Test admin login"""
+        self.log("\n=== 1) AUTHENTICATION ===")
+        success, response = self.run_test(
+            "Admin Login (admin@acenta.test/admin123)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "admin@acenta.test", "password": "admin123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.admin_token = response['access_token']
+            user = response.get('user', {})
+            roles = user.get('roles', [])
+            
+            if 'admin' in roles or 'super_admin' in roles:
+                self.log(f"✅ Admin login successful - roles: {roles}")
+                return True
+            else:
+                self.log(f"❌ Missing admin/super_admin role: {roles}")
+                return False
+        return False
+
+    def test_policy_webhook_fields(self):
+        """1) Policy alanları: webhook_enabled, webhook_url, webhook_secret, webhook_timeout_ms"""
+        self.log("\n=== 2) POLICY WEBHOOK FIELDS ===")
+        success, response = self.run_test(
+            "GET /api/admin/match-alerts/policy - Check webhook fields",
+            "GET",
+            "api/admin/match-alerts/policy",
+            200
+        )
+        
+        if success:
+            policy = response.get('policy', {})
+            required_fields = ['webhook_enabled', 'webhook_url', 'webhook_secret', 'webhook_timeout_ms']
+            missing_fields = []
+            
+            for field in required_fields:
+                if field not in policy:
+                    missing_fields.append(field)
+                else:
+                    self.log(f"✅ Field '{field}' present: {policy.get(field)}")
+            
+            if missing_fields:
+                self.log(f"❌ Missing webhook fields: {missing_fields}")
+                return False
+            
+            # Check default values
+            if policy.get('webhook_enabled') == False:
+                self.log("✅ webhook_enabled defaults to false")
+            if policy.get('webhook_url') is None:
+                self.log("✅ webhook_url defaults to null")
+            if policy.get('webhook_secret') is None:
+                self.log("✅ webhook_secret defaults to null")
+            if policy.get('webhook_timeout_ms') == 4000:
+                self.log("✅ webhook_timeout_ms defaults to 4000")
+            
+            return True
+        return False
+
+    def test_policy_update_webhook(self):
+        """2) Policy update: PUT /policy ile webhook ayarları"""
+        self.log("\n=== 3) POLICY UPDATE WEBHOOK ===")
+        
+        # Update policy with webhook settings
+        policy_data = {
+            "enabled": True,
+            "threshold_not_arrived_rate": 0.5,
+            "threshold_repeat_not_arrived_7": 3,
+            "min_matches_total": 5,
+            "cooldown_hours": 24,
+            "email_recipients": ["admin@acenta.test"],
+            "webhook_enabled": True,
+            "webhook_url": "https://example.com/webhook",
+            "webhook_secret": "testsecret",
+            "webhook_timeout_ms": 3000
+        }
+        
+        success, response = self.run_test(
+            "PUT /api/admin/match-alerts/policy - Set webhook settings",
+            "PUT",
+            "api/admin/match-alerts/policy",
+            200,
+            data=policy_data
+        )
+        
+        if success:
+            policy = response.get('policy', {})
+            if (policy.get('webhook_enabled') == True and 
+                policy.get('webhook_url') == "https://example.com/webhook" and
+                policy.get('webhook_secret') == "testsecret" and
+                policy.get('webhook_timeout_ms') == 3000):
+                self.log("✅ Webhook settings updated successfully")
+                
+                # Verify with GET
+                success2, response2 = self.run_test(
+                    "GET /api/admin/match-alerts/policy - Verify webhook settings",
+                    "GET",
+                    "api/admin/match-alerts/policy",
+                    200
+                )
+                
+                if success2:
+                    policy2 = response2.get('policy', {})
+                    if (policy2.get('webhook_enabled') == True and 
+                        policy2.get('webhook_url') == "https://example.com/webhook" and
+                        policy2.get('webhook_secret') == "testsecret" and
+                        policy2.get('webhook_timeout_ms') == 3000):
+                        self.log("✅ Webhook settings persisted correctly")
+                        return True
+                    else:
+                        self.log(f"❌ Webhook settings not persisted: {policy2}")
+                        return False
+                return True
+            else:
+                self.log(f"❌ Webhook settings not updated correctly: {policy}")
+                return False
+        return False
+
+    def test_webhook_test_endpoint(self):
+        """3) Webhook-test endpoint: POST /api/admin/match-alerts/webhook-test"""
+        self.log("\n=== 4) WEBHOOK TEST ENDPOINT ===")
+        
+        test_data = {
+            "webhook_url": "https://httpbin.org/post",
+            "webhook_secret": "abc"
+        }
+        
+        success, response = self.run_test(
+            "POST /api/admin/match-alerts/webhook-test",
+            "POST",
+            "api/admin/match-alerts/webhook-test",
+            200,
+            data=test_data
+        )
+        
+        if success:
+            if (response.get('ok') == True and 
+                response.get('http_status') == 200 and
+                'snippet' in response):
+                self.log(f"✅ Webhook test successful: {response}")
+                return True
+            else:
+                self.log(f"❌ Webhook test response invalid: {response}")
+                return False
+        else:
+            self.log("❌ Webhook test endpoint not found or failed")
+            return False
+
+    def test_run_webhook_delivery(self):
+        """4) Run ile webhook delivery üretimi"""
+        self.log("\n=== 5) RUN WEBHOOK DELIVERY ===")
+        
+        # First, set low thresholds to trigger alerts
+        policy_data = {
+            "enabled": True,
+            "threshold_not_arrived_rate": 0.01,  # Very low threshold
+            "threshold_repeat_not_arrived_7": 1,
+            "min_matches_total": 1,  # Very low minimum
+            "cooldown_hours": 1,  # Short cooldown for testing
+            "email_recipients": ["admin@acenta.test"],
+            "webhook_enabled": True,
+            "webhook_url": "https://httpbin.org/post",
+            "webhook_secret": "testsecret",
+            "webhook_timeout_ms": 3000
+        }
+        
+        success, response = self.run_test(
+            "PUT /policy - Set low thresholds for testing",
+            "PUT",
+            "api/admin/match-alerts/policy",
+            200,
+            data=policy_data
+        )
+        
+        if not success:
+            return False
+        
+        # Run match alerts with dry_run=0
+        success, response = self.run_test(
+            "POST /api/admin/match-alerts/run?days=30&min_total=1&dry_run=0",
+            "POST",
+            "api/admin/match-alerts/run?days=30&min_total=1&dry_run=0",
+            200
+        )
+        
+        if success:
+            sent_count = response.get('sent_count', 0)
+            triggered_count = response.get('triggered_count', 0)
+            
+            self.log(f"✅ Run completed: triggered={triggered_count}, sent={sent_count}")
+            
+            if triggered_count > 0:
+                # Check deliveries for both email and webhook
+                success2, response2 = self.run_test(
+                    "GET /api/admin/match-alerts/deliveries - Check deliveries",
+                    "GET",
+                    "api/admin/match-alerts/deliveries?limit=50",
+                    200
+                )
+                
+                if success2:
+                    items = response2.get('items', [])
+                    email_deliveries = [item for item in items if item.get('channel') == 'email']
+                    webhook_deliveries = [item for item in items if item.get('channel') == 'webhook']
+                    
+                    self.log(f"✅ Found {len(email_deliveries)} email deliveries")
+                    self.log(f"✅ Found {len(webhook_deliveries)} webhook deliveries")
+                    
+                    if len(webhook_deliveries) > 0:
+                        webhook_item = webhook_deliveries[0]
+                        if (webhook_item.get('delivery_target') == "https://httpbin.org/post" and
+                            webhook_item.get('http_status') == 200 and
+                            webhook_item.get('response_snippet')):
+                            self.log("✅ Webhook delivery successful with correct details")
+                            return True
+                        else:
+                            self.log(f"❌ Webhook delivery details incorrect: {webhook_item}")
+                            return False
+                    else:
+                        self.log("❌ No webhook deliveries found")
+                        return False
+                else:
+                    return False
+            else:
+                self.log("⚠️ No alerts triggered - may need to adjust test data")
+                return True  # Not necessarily a failure
+        return False
+
+    def test_cooldown_dedupe_webhook(self):
+        """5) Cooldown/dedupe webhook için"""
+        self.log("\n=== 6) COOLDOWN/DEDUPE WEBHOOK ===")
+        
+        # Run again immediately to test cooldown
+        success, response = self.run_test(
+            "POST /api/admin/match-alerts/run (Second run for cooldown test)",
+            "POST",
+            "api/admin/match-alerts/run?days=30&min_total=1&dry_run=0",
+            200
+        )
+        
+        if success:
+            sent_count = response.get('sent_count', 0)
+            triggered_count = response.get('triggered_count', 0)
+            
+            self.log(f"✅ Second run completed: triggered={triggered_count}, sent={sent_count}")
+            
+            if sent_count == 0 and triggered_count > 0:
+                self.log("✅ Cooldown working - no new deliveries sent despite triggers")
+                return True
+            elif sent_count == 0 and triggered_count == 0:
+                self.log("⚠️ No triggers in second run - cooldown test inconclusive")
+                return True
+            else:
+                self.log(f"❌ Cooldown not working - new deliveries sent: {sent_count}")
+                return False
+        return False
+
+    def test_deliveries_filter_webhook(self):
+        """6) Deliveries filtresi (webhook)"""
+        self.log("\n=== 7) DELIVERIES FILTER ===")
+        
+        # Test webhook filter
+        success, response = self.run_test(
+            "GET /api/admin/match-alerts/deliveries?channel=webhook",
+            "GET",
+            "api/admin/match-alerts/deliveries?channel=webhook",
+            200
+        )
+        
+        if success:
+            items = response.get('items', [])
+            webhook_only = all(item.get('channel') == 'webhook' for item in items)
+            
+            if webhook_only:
+                self.log(f"✅ Webhook filter working - {len(items)} webhook deliveries only")
+            else:
+                self.log(f"❌ Webhook filter not working - mixed channels found")
+                return False
+        
+        # Test email filter
+        success2, response2 = self.run_test(
+            "GET /api/admin/match-alerts/deliveries?channel=email",
+            "GET",
+            "api/admin/match-alerts/deliveries?channel=email",
+            200
+        )
+        
+        if success2:
+            items2 = response2.get('items', [])
+            email_only = all(item.get('channel') == 'email' for item in items2)
+            
+            if email_only:
+                self.log(f"✅ Email filter working - {len(items2)} email deliveries only")
+                return True
+            else:
+                self.log(f"❌ Email filter not working - mixed channels found")
+                return False
+        
+        return False
+
+    def test_rbac_webhook_endpoints(self):
+        """7) RBAC: Agency/hotel kullanıcıları webhook endpoint'lerine erişememeli"""
+        self.log("\n=== 8) RBAC WEBHOOK ENDPOINTS ===")
+        
+        # Test agency user login
+        success, response = self.run_test(
+            "Agency Login (agency1@demo.test/agency123)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "agency1@demo.test", "password": "agency123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        
+        if success and 'access_token' in response:
+            self.agency_token = response['access_token']
+            self.log("✅ Agency login successful")
+        else:
+            self.log("❌ Agency login failed")
+            return False
+        
+        # Test hotel user login
+        success, response = self.run_test(
+            "Hotel Login (hoteladmin@acenta.test/admin123)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "hoteladmin@acenta.test", "password": "admin123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        
+        if success and 'access_token' in response:
+            self.hotel_token = response['access_token']
+            self.log("✅ Hotel login successful")
+        else:
+            self.log("❌ Hotel login failed")
+            return False
+        
+        # Test agency access to webhook endpoints (should be 403)
+        endpoints_to_test = [
+            ("GET", "api/admin/match-alerts/policy"),
+            ("PUT", "api/admin/match-alerts/policy"),
+            ("POST", "api/admin/match-alerts/run"),
+            ("GET", "api/admin/match-alerts/deliveries")
+        ]
+        
+        all_blocked = True
+        
+        for method, endpoint in endpoints_to_test:
+            success, response = self.run_test(
+                f"Agency access to {method} {endpoint} (should be 403)",
+                method,
+                endpoint,
+                403,
+                data={"enabled": True} if method == "PUT" else None,
+                token=self.agency_token
+            )
+            
+            if not success:
+                self.log(f"❌ Agency should be denied access to {endpoint}")
+                all_blocked = False
+            else:
+                self.log(f"✅ Agency correctly denied access to {endpoint}")
+        
+        # Test hotel access to webhook endpoints (should be 403)
+        for method, endpoint in endpoints_to_test:
+            success, response = self.run_test(
+                f"Hotel access to {method} {endpoint} (should be 403)",
+                method,
+                endpoint,
+                403,
+                data={"enabled": True} if method == "PUT" else None,
+                token=self.hotel_token
+            )
+            
+            if not success:
+                self.log(f"❌ Hotel should be denied access to {endpoint}")
+                all_blocked = False
+            else:
+                self.log(f"✅ Hotel correctly denied access to {endpoint}")
+        
+        return all_blocked
+
+    def print_summary(self):
+        """Print test summary"""
+        self.log("\n" + "="*60)
+        self.log("WEBHOOK V1 BACKEND TEST SUMMARY")
+        self.log("="*60)
+        self.log(f"Total Tests: {self.tests_run}")
+        self.log(f"✅ Passed: {self.tests_passed}")
+        self.log(f"❌ Failed: {self.tests_failed}")
+        self.log(f"Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%")
+        
+        if self.failed_tests:
+            self.log("\n❌ FAILED TESTS:")
+            for i, test in enumerate(self.failed_tests, 1):
+                self.log(f"  {i}. {test}")
+        
+        self.log("="*60)
+
+    def run_webhook_v1_tests(self):
+        """Run all webhook v1 tests in sequence"""
+        self.log("🚀 Starting Webhook v1 Backend Integration Tests")
+        self.log(f"Base URL: {self.base_url}")
+        
+        # Authentication
+        if not self.test_admin_login():
+            self.log("❌ Admin login failed - stopping tests")
+            self.print_summary()
+            return 1
+
+        # 1) Policy webhook fields
+        self.test_policy_webhook_fields()
+        
+        # 2) Policy update
+        self.test_policy_update_webhook()
+        
+        # 3) Webhook test endpoint
+        self.test_webhook_test_endpoint()
+        
+        # 4) Run with webhook delivery
+        self.test_run_webhook_delivery()
+        
+        # 5) Cooldown/dedupe
+        self.test_cooldown_dedupe_webhook()
+        
+        # 6) Deliveries filter
+        self.test_deliveries_filter_webhook()
+        
+        # 7) RBAC
+        self.test_rbac_webhook_endpoints()
+
+        # Summary
+        self.print_summary()
+
+        return 0 if self.tests_failed == 0 else 1
+
+
 class P4MatchesIncludeActionTester:
     def __init__(self, base_url="https://risk-dashboard-26.preview.emergentagent.com"):
         self.base_url = base_url

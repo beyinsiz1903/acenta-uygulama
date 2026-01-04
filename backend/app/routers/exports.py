@@ -19,6 +19,9 @@ from app.routers.matches import list_matches
 
 router = APIRouter(prefix="/api/admin/exports", tags=["admin-exports"])
 
+# Public router for non-authenticated endpoints
+public_router = APIRouter(prefix="/api/exports", tags=["exports-public"])
+
 
 class ExportPolicyParams(BaseModel):
     days: int = Field(30, ge=1, le=365)

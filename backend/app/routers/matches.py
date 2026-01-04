@@ -55,6 +55,23 @@ class MatchDetailOut(BaseModel):
     bookings: List[BookingPublicView]
 
 
+class MatchAction(BaseModel):
+    match_id: str
+    from_hotel_id: str | None = None
+    to_hotel_id: str | None = None
+    status: str = "none"  # none|watchlist|manual_review|blocked
+    reason_code: str | None = None
+    note: str | None = None
+    updated_at: Optional[str] = None
+    updated_by_email: Optional[str] = None
+
+
+class MatchActionResponse(BaseModel):
+    ok: bool = True
+    action: MatchAction
+
+
+
 async def _resolve_names(db, org_id: str, agency_ids: list[str], hotel_ids: list[str]) -> tuple[dict[str, str], dict[str, str]]:
     """Helper to build {id -> name} maps for agencies and hotels."""
     agencies = await db.agencies.find({"organization_id": org_id, "_id": {"$in": agency_ids}}).to_list(length=None)

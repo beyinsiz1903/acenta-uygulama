@@ -86,7 +86,7 @@ class CRMFollowupsTester:
             "POST",
             "api/auth/login",
             200,
-            data={"email": "admin@settlehub.com", "password": "admin123"},
+            data={"email": "admin@acenta.test", "password": "admin123"},
             headers_override={'Content-Type': 'application/json'}
         )
         if success and 'access_token' in response:

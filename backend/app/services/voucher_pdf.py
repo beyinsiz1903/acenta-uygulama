@@ -135,7 +135,10 @@ def build_voucher_model(
     }
 
 
-def render_voucher_pdf_reportlab(model: Dict[str, Any]) -> bytes:
+def render_voucher_pdf_reportlab(
+    model: Dict[str, Any],
+    disclaimer: Optional[str] = None,
+) -> bytes:
     buf = BytesIO()
     c = canvas.Canvas(buf, pagesize=A4)
     width, height = A4
@@ -201,7 +204,13 @@ def render_voucher_pdf_reportlab(model: Dict[str, Any]) -> bytes:
 
     # Footer
     c.setFont("Helvetica-Oblique", 9)
-    c.drawString(x, 40, "Bu belge elektronik olarak oluşturulmuştur.")
+    footer_y = 40
+    c.drawString(x, footer_y, "Bu belge elektronik olarak oluşturulmuştur.")
+
+    if disclaimer:
+        # disclaimer satırını bir üst satıra koy
+        c.drawString(x, footer_y + 12, disclaimer)
+
     c.showPage()
     c.save()
 
@@ -213,12 +222,13 @@ async def generate_voucher_pdf(
     booking: Dict[str, Any],
     org: Dict[str, Any],
     hotel: Optional[Dict[str, Any]],
+    disclaimer: Optional[str] = None,
 ) -> Tuple[bytes, str]:
     # Ensure payment reference exists
     await ensure_payment_reference(organization_id, booking)
 
     # Build model and render PDF (booking may be slightly stale but reference is guaranteed in DB)
     model = build_voucher_model(booking, org, hotel)
-    pdf_bytes = render_voucher_pdf_reportlab(model)
+    pdf_bytes = render_voucher_pdf_reportlab(model, disclaimer=disclaimer)
     filename = f"voucher-{model['reference']}.pdf"
     return pdf_bytes, filename

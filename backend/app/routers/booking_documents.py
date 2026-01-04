@@ -176,11 +176,16 @@ async def booking_self_billing_pdf(booking_id: str, user=Depends(get_current_use
     if hotel_id:
         hotel = await db.hotels.find_one({"_id": hotel_id, "organization_id": org_id})
 
-    # Reuse voucher model but override footer via a simple disclaimer text overlay
-    pdf_bytes, filename = await generate_voucher_pdf(org_id, booking, org, hotel)
+    DISCLAIMER = "Bu belge bilgi amaçlıdır, resmi fatura yerine geçmez."
 
-    # NOTE: To keep things simple, we do not modify the PDF structure here;
-    # disclaimer responsibility is communicated in product copy.
+    pdf_bytes, filename = await generate_voucher_pdf(
+        org_id,
+        booking,
+        org,
+        hotel,
+        disclaimer=DISCLAIMER,
+    )
+
     filename = filename.replace("voucher-", "self-billing-")
 
     return StreamingResponse(

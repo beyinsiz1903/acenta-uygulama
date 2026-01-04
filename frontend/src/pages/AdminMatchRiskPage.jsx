@@ -136,6 +136,10 @@ export default function AdminMatchRiskPage() {
       try {
         const el = document.createElement("textarea");
         el.value = str;
+        el.setAttribute("readonly", "");
+        el.style.position = "fixed";
+        el.style.top = "-1000px";
+        el.style.left = "-1000px";
         document.body.appendChild(el);
         el.select();
         document.execCommand("copy");

@@ -264,6 +264,20 @@ export default function AdminMatchRiskPage() {
               />
             </div>
           </div>
+        {hotelMapLoading ? (
+          <div className="mt-1 text-[11px] text-muted-foreground">
+            Hotel isimleri yükleniyor...
+          </div>
+        ) : Object.keys(hotelMap).length > 0 ? (
+          <div className="mt-1 text-[11px] text-muted-foreground">
+            Hotel isimleri: <span className="font-medium">açık</span>
+          </div>
+        ) : (
+          <div className="mt-1 text-[11px] text-muted-foreground">
+            Hotel isimleri: <span className="font-medium">ID</span> (isim verisi yok)
+          </div>
+        )}
+
 
           <div className="flex items-center gap-2">
             <button

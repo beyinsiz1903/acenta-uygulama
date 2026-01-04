@@ -249,6 +249,8 @@ class MatchAlertDeliveryItem(BaseModel):
     error: Optional[str] = None
     fingerprint: str
     sent_at: str
+    delivery_target: Optional[str] = None
+    http_status: Optional[int] = None
 
 
 class MatchAlertDeliveriesResponse(BaseModel):

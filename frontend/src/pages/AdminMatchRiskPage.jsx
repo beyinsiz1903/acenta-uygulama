@@ -322,8 +322,7 @@ export default function AdminMatchRiskPage() {
                     <td className="py-2 px-2 text-xs">
                       <div className="flex items-center gap-2">
                         {isHighRisk ? (
-                          <TooltipProvider>
-                            <Tooltip>
+                          <Tooltip>
                               <TooltipTrigger asChild>
                                 <span
                                   className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-border/60 bg-background"

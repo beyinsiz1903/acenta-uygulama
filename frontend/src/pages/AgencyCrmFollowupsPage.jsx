@@ -166,6 +166,26 @@ export default function AgencyCrmFollowupsPage() {
     );
   }
 
+  useEffect(() => {
+    if (!drawerOpen || assignees.length > 0 || assigneesLoading) return;
+    (async () => {
+      setAssigneesLoading(true);
+      setAssigneesError("");
+      try {
+        const res = await api.get("/agency/users", { params: { role: "any" } });
+        const items = Array.isArray(res.data?.items) ? res.data.items : [];
+        setAssignees(items);
+      } catch (err) {
+        const msg = apiErrorMessage(err);
+        setAssigneesError(msg);
+        toast({ title: "Kullanıcılar yüklenemedi", description: msg, variant: "destructive" });
+      } finally {
+        setAssigneesLoading(false);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [drawerOpen]);
+
   const filteredItems = useMemo(() => {
     let base = items || [];
 

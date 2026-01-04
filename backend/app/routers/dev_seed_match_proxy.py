@@ -33,7 +33,7 @@ def _dev_routers_enabled() -> bool:
 
 @router.post(
     "/seed/match-proxy",
-    dependencies=[Depends(require_roles(["super_admin"))]],
+    dependencies=[Depends(require_roles(["super_admin"]))],
 )
 async def seed_match_proxy(
     user=Depends(get_current_user),

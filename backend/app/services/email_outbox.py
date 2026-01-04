@@ -135,7 +135,8 @@ async def enqueue_generic_email(
         "sent_at": None,
     }
 
-    await db.email_outbox.insert_one(doc)
+    result = await db.email_outbox.insert_one(doc)
+    return str(result.inserted_id) if result.inserted_id is not None else None
 
 
 

@@ -11,6 +11,7 @@ from app.auth import get_current_user, require_roles
 from app.db import get_db
 from app.routers.matches import list_matches
 from app.services.email_outbox import enqueue_generic_email
+from app.services.match_webhook import send_match_alert_webhook
 from app.utils import now_utc
 
 router = APIRouter(prefix="/api/admin/match-alerts", tags=["admin-match-alerts"])

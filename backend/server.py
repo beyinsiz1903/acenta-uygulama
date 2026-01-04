@@ -84,10 +84,11 @@ from app.integration_sync_worker import integration_sync_loop
 
 ROOT_DIR = Path(__file__).parent
 
-# Load .env only if exists (development fallback)
-# Production: Kubernetes secrets inject env vars directly
+# Load .env only in explicit local/dev environments.
+# Production/preview on Emergent: Kubernetes/Atlas inject env vars directly.
+ENVIRONMENT = os.getenv("ENVIRONMENT")
 env_path = ROOT_DIR / ".env"
-if env_path.exists():
+if ENVIRONMENT in {"local", "development", "dev"} and env_path.exists():
     load_dotenv(env_path)
 
 logging.basicConfig(

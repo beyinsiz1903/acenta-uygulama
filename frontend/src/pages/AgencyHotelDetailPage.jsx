@@ -40,8 +40,8 @@ export default function AgencyHotelDetailPage() {
       const resp = await api.get("/agency/hotels");
       const hotels = resp.data || [];
       
-      // Find the hotel
-      const foundHotel = hotels.find((h) => h.id === hotelId);
+      // Find the hotel (id may be string/uuid; normalise to string)
+      const foundHotel = hotels.find((h) => String(h.id) === String(hotelId));
       
       if (!foundHotel) {
         setError("Otel bulunamad\u0131 veya eri\u015fim yetkiniz yok");

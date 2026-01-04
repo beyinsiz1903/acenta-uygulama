@@ -426,6 +426,28 @@ export default function AgencyCrmFollowupsPage() {
                       </Button>
 
                       <Button
+                        variant="outline"
+                        size="xs"
+                        className="gap-1"
+                        data-testid="followup-action-open-drawer"
+                        onClick={() => {
+                          setSelectedItem(it);
+                          setDrawerOpen(true);
+                          setActiveTab("note");
+                          setNoteSubject("");
+                          setNoteBody("");
+                          setCallOutcome("callback");
+                          setCallSubject("Arama");
+                          setCallBody("");
+                          setTaskTitle("");
+                          setTaskDueDate("");
+                          setTaskAssignee("");
+                        }}
+                      >
+                        Hızlı İşlem
+                      </Button>
+
+                      <Button
                         variant="ghost"
                         size="xs"
                         className="gap-1"

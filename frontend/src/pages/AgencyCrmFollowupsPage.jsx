@@ -308,7 +308,9 @@ export default function AgencyCrmFollowupsPage() {
               Aktif follow-up sinyali bulunamadı. Filtreleri gevşetin veya daha sonra tekrar deneyin.
             </CardContent>
           </Card>
-      <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
+        ) : null}
+
+        <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
         <SheetContent className="w-full sm:max-w-lg">
           <SheetHeader>
             <SheetTitle>

@@ -1778,6 +1778,378 @@ class P4MatchesIncludeActionTester:
         # Store data for testing
         self.match_id = None
 
+    def log(self, msg):
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}")
+
+    def run_test(self, name, method, endpoint, expected_status, data=None, headers_override=None, token=None):
+        """Run a single API test with specific token"""
+        url = f"{self.base_url}/{endpoint}"
+        headers = headers_override or {'Content-Type': 'application/json'}
+        
+        # Use specific token if provided
+        if token:
+            headers['Authorization'] = f'Bearer {token}'
+        elif self.admin_token and not headers_override:
+            headers['Authorization'] = f'Bearer {self.admin_token}'
+
+        self.tests_run += 1
+        self.log(f"🔍 Test #{self.tests_run}: {name}")
+        
+        try:
+            if method == 'GET':
+                response = requests.get(url, headers=headers, timeout=10)
+            elif method == 'POST':
+                response = requests.post(url, json=data, headers=headers, timeout=10)
+            elif method == 'PUT':
+                response = requests.put(url, json=data, headers=headers, timeout=10)
+            elif method == 'DELETE':
+                response = requests.delete(url, headers=headers, timeout=10)
+            else:
+                raise ValueError(f"Unsupported method: {method}")
+
+            success = response.status_code == expected_status
+            if success:
+                self.tests_passed += 1
+                self.log(f"✅ PASSED - Status: {response.status_code}")
+                try:
+                    return True, response.json() if response.content else {}
+                except:
+                    return True, {}
+            else:
+                self.tests_failed += 1
+                self.failed_tests.append(f"{name} - Expected {expected_status}, got {response.status_code}")
+                self.log(f"❌ FAILED - Expected {expected_status}, got {response.status_code}")
+                try:
+                    self.log(f"   Response: {response.text[:200]}")
+                except:
+                    pass
+                return False, {}
+
+        except Exception as e:
+            self.tests_failed += 1
+            self.failed_tests.append(f"{name} - Error: {str(e)}")
+            self.log(f"❌ FAILED - Error: {str(e)}")
+            return False, {}
+
+    def test_admin_login(self):
+        """1) Auth: admin@acenta.test / admin123 ile login → token al"""
+        self.log("\n=== 1) AUTHENTICATION ===")
+        success, response = self.run_test(
+            "Admin Login (admin@acenta.test/admin123)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "admin@acenta.test", "password": "admin123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.admin_token = response['access_token']
+            user = response.get('user', {})
+            roles = user.get('roles', [])
+            
+            if 'admin' in roles or 'super_admin' in roles:
+                self.log(f"✅ Admin login successful - roles: {roles}")
+                return True
+            else:
+                self.log(f"❌ Missing admin/super_admin role: {roles}")
+                return False
+        return False
+
+    def test_regression_matches_without_include_action(self):
+        """2) Regression: GET /api/admin/matches (parametresiz) → 200 + yapı kontrolü"""
+        self.log("\n=== 2) REGRESSION (GERİ UYUMLULUĞU) ===")
+        success, response = self.run_test(
+            "GET /api/admin/matches (parametresiz)",
+            "GET",
+            "api/admin/matches",
+            200
+        )
+        
+        if success:
+            # Response yapısını kontrol et
+            if 'items' in response and isinstance(response['items'], list):
+                self.log(f"✅ Response structure OK - found {len(response['items'])} matches")
+                
+                if len(response['items']) > 0:
+                    item = response['items'][0]
+                    # Temel alanları kontrol et
+                    required_fields = ['id', 'agency_id', 'hotel_id', 'total_bookings', 'cancel_rate']
+                    missing_fields = [field for field in required_fields if field not in item]
+                    
+                    if not missing_fields:
+                        self.log(f"✅ Required fields present: {required_fields}")
+                        
+                        # Action alanlarının default None/null olduğunu kontrol et
+                        action_fields = ['action_status', 'action_reason_code', 'action_updated_at', 'action_updated_by_email']
+                        action_values = {field: item.get(field) for field in action_fields}
+                        
+                        # Store first match_id for later tests
+                        self.match_id = item.get('id')
+                        self.log(f"✅ Stored match_id for testing: {self.match_id}")
+                        
+                        # Action alanları None/null olmalı (include_action=False default)
+                        all_none = all(value is None for value in action_values.values())
+                        if all_none:
+                            self.log(f"✅ Action fields are None/null by default: {action_values}")
+                            return True
+                        else:
+                            self.log(f"❌ Action fields should be None/null: {action_values}")
+                            return False
+                    else:
+                        self.log(f"❌ Missing required fields: {missing_fields}")
+                        return False
+                else:
+                    self.log("⚠️  No matches found - creating test data might be needed")
+                    return True  # Not a failure, just no data
+            else:
+                self.log(f"❌ Invalid response structure: {response}")
+                return False
+        return False
+
+    def test_include_action_default_none(self):
+        """3) include_action=1 default none durumu"""
+        self.log("\n=== 3) INCLUDE_ACTION=1 DEFAULT NONE ===")
+        
+        if not self.match_id:
+            self.log("⚠️  No match_id available, skipping test")
+            return True
+            
+        success, response = self.run_test(
+            "GET /api/admin/matches?include_action=1",
+            "GET",
+            "api/admin/matches?include_action=1",
+            200
+        )
+        
+        if success and 'items' in response:
+            # İlgili match'i bul
+            target_match = None
+            for item in response['items']:
+                if item.get('id') == self.match_id:
+                    target_match = item
+                    break
+            
+            if target_match:
+                action_status = target_match.get('action_status')
+                if action_status is None or action_status == "none":
+                    self.log(f"✅ Action status is None/none as expected: {action_status}")
+                    return True
+                else:
+                    self.log(f"❌ Action status should be None/none, got: {action_status}")
+                    return False
+            else:
+                self.log(f"❌ Target match {self.match_id} not found in response")
+                return False
+        return False
+
+    def test_set_action_and_verify(self):
+        """4) include_action=1 + set edilmiş action testi"""
+        self.log("\n=== 4) INCLUDE_ACTION=1 + SET ACTION ===")
+        
+        if not self.match_id:
+            self.log("⚠️  No match_id available, skipping test")
+            return True
+        
+        # Önce action set et
+        action_data = {
+            "status": "blocked",
+            "reason_code": "test_reason",
+            "note": "test"
+        }
+        success, response = self.run_test(
+            f"PUT /api/admin/matches/{self.match_id}/action",
+            "PUT",
+            f"api/admin/matches/{self.match_id}/action",
+            200,
+            data=action_data
+        )
+        
+        if not success:
+            self.log("❌ Failed to set action")
+            return False
+        
+        self.log("✅ Action set successfully")
+        
+        # Şimdi include_action=1 ile listele
+        success, response = self.run_test(
+            "GET /api/admin/matches?include_action=1 (after setting action)",
+            "GET",
+            "api/admin/matches?include_action=1",
+            200
+        )
+        
+        if success and 'items' in response:
+            # İlgili match'i bul
+            target_match = None
+            for item in response['items']:
+                if item.get('id') == self.match_id:
+                    target_match = item
+                    break
+            
+            if target_match:
+                # Action alanlarını kontrol et
+                action_status = target_match.get('action_status')
+                action_reason_code = target_match.get('action_reason_code')
+                action_updated_at = target_match.get('action_updated_at')
+                action_updated_by_email = target_match.get('action_updated_by_email')
+                
+                checks = []
+                
+                # Status kontrolü
+                if action_status == "blocked":
+                    checks.append("✅ action_status == 'blocked'")
+                else:
+                    checks.append(f"❌ action_status should be 'blocked', got: {action_status}")
+                
+                # Reason code kontrolü
+                if action_reason_code == "test_reason":
+                    checks.append("✅ action_reason_code == 'test_reason'")
+                else:
+                    checks.append(f"❌ action_reason_code should be 'test_reason', got: {action_reason_code}")
+                
+                # Updated at kontrolü (non-empty string)
+                if action_updated_at and isinstance(action_updated_at, str) and len(action_updated_at) > 0:
+                    checks.append(f"✅ action_updated_at is non-empty: {action_updated_at}")
+                else:
+                    checks.append(f"❌ action_updated_at should be non-empty string, got: {action_updated_at}")
+                
+                # Updated by email kontrolü
+                if action_updated_by_email == "admin@acenta.test":
+                    checks.append("✅ action_updated_by_email == 'admin@acenta.test'")
+                else:
+                    checks.append(f"❌ action_updated_by_email should be 'admin@acenta.test', got: {action_updated_by_email}")
+                
+                # Tüm kontrolleri logla
+                for check in checks:
+                    self.log(check)
+                
+                # Tüm kontroller başarılı mı?
+                all_passed = all("✅" in check for check in checks)
+                return all_passed
+            else:
+                self.log(f"❌ Target match {self.match_id} not found in response")
+                return False
+        return False
+
+    def test_authorization_agency_denied(self):
+        """5) Yetki kontrolü - agency kullanıcısı 403 almalı"""
+        self.log("\n=== 5) YETKİ KONTROLÜ ===")
+        
+        # Agency login
+        success, response = self.run_test(
+            "Agency Login (agency1@demo.test/agency123)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "agency1@demo.test", "password": "agency123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        
+        if success and 'access_token' in response:
+            self.agency_token = response['access_token']
+            self.log("✅ Agency login successful")
+            
+            # Agency token ile matches endpoint'ine erişim dene
+            success, response = self.run_test(
+                "GET /api/admin/matches with agency token (should be 403)",
+                "GET",
+                "api/admin/matches",
+                403,
+                token=self.agency_token
+            )
+            
+            if success:
+                self.log("✅ Agency user correctly denied access (403)")
+                return True
+            else:
+                self.log("❌ Agency user should be denied access")
+                return False
+        else:
+            self.log("❌ Agency login failed")
+            return False
+
+    def test_authorization_hotel_denied(self):
+        """5b) Yetki kontrolü - hotel kullanıcısı da 403 almalı"""
+        # Hotel login
+        success, response = self.run_test(
+            "Hotel Login (hoteladmin@acenta.test/admin123)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "hoteladmin@acenta.test", "password": "admin123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        
+        if success and 'access_token' in response:
+            self.hotel_token = response['access_token']
+            self.log("✅ Hotel login successful")
+            
+            # Hotel token ile matches endpoint'ine erişim dene
+            success, response = self.run_test(
+                "GET /api/admin/matches with hotel token (should be 403)",
+                "GET",
+                "api/admin/matches",
+                403,
+                token=self.hotel_token
+            )
+            
+            if success:
+                self.log("✅ Hotel user correctly denied access (403)")
+                return True
+            else:
+                self.log("❌ Hotel user should be denied access")
+                return False
+        else:
+            self.log("❌ Hotel login failed")
+            return False
+
+    def print_summary(self):
+        """Print test summary"""
+        self.log("\n" + "="*60)
+        self.log("P4 V0 MATCHES INCLUDE_ACTION TEST SUMMARY")
+        self.log("="*60)
+        self.log(f"Total Tests: {self.tests_run}")
+        self.log(f"✅ Passed: {self.tests_passed}")
+        self.log(f"❌ Failed: {self.tests_failed}")
+        self.log(f"Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%")
+        
+        if self.failed_tests:
+            self.log("\n❌ FAILED TESTS:")
+            for i, test in enumerate(self.failed_tests, 1):
+                self.log(f"  {i}. {test}")
+        
+        self.log("="*60)
+
+    def run_p4_include_action_tests(self):
+        """Run all P4 include_action tests in sequence"""
+        self.log("🚀 Starting P4 v0 Matches include_action Parameter Tests")
+        self.log(f"Base URL: {self.base_url}")
+        
+        # 1) Authentication
+        if not self.test_admin_login():
+            self.log("❌ Admin login failed - stopping tests")
+            self.print_summary()
+            return 1
+
+        # 2) Regression test
+        if not self.test_regression_matches_without_include_action():
+            self.log("❌ Regression test failed")
+        
+        # 3) include_action=1 default none
+        self.test_include_action_default_none()
+        
+        # 4) include_action=1 + set action
+        self.test_set_action_and_verify()
+        
+        # 5) Authorization tests
+        self.test_authorization_agency_denied()
+        self.test_authorization_hotel_denied()
+
+        # Summary
+        self.print_summary()
+
+        return 0 if self.tests_failed == 0 else 1
+
 
 class MatchActionsTester:
     def __init__(self, base_url="https://risk-dashboard-26.preview.emergentagent.com"):

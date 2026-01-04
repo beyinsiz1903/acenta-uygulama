@@ -228,8 +228,8 @@ class CRMHotelContactsRBACTester:
             200,
             data={"email": self.hotel1_admin_email, "password": "test123"}
         )
-        if success1 and 'token' in response1:
-            self.hotel1_admin_token = response1['token']
+        if success1 and 'access_token' in response1:
+            self.hotel1_admin_token = response1['access_token']
             self.log(f"✅ Hotel1 admin logged in")
         
         # Login hotel2 admin
@@ -240,8 +240,8 @@ class CRMHotelContactsRBACTester:
             200,
             data={"email": self.hotel2_admin_email, "password": "test123"}
         )
-        if success2 and 'token' in response2:
-            self.hotel2_admin_token = response2['token']
+        if success2 and 'access_token' in response2:
+            self.hotel2_admin_token = response2['access_token']
             self.log(f"✅ Hotel2 admin logged in")
         
         # For agency1 agent, we need to check if there's an existing agency user

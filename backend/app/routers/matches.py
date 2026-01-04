@@ -314,8 +314,8 @@ async def _load_match_action(db, org_id: str, match_id: str, agency_id: str, hot
     if not doc:
         return MatchAction(
             match_id=match_id,
-            from_hotel_id=None,
-            to_hotel_id=hotel_id,
+            agency_id=agency_id,
+            hotel_id=hotel_id,
             status="none",
             reason_code=None,
             note=None,
@@ -329,8 +329,8 @@ async def _load_match_action(db, org_id: str, match_id: str, agency_id: str, hot
 
     return MatchAction(
         match_id=doc.get("match_id", match_id),
-        from_hotel_id=None,
-        to_hotel_id=doc.get("hotel_id") or hotel_id,
+        agency_id=doc.get("agency_id", agency_id),
+        hotel_id=doc.get("hotel_id", hotel_id),
         status=doc.get("status", "none"),
         reason_code=doc.get("reason_code"),
         note=doc.get("note"),

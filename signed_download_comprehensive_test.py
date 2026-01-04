@@ -6,7 +6,12 @@ This test directly accesses MongoDB to get real tokens and test the full flow
 import requests
 import asyncio
 import sys
+import os
 from datetime import datetime, timedelta
+
+# Add the backend directory to the path
+sys.path.insert(0, '/app/backend')
+
 from app.db import connect_mongo, get_db
 
 class SignedDownloadComprehensiveTest:

@@ -223,7 +223,7 @@ async def _send_alert_email(
         f"Current action: {item.action_status or 'none'}\n"
     )
 
-    await enqueue_generic_email(
+    outbox_id = await enqueue_generic_email(
         db,
         organization_id=org_id,
         to_addresses=recipients,
@@ -232,6 +232,8 @@ async def _send_alert_email(
         text_body=text_body,
         event_type="match.alert",
     )
+    
+    return outbox_id
 
 
 class MatchAlertDeliveryItem(BaseModel):

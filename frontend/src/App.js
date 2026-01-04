@@ -117,6 +117,7 @@ function App() {
             <Route path="bookings/:id/print" element={<AgencyBookingPrintPage />} />
             <Route path="settlements" element={<AgencySettlementsPage />} />
             <Route path="reports" element={<AgencyReportsPage />} />
+            <Route path="crm" element={<AgencyCrmFollowupsPage />} />
             <Route path="help" element={<AgencyHelpPage />} />
 
             <Route path="products/hotels" element={<AgencyCatalogHotelsPage />} />

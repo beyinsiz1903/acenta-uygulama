@@ -69,6 +69,24 @@ export default function AgencyCrmFollowupsPage() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState("");
 
+  const [actionableOnly, setActionableOnly] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [activeTab, setActiveTab] = useState("note");
+
+  const [noteSubject, setNoteSubject] = useState("");
+  const [noteBody, setNoteBody] = useState("");
+
+  const [callOutcome, setCallOutcome] = useState("callback");
+  const [callSubject, setCallSubject] = useState("Arama");
+  const [callBody, setCallBody] = useState("");
+
+  const [taskTitle, setTaskTitle] = useState("");
+  const [taskDueDate, setTaskDueDate] = useState("");
+  const [taskAssignee, setTaskAssignee] = useState("");
+
+  const [saving, setSaving] = useState(false);
+
   // Debounce search
   useEffect(() => {
     const t = setTimeout(() => {

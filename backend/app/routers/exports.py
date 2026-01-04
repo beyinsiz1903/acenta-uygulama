@@ -302,8 +302,11 @@ async def run_export(
 
         subject = f"[Exports] {run_doc['type']} ({key}) — {now.date().isoformat()}"
 
-        # Build download path (no absolute base here; ops can prepend public base URL)
-        download_path = f"/api/admin/exports/runs/{run_id}/download"
+        # Build public download link using signed token
+        download_token = run_doc.get("download", {}).get("token")
+        rel_path = f"/api/exports/download/{download_token}" if download_token else f"/api/admin/exports/runs/{run_id}/download"
+        base = os.environ.get("PUBLIC_BASE_URL", "").rstrip("/")
+        download_path = f"{base}{rel_path}" if base else rel_path
 
         text_body = (
             f"Syroce match risk export hazir\n"

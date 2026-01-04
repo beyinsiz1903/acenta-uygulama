@@ -257,7 +257,15 @@ export default function AgencyCrmFollowupsPage() {
                 />
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Switch
+                    checked={actionableOnly}
+                    onCheckedChange={setActionableOnly}
+                    data-testid="followups-actionable-toggle"
+                  />
+                  <span>Sadece aksiyon gerektirenler</span>
+                </div>
                 <Select value={idlePreset} onValueChange={setIdlePreset}>
                   <SelectTrigger className="h-9 w-28 text-xs" data-testid="followups-idle-select">
                     <SelectValue placeholder="Idle süresi" />

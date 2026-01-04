@@ -577,7 +577,7 @@ export default function AdminMatchRiskPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {drillItems.map((m, idx) => {
+                    {visibleDrillItems.map((m, idx) => {
                       const createdAt = m.created_at || m.createdAt || null;
                       const markedAt = m.outcome_marked_at || m.marked_at || null;
                       const refVal = m.reference_code || m.reference || m.match_id || m.id || idx;

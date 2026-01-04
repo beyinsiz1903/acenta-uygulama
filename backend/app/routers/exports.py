@@ -428,3 +428,41 @@ async def download_run(run_id: str, db=Depends(get_db), user=Depends(get_current
         "Content-Disposition": f"attachment; filename={filename}",
     }
     return Response(content=content, media_type="text/csv", headers=headers)
+
+
+# Public download endpoint (no auth required)
+@router.get("/public/download/{token}")
+async def public_download(token: str, db=Depends(get_db)):
+    # Public, no auth - token-based access
+    now = now_utc()
+    run = await db.export_runs.find_one({"download.token": token})
+    if not run:
+        raise HTTPException(status_code=404, detail="EXPORT_TOKEN_NOT_FOUND")
+
+    download_info = run.get("download") or {}
+    expires_at = download_info.get("expires_at")
+    if expires_at and expires_at < now:
+        raise HTTPException(status_code=410, detail="EXPORT_TOKEN_EXPIRED")
+
+    storage = run.get("storage") or {}
+    blob_id = storage.get("blob_id")
+    if not blob_id:
+        raise HTTPException(status_code=500, detail="EXPORT_BLOB_MISSING")
+
+    try:
+        blob_oid = ObjectId(blob_id)
+    except Exception:
+        raise HTTPException(status_code=500, detail="EXPORT_BLOB_INVALID")
+
+    blob = await db.export_blobs.find_one({"_id": blob_oid})
+    if not blob:
+        raise HTTPException(status_code=404, detail="EXPORT_BLOB_NOT_FOUND")
+
+    content = blob.get("content") or ""
+    file_info = run.get("file") or {}
+    filename = file_info.get("filename") or "export.csv"
+
+    headers = {
+        "Content-Disposition": f"attachment; filename={filename}",
+    }
+    return Response(content=content, media_type="text/csv", headers=headers)

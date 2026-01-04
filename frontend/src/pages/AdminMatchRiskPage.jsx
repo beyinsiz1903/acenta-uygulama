@@ -66,11 +66,18 @@ export default function AdminMatchRiskPage() {
   const [copied, setCopied] = useState("");
   const [hotelMap, setHotelMap] = useState({});
   const [hotelMapLoading, setHotelMapLoading] = useState(false);
+  const [onlyHighRisk, setOnlyHighRisk] = useState(false);
 
   const periodLabel = useMemo(() => {
     if (!from || !to) return "Tarih aralığı seçilmedi";
     return `${from} → ${to}`;
   }, [from, to]);
+
+  const visibleItems = useMemo(() => {
+    const rows = Array.isArray(items) ? items : [];
+    if (!onlyHighRisk) return rows;
+    return rows.filter((r) => Number(r?.not_arrived_rate || 0) >= 0.5);
+  }, [items, onlyHighRisk]);
 
   async function loadHotelsMap() {
     setHotelMapLoading(true);

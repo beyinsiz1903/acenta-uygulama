@@ -65,6 +65,8 @@ export default function AdminMatchAlertsPolicyPage() {
 
   useEffect(() => {
     loadPolicy();
+    loadDeliveries();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSave = async () => {

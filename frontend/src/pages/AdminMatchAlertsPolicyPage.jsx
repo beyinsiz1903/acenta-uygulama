@@ -296,6 +296,47 @@ export default function AdminMatchAlertsPolicyPage() {
           <CardTitle>Dry Run</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-sm text-muted-foreground">
+              Dry run ile mevcut policy’e göre hangi eşleşmelerin alert tetikleyeceğini görebilirsin. Gerçek email
+              gönderimi yapılmaz.
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={async () => {
+                if (!window.confirm("Dry run değil. Email gönderilecek. Devam?")) return;
+                try {
+                  setRunLoading(true);
+                  setError("");
+                  const resp = await api.post("/admin/match-alerts/run", null, {
+                    params: {
+                      days: runParams.days,
+                      min_total: runParams.min_total,
+                      dry_run: 0,
+                    },
+                  });
+                  const data = resp.data || {};
+                  // Basit feedback
+                  alert(
+                    `Run Now tamamlandı. Sent: ${data.sent_count || 0}, Failed: ${
+                      data.failed_count || 0
+                    }`
+                  );
+                  // Son alertler listesini yenilemek için aşağıda deliveries fetch çağrısı yapılacak
+                  await loadDeliveries();
+                } catch (e) {
+                  console.error("Match alerts run-now failed", e);
+                  setError(apiErrorMessage(e));
+                } finally {
+                  setRunLoading(false);
+                }
+              }}
+              data-testid="match-alerts-run-now"
+            >
+              Run Now (Send Emails)
+            </Button>
+          </div>
           <p className="text-sm text-muted-foreground">
             Dry run ile mevcut policy’e göre hangi eşleşmelerin alert tetikleyeceğini görebilirsin. Gerçek email
             gönderimi yapılmaz.

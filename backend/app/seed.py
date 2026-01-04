@@ -223,7 +223,7 @@ async def ensure_seed_data() -> None:
     await db.export_runs.create_index([
         ("organization_id", 1),
         ("download.token", 1),
-    ], unique=True)
+    ], unique=True, sparse=True)
 
 
     # Create 2 agencies if none

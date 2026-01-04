@@ -147,16 +147,13 @@ if (( NOT_ARRIVED < 0 )) || (( NOT_ARRIVED > OUTCOME_KNOWN )); then
 fi
 
 # RATE is float in [0,1]
-RATE_OK=$(python - <<EOF
+python - <<EOF
 rate = float("${RATE}")
 import sys
 sys.exit(0 if 0.0 <= rate <= 1.0 else 1)
 EOF
-) || true
 
-if [[ "${RATE_OK}" != "" ]]; then
-  : # python exited 0
-else
+if [[ $? -ne 0 ]]; then
   echo "Invariant failed: not_arrived_rate must be between 0 and 1" >&2
   echo "Row: ${SUMMARY_ROW}" >&2
   exit 1

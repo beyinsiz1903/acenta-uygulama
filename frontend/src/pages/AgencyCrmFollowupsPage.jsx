@@ -308,6 +308,174 @@ export default function AgencyCrmFollowupsPage() {
               Aktif follow-up sinyali bulunamadı. Filtreleri gevşetin veya daha sonra tekrar deneyin.
             </CardContent>
           </Card>
+      <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
+        <SheetContent className="w-full sm:max-w-lg">
+          <SheetHeader>
+            <SheetTitle>
+              {selectedItem?.hotel_name || selectedItem?.hotel_id || "CRM"}
+            </SheetTitle>
+            <SheetDescription>Hızlı not, arama sonucu ve görev ekleyin.</SheetDescription>
+          </SheetHeader>
+
+          <div className="mt-4">
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="grid grid-cols-3">
+                <TabsTrigger value="note">Not</TabsTrigger>
+                <TabsTrigger value="call">Arama</TabsTrigger>
+                <TabsTrigger value="task">Görev</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="note" className="mt-4 space-y-3">
+                <Input
+                  data-testid="crm-note-subject"
+                  placeholder="Konu"
+                  value={noteSubject}
+                  onChange={(e) => setNoteSubject(e.target.value)}
+                  className="h-9 text-sm"
+                />
+                <Textarea
+                  data-testid="crm-note-body"
+                  placeholder="Not (opsiyonel)"
+                  value={noteBody}
+                  onChange={(e) => setNoteBody(e.target.value)}
+                  className="min-h-[80px] text-sm"
+                />
+                <Button
+                  data-testid="crm-note-save"
+                  disabled={saving || !selectedItem || !noteSubject.trim()}
+                  onClick={async () => {
+                    if (!selectedItem || !noteSubject.trim()) return;
+                    setSaving(true);
+                    try {
+                      await api.post("/crm/notes", {
+                        scope: "agency",
+                        hotel_id: selectedItem.hotel_id,
+                        type: "note",
+                        subject: noteSubject.trim(),
+                        body: noteBody?.trim() || null,
+                      });
+                      toast({ title: "Not kaydedildi", variant: "default" });
+                      await fetchFollowups({ append: false, nextCursor: null });
+                    } catch (err) {
+                      toast({ title: "Not kaydedilemedi", description: apiErrorMessage(err), variant: "destructive" });
+                    } finally {
+                      setSaving(false);
+                    }
+                  }}
+                >
+                  Kaydet
+                </Button>
+              </TabsContent>
+
+              <TabsContent value="call" className="mt-4 space-y-3">
+                <Select value={callOutcome} onValueChange={setCallOutcome}>
+                  <SelectTrigger data-testid="crm-call-outcome" className="h-9 text-sm">
+                    <SelectValue placeholder="Arama sonucu" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="reached" className="text-sm">Ulaşıldı</SelectItem>
+                    <SelectItem value="no_answer" className="text-sm">Cevap yok</SelectItem>
+                    <SelectItem value="callback" className="text-sm">Geri arama</SelectItem>
+                    <SelectItem value="interested" className="text-sm">İlgili</SelectItem>
+                    <SelectItem value="not_interested" className="text-sm">İlgisiz</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Input
+                  data-testid="crm-call-subject"
+                  placeholder="Konu"
+                  value={callSubject}
+                  onChange={(e) => setCallSubject(e.target.value)}
+                  className="h-9 text-sm"
+                />
+                <Textarea
+                  data-testid="crm-call-body"
+                  placeholder="Not (opsiyonel)"
+                  value={callBody}
+                  onChange={(e) => setCallBody(e.target.value)}
+                  className="min-h-[80px] text-sm"
+                />
+                <Button
+                  data-testid="crm-call-save"
+                  disabled={saving || !selectedItem || !callSubject.trim() || !callOutcome}
+                  onClick={async () => {
+                    if (!selectedItem || !callSubject.trim() || !callOutcome) return;
+                    setSaving(true);
+                    try {
+                      await api.post("/crm/notes", {
+                        scope: "agency",
+                        hotel_id: selectedItem.hotel_id,
+                        type: "call",
+                        subject: callSubject.trim(),
+                        body: callBody?.trim() || null,
+                        call_outcome: callOutcome,
+                      });
+                      toast({ title: "Arama kaydı eklendi", variant: "default" });
+                      await fetchFollowups({ append: false, nextCursor: null });
+                    } catch (err) {
+                      toast({ title: "Arama kaydı eklenemedi", description: apiErrorMessage(err), variant: "destructive" });
+                    } finally {
+                      setSaving(false);
+                    }
+                  }}
+                >
+                  Kaydet
+                </Button>
+              </TabsContent>
+
+              <TabsContent value="task" className="mt-4 space-y-3">
+                <Input
+                  data-testid="crm-task-title"
+                  placeholder="Görev başlığı"
+                  value={taskTitle}
+                  onChange={(e) => setTaskTitle(e.target.value)}
+                  className="h-9 text-sm"
+                />
+                <Input
+                  type="date"
+                  data-testid="crm-task-due-date"
+                  value={taskDueDate}
+                  onChange={(e) => setTaskDueDate(e.target.value)}
+                  className="h-9 text-sm"
+                />
+                <Input
+                  data-testid="crm-task-assignee"
+                  placeholder="Assignee user id (opsiyonel)"
+                  value={taskAssignee}
+                  onChange={(e) => setTaskAssignee(e.target.value)}
+                  className="h-9 text-sm"
+                />
+                <Button
+                  data-testid="crm-task-create"
+                  disabled={saving || !selectedItem || !taskTitle.trim() || !taskDueDate}
+                  onClick={async () => {
+                    if (!selectedItem || !taskTitle.trim() || !taskDueDate) return;
+                    setSaving(true);
+                    try {
+                      await api.post("/crm/tasks", {
+                        scope: "agency",
+                        hotel_id: selectedItem.hotel_id,
+                        title: taskTitle.trim(),
+                        due_date: taskDueDate,
+                        assignee_user_id: taskAssignee?.trim() || null,
+                      });
+                      toast({ title: "Görev oluşturuldu", variant: "default" });
+                      await fetchFollowups({ append: false, nextCursor: null });
+                    } catch (err) {
+                      toast({ title: "Görev oluşturulamadı", description: apiErrorMessage(err), variant: "destructive" });
+                    } finally {
+                      setSaving(false);
+                    }
+                  }}
+                >
+                  Oluştur
+                </Button>
+              </TabsContent>
+            </Tabs>
+          </div>
+        </SheetContent>
+      </Sheet>
+
         ) : null}
 
         {filteredItems.map((it) => {

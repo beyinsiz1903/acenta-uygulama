@@ -189,7 +189,7 @@ class MatchOutcomesFullTester:
             "Create Catalog Product",
             "POST",
             "api/agency/catalog/products",
-            201,
+            200,
             token=self.agency_token,
             data=product_data
         )

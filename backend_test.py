@@ -2014,11 +2014,12 @@ class ExportsEmailV0Tester:
         """4) Archive list emailed field: GET /api/admin/exports/runs should show emailed=true for at least one run"""
         self.log("\n=== 4) ARCHIVE LIST EMAILED FIELD ===")
         
-        # Get runs list
+        # Get runs list for the policy that had email configured
+        policy_key = getattr(self, 'policy_key_with_email', 'match_risk_daily')
         success, response = self.run_test(
-            "GET /api/admin/exports/runs?key=match_risk_daily",
+            f"GET /api/admin/exports/runs?key={policy_key}",
             "GET",
-            "api/admin/exports/runs?key=match_risk_daily",
+            f"api/admin/exports/runs?key={policy_key}",
             200
         )
         if not success:

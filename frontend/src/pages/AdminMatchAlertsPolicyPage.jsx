@@ -314,37 +314,6 @@ export default function AdminMatchAlertsPolicyPage() {
               </label>
               <Input
                 id="webhook-secret"
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={async () => {
-                try {
-                  setSaving(true);
-                  setError("");
-                  const resp = await api.post("/admin/match-alerts/webhook-test", {
-                    webhook_url: policy.webhook_url,
-                    webhook_secret: policy.webhook_secret,
-                  });
-                  const data = resp.data || {};
-                  alert(
-                    `Webhook test ok: status=${data.http_status} snippet=${(data.snippet || "").slice(
-                      0,
-                      80
-                    )}`
-                  );
-                } catch (e) {
-                  console.error("Match alerts webhook test failed", e);
-                  setError(apiErrorMessage(e));
-                } finally {
-                  setSaving(false);
-                }
-              }}
-              data-testid="match-alerts-webhook-test"
-            >
-              Test Webhook
-            </Button>
-
                 type="password"
                 value={policy.webhook_secret || ""}
                 onChange={(e) =>
@@ -359,6 +328,36 @@ export default function AdminMatchAlertsPolicyPage() {
               <p className="text-xs text-muted-foreground">
                 Belirtilirse, payload imzalanır ve X-Syroce-Signature header’ında sha256=<hmac> olarak gönderilir.
               </p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={async () => {
+                  try {
+                    setSaving(true);
+                    setError("");
+                    const resp = await api.post("/admin/match-alerts/webhook-test", {
+                      webhook_url: policy.webhook_url,
+                      webhook_secret: policy.webhook_secret,
+                    });
+                    const data = resp.data || {};
+                    alert(
+                      `Webhook test ok: status=${data.http_status} snippet=${(data.snippet || "").slice(
+                        0,
+                        80
+                      )}`
+                    );
+                  } catch (e) {
+                    console.error("Match alerts webhook test failed", e);
+                    setError(apiErrorMessage(e));
+                  } finally {
+                    setSaving(false);
+                  }
+                }}
+                data-testid="match-alerts-webhook-test"
+              >
+                Test Webhook
+              </Button>
             </div>
           </div>
 

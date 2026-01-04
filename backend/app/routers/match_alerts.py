@@ -124,25 +124,47 @@ async def _already_sent_recently(db, org_id: str, match_id: str, fingerprint: st
     return doc is not None
 
 
-async def _record_delivery(db, org_id: str, match_id: str, fingerprint: str, channel: str, status: str, error: str | None = None) -> None:
+async def _record_delivery(
+    db,
+    org_id: str,
+    match_id: str,
+    fingerprint: str,
+    channel: str,
+    status: str,
+    *,
+    error: str | None = None,
+    delivery_target: str | None = None,
+    http_status: int | None = None,
+    response_snippet: str | None = None,
+    outbox_id: str | None = None,
+    retry_outbox_id: str | None = None,
+    attempt: int = 1,
+) -> None:
     now = now_utc()
+    update: dict[str, Any] = {
+        "organization_id": org_id,
+        "match_id": match_id,
+        "fingerprint": fingerprint,
+        "channel": channel,
+        "status": status,
+        "error": error,
+        "delivery_target": delivery_target,
+        "http_status": http_status,
+        "response_snippet": response_snippet,
+        "outbox_id": outbox_id,
+        "retry_outbox_id": retry_outbox_id,
+        "attempt": attempt,
+        "sent_at": now,
+    }
+
     await db.match_alert_deliveries.update_one(
         {
             "organization_id": org_id,
             "match_id": match_id,
             "fingerprint": fingerprint,
+            "channel": channel,
         },
-        {
-            "$set": {
-                "organization_id": org_id,
-                "match_id": match_id,
-                "fingerprint": fingerprint,
-                "channel": channel,
-                "status": status,
-                "error": error,
-                "sent_at": now,
-            }
-        },
+        {"$set": update},
         upsert=True,
     )
 

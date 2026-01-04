@@ -28,6 +28,12 @@ class MatchSummaryItem(BaseModel):
     cancel_rate: float
     last_booking_at: Optional[str] = None
 
+    # Optional action fields (only populated when include_action=1)
+    action_status: Optional[str] = None
+    action_reason_code: Optional[str] = None
+    action_updated_at: Optional[str] = None
+    action_updated_by_email: Optional[str] = None
+
 
 class MatchSummaryResponse(BaseModel):
     range: dict[str, Any]
@@ -85,6 +91,7 @@ async def _resolve_names(db, org_id: str, agency_ids: list[str], hotel_ids: list
 async def list_matches(
     days: int = Query(30, ge=1, le=365),
     min_total: int = Query(3, ge=1, le=1000),
+    include_action: bool = Query(False),
     db=Depends(get_db),
     user=Depends(get_current_user),
 ):

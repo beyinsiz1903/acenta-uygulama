@@ -27,6 +27,7 @@ export const MENU_CONFIG = {
         { label: "Rezervasyonlarım", path: "/app/agency/bookings" },
         { label: "Mutabakat", path: "/app/agency/settlements" },
         { label: "Finansal Raporlar", path: "/app/agency/reports" },
+        { label: "CRM (Takip)", path: "/app/agency/crm" },
         { label: "Ödeme Ayarları", path: "/app/agency/settings/payment" },
         { label: "Yardım", path: "/app/agency/help" },
       ],

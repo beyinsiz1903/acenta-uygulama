@@ -399,6 +399,7 @@ async def run_match_alerts(
         if email:
             recipients = [email]
 
+    # Email channel
     if not dry_run and triggered and recipients:
         for item in triggered:
             flags = []
@@ -428,7 +429,7 @@ async def run_match_alerts(
                 continue
 
             try:
-                await _send_alert_email(db, org_id=org_id, recipients=recipients, item=item, policy=policy)
+                outbox_id = await _send_alert_email(db, org_id=org_id, recipients=recipients, item=item, policy=policy)
                 await _record_delivery(
                     db,
                     org_id,
@@ -437,6 +438,8 @@ async def run_match_alerts(
                     channel="email",
                     status="sent",
                     error=None,
+                    delivery_target=",".join(recipients),
+                    outbox_id=outbox_id,
                 )
                 sent_count += 1
             except Exception as e:  # pragma: no cover - email failures shouldn't break whole run
@@ -448,8 +451,71 @@ async def run_match_alerts(
                     channel="email",
                     status="failed",
                     error=str(e),
+                    delivery_target=",".join(recipients),
                 )
                 failed_count += 1
+
+    # Webhook channel
+    if not dry_run and triggered and policy.webhook_enabled and policy.webhook_url:
+        for item in triggered:
+            flags = []
+            if item.triggered_by_rate:
+                flags.append("rate")
+            if item.triggered_by_repeat:
+                flags.append("repeat")
+            flags_str = "+".join(flags) or "none"
+
+            fingerprint = _match_fingerprint(
+                item.match_id,
+                days=days,
+                min_total=min_total,
+                thr_rate=policy.threshold_not_arrived_rate,
+                thr_repeat=policy.threshold_repeat_not_arrived_7,
+                flags=f"webhook-{flags_str}",
+            )
+
+            already = await _already_sent_recently(
+                db,
+                org_id,
+                item.match_id,
+                fingerprint,
+                policy.cooldown_hours,
+            )
+            if already:
+                continue
+
+            payload = {
+                "event": "match.alert",
+                "organization_id": org_id,
+                "generated_at": now_utc().isoformat(),
+                "window": {"days": days, "min_total": min_total},
+                "policy": {
+                    "threshold_not_arrived_rate": policy.threshold_not_arrived_rate,
+                    "cooldown_hours": policy.cooldown_hours,
+                },
+                "item": item.model_dump(),
+            }
+
+            ok_wh, http_status, snippet, err = await send_match_alert_webhook(
+                organization_id=org_id,
+                webhook_url=policy.webhook_url,
+                webhook_secret=policy.webhook_secret,
+                timeout_ms=policy.webhook_timeout_ms,
+                payload=payload,
+            )
+
+            await _record_delivery(
+                db,
+                org_id,
+                item.match_id,
+                fingerprint,
+                channel="webhook",
+                status="sent" if ok_wh else "failed",
+                error=err,
+                delivery_target=policy.webhook_url,
+                http_status=http_status,
+                response_snippet=snippet,
+            )
 
     return MatchAlertRunResult(
         ok=True,

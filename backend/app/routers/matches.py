@@ -57,8 +57,8 @@ class MatchDetailOut(BaseModel):
 
 class MatchAction(BaseModel):
     match_id: str
-    from_hotel_id: str | None = None
-    to_hotel_id: str | None = None
+    agency_id: str
+    hotel_id: str
     status: str = "none"  # none|watchlist|manual_review|blocked
     reason_code: str | None = None
     note: str | None = None

@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # ---------------------------
-# P4 Proof Pack (Token or CI-login mode)
+# P4 Proof Pack (Token or CI-login mode, with real to_hotel hotel_ok user when available)
 # ---------------------------
 # Required:
 #   BACKEND_BASE (no /api) e.g. http://localhost:8001 or https://preview.example.com
@@ -17,7 +17,9 @@ set -euo pipefail
 #   HOTEL_WRONG_EMAIL, HOTEL_WRONG_PASSWORD
 # Optional (stronger proof - real to_hotel user):
 #   HOTEL_OK_EMAIL, HOTEL_OK_PASSWORD
-# If HOTEL_OK creds are not provided, script falls back to using SUPER_ADMIN_TOKEN as HOTEL_OK_TOKEN.
+# If HOTEL_OK creds are not provided, script will try to use hotel_ok email/password
+# from the dev seed response; if still unavailable, falls back to SUPER_ADMIN_TOKEN
+# for the positive outcome call.
 
 # ---------------------------
 # Helpers
@@ -92,14 +94,7 @@ else
   HOTEL_WRONG_TOKEN="$(login_token "$API_BASE" "$HOTEL_WRONG_EMAIL" "$HOTEL_WRONG_PASSWORD")" \
     || die "Wrong-hotel user login failed"
 
-  if [[ -n "${HOTEL_OK_EMAIL:-}" && -n "${HOTEL_OK_PASSWORD:-}" ]]; then
-    HOTEL_OK_TOKEN="$(login_token "$API_BASE" "$HOTEL_OK_EMAIL" "$HOTEL_OK_PASSWORD")" \
-      || die "Hotel OK user login failed"
-  else
-    # fallback: super_admin can post outcome (allowed) — still passes settlement invariants + 403 negative.
-    HOTEL_OK_TOKEN="$SUPER_ADMIN_TOKEN"
-    log "HOTEL_OK creds not provided; using SUPER_ADMIN_TOKEN for positive outcome call."
-  fi
+  # HOTEL_OK token will be resolved after seed call, to allow using seed-provided creds
 fi
 
 # Ensure jq exists
@@ -114,6 +109,8 @@ SEED_RESP="$(curl -fsS -X POST "${API_BASE}/dev/seed/match-proxy" \
 MATCH_ID="$(json_get "$SEED_RESP" '.match_id')"
 TO_HOTEL_ID="$(json_get "$SEED_RESP" '.to_hotel_id')"
 CREATED_AT="$(json_get "$SEED_RESP" '.created_at')"
+SEED_OK_EMAIL="$(json_get "$SEED_RESP" '.hotel_ok.email // empty')"
+SEED_OK_PASSWORD="$(json_get "$SEED_RESP" '.hotel_ok.password // empty')"
 
 [[ -n "$MATCH_ID" && "$MATCH_ID" != "null" ]] || die "Seed response missing match_id"
 [[ -n "$TO_HOTEL_ID" && "$TO_HOTEL_ID" != "null" ]] || die "Seed response missing to_hotel_id"
@@ -124,6 +121,27 @@ FROM_DATE="$(date_add_days "$CREATED_DATE" -1)"
 TO_DATE="$(date_add_days "$CREATED_DATE" 1)"
 
 log "Seeded match_id=$MATCH_ID, to_hotel_id=$TO_HOTEL_ID, window $FROM_DATE -> $TO_DATE"
+
+# Resolve HOTEL_OK_TOKEN, preferring explicit env, then seed-provided creds, then fallback
+if [[ -n "${HOTEL_OK_TOKEN:-}" ]]; then
+  log "Using pre-provided HOTEL_OK_TOKEN"
+else
+  # If explicit HOTEL_OK_EMAIL/PASSWORD not set, but seed provided creds, use them
+  if [[ -z "${HOTEL_OK_EMAIL:-}" && -n "$SEED_OK_EMAIL" ]]; then
+    HOTEL_OK_EMAIL="$SEED_OK_EMAIL"
+    HOTEL_OK_PASSWORD="$SEED_OK_PASSWORD"
+    log "Using hotel_ok creds from seed response: $HOTEL_OK_EMAIL"
+  fi
+
+  if [[ -n "${HOTEL_OK_EMAIL:-}" && -n "${HOTEL_OK_PASSWORD:-}" ]]; then
+    HOTEL_OK_TOKEN="$(login_token "$API_BASE" "$HOTEL_OK_EMAIL" "$HOTEL_OK_PASSWORD")" || true
+  fi
+
+  if [[ -z "${HOTEL_OK_TOKEN:-}" || "${HOTEL_OK_TOKEN}" == "null" ]]; then
+    HOTEL_OK_TOKEN="$SUPER_ADMIN_TOKEN"
+    log "WARN: HOTEL_OK_TOKEN could not be resolved; falling back to SUPER_ADMIN_TOKEN for positive outcome."
+  fi
+fi
 
 log "Posting outcome as correct hotel user..."
 OUTCOME_RESP="$(curl -fsS -X POST "${API_BASE}/matches/${MATCH_ID}/outcome" \

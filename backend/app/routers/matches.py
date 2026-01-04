@@ -1,0 +1,294 @@
+from __future__ import annotations
+
+from datetime import timedelta
+from typing import Any, List, Optional
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+
+from app.auth import get_current_user, require_roles
+from app.db import get_db
+from app.schemas import BookingPublicView
+from app.utils import now_utc, build_booking_public_view
+
+router = APIRouter(prefix="/api/admin/matches", tags=["admin-matches"])
+
+
+class MatchSummaryOut(BookingPublicView.model_config["json_schema_extra"] if hasattr(BookingPublicView, "model_config") else object):  # type: ignore
+    pass
+
+
+class MatchSummaryItem(BaseModel):
+    id: str
+    agency_id: str
+    agency_name: Optional[str] = None
+    hotel_id: str
+    hotel_name: Optional[str] = None
+    total_bookings: int
+    pending: int
+    confirmed: int
+    cancelled: int
+    confirm_rate: float
+    cancel_rate: float
+    last_booking_at: Optional[str] = None
+
+
+class MatchSummaryResponse(BaseModel):
+    range: dict[str, Any]
+    items: List[MatchSummaryItem]
+
+
+class MatchMetrics(BaseModel):
+    total_bookings: int
+    pending: int
+    confirmed: int
+    cancelled: int
+    confirm_rate: float
+    cancel_rate: float
+    avg_approval_hours: Optional[float] = None
+
+
+class MatchDetailOut(BaseModel):
+    id: str
+    agency_id: str
+    agency_name: Optional[str] = None
+    hotel_id: str
+    hotel_name: Optional[str] = None
+    range: dict[str, Any]
+    metrics: MatchMetrics
+    bookings: List[BookingPublicView]
+
+
+async def _resolve_names(db, org_id: str, agency_ids: list[str], hotel_ids: list[str]) -> tuple[dict[str, str], dict[str, str]]:
+    """Helper to build {id -> name} maps for agencies and hotels."""
+    agencies = await db.agencies.find({"organization_id": org_id, "_id": {"$in": agency_ids}}).to_list(length=None)
+    hotels = await db.hotels.find({"organization_id": org_id, "_id": {"$in": hotel_ids}}).to_list(length=None)
+    agency_name_map = {str(a["_id"]): a.get("name", "") for a in agencies}
+    hotel_name_map = {str(h["_id"]): h.get("name", "") for h in hotels}
+    return agency_name_map, hotel_name_map
+
+
+@router.get("", response_model=MatchSummaryResponse, dependencies=[Depends(require_roles(["super_admin", "admin"]))])
+async def list_matches(
+    days: int = Query(30, ge=1, le=365),
+    min_total: int = Query(3, ge=1, le=1000),
+    db=Depends(get_db),
+    user=Depends(get_current_user),
+):
+    """List agency–hotel pairs (matches) aggregated from bookings.
+
+    This is a P4 v0-style risk aggregation backbone:
+    - groups by (agency_id, hotel_id)
+    - counts bookings by status
+    - computes basic rates (confirm/cancel)
+    """
+    org_id = user.get("organization_id")
+    cutoff = now_utc() - timedelta(days=days)
+
+    pipeline = [
+        {"$match": {"organization_id": org_id, "created_at": {"$gte": cutoff}}},
+        {
+            "$group": {
+                "_id": {"agency_id": "$agency_id", "hotel_id": "$hotel_id"},
+                "total": {"$sum": 1},
+                "pending": {"$sum": {"$cond": [{"$eq": ["$status", "pending"]}, 1, 0]}},
+                "confirmed": {"$sum": {"$cond": [{"$eq": ["$status", "confirmed"]}, 1, 0]}},
+                "cancelled": {"$sum": {"$cond": [{"$eq": ["$status", "cancelled"]}, 1, 0]}},
+                "last_booking_at": {"$max": "$created_at"},
+            }
+        },
+        {"$sort": {"total": -1}},
+    ]
+
+    rows = await db.bookings.aggregate(pipeline).to_list(length=None)
+
+    # filter by min_total
+    filtered = [r for r in rows if int(r.get("total") or 0) >= min_total]
+
+    agency_ids: list[str] = []
+    hotel_ids: list[str] = []
+    for r in filtered:
+        key = r.get("_id") or {}
+        a_id = str(key.get("agency_id") or "")
+        h_id = str(key.get("hotel_id") or "")
+        if a_id:
+            agency_ids.append(a_id)
+        if h_id:
+            hotel_ids.append(h_id)
+
+    agency_name_map, hotel_name_map = await _resolve_names(db, org_id, list(set(agency_ids)), list(set(hotel_ids)))
+
+    items: list[MatchSummaryItem] = []
+    for r in filtered:
+        key = r.get("_id") or {}
+        agency_id = str(key.get("agency_id") or "")
+        hotel_id = str(key.get("hotel_id") or "")
+        if not agency_id or not hotel_id:
+            continue
+        total = int(r.get("total") or 0)
+        pending = int(r.get("pending") or 0)
+        confirmed = int(r.get("confirmed") or 0)
+        cancelled = int(r.get("cancelled") or 0)
+        confirm_rate = float(confirmed) / total if total > 0 else 0.0
+        cancel_rate = float(cancelled) / total if total > 0 else 0.0
+        last_ts = r.get("last_booking_at")
+        last_iso = last_ts.isoformat() if hasattr(last_ts, "isoformat") else None
+
+        items.append(
+            MatchSummaryItem(
+                id=f"{agency_id}__{hotel_id}",
+                agency_id=agency_id,
+                agency_name=agency_name_map.get(agency_id),
+                hotel_id=hotel_id,
+                hotel_name=hotel_name_map.get(hotel_id),
+                total_bookings=total,
+                pending=pending,
+                confirmed=confirmed,
+                cancelled=cancelled,
+                confirm_rate=round(confirm_rate, 3),
+                cancel_rate=round(cancel_rate, 3),
+                last_booking_at=last_iso,
+            )
+        )
+
+    return {
+        "range": {"from": cutoff.isoformat(), "to": now_utc().isoformat(), "days": days},
+        "items": items,
+    }
+
+
+def _parse_match_id(match_id: str) -> tuple[str, str]:
+    try:
+        agency_id, hotel_id = match_id.split("__", 1)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="INVALID_MATCH_ID")
+    if not agency_id or not hotel_id:
+        raise HTTPException(status_code=400, detail="INVALID_MATCH_ID")
+    return agency_id, hotel_id
+
+
+@router.get("/{match_id}", response_model=MatchDetailOut, dependencies=[Depends(require_roles(["super_admin", "admin"]))])
+async def get_match_detail(
+    match_id: str,
+    days: int = Query(90, ge=1, le=365),
+    limit: int = Query(50, ge=1, le=200),
+    db=Depends(get_db),
+    user=Depends(get_current_user),
+):
+    """Detailed view for a given agency–hotel pair.
+
+    Returns:
+    - metrics (counts, rates, avg approval hours)
+    - latest bookings (normalized BookingPublicView list)
+    """
+    org_id = user.get("organization_id")
+    agency_id, hotel_id = _parse_match_id(match_id)
+    cutoff = now_utc() - timedelta(days=days)
+
+    # ownership: ensure agency & hotel belong to this org
+    agency = await db.agencies.find_one({"organization_id": org_id, "_id": agency_id})
+    hotel = await db.hotels.find_one({"organization_id": org_id, "_id": hotel_id})
+    if not agency or not hotel:
+        raise HTTPException(status_code=404, detail="MATCH_NOT_FOUND")
+
+    # aggregate metrics
+    pipeline = [
+        {
+            "$match": {
+                "organization_id": org_id,
+                "agency_id": agency_id,
+                "hotel_id": hotel_id,
+                "created_at": {"$gte": cutoff},
+            }
+        },
+        {
+            "$group": {
+                "_id": None,
+                "total": {"$sum": 1},
+                "pending": {"$sum": {"$cond": [{"$eq": ["$status", "pending"]}, 1, 0]}},
+                "confirmed": {"$sum": {"$cond": [{"$eq": ["$status", "confirmed"]}, 1, 0]}},
+                "cancelled": {"$sum": {"$cond": [{"$eq": ["$status", "cancelled"]}, 1, 0]}},
+            }
+        },
+    ]
+    agg = await db.bookings.aggregate(pipeline).to_list(length=1)
+    if agg:
+        row = agg[0]
+        total = int(row.get("total") or 0)
+        pending = int(row.get("pending") or 0)
+        confirmed = int(row.get("confirmed") or 0)
+        cancelled = int(row.get("cancelled") or 0)
+    else:
+        total = pending = confirmed = cancelled = 0
+
+    # avg approval hours (confirmed only)
+    approval_pipeline = [
+        {
+            "$match": {
+                "organization_id": org_id,
+                "agency_id": agency_id,
+                "hotel_id": hotel_id,
+                "status": "confirmed",
+                "created_at": {"$gte": cutoff},
+                "confirmed_at": {"$type": "date"},
+            }
+        },
+        {
+            "$project": {
+                "approval_ms": {"$subtract": ["$confirmed_at", "$created_at"]},
+            }
+        },
+        {
+            "$group": {
+                "_id": None,
+                "avg_ms": {"$avg": "$approval_ms"},
+            }
+        },
+    ]
+    approval_rows = await db.bookings.aggregate(approval_pipeline).to_list(length=1)
+    avg_approval_hours: Optional[float] = None
+    if approval_rows:
+        avg_ms = approval_rows[0].get("avg_ms")
+        if avg_ms is not None:
+            avg_approval_hours = float(avg_ms) / 1000.0 / 3600.0
+
+    confirm_rate = float(confirmed) / total if total > 0 else 0.0
+    cancel_rate = float(cancelled) / total if total > 0 else 0.0
+
+    # latest bookings for drilldown
+    cursor = (
+        db.bookings.find(
+            {
+                "organization_id": org_id,
+                "agency_id": agency_id,
+                "hotel_id": hotel_id,
+                "created_at": {"$gte": cutoff},
+            }
+        )
+        .sort("created_at", -1)
+        .limit(limit)
+    )
+    docs = await cursor.to_list(length=limit)
+    bookings: list[BookingPublicView] = []
+    for d in docs:
+        bookings.append(BookingPublicView(**build_booking_public_view(d)))
+
+    metrics = MatchMetrics(
+        total_bookings=total,
+        pending=pending,
+        confirmed=confirmed,
+        cancelled=cancelled,
+        confirm_rate=round(confirm_rate, 3),
+        cancel_rate=round(cancel_rate, 3),
+        avg_approval_hours=None if avg_approval_hours is None else round(avg_approval_hours, 2),
+    )
+
+    return MatchDetailOut(
+        id=f"{agency_id}__{hotel_id}",
+        agency_id=agency_id,
+        agency_name=agency.get("name"),
+        hotel_id=hotel_id,
+        hotel_name=hotel.get("name"),
+        range={"from": cutoff.isoformat(), "to": now_utc().isoformat(), "days": days},
+        metrics=metrics,
+        bookings=bookings,
+    )

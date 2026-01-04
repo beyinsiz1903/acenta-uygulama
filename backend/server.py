@@ -95,6 +95,8 @@ app.include_router(audit_router)
 app.include_router(voucher_router)
 app.include_router(web_booking_router)
 app.include_router(web_catalog_router)
+from app.backend.app.routers import matches_router
+app.include_router(matches_router)
 
 
 @app.get("/api/health")

@@ -15,6 +15,8 @@ import AdminAuditLogsPage from "./pages/AdminAuditLogsPage";
 import AdminEmailLogsPage from "./pages/AdminEmailLogsPage";
 import AdminPilotDashboardPage from "./pages/AdminPilotDashboardPage";
 import AdminMetricsPage from "./pages/AdminMetricsPage";
+import AdminMatchesPage from "./pages/AdminMatchesPage";
+import AdminMatchDetailPage from "./pages/AdminMatchDetailPage";
 import AgencyHotelsPage from "./pages/AgencyHotelsPage";
 import AgencyHotelDetailPage from "./pages/AgencyHotelDetailPage";
 import AgencyHotelSearchPage from "./pages/AgencyHotelSearchPage";
@@ -67,6 +69,8 @@ function App() {
             <Route path="email-logs" element={<AdminEmailLogsPage />} />
             <Route path="pilot-dashboard" element={<AdminPilotDashboardPage />} />
             <Route path="metrics" element={<AdminMetricsPage />} />
+            <Route path="matches" element={<AdminMatchesPage />} />
+            <Route path="matches/:id" element={<AdminMatchDetailPage />} />
           </Route>
         </Route>
 

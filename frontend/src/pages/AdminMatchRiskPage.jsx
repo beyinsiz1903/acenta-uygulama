@@ -184,6 +184,70 @@ export default function AdminMatchRiskPage() {
       } catch {
         // ignore
       }
+  function csvEscape(v) {
+    const s = String(v ?? "");
+    if (/[",\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+    return s;
+  }
+
+  function downloadCsv(filename, rows) {
+    const blob = new Blob([rows.join("\n")], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  function exportSummaryCsv() {
+    const header = [
+      "range_from",
+      "range_to",
+      "group_by",
+      "from_hotel_id",
+      "from_hotel_name",
+      "to_hotel_id",
+      "to_hotel_name",
+      "matches_total",
+      "outcome_known",
+      "outcome_missing",
+      "not_arrived",
+      "not_arrived_rate",
+      "repeat_not_arrived_7",
+    ];
+
+    const lines = [header.join(",")];
+
+    for (const r of visibleItems) {
+      const fromId = r.from_hotel_id || "";
+      const toId = r.to_hotel_id || "";
+      const row = [
+        from,
+        to,
+        groupBy,
+        fromId,
+        hotelLabel(fromId),
+        toId,
+        hotelLabel(toId),
+        r.matches_total ?? "",
+        r.outcome_known ?? "",
+        r.outcome_missing ?? "",
+        r.not_arrived ?? "",
+        r.not_arrived_rate ?? "",
+        r.repeat_not_arrived_7 ?? "",
+      ].map(csvEscape);
+
+      lines.push(row.join(","));
+    }
+
+    const safeFrom = String(from || "").replaceAll("/", "-");
+    const safeTo = String(to || "").replaceAll("/", "-");
+    downloadCsv(`match-risk_${groupBy}_${safeFrom}_to_${safeTo}.csv`, lines);
+  }
+
     }
   }
 

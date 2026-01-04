@@ -105,6 +105,17 @@
 ## user_problem_statement: "Müsaitlik ekranını takvim/grid görünümüne, Lead pipeline'ı drag-drop Kanban'a, Rezervasyon detayını drawer'a çevir. Ayrıca agentis.com.tr referansıyla tüm uygulamanın tasarımını daha kurumsal/modern hale getir."
 
 ## backend:
+  - task: "Match Actions Backend Flow - GET/PUT /api/admin/matches/{match_id}/action endpoints"
+    implemented: true
+    working: true
+    file: "/app/backend/app/routers/matches.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ MATCH ACTIONS BACKEND TEST COMPLETE - All 13 test scenarios passed (100% success rate). CRITICAL FUNCTIONALITY VERIFIED: A) Authentication & Authorization: Super admin login successful (admin@acenta.test/admin123), agency admin login successful (agency1@demo.test/agency123), hotel admin login successful (hoteladmin@acenta.test/admin123), proper role-based access control working (super_admin role required for match actions). B) Match ID Retrieval: GET /api/admin/matches returns valid match_id format (agency_id__hotel_id), found real match_id for testing: 88e2b8e4-12e7-43e4-9d54-e39d53576b18__e60e9d13-bd43-4c21-bc32-55f7d3de7346. C) GET Action (No Record): GET /api/admin/matches/{match_id}/action returns 200 with correct default structure (ok=true, status=none), proper response format when no action record exists. D) PUT Action (Watchlist): PUT /api/admin/matches/{match_id}/action with status=watchlist working correctly, reason_code and note fields properly set and persisted, updated_at and updated_by_email fields populated correctly. E) Persistence Verification: GET action after PUT confirms data persistence (status=watchlist, reason_code=high_cancel_rate, note=Test watchlist), all fields maintained correctly across requests. F) Clear Action: PUT with status=none successfully clears action record, reason_code and note properly reset to null, clean state restored as expected. G) RBAC Security: Agency token correctly denied access (403 Forbidden) for both GET and PUT operations, hotel token correctly denied access (403 Forbidden) for both GET and PUT operations, proper super_admin role enforcement working. H) Error Handling: Invalid status 'foo' correctly rejected with 422 INVALID_STATUS, proper validation working for status field. All match actions functionality production-ready with proper authentication, validation, persistence, and security controls."
 
 ## backend:
 ##   - task: "FAZ-6 Komisyon & Mutabakat (model + hesaplama + settlements API + cancel reversal)"

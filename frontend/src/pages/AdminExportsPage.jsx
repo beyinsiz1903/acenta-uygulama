@@ -554,7 +554,7 @@ export default function AdminExportsPage() {
                               </span>
                             </td>
                             <td className="py-1 pr-2 text-right text-xs">
-                              {/* rows say01s0131i backend'de yok; estimated size ile yetinelim */}
+                              {/* rows sayısı backend'de yok; estimated size ile yetinelim */}
                               -
                             </td>
                             <td className="py-1 pr-2 text-right text-xs">

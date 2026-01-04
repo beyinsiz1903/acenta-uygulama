@@ -187,8 +187,6 @@ async def _send_alert_email(
     item: MatchAlertRunItem,
     policy: MatchAlertPolicy,
 ) -> str:
-    from app.services.email_outbox import enqueue_generic_email  # local import to avoid cycles
-
     if not recipients:
         return ""
 

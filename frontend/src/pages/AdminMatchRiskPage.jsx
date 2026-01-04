@@ -72,6 +72,32 @@ export default function AdminMatchRiskPage() {
     return `${from} → ${to}`;
   }, [from, to]);
 
+  async function loadHotelsMap() {
+    setHotelMapLoading(true);
+    try {
+      const resp = await api.get("/admin/hotels");
+      const raw = resp.data || [];
+      const map = {};
+      for (const h of raw) {
+        const id = String(h.id || h._id || "");
+        if (!id) continue;
+        map[id] = h.name || h.title || h.hotel_name || id;
+      }
+      setHotelMap(map);
+    } catch (e) {
+      // mapping yoksa id göstererek devam edeceğiz
+      setHotelMap({});
+    } finally {
+      setHotelMapLoading(false);
+    }
+  }
+
+  function hotelLabel(id) {
+    const s = String(id || "");
+    if (!s) return "?";
+    return hotelMap[s] || s;
+  }
+
   async function loadSummary() {
     if (!from || !to) return;
 

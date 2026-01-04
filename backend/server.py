@@ -39,6 +39,8 @@ from app.routers.audit import router as audit_router
 from app.routers.voucher import router as voucher_router
 from app.routers.web_booking import router as web_booking_router
 from app.routers.web_catalog import router as web_catalog_router
+from app.routers.matches import router as matches_router
+from app.routers.match_alerts import router as match_alerts_router
 from app.email_worker import email_dispatch_loop
 from app.integration_sync_worker import integration_sync_loop
 

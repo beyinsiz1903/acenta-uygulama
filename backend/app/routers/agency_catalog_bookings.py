@@ -429,6 +429,9 @@ async def create_catalog_booking(
         "internal_notes": [],
         "created_at": now,
         "updated_at": now,
+        "to_hotel_id": target_hotel_id,
+        "hotel_id": target_hotel_id,
+        "from_hotel_id": from_hotel_id,
     }
 
     # Overbook audit note: attach to doc before insert

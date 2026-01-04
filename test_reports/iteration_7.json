@@ -1,0 +1,36 @@
+{
+  "summary": "Completed comprehensive RBAC testing for CRM Follow-ups endpoint (GET /api/crm/follow-ups). All 4 required scenarios passed successfully with 100% success rate. Endpoint correctly enforces agency-only scope, linked hotel filtering, and proper RBAC rules.",
+  "backend_issues": {
+    "critical_bugs": [],
+    "flaky_endpoints": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "Super admin authentication and setup",
+    "Agency user authentication (agency1@demo.test)",
+    "Hotel admin user creation and authentication via dev seed endpoint",
+    "SCENARIO 1 (POSITIVE): Agency user with linked hotels → GET /api/crm/follow-ups → 200 OK with items array containing 2 hotels",
+    "SCENARIO 2 (NEGATIVE): Agency user requesting non-linked hotel → GET /api/crm/follow-ups?hotel_id=<non_linked> → 403 FORBIDDEN",
+    "SCENARIO 3 (NEGATIVE): Hotel admin calling endpoint → GET /api/crm/follow-ups → 403 FORBIDDEN",
+    "SCENARIO 4 (SMOKE): Response shape validation - all required fields present (hotel_id, hotel_name, signals, suggested_action)",
+    "Response structure validation: items array, meta object with days_idle/due_until/count",
+    "Signals structure validation: idle_days, last_touch_at, open_tasks, due_today, overdue, next_due_date"
+  ],
+  "test_report_links": [
+    "/app/crm_followups_rbac_test.py"
+  ],
+  "action_item_for_main_agent": "",
+  "updated_files": [
+    "/app/crm_followups_rbac_test.py"
+  ],
+  "success_percentage": {
+    "backend": "100% (9/9 tests passed)",
+    "frontend": "N/A (frontend testing skipped as per request)"
+  },
+  "should_call_test_agent_after_fix": false,
+  "should_main_agent_test_itself": false
+}

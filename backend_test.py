@@ -1764,6 +1764,478 @@ class FAZ101IntegrationSyncTester:
         return 0 if self.tests_failed == 0 else 1
 
 
+class MatchActionsTester:
+    def __init__(self, base_url="https://risk-dashboard-26.preview.emergentagent.com"):
+        self.base_url = base_url
+        self.super_admin_token = None
+        self.agency_token = None
+        self.hotel_token = None
+        self.tests_run = 0
+        self.tests_passed = 0
+        self.tests_failed = 0
+        self.failed_tests = []
+        
+        # Store data for testing
+        self.match_id = None
+
+    def log(self, msg):
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}")
+
+    def run_test(self, name, method, endpoint, expected_status, data=None, headers_override=None, token=None):
+        """Run a single API test with specific token"""
+        url = f"{self.base_url}/{endpoint}"
+        headers = headers_override or {'Content-Type': 'application/json'}
+        
+        # Use specific token if provided
+        if token:
+            headers['Authorization'] = f'Bearer {token}'
+        elif self.super_admin_token and not headers_override:
+            headers['Authorization'] = f'Bearer {self.super_admin_token}'
+
+        self.tests_run += 1
+        self.log(f"🔍 Test #{self.tests_run}: {name}")
+        
+        try:
+            if method == 'GET':
+                response = requests.get(url, headers=headers, timeout=10)
+            elif method == 'POST':
+                response = requests.post(url, json=data, headers=headers, timeout=10)
+            elif method == 'PUT':
+                response = requests.put(url, json=data, headers=headers, timeout=10)
+            elif method == 'DELETE':
+                response = requests.delete(url, headers=headers, timeout=10)
+            else:
+                raise ValueError(f"Unsupported method: {method}")
+
+            success = response.status_code == expected_status
+            if success:
+                self.tests_passed += 1
+                self.log(f"✅ PASSED - Status: {response.status_code}")
+                try:
+                    return True, response.json() if response.content else {}
+                except:
+                    return True, {}
+            else:
+                self.tests_failed += 1
+                self.failed_tests.append(f"{name} - Expected {expected_status}, got {response.status_code}")
+                self.log(f"❌ FAILED - Expected {expected_status}, got {response.status_code}")
+                try:
+                    self.log(f"   Response: {response.text[:200]}")
+                except:
+                    pass
+                return False, {}
+
+        except Exception as e:
+            self.tests_failed += 1
+            self.failed_tests.append(f"{name} - Error: {str(e)}")
+            self.log(f"❌ FAILED - Error: {str(e)}")
+            return False, {}
+
+    def test_super_admin_login(self):
+        """ÖN HAZIRLIK: Super admin login"""
+        self.log("\n=== ÖN HAZIRLIK: AUTHENTICATION ===")
+        success, response = self.run_test(
+            "Super Admin Login (admin@acenta.test/admin123)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "admin@acenta.test", "password": "admin123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.super_admin_token = response['access_token']
+            user = response.get('user', {})
+            roles = user.get('roles', [])
+            
+            if 'super_admin' in roles:
+                self.log(f"✅ Super admin login successful - roles: {roles}")
+                return True
+            else:
+                self.log(f"❌ Missing super_admin role: {roles}")
+                return False
+        return False
+
+    def test_agency_admin_login(self):
+        """ÖN HAZIRLIK: Agency admin login"""
+        success, response = self.run_test(
+            "Agency Admin Login (agency1@demo.test/agency123)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "agency1@demo.test", "password": "agency123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.agency_token = response['access_token']
+            user = response.get('user', {})
+            roles = user.get('roles', [])
+            
+            if 'agency_admin' in roles:
+                self.log(f"✅ Agency admin login successful - roles: {roles}")
+                return True
+            else:
+                self.log(f"❌ Missing agency_admin role: {roles}")
+                return False
+        return False
+
+    def test_hotel_admin_login(self):
+        """ÖN HAZIRLIK: Hotel admin login"""
+        success, response = self.run_test(
+            "Hotel Admin Login (hoteladmin@acenta.test/admin123)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "hoteladmin@acenta.test", "password": "admin123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.hotel_token = response['access_token']
+            user = response.get('user', {})
+            roles = user.get('roles', [])
+            
+            if 'hotel_admin' in roles:
+                self.log(f"✅ Hotel admin login successful - roles: {roles}")
+                return True
+            else:
+                self.log(f"❌ Missing hotel_admin role: {roles}")
+                return False
+        return False
+
+    def test_get_match_id(self):
+        """ÖN HAZIRLIK: Get real match_id from /api/admin/matches"""
+        self.log("\n--- Get Real Match ID ---")
+        success, response = self.run_test(
+            "GET /api/admin/matches (to get real match_id)",
+            "GET",
+            "api/admin/matches",
+            200,
+            token=self.super_admin_token
+        )
+        
+        if success:
+            items = response.get('items', [])
+            if items:
+                self.match_id = items[0].get('id')
+                self.log(f"✅ Found match_id: {self.match_id}")
+                return True
+            else:
+                self.log(f"❌ No matches found in response")
+                return False
+        return False
+
+    def test_get_action_no_record(self):
+        """TEST 1: GET /api/admin/matches/{match_id}/action (kayıt yokken)"""
+        self.log("\n=== TEST 1: GET ACTION (NO RECORD) ===")
+        
+        if not self.match_id:
+            self.log("❌ No match_id available for testing")
+            return False
+            
+        success, response = self.run_test(
+            f"GET /api/admin/matches/{self.match_id}/action (no record)",
+            "GET",
+            f"api/admin/matches/{self.match_id}/action",
+            200,
+            token=self.super_admin_token
+        )
+        
+        if success:
+            if (response.get('ok') == True and 
+                response.get('action', {}).get('match_id') == self.match_id and
+                response.get('action', {}).get('status') == 'none'):
+                self.log(f"✅ Correct response format: ok=True, status=none")
+                return True
+            else:
+                self.log(f"❌ Invalid response format: {response}")
+                return False
+        return False
+
+    def test_put_action_watchlist(self):
+        """TEST 2: PUT /api/admin/matches/{match_id}/action (watchlist)"""
+        self.log("\n=== TEST 2: PUT ACTION (WATCHLIST) ===")
+        
+        if not self.match_id:
+            self.log("❌ No match_id available for testing")
+            return False
+            
+        watchlist_data = {
+            "status": "watchlist",
+            "reason_code": "high_cancel_rate",
+            "note": "Test watchlist"
+        }
+        
+        success, response = self.run_test(
+            f"PUT /api/admin/matches/{self.match_id}/action (watchlist)",
+            "PUT",
+            f"api/admin/matches/{self.match_id}/action",
+            200,
+            data=watchlist_data,
+            token=self.super_admin_token
+        )
+        
+        if success:
+            action = response.get('action', {})
+            if (action.get('status') == 'watchlist' and
+                action.get('reason_code') == 'high_cancel_rate' and
+                action.get('note') == 'Test watchlist' and
+                action.get('updated_at') is not None and
+                action.get('updated_by_email') is not None):
+                self.log(f"✅ Watchlist action created successfully")
+                self.log(f"   Status: {action.get('status')}")
+                self.log(f"   Reason: {action.get('reason_code')}")
+                self.log(f"   Note: {action.get('note')}")
+                self.log(f"   Updated by: {action.get('updated_by_email')}")
+                return True
+            else:
+                self.log(f"❌ Invalid watchlist response: {response}")
+                return False
+        return False
+
+    def test_get_action_persist_check(self):
+        """TEST 3: GET sonrası persist kontrolü"""
+        self.log("\n=== TEST 3: GET ACTION (PERSIST CHECK) ===")
+        
+        if not self.match_id:
+            self.log("❌ No match_id available for testing")
+            return False
+            
+        success, response = self.run_test(
+            f"GET /api/admin/matches/{self.match_id}/action (persist check)",
+            "GET",
+            f"api/admin/matches/{self.match_id}/action",
+            200,
+            token=self.super_admin_token
+        )
+        
+        if success:
+            action = response.get('action', {})
+            if (action.get('status') == 'watchlist' and
+                action.get('reason_code') == 'high_cancel_rate' and
+                action.get('note') == 'Test watchlist'):
+                self.log(f"✅ Watchlist action persisted correctly")
+                return True
+            else:
+                self.log(f"❌ Action not persisted correctly: {action}")
+                return False
+        return False
+
+    def test_put_action_none_clear(self):
+        """TEST 4: PUT status=none → temizleme"""
+        self.log("\n=== TEST 4: PUT ACTION (CLEAR) ===")
+        
+        if not self.match_id:
+            self.log("❌ No match_id available for testing")
+            return False
+            
+        clear_data = {
+            "status": "none"
+        }
+        
+        success, response = self.run_test(
+            f"PUT /api/admin/matches/{self.match_id}/action (clear)",
+            "PUT",
+            f"api/admin/matches/{self.match_id}/action",
+            200,
+            data=clear_data,
+            token=self.super_admin_token
+        )
+        
+        if success:
+            action = response.get('action', {})
+            if action.get('status') == 'none':
+                self.log(f"✅ Action cleared successfully (status=none)")
+                
+                # Verify reason_code and note are cleared
+                if action.get('reason_code') is None and action.get('note') is None:
+                    self.log(f"✅ reason_code and note cleared correctly")
+                    return True
+                else:
+                    self.log(f"❌ reason_code/note not cleared: reason={action.get('reason_code')}, note={action.get('note')}")
+                    return False
+            else:
+                self.log(f"❌ Action not cleared: {action}")
+                return False
+        return False
+
+    def test_rbac_agency_forbidden(self):
+        """TEST 5: RBAC - Agency token should get 403"""
+        self.log("\n=== TEST 5: RBAC (AGENCY FORBIDDEN) ===")
+        
+        if not self.match_id or not self.agency_token:
+            self.log("❌ No match_id or agency_token available for testing")
+            return False
+            
+        # Test GET with agency token
+        success, response = self.run_test(
+            f"GET /api/admin/matches/{self.match_id}/action (agency token - should be 403)",
+            "GET",
+            f"api/admin/matches/{self.match_id}/action",
+            403,
+            token=self.agency_token
+        )
+        
+        if success:
+            self.log(f"✅ Agency GET correctly forbidden (403)")
+        else:
+            return False
+            
+        # Test PUT with agency token
+        watchlist_data = {
+            "status": "watchlist",
+            "reason_code": "test",
+            "note": "test"
+        }
+        
+        success, response = self.run_test(
+            f"PUT /api/admin/matches/{self.match_id}/action (agency token - should be 403)",
+            "PUT",
+            f"api/admin/matches/{self.match_id}/action",
+            403,
+            data=watchlist_data,
+            token=self.agency_token
+        )
+        
+        if success:
+            self.log(f"✅ Agency PUT correctly forbidden (403)")
+            return True
+        return False
+
+    def test_rbac_hotel_forbidden(self):
+        """TEST 5: RBAC - Hotel token should get 403"""
+        self.log("\n=== TEST 5: RBAC (HOTEL FORBIDDEN) ===")
+        
+        if not self.match_id or not self.hotel_token:
+            self.log("❌ No match_id or hotel_token available for testing")
+            return False
+            
+        # Test GET with hotel token
+        success, response = self.run_test(
+            f"GET /api/admin/matches/{self.match_id}/action (hotel token - should be 403)",
+            "GET",
+            f"api/admin/matches/{self.match_id}/action",
+            403,
+            token=self.hotel_token
+        )
+        
+        if success:
+            self.log(f"✅ Hotel GET correctly forbidden (403)")
+        else:
+            return False
+            
+        # Test PUT with hotel token
+        watchlist_data = {
+            "status": "watchlist",
+            "reason_code": "test",
+            "note": "test"
+        }
+        
+        success, response = self.run_test(
+            f"PUT /api/admin/matches/{self.match_id}/action (hotel token - should be 403)",
+            "PUT",
+            f"api/admin/matches/{self.match_id}/action",
+            403,
+            data=watchlist_data,
+            token=self.hotel_token
+        )
+        
+        if success:
+            self.log(f"✅ Hotel PUT correctly forbidden (403)")
+            return True
+        return False
+
+    def test_invalid_status_error(self):
+        """TEST 6: Hatalı status ile PUT → 422 INVALID_STATUS"""
+        self.log("\n=== TEST 6: INVALID STATUS ERROR ===")
+        
+        if not self.match_id:
+            self.log("❌ No match_id available for testing")
+            return False
+            
+        invalid_data = {
+            "status": "foo"
+        }
+        
+        success, response = self.run_test(
+            f"PUT /api/admin/matches/{self.match_id}/action (invalid status - should be 422)",
+            "PUT",
+            f"api/admin/matches/{self.match_id}/action",
+            422,
+            data=invalid_data,
+            token=self.super_admin_token
+        )
+        
+        if success:
+            self.log(f"✅ Invalid status correctly rejected (422)")
+            return True
+        return False
+
+    def print_summary(self):
+        """Print test summary"""
+        self.log("\n" + "="*60)
+        self.log("MATCH ACTIONS BACKEND TEST SUMMARY")
+        self.log("="*60)
+        self.log(f"Total Tests: {self.tests_run}")
+        self.log(f"✅ Passed: {self.tests_passed}")
+        self.log(f"❌ Failed: {self.tests_failed}")
+        self.log(f"Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%")
+        
+        if self.failed_tests:
+            self.log("\n❌ FAILED TESTS:")
+            for i, test in enumerate(self.failed_tests, 1):
+                self.log(f"  {i}. {test}")
+        
+        self.log("="*60)
+
+    def run_match_actions_tests(self):
+        """Run all match actions tests in sequence"""
+        self.log("🚀 Starting Match Actions Backend Tests")
+        self.log(f"Base URL: {self.base_url}")
+        
+        # ÖN HAZIRLIK: Authentication
+        if not self.test_super_admin_login():
+            self.log("❌ Super admin login failed - stopping tests")
+            self.print_summary()
+            return 1
+
+        if not self.test_agency_admin_login():
+            self.log("❌ Agency admin login failed - continuing without RBAC tests")
+
+        if not self.test_hotel_admin_login():
+            self.log("❌ Hotel admin login failed - continuing without RBAC tests")
+
+        # ÖN HAZIRLIK: Get match_id
+        if not self.test_get_match_id():
+            self.log("❌ Could not get match_id - stopping tests")
+            self.print_summary()
+            return 1
+
+        # TEST 1: GET action (no record)
+        self.test_get_action_no_record()
+        
+        # TEST 2: PUT action (watchlist)
+        self.test_put_action_watchlist()
+        
+        # TEST 3: GET action (persist check)
+        self.test_get_action_persist_check()
+        
+        # TEST 4: PUT action (clear)
+        self.test_put_action_none_clear()
+        
+        # TEST 5: RBAC tests
+        if self.agency_token:
+            self.test_rbac_agency_forbidden()
+        if self.hotel_token:
+            self.test_rbac_hotel_forbidden()
+        
+        # TEST 6: Error conditions
+        self.test_invalid_status_error()
+
+        # Summary
+        self.print_summary()
+
+        return 0 if self.tests_failed == 0 else 1
+
+
 class FAZ121AdminMetricsSmokeTest:
     def __init__(self, base_url="https://risk-dashboard-26.preview.emergentagent.com"):
         self.base_url = base_url

@@ -154,7 +154,8 @@ export default function AdminMatchRiskPage() {
   }, []);
 
   return (
-    <div className="p-4 md:p-6" data-testid="admin-match-risk-page">
+    <TooltipProvider>
+      <div className="p-4 md:p-6" data-testid="admin-match-risk-page">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div>
           <div className="text-xl font-semibold">Match Risk Dashboard</div>

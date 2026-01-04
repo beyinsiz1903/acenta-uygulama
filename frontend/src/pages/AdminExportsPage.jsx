@@ -149,7 +149,11 @@ export default function AdminExportsPage() {
       if (dry) {
         setRunDryResult(data);
       } else {
-        alert(`Run now tamamland0131. run_id=${data.run_id || "-"}`);
+        alert(
+          `Run now tamamlandı. run_id=${data.run_id || "-"}${
+            data.emailed ? ` (emailed to: ${(data.emailed_to || []).join(", ")})` : ""
+          }`
+        );
         setRunsPolicyKey(form.key);
         await loadRuns(form.key);
       }

@@ -4,6 +4,7 @@ from datetime import timedelta
 from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel
 
 from app.auth import get_current_user, require_roles
 from app.db import get_db
@@ -11,10 +12,6 @@ from app.schemas import BookingPublicView
 from app.utils import now_utc, build_booking_public_view
 
 router = APIRouter(prefix="/api/admin/matches", tags=["admin-matches"])
-
-
-class MatchSummaryOut(BookingPublicView.model_config["json_schema_extra"] if hasattr(BookingPublicView, "model_config") else object):  # type: ignore
-    pass
 
 
 class MatchSummaryItem(BaseModel):

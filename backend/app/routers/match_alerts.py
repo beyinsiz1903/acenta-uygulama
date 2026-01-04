@@ -203,6 +203,63 @@ async def _send_alert_email(
     )
 
 
+class MatchAlertDeliveryItem(BaseModel):
+    match_id: str
+    channel: str
+    status: str
+    error: Optional[str] = None
+    fingerprint: str
+    sent_at: str
+
+
+class MatchAlertDeliveriesResponse(BaseModel):
+    ok: bool = True
+    items: list[MatchAlertDeliveryItem]
+
+
+@router.get("/deliveries", response_model=MatchAlertDeliveriesResponse, dependencies=[Depends(require_roles(["super_admin"]))])
+async def list_deliveries(
+    limit: int = Query(50, ge=1, le=200),
+    status: str = Query("all"),
+    match_id: Optional[str] = Query(None),
+    db=Depends(get_db),
+    user=Depends(get_current_user),
+):
+    org_id = user.get("organization_id")
+
+    q: dict[str, Any] = {"organization_id": org_id}
+    if status in {"sent", "failed"}:
+        q["status"] = status
+    if match_id:
+        q["match_id"] = match_id
+
+    cursor = (
+        db.match_alert_deliveries.find(q)
+        .sort("sent_at", -1)
+        .limit(limit)
+    )
+    docs = await cursor.to_list(length=limit)
+
+    items: list[MatchAlertDeliveryItem] = []
+    for d in docs:
+        sent_at = d.get("sent_at")
+        if hasattr(sent_at, "isoformat"):
+            sent_at = sent_at.isoformat()
+        items.append(
+            MatchAlertDeliveryItem(
+                match_id=d.get("match_id", ""),
+                channel=d.get("channel", "email"),
+                status=d.get("status", "sent"),
+                error=d.get("error"),
+                fingerprint=d.get("fingerprint", ""),
+                sent_at=sent_at,
+            )
+        )
+
+    return MatchAlertDeliveriesResponse(ok=True, items=items)
+
+
+
 @router.post("/run", response_model=MatchAlertRunResult, dependencies=[Depends(require_roles(["super_admin"]))])
 async def run_match_alerts(
     days: int = Query(30, ge=1, le=365),

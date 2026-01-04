@@ -64,6 +64,8 @@ export default function AdminMatchRiskPage() {
 
   const [view, setView] = useState("main"); // future: can add charts
   const [copied, setCopied] = useState("");
+  const [hotelMap, setHotelMap] = useState({});
+  const [hotelMapLoading, setHotelMapLoading] = useState(false);
 
   const periodLabel = useMemo(() => {
     if (!from || !to) return "Tarih aralığı seçilmedi";

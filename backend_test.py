@@ -9987,6 +9987,388 @@ class FAZDWebBookingTester:
         return 0 if self.tests_failed == 0 else 1
 
 
+class P4V0MatchesTester:
+    def __init__(self, base_url="https://risk-dashboard-26.preview.emergentagent.com"):
+        self.base_url = base_url
+        self.admin_token = None
+        self.agency_token = None
+        self.hotel_token = None
+        self.tests_run = 0
+        self.tests_passed = 0
+        self.tests_failed = 0
+        self.failed_tests = []
+        
+        # Store IDs for testing
+        self.match_ids = []
+
+    def log(self, msg):
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}")
+
+    def run_test(self, name, method, endpoint, expected_status, data=None, headers_override=None, token=None):
+        """Run a single API test with specific token"""
+        url = f"{self.base_url}/{endpoint}"
+        headers = headers_override or {'Content-Type': 'application/json'}
+        
+        # Use specific token if provided
+        if token:
+            headers['Authorization'] = f'Bearer {token}'
+        elif self.admin_token and not headers_override:
+            headers['Authorization'] = f'Bearer {self.admin_token}'
+
+        self.tests_run += 1
+        self.log(f"🔍 Test #{self.tests_run}: {name}")
+        
+        try:
+            if method == 'GET':
+                response = requests.get(url, headers=headers, timeout=10)
+            elif method == 'POST':
+                response = requests.post(url, json=data, headers=headers, timeout=10)
+            elif method == 'PUT':
+                response = requests.put(url, json=data, headers=headers, timeout=10)
+            elif method == 'DELETE':
+                response = requests.delete(url, headers=headers, timeout=10)
+            else:
+                raise ValueError(f"Unsupported method: {method}")
+
+            success = response.status_code == expected_status
+            if success:
+                self.tests_passed += 1
+                self.log(f"✅ PASSED - Status: {response.status_code}")
+                try:
+                    return True, response.json() if response.content else {}
+                except:
+                    return True, {}
+            else:
+                self.tests_failed += 1
+                self.failed_tests.append(f"{name} - Expected {expected_status}, got {response.status_code}")
+                self.log(f"❌ FAILED - Expected {expected_status}, got {response.status_code}")
+                try:
+                    self.log(f"   Response: {response.text[:200]}")
+                except:
+                    pass
+                return False, {}
+
+        except Exception as e:
+            self.tests_failed += 1
+            self.failed_tests.append(f"{name} - Error: {str(e)}")
+            self.log(f"❌ FAILED - Error: {str(e)}")
+            return False, {}
+
+    def test_admin_login(self):
+        """1) Test super admin login"""
+        self.log("\n=== 1) AUTH - SUPER ADMIN LOGIN ===")
+        success, response = self.run_test(
+            "Super Admin Login (admin@acenta.test/admin123)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "admin@acenta.test", "password": "admin123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.admin_token = response['access_token']
+            user = response.get('user', {})
+            roles = user.get('roles', [])
+            
+            if 'super_admin' in roles:
+                self.log(f"✅ Super admin login successful - roles: {roles}")
+                return True
+            else:
+                self.log(f"❌ Missing super_admin role: {roles}")
+                return False
+        return False
+
+    def test_matches_summary_endpoint(self):
+        """2) Test GET /api/admin/matches endpoint"""
+        self.log("\n=== 2) MATCH SUMMARY ENDPOINT ===")
+        success, response = self.run_test(
+            "GET /api/admin/matches (with Authorization)",
+            "GET",
+            "api/admin/matches",
+            200
+        )
+        
+        if success:
+            # Check response structure
+            if 'range' in response and 'items' in response:
+                range_data = response.get('range', {})
+                items = response.get('items', [])
+                
+                # Verify range structure
+                if all(field in range_data for field in ['from', 'to', 'days']):
+                    self.log(f"✅ Response structure correct - range: {range_data}")
+                    self.log(f"✅ Found {len(items)} match items")
+                    
+                    # Store match IDs for detail testing
+                    for item in items:
+                        if 'id' in item:
+                            self.match_ids.append(item['id'])
+                    
+                    # Verify item structure if items exist
+                    if items:
+                        first_item = items[0]
+                        required_fields = ['id', 'agency_id', 'hotel_id', 'total_bookings', 
+                                         'pending', 'confirmed', 'cancelled', 'confirm_rate', 
+                                         'cancel_rate', 'last_booking_at']
+                        
+                        missing_fields = [field for field in required_fields if field not in first_item]
+                        if not missing_fields:
+                            self.log(f"✅ Item structure correct - all required fields present")
+                            self.log(f"✅ Sample item ID format: {first_item.get('id')}")
+                            return True
+                        else:
+                            self.log(f"❌ Missing fields in item: {missing_fields}")
+                            return False
+                    else:
+                        self.log(f"✅ Empty demo environment - no bookings found (expected)")
+                        return True
+                else:
+                    self.log(f"❌ Missing range fields. Got: {range_data}")
+                    return False
+            else:
+                self.log(f"❌ Missing required response fields. Got: {list(response.keys())}")
+                return False
+        return False
+
+    def test_match_detail_endpoint(self):
+        """3) Test GET /api/admin/matches/{id} endpoint (if data exists)"""
+        self.log("\n=== 3) MATCH DETAIL ENDPOINT ===")
+        
+        if not self.match_ids:
+            self.log("⚠️  No match IDs available - testing with demo ID format")
+            # Test with a demo ID format
+            demo_id = "agency1__hotel1"
+            success, response = self.run_test(
+                f"GET /api/admin/matches/{demo_id} (Demo ID)",
+                "GET",
+                f"api/admin/matches/{demo_id}?days=90&limit=50",
+                404  # Expected 404 for non-existent match
+            )
+            if success:
+                self.log(f"✅ Proper 404 handling for non-existent match")
+            return success
+        
+        # Test with real match ID
+        match_id = self.match_ids[0]
+        success, response = self.run_test(
+            f"GET /api/admin/matches/{match_id}?days=90&limit=50",
+            "GET",
+            f"api/admin/matches/{match_id}?days=90&limit=50",
+            200
+        )
+        
+        if success:
+            # Verify response structure
+            required_fields = ['id', 'agency_id', 'hotel_id', 'range', 'metrics', 'bookings']
+            missing_fields = [field for field in required_fields if field not in response]
+            
+            if not missing_fields:
+                self.log(f"✅ Detail response structure correct")
+                
+                # Check metrics structure
+                metrics = response.get('metrics', {})
+                metrics_fields = ['total_bookings', 'pending', 'confirmed', 'cancelled', 
+                                'confirm_rate', 'cancel_rate', 'avg_approval_hours']
+                missing_metrics = [field for field in metrics_fields if field not in metrics]
+                
+                if not missing_metrics:
+                    self.log(f"✅ Metrics structure correct")
+                    
+                    # Check bookings structure
+                    bookings = response.get('bookings', [])
+                    self.log(f"✅ Found {len(bookings)} bookings in detail")
+                    
+                    if bookings:
+                        # Verify BookingPublicView structure
+                        first_booking = bookings[0]
+                        booking_fields = ['id', 'code', 'status']
+                        missing_booking_fields = [field for field in booking_fields if field not in first_booking]
+                        
+                        if not missing_booking_fields:
+                            self.log(f"✅ Booking structure correct (BookingPublicView)")
+                            return True
+                        else:
+                            self.log(f"❌ Missing booking fields: {missing_booking_fields}")
+                            return False
+                    else:
+                        self.log(f"✅ No bookings in detail (acceptable)")
+                        return True
+                else:
+                    self.log(f"❌ Missing metrics fields: {missing_metrics}")
+                    return False
+            else:
+                self.log(f"❌ Missing detail fields: {missing_fields}")
+                return False
+        return False
+
+    def test_invalid_match_id_scenarios(self):
+        """4) Test invalid match ID scenarios"""
+        self.log("\n=== 4) INVALID MATCH ID SCENARIOS ===")
+        
+        # Test invalid format
+        success, response = self.run_test(
+            "GET /api/admin/matches/foo (Invalid Format)",
+            "GET",
+            "api/admin/matches/foo",
+            400
+        )
+        if success:
+            self.log(f"✅ Invalid format properly returns 400 INVALID_MATCH_ID")
+        else:
+            return False
+        
+        # Test non-existent but valid format
+        success, response = self.run_test(
+            "GET /api/admin/matches/unknownAgency__unknownHotel (Non-existent)",
+            "GET",
+            "api/admin/matches/unknownAgency__unknownHotel",
+            404
+        )
+        if success:
+            self.log(f"✅ Non-existent match properly returns 404 MATCH_NOT_FOUND")
+            return True
+        else:
+            return False
+
+    def test_agency_authorization(self):
+        """5) Test agency user authorization (should be denied)"""
+        self.log("\n=== 5) AGENCY USER AUTHORIZATION ===")
+        
+        # Login as agency user
+        success, response = self.run_test(
+            "Agency Login (agency1@demo.test/agency123)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "agency1@demo.test", "password": "agency123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        
+        if success and 'access_token' in response:
+            self.agency_token = response['access_token']
+            self.log(f"✅ Agency login successful")
+            
+            # Try to access matches endpoint (should be denied)
+            success, response = self.run_test(
+                "GET /api/admin/matches (Agency User - Should be 403)",
+                "GET",
+                "api/admin/matches",
+                403,
+                token=self.agency_token
+            )
+            
+            if success:
+                self.log(f"✅ Agency user properly denied access (403)")
+                return True
+            else:
+                self.log(f"❌ Agency user should be denied access")
+                return False
+        else:
+            self.log(f"❌ Agency login failed")
+            return False
+
+    def test_hotel_authorization(self):
+        """6) Test hotel user authorization (should be denied)"""
+        self.log("\n=== 6) HOTEL USER AUTHORIZATION ===")
+        
+        # Login as hotel user
+        success, response = self.run_test(
+            "Hotel Login (hoteladmin@acenta.test/admin123)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "hoteladmin@acenta.test", "password": "admin123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        
+        if success and 'access_token' in response:
+            self.hotel_token = response['access_token']
+            self.log(f"✅ Hotel login successful")
+            
+            # Try to access matches endpoint (should be denied)
+            success, response = self.run_test(
+                "GET /api/admin/matches (Hotel User - Should be 403)",
+                "GET",
+                "api/admin/matches",
+                403,
+                token=self.hotel_token
+            )
+            
+            if success:
+                self.log(f"✅ Hotel user properly denied access (403)")
+                
+                # Also test detail endpoint
+                success, response = self.run_test(
+                    "GET /api/admin/matches/demo__test (Hotel User - Should be 403)",
+                    "GET",
+                    "api/admin/matches/demo__test",
+                    403,
+                    token=self.hotel_token
+                )
+                
+                if success:
+                    self.log(f"✅ Hotel user properly denied detail access (403)")
+                    return True
+                else:
+                    self.log(f"❌ Hotel user should be denied detail access")
+                    return False
+            else:
+                self.log(f"❌ Hotel user should be denied access")
+                return False
+        else:
+            self.log(f"❌ Hotel login failed")
+            return False
+
+    def print_summary(self):
+        """Print test summary"""
+        self.log("\n" + "="*60)
+        self.log("P4 V0 MATCHES BACKEND TEST SUMMARY")
+        self.log("="*60)
+        self.log(f"Total Tests: {self.tests_run}")
+        self.log(f"✅ Passed: {self.tests_passed}")
+        self.log(f"❌ Failed: {self.tests_failed}")
+        self.log(f"Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%")
+        
+        if self.failed_tests:
+            self.log("\n❌ FAILED TESTS:")
+            for i, test in enumerate(self.failed_tests, 1):
+                self.log(f"  {i}. {test}")
+        
+        self.log("="*60)
+
+    def run_p4v0_tests(self):
+        """Run all P4 v0 matches tests in sequence"""
+        self.log("🚀 Starting P4 v0 Matches Backend Tests")
+        self.log(f"Base URL: {self.base_url}")
+        
+        # 1) Authentication
+        if not self.test_admin_login():
+            self.log("❌ Super admin login failed - stopping tests")
+            self.print_summary()
+            return 1
+
+        # 2) Match summary endpoint
+        if not self.test_matches_summary_endpoint():
+            self.log("❌ Match summary endpoint failed")
+        
+        # 3) Match detail endpoint (if data exists)
+        self.test_match_detail_endpoint()
+        
+        # 4) Invalid ID scenarios
+        self.test_invalid_match_id_scenarios()
+        
+        # 5) Agency authorization
+        self.test_agency_authorization()
+        
+        # 6) Hotel authorization
+        self.test_hotel_authorization()
+
+        # Summary
+        self.print_summary()
+
+        return 0 if self.tests_failed == 0 else 1
+
+
 def main():
     if len(sys.argv) > 1:
         if sys.argv[1] == "faz5":

@@ -12375,8 +12375,12 @@ def main():
             tester = AlertingV0Tester()
             exit_code = tester.run_alerting_v0_tests()
             sys.exit(exit_code)
+        elif sys.argv[1] == "alerting-v0-deliveries":
+            tester = AlertingV0DeliveriesTester()
+            exit_code = tester.run_alerting_v0_deliveries_tests()
+            sys.exit(exit_code)
         else:
-            print("Usage: python backend_test.py [faz5|faz6|faz7|faz8|faz9|faz91|faz92|faz93|faz93admin|faz9x|faz10|faz101|admin-override|voucher-html|faz121|fazd|p4v0|match-actions|p4-include-action|alerting-v0]")
+            print("Usage: python backend_test.py [faz5|faz6|faz7|faz8|faz9|faz91|faz92|faz93|faz93admin|faz9x|faz10|faz101|admin-override|voucher-html|faz121|fazd|p4v0|match-actions|p4-include-action|alerting-v0|alerting-v0-deliveries]")
             sys.exit(1)
     else:
         tester = AcentaAPITester()

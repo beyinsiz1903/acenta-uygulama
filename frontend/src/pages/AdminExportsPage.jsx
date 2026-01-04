@@ -562,6 +562,9 @@ export default function AdminExportsPage() {
                             </td>
                             <td className="py-1 pr-2 text-xs">{r.filename}</td>
                             <td className="py-1 pr-2 text-xs font-mono">{shaShort}</td>
+                            <td className="py-1 pr-2 text-xs">
+                              {r.emailed ? "Queued" : "—"}
+                            </td>
                             <td className="py-1 pr-2 text-right">
                               <Button
                                 type="button"

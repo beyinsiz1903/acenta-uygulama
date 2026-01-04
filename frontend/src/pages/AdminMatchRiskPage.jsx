@@ -181,6 +181,7 @@ export default function AdminMatchRiskPage() {
   }
 
   useEffect(() => {
+    void loadHotelsMap();
     void loadSummary();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

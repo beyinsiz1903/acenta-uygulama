@@ -20,6 +20,42 @@ export default function AdminMatchDetailPage() {
   const [error, setError] = useState("");
   const [data, setData] = useState(null);
   const [action, setAction] = useState({ status: "none", reason_code: "", note: "" });
+
+  useEffect(() => {
+    if (!id) return;
+
+    const run = async () => {
+      try {
+        setLoading(true);
+        setError("");
+        setSaveError("");
+        setSaveSuccess(false);
+
+        const [detailResp, actionResp] = await Promise.all([
+          api.get(`/admin/matches/${id}`, {
+            params: { days: 90, limit: 50 },
+          }),
+          api.get(`/admin/matches/${id}/action`),
+        ]);
+
+        setData(detailResp.data);
+        const a = actionResp.data?.action || {};
+        setAction({
+          status: a.status || "none",
+          reason_code: a.reason_code || "",
+          note: a.note || "",
+        });
+      } catch (e) {
+        console.error("Admin match detail fetch failed", e);
+        setError(apiErrorMessage(e));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    run();
+  }, [id]);
+
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [saveSuccess, setSaveSuccess] = useState(false);

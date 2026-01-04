@@ -204,7 +204,7 @@ export default function AdminExportsPage() {
       <div>
         <h1 className="text-2xl font-bold text-foreground">Exports</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Match risk f626331n01640135014016 3101640135014ar01640135014 ie7i n scheduled CSV export politikalar0131n01640135014n01640135014z ve ge314165i export ar310129601729g01fd01n0131 017serisiniz.
+          Match risk eşleşmeleriniz için planlı CSV export politikalarını yönetin ve geçmiş export arşivini buradan görüntüleyin.
         </p>
       </div>
 

@@ -96,11 +96,12 @@ class CRMHotelContactsRBACTester:
             200,
             data={"email": "admin@acenta.test", "password": "admin123"}
         )
-        if success and 'token' in response:
-            self.super_admin_token = response['token']
+        if success and 'access_token' in response:
+            self.super_admin_token = response['access_token']
             self.org_id = response.get('user', {}).get('organization_id')
             self.log(f"✅ Super admin logged in - org_id: {self.org_id}")
             return True
+        self.log(f"❌ Login response missing access_token: {response}")
         return False
 
     def seed_agencies(self):

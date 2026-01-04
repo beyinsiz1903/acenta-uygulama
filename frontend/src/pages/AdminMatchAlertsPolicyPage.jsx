@@ -43,6 +43,7 @@ export default function AdminMatchAlertsPolicyPage() {
           limit: 50,
           status: deliveriesFilter.status,
           match_id: deliveriesFilter.match_id || undefined,
+          channel: deliveriesFilter.channel && deliveriesFilter.channel !== "all" ? deliveriesFilter.channel : undefined,
         },
       });
       setDeliveries(resp.data?.items || []);

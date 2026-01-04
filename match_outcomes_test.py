@@ -124,26 +124,24 @@ class MatchOutcomesRiskTester:
         
         # Create hotel1 user
         email1 = f"hotel1_test_{uuid.uuid4().hex[:8]}@test.com"
+        url1 = f"api/dev/seed/users/hotel?hotel_id={self.hotel1_id}&email={email1}&password=demo123"
         success1, _ = self.run_test(
             "Create Hotel1 User",
             "POST",
-            "api/dev/seed/users/hotel",
+            url1,
             200,
-            data={"hotel_id": self.hotel1_id, "email": email1, "password": "demo123"},
-            token=self.super_admin_token,
-            params={"hotel_id": self.hotel1_id, "email": email1}
+            token=self.super_admin_token
         )
         
         # Create hotel2 user
         email2 = f"hotel2_test_{uuid.uuid4().hex[:8]}@test.com"
+        url2 = f"api/dev/seed/users/hotel?hotel_id={self.hotel2_id}&email={email2}&password=demo123"
         success2, _ = self.run_test(
             "Create Hotel2 User",
             "POST",
-            "api/dev/seed/users/hotel",
+            url2,
             200,
-            data={"hotel_id": self.hotel2_id, "email": email2, "password": "demo123"},
-            token=self.super_admin_token,
-            params={"hotel_id": self.hotel2_id, "email": email2}
+            token=self.super_admin_token
         )
         
         if success1 and success2:
@@ -155,8 +153,8 @@ class MatchOutcomesRiskTester:
                 200,
                 data={"email": email1, "password": "demo123"}
             )
-            if success and 'token' in response:
-                self.hotel1_token = response['token']
+            if success:
+                self.hotel1_token = response.get('access_token') or response.get('token')
                 self.log(f"✅ Hotel1 user logged in")
             
             # Login as hotel2 user
@@ -167,8 +165,8 @@ class MatchOutcomesRiskTester:
                 200,
                 data={"email": email2, "password": "demo123"}
             )
-            if success and 'token' in response:
-                self.hotel2_token = response['token']
+            if success:
+                self.hotel2_token = response.get('access_token') or response.get('token')
                 self.log(f"✅ Hotel2 user logged in")
             
             return self.hotel1_token and self.hotel2_token

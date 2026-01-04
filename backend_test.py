@@ -11306,8 +11306,12 @@ def main():
             tester = MatchActionsTester()
             exit_code = tester.run_match_actions_tests()
             sys.exit(exit_code)
+        elif sys.argv[1] == "p4-include-action":
+            tester = P4MatchesIncludeActionTester()
+            exit_code = tester.run_p4_include_action_tests()
+            sys.exit(exit_code)
         else:
-            print("Usage: python backend_test.py [faz5|faz6|faz7|faz8|faz9|faz91|faz92|faz93|faz93admin|faz9x|faz10|faz101|admin-override|voucher-html|faz121|fazd|p4v0|match-actions]")
+            print("Usage: python backend_test.py [faz5|faz6|faz7|faz8|faz9|faz91|faz92|faz93|faz93admin|faz9x|faz10|faz101|admin-override|voucher-html|faz121|fazd|p4v0|match-actions|p4-include-action]")
             sys.exit(1)
     else:
         tester = AcentaAPITester()

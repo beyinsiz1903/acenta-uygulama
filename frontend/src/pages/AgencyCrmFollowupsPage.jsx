@@ -565,6 +565,25 @@ export default function AgencyCrmFollowupsPage() {
                       <Button
                         variant="outline"
                         size="xs"
+                        className="gap-1"
+                        data-testid="followup-action-complete-task"
+                        disabled={!s.next_task_id}
+                        onClick={async () => {
+                          if (!s.next_task_id) return;
+                          try {
+                            await api.post(`/crm/tasks/${s.next_task_id}/complete`);
+                            toast({ title: "Görev tamamlandı", variant: "default" });
+                            await fetchFollowups({ append: false, nextCursor: null });
+                          } catch (err) {
+                            toast({ title: "Görev tamamlanamadı", description: apiErrorMessage(err), variant: "destructive" });
+                          }
+                        }}
+                      >
+                        Görevi Tamamla
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="xs"
                         asChild
                         disabled={!phoneNorm}
                         data-testid="followup-action-call"

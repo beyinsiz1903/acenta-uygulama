@@ -34,6 +34,8 @@ async def ensure_crm_indexes(db: AsyncIOMotorDatabase) -> None:
         await db.hotel_contacts.create_index(
             [("organization_id", 1), ("email", 1)],
             name="hc_org_email_idx",
+            unique=False,
+            sparse=True,
         )
 
         await db.hotel_contacts.create_index(

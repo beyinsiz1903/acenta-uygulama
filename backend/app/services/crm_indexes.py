@@ -65,6 +65,25 @@ async def ensure_crm_indexes(db: AsyncIOMotorDatabase) -> None:
             name="htasks_org_hotel_agency_status_idx",
         )
 
+        # match_outcomes (soft outcome events for match risk reports)
+        try:
+            await db.match_outcomes.create_index(
+                [("organization_id", 1), ("match_id", 1), ("marked_at", -1)],
+                name="mo_org_match_marked_idx",
+            )
+
+            await db.match_outcomes.create_index(
+                [("organization_id", 1), ("marked_at", -1)],
+                name="mo_org_marked_idx",
+            )
+
+            await db.match_outcomes.create_index(
+                [("organization_id", 1), ("to_hotel_id", 1), ("marked_at", -1)],
+                name="mo_org_to_hotel_marked_idx",
+            )
+        except Exception:
+            logger.exception("Failed to ensure match_outcomes indexes")
+
         logger.info("CRM indexes ensured successfully")
     except Exception:
         # Do not crash the app on index errors; just log for investigation.

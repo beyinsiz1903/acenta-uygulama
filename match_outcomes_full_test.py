@@ -8,7 +8,7 @@ import sys
 import uuid
 from datetime import datetime, timedelta
 
-BASE_URL = "https://settlehub.preview.emergentagent.com"
+BASE_URL = "https://tourism-booking.preview.emergentagent.com"
 
 class MatchOutcomesFullTester:
     def __init__(self):

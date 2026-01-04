@@ -1,187 +1,164 @@
 <analysis>**original_problem_statement:**
-The user wants to add features to a B2B/B2C tourism platform to achieve parity with a reference application called Agentis. The application is for travel agencies and hotels to manage reservations, products, and financials.
+The user wants to add features to a B2B/B2C tourism platform to achieve parity with a reference application called Agentis. The platform is for travel agencies and hotels to manage reservations, products, and financials.
 
 **PRODUCT REQUIREMENTS:**
-
-The initial high-priority (P0) features requested were:
--   **Mutabakat (Settlement):** A complete workflow for financial reconciliation between agencies and hotels.
--   **Komisyon hesaplama (Commission calculation):** Calculating agency commissions based on gross booking prices.
--   **Voucher:** Generating and managing booking vouchers.
-
-Subsequent user requests detailed the following sprints and features:
-1.  **Financial Parity Sprint:**
-    -   Commission Model: Hotel-based percentage, calculated at booking time and stored in a .
-    -   Self-Billing: Generate an informational PDF statement (not a legal invoice) with a disclaimer. KDV (VAT) is out of scope for v1.
-    -   Payment Status: A manual, booking-based status (, , ).
-    -   Financial Summaries & Reports for both agencies and hotels.
-2.  **Operations & Documents Sprint:**
-    -   **Seed Data:** Create a  endpoint to seed the database with realistic bookings, agencies, and hotels for demo purposes.
-    -   **Voucher Parity:** Enhance voucher functionality to include PDF download, email sending, and a separate self-billing PDF endpoint, all under a consistent  URI scheme.
-    -   **Settlement Workflow:** Implement a full status lifecycle (, , , , ) with  and  actions available in the UI for both agency and hotel users.
-3.  **CRM v1 Sprint:**
-    -   **Backend:** Implement MongoDB collections and FastAPI routers for , , and . Enforce strict RBAC and data ownership rules.
-    -   **Frontend:** Integrate the CRM as three tabs (**Kişiler**, **Notlar**, **Görevler**) into the . Agency users can view contacts and manage notes/tasks related to a hotel.
+The project has evolved through several sprints:
+1.  **Financial Parity & Operations:** Implement commission calculation, settlement workflows, and voucher/self-billing PDF generation.
+2.  **CRM v1 & v1.1:**
+    -   Create backend and frontend for managing Contacts, Notes, and Tasks for hotels.
+    -   Implement a Follow-ups (Satış Masası) page for agency users to see actionable sales signals (e.g., overdue tasks, idle hotels). This includes a  endpoint and a quick-action drawer for creating notes/tasks from the list.
+3.  **Match Risk Management (P4):**
+    -   Implement a soft outcome system where hotels can mark if a referred guest arrived or not_arrived. This is for statistical purposes only and must not affect billing.
+    -   Create admin-level risk reports to identify patterns of misuse (e.g., hotels consistently marking guests as not_arrived).
+    -   Legally frame the match as an official referral record, not proof of a completed stay, by adding disclaimers (microcopy) to the UI.
 
 **User's preferred language**: Turkish
 
 **what currently exists?**
-The application is a comprehensive tourism management platform built on the FARM stack (FastAPI, React, MongoDB). The agent has successfully implemented a suite of financial features, bringing the app to Agentis parity in that domain.
+The application is a FARM stack (FastAPI, React, MongoDB) platform. A significant number of features have been implemented, including financial settlements, voucher/document generation, and a comprehensive CRM module for agencies.
 
-This includes:
--   A complete settlement workflow with UI for both agencies and hotels to confirm/dispute reconciliations, protected by robust Role-Based Access Control (RBAC) and ownership checks.
--   Voucher and self-billing PDF generation and email functionalities, accessible via standardized API endpoints.
--   Development endpoints to seed the database with users, bookings, and settlements, facilitating testing and demos.
--   The backend for a new CRM module (Contacts, Notes, Tasks) is complete.
--   The frontend for the CRM Notes and Tasks tabs has been implemented and integrated into the .
+-   **CRM Follow-ups:** The Satış Masası page () is fully functional. It lists hotels with actionable signals (idle, overdue tasks, etc.) and features a quick-action drawer for adding notes and tasks.
+-   **Match Microcopy:** A legal disclaimer component () has been created and integrated into the  to clarify that a match is a referral record, not proof of stay.
+-   **Risk Management Backend (Partial):** The backend for the P4 sprint is mostly implemented. This includes:
+    -    endpoint to log soft outcomes.
+    -    and  endpoints for admin reporting.
+    -   The implementation includes security hardening (role/roles checks) and normalization helpers.
+
+However, the  endpoint is currently non-functional due to a data model mismatch.
 
 **Last working item**:
--   **Last item agent was working:** The agent was tasked with completing the CRM sprint by implementing the frontend for the Contacts (Kişiler) tab. The user provided the complete code for the  component and the necessary patch to integrate it into . The agent has acknowledged this and prepared to implement it.
+-   **Last item agent was working:** The agent was trying to fix a critical bug where the  endpoint consistently returned a 404 error. The root cause was identified as two-fold:
+    1.  The proxy data source for matches () was missing necessary  and  fields, which are crucial for ownership checks.
+    2.  The database query was likely failing due to a mismatch between the   from the URL and the   in the MongoDB collection.
+    The user provided a detailed patch plan to fix this by making the  helper handle both  and  types, and by populating the required hotel ID fields during the creation of a booking request.
 -   **Status:** IN PROGRESS
--   **Agent Testing Done:** N
--   **Which testing method agent to use?** Frontend testing agent. After creating and integrating , the agent should run the smoke test checklist provided by the user to verify functionality (list rendering, actions, search).
+-   **Agent Testing Done:** N (The previous test run, , failed because of this bug).
+-   **Which testing method agent to use?** Backend testing agent. After applying the fixes, the agent must execute the 4-step verification plan provided by the user in Message 290 to confirm the endpoint works as expected and the security guards are effective.
 -   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
--   **Issue 1: (P1) Self-billing PDF is missing the required disclaimer text.**
-    -   **Description:** The user requires the text Bu belge bilgi amaçlıdır, resmi fatura yerine geçmez. (This document is for informational purposes only, it does not replace an official invoice) on all self-billing PDFs. The agent acknowledged this but it has not been implemented.
+-   **Issue 1: (P0)  endpoint is broken, returning 404.**
+    -   **Description:** This critical bug blocks the completion of the P4 sprint. The endpoint fails because it cannot find the match record, preventing hotels from logging guest arrival outcomes. The failure is due to a combination of a  vs.  lookup issue and missing  fields in the proxy data model (), which would cause subsequent ownership checks to fail even if the record were found.
+    -   **Attempted fixes:** The agent has identified the relevant files (, ) but has not yet applied the user-provided patches.
     -   **Next debug checklist:**
-        1.  Locate the PDF generation logic, likely in .
-        2.  Modify the function (e.g., ) to accept a flag or parameter like .
-        3.  When this flag is true, add the disclaimer text to the PDF canvas, likely using 's  method.
-        4.  Ensure the  endpoint in  calls the PDF generator with this flag.
-    -   **Why fix this issue and what will be achieved with the fix?** To meet a specific product requirement and ensure legal clarity for the generated documents.
-    -   **Status:** NOT STARTED
+        1.  In , modify the  helper function to attempt matching the  as both a  and an .
+        2.  In , modify the  function (or equivalent) to populate , , and  fields in the  document upon creation.
+        3.  (Optional) Create a backfill script to populate these fields for existing records to facilitate testing.
+        4.  Execute the 4-step verification plan from the user to test the fix: POST outcome, check drilldown, check summary, and test the 403 error for a user from the wrong hotel.
+    -   **Why fix this issue and what will be achieved with the fix?** This will make the soft outcome logging feature functional, a cornerstone of the P4 risk management sprint, and unblock the project.
+    -   **Status:** IN PROGRESS
     -   **Is recurring issue?** N
-    -   **Should Test frontend/backend/both after fix?** Backend. Verify by downloading the PDF and checking its content.
+    -   **Should Test frontend/backend/both after fix?** Backend.
 
 **In progress Task List**:
--   **Task 1: (P0) Complete the CRM v1 Implementation**
-    -   **Description:** The final step of the CRM v1 sprint is to implement the frontend for the Contacts tab.
-    -   **Where to resume:**
-        1.  Create the file  with the full code provided by the user in Chat Message 433.
-        2.  Apply the patch to  to import and render this new component within the   block, also provided in Chat Message 433.
-        3.  Run the smoke test checklist from the user message to ensure the tab lists contacts correctly and the action buttons (Call, WhatsApp, Email, Copy) are functional.
-    -   **What will be achieved with this?** This will complete the CRM v1 sprint, providing full functionality for Contacts, Notes, and Tasks in the agency hotel detail view.
+-   **Task 1: (P0) Finalize and Verify P4 Sprint: Soft Outcome & Match Risk Reports.**
+    -   **Where to resume:** The immediate next step is to apply the patches described in the pending issue above to fix the  endpoint.
+    -   **What will be achieved with this?** This will complete the backend implementation for the P4 sprint, enabling statistical tracking of match outcomes and providing admins with risk analysis reports.
     -   **Status:** IN PROGRESS
-    -   **Should Test frontend/backend/both after fix?** Frontend. Manual smoke test or frontend testing agent.
-    -   **Blocked on something:** No.
+    -   **Should Test frontend/backend/both after fix?** Backend.
+    -   **Blocked on something:** Blocked on fixing the 404 issue in the  endpoint.
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks:**
-    -   **(P1) Perform Negative RBAC Tests for CRM Tasks:** Run a  suite to formally prove the double lock for the Tasks module, specifically:
-        -    agent cannot create a task for  if there's no link.
-        -    agent cannot toggle the status of a task assigned to another agent.
-    -   **(P2) Create DB Indexes for CRM Collections:** In a suitable startup script or directly, create the recommended MongoDB indexes for , , and  to ensure performance.
+    -   **(P5) Build UI for Match Risk Dashboard:** Create a new admin page at . This page will consume the  and  endpoints, allowing admins to filter and view outcome statistics. (User mentioned this as the next step after P4).
+    -   **(P5) Build UI for Soft Outcome:** Integrate UI elements (e.g., buttons in the match detail view) for hotel users to call the  endpoint and mark a guest as arrived or not_arrived.
 -   **Future Tasks:**
-    -   **(P2) Agency CRM File Attachments:** Extend the CRM (likely the Notes module) to support file uploads ().
-    -   **(P2) Allotment / Release Feature:** Implement the allotment/release management features as mentioned in the initial problem statement.
-    -   **(P2) Agency Reports Enhancement:** Further enhancements to agency reports.
+    -   **(P3 - Interrupted):** The user previously specified a P3 sprint to enhance the CRM with a full timeline view (), quick outcome buttons, and KPI widgets. This work was paused to focus on the Match/Risk (P4) sprint but represents a significant pending feature.
 
 **Completed work in this session**
--   **Financial Features & Settlement Workflow:**
-    -   Implemented commission calculation, payment status tracking, and financial snapshots on bookings.
-    -   Created a complete settlement lifecycle (//) with a dedicated UI on both  and , secured by robust RBAC checks.
--   **Voucher & Document Management:**
-    -   Standardized voucher and self-billing PDF generation/emailing under the  endpoint.
--   **CRM v1 (Backend & Partial Frontend):**
-    -   Created backend routers and services for Contacts, Notes, and Tasks ().
-    -   Implemented the Notes and Tasks tabs on the frontend (, ) and integrated them into .
--   **Development Infrastructure:**
-    -   Added seed endpoints for bookings, settlements, and users to facilitate testing.
-    -   Conducted multiple rounds of testing with  to verify features and RBAC rules.
+-   **CRM Follow-ups Page (P0-P2):**
+    -   Implemented the  endpoint to provide sales signals for agency users.
+    -   Created , , and  endpoints.
+    -   Created the  frontend page, including a filterable list, quick-action drawer, and assignee dropdown ().
+-   **Match Risk Management (P4 - Partial):**
+    -   Created backend routers  and  with endpoints for logging outcomes and generating reports.
+    -   Hardened the backend with robust  checks, normalization helpers, and length validations.
+    -   Created and integrated the  component to display disclaimers in the UI.
 
 **Earlier issues found/mentioned but not fixed**
--   **Issue 1: Self-billing PDF is missing the required disclaimer text.**
-    -   **Debug checklist:** See All Pending/In progress Issue list.
-    -   **Why to solve this issue and what will be achieved with this?** To fulfill a specific user requirement for informational documents.
-    -   **Should Test frontend/backend/both after fix:** Backend.
+-   **Issue 1: Self-billing PDF disclaimer verification is pending.**
+    -   **Debug checklist:** The code to add the disclaimer Bu belge bilgi amaçlıdır, resmi fatura yerine geçmez. to self-billing PDFs was implemented in . However, it was never confirmed if the final PDF output is correct. The agent needs to download a self-billing PDF and a standard voucher PDF to verify the disclaimer only appears on the former.
+    -   **Why to solve this issue and what will be achieved with this?** Fulfills a specific product requirement and ensures legal clarity.
+    -   **Should Test frontend/backend/both after fix:** Backend (download and check PDF).
     -   **Is recurring issue?** N
 
 **Known issue recurrence from previous fork**
--   N/A
+-   None.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Backend:** FastAPI, MongoDB (using ), Pydantic models for validation, and JWT for authentication.
--   **Frontend:** React, , ,  for API calls,  for the component library, and  for toast notifications.
--   **Architecture:** A robust API-driven architecture with a strict separation of concerns.
--   **Security:** Strong emphasis on a double-lock RBAC system, checking for both user role and data ownership (, , ) on the backend for every sensitive operation.
+-   **Proxy Data Model:** The project currently uses the  collection as a temporary proxy for a dedicated matches collection. This is the source of the main blocker.
+-   **Event-Sourcing for Outcomes:** The system logs each outcome (, ) as a separate immutable event in , rather than updating a status on the match itself. Reports use the latest event.
+-   **Statistical Risk Management:** The platform does not enforce penalties but provides statistical reports to admins to identify patterns of potential misuse.
+-   **Product-Legal Framing:** A core concept is framing a match as an official referral record and not as proof of a completed stay to manage liability. This is enforced through UI microcopy.
 
 **key DB schema**
--   **booking_financial_entries:** 
--   **hotel_contacts:** 
--   **hotel_crm_notes:** 
--   **hotel_crm_tasks:** 
+-   **agency_catalog_booking_requests:** (Proxy for matches)  - **CRITICAL: Missing , , .**
+-   **match_outcomes:** 
+-   **users:** 
 
 **changes in tech stack**
 -   None.
 
 **All files of reference**
--   : **To be created.** This file will contain the UI for the CRM Contacts tab.
--   : **To be updated.** This page hosts the CRM tabs and needs to be patched to include the new .
--   : The backend router that serves the data for the Contacts tab.
--   : This service needs to be updated to add the disclaimer to the self-billing PDF.
-
-**Areas that need refactoring**:
--   The user suggested creating a shared helper function (e.g., ) to standardize the 403 vs. 404 responses for RBAC/ownership checks across different modules, reducing code duplication.
+-   : Contains the broken  endpoint and the  helper that needs patching.
+-   : Contains the  logic that needs to be patched to populate hotel IDs.
+-   : Implements the admin-level summary and drilldown reports.
+-   : The reusable component for the legal disclaimer.
+-   : The latest test report, which details the failure of the outcome endpoint.
 
 **key api endpoints**
--   , 
--   , 
--   , 
+-    **(BROKEN)**
 -   
 -   
 -   
--   , 
+-   
 
 **Critical Info for New Agent**
--   The user is highly technical and provides sprint-like, non-negotiable instructions. Follow them precisely and report back in the requested format.
--   RBAC is the most critical aspect of the application. Every endpoint that modifies or exposes data must perform a double-lock check: 1) Organization scope, 2) Data ownership (agency/hotel). The user will likely ask you to prove this with negative tests.
--   The project has dev endpoints for seeding data (). Use them to create test data before running tests or verifying UI functionality. These are enabled by  and require  role.
+-   **Proxy Match Model is the Blocker:** You must first fix the  endpoint. This requires understanding that  is a temporary stand-in for a proper  collection. Your primary task is to apply the user's patch plan to fix the  lookup and populate the missing  and  fields.
+-   **User is Technical:** The user provides highly detailed, sprint-like specifications and expects settlement-grade quality. Follow instructions precisely and report back in the requested format (e.g., the 4-step kanban test).
+-   **Legal Framing:** Remember the core product decision: the platform records referrals, not stays. All communication and UI should reflect this.
 
 **documents and test reports created in this job**
 -   
--   
--   
--   
--   
--   
+-    (and previous iterations)
 
 **Last 10 User Messages and any pending HUMAN messages**
-10.  **Request:** Start the Contacts sprint. User provided the full code for  and the patch for . **Status:** Pending implementation.
-9.  **Request:** Provided the  instance usage pattern. **Status:** Completed.
-8.  **Request:** Asked for the API usage pattern to provide the Tasks tab code. **Status:** Completed.
-7.  **Summary:** Agent reported that the Tasks tab hardening fixes were done and confirmed readiness for the Contacts sprint. **Status:** Completed.
-6.  **Request:** Harden the Tasks tab list parsing. **Status:** Completed.
-5.  **Summary:** Agent reported Tasks tab implementation was complete. **Status:** Completed.
-4.  **Request:** Provided full code for  and . **Status:** Completed.
-3.  **Request:** Asked for API usage pattern to provide Tasks tab code. **Status:** Completed.
-2.  **Request:** Confirmed the agent's plan for the Tasks tab and provided the next steps. **Status:** Completed.
-1.  **Summary:** Agent reported that hardening fixes for the Notes tab were done and confirmed readiness for the Tasks tab. **Status:** Completed.
+10. **User Request:** Provides a detailed 4-step plan to produce settlement-grade proof that the P4 sprint is complete, including  commands. (Chat Message 290)
+9.  **Agent Summary:** Confirms P4 hardening is done but states that the  endpoint is failing with a 404 due to a data model mismatch. Proposes fixing this as the next step. (Chat Message 289)
+8.  **Agent Action:** Observation of file content. (Chat Message 288)
+7.  **Agent Action:** Observation of file content. (Chat Message 286)
+6.  **Agent Action:** Observation of file content. (Chat Message 284)
+5.  **Agent Action:** Observation of file content. (Chat Message 282)
+4.  **Agent Action:** Observation of file content. (Chat Message 280)
+3.  **Test Agent Result:**  is generated, summarizing that the risk report endpoints work but the  endpoint fails with a 404 due to the data model mismatch. (Chat Message 278)
+2.  **Agent Action:** Calls testing agent. (Chat Message 276)
+1.  **User Request:** Provides the final settlement-grade kanban test plan to verify and close the P4 sprint. (Chat Message 274)
 
 **Project Health Check:**
--   **Broken:** None identified.
--   **Mocked:** No mocked data. Seeding endpoints are used for generating test data.
+-   **Broken:**
+    -   : Returns 404 due to data model issues, blocking a core feature.
+-   **Mocked:**
+    -   The concept of a match is mocked using the  collection, which is the root cause of the broken endpoint.
 
 **3rd Party Integrations**
--   The application appears to use Amazon SES for emails, as  is mentioned, but no explicit integration details were discussed.
+-   None explicitly discussed or integrated in this session.
 
 **Testing status**
--   **Testing agent used after significant changes:** YES. Used extensively for settlement and RBAC features.
--   **Troubleshoot agent used after agent stuck in loop:** NO.
--   **Test files created:** None manually. All automated tests were run by .
--   **Known regressions:** None.
+-   **Testing agent used after significant changes:** YES
+-   **Troubleshoot agent used after agent stuck in loop:** NO
+-   **Test files created:** None manually. All tests via .
+-   **Known regressions:** The  endpoint is non-functional.
 
 **Credentials to test flow:**
-Use the dev seed endpoints to create users with specific roles and data.
--   Create a super admin, agency admin, and hotel admin.
--   Example: 
--   Use  to create test data for the settlement pages.
+To verify the P4 fixes, you will need three JWTs:
+1.  
+2.   (for a user belonging to the  of a test match)
+3.   (for a user from a different hotel)
+You may need to use a  endpoint to create these users and a test match ( record) with the necessary  fields populated.
 
 **What agent forgot to execute**
--   **Implement the Contacts Tab Frontend:** The user provided the complete code for  and the integration patch, but the agent has not yet created the file or applied the patch. This is the highest priority pending task.
--   **Add Disclaimer to Self-Billing PDF:** This product requirement was acknowledged but never implemented.
--   **Create DB Indexes for CRM:** Acknowledged as a pending optimization.
--   **Run Negative RBAC Tests for Tasks:** The user requested this as a kanıt paketi (proof package), but it has not been done yet.</analysis>
+-   **P4 Fix Implementation:** The agent received a clear, actionable plan to fix the blocking 404 issue on the  endpoint (patching  and ) but has not yet applied the code changes.
+-   **Self-billing PDF Verification:** The agent implemented the code to add a disclaimer to the PDF but never performed the final verification step of downloading the PDF to confirm the text appears correctly.</analysis>

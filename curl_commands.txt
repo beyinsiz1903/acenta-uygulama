@@ -1,15 +1,15 @@
 === CURL COMMANDS USED IN TESTING ===
 
 1) Agency Admin Login:
-curl -X POST https://settlehub.preview.emergentagent.com/api/auth/login \
+curl -X POST https://tourism-booking.preview.emergentagent.com/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email": "agency1@demo.test", "password": "agency123"}'
 
 2) Get Active Tours:
-curl -X GET https://settlehub.preview.emergentagent.com/api/public/tours
+curl -X GET https://tourism-booking.preview.emergentagent.com/api/public/tours
 
 3) Create Tour Booking Request:
-curl -X POST https://settlehub.preview.emergentagent.com/api/public/tours/TOUR_1766951497/book \
+curl -X POST https://tourism-booking.preview.emergentagent.com/api/public/tours/TOUR_1766951497/book \
   -H "Content-Type: application/json" \
   -d '{
     "full_name": "Test User",
@@ -21,32 +21,32 @@ curl -X POST https://settlehub.preview.emergentagent.com/api/public/tours/TOUR_1
   }'
 
 4) List Tour Booking Requests (with auth):
-curl -X GET https://settlehub.preview.emergentagent.com/api/agency/tour-bookings?status=new \
+curl -X GET https://tourism-booking.preview.emergentagent.com/api/agency/tour-bookings?status=new \
   -H "Authorization: Bearer <TOKEN>"
 
 5) Update Booking Request Status:
-curl -X POST https://settlehub.preview.emergentagent.com/api/agency/tour-bookings/<REQUEST_ID>/set-status \
+curl -X POST https://tourism-booking.preview.emergentagent.com/api/agency/tour-bookings/<REQUEST_ID>/set-status \
   -H "Authorization: Bearer <TOKEN>" \
   -H "Content-Type: application/json" \
   -d '{"status": "approved"}'
 
 6) Verify Status Update:
-curl -X GET https://settlehub.preview.emergentagent.com/api/agency/tour-bookings?status=approved \
+curl -X GET https://tourism-booking.preview.emergentagent.com/api/agency/tour-bookings?status=approved \
   -H "Authorization: Bearer <TOKEN>"
 
 7) Test Permission Errors:
-curl -X GET https://settlehub.preview.emergentagent.com/api/agency/tour-bookings
+curl -X GET https://tourism-booking.preview.emergentagent.com/api/agency/tour-bookings
 # Should return 401
 
 8) Test Invalid Status:
-curl -X POST https://settlehub.preview.emergentagent.com/api/agency/tour-bookings/<REQUEST_ID>/set-status \
+curl -X POST https://tourism-booking.preview.emergentagent.com/api/agency/tour-bookings/<REQUEST_ID>/set-status \
   -H "Authorization: Bearer <TOKEN>" \
   -H "Content-Type: application/json" \
   -d '{"status": "foo"}'
 # Should return 400 with INVALID_STATUS
 
 9) Test Non-existing Tour:
-curl -X POST https://settlehub.preview.emergentagent.com/api/public/tours/non-existing-tour-id/book \
+curl -X POST https://tourism-booking.preview.emergentagent.com/api/public/tours/non-existing-tour-id/book \
   -H "Content-Type: application/json" \
   -d '{"full_name": "Test", "phone": "+905551112233", "desired_date": "2025-12-30", "pax": 1}'
 # Should return 404 with TOUR_NOT_FOUND

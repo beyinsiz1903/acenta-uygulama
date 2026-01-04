@@ -71,6 +71,8 @@ class ExportRunResult(BaseModel):
     rows: int
     estimated_size_bytes: int
     run_id: Optional[str] = None
+    emailed: Optional[bool] = None
+    emailed_to: Optional[list[str]] = None
 
 
 @router.get("/policies", response_model=ExportPoliciesResponse, dependencies=[Depends(require_roles(["super_admin"]))])

@@ -65,7 +65,9 @@ export default function HotelTasksTab({ hotelId, agencyId, user }) {
       if (assignee === "me") params.assignee = "me"; // backend: assignee=me
 
       const res = await api.get("/crm/hotel-tasks", { params });
-      setItems(res.data?.tasks || res.data || []);
+      const data = res.data;
+      const list = Array.isArray(data) ? data : (data?.tasks || []);
+      setItems(list);
     } catch (err) {
       toast.error(apiErrorMessage(err));
     } finally {

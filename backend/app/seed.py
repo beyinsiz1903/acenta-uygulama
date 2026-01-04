@@ -172,6 +172,17 @@ async def ensure_seed_data() -> None:
         [("organization_id", 1), ("booking_id", 1), ("type", 1)]
     )
 
+    # P4 v0: match_actions indexes
+    await db.match_actions.create_index([
+        ("organization_id", 1),
+        ("match_id", 1),
+    ], unique=True)
+    await db.match_actions.create_index([
+        ("organization_id", 1),
+        ("status", 1),
+        ("updated_at", -1),
+    ])
+
     # Create 2 agencies if none
     agencies = await db.agencies.find({"organization_id": org_id}).to_list(10)
     if len(agencies) == 0:

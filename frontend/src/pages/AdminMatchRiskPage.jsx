@@ -146,6 +146,7 @@ export default function AdminMatchRiskPage() {
     setDrillLoading(true);
     setDrillErr("");
     setDrillItems([]);
+    setDrillOutcome("all");
 
     try {
       const params = new URLSearchParams();

@@ -294,6 +294,8 @@ async def list_deliveries(
                 error=d.get("error"),
                 fingerprint=d.get("fingerprint", ""),
                 sent_at=sent_at,
+                delivery_target=d.get("delivery_target"),
+                http_status=d.get("http_status"),
             )
         )
 

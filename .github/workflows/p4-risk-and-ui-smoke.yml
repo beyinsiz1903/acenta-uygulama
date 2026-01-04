@@ -1,0 +1,104 @@
+name: P4 Risk Engine + UI Smoke
+
+on:
+  workflow_dispatch:
+  # workflow_run:
+  #   workflows: ["Preview Deploy"]
+  #   types: [completed]
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  p4-proof-pack:
+    name: P4 backend proof (dev seed + risk reports)
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') }}
+    env:
+      BACKEND_BASE: ${{ secrets.PREVIEW_BACKEND_BASE }}
+      SUPER_ADMIN_EMAIL: ${{ secrets.SUPER_ADMIN_EMAIL }}
+      SUPER_ADMIN_PASSWORD: ${{ secrets.SUPER_ADMIN_PASSWORD }}
+      HOTEL_WRONG_EMAIL: ${{ secrets.HOTEL_WRONG_EMAIL }}
+      HOTEL_WRONG_PASSWORD: ${{ secrets.HOTEL_WRONG_PASSWORD }}
+      ENVIRONMENT: preview
+      ENABLE_DEV_ROUTERS: "true"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Wait for backend
+        run: |
+          set -e
+          echo "Waiting for backend at ${BACKEND_BASE}..."
+          for i in {1..30}; do
+            if curl -fsS "${BACKEND_BASE}/api/health" >/dev/null 2>&1; then
+              echo "Backend is up"
+              exit 0
+            fi
+            echo "Waiting backend... ($i)"
+            sleep 5
+          done
+          echo "Backend did not become ready" >&2
+          exit 1
+
+      - name: Run P4 proof pack
+        run: |
+          chmod +x scripts/p4_proof_pack.sh
+          ./scripts/p4_proof_pack.sh
+
+  ui-smoke:
+    name: Admin Match Risk UI smoke
+    runs-on: ubuntu-latest
+    needs: p4-proof-pack
+    env:
+      FRONTEND_BASE: ${{ secrets.PREVIEW_FRONTEND_BASE }}
+      SUPER_ADMIN_EMAIL: ${{ secrets.SUPER_ADMIN_EMAIL }}
+      SUPER_ADMIN_PASSWORD: ${{ secrets.SUPER_ADMIN_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: yarn
+          cache-dependency-path: frontend/yarn.lock
+
+      - name: Wait for frontend
+        run: |
+          set -e
+          echo "Waiting for frontend at ${FRONTEND_BASE}..."
+          for i in {1..30}; do
+            if curl -fsS "${FRONTEND_BASE}" >/dev/null 2>&1; then
+              echo "Frontend is up"
+              exit 0
+            fi
+            echo "Waiting frontend... ($i)"
+            sleep 5
+          done
+          echo "Frontend did not become ready" >&2
+          exit 1
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-msplaywright-${{ hashFiles('frontend/yarn.lock') }}
+
+      - name: Run UI Smoke (auto-detect Playwright/Cypress)
+        run: |
+          chmod +x scripts/ui_smoke_match_risk.sh
+          ./scripts/ui_smoke_match_risk.sh
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: frontend/playwright-report
+          if-no-files-found: ignore

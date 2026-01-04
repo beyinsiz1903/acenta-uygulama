@@ -179,7 +179,7 @@ class MatchOutcomesFullTester:
         
         # Create product
         product_data = {
-            "type": "accommodation",
+            "type": "hotel",
             "title": "Test Match Product",
             "description": "For match outcome testing",
             "active": True

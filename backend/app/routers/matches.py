@@ -306,3 +306,111 @@ async def get_match_detail(
         metrics=metrics,
         bookings=bookings,
     )
+
+
+
+async def _load_match_action(db, org_id: str, match_id: str, agency_id: str, hotel_id: str) -> MatchAction:
+    doc = await db.match_actions.find_one({"organization_id": org_id, "match_id": match_id})
+    if not doc:
+        return MatchAction(
+            match_id=match_id,
+            from_hotel_id=None,
+            to_hotel_id=hotel_id,
+            status="none",
+            reason_code=None,
+            note=None,
+            updated_at=None,
+            updated_by_email=None,
+        )
+
+    updated_at = doc.get("updated_at")
+    if hasattr(updated_at, "isoformat"):
+        updated_at = updated_at.isoformat()
+
+    return MatchAction(
+        match_id=doc.get("match_id", match_id),
+        from_hotel_id=None,
+        to_hotel_id=doc.get("hotel_id") or hotel_id,
+        status=doc.get("status", "none"),
+        reason_code=doc.get("reason_code"),
+        note=doc.get("note"),
+        updated_at=updated_at,
+        updated_by_email=doc.get("updated_by_email"),
+    )
+
+
+class MatchActionUpdateIn(BaseModel):
+    status: str
+    reason_code: Optional[str] = None
+    note: Optional[str] = None
+
+
+_VALID_STATUSES = {"none", "watchlist", "manual_review", "blocked"}
+
+
+@router.get("/{match_id}/action", response_model=MatchActionResponse, dependencies=[Depends(require_roles(["super_admin"]))])
+async def get_match_action(
+    match_id: str,
+    db=Depends(get_db),
+    user=Depends(get_current_user),
+):
+    org_id = user.get("organization_id")
+    agency_id, hotel_id = _parse_match_id(match_id)
+
+    # ensure match exists (same ownership checks as detail)
+    agency = await db.agencies.find_one({"organization_id": org_id, "_id": agency_id})
+    hotel = await db.hotels.find_one({"organization_id": org_id, "_id": hotel_id})
+    if not agency or not hotel:
+        raise HTTPException(status_code=404, detail="MATCH_NOT_FOUND")
+
+    action = await _load_match_action(db, org_id, match_id, agency_id, hotel_id)
+    return MatchActionResponse(ok=True, action=action)
+
+
+@router.put("/{match_id}/action", response_model=MatchActionResponse, dependencies=[Depends(require_roles(["super_admin"]))])
+async def upsert_match_action(
+    match_id: str,
+    payload: MatchActionUpdateIn,
+    db=Depends(get_db),
+    user=Depends(get_current_user),
+):
+    org_id = user.get("organization_id")
+    if payload.status not in _VALID_STATUSES:
+        raise HTTPException(status_code=422, detail="INVALID_STATUS")
+
+    agency_id, hotel_id = _parse_match_id(match_id)
+
+    # ensure match exists (same ownership checks as detail)
+    agency = await db.agencies.find_one({"organization_id": org_id, "_id": agency_id})
+    hotel = await db.hotels.find_one({"organization_id": org_id, "_id": hotel_id})
+    if not agency or not hotel:
+        raise HTTPException(status_code=404, detail="MATCH_NOT_FOUND")
+
+    # status=none => dokümanı sil ve none döndür (clean state)
+    if payload.status == "none":
+        await db.match_actions.delete_one({"organization_id": org_id, "match_id": match_id})
+        action = await _load_match_action(db, org_id, match_id, agency_id, hotel_id)
+        return MatchActionResponse(ok=True, action=action)
+
+    now = now_utc()
+    doc = {
+        "organization_id": org_id,
+        "match_id": match_id,
+        "agency_id": agency_id,
+        "hotel_id": hotel_id,
+        "status": payload.status,
+        "reason_code": payload.reason_code,
+        "note": payload.note,
+        "updated_at": now,
+        "updated_by_user_id": user.get("id"),
+        "updated_by_email": user.get("email"),
+    }
+
+    await db.match_actions.update_one(
+        {"organization_id": org_id, "match_id": match_id},
+        {"$set": doc, "$setOnInsert": {"created_at": now}},
+        upsert=True,
+    )
+
+    action = await _load_match_action(db, org_id, match_id, agency_id, hotel_id)
+    return MatchActionResponse(ok=True, action=action)

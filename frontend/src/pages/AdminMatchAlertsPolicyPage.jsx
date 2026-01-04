@@ -395,6 +395,109 @@ export default function AdminMatchAlertsPolicyPage() {
                 value={runParams.min_total}
                 onChange={(e) =>
                   setRunParams((prev) => ({ ...prev, min_total: parseInt(e.target.value || "1", 10) }))
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Son Alertler</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4" data-testid="match-alerts-deliveries-table">
+          <div className="flex flex-wrap items-center gap-3 mb-2">
+            <div className="space-y-1">
+              <label className="text-xs font-medium" htmlFor="deliveries-status">
+                Status
+              </label>
+              <select
+                id="deliveries-status"
+                className="border rounded px-2 py-1 text-sm bg-background"
+                value={deliveriesFilter.status}
+                onChange={(e) =>
+                  setDeliveriesFilter((prev) => ({ ...prev, status: e.target.value }))
+                }
+                data-testid="match-alerts-deliveries-status"
+              >
+                <option value="all">All</option>
+                <option value="sent">Sent</option>
+                <option value="failed">Failed</option>
+              </select>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-medium" htmlFor="deliveries-matchid">
+                Match ID
+              </label>
+              <Input
+                id="deliveries-matchid"
+                placeholder="agency__hotel"
+                value={deliveriesFilter.match_id}
+                onChange={(e) =>
+                  setDeliveriesFilter((prev) => ({ ...prev, match_id: e.target.value }))
+                }
+                className="h-8 text-xs"
+                data-testid="match-alerts-deliveries-matchid"
+              />
+            </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={loadDeliveries}
+              data-testid="match-alerts-deliveries-refresh"
+            >
+              Yenile
+            </Button>
+          </div>
+
+          {deliveriesLoading ? (
+            <p className="text-sm text-muted-foreground">Yükleniyor...</p>
+          ) : deliveries.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Kayıtlı alert teslimatı bulunamadı.</p>
+          ) : (
+            <div className="overflow-x-auto mt-2">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b text-left text-xs text-muted-foreground">
+                    <th className="py-1 pr-2">Sent At</th>
+                    <th className="py-1 pr-2">Match ID</th>
+                    <th className="py-1 pr-2">Status</th>
+                    <th className="py-1 pr-2">Channel</th>
+                    <th className="py-1 pr-2">Error</th>
+                    <th className="py-1 pr-2">Fingerprint</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {deliveries.map((d) => {
+                    const fp = d.fingerprint || "";
+                    const fpShort = fp.length > 12 ? `${fp.slice(0, 12)}…` : fp;
+                    const status = d.status || "sent";
+                    const statusClass =
+                      status === "failed"
+                        ? "text-red-600"
+                        : "text-emerald-600";
+                    return (
+                      <tr key={`${d.match_id}-${d.sent_at}-${d.channel}`} className="border-b last:border-0">
+                        <td className="py-1 pr-2 text-xs">
+                          {d.sent_at ? new Date(d.sent_at).toLocaleString() : "-"}
+                        </td>
+                        <td className="py-1 pr-2 font-mono text-xs">{d.match_id}</td>
+                        <td className="py-1 pr-2 text-xs">
+                          <span className={statusClass}>{status}</span>
+                        </td>
+                        <td className="py-1 pr-2 text-xs">{d.channel}</td>
+                        <td className="py-1 pr-2 text-xs max-w-[200px] truncate">
+                          {d.error || "—"}
+                        </td>
+                        <td className="py-1 pr-2 text-xs font-mono">{fpShort}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
                 }
               />
             </div>

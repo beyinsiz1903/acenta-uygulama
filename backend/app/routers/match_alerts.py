@@ -256,6 +256,7 @@ async def list_deliveries(
     limit: int = Query(50, ge=1, le=200),
     status: str = Query("all"),
     match_id: Optional[str] = Query(None),
+    channel: Optional[str] = Query(None),
     db=Depends(get_db),
     user=Depends(get_current_user),
 ):
@@ -266,6 +267,8 @@ async def list_deliveries(
         q["status"] = status
     if match_id:
         q["match_id"] = match_id
+    if channel in {"email", "webhook"}:
+        q["channel"] = channel
 
     cursor = (
         db.match_alert_deliveries.find(q)

@@ -154,23 +154,6 @@ async def _record_delivery(
         "organization_id": org_id,
         "match_id": match_id,
         "fingerprint": fingerprint,
-
-
-class MatchAlertDeliveryItem(BaseModel):
-    match_id: str
-    channel: str
-    status: str
-    error: Optional[str] = None
-    fingerprint: str
-    sent_at: str
-    delivery_target: Optional[str] = None
-    http_status: Optional[int] = None
-
-
-class MatchAlertDeliveriesResponse(BaseModel):
-    ok: bool = True
-    items: list[MatchAlertDeliveryItem]
-
         "channel": channel,
         "status": status,
         "error": error,

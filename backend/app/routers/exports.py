@@ -434,7 +434,7 @@ async def download_run(run_id: str, db=Depends(get_db), user=Depends(get_current
 
 
 # Public download endpoint (no auth required)
-@router.get("/public/download/{token}")
+@public_router.get("/download/{token}")
 async def public_download(token: str, db=Depends(get_db)):
     # Public, no auth - token-based access
     now = now_utc()

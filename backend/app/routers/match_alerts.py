@@ -1,0 +1,351 @@
+from __future__ import annotations
+
+from dataclasses import asdict, dataclass
+from datetime import timedelta
+from typing import Any, Optional
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel, Field
+
+from app.auth import get_current_user, require_roles
+from app.db import get_db
+from app.routers.matches import list_matches
+from app.services.email_outbox import enqueue_generic_email
+from app.utils import now_utc
+
+router = APIRouter(prefix="/api/admin/match-alerts", tags=["admin-match-alerts"])
+
+
+@dataclass
+class MatchAlertPolicy:
+    organization_id: str
+    enabled: bool = True
+    threshold_not_arrived_rate: float = 0.5
+    threshold_repeat_not_arrived_7: int = 3
+    min_matches_total: int = 5
+    cooldown_hours: int = 24
+    email_recipients: list[str] | None = None
+    webhook_url: str | None = None  # reserved for v1
+
+
+class MatchAlertPolicyModel(BaseModel):
+    enabled: bool = True
+    threshold_not_arrived_rate: float = Field(0.5, ge=0.0, le=1.0)
+    threshold_repeat_not_arrived_7: int = Field(3, ge=0)
+    min_matches_total: int = Field(5, ge=1)
+    cooldown_hours: int = Field(24, ge=1, le=168)
+    email_recipients: list[str] | None = None
+    webhook_url: str | None = None
+
+
+class MatchAlertPolicyResponse(BaseModel):
+    organization_id: str
+    policy: MatchAlertPolicyModel
+
+
+class MatchAlertRunItem(BaseModel):
+    match_id: str
+    agency_id: str
+    agency_name: Optional[str] = None
+    hotel_id: str
+    hotel_name: Optional[str] = None
+    total_bookings: int
+    cancel_rate: float
+    repeat_not_arrived_7: Optional[int] = None
+    action_status: Optional[str] = None
+    triggered_by_rate: bool
+    triggered_by_repeat: bool
+
+
+class MatchAlertRunResult(BaseModel):
+    ok: bool = True
+    evaluated_count: int
+    triggered_count: int
+    sent_count: int
+    failed_count: int
+    dry_run: bool
+    items: list[MatchAlertRunItem]
+
+
+async def _load_policy(db, org_id: str) -> MatchAlertPolicy:
+    doc = await db.match_alert_policies.find_one({"organization_id": org_id})
+    if not doc:
+        return MatchAlertPolicy(organization_id=org_id)
+
+    return MatchAlertPolicy(
+        organization_id=org_id,
+        enabled=bool(doc.get("enabled", True)),
+        threshold_not_arrived_rate=float(doc.get("threshold_not_arrived_rate", 0.5)),
+        threshold_repeat_not_arrived_7=int(doc.get("threshold_repeat_not_arrived_7", 3)),
+        min_matches_total=int(doc.get("min_matches_total", 5)),
+        cooldown_hours=int(doc.get("cooldown_hours", 24)),
+        email_recipients=list(doc.get("email_recipients") or []),
+        webhook_url=doc.get("webhook_url"),
+    )
+
+
+@router.get("/policy", response_model=MatchAlertPolicyResponse, dependencies=[Depends(require_roles(["super_admin"]))])
+async def get_policy(db=Depends(get_db), user=Depends(get_current_user)):
+    org_id = user.get("organization_id")
+    policy = await _load_policy(db, org_id)
+    return MatchAlertPolicyResponse(organization_id=org_id, policy=MatchAlertPolicyModel(**asdict(policy)))
+
+
+@router.put("/policy", response_model=MatchAlertPolicyResponse, dependencies=[Depends(require_roles(["super_admin"]))])
+async def update_policy(payload: MatchAlertPolicyModel, db=Depends(get_db), user=Depends(get_current_user)):
+    org_id = user.get("organization_id")
+    data = payload.model_dump()
+    data["organization_id"] = org_id
+
+    await db.match_alert_policies.update_one(
+        {"organization_id": org_id},
+        {"$set": data},
+        upsert=True,
+    )
+
+    return MatchAlertPolicyResponse(organization_id=org_id, policy=payload)
+
+
+def _match_fingerprint(match_id: str, *, days: int, min_total: int, thr_rate: float, thr_repeat: int, flags: str) -> str:
+    return f"{match_id}|d={days}|min={min_total}|r>={thr_rate}|rep>={thr_repeat}|{flags}"
+
+
+async def _already_sent_recently(db, org_id: str, match_id: str, fingerprint: str, cooldown_hours: int) -> bool:
+    now = now_utc()
+    cutoff = now - timedelta(hours=cooldown_hours)
+    doc = await db.match_alert_deliveries.find_one(
+        {
+            "organization_id": org_id,
+            "match_id": match_id,
+            "fingerprint": fingerprint,
+            "sent_at": {"$gte": cutoff},
+        }
+    )
+    return doc is not None
+
+
+async def _record_delivery(db, org_id: str, match_id: str, fingerprint: str, channel: str, status: str, error: str | None = None) -> None:
+    now = now_utc()
+    await db.match_alert_deliveries.update_one(
+        {
+            "organization_id": org_id,
+            "match_id": match_id,
+            "fingerprint": fingerprint,
+        },
+        {
+            "$set": {
+                "organization_id": org_id,
+                "match_id": match_id,
+                "fingerprint": fingerprint,
+                "channel": channel,
+                "status": status,
+                "error": error,
+                "sent_at": now,
+            }
+        },
+        upsert=True,
+    )
+
+
+async def _send_alert_email(
+    db,
+    *,
+    org_id: str,
+    recipients: list[str],
+    item: MatchAlertRunItem,
+    policy: MatchAlertPolicy,
+) -> None:
+    from app.services.email_outbox import enqueue_generic_email  # local import to avoid cycles
+
+    if not recipients:
+        return
+
+    subject = f"[MatchRisk] High risk detected for {item.hotel_name or item.hotel_id}"
+
+    flags = []
+    if item.triggered_by_rate:
+        flags.append(f"cancel_rate>={policy.threshold_not_arrived_rate:.2f}")
+    if item.triggered_by_repeat:
+        flags.append(f"repeat_not_arrived_7>={policy.threshold_repeat_not_arrived_7}")
+
+    flags_str = ", ".join(flags)
+
+    html_body = f"""
+<h2>High risk match detected</h2>
+<p><strong>Agency:</strong> {item.agency_name or item.agency_id}</p>
+<p><strong>Hotel:</strong> {item.hotel_name or item.hotel_id}</p>
+<p><strong>Match ID:</strong> {item.match_id}</p>
+<p><strong>Total bookings (period):</strong> {item.total_bookings}</p>
+<p><strong>Cancel rate:</strong> {item.cancel_rate:.2%}</p>
+<p><strong>Triggered by:</strong> {flags_str}</p>
+<p><strong>Current action:</strong> {item.action_status or "none"}</p>
+""".strip()
+
+    text_body = (
+        f"High risk match detected\n"
+        f"Agency: {item.agency_name or item.agency_id}\n"
+        f"Hotel: {item.hotel_name or item.hotel_id}\n"
+        f"Match ID: {item.match_id}\n"
+        f"Total bookings (period): {item.total_bookings}\n"
+        f"Cancel rate: {item.cancel_rate:.2%}\n"
+        f"Triggered by: {flags_str}\n"
+        f"Current action: {item.action_status or 'none'}\n"
+    )
+
+    await enqueue_generic_email(
+        db,
+        organization_id=org_id,
+        to_addresses=recipients,
+        subject=subject,
+        html_body=html_body,
+        text_body=text_body,
+        event_type="match.alert",
+    )
+
+
+@router.post("/run", response_model=MatchAlertRunResult, dependencies=[Depends(require_roles(["super_admin"]))])
+async def run_match_alerts(
+    days: int = Query(30, ge=1, le=365),
+    min_total: int = Query(5, ge=1, le=1000),
+    dry_run: bool = Query(True),
+    db=Depends(get_db),
+    user=Depends(get_current_user),
+):
+    org_id = user.get("organization_id")
+    policy = await _load_policy(db, org_id)
+
+    if not policy.enabled:
+        return MatchAlertRunResult(
+            ok=True,
+            evaluated_count=0,
+            triggered_count=0,
+            sent_count=0,
+            failed_count=0,
+            dry_run=dry_run,
+            items=[],
+        )
+
+    # Reuse matches aggregation with include_action=1
+    matches_resp = await list_matches(days=days, min_total=min_total, include_action=True, db=db, user=user)  # type: ignore[arg-type]
+    items_raw = matches_resp["items"] if isinstance(matches_resp, dict) else matches_resp.items
+
+    evaluated_count = 0
+    triggered: list[MatchAlertRunItem] = []
+
+    for row in items_raw:
+        # row may be dict or Pydantic model
+        data: dict[str, Any]
+        if isinstance(row, dict):
+            data = row
+        else:
+            data = row.model_dump()
+
+        evaluated_count += 1
+
+        total = int(data.get("total_bookings") or 0)
+        if total < policy.min_matches_total:
+            continue
+
+        cancel_rate = float(data.get("cancel_rate") or 0.0)
+        # repeat_not_arrived_7 henüz yok; v0 için sadece rate ile gidelim
+        repeat_7 = None
+
+        triggered_by_rate = cancel_rate >= policy.threshold_not_arrived_rate
+        triggered_by_repeat = False  # placeholder for future
+
+        if not (triggered_by_rate or triggered_by_repeat):
+            continue
+
+        action_status = data.get("action_status") or "none"
+        if action_status == "blocked":
+            # Already blocked; skip alerts to avoid spam
+            continue
+
+        item = MatchAlertRunItem(
+            match_id=data.get("id"),
+            agency_id=data.get("agency_id"),
+            agency_name=data.get("agency_name"),
+            hotel_id=data.get("hotel_id"),
+            hotel_name=data.get("hotel_name"),
+            total_bookings=total,
+            cancel_rate=cancel_rate,
+            repeat_not_arrived_7=repeat_7,
+            action_status=action_status,
+            triggered_by_rate=triggered_by_rate,
+            triggered_by_repeat=triggered_by_repeat,
+        )
+        triggered.append(item)
+
+    sent_count = 0
+    failed_count = 0
+
+    # Resolve recipients: policy.email_recipients or fallback to current user
+    recipients: list[str] = []
+    if policy.email_recipients:
+        recipients = [e for e in policy.email_recipients if e]
+    else:
+        email = user.get("email")
+        if email:
+            recipients = [email]
+
+    if not dry_run and triggered and recipients:
+        for item in triggered:
+            flags = []
+            if item.triggered_by_rate:
+                flags.append("rate")
+            if item.triggered_by_repeat:
+                flags.append("repeat")
+            flags_str = "+".join(flags) or "none"
+
+            fingerprint = _match_fingerprint(
+                item.match_id,
+                days=days,
+                min_total=min_total,
+                thr_rate=policy.threshold_not_arrived_rate,
+                thr_repeat=policy.threshold_repeat_not_arrived_7,
+                flags=flags_str,
+            )
+
+            already = await _already_sent_recently(
+                db,
+                org_id,
+                item.match_id,
+                fingerprint,
+                policy.cooldown_hours,
+            )
+            if already:
+                continue
+
+            try:
+                await _send_alert_email(db, org_id=org_id, recipients=recipients, item=item, policy=policy)
+                await _record_delivery(
+                    db,
+                    org_id,
+                    item.match_id,
+                    fingerprint,
+                    channel="email",
+                    status="sent",
+                    error=None,
+                )
+                sent_count += 1
+            except Exception as e:  # pragma: no cover - email failures shouldn't break whole run
+                await _record_delivery(
+                    db,
+                    org_id,
+                    item.match_id,
+                    fingerprint,
+                    channel="email",
+                    status="failed",
+                    error=str(e),
+                )
+                failed_count += 1
+
+    return MatchAlertRunResult(
+        ok=True,
+        evaluated_count=evaluated_count,
+        triggered_count=len(triggered),
+        sent_count=sent_count,
+        failed_count=failed_count,
+        dry_run=dry_run,
+        items=triggered,
+    )

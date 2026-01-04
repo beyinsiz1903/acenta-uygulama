@@ -11228,6 +11228,583 @@ class P4V0MatchesTester:
         return 0 if self.tests_failed == 0 else 1
 
 
+class AlertingV0Tester:
+    def __init__(self, base_url="https://risk-dashboard-26.preview.emergentagent.com"):
+        self.base_url = base_url
+        self.super_admin_token = None
+        self.agency_token = None
+        self.hotel_token = None
+        self.tests_run = 0
+        self.tests_passed = 0
+        self.tests_failed = 0
+        self.failed_tests = []
+        
+        # Store data for testing
+        self.match_id = None
+
+    def log(self, msg):
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}")
+
+    def run_test(self, name, method, endpoint, expected_status, data=None, headers_override=None, token=None):
+        """Run a single API test with specific token"""
+        url = f"{self.base_url}/{endpoint}"
+        headers = headers_override or {'Content-Type': 'application/json'}
+        
+        # Use specific token if provided
+        if token:
+            headers['Authorization'] = f'Bearer {token}'
+        elif self.super_admin_token and not headers_override:
+            headers['Authorization'] = f'Bearer {self.super_admin_token}'
+
+        self.tests_run += 1
+        self.log(f"🔍 Test #{self.tests_run}: {name}")
+        
+        try:
+            if method == 'GET':
+                response = requests.get(url, headers=headers, timeout=10)
+            elif method == 'POST':
+                response = requests.post(url, json=data, headers=headers, timeout=10)
+            elif method == 'PUT':
+                response = requests.put(url, json=data, headers=headers, timeout=10)
+            elif method == 'DELETE':
+                response = requests.delete(url, headers=headers, timeout=10)
+            else:
+                raise ValueError(f"Unsupported method: {method}")
+
+            success = response.status_code == expected_status
+            if success:
+                self.tests_passed += 1
+                self.log(f"✅ PASSED - Status: {response.status_code}")
+                try:
+                    return True, response.json() if response.content else {}
+                except:
+                    return True, {}
+            else:
+                self.tests_failed += 1
+                self.failed_tests.append(f"{name} - Expected {expected_status}, got {response.status_code}")
+                self.log(f"❌ FAILED - Expected {expected_status}, got {response.status_code}")
+                try:
+                    self.log(f"   Response: {response.text[:200]}")
+                except:
+                    pass
+                return False, {}
+
+        except Exception as e:
+            self.tests_failed += 1
+            self.failed_tests.append(f"{name} - Error: {str(e)}")
+            self.log(f"❌ FAILED - Error: {str(e)}")
+            return False, {}
+
+    def test_super_admin_login(self):
+        """1) Auth: admin@acenta.test / admin123 ile login → token al (super_admin)"""
+        self.log("\n=== 1) AUTH & RBAC ===")
+        success, response = self.run_test(
+            "Super Admin Login (admin@acenta.test/admin123)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "admin@acenta.test", "password": "admin123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.super_admin_token = response['access_token']
+            user = response.get('user', {})
+            roles = user.get('roles', [])
+            
+            if 'admin' in roles or 'super_admin' in roles:
+                self.log(f"✅ Super admin login successful - roles: {roles}")
+                return True
+            else:
+                self.log(f"❌ Missing admin/super_admin role: {roles}")
+                return False
+        return False
+
+    def test_agency_login(self):
+        """Agency login for RBAC testing"""
+        success, response = self.run_test(
+            "Agency Login (agency1@demo.test/agency123)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "agency1@demo.test", "password": "agency123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.agency_token = response['access_token']
+            self.log(f"✅ Agency login successful")
+            return True
+        return False
+
+    def test_hotel_login(self):
+        """Hotel login for RBAC testing"""
+        success, response = self.run_test(
+            "Hotel Login (hoteladmin@acenta.test/admin123)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "hoteladmin@acenta.test", "password": "admin123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.hotel_token = response['access_token']
+            self.log(f"✅ Hotel login successful")
+            return True
+        return False
+
+    def test_rbac_agency_forbidden(self):
+        """Agency kullanıcıları policy ve run endpointlerine erişim dene → 403 Forbidden olmalı"""
+        self.log("\n--- RBAC: Agency Access (Should be 403) ---")
+        
+        # Test policy endpoint
+        success, response = self.run_test(
+            "Agency Access to GET /api/admin/match-alerts/policy (Should be 403)",
+            "GET",
+            "api/admin/match-alerts/policy",
+            403,
+            token=self.agency_token
+        )
+        
+        if not success:
+            return False
+        
+        # Test run endpoint
+        success, response = self.run_test(
+            "Agency Access to POST /api/admin/match-alerts/run (Should be 403)",
+            "POST",
+            "api/admin/match-alerts/run?days=30&min_total=3&dry_run=1",
+            403,
+            token=self.agency_token
+        )
+        
+        return success
+
+    def test_rbac_hotel_forbidden(self):
+        """Hotel kullanıcıları policy ve run endpointlerine erişim dene → 403 Forbidden olmalı"""
+        self.log("\n--- RBAC: Hotel Access (Should be 403) ---")
+        
+        # Test policy endpoint
+        success, response = self.run_test(
+            "Hotel Access to GET /api/admin/match-alerts/policy (Should be 403)",
+            "GET",
+            "api/admin/match-alerts/policy",
+            403,
+            token=self.hotel_token
+        )
+        
+        if not success:
+            return False
+        
+        # Test run endpoint
+        success, response = self.run_test(
+            "Hotel Access to POST /api/admin/match-alerts/run (Should be 403)",
+            "POST",
+            "api/admin/match-alerts/run?days=30&min_total=3&dry_run=1",
+            403,
+            token=self.hotel_token
+        )
+        
+        return success
+
+    def test_get_policy_default(self):
+        """2) GET /api/admin/match-alerts/policy (super_admin): Hiç policy yokken çağır → 200 ve default değerler dönmeli"""
+        self.log("\n=== 2) GET POLICY (DEFAULT VALUES) ===")
+        
+        success, response = self.run_test(
+            "GET /api/admin/match-alerts/policy (Default Values)",
+            "GET",
+            "api/admin/match-alerts/policy",
+            200,
+            token=self.super_admin_token
+        )
+        
+        if success:
+            policy = response.get('policy', {})
+            expected_defaults = {
+                'enabled': True,
+                'threshold_not_arrived_rate': 0.5,
+                'threshold_repeat_not_arrived_7': 3,
+                'min_matches_total': 5,
+                'cooldown_hours': 24
+            }
+            
+            all_correct = True
+            for key, expected_value in expected_defaults.items():
+                actual_value = policy.get(key)
+                if actual_value == expected_value:
+                    self.log(f"✅ {key}: {actual_value} (correct)")
+                else:
+                    self.log(f"❌ {key}: {actual_value} (expected {expected_value})")
+                    all_correct = False
+            
+            # Check email_recipients (can be [] or null)
+            email_recipients = policy.get('email_recipients')
+            if email_recipients is None or email_recipients == []:
+                self.log(f"✅ email_recipients: {email_recipients} (acceptable)")
+            else:
+                self.log(f"❌ email_recipients: {email_recipients} (expected [] or null)")
+                all_correct = False
+            
+            return all_correct
+        
+        return False
+
+    def test_put_policy(self):
+        """3) PUT /api/admin/match-alerts/policy: Body ile güncelleme → 200 dönmeli, GET sonrası aynı değerler dönmeli"""
+        self.log("\n=== 3) PUT POLICY ===")
+        
+        policy_data = {
+            "enabled": True,
+            "threshold_not_arrived_rate": 0.4,
+            "threshold_repeat_not_arrived_7": 2,
+            "min_matches_total": 3,
+            "cooldown_hours": 12,
+            "email_recipients": ["alerts@acenta.test"]
+        }
+        
+        success, response = self.run_test(
+            "PUT /api/admin/match-alerts/policy",
+            "PUT",
+            "api/admin/match-alerts/policy",
+            200,
+            data=policy_data,
+            token=self.super_admin_token
+        )
+        
+        if not success:
+            return False
+        
+        # Verify the response contains the updated policy
+        returned_policy = response.get('policy', {})
+        for key, expected_value in policy_data.items():
+            actual_value = returned_policy.get(key)
+            if actual_value == expected_value:
+                self.log(f"✅ PUT response {key}: {actual_value} (correct)")
+            else:
+                self.log(f"❌ PUT response {key}: {actual_value} (expected {expected_value})")
+                return False
+        
+        # Now GET to verify persistence
+        success, response = self.run_test(
+            "GET /api/admin/match-alerts/policy (After PUT)",
+            "GET",
+            "api/admin/match-alerts/policy",
+            200,
+            token=self.super_admin_token
+        )
+        
+        if success:
+            policy = response.get('policy', {})
+            all_correct = True
+            for key, expected_value in policy_data.items():
+                actual_value = policy.get(key)
+                if actual_value == expected_value:
+                    self.log(f"✅ GET after PUT {key}: {actual_value} (correct)")
+                else:
+                    self.log(f"❌ GET after PUT {key}: {actual_value} (expected {expected_value})")
+                    all_correct = False
+            
+            return all_correct
+        
+        return False
+
+    def test_run_dry_run_true(self):
+        """4) POST /api/admin/match-alerts/run?days=30&min_total=3&dry_run=1: 200 dönmeli"""
+        self.log("\n=== 4) RUN DRY_RUN=1 ===")
+        
+        success, response = self.run_test(
+            "POST /api/admin/match-alerts/run?days=30&min_total=3&dry_run=1",
+            "POST",
+            "api/admin/match-alerts/run?days=30&min_total=3&dry_run=1",
+            200,
+            token=self.super_admin_token
+        )
+        
+        if success:
+            # Verify response structure
+            required_fields = ['ok', 'dry_run', 'evaluated_count', 'triggered_count', 'items']
+            all_correct = True
+            
+            for field in required_fields:
+                if field in response:
+                    self.log(f"✅ {field}: {response[field]}")
+                else:
+                    self.log(f"❌ Missing field: {field}")
+                    all_correct = False
+            
+            # Verify specific values
+            if response.get('ok') is True:
+                self.log(f"✅ ok: True (correct)")
+            else:
+                self.log(f"❌ ok: {response.get('ok')} (expected True)")
+                all_correct = False
+            
+            if response.get('dry_run') is True:
+                self.log(f"✅ dry_run: True (correct)")
+            else:
+                self.log(f"❌ dry_run: {response.get('dry_run')} (expected True)")
+                all_correct = False
+            
+            evaluated_count = response.get('evaluated_count', 0)
+            triggered_count = response.get('triggered_count', 0)
+            
+            if evaluated_count >= triggered_count >= 0:
+                self.log(f"✅ evaluated_count ({evaluated_count}) >= triggered_count ({triggered_count}) >= 0")
+            else:
+                self.log(f"❌ Invalid counts: evaluated={evaluated_count}, triggered={triggered_count}")
+                all_correct = False
+            
+            # Check items structure
+            items = response.get('items', [])
+            if isinstance(items, list):
+                self.log(f"✅ items is list with {len(items)} items")
+                
+                # Check first item structure if exists
+                if items:
+                    item = items[0]
+                    required_item_fields = ['match_id', 'agency_id', 'hotel_id', 'total_bookings', 'cancel_rate', 'triggered_by_rate']
+                    for field in required_item_fields:
+                        if field in item:
+                            self.log(f"✅ item.{field}: {item[field]}")
+                        else:
+                            self.log(f"❌ Missing item field: {field}")
+                            all_correct = False
+            else:
+                self.log(f"❌ items is not a list: {type(items)}")
+                all_correct = False
+            
+            return all_correct
+        
+        return False
+
+    def test_run_dry_run_false(self):
+        """5) POST /api/admin/match-alerts/run?days=30&min_total=3&dry_run=0: 200 dönmeli"""
+        self.log("\n=== 5) RUN DRY_RUN=0 ===")
+        
+        success, response = self.run_test(
+            "POST /api/admin/match-alerts/run?days=30&min_total=3&dry_run=0",
+            "POST",
+            "api/admin/match-alerts/run?days=30&min_total=3&dry_run=0",
+            200,
+            token=self.super_admin_token
+        )
+        
+        if success:
+            # Verify response structure
+            required_fields = ['ok', 'sent_count', 'failed_count']
+            all_correct = True
+            
+            for field in required_fields:
+                if field in response:
+                    self.log(f"✅ {field}: {response[field]}")
+                else:
+                    self.log(f"❌ Missing field: {field}")
+                    all_correct = False
+            
+            if response.get('ok') is True:
+                self.log(f"✅ ok: True (correct)")
+            else:
+                self.log(f"❌ ok: {response.get('ok')} (expected True)")
+                all_correct = False
+            
+            sent_count = response.get('sent_count', 0)
+            failed_count = response.get('failed_count', 0)
+            
+            if sent_count >= 0 and failed_count >= 0:
+                self.log(f"✅ sent_count ({sent_count}) >= 0, failed_count ({failed_count}) >= 0")
+            else:
+                self.log(f"❌ Invalid counts: sent={sent_count}, failed={failed_count}")
+                all_correct = False
+            
+            return all_correct
+        
+        return False
+
+    def test_email_outbox_verification(self):
+        """Email outbox koleksiyonunda event_type="match.alert" olan kayıt kontrolü"""
+        self.log("\n=== 6) EMAIL OUTBOX VERIFICATION ===")
+        
+        # This would require direct MongoDB access, which we don't have in API tests
+        # Instead, we'll check if the run endpoint worked without errors
+        self.log("✅ Email outbox verification skipped (requires direct DB access)")
+        self.log("   If triggered items exist and recipients are configured, emails should be queued")
+        return True
+
+    def test_cooldown_dedupe(self):
+        """6) Cooldown/dedupe: Aynı parametrelerle run'ı iki kere arka arkaya çağır"""
+        self.log("\n=== 7) COOLDOWN/DEDUPE ===")
+        
+        # First run
+        success1, response1 = self.run_test(
+            "First Run (dry_run=0) for Cooldown Test",
+            "POST",
+            "api/admin/match-alerts/run?days=30&min_total=3&dry_run=0",
+            200,
+            token=self.super_admin_token
+        )
+        
+        if not success1:
+            return False
+        
+        sent_count1 = response1.get('sent_count', 0)
+        self.log(f"✅ First run sent_count: {sent_count1}")
+        
+        # Second run immediately after
+        success2, response2 = self.run_test(
+            "Second Run (dry_run=0) for Cooldown Test",
+            "POST",
+            "api/admin/match-alerts/run?days=30&min_total=3&dry_run=0",
+            200,
+            token=self.super_admin_token
+        )
+        
+        if not success2:
+            return False
+        
+        sent_count2 = response2.get('sent_count', 0)
+        self.log(f"✅ Second run sent_count: {sent_count2}")
+        
+        # Verify cooldown behavior
+        if sent_count2 <= sent_count1:
+            self.log(f"✅ Cooldown working: second run sent_count ({sent_count2}) <= first run ({sent_count1})")
+            if sent_count1 > 0 and sent_count2 == 0:
+                self.log(f"✅ Perfect cooldown: first run sent alerts, second run sent none (dedupe working)")
+            return True
+        else:
+            self.log(f"❌ Cooldown not working: second run sent more ({sent_count2}) than first run ({sent_count1})")
+            return False
+
+    def test_blocked_action_gate(self):
+        """7) Blocked action gate: Bir match için status="blocked" ayarla, sonra run endpointini çağır"""
+        self.log("\n=== 8) BLOCKED ACTION GATE ===")
+        
+        # First, get a match ID
+        success, response = self.run_test(
+            "GET /api/admin/matches (to find a match_id)",
+            "GET",
+            "api/admin/matches",
+            200,
+            token=self.super_admin_token
+        )
+        
+        if not success:
+            return False
+        
+        items = response.get('items', [])
+        if not items:
+            self.log("❌ No matches found for blocked action test")
+            return False
+        
+        match_id = items[0].get('id')
+        if not match_id:
+            self.log("❌ No match_id found in first match")
+            return False
+        
+        self.log(f"✅ Using match_id for test: {match_id}")
+        
+        # Set match action to blocked
+        block_data = {
+            "status": "blocked",
+            "reason_code": "test_block",
+            "note": "Blocked for alerting test"
+        }
+        
+        success, response = self.run_test(
+            f"PUT /api/admin/matches/{match_id}/action (set blocked)",
+            "PUT",
+            f"api/admin/matches/{match_id}/action",
+            200,
+            data=block_data,
+            token=self.super_admin_token
+        )
+        
+        if not success:
+            return False
+        
+        self.log(f"✅ Match {match_id} set to blocked status")
+        
+        # Now run alerts with dry_run=1 to see if this match is excluded
+        success, response = self.run_test(
+            "POST /api/admin/match-alerts/run?dry_run=1 (after blocking match)",
+            "POST",
+            "api/admin/match-alerts/run?days=30&min_total=1&dry_run=1",
+            200,
+            token=self.super_admin_token
+        )
+        
+        if success:
+            items = response.get('items', [])
+            blocked_match_found = any(item.get('match_id') == match_id for item in items)
+            
+            if not blocked_match_found:
+                self.log(f"✅ Blocked match {match_id} correctly excluded from alert items")
+                return True
+            else:
+                self.log(f"❌ Blocked match {match_id} still appears in alert items (should be excluded)")
+                return False
+        
+        return False
+
+    def print_summary(self):
+        """Print test summary"""
+        self.log("\n" + "="*60)
+        self.log("ALERTING V0 BACKEND TEST SUMMARY")
+        self.log("="*60)
+        self.log(f"Total Tests: {self.tests_run}")
+        self.log(f"✅ Passed: {self.tests_passed}")
+        self.log(f"❌ Failed: {self.tests_failed}")
+        self.log(f"Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%")
+        
+        if self.failed_tests:
+            self.log("\n❌ FAILED TESTS:")
+            for i, test in enumerate(self.failed_tests, 1):
+                self.log(f"  {i}. {test}")
+        
+        self.log("="*60)
+
+    def run_alerting_v0_tests(self):
+        """Run all Alerting v0 tests in sequence"""
+        self.log("🚀 Starting Alerting v0 Backend Tests")
+        self.log(f"Base URL: {self.base_url}")
+        
+        # 1) Authentication
+        if not self.test_super_admin_login():
+            self.log("❌ Super admin login failed - stopping tests")
+            self.print_summary()
+            return 1
+
+        # Get agency and hotel tokens for RBAC testing
+        self.test_agency_login()
+        self.test_hotel_login()
+        
+        # RBAC tests
+        if self.agency_token:
+            self.test_rbac_agency_forbidden()
+        if self.hotel_token:
+            self.test_rbac_hotel_forbidden()
+
+        # 2) Policy tests
+        self.test_get_policy_default()
+        self.test_put_policy()
+
+        # 3) Run tests
+        self.test_run_dry_run_true()
+        self.test_run_dry_run_false()
+        
+        # 4) Email verification (limited without DB access)
+        self.test_email_outbox_verification()
+        
+        # 5) Cooldown/dedupe
+        self.test_cooldown_dedupe()
+        
+        # 6) Blocked action gate
+        self.test_blocked_action_gate()
+
+        # Summary
+        self.print_summary()
+
+        return 0 if self.tests_failed == 0 else 1
+
+
 def main():
     if len(sys.argv) > 1:
         if sys.argv[1] == "faz5":

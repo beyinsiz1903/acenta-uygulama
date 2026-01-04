@@ -241,6 +241,8 @@ async def run_export(
             rows=len(rows),
             estimated_size_bytes=size_bytes,
             run_id=None,
+            emailed=None,
+            emailed_to=None,
         )
 
     # Persist blob

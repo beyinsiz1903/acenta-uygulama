@@ -102,8 +102,12 @@ class MatchOutcomesRiskTester:
             token=self.super_admin_token
         )
         if success:
-            self.log(f"   Response keys: {list(response.keys())}")
-            hotels = response.get('items', response.get('hotels', []))
+            # Response might be a list directly or have 'items' key
+            if isinstance(response, list):
+                hotels = response
+            else:
+                hotels = response.get('items', response.get('hotels', []))
+            
             self.log(f"   Found {len(hotels)} hotels")
             if len(hotels) >= 2:
                 self.hotel1_id = hotels[0].get('id', hotels[0].get('_id'))

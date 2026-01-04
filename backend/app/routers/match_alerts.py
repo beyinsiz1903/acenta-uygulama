@@ -295,6 +295,49 @@ async def list_deliveries(
     return MatchAlertDeliveriesResponse(ok=True, items=items)
 
 
+class WebhookTestRequest(BaseModel):
+    webhook_url: str
+    webhook_secret: str | None = None
+
+
+class WebhookTestResponse(BaseModel):
+    ok: bool
+    http_status: int | None = None
+    snippet: str | None = None
+    error: str | None = None
+
+
+@router.post("/webhook-test", response_model=WebhookTestResponse, dependencies=[Depends(require_roles(["super_admin"]))])
+async def test_webhook(payload: WebhookTestRequest, db=Depends(get_db), user=Depends(get_current_user)):
+    """Test webhook endpoint with a sample payload"""
+    org_id = user.get("organization_id")
+    
+    # Create a test payload
+    test_payload = {
+        "event": "match.alert.test",
+        "organization_id": org_id,
+        "generated_at": now_utc().isoformat(),
+        "test": True,
+        "message": "This is a test webhook from Syroce Match Alerts"
+    }
+    
+    # Send test webhook
+    ok_wh, http_status, snippet, err = await send_match_alert_webhook(
+        organization_id=org_id,
+        webhook_url=payload.webhook_url,
+        webhook_secret=payload.webhook_secret,
+        timeout_ms=4000,  # Default timeout
+        payload=test_payload,
+    )
+    
+    return WebhookTestResponse(
+        ok=ok_wh,
+        http_status=http_status,
+        snippet=snippet,
+        error=err
+    )
+
+
 
 @router.post("/run", response_model=MatchAlertRunResult, dependencies=[Depends(require_roles(["super_admin"]))])
 async def run_match_alerts(

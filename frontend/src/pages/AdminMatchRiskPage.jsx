@@ -184,6 +184,9 @@ export default function AdminMatchRiskPage() {
       } catch {
         // ignore
       }
+    }
+  }
+
   function csvEscape(v) {
     const s = String(v ?? "");
     if (/[",\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`;

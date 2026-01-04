@@ -185,9 +185,7 @@ async def _send_alert_email(
     recipients: list[str],
     item: MatchAlertRunItem,
     policy: MatchAlertPolicy,
-    from app.services.match_webhook import send_match_alert_webhook
-
-) -> None:
+) -> str:
     from app.services.email_outbox import enqueue_generic_email  # local import to avoid cycles
 
     if not recipients:

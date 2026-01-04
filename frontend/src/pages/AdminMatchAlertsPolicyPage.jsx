@@ -326,7 +326,7 @@ export default function AdminMatchAlertsPolicyPage() {
                 data-testid="match-alerts-webhook-secret"
               />
               <p className="text-xs text-muted-foreground">
-                Belirtilirse, payload imzalanır ve X-Syroce-Signature header’ında sha256=<hmac> olarak gönderilir.
+                Belirtilirse, payload imzalanır ve X-Syroce-Signature header'ında sha256=hmac_hex olarak gönderilir.
               </p>
               <Button
                 type="button"

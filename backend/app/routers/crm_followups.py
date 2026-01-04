@@ -240,7 +240,7 @@ async def _fetch_tasks_agg_map(
     # Fetch open tasks; we'll compute date comparisons in Python to avoid schema variance (date vs datetime vs string).
     cur = db.hotel_crm_tasks.find(
         {"organization_id": organization_id, "agency_id": agency_id, "hotel_id": {"$in": hotel_ids}, "status": "open"},
-        {"hotel_id": 1, "due_date": 1, "updated_at": 1, "assignee_user_id": 1},
+        {"_id": 1, "hotel_id": 1, "due_date": 1, "updated_at": 1, "assignee_user_id": 1, "title": 1},
     )
 
     out: Dict[str, Dict[str, Any]] = {}
@@ -248,7 +248,16 @@ async def _fetch_tasks_agg_map(
         hid = str(t.get("hotel_id"))
         rec = out.setdefault(
             hid,
-            {"open_tasks": 0, "due_today": 0, "overdue": 0, "next_due_date": None, "last_task_update_at": None},
+            {
+                "open_tasks": 0,
+                "due_today": 0,
+                "overdue": 0,
+                "next_due_date": None,
+                "next_task_id": None,
+                "next_task_title": None,
+                "next_task_updated_at": None,
+                "last_task_update_at": None,
+            },
         )
         rec["open_tasks"] += 1
 
@@ -260,8 +269,28 @@ async def _fetch_tasks_agg_map(
                 rec["overdue"] += 1
 
             nd = rec.get("next_due_date")
+            upd_for_task = t.get("updated_at")
+            if isinstance(upd_for_task, str):
+                try:
+                    upd_for_task = datetime.fromisoformat(upd_for_task.replace("Z", "+00:00"))
+                except Exception:
+                    upd_for_task = None
+            if isinstance(upd_for_task, datetime) and upd_for_task.tzinfo is None:
+                upd_for_task = upd_for_task.replace(tzinfo=timezone.utc)
+
+            better_candidate = False
             if nd is None or due_d < nd:
+                better_candidate = True
+            elif nd == due_d and isinstance(upd_for_task, datetime):
+                existing_upd = rec.get("next_task_updated_at")
+                if not isinstance(existing_upd, datetime) or upd_for_task > existing_upd:
+                    better_candidate = True
+
+            if better_candidate:
                 rec["next_due_date"] = due_d
+                rec["next_task_id"] = str(t.get("_id")) if t.get("_id") is not None else None
+                rec["next_task_title"] = (t.get("title") or "").strip() or None
+                rec["next_task_updated_at"] = upd_for_task
 
         upd = t.get("updated_at")
         if isinstance(upd, str):
@@ -406,6 +435,8 @@ async def get_followups(
         due_today = int(tasks_agg.get("due_today") or 0)
         overdue = int(tasks_agg.get("overdue") or 0)
         next_due_date = tasks_agg.get("next_due_date")
+        next_task_id = tasks_agg.get("next_task_id")
+        next_task_title = tasks_agg.get("next_task_title")
 
         callback_hit = hid in callback_map
 
@@ -440,6 +471,8 @@ async def get_followups(
                 "due_today": due_today,
                 "overdue": overdue,
                 "next_due_date": (next_due_date.isoformat() if isinstance(next_due_date, date) else None),
+                "next_task_id": next_task_id,
+                "next_task_title": next_task_title,
             },
             "suggested_action": {"type": action_type, "reason": reason},
             "_flags": {"callback": callback_hit},

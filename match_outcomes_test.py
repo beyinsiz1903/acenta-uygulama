@@ -82,11 +82,13 @@ class MatchOutcomesRiskTester:
             200,
             data={"email": "admin@acenta.test", "password": "admin123"}
         )
-        if success and 'token' in response:
-            self.super_admin_token = response['token']
-            self.org_id = response.get('user', {}).get('organization_id')
-            self.log(f"✅ Super admin logged in - org_id: {self.org_id}")
-            return True
+        if success:
+            self.super_admin_token = response.get('token') or response.get('access_token')
+            self.org_id = response.get('user', {}).get('organization_id') or response.get('organization_id')
+            self.log(f"✅ Super admin logged in - token: {self.super_admin_token[:20] if self.super_admin_token else 'None'}...")
+            self.log(f"   org_id: {self.org_id}")
+            self.log(f"   Response keys: {list(response.keys())}")
+            return bool(self.super_admin_token)
         return False
 
     def test_get_hotels(self):

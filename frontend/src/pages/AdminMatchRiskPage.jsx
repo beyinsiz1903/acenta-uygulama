@@ -533,6 +533,24 @@ export default function AdminMatchRiskPage() {
           >
             <div className="flex items-center justify-between border-b px-4 py-3">
               <div>
+              <div className="mb-3 flex items-center gap-2 text-xs text-muted-foreground">
+                <span>Outcome filtresi:</span>
+                <select
+                  className="h-8 rounded-md border bg-background px-2 text-xs"
+                  value={drillOutcome}
+                  onChange={(e) => setDrillOutcome(e.target.value)}
+                  data-testid="match-risk-drill-outcome-filter"
+                >
+                  <option value="all">Hepsi</option>
+                  <option value="not_arrived">Not Arrived</option>
+                  <option value="unknown">Unknown</option>
+                  <option value="arrived">Arrived</option>
+                </select>
+                <span>
+                  ({visibleDrillItems.length}/{Array.isArray(drillItems) ? drillItems.length : 0})
+                </span>
+              </div>
+
                 <div className="text-sm font-semibold">Drilldown</div>
                 <div className="text-[11px] text-muted-foreground">{periodLabel}</div>
                 <div className="mt-1 text-[11px] text-muted-foreground max-w-md">

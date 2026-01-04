@@ -261,6 +261,21 @@ export default function AdminMatchRiskPage() {
                 className="h-8 rounded-md border bg-background px-2 text-xs"
                 value={groupBy}
                 onChange={(e) => setGroupBy(e.target.value)}
+        <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground" data-testid="match-risk-period-label">
+          <span>Dönem: {periodLabel}</span>
+          {hotelMapLoading ? (
+            <span>Hotel isimleri yükleniyor...</span>
+          ) : Object.keys(hotelMap).length > 0 ? (
+            <span>
+              Hotel isimleri: <span className="font-medium">açık</span>
+            </span>
+          ) : (
+            <span>
+              Hotel isimleri: <span className="font-medium">ID</span> (isim verisi yok)
+            </span>
+          )}
+        </div>
+
                 data-testid="match-risk-group-by"
               >
                 <option value="pair">Çift (from → to)</option>

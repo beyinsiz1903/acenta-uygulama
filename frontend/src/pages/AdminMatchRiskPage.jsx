@@ -370,7 +370,7 @@ export default function AdminMatchRiskPage() {
               </tr>
             </thead>
             <tbody>
-              {items.map((row, idx) => {
+              {visibleItems.map((row, idx) => {
                 const rate = Number(row.not_arrived_rate || 0);
                 const level = deriveRiskLevel(rate);
                 const label = formatPercent(row.not_arrived_rate);

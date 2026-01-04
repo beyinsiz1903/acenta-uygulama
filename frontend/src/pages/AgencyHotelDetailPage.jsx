@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import HotelNotesTab from "../components/crm/HotelNotesTab";
 import HotelTasksTab from "../components/crm/HotelTasksTab";
+import HotelContactsTab from "../components/crm/HotelContactsTab";
 import { toast } from "sonner";
 
 export default function AgencyHotelDetailPage() {
@@ -209,7 +210,11 @@ export default function AgencyHotelDetailPage() {
             </TabsContent>
 
             <TabsContent value="contacts" className="mt-3">
-              <div className="text-xs text-slate-400">Yakında: Kişiler</div>
+              <HotelContactsTab
+                hotelId={hotelId}
+                agencyId={user?.agency_id}
+                user={user}
+              />
             </TabsContent>
 
             <TabsContent value="tasks" className="mt-3">

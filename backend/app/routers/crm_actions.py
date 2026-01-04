@@ -90,8 +90,9 @@ class CrmTaskCreateIn(BaseModel):
 async def create_crm_note(payload: CrmNoteCreateIn, user=Depends(get_current_user), db=Depends(get_db)):
     _require_scope_agency(payload.scope)
 
+    role = user.get("role")
     roles = set(user.get("roles") or [])
-    if {"hotel_admin", "hotel_staff"} & roles:
+    if role in {"hotel_admin", "hotel_staff"} or {"hotel_admin", "hotel_staff"} & roles:
         # v1.1: hotel roles cannot write CRM notes via this endpoint
         raise HTTPException(status_code=403, detail="FORBIDDEN")
 

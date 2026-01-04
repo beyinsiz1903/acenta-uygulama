@@ -277,9 +277,58 @@ async def run_export(
             "mode": "mongo",
             "blob_id": blob_id,
         },
+        "email": None,
     }
     run_res = await db.export_runs.insert_one(run_doc)
     run_id = str(run_res.inserted_id)
+
+    # Email delivery v0: if recipients configured, enqueue email_outbox job
+    recipients = [r.strip() for r in (policy.get("recipients") or []) if r and "@" in r]
+    emailed = False
+    emailed_to: list[str] | None = None
+    if recipients:
+        from app.services.email_outbox import enqueue_generic_email  # local import to avoid cycles
+
+        subject = f"[Exports] {run_doc['type']} ({key}) — {now.date().isoformat()}"
+
+        # Build download path (no absolute base here; ops can prepend public base URL)
+        download_path = f"/api/admin/exports/runs/{run_id}/download"
+
+        text_body = (
+            f"Syroce match risk export hazir\n"
+            f"Org: {org_id}\n"
+            f"Policy: {key}\n"
+            f"Rows: {len(rows)}\n"
+            f"Size: {size_bytes} bytes\n"
+            f"Generated at: {now.isoformat()}\n"
+            f"Download: {download_path}\n"
+        )
+        html_body = (
+            f"<h2>Match Risk Export Hazır</h2>"
+            f"<p><strong>Org:</strong> {org_id}</p>"
+            f"<p><strong>Policy:</strong> {key}</p>"
+            f"<p><strong>Rows:</strong> {len(rows)}</p>"
+            f"<p><strong>Size:</strong> {size_bytes} bytes</p>"
+            f"<p><strong>Generated at:</strong> {now.isoformat()}</p>"
+            f"<p><a href=\"{download_path}\">CSV indir</a></p>"
+        )
+
+        outbox_id = await enqueue_generic_email(
+            db,
+            organization_id=org_id,
+            to_addresses=recipients,
+            subject=subject,
+            html_body=html_body,
+            text_body=text_body,
+            event_type="exports.ready",
+        )
+        emailed = True
+        emailed_to = recipients
+
+        await db.export_runs.update_one(
+            {"_id": run_res.inserted_id},
+            {"$set": {"email": {"queued": True, "to": recipients, "outbox_id": outbox_id}}},
+        )
 
     return ExportRunResult(
         ok=True,
@@ -288,6 +337,8 @@ async def run_export(
         rows=len(rows),
         estimated_size_bytes=size_bytes,
         run_id=run_id,
+        emailed=emailed,
+        emailed_to=emailed_to,
     )
 
 

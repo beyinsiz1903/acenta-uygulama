@@ -544,6 +544,11 @@ export default function AgencyCrmFollowupsPage() {
                       <span>Today: {s.due_today ?? 0}</span>
                       <span>Overdue: {s.overdue ?? 0}</span>
                       <span>Next due: {formatDateTr(s.next_due_date)}</span>
+                      {s.next_task_title ? (
+                        <span className="truncate max-w-[180px]">
+                          Görev: {s.next_task_title}
+                        </span>
+                      ) : null}
                     </div>
 
                     {s.last_touch_summary || s.last_touch_at ? (

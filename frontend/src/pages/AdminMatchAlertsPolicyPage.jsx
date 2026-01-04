@@ -274,18 +274,58 @@ export default function AdminMatchAlertsPolicyPage() {
               </p>
             </div>
 
-            <div className="space-y-1 opacity-60">
-              <label htmlFor="webhook-url" className="text-sm font-medium">
-                Webhook URL (v1)
-              </label>
+            <div className="space-y-1">
+              <div className="flex items-center justify-between">
+                <label htmlFor="webhook-url" className="text-sm font-medium">
+                  Webhook URL
+                </label>
+                <div className="flex items-center gap-2 text-xs">
+                  <span>Enable webhook</span>
+                  <Switch
+                    checked={policy.webhook_enabled}
+                    onCheckedChange={(val) =>
+                      setPolicy((prev) => ({ ...prev, webhook_enabled: Boolean(val) }))
+                    }
+                    data-testid="match-alerts-webhook-enabled"
+                  />
+                </div>
+              </div>
               <Input
                 id="webhook-url"
                 value={policy.webhook_url || ""}
-                disabled
-                readOnly
+                onChange={(e) =>
+                  setPolicy((prev) => ({
+                    ...prev,
+                    webhook_url: e.target.value,
+                  }))
+                }
+                placeholder="https://hooks.slack.com/..."
+                data-testid="match-alerts-webhook-url"
               />
               <p className="text-xs text-muted-foreground">
-                Webhook entegrasyonları bir sonraki sürümde eklenecektir.
+                Webhook URL boş veya disabled ise webhook gönderilmez. Örn: Slack/Discord/Teams incoming webhook.
+              </p>
+            </div>
+
+            <div className="space-y-1">
+              <label htmlFor="webhook-secret" className="text-sm font-medium">
+                Webhook Secret (opsiyonel)
+              </label>
+              <Input
+                id="webhook-secret"
+                type="password"
+                value={policy.webhook_secret || ""}
+                onChange={(e) =>
+                  setPolicy((prev) => ({
+                    ...prev,
+                    webhook_secret: e.target.value || null,
+                  }))
+                }
+                placeholder="İmza için gizli anahtar"
+                data-testid="match-alerts-webhook-secret"
+              />
+              <p className="text-xs text-muted-foreground">
+                Belirtilirse, payload imzalanır ve X-Syroce-Signature header’ında sha256=<hmac> olarak gönderilir.
               </p>
             </div>
           </div>

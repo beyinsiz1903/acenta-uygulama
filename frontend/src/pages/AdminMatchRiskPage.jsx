@@ -305,6 +305,7 @@ export default function AdminMatchRiskPage() {
                 setTo(today);
                 setGroupBy("pair");
                 setMinMatches(5);
+                setOnlyHighRisk(false);
                 void loadSummary();
               }}
               disabled={loading}

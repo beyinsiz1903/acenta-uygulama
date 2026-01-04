@@ -65,6 +65,9 @@ from app.routers.crm_hotel_notes import router as crm_hotel_notes_router
 from app.routers.crm_hotel_tasks import router as crm_hotel_tasks_router
 from app.routers.crm_actions import router as crm_actions_router
 from app.routers.agency_users import router as agency_users_router
+from app.routers.match_outcomes import router as match_outcomes_router
+from app.routers.match_risk_reports import router as match_risk_reports_router
+
 
 
 from app.routers.crm_followups import router as crm_followups_router
@@ -158,6 +161,8 @@ app.include_router(crm_hotel_tasks_router)
 app.include_router(crm_followups_router)
 app.include_router(crm_actions_router)
 app.include_router(agency_users_router)
+app.include_router(match_outcomes_router)
+app.include_router(match_risk_reports_router)
 
 if os.getenv("ENABLE_DEV_ROUTERS") == "true":
     app.include_router(dev_tools_router)

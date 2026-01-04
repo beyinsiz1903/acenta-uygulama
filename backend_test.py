@@ -12794,6 +12794,499 @@ class AlertingV0DeliveriesTester:
         return 0 if self.tests_failed == 0 else 1
 
 
+class ExportsV0BackendTester:
+    """Test Exports v0 backend functionality for match_risk_summary CSV exports"""
+    
+    def __init__(self, base_url="https://risk-dashboard-26.preview.emergentagent.com"):
+        self.base_url = base_url
+        self.admin_token = None
+        self.agency_token = None
+        self.hotel_token = None
+        self.tests_run = 0
+        self.tests_passed = 0
+        self.tests_failed = 0
+        self.failed_tests = []
+        
+        # Store IDs for testing
+        self.policy_key = "match_risk_daily"
+        self.run_id = None
+
+    def log(self, msg):
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}")
+
+    def run_test(self, name, method, endpoint, expected_status, data=None, headers_override=None, token=None):
+        """Run a single API test with specific token"""
+        url = f"{self.base_url}/{endpoint}"
+        headers = headers_override or {'Content-Type': 'application/json'}
+        
+        # Use specific token if provided
+        if token:
+            headers['Authorization'] = f'Bearer {token}'
+        elif self.admin_token and not headers_override:
+            headers['Authorization'] = f'Bearer {self.admin_token}'
+
+        self.tests_run += 1
+        self.log(f"🔍 Test #{self.tests_run}: {name}")
+        
+        try:
+            if method == 'GET':
+                response = requests.get(url, headers=headers, timeout=10)
+            elif method == 'POST':
+                response = requests.post(url, json=data, headers=headers, timeout=10)
+            elif method == 'PUT':
+                response = requests.put(url, json=data, headers=headers, timeout=10)
+            elif method == 'DELETE':
+                response = requests.delete(url, headers=headers, timeout=10)
+            else:
+                raise ValueError(f"Unsupported method: {method}")
+
+            success = response.status_code == expected_status
+            if success:
+                self.tests_passed += 1
+                self.log(f"✅ PASSED - Status: {response.status_code}")
+                try:
+                    return True, response.json() if response.content else {}
+                except:
+                    return True, response.text if hasattr(response, 'text') else {}
+            else:
+                self.tests_failed += 1
+                self.failed_tests.append(f"{name} - Expected {expected_status}, got {response.status_code}")
+                self.log(f"❌ FAILED - Expected {expected_status}, got {response.status_code}")
+                try:
+                    self.log(f"   Response: {response.text[:200]}")
+                except:
+                    pass
+                return False, {}
+
+        except Exception as e:
+            self.tests_failed += 1
+            self.failed_tests.append(f"{name} - Error: {str(e)}")
+            self.log(f"❌ FAILED - Error: {str(e)}")
+            return False, {}
+
+    def test_admin_login(self):
+        """1) Test admin login with super_admin role"""
+        self.log("\n=== 1) AUTH & RBAC ===")
+        success, response = self.run_test(
+            "Admin Login (admin@acenta.test/admin123)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "admin@acenta.test", "password": "admin123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.admin_token = response['access_token']
+            user = response.get('user', {})
+            roles = user.get('roles', [])
+            
+            if 'admin' in roles or 'super_admin' in roles:
+                self.log(f"✅ Admin login successful - roles: {roles}")
+                return True
+            else:
+                self.log(f"❌ Missing admin/super_admin role: {roles}")
+                return False
+        return False
+
+    def test_agency_hotel_access_denied(self):
+        """Test that agency/hotel users cannot access exports endpoints"""
+        self.log("\n--- Agency/Hotel Access Control ---")
+        
+        # Test agency user access
+        success, response = self.run_test(
+            "Agency Login (agency1@demo.test/agency123)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "agency1@demo.test", "password": "agency123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        
+        if success and 'access_token' in response:
+            self.agency_token = response['access_token']
+            self.log("✅ Agency login successful")
+            
+            # Try to access exports with agency token
+            success, response = self.run_test(
+                "Agency Access to Exports (Should be 403)",
+                "GET",
+                "api/admin/exports/policies",
+                403,
+                token=self.agency_token
+            )
+            if success:
+                self.log("✅ Agency correctly denied access (403 Forbidden)")
+            else:
+                return False
+        
+        # Test hotel user access
+        success, response = self.run_test(
+            "Hotel Login (hoteladmin@acenta.test/admin123)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "hoteladmin@acenta.test", "password": "admin123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        
+        if success and 'access_token' in response:
+            self.hotel_token = response['access_token']
+            self.log("✅ Hotel login successful")
+            
+            # Try to access exports with hotel token
+            success, response = self.run_test(
+                "Hotel Access to Exports (Should be 403)",
+                "GET",
+                "api/admin/exports/policies",
+                403,
+                token=self.hotel_token
+            )
+            if success:
+                self.log("✅ Hotel correctly denied access (403 Forbidden)")
+                return True
+            else:
+                return False
+        
+        return False
+
+    def test_policy_crud(self):
+        """2) Test policy CRUD operations"""
+        self.log("\n=== 2) POLICY CRUD ===")
+        
+        # Create/Update policy
+        policy_data = {
+            "key": self.policy_key,
+            "enabled": True,
+            "type": "match_risk_summary",
+            "format": "csv",
+            "schedule_hint": "daily 09:00",
+            "recipients": [],
+            "cooldown_hours": 24,
+            "params": {
+                "days": 30,
+                "min_matches": 1,
+                "only_high_risk": False
+            }
+        }
+        
+        success, response = self.run_test(
+            f"PUT /api/admin/exports/policies/{self.policy_key}",
+            "PUT",
+            f"api/admin/exports/policies/{self.policy_key}",
+            200,
+            data=policy_data
+        )
+        
+        if success:
+            # Verify response structure
+            required_fields = ['key', 'enabled', 'type', 'format', 'schedule_hint', 'recipients', 'cooldown_hours', 'params']
+            missing_fields = [field for field in required_fields if field not in response]
+            
+            if not missing_fields:
+                if (response.get('key') == self.policy_key and 
+                    response.get('enabled') == True and
+                    response.get('type') == 'match_risk_summary' and
+                    response.get('format') == 'csv'):
+                    self.log(f"✅ Policy created/updated successfully: {response.get('key')}")
+                else:
+                    self.log(f"❌ Policy data mismatch: {response}")
+                    return False
+            else:
+                self.log(f"❌ Missing required fields in response: {missing_fields}")
+                return False
+        else:
+            return False
+        
+        # List policies to verify it appears
+        success, response = self.run_test(
+            "GET /api/admin/exports/policies",
+            "GET",
+            "api/admin/exports/policies",
+            200
+        )
+        
+        if success:
+            items = response.get('items', [])
+            policy_found = any(item.get('key') == self.policy_key for item in items)
+            
+            if policy_found:
+                self.log(f"✅ Policy found in list: {self.policy_key}")
+                return True
+            else:
+                self.log(f"❌ Policy not found in list: {self.policy_key}")
+                return False
+        
+        return False
+
+    def test_run_dry(self):
+        """3) Test dry run functionality"""
+        self.log("\n=== 3) RUN DRY ===")
+        
+        success, response = self.run_test(
+            f"POST /api/admin/exports/run?key={self.policy_key}&dry_run=1",
+            "POST",
+            f"api/admin/exports/run?key={self.policy_key}&dry_run=1",
+            200
+        )
+        
+        if success:
+            # Verify dry run response structure
+            required_fields = ['ok', 'dry_run', 'policy_key', 'rows', 'estimated_size_bytes']
+            missing_fields = [field for field in required_fields if field not in response]
+            
+            if not missing_fields:
+                if (response.get('ok') == True and 
+                    response.get('dry_run') == True and
+                    response.get('policy_key') == self.policy_key and
+                    isinstance(response.get('rows'), int) and response.get('rows') >= 0 and
+                    isinstance(response.get('estimated_size_bytes'), int) and response.get('estimated_size_bytes') >= 0):
+                    self.log(f"✅ Dry run successful: rows={response.get('rows')}, size={response.get('estimated_size_bytes')} bytes")
+                    return True
+                else:
+                    self.log(f"❌ Invalid dry run response values: {response}")
+                    return False
+            else:
+                self.log(f"❌ Missing required fields in dry run response: {missing_fields}")
+                return False
+        
+        return False
+
+    def test_run_now(self):
+        """4) Test actual export run"""
+        self.log("\n=== 4) RUN NOW ===")
+        
+        success, response = self.run_test(
+            f"POST /api/admin/exports/run?key={self.policy_key}&dry_run=0",
+            "POST",
+            f"api/admin/exports/run?key={self.policy_key}&dry_run=0",
+            200
+        )
+        
+        if success:
+            # Verify run response structure
+            required_fields = ['ok', 'dry_run', 'policy_key', 'rows', 'estimated_size_bytes', 'run_id']
+            missing_fields = [field for field in required_fields if field not in response]
+            
+            if not missing_fields:
+                if (response.get('ok') == True and 
+                    response.get('dry_run') == False and
+                    response.get('policy_key') == self.policy_key and
+                    isinstance(response.get('rows'), int) and response.get('rows') >= 0 and
+                    isinstance(response.get('estimated_size_bytes'), int) and response.get('estimated_size_bytes') >= 0 and
+                    response.get('run_id')):
+                    self.run_id = response.get('run_id')
+                    self.log(f"✅ Export run successful: run_id={self.run_id}, rows={response.get('rows')}")
+                    return True
+                else:
+                    self.log(f"❌ Invalid run response values: {response}")
+                    return False
+            else:
+                self.log(f"❌ Missing required fields in run response: {missing_fields}")
+                return False
+        
+        return False
+
+    def test_cooldown(self):
+        """5) Test cooldown mechanism"""
+        self.log("\n=== 5) COOLDOWN ===")
+        
+        # Try to run again immediately - should get 409 EXPORT_COOLDOWN_ACTIVE
+        success, response = self.run_test(
+            f"POST /api/admin/exports/run?key={self.policy_key}&dry_run=0 (Should be 409)",
+            "POST",
+            f"api/admin/exports/run?key={self.policy_key}&dry_run=0",
+            409
+        )
+        
+        if success:
+            self.log("✅ Cooldown mechanism working - 409 EXPORT_COOLDOWN_ACTIVE returned")
+            return True
+        else:
+            self.log("❌ Cooldown mechanism not working - should return 409")
+            return False
+
+    def test_archive_list(self):
+        """6) Test archive list functionality"""
+        self.log("\n=== 6) ARCHIVE LIST ===")
+        
+        success, response = self.run_test(
+            f"GET /api/admin/exports/runs?key={self.policy_key}&limit=10",
+            "GET",
+            f"api/admin/exports/runs?key={self.policy_key}&limit=10",
+            200
+        )
+        
+        if success:
+            items = response.get('items', [])
+            
+            if items:
+                # Find our run in the list
+                our_run = None
+                for item in items:
+                    if item.get('id') == self.run_id:
+                        our_run = item
+                        break
+                
+                if our_run:
+                    # Verify run item structure
+                    required_fields = ['id', 'policy_key', 'type', 'format', 'status', 'generated_at', 'size_bytes', 'filename']
+                    missing_fields = [field for field in required_fields if field not in our_run]
+                    
+                    if not missing_fields:
+                        if (our_run.get('policy_key') == self.policy_key and
+                            our_run.get('type') == 'match_risk_summary' and
+                            our_run.get('format') == 'csv' and
+                            our_run.get('status') == 'ready'):
+                            self.log(f"✅ Run found in archive list: {our_run.get('id')}")
+                            return True
+                        else:
+                            self.log(f"❌ Run data mismatch in archive: {our_run}")
+                            return False
+                    else:
+                        self.log(f"❌ Missing required fields in run item: {missing_fields}")
+                        return False
+                else:
+                    self.log(f"❌ Our run {self.run_id} not found in archive list")
+                    return False
+            else:
+                self.log("❌ No runs found in archive list")
+                return False
+        
+        return False
+
+    def test_download(self):
+        """7) Test download functionality"""
+        self.log("\n=== 7) DOWNLOAD ===")
+        
+        if not self.run_id:
+            self.log("⚠️  No run_id available for download test")
+            return False
+        
+        # Test download endpoint
+        url = f"{self.base_url}/api/admin/exports/runs/{self.run_id}/download"
+        headers = {'Authorization': f'Bearer {self.admin_token}'}
+        
+        self.tests_run += 1
+        self.log(f"🔍 Test #{self.tests_run}: GET /api/admin/exports/runs/{self.run_id}/download")
+        
+        try:
+            response = requests.get(url, headers=headers, timeout=10)
+            
+            if response.status_code == 200:
+                self.tests_passed += 1
+                
+                # Check Content-Type
+                content_type = response.headers.get('content-type', '')
+                if 'text/csv' in content_type:
+                    self.log(f"✅ Correct Content-Type: {content_type}")
+                else:
+                    self.log(f"❌ Wrong Content-Type: {content_type}")
+                    return False
+                
+                # Check Content-Disposition header
+                content_disposition = response.headers.get('content-disposition', '')
+                if 'filename' in content_disposition:
+                    self.log(f"✅ Content-Disposition header contains filename: {content_disposition}")
+                else:
+                    self.log(f"❌ Content-Disposition header missing filename: {content_disposition}")
+                    return False
+                
+                # Check CSV content
+                csv_content = response.text
+                if csv_content and 'match_id' in csv_content:
+                    lines = csv_content.strip().split('\n')
+                    if len(lines) >= 1:  # At least header
+                        header = lines[0]
+                        expected_columns = ['match_id', 'agency_id', 'hotel_id']
+                        if all(col in header for col in expected_columns):
+                            self.log(f"✅ CSV content valid - {len(lines)} lines, header: {header[:100]}...")
+                            return True
+                        else:
+                            self.log(f"❌ CSV header missing expected columns: {header}")
+                            return False
+                    else:
+                        self.log(f"❌ CSV content too short: {len(lines)} lines")
+                        return False
+                else:
+                    self.log(f"❌ Invalid CSV content: {csv_content[:100]}...")
+                    return False
+            else:
+                self.tests_failed += 1
+                self.failed_tests.append(f"Download - Expected 200, got {response.status_code}")
+                self.log(f"❌ FAILED - Status: {response.status_code}")
+                try:
+                    self.log(f"   Response: {response.text[:200]}")
+                except:
+                    pass
+                return False
+                
+        except Exception as e:
+            self.tests_failed += 1
+            self.failed_tests.append(f"Download - Error: {str(e)}")
+            self.log(f"❌ FAILED - Error: {str(e)}")
+            return False
+
+    def print_summary(self):
+        """Print test summary"""
+        self.log("\n" + "="*60)
+        self.log("EXPORTS V0 BACKEND TEST SUMMARY")
+        self.log("="*60)
+        self.log(f"Total Tests: {self.tests_run}")
+        self.log(f"✅ Passed: {self.tests_passed}")
+        self.log(f"❌ Failed: {self.tests_failed}")
+        self.log(f"Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%")
+        
+        if self.failed_tests:
+            self.log("\n❌ FAILED TESTS:")
+            for i, test in enumerate(self.failed_tests, 1):
+                self.log(f"  {i}. {test}")
+        
+        self.log("="*60)
+
+    def run_exports_v0_tests(self):
+        """Run all Exports v0 tests in sequence"""
+        self.log("🚀 Starting Exports v0 Backend Tests")
+        self.log(f"Base URL: {self.base_url}")
+        
+        # 1) Auth & RBAC
+        if not self.test_admin_login():
+            self.log("❌ Admin login failed - stopping tests")
+            self.print_summary()
+            return 1
+        
+        if not self.test_agency_hotel_access_denied():
+            self.log("❌ Access control test failed")
+        
+        # 2) Policy CRUD
+        if not self.test_policy_crud():
+            self.log("❌ Policy CRUD failed")
+        
+        # 3) Run dry
+        if not self.test_run_dry():
+            self.log("❌ Dry run test failed")
+        
+        # 4) Run now
+        if not self.test_run_now():
+            self.log("❌ Run now test failed")
+        
+        # 5) Cooldown
+        if not self.test_cooldown():
+            self.log("❌ Cooldown test failed")
+        
+        # 6) Archive list
+        if not self.test_archive_list():
+            self.log("❌ Archive list test failed")
+        
+        # 7) Download
+        if not self.test_download():
+            self.log("❌ Download test failed")
+
+        # Summary
+        self.print_summary()
+
+        return 0 if self.tests_failed == 0 else 1
+
+
 def main():
     if len(sys.argv) > 1:
         if sys.argv[1] == "faz5":

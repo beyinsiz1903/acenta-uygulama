@@ -260,6 +260,10 @@ async def run_export(
     sha256 = hashlib.sha256(csv_str.encode("utf-8")).hexdigest()
     filename = f"match-risk_{org_id}_{now.date().isoformat()}.csv"
 
+    # Signed download token v0
+    download_token = secrets.token_urlsafe(32)
+    expires_at = now + timedelta(days=7)
+
     run_doc = {
         "organization_id": org_id,
         "policy_key": key,
@@ -279,6 +283,10 @@ async def run_export(
         "storage": {
             "mode": "mongo",
             "blob_id": blob_id,
+        },
+        "download": {
+            "token": download_token,
+            "expires_at": expires_at,
         },
         "email": None,
     }

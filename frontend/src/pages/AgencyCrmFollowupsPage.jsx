@@ -151,8 +151,25 @@ export default function AgencyCrmFollowupsPage() {
     return Number.isFinite(n) ? n : null;
   }, [idlePreset]);
 
+  function isActionable(it) {
+    const s = it?.signals || {};
+    const r = it?.suggested_action?.reason;
+    return (
+      r === "callback" ||
+      r === "overdue" ||
+      r === "due_today" ||
+      (typeof s.idle_days === "number" && s.idle_days >= 7)
+    );
+  }
+
   const filteredItems = useMemo(() => {
-    return (items || []).filter((it) => {
+    let base = items || [];
+
+    if (actionableOnly) {
+      base = base.filter((it) => isActionable(it));
+    }
+
+    return base.filter((it) => {
       const s = it.signals || {};
       const idle = typeof s.idle_days === "number" ? s.idle_days : null;
       const overdue = Number(s.overdue || 0);

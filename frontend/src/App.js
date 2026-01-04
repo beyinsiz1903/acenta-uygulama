@@ -15,6 +15,7 @@ import AdminAuditLogsPage from "./pages/AdminAuditLogsPage";
 import AdminEmailLogsPage from "./pages/AdminEmailLogsPage";
 import AdminPilotDashboardPage from "./pages/AdminPilotDashboardPage";
 import AdminMetricsPage from "./pages/AdminMetricsPage";
+import AdminMatchRiskPage from "./pages/AdminMatchRiskPage";
 import AgencyHotelsPage from "./pages/AgencyHotelsPage";
 import AgencyCatalogHotelsPage from "./pages/AgencyCatalogHotelsPage";
 import AgencyCatalogProductsPage from "./pages/AgencyCatalogProductsPage";
@@ -92,6 +93,7 @@ function App() {
             <Route path="email-logs" element={<AdminEmailLogsPage />} />
             <Route path="pilot-dashboard" element={<AdminPilotDashboardPage />} />
             <Route path="metrics" element={<AdminMetricsPage />} />
+            <Route path="reports/match-risk" element={<AdminMatchRiskPage />} />
           </Route>
         </Route>
 

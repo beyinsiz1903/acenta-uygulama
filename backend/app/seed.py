@@ -187,10 +187,23 @@ async def ensure_seed_data() -> None:
     await db.match_alert_policies.create_index([
         ("organization_id", 1)
     ], unique=True)
+    # Update match_alert_deliveries indexes to be channel-aware
+    # Drop old unique index (organization_id, match_id, fingerprint) if it exists
+    try:
+        indexes = await db.match_alert_deliveries.index_information()
+        for name, info in indexes.items():
+            keys = info.get("key") or []
+            if keys == [("organization_id", 1), ("match_id", 1), ("fingerprint", 1)]:
+                await db.match_alert_deliveries.drop_index(name)
+    except Exception:
+        # Best-effort; if anything fails we don't want seed to crash
+        pass
+
     await db.match_alert_deliveries.create_index([
         ("organization_id", 1),
         ("match_id", 1),
         ("fingerprint", 1),
+        ("channel", 1),
     ], unique=True)
     await db.match_alert_deliveries.create_index([
         ("organization_id", 1),

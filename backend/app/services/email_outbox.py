@@ -106,7 +106,7 @@ async def enqueue_generic_email(
     html_body: str,
     text_body: str | None = None,
     event_type: str = "generic",
-) -> None:
+) -> str | None:
     """Create a generic email_outbox job (non-booking specific).
 
     Used for alerts/notifications where we don't have a booking_id.

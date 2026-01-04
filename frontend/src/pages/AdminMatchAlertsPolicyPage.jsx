@@ -1,0 +1,399 @@
+import React, { useEffect, useState } from "react";
+import { api, apiErrorMessage } from "../lib/api";
+import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/card";
+import { Switch } from "../components/ui/switch";
+import { Input } from "../components/ui/input";
+import { Button } from "../components/ui/button";
+import { Loader2, AlertCircle } from "lucide-react";
+
+export default function AdminMatchAlertsPolicyPage() {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [runLoading, setRunLoading] = useState(false);
+  const [policy, setPolicy] = useState({
+    enabled: true,
+    threshold_not_arrived_rate: 0.5,
+    threshold_repeat_not_arrived_7: 3,
+    min_matches_total: 5,
+    cooldown_hours: 24,
+    email_recipients: [],
+    webhook_url: null,
+  });
+  const [recipientsInput, setRecipientsInput] = useState("");
+  const [runParams, setRunParams] = useState({ days: 30, min_total: 5 });
+  const [runResult, setRunResult] = useState(null);
+
+  const loadPolicy = async () => {
+    try {
+      setLoading(true);
+      setError("");
+      const resp = await api.get("/admin/match-alerts/policy");
+      const p = resp.data?.policy || {};
+      setPolicy(p);
+      setRecipientsInput((p.email_recipients || []).join(", "));
+    } catch (e) {
+      console.error("Match alerts policy fetch failed", e);
+      setError(apiErrorMessage(e));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadPolicy();
+  }, []);
+
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      setError("");
+      const recipients = recipientsInput
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+
+      const payload = {
+        ...policy,
+        email_recipients: recipients.length ? recipients : null,
+      };
+
+      await api.put("/admin/match-alerts/policy", payload);
+      await loadPolicy();
+    } catch (e) {
+      console.error("Match alerts policy save failed", e);
+      setError(apiErrorMessage(e));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleReset = async () => {
+    setRunResult(null);
+    await loadPolicy();
+  };
+
+  const handleDryRun = async () => {
+    try {
+      setRunLoading(true);
+      setError("");
+      setRunResult(null);
+      const resp = await api.post("/admin/match-alerts/run", null, {
+        params: {
+          days: runParams.days,
+          min_total: runParams.min_total,
+          dry_run: 1,
+        },
+      });
+      setRunResult(resp.data || null);
+    } catch (e) {
+      console.error("Match alerts dry run failed", e);
+      setError(apiErrorMessage(e));
+    } finally {
+      setRunLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div
+        className="flex items-center justify-center h-96"
+        data-testid="admin-match-alerts-policy-page"
+      >
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6" data-testid="admin-match-alerts-policy-page">
+      <div>
+        <h1 className="text-2xl font-bold text-foreground">Match Alerts Policy</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Match, konaklama gerçekleştiği anlamına gelmez; sadece acenta–otel eşleşmesi (pair) için risk sinyallerini
+          özetler. Bu sayfa, yüksek riskli eşleşmeler için email alert davranışını kontrol etmenizi sağlar. Webhook
+          entegrasyonları v1 ile gelecektir.
+        </p>
+      </div>
+
+      {error && (
+        <div className="flex items-center gap-2 text-destructive text-sm">
+          <AlertCircle className="h-4 w-4" />
+          <span>{error}</span>
+        </div>
+      )}
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Policy</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <div className="text-sm font-medium">Alerting aktif</div>
+              <p className="text-xs text-muted-foreground">
+                Enabled kapalıysa, hiçbir eşleşme için email alert üretilmez.
+              </p>
+            </div>
+            <Switch
+              checked={policy.enabled}
+              onCheckedChange={(val) => setPolicy((prev) => ({ ...prev, enabled: Boolean(val) }))}
+              data-testid="match-alerts-enabled"
+            />
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-1">
+              <label htmlFor="threshold-rate" className="text-sm font-medium">
+                Not-arrived / cancel rate eşiği
+              </label>
+              <Input
+                id="threshold-rate"
+                type="number"
+                step="0.05"
+                min="0"
+                max="1"
+                value={policy.threshold_not_arrived_rate}
+                onChange={(e) =>
+                  setPolicy((prev) => ({
+                    ...prev,
+                    threshold_not_arrived_rate: parseFloat(e.target.value || "0"),
+                  }))
+                }
+                data-testid="match-alerts-threshold-rate"
+              />
+              <p className="text-xs text-muted-foreground">
+                0–1 arası oran. Örneğin 0.5 → %50 ve üzeri iptal/not-arrived oranı için alert üret.
+              </p>
+            </div>
+
+            <div className="space-y-1">
+              <label htmlFor="min-matches" className="text-sm font-medium">
+                Minimum eşleşme sayısı
+              </label>
+              <Input
+                id="min-matches"
+                type="number"
+                min="1"
+                value={policy.min_matches_total}
+                onChange={(e) =>
+                  setPolicy((prev) => ({
+                    ...prev,
+                    min_matches_total: parseInt(e.target.value || "1", 10),
+                  }))
+                }
+                data-testid="match-alerts-min-matches"
+              />
+              <p className="text-xs text-muted-foreground">
+                Belirtilen dönem içinde toplam eşleşme sayısı bu değerden küçükse alert üretilmez.
+              </p>
+            </div>
+
+            <div className="space-y-1">
+              <label htmlFor="cooldown-hours" className="text-sm font-medium">
+                Cooldown (saat)
+              </label>
+              <Input
+                id="cooldown-hours"
+                type="number"
+                min="1"
+                max="168"
+                value={policy.cooldown_hours}
+                onChange={(e) =>
+                  setPolicy((prev) => ({
+                    ...prev,
+                    cooldown_hours: parseInt(e.target.value || "1", 10),
+                  }))
+                }
+                data-testid="match-alerts-cooldown"
+              />
+              <p className="text-xs text-muted-foreground">
+                Aynı match ve config için yeni alert üretmeden önce beklenecek minimum süre.
+              </p>
+            </div>
+
+            <div className="space-y-1">
+              <label htmlFor="recipients" className="text-sm font-medium">
+                Email recipients
+              </label>
+              <Input
+                id="recipients"
+                placeholder="alerts@acenta.test, ops@acenta.test"
+                value={recipientsInput}
+                onChange={(e) => setRecipientsInput(e.target.value)}
+                data-testid="match-alerts-recipients"
+              />
+              <p className="text-xs text-muted-foreground">
+                Virgülle ayrılmış email listesi. Boş bırakırsan varsayılan olarak kendi email adresin kullanılır.
+              </p>
+            </div>
+
+            <div className="space-y-1">
+              <label htmlFor="repeat-threshold" className="text-sm font-medium">
+                Repeat not-arrived (v1 placeholder)
+              </label>
+              <Input
+                id="repeat-threshold"
+                type="number"
+                min="0"
+                value={policy.threshold_repeat_not_arrived_7}
+                onChange={(e) =>
+                  setPolicy((prev) => ({
+                    ...prev,
+                    threshold_repeat_not_arrived_7: parseInt(e.target.value || "0", 10),
+                  }))
+                }
+              />
+              <p className="text-xs text-muted-foreground">
+                Şimdilik sadece config olarak saklanır; v1 ile aktif hale gelecektir.
+              </p>
+            </div>
+
+            <div className="space-y-1 opacity-60">
+              <label htmlFor="webhook-url" className="text-sm font-medium">
+                Webhook URL (v1)
+              </label>
+              <Input
+                id="webhook-url"
+                value={policy.webhook_url || ""}
+                disabled
+                readOnly
+              />
+              <p className="text-xs text-muted-foreground">
+                Webhook entegrasyonları bir sonraki sürümde eklenecektir.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 mt-4">
+            <Button
+              onClick={handleSave}
+              disabled={saving}
+              data-testid="match-alerts-save"
+            >
+              {saving ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Kaydediliyor...
+                </>
+              ) : (
+                "Kaydet"
+              )}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleReset}
+              data-testid="match-alerts-reset"
+            >
+              Varsayılanlara dön
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Dry Run</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Dry run ile mevcut policy’e göre hangi eşleşmelerin alert tetikleyeceğini görebilirsin. Gerçek email
+            gönderimi yapılmaz.
+          </p>
+
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="space-y-1">
+              <label htmlFor="run-days" className="text-sm font-medium">
+                Gün (days)
+              </label>
+              <Input
+                id="run-days"
+                type="number"
+                min="1"
+                max="365"
+                value={runParams.days}
+                onChange={(e) =>
+                  setRunParams((prev) => ({ ...prev, days: parseInt(e.target.value || "1", 10) }))
+                }
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label htmlFor="run-min-total" className="text-sm font-medium">
+                Min matches
+              </label>
+              <Input
+                id="run-min-total"
+                type="number"
+                min="1"
+                value={runParams.min_total}
+                onChange={(e) =>
+                  setRunParams((prev) => ({ ...prev, min_total: parseInt(e.target.value || "1", 10) }))
+                }
+              />
+            </div>
+          </div>
+
+          <Button
+            type="button"
+            onClick={handleDryRun}
+            disabled={runLoading}
+            data-testid="match-alerts-dry-run"
+          >
+            {runLoading ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Çalıştırılıyor...
+              </>
+            ) : (
+              "Dry Run Çalıştır"
+            )}
+          </Button>
+
+          {runResult && (
+            <div className="mt-4 space-y-2" data-testid="match-alerts-dry-table">
+              <div className="text-sm">
+                <span className="font-medium">Evaluated:</span> {runResult.evaluated_count} ·
+                <span className="font-medium ml-2">Triggered:</span> {runResult.triggered_count} ·
+                <span className="font-medium ml-2">Sent:</span> {runResult.sent_count} ·
+                <span className="font-medium ml-2">Failed:</span> {runResult.failed_count}
+              </div>
+
+              {(!runResult.items || runResult.items.length === 0) ? (
+                <p className="text-sm text-muted-foreground">
+                  Bu parametrelerle alert tetikleyen eşleşme bulunamadı.
+                </p>
+              ) : (
+                <div className="overflow-x-auto mt-2">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b text-left text-xs text-muted-foreground">
+                        <th className="py-1 pr-2">Match ID</th>
+                        <th className="py-1 pr-2">Acenta</th>
+                        <th className="py-1 pr-2">Otel</th>
+                        <th className="py-1 pr-2 text-right">Toplam</th>
+                        <th className="py-1 pr-2 text-right">Cancel rate</th>
+                        <th className="py-1 pr-2">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {runResult.items.slice(0, 20).map((item) => (
+                        <tr key={item.match_id} className="border-b last:border-0">
+                          <td className="py-1 pr-2 font-mono text-xs">{item.match_id}</td>
+                          <td className="py-1 pr-2">{item.agency_name || item.agency_id}</td>
+                          <td className="py-1 pr-2">{item.hotel_name || item.hotel_id}</td>
+                          <td className="py-1 pr-2 text-right">{item.total_bookings}</td>
+                          <td className="py-1 pr-2 text-right">{(item.cancel_rate * 100).toFixed(1)}%</td>
+                          <td className="py-1 pr-2">{item.action_status || "none"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

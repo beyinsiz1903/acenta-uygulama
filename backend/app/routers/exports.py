@@ -360,6 +360,7 @@ async def list_runs(
     items: list[ExportRunItem] = []
     for d in docs:
         file_info = d.get("file") or {}
+        email_info = d.get("email") or {}
         items.append(
             ExportRunItem(
                 id=str(d.get("_id")),
@@ -372,6 +373,7 @@ async def list_runs(
                 size_bytes=int(file_info.get("size_bytes") or 0),
                 filename=file_info.get("filename") or "export.csv",
                 sha256=file_info.get("sha256"),
+                emailed=bool(email_info.get("queued")) if email_info else None,
             )
         )
     return ExportRunsResponse(ok=True, items=items)

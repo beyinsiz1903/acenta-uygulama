@@ -338,7 +338,6 @@ export default function AdminMatchRiskPage() {
                                 </p>
                               </TooltipContent>
                             </Tooltip>
-                          </TooltipProvider>
                         ) : null}
                         <span className="font-medium truncate max-w-[260px]">{groupLabel}</span>
                       </div>

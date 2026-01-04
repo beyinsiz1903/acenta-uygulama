@@ -1,166 +1,187 @@
 <analysis>**original_problem_statement:**
-The user's goal is to build an advanced travel platform named Syroce. The current development focuses on implementing features in distinct sprints and modules.
+The user wants to add features to a B2B/B2C tourism platform to achieve parity with a reference application called Agentis. The application is for travel agencies and hotels to manage reservations, products, and financials.
 
-**PRODUCT REQUIREMENTS (Summary from User):**
-- **Vision**: A unified platform for B2B2C travel sales, where agencies sell hotels and tours, and hotels manage inventory.
-- **Sprint-A & B**: Completed, delivering a Tours feature and a public tour reservation request system.
-- **Sprint-C**: A series of UI/UX improvements for the tours feature.
-    - **C1 (Gallery)**: Completed. A gallery/lightbox for tour detail images.
-    - **C2 (Filters)**: Completed. Search and filter functionality for the agency's tour bookings page.
-    - **C3 (Detail Page)**: Completed. A detail page for individual tour booking requests, with actions and internal notes. A Playwright test was added for this.
-- **Modül-1 (Offline Payment)**: A repair sprint to harden the offline IBAN payment workflow. This has been split:
-    - **Part 1 (Meta/Prepare)**: Implement backend logic to prepare offline payment details (IBAN snapshot, reference code) and generate voucher metadata. (This part is now complete).
-    - **Part 2 (PDF Generation)**: Implement a public endpoint to generate a PDF voucher with the offline payment details. (This is the current in-progress task).
-- **Bug/UX Fixes**:
-    - A critical bug causing a white screen on the hotel booking page () was reported and fixed.
-    - A user request to change text-based date inputs to  pickers was implemented.
+**PRODUCT REQUIREMENTS:**
 
-**User's preferred language**: Turkish (Türkçe)
+The initial high-priority (P0) features requested were:
+-   **Mutabakat (Settlement):** A complete workflow for financial reconciliation between agencies and hotels.
+-   **Komisyon hesaplama (Commission calculation):** Calculating agency commissions based on gross booking prices.
+-   **Voucher:** Generating and managing booking vouchers.
+
+Subsequent user requests detailed the following sprints and features:
+1.  **Financial Parity Sprint:**
+    -   Commission Model: Hotel-based percentage, calculated at booking time and stored in a .
+    -   Self-Billing: Generate an informational PDF statement (not a legal invoice) with a disclaimer. KDV (VAT) is out of scope for v1.
+    -   Payment Status: A manual, booking-based status (, , ).
+    -   Financial Summaries & Reports for both agencies and hotels.
+2.  **Operations & Documents Sprint:**
+    -   **Seed Data:** Create a  endpoint to seed the database with realistic bookings, agencies, and hotels for demo purposes.
+    -   **Voucher Parity:** Enhance voucher functionality to include PDF download, email sending, and a separate self-billing PDF endpoint, all under a consistent  URI scheme.
+    -   **Settlement Workflow:** Implement a full status lifecycle (, , , , ) with  and  actions available in the UI for both agency and hotel users.
+3.  **CRM v1 Sprint:**
+    -   **Backend:** Implement MongoDB collections and FastAPI routers for , , and . Enforce strict RBAC and data ownership rules.
+    -   **Frontend:** Integrate the CRM as three tabs (**Kişiler**, **Notlar**, **Görevler**) into the . Agency users can view contacts and manage notes/tasks related to a hotel.
+
+**User's preferred language**: Turkish
 
 **what currently exists?**
-The application is a full-stack solution (React/FastAPI/MongoDB).
-1.  **Core Features**: Sprints A, B, and C are complete. This includes a full tour creation, public reservation request, and agency management flow with a detail gallery, filters, and a dedicated detail page.
-2.  **Repo Structure**: The project structure has been cleaned up; symlinks have been removed, and all code now resides directly under  and .
-3.  **Bug Fixes & UX**: A critical React Hooks bug in  has been resolved. Date inputs on public booking pages now use the native browser date picker.
-4.  **Offline Payment (Part 1 - Meta)**: The backend is ready to handle offline payment preparation.
-    -   New endpoints () allow agencies to configure their IBAN details.
-    -   The  endpoint idempotently adds  (with IBAN snapshot, due date, reference code) and  (with , ) metadata to tour booking documents. This part is functionally complete and tested.
+The application is a comprehensive tourism management platform built on the FARM stack (FastAPI, React, MongoDB). The agent has successfully implemented a suite of financial features, bringing the app to Agentis parity in that domain.
+
+This includes:
+-   A complete settlement workflow with UI for both agencies and hotels to confirm/dispute reconciliations, protected by robust Role-Based Access Control (RBAC) and ownership checks.
+-   Voucher and self-billing PDF generation and email functionalities, accessible via standardized API endpoints.
+-   Development endpoints to seed the database with users, bookings, and settlements, facilitating testing and demos.
+-   The backend for a new CRM module (Contacts, Notes, Tasks) is complete.
+-   The frontend for the CRM Notes and Tasks tabs has been implemented and integrated into the .
 
 **Last working item**:
--   **Last item agent was working**: Implementing **Modül-3.0: Tour Voucher PDF Stabilization**. The agent created a new, separate PDF renderer for tours () to avoid conflicts with the existing hotel voucher system. A new router () was also created for the public endpoint. However, the final integration is failing. The agent's tests of the  endpoint are returning a  or a  error, indicating that the endpoint is either not correctly registered or the renderer is still failing.
--   **Status**: IN PROGRESS
--   **Agent Testing Done**: N (Agent's tests are failing).
--   **Which testing method agent to use?**: backend testing agent. The agent must first debug the  endpoint using . After fixing the backend, the frontend button that opens this URL should be tested.
--   **User Testing Done**: N
+-   **Last item agent was working:** The agent was tasked with completing the CRM sprint by implementing the frontend for the Contacts (Kişiler) tab. The user provided the complete code for the  component and the necessary patch to integrate it into . The agent has acknowledged this and prepared to implement it.
+-   **Status:** IN PROGRESS
+-   **Agent Testing Done:** N
+-   **Which testing method agent to use?** Frontend testing agent. After creating and integrating , the agent should run the smoke test checklist provided by the user to verify functionality (list rendering, actions, search).
+-   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
--   **Issue 1: (P0) Tour Voucher PDF endpoint is not working.**
-    -   **Description**: The endpoint  returns a  or  error instead of generating a PDF. The data preparation part (creating  and ) is working, but the public endpoint itself is broken.
-    -   **Attempted fixes**: The agent correctly identified the need for a separate renderer and created  and . The idempotency logic in  was fixed to ensure  is always created. The final step of integrating the new router and ensuring it uses the new renderer seems to have failed.
-    -   **Next debug checklist**:
-        1.  Verify that  from  is correctly included in . The last attempt to edit this file failed.
-        2.  Inside , confirm the router prefix is .
-        3.  Add logging inside the  endpoint to confirm it's being hit and receiving the  correctly.
-        4.  Log the database document found to ensure the lookup by  is successful.
-        5.  Ensure the endpoint is calling the new  function from , not the old hotel voucher renderer.
-    -   **Why fix this issue and what will be achieved with the fix?**: This will complete the PDF generation feature, a key part of the Modül-1 sprint, allowing agencies to provide professional-looking vouchers with payment instructions to their customers.
-    -   **Status**: IN PROGRESS
-    -   **Is recurring issue?**: Y
-    -   **Should Test frontend/backend/both after fix?**: Both.
-    -   **Blocked on other issue**: None.
+-   **Issue 1: (P1) Self-billing PDF is missing the required disclaimer text.**
+    -   **Description:** The user requires the text Bu belge bilgi amaçlıdır, resmi fatura yerine geçmez. (This document is for informational purposes only, it does not replace an official invoice) on all self-billing PDFs. The agent acknowledged this but it has not been implemented.
+    -   **Next debug checklist:**
+        1.  Locate the PDF generation logic, likely in .
+        2.  Modify the function (e.g., ) to accept a flag or parameter like .
+        3.  When this flag is true, add the disclaimer text to the PDF canvas, likely using 's  method.
+        4.  Ensure the  endpoint in  calls the PDF generator with this flag.
+    -   **Why fix this issue and what will be achieved with the fix?** To meet a specific product requirement and ensure legal clarity for the generated documents.
+    -   **Status:** NOT STARTED
+    -   **Is recurring issue?** N
+    -   **Should Test frontend/backend/both after fix?** Backend. Verify by downloading the PDF and checking its content.
 
 **In progress Task List**:
--   **Task 1: (P0) Modül-3.0: Tour Voucher PDF Stabilization**
-    -   **Where to resume**: Debugging the  endpoint. The primary focus should be on ensuring the new router is correctly registered in  and that it uses the new, dedicated tour PDF renderer.
-    -   **What will be achieved with this?**: A working, publicly accessible PDF voucher for tour bookings that includes all necessary payment and reservation details.
-    -   **Status**: IN PROGRESS
-    -   **Should Test frontend/backend/both after fix?**: Both
-    -   **Blocked on something**: The 404/500 error on the endpoint.
+-   **Task 1: (P0) Complete the CRM v1 Implementation**
+    -   **Description:** The final step of the CRM v1 sprint is to implement the frontend for the Contacts tab.
+    -   **Where to resume:**
+        1.  Create the file  with the full code provided by the user in Chat Message 433.
+        2.  Apply the patch to  to import and render this new component within the   block, also provided in Chat Message 433.
+        3.  Run the smoke test checklist from the user message to ensure the tab lists contacts correctly and the action buttons (Call, WhatsApp, Email, Copy) are functional.
+    -   **What will be achieved with this?** This will complete the CRM v1 sprint, providing full functionality for Contacts, Notes, and Tasks in the agency hotel detail view.
+    -   **Status:** IN PROGRESS
+    -   **Should Test frontend/backend/both after fix?** Frontend. Manual smoke test or frontend testing agent.
+    -   **Blocked on something:** No.
 
 **Upcoming and Future Tasks**
-*   **Upcoming Tasks**:
-    *   **P1: Paid İşaretleme UX’i (Mark as Paid UX)**: Implement the UI and backend logic for marking offline payments as paid. This includes role-based permissions, audit trails (who/when), and UI updates.
-    *   **P2: Voucher Security (HMAC Token)**: Secure the public PDF voucher URL with a short-lived token () to prevent unauthorized access and enumeration.
-*   **Future Tasks**:
-    *   **Modül-2**: Stripe integration for online payments.
-    *   **Modül-4**: Resend integration for emailing vouchers.
-    *   **Refactoring**: Standardize all API error responses to the  format. Create a dedicated  endpoint to optimize .
-    *   **Phase 3+**: Implement ARI History & Compare UI and integrate with real channel managers like Expedia or Etstur.
+-   **Upcoming Tasks:**
+    -   **(P1) Perform Negative RBAC Tests for CRM Tasks:** Run a  suite to formally prove the double lock for the Tasks module, specifically:
+        -    agent cannot create a task for  if there's no link.
+        -    agent cannot toggle the status of a task assigned to another agent.
+    -   **(P2) Create DB Indexes for CRM Collections:** In a suitable startup script or directly, create the recommended MongoDB indexes for , , and  to ensure performance.
+-   **Future Tasks:**
+    -   **(P2) Agency CRM File Attachments:** Extend the CRM (likely the Notes module) to support file uploads ().
+    -   **(P2) Allotment / Release Feature:** Implement the allotment/release management features as mentioned in the initial problem statement.
+    -   **(P2) Agency Reports Enhancement:** Further enhancements to agency reports.
 
 **Completed work in this session**
--   **Repo Structure**: Fixed symlinks and moved code from  to , stabilizing the project environment.
--   **Sprint-C (Full)**:
-    -   **C1**: Implemented a gallery/lightbox for tour images on .
-    -   **C2**: Added client-side search and date filters to the .
-    -   **C3**: Created the  with backend endpoints for details and internal notes. Added a Playwright test for this flow.
--   **Bug Fix**: Resolved a critical React Hooks rendering bug in .
--   **UX Improvement**: Replaced text inputs with  pickers on the .
--   **Modül-1 (Part 1 - Meta)**:
-    -   Created backend endpoints () and a UI page () for managing offline payment settings.
-    -   Implemented the  backend logic to idempotently generate and store  and  metadata on tour booking documents.
+-   **Financial Features & Settlement Workflow:**
+    -   Implemented commission calculation, payment status tracking, and financial snapshots on bookings.
+    -   Created a complete settlement lifecycle (//) with a dedicated UI on both  and , secured by robust RBAC checks.
+-   **Voucher & Document Management:**
+    -   Standardized voucher and self-billing PDF generation/emailing under the  endpoint.
+-   **CRM v1 (Backend & Partial Frontend):**
+    -   Created backend routers and services for Contacts, Notes, and Tasks ().
+    -   Implemented the Notes and Tasks tabs on the frontend (, ) and integrated them into .
+-   **Development Infrastructure:**
+    -   Added seed endpoints for bookings, settlements, and users to facilitate testing.
+    -   Conducted multiple rounds of testing with  to verify features and RBAC rules.
 
 **Earlier issues found/mentioned but not fixed**
-None.
+-   **Issue 1: Self-billing PDF is missing the required disclaimer text.**
+    -   **Debug checklist:** See All Pending/In progress Issue list.
+    -   **Why to solve this issue and what will be achieved with this?** To fulfill a specific user requirement for informational documents.
+    -   **Should Test frontend/backend/both after fix:** Backend.
+    -   **Is recurring issue?** N
 
 **Known issue recurrence from previous fork**
-None.
+-   N/A
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-*   **Backend**: FastAPI, Asynchronous Python, Pydantic, Motor (MongoDB).
-*   **Frontend**: React, Tailwind CSS, shadcn/ui, , Axios.
-*   **PDF Generation**:  library with embedded  font for Turkish character support.
-*   **API Design**: Standardized error responses (), idempotent endpoints.
+-   **Backend:** FastAPI, MongoDB (using ), Pydantic models for validation, and JWT for authentication.
+-   **Frontend:** React, , ,  for API calls,  for the component library, and  for toast notifications.
+-   **Architecture:** A robust API-driven architecture with a strict separation of concerns.
+-   **Security:** Strong emphasis on a double-lock RBAC system, checking for both user role and data ownership (, , ) on the backend for every sensitive operation.
 
 **key DB schema**
--   **tour_booking_requests**: (MODIFIED) Enhanced with  and  sub-documents.
-    -   
-    -   
--   **agency_payment_settings**: (NEW) 
+-   **booking_financial_entries:** 
+-   **hotel_contacts:** 
+-   **hotel_crm_notes:** 
+-   **hotel_crm_tasks:** 
 
 **changes in tech stack**
--   The  library is now a core part of the PDF generation flow, with a focus on embedding custom fonts () to ensure proper character rendering.
+-   None.
 
 **All files of reference**
--   : **NEW**. The router for the public PDF endpoint. Currently the source of the 404/500 error.
--   : **NEW**. The dedicated PDF renderer for tours. Needs to be correctly called by the router.
--   : **MODIFIED**. Contains the core logic for , now correctly creating voucher metadata.
--   : **MODIFIED**. Needs to correctly include the . This is a likely point of failure.
--   : **MODIFIED**. A Voucher PDF button needs to be added and tested here once the backend is fixed.
--   : **NEW**. Page for agencies to configure their offline payment details.
--   : **MODIFIED**. The Playwright test was updated and is passing for the C3 flow.
+-   : **To be created.** This file will contain the UI for the CRM Contacts tab.
+-   : **To be updated.** This page hosts the CRM tabs and needs to be patched to include the new .
+-   : The backend router that serves the data for the Contacts tab.
+-   : This service needs to be updated to add the disclaimer to the self-billing PDF.
 
 **Areas that need refactoring**:
--   The API error format needs to be standardized across all modules, not just the new payment-related ones.
--   The  would benefit from a dedicated  endpoint to avoid fetching the entire list of tours.
+-   The user suggested creating a shared helper function (e.g., ) to standardize the 403 vs. 404 responses for RBAC/ownership checks across different modules, reducing code duplication.
 
 **key api endpoints**
--   : **(IN PROGRESS/BROKEN)** The endpoint for fetching the tour voucher PDF.
--   : (WORKING) Idempotently prepares a tour booking for offline payment.
--   : (WORKING) Manages agency-specific offline payment configurations.
+-   , 
+-   , 
+-   , 
+-   
+-   
+-   
+-   , 
 
 **Critical Info for New Agent**
--   The current task is a micro-sprint: **Modül-3.0: Tour Voucher PDF Stabilization**.
--   The previous sprint segment (Offline Payment metadata preparation) is **DONE**. The  endpoint correctly adds  and  data to tour bookings.
--   The immediate blocker is the  endpoint, which returns 404/500. You must fix this.
--   The root cause is likely that  is not correctly included in , or the router is not correctly calling the new  service.
--   Do not touch the existing hotel voucher system (, ). The fix must be isolated to the new tour-specific files (, ).
+-   The user is highly technical and provides sprint-like, non-negotiable instructions. Follow them precisely and report back in the requested format.
+-   RBAC is the most critical aspect of the application. Every endpoint that modifies or exposes data must perform a double-lock check: 1) Organization scope, 2) Data ownership (agency/hotel). The user will likely ask you to prove this with negative tests.
+-   The project has dev endpoints for seeding data (). Use them to create test data before running tests or verifying UI functionality. These are enabled by  and require  role.
 
 **documents and test reports created in this job**
--    (updated for C3).
+-   
+-   
+-   
+-   
+-   
+-   
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User:** Asks for date pickers instead of manual entry in the reservation screen.
-2.  **Agent:** Implements date pickers for the .
-3.  **User:** Shows a screenshot where date pickers are still missing.
-4.  **Agent:** Clarifies the change was made on a different page and asks for the URL of the screen in the screenshot.
-5.  **User:** Asks for clarification on the difference between Onaylı (Confirmed) and Talep (Pending) booking statuses.
-6.  **Agent:** Explains the workflow difference: Talep is a request awaiting hotel approval, while Onaylı is a direct, confirmed booking that requires prior commercial agreement with the hotel.
-7.  **User:** Confirms understanding and asks to continue with updates.
-8.  **Agent:** Acknowledges and plans to proceed with the Modül-1 Repair sprint.
-9.  **User:** Confirms the plan for Modül-1, clarifying permissions and priorities.
-10. **Agent:** Starts implementing the backend part of Modül-1 (payment settings and the  endpoint).
+10.  **Request:** Start the Contacts sprint. User provided the full code for  and the patch for . **Status:** Pending implementation.
+9.  **Request:** Provided the  instance usage pattern. **Status:** Completed.
+8.  **Request:** Asked for the API usage pattern to provide the Tasks tab code. **Status:** Completed.
+7.  **Summary:** Agent reported that the Tasks tab hardening fixes were done and confirmed readiness for the Contacts sprint. **Status:** Completed.
+6.  **Request:** Harden the Tasks tab list parsing. **Status:** Completed.
+5.  **Summary:** Agent reported Tasks tab implementation was complete. **Status:** Completed.
+4.  **Request:** Provided full code for  and . **Status:** Completed.
+3.  **Request:** Asked for API usage pattern to provide Tasks tab code. **Status:** Completed.
+2.  **Request:** Confirmed the agent's plan for the Tasks tab and provided the next steps. **Status:** Completed.
+1.  **Summary:** Agent reported that hardening fixes for the Notes tab were done and confirmed readiness for the Tasks tab. **Status:** Completed.
 
 **Project Health Check:**
-*   **Broken**: The tour voucher PDF generation ().
-*   **Working**: Core tour features (Sprint A, B, C), hotel booking search (bug fixed), and the backend logic for preparing offline payment metadata.
-*   **Mocked**:  provider.
+-   **Broken:** None identified.
+-   **Mocked:** No mocked data. Seeding endpoints are used for generating test data.
 
 **3rd Party Integrations**
--   **reportlab**: Used for PDF generation. The agent has configured it to use  fonts for proper Turkish character support.
+-   The application appears to use Amazon SES for emails, as  is mentioned, but no explicit integration details were discussed.
 
 **Testing status**
--   **Testing agent used after significant changes**: YES (for backend endpoints, though the last one failed).
--   **Troubleshoot agent used after agent stuck in loop**: NO
--   **Test files created**:  (New Page),  (New Router),  (New Service),  (New Router).
--   **Known regressions**: None.
+-   **Testing agent used after significant changes:** YES. Used extensively for settlement and RBAC features.
+-   **Troubleshoot agent used after agent stuck in loop:** NO.
+-   **Test files created:** None manually. All automated tests were run by .
+-   **Known regressions:** None.
 
 **Credentials to test flow:**
-*   **Agency**:  / 
-*   **Hotel Admin**:  / 
-*   **Super Admin**:  / 
+Use the dev seed endpoints to create users with specific roles and data.
+-   Create a super admin, agency admin, and hotel admin.
+-   Example: 
+-   Use  to create test data for the settlement pages.
 
 **What agent forgot to execute**
-The agent has not successfully completed the PDF generation sprint. The final integration step of making the  endpoint work remains unfinished, despite creating all the necessary component files. The agent needs to focus on debugging the routing and service invocation for this endpoint.</analysis>
+-   **Implement the Contacts Tab Frontend:** The user provided the complete code for  and the integration patch, but the agent has not yet created the file or applied the patch. This is the highest priority pending task.
+-   **Add Disclaimer to Self-Billing PDF:** This product requirement was acknowledged but never implemented.
+-   **Create DB Indexes for CRM:** Acknowledged as a pending optimization.
+-   **Run Negative RBAC Tests for Tasks:** The user requested this as a kanıt paketi (proof package), but it has not been done yet.</analysis>

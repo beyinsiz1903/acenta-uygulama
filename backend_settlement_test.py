@@ -8,7 +8,7 @@ import sys
 from datetime import datetime
 
 class SyroceSettlementTester:
-    def __init__(self, base_url="https://uygulama-bilgi.preview.emergentagent.com"):
+    def __init__(self, base_url="https://settlehub.preview.emergentagent.com"):
         self.base_url = base_url
         self.agency_token = None
         self.hotel_token = None

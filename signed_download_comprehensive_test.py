@@ -105,8 +105,9 @@ class SignedDownloadComprehensiveTest:
         """1) Run export and inspect export_runs doc for download field"""
         self.log("\n=== 1) RUN EXPORT AND INSPECT DOWNLOAD FIELD ===")
         
-        # Use existing policy match_risk_daily with recipients
-        self.policy_key = "match_risk_daily"
+        # Use a unique policy key to avoid cooldown
+        import time
+        self.policy_key = f"match_risk_daily_{int(time.time())}"
         
         # First, set up the policy with recipients
         policy_data = {

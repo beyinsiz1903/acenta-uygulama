@@ -504,8 +504,11 @@ export default function AdminMatchRiskPage() {
                               ) : null}
                             </div>
                           </td>
-                          <td className="py-2 px-2">
-                            <div className="font-mono text-[11px] truncate max-w-[160px]">
+                          <td className="py-2 px-2 text-xs">
+                            <div className="truncate max-w-[260px]">
+                              {hotelLabel(fromId)} → {hotelLabel(toId)}
+                            </div>
+                            <div className="text-[10px] text-muted-foreground font-mono">
                               {fromId} → {toId}
                             </div>
                           </td>

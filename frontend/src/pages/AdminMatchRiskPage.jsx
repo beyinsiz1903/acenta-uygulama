@@ -370,7 +370,9 @@ export default function AdminMatchRiskPage() {
                         ) : null}
                         <span className="font-medium truncate max-w-[260px]">{groupLabel}</span>
                       </div>
-                      <div className="text-[11px] text-muted-foreground">group_by: {groupBy}</div>
+                      <div className="text-[11px] text-muted-foreground">
+                        group_by: {groupBy}
+                      </div>
                     </td>
                     <td className="py-2 px-2 font-medium">{row.matches_total}</td>
                     <td className="py-2 px-2 text-xs">

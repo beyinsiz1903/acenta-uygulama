@@ -251,9 +251,6 @@ export default function AdminMatchRiskPage() {
     downloadCsv(`match-risk_${groupBy}_${safeFrom}_to_${safeTo}.csv`, lines);
   }
 
-    }
-  }
-
   useEffect(() => {
     void loadHotelsMap();
     void loadSummary();

@@ -178,8 +178,9 @@ async def create_crm_task(payload: CrmTaskCreateIn, user=Depends(get_current_use
     dependencies=[Depends(require_roles(["agency_admin", "agency_agent", "super_admin"]))],
 )
 async def complete_crm_task(task_id: str, user=Depends(get_current_user), db=Depends(get_db)):
+    role = user.get("role")
     roles = set(user.get("roles") or [])
-    if {"hotel_admin", "hotel_staff"} & roles:
+    if role in {"hotel_admin", "hotel_staff"} or {"hotel_admin", "hotel_staff"} & roles:
         raise HTTPException(status_code=403, detail="FORBIDDEN")
 
     task = await _assert_own_task(db, user, task_id)

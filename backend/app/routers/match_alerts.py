@@ -189,7 +189,7 @@ async def _send_alert_email(
     from app.services.email_outbox import enqueue_generic_email  # local import to avoid cycles
 
     if not recipients:
-        return
+        return ""
 
     subject = f"[MatchRisk] High risk detected for {item.hotel_name or item.hotel_id}"
 

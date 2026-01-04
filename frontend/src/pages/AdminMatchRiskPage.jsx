@@ -238,6 +238,16 @@ export default function AdminMatchRiskPage() {
               <span>-</span>
               <input
                 type="date"
+            <label className="inline-flex items-center gap-2 text-xs">
+              <input
+                type="checkbox"
+                checked={onlyHighRisk}
+                onChange={(e) => setOnlyHighRisk(e.target.checked)}
+                data-testid="match-risk-only-high-toggle"
+              />
+              Sadece yüksek risk (≥ %50)
+            </label>
+
                 className="h-8 rounded-md border bg-background px-2 text-xs"
                 value={to}
                 onChange={(e) => setTo(e.target.value)}

@@ -101,13 +101,17 @@ class MatchOutcomesRiskTester:
             200,
             token=self.super_admin_token
         )
-        if success and 'items' in response:
-            hotels = response['items']
+        if success:
+            self.log(f"   Response keys: {list(response.keys())}")
+            hotels = response.get('items', response.get('hotels', []))
+            self.log(f"   Found {len(hotels)} hotels")
             if len(hotels) >= 2:
-                self.hotel1_id = hotels[0]['id']
-                self.hotel2_id = hotels[1]['id']
+                self.hotel1_id = hotels[0].get('id', hotels[0].get('_id'))
+                self.hotel2_id = hotels[1].get('id', hotels[1].get('_id'))
                 self.log(f"✅ Found hotels - hotel1: {self.hotel1_id}, hotel2: {self.hotel2_id}")
                 return True
+            else:
+                self.log(f"❌ Not enough hotels found: {len(hotels)}")
         return False
 
     def test_create_hotel_users(self):

@@ -11805,6 +11805,490 @@ class AlertingV0Tester:
         return 0 if self.tests_failed == 0 else 1
 
 
+class AlertingV0DeliveriesTester:
+    def __init__(self, base_url="https://risk-dashboard-26.preview.emergentagent.com"):
+        self.base_url = base_url
+        self.super_admin_token = None
+        self.agency_token = None
+        self.hotel_token = None
+        self.tests_run = 0
+        self.tests_passed = 0
+        self.tests_failed = 0
+        self.failed_tests = []
+
+    def log(self, msg):
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}")
+
+    def run_test(self, name, method, endpoint, expected_status, data=None, headers_override=None, token=None):
+        """Run a single API test with specific token"""
+        url = f"{self.base_url}/{endpoint}"
+        headers = headers_override or {'Content-Type': 'application/json'}
+        
+        # Use specific token if provided
+        if token:
+            headers['Authorization'] = f'Bearer {token}'
+        elif self.super_admin_token and not headers_override:
+            headers['Authorization'] = f'Bearer {self.super_admin_token}'
+
+        self.tests_run += 1
+        self.log(f"🔍 Test #{self.tests_run}: {name}")
+        
+        try:
+            if method == 'GET':
+                response = requests.get(url, headers=headers, timeout=10)
+            elif method == 'POST':
+                response = requests.post(url, json=data, headers=headers, timeout=10)
+            elif method == 'PUT':
+                response = requests.put(url, json=data, headers=headers, timeout=10)
+            elif method == 'DELETE':
+                response = requests.delete(url, headers=headers, timeout=10)
+            else:
+                raise ValueError(f"Unsupported method: {method}")
+
+            success = response.status_code == expected_status
+            if success:
+                self.tests_passed += 1
+                self.log(f"✅ PASSED - Status: {response.status_code}")
+                try:
+                    return True, response.json() if response.content else {}
+                except:
+                    return True, {}
+            else:
+                self.tests_failed += 1
+                self.failed_tests.append(f"{name} - Expected {expected_status}, got {response.status_code}")
+                self.log(f"❌ FAILED - Expected {expected_status}, got {response.status_code}")
+                try:
+                    self.log(f"   Response: {response.text[:200]}")
+                except:
+                    pass
+                return False, {}
+
+        except Exception as e:
+            self.tests_failed += 1
+            self.failed_tests.append(f"{name} - Error: {str(e)}")
+            self.log(f"❌ FAILED - Error: {str(e)}")
+            return False, {}
+
+    def test_super_admin_login(self):
+        """1) Auth: admin@acenta.test / admin123 ile login → token al"""
+        self.log("\n=== 1) AUTH & RBAC ===")
+        success, response = self.run_test(
+            "Super Admin Login (admin@acenta.test/admin123)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "admin@acenta.test", "password": "admin123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.super_admin_token = response['access_token']
+            user = response.get('user', {})
+            roles = user.get('roles', [])
+            
+            if 'admin' in roles or 'super_admin' in roles:
+                self.log(f"✅ Super admin login successful - roles: {roles}")
+                return True
+            else:
+                self.log(f"❌ Missing admin/super_admin role: {roles}")
+                return False
+        return False
+
+    def test_agency_login(self):
+        """Agency login for RBAC testing"""
+        success, response = self.run_test(
+            "Agency Login (agency1@demo.test/agency123)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "agency1@demo.test", "password": "agency123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.agency_token = response['access_token']
+            self.log(f"✅ Agency login successful")
+            return True
+        return False
+
+    def test_hotel_login(self):
+        """Hotel login for RBAC testing"""
+        success, response = self.run_test(
+            "Hotel Login (hoteladmin@acenta.test/admin123)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "hoteladmin@acenta.test", "password": "admin123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.hotel_token = response['access_token']
+            self.log(f"✅ Hotel login successful")
+            return True
+        return False
+
+    def test_deliveries_rbac_agency_forbidden(self):
+        """Agency kullanıcıları deliveries endpointine erişim dene → 403 Forbidden olmalı"""
+        self.log("\n--- RBAC: Agency Access to Deliveries (Should be 403) ---")
+        
+        success, response = self.run_test(
+            "Agency Access to GET /api/admin/match-alerts/deliveries (Should be 403)",
+            "GET",
+            "api/admin/match-alerts/deliveries?limit=50&status=all",
+            403,
+            token=self.agency_token
+        )
+        
+        return success
+
+    def test_deliveries_rbac_hotel_forbidden(self):
+        """Hotel kullanıcıları deliveries endpointine erişim dene → 403 Forbidden olmalı"""
+        self.log("\n--- RBAC: Hotel Access to Deliveries (Should be 403) ---")
+        
+        success, response = self.run_test(
+            "Hotel Access to GET /api/admin/match-alerts/deliveries (Should be 403)",
+            "GET",
+            "api/admin/match-alerts/deliveries?limit=50&status=all",
+            403,
+            token=self.hotel_token
+        )
+        
+        return success
+
+    def test_deliveries_empty_state(self):
+        """2) Boş state: Yeni bir org veya hiç alert çalışmamışsa GET /api/admin/match-alerts/deliveries → 200, ok=true, items boş liste"""
+        self.log("\n=== 2) DELIVERIES EMPTY STATE ===")
+        
+        success, response = self.run_test(
+            "GET /api/admin/match-alerts/deliveries?limit=50&status=all (Empty State)",
+            "GET",
+            "api/admin/match-alerts/deliveries?limit=50&status=all",
+            200,
+            token=self.super_admin_token
+        )
+        
+        if success:
+            ok = response.get('ok')
+            items = response.get('items', [])
+            
+            if ok is True:
+                self.log(f"✅ ok=true (correct)")
+            else:
+                self.log(f"❌ ok={ok} (expected true)")
+                return False
+            
+            if isinstance(items, list):
+                self.log(f"✅ items is list with {len(items)} entries")
+                return True
+            else:
+                self.log(f"❌ items is not a list: {type(items)}")
+                return False
+        
+        return False
+
+    def test_deliveries_with_sent_records(self):
+        """3) Sent kayıtları: Policy'yi düşük threshold ile ayarla, alert üret, deliveries'da gör"""
+        self.log("\n=== 3) DELIVERIES WITH SENT RECORDS ===")
+        
+        # First set policy with very low thresholds
+        policy_data = {
+            "enabled": True,
+            "threshold_not_arrived_rate": 0.01,  # Very low threshold
+            "threshold_repeat_not_arrived_7": 1,
+            "min_matches_total": 1,
+            "cooldown_hours": 1,
+            "email_recipients": ["test@acenta.test"]
+        }
+        
+        success, response = self.run_test(
+            "PUT /api/admin/match-alerts/policy (Low Thresholds)",
+            "PUT",
+            "api/admin/match-alerts/policy",
+            200,
+            data=policy_data,
+            token=self.super_admin_token
+        )
+        
+        if not success:
+            return False
+        
+        self.log("✅ Policy set with low thresholds")
+        
+        # Run alerts with dry_run=0 to generate actual deliveries
+        success, response = self.run_test(
+            "POST /api/admin/match-alerts/run?days=30&min_total=1&dry_run=0",
+            "POST",
+            "api/admin/match-alerts/run?days=30&min_total=1&dry_run=0",
+            200,
+            token=self.super_admin_token
+        )
+        
+        if not success:
+            return False
+        
+        triggered_count = response.get('triggered_count', 0)
+        sent_count = response.get('sent_count', 0)
+        
+        self.log(f"✅ Alert run completed - triggered: {triggered_count}, sent: {sent_count}")
+        
+        if triggered_count == 0:
+            self.log("⚠️  No alerts triggered - may be normal if no matches meet criteria")
+            return True
+        
+        # Check deliveries endpoint
+        success, response = self.run_test(
+            "GET /api/admin/match-alerts/deliveries?limit=50&status=all (After Alert Run)",
+            "GET",
+            "api/admin/match-alerts/deliveries?limit=50&status=all",
+            200,
+            token=self.super_admin_token
+        )
+        
+        if success:
+            items = response.get('items', [])
+            
+            if len(items) > 0:
+                self.log(f"✅ Found {len(items)} delivery records")
+                
+                # Check first delivery record structure
+                first_item = items[0]
+                required_fields = ['match_id', 'channel', 'status', 'fingerprint', 'sent_at']
+                
+                all_fields_present = True
+                for field in required_fields:
+                    if field in first_item:
+                        self.log(f"✅ {field}: {first_item[field]}")
+                    else:
+                        self.log(f"❌ Missing field: {field}")
+                        all_fields_present = False
+                
+                return all_fields_present
+            else:
+                self.log(f"⚠️  No delivery records found (sent_count was {sent_count})")
+                return sent_count == 0  # OK if nothing was actually sent
+        
+        return False
+
+    def test_deliveries_status_filter(self):
+        """4) Status filtresi: sent ve failed kayıtları ayrı ayrı filtrele"""
+        self.log("\n=== 4) DELIVERIES STATUS FILTER ===")
+        
+        # Test status=sent filter
+        success, response = self.run_test(
+            "GET /api/admin/match-alerts/deliveries?status=sent",
+            "GET",
+            "api/admin/match-alerts/deliveries?status=sent",
+            200,
+            token=self.super_admin_token
+        )
+        
+        if not success:
+            return False
+        
+        sent_items = response.get('items', [])
+        self.log(f"✅ status=sent returned {len(sent_items)} items")
+        
+        # Verify all items have status=sent
+        for item in sent_items:
+            if item.get('status') != 'sent':
+                self.log(f"❌ Found non-sent item in sent filter: {item.get('status')}")
+                return False
+        
+        if sent_items:
+            self.log(f"✅ All items have status=sent")
+        
+        # Test status=failed filter
+        success, response = self.run_test(
+            "GET /api/admin/match-alerts/deliveries?status=failed",
+            "GET",
+            "api/admin/match-alerts/deliveries?status=failed",
+            200,
+            token=self.super_admin_token
+        )
+        
+        if not success:
+            return False
+        
+        failed_items = response.get('items', [])
+        self.log(f"✅ status=failed returned {len(failed_items)} items")
+        
+        # Verify all items have status=failed
+        for item in failed_items:
+            if item.get('status') != 'failed':
+                self.log(f"❌ Found non-failed item in failed filter: {item.get('status')}")
+                return False
+        
+        if failed_items:
+            self.log(f"✅ All items have status=failed")
+        
+        return True
+
+    def test_deliveries_match_id_filter(self):
+        """5) match_id filtresi: Belirli bir match_id için kayıtları filtrele"""
+        self.log("\n=== 5) DELIVERIES MATCH_ID FILTER ===")
+        
+        # First get all deliveries to find a match_id
+        success, response = self.run_test(
+            "GET /api/admin/match-alerts/deliveries?limit=50&status=all (Get match_id)",
+            "GET",
+            "api/admin/match-alerts/deliveries?limit=50&status=all",
+            200,
+            token=self.super_admin_token
+        )
+        
+        if not success:
+            return False
+        
+        items = response.get('items', [])
+        if not items:
+            self.log("⚠️  No delivery records found for match_id filter test")
+            return True  # OK if no records exist
+        
+        test_match_id = items[0].get('match_id')
+        if not test_match_id:
+            self.log("❌ No match_id found in first delivery record")
+            return False
+        
+        self.log(f"✅ Using match_id for filter test: {test_match_id}")
+        
+        # Test match_id filter
+        success, response = self.run_test(
+            f"GET /api/admin/match-alerts/deliveries?match_id={test_match_id}",
+            "GET",
+            f"api/admin/match-alerts/deliveries?match_id={test_match_id}",
+            200,
+            token=self.super_admin_token
+        )
+        
+        if not success:
+            return False
+        
+        filtered_items = response.get('items', [])
+        self.log(f"✅ match_id filter returned {len(filtered_items)} items")
+        
+        # Verify all items have the correct match_id
+        for item in filtered_items:
+            if item.get('match_id') != test_match_id:
+                self.log(f"❌ Found wrong match_id in filter: {item.get('match_id')} (expected {test_match_id})")
+                return False
+        
+        if filtered_items:
+            self.log(f"✅ All items have correct match_id: {test_match_id}")
+        
+        return True
+
+    def test_deliveries_sorting(self):
+        """6) Sıralama: sent_at'e göre desc sıralama kontrolü"""
+        self.log("\n=== 6) DELIVERIES SORTING ===")
+        
+        success, response = self.run_test(
+            "GET /api/admin/match-alerts/deliveries?limit=50&status=all (Check Sorting)",
+            "GET",
+            "api/admin/match-alerts/deliveries?limit=50&status=all",
+            200,
+            token=self.super_admin_token
+        )
+        
+        if not success:
+            return False
+        
+        items = response.get('items', [])
+        
+        if len(items) < 2:
+            self.log(f"⚠️  Only {len(items)} delivery records found - cannot verify sorting")
+            return True  # OK if not enough records to test sorting
+        
+        # Check if items are sorted by sent_at desc
+        from datetime import datetime
+        
+        previous_sent_at = None
+        all_sorted = True
+        
+        for i, item in enumerate(items):
+            sent_at_str = item.get('sent_at')
+            if not sent_at_str:
+                self.log(f"❌ Item {i} missing sent_at field")
+                return False
+            
+            try:
+                # Parse ISO datetime
+                sent_at = datetime.fromisoformat(sent_at_str.replace('Z', '+00:00'))
+                
+                if previous_sent_at is not None:
+                    if sent_at > previous_sent_at:
+                        self.log(f"❌ Sorting error at item {i}: {sent_at} > {previous_sent_at} (should be desc)")
+                        all_sorted = False
+                        break
+                
+                previous_sent_at = sent_at
+                
+            except Exception as e:
+                self.log(f"❌ Error parsing sent_at for item {i}: {e}")
+                return False
+        
+        if all_sorted:
+            self.log(f"✅ All {len(items)} items are properly sorted by sent_at desc")
+            return True
+        else:
+            return False
+
+    def print_summary(self):
+        """Print test summary"""
+        self.log("\n" + "="*60)
+        self.log("ALERTING V0 DELIVERIES BACKEND TEST SUMMARY")
+        self.log("="*60)
+        self.log(f"Total Tests: {self.tests_run}")
+        self.log(f"✅ Passed: {self.tests_passed}")
+        self.log(f"❌ Failed: {self.tests_failed}")
+        self.log(f"Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%")
+        
+        if self.failed_tests:
+            self.log("\n❌ FAILED TESTS:")
+            for i, test in enumerate(self.failed_tests, 1):
+                self.log(f"  {i}. {test}")
+        
+        self.log("="*60)
+
+    def run_alerting_v0_deliveries_tests(self):
+        """Run all Alerting v0 deliveries tests in sequence"""
+        self.log("🚀 Starting Alerting v0 Deliveries Backend Tests")
+        self.log(f"Base URL: {self.base_url}")
+        
+        # 1) Authentication
+        if not self.test_super_admin_login():
+            self.log("❌ Super admin login failed - stopping tests")
+            self.print_summary()
+            return 1
+
+        # Get agency and hotel tokens for RBAC testing
+        self.test_agency_login()
+        self.test_hotel_login()
+        
+        # RBAC tests for deliveries endpoint
+        if self.agency_token:
+            self.test_deliveries_rbac_agency_forbidden()
+        if self.hotel_token:
+            self.test_deliveries_rbac_hotel_forbidden()
+
+        # 2) Empty state test
+        self.test_deliveries_empty_state()
+
+        # 3) Generate and test sent records
+        self.test_deliveries_with_sent_records()
+        
+        # 4) Status filtering
+        self.test_deliveries_status_filter()
+        
+        # 5) match_id filtering
+        self.test_deliveries_match_id_filter()
+        
+        # 6) Sorting verification
+        self.test_deliveries_sorting()
+
+        # Summary
+        self.print_summary()
+
+        return 0 if self.tests_failed == 0 else 1
+
+
 def main():
     if len(sys.argv) > 1:
         if sys.argv[1] == "faz5":

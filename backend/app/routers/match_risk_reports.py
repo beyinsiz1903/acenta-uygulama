@@ -159,6 +159,9 @@ async def match_risk_summary(
 
         items.append(record)
 
+    # Sort items with higher risk first: by not_arrived_rate then matches_total
+    items.sort(key=lambda r: (r.get("not_arrived_rate", 0.0), r.get("matches_total", 0)), reverse=True)
+
     return {
         "range": {"from": date_from, "to": date_to},
         "group_by": group_by,

@@ -19,6 +19,11 @@ export default function AdminMatchDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [data, setData] = useState(null);
+  const [action, setAction] = useState({ status: "none", reason_code: "", note: "" });
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
 
   useEffect(() => {
     if (!id) return;

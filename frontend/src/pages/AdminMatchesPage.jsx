@@ -30,7 +30,7 @@ export default function AdminMatchesPage() {
         setLoading(true);
         setError("");
         const resp = await api.get("/admin/matches", {
-          params: { days: 30, min_total: 3 },
+          params: { days: 30, min_total: 3, include_action: 1 },
         });
         setItems(resp.data?.items || []);
         setRange(resp.data?.range || null);

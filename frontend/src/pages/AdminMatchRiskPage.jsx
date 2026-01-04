@@ -508,6 +508,7 @@ export default function AdminMatchRiskPage() {
         komisyon veya fatura hesaplarını etkilemez; sadece olası kötüye kullanım desenlerini
         tespit etmek için kullanılır.
       </div>
+      </div>
     </TooltipProvider>
   );
 }

@@ -75,7 +75,7 @@ export default function AdminMatchRiskPage() {
   }, [items, onlyHighRisk]);
 
   function getOutcome(m) {
-    return String(m?.outcome || m?.outcome_value || m?.outcome_status || "unknown");
+    return String(m?.outcome || m?.outcome_value || m?.outcome_status || "unknown").toLowerCase();
   }
 
   const visibleDrillItems = useMemo(() => {

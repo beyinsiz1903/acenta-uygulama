@@ -305,16 +305,6 @@ export default function AdminMatchRiskPage() {
               <span>-</span>
               <input
                 type="date"
-            <label className="inline-flex items-center gap-2 text-xs">
-              <input
-                type="checkbox"
-                checked={onlyHighRisk}
-                onChange={(e) => setOnlyHighRisk(e.target.checked)}
-                data-testid="match-risk-only-high-toggle"
-              />
-              Sadece yüksek risk (≥ %50)
-            </label>
-
                 className="h-8 rounded-md border bg-background px-2 text-xs"
                 value={to}
                 onChange={(e) => setTo(e.target.value)}
@@ -322,43 +312,40 @@ export default function AdminMatchRiskPage() {
               />
             </div>
 
-            <div className="flex items-center gap-1">
-              <span className="text-muted-foreground">Gruplama:</span>
-              <select
-            <button
-              type="button"
-              className="h-8 rounded-md border bg-background px-3 text-xs"
-              onClick={exportSummaryCsv}
-              disabled={visibleItems.length === 0}
-              data-testid="match-risk-export-csv"
-            >
-              CSV Export
-            </button>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1">
+                <span className="text-muted-foreground">Gruplama:</span>
+                <select
+                  className="h-8 rounded-md border bg-background px-2 text-xs"
+                  value={groupBy}
+                  onChange={(e) => setGroupBy(e.target.value)}
+                  data-testid="match-risk-group-by"
+                >
+                  <option value="pair">Çift (from → to)</option>
+                  <option value="to_hotel">To Hotel</option>
+                  <option value="from_hotel">From Hotel</option>
+                </select>
+              </div>
 
-                className="h-8 rounded-md border bg-background px-2 text-xs"
-                value={groupBy}
-                onChange={(e) => setGroupBy(e.target.value)}
-        <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground" data-testid="match-risk-period-label">
-          <span>Dönem: {periodLabel}</span>
-          {hotelMapLoading ? (
-            <span>Hotel isimleri yükleniyor...</span>
-          ) : Object.keys(hotelMap).length > 0 ? (
-            <span>
-              Hotel isimleri: <span className="font-medium">açık</span>
-            </span>
-          ) : (
-            <span>
-              Hotel isimleri: <span className="font-medium">ID</span> (isim verisi yok)
-            </span>
-          )}
-        </div>
+              <label className="inline-flex items-center gap-2 text-xs">
+                <input
+                  type="checkbox"
+                  checked={onlyHighRisk}
+                  onChange={(e) => setOnlyHighRisk(e.target.checked)}
+                  data-testid="match-risk-only-high-toggle"
+                />
+                Sadece yüksek risk (≥ %50)
+              </label>
 
-                data-testid="match-risk-group-by"
+              <button
+                type="button"
+                className="h-8 rounded-md border bg-background px-3 text-xs"
+                onClick={exportSummaryCsv}
+                disabled={visibleItems.length === 0}
+                data-testid="match-risk-export-csv"
               >
-                <option value="pair">Çift (from → to)</option>
-                <option value="to_hotel">To Hotel</option>
-                <option value="from_hotel">From Hotel</option>
-              </select>
+                CSV Export
+              </button>
             </div>
 
             <div className="flex items-center gap-1">
@@ -373,20 +360,21 @@ export default function AdminMatchRiskPage() {
               />
             </div>
           </div>
-        {hotelMapLoading ? (
-          <div className="mt-1 text-[11px] text-muted-foreground">
-            Hotel isimleri yükleniyor...
-          </div>
-        ) : Object.keys(hotelMap).length > 0 ? (
-          <div className="mt-1 text-[11px] text-muted-foreground">
-            Hotel isimleri: <span className="font-medium">açık</span>
-          </div>
-        ) : (
-          <div className="mt-1 text-[11px] text-muted-foreground">
-            Hotel isimleri: <span className="font-medium">ID</span> (isim verisi yok)
-          </div>
-        )}
 
+          <div className="flex flex-col gap-1 text-[11px] text-muted-foreground">
+            <div data-testid="match-risk-period-label">Dönem: {periodLabel}</div>
+            {hotelMapLoading ? (
+              <div>Hotel isimleri yükleniyor...</div>
+            ) : Object.keys(hotelMap).length > 0 ? (
+              <div>
+                Hotel isimleri: <span className="font-medium">açık</span>
+              </div>
+            ) : (
+              <div>
+                Hotel isimleri: <span className="font-medium">ID</span> (isim verisi yok)
+              </div>
+            )}
+          </div>
 
           <div className="flex items-center gap-2">
             <button

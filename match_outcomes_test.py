@@ -10,7 +10,7 @@ import uuid
 from datetime import datetime, timedelta
 
 class MatchOutcomesRiskTester:
-    def __init__(self, base_url="https://tourism-booking.preview.emergentagent.com"):
+    def __init__(self, base_url="https://agencyriskmgmt.preview.emergentagent.com"):
         self.base_url = base_url
         self.super_admin_token = None
         self.hotel1_token = None

@@ -8,7 +8,7 @@ import sys
 from datetime import datetime, timedelta
 
 class FinancialFeaturesTester:
-    def __init__(self, base_url="https://tourism-booking.preview.emergentagent.com"):
+    def __init__(self, base_url="https://agencyriskmgmt.preview.emergentagent.com"):
         self.base_url = base_url
         self.agency_token = None
         self.hotel_token = None

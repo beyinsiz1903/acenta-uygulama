@@ -4,7 +4,7 @@ from datetime import timedelta
 from io import StringIO
 import csv
 import hashlib
-from typing import Any, Optional
+from typing import Any, Optional, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from pydantic import BaseModel, Field

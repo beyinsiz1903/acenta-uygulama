@@ -61,6 +61,7 @@ export default function AdminMatchRiskPage() {
   const [drillErr, setDrillErr] = useState("");
   const [drillItems, setDrillItems] = useState([]);
   const [activeRow, setActiveRow] = useState(null);
+  const [drillOutcome, setDrillOutcome] = useState("all"); // all | arrived | not_arrived | unknown
 
   const [view, setView] = useState("main"); // future: can add charts
   const [copied, setCopied] = useState("");

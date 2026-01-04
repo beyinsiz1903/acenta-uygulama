@@ -1772,6 +1772,10 @@ class ExportsEmailV0Tester:
         self.tests_passed = 0
         self.tests_failed = 0
         self.failed_tests = []
+        
+        # Store data for testing
+        self.run_id_with_email = None
+        self.policy_key_with_email = None
 
     def log(self, msg):
         print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}")

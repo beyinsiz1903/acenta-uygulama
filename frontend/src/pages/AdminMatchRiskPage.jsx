@@ -563,6 +563,8 @@ export default function AdminMatchRiskPage() {
                 <div className="text-sm text-muted-foreground">Yükleniyor...</div>
               ) : drillItems.length === 0 ? (
                 <div className="text-sm text-muted-foreground">Bu grup için kayıt bulunamadı.</div>
+              ) : visibleDrillItems.length === 0 ? (
+                <div className="text-sm text-muted-foreground">Bu outcome filtresine uyan kayıt bulunamadı.</div>
               ) : (
                 <table className="w-full text-xs" data-testid="match-risk-drill-table">
                   <thead>

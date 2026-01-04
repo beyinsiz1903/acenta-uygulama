@@ -493,6 +493,25 @@ export default function AdminMatchAlertsPolicyPage() {
             </div>
 
             <div className="space-y-1">
+              <label className="text-xs font-medium" htmlFor="deliveries-channel">
+                Channel
+              </label>
+              <select
+                id="deliveries-channel"
+                className="border rounded px-2 py-1 text-sm bg-background"
+                value={deliveriesFilter.channel || "all"}
+                onChange={(e) =>
+                  setDeliveriesFilter((prev) => ({ ...prev, channel: e.target.value }))
+                }
+                data-testid="match-alerts-deliveries-channel"
+              >
+                <option value="all">All</option>
+                <option value="email">Email</option>
+                <option value="webhook">Webhook</option>
+              </select>
+            </div>
+
+            <div className="space-y-1">
               <label className="text-xs font-medium" htmlFor="deliveries-matchid">
                 Match ID
               </label>

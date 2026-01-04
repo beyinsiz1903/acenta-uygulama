@@ -27,8 +27,8 @@ class ExportPolicyParams(BaseModel):
 class ExportPolicyModel(BaseModel):
     key: str
     enabled: bool = True
-    type: str = Field("match_risk_summary", const=True)
-    format: str = Field("csv", const=True)
+    type: Literal["match_risk_summary"] = "match_risk_summary"
+    format: Literal["csv"] = "csv"
     schedule_hint: Optional[str] = None
     recipients: list[str] | None = None
     cooldown_hours: int = Field(24, ge=1, le=168)

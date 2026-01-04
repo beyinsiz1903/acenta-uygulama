@@ -7,7 +7,7 @@ from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
-from app.auth import get_current_user, require_roles
+from app.auth import get_current_user, require_roles, hash_password
 from app.db import get_db
 from app.utils import now_utc
 
@@ -163,6 +163,36 @@ async def seed_match_proxy(
 
     await db.agency_catalog_booking_requests.insert_one(doc)
 
+    # Ensure a deterministic hotel_admin user for to_hotel (hotel OK user)
+    to_hotel_id_str = str(to_hotel["_id"])
+    hotel_ok_email = f"p4_ok_{to_hotel_id_str[:8]}@seed.local"
+    hotel_ok_password = f"P4ok-{to_hotel_id_str[:8]}-admin123!"
+
+    existing_user = await db.users.find_one({"organization_id": org_id, "email": hotel_ok_email})
+    hotel_ok_user_id: Optional[str]
+
+    if not existing_user:
+        user_doc = {
+            "_id": str(uuid.uuid4()),
+            "organization_id": org_id,
+            "hotel_id": to_hotel_id_str,
+            "email": hotel_ok_email,
+            "password_hash": hash_password(hotel_ok_password),
+            "roles": ["hotel_admin"],
+            "is_active": True,
+            "created_at": created_at,
+            "updated_at": created_at,
+        }
+        await db.users.insert_one(user_doc)
+        hotel_ok_user_id = user_doc["_id"]
+    else:
+        hotel_ok_user_id = str(existing_user.get("_id"))
+        # Ensure role and hotel binding are correct in dev
+        await db.users.update_one(
+            {"_id": existing_user["_id"]},
+            {"$set": {"hotel_id": to_hotel_id_str, "roles": ["hotel_admin"], "updated_at": now_utc()}},
+        )
+
     return {
         "ok": True,
         "match_id": match_id,
@@ -172,4 +202,10 @@ async def seed_match_proxy(
         "agency_id": agency["_id"],
         "created_at": created_at.isoformat(),
         "dev_seed": True,
+        "hotel_ok": {
+            "email": hotel_ok_email,
+            "password": hotel_ok_password,
+            "user_id": hotel_ok_user_id,
+            "hotel_id": to_hotel_id_str,
+        },
     }

@@ -87,6 +87,9 @@ async def _load_policy(db, org_id: str) -> MatchAlertPolicy:
         cooldown_hours=int(doc.get("cooldown_hours", 24)),
         email_recipients=list(doc.get("email_recipients") or []),
         webhook_url=doc.get("webhook_url"),
+        webhook_enabled=bool(doc.get("webhook_enabled", False)),
+        webhook_secret=doc.get("webhook_secret"),
+        webhook_timeout_ms=int(doc.get("webhook_timeout_ms", 4000)),
     )
 
 

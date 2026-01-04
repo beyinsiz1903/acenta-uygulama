@@ -464,13 +464,28 @@ export default function AgencyCrmFollowupsPage() {
                   onChange={(e) => setTaskDueDate(e.target.value)}
                   className="h-9 text-sm"
                 />
-                <Input
-                  data-testid="crm-task-assignee"
-                  placeholder="Assignee user id (opsiyonel)"
+                <Select
                   value={taskAssignee}
-                  onChange={(e) => setTaskAssignee(e.target.value)}
-                  className="h-9 text-sm"
-                />
+                  onValueChange={setTaskAssignee}
+                  disabled={assigneesLoading || assignees.length === 0}
+                >
+                  <SelectTrigger
+                    data-testid="crm-task-assignee"
+                    className="h-9 text-sm"
+                  >
+                    <SelectValue placeholder={assigneesLoading ? "Yükleniyor..." : "Atanan kişi (opsiyonel)"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="" className="text-sm">
+                      Seçilmedi
+                    </SelectItem>
+                    {assignees.map((u) => (
+                      <SelectItem key={u.user_id} value={u.user_id} className="text-sm">
+                        {u.name || u.email} {u.email ? `(${u.email})` : ""}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <Button
                   data-testid="crm-task-create"
                   disabled={saving || !selectedItem || !taskTitle.trim() || !taskDueDate}

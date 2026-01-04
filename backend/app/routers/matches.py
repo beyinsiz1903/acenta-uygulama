@@ -138,6 +138,25 @@ async def list_matches(
 
     agency_name_map, hotel_name_map = await _resolve_names(db, org_id, list(set(agency_ids)), list(set(hotel_ids)))
 
+    # Optional: load actions when requested to avoid extra cost by default
+    actions_by_match_id: dict[str, dict[str, Any]] = {}
+    if include_action and filtered:
+        match_ids = []
+        for r in filtered:
+            key = r.get("_id") or {}
+            a_id = str(key.get("agency_id") or "")
+            h_id = str(key.get("hotel_id") or "")
+            if a_id and h_id:
+                match_ids.append(f"{a_id}__{h_id}")
+        if match_ids:
+            cursor = db.match_actions.find({"organization_id": org_id, "match_id": {"$in": match_ids}})
+            docs = await cursor.to_list(length=None)
+            for d in docs:
+                mid = d.get("match_id")
+                if not mid:
+                    continue
+                actions_by_match_id[mid] = d
+
     items: list[MatchSummaryItem] = []
     for r in filtered:
         key = r.get("_id") or {}
@@ -154,9 +173,24 @@ async def list_matches(
         last_ts = r.get("last_booking_at")
         last_iso = last_ts.isoformat() if hasattr(last_ts, "isoformat") else None
 
+        match_id = f"{agency_id}__{hotel_id}"
+        action_doc = actions_by_match_id.get(match_id) if include_action else None
+        action_status = None
+        action_reason_code = None
+        action_updated_at = None
+        action_updated_by_email = None
+        if action_doc:
+            action_status = action_doc.get("status") or "none"
+            action_reason_code = action_doc.get("reason_code")
+            ua = action_doc.get("updated_at")
+            if hasattr(ua, "isoformat"):
+                ua = ua.isoformat()
+            action_updated_at = ua
+            action_updated_by_email = action_doc.get("updated_by_email")
+
         items.append(
             MatchSummaryItem(
-                id=f"{agency_id}__{hotel_id}",
+                id=match_id,
                 agency_id=agency_id,
                 agency_name=agency_name_map.get(agency_id),
                 hotel_id=hotel_id,
@@ -168,6 +202,10 @@ async def list_matches(
                 confirm_rate=round(confirm_rate, 3),
                 cancel_rate=round(cancel_rate, 3),
                 last_booking_at=last_iso,
+                action_status=action_status,
+                action_reason_code=action_reason_code,
+                action_updated_at=action_updated_at,
+                action_updated_by_email=action_updated_by_email,
             )
         )
 

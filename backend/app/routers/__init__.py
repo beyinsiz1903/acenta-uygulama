@@ -1,1 +1,12 @@
-# Routers package
+from . import agency_catalog_bookings  # noqa: F401
+from . import agency_catalog_products  # noqa: F401
+from . import agency_catalog_variants  # noqa: F401
+from . import admin_demo_seed  # noqa: F401
+from . import crm_actions  # noqa: F401
+from . import crm_followups  # noqa: F401
+from . import dev_seed_bookings  # noqa: F401
+from . import dev_seed_match_proxy  # noqa: F401
+from . import dev_seed_settlements  # noqa: F401
+from . import dev_seed_users  # noqa: F401
+from . import match_outcomes  # noqa: F401
+from . import match_risk_reports  # noqa: F401

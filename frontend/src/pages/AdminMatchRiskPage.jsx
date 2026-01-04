@@ -334,11 +334,11 @@ export default function AdminMatchRiskPage() {
 
                 let groupLabel = "";
                 if (groupBy === "pair") {
-                  groupLabel = `${row.from_hotel_id || "?"} → ${row.to_hotel_id || "?"}`;
+                  groupLabel = `${hotelLabel(row.from_hotel_id)} → ${hotelLabel(row.to_hotel_id)}`;
                 } else if (groupBy === "to_hotel") {
-                  groupLabel = row.to_hotel_id || "?";
+                  groupLabel = hotelLabel(row.to_hotel_id);
                 } else {
-                  groupLabel = row.from_hotel_id || "?";
+                  groupLabel = hotelLabel(row.from_hotel_id);
                 }
 
                 return (

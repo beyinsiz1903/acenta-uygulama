@@ -39,6 +39,9 @@ class MatchAlertPolicyModel(BaseModel):
     cooldown_hours: int = Field(24, ge=1, le=168)
     email_recipients: list[str] | None = None
     webhook_url: str | None = None
+    webhook_enabled: bool = False
+    webhook_secret: str | None = None
+    webhook_timeout_ms: int = Field(4000, ge=500, le=10000)
 
 
 class MatchAlertPolicyResponse(BaseModel):

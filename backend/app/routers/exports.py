@@ -444,8 +444,16 @@ async def public_download(token: str, db=Depends(get_db)):
 
     download_info = run.get("download") or {}
     expires_at = download_info.get("expires_at")
-    if expires_at and expires_at < now:
-        raise HTTPException(status_code=410, detail="EXPORT_TOKEN_EXPIRED")
+    if expires_at:
+        # Ensure both datetimes are comparable (both aware or both naive)
+        if hasattr(expires_at, 'tzinfo') and expires_at.tzinfo is not None:
+            # expires_at is timezone-aware, compare with aware now
+            if expires_at < now:
+                raise HTTPException(status_code=410, detail="EXPORT_TOKEN_EXPIRED")
+        else:
+            # expires_at is naive, compare with naive now
+            if expires_at < now.replace(tzinfo=None):
+                raise HTTPException(status_code=410, detail="EXPORT_TOKEN_EXPIRED")
 
     storage = run.get("storage") or {}
     blob_id = storage.get("blob_id")

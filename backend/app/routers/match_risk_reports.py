@@ -221,7 +221,11 @@ async def match_risk_drilldown(
     match_ids = [str(m["_id"]) for m in matches]
 
     outcomes_cur = db.match_outcomes.find(
-        {"organization_id": org_id, "match_id": {"$in": match_ids}},
+        {
+            "organization_id": org_id,
+            "match_id": {"$in": match_ids},
+            "marked_at": {"$lt": end},
+        },
         {"match_id": 1, "outcome": 1, "marked_at": 1, "note": 1},
     )
 

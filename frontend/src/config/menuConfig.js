@@ -9,6 +9,7 @@ export const MENU_CONFIG = {
         { label: "Pilot Dashboard", path: "/app/admin/pilot-dashboard" },
         { label: "Metrikler", path: "/app/admin/metrics" },
         { label: "Match Risk", path: "/app/admin/matches" },
+        { label: "Match Alerts", path: "/app/admin/settings/match-alerts" },
       ],
     },
     {

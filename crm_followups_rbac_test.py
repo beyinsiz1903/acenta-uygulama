@@ -225,35 +225,73 @@ class CRMFollowupsTester:
         return False
 
     def test_create_hotel_admin(self):
-        """Create hotel admin for hotel1"""
+        """Create hotel admin for testing"""
         self.log("\n=== SETUP: CREATE HOTEL ADMIN ===")
         
-        # Use existing hotel1@demo.test user
-        self.hotel1_admin_email = "hotel1@demo.test"
-        
-        # Test login to verify user exists
+        # First, get a hotel from the agency's linked hotels
         success, response = self.run_test(
-            "Hotel1 Admin Login",
+            "Get Agency Hotels",
+            "GET",
+            "api/agency/hotels",
+            200,
+            token=self.agency1_token
+        )
+        
+        if not success:
+            self.log("❌ Failed to get agency hotels")
+            return False
+        
+        items = response.get('items', [])
+        if not items:
+            self.log("❌ No hotels linked to agency")
+            return False
+        
+        # Use the first hotel
+        first_hotel = items[0]
+        self.hotel1_id = first_hotel.get('hotel_id')
+        self.log(f"✅ Found linked hotel: {self.hotel1_id} - {first_hotel.get('hotel_name')}")
+        
+        # Create a hotel admin user using dev seed endpoint
+        self.hotel1_admin_email = f"hotel_test_{uuid.uuid4().hex[:6]}@test.com"
+        
+        success, response = self.run_test(
+            "Create Hotel Admin User",
+            "POST",
+            "api/dev/seed/users/hotel",
+            200,
+            data={
+                "hotel_id": self.hotel1_id,
+                "email": self.hotel1_admin_email,
+                "password": "demo123"
+            },
+            token=self.super_admin_token
+        )
+        
+        if not success:
+            self.log("❌ Failed to create hotel admin user")
+            return False
+        
+        self.log(f"✅ Hotel admin user created: {self.hotel1_admin_email}")
+        
+        # Login as hotel admin
+        success, response = self.run_test(
+            "Hotel Admin Login",
             "POST",
             "api/auth/login",
             200,
-            data={"email": self.hotel1_admin_email, "password": "hotel123"},
+            data={"email": self.hotel1_admin_email, "password": "demo123"},
             headers_override={'Content-Type': 'application/json'}
         )
+        
         if success and 'access_token' in response:
             self.hotel1_admin_token = response['access_token']
             user = response.get('user', {})
             hotel_id = user.get('hotel_id')
             roles = user.get('roles', [])
             
-            # Update hotel1_id if user has different hotel
-            if hotel_id:
-                self.hotel1_id = hotel_id
-                self.log(f"✅ Hotel admin login successful - hotel_id: {hotel_id}, roles: {roles}")
-                return True
-            else:
-                self.log(f"❌ User has no hotel_id")
-                return False
+            self.log(f"✅ Hotel admin login successful - hotel_id: {hotel_id}, roles: {roles}")
+            return True
+        
         return False
 
     def test_scenario_1_positive_agency_linked_hotels(self):

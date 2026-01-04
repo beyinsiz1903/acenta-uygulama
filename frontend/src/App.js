@@ -74,6 +74,7 @@ function App() {
             <Route path="matches" element={<AdminMatchesPage />} />
             <Route path="matches/:id" element={<AdminMatchDetailPage />} />
             <Route path="settings/match-alerts" element={<AdminMatchAlertsPolicyPage />} />
+            <Route path="exports" element={<AdminExportsPage />} />
           </Route>
         </Route>
 

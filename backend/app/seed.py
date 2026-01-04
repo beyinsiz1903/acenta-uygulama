@@ -210,6 +210,22 @@ async def ensure_seed_data() -> None:
         ("sent_at", -1),
     ])
 
+    # Exports v0: export_policies & export_runs indexes
+    await db.export_policies.create_index([
+        ("organization_id", 1),
+        ("key", 1),
+    ], unique=True)
+    await db.export_runs.create_index([
+        ("organization_id", 1),
+        ("policy_key", 1),
+        ("generated_at", -1),
+    ])
+    await db.export_runs.create_index([
+        ("organization_id", 1),
+        ("download.token", 1),
+    ], unique=True)
+
+
     # Create 2 agencies if none
     agencies = await db.agencies.find({"organization_id": org_id}).to_list(10)
     if len(agencies) == 0:

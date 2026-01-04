@@ -527,6 +527,7 @@ export default function AdminExportsPage() {
                         <th className="py-1 pr-2 text-right">Size</th>
                         <th className="py-1 pr-2 text-left">Filename</th>
                         <th className="py-1 pr-2 text-left">SHA</th>
+                        <th className="py-1 pr-2 text-left">Emailed</th>
                         <th className="py-1 pr-2"></th>
                       </tr>
                     </thead>

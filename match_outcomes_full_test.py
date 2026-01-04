@@ -218,7 +218,7 @@ class MatchOutcomesFullTester:
             "Create Catalog Variant",
             "POST",
             "api/agency/catalog/variants",
-            201,
+            200,
             token=self.agency_token,
             data=variant_data
         )

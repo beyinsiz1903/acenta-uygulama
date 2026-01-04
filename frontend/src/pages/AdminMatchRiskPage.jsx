@@ -340,10 +340,7 @@ export default function AdminMatchRiskPage() {
           </div>
         </div>
 
-        <div className="mt-2 text-[11px] text-muted-foreground" data-testid="match-risk-period-label">
-          Dönem: {periodLabel}
-        </div>
-      </div>
+              </div>
 
       {err ? (
         <div

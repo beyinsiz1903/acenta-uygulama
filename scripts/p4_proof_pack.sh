@@ -134,7 +134,8 @@ OUTCOME_RESP="$(curl -fsS -X POST "${API_BASE}/matches/${MATCH_ID}/outcome" \
 echo "Outcome response: ${OUTCOME_RESP}"
 
 log "Verifying drilldown entry..."
-DRILL_RESP="$(curl -fsS "${API_BASE}/reports/match-risk/drilldown?from=${FROM_DATE}&to=${TO_DATE}&to_hotel_id=${TO_HOTEL_ID}")" \
+DRILL_RESP="$(curl -fsS "${API_BASE}/reports/match-risk/drilldown?from=${FROM_DATE}&to=${TO_DATE}&to_hotel_id=${TO_HOTEL_ID}" \
+  -H "Authorization: Bearer ${SUPER_ADMIN_TOKEN}")" \
   || die "Drilldown request failed"
 
 MATCH_ROW="$(echo "$DRILL_RESP" | jq -c --arg mid "$MATCH_ID" '.items[] | select(.match_id == $mid)' | head -n 1 || true)"
@@ -145,7 +146,8 @@ OUTCOME_VAL="$(echo "$MATCH_ROW" | jq -r '.outcome')"
 log "Drilldown OK for match_id=$MATCH_ID with outcome=$OUTCOME_VAL"
 
 log "Verifying summary invariants..."
-SUMMARY_RESP="$(curl -fsS "${API_BASE}/reports/match-risk?from=${FROM_DATE}&to=${TO_DATE}&group_by=to_hotel")" \
+SUMMARY_RESP="$(curl -fsS "${API_BASE}/reports/match-risk?from=${FROM_DATE}&to=${TO_DATE}&group_by=to_hotel" \
+  -H "Authorization: Bearer ${SUPER_ADMIN_TOKEN}")" \
   || die "Summary request failed"
 
 SUMMARY_ROW="$(echo "$SUMMARY_RESP" | jq -c --arg hid "$TO_HOTEL_ID" '.items[] | select(.to_hotel_id == $hid)' | head -n 1 || true)"

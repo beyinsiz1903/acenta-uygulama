@@ -87,17 +87,18 @@ async def create_match_outcome(
     db = await get_db()
 
     org_id = str(user.get("organization_id"))
-    roles = set(user.get("roles") or [])
+    roles = _role_set(user)
+    primary_role = user.get("role")
 
     # Only hotel roles + super_admin are allowed in v1
-    if not ("super_admin" in roles or roles.intersection({"hotel_admin", "hotel_staff"})):
+    if not ("super_admin" in roles or {"hotel_admin", "hotel_staff"} & roles):
         raise HTTPException(status_code=403, detail="FORBIDDEN")
 
     match_doc = await _load_match_or_404(db, org_id, match_id)
 
     # Ownership check: hotel user must belong to the receiving hotel (to_hotel_id)
     user_hotel_id = user.get("hotel_id") or user.get("hotel") or user.get("hotel_code")
-    match_to_hotel_id = str(match_doc.get("hotel_id") or match_doc.get("to_hotel_id") or "")
+    match_to_hotel_id = _match_to_hotel_id(match_doc)
     if "super_admin" not in roles:
         if not user_hotel_id or str(user_hotel_id) != match_to_hotel_id:
             raise HTTPException(status_code=403, detail="FORBIDDEN")
@@ -107,14 +108,14 @@ async def create_match_outcome(
     outcome_doc: dict[str, Any] = {
         "organization_id": org_id,
         "match_id": match_id,
-        "from_hotel_id": str(match_doc.get("from_hotel_id") or ""),
+        "from_hotel_id": _match_from_hotel_id(match_doc),
         "to_hotel_id": match_to_hotel_id,
         "outcome": payload.outcome,
         "note": (payload.note or None),
         "marked_at": now,
         "marked_by_user_id": str(user.get("id") or user.get("_id") or ""),
         "marked_by_email": user.get("email"),
-        "marked_by_role": next(iter(roles)) if roles else None,
+        "marked_by_role": _primary_role(roles, primary_role),
     }
 
     res = await db.match_outcomes.insert_one(outcome_doc)

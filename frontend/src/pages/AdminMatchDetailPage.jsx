@@ -134,6 +134,114 @@ export default function AdminMatchDetailPage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-4">
+      <Card>
+        <CardHeader>
+          <CardTitle>Risk Aksiyonu</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            <div className="flex flex-col md:flex-row md:items-center md:gap-3">
+              <label htmlFor="match-action-status" className="text-sm font-medium" data-testid="match-action-status-label">
+                Durum
+              </label>
+              <select
+                id="match-action-status"
+                data-testid="match-action-status"
+                className="mt-1 md:mt-0 border rounded px-2 py-1 text-sm bg-background"
+                value={action.status}
+                onChange={(e) => setAction((prev) => ({ ...prev, status: e.target.value }))}
+              >
+                <option value="none">Seçilmemiş</option>
+                <option value="watchlist">Watchlist</option>
+                <option value="manual_review">Manual review</option>
+                <option value="blocked">Blocked</option>
+              </select>
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label htmlFor="match-action-reason" className="text-sm font-medium">
+                Reason code (opsiyonel)
+              </label>
+              <input
+                id="match-action-reason"
+                data-testid="match-action-reason"
+                className="border rounded px-2 py-1 text-sm bg-background"
+                value={action.reason_code}
+                onChange={(e) => setAction((prev) => ({ ...prev, reason_code: e.target.value }))}
+                placeholder="örn: high_not_arrived_rate"
+              />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label htmlFor="match-action-note" className="text-sm font-medium">
+                Not (opsiyonel)
+              </label>
+              <textarea
+                id="match-action-note"
+                data-testid="match-action-note"
+                className="border rounded px-2 py-1 text-sm bg-background min-h-[60px]"
+                value={action.note}
+                onChange={(e) => setAction((prev) => ({ ...prev, note: e.target.value }))}
+                placeholder="İç not (örn: son 30 günde 3 kez no-show)"
+              />
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                data-testid="match-action-save"
+                className="inline-flex items-center px-3 py-1.5 rounded bg-primary text-primary-foreground text-sm disabled:opacity-60"
+                onClick={async () => {
+                  try {
+                    setSaving(true);
+                    setSaveError("");
+                    setSaveSuccess(false);
+
+                    await api.put(`/admin/matches/${id}/action`, {
+                      status: action.status,
+                      reason_code: action.reason_code || null,
+                      note: action.note || null,
+                    });
+
+                    setSaveSuccess(true);
+                    setTimeout(() => setSaveSuccess(false), 1500);
+                  } catch (e) {
+                    console.error("Match action save failed", e);
+                    setSaveError(apiErrorMessage(e));
+                  } finally {
+                    setSaving(false);
+                  }
+                }}
+                disabled={saving}
+              >
+                {saving ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Kaydediliyor...
+                  </>
+                ) : (
+                  "Kaydet"
+                )}
+              </button>
+
+              {saveSuccess && (
+                <span
+                  className="text-xs text-emerald-600"
+                  data-testid="match-action-saved"
+                >
+                  Kaydedildi
+                </span>
+              )}
+
+              {saveError && (
+                <span className="text-xs text-destructive" data-testid="match-action-error">
+                  {saveError}
+                </span>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-medium text-muted-foreground">Toplam Rezervasyon</CardTitle>

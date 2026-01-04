@@ -57,6 +57,7 @@ class ExportRunItem(BaseModel):
     size_bytes: int
     filename: str
     sha256: Optional[str] = None
+    emailed: Optional[bool] = None
 
 
 class ExportRunsResponse(BaseModel):

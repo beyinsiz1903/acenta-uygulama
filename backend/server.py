@@ -63,6 +63,8 @@ from app.routers.public_catalog_offers import router as public_catalog_offers_ro
 from app.routers.crm_hotel_contacts import router as crm_hotel_contacts_router
 from app.routers.crm_hotel_notes import router as crm_hotel_notes_router
 from app.routers.crm_hotel_tasks import router as crm_hotel_tasks_router
+from app.routers.crm_actions import router as crm_actions_router
+
 from app.routers.crm_followups import router as crm_followups_router
 
 from app.routers.dev_tools import router as dev_tools_router
@@ -152,6 +154,7 @@ app.include_router(crm_hotel_contacts_router)
 app.include_router(crm_hotel_notes_router)
 app.include_router(crm_hotel_tasks_router)
 app.include_router(crm_followups_router)
+app.include_router(crm_actions_router)
 
 if os.getenv("ENABLE_DEV_ROUTERS") == "true":
     app.include_router(dev_tools_router)

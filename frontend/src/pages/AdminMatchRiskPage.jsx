@@ -258,6 +258,16 @@ export default function AdminMatchRiskPage() {
             <div className="flex items-center gap-1">
               <span className="text-muted-foreground">Gruplama:</span>
               <select
+            <button
+              type="button"
+              className="h-8 rounded-md border bg-background px-3 text-xs"
+              onClick={exportSummaryCsv}
+              disabled={visibleItems.length === 0}
+              data-testid="match-risk-export-csv"
+            >
+              CSV Export
+            </button>
+
                 className="h-8 rounded-md border bg-background px-2 text-xs"
                 value={groupBy}
                 onChange={(e) => setGroupBy(e.target.value)}

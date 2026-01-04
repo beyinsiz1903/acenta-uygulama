@@ -101,6 +101,7 @@ app.include_router(web_catalog_router)
 app.include_router(matches_router)
 app.include_router(match_alerts_router)
 app.include_router(exports_router)
+app.include_router(exports_public_router)
 
 
 @app.get("/api/health")

@@ -14,18 +14,26 @@ from app.utils import now_utc
 router = APIRouter(prefix="/api/dev", tags=["dev-seed-match-proxy"])
 
 
-def _is_dev_env() -> bool:
-    """Allow seeding only in dev/preview environments.
+def _env_value(*keys: str) -> str:
+    for k in keys:
+        v = os.getenv(k)
+        if v is not None and str(v).strip() != "":
+            return str(v).strip()
+    return ""
 
-    We use ENABLE_DEV_ROUTERS as primary switch (already used in server.py).
-    """
 
-    return os.getenv("ENABLE_DEV_ROUTERS") == "true"
+def _is_production_env() -> bool:
+    v = _env_value("ENVIRONMENT", "APP_ENV", "ENV", "STAGE").lower()
+    return v in {"prod", "production"}
+
+
+def _dev_routers_enabled() -> bool:
+    return os.getenv("ENABLE_DEV_ROUTERS", "").lower() == "true"
 
 
 @router.post(
     "/seed/match-proxy",
-    dependencies=[Depends(require_roles(["super_admin"]))],
+    dependencies=[Depends(require_roles(["super_admin"))]],
 )
 async def seed_match_proxy(
     user=Depends(get_current_user),
@@ -48,7 +56,11 @@ async def seed_match_proxy(
     (hotel_id/to_hotel_id); otherwise a second hotel will be picked/created.
     """
 
-    if not _is_dev_env():
+    if _is_production_env():
+        # Hard guard: never allow dev seeds in production even if ENABLE_DEV_ROUTERS was mis-set
+        raise HTTPException(status_code=403, detail="DEV_SEED_DISABLED_IN_PRODUCTION")
+
+    if not _dev_routers_enabled():
         raise HTTPException(status_code=403, detail="DEV_SEED_DISABLED")
 
     org_id = str(user["organization_id"])
@@ -159,4 +171,5 @@ async def seed_match_proxy(
         "organization_id": org_id,
         "agency_id": agency["_id"],
         "created_at": created_at.isoformat(),
+        "dev_seed": True,
     }

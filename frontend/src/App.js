@@ -72,6 +72,7 @@ function App() {
             <Route path="metrics" element={<AdminMetricsPage />} />
             <Route path="matches" element={<AdminMatchesPage />} />
             <Route path="matches/:id" element={<AdminMatchDetailPage />} />
+            <Route path="settings/match-alerts" element={<AdminMatchAlertsPolicyPage />} />
           </Route>
         </Route>
 

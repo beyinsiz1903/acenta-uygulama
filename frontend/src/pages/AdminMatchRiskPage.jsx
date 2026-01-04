@@ -80,6 +80,16 @@ export default function AdminMatchRiskPage() {
     return rows.filter((r) => Number(r?.not_arrived_rate || 0) >= 0.5);
   }, [items, onlyHighRisk]);
 
+  function getOutcome(m) {
+    return String(m?.outcome || m?.outcome_value || m?.outcome_status || "unknown");
+  }
+
+  const visibleDrillItems = useMemo(() => {
+    const rows = Array.isArray(drillItems) ? drillItems : [];
+    if (drillOutcome === "all") return rows;
+    return rows.filter((m) => getOutcome(m) === drillOutcome);
+  }, [drillItems, drillOutcome]);
+
   async function loadHotelsMap() {
     setHotelMapLoading(true);
     try {

@@ -25,7 +25,10 @@ class MatchAlertPolicy:
     min_matches_total: int = 5
     cooldown_hours: int = 24
     email_recipients: list[str] | None = None
-    webhook_url: str | None = None  # reserved for v1
+    webhook_url: str | None = None
+    webhook_enabled: bool = False
+    webhook_secret: str | None = None
+    webhook_timeout_ms: int = 4000
 
 
 class MatchAlertPolicyModel(BaseModel):

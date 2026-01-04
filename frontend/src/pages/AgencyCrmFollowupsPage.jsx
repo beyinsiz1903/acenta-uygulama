@@ -87,6 +87,10 @@ export default function AgencyCrmFollowupsPage() {
 
   const [saving, setSaving] = useState(false);
 
+  const [assignees, setAssignees] = useState([]);
+  const [assigneesLoading, setAssigneesLoading] = useState(false);
+  const [assigneesError, setAssigneesError] = useState("");
+
   // Debounce search
   useEffect(() => {
     const t = setTimeout(() => {

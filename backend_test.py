@@ -1850,9 +1850,13 @@ class ExportsEmailV0Tester:
         """1) Policy recipients boşken: emailed == false/null, emailed_to == null/[], no email_outbox records"""
         self.log("\n=== 1) POLICY RECIPIENTS EMPTY ===")
         
+        # Use a unique policy key to avoid cooldown issues
+        import time
+        policy_key = f"match_risk_test_{int(time.time())}"
+        
         # Set policy with empty recipients
         policy_data = {
-            "key": "match_risk_daily",
+            "key": policy_key,
             "enabled": True,
             "type": "match_risk_summary",
             "format": "csv",
@@ -1865,9 +1869,9 @@ class ExportsEmailV0Tester:
             }
         }
         success, response = self.run_test(
-            "PUT /api/admin/exports/policies/match_risk_daily (empty recipients)",
+            f"PUT /api/admin/exports/policies/{policy_key} (empty recipients)",
             "PUT",
-            "api/admin/exports/policies/match_risk_daily",
+            f"api/admin/exports/policies/{policy_key}",
             200,
             data=policy_data
         )
@@ -1878,9 +1882,9 @@ class ExportsEmailV0Tester:
         
         # Run export
         success, response = self.run_test(
-            "POST /api/admin/exports/run?key=match_risk_daily&dry_run=0",
+            f"POST /api/admin/exports/run?key={policy_key}&dry_run=0",
             "POST",
-            "api/admin/exports/run?key=match_risk_daily&dry_run=0",
+            f"api/admin/exports/run?key={policy_key}&dry_run=0",
             200
         )
         if not success:
@@ -1920,9 +1924,13 @@ class ExportsEmailV0Tester:
         """2) Policy recipients doluyken: emailed == true, emailed_to populated, email_outbox records exist"""
         self.log("\n=== 2) POLICY RECIPIENTS FILLED ===")
         
+        # Use a unique policy key to avoid cooldown issues
+        import time
+        policy_key = f"match_risk_test_{int(time.time())}_filled"
+        
         # Set policy with recipients
         policy_data = {
-            "key": "match_risk_daily",
+            "key": policy_key,
             "enabled": True,
             "type": "match_risk_summary", 
             "format": "csv",
@@ -1935,9 +1943,9 @@ class ExportsEmailV0Tester:
             }
         }
         success, response = self.run_test(
-            "PUT /api/admin/exports/policies/match_risk_daily (with recipients)",
+            f"PUT /api/admin/exports/policies/{policy_key} (with recipients)",
             "PUT",
-            "api/admin/exports/policies/match_risk_daily",
+            f"api/admin/exports/policies/{policy_key}",
             200,
             data=policy_data
         )
@@ -1946,15 +1954,11 @@ class ExportsEmailV0Tester:
         
         self.log(f"✅ Policy updated with recipients: {response.get('recipients')}")
         
-        # Wait a bit to ensure cooldown passes
-        import time
-        time.sleep(2)
-        
         # Run export
         success, response = self.run_test(
-            "POST /api/admin/exports/run?key=match_risk_daily&dry_run=0 (with recipients)",
+            f"POST /api/admin/exports/run?key={policy_key}&dry_run=0 (with recipients)",
             "POST",
-            "api/admin/exports/run?key=match_risk_daily&dry_run=0",
+            f"api/admin/exports/run?key={policy_key}&dry_run=0",
             200
         )
         if not success:
@@ -1980,6 +1984,7 @@ class ExportsEmailV0Tester:
         if run_id:
             self.log(f"✅ run_id populated: {run_id}")
             self.run_id_with_email = run_id
+            self.policy_key_with_email = policy_key
         else:
             self.log(f"❌ run_id should be populated")
             return False

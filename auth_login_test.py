@@ -9,7 +9,7 @@ import json
 from datetime import datetime
 
 class AuthLoginTester:
-    def __init__(self, base_url="https://trip-manager-34.preview.emergentagent.com"):
+    def __init__(self, base_url="https://risk-dashboard-26.preview.emergentagent.com"):
         self.base_url = base_url
         self.tests_run = 0
         self.tests_passed = 0

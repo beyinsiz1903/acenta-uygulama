@@ -259,12 +259,12 @@ class CRMFollowupsTester:
             "POST",
             "api/dev/seed/users/hotel",
             200,
-            data={
+            token=self.super_admin_token,
+            params={
                 "hotel_id": self.hotel1_id,
                 "email": self.hotel1_admin_email,
                 "password": "demo123"
-            },
-            token=self.super_admin_token
+            }
         )
         
         if not success:

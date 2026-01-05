@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from io import StringIO
+from io import StringIO, BytesIO
 import csv
 import hashlib
 import os
@@ -11,6 +11,10 @@ from typing import Any, Optional, Literal
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from pydantic import BaseModel, Field
 from bson import ObjectId
+from reportlab.lib.pagesizes import A4
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 
 from app.auth import get_current_user, require_roles
 from app.db import get_db
@@ -33,7 +37,7 @@ class ExportPolicyModel(BaseModel):
     key: str
     enabled: bool = True
     type: Literal["match_risk_summary"] = "match_risk_summary"
-    format: Literal["csv"] = "csv"
+    format: Literal["csv", "pdf"] = "csv"
     schedule_hint: Optional[str] = None
     recipients: list[str] | None = None
     cooldown_hours: int = Field(24, ge=1, le=168)

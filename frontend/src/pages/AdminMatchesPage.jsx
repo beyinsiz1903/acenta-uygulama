@@ -312,6 +312,25 @@ export default function AdminMatchesPage() {
                   {selectedMatch?.agency_name || selectedMatch?.agency_id} — {" "}
                   {selectedMatch?.hotel_name || selectedMatch?.hotel_id}
                 </DrawerTitle>
+                {selectedMatch && (
+                  <div className="mt-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      data-testid="match-risk-open-match-detail"
+                      onClick={() => {
+                        const id = selectedMatch.id;
+                        setEventsOpen(false);
+                        setEventsData(null);
+                        setSelectedMatch(null);
+                        navigate(`/app/admin/matches/${id}`);
+                      }}
+                    >
+                      Open Match Detail
+                    </Button>
+                  </div>
+                )}
                 <div className="mt-2 flex flex-wrap items-center gap-2">
                   {selectedMatch?.high_risk && (
                     <Badge variant="destructive">HIGH</Badge>

@@ -10,6 +10,7 @@ from app.auth import get_current_user, require_roles
 from app.db import get_db
 from app.schemas import BookingPublicView
 from app.utils import now_utc, build_booking_public_view
+from app.services.risk_profile import load_risk_profile, is_high_risk
 
 router = APIRouter(prefix="/api/admin/matches", tags=["admin-matches"])
 
@@ -43,6 +44,7 @@ class MatchSummaryItem(BaseModel):
 
 class MatchSummaryResponse(BaseModel):
     range: dict[str, Any]
+    risk_profile: dict[str, Any]
     items: List[MatchSummaryItem]
 
 

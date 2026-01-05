@@ -212,6 +212,13 @@ async def ensure_seed_data() -> None:
         ("target.match_id", 1),
     ])
 
+    # STORY v1: risk_snapshots indexes
+    await db.risk_snapshots.create_index([
+        ("organization_id", 1),
+        ("snapshot_key", 1),
+        ("generated_at", -1),
+    ])
+
     # Alerting v0: match_alert_policies & match_alert_deliveries indexes
     await db.match_alert_policies.create_index([
         ("organization_id", 1)

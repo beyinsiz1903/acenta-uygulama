@@ -15373,6 +15373,297 @@ Download: /api/exports/download/abc123token456def789
         return 0 if self.tests_failed == 0 else 1
 
 
+class MatchRiskDashboardTester:
+    def __init__(self, base_url="https://risk-match-analyzer.preview.emergentagent.com"):
+        self.base_url = base_url
+        self.admin_token = None
+        self.tests_run = 0
+        self.tests_passed = 0
+        self.tests_failed = 0
+        self.failed_tests = []
+        
+        # Store test data
+        self.match_data = None
+        self.high_risk_matches = None
+
+    def log(self, msg):
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}")
+
+    def run_test(self, name, method, endpoint, expected_status, data=None, headers_override=None):
+        """Run a single API test"""
+        url = f"{self.base_url}/{endpoint}"
+        headers = headers_override or {'Content-Type': 'application/json'}
+        if self.admin_token and not headers_override:
+            headers['Authorization'] = f'Bearer {self.admin_token}'
+
+        self.tests_run += 1
+        self.log(f"🔍 Test #{self.tests_run}: {name}")
+        
+        try:
+            if method == 'GET':
+                response = requests.get(url, headers=headers, timeout=10)
+            elif method == 'POST':
+                response = requests.post(url, json=data, headers=headers, timeout=10)
+            elif method == 'PUT':
+                response = requests.put(url, json=data, headers=headers, timeout=10)
+            elif method == 'DELETE':
+                response = requests.delete(url, headers=headers, timeout=10)
+            else:
+                raise ValueError(f"Unsupported method: {method}")
+
+            success = response.status_code == expected_status
+            if success:
+                self.tests_passed += 1
+                self.log(f"✅ PASSED - Status: {response.status_code}")
+                try:
+                    return True, response.json() if response.content else {}
+                except:
+                    return True, {}
+            else:
+                self.tests_failed += 1
+                self.failed_tests.append(f"{name} - Expected {expected_status}, got {response.status_code}")
+                self.log(f"❌ FAILED - Expected {expected_status}, got {response.status_code}")
+                try:
+                    self.log(f"   Response: {response.text[:200]}")
+                except:
+                    pass
+                return False, {}
+
+        except Exception as e:
+            self.tests_failed += 1
+            self.failed_tests.append(f"{name} - Error: {str(e)}")
+            self.log(f"❌ FAILED - Error: {str(e)}")
+            return False, {}
+
+    def test_admin_login(self):
+        """1) Test super admin login"""
+        self.log("\n=== 1) AUTHENTICATION ===")
+        success, response = self.run_test(
+            "Super Admin Login (admin@acenta.test/admin123)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "admin@acenta.test", "password": "admin123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.admin_token = response['access_token']
+            user = response.get('user', {})
+            roles = user.get('roles', [])
+            
+            if 'admin' in roles or 'super_admin' in roles:
+                self.log(f"✅ Super admin login successful - roles: {roles}")
+                return True
+            else:
+                self.log(f"❌ Missing admin/super_admin role: {roles}")
+                return False
+        return False
+
+    def test_matches_no_filters(self):
+        """2) Test GET /api/admin/matches with no filters"""
+        self.log("\n=== 2) MATCHES NO FILTERS ===")
+        success, response = self.run_test(
+            "GET /api/admin/matches?days=30&min_total=1&include_action=1 (no filters)",
+            "GET",
+            "api/admin/matches?days=30&min_total=1&include_action=1",
+            200
+        )
+        
+        if success:
+            # Verify response structure
+            if 'risk_profile' not in response:
+                self.log(f"❌ Missing risk_profile in response")
+                return False
+            
+            if 'items' not in response:
+                self.log(f"❌ Missing items in response")
+                return False
+            
+            items = response.get('items', [])
+            self.log(f"✅ Found {len(items)} matches")
+            
+            # Verify each item has required fields
+            for i, item in enumerate(items):
+                required_fields = ['high_risk', 'high_risk_reasons']
+                for field in required_fields:
+                    if field not in item:
+                        self.log(f"❌ Item {i} missing field: {field}")
+                        return False
+            
+            self.log(f"✅ All items have required fields: high_risk, high_risk_reasons")
+            self.match_data = response
+            return True
+        
+        return False
+
+    def test_high_risk_filter_and_sort(self):
+        """3) Test GET /api/admin/matches with only_high_risk=1&sort=repeat_desc"""
+        self.log("\n=== 3) HIGH RISK FILTER + SORT ===")
+        success, response = self.run_test(
+            "GET /api/admin/matches?days=30&min_total=1&include_action=1&only_high_risk=1&sort=repeat_desc",
+            "GET",
+            "api/admin/matches?days=30&min_total=1&include_action=1&only_high_risk=1&sort=repeat_desc",
+            200
+        )
+        
+        if success:
+            items = response.get('items', [])
+            self.log(f"✅ Found {len(items)} high-risk matches")
+            
+            # Verify all items have high_risk=true
+            for i, item in enumerate(items):
+                if not item.get('high_risk', False):
+                    self.log(f"❌ Item {i} has high_risk=false, expected true")
+                    return False
+            
+            self.log(f"✅ All {len(items)} items have high_risk=true")
+            
+            # Verify sorting by repeat_not_arrived_7 desc
+            if len(items) > 1:
+                for i in range(len(items) - 1):
+                    current_repeat = items[i].get('repeat_not_arrived_7', 0)
+                    next_repeat = items[i + 1].get('repeat_not_arrived_7', 0)
+                    if current_repeat < next_repeat:
+                        self.log(f"❌ Sort order incorrect: item {i} repeat={current_repeat} < item {i+1} repeat={next_repeat}")
+                        return False
+                
+                self.log(f"✅ Items correctly sorted by repeat_not_arrived_7 desc")
+            
+            self.high_risk_matches = response
+            return True
+        
+        return False
+
+    def test_other_sort_options(self):
+        """4) Test other sort options"""
+        self.log("\n=== 4) OTHER SORT OPTIONS ===")
+        
+        sort_options = ["rate_desc", "total_desc", "last_booking_desc"]
+        
+        for sort_option in sort_options:
+            success, response = self.run_test(
+                f"GET /api/admin/matches with sort={sort_option}",
+                "GET",
+                f"api/admin/matches?days=30&min_total=1&include_action=1&sort={sort_option}",
+                200
+            )
+            
+            if success:
+                items = response.get('items', [])
+                self.log(f"✅ Sort {sort_option}: {len(items)} items returned")
+                
+                # Verify sorting is applied (basic check)
+                if len(items) > 1:
+                    if sort_option == "rate_desc":
+                        # Check cancel_rate descending
+                        for i in range(len(items) - 1):
+                            current_rate = items[i].get('cancel_rate', 0)
+                            next_rate = items[i + 1].get('cancel_rate', 0)
+                            if current_rate < next_rate:
+                                self.log(f"❌ Rate sort incorrect: {current_rate} < {next_rate}")
+                                return False
+                        self.log(f"✅ Rate sort working correctly")
+                    
+                    elif sort_option == "total_desc":
+                        # Check total_bookings descending
+                        for i in range(len(items) - 1):
+                            current_total = items[i].get('total_bookings', 0)
+                            next_total = items[i + 1].get('total_bookings', 0)
+                            if current_total < next_total:
+                                self.log(f"❌ Total sort incorrect: {current_total} < {next_total}")
+                                return False
+                        self.log(f"✅ Total sort working correctly")
+            else:
+                return False
+        
+        return True
+
+    def print_json_snippet(self):
+        """Print JSON snippet for step 3 as requested"""
+        self.log("\n=== JSON SNIPPET FOR STEP 3 ===")
+        
+        if not self.high_risk_matches:
+            self.log("❌ No high-risk matches data available")
+            return
+        
+        # Extract required data
+        risk_profile = self.high_risk_matches.get('risk_profile', {})
+        items = self.high_risk_matches.get('items', [])
+        
+        # Get first 3 items with required fields
+        snippet_items = []
+        for i, item in enumerate(items[:3]):
+            snippet_item = {
+                'id': item.get('id'),
+                'repeat_not_arrived_7': item.get('repeat_not_arrived_7'),
+                'cancel_rate': item.get('cancel_rate'),
+                'total_bookings': item.get('total_bookings'),
+                'high_risk': item.get('high_risk'),
+                'high_risk_reasons': item.get('high_risk_reasons')
+            }
+            snippet_items.append(snippet_item)
+        
+        snippet = {
+            'risk_profile': risk_profile,
+            'first_3_items': snippet_items
+        }
+        
+        import json
+        self.log("JSON Snippet:")
+        self.log(json.dumps(snippet, indent=2))
+
+    def print_summary(self):
+        """Print test summary"""
+        self.log("\n" + "="*60)
+        self.log("MATCH RISK DASHBOARD HIGH-RISK FILTER + SORT TEST SUMMARY")
+        self.log("="*60)
+        self.log(f"Total Tests: {self.tests_run}")
+        self.log(f"✅ Passed: {self.tests_passed}")
+        self.log(f"❌ Failed: {self.tests_failed}")
+        self.log(f"Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%")
+        
+        if self.failed_tests:
+            self.log("\n❌ FAILED TESTS:")
+            for i, test in enumerate(self.failed_tests, 1):
+                self.log(f"  {i}. {test}")
+        
+        self.log("="*60)
+
+    def run_match_risk_tests(self):
+        """Run all match risk dashboard tests"""
+        self.log("🚀 Starting Match Risk Dashboard High-Risk Filter + Sort v1 Backend Tests")
+        self.log(f"Base URL: {self.base_url}")
+        
+        # 1) Authentication
+        if not self.test_admin_login():
+            self.log("❌ Admin login failed - stopping tests")
+            self.print_summary()
+            return 1
+
+        # 2) Test matches endpoint without filters
+        if not self.test_matches_no_filters():
+            self.log("❌ Matches no filters test failed - stopping tests")
+            self.print_summary()
+            return 1
+
+        # 3) Test high-risk filter and sort
+        if not self.test_high_risk_filter_and_sort():
+            self.log("❌ High-risk filter and sort test failed - stopping tests")
+            self.print_summary()
+            return 1
+
+        # 4) Test other sort options
+        self.test_other_sort_options()
+
+        # Print JSON snippet
+        self.print_json_snippet()
+
+        # Summary
+        self.print_summary()
+
+        return 0 if self.tests_failed == 0 else 1
+
+
 def main():
     if len(sys.argv) > 1:
         if sys.argv[1] == "faz5":

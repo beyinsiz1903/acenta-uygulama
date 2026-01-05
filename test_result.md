@@ -503,6 +503,8 @@
 
 ## test_plan:
   - task: "STORY v1 – Story 3: Risk Snapshots Trend API & Delta"
+  current_focus: ["STORY v1 – Story 4: Match Risk Trends UI"]
+
     implemented: true
     working: true
     file: "/app/backend/app/routers/risk_snapshots.py"

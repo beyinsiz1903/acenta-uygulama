@@ -377,25 +377,23 @@ export default function AdminMatchesPage() {
                     setEventsData(null);
                     setSelectedMatch(null);
                   }}
-            {eventsData && (
-              <p className="px-4 pb-1 text-[11px] text-muted-foreground">
-                Showing:
-                {" "}
-                {eventsOnlyCancelled ? "cancelled only" : "all statuses"}
-                {", "}
-                {eventsShowBehavioral ? "behavioral" : "no behavioral"}
-                {" / "}
-                {eventsShowOperational ? "operational" : "no operational"}
-                {eventsReasonFilter
-                  ? `, reason contains "${eventsReasonFilter}"`
-                  : ""}
-              </p>
-            )}
-
                 >
                   ×
                 </Button>
               </DrawerClose>
+              {eventsData && (
+                <p className="px-4 pb-1 text-[11px] text-muted-foreground">
+                  Showing:{" "}
+                  {eventsOnlyCancelled ? "cancelled only" : "all statuses"}
+                  {", "}
+                  {eventsShowBehavioral ? "behavioral" : "no behavioral"}
+                  {" / "}
+                  {eventsShowOperational ? "operational" : "no operational"}
+                  {eventsReasonFilter
+                    ? `, reason contains "${eventsReasonFilter}"`
+                    : ""}
+                </p>
+              )}
             </DrawerHeader>
 
             <div className="px-4 pb-4 space-y-3">

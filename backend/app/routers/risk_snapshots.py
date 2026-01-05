@@ -156,5 +156,103 @@ async def run_risk_snapshot(
         "snapshot_key": snapshot_key,
         "generated_at": now_utc().isoformat(),
         "metrics": metrics.model_dump(),
+
+
+class TrendPoint(BaseModel):
+    generated_at: str
+    high_risk_rate: float
+    verified_share_avg: float
+    matches_evaluated: int
+    high_risk_matches: int
+
+
+class TrendDeltaMetric(BaseModel):
+    start: float
+    end: float
+    abs_change: float
+    pct_change: float
+    direction: str  # up|down|flat
+
+
+class TrendDelta(BaseModel):
+    high_risk_rate: TrendDeltaMetric
+    verified_share_avg: TrendDeltaMetric
+
+
+@router.get("/trend")
+async def get_risk_trend(
+    snapshot_key: str = Query("match_risk_daily"),
+    limit: int = Query(30, ge=1, le=365),
+    db=Depends(get_db),
+    user=Depends(get_current_user),
+):
+    """Return time-series trend + delta summary for risk snapshots.
+
+    - points: oldest                                                                             newest
+    - delta: first vs last point for selected metrics.
+    """
+    org_id = user.get("organization_id")
+
+    # Fetch last N snapshots (newest first)
+    cursor = (
+        db.risk_snapshots.find({"organization_id": org_id, "snapshot_key": snapshot_key})
+        .sort("generated_at", -1)
+        .limit(limit)
+    )
+    docs = await cursor.to_list(length=limit)
+
+    if not docs:
+        return {"points": [], "delta": None}
+
+    # Oldest                                                                     newest
+    docs_chrono = list(reversed(docs))
+
+    points: list[TrendPoint] = []
+    for d in docs_chrono:
+        metrics = d.get("metrics") or {}
+        points.append(
+            TrendPoint(
+                generated_at=d.get("generated_at").isoformat() if d.get("generated_at") else "",
+                high_risk_rate=float(metrics.get("high_risk_rate", 0.0) or 0.0),
+                verified_share_avg=float(metrics.get("verified_share_avg", 0.0) or 0.0),
+                matches_evaluated=int(metrics.get("matches_evaluated", 0) or 0),
+                high_risk_matches=int(metrics.get("high_risk_matches", 0) or 0),
+            )
+        )
+
+    if len(points) < 2:
+        return {"points": [p.model_dump() for p in points], "delta": None}
+
+    first = points[0]
+    last = points[-1]
+
+    def _build_delta_metric(start: float, end: float) -> TrendDeltaMetric:
+        abs_change = end - start
+        pct_change = 0.0
+        if start != 0:
+            pct_change = (abs_change / start) * 100.0
+        direction = "flat"
+        if abs_change > 0:
+            direction = "up"
+        elif abs_change < 0:
+            direction = "down"
+        return TrendDeltaMetric(
+            start=start,
+            end=end,
+            abs_change=abs_change,
+            pct_change=pct_change,
+            direction=direction,
+        )
+
+    delta = TrendDelta(
+        high_risk_rate=_build_delta_metric(first.high_risk_rate, last.high_risk_rate),
+        verified_share_avg=_build_delta_metric(first.verified_share_avg, last.verified_share_avg),
+    )
+
+    return {
+        "points": [p.model_dump() for p in points],
+        "delta": delta.model_dump(),
+    }
+
         "top_offenders_count": len(top),
     }

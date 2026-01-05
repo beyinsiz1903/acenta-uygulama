@@ -14,6 +14,37 @@ from app.utils import now_utc
 router = APIRouter(prefix="/api/admin/risk-snapshots", tags=["admin-risk-snapshots"])
 
 
+@router.get("")
+async def list_risk_snapshots(
+    snapshot_key: str = Query("match_risk_daily"),
+    limit: int = Query(10, ge=1, le=100),
+    db=Depends(get_db),
+    user=Depends(get_current_user),
+):
+    """List risk snapshots for a given snapshot_key."""
+    org_id = user.get("organization_id")
+    
+    # Find snapshots for this organization and snapshot_key
+    cursor = db.risk_snapshots.find({
+        "organization_id": org_id,
+        "snapshot_key": snapshot_key
+    }).sort("generated_at", -1).limit(limit)
+    
+    documents = await cursor.to_list(length=limit)
+    
+    # Convert ObjectId to string and format for JSON response
+    items = []
+    for doc in documents:
+        if "_id" in doc:
+            doc["_id"] = str(doc["_id"])
+        items.append(doc)
+    
+    return {
+        "items": items,
+        "count": len(items)
+    }
+
+
 @router.post("/run")
 async def run_risk_snapshot(
     snapshot_key: str = Query("match_risk_daily"),

@@ -15265,7 +15265,7 @@ Download: /api/exports/download/abc123token456def789
         # Verify expected content
         checks = [
             (self.email_outbox_doc['event_type'] == 'exports.ready', "event_type = 'exports.ready'"),
-            ('Match Risk' in self.email_outbox_doc['subject'], "subject contains 'Match Risk'"),
+            ('match_risk_summary' in self.email_outbox_doc['subject'], "subject contains 'match_risk_summary'"),
             (self.policy_key in self.email_outbox_doc['subject'], f"subject contains policy key '{self.policy_key}'"),
             ('/api/exports/download/' in self.email_outbox_doc['text_body'], "text_body contains public download link"),
         ]

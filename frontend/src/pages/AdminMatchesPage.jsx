@@ -22,28 +22,39 @@ export default function AdminMatchesPage() {
   const [error, setError] = useState("");
   const [items, setItems] = useState([]);
   const [range, setRange] = useState(null);
+  const [onlyHighRisk, setOnlyHighRisk] = useState(false);
+  const [sort, setSort] = useState("high_risk_first");
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const run = async () => {
-      try {
-        setLoading(true);
-        setError("");
-        const resp = await api.get("/admin/matches", {
-          params: { days: 30, min_total: 3, include_action: 1 },
-        });
-        setItems(resp.data?.items || []);
-        setRange(resp.data?.range || null);
-      } catch (e) {
-        console.error("Admin matches fetch failed", e);
-        setError(apiErrorMessage(e));
-      } finally {
-        setLoading(false);
-      }
-    };
+  const loadMatches = async (opts = {}) => {
+    const days = opts.days ?? 30;
+    const minTotal = opts.min_total ?? 3;
+    try {
+      setLoading(true);
+      setError("");
+      const resp = await api.get("/admin/matches", {
+        params: {
+          days,
+          min_total: minTotal,
+          include_action: 1,
+          only_high_risk: onlyHighRisk ? 1 : 0,
+          sort,
+        },
+      });
+      setItems(resp.data?.items || []);
+      setRange(resp.data?.range || null);
+    } catch (e) {
+      console.error("Admin matches fetch failed", e);
+      setError(apiErrorMessage(e));
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    run();
-  }, []);
+  useEffect(() => {
+    loadMatches();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onlyHighRisk, sort]);
 
   if (loading) {
     return (

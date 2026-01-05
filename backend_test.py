@@ -20131,35 +20131,27 @@ class RiskSnapshotsTester:
         
         return False
 
-    def test_collection_read_via_db(self):
-        """3.2) Koleksiyondan okuma (MongoDB direct access)"""
-        self.log("\n=== 3.2) KOLEKSİYONDAN OKUMA (MongoDB) ===")
+    def test_collection_read_via_api(self):
+        """3.2) Koleksiyondan okuma (GET API endpoint)"""
+        self.log("\n=== 3.2) KOLEKSİYONDAN OKUMA (GET API) ===")
         
-        try:
-            # Since there's no GET endpoint yet, we'll access MongoDB directly
-            import asyncio
-            from app.db import get_db
+        success, response = self.run_test(
+            "GET /api/admin/risk-snapshots (snapshot_key=match_risk_daily)",
+            "GET",
+            "api/admin/risk-snapshots?snapshot_key=match_risk_daily&limit=1",
+            200
+        )
+        
+        if success:
+            items = response.get('items', [])
+            count = response.get('count', 0)
             
-            async def check_collection():
-                db = await get_db()
-                
-                # Find documents in risk_snapshots collection
-                cursor = db.risk_snapshots.find({
-                    "snapshot_key": "match_risk_daily"
-                }).sort("generated_at", -1).limit(1)
-                
-                documents = await cursor.to_list(length=1)
-                return documents
-            
-            # Run the async function
-            documents = asyncio.run(check_collection())
-            
-            if not documents:
+            if count == 0 or len(items) == 0:
                 self.log(f"❌ No documents found in risk_snapshots collection")
                 return False
             
-            doc = documents[0]
-            self.log(f"✅ Found {len(documents)} document(s) in risk_snapshots collection")
+            doc = items[0]
+            self.log(f"✅ Found {count} document(s) in risk_snapshots collection")
             
             # Verify document structure
             required_fields = ['organization_id', 'snapshot_key', 'generated_at', 'metrics', 'top_offenders']
@@ -20214,10 +20206,8 @@ class RiskSnapshotsTester:
             self.log(f"✅ JSON snippet: {snippet}")
             
             return True
-            
-        except Exception as e:
-            self.log(f"❌ Error accessing MongoDB: {str(e)}")
-            return False
+        
+        return False
 
     def print_summary(self):
         """Print test summary"""

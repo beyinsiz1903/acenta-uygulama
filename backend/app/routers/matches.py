@@ -34,6 +34,10 @@ class MatchSummaryItem(BaseModel):
     # v1.5: no-show based metrics from booking_outcomes
     no_show_rate: float = 0.0
     repeat_no_show_7: int = 0
+    # v2.1: verified-aware metrics
+    verified_bookings_30d: int = 0
+    verified_no_show_30d: int = 0
+    verified_share: float = 0.0
     # Debug field for v1.2: how many operational cancels in last 7 days
     repeat_cancelled_operational_7: int = 0
     # Legacy field for behavioral cancels (repeat_not_arrived_7)

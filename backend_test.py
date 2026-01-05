@@ -20302,7 +20302,7 @@ if __name__ == "__main__":
                 sys.exit(exit_code)
             else:
                 print(f"Unknown test type: {test_type}")
-                print("Available test types: proof_v2_story3, proof_v2_story4, proof_v2_story2, signed_download, faz5, proof_v11, all")
+                print("Available test types: risk_snapshots, proof_v2_story3, proof_v2_story4, proof_v2_story2, signed_download, faz5, proof_v11, all")
                 sys.exit(1)
         else:
             # Default: run comprehensive tests

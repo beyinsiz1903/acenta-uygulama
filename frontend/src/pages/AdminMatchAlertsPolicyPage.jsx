@@ -250,7 +250,8 @@ export default function AdminMatchAlertsPolicyPage() {
           </div>
         </CardContent>
       </Card>
-          <Card className="mt-4">
+
+      <Card className="mt-4">
             <CardHeader>
               <CardTitle>Risk Profile</CardTitle>
             </CardHeader>

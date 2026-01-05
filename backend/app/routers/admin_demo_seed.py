@@ -214,6 +214,13 @@ async def seed_demo_bookings(
     
     return SeedBookingsResponse(
         ok=True,
+        seed_tag="v1",
+        inserted=len(bookings_to_insert),
+        wiped=wiped,
+    )
+
+
+async def ensure_demo_no_show_booking(db, org_id: str) -> None:
 
 
 async def ensure_demo_no_show_booking(db, org_id: str) -> None:

@@ -72,6 +72,29 @@ class MatchDetailOut(BaseModel):
     bookings: List[BookingPublicView]
 
 
+class MatchEventItem(BaseModel):
+    booking_id: str
+    created_at: str
+    status: str
+    cancel_reason: Optional[str] = None
+    cancel_tag: str
+
+
+class MatchEventsSummary(BaseModel):
+    behavioral_cancel_count: int
+    operational_cancel_count: int
+    total_bookings_in_window: int
+
+
+class MatchEventsResponse(BaseModel):
+    ok: bool = True
+    match_id: str
+    window: dict[str, Any]
+    summary: MatchEventsSummary
+    items: list[MatchEventItem]
+
+
+
 class MatchAction(BaseModel):
     match_id: str
     agency_id: str
@@ -511,6 +534,95 @@ async def get_match_detail(
     )
     docs = await cursor.to_list(length=limit)
     bookings: list[BookingPublicView] = []
+
+
+@router.get("/{match_id}/events", response_model=MatchEventsResponse, dependencies=[Depends(require_roles(["super_admin"]))])
+async def get_match_events(
+    match_id: str,
+    days: int = Query(7, ge=1, le=365),
+    limit: int = Query(200, ge=1, le=1000),
+    db=Depends(get_db),
+    user=Depends(get_current_user),
+):
+    """Return recent bookings for a match with behavioral/operational tagging.
+
+    - window: last `days` days
+    - items: latest bookings (created_at desc) up to `limit`
+    """
+    org_id = user.get("organization_id")
+    agency_id, hotel_id = _parse_match_id(match_id)
+
+    # ownership: ensure agency & hotel belong to this org (reuse detail logic)
+    agency = await db.agencies.find_one({"organization_id": org_id, "_id": agency_id})
+    hotel = await db.hotels.find_one({"organization_id": org_id, "_id": hotel_id})
+    if not agency or not hotel:
+        raise HTTPException(status_code=404, detail="MATCH_NOT_FOUND")
+
+    now = now_utc()
+    cutoff = now - timedelta(days=days)
+
+    cursor = (
+        db.bookings.find(
+            {
+                "organization_id": org_id,
+                "agency_id": agency_id,
+                "hotel_id": hotel_id,
+                "created_at": {"$gte": cutoff},
+            }
+        )
+        .sort("created_at", -1)
+        .limit(limit)
+    )
+    docs = await cursor.to_list(length=limit)
+
+    behavioral_count = 0
+    operational_count = 0
+    items: list[MatchEventItem] = []
+
+    for d in docs:
+        status = d.get("status") or "unknown"
+        cancel_reason = d.get("cancel_reason")
+        cancelled_by = d.get("cancelled_by")
+        tag = "none"
+        if status == "cancelled":
+            # Use same rule as aggregation: operational if PRICE/RATE_CHANGED or cancelled_by system
+            if (cancel_reason in ["PRICE_CHANGED", "RATE_CHANGED"]) or cancelled_by == "system":
+                tag = "operational"
+                operational_count += 1
+            else:
+                tag = "behavioral"
+                behavioral_count += 1
+
+        created_at = d.get("created_at")
+        if hasattr(created_at, "isoformat"):
+            created_str = created_at.isoformat()
+        else:
+            created_str = str(created_at)
+
+        items.append(
+            MatchEventItem(
+                booking_id=str(d.get("_id")),
+                created_at=created_str,
+                status=status,
+                cancel_reason=cancel_reason,
+                cancel_tag=tag,
+            )
+        )
+
+    summary = MatchEventsSummary(
+        behavioral_cancel_count=behavioral_count,
+        operational_cancel_count=operational_count,
+        total_bookings_in_window=len(docs),
+    )
+
+    return MatchEventsResponse(
+        ok=True,
+        match_id=match_id,
+        window={"days": days, "from": cutoff.isoformat(), "to": now.isoformat()},
+        summary=summary,
+        items=items,
+    )
+
     for d in docs:
         bookings.append(BookingPublicView(**build_booking_public_view(d)))
 

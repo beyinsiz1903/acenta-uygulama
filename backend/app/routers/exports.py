@@ -293,11 +293,6 @@ def _rows_to_pdf(rows: list[dict[str, Any]], org_id: str, risk_profile: dict[str
     buf.close()
     return pdf_bytes
 
-                "generated_at": now_str,
-            }
-        )
-    return rows
-
 
 def _rows_to_csv(rows: list[dict[str, Any]]) -> str:
     output = StringIO()

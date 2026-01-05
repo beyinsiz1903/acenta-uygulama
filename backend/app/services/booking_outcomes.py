@@ -71,6 +71,52 @@ def resolve_outcome_for_booking(doc: Dict[str, Any], today: Optional[datetime] =
   return "unknown", "rule_inferred", inferred_reason
 
 
+def apply_pms_status_evidence(
+  outcome_doc: Dict[str, Any],
+  *,
+  status: str,
+  at: datetime,
+  source: str,
+  ref: Optional[str] = None,
+) -> Dict[str, Any]:
+  """Apply a PMS status event as evidence to an existing outcome doc.
+
+  - Appends a pms_status evidence record (idempotent by type+value+ref).
+  - If status == 'arrived', sets final_outcome='arrived', outcome_source='pms_event',
+    confidence=1.0 and outcome_version>=2.
+  """
+  status_norm = (status or "").lower()
+  ev_list = outcome_doc.get("evidence") or []
+
+  ev = {
+    "type": "pms_status",
+    "value": status_norm,
+    "at": at.isoformat(),
+    "source": source,
+    "ref": ref,
+  }
+
+  # Idempotency: do not duplicate same evidence
+  exists = any(
+    (e or {}).get("type") == ev["type"]
+    and (e or {}).get("value") == ev["value"]
+    and (e or {}).get("ref") == ev["ref"]
+    for e in ev_list
+  )
+  if not exists:
+    ev_list.append(ev)
+
+  outcome_doc["evidence"] = ev_list
+
+  if status_norm == "arrived":
+    outcome_doc["final_outcome"] = "arrived"
+    outcome_doc["outcome_source"] = "pms_event"
+    outcome_doc["outcome_version"] = max(int(outcome_doc.get("outcome_version") or 1), 2)
+    outcome_doc["confidence"] = 1.0
+
+  return outcome_doc
+
+
 async def upsert_booking_outcome(db, booking_doc: Dict[str, Any], today: Optional[datetime] = None) -> Dict[str, Any]:
   org_id = booking_doc.get("organization_id")
   booking_id = str(booking_doc.get("_id"))

@@ -120,7 +120,12 @@ class MockPmsClient(PmsClient):
         if not hotel_id or not agency_id or not check_in or not check_out:
             raise PmsError(code="VALIDATION_ERROR", message="missing fields", http_status=409)
 
-        # Deterministic PRICE_CHANGED simulation (stable by idempotency key)
+        # Test-only: deterministic PRICE_CHANGED when explicit fixture header/body is present
+        fixture = payload.get("test_fixture") or payload.get("fixture")
+        if fixture == "price_changed_409":
+            raise PmsError(code="PRICE_CHANGED", message="price changed (fixture)", http_status=409)
+
+        # Legacy deterministic simulation by idempotency key (left for backwards-compat)
         try:
             if int(idempotency_key.replace("-", "")[-1], 16) % 20 == 0:
                 raise PmsError(code="PRICE_CHANGED", message="price changed", http_status=409)

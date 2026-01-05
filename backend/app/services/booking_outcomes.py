@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from datetime import date, datetime, timedelta, timezone
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Optional, Tuple
 
 from app.utils import now_utc
@@ -17,7 +17,7 @@ class BookingOutcome:
   agency_id: str
   hotel_id: str
   booked_at: datetime
-  checkin_date: date
+  checkin_date: Optional[datetime]
   final_outcome: str
   outcome_source: str
   inferred_reason: Optional[str]

@@ -1932,6 +1932,8 @@ class ProofV11NoShowTester:
                     return False
             else:
                 self.log(f"❌ No no_show booking outcomes found")
+                self.log(f"⚠️  This is likely due to the backend BSON encoding issue preventing upsert of booking outcomes.")
+                self.log(f"   The dry run in test 1 should have shown that no_show detection logic works correctly.")
                 return False
         return False
 

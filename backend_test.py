@@ -14104,9 +14104,35 @@ class RepeatNotArrived7Tester:
         ]
         
         for i, booking_info in enumerate(bookings_to_create):
+            # First do a search to get a valid search_id
+            search_data = {
+                "hotel_id": self.hotel_id,
+                "check_in": booking_info["check_in"],
+                "check_out": booking_info["check_out"],
+                "occupancy": {"adults": 2, "children": 0}
+            }
+            
+            success, search_response, _ = self.run_test(
+                f"Search for {booking_info['desc']}",
+                "POST",
+                "api/agency/search",
+                200,
+                data=search_data,
+                token=self.agency_token
+            )
+            
+            if not success:
+                self.log(f"❌ Failed to search for {booking_info['desc']}")
+                return False
+            
+            search_id = search_response.get('search_id')
+            if not search_id:
+                self.log(f"❌ No search_id returned for {booking_info['desc']}")
+                return False
+            
             # Create draft
             draft_data = {
-                "search_id": f"search_{uuid.uuid4().hex[:8]}",
+                "search_id": search_id,
                 "hotel_id": self.hotel_id,
                 "room_type_id": "rt_standard",
                 "rate_plan_id": "rp_base",

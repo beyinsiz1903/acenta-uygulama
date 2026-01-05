@@ -288,11 +288,11 @@ export default function AdminMatchAlertsPolicyPage() {
             </div>
 
             <div className="space-y-1">
-              <label htmlFor="repeat-threshold" className="text-sm font-medium">
-                Repeat not-arrived (v1 placeholder)
+              <label htmlFor="threshold-repeat" className="text-sm font-medium">
+                Repeat not-arrived (alert e5i5i)
               </label>
               <Input
-                id="repeat-threshold"
+                id="threshold-repeat"
                 type="number"
                 min="0"
                 value={policy.threshold_repeat_not_arrived_7}

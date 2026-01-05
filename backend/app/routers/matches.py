@@ -274,6 +274,45 @@ async def list_matches(
                 actions_by_match_id[mid] = d
 
     # Load unified risk profile (defaults if doc is missing)
+    # Optional filter: only high risk
+    if only_high_risk:
+        items = [it for it in items if it.high_risk]
+
+    # Sorting
+    def sort_key_high_first(it: MatchSummaryItem):
+        return (
+            0 if it.high_risk else 1,
+            -it.repeat_not_arrived_7,
+            -it.cancel_rate,
+            -it.total_bookings,
+        )
+
+    def sort_key_repeat_desc(it: MatchSummaryItem):
+        return (-it.repeat_not_arrived_7, -it.cancel_rate)
+
+    def sort_key_rate_desc(it: MatchSummaryItem):
+        return (-it.cancel_rate, -it.repeat_not_arrived_7)
+
+    def sort_key_total_desc(it: MatchSummaryItem):
+        return (-it.total_bookings,)
+
+    def sort_key_last_booking_desc(it: MatchSummaryItem):
+        # None sonlarda kalsın
+        return (0 if it.last_booking_at else 1, it.last_booking_at or "")
+
+    if sort == "repeat_desc":
+        items.sort(key=sort_key_repeat_desc)
+    elif sort == "rate_desc":
+        items.sort(key=sort_key_rate_desc)
+    elif sort == "total_desc":
+        items.sort(key=sort_key_total_desc)
+    elif sort == "last_booking_desc":
+        items.sort(key=sort_key_last_booking_desc, reverse=True)
+    else:
+        # default: high_risk_first
+        items.sort(key=sort_key_high_first)
+
+
     risk_profile_obj = await load_risk_profile(db, org_id)
     risk_profile_dict = risk_profile_obj.to_dict()
 

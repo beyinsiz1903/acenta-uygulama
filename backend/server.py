@@ -35,6 +35,7 @@ from app.routers.hotel_integrations import router as hotel_integrations_router
 from app.routers.settlements import hotel_router as hotel_settlements_router
 from app.routers.settlements import agency_router as agency_settlements_router
 from app.routers.bookings import router as bookings_router
+from app.routers.booking_outcomes import router as booking_outcomes_router
 from app.routers.audit import router as audit_router
 from app.routers.voucher import router as voucher_router
 from app.routers.web_booking import router as web_booking_router

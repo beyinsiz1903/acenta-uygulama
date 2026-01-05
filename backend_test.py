@@ -1712,6 +1712,19 @@ class FAZ5HotelExtranetTester:
         return 0 if self.tests_failed == 0 else 1
 
 
+class ProofV11NoShowTester:
+    def __init__(self, base_url="https://acenta-risk.preview.emergentagent.com"):
+        self.base_url = base_url
+        self.admin_token = None
+        self.tests_run = 0
+        self.tests_passed = 0
+        self.tests_failed = 0
+        self.failed_tests = []
+        
+        # Store data for testing
+        self.no_show_booking_id = None
+        self.match_id = None
+
 class ProofV1BackendTester:
     def __init__(self, base_url="https://acenta-risk.preview.emergentagent.com"):
         self.base_url = base_url

@@ -252,6 +252,144 @@ export default function AdminMatchAlertsPolicyPage() {
               <label htmlFor="cooldown-hours" className="text-sm font-medium">
                 Cooldown (saat)
               </label>
+          <Card className="mt-4">
+            <CardHeader>
+              <CardTitle>Risk Profile</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <p className="text-xs text-muted-foreground">
+                High risk tanm: <code>behavioral_not_arrived_rate &gt;= rate_threshold</code> OR
+                <code> repeat_not_arrived_7 &gt;= repeat_threshold_7</code>. Tm dashboard, alert ve export
+                eikleri bu profile gre hesaplanr.
+              </p>
+
+              <div className="grid gap-3 md:grid-cols-3">
+                <div className="space-y-1">
+                  <label className="text-sm font-medium" htmlFor="risk-rate-threshold">
+                    Rate threshold
+                  </label>
+                  <Input
+                    id="risk-rate-threshold"
+                    type="number"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    value={riskProfile.rate_threshold}
+                    onChange={(e) =>
+                      setRiskProfile((prev) => ({
+                        ...prev,
+                        rate_threshold: parseFloat(e.target.value || "0"),
+                      }))
+                    }
+                    data-testid="risk-profile-rate-threshold"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Davransal not-arrived (behavioral cancel) oran iin 01 aras bir deer.
+                  </p>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-sm font-medium" htmlFor="risk-repeat-threshold">
+                    Repeat threshold 7d
+                  </label>
+                  <Input
+                    id="risk-repeat-threshold"
+                    type="number"
+                    min="0"
+                    value={riskProfile.repeat_threshold_7}
+                    onChange={(e) =>
+                      setRiskProfile((prev) => ({
+                        ...prev,
+                        repeat_threshold_7: parseInt(e.target.value || "0", 10),
+                      }))
+                    }
+                    data-testid="risk-profile-repeat-threshold"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Son 7 g iinde bu deeri aan tekrar says yksek risk saylr.
+                  </p>
+                </div>
+
+                <div className="space-y-1 flex flex-col justify-between">
+                  <div className="text-xs text-muted-foreground">
+                    <div>Mode: {riskProfile.mode}</div>
+                    {riskProfile.updated_at && (
+                      <div className="mt-1">
+                        Son gncelleyen: {riskProfile.updated_by_email || "-"}
+                        <br />
+                        Zaman: {new Date(riskProfile.updated_at).toLocaleString()}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex gap-2 mt-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={async () => {
+                        try {
+                          setSaving(true);
+                          setError("");
+                          const resp = await api.put("/admin/match-alerts/risk-profile", riskProfile);
+                          const rp = resp.data?.risk_profile || resp.data?.riskProfile || {};
+                          setRiskProfile((prev) => ({ ...prev, ...rp }));
+                        } catch (e) {
+                          console.error("Risk profile save failed", e);
+                          setError(apiErrorMessage(e));
+                        } finally {
+                          setSaving(false);
+                        }
+                      }}
+                      data-testid="risk-profile-save"
+                    >
+                      Save
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={loadPolicy}
+                      data-testid="risk-profile-reset"
+                    >
+                      Reset
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={async () => {
+                        try {
+                          setPreviewLoading(true);
+                          setError("");
+                          setPreviewHighRiskCount(null);
+                          const resp = await api.get("/admin/matches", {
+                            params: { days: runParams.days, min_total: runParams.min_total, include_action: 1 },
+                          });
+                          const items = resp.data?.items || [];
+                          const highCount = items.filter((m) => m.high_risk).length;
+                          setPreviewHighRiskCount(highCount);
+                        } catch (e) {
+                          console.error("Risk profile preview failed", e);
+                          setError(apiErrorMessage(e));
+                        } finally {
+                          setPreviewLoading(false);
+                        }
+                      }}
+                      data-testid="risk-profile-preview"
+                    >
+                      {previewLoading ? "Preview..." : "Preview impact"}
+                    </Button>
+                  </div>
+                  {previewHighRiskCount !== null && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      lk {runParams.min_total}+ efleme iinde high_risk=true says: {previewHighRiskCount}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
               <Input
                 id="cooldown-hours"
                 type="number"

@@ -250,6 +250,51 @@ export default function AdminMatchAlertsPolicyPage() {
               <p className="text-xs text-muted-foreground">
                 Aynı match ve config için yeni alert üretmeden önce beklenecek minimum süre.
               </p>
+          <div className="grid gap-4 md:grid-cols-2 mt-2" data-testid="match-risk-risk-profile-card">
+            <div className="space-y-1">
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <div className="text-sm font-medium">Prefer verified outcomes only</div>
+                  <p className="text-xs text-muted-foreground">
+                    Yeterli sayıda verified booking varsa, risk hesaplamasında yaln31zca verified
+                    outcomes kullan31l31r.
+                  </p>
+                </div>
+                <Switch
+                  checked={riskProfile.prefer_verified_only}
+                  onCheckedChange={(val) =>
+                    setRiskProfile((prev) => ({ ...prev, prefer_verified_only: Boolean(val) }))
+                  }
+                  data-testid="match-risk-prefer-verified-only"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <label htmlFor="min-verified-bookings" className="text-sm font-medium">
+                Min verified bookings
+              </label>
+              <Input
+                id="min-verified-bookings"
+                type="number"
+                min="0"
+                value={riskProfile.min_verified_bookings}
+                onChange={(e) =>
+                  setRiskProfile((prev) => ({
+                    ...prev,
+                    min_verified_bookings: Number.isNaN(parseInt(e.target.value, 10))
+                      ? 0
+                      : parseInt(e.target.value, 10),
+                  }))
+                }
+                data-testid="match-risk-min-verified-bookings"
+              />
+              <p className="text-xs text-muted-foreground">
+                Verified-only mode, sadece verified_bookings bu de1ferden b fcy fck veya e5fit ise aktif olur.
+              </p>
+            </div>
+          </div>
+
             </div>
           </div>
         </CardContent>

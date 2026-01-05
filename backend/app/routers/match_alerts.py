@@ -228,11 +228,29 @@ async def update_risk_profile(payload: RiskProfileOut, db=Depends(get_db), user=
     rate = max(0.0, min(1.0, float(payload.rate_threshold)))
     repeat = max(0, int(payload.repeat_threshold_7))
 
+    # derived v2 fields
+    no_show_rate_threshold = float(
+        payload.no_show_rate_threshold
+        if payload.no_show_rate_threshold is not None
+        else rate
+    )
+    repeat_no_show_threshold_7 = int(
+        payload.repeat_no_show_threshold_7
+        if payload.repeat_no_show_threshold_7 is not None
+        else repeat
+    )
+    min_verified = max(0, int(payload.min_verified_bookings or 0))
+    prefer_verified_only = bool(payload.prefer_verified_only)
+
     now = now_utc()
     doc = {
         "organization_id": org_id,
         "rate_threshold": rate,
         "repeat_threshold_7": repeat,
+        "no_show_rate_threshold": no_show_rate_threshold,
+        "repeat_no_show_threshold_7": repeat_no_show_threshold_7,
+        "min_verified_bookings": min_verified,
+        "prefer_verified_only": prefer_verified_only,
         "mode": "rate_or_repeat",
         "updated_at": now,
         "updated_by_email": user.get("email"),

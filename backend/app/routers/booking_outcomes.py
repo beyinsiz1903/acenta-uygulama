@@ -109,7 +109,16 @@ async def recompute_booking_outcomes(
   if org_doc and org_doc.get("slug") not in {"default", "org_demo"}:
     return BookingOutcomeRecomputeResponse(ok=False, dry_run=dry_run, scanned=0, upserts=0, counts={})
 
-  cutoff = now_utc() - timedelta(days=days)
+  base_now = now_utc()
+  if today:
+    try:
+      from datetime import datetime
+
+      base_now = datetime.fromisoformat(today)
+    except Exception:
+      base_now = now_utc()
+
+  cutoff = base_now - timedelta(days=days)
   q = {"organization_id": org_id, "created_at": {"$gte": cutoff}}
 
   cursor = db.bookings.find(q).sort("created_at", -1)

@@ -42,6 +42,7 @@ export default function AdminMatchesPage() {
   const [eventsShowBehavioral, setEventsShowBehavioral] = useState(true);
   const [eventsShowOperational, setEventsShowOperational] = useState(false);
   const [eventsReasonFilter, setEventsReasonFilter] = useState("");
+  const [copiedBookingId, setCopiedBookingId] = useState(null);
 
   const [selectedMatch, setSelectedMatch] = useState(null);
   const navigate = useNavigate();
@@ -586,17 +587,10 @@ export default function AdminMatchesPage() {
                                       if (!ev.booking_id) return;
                                       const ok = await safeCopyText(ev.booking_id);
                                       if (ok) {
-                                        // Kısa süreli görsel feedback: buton title güncelleme
-                                        const el = document.querySelector(
-                                          `[data-testid='match-risk-events-copy-booking-id-${ev.booking_id}']`
-                                        );
-                                        if (el) {
-                                          const prev = el.getAttribute("data-label") || ev.booking_id;
-                                          el.setAttribute("data-label", "Copied");
-                                          window.setTimeout(() => {
-                                            el.setAttribute("data-label", prev);
-                                          }, 1200);
-                                        }
+                                        setCopiedBookingId(ev.booking_id);
+                                        window.setTimeout(() => {
+                                          setCopiedBookingId(null);
+                                        }, 1200);
                                       }
                                     } catch (e) {
                                       console.error("Copy booking id failed", e);
@@ -605,7 +599,11 @@ export default function AdminMatchesPage() {
                                   data-testid={`match-risk-events-copy-booking-id-${ev.booking_id}`}
                                 >
                                   <Copy className="h-3 w-3" />
-                                  <span>{ev.booking_id || "-"}</span>
+                                  <span>
+                                    {copiedBookingId === ev.booking_id
+                                      ? "Copied"
+                                      : ev.booking_id || "-"}
+                                  </span>
                                 </button>
                               </TableCell>
                             </TableRow>

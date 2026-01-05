@@ -39,7 +39,7 @@ export default function AdminMatchesPage() {
   const [eventsOnlyCancelled, setEventsOnlyCancelled] = useState(false);
   const [eventsSort, setEventsSort] = useState("created_desc");
   const [eventsShowBehavioral, setEventsShowBehavioral] = useState(true);
-  const [eventsShowOperational, setEventsShowOperational] = useState(true);
+  const [eventsShowOperational, setEventsShowOperational] = useState(false);
   const [eventsReasonFilter, setEventsReasonFilter] = useState("");
 
   const [selectedMatch, setSelectedMatch] = useState(null);
@@ -520,7 +520,16 @@ export default function AdminMatchesPage() {
                           });
                           if (eventsReasonFilter) {
                             const q = eventsReasonFilter.toLowerCase();
-                            rows = rows.filter((i) => (i.cancel_reason || "").toLowerCase().includes(q));
+                            rows = rows.filter((i) => {
+                              const reason = (i.cancel_reason || "").toLowerCase();
+                              const note = (i.cancel_note || "").toLowerCase();
+                              const raw = (i.raw_reason || "").toLowerCase();
+                              return (
+                                reason.includes(q) ||
+                                note.includes(q) ||
+                                raw.includes(q)
+                              );
+                            });
                           }
                           rows = [...rows].sort((a, b) => {
                             const da = a.created_at ? new Date(a.created_at).getTime() : 0;

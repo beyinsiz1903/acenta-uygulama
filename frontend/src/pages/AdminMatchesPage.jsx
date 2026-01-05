@@ -403,41 +403,97 @@ export default function AdminMatchesPage() {
 
               {eventsData && !eventsLoading && !eventsError && (
                 <>
-                  <div className="flex items-center justify-between gap-2 mb-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs">Only cancelled</span>
-                      <input
-                        type="checkbox"
-                        checked={eventsOnlyCancelled}
-                        onChange={(e) => setEventsOnlyCancelled(e.target.checked)}
-                        data-testid="match-risk-events-only-cancelled"
-                      />
+                  <div className="flex flex-col gap-2 mb-2">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs">Only cancelled</span>
+                          <input
+                            type="checkbox"
+                            checked={eventsOnlyCancelled}
+                            onChange={(e) => setEventsOnlyCancelled(e.target.checked)}
+                            data-testid="match-risk-events-only-cancelled"
+                          />
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs">Tag filtre</span>
+                          <label className="flex items-center gap-1 text-xs">
+                            <input
+                              type="checkbox"
+                              checked={eventsShowBehavioral}
+                              onChange={(e) => setEventsShowBehavioral(e.target.checked)}
+                              data-testid="match-risk-events-tag-behavioral"
+                            />
+                            <span>behavioral</span>
+                          </label>
+                          <label className="flex items-center gap-1 text-xs">
+                            <input
+                              type="checkbox"
+                              checked={eventsShowOperational}
+                              onChange={(e) => setEventsShowOperational(e.target.checked)}
+                              data-testid="match-risk-events-tag-operational"
+                            />
+                            <span>operational</span>
+                          </label>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <label className="text-xs" htmlFor="match-risk-events-reason-filter">
+                            Reason filter
+                          </label>
+                          <input
+                            id="match-risk-events-reason-filter"
+                            type="text"
+                            className="border rounded px-2 py-1 text-xs bg-background min-w-[160px]"
+                            placeholder="Reason içinde ara..."
+                            value={eventsReasonFilter}
+                            onChange={(e) => setEventsReasonFilter(e.target.value)}
+                            data-testid="match-risk-events-reason-filter"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="space-y-1">
+                          <label className="text-xs font-medium" htmlFor="match-risk-events-sort">
+                            Sort by
+                          </label>
+                          <select
+                            id="match-risk-events-sort"
+                            className="border rounded px-2 py-1 text-xs bg-background"
+                            value={eventsSort}
+                            onChange={(e) => setEventsSort(e.target.value)}
+                            data-testid="match-risk-events-sort"
+                          >
+                            <option value="created_desc">Created (new → old)</option>
+                            <option value="created_asc">Created (old → new)</option>
+                          </select>
+                        </div>
+                        <Button
+                          type="button"
+                          size="xs"
+                          variant="outline"
+                          onClick={() => {
+                            try {
+                              const text = JSON.stringify(eventsData, null, 2);
+                              if (navigator.clipboard && navigator.clipboard.writeText) {
+                                navigator.clipboard.writeText(text);
+                              } else {
+                                const ta = document.createElement("textarea");
+                                ta.value = text;
+                                document.body.appendChild(ta);
+                                ta.select();
+                                document.execCommand("copy");
+                                document.body.removeChild(ta);
+                              }
+                            } catch (e) {
+                              console.error("Copy JSON failed", e);
+                            }
+                          }}
+                          data-testid="match-risk-events-copy-json"
+                        >
+                          Copy JSON
+                        </Button>
+                      </div>
                     </div>
-                    <Button
-                      type="button"
-                      size="xs"
-                      variant="outline"
-                      onClick={() => {
-                        try {
-                          const text = JSON.stringify(eventsData, null, 2);
-                          if (navigator.clipboard && navigator.clipboard.writeText) {
-                            navigator.clipboard.writeText(text);
-                          } else {
-                            const ta = document.createElement("textarea");
-                            ta.value = text;
-                            document.body.appendChild(ta);
-                            ta.select();
-                            document.execCommand("copy");
-                            document.body.removeChild(ta);
-                          }
-                        } catch (e) {
-                          console.error("Copy JSON failed", e);
-                        }
-                      }}
-                      data-testid="match-risk-events-copy-json"
-                    >
-                      Copy JSON
-                    </Button>
                   </div>
 
                   <div className="border rounded-md overflow-hidden" data-testid="match-risk-events-table">
@@ -448,38 +504,77 @@ export default function AdminMatchesPage() {
                           <TableHead>Status</TableHead>
                           <TableHead>Cancel tag</TableHead>
                           <TableHead>Cancel reason</TableHead>
+                          <TableHead>Booking ID</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {(eventsOnlyCancelled
-                          ? eventsData.items.filter((i) => i.status === "cancelled")
-                          : eventsData.items
-                        ).map((ev) => (
-                          <TableRow key={ev.booking_id}>
-                            <TableCell className="text-xs">
-                              {ev.created_at ? new Date(ev.created_at).toLocaleString() : "-"}
-                            </TableCell>
-                            <TableCell className="text-xs">{ev.status}</TableCell>
-                            <TableCell className="text-xs">
-                              {ev.cancel_tag === "behavioral" && (
-                                <Badge variant="outline" className="text-[10px] px-1 py-0">
-                                  behavioral
-                                </Badge>
-                              )}
-                              {ev.cancel_tag === "operational" && (
-                                <Badge variant="outline" className="text-[10px] px-1 py-0">
-                                  operational
-                                </Badge>
-                              )}
-                              {ev.cancel_tag === "none" && (
-                                <span className="text-[10px] text-muted-foreground">none</span>
-                              )}
-                            </TableCell>
-                            <TableCell className="text-xs font-mono max-w-[260px] truncate">
-                              {ev.cancel_reason || "-"}
-                            </TableCell>
-                          </TableRow>
-                        ))}
+                        {(() => {
+                          let rows = eventsData.items || [];
+                          if (eventsOnlyCancelled) {
+                            rows = rows.filter((i) => i.status === "cancelled");
+                          }
+                          rows = rows.filter((i) => {
+                            if (i.cancel_tag === "behavioral" && !eventsShowBehavioral) return false;
+                            if (i.cancel_tag === "operational" && !eventsShowOperational) return false;
+                            return true;
+                          });
+                          if (eventsReasonFilter) {
+                            const q = eventsReasonFilter.toLowerCase();
+                            rows = rows.filter((i) => (i.cancel_reason || "").toLowerCase().includes(q));
+                          }
+                          rows = [...rows].sort((a, b) => {
+                            const da = a.created_at ? new Date(a.created_at).getTime() : 0;
+                            const db = b.created_at ? new Date(b.created_at).getTime() : 0;
+                            if (eventsSort === "created_asc") {
+                              return da - db;
+                            }
+                            return db - da;
+                          });
+                          return rows.map((ev) => (
+                            <TableRow key={ev.booking_id}>
+                              <TableCell className="text-xs">
+                                {ev.created_at ? new Date(ev.created_at).toLocaleString() : "-"}
+                              </TableCell>
+                              <TableCell className="text-xs">{ev.status}</TableCell>
+                              <TableCell className="text-xs">
+                                {ev.cancel_tag === "behavioral" && (
+                                  <Badge variant="outline" className="text-[10px] px-1 py-0">
+                                    behavioral
+                                  </Badge>
+                                )}
+                                {ev.cancel_tag === "operational" && (
+                                  <Badge variant="outline" className="text-[10px] px-1 py-0">
+                                    operational
+                                  </Badge>
+                                )}
+                                {ev.cancel_tag === "none" && (
+                                  <span className="text-[10px] text-muted-foreground">none</span>
+                                )}
+                              </TableCell>
+                              <TableCell className="text-xs font-mono max-w-[260px] truncate">
+                                {ev.cancel_reason || "-"}
+                              </TableCell>
+                              <TableCell className="text-xs font-mono">
+                                <button
+                                  type="button"
+                                  className="inline-flex items-center gap-1 text-xs underline-offset-2 hover:underline"
+                                  onClick={() => {
+                                    try {
+                                      if (!ev.booking_id) return;
+                                      navigator.clipboard.writeText(ev.booking_id);
+                                    } catch (e) {
+                                      console.error("Copy booking id failed", e);
+                                    }
+                                  }}
+                                  data-testid="match-risk-events-copy-booking-id"
+                                >
+                                  <Copy className="h-3 w-3" />
+                                  <span>{ev.booking_id || "-"}</span>
+                                </button>
+                              </TableCell>
+                            </TableRow>
+                          ));
+                        })()}
                       </TableBody>
                     </Table>
                   </div>

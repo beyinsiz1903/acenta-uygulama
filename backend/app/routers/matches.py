@@ -194,6 +194,48 @@ async def list_matches(
         if a_id:
             agency_ids.append(a_id)
         if h_id:
+    # v1.5: load no-show metrics from booking_outcomes (7d window)
+    no_show_rate_by_match: dict[str, float] = {}
+    repeat_no_show_7_by_match: dict[str, int] = {}
+    if filtered:
+        outcomes_cursor = db.booking_outcomes.aggregate(
+            [
+                {
+                    "$match": {
+                        "organization_id": org_id,
+                        "checkin_date": {"$gte": (now_utc() - timedelta(days=7)).date()},
+                        "$or": [
+                            {"agency_id": str((r.get("_id") or {}).get("agency_id") or ""), "hotel_id": str((r.get("_id") or {}).get("hotel_id") or "")}  # type: ignore
+                            for r in filtered
+                        ],
+                    }
+                },
+                {
+                    "$group": {
+                        "_id": {"agency_id": "$agency_id", "hotel_id": "$hotel_id"},
+                        "total": {"$sum": 1},
+                        "no_show_count": {
+                            "$sum": {"$cond": [{"$eq": ["$final_outcome", "no_show"]}, 1, 0]},
+                        },
+                    }
+                },
+            ]
+        )
+        outcomes_rows = await outcomes_cursor.to_list(length=None)
+        for orow in outcomes_rows:
+            kk = orow.get("_id") or {}
+            aid = str(kk.get("agency_id") or "")
+            hid = str(kk.get("hotel_id") or "")
+            if not aid or not hid:
+                continue
+            key_id = f"{aid}__{hid}"
+            total = int(orow.get("total") or 0)
+            no_show_count = int(orow.get("no_show_count") or 0)
+            rate = float(no_show_count) / total if total > 0 else 0.0
+            no_show_rate_by_match[key_id] = rate
+            repeat_no_show_7_by_match[key_id] = no_show_count
+
+
             hotel_ids.append(h_id)
 
     agency_name_map, hotel_name_map = await _resolve_names(db, org_id, list(set(agency_ids)), list(set(hotel_ids)))

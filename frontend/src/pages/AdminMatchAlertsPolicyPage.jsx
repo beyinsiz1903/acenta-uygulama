@@ -29,6 +29,10 @@ export default function AdminMatchAlertsPolicyPage() {
   const [riskProfile, setRiskProfile] = useState({
     rate_threshold: 0.5,
     repeat_threshold_7: 3,
+    no_show_rate_threshold: 0.5,
+    repeat_no_show_threshold_7: 3,
+    min_verified_bookings: 0,
+    prefer_verified_only: false,
     mode: "rate_or_repeat",
     updated_at: null,
     updated_by_email: null,

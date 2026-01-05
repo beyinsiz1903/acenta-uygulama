@@ -154,6 +154,14 @@ async def ensure_seed_data() -> None:
     await db.bookings.create_index([("agency_id", 1), ("status", 1), ("submitted_at", -1)])
     await db.bookings.create_index([("hotel_id", 1), ("status", 1), ("submitted_at", -1)])
     await db.bookings.create_index([("approval_deadline_at", 1)])  # SLA tracking
+    # Repeat not-arrived 7d: index for per-pair window scans
+    await db.bookings.create_index([
+        ("organization_id", 1),
+        ("agency_id", 1),
+        ("hotel_id", 1),
+        ("status", 1),
+        ("created_at", -1),
+    ])
 
 
     # FAZ-10.1: integration sync outbox

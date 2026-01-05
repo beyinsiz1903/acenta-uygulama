@@ -23,6 +23,7 @@ export default function AdminMatchesPage() {
   const [items, setItems] = useState([]);
   const [range, setRange] = useState(null);
   const [onlyHighRisk, setOnlyHighRisk] = useState(false);
+  const [hideBlocked, setHideBlocked] = useState(false);
   const [sort, setSort] = useState("high_risk_first");
   const navigate = useNavigate();
 

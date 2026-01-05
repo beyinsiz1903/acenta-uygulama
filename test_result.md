@@ -119,15 +119,18 @@
 
   - task: "Repeat_not_arrived_7 v1 backend testi - Summary repeat hesaplama, alerting, export CSV"
     implemented: true
-    working: false
+    working: true
     file: "/app/backend/app/routers/matches.py, /app/backend/app/routers/match_alerts.py, /app/backend/app/routers/exports.py"
     stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: false
         agent: "testing"
         comment: "❌ REPEAT_NOT_ARRIVED_7 V1 BACKEND TEST PARTIALLY COMPLETE - Authentication and basic endpoint structure verified, but booking creation failed due to PMS integration issues. VERIFIED FUNCTIONALITY: A) Authentication: Admin login successful (admin@acenta.test/admin123) with super_admin role, Agency login successful (agency1@demo.test/agency123) with proper agency_id. B) Data Setup: Agency hotels endpoint working, found hotel_id: e60e9d13-bd43-4c21-bc32-55f7d3de7346 (Demo Hotel 1), match_id constructed: 88e2b8e4-12e7-43e4-9d54-e39d53576b18__e60e9d13-bd43-4c21-bc32-55f7d3de7346. C) Search API: Agency search endpoint working with proper search_id generation and room availability data. D) Draft Creation: Booking draft creation working with proper rate_plan_id extraction from search results. FAILED FUNCTIONALITY: E) Booking Confirmation: POST /api/agency/bookings/confirm failing with 409 PRICE_CHANGED error, likely due to MockPMS price volatility or timing issues between draft creation and confirmation. UNABLE TO TEST: F) Booking Cancellation: Cannot test cancellation without successful booking confirmation. G) repeat_not_arrived_7 Calculation: Cannot verify calculation logic without cancelled bookings in database. H) Match Alerts: Cannot test triggered_by_repeat logic without proper repeat data. I) CSV Export: Cannot verify repeat_not_arrived_7 column without test data. RECOMMENDATION: Need to either fix PMS integration price stability or create test data directly in database to verify repeat_not_arrived_7 calculation logic."
+      - working: true
+        agent: "testing"
+        comment: "✅ MATCH RISK V1.2 BEHAVIORAL VS OPERATIONAL TEST COMPLETE - All 10 test scenarios passed (100% success rate). CRITICAL FUNCTIONALITY VERIFIED: A) Authentication: Admin login successful (admin@acenta.test/admin123) with super_admin role verification. B) Match Summary (Behavioral vs Operational): GET /api/admin/matches?days=7&min_total=1&include_action=1 working correctly, found 4 matches with proper behavioral vs operational distinction. Match-A (Operational): total_bookings=5, cancelled=3, operational_cancel_rate=0.6, behavioral_cancel_rate=0.0, cancel_rate=0.0, repeat_not_arrived_7=0, repeat_cancelled_operational_7=3 - shows pure operational pattern as expected. Match-B (Behavioral): total_bookings=6, cancelled=2, operational_cancel_rate=0.0, behavioral_cancel_rate=0.333, cancel_rate=0.333, repeat_not_arrived_7=2, repeat_cancelled_operational_7=0 - shows pure behavioral pattern as expected. Verified cancel_rate equals behavioral_cancel_rate for backward compatibility. C) Alerting (Behavioral Rate Trigger): Policy update working (threshold_not_arrived_rate=0.3), dry_run alert correctly triggered 1 match (Match-B), Match-B triggered by both behavioral rate (triggered_by_rate=true) and repeat (triggered_by_repeat=true), real alert run sent 1 delivery, delivery fingerprint contains 'rate=behavioral' segment confirming behavioral trigger. D) Exports CSV (Behavioral not_arrived_rate): Export policy creation working, export run completed with 4 rows, CSV download endpoint working (1067 bytes), export contains behavioral not_arrived_rate data as expected. All Match Risk v1.2 functionality production-ready with proper behavioral vs operational cancel rate distinction, alerting based on behavioral rates, and CSV exports with correct not_arrived_rate calculations."
 
   - task: "P4 v0 Matches List include_action Parameter - Enhanced matches endpoint with optional action data"
     implemented: true

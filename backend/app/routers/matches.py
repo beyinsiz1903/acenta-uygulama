@@ -34,6 +34,9 @@ class MatchSummaryItem(BaseModel):
     repeat_not_arrived_7: int = 0
     # Debug field for v1.2: how many operational cancels in last 7 days
     repeat_cancelled_operational_7: int = 0
+    # Unified risk flag (using RiskProfile)
+    high_risk: bool = False
+    high_risk_reasons: list[str] = []
 
     # Optional action fields (only populated when include_action=1)
     action_status: Optional[str] = None

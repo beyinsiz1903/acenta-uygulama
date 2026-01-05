@@ -534,6 +534,29 @@ async def get_match_detail(
     )
     docs = await cursor.to_list(length=limit)
     bookings: list[BookingPublicView] = []
+    for d in docs:
+        bookings.append(BookingPublicView(**build_booking_public_view(d)))
+
+    metrics = MatchMetrics(
+        total_bookings=total,
+        pending=pending,
+        confirmed=confirmed,
+        cancelled=cancelled,
+        confirm_rate=round(confirm_rate, 3),
+        cancel_rate=round(cancel_rate, 3),
+        avg_approval_hours=None if avg_approval_hours is None else round(avg_approval_hours, 2),
+    )
+
+    return MatchDetailOut(
+        id=f"{agency_id}__{hotel_id}",
+        agency_id=agency_id,
+        agency_name=agency.get("name"),
+        hotel_id=hotel_id,
+        hotel_name=hotel.get("name"),
+        range={"from": cutoff.isoformat(), "to": now_utc().isoformat(), "days": days},
+        metrics=metrics,
+        bookings=bookings,
+    )
 
 
 @router.get("/{match_id}/events", response_model=MatchEventsResponse, dependencies=[Depends(require_roles(["super_admin"]))])

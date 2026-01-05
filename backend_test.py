@@ -1941,8 +1941,8 @@ class ProofV2Story3Tester:
                     self.log(f"✅ Diff contains verified_by_email")
                 else:
                     # Check if verified_by_email is in the evidence instead
-                    evidence = verified_entry.get('after', {}).get('evidence', [])
-                    if evidence and any(ev.get('by_email') == 'admin@acenta.test' for ev in evidence):
+                    evidence_after = diff.get('evidence', {}).get('after', [])
+                    if evidence_after and any(ev.get('by_email') == 'admin@acenta.test' for ev in evidence_after):
                         self.log(f"✅ verified_by_email found in evidence instead of diff")
                     else:
                         self.log("❌ verified_by_email not found in diff or evidence")

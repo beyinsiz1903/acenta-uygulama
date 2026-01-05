@@ -172,6 +172,31 @@ export default function AdminMatchesPage() {
                           <RiskBadge cancelRate={item.cancel_rate} />
                         </TableCell>
                         <TableCell>
+                          {item.high_risk && (
+                            <Badge
+                              variant="destructive"
+                              data-testid="match-risk-row-high-badge"
+                            >
+                              HIGH
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {Array.isArray(item.high_risk_reasons) && item.high_risk_reasons.length > 0 ? (
+                            <div className="flex flex-wrap gap-1">
+                              {item.high_risk_reasons.map((r) => (
+                                <Badge key={r} variant="outline" className="text-[10px] px-1 py-0">
+                                  {r}
+                                </Badge>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">
+                              ok
+                            </span>
+                          )}
+                        </TableCell>
+                        <TableCell>
                           {item.action_status && item.action_status !== "none" && (
                             <Badge
                               variant={

@@ -14092,15 +14092,18 @@ class RepeatNotArrived7Tester:
         
         # Dates within last 7 days
         recent_date1 = (datetime.now() - timedelta(days=3)).strftime("%Y-%m-%d")
+        recent_date1_out = (datetime.now() - timedelta(days=2)).strftime("%Y-%m-%d")
         recent_date2 = (datetime.now() - timedelta(days=5)).strftime("%Y-%m-%d")
+        recent_date2_out = (datetime.now() - timedelta(days=4)).strftime("%Y-%m-%d")
         
         # Date 8+ days ago (should not count)
         old_date = (datetime.now() - timedelta(days=10)).strftime("%Y-%m-%d")
+        old_date_out = (datetime.now() - timedelta(days=9)).strftime("%Y-%m-%d")
         
         bookings_to_create = [
-            {"check_in": recent_date1, "check_out": recent_date1, "should_count": True, "desc": "Recent cancelled 1 (3 days ago)"},
-            {"check_in": recent_date2, "check_out": recent_date2, "should_count": True, "desc": "Recent cancelled 2 (5 days ago)"},
-            {"check_in": old_date, "check_out": old_date, "should_count": False, "desc": "Old cancelled (10 days ago)"},
+            {"check_in": recent_date1, "check_out": recent_date1_out, "should_count": True, "desc": "Recent cancelled 1 (3 days ago)"},
+            {"check_in": recent_date2, "check_out": recent_date2_out, "should_count": True, "desc": "Recent cancelled 2 (5 days ago)"},
+            {"check_in": old_date, "check_out": old_date_out, "should_count": False, "desc": "Old cancelled (10 days ago)"},
         ]
         
         for i, booking_info in enumerate(bookings_to_create):

@@ -553,14 +553,15 @@ async def download_run(run_id: str, db=Depends(get_db), user=Depends(get_current
     if not blob:
         raise HTTPException(status_code=404, detail="EXPORT_BLOB_NOT_FOUND")
 
-    content = blob.get("content") or ""
+    content = blob.get("content") or b""
     file_info = run.get("file") or {}
     filename = file_info.get("filename") or "export.csv"
+    media_type = file_info.get("content_type") or "text/csv"
 
     headers = {
         "Content-Disposition": f"attachment; filename={filename}",
     }
-    return Response(content=content, media_type="text/csv", headers=headers)
+    return Response(content=content, media_type=media_type, headers=headers)
 
 
 # Public download endpoint (no auth required)

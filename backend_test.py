@@ -19747,11 +19747,11 @@ class ProofV2Story4Tester:
         self.log("\n=== 4) PREFER_VERIFIED_ONLY ON + VERIFIED YETERLI ===")
         self.log("\n--- 4.1 Case A: Yüksek eşikler, high_risk=false ---")
         
-        # Set high thresholds to make high_risk false
+        # Set very high thresholds to make high_risk false
         update_data = {
-            "rate_threshold": 0.9,
+            "rate_threshold": 1.1,  # Higher than 100% to avoid rate-based risk
             "repeat_threshold_7": 99,
-            "no_show_rate_threshold": 0.9,
+            "no_show_rate_threshold": 1.1,  # Higher than 100% to avoid rate-based risk
             "repeat_no_show_threshold_7": 99,
             "min_verified_bookings": 1,  # Lower threshold to enable verified-only mode
             "prefer_verified_only": True

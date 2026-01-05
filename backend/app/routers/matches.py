@@ -103,6 +103,9 @@ async def list_matches(
     days: int = Query(30, ge=1, le=365),
     min_total: int = Query(3, ge=1, le=1000),
     include_action: bool = Query(False),
+    only_high_risk: bool = Query(False),
+    sort: str = Query("high_risk_first"),
+    include_reasons: bool = Query(True),
     db=Depends(get_db),
     user=Depends(get_current_user),
 ):
@@ -316,10 +319,11 @@ async def list_matches(
         # Unified high-risk decision + reasons
         high_risk = is_high_risk(behavioral_cancel_rate, repeat_7_behavioral, risk_profile_obj)
         reasons: list[str] = []
-        if behavioral_cancel_rate >= risk_profile_obj.rate_threshold:
-            reasons.append("rate")
-        if repeat_7_behavioral >= risk_profile_obj.repeat_threshold_7:
-            reasons.append("repeat")
+        if include_reasons:
+            if behavioral_cancel_rate >= risk_profile_obj.rate_threshold:
+                reasons.append("rate")
+            if repeat_7_behavioral >= risk_profile_obj.repeat_threshold_7:
+                reasons.append("repeat")
 
         items.append(
             MatchSummaryItem(

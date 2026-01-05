@@ -6,89 +6,90 @@ The top 3 pragmatic missing features requested were:
 2.  **Risk to Action Bridge**: The ability to apply actions to risky matches, such as adding them to a watchlist, flagging for manual review, or blocking the pairing.
 3.  **Alerting**: A system to send email or webhook notifications when specific risk thresholds are exceeded.
 
-Upon investigation, it was discovered that the foundational P4 Risk Engine did not exist in the repository. The project's scope was therefore expanded to first build this entire module from scratch, defining a match as an **agency-hotel pair**, and then implementing all the requested features on top of this new foundation.
+Upon investigation, it was discovered that the foundational P4 Risk Engine did not exist. The project's scope was therefore expanded to first build this entire module from scratch, defining a match as an **agency-hotel pair**, and then implementing all the requested features on top of this new foundation. The project has since evolved through multiple user-driven phases to refine and expand this module.
 
 **PRODUCT REQUIREMENTS:**
 1.  Build a Match Risk engine that aggregates booking data to identify risky agency-hotel pairings.
 2.  Create a Match Risk Dashboard to list these pairings with relevant risk metrics.
-3.  Implement a detail page for each match.
+3.  Implement a detail page and a drill-down event viewer for each match.
 4.  Add a system for admins to apply actions (e.g., , ) to matches.
 5.  Develop a configurable alerting system (email and webhook) that triggers on high-risk thresholds.
-6.  Create an Export Center for scheduling and downloading CSV reports of risk data.
+6.  Create an Export Center for scheduling and downloading CSV and PDF reports of risk data.
 7.  Ensure download links are secure and time-limited.
-8.  Implement the  risk signal and integrate it end-to-end (dashboard, alerts, exports).
-9.  All new features must be protected and accessible only by  roles.
+8.  Implement a sophisticated risk signal logic, distinguishing between behavioral and operational cancellations.
+9.  Centralize risk thresholds into a single, editable Risk Profile.
+10. All new features must be protected and accessible only by  roles.
+11. Implement isolated, deterministic tests for external service mocks (like MockPMS) to ensure CI stability.
 
 **User's preferred language**: Turkish. The next agent MUST respond in Turkish.
 
 **what currently exists?**
-The application now has a complete, production-grade Match Risk module built from scratch. This includes:
--   **Risk Engine:** A backend engine that aggregates  data to calculate risk signals for agency-hotel pairs (), including  (as a proxy for ) and a fully implemented  signal.
--   **Admin UI:** A comprehensive set of admin pages:
-    -   **Match Risk Dashboard ():** A filterable and sortable list of all matches with their risk metrics and action statuses.
-    -   **Match Detail Page ():** A detailed view of a single match, including an Action Panel to flag or block pairs.
-    -   **Alerting Policy UI ():** A full UI to configure alert thresholds, channels (email/webhook), batching, and security settings. It also includes a Deliveries Viewer to see sent/failed alerts and retry them.
-    -   **Export Center ():** A UI to create and manage export policies, run exports manually, and download historical reports from an archive.
--   **Alerting System:** A robust system that can send alerts via email (using AWS SES) or webhook (single or batch mode). It supports deduplication, cooldowns, and v3 security hardening (timestamp, request ID, and signed payloads).
--   **Export System:** A feature to generate, archive, and download CSV reports. Download links are public, secure (token-based), and time-limited (7-day expiry).
--   **Documentation:** A detailed markdown file () explaining how to verify webhook signatures, complete with Node.js and Python examples.
+The application features a mature Match Risk module built from the ground up. This includes:
+-   **Risk Engine:** A backend engine that calculates risk signals, now distinguishing between behavioral (e.g., customer cancellation) and operational (e.g., ) cancellations to provide a more accurate  proxy.
+-   **Unified Risk Profile:** A central  collection and associated API () allows admins to define high-risk thresholds (, ) from a single UI, which governs the dashboard, alerts, and exports.
+-   **Admin UI:**
+    -   **Match Risk Dashboard:** A filterable (, ) and sortable dashboard. It features visual badges for  risk,  status, and drill-down functionality.
+    -   **Match Detail Drawer:** A drawer opens on row-click, showing a summary of risk signals and a detailed list of recent booking events () with tags for  vs.  cancels. A link provides access to the full detail page.
+    -   **Match Detail Page:** A full page with an Action Panel to manage match statuses (, ).
+    -   **Alerting Policy UI:** A comprehensive UI to manage alert policies and view delivery history. The risk thresholds are now managed in a separate card on this page.
+    -   **Export Center:** A full UI to manage export policies (for both CSV and PDF), run exports, and download from an archive.
+-   **Alerting & Export Systems:** Both systems are fully integrated with the unified  and the behavioral/operational cancellation logic. Exports now support both CSV and PDF formats and include a header note about how blocked matches are handled.
+-   **Deterministic Testing:** The  signal is now verifiable with deterministic seed data. MockPMS error states (like ) are tested in isolation using dedicated contract tests, ensuring CI stability.
 
 **Last working item**:
--   **Last item agent was working:** Implementing filter and sort controls on the Match Risk Dashboard for the newly added  signal.
--   **Status:** COMPLETED
--   **Agent Testing Done:** Y (Backend API changes were tested and confirmed to work as expected. Frontend changes were implemented and described.)
--   **Which testing method agent to use?** NA
+-   **Last item agent was working:** The user requested UI polish for the **Match Detail Drill-down Drawer** to improve its usability for operations teams. The agent received the detailed plan but has not started implementation.
+-   **Status:** NOT STARTED
+-   **Agent Testing Done:** N
+-   **Which testing method agent to use?** Frontend testing agent (to verify client-side filters, sorting, and copy functionality) and screenshot tool (to capture the final UI).
 -   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
-There are no pending or in-progress issues. The last requested task was completed.
+-   **Issue 1: (P0) Implement Drawer UX Polish v1**
+    -   **Description:** The Match Detail Drawer needs enhanced controls to be more effective for operational analysis. The user has specified a clear set of features to be added.
+    -   **Attempted fixes:** None yet.
+    -   **Next debug checklist:**
+        1.  Locate , where the  component is implemented.
+        2.  Add state management for the new filters (sort order, tag filters, reason text).
+        3.  Implement client-side logic to sort and filter the  array based on the new state.
+        4.  Add the new UI controls (select for sort, checkboxes for tags, input for reason filter, copy icon for booking ID) to the .
+        5.  Implement the clipboard copy functionality for the booking ID.
+    -   **Why fix this issue and what will be achieved with the fix?** This will make the drill-down feature significantly more powerful for operators, allowing them to quickly isolate the specific booking events that contribute to a match's risk profile.
+    -   **Status:** NOT STARTED
+    -   **Is recurring issue?** N
+    -   **Should Test frontend/backend/both after fix?** frontend
+    -   **Blocked on other issue:** None.
 
 **In progress Task List**:
-There are no in-progress tasks.
+-   **Task 1: (P0) Drawer UX Polish v1**
+    -   **Where to resume:** Start by editing .
+    -   **What will be achieved with this?** A more interactive and useful drill-down drawer with sorting, filtering, and copy-to-clipboard functionality.
+    -   **Status:** NOT STARTED
+    -   **Should Test frontend/backend/both after fix?** frontend
+    -   **Blocked on something:** None.
 
 **Upcoming and Future Tasks**
-
 -   **Upcoming Tasks:**
-    -   (P0) **PDF Exports:** Add PDF as a supported format in the Export Center. This would involve generating a PDF report for the Match Risk Summary.
-    -   (P1) **Resolve  Proxy:** The current  and  signals use  as a proxy for a not arrived outcome. The next step is to implement a true  signal, potentially by filtering out operational cancellations (e.g., ) or integrating with a proper PMS outcome.
+    -   (P1) **Export-to-Drawer Deep Link:** Add a mechanism (e.g., a clickable link on the  in exported CSVs) that deep-links back to the dashboard and automatically opens the events drawer for that match.
+    -   (P1) **UI Polish for PDF in Export Center:** While PDF export is functional, the UI in the Export Center could be enhanced with specific PDF icons and labels to make the feature more discoverable. This was deprioritized but is still a valid task.
 
 -   **Future Tasks:**
-    -   (P2) **Contacts Module:** Build a new module for managing contacts at hotels and agencies, potentially with task/activity integration.
-    -   (P2) **Tenant-Scoped Reporting:** Create read-only versions of reports for non-super-admin roles (e.g., agency or hotel-specific views).
-    -   (P3) **Webhook Consumer Examples:** Create example repositories (, ) to demonstrate how to listen to the webhooks, making integration easier for customers.
+    -   (P2) **Resolve  Proxy:** The  signal still relies on  status. The next major step would be to integrate a true  signal from a PMS or by refining the cancellation reason logic further.
+    -   (P2) **RiskProfile Mode Expansion:** Enable the  field in the  to support  and  in addition to the current , and reflect this in the UI.
+    -   (P2) **Contacts Module:** Build a new module for managing contacts at hotels and agencies.
+    -   (P2) **Tenant-Scoped Reporting:** Create read-only versions of reports for non-super-admin roles.
+    -   (P3) **Webhook Consumer Examples:** Create example repositories to demonstrate how customers can consume the secure webhooks.
 
 **Completed work in this session**
--   **P4 Match Risk v0 Foundation:**
-    -   Built the entire backend and frontend for the Match Risk module from scratch, defining a match as an  pair.
-    -   Created Match Risk Dashboard (, ) and Detail Page (, ).
--   **Risk Actions v0:**
-    -   Implemented a system to apply actions (, , ) to matches, stored in the  collection.
-    -   Added an Action Panel to the Match Detail UI.
--   **Alerting System (End-to-End):**
-    -   Created backend models (, ) and services for a configurable alerting system.
-    -   Implemented email channel via existing AWS SES integration.
-    -   Implemented webhook channel with v3 hardening (, , signed payloads).
-    -   Added support for batch webhooks.
-    -   Created a full Admin UI to manage policies, view deliveries, and retry failed alerts.
-    -   Authored  for customer integration.
--   **Export Center (End-to-End):**
-    -   Created a complete system for defining, running, and archiving CSV exports (, , ).
-    -   Implemented secure, time-limited, public download links via .
-    -   Integrated email notifications for completed exports.
-    -   Built a full Admin UI with Policies and Archive tabs.
--   ** Signal (End-to-End):**
-    -   Implemented the backend calculation for the signal based on  bookings in the last 7 days.
-    -   Integrated the signal into the Dashboard, Alerting engine, and Export CSVs.
-    -   Made the  in exports dependent on a configurable repeat threshold.
-    -   Added filtering and sorting by the repeat signal to the Match Risk Dashboard.
+-   **Behavioral vs. Operational Logic:** Differentiated cancellation types across the entire risk engine (dashboard, alerts, exports) for more accurate signaling.
+-   **Unified Risk Profile:** Centralized risk thresholds into an editable  collection and UI, ensuring consistency across all modules.
+-   **PDF Exports:** Added PDF as a supported format in the Export Center, generated via ReportLab.
+-   **Dashboard Filters & Sorting:** Implemented  filter and multiple sorting options on the Match Risk Dashboard.
+-   **Blocked Match Visibility:** Added UI badges and filters to clarify the status and impact of blocked matches on the dashboard.
+-   **Match Event Drill-down:** Created a new API endpoint () and a UI drawer on the dashboard to show detailed booking events for any match.
+-   **Isolated MockPMS Testing:** Created deterministic contract tests for the MockPMS service to handle  and other errors, stabilizing the core test suite.
 
 **Earlier issues found/mentioned but not fixed**
--   **Issue 1: Testing Limitation with MockPMS**
-    -   **Description:** The test agent had difficulty automatically verifying the  signal logic because the MockPMS service would return a  error, preventing the creation of new  bookings for testing.
-    -   **Workaround:** The agent confirmed the code's correctness by manually inspecting the logic and using existing seed data. For future testing, the agent suggested seeding cancelled bookings directly into the database to bypass the MockPMS dependency.
-    -   **Why to solve this issue and what will be achieved with this?** Fixing this in the test environment would allow for more robust, automated end-to-end testing of risk signals.
-    -   **Should Test frontend/backend/both after fix:** backend
-    -   **Is recurring issue?** Y
+-   The Testing Limitation with MockPMS issue from the previous fork has been **RESOLVED** in this session by creating deterministic seed data for the risk engine and isolated contract tests for the MockPMS service.
 
 **Known issue recurrence from previous fork**
 -   None.
@@ -97,68 +98,116 @@ There are no in-progress tasks.
 
 
 **Key Technical Concepts**
--   **Backend:** FastAPI, MongoDB (with aggregation pipelines for risk calculation).
--   **Frontend:** React, Tailwind CSS.
--   **Risk Engine:** Business logic is based on aggregating  data to derive risk signals for  pairs. The  signal is proxied by .
--   **Alerting:** Configurable policies trigger alerts via an existing  service or a new webhook service.
--   **Webhooks:** Feature a v3 hardening standard, including  (for replay protection),  (for idempotency), and a signed payload ( of ).
--   **Secure Downloads:** Public download links for exports are secured using a short-lived, unique token stored per export run, with an expiration check.
+-   **Backend:** FastAPI, MongoDB (utilizing aggregation pipelines).
+-   **Frontend:** React, Tailwind CSS, Shadcn UI components (including the new ).
+-   **Risk Logic:**
+    -   **Behavioral vs. Operational Cancels:** Aggregation pipelines now categorize cancellations to filter out operational noise like .
+    -   **Unified Risk Profile:** A single MongoDB document per organization () defines high-risk thresholds, acting as the single source of truth for the dashboard, alerts, and exports.
+-   **PDF Generation:** Using the  library on the backend to generate PDF reports dynamically.
+-   **Isolated Contract Testing:** Using ============================= test session starts ==============================
+platform linux -- Python 3.11.14, pytest-9.0.2, pluggy-1.6.0
+rootdir: /app
+plugins: anyio-4.12.0
+collected 2 items / 3 errors
+
+==================================== ERRORS ====================================
+___________ ERROR collecting backend/tests/test_mockpms_contracts.py ___________
+ImportError while importing test module '/app/backend/tests/test_mockpms_contracts.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/usr/local/lib/python3.11/importlib/__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend/tests/test_mockpms_contracts.py:6: in <module>
+    from app.services.connect_layer import create_booking
+E   ModuleNotFoundError: No module named 'app'
+_________ ERROR collecting backend/tests/test_mockpms_price_changed.py _________
+ImportError while importing test module '/app/backend/tests/test_mockpms_price_changed.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/usr/local/lib/python3.11/importlib/__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend/tests/test_mockpms_price_changed.py:6: in <module>
+    from app.services.connect_layer import create_booking
+E   ModuleNotFoundError: No module named 'app'
+_____________________ ERROR collecting test_pilot_data.py ______________________
+test_pilot_data.py:14: in <module>
+    MONGO_URL = os.environ["MONGO_URL"]
+                ^^^^^^^^^^^^^^^^^^^^^^^
+<frozen os>:679: in __getitem__
+    ???
+E   KeyError: 'MONGO_URL'
+=============================== warnings summary ===============================
+../root/.venv/lib/python3.11/site-packages/starlette/formparsers.py:12
+  /root/.venv/lib/python3.11/site-packages/starlette/formparsers.py:12: PendingDeprecationWarning: Please use `import python_multipart` instead.
+    import multipart
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+ERROR backend/tests/test_mockpms_contracts.py
+ERROR backend/tests/test_mockpms_price_changed.py
+ERROR test_pilot_data.py - KeyError: 'MONGO_URL'
+!!!!!!!!!!!!!!!!!!! Interrupted: 3 errors during collection !!!!!!!!!!!!!!!!!!!!
+========================= 1 warning, 3 errors in 0.90s ========================= with specific  flags in request payloads to test external service mock (MockPMS) behavior deterministically, separate from core application logic tests.
 
 **key DB schema**
--   : {{ (PK), , , }}
 -   : {{ (PK), , , , , }}
--   : {{, , , , , , , }}
+-   : {{ (PK), , , }}
 -   : {{ (PK), , , , }}
--   : {{, , , , :{, }}}
--   : {{, ,  (Binary)}}
+-   : {{ (PK), , ,  (|), }}
 
 **All files of reference**
--   : Created to provide the core summary and detail endpoints for the Match Risk module.
--   : Created to manage alerting policies, run alerts, and view delivery history.
--   : Created to manage the entire export lifecycle, from policies to downloads.
--   : Created to encapsulate webhook sending logic, including v3 signature hardening.
--   : Created to document the secure webhook standard for customer integration.
--   : Created as the main dashboard UI for viewing match risks.
--   : Created for drilling down into a single match and applying actions.
--   : Created as the UI for managing the entire alerting system.
--   : Created as the UI for the Export Center.
--   , , : Updated to integrate all new pages and routes.
+-   : Heavily updated to include behavioral/operational logic, integrate with the Risk Profile, add sorting/filtering, and provide the new  drill-down endpoint.
+-   : New file containing logic to load and manage risk profiles.
+-   : Updated to create deterministic seed data for  (operational) and  (behavioral) and to set a specific  for .
+-   : Updated to handle PDF generation with  and add header notes to both CSV and PDF files.
+-    & : New files for isolated contract testing of the MockPMS.
+-   : Significantly updated with filter/sort controls and the new  component for event drill-downs.
+-   : Updated with a new  to edit the organization's Risk Profile.
+-   : Updated with UI controls and logic to handle both CSV and PDF formats in policies and archives.
+-   : New component added to support the drill-down feature.
 
 **Critical Info for New Agent**
--   The most critical decision was to build the entire Match Risk module from scratch, as it was not present in the initial codebase.
--   The definition of a match is a pair of . The  is a string composite: .
--   The  and  signals currently use booking  as a proxy for a not arrived outcome. This is a known v1 simplification.
+-   The  is the single source of truth for what constitutes high risk. All features (dashboard badges, alerts, export flags) are driven by it.
+-   The demo organization () has a specific Risk Profile seeded () to make  high-risk by default for consistent testing.
+-   Core risk engine testing now relies *exclusively* on the deterministic seed data. The MockPMS service is tested separately in  and should not be a dependency for testing the main risk logic.
+-   The user prefers making incremental, user-facing vertical slice improvements phase by phase. Each phase is closed with clear kanıt (proofs).
 
 **documents and test reports created in this job**
 -   
+-   
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User (Msg 428):** Policy. Confirmed the next task is to make the repeat threshold configurable in the export policy.
-2.  **Agent (Msg 429):** Provided a detailed plan to implement the configurable repeat threshold for exports.
-3.  **Agent (Msg 434):** Confirmed completion of the Exports Policy v1 phase and provided sample outputs.
-4.  **User (Msg 435):** Confirmed the policy phase is complete and requested the next task: add repeat filter/sort to the dashboard UI.
-5.  **Agent (Msg 436):** Provided a detailed plan to add repeat filter/sort to the dashboard.
-6.  **Agent (Msg 440):** Confirmed completion of the dashboard UI phase and provided sample outputs.
-7.  **Agent (Msg 427):** Acknowledged the  to  proxy is a risk and proposed mini-patches for terminological clarity and filtering out operational cancellations.
-8.  **User (Msg 426):** After seeing the  signal was working, asked for the next steps: making the threshold configurable or improving the UI.
-9.  **Agent (Msg 425):** Confirmed the repeat signal backend work was done but noted a testing limitation. Provided sample outputs.
-10. **User (Msg 428):** Chose Policy as the next step, confirming the agent should make the export policy's repeat threshold configurable.
+1.  **User (Msg 561):** Selected Drawer UX polish v1 as the next phase. Provided a detailed list of requirements: sorting, tag filters, booking ID copy, and a reason filter for the events table in the drawer.
+2.  **Agent (Msg 560):** Completed the MockPMS Contract Suite, provided the 3 proofs, and asked the user to choose the next phase between Drawer UX polish or more contract tests.
+3.  **User (Msg 529):** Confirmed the plan for the MockPMS Contract Suite was correct and provided suggestions for hardening the tests.
+4.  **Agent (Msg 528):** Confirmed the selection of MockPMS Contract Suite v1 and presented a detailed plan for implementation and the 3 proofs to be provided.
+5.  **User (Msg 525):** Confirmed the MockPMS isolation phase was complete and selected the next phase: creating a full contract test suite for MockPMS (NO_INVENTORY, INVALID_DATES, etc.).
+6.  **Agent (Msg 524):** Completed the MockPMS 409 isolation test, provided the 3 proofs, and asked the user to choose the next phase.
+7.  **User (Msg 499):** Confirmed the plan to create an isolated test for MockPMS 409 errors was correct and provided detailed suggestions for implementation.
+8.  **Agent (Msg 498):** Responded to the user's choice, confirming the next phase is to create an isolated test for the MockPMS 409 error and outlined a plan.
+9.  **User (Msg 497):** Confirmed the Open Match Detail link phase was complete and suggested the next major phase: creating an isolated test for the MockPMS 409 error.
+10. **Agent (Msg 496):** Completed the micro-phase of adding an Open Match Detail link to the drawer and provided the 3 proofs.
 
 **Project Health Check:**
--   **Working:** The entire Match Risk, Alerting, and Export modules are functional.
+-   **Working:** The entire Match Risk, Alerting, Export, and Drill-down feature set is functional and robust. Testing is deterministic.
 -   **Broken:** None.
--   **Mocked:** The  signal is a proxy based on  status, which is a functional simplification, not a broken mock.
+-   **Mocked:** The  signal is still a functional proxy based on . This is a known v1 simplification, not a broken feature.
 
 **3rd Party Integrations**
--   **AWS SES:** Used for sending emails via the  service. No specific version is mentioned; it uses the existing  service wrapper.
+-   **AWS SES:** Used for sending emails via the  service.
 
 **Testing status**
--   **Testing agent used after significant changes:** YES. The agent frequently used the testing agent to validate backend changes.
+-   **Testing agent used after significant changes:** YES, for backend logic and API validation.
 -   **Troubleshoot agent used after agent stuck in loop:** NO.
+-   **Test files created:**
+    -   
+    -   
 -   **Known regressions:** None.
 
 **Credentials to test flow:**
 -   Use  /  to log in as a super admin.
 
 **What agent forgot to execute**
--   The agent successfully executed all user requests in a logical sequence, including the critical initial step of building the foundational module that was unexpectedly missing. No tasks were overlooked.</analysis>
+-   The agent has followed all user requests. The implementation of the very last task (Drawer UX Polish v1) was not started as the session concluded immediately after the user provided the requirements.</analysis>

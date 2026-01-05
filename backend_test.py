@@ -9,7 +9,7 @@ import uuid
 from datetime import datetime, timedelta
 
 class AcentaAPITester:
-    def __init__(self, base_url="https://risk-match-analyzer.preview.emergentagent.com"):
+    def __init__(self, base_url="https://acenta-risk.preview.emergentagent.com"):
         self.base_url = base_url
         self.token = None
         self.tests_run = 0
@@ -77,7 +77,7 @@ class AcentaAPITester:
 
 
 class SignedDownloadLinkTester:
-    def __init__(self, base_url="https://risk-match-analyzer.preview.emergentagent.com"):
+    def __init__(self, base_url="https://acenta-risk.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.tests_run = 0
@@ -1153,7 +1153,7 @@ class SignedDownloadLinkTester:
 
 
 class FAZ5HotelExtranetTester:
-    def __init__(self, base_url="https://risk-match-analyzer.preview.emergentagent.com"):
+    def __init__(self, base_url="https://acenta-risk.preview.emergentagent.com"):
         self.base_url = base_url
         self.hotel_token = None
         self.agency_token = None
@@ -1713,7 +1713,7 @@ class FAZ5HotelExtranetTester:
 
 
 class FAZ101IntegrationSyncTester:
-    def __init__(self, base_url="https://risk-match-analyzer.preview.emergentagent.com"):
+    def __init__(self, base_url="https://acenta-risk.preview.emergentagent.com"):
         self.base_url = base_url
         self.hotel_token = None
         self.tests_run = 0
@@ -2092,7 +2092,7 @@ class FAZ101IntegrationSyncTester:
 
 
 class ExportsEmailV0Tester:
-    def __init__(self, base_url="https://risk-match-analyzer.preview.emergentagent.com"):
+    def __init__(self, base_url="https://acenta-risk.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.tests_run = 0
@@ -2419,7 +2419,7 @@ class ExportsEmailV0Tester:
 
 
 class WebhookV1BackendTester:
-    def __init__(self, base_url="https://risk-match-analyzer.preview.emergentagent.com"):
+    def __init__(self, base_url="https://acenta-risk.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.agency_token = None
@@ -2924,7 +2924,7 @@ class WebhookV1BackendTester:
 
 
 class P4MatchesIncludeActionTester:
-    def __init__(self, base_url="https://risk-match-analyzer.preview.emergentagent.com"):
+    def __init__(self, base_url="https://acenta-risk.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.agency_token = None
@@ -3311,7 +3311,7 @@ class P4MatchesIncludeActionTester:
 
 
 class MatchActionsTester:
-    def __init__(self, base_url="https://risk-match-analyzer.preview.emergentagent.com"):
+    def __init__(self, base_url="https://acenta-risk.preview.emergentagent.com"):
         self.base_url = base_url
         self.super_admin_token = None
         self.agency_token = None
@@ -3783,7 +3783,7 @@ class MatchActionsTester:
 
 
 class FAZ121AdminMetricsSmokeTest:
-    def __init__(self, base_url="https://risk-match-analyzer.preview.emergentagent.com"):
+    def __init__(self, base_url="https://acenta-risk.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.tests_run = 0
@@ -4554,7 +4554,7 @@ class FAZ8BookingSubmitIntentTester:
 
 
 class VoucherHTMLChangesTester:
-    def __init__(self, base_url="https://risk-match-analyzer.preview.emergentagent.com"):
+    def __init__(self, base_url="https://acenta-risk.preview.emergentagent.com"):
         self.base_url = base_url
         self.agency_token = None
         self.hotel_token = None
@@ -4995,7 +4995,7 @@ class VoucherHTMLChangesTester:
 
 
 class AdminOverrideTester:
-    def __init__(self, base_url="https://risk-match-analyzer.preview.emergentagent.com"):
+    def __init__(self, base_url="https://acenta-risk.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.agency_token = None
@@ -5592,7 +5592,7 @@ class AdminOverrideTester:
 
 
 class FAZ93AdminEmailOutboxTester:
-    def __init__(self, base_url="https://risk-match-analyzer.preview.emergentagent.com"):
+    def __init__(self, base_url="https://acenta-risk.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.agency_token = None
@@ -6141,7 +6141,7 @@ class FAZ93AdminEmailOutboxTester:
 
 
 class FAZ93EmailOutboxTester:
-    def __init__(self, base_url="https://risk-match-analyzer.preview.emergentagent.com"):
+    def __init__(self, base_url="https://acenta-risk.preview.emergentagent.com"):
         self.base_url = base_url
         self.agency_token = None
         self.hotel_token = None
@@ -6671,7 +6671,7 @@ class FAZ93EmailOutboxTester:
 
 
 class FAZ91BookingDetailTester:
-    def __init__(self, base_url="https://risk-match-analyzer.preview.emergentagent.com"):
+    def __init__(self, base_url="https://acenta-risk.preview.emergentagent.com"):
         self.base_url = base_url
         self.agency_token = None
         self.hotel_token = None
@@ -7318,7 +7318,7 @@ class FAZ91BookingDetailTester:
 
 
 class FAZ8PMSTester:
-    def __init__(self, base_url="https://risk-match-analyzer.preview.emergentagent.com"):
+    def __init__(self, base_url="https://acenta-risk.preview.emergentagent.com"):
         self.base_url = base_url
         self.agency_token = None
         self.super_admin_token = None
@@ -7977,7 +7977,7 @@ class FAZ8PMSTester:
 
 
 class FAZ9VoucherEmailTester:
-    def __init__(self, base_url="https://risk-match-analyzer.preview.emergentagent.com"):
+    def __init__(self, base_url="https://acenta-risk.preview.emergentagent.com"):
         self.base_url = base_url
         self.agency_token = None
         self.tests_run = 0
@@ -8283,7 +8283,7 @@ class FAZ9VoucherEmailTester:
 
 
 class FAZ6CommissionTester:
-    def __init__(self, base_url="https://risk-match-analyzer.preview.emergentagent.com"):
+    def __init__(self, base_url="https://acenta-risk.preview.emergentagent.com"):
         self.base_url = base_url
         self.super_admin_token = None
         self.agency_token = None
@@ -9015,7 +9015,7 @@ class FAZ6CommissionTester:
 
 
 class FAZ7AuditCacheEventsTester:
-    def __init__(self, base_url="https://risk-match-analyzer.preview.emergentagent.com"):
+    def __init__(self, base_url="https://acenta-risk.preview.emergentagent.com"):
         self.base_url = base_url
         self.hotel_token = None
         self.agency_token = None
@@ -9685,7 +9685,7 @@ class FAZ7AuditCacheEventsTester:
 
 
 class FAZ92VoucherTokenTester:
-    def __init__(self, base_url="https://risk-match-analyzer.preview.emergentagent.com"):
+    def __init__(self, base_url="https://acenta-risk.preview.emergentagent.com"):
         self.base_url = base_url
         self.agency_token = None
         self.hotel_token = None
@@ -10134,7 +10134,7 @@ class FAZ92VoucherTokenTester:
 
 
 class FAZ9xAgencyHotelsTester:
-    def __init__(self, base_url="https://risk-match-analyzer.preview.emergentagent.com"):
+    def __init__(self, base_url="https://acenta-risk.preview.emergentagent.com"):
         self.base_url = base_url
         self.agency_token = None
         self.tests_run = 0
@@ -10730,7 +10730,7 @@ class FAZ9xAgencyHotelsTester:
 
 
 class FAZ10HotelIntegrationsTester:
-    def __init__(self, base_url="https://risk-match-analyzer.preview.emergentagent.com"):
+    def __init__(self, base_url="https://acenta-risk.preview.emergentagent.com"):
         self.base_url = base_url
         self.hotel_token = None
         self.agency_token = None
@@ -11121,7 +11121,7 @@ class FAZ10HotelIntegrationsTester:
 
 
 class FAZ101IntegrationSyncTester:
-    def __init__(self, base_url="https://risk-match-analyzer.preview.emergentagent.com"):
+    def __init__(self, base_url="https://acenta-risk.preview.emergentagent.com"):
         self.base_url = base_url
         self.hotel_token = None
         self.agency_token = None
@@ -12006,7 +12006,7 @@ class FAZDWebBookingTester:
 
 
 class P4V0MatchesTester:
-    def __init__(self, base_url="https://risk-match-analyzer.preview.emergentagent.com"):
+    def __init__(self, base_url="https://acenta-risk.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.agency_token = None
@@ -12388,7 +12388,7 @@ class P4V0MatchesTester:
 
 
 class AlertingV0Tester:
-    def __init__(self, base_url="https://risk-match-analyzer.preview.emergentagent.com"):
+    def __init__(self, base_url="https://acenta-risk.preview.emergentagent.com"):
         self.base_url = base_url
         self.super_admin_token = None
         self.agency_token = None
@@ -12965,7 +12965,7 @@ class AlertingV0Tester:
 
 
 class AlertingV0DeliveriesTester:
-    def __init__(self, base_url="https://risk-match-analyzer.preview.emergentagent.com"):
+    def __init__(self, base_url="https://acenta-risk.preview.emergentagent.com"):
         self.base_url = base_url
         self.super_admin_token = None
         self.agency_token = None
@@ -13942,7 +13942,7 @@ class ExportsV0BackendTester:
 
 
 class RepeatNotArrived7Tester:
-    def __init__(self, base_url="https://risk-match-analyzer.preview.emergentagent.com"):
+    def __init__(self, base_url="https://acenta-risk.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.agency_token = None
@@ -14553,7 +14553,7 @@ class RepeatNotArrived7Tester:
 
 
 class MatchRiskV12Tester:
-    def __init__(self, base_url="https://risk-match-analyzer.preview.emergentagent.com"):
+    def __init__(self, base_url="https://acenta-risk.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.tests_run = 0
@@ -15374,7 +15374,7 @@ Download: /api/exports/download/abc123token456def789
 
 
 class MatchRiskDashboardTester:
-    def __init__(self, base_url="https://risk-match-analyzer.preview.emergentagent.com"):
+    def __init__(self, base_url="https://acenta-risk.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.tests_run = 0

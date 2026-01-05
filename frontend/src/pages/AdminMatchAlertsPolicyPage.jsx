@@ -23,6 +23,9 @@ export default function AdminMatchAlertsPolicyPage() {
   const [recipientsInput, setRecipientsInput] = useState("");
   const [runParams, setRunParams] = useState({ days: 30, min_total: 5 });
   const [runResult, setRunResult] = useState(null);
+  const [deliveries, setDeliveries] = useState([]);
+  const [deliveriesLoading, setDeliveriesLoading] = useState(false);
+  const [deliveriesFilter, setDeliveriesFilter] = useState({ status: "all", channel: "all", match_id: "" });
 
   const loadPolicy = async () => {
     try {
@@ -31,30 +34,6 @@ export default function AdminMatchAlertsPolicyPage() {
       const resp = await api.get("/admin/match-alerts/policy");
       const p = resp.data?.policy || {};
       setPolicy(p);
-  const [deliveries, setDeliveries] = useState([]);
-  const [deliveriesLoading, setDeliveriesLoading] = useState(false);
-  const [deliveriesFilter, setDeliveriesFilter] = useState({ status: "all", match_id: "" });
-
-  const loadDeliveries = async () => {
-    try {
-      setDeliveriesLoading(true);
-      const resp = await api.get("/admin/match-alerts/deliveries", {
-        params: {
-          limit: 50,
-          status: deliveriesFilter.status,
-          match_id: deliveriesFilter.match_id || undefined,
-          channel: deliveriesFilter.channel && deliveriesFilter.channel !== "all" ? deliveriesFilter.channel : undefined,
-        },
-      });
-      setDeliveries(resp.data?.items || []);
-    } catch (e) {
-      console.error("Match alerts deliveries fetch failed", e);
-      // Hata zaten üstteki error alanında gösterilebilir; burada swallow edebiliriz.
-    } finally {
-      setDeliveriesLoading(false);
-    }
-  };
-
       setRecipientsInput((p.email_recipients || []).join(", "));
     } catch (e) {
       console.error("Match alerts policy fetch failed", e);

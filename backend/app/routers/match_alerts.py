@@ -394,10 +394,16 @@ async def run_match_alerts(
         cancel_rate = behavioral_rate
         repeat_7 = int(data.get("repeat_not_arrived_7") or 0)
 
-        triggered_by_rate = behavioral_rate >= policy.threshold_not_arrived_rate
-        triggered_by_repeat = repeat_7 >= policy.threshold_repeat_not_arrived_7
+        # Unified high-risk decision (policy thresholds deprecated, RiskProfile is source of truth)
+        from app.services.risk_profile import load_risk_profile, is_high_risk  # local import to avoid cycles
 
-        if not (triggered_by_rate or triggered_by_repeat):
+        risk_profile = await load_risk_profile(db, org_id)
+        high_risk = is_high_risk(behavioral_rate, repeat_7, risk_profile)
+
+        triggered_by_rate = behavioral_rate >= risk_profile.rate_threshold
+        triggered_by_repeat = repeat_7 >= risk_profile.repeat_threshold_7
+
+        if not high_risk:
             continue
 
         action_status = data.get("action_status") or "none"

@@ -20272,7 +20272,11 @@ if __name__ == "__main__":
         if len(sys.argv) > 1:
             test_type = sys.argv[1]
             
-            if test_type == "proof_v2_story3":
+            if test_type == "risk_snapshots":
+                tester = RiskSnapshotsTester()
+                exit_code = tester.run_risk_snapshots_tests()
+                sys.exit(exit_code)
+            elif test_type == "proof_v2_story3":
                 tester = ProofV2Story3Tester()
                 exit_code = tester.run_proof_v2_story3_tests()
                 sys.exit(exit_code)

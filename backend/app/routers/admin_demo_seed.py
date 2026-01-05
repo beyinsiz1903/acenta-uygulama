@@ -268,8 +268,3 @@ async def ensure_demo_no_show_booking(db, org_id: str) -> None:
     }
 
     await db.bookings.insert_one(booking)
-
-        seed_tag="v1",
-        inserted=len(bookings_to_insert),
-        wiped=wiped,
-    )

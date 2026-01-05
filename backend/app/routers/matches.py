@@ -11,7 +11,6 @@ from app.db import get_db
 from app.schemas import BookingPublicView
 from app.utils import now_utc, build_booking_public_view
 from app.services.risk_profile import load_risk_profile, is_high_risk
-from app.utils import now_utc
 
 router = APIRouter(prefix="/api/admin/matches", tags=["admin-matches"])
 

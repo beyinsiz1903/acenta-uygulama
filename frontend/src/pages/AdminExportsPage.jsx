@@ -568,6 +568,35 @@ export default function AdminExportsPage() {
                             <td className="py-1 pr-2 text-xs">
                               {r.emailed ? "Queued" : "—"}
                             </td>
+                            <td className="py-1 pr-2 text-xs">
+                              {r.type === "match_risk_summary" && runsDeeplinkTemplate ? (
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => {
+                                    const tpl = runsDeeplinkTemplate;
+                                    const text = tpl.replace("{match_id}", "<match_id>");
+                                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                                      navigator.clipboard.writeText(text);
+                                    } else {
+                                      const ta = document.createElement("textarea");
+                                      ta.value = text;
+                                      document.body.appendChild(ta);
+                                      ta.select();
+                                      document.execCommand("copy");
+                                      document.body.removeChild(ta);
+                                    }
+                                    alert(`Template copied to clipboard: ${text}`);
+                                  }}
+                                  data-testid="exports-run-copy-deeplink-template"
+                                >
+                                  Copy deep link template
+                                </Button>
+                              ) : (
+                                <span className="text-xs text-muted-foreground">-</span>
+                              )}
+                            </td>
                             <td className="py-1 pr-2 text-right">
                               <Button
                                 type="button"

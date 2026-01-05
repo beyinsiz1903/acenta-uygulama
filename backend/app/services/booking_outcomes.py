@@ -25,6 +25,11 @@ class BookingOutcome:
   verified_at: Optional[datetime]
   created_at: datetime
   updated_at: datetime
+  # v2 fields
+  outcome_version: int = 1
+  evidence: list[dict[str, Any]] | None = None
+  override: Optional[dict[str, Any]] = None
+  confidence: float | None = None
 
 
 def resolve_outcome_for_booking(doc: Dict[str, Any], today: Optional[datetime] = None) -> Tuple[str, str, Optional[str]]:
@@ -97,6 +102,11 @@ async def upsert_booking_outcome(db, booking_doc: Dict[str, Any], today: Optiona
 
   outcome, source, inferred_reason = resolve_outcome_for_booking(booking_doc, today=today)
   now = now_utc()
+
+  # v2 defaults for new engine
+  outcome_version = 2
+  evidence: list[dict[str, Any]] = []
+  confidence = 0.8  # heuristic for rule_inferred v2
 
   # MongoDB requires datetime for date-like fields; normalize checkin_date
   checkin_dt: Optional[datetime]

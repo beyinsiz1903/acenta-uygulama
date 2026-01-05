@@ -205,7 +205,7 @@ async def list_matches(
                 {
                     "$match": {
                         "organization_id": org_id,
-                        "checkin_date": {"$gte": (now_utc() - timedelta(days=7)).date()},
+                        "checkin_date": {"$gte": now_utc() - timedelta(days=7)},
                         "$or": [
                             {"agency_id": str((r.get("_id") or {}).get("agency_id") or ""), "hotel_id": str((r.get("_id") or {}).get("hotel_id") or "")}  # type: ignore
                             for r in filtered

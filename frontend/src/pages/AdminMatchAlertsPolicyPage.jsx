@@ -229,46 +229,27 @@ export default function AdminMatchAlertsPolicyPage() {
               <label htmlFor="cooldown-hours" className="text-sm font-medium">
                 Cooldown (saat)
               </label>
-
-          <div className="space-y-1">
-            <label htmlFor="repeat-threshold" className="text-sm font-medium">
-              Repeat not-arrived eşiği (7 gün)
-            </label>
-            <Input
-              id="repeat-threshold"
-              type="number"
-              min="0"
-              value={riskProfile.repeat_threshold_7}
-              onChange={(e) =>
-                setRiskProfile((prev) => ({
-                  ...prev,
-                  repeat_threshold_7: parseInt(e.target.value || "0", 10),
-                }))
-              }
-              data-testid="risk-profile-repeat-threshold"
-            />
-            <p className="text-xs text-muted-foreground">
-          <div className="space-y-1">
-            <label htmlFor="repeat-threshold" className="text-sm font-medium">
-              Repeat not-arrived eşiği (7 gün)
-            </label>
-            <Input
-              id="repeat-threshold"
-              type="number"
-              min="0"
-              value={riskProfile.repeat_threshold_7}
-              onChange={(e) =>
-                setRiskProfile((prev) => ({
-                  ...prev,
-                  repeat_threshold_7: parseInt(e.target.value || "0", 10),
-                }))
-              }
-              data-testid="risk-profile-repeat-threshold"
-            />
-            <p className="text-xs text-muted-foreground">
-              Son 7 gün içinde bu değerden fazla not-arrived/cancel gören eşleşmeyi yüksek risk say.
-            </p>
+              <Input
+                id="cooldown-hours"
+                type="number"
+                min="1"
+                max="168"
+                value={policy.cooldown_hours}
+                onChange={(e) =>
+                  setPolicy((prev) => ({
+                    ...prev,
+                    cooldown_hours: parseInt(e.target.value || "1", 10),
+                  }))
+                }
+                data-testid="match-alerts-cooldown"
+              />
+              <p className="text-xs text-muted-foreground">
+                Aynı match ve config için yeni alert üretmeden önce beklenecek minimum süre.
+              </p>
+            </div>
           </div>
+        </CardContent>
+      </Card>
           <Card className="mt-4">
             <CardHeader>
               <CardTitle>Risk Profile</CardTitle>

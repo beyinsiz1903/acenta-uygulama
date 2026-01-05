@@ -19412,4 +19412,40 @@ class ProofV2Story2ArrivedTester:
 
 
 if __name__ == "__main__":
+    import sys
+    
+    def main():
+        if len(sys.argv) > 1:
+            test_type = sys.argv[1]
+            
+            if test_type == "proof_v2_story3":
+                tester = ProofV2Story3Tester()
+                exit_code = tester.run_proof_v2_story3_tests()
+                sys.exit(exit_code)
+            elif test_type == "signed_download":
+                tester = SignedDownloadLinkTester()
+                exit_code = tester.run_signed_download_tests()
+                sys.exit(exit_code)
+            elif test_type == "faz5":
+                tester = FAZ5HotelExtranetTester()
+                exit_code = tester.run_faz5_tests()
+                sys.exit(exit_code)
+            elif test_type == "proof_v11":
+                tester = ProofV11NoShowTester()
+                exit_code = tester.run_proof_v11_tests()
+                sys.exit(exit_code)
+            elif test_type == "proof_v2_story2":
+                tester = ProofV2Story2Tester()
+                exit_code = tester.run_proof_v2_story2_tests()
+                sys.exit(exit_code)
+            else:
+                print(f"Unknown test type: {test_type}")
+                print("Available test types: proof_v2_story3, proof_v2_story2, signed_download, faz5, proof_v11, all")
+                sys.exit(1)
+        else:
+            # Default: run comprehensive tests
+            tester = AcentaAPITester()
+            exit_code = tester.run_all_tests()
+            sys.exit(exit_code)
+    
     main()

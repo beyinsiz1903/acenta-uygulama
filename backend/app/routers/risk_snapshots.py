@@ -156,6 +156,8 @@ async def run_risk_snapshot(
         "snapshot_key": snapshot_key,
         "generated_at": now_utc().isoformat(),
         "metrics": metrics.model_dump(),
+        "top_offenders_count": len(top),
+    }
 
 
 class TrendPoint(BaseModel):

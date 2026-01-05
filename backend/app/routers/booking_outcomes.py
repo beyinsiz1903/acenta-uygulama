@@ -226,9 +226,9 @@ async def apply_pms_event(
 async def verify_booking_outcome(
   booking_id: str,
   payload: BookingOutcomeVerifyIn,
+  request: Request,
   db=Depends(get_db),
   user=Depends(get_current_user),
-  request=Depends(),
 ):
   org_id = user.get("organization_id")
 

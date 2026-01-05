@@ -110,7 +110,6 @@ async def upsert_booking_outcome(db, booking_doc: Dict[str, Any], today: Optiona
     "inferred_reason": inferred_reason,
     "verified": False,
     "verified_at": None,
-    "created_at": now,
     "updated_at": now,
   }
 

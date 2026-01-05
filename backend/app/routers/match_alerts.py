@@ -55,7 +55,11 @@ class MatchAlertPolicyResponse(BaseModel):
 class RiskProfileOut(BaseModel):
     rate_threshold: float
     repeat_threshold_7: int
-    mode: str
+    mode: str = "rate_or_repeat"
+    no_show_rate_threshold: Optional[float] = None
+    repeat_no_show_threshold_7: Optional[int] = None
+    min_verified_bookings: int = 0
+    prefer_verified_only: bool = False
     updated_at: Optional[str] = None
     updated_by_email: Optional[str] = None
 

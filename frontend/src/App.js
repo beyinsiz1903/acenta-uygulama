@@ -20,6 +20,8 @@ import AdminMatchesPage from "./pages/AdminMatchesPage";
 import AdminExportsPage from "./pages/AdminExportsPage";
 import AdminMatchDetailPage from "./pages/AdminMatchDetailPage";
 import AdminMatchRiskTrendsPage from "./pages/AdminMatchRiskTrendsPage";
+import DashboardPage from "./pages/DashboardPage";
+import ProductsPage from "./pages/ProductsPage";
 import AgencyHotelsPage from "./pages/AgencyHotelsPage";
 import AgencyHotelDetailPage from "./pages/AgencyHotelDetailPage";
 import AgencyHotelSearchPage from "./pages/AgencyHotelSearchPage";
@@ -79,6 +81,19 @@ function App() {
             <Route path="settings/match-alerts" element={<AdminMatchAlertsPolicyPage />} />
             <Route path="exports" element={<AdminExportsPage />} />
           </Route>
+        </Route>
+
+        {/* Core App Routes (Dashboard, Products, etc.) */}
+        <Route
+          path="/app/*"
+          element={
+            <RequireAuth roles={["admin", "sales", "ops", "accounting", "b2b_agent", "super_admin"]}>
+              <AppShell />
+            </RequireAuth>
+          }
+        >
+          <Route index element={<DashboardPage />} />
+          <Route path="products" element={<ProductsPage />} />
         </Route>
 
         {/* Agency Routes (Core Flow) */}

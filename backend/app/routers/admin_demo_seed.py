@@ -214,6 +214,57 @@ async def seed_demo_bookings(
     
     return SeedBookingsResponse(
         ok=True,
+
+
+async def ensure_demo_no_show_booking(db, org_id: str) -> None:
+    """Create a deterministic past-check-in, not-cancelled booking for no_show tests.
+
+    - status: confirmed
+    - checkin: 2 days ago
+    - agency_id / hotel_id: use deterministic match from previous seed (Match-B)
+    """
+    # Known deterministic IDs for Match-B in org_demo (from earlier seed work)
+    agency_id = "88e2b8e4-12e7-43e4-9d54-e39d53576b18"
+    hotel_id = "1ea289b7-621b-49d8-be9c-c21a6bb44f47"
+
+    existing = await db.bookings.find_one({
+        "organization_id": org_id,
+        "source": "demo_no_show_seed",
+        "agency_id": agency_id,
+        "hotel_id": hotel_id,
+    })
+    if existing:
+        return
+
+    today = now_utc()
+    checkin = today - timedelta(days=2)
+    checkout = checkin + timedelta(days=2)
+
+    booking = {
+        "_id": "DEMO_NO_SHOW_BOOKING_1",
+        "organization_id": org_id,
+        "agency_id": agency_id,
+        "hotel_id": hotel_id,
+        "status": "confirmed",
+        "cancel_reason": None,
+        "cancelled_by": None,
+        "created_at": today - timedelta(days=3),
+        "updated_at": today - timedelta(days=3),
+        "guest_first_name": "NoShow",
+        "guest_last_name": "Demo",
+        "guest_email": "noshow.demo@acenta.test",
+        "guest_phone": "+90 555 000 0000",
+        "stay": {
+            "check_in": checkin.isoformat(),
+            "check_out": checkout.isoformat(),
+        },
+        "source": "demo_no_show_seed",
+        "demo_seed_tag": "no_show_v1",
+        "code": "NO-SHOW-DEM01",
+    }
+
+    await db.bookings.insert_one(booking)
+
         seed_tag="v1",
         inserted=len(bookings_to_insert),
         wiped=wiped,

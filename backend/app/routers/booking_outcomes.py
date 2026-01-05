@@ -135,6 +135,23 @@ async def recompute_booking_outcomes(
     except Exception:
       base_now = now_utc()
 
+  cutoff = base_now - timedelta(days=days)
+  q = {"organization_id": org_id, "created_at": {"$gte": cutoff}}
+
+  cursor = db.bookings.find(q).sort("created_at", -1)
+  scanned = 0
+  upserts = 0
+  counts: dict[str, int] = {}
+
+  async for b in cursor:
+    scanned += 1
+    outcome, source, inferred = resolve_outcome_for_booking(b)
+    counts[outcome] = counts.get(outcome, 0) + 1
+    if not dry_run:
+      await upsert_booking_outcome(db, b)
+      upserts += 1
+
+  return BookingOutcomeRecomputeResponse(ok=True, dry_run=dry_run, scanned=scanned, upserts=upserts, counts=counts)
 
 
 @router.post("/{booking_id}/pms-event", response_model=BookingOutcomePmsEventResponse, dependencies=[Depends(require_roles(["super_admin"]))])

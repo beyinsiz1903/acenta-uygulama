@@ -81,6 +81,10 @@ export default function AdminMatchesPage() {
     );
   }
 
+  const displayedItems = hideBlocked
+    ? items.filter((i) => i.action_status !== "blocked")
+    : items;
+
   return (
     <div className="space-y-6">
       <div>

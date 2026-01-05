@@ -502,6 +502,18 @@
         comment: "✅ STORY V1 RISK SNAPSHOTS TEST COMPLETE - All 4 test scenarios passed (100% success rate). COMPREHENSIVE FUNCTIONALITY VERIFIED: A) Authentication: Admin login successful (admin@acenta.test/admin123) with super_admin role verification. B) DRY RUN SNAPSHOT EXECUTION: POST /api/admin/risk-snapshots/run?snapshot_key=match_risk_daily&days=30&min_total=1&top_n=5&dry_run=1 working correctly - returns 200 OK with all required fields (ok=true, dry_run=true, snapshot_key='match_risk_daily', generated_at ISO-8601 format, metrics structure with matches_evaluated=6, high_risk_matches=0, high_risk_rate=0.0, verified_share_avg=0.024, verified_only_used_matches=0, top_offenders_count=0). C) REAL SNAPSHOT WRITE: POST /api/admin/risk-snapshots/run?snapshot_key=match_risk_daily&days=30&min_total=1&top_n=5&dry_run=0 working correctly - returns 200 OK with consistent response structure (ok=true, dry_run=false, metrics format consistent with dry_run). D) COLLECTION READ VERIFICATION: GET /api/admin/risk-snapshots?snapshot_key=match_risk_daily&limit=1 working correctly - found 1 document in risk_snapshots collection with proper structure (organization_id, snapshot_key='match_risk_daily', generated_at, metrics with all required fields: matches_evaluated, high_risk_matches, high_risk_rate, verified_share_avg, verified_only_used_matches, top_offenders array). FIXED ISSUES DURING TESTING: 1) Fixed MATCH_SUMMARY_UNAVAILABLE error in risk_snapshots router by correcting matches_resp.items access to matches_resp.get('items', []) (dict key access instead of attribute access), 2) Added missing GET /api/admin/risk-snapshots endpoint for collection verification. All STORY v1 risk snapshots functionality production-ready with proper snapshot generation, persistence, and retrieval working as specified."
 
 ## test_plan:
+  - task: "STORY v1 – Story 3: Risk Snapshots Trend API & Delta"
+    implemented: true
+    working: false
+    file: "/app/backend/app/routers/risk_snapshots.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "main"
+        comment: "Initial implementation of GET /api/admin/risk-snapshots/trend: returns chronological points array (generated_at, high_risk_rate, verified_share_avg, matches_evaluated, high_risk_matches) and delta object summarizing first vs last change for high_risk_rate and verified_share_avg (abs_change, pct_change, direction). Needs backend testing with 1/2/N snapshot documents and edge cases (no data, invalid limits)."
+
   current_focus: []
   stuck_tasks: []
   test_all: false

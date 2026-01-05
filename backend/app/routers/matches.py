@@ -313,6 +313,14 @@ async def list_matches(
         repeat_7_behavioral = repeat_behavioral.get(match_id, 0)
         repeat_7_operational = repeat_operational.get(match_id, 0)
 
+        # Unified high-risk decision + reasons
+        high_risk = is_high_risk(behavioral_cancel_rate, repeat_7_behavioral, risk_profile_obj)
+        reasons: list[str] = []
+        if behavioral_cancel_rate >= risk_profile_obj.rate_threshold:
+            reasons.append("rate")
+        if repeat_7_behavioral >= risk_profile_obj.repeat_threshold_7:
+            reasons.append("repeat")
+
         items.append(
             MatchSummaryItem(
                 id=match_id,
@@ -332,6 +340,8 @@ async def list_matches(
                 last_booking_at=last_iso,
                 repeat_not_arrived_7=repeat_7_behavioral,
                 repeat_cancelled_operational_7=repeat_7_operational,
+                high_risk=high_risk,
+                high_risk_reasons=reasons,
                 action_status=action_status,
                 action_reason_code=action_reason_code,
                 action_updated_at=action_updated_at,
@@ -341,6 +351,7 @@ async def list_matches(
 
     return {
         "range": {"from": cutoff.isoformat(), "to": now_utc().isoformat(), "days": days},
+        "risk_profile": risk_profile_dict,
         "items": items,
     }
 

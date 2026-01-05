@@ -296,21 +296,32 @@ def _rows_to_pdf(rows: list[dict[str, Any]], org_id: str, risk_profile: dict[str
 
 def _rows_to_csv(rows: list[dict[str, Any]]) -> str:
     output = StringIO()
+
+    # Header notes about blocked behaviour
+    output.write(
+        "# Not: Blocked eşleşmeler alerts/export delivery üretmez; dashboard’da görünmeye devam eder.\n"
+    )
+    output.write(
+        "# Note: Blocked matches do not generate alerts/exports deliveries; they remain visible on the dashboard.\n"
+    )
+
     if not rows:
         writer = csv.writer(output)
-        writer.writerow([
-            "match_id",
-            "agency_id",
-            "hotel_id",
-            "agency_name",
-            "hotel_name",
-            "total_matches",
-            "not_arrived_rate",
-            "repeat_not_arrived_7",
-            "action_status",
-            "high_risk_flag",
-            "generated_at",
-        ])
+        writer.writerow(
+            [
+                "match_id",
+                "agency_id",
+                "hotel_id",
+                "agency_name",
+                "hotel_name",
+                "total_matches",
+                "not_arrived_rate",
+                "repeat_not_arrived_7",
+                "action_status",
+                "high_risk_flag",
+                "generated_at",
+            ]
+        )
         return output.getvalue()
 
     fieldnames = list(rows[0].keys())

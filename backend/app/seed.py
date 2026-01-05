@@ -223,6 +223,23 @@ async def ensure_seed_data() -> None:
         ("organization_id", 1),
     ], unique=True)
 
+    # Deterministic org_demo risk profile for tests (affects only org 'default')
+    await db.risk_profiles.update_one(
+        {"organization_id": org_id},
+        {
+            "$set": {
+                "organization_id": org_id,
+                "rate_threshold": 0.5,
+                "repeat_threshold_7": 2,
+                "mode": "rate_or_repeat",
+                "updated_at": now_utc(),
+                "updated_by_email": DEFAULT_ADMIN_EMAIL,
+            },
+            "$setOnInsert": {"created_at": now_utc()},
+        },
+        upsert=True,
+    )
+
 
     # Exports v0: export_policies & export_runs indexes
     await db.export_policies.create_index([

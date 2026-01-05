@@ -457,7 +457,7 @@ async def run_export(
             f"<p><strong>Rows:</strong> {len(rows)}</p>"
             f"<p><strong>Size:</strong> {size_bytes} bytes</p>"
             f"<p><strong>Generated at:</strong> {now.isoformat()}</p>"
-            f"<p><a href=\"{download_path}\">CSV indir</a></p>"
+            f"<p><a href=\"{download_path}\">{ 'PDF indir' if fmt == 'pdf' else 'CSV indir' }</a></p>"
         )
 
         outbox_id = await enqueue_generic_email(

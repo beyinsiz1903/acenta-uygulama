@@ -142,7 +142,7 @@ export default function AdminMatchesPage() {
           <CardTitle className="text-sm font-medium">Eşleşmeler</CardTitle>
         </CardHeader>
         <CardContent>
-          {items.length === 0 ? (
+          {displayedItems.length === 0 ? (
             <p className="text-sm text-muted-foreground">Bu dönem için eşleşme bulunamadı.</p>
           ) : (
             <div className="overflow-x-auto">

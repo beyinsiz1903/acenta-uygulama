@@ -385,14 +385,23 @@ async def list_matches(
         repeat_7_behavioral = repeat_behavioral.get(match_id, 0)
         repeat_7_operational = repeat_operational.get(match_id, 0)
 
-        # Unified high-risk decision + reasons
-        high_risk = is_high_risk(behavioral_cancel_rate, repeat_7_behavioral, risk_profile_obj)
+        # v1.5: use no-show metrics from booking_outcomes when available
+        no_show_rate = float(no_show_rate_by_match.get(match_id, 0.0))
+        repeat_no_show_7 = int(repeat_no_show_7_by_match.get(match_id, 0))
+
+        # Unified high-risk decision + reasons based on no-show
+        high_risk = is_high_risk(no_show_rate, repeat_no_show_7, risk_profile_obj)
         reasons: list[str] = []
         if include_reasons:
-            if behavioral_cancel_rate >= risk_profile_obj.rate_threshold:
+            if no_show_rate >= (risk_profile_obj.no_show_rate_threshold or risk_profile_obj.rate_threshold):
                 reasons.append("rate")
-            if repeat_7_behavioral >= risk_profile_obj.repeat_threshold_7:
+            if repeat_no_show_7 >= (risk_profile_obj.repeat_no_show_threshold_7 or risk_profile_obj.repeat_threshold_7):
                 reasons.append("repeat")
+
+        risk_inputs = {
+            "rate_source": "no_show",
+            "repeat_source": "no_show",
+        }
 
         items.append(
             MatchSummaryItem(

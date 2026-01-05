@@ -239,6 +239,9 @@ export default function AdminMatchesPage() {
                 <TableBody>
                   {displayedItems.map((item) => {
                     const cancelPct = (item.cancel_rate || 0) * 100;
+                    const verifiedSharePct =
+                      typeof item.verified_share === "number" ? item.verified_share * 100 : 0;
+                    const verifiedOnly = item.risk_inputs?.verified_only;
                     return (
                       <TableRow
                         key={item.id}

@@ -32,6 +32,12 @@ export default function AdminMatchesPage() {
   const [onlyHighRisk, setOnlyHighRisk] = useState(false);
   const [hideBlocked, setHideBlocked] = useState(false);
   const [sort, setSort] = useState("high_risk_first");
+  const [eventsOpen, setEventsOpen] = useState(false);
+  const [eventsLoading, setEventsLoading] = useState(false);
+  const [eventsError, setEventsError] = useState("");
+  const [eventsData, setEventsData] = useState(null);
+  const [eventsOnlyCancelled, setEventsOnlyCancelled] = useState(false);
+  const [selectedMatch, setSelectedMatch] = useState(null);
   const navigate = useNavigate();
 
   const loadMatches = async (opts = {}) => {

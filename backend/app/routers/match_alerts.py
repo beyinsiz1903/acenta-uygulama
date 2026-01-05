@@ -386,11 +386,10 @@ async def run_match_alerts(
             continue
 
         cancel_rate = float(data.get("cancel_rate") or 0.0)
-        # repeat_not_arrived_7 henüz yok; v0 için sadece rate ile gidelim
-        repeat_7 = None
+        repeat_7 = int(data.get("repeat_not_arrived_7") or 0)
 
         triggered_by_rate = cancel_rate >= policy.threshold_not_arrived_rate
-        triggered_by_repeat = False  # placeholder for future
+        triggered_by_repeat = repeat_7 >= policy.threshold_repeat_not_arrived_7
 
         if not (triggered_by_rate or triggered_by_repeat):
             continue

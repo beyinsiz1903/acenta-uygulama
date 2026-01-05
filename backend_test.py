@@ -15664,6 +15664,360 @@ class MatchRiskDashboardTester:
         return 0 if self.tests_failed == 0 else 1
 
 
+class MatchRiskHighRiskFilterTester:
+    def __init__(self, base_url="https://acenta-risk.preview.emergentagent.com"):
+        self.base_url = base_url
+        self.admin_token = None
+        self.tests_run = 0
+        self.tests_passed = 0
+        self.tests_failed = 0
+        self.failed_tests = []
+
+    def log(self, msg):
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}")
+
+    def run_test(self, name, method, endpoint, expected_status, data=None, headers_override=None):
+        """Run a single API test"""
+        url = f"{self.base_url}/{endpoint}"
+        headers = headers_override or {'Content-Type': 'application/json'}
+        if self.admin_token and not headers_override:
+            headers['Authorization'] = f'Bearer {self.admin_token}'
+
+        self.tests_run += 1
+        self.log(f"🔍 Test #{self.tests_run}: {name}")
+        
+        try:
+            if method == 'GET':
+                response = requests.get(url, headers=headers, timeout=10)
+            elif method == 'POST':
+                response = requests.post(url, json=data, headers=headers, timeout=10)
+            elif method == 'PUT':
+                response = requests.put(url, json=data, headers=headers, timeout=10)
+            elif method == 'DELETE':
+                response = requests.delete(url, headers=headers, timeout=10)
+            else:
+                raise ValueError(f"Unsupported method: {method}")
+
+            success = response.status_code == expected_status
+            if success:
+                self.tests_passed += 1
+                self.log(f"✅ PASSED - Status: {response.status_code}")
+                try:
+                    return True, response.json() if response.content else {}
+                except:
+                    return True, {}
+            else:
+                self.tests_failed += 1
+                self.failed_tests.append(f"{name} - Expected {expected_status}, got {response.status_code}")
+                self.log(f"❌ FAILED - Expected {expected_status}, got {response.status_code}")
+                try:
+                    self.log(f"   Response: {response.text[:200]}")
+                except:
+                    pass
+                return False, {}
+
+        except Exception as e:
+            self.tests_failed += 1
+            self.failed_tests.append(f"{name} - Error: {str(e)}")
+            self.log(f"❌ FAILED - Error: {str(e)}")
+            return False, {}
+
+    def test_admin_login(self):
+        """Test super admin login"""
+        self.log("\n=== AUTHENTICATION ===")
+        success, response = self.run_test(
+            "Super Admin Login (admin@acenta.test/admin123)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "admin@acenta.test", "password": "admin123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.admin_token = response['access_token']
+            user = response.get('user', {})
+            roles = user.get('roles', [])
+            
+            if 'admin' in roles or 'super_admin' in roles:
+                self.log(f"✅ Super admin login successful - roles: {roles}")
+                return True
+            else:
+                self.log(f"❌ Missing admin/super_admin role: {roles}")
+                return False
+        return False
+
+    def test_basic_high_risk_filter_sort(self):
+        """1) Basic high risk filter + sort (repeat_desc)"""
+        self.log("\n=== 1) BASIC HIGH RISK FILTER + SORT (repeat_desc) ===")
+        
+        success, response = self.run_test(
+            "GET /api/admin/matches with high_risk filter + repeat_desc sort",
+            "GET",
+            "api/admin/matches?days=7&min_total=1&include_action=1&only_high_risk=1&sort=repeat_desc",
+            200
+        )
+        
+        if not success:
+            return False
+            
+        items = response.get('items', [])
+        risk_profile = response.get('risk_profile', {})
+        
+        # a) All returned items have high_risk === true
+        all_high_risk = all(item.get('high_risk') == True for item in items)
+        if all_high_risk:
+            self.log(f"✅ All {len(items)} items have high_risk=true")
+        else:
+            self.log(f"❌ Not all items have high_risk=true")
+            return False
+        
+        # b) There is at least 1 item
+        if len(items) >= 1:
+            self.log(f"✅ Found {len(items)} high-risk items (≥1)")
+        else:
+            self.log(f"❌ No high-risk items found")
+            return False
+        
+        # c) Items are sorted by repeat_not_arrived_7 descending
+        repeat_values = [item.get('repeat_not_arrived_7', 0) for item in items]
+        is_sorted_desc = all(repeat_values[i] >= repeat_values[i+1] for i in range(len(repeat_values)-1))
+        if is_sorted_desc:
+            self.log(f"✅ Items sorted by repeat_not_arrived_7 descending: {repeat_values}")
+        else:
+            self.log(f"❌ Items NOT sorted by repeat_not_arrived_7 descending: {repeat_values}")
+            return False
+        
+        # d) Provide JSON snippet for first 3 items
+        self.log(f"\n📋 JSON SNIPPET - First 3 items with required fields:")
+        for i, item in enumerate(items[:3]):
+            snippet = {
+                "id": item.get('id'),
+                "repeat_not_arrived_7": item.get('repeat_not_arrived_7'),
+                "cancel_rate": item.get('cancel_rate'),
+                "total_bookings": item.get('total_bookings'),
+                "high_risk": item.get('high_risk'),
+                "high_risk_reasons": item.get('high_risk_reasons', [])
+            }
+            self.log(f"  Item {i+1}: {snippet}")
+        
+        self.log(f"\n📋 RISK PROFILE:")
+        self.log(f"  {risk_profile}")
+        
+        return True
+
+    def test_sort_variations(self):
+        """2) Sort variations"""
+        self.log("\n=== 2) SORT VARIATIONS ===")
+        
+        sort_tests = [
+            ("rate_desc", "cancel_rate"),
+            ("total_desc", "total_bookings"), 
+            ("last_booking_desc", "last_booking_at")
+        ]
+        
+        all_passed = True
+        
+        for sort_param, sort_field in sort_tests:
+            self.log(f"\n--- Testing sort={sort_param} ---")
+            
+            success, response = self.run_test(
+                f"GET /api/admin/matches with sort={sort_param}",
+                "GET",
+                f"api/admin/matches?days=30&min_total=1&include_action=1&sort={sort_param}",
+                200
+            )
+            
+            if not success:
+                all_passed = False
+                continue
+                
+            items = response.get('items', [])
+            risk_profile = response.get('risk_profile', {})
+            
+            # Check response structure
+            if 'range' in response and 'risk_profile' in response and 'items' in response:
+                self.log(f"✅ Response has correct structure (range + risk_profile + items)")
+            else:
+                self.log(f"❌ Response missing required fields")
+                all_passed = False
+                continue
+            
+            # Check sorting
+            if sort_field == "last_booking_desc":
+                # For last_booking_desc, we need special handling for None values
+                values = []
+                for item in items:
+                    val = item.get(sort_field)
+                    if val is None:
+                        values.append("")  # None values should be last
+                    else:
+                        values.append(val)
+                # Check if sorted descending (most recent first, None last)
+                is_sorted = True
+                for i in range(len(values)-1):
+                    if values[i] != "" and values[i+1] != "":
+                        if values[i] < values[i+1]:  # Should be descending
+                            is_sorted = False
+                            break
+                    elif values[i] == "" and values[i+1] != "":
+                        is_sorted = False  # None should be after non-None
+                        break
+            else:
+                # For numeric fields, check descending order
+                values = [item.get(sort_field, 0) for item in items]
+                is_sorted = all(values[i] >= values[i+1] for i in range(len(values)-1))
+            
+            if is_sorted:
+                self.log(f"✅ Items sorted by {sort_field} descending")
+            else:
+                self.log(f"❌ Items NOT sorted by {sort_field} descending")
+                all_passed = False
+            
+            # Print top 3 items with relevant fields
+            self.log(f"📋 Top 3 items for {sort_param}:")
+            for i, item in enumerate(items[:3]):
+                if sort_param == "rate_desc":
+                    key_fields = {
+                        "id": item.get('id'),
+                        "cancel_rate": item.get('cancel_rate'),
+                        "repeat_not_arrived_7": item.get('repeat_not_arrived_7')
+                    }
+                elif sort_param == "total_desc":
+                    key_fields = {
+                        "id": item.get('id'),
+                        "total_bookings": item.get('total_bookings')
+                    }
+                elif sort_param == "last_booking_desc":
+                    key_fields = {
+                        "id": item.get('id'),
+                        "last_booking_at": item.get('last_booking_at')
+                    }
+                
+                self.log(f"  Item {i+1}: {key_fields}")
+        
+        return all_passed
+
+    def test_risk_profile_alignment(self):
+        """3) RiskProfile alignment"""
+        self.log("\n=== 3) RISK PROFILE ALIGNMENT ===")
+        
+        success, response = self.run_test(
+            "GET /api/admin/matches for risk profile alignment check",
+            "GET",
+            "api/admin/matches?days=30&min_total=1",
+            200
+        )
+        
+        if not success:
+            return False
+            
+        items = response.get('items', [])
+        risk_profile = response.get('risk_profile', {})
+        
+        rate_threshold = risk_profile.get('rate_threshold', 0.5)
+        repeat_threshold_7 = risk_profile.get('repeat_threshold_7', 3)
+        
+        self.log(f"📋 Risk Profile Thresholds:")
+        self.log(f"  rate_threshold: {rate_threshold}")
+        self.log(f"  repeat_threshold_7: {repeat_threshold_7}")
+        
+        # Find high-risk items to check alignment
+        high_risk_items = [item for item in items if item.get('high_risk') == True]
+        
+        if not high_risk_items:
+            self.log(f"⚠️  No high-risk items found in seed data for alignment check")
+            return True
+        
+        self.log(f"\n📋 Checking alignment for {len(high_risk_items)} high-risk items:")
+        
+        alignment_correct = True
+        examples_shown = 0
+        
+        for item in high_risk_items[:2]:  # Check first 2 high-risk items
+            item_id = item.get('id')
+            cancel_rate = item.get('cancel_rate', 0)
+            repeat_7 = item.get('repeat_not_arrived_7', 0)
+            reasons = item.get('high_risk_reasons', [])
+            
+            self.log(f"\n  Item: {item_id}")
+            self.log(f"    cancel_rate: {cancel_rate}")
+            self.log(f"    repeat_not_arrived_7: {repeat_7}")
+            self.log(f"    high_risk_reasons: {reasons}")
+            
+            # Check rate alignment
+            if 'rate' in reasons:
+                if cancel_rate >= rate_threshold:
+                    self.log(f"    ✅ Rate alignment correct: {cancel_rate} >= {rate_threshold}")
+                else:
+                    self.log(f"    ❌ Rate alignment incorrect: {cancel_rate} < {rate_threshold}")
+                    alignment_correct = False
+            
+            # Check repeat alignment  
+            if 'repeat' in reasons:
+                if repeat_7 >= repeat_threshold_7:
+                    self.log(f"    ✅ Repeat alignment correct: {repeat_7} >= {repeat_threshold_7}")
+                else:
+                    self.log(f"    ❌ Repeat alignment incorrect: {repeat_7} < {repeat_threshold_7}")
+                    alignment_correct = False
+            
+            examples_shown += 1
+        
+        if alignment_correct:
+            self.log(f"\n✅ Risk profile alignment verified for {examples_shown} examples")
+        else:
+            self.log(f"\n❌ Risk profile alignment issues found")
+        
+        return alignment_correct
+
+    def print_summary(self):
+        """Print test summary"""
+        self.log("\n" + "="*60)
+        self.log("MATCH RISK HIGH-RISK FILTER + SORT V1 TEST SUMMARY")
+        self.log("="*60)
+        self.log(f"Total Tests: {self.tests_run}")
+        self.log(f"✅ Passed: {self.tests_passed}")
+        self.log(f"❌ Failed: {self.tests_failed}")
+        self.log(f"Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%")
+        
+        if self.failed_tests:
+            self.log("\n❌ FAILED TESTS:")
+            for i, test in enumerate(self.failed_tests, 1):
+                self.log(f"  {i}. {test}")
+        
+        self.log("="*60)
+
+    def run_high_risk_filter_tests(self):
+        """Run all high-risk filter and sort tests"""
+        self.log("🚀 Starting Match Risk High-Risk Filter + Sort v1 Backend Tests")
+        self.log(f"Base URL: {self.base_url}")
+        
+        # Authentication
+        if not self.test_admin_login():
+            self.log("❌ Super admin login failed - stopping tests")
+            self.print_summary()
+            return 1
+
+        # 1) Basic high risk filter + sort (repeat_desc)
+        test1_passed = self.test_basic_high_risk_filter_sort()
+
+        # 2) Sort variations
+        test2_passed = self.test_sort_variations()
+
+        # 3) RiskProfile alignment
+        test3_passed = self.test_risk_profile_alignment()
+
+        # Summary
+        self.print_summary()
+
+        # Provide final assessment
+        if test1_passed and test2_passed and test3_passed:
+            self.log("\n🎉 ALL TESTS PASSED - High-risk filter and sort functionality working correctly!")
+            return 0
+        else:
+            self.log("\n❌ SOME TESTS FAILED - Check details above")
+            return 1
+
+
 def main():
     if len(sys.argv) > 1:
         if sys.argv[1] == "faz5":

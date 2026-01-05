@@ -92,6 +92,7 @@ async def list_booking_outcomes(
 async def recompute_booking_outcomes(
   days: int = Query(60, ge=1, le=365),
   dry_run: bool = Query(True),
+  today: Optional[str] = Query(None, description="ISO timestamp for deterministic tests"),
   db=Depends(get_db),
   user=Depends(get_current_user),
 ):

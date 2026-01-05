@@ -16261,6 +16261,213 @@ class MatchRiskSortingTester:
             return 1
 
 
+class ExportDeepLinkTester:
+    def __init__(self, base_url="https://acenta-risk.preview.emergentagent.com"):
+        self.base_url = base_url
+        self.admin_token = None
+        self.tests_run = 0
+        self.tests_passed = 0
+        self.tests_failed = 0
+        self.failed_tests = []
+
+    def log(self, msg):
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}")
+
+    def run_test(self, name, method, endpoint, expected_status, data=None, headers_override=None):
+        """Run a single API test"""
+        url = f"{self.base_url}/{endpoint}"
+        headers = headers_override or {'Content-Type': 'application/json'}
+        if self.admin_token and not headers_override:
+            headers['Authorization'] = f'Bearer {self.admin_token}'
+
+        self.tests_run += 1
+        self.log(f"🔍 Test #{self.tests_run}: {name}")
+        
+        try:
+            if method == 'GET':
+                response = requests.get(url, headers=headers, timeout=10)
+            elif method == 'POST':
+                response = requests.post(url, json=data, headers=headers, timeout=10)
+            elif method == 'PUT':
+                response = requests.put(url, json=data, headers=headers, timeout=10)
+            elif method == 'DELETE':
+                response = requests.delete(url, headers=headers, timeout=10)
+            else:
+                raise ValueError(f"Unsupported method: {method}")
+
+            success = response.status_code == expected_status
+            if success:
+                self.tests_passed += 1
+                self.log(f"✅ PASSED - Status: {response.status_code}")
+                try:
+                    return True, response.json() if response.content else {}
+                except:
+                    return True, {}
+            else:
+                self.tests_failed += 1
+                self.failed_tests.append(f"{name} - Expected {expected_status}, got {response.status_code}")
+                self.log(f"❌ FAILED - Expected {expected_status}, got {response.status_code}")
+                try:
+                    self.log(f"   Response: {response.text[:200]}")
+                except:
+                    pass
+                return False, {}
+
+        except Exception as e:
+            self.tests_failed += 1
+            self.failed_tests.append(f"{name} - Error: {str(e)}")
+            self.log(f"❌ FAILED - Error: {str(e)}")
+            return False, {}
+
+    def test_admin_login(self):
+        """Test admin login"""
+        self.log("\n=== AUTHENTICATION ===")
+        success, response = self.run_test(
+            "Admin Login (admin@acenta.test/admin123)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "admin@acenta.test", "password": "admin123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.admin_token = response['access_token']
+            user = response.get('user', {})
+            roles = user.get('roles', [])
+            
+            if 'admin' in roles or 'super_admin' in roles:
+                self.log(f"✅ Admin login successful - roles: {roles}")
+                return True
+            else:
+                self.log(f"❌ Missing admin/super_admin role: {roles}")
+                return False
+        return False
+
+    def test_export_runs_deeplink_template(self):
+        """Test GET /api/admin/exports/runs for admin_deeplink_template field"""
+        self.log("\n=== EXPORT RUNS DEEPLINK TEMPLATE TEST ===")
+        
+        # Test with match_risk_daily key first
+        success, response = self.run_test(
+            "Get Export Runs (match_risk_daily)",
+            "GET",
+            "api/admin/exports/runs?key=match_risk_daily",
+            200
+        )
+        
+        if success:
+            # Check if admin_deeplink_template field exists
+            admin_deeplink_template = response.get('admin_deeplink_template')
+            if admin_deeplink_template:
+                self.log(f"✅ admin_deeplink_template field found: {admin_deeplink_template}")
+                
+                # Verify the exact pattern
+                expected_pattern = "/app/admin/reports/match-risk?match_id={match_id}&open_drawer=1&source=export"
+                if admin_deeplink_template == expected_pattern:
+                    self.log(f"✅ admin_deeplink_template matches expected pattern exactly")
+                    return True, admin_deeplink_template
+                else:
+                    self.log(f"❌ admin_deeplink_template pattern mismatch:")
+                    self.log(f"   Expected: {expected_pattern}")
+                    self.log(f"   Actual:   {admin_deeplink_template}")
+                    return False, admin_deeplink_template
+            else:
+                self.log(f"❌ admin_deeplink_template field not found in response")
+                self.log(f"   Response keys: {list(response.keys())}")
+                return False, None
+        else:
+            # Try with any available match_risk policy key
+            self.log("Trying to find any match_risk policy key...")
+            success, policies_response = self.run_test(
+                "Get Export Policies",
+                "GET",
+                "api/admin/exports/policies",
+                200
+            )
+            
+            if success:
+                policies = policies_response.get('items', [])
+                match_risk_policies = [p for p in policies if p.get('type') == 'match_risk_summary']
+                
+                if match_risk_policies:
+                    policy_key = match_risk_policies[0].get('key')
+                    self.log(f"Found match_risk policy: {policy_key}")
+                    
+                    # Test with this policy key
+                    success, response = self.run_test(
+                        f"Get Export Runs ({policy_key})",
+                        "GET",
+                        f"api/admin/exports/runs?key={policy_key}",
+                        200
+                    )
+                    
+                    if success:
+                        admin_deeplink_template = response.get('admin_deeplink_template')
+                        if admin_deeplink_template:
+                            self.log(f"✅ admin_deeplink_template field found: {admin_deeplink_template}")
+                            
+                            # Verify the exact pattern
+                            expected_pattern = "/app/admin/reports/match-risk?match_id={match_id}&open_drawer=1&source=export"
+                            if admin_deeplink_template == expected_pattern:
+                                self.log(f"✅ admin_deeplink_template matches expected pattern exactly")
+                                return True, admin_deeplink_template
+                            else:
+                                self.log(f"❌ admin_deeplink_template pattern mismatch:")
+                                self.log(f"   Expected: {expected_pattern}")
+                                self.log(f"   Actual:   {admin_deeplink_template}")
+                                return False, admin_deeplink_template
+                        else:
+                            self.log(f"❌ admin_deeplink_template field not found in response")
+                            return False, None
+                else:
+                    self.log(f"❌ No match_risk policies found")
+                    return False, None
+            else:
+                self.log(f"❌ Could not retrieve export policies")
+                return False, None
+
+    def print_summary(self):
+        """Print test summary"""
+        self.log("\n" + "="*60)
+        self.log("EXPORT DEEPLINK TEMPLATE TEST SUMMARY")
+        self.log("="*60)
+        self.log(f"Total Tests: {self.tests_run}")
+        self.log(f"✅ Passed: {self.tests_passed}")
+        self.log(f"❌ Failed: {self.tests_failed}")
+        self.log(f"Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%")
+        
+        if self.failed_tests:
+            self.log("\n❌ FAILED TESTS:")
+            for i, test in enumerate(self.failed_tests, 1):
+                self.log(f"  {i}. {test}")
+        
+        self.log("="*60)
+
+    def run_deeplink_tests(self):
+        """Run export deeplink template tests"""
+        self.log("🚀 Starting Export Deeplink Template Tests")
+        self.log(f"Base URL: {self.base_url}")
+        
+        # Authentication
+        if not self.test_admin_login():
+            self.log("❌ Admin login failed - stopping tests")
+            self.print_summary()
+            return 1
+
+        # Test deeplink template
+        success, template = self.test_export_runs_deeplink_template()
+        
+        # Summary
+        self.print_summary()
+        
+        # Show the actual template value
+        if template:
+            self.log(f"\n🔍 ACTUAL admin_deeplink_template VALUE:")
+            self.log(f"   {template}")
+        
+        return 0 if self.tests_failed == 0 else 1
+
+
 def main():
     if len(sys.argv) > 1:
         if sys.argv[1] == "faz5":

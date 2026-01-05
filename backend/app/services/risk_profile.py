@@ -32,12 +32,16 @@ async def load_risk_profile(db, org_id: str) -> RiskProfile:
         # v1: single mode, rate_or_repeat
         return RiskProfile(organization_id=org_id, mode="rate_or_repeat")
 
-    return RiskProfile(
+    rp = RiskProfile(
         organization_id=org_id,
         rate_threshold=float(doc.get("rate_threshold", 0.5)),
         repeat_threshold_7=int(doc.get("repeat_threshold_7", 3)),
+        no_show_rate_threshold=float(doc.get("no_show_rate_threshold", doc.get("rate_threshold", 0.5))),
+        repeat_no_show_threshold_7=int(doc.get("repeat_no_show_threshold_7", doc.get("repeat_threshold_7", 3))),
+        min_verified_bookings=int(doc.get("min_verified_bookings", 0)),
         mode="rate_or_repeat",
     )
+    return rp
 
 
 def is_high_risk(rate: float, repeat_7: int, profile: RiskProfile) -> bool:

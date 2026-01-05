@@ -94,6 +94,14 @@ async def create_web_booking(payload: WebBookingCreateIn, db=Depends(get_db)) ->
 
   now = now_utc()
 
+  # Enforcement: block if this hotel–agency match is blocked (web bookings have no agency, so skip)
+  await ensure_match_not_blocked(
+    db,
+    organization_id=org_id,
+    agency_id=None,
+    hotel_id=str(payload.hotel_id),
+  )
+
   # Web bookings use a simplified booking schema compatible with AdminMetrics & hotel panel
   doc: dict[str, Any] = {
     "organization_id": org_id,

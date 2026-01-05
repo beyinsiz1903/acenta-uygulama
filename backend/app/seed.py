@@ -218,6 +218,12 @@ async def ensure_seed_data() -> None:
         ("sent_at", -1),
     ])
 
+    # Risk profiles: per-org unified thresholds for match risk
+    await db.risk_profiles.create_index([
+        ("organization_id", 1),
+    ], unique=True)
+
+
     # Exports v0: export_policies & export_runs indexes
     await db.export_policies.create_index([
         ("organization_id", 1),

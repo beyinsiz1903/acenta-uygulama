@@ -568,15 +568,28 @@ export default function AdminMatchesPage() {
                                 <button
                                   type="button"
                                   className="inline-flex items-center gap-1 text-xs underline-offset-2 hover:underline"
-                                  onClick={() => {
+                                  onClick={async () => {
                                     try {
                                       if (!ev.booking_id) return;
-                                      navigator.clipboard.writeText(ev.booking_id);
+                                      const ok = await safeCopyText(ev.booking_id);
+                                      if (ok) {
+                                        // Kısa süreli görsel feedback: buton title güncelleme
+                                        const el = document.querySelector(
+                                          `[data-testid='match-risk-events-copy-booking-id-${ev.booking_id}']`
+                                        );
+                                        if (el) {
+                                          const prev = el.getAttribute("data-label") || ev.booking_id;
+                                          el.setAttribute("data-label", "Copied");
+                                          window.setTimeout(() => {
+                                            el.setAttribute("data-label", prev);
+                                          }, 1200);
+                                        }
+                                      }
                                     } catch (e) {
                                       console.error("Copy booking id failed", e);
                                     }
                                   }}
-                                  data-testid="match-risk-events-copy-booking-id"
+                                  data-testid={`match-risk-events-copy-booking-id-${ev.booking_id}`}
                                 >
                                   <Copy className="h-3 w-3" />
                                   <span>{ev.booking_id || "-"}</span>

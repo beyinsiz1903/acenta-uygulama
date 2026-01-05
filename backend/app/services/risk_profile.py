@@ -47,6 +47,8 @@ async def load_risk_profile(db, org_id: str) -> RiskProfile:
 def is_high_risk(rate: float, repeat_7: int, profile: RiskProfile) -> bool:
     """Centralized high-risk decision.
 
-    v1: mode sabit olarak rate_or_repeat, yani rate >= threshold OR repeat >= threshold.
+    v1.5: still uses rate_or_repeat but caller decides which metric to pass.
     """
-    return rate >= profile.rate_threshold or repeat_7 >= profile.repeat_threshold_7
+    return rate >= (profile.no_show_rate_threshold or profile.rate_threshold) or repeat_7 >= (
+        profile.repeat_no_show_threshold_7 or profile.repeat_threshold_7
+    )

@@ -105,6 +105,18 @@
 ## user_problem_statement: "Müsaitlik ekranını takvim/grid görünümüne, Lead pipeline'ı drag-drop Kanban'a, Rezervasyon detayını drawer'a çevir. Ayrıca agentis.com.tr referansıyla tüm uygulamanın tasarımını daha kurumsal/modern hale getir."
 
 ## backend:
+  - task: "Export-to-Match Risk Dashboard Deep Link P1 backend doğrulaması"
+    implemented: true
+    working: true
+    file: "/app/backend/app/routers/exports.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ EXPORT-TO-MATCH RISK DASHBOARD DEEP LINK P1 BACKEND TEST COMPLETE - All 2 test scenarios passed (100% success rate). CRITICAL FUNCTIONALITY VERIFIED: A) Authentication: Admin login successful (admin@acenta.test/admin123) with proper super_admin role verification. B) Admin Deeplink Template Field: GET /api/admin/exports/runs?key=match_risk_daily returns 200 with admin_deeplink_template field present, admin_deeplink_template value matches expected pattern exactly: '/app/admin/reports/match-risk?match_id={match_id}&open_drawer=1&source=export', field is properly included in ExportRunsResponse model and returned by list_runs endpoint. The admin_deeplink_template has been successfully moved to the new route as requested and contains the exact pattern specified. Backend implementation is production-ready."
+
   - task: "Match Actions Backend Flow - GET/PUT /api/admin/matches/{match_id}/action endpoints"
     implemented: true
     working: true

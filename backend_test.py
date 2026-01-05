@@ -15782,8 +15782,12 @@ def main():
             tester = PDFExportV1Tester()
             exit_code = tester.run_pdf_export_tests()
             sys.exit(exit_code)
+        elif sys.argv[1] == "match-risk-dashboard":
+            tester = MatchRiskDashboardTester()
+            exit_code = tester.run_match_risk_tests()
+            sys.exit(exit_code)
         else:
-            print("Usage: python backend_test.py [faz5|faz6|faz7|faz8|faz9|faz91|faz92|faz93|faz93admin|faz9x|faz10|faz101|admin-override|voucher-html|faz121|fazd|p4v0|match-actions|p4-include-action|alerting-v0|alerting-v0-deliveries|webhook-v1|exports-v0|exports-email-v0|signed-download|repeat-not-arrived|match_risk_v12|pdf-export-v1]")
+            print("Usage: python backend_test.py [faz5|faz6|faz7|faz8|faz9|faz91|faz92|faz93|faz93admin|faz9x|faz10|faz101|admin-override|voucher-html|faz121|fazd|p4v0|match-actions|p4-include-action|alerting-v0|alerting-v0-deliveries|webhook-v1|exports-v0|exports-email-v0|signed-download|repeat-not-arrived|match_risk_v12|pdf-export-v1|match-risk-dashboard]")
             sys.exit(1)
     else:
         tester = AcentaAPITester()

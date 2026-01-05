@@ -17362,6 +17362,487 @@ class ExportDeepLinkTester:
         return 0 if self.tests_failed == 0 else 1
 
 
+class ScaleV1EnforcementTester:
+    def __init__(self, base_url="https://acenta-risk.preview.emergentagent.com"):
+        self.base_url = base_url
+        self.admin_token = None
+        self.agency_token = None
+        self.tests_run = 0
+        self.tests_passed = 0
+        self.tests_failed = 0
+        self.failed_tests = []
+        
+        # Store data for testing
+        self.match_id = None
+        self.draft_id = None
+        self.hotel_id = None
+
+    def log(self, msg):
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}")
+
+    def run_test(self, name, method, endpoint, expected_status, data=None, headers_override=None, token=None):
+        """Run a single API test with specific token"""
+        url = f"{self.base_url}/{endpoint}"
+        headers = headers_override or {'Content-Type': 'application/json'}
+        
+        # Use specific token if provided, otherwise use admin_token
+        if token:
+            headers['Authorization'] = f'Bearer {token}'
+        elif self.admin_token and not headers_override:
+            headers['Authorization'] = f'Bearer {self.admin_token}'
+
+        self.tests_run += 1
+        self.log(f"🔍 Test #{self.tests_run}: {name}")
+        
+        try:
+            if method == 'GET':
+                response = requests.get(url, headers=headers, timeout=10)
+            elif method == 'POST':
+                response = requests.post(url, json=data, headers=headers, timeout=10)
+            elif method == 'PUT':
+                response = requests.put(url, json=data, headers=headers, timeout=10)
+            elif method == 'DELETE':
+                response = requests.delete(url, headers=headers, timeout=10)
+            else:
+                raise ValueError(f"Unsupported method: {method}")
+
+            success = response.status_code == expected_status
+            if success:
+                self.tests_passed += 1
+                self.log(f"✅ PASSED - Status: {response.status_code}")
+                try:
+                    return True, response.json() if response.content else {}
+                except:
+                    return True, {}
+            else:
+                self.tests_failed += 1
+                self.failed_tests.append(f"{name} - Expected {expected_status}, got {response.status_code}")
+                self.log(f"❌ FAILED - Expected {expected_status}, got {response.status_code}")
+                try:
+                    self.log(f"   Response: {response.text[:200]}")
+                except:
+                    pass
+                return False, {}
+
+        except Exception as e:
+            self.tests_failed += 1
+            self.failed_tests.append(f"{name} - Error: {str(e)}")
+            self.log(f"❌ FAILED - Error: {str(e)}")
+            return False, {}
+
+    def test_admin_login(self):
+        """Test admin login"""
+        self.log("\n=== AUTHENTICATION ===")
+        success, response = self.run_test(
+            "Admin Login (admin@acenta.test/admin123)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "admin@acenta.test", "password": "admin123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.admin_token = response['access_token']
+            user = response.get('user', {})
+            roles = user.get('roles', [])
+            
+            if 'admin' in roles or 'super_admin' in roles:
+                self.log(f"✅ Admin login successful - roles: {roles}")
+                return True
+            else:
+                self.log(f"❌ Missing admin/super_admin role: {roles}")
+                return False
+        return False
+
+    def test_action_policy_get(self):
+        """1) Action Policy GET - Test getting match-risk policy"""
+        self.log("\n=== 1) ACTION POLICY GET ===")
+        
+        success, response = self.run_test(
+            "GET /api/admin/action-policies/match-risk",
+            "GET",
+            "api/admin/action-policies/match-risk",
+            200
+        )
+        
+        if success:
+            # Verify response structure
+            if response.get('ok') is True:
+                self.log(f"✅ Response ok=true")
+            else:
+                self.log(f"❌ Response ok={response.get('ok')}")
+                return False
+                
+            policy = response.get('policy', {})
+            if 'enabled' in policy and isinstance(policy['enabled'], bool):
+                self.log(f"✅ Policy enabled field present: {policy['enabled']}")
+            else:
+                self.log(f"❌ Policy enabled field missing or invalid")
+                return False
+                
+            if 'default_action' in policy and isinstance(policy['default_action'], str):
+                self.log(f"✅ Policy default_action field present: {policy['default_action']}")
+            else:
+                self.log(f"❌ Policy default_action field missing or invalid")
+                return False
+                
+            if 'rules' in policy and isinstance(policy['rules'], list):
+                self.log(f"✅ Policy rules field present: {len(policy['rules'])} rules")
+            else:
+                self.log(f"❌ Policy rules field missing or invalid")
+                return False
+                
+            return True
+        return False
+
+    def test_action_policy_put(self):
+        """1) Action Policy PUT - Test updating match-risk policy"""
+        self.log("\n=== 1) ACTION POLICY PUT ===")
+        
+        # Test policy data as specified in the request
+        policy_data = {
+            "enabled": True,
+            "default_action": "watchlist",
+            "rules": [
+                {
+                    "when": {
+                        "high_risk": True,
+                        "reasons_any": ["repeat"]
+                    },
+                    "then": {
+                        "action": "block",
+                        "requires_approval_to_unblock": True,
+                        "notify_channels": ["email"]
+                    }
+                }
+            ]
+        }
+        
+        success, response = self.run_test(
+            "PUT /api/admin/action-policies/match-risk",
+            "PUT",
+            "api/admin/action-policies/match-risk",
+            200,
+            data=policy_data
+        )
+        
+        if success:
+            # Verify response structure
+            if response.get('ok') is True:
+                self.log(f"✅ Response ok=true")
+            else:
+                self.log(f"❌ Response ok={response.get('ok')}")
+                return False
+                
+            returned_policy = response.get('policy', {})
+            
+            # Verify the policy was saved correctly
+            if returned_policy.get('enabled') == policy_data['enabled']:
+                self.log(f"✅ Policy enabled saved correctly: {returned_policy['enabled']}")
+            else:
+                self.log(f"❌ Policy enabled not saved correctly")
+                return False
+                
+            if returned_policy.get('default_action') == policy_data['default_action']:
+                self.log(f"✅ Policy default_action saved correctly: {returned_policy['default_action']}")
+            else:
+                self.log(f"❌ Policy default_action not saved correctly")
+                return False
+                
+            if len(returned_policy.get('rules', [])) == len(policy_data['rules']):
+                self.log(f"✅ Policy rules saved correctly: {len(returned_policy['rules'])} rules")
+                
+                # Verify rule structure
+                rule = returned_policy['rules'][0]
+                expected_rule = policy_data['rules'][0]
+                
+                if (rule.get('when', {}).get('high_risk') == expected_rule['when']['high_risk'] and
+                    rule.get('when', {}).get('reasons_any') == expected_rule['when']['reasons_any'] and
+                    rule.get('then', {}).get('action') == expected_rule['then']['action']):
+                    self.log(f"✅ Rule structure saved correctly")
+                else:
+                    self.log(f"❌ Rule structure not saved correctly")
+                    return False
+            else:
+                self.log(f"❌ Policy rules not saved correctly")
+                return False
+                
+            return True
+        return False
+
+    def test_get_match_for_blocking(self):
+        """2) Get a match ID for enforcement testing"""
+        self.log("\n=== 2) GET MATCH FOR BLOCKING ===")
+        
+        success, response = self.run_test(
+            "GET /api/admin/matches (to find a match)",
+            "GET",
+            "api/admin/matches?days=30&min_total=1",
+            200
+        )
+        
+        if success:
+            items = response.get('items', [])
+            if items:
+                # Use the specified match ID from the request
+                target_match_id = "88e2b8e4__1ea289b7"
+                
+                # Look for the specific match or use the first available
+                match_found = None
+                for item in items:
+                    if item.get('id') == target_match_id:
+                        match_found = item
+                        break
+                
+                if not match_found and items:
+                    match_found = items[0]
+                
+                if match_found:
+                    self.match_id = match_found['id']
+                    # Extract hotel_id for later use
+                    if '__' in self.match_id:
+                        _, self.hotel_id = self.match_id.split('__', 1)
+                    self.log(f"✅ Found match for testing: {self.match_id}")
+                    return True
+                else:
+                    self.log(f"❌ No matches found")
+                    return False
+            else:
+                self.log(f"❌ No matches in response")
+                return False
+        return False
+
+    def test_set_match_blocked(self):
+        """2) Set match action to blocked"""
+        self.log("\n=== 2) SET MATCH BLOCKED ===")
+        
+        if not self.match_id:
+            self.log(f"❌ No match_id available for blocking")
+            return False
+        
+        block_data = {
+            "status": "blocked",
+            "reason_code": "high_risk_enforcement",
+            "note": "Blocked for SCALE v1 enforcement testing"
+        }
+        
+        success, response = self.run_test(
+            f"PUT /api/admin/matches/{self.match_id}/action (set blocked)",
+            "PUT",
+            f"api/admin/matches/{self.match_id}/action",
+            200,
+            data=block_data
+        )
+        
+        if success:
+            action = response.get('action', {})
+            if action.get('status') == 'blocked':
+                self.log(f"✅ Match successfully blocked: {action.get('status')}")
+                return True
+            else:
+                self.log(f"❌ Match not blocked correctly: {action.get('status')}")
+                return False
+        return False
+
+    def test_agency_login(self):
+        """Test agency login for enforcement testing"""
+        self.log("\n=== AGENCY LOGIN FOR ENFORCEMENT ===")
+        
+        success, response = self.run_test(
+            "Agency Login (agency1@demo.test/agency123)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "agency1@demo.test", "password": "agency123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        
+        if success and 'access_token' in response:
+            self.agency_token = response['access_token']
+            user = response.get('user', {})
+            agency_id = user.get('agency_id')
+            
+            if agency_id:
+                self.log(f"✅ Agency login successful - agency_id: {agency_id}")
+                return True
+            else:
+                self.log(f"❌ Missing agency_id in user")
+                return False
+        return False
+
+    def test_agency_booking_blocked(self):
+        """2a) Test agency booking submit with blocked match"""
+        self.log("\n=== 2A) AGENCY BOOKING BLOCKED ENFORCEMENT ===")
+        
+        if not self.agency_token or not self.hotel_id:
+            self.log(f"❌ Missing agency_token or hotel_id for enforcement test")
+            return False
+        
+        # First create a draft
+        draft_data = {
+            "search_id": f"search_{uuid.uuid4().hex[:8]}",
+            "hotel_id": self.hotel_id,
+            "room_type_id": "rt_standard",
+            "rate_plan_id": "rp_base",
+            "guest": {
+                "full_name": "Test Guest Enforcement",
+                "email": "test.enforcement@example.com",
+                "phone": "+905551234567"
+            },
+            "check_in": "2026-03-15",
+            "check_out": "2026-03-17",
+            "nights": 2,
+            "adults": 2,
+            "children": 0
+        }
+        
+        success, response = self.run_test(
+            "Create booking draft for enforcement test",
+            "POST",
+            "api/agency/bookings/draft",
+            200,
+            data=draft_data,
+            token=self.agency_token
+        )
+        
+        if success:
+            self.draft_id = response.get('id')
+            self.log(f"✅ Draft created: {self.draft_id}")
+            
+            # Now try to submit the draft - should be blocked
+            submit_data = {
+                "note_to_hotel": "Test enforcement blocking"
+            }
+            
+            success_submit, response_submit = self.run_test(
+                "Submit booking draft (should be blocked)",
+                "POST",
+                f"api/agency/bookings/{self.draft_id}/submit",
+                403,  # Expecting 403 MATCH_BLOCKED
+                data=submit_data,
+                token=self.agency_token
+            )
+            
+            if success_submit:
+                # Check if the error code is MATCH_BLOCKED
+                detail = response_submit.get('detail', {})
+                if isinstance(detail, dict) and detail.get('code') == 'MATCH_BLOCKED':
+                    self.log(f"✅ Agency booking correctly blocked with code: {detail.get('code')}")
+                    return True
+                else:
+                    self.log(f"❌ Wrong error code: {detail}")
+                    return False
+            else:
+                self.log(f"❌ Agency booking submit test failed")
+                return False
+        else:
+            self.log(f"❌ Failed to create draft for enforcement test")
+            return False
+
+    def test_web_booking_blocked(self):
+        """2b) Test public web booking with blocked match"""
+        self.log("\n=== 2B) WEB BOOKING BLOCKED ENFORCEMENT ===")
+        
+        if not self.hotel_id:
+            self.log(f"❌ Missing hotel_id for web booking enforcement test")
+            return False
+        
+        web_booking_data = {
+            "hotel_id": self.hotel_id,
+            "room_type_id": "rt_standard",
+            "check_in": "2026-03-15",
+            "check_out": "2026-03-17",
+            "adults": 2,
+            "children": 0,
+            "price_total": 4200.0,
+            "currency": "TRY",
+            "guest": {
+                "full_name": "Test Web Guest",
+                "email": "test.web@example.com",
+                "phone": "+905551234567"
+            }
+        }
+        
+        success, response = self.run_test(
+            "POST /api/web/bookings (should be blocked)",
+            "POST",
+            "api/web/bookings",
+            403,  # Expecting 403 MATCH_BLOCKED
+            data=web_booking_data,
+            headers_override={'Content-Type': 'application/json'}  # No auth for web bookings
+        )
+        
+        if success:
+            # Check if the error code is MATCH_BLOCKED
+            detail = response.get('detail', {})
+            if isinstance(detail, dict) and detail.get('code') == 'MATCH_BLOCKED':
+                self.log(f"✅ Web booking correctly blocked with code: {detail.get('code')}")
+                return True
+            else:
+                self.log(f"❌ Wrong error code: {detail}")
+                return False
+        else:
+            self.log(f"❌ Web booking enforcement test failed")
+            return False
+
+    def print_summary(self):
+        """Print test summary"""
+        self.log("\n" + "="*60)
+        self.log("SCALE V1 ENFORCEMENT & POLICY TEST SUMMARY")
+        self.log("="*60)
+        self.log(f"Total Tests: {self.tests_run}")
+        self.log(f"✅ Passed: {self.tests_passed}")
+        self.log(f"❌ Failed: {self.tests_failed}")
+        self.log(f"Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%")
+        
+        if self.failed_tests:
+            self.log("\n❌ FAILED TESTS:")
+            for i, test in enumerate(self.failed_tests, 1):
+                self.log(f"  {i}. {test}")
+        
+        self.log("="*60)
+
+    def run_scale_v1_tests(self):
+        """Run all SCALE v1 enforcement tests"""
+        self.log("🚀 Starting SCALE v1 Enforcement & Policy Tests")
+        self.log(f"Base URL: {self.base_url}")
+        
+        # Authentication
+        if not self.test_admin_login():
+            self.log("❌ Admin login failed - stopping tests")
+            self.print_summary()
+            return 1
+
+        # 1) Action Policy GET/PUT tests
+        self.test_action_policy_get()
+        self.test_action_policy_put()
+
+        # 2) Enforcement tests - setup
+        if not self.test_get_match_for_blocking():
+            self.log("❌ Could not find match for blocking - stopping enforcement tests")
+            self.print_summary()
+            return 1
+
+        if not self.test_set_match_blocked():
+            self.log("❌ Could not set match to blocked - stopping enforcement tests")
+            self.print_summary()
+            return 1
+
+        # Agency login for enforcement tests
+        if not self.test_agency_login():
+            self.log("❌ Agency login failed - skipping agency enforcement test")
+        else:
+            self.test_agency_booking_blocked()
+
+        # Web booking enforcement test (no auth needed)
+        self.test_web_booking_blocked()
+
+        # Summary
+        self.print_summary()
+
+        return 0 if self.tests_failed == 0 else 1
+
+
 def main():
     if len(sys.argv) > 1:
         if sys.argv[1] == "faz5":

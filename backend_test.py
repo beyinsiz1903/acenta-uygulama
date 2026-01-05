@@ -17843,6 +17843,403 @@ class ScaleV1EnforcementTester:
         return 0 if self.tests_failed == 0 else 1
 
 
+class ScaleV1ApprovalAuditTester:
+    def __init__(self, base_url="https://acenta-risk.preview.emergentagent.com"):
+        self.base_url = base_url
+        self.admin_token = None
+        self.tests_run = 0
+        self.tests_passed = 0
+        self.tests_failed = 0
+        self.failed_tests = []
+        
+        # Store data for testing
+        self.match_id = None
+        self.task_id = None
+
+    def log(self, msg):
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}")
+
+    def run_test(self, name, method, endpoint, expected_status, data=None, headers_override=None):
+        """Run a single API test"""
+        url = f"{self.base_url}/{endpoint}"
+        headers = headers_override or {'Content-Type': 'application/json'}
+        if self.admin_token and not headers_override:
+            headers['Authorization'] = f'Bearer {self.admin_token}'
+
+        self.tests_run += 1
+        self.log(f"🔍 Test #{self.tests_run}: {name}")
+        
+        try:
+            if method == 'GET':
+                response = requests.get(url, headers=headers, timeout=10)
+            elif method == 'POST':
+                response = requests.post(url, json=data, headers=headers, timeout=10)
+            elif method == 'PUT':
+                response = requests.put(url, json=data, headers=headers, timeout=10)
+            elif method == 'DELETE':
+                response = requests.delete(url, headers=headers, timeout=10)
+            else:
+                raise ValueError(f"Unsupported method: {method}")
+
+            success = response.status_code == expected_status
+            if success:
+                self.tests_passed += 1
+                self.log(f"✅ PASSED - Status: {response.status_code}")
+                try:
+                    return True, response.json() if response.content else {}
+                except:
+                    return True, {}
+            else:
+                self.tests_failed += 1
+                self.failed_tests.append(f"{name} - Expected {expected_status}, got {response.status_code}")
+                self.log(f"❌ FAILED - Expected {expected_status}, got {response.status_code}")
+                try:
+                    self.log(f"   Response: {response.text[:200]}")
+                except:
+                    pass
+                return False, {}
+
+        except Exception as e:
+            self.tests_failed += 1
+            self.failed_tests.append(f"{name} - Error: {str(e)}")
+            self.log(f"❌ FAILED - Error: {str(e)}")
+            return False, {}
+
+    def test_admin_login(self):
+        """Test admin login"""
+        self.log("\n=== AUTHENTICATION ===")
+        success, response = self.run_test(
+            "Admin Login (admin@acenta.test/admin123)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "admin@acenta.test", "password": "admin123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.admin_token = response['access_token']
+            user = response.get('user', {})
+            roles = user.get('roles', [])
+            
+            if 'admin' in roles or 'super_admin' in roles:
+                self.log(f"✅ Admin login successful - roles: {roles}")
+                return True
+            else:
+                self.log(f"❌ Missing admin/super_admin role: {roles}")
+                return False
+        return False
+
+    def test_1_preparation_block_match(self):
+        """1) Hazırlık: bir match'i blocked yap"""
+        self.log("\n=== 1) HAZIRLIK: BİR MATCH'İ BLOCKED YAP ===")
+        
+        # 1.2 Get a match from /api/admin/matches?days=30&min_total=1
+        success, response = self.run_test(
+            "Get matches for blocking",
+            "GET",
+            "api/admin/matches?days=30&min_total=1",
+            200
+        )
+        
+        if success and response.get('items'):
+            matches = response['items']
+            if len(matches) > 0:
+                # Use the first match or look for a specific one
+                match = matches[0]
+                self.match_id = match['id']
+                self.log(f"✅ Selected match for testing: {self.match_id}")
+                
+                # 1.3 Block this match using PUT /api/admin/matches/{match_id}/action
+                block_data = {
+                    "status": "blocked",
+                    "reason_code": "test_block",
+                    "note": "Test blocking for SCALE v1 approval test"
+                }
+                success, response = self.run_test(
+                    f"Block match {self.match_id}",
+                    "PUT",
+                    f"api/admin/matches/{self.match_id}/action",
+                    200,
+                    data=block_data
+                )
+                
+                if success and response.get('ok'):
+                    action = response.get('action', {})
+                    if action.get('status') == 'blocked':
+                        self.log(f"✅ Match successfully blocked: status={action.get('status')}")
+                        return True
+                    else:
+                        self.log(f"❌ Match not blocked properly: status={action.get('status')}")
+                        return False
+                else:
+                    self.log(f"❌ Failed to block match")
+                    return False
+            else:
+                self.log(f"❌ No matches found for testing")
+                return False
+        else:
+            self.log(f"❌ Failed to get matches")
+            return False
+
+    def test_2_request_unblock_pending_task(self):
+        """2) Request-unblock → pending task"""
+        self.log("\n=== 2) REQUEST-UNBLOCK → PENDING TASK ===")
+        
+        if not self.match_id:
+            self.log("❌ No match_id available for unblock request")
+            return False
+        
+        # 2.1 Call POST /api/admin/matches/{match_id}/request-unblock
+        success, response = self.run_test(
+            f"Request unblock for match {self.match_id}",
+            "POST",
+            f"api/admin/matches/{self.match_id}/request-unblock",
+            200,
+            data={"note": "Test unblock request for SCALE v1"}
+        )
+        
+        if success:
+            # Check expected response fields
+            ok = response.get('ok')
+            task_id = response.get('task_id')
+            status = response.get('status')
+            already_pending = response.get('already_pending')
+            
+            if ok and task_id and status == 'pending':
+                self.task_id = task_id
+                self.log(f"✅ Unblock request successful:")
+                self.log(f"   - ok: {ok}")
+                self.log(f"   - task_id: {task_id}")
+                self.log(f"   - status: {status}")
+                self.log(f"   - already_pending: {already_pending}")
+                
+                if already_pending is False:
+                    self.log(f"✅ First request (already_pending=false)")
+                else:
+                    self.log(f"⚠️  Already pending request (already_pending=true)")
+                
+                # 2.2 Verify task appears in approval tasks list
+                success, response = self.run_test(
+                    "Check approval tasks list",
+                    "GET",
+                    "api/admin/approval-tasks?status=pending&limit=10",
+                    200
+                )
+                
+                if success:
+                    items = response.get('items', [])
+                    found_task = None
+                    for item in items:
+                        if item.get('id') == self.task_id:
+                            found_task = item
+                            break
+                    
+                    if found_task:
+                        self.log(f"✅ Task found in approval tasks list:")
+                        self.log(f"   - task_type: {found_task.get('task_type')}")
+                        self.log(f"   - status: {found_task.get('status')}")
+                        self.log(f"   - target: {found_task.get('target')}")
+                        return True
+                    else:
+                        self.log(f"❌ Task {self.task_id} not found in approval tasks list")
+                        return False
+                else:
+                    self.log(f"❌ Failed to get approval tasks list")
+                    return False
+            else:
+                self.log(f"❌ Invalid response: ok={ok}, task_id={task_id}, status={status}")
+                return False
+        else:
+            self.log(f"❌ Request unblock failed")
+            return False
+
+    def test_3_approve_match_actions_update_audit(self):
+        """3) Approve → match_actions güncellemesi + audit"""
+        self.log("\n=== 3) APPROVE → MATCH_ACTIONS GÜNCELLEMESİ + AUDIT ===")
+        
+        if not self.task_id:
+            self.log("❌ No task_id available for approval")
+            return False
+        
+        # 3.1 Call POST /api/admin/approval-tasks/{task_id}/approve
+        approve_data = {"note": "unblock for test"}
+        success, response = self.run_test(
+            f"Approve task {self.task_id}",
+            "POST",
+            f"api/admin/approval-tasks/{self.task_id}/approve",
+            200,
+            data=approve_data
+        )
+        
+        if success:
+            # Check expected response fields
+            ok = response.get('ok')
+            status = response.get('status')
+            match_action_status = response.get('match_action_status')
+            
+            if ok and status == 'approved' and match_action_status == 'none':
+                self.log(f"✅ Approval successful:")
+                self.log(f"   - ok: {ok}")
+                self.log(f"   - status: {status}")
+                self.log(f"   - match_action_status: {match_action_status}")
+                
+                # 3.2 Verify match action status updated
+                success, response = self.run_test(
+                    "Check match action status after approval",
+                    "GET",
+                    f"api/admin/matches?days=30&min_total=1&include_action=1",
+                    200
+                )
+                
+                if success:
+                    items = response.get('items', [])
+                    found_match = None
+                    for item in items:
+                        if item.get('id') == self.match_id:
+                            found_match = item
+                            break
+                    
+                    if found_match:
+                        action_status = found_match.get('action_status')
+                        if action_status == 'none':
+                            self.log(f"✅ Match action status updated to 'none' (unblocked)")
+                            return True
+                        else:
+                            self.log(f"❌ Match action status not updated: {action_status}")
+                            return False
+                    else:
+                        self.log(f"❌ Match {self.match_id} not found in matches list")
+                        return False
+                else:
+                    self.log(f"❌ Failed to get matches list")
+                    return False
+            else:
+                self.log(f"❌ Invalid approval response: ok={ok}, status={status}, match_action_status={match_action_status}")
+                return False
+        else:
+            self.log(f"❌ Approval failed")
+            return False
+
+    def test_4_audit_trail_verification(self):
+        """4) Audit trail kanıtı"""
+        self.log("\n=== 4) AUDIT TRAIL KANITI ===")
+        
+        if not self.match_id:
+            self.log("❌ No match_id available for audit verification")
+            return False
+        
+        # 4.1 Get audit logs for the match
+        success, response = self.run_test(
+            f"Get audit logs for match {self.match_id}",
+            "GET",
+            f"api/audit/logs?target_type=match&target_id={self.match_id}&limit=50",
+            200
+        )
+        
+        if success:
+            audit_logs = response if isinstance(response, list) else []
+            
+            # Look for required audit entries
+            approval_task_approved = None
+            match_action_updated = None
+            
+            for log in audit_logs:
+                action = log.get('action')
+                target = log.get('target', {})
+                
+                if action == 'approval_task.approved' and target.get('type') == 'approval_task':
+                    approval_task_approved = log
+                elif action == 'match_action.updated' and target.get('type') == 'match' and target.get('id') == self.match_id:
+                    match_action_updated = log
+            
+            # 4.2 Verify both required audit entries exist
+            results = []
+            
+            if approval_task_approved:
+                self.log(f"✅ Found approval_task.approved audit entry:")
+                diff = approval_task_approved.get('diff', {})
+                before_status = diff.get('status', {}).get('before')
+                after_status = diff.get('status', {}).get('after')
+                self.log(f"   - status before: {before_status}")
+                self.log(f"   - status after: {after_status}")
+                results.append(True)
+            else:
+                self.log(f"❌ Missing approval_task.approved audit entry")
+                results.append(False)
+            
+            if match_action_updated:
+                self.log(f"✅ Found match_action.updated audit entry:")
+                diff = match_action_updated.get('diff', {})
+                before_status = diff.get('status', {}).get('before')
+                after_status = diff.get('status', {}).get('after')
+                self.log(f"   - status before: {before_status}")
+                self.log(f"   - status after: {after_status}")
+                results.append(True)
+            else:
+                self.log(f"❌ Missing match_action.updated audit entry")
+                results.append(False)
+            
+            return all(results)
+        else:
+            self.log(f"❌ Failed to get audit logs")
+            return False
+
+    def print_summary(self):
+        """Print test summary"""
+        self.log("\n" + "="*60)
+        self.log("SCALE V1 APPROVAL & AUDIT CHAIN TEST SUMMARY")
+        self.log("="*60)
+        self.log(f"Total Tests: {self.tests_run}")
+        self.log(f"✅ Passed: {self.tests_passed}")
+        self.log(f"❌ Failed: {self.tests_failed}")
+        self.log(f"Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%")
+        
+        if self.failed_tests:
+            self.log("\n❌ FAILED TESTS:")
+            for i, test in enumerate(self.failed_tests, 1):
+                self.log(f"  {i}. {test}")
+        
+        self.log("="*60)
+
+    def run_scale_v1_approval_tests(self):
+        """Run all SCALE v1 approval & audit tests"""
+        self.log("🚀 Starting SCALE v1 Approval & Audit Chain Tests")
+        self.log(f"Base URL: {self.base_url}")
+        self.log("Testing org_demo / default org with admin@acenta.test")
+        
+        # Authentication
+        if not self.test_admin_login():
+            self.log("❌ Admin login failed - stopping tests")
+            self.print_summary()
+            return 1
+
+        # 1) Preparation: Block a match
+        if not self.test_1_preparation_block_match():
+            self.log("❌ Match blocking failed - stopping tests")
+            self.print_summary()
+            return 1
+
+        # 2) Request-unblock → pending task
+        if not self.test_2_request_unblock_pending_task():
+            self.log("❌ Request unblock failed - stopping tests")
+            self.print_summary()
+            return 1
+
+        # 3) Approve → match_actions update + audit
+        if not self.test_3_approve_match_actions_update_audit():
+            self.log("❌ Approval process failed - stopping tests")
+            self.print_summary()
+            return 1
+
+        # 4) Audit trail verification
+        self.test_4_audit_trail_verification()
+
+        # Summary
+        self.print_summary()
+
+        return 0 if self.tests_failed == 0 else 1
+
+
 def main():
     if len(sys.argv) > 1:
         if sys.argv[1] == "faz5":

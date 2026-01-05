@@ -345,7 +345,7 @@ async def list_matches(
             # 30d verified totals
             match_stage_verified_30 = {
                 "organization_id": org_id,
-                "booked_at": {"$gte": thirty_days_ago},
+                "created_at": {"$gte": thirty_days_ago},
                 "verified": True,
                 "$or": pair_or_filters_verified,
             }

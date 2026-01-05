@@ -220,6 +220,178 @@ async def apply_pms_event(
     upsert=True,
   )
 
+
+
+@router.post("/{booking_id}/verify", dependencies=[Depends(require_roles(["super_admin", "admin"]))])
+async def verify_booking_outcome(
+  booking_id: str,
+  payload: BookingOutcomeVerifyIn,
+  db=Depends(get_db),
+  user=Depends(get_current_user),
+  request=Depends(),
+):
+  org_id = user.get("organization_id")
+
+  doc = await db.booking_outcomes.find_one({"organization_id": org_id, "booking_id": booking_id})
+  if not doc:
+    raise HTTPException(status_code=404, detail="BOOKING_OUTCOME_NOT_FOUND")
+
+  before = doc.copy()
+
+  now = now_utc()
+  email = user.get("email")
+
+  # Apply verify flags
+  doc["verified"] = True
+  doc["verified_by_email"] = email
+  doc["verified_at"] = now
+
+  if payload.final_outcome:
+    doc["final_outcome"] = payload.final_outcome
+    doc["outcome_source"] = "manual_verified"
+
+  # Append manual_verify evidence
+  ev_list = doc.get("evidence") or []
+  ev_list.append(
+    {
+      "type": "manual_verify",
+      "by_email": email,
+      "note": payload.note,
+      "at": now.isoformat(),
+    }
+  )
+  doc["evidence"] = ev_list
+
+  # Confidence & version tweaks for manual verification
+  doc["outcome_version"] = max(int(doc.get("outcome_version") or 1), 2)
+  if doc.get("outcome_source") == "manual_verified":
+    doc["confidence"] = 0.95
+
+  await db.booking_outcomes.update_one(
+    {"organization_id": org_id, "booking_id": booking_id},
+    {"$set": doc},
+    upsert=True,
+  )
+
+  after = await db.booking_outcomes.find_one({"organization_id": org_id, "booking_id": booking_id}) or {}
+
+  actor = {"email": email, "roles": user.get("roles", [])}
+
+  await write_audit_log(
+    db,
+    organization_id=org_id,
+    actor=actor,
+    request=request,
+    action="booking_outcome.verified",
+    target_type="booking_outcome",
+    target_id=booking_id,
+    before=before,
+    after=after,
+    meta={"note": payload.note},
+  )
+
+  evidence = after.get("evidence") or []
+
+  return {
+    "ok": True,
+    "booking_id": booking_id,
+    "final_outcome": after.get("final_outcome") or "unknown",
+    "outcome_source": after.get("outcome_source") or "rule_inferred",
+    "verified": bool(after.get("verified")),
+    "verified_by_email": after.get("verified_by_email"),
+    "verified_at": after.get("verified_at").isoformat() if after.get("verified_at") else None,
+    "evidence_count": len(evidence),
+    "outcome_version": int(after.get("outcome_version") or 1),
+  }
+
+
+@router.post("/{booking_id}/override", dependencies=[Depends(require_roles(["super_admin", "admin"]))])
+async def override_booking_outcome(
+  booking_id: str,
+  payload: BookingOutcomeOverrideIn,
+  db=Depends(get_db),
+  user=Depends(get_current_user),
+  request=Depends(),
+):
+  org_id = user.get("organization_id")
+
+  doc = await db.booking_outcomes.find_one({"organization_id": org_id, "booking_id": booking_id})
+  if not doc:
+    raise HTTPException(status_code=404, detail="BOOKING_OUTCOME_NOT_FOUND")
+
+  before = doc.copy()
+
+  now = now_utc()
+  email = user.get("email")
+
+  # Apply override structure
+  override = {
+    "final_outcome": payload.final_outcome,
+    "reason": payload.reason,
+    "by_email": email,
+    "at": now.isoformat(),
+  }
+  doc["override"] = override
+
+  # Apply final outcome + manual override source
+  doc["final_outcome"] = payload.final_outcome
+  doc["outcome_source"] = "manual_override"
+  doc["verified"] = True
+  doc["verified_by_email"] = email
+  doc["verified_at"] = now
+
+  # Append manual_override evidence
+  ev_list = doc.get("evidence") or []
+  ev_list.append(
+    {
+      "type": "manual_override",
+      "by_email": email,
+      "reason": payload.reason,
+      "at": now.isoformat(),
+    }
+  )
+  doc["evidence"] = ev_list
+
+  # v2 semantics
+  doc["outcome_version"] = max(int(doc.get("outcome_version") or 1), 2)
+  doc["confidence"] = 1.0
+
+  await db.booking_outcomes.update_one(
+    {"organization_id": org_id, "booking_id": booking_id},
+    {"$set": doc},
+    upsert=True,
+  )
+
+  after = await db.booking_outcomes.find_one({"organization_id": org_id, "booking_id": booking_id}) or {}
+
+  actor = {"email": email, "roles": user.get("roles", [])}
+
+  await write_audit_log(
+    db,
+    organization_id=org_id,
+    actor=actor,
+    request=request,
+    action="booking_outcome.overridden",
+    target_type="booking_outcome",
+    target_id=booking_id,
+    before=before,
+    after=after,
+    meta={"reason": payload.reason},
+  )
+
+  evidence = after.get("evidence") or []
+
+  return {
+    "ok": True,
+    "booking_id": booking_id,
+    "final_outcome": after.get("final_outcome") or "unknown",
+    "outcome_source": after.get("outcome_source") or "rule_inferred",
+    "verified": bool(after.get("verified")),
+    "override": after.get("override"),
+    "outcome_version": int(after.get("outcome_version") or 1),
+    "evidence_count": len(evidence),
+  }
+
   evidence = updated.get("evidence") or []
 
   return BookingOutcomePmsEventResponse(

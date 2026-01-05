@@ -416,6 +416,18 @@
 ##   version: "1.0"
 ##   test_sequence: 2
 ##   run_ui: true
+  - task: "PROOF v1.1 – No-show deterministic patch tekrar testi (BSON fix sonrası)"
+    implemented: true
+    working: true
+    file: "/app/backend/app/routers/booking_outcomes.py, /app/backend/app/routers/matches.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ PROOF V1.1 NO-SHOW DETERMINISTIC PATCH TEST COMPLETE - All 5 test scenarios passed (100% success rate). COMPREHENSIVE FUNCTIONALITY VERIFIED: A) Authentication: Admin login successful (admin@acenta.test/admin123) with super_admin role verification. B) KANIT 1 - Recompute + no_show sayımı: POST /api/admin/booking-outcomes/recompute?days=60&dry_run=0&today=2026-01-05T12:00:00+00:00 working correctly - ok=true, counts['no_show']=1 (>=1 requirement met), dry-run also confirmed 1 no_show detection. C) KANIT 2 - booking_outcomes no_show örneği: GET /api/admin/booking-outcomes?outcome=no_show&limit=10 working correctly - found 1 no_show item with booking_id='DEMO_NO_SHOW_BOOKING_1', final_outcome='no_show', outcome_source='rule_inferred', inferred_reason='check_in_past_no_cancel', verified=false (all 4 requirements met). D) KANIT 3 - Matches summary no_show etkisi: GET /api/admin/matches?days=30&min_total=1&include_action=1&sort=repeat_desc working correctly - DEMO match (agency_id='88e2b8e4-12e7-43e4-9d54-e39d53576b18', hotel_id='1ea289b7-621b-49d8-be9c-c21a6bb44f47') shows repeat_no_show_7=1 (>=1), no_show_rate=1.0 (>0), risk_inputs.rate_source='no_show', risk_inputs.repeat_source='no_show' (all 4 requirements met). All three evidence points (KANIT 1, 2, 3) successfully verified. PROOF v1.1 no-show deterministic patch working correctly after BSON fix."
+
 ## test_plan:
 ##   current_focus: []
 ##   stuck_tasks: []

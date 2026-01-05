@@ -162,8 +162,9 @@ async def list_matches(
             hotel_ids.append(h_id)
 
     agency_name_map, hotel_name_map = await _resolve_names(db, org_id, list(set(agency_ids)), list(set(hotel_ids)))
-    # Repeat not-arrived 7d aggregation
-    repeat_counts: dict[str, int] = {}
+    # Repeat not-arrived 7d aggregation (behavioral vs operational)
+    repeat_behavioral: dict[str, int] = {}
+    repeat_operational: dict[str, int] = {}
     if filtered:
         from app.utils import now_utc as _now_utc
 
@@ -188,7 +189,48 @@ async def list_matches(
                 {
                     "$group": {
                         "_id": {"agency_id": "$agency_id", "hotel_id": "$hotel_id"},
-                        "c": {"$sum": 1},
+                        "behavioral": {
+                            "$sum": {
+                                "$cond": [
+                                    {
+                                        "$and": [
+                                            {"$eq": ["$status", "cancelled"]},
+                                            {
+                                                "$not": [
+                                                    {
+                                                        "$or": [
+                                                            {"$in": ["$cancel_reason", ["PRICE_CHANGED", "RATE_CHANGED"]]},
+                                                            {"$eq": ["$cancelled_by", "system"]},
+                                                        ]
+                                                    }
+                                                ]
+                                            },
+                                        ]
+                                    },
+                                    1,
+                                    0,
+                                ]
+                            }
+                        },
+                        "operational": {
+                            "$sum": {
+                                "$cond": [
+                                    {
+                                        "$and": [
+                                            {"$eq": ["$status", "cancelled"]},
+                                            {
+                                                "$or": [
+                                                    {"$in": ["$cancel_reason", ["PRICE_CHANGED", "RATE_CHANGED"]]},
+                                                    {"$eq": ["$cancelled_by", "system"]},
+                                                ]
+                                            },
+                                        ]
+                                    },
+                                    1,
+                                    0,
+                                ]
+                            }
+                        },
                     }
                 },
             ]
@@ -198,7 +240,9 @@ async def list_matches(
                 ra = str(kk.get("agency_id") or "")
                 rh = str(kk.get("hotel_id") or "")
                 if ra and rh:
-                    repeat_counts[f"{ra}__{rh}"] = int(rr.get("c") or 0)
+                    key_id = f"{ra}__{rh}"
+                    repeat_behavioral[key_id] = int(rr.get("behavioral") or 0)
+                    repeat_operational[key_id] = int(rr.get("operational") or 0)
 
 
 
@@ -232,8 +276,13 @@ async def list_matches(
         pending = int(r.get("pending") or 0)
         confirmed = int(r.get("confirmed") or 0)
         cancelled = int(r.get("cancelled") or 0)
+        operational_cancelled = int(r.get("operational_cancelled") or 0)
+        behavioral_cancelled = max(cancelled - operational_cancelled, 0)
+
         confirm_rate = float(confirmed) / total if total > 0 else 0.0
-        cancel_rate = float(cancelled) / total if total > 0 else 0.0
+        operational_cancel_rate = float(operational_cancelled) / total if total > 0 else 0.0
+        behavioral_cancel_rate = float(behavioral_cancelled) / total if total > 0 else 0.0
+
         last_ts = r.get("last_booking_at")
         last_iso = last_ts.isoformat() if hasattr(last_ts, "isoformat") else None
 

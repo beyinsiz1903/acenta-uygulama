@@ -602,6 +602,8 @@ export default function AdminMatchAlertsPolicyPage() {
           </div>
         </CardContent>
 
+      <Card>
+        <CardContent>
           <div className="flex items-center gap-3 mt-4">
             <Button
               onClick={handleSave}

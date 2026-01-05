@@ -104,15 +104,17 @@ export default function AdminMatchesPage() {
     }
     const found = items.find((m) => m.id === deeplinkMatchId);
     if (!found) {
-      // For now just log; toast eklenecek
-      console.warn("Match not found for deeplink", deeplinkMatchId);
+      toast({
+        title: "Match not found in current view",
+        description: "Try increasing days or lowering min_total.",
+        duration: 3000,
+      });
       return;
     }
     setSelectedMatch(found);
     setEventsOnlyCancelled(false);
     setEventsOpen(true);
     loadEvents(found);
-     
   }, [items, deeplinkMatchId, deeplinkOpenDrawer]);
 
   useEffect(() => {

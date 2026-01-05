@@ -212,6 +212,23 @@ export default function AdminMatchAlertsPolicyPage() {
                 type="number"
                 min="1"
                 value={policy.min_matches_total}
+                onChange={(e) =>
+                  setPolicy((prev) => ({
+                    ...prev,
+                    min_matches_total: parseInt(e.target.value || "1", 10),
+                  }))
+                }
+                data-testid="match-alerts-min-matches"
+              />
+              <p className="text-xs text-muted-foreground">
+                Belirtilen dönem içinde toplam eşleşme sayısı bu değerden küçükse alert üretilmez.
+              </p>
+            </div>
+
+            <div className="space-y-1">
+              <label htmlFor="cooldown-hours" className="text-sm font-medium">
+                Cooldown (saat)
+              </label>
 
           <div className="space-y-1">
             <label htmlFor="repeat-threshold" className="text-sm font-medium">

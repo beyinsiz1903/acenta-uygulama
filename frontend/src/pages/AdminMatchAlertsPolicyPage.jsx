@@ -408,25 +408,6 @@ export default function AdminMatchAlertsPolicyPage() {
           </Card>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Policy</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <div className="text-sm font-medium">Alerting aktif</div>
-              <p className="text-xs text-muted-foreground">
-                Enabled kapalıysa, hiçbir eşleşme için email alert üretilmez.
-              </p>
-            </div>
-            <Switch
-              checked={policy.enabled}
-              onCheckedChange={(val) => setPolicy((prev) => ({ ...prev, enabled: Boolean(val) }))}
-              data-testid="match-alerts-enabled"
-            />
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-1">
               <label htmlFor="threshold-rate" className="text-sm font-medium">
                 Not-arrived / cancel rate eşiği

@@ -20246,7 +20246,7 @@ class RiskSnapshotsTester:
             self.log("❌ Real snapshot write failed")
         
         # 3.2) Collection reading
-        if not self.test_collection_read_via_db():
+        if not self.test_collection_read_via_api():
             self.log("❌ Collection read failed")
 
         # Summary

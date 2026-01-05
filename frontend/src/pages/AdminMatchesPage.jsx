@@ -45,7 +45,7 @@ export default function AdminMatchesPage() {
   const [copiedBookingId, setCopiedBookingId] = useState(null);
 
   const [selectedMatch, setSelectedMatch] = useState(null);
-  const navigate = useNavigate();
+  const location = useLocation();
 
   const loadMatches = async (opts = {}) => {
     const days = opts.days ?? 30;

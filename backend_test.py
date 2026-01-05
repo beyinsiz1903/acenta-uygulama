@@ -19817,7 +19817,7 @@ class ProofV2Story4Tester:
             "repeat_threshold_7": 2,
             "no_show_rate_threshold": 0.9,
             "repeat_no_show_threshold_7": 2,
-            "min_verified_bookings": 2,
+            "min_verified_bookings": 1,  # Lower threshold to enable verified-only mode
             "prefer_verified_only": True
         }
         

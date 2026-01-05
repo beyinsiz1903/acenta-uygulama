@@ -206,7 +206,16 @@ export default function AdminMatchesPage() {
                   {displayedItems.map((item) => {
                     const cancelPct = (item.cancel_rate || 0) * 100;
                     return (
-                      <TableRow key={item.id}>
+                      <TableRow
+                        key={item.id}
+                        className="cursor-pointer hover:bg-muted/40"
+                        onClick={() => {
+                          setSelectedMatch(item);
+                          setEventsOnlyCancelled(false);
+                          setEventsOpen(true);
+                          loadEvents(item);
+                        }}
+                      >
                         <TableCell>{item.agency_name || item.agency_id}</TableCell>
                         <TableCell>{item.hotel_name || item.hotel_id}</TableCell>
                         <TableCell className="text-right font-medium">{item.total_bookings}</TableCell>

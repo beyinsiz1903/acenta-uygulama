@@ -40,6 +40,7 @@ async def load_risk_profile(db, org_id: str) -> RiskProfile:
         no_show_rate_threshold=float(doc.get("no_show_rate_threshold", doc.get("rate_threshold", 0.5))),
         repeat_no_show_threshold_7=int(doc.get("repeat_no_show_threshold_7", doc.get("repeat_threshold_7", 3))),
         min_verified_bookings=int(doc.get("min_verified_bookings", 0)),
+        prefer_verified_only=bool(doc.get("prefer_verified_only", False)),
         mode="rate_or_repeat",
     )
     return rp

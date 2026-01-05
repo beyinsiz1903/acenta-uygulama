@@ -44,7 +44,7 @@ async def run_risk_snapshot(
         user=user,
     )
 
-    items = matches_resp.items  # type: ignore[attr-defined]
+    items = matches_resp.get("items", [])  # Access as dict key, not attribute
     if not isinstance(items, list):
         raise HTTPException(status_code=500, detail="MATCH_SUMMARY_UNAVAILABLE")
 

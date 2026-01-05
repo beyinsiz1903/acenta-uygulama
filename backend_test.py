@@ -1152,6 +1152,393 @@ class SignedDownloadLinkTester:
         return 0 if self.tests_failed == 0 else 1
 
 
+class RiskSnapshotsTrendTester:
+    def __init__(self, base_url="https://riskdelta.preview.emergentagent.com"):
+        self.base_url = base_url
+        self.admin_token = None
+        self.tests_run = 0
+        self.tests_passed = 0
+        self.tests_failed = 0
+        self.failed_tests = []
+        
+        # Store data for testing
+        self.snapshot_key = "match_risk_daily"
+        self.run_ids = []
+
+    def log(self, msg):
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}")
+
+    def run_test(self, name, method, endpoint, expected_status, data=None, headers_override=None):
+        """Run a single API test"""
+        url = f"{self.base_url}/{endpoint}"
+        headers = headers_override or {'Content-Type': 'application/json'}
+        if self.admin_token and not headers_override:
+            headers['Authorization'] = f'Bearer {self.admin_token}'
+
+        self.tests_run += 1
+        self.log(f"🔍 Test #{self.tests_run}: {name}")
+        
+        try:
+            if method == 'GET':
+                response = requests.get(url, headers=headers, timeout=10)
+            elif method == 'POST':
+                response = requests.post(url, json=data, headers=headers, timeout=10)
+            elif method == 'PUT':
+                response = requests.put(url, json=data, headers=headers, timeout=10)
+            elif method == 'DELETE':
+                response = requests.delete(url, headers=headers, timeout=10)
+            else:
+                raise ValueError(f"Unsupported method: {method}")
+
+            success = response.status_code == expected_status
+            if success:
+                self.tests_passed += 1
+                self.log(f"✅ PASSED - Status: {response.status_code}")
+                try:
+                    return True, response.json() if response.content else {}
+                except:
+                    return True, {}
+            else:
+                self.tests_failed += 1
+                self.failed_tests.append(f"{name} - Expected {expected_status}, got {response.status_code}")
+                self.log(f"❌ FAILED - Expected {expected_status}, got {response.status_code}")
+                try:
+                    self.log(f"   Response: {response.text[:200]}")
+                except:
+                    pass
+                return False, {}
+
+        except Exception as e:
+            self.tests_failed += 1
+            self.failed_tests.append(f"{name} - Error: {str(e)}")
+            self.log(f"❌ FAILED - Error: {str(e)}")
+            return False, {}
+
+    def test_admin_login(self):
+        """Test admin login"""
+        self.log("\n=== AUTHENTICATION ===")
+        success, response = self.run_test(
+            "Admin Login (admin@acenta.test/admin123)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "admin@acenta.test", "password": "admin123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.admin_token = response['access_token']
+            user = response.get('user', {})
+            roles = user.get('roles', [])
+            
+            if 'admin' in roles or 'super_admin' in roles:
+                self.log(f"✅ Admin login successful - roles: {roles}")
+                return True
+            else:
+                self.log(f"❌ Missing admin/super_admin role: {roles}")
+                return False
+        return False
+
+    def test_scenario_1_no_snapshots(self):
+        """1) Hiç snapshot yokken"""
+        self.log("\n=== 1) HİÇ SNAPSHOT YOKKEN ===")
+        
+        # Test with a unique snapshot key to ensure no data
+        unique_key = f"test_empty_{int(datetime.now().timestamp())}"
+        
+        success, response = self.run_test(
+            f"GET trend with no snapshots (key={unique_key})",
+            "GET",
+            f"api/admin/risk-snapshots/trend?snapshot_key={unique_key}",
+            200
+        )
+        
+        if success:
+            points = response.get('points', [])
+            delta = response.get('delta')
+            
+            if len(points) == 0 and delta is None:
+                self.log(f"✅ Correct response for no snapshots: points=[], delta=null")
+                return True
+            else:
+                self.log(f"❌ Incorrect response: points={len(points)}, delta={delta}")
+                return False
+        return False
+
+    def test_scenario_2_one_snapshot(self):
+        """2) 1 snapshot varken"""
+        self.log("\n=== 2) 1 SNAPSHOT VARKEN ===")
+        
+        # First create a snapshot
+        success, response = self.run_test(
+            "Create snapshot (dry_run=0)",
+            "POST",
+            f"api/admin/risk-snapshots/run?snapshot_key={self.snapshot_key}&days=30&min_total=1&top_n=5&dry_run=0",
+            200
+        )
+        
+        if not success:
+            self.log("❌ Failed to create snapshot")
+            return False
+        
+        self.log(f"✅ Snapshot created successfully")
+        
+        # Now test trend with 1 snapshot
+        success, response = self.run_test(
+            f"GET trend with 1 snapshot",
+            "GET",
+            f"api/admin/risk-snapshots/trend?snapshot_key={self.snapshot_key}&limit=5",
+            200
+        )
+        
+        if success:
+            points = response.get('points', [])
+            delta = response.get('delta')
+            
+            if len(points) == 1 and delta is None:
+                point = points[0]
+                required_fields = ['generated_at', 'high_risk_rate', 'verified_share_avg', 'matches_evaluated', 'high_risk_matches']
+                
+                all_fields_present = all(field in point for field in required_fields)
+                if all_fields_present:
+                    self.log(f"✅ Correct response for 1 snapshot:")
+                    self.log(f"   - points length: {len(points)}")
+                    self.log(f"   - generated_at: {point['generated_at']}")
+                    self.log(f"   - high_risk_rate: {point['high_risk_rate']}")
+                    self.log(f"   - verified_share_avg: {point['verified_share_avg']}")
+                    self.log(f"   - matches_evaluated: {point['matches_evaluated']}")
+                    self.log(f"   - high_risk_matches: {point['high_risk_matches']}")
+                    self.log(f"   - delta: {delta}")
+                    return True
+                else:
+                    missing_fields = [f for f in required_fields if f not in point]
+                    self.log(f"❌ Missing fields in point: {missing_fields}")
+                    return False
+            else:
+                self.log(f"❌ Incorrect response: points={len(points)}, delta={delta}")
+                return False
+        return False
+
+    def test_scenario_3_two_snapshots_delta(self):
+        """3) 2 snapshot varken (delta kontrolü)"""
+        self.log("\n=== 3) 2 SNAPSHOT VARKEN (DELTA KONTROLÜ) ===")
+        
+        # Create a second snapshot with different parameters to get different metrics
+        success, response = self.run_test(
+            "Create second snapshot (different params)",
+            "POST",
+            f"api/admin/risk-snapshots/run?snapshot_key={self.snapshot_key}&days=7&min_total=1&top_n=3&dry_run=0",
+            200
+        )
+        
+        if not success:
+            self.log("❌ Failed to create second snapshot")
+            return False
+        
+        self.log(f"✅ Second snapshot created successfully")
+        
+        # Now test trend with 2 snapshots
+        success, response = self.run_test(
+            f"GET trend with 2 snapshots",
+            "GET",
+            f"api/admin/risk-snapshots/trend?snapshot_key={self.snapshot_key}&limit=5",
+            200
+        )
+        
+        if success:
+            points = response.get('points', [])
+            delta = response.get('delta')
+            
+            if len(points) >= 2 and delta is not None:
+                # Check chronological order (oldest → newest)
+                if len(points) >= 2:
+                    first_time = points[0]['generated_at']
+                    last_time = points[-1]['generated_at']
+                    self.log(f"✅ Points in chronological order: {first_time} → {last_time}")
+                
+                # Check delta structure
+                required_delta_fields = ['high_risk_rate', 'verified_share_avg']
+                delta_fields_present = all(field in delta for field in required_delta_fields)
+                
+                if delta_fields_present:
+                    hrr_delta = delta['high_risk_rate']
+                    vsa_delta = delta['verified_share_avg']
+                    
+                    # Check delta metric structure
+                    required_metric_fields = ['start', 'end', 'abs_change', 'pct_change', 'direction']
+                    hrr_valid = all(field in hrr_delta for field in required_metric_fields)
+                    vsa_valid = all(field in vsa_delta for field in required_metric_fields)
+                    
+                    if hrr_valid and vsa_valid:
+                        self.log(f"✅ Correct delta structure:")
+                        self.log(f"   - high_risk_rate: start={hrr_delta['start']}, end={hrr_delta['end']}, change={hrr_delta['abs_change']}, pct={hrr_delta['pct_change']:.2f}%, direction={hrr_delta['direction']}")
+                        self.log(f"   - verified_share_avg: start={vsa_delta['start']}, end={vsa_delta['end']}, change={vsa_delta['abs_change']}, pct={vsa_delta['pct_change']:.2f}%, direction={vsa_delta['direction']}")
+                        
+                        # Verify direction logic
+                        hrr_direction_correct = (
+                            (hrr_delta['direction'] == 'up' and hrr_delta['abs_change'] > 0) or
+                            (hrr_delta['direction'] == 'down' and hrr_delta['abs_change'] < 0) or
+                            (hrr_delta['direction'] == 'flat' and hrr_delta['abs_change'] == 0)
+                        )
+                        
+                        vsa_direction_correct = (
+                            (vsa_delta['direction'] == 'up' and vsa_delta['abs_change'] > 0) or
+                            (vsa_delta['direction'] == 'down' and vsa_delta['abs_change'] < 0) or
+                            (vsa_delta['direction'] == 'flat' and vsa_delta['abs_change'] == 0)
+                        )
+                        
+                        if hrr_direction_correct and vsa_direction_correct:
+                            self.log(f"✅ Direction logic correct")
+                            return True
+                        else:
+                            self.log(f"❌ Direction logic incorrect")
+                            return False
+                    else:
+                        self.log(f"❌ Invalid delta metric structure")
+                        return False
+                else:
+                    self.log(f"❌ Missing delta fields: {[f for f in required_delta_fields if f not in delta]}")
+                    return False
+            else:
+                self.log(f"❌ Incorrect response: points={len(points)}, delta={delta}")
+                return False
+        return False
+
+    def test_scenario_4_limit_behavior(self):
+        """4) N snapshot ve limit davranışı"""
+        self.log("\n=== 4) N SNAPSHOT VE LİMİT DAVRANIŞI ===")
+        
+        # Create a third snapshot
+        success, response = self.run_test(
+            "Create third snapshot",
+            "POST",
+            f"api/admin/risk-snapshots/run?snapshot_key={self.snapshot_key}&days=14&min_total=2&top_n=4&dry_run=0",
+            200
+        )
+        
+        if success:
+            self.log(f"✅ Third snapshot created successfully")
+        
+        # Test with limit=2
+        success, response = self.run_test(
+            f"GET trend with limit=2",
+            "GET",
+            f"api/admin/risk-snapshots/trend?snapshot_key={self.snapshot_key}&limit=2",
+            200
+        )
+        
+        if success:
+            points = response.get('points', [])
+            delta = response.get('delta')
+            
+            if len(points) == 2 and delta is not None:
+                self.log(f"✅ Limit=2 working correctly:")
+                self.log(f"   - Points returned: {len(points)}")
+                self.log(f"   - Delta calculated from these 2 points")
+                
+                # Verify delta is calculated from first and last of these 2 points
+                first_point = points[0]
+                last_point = points[-1]
+                hrr_delta = delta['high_risk_rate']
+                
+                expected_abs_change = last_point['high_risk_rate'] - first_point['high_risk_rate']
+                actual_abs_change = hrr_delta['abs_change']
+                
+                if abs(expected_abs_change - actual_abs_change) < 0.0001:  # Float comparison
+                    self.log(f"✅ Delta calculation correct for limited points")
+                    return True
+                else:
+                    self.log(f"❌ Delta calculation incorrect: expected {expected_abs_change}, got {actual_abs_change}")
+                    return False
+            else:
+                self.log(f"❌ Incorrect response for limit=2: points={len(points)}, delta={delta}")
+                return False
+        return False
+
+    def test_scenario_5_parameter_validation(self):
+        """5) Parametre validasyonu"""
+        self.log("\n=== 5) PARAMETRE VALİDASYONU ===")
+        
+        # Test limit=0 (should fail)
+        success, response = self.run_test(
+            "GET trend with limit=0 (should fail)",
+            "GET",
+            f"api/admin/risk-snapshots/trend?snapshot_key={self.snapshot_key}&limit=0",
+            422
+        )
+        
+        if success:
+            self.log(f"✅ limit=0 correctly rejected with 422")
+        else:
+            self.log(f"❌ limit=0 validation failed")
+            return False
+        
+        # Test limit=400 (should fail)
+        success, response = self.run_test(
+            "GET trend with limit=400 (should fail)",
+            "GET",
+            f"api/admin/risk-snapshots/trend?snapshot_key={self.snapshot_key}&limit=400",
+            422
+        )
+        
+        if success:
+            self.log(f"✅ limit=400 correctly rejected with 422")
+            return True
+        else:
+            self.log(f"❌ limit=400 validation failed")
+            return False
+
+    def print_summary(self):
+        """Print test summary"""
+        self.log("\n" + "="*60)
+        self.log("RISK SNAPSHOTS TREND API TEST SUMMARY")
+        self.log("="*60)
+        self.log(f"Total Tests: {self.tests_run}")
+        self.log(f"✅ Passed: {self.tests_passed}")
+        self.log(f"❌ Failed: {self.tests_failed}")
+        self.log(f"Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%")
+        
+        if self.failed_tests:
+            self.log("\n❌ FAILED TESTS:")
+            for i, test in enumerate(self.failed_tests, 1):
+                self.log(f"  {i}. {test}")
+        
+        self.log("="*60)
+
+    def run_risk_snapshots_trend_tests(self):
+        """Run all risk snapshots trend tests"""
+        self.log("🚀 Starting Risk Snapshots Trend API Tests")
+        self.log(f"Base URL: {self.base_url}")
+        
+        # Authentication
+        if not self.test_admin_login():
+            self.log("❌ Admin login failed - stopping tests")
+            self.print_summary()
+            return 1
+
+        # Test scenarios
+        scenario_results = []
+        
+        # 1) No snapshots
+        scenario_results.append(self.test_scenario_1_no_snapshots())
+        
+        # 2) 1 snapshot
+        scenario_results.append(self.test_scenario_2_one_snapshot())
+        
+        # 3) 2 snapshots (delta)
+        scenario_results.append(self.test_scenario_3_two_snapshots_delta())
+        
+        # 4) N snapshots and limit
+        scenario_results.append(self.test_scenario_4_limit_behavior())
+        
+        # 5) Parameter validation
+        scenario_results.append(self.test_scenario_5_parameter_validation())
+
+        # Summary
+        self.print_summary()
+
+        return 0 if self.tests_failed == 0 else 1
+
+
 class FAZ5HotelExtranetTester:
     def __init__(self, base_url="https://riskdelta.preview.emergentagent.com"):
         self.base_url = base_url

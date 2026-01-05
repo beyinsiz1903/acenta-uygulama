@@ -33,10 +33,28 @@ export function setUser(user) {
   localStorage.setItem("acenta_user", JSON.stringify(user));
 }
 
-// If backendEnv is empty, axios will call relative to current origin, and
-// we manually ensure all paths start with /api when calling.
+// If backendEnv is empty, axios will call relative to current origin.
+// Ayrıca: Eğer REACT_APP_BACKEND_URL localhost'u gösteriyor ama uygulama
+// başka bir hosttan (örn. preview/prod domain) çalışıyorsa, bu değeri yok
+// sayıp aynı origin /api üzerinden çağrı yaparız.
+let resolvedBaseURL = "/api";
+if (backendEnv) {
+  const isBrowser = typeof window !== "undefined";
+  if (isBrowser) {
+    const host = window.location.hostname;
+    const backendIsLocalhost = backendEnv.includes("://localhost") || backendEnv.includes("://127.0.0.1");
+    const originIsLocalhost = host === "localhost" || host === "127.0.0.1";
+    if (!backendIsLocalhost || originIsLocalhost) {
+      resolvedBaseURL = `${backendEnv}/api`;
+    }
+  } else {
+    // Node/test ortamında env'i doğrudan kullan
+    resolvedBaseURL = `${backendEnv}/api`;
+  }
+}
+
 export const api = axios.create({
-  baseURL: backendEnv ? `${backendEnv}/api` : "/api",
+  baseURL: resolvedBaseURL,
 });
 
 api.interceptors.request.use((config) => {

@@ -390,10 +390,7 @@ export default function AdminMatchAlertsPolicyPage() {
           </Card>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Alert Configuration</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent>
             <div className="space-y-1">
               <label htmlFor="threshold-rate" className="text-sm font-medium">
                 Not-arrived / cancel rate eşiği

@@ -98,13 +98,20 @@ async def upsert_booking_outcome(db, booking_doc: Dict[str, Any], today: Optiona
   outcome, source, inferred_reason = resolve_outcome_for_booking(booking_doc, today=today)
   now = now_utc()
 
+  # MongoDB requires datetime for date-like fields; normalize checkin_date
+  checkin_dt: Optional[datetime]
+  if checkin_date is None:
+    checkin_dt = None
+  else:
+    checkin_dt = datetime.combine(checkin_date, datetime.min.time(), tzinfo=timezone.utc)
+
   doc = {
     "organization_id": org_id,
     "booking_id": booking_id,
     "agency_id": str(booking_doc.get("agency_id") or ""),
     "hotel_id": str(booking_doc.get("hotel_id") or ""),
     "booked_at": booked_at,
-    "checkin_date": checkin_date,
+    "checkin_date": checkin_dt,
     "final_outcome": outcome,
     "outcome_source": source,
     "inferred_reason": inferred_reason,

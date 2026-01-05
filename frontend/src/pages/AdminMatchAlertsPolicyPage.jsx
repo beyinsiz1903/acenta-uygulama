@@ -215,7 +215,7 @@ export default function AdminMatchAlertsPolicyPage() {
 
           <div className="space-y-1">
             <label htmlFor="repeat-threshold" className="text-sm font-medium">
-              Repeat not-arrived e57i (7 g5n)
+              Repeat not-arrived eşiği (7 gün)
             </label>
             <Input
               id="repeat-threshold"
@@ -231,7 +231,7 @@ export default function AdminMatchAlertsPolicyPage() {
               data-testid="risk-profile-repeat-threshold"
             />
             <p className="text-xs text-muted-foreground">
-              Son 7 g5n i5inde bu de5erden fazla not-arrived/cancel g5ren e5fle5meyi y5ksek risk say.
+              Son 7 gün içinde bu değerden fazla not-arrived/cancel gören eşleşmeyi yüksek risk say.
             </p>
           </div>
 

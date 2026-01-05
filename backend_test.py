@@ -14965,8 +14965,9 @@ class PDFExportV1Tester:
         self.tests_failed = 0
         self.failed_tests = []
         
-        # Store data for testing
-        self.policy_key = "match_risk_pdf_v1"
+        # Store data for testing - use unique key to avoid cooldown
+        import time
+        self.policy_key = f"match_risk_pdf_v1_{int(time.time())}"
         self.run_id = None
         self.download_token = None
         self.run_response_json = None

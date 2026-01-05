@@ -87,6 +87,7 @@ export default function AdminExportsPage() {
         params: { key, limit: 50 },
       });
       setRuns(resp.data?.items || []);
+      setRunsDeeplinkTemplate(resp.data?.admin_deeplink_template || "");
     } catch (e) {
       console.error("Exports runs fetch failed", e);
     } finally {

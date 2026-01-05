@@ -1,13 +1,12 @@
 from __future__ import annotations
 
-import asyncio
-
 import pytest
 
 from app.services.connect_layer import create_booking
 
 
 @pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_mockpms_price_changed_conflict():
     """Deterministic PRICE_CHANGED 409 when test_fixture flag is set.
 

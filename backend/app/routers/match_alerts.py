@@ -385,10 +385,16 @@ async def run_match_alerts(
         if total < policy.min_matches_total:
             continue
 
-        cancel_rate = float(data.get("cancel_rate") or 0.0)
+        # Prefer behavioral_cancel_rate if available; fallback to legacy cancel_rate
+        behavioral_rate = float(
+            data.get("behavioral_cancel_rate")
+            or data.get("cancel_rate")
+            or 0.0
+        )
+        cancel_rate = behavioral_rate
         repeat_7 = int(data.get("repeat_not_arrived_7") or 0)
 
-        triggered_by_rate = cancel_rate >= policy.threshold_not_arrived_rate
+        triggered_by_rate = behavioral_rate >= policy.threshold_not_arrived_rate
         triggered_by_repeat = repeat_7 >= policy.threshold_repeat_not_arrived_7
 
         if not (triggered_by_rate or triggered_by_repeat):

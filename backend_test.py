@@ -20649,7 +20649,11 @@ if __name__ == "__main__":
         if len(sys.argv) > 1:
             test_type = sys.argv[1]
             
-            if test_type == "risk_snapshots":
+            if test_type == "risk-snapshots-trend":
+                tester = RiskSnapshotsTrendTester()
+                exit_code = tester.run_risk_snapshots_trend_tests()
+                sys.exit(exit_code)
+            elif test_type == "risk_snapshots":
                 tester = RiskSnapshotsTester()
                 exit_code = tester.run_risk_snapshots_tests()
                 sys.exit(exit_code)

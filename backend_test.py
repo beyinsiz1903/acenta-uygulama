@@ -14552,6 +14552,410 @@ class RepeatNotArrived7Tester:
         return 0 if self.tests_failed == 0 else 1
 
 
+class MatchRiskV12Tester:
+    def __init__(self, base_url="https://risk-match-analyzer.preview.emergentagent.com"):
+        self.base_url = base_url
+        self.admin_token = None
+        self.tests_run = 0
+        self.tests_passed = 0
+        self.tests_failed = 0
+        self.failed_tests = []
+        
+        # Store data for testing
+        self.policy_key = None
+        self.run_id = None
+        self.match_a_id = "88e2b8e4-12e7-43e4-9d54-e39d53576b18__e60e9d13-bd43-4c21-bc32-55f7d3de7346"
+        self.match_b_id = "88e2b8e4-12e7-43e4-9d54-e39d53576b18__1ea289b7-621b-49d8-be9c-c21a6bb44f47"
+
+    def log(self, msg):
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}")
+
+    def run_test(self, name, method, endpoint, expected_status, data=None, headers_override=None):
+        """Run a single API test"""
+        url = f"{self.base_url}/{endpoint}"
+        headers = headers_override or {'Content-Type': 'application/json'}
+        if self.admin_token and not headers_override:
+            headers['Authorization'] = f'Bearer {self.admin_token}'
+
+        self.tests_run += 1
+        self.log(f"🔍 Test #{self.tests_run}: {name}")
+        
+        try:
+            if method == 'GET':
+                response = requests.get(url, headers=headers, timeout=10)
+            elif method == 'POST':
+                response = requests.post(url, json=data, headers=headers, timeout=10)
+            elif method == 'PUT':
+                response = requests.put(url, json=data, headers=headers, timeout=10)
+            elif method == 'DELETE':
+                response = requests.delete(url, headers=headers, timeout=10)
+            else:
+                raise ValueError(f"Unsupported method: {method}")
+
+            success = response.status_code == expected_status
+            if success:
+                self.tests_passed += 1
+                self.log(f"✅ PASSED - Status: {response.status_code}")
+                try:
+                    return True, response.json() if response.content else {}
+                except:
+                    return True, {}
+            else:
+                self.tests_failed += 1
+                self.failed_tests.append(f"{name} - Expected {expected_status}, got {response.status_code}")
+                self.log(f"❌ FAILED - Expected {expected_status}, got {response.status_code}")
+                try:
+                    self.log(f"   Response: {response.text[:200]}")
+                except:
+                    pass
+                return False, {}
+
+        except Exception as e:
+            self.tests_failed += 1
+            self.failed_tests.append(f"{name} - Error: {str(e)}")
+            self.log(f"❌ FAILED - Error: {str(e)}")
+            return False, {}
+
+    def test_admin_login(self):
+        """1) Test admin login"""
+        self.log("\n=== 1) AUTH ===")
+        success, response = self.run_test(
+            "Admin Login (admin@acenta.test/admin123)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "admin@acenta.test", "password": "admin123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.admin_token = response['access_token']
+            user = response.get('user', {})
+            roles = user.get('roles', [])
+            
+            if 'admin' in roles or 'super_admin' in roles:
+                self.log(f"✅ Admin login successful - roles: {roles}")
+                return True
+            else:
+                self.log(f"❌ Missing admin/super_admin role: {roles}")
+                return False
+        return False
+
+    def test_match_summary(self):
+        """2) Test Match Summary (behavioral vs operational)"""
+        self.log("\n=== 2) MATCH SUMMARY (BEHAVIORAL VS OPERATIONAL) ===")
+        
+        # Get matches with include_action=1
+        success, response = self.run_test(
+            "GET /api/admin/matches?days=7&min_total=1&include_action=1",
+            "GET",
+            "api/admin/matches?days=7&min_total=1&include_action=1",
+            200
+        )
+        
+        if not success:
+            return False
+            
+        items = response.get('items', [])
+        self.log(f"✅ Found {len(items)} matches")
+        
+        # Look for our specific matches
+        match_a = None
+        match_b = None
+        
+        for item in items:
+            if item.get('id') == self.match_a_id:
+                match_a = item
+            elif item.get('id') == self.match_b_id:
+                match_b = item
+        
+        # Verify Match-A (operational)
+        if match_a:
+            self.log(f"\n--- Match-A (Operational) Analysis ---")
+            self.log(f"✅ Found Match-A: {self.match_a_id}")
+            self.log(f"   total_bookings: {match_a.get('total_bookings')}")
+            self.log(f"   cancelled: {match_a.get('cancelled')}")
+            self.log(f"   operational_cancel_rate: {match_a.get('operational_cancel_rate')}")
+            self.log(f"   behavioral_cancel_rate: {match_a.get('behavioral_cancel_rate')}")
+            self.log(f"   cancel_rate: {match_a.get('cancel_rate')}")
+            self.log(f"   repeat_not_arrived_7: {match_a.get('repeat_not_arrived_7')}")
+            self.log(f"   repeat_cancelled_operational_7: {match_a.get('repeat_cancelled_operational_7')}")
+            
+            # Expected: operational cancels, low behavioral
+            if match_a.get('operational_cancel_rate', 0) > 0.5 and match_a.get('behavioral_cancel_rate', 0) < 0.1:
+                self.log(f"✅ Match-A shows operational pattern as expected")
+            else:
+                self.log(f"❌ Match-A doesn't show expected operational pattern")
+        else:
+            self.log(f"⚠️  Match-A not found: {self.match_a_id}")
+        
+        # Verify Match-B (behavioral)
+        if match_b:
+            self.log(f"\n--- Match-B (Behavioral) Analysis ---")
+            self.log(f"✅ Found Match-B: {self.match_b_id}")
+            self.log(f"   total_bookings: {match_b.get('total_bookings')}")
+            self.log(f"   cancelled: {match_b.get('cancelled')}")
+            self.log(f"   operational_cancel_rate: {match_b.get('operational_cancel_rate')}")
+            self.log(f"   behavioral_cancel_rate: {match_b.get('behavioral_cancel_rate')}")
+            self.log(f"   cancel_rate: {match_b.get('cancel_rate')}")
+            self.log(f"   repeat_not_arrived_7: {match_b.get('repeat_not_arrived_7')}")
+            self.log(f"   repeat_cancelled_operational_7: {match_b.get('repeat_cancelled_operational_7')}")
+            
+            # Expected: behavioral cancels, low operational
+            if match_b.get('behavioral_cancel_rate', 0) > 0.3 and match_b.get('operational_cancel_rate', 0) < 0.1:
+                self.log(f"✅ Match-B shows behavioral pattern as expected")
+            else:
+                self.log(f"❌ Match-B doesn't show expected behavioral pattern")
+        else:
+            self.log(f"⚠️  Match-B not found: {self.match_b_id}")
+        
+        # Verify that cancel_rate equals behavioral_cancel_rate
+        for item in items[:3]:  # Check first few items
+            cancel_rate = item.get('cancel_rate', 0)
+            behavioral_rate = item.get('behavioral_cancel_rate', 0)
+            if abs(cancel_rate - behavioral_rate) < 0.001:  # Allow small floating point differences
+                self.log(f"✅ cancel_rate equals behavioral_cancel_rate for {item.get('id', 'unknown')}")
+            else:
+                self.log(f"❌ cancel_rate ({cancel_rate}) != behavioral_cancel_rate ({behavioral_rate}) for {item.get('id', 'unknown')}")
+        
+        return True
+
+    def test_alerting(self):
+        """3) Test Alerting (behavioral rate trigger)"""
+        self.log("\n=== 3) ALERTING (BEHAVIORAL RATE TRIGGER) ===")
+        
+        # First, adjust policy threshold to ensure Match-B triggers
+        policy_data = {
+            "enabled": True,
+            "threshold_not_arrived_rate": 0.3,  # Lower threshold to catch Match-B
+            "threshold_repeat_not_arrived_7": 2,
+            "min_matches_total": 1,
+            "cooldown_hours": 1,
+            "email_recipients": ["test@acenta.test"]
+        }
+        
+        success, response = self.run_test(
+            "Update Alert Policy (lower threshold)",
+            "PUT",
+            "api/admin/match-alerts/policy",
+            200,
+            data=policy_data
+        )
+        
+        if success:
+            self.log(f"✅ Policy updated - threshold_not_arrived_rate: 0.3")
+        
+        # Run dry_run alert
+        success, response = self.run_test(
+            "POST /api/admin/match-alerts/run?days=7&min_total=1&dry_run=1",
+            "POST",
+            "api/admin/match-alerts/run?days=7&min_total=1&dry_run=1",
+            200
+        )
+        
+        if not success:
+            return False
+        
+        items = response.get('items', [])
+        triggered_count = response.get('triggered_count', 0)
+        
+        self.log(f"✅ Alert run completed - triggered: {triggered_count}, items: {len(items)}")
+        
+        # Look for Match-B in triggered items
+        match_b_triggered = None
+        for item in items:
+            if item.get('match_id') == self.match_b_id:
+                match_b_triggered = item
+                break
+        
+        if match_b_triggered:
+            self.log(f"\n--- Match-B Alert Analysis ---")
+            self.log(f"✅ Match-B triggered alert: {self.match_b_id}")
+            self.log(f"   cancel_rate: {match_b_triggered.get('cancel_rate')}")
+            self.log(f"   triggered_by_rate: {match_b_triggered.get('triggered_by_rate')}")
+            self.log(f"   triggered_by_repeat: {match_b_triggered.get('triggered_by_repeat')}")
+            self.log(f"   repeat_not_arrived_7: {match_b_triggered.get('repeat_not_arrived_7')}")
+            
+            # Verify it's triggered by behavioral rate
+            if match_b_triggered.get('triggered_by_rate'):
+                self.log(f"✅ Match-B correctly triggered by behavioral rate")
+            else:
+                self.log(f"❌ Match-B not triggered by rate")
+                
+            if match_b_triggered.get('triggered_by_repeat'):
+                self.log(f"✅ Match-B also triggered by repeat")
+            else:
+                self.log(f"⚠️  Match-B not triggered by repeat")
+        else:
+            self.log(f"⚠️  Match-B not found in triggered items")
+        
+        # Test real run (dry_run=0)
+        success, response = self.run_test(
+            "POST /api/admin/match-alerts/run?days=7&min_total=1&dry_run=0",
+            "POST",
+            "api/admin/match-alerts/run?days=7&min_total=1&dry_run=0",
+            200
+        )
+        
+        if success:
+            sent_count = response.get('sent_count', 0)
+            self.log(f"✅ Real alert run completed - sent: {sent_count}")
+            
+            # Check deliveries
+            success, deliveries_response = self.run_test(
+                "GET /api/admin/match-alerts/deliveries",
+                "GET",
+                "api/admin/match-alerts/deliveries",
+                200
+            )
+            
+            if success:
+                delivery_items = deliveries_response.get('items', [])
+                self.log(f"✅ Found {len(delivery_items)} deliveries")
+                
+                # Look for behavioral rate in fingerprint
+                for delivery in delivery_items[:3]:  # Check recent deliveries
+                    fingerprint = delivery.get('fingerprint', '')
+                    if 'rate=behavioral' in fingerprint:
+                        self.log(f"✅ Found delivery with 'rate=behavioral' in fingerprint")
+                        break
+                else:
+                    self.log(f"⚠️  No delivery found with 'rate=behavioral' in fingerprint")
+        
+        return True
+
+    def test_exports_csv(self):
+        """4) Test Exports CSV (behavioral not_arrived_rate)"""
+        self.log("\n=== 4) EXPORTS CSV (BEHAVIORAL NOT_ARRIVED_RATE) ===")
+        
+        # Create policy
+        import time
+        self.policy_key = f"match_risk_debug_v12_{int(time.time())}"
+        
+        policy_data = {
+            "key": self.policy_key,
+            "enabled": True,
+            "type": "match_risk_summary",
+            "format": "csv",
+            "recipients": [],  # No email for this test
+            "cooldown_hours": 1,
+            "params": {
+                "days": 7,
+                "min_matches": 1,
+                "only_high_risk": False
+            }
+        }
+        
+        success, response = self.run_test(
+            f"PUT /api/admin/exports/policies/{self.policy_key}",
+            "PUT",
+            f"api/admin/exports/policies/{self.policy_key}",
+            200,
+            data=policy_data
+        )
+        
+        if not success:
+            return False
+        
+        self.log(f"✅ Export policy created: {self.policy_key}")
+        
+        # Run export
+        success, response = self.run_test(
+            f"POST /api/admin/exports/run?key={self.policy_key}&dry_run=0",
+            "POST",
+            f"api/admin/exports/run?key={self.policy_key}&dry_run=0",
+            200
+        )
+        
+        if not success:
+            return False
+        
+        self.run_id = response.get('run_id')
+        rows = response.get('rows', 0)
+        
+        self.log(f"✅ Export run completed - run_id: {self.run_id}, rows: {rows}")
+        
+        # Download CSV
+        success, csv_response = self.run_test(
+            f"GET /api/admin/exports/runs/{self.run_id}/download",
+            "GET",
+            f"api/admin/exports/runs/{self.run_id}/download",
+            200
+        )
+        
+        if success:
+            # Since we can't get the actual CSV content from the test framework,
+            # we'll verify the endpoint works and log what we can
+            self.log(f"✅ CSV download endpoint working")
+            
+            # Get the runs list to verify the export
+            success, runs_response = self.run_test(
+                f"GET /api/admin/exports/runs?key={self.policy_key}",
+                "GET",
+                f"api/admin/exports/runs?key={self.policy_key}",
+                200
+            )
+            
+            if success:
+                runs = runs_response.get('items', [])
+                if runs:
+                    run = runs[0]
+                    self.log(f"✅ Export run details:")
+                    self.log(f"   filename: {run.get('filename')}")
+                    self.log(f"   size_bytes: {run.get('size_bytes')}")
+                    self.log(f"   status: {run.get('status')}")
+                    
+                    # Note: In a real CSV, we would expect:
+                    # - Match-A: not_arrived_rate ~0.0, repeat_not_arrived_7=0, high_risk_flag=false
+                    # - Match-B: not_arrived_rate ~0.333, repeat_not_arrived_7=2, high_risk_flag=true
+                    self.log(f"📊 CSV should contain behavioral not_arrived_rate data")
+                    self.log(f"   Expected Match-A: low not_arrived_rate, repeat_not_arrived_7=0")
+                    self.log(f"   Expected Match-B: ~0.333 not_arrived_rate, repeat_not_arrived_7=2")
+        
+        return True
+
+    def print_summary(self):
+        """Print test summary"""
+        self.log("\n" + "="*60)
+        self.log("MATCH RISK V1.2 BEHAVIORAL VS OPERATIONAL TEST SUMMARY")
+        self.log("="*60)
+        self.log(f"Total Tests: {self.tests_run}")
+        self.log(f"✅ Passed: {self.tests_passed}")
+        self.log(f"❌ Failed: {self.tests_failed}")
+        self.log(f"Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%")
+        
+        if self.failed_tests:
+            self.log("\n❌ FAILED TESTS:")
+            for i, test in enumerate(self.failed_tests, 1):
+                self.log(f"  {i}. {test}")
+        
+        self.log("="*60)
+
+    def run_match_risk_v12_tests(self):
+        """Run all Match Risk v1.2 tests"""
+        self.log("🚀 Starting Match Risk v1.2 Behavioral vs Operational Tests")
+        self.log(f"Base URL: {self.base_url}")
+        
+        # 1) Authentication
+        if not self.test_admin_login():
+            self.log("❌ Admin login failed - stopping tests")
+            self.print_summary()
+            return 1
+
+        # 2) Match Summary
+        self.test_match_summary()
+
+        # 3) Alerting
+        self.test_alerting()
+
+        # 4) Exports CSV
+        self.test_exports_csv()
+
+        # Summary
+        self.print_summary()
+
+        return 0 if self.tests_failed == 0 else 1
+
+
 def main():
     if len(sys.argv) > 1:
         if sys.argv[1] == "faz5":

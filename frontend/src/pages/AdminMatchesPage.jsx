@@ -87,19 +87,6 @@ export default function AdminMatchesPage() {
     loadMatches();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onlyHighRisk, sort]);
-      setRange(resp.data?.range || null);
-    } catch (e) {
-      console.error("Admin matches fetch failed", e);
-      setError(apiErrorMessage(e));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadMatches();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onlyHighRisk, sort]);
 
   if (loading) {
     return (

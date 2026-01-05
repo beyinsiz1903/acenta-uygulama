@@ -181,7 +181,7 @@ async def _generate_match_risk_rows(db, org_id: str, params: ExportPolicyParams,
                 "not_arrived_rate": behavioral_rate,
                 "repeat_not_arrived_7": int(data.get("repeat_not_arrived_7") or 0),
                 "action_status": data.get("action_status") or "none",
-                "high_risk_flag": cancel_rate >= 0.5 or int(data.get("repeat_not_arrived_7") or 0) >= 3,
+                "high_risk_flag": behavioral_rate >= 0.5 or int(data.get("repeat_not_arrived_7") or 0) >= 3,
                 "generated_at": now_str,
             }
         )

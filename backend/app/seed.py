@@ -213,6 +213,18 @@ async def ensure_seed_data() -> None:
         ("fingerprint", 1),
         ("channel", 1),
     ], unique=True)
+
+    # Booking outcomes indexes
+    await db.booking_outcomes.create_index([
+        ("organization_id", 1),
+        ("booking_id", 1),
+    ], unique=True)
+    await db.booking_outcomes.create_index([
+        ("organization_id", 1),
+        ("agency_id", 1),
+        ("hotel_id", 1),
+        ("checkin_date", -1),
+    ])
     await db.match_alert_deliveries.create_index([
         ("organization_id", 1),
         ("sent_at", -1),

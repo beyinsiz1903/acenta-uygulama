@@ -618,6 +618,7 @@ export default function AdminMatchAlertsPolicyPage() {
               </Button>
             </div>
           </div>
+          </div>
 
           <div className="flex items-center gap-3 mt-4">
             <Button

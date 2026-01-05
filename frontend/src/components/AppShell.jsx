@@ -25,16 +25,16 @@ import { api, clearToken, getUser } from "../lib/api";
 import { getMenuForUser } from "../config/menuConfig";
 
 const legacyNav = [
-  { to: "/app", label: "Dashboard", icon: LayoutGrid, roles: ["admin", "sales", "ops", "accounting", "b2b_agent"] },
-  { to: "/app/products", label: "Ürünler", icon: Layers, roles: ["admin", "sales", "ops"] },
-  { to: "/app/inventory", label: "Müsaitlik", icon: CalendarDays, roles: ["admin", "sales", "ops"] },
-  { to: "/app/reservations", label: "Rezervasyonlar", icon: Ticket, roles: ["admin", "sales", "ops", "accounting", "b2b_agent"] },
-  { to: "/app/customers", label: "Müşteriler", icon: Users, roles: ["admin", "sales", "ops"] },
-  { to: "/app/crm", label: "CRM", icon: FileText, roles: ["admin", "sales"] },
-  { to: "/app/b2b", label: "B2B / Acenteler", icon: Building2, roles: ["admin"] },
+  { to: "/app", label: "Dashboard", icon: LayoutGrid, roles: ["admin", "sales", "ops", "accounting", "b2b_agent", "super_admin"] },
+  { to: "/app/products", label: "Ürünler", icon: Layers, roles: ["admin", "sales", "ops", "super_admin"] },
+  { to: "/app/inventory", label: "Müsaitlik", icon: CalendarDays, roles: ["admin", "sales", "ops", "super_admin"] },
+  { to: "/app/reservations", label: "Rezervasyonlar", icon: Ticket, roles: ["admin", "sales", "ops", "accounting", "b2b_agent", "super_admin"] },
+  { to: "/app/customers", label: "Müşteriler", icon: Users, roles: ["admin", "sales", "ops", "super_admin"] },
+  { to: "/app/crm", label: "CRM", icon: FileText, roles: ["admin", "sales", "super_admin"] },
+  { to: "/app/b2b", label: "B2B / Acenteler", icon: Building2, roles: ["admin", "super_admin"] },
   { to: "/app/b2b-book", label: "B2B Rezervasyon", icon: Ticket, roles: ["b2b_agent"] },
-  { to: "/app/reports", label: "Raporlar", icon: BarChart3, roles: ["admin", "sales", "accounting"] },
-  { to: "/app/settings", label: "Ayarlar", icon: Settings, roles: ["admin"] },
+  { to: "/app/reports", label: "Raporlar", icon: BarChart3, roles: ["admin", "sales", "accounting", "super_admin"] },
+  { to: "/app/settings", label: "Ayarlar", icon: Settings, roles: ["admin", "super_admin"] },
 ];
 
 const iconMap = {

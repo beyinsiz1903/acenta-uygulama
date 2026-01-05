@@ -349,8 +349,24 @@ async def run_export(
         raise HTTPException(status_code=409, detail="EXPORT_COOLDOWN_ACTIVE")
 
     rows = await _generate_match_risk_rows(db, org_id, params, user)
-    csv_str = _rows_to_csv(rows)
-    size_bytes = len(csv_str.encode("utf-8"))
+
+    # Decide on format (csv or pdf)
+    fmt = policy.get("format", "csv")
+    if fmt not in {"csv", "pdf"}:
+        fmt = "csv"
+
+    if fmt == "pdf":
+        # PDF: binary content
+        from app.services.risk_profile import load_risk_profile
+
+        risk_profile = await load_risk_profile(db, org_id)
+        content_bytes = _rows_to_pdf(rows, org_id, risk_profile.to_dict())
+        size_bytes = len(content_bytes)
+    else:
+        # CSV: text content
+        csv_str = _rows_to_csv(rows)
+        content_bytes = csv_str.encode("utf-8")
+        size_bytes = len(content_bytes)
 
     if dry_run:
         return ExportRunResult(
@@ -367,14 +383,15 @@ async def run_export(
     # Persist blob
     blob_doc = {
         "organization_id": org_id,
-        "content": csv_str,
+        "content": content_bytes,
         "created_at": now,
     }
     blob_res = await db.export_blobs.insert_one(blob_doc)
     blob_id = str(blob_res.inserted_id)
 
-    sha256 = hashlib.sha256(csv_str.encode("utf-8")).hexdigest()
-    filename = f"match-risk_{org_id}_{now.date().isoformat()}.csv"
+    sha256 = hashlib.sha256(content_bytes).hexdigest()
+    ext = "pdf" if fmt == "pdf" else "csv"
+    filename = f"match-risk_{org_id}_{now.date().isoformat()}.{ext}"
 
     # Signed download token v0
     download_token = secrets.token_urlsafe(32)

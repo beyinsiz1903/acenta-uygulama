@@ -221,9 +221,6 @@ async def seed_demo_bookings(
 
 
 async def ensure_demo_no_show_booking(db, org_id: str) -> None:
-
-
-async def ensure_demo_no_show_booking(db, org_id: str) -> None:
     """Create a deterministic past-check-in, not-cancelled booking for no_show tests.
 
     - status: confirmed

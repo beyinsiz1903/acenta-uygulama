@@ -9,6 +9,10 @@ class RiskProfile:
     organization_id: str
     rate_threshold: float = 0.5
     repeat_threshold_7: int = 3
+    # v2 fields for no-show based risk
+    no_show_rate_threshold: float | None = None
+    repeat_no_show_threshold_7: int | None = None
+    min_verified_bookings: int = 0
     mode: str = "rate_or_repeat"  # rate_only | repeat_only | rate_or_repeat
 
     def to_dict(self) -> dict[str, Any]:

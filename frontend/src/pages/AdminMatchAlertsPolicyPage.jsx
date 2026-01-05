@@ -42,6 +42,25 @@ export default function AdminMatchAlertsPolicyPage() {
       setLoading(false);
     }
   };
+  const loadDeliveries = async () => {
+    try {
+      setDeliveriesLoading(true);
+      const resp = await api.get("/admin/match-alerts/deliveries", {
+        params: {
+          limit: 50,
+          status: deliveriesFilter.status,
+          match_id: deliveriesFilter.match_id || undefined,
+          channel: deliveriesFilter.channel && deliveriesFilter.channel !== "all" ? deliveriesFilter.channel : undefined,
+        },
+      });
+      setDeliveries(resp.data?.items || []);
+    } catch (e) {
+      console.error("Match alerts deliveries fetch failed", e);
+      // Hata zaten üstteki error alanında gösterilebilir; burada swallow edebiliriz.
+    } finally {
+      setDeliveriesLoading(false);
+    }
+  };
 
   useEffect(() => {
     loadPolicy();

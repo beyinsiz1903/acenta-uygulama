@@ -36,6 +36,8 @@ class MatchSummaryItem(BaseModel):
     repeat_no_show_7: int = 0
     # Debug field for v1.2: how many operational cancels in last 7 days
     repeat_cancelled_operational_7: int = 0
+    # Legacy field for behavioral cancels (repeat_not_arrived_7)
+    repeat_not_arrived_7: int = 0
     # Unified risk flag (using RiskProfile)
     high_risk: bool = False
     high_risk_reasons: list[str] = []

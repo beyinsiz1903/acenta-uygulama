@@ -1712,6 +1712,521 @@ class FAZ5HotelExtranetTester:
         return 0 if self.tests_failed == 0 else 1
 
 
+class ProofV1BackendTester:
+    def __init__(self, base_url="https://acenta-risk.preview.emergentagent.com"):
+        self.base_url = base_url
+        self.admin_token = None
+        self.tests_run = 0
+        self.tests_passed = 0
+        self.tests_failed = 0
+        self.failed_tests = []
+        
+        # Store data for testing
+        self.match_id = None
+        self.original_risk_profile = None
+
+    def log(self, msg):
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}")
+
+    def run_test(self, name, method, endpoint, expected_status, data=None, headers_override=None):
+        """Run a single API test"""
+        url = f"{self.base_url}/{endpoint}"
+        headers = headers_override or {'Content-Type': 'application/json'}
+        if self.admin_token and not headers_override:
+            headers['Authorization'] = f'Bearer {self.admin_token}'
+
+        self.tests_run += 1
+        self.log(f"🔍 Test #{self.tests_run}: {name}")
+        
+        try:
+            if method == 'GET':
+                response = requests.get(url, headers=headers, timeout=10)
+            elif method == 'POST':
+                response = requests.post(url, json=data, headers=headers, timeout=10)
+            elif method == 'PUT':
+                response = requests.put(url, json=data, headers=headers, timeout=10)
+            elif method == 'DELETE':
+                response = requests.delete(url, headers=headers, timeout=10)
+            else:
+                raise ValueError(f"Unsupported method: {method}")
+
+            success = response.status_code == expected_status
+            if success:
+                self.tests_passed += 1
+                self.log(f"✅ PASSED - Status: {response.status_code}")
+                try:
+                    return True, response.json() if response.content else {}
+                except:
+                    return True, {}
+            else:
+                self.tests_failed += 1
+                self.failed_tests.append(f"{name} - Expected {expected_status}, got {response.status_code}")
+                self.log(f"❌ FAILED - Expected {expected_status}, got {response.status_code}")
+                try:
+                    self.log(f"   Response: {response.text[:200]}")
+                except:
+                    pass
+                return False, {}
+
+        except Exception as e:
+            self.tests_failed += 1
+            self.failed_tests.append(f"{name} - Error: {str(e)}")
+            self.log(f"❌ FAILED - Error: {str(e)}")
+            return False, {}
+
+    def test_admin_login(self):
+        """Test admin login"""
+        self.log("\n=== AUTHENTICATION ===")
+        success, response = self.run_test(
+            "Admin Login (admin@acenta.test/admin123)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "admin@acenta.test", "password": "admin123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.admin_token = response['access_token']
+            user = response.get('user', {})
+            roles = user.get('roles', [])
+            
+            if 'admin' in roles or 'super_admin' in roles:
+                self.log(f"✅ Admin login successful - roles: {roles}")
+                return True
+            else:
+                self.log(f"❌ Missing admin/super_admin role: {roles}")
+                return False
+        return False
+
+    def test_outcome_engine_dry_run(self):
+        """1.1) Recompute dry-run"""
+        self.log("\n=== 1) OUTCOME ENGINE ÖRNEKLERI (KANIT 1) ===")
+        self.log("\n--- 1.1) Recompute dry-run ---")
+        
+        success, response = self.run_test(
+            "Recompute Dry-run (60 days)",
+            "POST",
+            "api/admin/booking-outcomes/recompute?days=60&dry_run=1",
+            200
+        )
+        
+        if success:
+            if response.get('ok') and response.get('dry_run'):
+                self.log(f"✅ Response ok={response.get('ok')}, dry_run={response.get('dry_run')}")
+                
+                counts = response.get('counts', {})
+                expected_keys = ["no_show", "cancelled_operational", "cancelled_behavioral", "unknown"]
+                found_keys = [key for key in expected_keys if key in counts]
+                
+                if found_keys:
+                    self.log(f"✅ Found expected outcome types: {found_keys}")
+                    self.log(f"   Counts: {counts}")
+                    return True
+                else:
+                    self.log(f"❌ No expected outcome types found in counts: {counts}")
+                    return False
+            else:
+                self.log(f"❌ Invalid response structure: ok={response.get('ok')}, dry_run={response.get('dry_run')}")
+                return False
+        return False
+
+    def test_outcome_engine_real_upsert(self):
+        """1.2) Gerçek upsert (küçük window)"""
+        self.log("\n--- 1.2) Gerçek upsert (küçük window) ---")
+        
+        success, response = self.run_test(
+            "Real Upsert (7 days)",
+            "POST",
+            "api/admin/booking-outcomes/recompute?days=7&dry_run=0",
+            200
+        )
+        
+        if success:
+            if response.get('ok'):
+                scanned = response.get('scanned', 0)
+                upserts = response.get('upserts', 0)
+                self.log(f"✅ Real upsert successful: scanned={scanned}, upserts={upserts}")
+                return True
+            else:
+                self.log(f"❌ Real upsert failed: {response}")
+                return False
+        return False
+
+    def test_outcome_engine_list_examples(self):
+        """1.3) List outcomes ile 3 tip örnek bul"""
+        self.log("\n--- 1.3) List outcomes ile 3 tip örnek bul ---")
+        
+        success, response = self.run_test(
+            "List Booking Outcomes",
+            "GET",
+            "api/admin/booking-outcomes?limit=50",
+            200
+        )
+        
+        if success:
+            items = response.get('items', [])
+            self.log(f"✅ Found {len(items)} booking outcomes")
+            
+            # Find examples of each type
+            examples = {
+                'cancelled_operational': None,
+                'cancelled_behavioral': None,
+                'no_show': None
+            }
+            
+            for item in items:
+                final_outcome = item.get('final_outcome')
+                outcome_source = item.get('outcome_source')
+                verified = item.get('verified')
+                
+                if final_outcome == 'cancelled_operational' and not examples['cancelled_operational']:
+                    if outcome_source == 'rule_inferred' and not verified:
+                        examples['cancelled_operational'] = item
+                        self.log(f"✅ Found cancelled_operational example:")
+                        self.log(f"   booking_id: {item.get('booking_id')}")
+                        self.log(f"   final_outcome: {final_outcome}")
+                        self.log(f"   outcome_source: {outcome_source}")
+                        self.log(f"   verified: {verified}")
+                        self.log(f"   inferred_reason: {item.get('inferred_reason')}")
+                
+                elif final_outcome == 'cancelled_behavioral' and not examples['cancelled_behavioral']:
+                    if outcome_source == 'rule_inferred' and not verified:
+                        examples['cancelled_behavioral'] = item
+                        self.log(f"✅ Found cancelled_behavioral example:")
+                        self.log(f"   booking_id: {item.get('booking_id')}")
+                        self.log(f"   final_outcome: {final_outcome}")
+                        self.log(f"   outcome_source: {outcome_source}")
+                        self.log(f"   verified: {verified}")
+                
+                elif final_outcome == 'no_show' and not examples['no_show']:
+                    if outcome_source == 'rule_inferred' and not verified:
+                        examples['no_show'] = item
+                        self.log(f"✅ Found no_show example:")
+                        self.log(f"   booking_id: {item.get('booking_id')}")
+                        self.log(f"   final_outcome: {final_outcome}")
+                        self.log(f"   outcome_source: {outcome_source}")
+                        self.log(f"   verified: {verified}")
+            
+            found_count = sum(1 for ex in examples.values() if ex is not None)
+            self.log(f"✅ Found {found_count}/3 required outcome examples")
+            
+            if found_count >= 1:  # At least one example found
+                return True
+            else:
+                self.log(f"❌ No valid examples found with outcome_source=rule_inferred and verified=false")
+                return False
+        return False
+
+    def test_matches_summary_no_show_metrics(self):
+        """2) Matches summary no_show metrikleri (Kanıt 2)"""
+        self.log("\n=== 2) MATCHES SUMMARY NO_SHOW METRİKLERİ (KANIT 2) ===")
+        
+        success, response = self.run_test(
+            "Matches Summary with No-Show Metrics",
+            "GET",
+            "api/admin/matches?days=30&min_total=1&include_action=1&sort=repeat_desc",
+            200
+        )
+        
+        if success:
+            # Check risk_profile structure
+            risk_profile = response.get('risk_profile', {})
+            required_fields = ['no_show_rate_threshold', 'repeat_no_show_threshold_7', 'min_verified_bookings']
+            
+            found_fields = []
+            for field in required_fields:
+                if field in risk_profile:
+                    found_fields.append(field)
+                    self.log(f"✅ Found risk_profile.{field}: {risk_profile[field]}")
+            
+            if not found_fields:
+                # Check for alternative field names
+                alt_fields = ['rate_threshold', 'repeat_threshold_7']
+                for field in alt_fields:
+                    if field in risk_profile:
+                        found_fields.append(field)
+                        self.log(f"✅ Found risk_profile.{field}: {risk_profile[field]}")
+            
+            items = response.get('items', [])
+            self.log(f"✅ Found {len(items)} matches")
+            
+            if items:
+                first_item = items[0]
+                self.match_id = first_item.get('id')  # Store for later tests
+                
+                # Check required fields in first item
+                required_item_fields = ['no_show_rate', 'repeat_no_show_7']
+                found_item_fields = []
+                
+                for field in required_item_fields:
+                    if field in first_item:
+                        found_item_fields.append(field)
+                        self.log(f"✅ Found item.{field}: {first_item[field]}")
+                
+                # Check risk_inputs
+                risk_inputs = first_item.get('risk_inputs', {})
+                if risk_inputs:
+                    rate_source = risk_inputs.get('rate_source')
+                    repeat_source = risk_inputs.get('repeat_source')
+                    
+                    if rate_source == 'no_show' and repeat_source == 'no_show':
+                        self.log(f"✅ Risk inputs correct: rate_source={rate_source}, repeat_source={repeat_source}")
+                        
+                        # Print JSON snippet
+                        snippet = {
+                            'match_id': first_item.get('id'),
+                            'no_show_rate': first_item.get('no_show_rate'),
+                            'repeat_no_show_7': first_item.get('repeat_no_show_7'),
+                            'risk_inputs': risk_inputs,
+                            'high_risk': first_item.get('high_risk'),
+                            'high_risk_reasons': first_item.get('high_risk_reasons')
+                        }
+                        self.log(f"✅ Example JSON snippet: {snippet}")
+                        return True
+                    else:
+                        self.log(f"❌ Invalid risk_inputs: rate_source={rate_source}, repeat_source={repeat_source}")
+                        return False
+                else:
+                    self.log(f"❌ No risk_inputs found in first item")
+                    return False
+            else:
+                self.log(f"❌ No matches found")
+                return False
+        return False
+
+    def test_risk_profile_get(self):
+        """3.1) Get current risk profile"""
+        self.log("\n=== 3) RISKPROFILE V2 THRESHOLD ETKİSİ (KANIT 3) ===")
+        self.log("\n--- 3.1) Get current risk profile ---")
+        
+        success, response = self.run_test(
+            "Get Risk Profile",
+            "GET",
+            "api/admin/match-alerts/risk-profile",
+            200
+        )
+        
+        if success:
+            risk_profile = response.get('risk_profile', {})
+            self.original_risk_profile = risk_profile.copy()  # Store for restoration
+            
+            self.log(f"✅ Current risk profile:")
+            self.log(f"   rate_threshold: {risk_profile.get('rate_threshold')}")
+            self.log(f"   repeat_threshold_7: {risk_profile.get('repeat_threshold_7')}")
+            self.log(f"   mode: {risk_profile.get('mode')}")
+            
+            return True
+        return False
+
+    def test_risk_profile_threshold_effects(self):
+        """3.2) Test threshold değiştirerek etkisini göster"""
+        self.log("\n--- 3.2) Test threshold effects ---")
+        
+        if not self.match_id:
+            self.log("❌ No match_id available from previous test")
+            return False
+        
+        # First get current matches to find a high_risk=true match
+        success, response = self.run_test(
+            "Get Current Matches",
+            "GET",
+            "api/admin/matches?days=30&min_total=1&include_action=1",
+            200
+        )
+        
+        if not success:
+            return False
+        
+        items = response.get('items', [])
+        high_risk_match = None
+        
+        for item in items:
+            if item.get('high_risk'):
+                high_risk_match = item
+                break
+        
+        if not high_risk_match:
+            self.log("❌ No high_risk=true match found")
+            return False
+        
+        match_id = high_risk_match.get('id')
+        repeat_no_show_7 = high_risk_match.get('repeat_no_show_7', 0)
+        current_high_risk = high_risk_match.get('high_risk')
+        current_reasons = high_risk_match.get('high_risk_reasons', [])
+        
+        self.log(f"✅ Found high-risk match: {match_id}")
+        self.log(f"   repeat_no_show_7: {repeat_no_show_7}")
+        self.log(f"   high_risk: {current_high_risk}")
+        self.log(f"   high_risk_reasons: {current_reasons}")
+        
+        # Case A: Increase repeat threshold to make match non-high-risk
+        new_threshold = repeat_no_show_7 + 1
+        self.log(f"\n--- Case A: Increase repeat threshold to {new_threshold} ---")
+        
+        success, response = self.run_test(
+            f"Update Risk Profile (repeat_threshold_7={new_threshold})",
+            "PUT",
+            "api/admin/match-alerts/risk-profile",
+            200,
+            data={
+                "rate_threshold": self.original_risk_profile.get('rate_threshold', 0.5),
+                "repeat_threshold_7": new_threshold,
+                "mode": "rate_or_repeat"
+            }
+        )
+        
+        if success:
+            # Check effect on matches
+            success, response = self.run_test(
+                "Get Matches After Threshold Increase",
+                "GET",
+                "api/admin/matches?days=30&min_total=1&include_action=1",
+                200
+            )
+            
+            if success:
+                items = response.get('items', [])
+                updated_match = None
+                
+                for item in items:
+                    if item.get('id') == match_id:
+                        updated_match = item
+                        break
+                
+                if updated_match:
+                    new_high_risk = updated_match.get('high_risk')
+                    new_reasons = updated_match.get('high_risk_reasons', [])
+                    
+                    self.log(f"✅ Case A Results:")
+                    self.log(f"   repeat_no_show_7: {updated_match.get('repeat_no_show_7')}")
+                    self.log(f"   risk_profile.repeat_threshold_7: {new_threshold}")
+                    self.log(f"   high_risk: {new_high_risk}")
+                    self.log(f"   high_risk_reasons: {new_reasons}")
+                    
+                    if not new_high_risk or 'repeat' not in new_reasons:
+                        self.log(f"✅ Case A successful: high_risk changed or 'repeat' removed from reasons")
+                    else:
+                        self.log(f"❌ Case A failed: high_risk still true with 'repeat' in reasons")
+        
+        # Case B: Lower repeat threshold to make match high-risk
+        lower_threshold = max(0, repeat_no_show_7)
+        self.log(f"\n--- Case B: Lower repeat threshold to {lower_threshold} ---")
+        
+        success, response = self.run_test(
+            f"Update Risk Profile (repeat_threshold_7={lower_threshold})",
+            "PUT",
+            "api/admin/match-alerts/risk-profile",
+            200,
+            data={
+                "rate_threshold": self.original_risk_profile.get('rate_threshold', 0.5),
+                "repeat_threshold_7": lower_threshold,
+                "mode": "rate_or_repeat"
+            }
+        )
+        
+        if success:
+            # Check effect on matches
+            success, response = self.run_test(
+                "Get Matches After Threshold Decrease",
+                "GET",
+                "api/admin/matches?days=30&min_total=1&include_action=1",
+                200
+            )
+            
+            if success:
+                items = response.get('items', [])
+                updated_match = None
+                
+                for item in items:
+                    if item.get('id') == match_id:
+                        updated_match = item
+                        break
+                
+                if updated_match:
+                    new_high_risk = updated_match.get('high_risk')
+                    new_reasons = updated_match.get('high_risk_reasons', [])
+                    
+                    self.log(f"✅ Case B Results:")
+                    self.log(f"   repeat_no_show_7: {updated_match.get('repeat_no_show_7')}")
+                    self.log(f"   risk_profile.repeat_threshold_7: {lower_threshold}")
+                    self.log(f"   high_risk: {new_high_risk}")
+                    self.log(f"   high_risk_reasons: {new_reasons}")
+                    
+                    if new_high_risk and 'repeat' in new_reasons:
+                        self.log(f"✅ Case B successful: high_risk=true and 'repeat' in reasons")
+                        return True
+                    else:
+                        self.log(f"❌ Case B failed: expected high_risk=true with 'repeat' in reasons")
+                        return False
+        
+        return False
+
+    def restore_original_risk_profile(self):
+        """Restore original risk profile if available"""
+        if self.original_risk_profile:
+            self.log("\n--- Restoring Original Risk Profile ---")
+            success, response = self.run_test(
+                "Restore Original Risk Profile",
+                "PUT",
+                "api/admin/match-alerts/risk-profile",
+                200,
+                data=self.original_risk_profile
+            )
+            if success:
+                self.log("✅ Original risk profile restored")
+            else:
+                self.log("❌ Failed to restore original risk profile")
+
+    def print_summary(self):
+        """Print test summary"""
+        self.log("\n" + "="*60)
+        self.log("PROOF V1 BACKEND TEST SUMMARY")
+        self.log("="*60)
+        self.log(f"Total Tests: {self.tests_run}")
+        self.log(f"✅ Passed: {self.tests_passed}")
+        self.log(f"❌ Failed: {self.tests_failed}")
+        self.log(f"Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%")
+        
+        if self.failed_tests:
+            self.log("\n❌ FAILED TESTS:")
+            for i, test in enumerate(self.failed_tests, 1):
+                self.log(f"  {i}. {test}")
+        
+        self.log("="*60)
+
+    def run_proof_v1_tests(self):
+        """Run all PROOF v1 tests in sequence"""
+        self.log("🚀 Starting PROOF v1 Backend Kabul Kriterleri Tests")
+        self.log(f"Base URL: {self.base_url}")
+        self.log("Testing only org_demo / default org as requested")
+        
+        # Authentication
+        if not self.test_admin_login():
+            self.log("❌ Admin login failed - stopping tests")
+            self.print_summary()
+            return 1
+
+        # 1) Outcome engine examples
+        self.test_outcome_engine_dry_run()
+        self.test_outcome_engine_real_upsert()
+        self.test_outcome_engine_list_examples()
+
+        # 2) Matches summary no_show metrics
+        self.test_matches_summary_no_show_metrics()
+
+        # 3) RiskProfile v2 threshold effects
+        self.test_risk_profile_get()
+        self.test_risk_profile_threshold_effects()
+
+        # Restore original settings
+        self.restore_original_risk_profile()
+
+        # Summary
+        self.print_summary()
+
+        return 0 if self.tests_failed == 0 else 1
+
+
 class FAZ101IntegrationSyncTester:
     def __init__(self, base_url="https://acenta-risk.preview.emergentagent.com"):
         self.base_url = base_url

@@ -220,6 +220,18 @@ async def apply_pms_event(
     upsert=True,
   )
 
+  # Return response
+  evidence = updated.get("evidence") or []
+  return BookingOutcomePmsEventResponse(
+    ok=True,
+    booking_id=updated["booking_id"],
+    final_outcome=updated.get("final_outcome") or "unknown",
+    outcome_source=updated.get("outcome_source") or "rule_inferred",
+    outcome_version=int(updated.get("outcome_version") or 1),
+    confidence=updated.get("confidence"),
+    evidence_count=len(evidence),
+  )
+
 
 
 @router.post("/{booking_id}/verify", dependencies=[Depends(require_roles(["super_admin", "admin"]))])

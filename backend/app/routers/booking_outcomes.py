@@ -391,15 +391,3 @@ async def override_booking_outcome(
     "outcome_version": int(after.get("outcome_version") or 1),
     "evidence_count": len(evidence),
   }
-
-  evidence = updated.get("evidence") or []
-
-  return BookingOutcomePmsEventResponse(
-    ok=True,
-    booking_id=str(updated.get("booking_id")),
-    final_outcome=updated.get("final_outcome") or "unknown",
-    outcome_source=updated.get("outcome_source") or "rule_inferred",
-    outcome_version=int(updated.get("outcome_version") or 1),
-    confidence=updated.get("confidence"),
-    evidence_count=len(evidence),
-  )

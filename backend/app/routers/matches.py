@@ -279,45 +279,6 @@ async def list_matches(
 
     items: list[MatchSummaryItem] = []
     for r in filtered:
-    def sort_key_high_first(it: MatchSummaryItem):
-        return (
-            0 if it.high_risk else 1,
-            -it.repeat_not_arrived_7,
-            -it.cancel_rate,
-            -it.total_bookings,
-        )
-
-    def sort_key_repeat_desc(it: MatchSummaryItem):
-        return (-it.repeat_not_arrived_7, -it.cancel_rate)
-
-    def sort_key_rate_desc(it: MatchSummaryItem):
-        return (-it.cancel_rate, -it.repeat_not_arrived_7)
-
-    def sort_key_total_desc(it: MatchSummaryItem):
-        return (-it.total_bookings,)
-
-    def sort_key_last_booking_desc(it: MatchSummaryItem):
-        # None sonlarda kalsın
-        return (0 if it.last_booking_at else 1, it.last_booking_at or "")
-
-    if sort == "repeat_desc":
-        items.sort(key=sort_key_repeat_desc)
-    elif sort == "rate_desc":
-        items.sort(key=sort_key_rate_desc)
-    elif sort == "total_desc":
-        items.sort(key=sort_key_total_desc)
-    elif sort == "last_booking_desc":
-        items.sort(key=sort_key_last_booking_desc, reverse=True)
-    else:
-        # default: high_risk_first
-        items.sort(key=sort_key_high_first)
-
-
-    risk_profile_obj = await load_risk_profile(db, org_id)
-    risk_profile_dict = risk_profile_obj.to_dict()
-
-    items: list[MatchSummaryItem] = []
-    for r in filtered:
         key = r.get("_id") or {}
         agency_id = str(key.get("agency_id") or "")
         hotel_id = str(key.get("hotel_id") or "")
@@ -348,45 +309,6 @@ async def list_matches(
             action_reason_code = action_doc.get("reason_code")
             ua = action_doc.get("updated_at")
             if hasattr(ua, "isoformat"):
-    # Optional filter: only high risk
-    if only_high_risk:
-        items = [it for it in items if it.high_risk]
-
-    # Sorting
-    def sort_key_high_first(it: MatchSummaryItem):
-        return (
-            0 if it.high_risk else 1,
-            -it.repeat_not_arrived_7,
-            -it.cancel_rate,
-            -it.total_bookings,
-        )
-
-    def sort_key_repeat_desc(it: MatchSummaryItem):
-        return (-it.repeat_not_arrived_7, -it.cancel_rate)
-
-    def sort_key_rate_desc(it: MatchSummaryItem):
-        return (-it.cancel_rate, -it.repeat_not_arrived_7)
-
-    def sort_key_total_desc(it: MatchSummaryItem):
-        return (-it.total_bookings,)
-
-    def sort_key_last_booking_desc(it: MatchSummaryItem):
-        # None sonlarda kalsın
-        return (0 if it.last_booking_at else 1, it.last_booking_at or "")
-
-    if sort == "repeat_desc":
-        items.sort(key=sort_key_repeat_desc)
-    elif sort == "rate_desc":
-        items.sort(key=sort_key_rate_desc)
-    elif sort == "total_desc":
-        items.sort(key=sort_key_total_desc)
-    elif sort == "last_booking_desc":
-        items.sort(key=sort_key_last_booking_desc, reverse=True)
-    else:
-        # default: high_risk_first
-        items.sort(key=sort_key_high_first)
-
-
                 ua = ua.isoformat()
             action_updated_at = ua
             action_updated_by_email = action_doc.get("updated_by_email")
@@ -430,6 +352,44 @@ async def list_matches(
                 action_updated_by_email=action_updated_by_email,
             )
         )
+
+    # Optional filter: only high risk
+    if only_high_risk:
+        items = [it for it in items if it.high_risk]
+
+    # Sorting
+    def sort_key_high_first(it: MatchSummaryItem):
+        return (
+            0 if it.high_risk else 1,
+            -it.repeat_not_arrived_7,
+            -it.cancel_rate,
+            -it.total_bookings,
+        )
+
+    def sort_key_repeat_desc(it: MatchSummaryItem):
+        return (-it.repeat_not_arrived_7, -it.cancel_rate)
+
+    def sort_key_rate_desc(it: MatchSummaryItem):
+        return (-it.cancel_rate, -it.repeat_not_arrived_7)
+
+    def sort_key_total_desc(it: MatchSummaryItem):
+        return (-it.total_bookings,)
+
+    def sort_key_last_booking_desc(it: MatchSummaryItem):
+        # None sonlarda kalsın
+        return (0 if it.last_booking_at else 1, it.last_booking_at or "")
+
+    if sort == "repeat_desc":
+        items.sort(key=sort_key_repeat_desc)
+    elif sort == "rate_desc":
+        items.sort(key=sort_key_rate_desc)
+    elif sort == "total_desc":
+        items.sort(key=sort_key_total_desc)
+    elif sort == "last_booking_desc":
+        items.sort(key=sort_key_last_booking_desc, reverse=True)
+    else:
+        # default: high_risk_first
+        items.sort(key=sort_key_high_first)
 
     return {
         "range": {"from": cutoff.isoformat(), "to": now_utc().isoformat(), "days": days},

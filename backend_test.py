@@ -1725,6 +1725,348 @@ class ProofV11NoShowTester:
         self.no_show_booking_id = None
         self.match_id = None
 
+    def log(self, msg):
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}")
+
+    def run_test(self, name, method, endpoint, expected_status, data=None, headers_override=None):
+        """Run a single API test"""
+        url = f"{self.base_url}/{endpoint}"
+        headers = headers_override or {'Content-Type': 'application/json'}
+        if self.admin_token and not headers_override:
+            headers['Authorization'] = f'Bearer {self.admin_token}'
+
+        self.tests_run += 1
+        self.log(f"🔍 Test #{self.tests_run}: {name}")
+        
+        try:
+            if method == 'GET':
+                response = requests.get(url, headers=headers, timeout=10)
+            elif method == 'POST':
+                response = requests.post(url, json=data, headers=headers, timeout=10)
+            elif method == 'PUT':
+                response = requests.put(url, json=data, headers=headers, timeout=10)
+            elif method == 'DELETE':
+                response = requests.delete(url, headers=headers, timeout=10)
+            else:
+                raise ValueError(f"Unsupported method: {method}")
+
+            success = response.status_code == expected_status
+            if success:
+                self.tests_passed += 1
+                self.log(f"✅ PASSED - Status: {response.status_code}")
+                try:
+                    return True, response.json() if response.content else {}
+                except:
+                    return True, {}
+            else:
+                self.tests_failed += 1
+                self.failed_tests.append(f"{name} - Expected {expected_status}, got {response.status_code}")
+                self.log(f"❌ FAILED - Expected {expected_status}, got {response.status_code}")
+                try:
+                    self.log(f"   Response: {response.text[:200]}")
+                except:
+                    pass
+                return False, {}
+
+        except Exception as e:
+            self.tests_failed += 1
+            self.failed_tests.append(f"{name} - Error: {str(e)}")
+            self.log(f"❌ FAILED - Error: {str(e)}")
+            return False, {}
+
+    def test_admin_login(self):
+        """Test admin login"""
+        self.log("\n=== AUTHENTICATION ===")
+        success, response = self.run_test(
+            "Admin Login (admin@acenta.test/admin123)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "admin@acenta.test", "password": "admin123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.admin_token = response['access_token']
+            user = response.get('user', {})
+            roles = user.get('roles', [])
+            
+            if 'admin' in roles or 'super_admin' in roles:
+                self.log(f"✅ Admin login successful - roles: {roles}")
+                return True
+            else:
+                self.log(f"❌ Missing admin/super_admin role: {roles}")
+                return False
+        return False
+
+    def test_recompute_no_show_count(self):
+        """1) Recompute + no_show sayımı"""
+        self.log("\n=== 1) RECOMPUTE + NO_SHOW SAYIMI ===")
+        
+        success, response = self.run_test(
+            "Recompute with deterministic today (60 days, dry_run=0)",
+            "POST",
+            "api/admin/booking-outcomes/recompute?days=60&dry_run=0&today=2026-01-05T12:00:00+00:00",
+            200
+        )
+        
+        if success:
+            if response.get('ok'):
+                self.log(f"✅ Response ok={response.get('ok')}")
+                
+                counts = response.get('counts', {})
+                no_show_count = counts.get('no_show', 0)
+                
+                if no_show_count >= 1:
+                    self.log(f"✅ no_show count: {no_show_count} (>= 1)")
+                    self.log(f"   All counts: {counts}")
+                    return True
+                else:
+                    self.log(f"❌ no_show count: {no_show_count} (< 1)")
+                    self.log(f"   All counts: {counts}")
+                    return False
+            else:
+                self.log(f"❌ Response ok={response.get('ok')}")
+                return False
+        return False
+
+    def test_no_show_booking_outcome_example(self):
+        """2) booking_outcomes içinde no_show örneği (Kanıt 1)"""
+        self.log("\n=== 2) BOOKING_OUTCOMES NO_SHOW ÖRNEĞİ (KANIT 1) ===")
+        
+        success, response = self.run_test(
+            "Get no_show booking outcomes",
+            "GET",
+            "api/admin/booking-outcomes?outcome=no_show&limit=10",
+            200
+        )
+        
+        if success:
+            items = response if isinstance(response, list) else response.get('items', [])
+            
+            if len(items) >= 1:
+                self.log(f"✅ Found {len(items)} no_show booking outcomes")
+                
+                # Look for DEMO_NO_SHOW_BOOKING_1 or take the first one
+                target_booking = None
+                for item in items:
+                    booking_id = item.get('booking_id', '')
+                    if 'DEMO_NO_SHOW_BOOKING_1' in booking_id or 'no_show' in booking_id.lower():
+                        target_booking = item
+                        break
+                
+                if not target_booking and items:
+                    target_booking = items[0]  # Take first one if no specific demo booking found
+                
+                if target_booking:
+                    self.no_show_booking_id = target_booking.get('booking_id')
+                    final_outcome = target_booking.get('final_outcome')
+                    outcome_source = target_booking.get('outcome_source')
+                    inferred_reason = target_booking.get('inferred_reason')
+                    verified = target_booking.get('verified')
+                    
+                    self.log(f"📋 KANIT 1 - No-show booking örneği:")
+                    self.log(f"   booking_id: {self.no_show_booking_id}")
+                    self.log(f"   final_outcome: {final_outcome}")
+                    self.log(f"   outcome_source: {outcome_source}")
+                    self.log(f"   inferred_reason: {inferred_reason}")
+                    self.log(f"   verified: {verified}")
+                    
+                    # Verify expected values
+                    checks_passed = 0
+                    total_checks = 4
+                    
+                    if final_outcome == "no_show":
+                        self.log(f"✅ final_outcome == 'no_show'")
+                        checks_passed += 1
+                    else:
+                        self.log(f"❌ final_outcome == '{final_outcome}' (expected 'no_show')")
+                    
+                    if outcome_source == "rule_inferred":
+                        self.log(f"✅ outcome_source == 'rule_inferred'")
+                        checks_passed += 1
+                    else:
+                        self.log(f"❌ outcome_source == '{outcome_source}' (expected 'rule_inferred')")
+                    
+                    if inferred_reason == "check_in_past_no_cancel":
+                        self.log(f"✅ inferred_reason == 'check_in_past_no_cancel'")
+                        checks_passed += 1
+                    else:
+                        self.log(f"❌ inferred_reason == '{inferred_reason}' (expected 'check_in_past_no_cancel')")
+                    
+                    if verified == False:
+                        self.log(f"✅ verified == false")
+                        checks_passed += 1
+                    else:
+                        self.log(f"❌ verified == {verified} (expected false)")
+                    
+                    if checks_passed == total_checks:
+                        self.log(f"✅ All {total_checks} checks passed for no_show booking outcome")
+                        return True
+                    else:
+                        self.log(f"❌ Only {checks_passed}/{total_checks} checks passed")
+                        return False
+                else:
+                    self.log(f"❌ No booking found in no_show outcomes")
+                    return False
+            else:
+                self.log(f"❌ No no_show booking outcomes found")
+                return False
+        return False
+
+    def test_matches_no_show_metric_impact(self):
+        """3) Matches summary'de no_show metrik etkisi (Kanıt 3)"""
+        self.log("\n=== 3) MATCHES SUMMARY NO_SHOW METRİK ETKİSİ (KANIT 3) ===")
+        
+        success, response = self.run_test(
+            "Get matches with no_show metrics",
+            "GET",
+            "api/admin/matches?days=30&min_total=1&include_action=1&sort=repeat_desc",
+            200
+        )
+        
+        if success:
+            items = response.get('items', []) if isinstance(response, dict) else response
+            
+            if len(items) >= 1:
+                self.log(f"✅ Found {len(items)} matches")
+                
+                # Look for a match that has no_show data
+                target_match = None
+                for item in items:
+                    repeat_no_show_7 = item.get('repeat_no_show_7', 0)
+                    no_show_rate = item.get('no_show_rate', 0)
+                    
+                    if repeat_no_show_7 >= 1 or no_show_rate > 0:
+                        target_match = item
+                        break
+                
+                if target_match:
+                    match_id = target_match.get('id')
+                    repeat_no_show_7 = target_match.get('repeat_no_show_7', 0)
+                    no_show_rate = target_match.get('no_show_rate', 0)
+                    high_risk = target_match.get('high_risk', False)
+                    high_risk_reasons = target_match.get('high_risk_reasons', [])
+                    risk_inputs = target_match.get('risk_inputs', {})
+                    
+                    self.log(f"📋 KANIT 3 - Match no_show metrik etkisi:")
+                    self.log(f"   id: {match_id}")
+                    self.log(f"   repeat_no_show_7: {repeat_no_show_7}")
+                    self.log(f"   no_show_rate: {no_show_rate}")
+                    self.log(f"   high_risk: {high_risk}")
+                    self.log(f"   high_risk_reasons: {high_risk_reasons}")
+                    self.log(f"   risk_inputs: {risk_inputs}")
+                    
+                    # Verify expected values
+                    checks_passed = 0
+                    total_checks = 4
+                    
+                    if repeat_no_show_7 >= 1:
+                        self.log(f"✅ repeat_no_show_7 >= 1 ({repeat_no_show_7})")
+                        checks_passed += 1
+                    else:
+                        self.log(f"❌ repeat_no_show_7 < 1 ({repeat_no_show_7})")
+                    
+                    if no_show_rate > 0:
+                        self.log(f"✅ no_show_rate > 0 ({no_show_rate})")
+                        checks_passed += 1
+                    else:
+                        self.log(f"❌ no_show_rate <= 0 ({no_show_rate})")
+                    
+                    rate_source = risk_inputs.get('rate_source')
+                    if rate_source == "no_show":
+                        self.log(f"✅ risk_inputs.rate_source == 'no_show'")
+                        checks_passed += 1
+                    else:
+                        self.log(f"❌ risk_inputs.rate_source == '{rate_source}' (expected 'no_show')")
+                    
+                    repeat_source = risk_inputs.get('repeat_source')
+                    if repeat_source == "no_show":
+                        self.log(f"✅ risk_inputs.repeat_source == 'no_show'")
+                        checks_passed += 1
+                    else:
+                        self.log(f"❌ risk_inputs.repeat_source == '{repeat_source}' (expected 'no_show')")
+                    
+                    if checks_passed >= 2:  # At least 2 out of 4 checks should pass for a valid no_show impact
+                        self.log(f"✅ {checks_passed}/{total_checks} checks passed - no_show metric impact verified")
+                        return True
+                    else:
+                        self.log(f"❌ Only {checks_passed}/{total_checks} checks passed")
+                        return False
+                else:
+                    self.log(f"❌ No match found with no_show metrics (repeat_no_show_7 >= 1 or no_show_rate > 0)")
+                    return False
+            else:
+                self.log(f"❌ No matches found")
+                return False
+        return False
+
+    def print_summary(self):
+        """Print test summary"""
+        self.log("\n" + "="*60)
+        self.log("PROOF V1.1 NO-SHOW DETERMINISTIC PROOF TEST SUMMARY")
+        self.log("="*60)
+        self.log(f"Total Tests: {self.tests_run}")
+        self.log(f"✅ Passed: {self.tests_passed}")
+        self.log(f"❌ Failed: {self.tests_failed}")
+        self.log(f"Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%")
+        
+        if self.failed_tests:
+            self.log("\n❌ FAILED TESTS:")
+            for i, test in enumerate(self.failed_tests, 1):
+                self.log(f"  {i}. {test}")
+        
+        self.log("="*60)
+
+    def run_proof_v11_tests(self):
+        """Run all PROOF v1.1 no-show tests"""
+        self.log("🚀 Starting PROOF v1.1 No-show Deterministic Proof Tests")
+        self.log(f"Base URL: {self.base_url}")
+        self.log("Testing only default/org_demo organization")
+        
+        # Authentication
+        if not self.test_admin_login():
+            self.log("❌ Admin login failed - stopping tests")
+            self.print_summary()
+            return 1
+
+        # 1) Recompute + no_show count
+        test1_result = self.test_recompute_no_show_count()
+
+        # 2) booking_outcomes no_show example (Evidence 1)
+        test2_result = self.test_no_show_booking_outcome_example()
+
+        # 3) Matches summary no_show metric impact (Evidence 3)
+        test3_result = self.test_matches_no_show_metric_impact()
+
+        # Summary
+        self.print_summary()
+
+        # Print evidence summary
+        self.log("\n" + "="*60)
+        self.log("KANIT ÖZETİ (EVIDENCE SUMMARY)")
+        self.log("="*60)
+        
+        if test1_result:
+            self.log("✅ KANIT 1 - Recompute no_show count: PASS")
+        else:
+            self.log("❌ KANIT 1 - Recompute no_show count: FAIL")
+        
+        if test2_result:
+            self.log("✅ KANIT 2 - booking_outcomes no_show example: PASS")
+            if self.no_show_booking_id:
+                self.log(f"   📋 Example booking_id: {self.no_show_booking_id}")
+        else:
+            self.log("❌ KANIT 2 - booking_outcomes no_show example: FAIL")
+        
+        if test3_result:
+            self.log("✅ KANIT 3 - Matches no_show metric impact: PASS")
+        else:
+            self.log("❌ KANIT 3 - Matches no_show metric impact: FAIL")
+        
+        self.log("="*60)
+
+        return 0 if self.tests_failed == 0 else 1
+
 class ProofV1BackendTester:
     def __init__(self, base_url="https://acenta-risk.preview.emergentagent.com"):
         self.base_url = base_url

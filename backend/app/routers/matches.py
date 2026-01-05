@@ -274,11 +274,11 @@ async def list_matches(
                 actions_by_match_id[mid] = d
 
     # Load unified risk profile (defaults if doc is missing)
-    # Optional filter: only high risk
-    if only_high_risk:
-        items = [it for it in items if it.high_risk]
+    risk_profile_obj = await load_risk_profile(db, org_id)
+    risk_profile_dict = risk_profile_obj.to_dict()
 
-    # Sorting
+    items: list[MatchSummaryItem] = []
+    for r in filtered:
     def sort_key_high_first(it: MatchSummaryItem):
         return (
             0 if it.high_risk else 1,

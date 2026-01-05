@@ -9,6 +9,7 @@ from pydantic import BaseModel, EmailStr, Field
 
 from app.db import get_db
 from app.utils import now_utc, serialize_doc
+from app.services.enforcement import ensure_match_not_blocked
 
 logger = logging.getLogger("acenta-master")
 

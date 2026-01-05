@@ -93,25 +93,6 @@ export default function AdminMatchesPage() {
     } finally {
       setEventsLoading(false);
     }
-  useEffect(() => {
-    // Export deep-link: try to auto-open drawer for given match_id
-    if (!deeplinkMatchId || !items || items.length === 0 || !deeplinkOpenDrawer) {
-      return;
-    }
-    const found = items.find((m) => m.id === deeplinkMatchId);
-    if (!found) {
-      // For now just log; toast eklenecek
-      console.warn("Match not found for deeplink", deeplinkMatchId);
-      return;
-    }
-    setSelectedMatch(found);
-    setEventsOnlyCancelled(false);
-    setEventsOpen(true);
-    loadEvents(found);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items, deeplinkMatchId, deeplinkOpenDrawer]);
-
-
   };
 
   useEffect(() => {

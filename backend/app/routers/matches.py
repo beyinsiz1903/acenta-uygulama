@@ -27,6 +27,7 @@ class MatchSummaryItem(BaseModel):
     confirm_rate: float
     cancel_rate: float
     last_booking_at: Optional[str] = None
+    repeat_not_arrived_7: int = 0
 
     # Optional action fields (only populated when include_action=1)
     action_status: Optional[str] = None

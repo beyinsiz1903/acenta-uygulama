@@ -104,6 +104,15 @@ export default function AdminMatchesPage() {
                 data-testid="match-risk-only-high-risk"
               />
             </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs">Hide blocked</span>
+              <input
+                type="checkbox"
+                checked={hideBlocked}
+                onChange={(e) => setHideBlocked(e.target.checked)}
+                data-testid="match-risk-hide-blocked"
+              />
+            </div>
             <div className="space-y-1">
               <label className="text-xs font-medium" htmlFor="match-risk-sort">
                 Sort by

@@ -14072,8 +14072,8 @@ class RepeatNotArrived7Tester:
         if success and response:
             hotels = response if isinstance(response, list) else response.get('items', [])
             if hotels:
-                self.hotel_id = hotels[0].get('id')
-                hotel_name = hotels[0].get('name', 'Unknown')
+                self.hotel_id = hotels[0].get('hotel_id')  # Changed from 'id' to 'hotel_id'
+                hotel_name = hotels[0].get('hotel_name', 'Unknown')  # Changed from 'name' to 'hotel_name'
                 self.log(f"✅ Found hotel_id: {self.hotel_id} ({hotel_name})")
                 self.match_id = f"{self.agency_id}__{self.hotel_id}"
                 self.log(f"✅ Match ID: {self.match_id}")

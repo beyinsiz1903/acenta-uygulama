@@ -18124,8 +18124,8 @@ class ScaleV1ApprovalAuditTester:
         """4) Audit trail kanıtı"""
         self.log("\n=== 4) AUDIT TRAIL KANITI ===")
         
-        if not self.match_id:
-            self.log("❌ No match_id available for audit verification")
+        if not self.match_id or not self.task_id:
+            self.log("❌ No match_id or task_id available for audit verification")
             return False
         
         # 4.1 Get audit logs for the match
@@ -18136,21 +18136,39 @@ class ScaleV1ApprovalAuditTester:
             200
         )
         
-        if success:
-            audit_logs = response if isinstance(response, list) else []
+        # Also get audit logs for the approval task
+        success2, response2 = self.run_test(
+            f"Get audit logs for approval task {self.task_id}",
+            "GET",
+            f"api/audit/logs?target_type=approval_task&target_id={self.task_id}&limit=50",
+            200
+        )
+        
+        if success and success2:
+            match_audit_logs = response if isinstance(response, list) else []
+            task_audit_logs = response2 if isinstance(response2, list) else []
             
             # Look for required audit entries
             approval_task_approved = None
             match_action_updated = None
             
-            for log in audit_logs:
+            # Look for approval_task.approved in task audit logs
+            for log in task_audit_logs:
                 action = log.get('action')
                 target = log.get('target', {})
                 
-                if action == 'approval_task.approved' and target.get('type') == 'approval_task':
+                if action == 'approval_task.approved' and target.get('type') == 'approval_task' and target.get('id') == self.task_id:
                     approval_task_approved = log
-                elif action == 'match_action.updated' and target.get('type') == 'match' and target.get('id') == self.match_id:
+                    break
+            
+            # Look for match_action.updated in match audit logs
+            for log in match_audit_logs:
+                action = log.get('action')
+                target = log.get('target', {})
+                
+                if action == 'match_action.updated' and target.get('type') == 'match' and target.get('id') == self.match_id:
                     match_action_updated = log
+                    break
             
             # 4.2 Verify both required audit entries exist
             results = []

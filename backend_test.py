@@ -18400,6 +18400,10 @@ def main():
             tester = ProofV11NoShowTester()
             exit_code = tester.run_proof_v11_tests()
             sys.exit(exit_code)
+        elif sys.argv[1] == "proof-v2-story2":
+            tester = ProofV2Story2ArrivedTester()
+            exit_code = tester.run_proof_v2_story2_tests()
+            sys.exit(exit_code)
         elif sys.argv[1] == "scale-v1":
             tester = ScaleV1EnforcementTester()
             exit_code = tester.run_scale_v1_tests()

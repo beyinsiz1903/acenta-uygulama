@@ -54,6 +54,24 @@ export default function AdminMatchesPage() {
           only_high_risk: onlyHighRisk ? 1 : 0,
           sort,
         },
+  const loadEvents = async (match) => {
+    if (!match) return;
+    try {
+      setEventsLoading(true);
+      setEventsError("");
+      setEventsData(null);
+      const resp = await api.get(`/admin/matches/${match.id}/events`, {
+        params: { days: 7 },
+      });
+      setEventsData(resp.data);
+    } catch (e) {
+      console.error("Match events fetch failed", e);
+      setEventsError(apiErrorMessage(e));
+    } finally {
+      setEventsLoading(false);
+    }
+  };
+
       });
       setItems(resp.data?.items || []);
       setRange(resp.data?.range || null);

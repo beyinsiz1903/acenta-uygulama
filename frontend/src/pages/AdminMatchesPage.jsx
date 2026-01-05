@@ -54,6 +54,17 @@ export default function AdminMatchesPage() {
           only_high_risk: onlyHighRisk ? 1 : 0,
           sort,
         },
+      });
+      setItems(resp.data?.items || []);
+      setRange(resp.data?.range || null);
+    } catch (e) {
+      console.error("Admin matches fetch failed", e);
+      setError(apiErrorMessage(e));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const loadEvents = async (match) => {
     if (!match) return;
     try {

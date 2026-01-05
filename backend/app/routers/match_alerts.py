@@ -493,7 +493,7 @@ async def run_match_alerts(
         for item in triggered:
             flags = []
             if item.triggered_by_rate:
-                flags.append("rate")
+                flags.append("rate=behavioral")
             if item.triggered_by_repeat:
                 flags.append("repeat")
             flags_str = "+".join(flags) or "none"

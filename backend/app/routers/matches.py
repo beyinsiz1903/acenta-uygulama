@@ -270,6 +270,10 @@ async def list_matches(
                     continue
                 actions_by_match_id[mid] = d
 
+    # Load unified risk profile (defaults if doc is missing)
+    risk_profile_obj = await load_risk_profile(db, org_id)
+    risk_profile_dict = risk_profile_obj.to_dict()
+
     items: list[MatchSummaryItem] = []
     for r in filtered:
         key = r.get("_id") or {}

@@ -106,7 +106,15 @@ async def upsert_booking_outcome(db, booking_doc: Dict[str, Any], today: Optiona
   # v2 defaults for new engine
   outcome_version = 2
   evidence: list[dict[str, Any]] = []
-  confidence = 0.8  # heuristic for rule_inferred v2
+  # simple confidence mapping; can be refined in Story 2
+  if source == "rule_inferred":
+    if outcome == "unknown":
+      confidence = 0.4
+    else:
+      confidence = 0.8
+  else:
+    # non-rule sources (e.g. pms_event) are considered strong
+    confidence = 1.0
 
   # MongoDB requires datetime for date-like fields; normalize checkin_date
   checkin_dt: Optional[datetime]

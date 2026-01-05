@@ -19422,6 +19422,512 @@ class ProofV2Story2ArrivedTester:
         return 0 if self.tests_failed == 0 else 1
 
 
+class ProofV2Story4Tester:
+    def __init__(self, base_url="http://localhost:8001"):
+        self.base_url = base_url
+        self.admin_token = None
+        self.tests_run = 0
+        self.tests_passed = 0
+        self.tests_failed = 0
+        self.failed_tests = []
+        
+        # Store data for testing
+        self.test_match_id = None
+
+    def log(self, msg):
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}")
+
+    def run_test(self, name, method, endpoint, expected_status, data=None, headers_override=None):
+        """Run a single API test"""
+        url = f"{self.base_url}/{endpoint}"
+        headers = headers_override or {'Content-Type': 'application/json'}
+        if self.admin_token and not headers_override:
+            headers['Authorization'] = f'Bearer {self.admin_token}'
+
+        self.tests_run += 1
+        self.log(f"🔍 Test #{self.tests_run}: {name}")
+        
+        try:
+            if method == 'GET':
+                response = requests.get(url, headers=headers, timeout=10)
+            elif method == 'POST':
+                response = requests.post(url, json=data, headers=headers, timeout=10)
+            elif method == 'PUT':
+                response = requests.put(url, json=data, headers=headers, timeout=10)
+            elif method == 'DELETE':
+                response = requests.delete(url, headers=headers, timeout=10)
+            else:
+                raise ValueError(f"Unsupported method: {method}")
+
+            success = response.status_code == expected_status
+            if success:
+                self.tests_passed += 1
+                self.log(f"✅ PASSED - Status: {response.status_code}")
+                try:
+                    return True, response.json() if response.content else {}
+                except:
+                    return True, {}
+            else:
+                self.tests_failed += 1
+                self.failed_tests.append(f"{name} - Expected {expected_status}, got {response.status_code}")
+                self.log(f"❌ FAILED - Expected {expected_status}, got {response.status_code}")
+                try:
+                    self.log(f"   Response: {response.text[:200]}")
+                except:
+                    pass
+                return False, {}
+
+        except Exception as e:
+            self.tests_failed += 1
+            self.failed_tests.append(f"{name} - Error: {str(e)}")
+            self.log(f"❌ FAILED - Error: {str(e)}")
+            return False, {}
+
+    def test_admin_login(self):
+        """Test admin login"""
+        self.log("\n=== AUTHENTICATION ===")
+        success, response = self.run_test(
+            "Admin Login (admin@acenta.test/admin123)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "admin@acenta.test", "password": "admin123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.admin_token = response['access_token']
+            user = response.get('user', {})
+            roles = user.get('roles', [])
+            
+            if 'admin' in roles or 'super_admin' in roles:
+                self.log(f"✅ Admin login successful - roles: {roles}")
+                return True
+            else:
+                self.log(f"❌ Missing admin/super_admin role: {roles}")
+                return False
+        return False
+
+    def test_risk_profile_get_fields(self):
+        """1.1) GET /api/admin/match-alerts/risk-profile - verify all fields"""
+        self.log("\n=== 1) RISKPROFILE GENİŞLETME TESİ ===")
+        self.log("\n--- 1.1 GET risk-profile alanları ---")
+        
+        success, response = self.run_test(
+            "GET Risk Profile - Field Verification",
+            "GET",
+            "api/admin/match-alerts/risk-profile",
+            200
+        )
+        
+        if success:
+            risk_profile = response.get('risk_profile', {})
+            required_fields = [
+                'rate_threshold',
+                'repeat_threshold_7', 
+                'no_show_rate_threshold',
+                'repeat_no_show_threshold_7',
+                'min_verified_bookings',
+                'prefer_verified_only'
+            ]
+            
+            missing_fields = []
+            for field in required_fields:
+                if field not in risk_profile:
+                    missing_fields.append(field)
+            
+            if missing_fields:
+                self.log(f"❌ Missing fields in risk_profile: {missing_fields}")
+                return False
+            else:
+                self.log(f"✅ All required fields present in risk_profile")
+                self.log(f"   Current values: rate_threshold={risk_profile.get('rate_threshold')}, "
+                        f"repeat_threshold_7={risk_profile.get('repeat_threshold_7')}, "
+                        f"min_verified_bookings={risk_profile.get('min_verified_bookings')}, "
+                        f"prefer_verified_only={risk_profile.get('prefer_verified_only')}")
+                return True
+        return False
+
+    def test_risk_profile_put_update(self):
+        """1.2) PUT /api/admin/match-alerts/risk-profile - update and verify"""
+        self.log("\n--- 1.2 PUT risk-profile güncelleme ---")
+        
+        # Update risk profile
+        update_data = {
+            "rate_threshold": 0.5,
+            "repeat_threshold_7": 2,
+            "no_show_rate_threshold": 0.5,
+            "repeat_no_show_threshold_7": 2,
+            "min_verified_bookings": 2,
+            "prefer_verified_only": False
+        }
+        
+        success, response = self.run_test(
+            "PUT Risk Profile Update",
+            "PUT",
+            "api/admin/match-alerts/risk-profile",
+            200,
+            data=update_data
+        )
+        
+        if not success:
+            return False
+        
+        # Verify the update by getting the profile again
+        success, response = self.run_test(
+            "GET Risk Profile - Verify Update",
+            "GET",
+            "api/admin/match-alerts/risk-profile",
+            200
+        )
+        
+        if success:
+            risk_profile = response.get('risk_profile', {})
+            
+            # Check if values match what we set
+            checks = [
+                ('rate_threshold', 0.5),
+                ('repeat_threshold_7', 2),
+                ('no_show_rate_threshold', 0.5),
+                ('repeat_no_show_threshold_7', 2),
+                ('min_verified_bookings', 2),
+                ('prefer_verified_only', False)
+            ]
+            
+            all_match = True
+            for field, expected in checks:
+                actual = risk_profile.get(field)
+                if actual != expected:
+                    self.log(f"❌ Field {field}: expected {expected}, got {actual}")
+                    all_match = False
+            
+            if all_match:
+                self.log(f"✅ All risk profile values updated correctly")
+                return True
+            else:
+                return False
+        return False
+
+    def test_matches_verified_metrics(self):
+        """2.1) GET /api/admin/matches - verify verified_* metrics"""
+        self.log("\n=== 2) MATCHES SUMMARY – VERIFIED METRİKLER ===")
+        self.log("\n--- 2.1 Verified metrikler kontrolü ---")
+        
+        success, response = self.run_test(
+            "GET Matches - Verified Metrics Check",
+            "GET",
+            "api/admin/matches?days=30&min_total=1&include_action=1&sort=repeat_desc",
+            200
+        )
+        
+        if success:
+            items = response.get('items', [])
+            if not items:
+                self.log(f"❌ No matches found for testing")
+                return False
+            
+            # Check first item or look for deterministic match
+            test_item = None
+            for item in items:
+                if item.get('id') == '88e2b8e4__1ea289b7':  # Known deterministic match
+                    test_item = item
+                    break
+            
+            if not test_item:
+                test_item = items[0]  # Use first item if deterministic not found
+            
+            self.test_match_id = test_item.get('id')
+            self.log(f"✅ Testing with match: {self.test_match_id}")
+            
+            # Check required verified fields
+            required_fields = [
+                'verified_bookings_30d',
+                'verified_no_show_30d', 
+                'verified_share'
+            ]
+            
+            missing_fields = []
+            for field in required_fields:
+                if field not in test_item:
+                    missing_fields.append(field)
+                else:
+                    value = test_item[field]
+                    if field in ['verified_bookings_30d', 'verified_no_show_30d']:
+                        if not isinstance(value, int):
+                            missing_fields.append(f"{field} (not integer)")
+                    elif field == 'verified_share':
+                        if not isinstance(value, (int, float)) or value < 0.0 or value > 1.0:
+                            missing_fields.append(f"{field} (not valid float 0.0-1.0)")
+            
+            # Check risk_inputs
+            risk_inputs = test_item.get('risk_inputs', {})
+            if 'verified_only' not in risk_inputs or not isinstance(risk_inputs['verified_only'], bool):
+                missing_fields.append('risk_inputs.verified_only (not bool)')
+            
+            if missing_fields:
+                self.log(f"❌ Missing or invalid verified fields: {missing_fields}")
+                return False
+            else:
+                self.log(f"✅ All verified metrics present and valid")
+                self.log(f"   verified_bookings_30d: {test_item['verified_bookings_30d']}")
+                self.log(f"   verified_no_show_30d: {test_item['verified_no_show_30d']}")
+                self.log(f"   verified_share: {test_item['verified_share']}")
+                self.log(f"   risk_inputs.verified_only: {risk_inputs['verified_only']}")
+                return True
+        return False
+
+    def test_prefer_verified_only_off(self):
+        """3) prefer_verified_only OFF → fallback (all outcomes)"""
+        self.log("\n=== 3) PREFER_VERIFIED_ONLY OFF → FALLBACK ===")
+        self.log("\n--- 3.1 Set prefer_verified_only=false ---")
+        
+        # Set prefer_verified_only to false
+        update_data = {
+            "rate_threshold": 0.5,
+            "repeat_threshold_7": 2,
+            "no_show_rate_threshold": 0.5,
+            "repeat_no_show_threshold_7": 2,
+            "min_verified_bookings": 2,
+            "prefer_verified_only": False
+        }
+        
+        success, response = self.run_test(
+            "PUT Risk Profile - prefer_verified_only=false",
+            "PUT",
+            "api/admin/match-alerts/risk-profile",
+            200,
+            data=update_data
+        )
+        
+        if not success:
+            return False
+        
+        self.log("\n--- 3.2 Check matches behavior ---")
+        
+        success, response = self.run_test(
+            "GET Matches - prefer_verified_only OFF",
+            "GET",
+            "api/admin/matches?days=30&min_total=1&include_action=1",
+            200
+        )
+        
+        if success:
+            items = response.get('items', [])
+            
+            # Look for our test match or use deterministic one
+            test_item = None
+            for item in items:
+                if self.test_match_id and item.get('id') == self.test_match_id:
+                    test_item = item
+                    break
+                elif item.get('id') == '88e2b8e4__1ea289b7':
+                    test_item = item
+                    break
+            
+            if not test_item and items:
+                test_item = items[0]
+            
+            if test_item:
+                risk_inputs = test_item.get('risk_inputs', {})
+                verified_only = risk_inputs.get('verified_only', True)  # Default should be False
+                
+                if verified_only == False:
+                    self.log(f"✅ prefer_verified_only OFF working - risk_inputs.verified_only=false")
+                    self.log(f"   Match {test_item.get('id')}: high_risk={test_item.get('high_risk')}")
+                    return True
+                else:
+                    self.log(f"❌ Expected verified_only=false, got {verified_only}")
+                    return False
+            else:
+                self.log(f"❌ No test match found")
+                return False
+        return False
+
+    def test_prefer_verified_only_on_case_a(self):
+        """4.1) prefer_verified_only ON + high thresholds → high_risk false"""
+        self.log("\n=== 4) PREFER_VERIFIED_ONLY ON + VERIFIED YETERLI ===")
+        self.log("\n--- 4.1 Case A: Yüksek eşikler, high_risk=false ---")
+        
+        # Set high thresholds to make high_risk false
+        update_data = {
+            "rate_threshold": 0.9,
+            "repeat_threshold_7": 99,
+            "no_show_rate_threshold": 0.9,
+            "repeat_no_show_threshold_7": 99,
+            "min_verified_bookings": 2,
+            "prefer_verified_only": True
+        }
+        
+        success, response = self.run_test(
+            "PUT Risk Profile - Case A (high thresholds)",
+            "PUT",
+            "api/admin/match-alerts/risk-profile",
+            200,
+            data=update_data
+        )
+        
+        if not success:
+            return False
+        
+        success, response = self.run_test(
+            "GET Matches - Case A verification",
+            "GET",
+            "api/admin/matches?days=30&min_total=1&include_action=1",
+            200
+        )
+        
+        if success:
+            items = response.get('items', [])
+            
+            # Look for our test match
+            test_item = None
+            for item in items:
+                if self.test_match_id and item.get('id') == self.test_match_id:
+                    test_item = item
+                    break
+                elif item.get('id') == '88e2b8e4__1ea289b7':
+                    test_item = item
+                    break
+            
+            if not test_item and items:
+                test_item = items[0]
+            
+            if test_item:
+                risk_inputs = test_item.get('risk_inputs', {})
+                verified_only = risk_inputs.get('verified_only')
+                high_risk = test_item.get('high_risk')
+                
+                if verified_only == True and high_risk == False:
+                    self.log(f"✅ Case A working - verified_only=true, high_risk=false")
+                    return True
+                else:
+                    self.log(f"❌ Case A failed - verified_only={verified_only}, high_risk={high_risk}")
+                    return False
+            else:
+                self.log(f"❌ No test match found for Case A")
+                return False
+        return False
+
+    def test_prefer_verified_only_on_case_b(self):
+        """4.2) prefer_verified_only ON + low thresholds → high_risk true"""
+        self.log("\n--- 4.2 Case B: Düşük eşikler, high_risk=true ---")
+        
+        # Set low thresholds to make high_risk true
+        update_data = {
+            "rate_threshold": 0.9,
+            "repeat_threshold_7": 2,
+            "no_show_rate_threshold": 0.9,
+            "repeat_no_show_threshold_7": 2,
+            "min_verified_bookings": 2,
+            "prefer_verified_only": True
+        }
+        
+        success, response = self.run_test(
+            "PUT Risk Profile - Case B (low repeat threshold)",
+            "PUT",
+            "api/admin/match-alerts/risk-profile",
+            200,
+            data=update_data
+        )
+        
+        if not success:
+            return False
+        
+        success, response = self.run_test(
+            "GET Matches - Case B verification",
+            "GET",
+            "api/admin/matches?days=30&min_total=1&include_action=1",
+            200
+        )
+        
+        if success:
+            items = response.get('items', [])
+            
+            # Look for our test match
+            test_item = None
+            for item in items:
+                if self.test_match_id and item.get('id') == self.test_match_id:
+                    test_item = item
+                    break
+                elif item.get('id') == '88e2b8e4__1ea289b7':
+                    test_item = item
+                    break
+            
+            if not test_item and items:
+                test_item = items[0]
+            
+            if test_item:
+                risk_inputs = test_item.get('risk_inputs', {})
+                verified_only = risk_inputs.get('verified_only')
+                high_risk = test_item.get('high_risk')
+                high_risk_reasons = test_item.get('high_risk_reasons', [])
+                
+                if verified_only == True and high_risk == True and 'repeat' in high_risk_reasons:
+                    self.log(f"✅ Case B working - verified_only=true, high_risk=true, reasons={high_risk_reasons}")
+                    return True
+                else:
+                    self.log(f"❌ Case B failed - verified_only={verified_only}, high_risk={high_risk}, reasons={high_risk_reasons}")
+                    return False
+            else:
+                self.log(f"❌ No test match found for Case B")
+                return False
+        return False
+
+    def print_summary(self):
+        """Print test summary"""
+        self.log("\n" + "="*60)
+        self.log("PROOF V2 STORY 4 (VERIFIED-AWARE RISK CALCULATION) TEST SUMMARY")
+        self.log("="*60)
+        self.log(f"Total Tests: {self.tests_run}")
+        self.log(f"✅ Passed: {self.tests_passed}")
+        self.log(f"❌ Failed: {self.tests_failed}")
+        self.log(f"Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%")
+        
+        if self.failed_tests:
+            self.log("\n❌ FAILED TESTS:")
+            for i, test in enumerate(self.failed_tests, 1):
+                self.log(f"  {i}. {test}")
+        
+        self.log("="*60)
+
+    def run_proof_v2_story4_tests(self):
+        """Run all PROOF v2 Story 4 tests"""
+        self.log("🚀 Starting PROOF v2 Story 4 (Verified-Aware Risk Calculation) Tests")
+        self.log(f"Base URL: {self.base_url}")
+        
+        # Authentication
+        if not self.test_admin_login():
+            self.log("❌ Admin login failed - stopping tests")
+            self.print_summary()
+            return 1
+
+        # 1) RiskProfile genişletme testi
+        if not self.test_risk_profile_get_fields():
+            self.log("❌ Risk profile GET fields test failed")
+        
+        if not self.test_risk_profile_put_update():
+            self.log("❌ Risk profile PUT update test failed")
+
+        # 2) Matches summary – verified metrikler
+        if not self.test_matches_verified_metrics():
+            self.log("❌ Matches verified metrics test failed")
+
+        # 3) prefer_verified_only OFF → fallback
+        if not self.test_prefer_verified_only_off():
+            self.log("❌ prefer_verified_only OFF test failed")
+
+        # 4) prefer_verified_only ON cases
+        if not self.test_prefer_verified_only_on_case_a():
+            self.log("❌ prefer_verified_only ON Case A test failed")
+        
+        if not self.test_prefer_verified_only_on_case_b():
+            self.log("❌ prefer_verified_only ON Case B test failed")
+
+        # Summary
+        self.print_summary()
+
+        return 0 if self.tests_failed == 0 else 1
+
+
 if __name__ == "__main__":
     import sys
     
@@ -19432,6 +19938,10 @@ if __name__ == "__main__":
             if test_type == "proof_v2_story3":
                 tester = ProofV2Story3Tester()
                 exit_code = tester.run_proof_v2_story3_tests()
+                sys.exit(exit_code)
+            elif test_type == "proof_v2_story4":
+                tester = ProofV2Story4Tester()
+                exit_code = tester.run_proof_v2_story4_tests()
                 sys.exit(exit_code)
             elif test_type == "signed_download":
                 tester = SignedDownloadLinkTester()
@@ -19451,7 +19961,7 @@ if __name__ == "__main__":
                 sys.exit(exit_code)
             else:
                 print(f"Unknown test type: {test_type}")
-                print("Available test types: proof_v2_story3, proof_v2_story2, signed_download, faz5, proof_v11, all")
+                print("Available test types: proof_v2_story3, proof_v2_story4, proof_v2_story2, signed_download, faz5, proof_v11, all")
                 sys.exit(1)
         else:
             # Default: run comprehensive tests

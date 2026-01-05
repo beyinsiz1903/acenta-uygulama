@@ -300,22 +300,6 @@ async def update_risk_profile(payload: RiskProfileOut, db=Depends(get_db), user=
         ),
     )
 
-        "retry_outbox_id": retry_outbox_id,
-        "attempt": attempt,
-        "sent_at": now,
-    }
-
-    await db.match_alert_deliveries.update_one(
-        {
-            "organization_id": org_id,
-            "match_id": match_id,
-            "fingerprint": fingerprint,
-            "channel": channel,
-        },
-        {"$set": update},
-        upsert=True,
-    )
-
 
 async def _send_alert_email(
     db,

@@ -309,9 +309,9 @@ async def verify_booking_outcome(
 async def override_booking_outcome(
   booking_id: str,
   payload: BookingOutcomeOverrideIn,
+  request: Request,
   db=Depends(get_db),
   user=Depends(get_current_user),
-  request=Depends(),
 ):
   org_id = user.get("organization_id")
 

@@ -42,6 +42,5 @@ async def test_mockpms_price_changed_conflict():
 
     # HTTPException ise .detail "PRICE_CHANGED" olmali
     err = excinfo.value
-    # FastAPI HTTPException kullaniminda .detail alanini string olarak bekliyoruz
-    assert hasattr(err, "detail"), "Expected HTTP-style exception with 'detail' attribute"
+    assert err.status_code == 409
     assert err.detail == "PRICE_CHANGED"

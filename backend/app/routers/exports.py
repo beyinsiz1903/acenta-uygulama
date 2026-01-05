@@ -161,8 +161,13 @@ async def _generate_match_risk_rows(db, org_id: str, params: ExportPolicyParams,
     now_str = now_utc().isoformat()
     for item in items:
         data = item if isinstance(item, dict) else item.model_dump()
-        cancel_rate = float(data.get("cancel_rate") or 0.0)
-        if params.only_high_risk and cancel_rate < 0.5:
+        # Prefer behavioral_cancel_rate if available; fallback to legacy cancel_rate
+        behavioral_rate = float(
+            data.get("behavioral_cancel_rate")
+            or data.get("cancel_rate")
+            or 0.0
+        )
+        if params.only_high_risk and behavioral_rate < 0.5:
             continue
         rows.append(
             {

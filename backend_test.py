@@ -19811,12 +19811,12 @@ class ProofV2Story4Tester:
         """4.2) prefer_verified_only ON + low thresholds → high_risk true"""
         self.log("\n--- 4.2 Case B: Düşük eşikler, high_risk=true ---")
         
-        # Set low thresholds to make high_risk true
+        # Set low repeat threshold but high rate threshold to trigger repeat-based risk
         update_data = {
-            "rate_threshold": 0.5,  # Lower than verified rate to trigger rate-based risk
-            "repeat_threshold_7": 2,
-            "no_show_rate_threshold": 0.5,  # Lower than verified rate to trigger rate-based risk
-            "repeat_no_show_threshold_7": 2,
+            "rate_threshold": 1.1,  # Higher than verified rate to avoid rate-based risk
+            "repeat_threshold_7": 0,  # Very low to trigger repeat-based risk
+            "no_show_rate_threshold": 1.1,  # Higher than verified rate to avoid rate-based risk
+            "repeat_no_show_threshold_7": 0,  # Very low to trigger repeat-based risk
             "min_verified_bookings": 1,  # Lower threshold to enable verified-only mode
             "prefer_verified_only": True
         }

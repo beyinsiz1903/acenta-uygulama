@@ -178,6 +178,74 @@ async def _record_delivery(
         "http_status": http_status,
         "response_snippet": response_snippet,
         "outbox_id": outbox_id,
+        "retry_outbox_id": retry_outbox_id,
+        "attempt": attempt,
+        "sent_at": now,
+    }
+
+    await db.match_alert_deliveries.update_one(
+        {
+            "organization_id": org_id,
+            "match_id": match_id,
+            "fingerprint": fingerprint,
+            "channel": channel,
+        },
+        {"$set": update},
+        upsert=True,
+    )
+
+
+@router.get("/risk-profile", response_model=RiskProfileResponse, dependencies=[Depends(require_roles(["super_admin"]))])
+async def get_risk_profile(db=Depends(get_db), user=Depends(get_current_user)):
+    org_id = user.get("organization_id")
+    rp = await load_risk_profile(db, org_id)
+    # metadata (updated_at/by) tutulmuyordu; v1'de None döner
+    return RiskProfileResponse(
+        ok=True,
+        risk_profile=RiskProfileOut(
+            rate_threshold=rp.rate_threshold,
+            repeat_threshold_7=rp.repeat_threshold_7,
+            mode=rp.mode,
+            updated_at=None,
+            updated_by_email=None,
+        ),
+    )
+
+
+@router.put("/risk-profile", response_model=RiskProfileResponse, dependencies=[Depends(require_roles(["super_admin"]))])
+async def update_risk_profile(payload: RiskProfileOut, db=Depends(get_db), user=Depends(get_current_user)):
+    org_id = user.get("organization_id")
+
+    # mode v1'de sabit rate_or_repeat; client gönderse bile ignore
+    rate = max(0.0, min(1.0, float(payload.rate_threshold)))
+    repeat = max(0, int(payload.repeat_threshold_7))
+
+    now = now_utc()
+    doc = {
+        "organization_id": org_id,
+        "rate_threshold": rate,
+        "repeat_threshold_7": repeat,
+        "mode": "rate_or_repeat",
+        "updated_at": now,
+        "updated_by_email": user.get("email"),
+    }
+
+    await db.risk_profiles.update_one(
+        {"organization_id": org_id},
+        {"$set": doc, "$setOnInsert": {"created_at": now}},
+        upsert=True,
+    )
+
+    return RiskProfileResponse(
+        ok=True,
+        risk_profile=RiskProfileOut(
+            rate_threshold=rate,
+            repeat_threshold_7=repeat,
+            mode="rate_or_repeat",
+            updated_at=now.isoformat(),
+            updated_by_email=user.get("email"),
+        ),
+    )
 
 
 @router.get("/risk-profile", response_model=RiskProfileResponse, dependencies=[Depends(require_roles(["super_admin"]))])

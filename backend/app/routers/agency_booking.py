@@ -233,8 +233,16 @@ async def submit_booking(draft_id: str, payload: BookingSubmitIn, request: Reque
     # Intent: default pending (current behavior), allow explicit flag (reserved for future variants)
     _intent = payload.intent or "pending"
     
-    # 4. Create pending booking
+    # 4. Create pending booking (enforcement: blocked match?)
     now = now_utc()
+
+    await ensure_match_not_blocked(
+        db,
+        organization_id=user["organization_id"],
+        agency_id=str(agency_id),
+        hotel_id=str(draft["hotel_id"]),
+    )
+
     booking_id = str(uuid.uuid4())
     
     # Calculate commission from link

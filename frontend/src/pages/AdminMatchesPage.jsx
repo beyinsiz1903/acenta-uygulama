@@ -70,6 +70,12 @@ export default function AdminMatchesPage() {
     } finally {
       setLoading(false);
     }
+  // Parse deep-link query parameters (e.g. from exports)
+  const searchParams = new URLSearchParams(location.search || "");
+  const deeplinkMatchId = searchParams.get("match_id");
+  const deeplinkOpenDrawer = searchParams.get("open_drawer") === "1";
+
+
   };
 
   const loadEvents = async (match) => {

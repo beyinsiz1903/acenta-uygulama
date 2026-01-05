@@ -194,6 +194,8 @@ async def list_matches(
         if a_id:
             agency_ids.append(a_id)
         if h_id:
+            hotel_ids.append(h_id)
+
     # v1.5: load no-show metrics from booking_outcomes (7d window)
     no_show_rate_by_match: dict[str, float] = {}
     repeat_no_show_7_by_match: dict[str, int] = {}

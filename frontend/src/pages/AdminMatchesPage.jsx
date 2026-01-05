@@ -84,6 +84,43 @@ export default function AdminMatchesPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-foreground">Match Risk</h1>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle className="text-sm font-medium">Filtreler</CardTitle>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2">
+              <span className="text-xs">Only high risk</span>
+              <input
+                type="checkbox"
+                checked={onlyHighRisk}
+                onChange={(e) => setOnlyHighRisk(e.target.checked)}
+                data-testid="match-risk-only-high-risk"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-medium" htmlFor="match-risk-sort">
+                Sort by
+              </label>
+              <select
+                id="match-risk-sort"
+                className="border rounded px-2 py-1 text-xs bg-background"
+                value={sort}
+                onChange={(e) => setSort(e.target.value)}
+                data-testid="match-risk-sort"
+              >
+                <option value="high_risk_first">High risk first</option>
+                <option value="repeat_desc">Repeat (7d) desc</option>
+                <option value="rate_desc">Not-arrived rate desc</option>
+                <option value="total_desc">Total bookings desc</option>
+                <option value="last_booking_desc">Last booking desc</option>
+              </select>
+            </div>
+          </div>
+        </CardHeader>
+      </Card>
+
         <p className="text-sm text-muted-foreground">
           Acenta–otel eşleşmelerini (agency–hotel pairs) son 30 güne göre özetler. Yüksek iptal oranına sahip
           eşleşmeleri buradan inceleyebilirsiniz.

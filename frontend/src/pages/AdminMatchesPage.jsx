@@ -47,6 +47,11 @@ export default function AdminMatchesPage() {
   const [selectedMatch, setSelectedMatch] = useState(null);
   const location = useLocation();
 
+  // Parse deep-link query parameters (e.g. from exports)
+  const searchParams = new URLSearchParams(location.search || "");
+  const deeplinkMatchId = searchParams.get("match_id");
+  const deeplinkOpenDrawer = searchParams.get("open_drawer") === "1";
+
   const loadMatches = async (opts = {}) => {
     const days = opts.days ?? 30;
     const minTotal = opts.min_total ?? 3;

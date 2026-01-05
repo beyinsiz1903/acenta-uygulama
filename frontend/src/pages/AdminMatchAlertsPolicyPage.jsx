@@ -407,6 +407,76 @@ export default function AdminMatchAlertsPolicyPage() {
             </CardContent>
           </Card>
 
+      <Card>
+        <CardHeader>
+          <CardTitle>Policy</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <div className="text-sm font-medium">Alerting aktif</div>
+              <p className="text-xs text-muted-foreground">
+                Enabled kapalıysa, hiçbir eşleşme için email alert üretilmez.
+              </p>
+            </div>
+            <Switch
+              checked={policy.enabled}
+              onCheckedChange={(val) => setPolicy((prev) => ({ ...prev, enabled: Boolean(val) }))}
+              data-testid="match-alerts-enabled"
+            />
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-1">
+              <label htmlFor="threshold-rate" className="text-sm font-medium">
+                Not-arrived / cancel rate eşiği
+              </label>
+              <Input
+                id="threshold-rate"
+                type="number"
+                step="0.05"
+                min="0"
+                max="1"
+                value={policy.threshold_not_arrived_rate}
+                onChange={(e) =>
+                  setPolicy((prev) => ({
+                    ...prev,
+                    threshold_not_arrived_rate: parseFloat(e.target.value || "0"),
+                  }))
+                }
+                data-testid="match-alerts-threshold-rate"
+              />
+              <p className="text-xs text-muted-foreground">
+                0–1 arası oran. Örneğin 0.5 → %50 ve üzeri iptal/not-arrived oranı için alert üret.
+              </p>
+            </div>
+
+            <div className="space-y-1">
+              <label htmlFor="min-matches" className="text-sm font-medium">
+                Minimum eşleşme sayısı
+              </label>
+              <Input
+                id="min-matches"
+                type="number"
+                min="1"
+                value={policy.min_matches_total}
+                onChange={(e) =>
+                  setPolicy((prev) => ({
+                    ...prev,
+                    min_matches_total: parseInt(e.target.value || "1", 10),
+                  }))
+                }
+                data-testid="match-alerts-min-matches"
+              />
+              <p className="text-xs text-muted-foreground">
+                Belirtilen dönem içinde toplam eşleşme sayısı bu değerden küçükse alert üretilmez.
+              </p>
+            </div>
+
+            <div className="space-y-1">
+              <label htmlFor="cooldown-hours" className="text-sm font-medium">
+                Cooldown (saat)
+              </label>
               <Input
                 id="cooldown-hours"
                 type="number"

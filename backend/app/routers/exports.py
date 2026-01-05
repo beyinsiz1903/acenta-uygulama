@@ -284,7 +284,8 @@ def _rows_to_pdf(rows: list[dict[str, Any]], org_id: str, risk_profile: dict[str
     legal = (
         "<font size=6>Match risk raporu, operasyonel ve davranışsal iptallerden türetilmiş"
         " istatistiksel bir özet sunar; tekil rezervasyon için konaklama kanıtı değildir." \
-        " Kararlarınızı verirken ek veri kaynakları ve iş kurallarınızı da dikkate alın.</font>"
+        " Kararlarınızı verirken ek veri kaynakları ve iş kurallarınızı da dikkate alın." \
+        " Blocked eşleşmelerde uyarı/export gönderimi yapılmaz; dashboard görünürlüğü devam eder.</font>"
     )
     story.append(Paragraph(legal, styles["Normal"]))
 

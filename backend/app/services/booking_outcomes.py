@@ -27,7 +27,7 @@ class BookingOutcome:
   updated_at: datetime
   # v2 fields
   outcome_version: int = 1
-  evidence: list[dict[str, Any]] | None = None
+  evidence: list[dict[str, Any]] = field(default_factory=list)
   override: Optional[dict[str, Any]] = None
   confidence: float | None = None
 

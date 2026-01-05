@@ -14136,7 +14136,7 @@ class RepeatNotArrived7Tester:
                 "search_id": search_id,
                 "hotel_id": self.hotel_id,
                 "room_type_id": "rt_standard",
-                "rate_plan_id": "rp_base",
+                "rate_plan_id": "695aa08e29fad69d6cc8c4ad",  # Use the actual rate plan ID from search
                 "guest": {
                     "full_name": f"Test Guest {i+1}",
                     "email": f"guest{i+1}@test.com",

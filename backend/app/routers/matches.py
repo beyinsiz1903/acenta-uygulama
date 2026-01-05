@@ -327,6 +327,80 @@ async def list_matches(
                 if ra and rh:
                     key_id = f"{ra}__{rh}"
                     repeat_behavioral[key_id] = int(rr.get("behavioral") or 0)
+    # v2.1: load verified-only metrics from booking_outcomes (30d + 7d)
+    verified_bookings_30d_by_match: dict[str, int] = {}
+    verified_no_show_30d_by_match: dict[str, int] = {}
+    verified_repeat_no_show_7_by_match: dict[str, int] = {}
+    if filtered:
+        thirty_days_ago = now_utc() - timedelta(days=30)
+        seven_days_ago_verified = now_utc() - timedelta(days=7)
+        pair_or_filters_verified: list[dict[str, Any]] = []
+        for r in filtered:
+            key = r.get("_id") or {}
+            a_id = str(key.get("agency_id") or "")
+            h_id = str(key.get("hotel_id") or "")
+            if a_id and h_id:
+                pair_or_filters_verified.append({"agency_id": a_id, "hotel_id": h_id})
+        if pair_or_filters_verified:
+            # 30d verified totals
+            match_stage_verified_30 = {
+                "organization_id": org_id,
+                "booked_at": {"$gte": thirty_days_ago},
+                "verified": True,
+                "$or": pair_or_filters_verified,
+            }
+            pipeline_verified_30 = [
+                {"$match": match_stage_verified_30},
+                {
+                    "$group": {
+                        "_id": {"agency_id": "$agency_id", "hotel_id": "$hotel_id"},
+                        "total": {"$sum": 1},
+                        "no_show": {
+                            "$sum": {"$cond": [{"$eq": ["$final_outcome", "no_show"]}, 1, 0]},
+                        },
+                    }
+                },
+            ]
+            v30_rows = await db.booking_outcomes.aggregate(pipeline_verified_30).to_list(length=None)
+            for vr in v30_rows:
+                kk = vr.get("_id") or {}
+                aid = str(kk.get("agency_id") or "")
+                hid = str(kk.get("hotel_id") or "")
+                if not aid or not hid:
+                    continue
+                mid = f"{aid}__{hid}"
+                total_v = int(vr.get("total") or 0)
+                no_show_v = int(vr.get("no_show") or 0)
+                verified_bookings_30d_by_match[mid] = total_v
+                verified_no_show_30d_by_match[mid] = no_show_v
+
+            # 7d verified repeat no-show
+            match_stage_verified_7 = {
+                "organization_id": org_id,
+                "checkin_date": {"$gte": seven_days_ago_verified.date()},
+                "verified": True,
+                "final_outcome": "no_show",
+                "$or": pair_or_filters_verified,
+            }
+            pipeline_verified_7 = [
+                {"$match": match_stage_verified_7},
+                {
+                    "$group": {
+                        "_id": {"agency_id": "$agency_id", "hotel_id": "$hotel_id"},
+                        "no_show_repeat": {"$sum": 1},
+                    }
+                },
+            ]
+            v7_rows = await db.booking_outcomes.aggregate(pipeline_verified_7).to_list(length=None)
+            for vr in v7_rows:
+                kk = vr.get("_id") or {}
+                aid = str(kk.get("agency_id") or "")
+                hid = str(kk.get("hotel_id") or "")
+                if not aid or not hid:
+                    continue
+                mid = f"{aid}__{hid}"
+                verified_repeat_no_show_7_by_match[mid] = int(vr.get("no_show_repeat") or 0)
+
                     repeat_operational[key_id] = int(rr.get("operational") or 0)
 
 

@@ -16018,6 +16018,249 @@ class MatchRiskHighRiskFilterTester:
             return 1
 
 
+class MatchRiskSortingTester:
+    def __init__(self, base_url="https://acenta-risk.preview.emergentagent.com"):
+        self.base_url = base_url
+        self.admin_token = None
+        self.tests_run = 0
+        self.tests_passed = 0
+        self.tests_failed = 0
+        self.failed_tests = []
+
+    def log(self, msg):
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}")
+
+    def run_test(self, name, method, endpoint, expected_status, data=None, headers_override=None):
+        """Run a single API test"""
+        url = f"{self.base_url}/{endpoint}"
+        headers = headers_override or {'Content-Type': 'application/json'}
+        if self.admin_token and not headers_override:
+            headers['Authorization'] = f'Bearer {self.admin_token}'
+
+        self.tests_run += 1
+        self.log(f"🔍 Test #{self.tests_run}: {name}")
+        
+        try:
+            if method == 'GET':
+                response = requests.get(url, headers=headers, timeout=10)
+            elif method == 'POST':
+                response = requests.post(url, json=data, headers=headers, timeout=10)
+            elif method == 'PUT':
+                response = requests.put(url, json=data, headers=headers, timeout=10)
+            elif method == 'DELETE':
+                response = requests.delete(url, headers=headers, timeout=10)
+            else:
+                raise ValueError(f"Unsupported method: {method}")
+
+            success = response.status_code == expected_status
+            if success:
+                self.tests_passed += 1
+                self.log(f"✅ PASSED - Status: {response.status_code}")
+                try:
+                    return True, response.json() if response.content else {}
+                except:
+                    return True, {}
+            else:
+                self.tests_failed += 1
+                self.failed_tests.append(f"{name} - Expected {expected_status}, got {response.status_code}")
+                self.log(f"❌ FAILED - Expected {expected_status}, got {response.status_code}")
+                try:
+                    self.log(f"   Response: {response.text[:200]}")
+                except:
+                    pass
+                return False, {}
+
+        except Exception as e:
+            self.tests_failed += 1
+            self.failed_tests.append(f"{name} - Error: {str(e)}")
+            self.log(f"❌ FAILED - Error: {str(e)}")
+            return False, {}
+
+    def test_admin_login(self):
+        """Test admin login"""
+        self.log("\n=== AUTHENTICATION ===")
+        success, response = self.run_test(
+            "Admin Login (admin@acenta.test/admin123)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "admin@acenta.test", "password": "admin123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.admin_token = response['access_token']
+            user = response.get('user', {})
+            roles = user.get('roles', [])
+            
+            if 'admin' in roles or 'super_admin' in roles:
+                self.log(f"✅ Admin login successful - roles: {roles}")
+                return True
+            else:
+                self.log(f"❌ Missing admin/super_admin role: {roles}")
+                return False
+        return False
+
+    def test_high_risk_repeat_desc_sorting(self):
+        """Test 1: GET /api/admin/matches?days=7&min_total=1&include_action=1&only_high_risk=1&sort=repeat_desc"""
+        self.log("\n=== TEST 1: HIGH RISK + REPEAT_DESC SORTING ===")
+        
+        success, response = self.run_test(
+            "High Risk Matches with repeat_desc sort",
+            "GET",
+            "api/admin/matches?days=7&min_total=1&include_action=1&only_high_risk=1&sort=repeat_desc",
+            200
+        )
+        
+        if not success:
+            self.log("❌ FAIL - API call failed")
+            return False
+            
+        items = response.get('items', [])
+        self.log(f"✅ PASS - API returned {len(items)} items")
+        
+        # Test: items.length >= 0 (can be empty)
+        if len(items) >= 0:
+            self.log("✅ PASS - Items length >= 0")
+        else:
+            self.log("❌ FAIL - Items length < 0")
+            return False
+            
+        if len(items) == 0:
+            self.log("✅ PASS - Empty result is acceptable")
+            return True
+            
+        # Test: Each item has high_risk === true
+        all_high_risk = all(item.get('high_risk') is True for item in items)
+        if all_high_risk:
+            self.log("✅ PASS - All items have high_risk=true")
+        else:
+            self.log("❌ FAIL - Some items have high_risk=false")
+            return False
+            
+        # Test: repeat_not_arrived_7 non-increasing (desc)
+        repeat_values = [item.get('repeat_not_arrived_7', 0) for item in items]
+        is_desc = all(repeat_values[i] >= repeat_values[i+1] for i in range(len(repeat_values)-1))
+        if is_desc:
+            self.log(f"✅ PASS - repeat_not_arrived_7 descending: {repeat_values}")
+        else:
+            self.log(f"❌ FAIL - repeat_not_arrived_7 not descending: {repeat_values}")
+            return False
+            
+        # Test: Tie-breaker cancel_rate desc for same repeat_not_arrived_7
+        for i in range(len(items)-1):
+            if items[i].get('repeat_not_arrived_7') == items[i+1].get('repeat_not_arrived_7'):
+                if items[i].get('cancel_rate', 0) >= items[i+1].get('cancel_rate', 0):
+                    self.log(f"✅ PASS - Tie-breaker working: same repeat={items[i].get('repeat_not_arrived_7')}, cancel_rates {items[i].get('cancel_rate')} >= {items[i+1].get('cancel_rate')}")
+                else:
+                    self.log(f"❌ FAIL - Tie-breaker not working: same repeat={items[i].get('repeat_not_arrived_7')}, cancel_rates {items[i].get('cancel_rate')} < {items[i+1].get('cancel_rate')}")
+                    return False
+                    
+        # Output first 2-3 items
+        self.log("\n--- FIRST 2-3 ITEMS OUTPUT ---")
+        for i, item in enumerate(items[:3]):
+            self.log(f"Item {i+1}:")
+            self.log(f"  id: {item.get('id')}")
+            self.log(f"  repeat_not_arrived_7: {item.get('repeat_not_arrived_7')}")
+            self.log(f"  cancel_rate: {item.get('cancel_rate')}")
+            self.log(f"  total_bookings: {item.get('total_bookings')}")
+            self.log(f"  high_risk: {item.get('high_risk')}")
+            self.log(f"  high_risk_reasons: {item.get('high_risk_reasons')}")
+            
+        return True
+
+    def test_high_risk_first_sorting(self):
+        """Test 2: GET /api/admin/matches?days=30&min_total=1&include_action=1&sort=high_risk_first"""
+        self.log("\n=== TEST 2: HIGH_RISK_FIRST SORTING ===")
+        
+        success, response = self.run_test(
+            "Matches with high_risk_first sort",
+            "GET",
+            "api/admin/matches?days=30&min_total=1&include_action=1&sort=high_risk_first",
+            200
+        )
+        
+        if not success:
+            self.log("❌ FAIL - API call failed")
+            return False
+            
+        items = response.get('items', [])
+        self.log(f"✅ PASS - API returned {len(items)} items")
+        
+        if len(items) == 0:
+            self.log("✅ PASS - Empty result is acceptable")
+            return True
+            
+        # Test: high_risk=true items should come before high_risk=false items
+        high_risk_section_ended = False
+        for i, item in enumerate(items):
+            is_high_risk = item.get('high_risk', False)
+            
+            if not is_high_risk:
+                high_risk_section_ended = True
+            elif high_risk_section_ended:
+                self.log(f"❌ FAIL - Found high_risk=true after high_risk=false at position {i}")
+                return False
+                
+        self.log("✅ PASS - high_risk=true items come before high_risk=false items")
+        
+        # Output first 5-6 items
+        self.log("\n--- FIRST 5-6 ITEMS OUTPUT ---")
+        for i, item in enumerate(items[:6]):
+            self.log(f"Item {i+1}:")
+            self.log(f"  id: {item.get('id')}")
+            self.log(f"  high_risk: {item.get('high_risk')}")
+            self.log(f"  high_risk_reasons: {item.get('high_risk_reasons')}")
+            self.log(f"  repeat_not_arrived_7: {item.get('repeat_not_arrived_7')}")
+            self.log(f"  cancel_rate: {item.get('cancel_rate')}")
+            
+        return True
+
+    def print_summary(self):
+        """Print test summary"""
+        self.log("\n" + "="*60)
+        self.log("MATCH RISK SORTING TEST SUMMARY")
+        self.log("="*60)
+        self.log(f"Total Tests: {self.tests_run}")
+        self.log(f"✅ Passed: {self.tests_passed}")
+        self.log(f"❌ Failed: {self.tests_failed}")
+        self.log(f"Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%")
+        
+        if self.failed_tests:
+            self.log("\n❌ FAILED TESTS:")
+            for i, test in enumerate(self.failed_tests, 1):
+                self.log(f"  {i}. {test}")
+        
+        self.log("="*60)
+
+    def run_match_risk_sorting_tests(self):
+        """Run all match risk sorting tests"""
+        self.log("🚀 Starting Match Risk Sorting Tests")
+        self.log(f"Base URL: {self.base_url}")
+        
+        # Authentication
+        if not self.test_admin_login():
+            self.log("❌ Admin login failed - stopping tests")
+            self.print_summary()
+            return 1
+
+        # Test 1: High risk + repeat_desc sorting
+        test1_result = self.test_high_risk_repeat_desc_sorting()
+        
+        # Test 2: High risk first sorting
+        test2_result = self.test_high_risk_first_sorting()
+
+        # Summary
+        self.print_summary()
+        
+        # Final result
+        if test1_result and test2_result:
+            self.log("\n🎉 ALL TESTS PASSED!")
+            return 0
+        else:
+            self.log("\n💥 SOME TESTS FAILED!")
+            return 1
+
+
 def main():
     if len(sys.argv) > 1:
         if sys.argv[1] == "faz5":

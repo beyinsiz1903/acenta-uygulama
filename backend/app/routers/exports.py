@@ -539,8 +539,8 @@ async def list_runs(
             )
         )
 
-    # Admin deeplink template for match risk exports
-    template = "/app/admin/matches?match_id={match_id}&open_drawer=1&source=export"
+    # Admin deeplink template for match risk exports (dashboard route)
+    template = "/app/admin/reports/match-risk?match_id={match_id}&open_drawer=1&source=export"
 
     return ExportRunsResponse(ok=True, items=items, admin_deeplink_template=template)
 

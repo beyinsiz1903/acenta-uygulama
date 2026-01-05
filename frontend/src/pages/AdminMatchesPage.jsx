@@ -111,8 +111,7 @@ export default function AdminMatchesPage() {
     setEventsOnlyCancelled(false);
     setEventsOpen(true);
     loadEvents(found);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items, deeplinkMatchId, deeplinkOpenDrawer]);
+  }, [items, deeplinkMatchId, deeplinkOpenDrawer, loadEvents]);
 
   useEffect(() => {
     loadMatches();

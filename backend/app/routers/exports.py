@@ -538,7 +538,11 @@ async def list_runs(
                 emailed=bool(email_info.get("queued")) if email_info else None,
             )
         )
-    return ExportRunsResponse(ok=True, items=items)
+
+    # Admin deeplink template for match risk exports
+    template = "/app/admin/matches?match_id={match_id}&open_drawer=1&source=export"
+
+    return ExportRunsResponse(ok=True, items=items, admin_deeplink_template=template)
 
 
 @router.get("/runs/{run_id}/download", dependencies=[Depends(require_roles(["super_admin"]))])

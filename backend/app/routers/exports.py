@@ -195,6 +195,10 @@ async def _generate_match_risk_rows(db, org_id: str, params: ExportPolicyParams,
                 "action_status": data.get("action_status") or "none",
                 # Unified high-risk flag: based on RiskProfile (rate OR repeat)
                 "high_risk_flag": high_risk,
+                "generated_at": now_str,
+            }
+        )
+    return rows
 
 
 def _rows_to_pdf(rows: list[dict[str, Any]], org_id: str, risk_profile: dict[str, Any]) -> bytes:

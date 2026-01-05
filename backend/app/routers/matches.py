@@ -138,6 +138,45 @@ async def list_matches(
             hotel_ids.append(h_id)
 
     agency_name_map, hotel_name_map = await _resolve_names(db, org_id, list(set(agency_ids)), list(set(hotel_ids)))
+    # Repeat not-arrived 7d aggregation
+    repeat_counts: dict[str, int] = {}
+    if filtered:
+        from app.utils import now_utc as _now_utc
+
+        now = _now_utc()
+        seven_days_ago = now - timedelta(days=7)
+        pair_or_filters: list[dict[str, Any]] = []
+        for r in filtered:
+            key = r.get("_id") or {}
+            a_id = str(key.get("agency_id") or "")
+            h_id = str(key.get("hotel_id") or "")
+            if a_id and h_id:
+                pair_or_filters.append({"agency_id": a_id, "hotel_id": h_id})
+        if pair_or_filters:
+            match_stage: dict[str, Any] = {
+                "organization_id": org_id,
+                "status": "cancelled",  # treat cancelled as not_arrived proxy
+                "created_at": {"$gte": seven_days_ago},
+                "$or": pair_or_filters,
+            }
+            repeat_pipeline = [
+                {"$match": match_stage},
+                {
+                    "$group": {
+                        "_id": {"agency_id": "$agency_id", "hotel_id": "$hotel_id"},
+                        "c": {"$sum": 1},
+                    }
+                },
+            ]
+            repeat_rows = await db.bookings.aggregate(repeat_pipeline).to_list(length=None)
+            for rr in repeat_rows:
+                kk = rr.get("_id") or {}
+                ra = str(kk.get("agency_id") or "")
+                rh = str(kk.get("hotel_id") or "")
+                if ra and rh:
+                    repeat_counts[f"{ra}__{rh}"] = int(rr.get("c") or 0)
+
+
 
     # Optional: load actions when requested to avoid extra cost by default
     actions_by_match_id: dict[str, dict[str, Any]] = {}

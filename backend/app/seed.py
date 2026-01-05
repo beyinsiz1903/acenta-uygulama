@@ -263,6 +263,11 @@ async def ensure_seed_data() -> None:
         ("policy_key", 1),
         ("generated_at", -1),
     ])
+
+    # Ensure deterministic no-show demo booking for org_demo
+    from app.routers.admin_demo_seed import ensure_demo_no_show_booking
+
+    await ensure_demo_no_show_booking(db, org_id)
     await db.export_runs.create_index([
         ("organization_id", 1),
         ("download.token", 1),

@@ -191,6 +191,27 @@ async def ensure_seed_data() -> None:
         ("updated_at", -1),
     ])
 
+    # SCALE v1: action_policies indexes (per-org)
+    await db.action_policies.create_index([
+        ("organization_id", 1),
+    ], unique=True)
+
+    # SCALE v1: approval_tasks indexes
+    await db.approval_tasks.create_index([
+        ("organization_id", 1),
+        ("status", 1),
+        ("requested_at", -1),
+    ])
+    await db.approval_tasks.create_index([
+        ("organization_id", 1),
+        ("task_type", 1),
+        ("status", 1),
+    ])
+    await db.approval_tasks.create_index([
+        ("organization_id", 1),
+        ("target.match_id", 1),
+    ])
+
     # Alerting v0: match_alert_policies & match_alert_deliveries indexes
     await db.match_alert_policies.create_index([
         ("organization_id", 1)

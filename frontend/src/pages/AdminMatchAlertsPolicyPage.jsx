@@ -99,6 +99,15 @@ export default function AdminMatchAlertsPolicyPage() {
       };
 
       await api.put("/admin/match-alerts/policy", payload);
+      // Save risk profile as well
+      await api.put("/admin/match-alerts/risk-profile", {
+        rate_threshold: riskProfile.rate_threshold,
+        repeat_threshold_7: riskProfile.repeat_threshold_7,
+        no_show_rate_threshold: riskProfile.no_show_rate_threshold,
+        repeat_no_show_threshold_7: riskProfile.repeat_no_show_threshold_7,
+        min_verified_bookings: riskProfile.min_verified_bookings,
+        prefer_verified_only: riskProfile.prefer_verified_only,
+      });
       await loadPolicy();
     } catch (e) {
       console.error("Match alerts policy save failed", e);

@@ -44,6 +44,9 @@ export default function AdminMatchAlertsPolicyPage() {
       const p = resp.data?.policy || {};
       setPolicy(p);
       setRecipientsInput((p.email_recipients || []).join(", "));
+      const rpResp = await api.get("/admin/match-alerts/risk-profile");
+      const rp = rpResp.data?.risk_profile || rpResp.data?.riskProfile || {};
+      setRiskProfile((prev) => ({ ...prev, ...rp }));
     } catch (e) {
       console.error("Match alerts policy fetch failed", e);
       setError(apiErrorMessage(e));

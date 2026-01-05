@@ -1726,6 +1726,607 @@ class ProofV2Story3Tester:
         self.override_booking_id = None
         self.arrived_booking_id = None
 
+    def log(self, msg):
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}")
+
+    def run_test(self, name, method, endpoint, expected_status, data=None, headers_override=None):
+        """Run a single API test"""
+        url = f"{self.base_url}/{endpoint}"
+        headers = headers_override or {'Content-Type': 'application/json'}
+        if self.admin_token and not headers_override:
+            headers['Authorization'] = f'Bearer {self.admin_token}'
+
+        self.tests_run += 1
+        self.log(f"🔍 Test #{self.tests_run}: {name}")
+        
+        try:
+            if method == 'GET':
+                response = requests.get(url, headers=headers, timeout=10)
+            elif method == 'POST':
+                response = requests.post(url, json=data, headers=headers, timeout=10)
+            elif method == 'PUT':
+                response = requests.put(url, json=data, headers=headers, timeout=10)
+            elif method == 'DELETE':
+                response = requests.delete(url, headers=headers, timeout=10)
+            else:
+                raise ValueError(f"Unsupported method: {method}")
+
+            success = response.status_code == expected_status
+            if success:
+                self.tests_passed += 1
+                self.log(f"✅ PASSED - Status: {response.status_code}")
+                try:
+                    return True, response.json() if response.content else {}
+                except:
+                    return True, {}
+            else:
+                self.tests_failed += 1
+                self.failed_tests.append(f"{name} - Expected {expected_status}, got {response.status_code}")
+                self.log(f"❌ FAILED - Expected {expected_status}, got {response.status_code}")
+                try:
+                    self.log(f"   Response: {response.text[:200]}")
+                except:
+                    pass
+                return False, {}
+
+        except Exception as e:
+            self.tests_failed += 1
+            self.failed_tests.append(f"{name} - Error: {str(e)}")
+            self.log(f"❌ FAILED - Error: {str(e)}")
+            return False, {}
+
+    def test_admin_login(self):
+        """Test admin login"""
+        self.log("\n=== AUTHENTICATION ===")
+        success, response = self.run_test(
+            "Admin Login (admin@acenta.test/admin123)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "admin@acenta.test", "password": "admin123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.admin_token = response['access_token']
+            user = response.get('user', {})
+            roles = user.get('roles', [])
+            
+            if 'admin' in roles or 'super_admin' in roles:
+                self.log(f"✅ Admin login successful - roles: {roles}")
+                return True
+            else:
+                self.log(f"❌ Missing admin/super_admin role: {roles}")
+                return False
+        return False
+
+    def test_verify_flow(self):
+        """1) Verify akışı (Kanıt 1)"""
+        self.log("\n=== 1) VERIFY AKIŞI (KANIT 1) ===")
+        
+        # 1.1 Login already done in test_admin_login
+        
+        # 1.2 Find a rule_inferred outcome
+        self.log("\n--- 1.2 Rule_inferred outcome bulma ---")
+        
+        # First recompute to ensure we have outcomes
+        success, response = self.run_test(
+            "Recompute booking outcomes",
+            "POST",
+            "api/admin/booking-outcomes/recompute?days=60&dry_run=0",
+            200
+        )
+        if success:
+            self.log(f"✅ Recompute successful - scanned: {response.get('scanned')}, upserts: {response.get('upserts')}")
+        
+        # Get booking outcomes with rule_inferred source
+        success, response = self.run_test(
+            "Get booking outcomes (rule_inferred)",
+            "GET",
+            "api/admin/booking-outcomes?limit=20",
+            200
+        )
+        
+        if success and response.get('items'):
+            # Find a rule_inferred outcome
+            rule_inferred_item = None
+            for item in response['items']:
+                if item.get('outcome_source') == 'rule_inferred':
+                    rule_inferred_item = item
+                    break
+            
+            if rule_inferred_item:
+                self.verify_booking_id = rule_inferred_item['booking_id']
+                self.log(f"✅ Found rule_inferred outcome: booking_id={self.verify_booking_id}, final_outcome={rule_inferred_item['final_outcome']}")
+            else:
+                self.log("❌ No rule_inferred outcomes found")
+                return False
+        else:
+            self.log("❌ Failed to get booking outcomes")
+            return False
+        
+        # 1.3 Verify çağrısı
+        self.log("\n--- 1.3 Verify çağrısı ---")
+        verify_data = {
+            "final_outcome": "no_show",
+            "note": "Ops verified after cross-checking PMS."
+        }
+        
+        success, response = self.run_test(
+            f"Verify booking outcome ({self.verify_booking_id})",
+            "POST",
+            f"api/admin/booking-outcomes/{self.verify_booking_id}/verify",
+            200,
+            data=verify_data
+        )
+        
+        if success:
+            # Check all expected fields
+            expected_fields = {
+                'ok': True,
+                'booking_id': self.verify_booking_id,
+                'final_outcome': 'no_show',
+                'outcome_source': 'manual_verified',
+                'verified': True,
+                'verified_by_email': 'admin@acenta.test'
+            }
+            
+            all_good = True
+            for field, expected_value in expected_fields.items():
+                actual_value = response.get(field)
+                if actual_value != expected_value:
+                    self.log(f"❌ Field {field}: expected {expected_value}, got {actual_value}")
+                    all_good = False
+                else:
+                    self.log(f"✅ Field {field}: {actual_value}")
+            
+            # Check additional fields exist
+            if response.get('verified_at'):
+                self.log(f"✅ verified_at: {response.get('verified_at')}")
+            else:
+                self.log("❌ verified_at missing")
+                all_good = False
+                
+            if response.get('evidence_count', 0) >= 1:
+                self.log(f"✅ evidence_count: {response.get('evidence_count')}")
+            else:
+                self.log(f"❌ evidence_count: {response.get('evidence_count')} (expected >= 1)")
+                all_good = False
+                
+            if response.get('outcome_version', 0) >= 2:
+                self.log(f"✅ outcome_version: {response.get('outcome_version')}")
+            else:
+                self.log(f"❌ outcome_version: {response.get('outcome_version')} (expected >= 2)")
+                all_good = False
+            
+            if not all_good:
+                return False
+        else:
+            return False
+        
+        # 1.4 Audit kontrolü
+        self.log("\n--- 1.4 Audit kontrolü ---")
+        success, response = self.run_test(
+            f"Get audit logs for booking_outcome {self.verify_booking_id}",
+            "GET",
+            f"api/audit/logs?target_type=booking_outcome&target_id={self.verify_booking_id}&limit=10",
+            200
+        )
+        
+        if success:
+            # Find the verified action
+            verified_entry = None
+            for entry in response:
+                if entry.get('action') == 'booking_outcome.verified':
+                    verified_entry = entry
+                    break
+            
+            if verified_entry:
+                self.log(f"✅ Found booking_outcome.verified audit entry")
+                
+                # Check diff
+                diff = verified_entry.get('diff', {})
+                if 'verified' in diff:
+                    before_verified = diff['verified'].get('before')
+                    after_verified = diff['verified'].get('after')
+                    if before_verified == False and after_verified == True:
+                        self.log(f"✅ Diff verified: before={before_verified}, after={after_verified}")
+                    else:
+                        self.log(f"❌ Diff verified: before={before_verified}, after={after_verified}")
+                        return False
+                else:
+                    self.log("❌ Diff missing 'verified' field")
+                    return False
+                
+                if 'verified_by_email' in diff:
+                    self.log(f"✅ Diff contains verified_by_email")
+                else:
+                    self.log("❌ Diff missing 'verified_by_email' field")
+                    return False
+                    
+            else:
+                self.log("❌ No booking_outcome.verified audit entry found")
+                return False
+        else:
+            return False
+        
+        self.log("✅ Verify akışı tamamlandı")
+        return True
+
+    def test_override_flow(self):
+        """2) Override akışı (Kanıt 2)"""
+        self.log("\n=== 2) OVERRIDE AKIŞI (KANIT 2) ===")
+        
+        # 2.1 Find a different booking_outcome
+        self.log("\n--- 2.1 Farklı booking_outcome seçme ---")
+        
+        success, response = self.run_test(
+            "Get booking outcomes for override test",
+            "GET",
+            "api/admin/booking-outcomes?limit=20",
+            200
+        )
+        
+        if success and response.get('items'):
+            # Find a different booking (not the one we verified)
+            override_item = None
+            for item in response['items']:
+                if item['booking_id'] != self.verify_booking_id:
+                    override_item = item
+                    break
+            
+            if override_item:
+                self.override_booking_id = override_item['booking_id']
+                self.log(f"✅ Found booking for override: booking_id={self.override_booking_id}, current_outcome={override_item['final_outcome']}")
+            else:
+                self.log("❌ No suitable booking found for override test")
+                return False
+        else:
+            self.log("❌ Failed to get booking outcomes for override")
+            return False
+        
+        # 2.2 Override çağrısı
+        self.log("\n--- 2.2 Override çağrısı ---")
+        override_data = {
+            "final_outcome": "no_show",
+            "reason": "customer dispute #123"
+        }
+        
+        success, response = self.run_test(
+            f"Override booking outcome ({self.override_booking_id})",
+            "POST",
+            f"api/admin/booking-outcomes/{self.override_booking_id}/override",
+            200,
+            data=override_data
+        )
+        
+        if success:
+            # Check all expected fields
+            expected_fields = {
+                'ok': True,
+                'final_outcome': 'no_show',
+                'outcome_source': 'manual_override',
+                'verified': True
+            }
+            
+            all_good = True
+            for field, expected_value in expected_fields.items():
+                actual_value = response.get(field)
+                if actual_value != expected_value:
+                    self.log(f"❌ Field {field}: expected {expected_value}, got {actual_value}")
+                    all_good = False
+                else:
+                    self.log(f"✅ Field {field}: {actual_value}")
+            
+            # Check override field
+            override_field = response.get('override', {})
+            if override_field.get('final_outcome') == 'no_show' and override_field.get('reason') == 'customer dispute #123':
+                self.log(f"✅ Override field: {override_field}")
+            else:
+                self.log(f"❌ Override field: {override_field}")
+                all_good = False
+            
+            # Check version and evidence
+            if response.get('outcome_version', 0) >= 2:
+                self.log(f"✅ outcome_version: {response.get('outcome_version')}")
+            else:
+                self.log(f"❌ outcome_version: {response.get('outcome_version')} (expected >= 2)")
+                all_good = False
+                
+            if response.get('evidence_count', 0) >= 1:
+                self.log(f"✅ evidence_count: {response.get('evidence_count')}")
+            else:
+                self.log(f"❌ evidence_count: {response.get('evidence_count')} (expected >= 1)")
+                all_good = False
+            
+            if not all_good:
+                return False
+        else:
+            return False
+        
+        # 2.3 Audit kontrolü
+        self.log("\n--- 2.3 Audit kontrolü ---")
+        success, response = self.run_test(
+            f"Get audit logs for override {self.override_booking_id}",
+            "GET",
+            f"api/audit/logs?target_type=booking_outcome&target_id={self.override_booking_id}&limit=10",
+            200
+        )
+        
+        if success:
+            # Find the overridden action
+            overridden_entry = None
+            for entry in response:
+                if entry.get('action') == 'booking_outcome.overridden':
+                    overridden_entry = entry
+                    break
+            
+            if overridden_entry:
+                self.log(f"✅ Found booking_outcome.overridden audit entry")
+                
+                # Check diff
+                diff = overridden_entry.get('diff', {})
+                if 'final_outcome' in diff:
+                    before_outcome = diff['final_outcome'].get('before')
+                    after_outcome = diff['final_outcome'].get('after')
+                    if after_outcome == 'no_show':
+                        self.log(f"✅ Diff final_outcome: before={before_outcome}, after={after_outcome}")
+                    else:
+                        self.log(f"❌ Diff final_outcome: before={before_outcome}, after={after_outcome}")
+                        return False
+                else:
+                    self.log("❌ Diff missing 'final_outcome' field")
+                    return False
+                
+                if 'outcome_source' in diff:
+                    before_source = diff['outcome_source'].get('before')
+                    after_source = diff['outcome_source'].get('after')
+                    if after_source == 'manual_override':
+                        self.log(f"✅ Diff outcome_source: before={before_source}, after={after_source}")
+                    else:
+                        self.log(f"❌ Diff outcome_source: before={before_source}, after={after_source}")
+                        return False
+                else:
+                    self.log("❌ Diff missing 'outcome_source' field")
+                    return False
+                    
+            else:
+                self.log("❌ No booking_outcome.overridden audit entry found")
+                return False
+        else:
+            return False
+        
+        self.log("✅ Override akışı tamamlandı")
+        return True
+
+    def test_arrived_override_chain(self):
+        """3) Arrived (pms_event) → Override zinciri (Kanıt 3)"""
+        self.log("\n=== 3) ARRIVED → OVERRIDE ZİNCİRİ (KANIT 3) ===")
+        
+        # 3.1 Use arrived booking from Story 2 or create one
+        self.log("\n--- 3.1 Arrived booking bulma/oluşturma ---")
+        
+        # First check if we have an existing arrived booking
+        success, response = self.run_test(
+            "Get booking outcomes (arrived)",
+            "GET",
+            "api/admin/booking-outcomes?limit=20",
+            200
+        )
+        
+        arrived_item = None
+        if success and response.get('items'):
+            for item in response['items']:
+                if item.get('final_outcome') == 'arrived' and item.get('outcome_source') == 'pms_event':
+                    arrived_item = item
+                    break
+        
+        if arrived_item:
+            self.arrived_booking_id = arrived_item['booking_id']
+            self.log(f"✅ Found existing arrived booking: {self.arrived_booking_id}")
+        else:
+            # Create an arrived booking using pms-event
+            self.log("No existing arrived booking found, creating one...")
+            
+            # Get any booking to convert to arrived
+            if success and response.get('items'):
+                test_item = response['items'][0]
+                test_booking_id = test_item['booking_id']
+                
+                # Apply arrived pms event
+                pms_event_data = {
+                    "status": "arrived",
+                    "at": "2026-01-05T10:00:00+00:00",
+                    "source": "pms:test",
+                    "ref": "test_arrived"
+                }
+                
+                success, response = self.run_test(
+                    f"Apply arrived PMS event ({test_booking_id})",
+                    "POST",
+                    f"api/admin/booking-outcomes/{test_booking_id}/pms-event",
+                    200,
+                    data=pms_event_data
+                )
+                
+                if success and response.get('final_outcome') == 'arrived':
+                    self.arrived_booking_id = test_booking_id
+                    self.log(f"✅ Created arrived booking: {self.arrived_booking_id}")
+                else:
+                    self.log("❌ Failed to create arrived booking")
+                    return False
+            else:
+                self.log("❌ No bookings available for arrived test")
+                return False
+        
+        # Verify the booking is arrived with pms_event source
+        success, response = self.run_test(
+            "Verify arrived booking state",
+            "GET",
+            f"api/admin/booking-outcomes?limit=20",
+            200
+        )
+        
+        if success and response.get('items'):
+            arrived_confirmed = False
+            for item in response['items']:
+                if (item['booking_id'] == self.arrived_booking_id and 
+                    item['final_outcome'] == 'arrived' and 
+                    item['outcome_source'] == 'pms_event'):
+                    arrived_confirmed = True
+                    self.log(f"✅ Confirmed arrived state: final_outcome={item['final_outcome']}, outcome_source={item['outcome_source']}")
+                    break
+            
+            if not arrived_confirmed:
+                self.log("❌ Arrived booking state not confirmed")
+                return False
+        else:
+            return False
+        
+        # 3.2 Override the arrived booking
+        self.log("\n--- 3.2 Override arrived booking ---")
+        override_data = {
+            "final_outcome": "no_show",
+            "reason": "test override after arrived"
+        }
+        
+        success, response = self.run_test(
+            f"Override arrived booking ({self.arrived_booking_id})",
+            "POST",
+            f"api/admin/booking-outcomes/{self.arrived_booking_id}/override",
+            200,
+            data=override_data
+        )
+        
+        if success:
+            # Check expected response
+            expected_fields = {
+                'final_outcome': 'no_show',
+                'outcome_source': 'manual_override',
+                'verified': True
+            }
+            
+            all_good = True
+            for field, expected_value in expected_fields.items():
+                actual_value = response.get(field)
+                if actual_value != expected_value:
+                    self.log(f"❌ Field {field}: expected {expected_value}, got {actual_value}")
+                    all_good = False
+                else:
+                    self.log(f"✅ Field {field}: {actual_value}")
+            
+            # Check override reason
+            override_field = response.get('override', {})
+            if override_field.get('reason') == 'test override after arrived':
+                self.log(f"✅ Override reason: {override_field.get('reason')}")
+            else:
+                self.log(f"❌ Override reason: {override_field.get('reason')}")
+                all_good = False
+            
+            if not all_good:
+                return False
+        else:
+            return False
+        
+        # 3.3 Audit diff kontrolü
+        self.log("\n--- 3.3 Audit diff kontrolü ---")
+        success, response = self.run_test(
+            f"Get audit logs for arrived→override {self.arrived_booking_id}",
+            "GET",
+            f"api/audit/logs?target_type=booking_outcome&target_id={self.arrived_booking_id}&limit=10",
+            200
+        )
+        
+        if success:
+            # Find the overridden action
+            overridden_entry = None
+            for entry in response:
+                if entry.get('action') == 'booking_outcome.overridden':
+                    overridden_entry = entry
+                    break
+            
+            if overridden_entry:
+                self.log(f"✅ Found booking_outcome.overridden audit entry")
+                
+                # Check specific diff for arrived→no_show
+                diff = overridden_entry.get('diff', {})
+                if 'final_outcome' in diff:
+                    before_outcome = diff['final_outcome'].get('before')
+                    after_outcome = diff['final_outcome'].get('after')
+                    if before_outcome == 'arrived' and after_outcome == 'no_show':
+                        self.log(f"✅ Diff final_outcome: before={before_outcome}, after={after_outcome}")
+                    else:
+                        self.log(f"❌ Diff final_outcome: before={before_outcome}, after={after_outcome}")
+                        return False
+                else:
+                    self.log("❌ Diff missing 'final_outcome' field")
+                    return False
+                
+                if 'outcome_source' in diff:
+                    before_source = diff['outcome_source'].get('before')
+                    after_source = diff['outcome_source'].get('after')
+                    if before_source == 'pms_event' and after_source == 'manual_override':
+                        self.log(f"✅ Diff outcome_source: before={before_source}, after={after_source}")
+                    else:
+                        self.log(f"❌ Diff outcome_source: before={before_source}, after={after_source}")
+                        return False
+                else:
+                    self.log("❌ Diff missing 'outcome_source' field")
+                    return False
+                    
+            else:
+                self.log("❌ No booking_outcome.overridden audit entry found")
+                return False
+        else:
+            return False
+        
+        self.log("✅ Arrived→Override zinciri tamamlandı")
+        return True
+
+    def print_summary(self):
+        """Print test summary"""
+        self.log("\n" + "="*60)
+        self.log("PROOF V2 STORY 3 TEST SUMMARY")
+        self.log("="*60)
+        self.log(f"Total Tests: {self.tests_run}")
+        self.log(f"✅ Passed: {self.tests_passed}")
+        self.log(f"❌ Failed: {self.tests_failed}")
+        self.log(f"Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%")
+        
+        if self.failed_tests:
+            self.log("\n❌ FAILED TESTS:")
+            for i, test in enumerate(self.failed_tests, 1):
+                self.log(f"  {i}. {test}")
+        
+        self.log("="*60)
+
+    def run_proof_v2_story3_tests(self):
+        """Run all PROOF v2 Story 3 tests"""
+        self.log("🚀 Starting PROOF v2 Story 3 (Manual Verify/Override + Audit diff) Tests")
+        self.log(f"Base URL: {self.base_url}")
+        
+        # Authentication
+        if not self.test_admin_login():
+            self.log("❌ Admin login failed - stopping tests")
+            self.print_summary()
+            return 1
+
+        # 1) Verify akışı
+        if not self.test_verify_flow():
+            self.log("❌ Verify flow failed")
+        
+        # 2) Override akışı
+        if not self.test_override_flow():
+            self.log("❌ Override flow failed")
+        
+        # 3) Arrived → Override zinciri
+        if not self.test_arrived_override_chain():
+            self.log("❌ Arrived→Override chain failed")
+
+        # Summary
+        self.print_summary()
+
+        return 0 if self.tests_failed == 0 else 1
+
 class ProofV11NoShowTester:
     def __init__(self, base_url="https://acenta-risk.preview.emergentagent.com"):
         self.base_url = base_url

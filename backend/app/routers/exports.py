@@ -159,6 +159,11 @@ async def _generate_match_risk_rows(db, org_id: str, params: ExportPolicyParams,
     items = matches_resp["items"] if isinstance(matches_resp, dict) else matches_resp.items
     rows: list[dict[str, Any]] = []
     now_str = now_utc().isoformat()
+    from app.services.risk_profile import load_risk_profile, is_high_risk
+
+    # Unified risk profile per-org (defaults if no doc)
+    risk_profile = await load_risk_profile(db, org_id)
+
     for item in items:
         data = item if isinstance(item, dict) else item.model_dump()
         # Prefer behavioral_cancel_rate if available; fallback to legacy cancel_rate
@@ -167,7 +172,10 @@ async def _generate_match_risk_rows(db, org_id: str, params: ExportPolicyParams,
             or data.get("cancel_rate")
             or 0.0
         )
-        if params.only_high_risk and behavioral_rate < 0.5:
+        repeat_7 = int(data.get("repeat_not_arrived_7") or 0)
+
+        high_risk = is_high_risk(behavioral_rate, repeat_7, risk_profile)
+        if params.only_high_risk and not high_risk:
             continue
         rows.append(
             {

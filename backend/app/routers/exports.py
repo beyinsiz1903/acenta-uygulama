@@ -72,6 +72,7 @@ class ExportRunItem(BaseModel):
 class ExportRunsResponse(BaseModel):
     ok: bool = True
     items: list[ExportRunItem]
+    admin_deeplink_template: str | None = None
 
 
 class ExportRunResult(BaseModel):

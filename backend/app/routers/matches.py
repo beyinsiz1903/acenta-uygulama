@@ -377,7 +377,7 @@ async def list_matches(
             # 7d verified repeat no-show
             match_stage_verified_7 = {
                 "organization_id": org_id,
-                "checkin_date": {"$gte": seven_days_ago_verified.date()},
+                "created_at": {"$gte": seven_days_ago_verified},
                 "verified": True,
                 "final_outcome": "no_show",
                 "$or": pair_or_filters_verified,

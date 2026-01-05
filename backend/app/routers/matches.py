@@ -26,17 +26,21 @@ class MatchSummaryItem(BaseModel):
     confirmed: int
     cancelled: int
     confirm_rate: float
-    # cancel_rate is now the behavioral (non-operational) cancel rate
+    # cancel_rate is now the behavioral (non-operational) cancel rate (legacy)
     cancel_rate: float
     operational_cancel_rate: float
     behavioral_cancel_rate: float
     last_booking_at: Optional[str] = None
-    repeat_not_arrived_7: int = 0
+    # v1.5: no-show based metrics from booking_outcomes
+    no_show_rate: float = 0.0
+    repeat_no_show_7: int = 0
     # Debug field for v1.2: how many operational cancels in last 7 days
     repeat_cancelled_operational_7: int = 0
     # Unified risk flag (using RiskProfile)
     high_risk: bool = False
     high_risk_reasons: list[str] = []
+    # debug: what inputs were used for risk
+    risk_inputs: dict[str, Any] | None = None
 
     # Optional action fields (only populated when include_action=1)
     action_status: Optional[str] = None

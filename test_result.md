@@ -476,11 +476,25 @@
         agent: "testing"
         comment: "✅ PROOF V1.1 NO-SHOW DETERMINISTIC PATCH TEST COMPLETE - All 5 test scenarios passed (100% success rate). COMPREHENSIVE FUNCTIONALITY VERIFIED: A) Authentication: Admin login successful (admin@acenta.test/admin123) with super_admin role verification. B) KANIT 1 - Recompute + no_show sayımı: POST /api/admin/booking-outcomes/recompute?days=60&dry_run=0&today=2026-01-05T12:00:00+00:00 working correctly - ok=true, counts['no_show']=1 (>=1 requirement met), dry-run also confirmed 1 no_show detection. C) KANIT 2 - booking_outcomes no_show örneği: GET /api/admin/booking-outcomes?outcome=no_show&limit=10 working correctly - found 1 no_show item with booking_id='DEMO_NO_SHOW_BOOKING_1', final_outcome='no_show', outcome_source='rule_inferred', inferred_reason='check_in_past_no_cancel', verified=false (all 4 requirements met). D) KANIT 3 - Matches summary no_show etkisi: GET /api/admin/matches?days=30&min_total=1&include_action=1&sort=repeat_desc working correctly - DEMO match (agency_id='88e2b8e4-12e7-43e4-9d54-e39d53576b18', hotel_id='1ea289b7-621b-49d8-be9c-c21a6bb44f47') shows repeat_no_show_7=1 (>=1), no_show_rate=1.0 (>0), risk_inputs.rate_source='no_show', risk_inputs.repeat_source='no_show' (all 4 requirements met). All three evidence points (KANIT 1, 2, 3) successfully verified. PROOF v1.1 no-show deterministic patch working correctly after BSON fix."
 
+## frontend:
+  - task: "PROOF v2 UI mini-dilimi doğrulama - Risk Profile Settings & Match Dashboard Verified Chip"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/AdminMatchAlertsPolicyPage.jsx, /app/frontend/src/pages/AdminMatchesPage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ PROOF V2 UI MINI-DILIMI DOĞRULAMA TEST COMPLETE - All 9 test scenarios passed (100% success rate). COMPREHENSIVE FUNCTIONALITY VERIFIED: A) Authentication: Admin login successful (admin@acenta.test/admin123) with super_admin role verification. B) Risk Profile UI (Settings): Successfully navigated to /app/admin/settings/match-alerts, Risk Profile card found (data-testid='match-risk-risk-profile-card'), Prefer verified outcomes only switch (data-testid='match-risk-prefer-verified-only') visible and toggleable, Min verified bookings input (data-testid='match-risk-min-verified-bookings') accepts numeric input. C) Settings Persistence Test: Toggle set to ON, min_verified_bookings set to 2, Save button clicked (data-testid='risk-profile-save'), Page reloaded successfully, Values restored correctly (prefer_verified_only=true, min_verified_bookings=2), GET /api/admin/match-alerts/risk-profile API working correctly. D) Match Risk Dashboard: Successfully navigated to /app/admin/matches, Matches table loaded with data, Verified chip found (data-testid='match-risk-verified-chip'), Chip text shows 'V 14%' format as expected, Chip contains 'V' with percentage value, V-ONLY mode detection working (shows 'V' for regular mode, would show 'V-ONLY' when risk_inputs.verified_only=true). All PROOF v2 UI functionality production-ready with proper Risk Profile settings persistence and Match Dashboard verified chip display working as specified."
+
 ## test_plan:
-##   current_focus: []
-##   stuck_tasks: []
-##   test_all: false
-##   test_priority: "high_first"
+  current_focus: []
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
 ## agent_communication:
 ##   - agent: "main"
 ##     message: "Backend'de lead Kanban kalıcılığı için sort_index alanı eklendi ve status patch endpoint'i sort_index kabul edecek şekilde genişletildi. Lütfen auth ile login olup lead oluşturma, listeleme sıralaması, status+sort_index patch akışını test edin."

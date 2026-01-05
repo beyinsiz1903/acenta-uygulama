@@ -747,3 +747,72 @@ async def ensure_seed_data() -> None:
                         "updated_by": DEFAULT_ADMIN_EMAIL,
                     }
                 )
+
+
+    # -------------------------------
+    # Match Risk v1.2 demo data: operational vs behavioral cancels
+    # -------------------------------
+    seed_marker = await db.bookings.find_one({"organization_id": org_id, "tags": "not_arrived_v1_2_seed"})
+    if not seed_marker and len(agencies) >= 1 and len(hotels) >= 1:
+        import uuid
+        from datetime import timedelta
+
+        now = now_utc()
+        seven_days_ago = now - timedelta(days=7)
+
+        agency_a = agencies[0]
+        hotel_a = hotels[0]
+        agency_b = agencies[0]
+        hotel_b = hotels[1] if len(hotels) > 1 else hotels[0]
+
+        base_common = {
+            "organization_id": org_id,
+            "created_at": seven_days_ago + timedelta(days=1),
+            "updated_at": now,
+            "submitted_at": seven_days_ago + timedelta(days=1),
+            "agency_id": agency_a["_id"],
+            "hotel_id": hotel_a["_id"],
+            "check_in_date": (seven_days_ago.date().isoformat()),
+            "check_out_date": (seven_days_ago.date().isoformat()),
+            "status": "cancelled",
+            "tags": "not_arrived_v1_2_seed",
+        }
+
+        # Match-A: purely operational cancels (PRICE_CHANGED/system)
+        match_a_docs = []
+        for i in range(3):
+            d = base_common.copy()
+            d.update(
+                {
+                    "_id": str(uuid.uuid4()),
+                    "code": f"SEED-A-{i+1}",
+                    "cancel_reason": "PRICE_CHANGED",
+                    "cancelled_by": "system",
+                }
+            )
+            match_a_docs.append(d)
+
+        # Match-B: behavioral cancels (agency)
+        match_b_docs = []
+        for i in range(3):
+            d = base_common.copy()
+            d.update(
+                {
+                    "_id": str(uuid.uuid4()),
+                    "code": f"SEED-B-{i+1}",
+                    "agency_id": agency_b["_id"],
+                    "hotel_id": hotel_b["_id"],
+                }
+            )
+            if i < 2:
+                d["status"] = "cancelled"
+                d["cancelled_by"] = "agency"
+                d["cancel_reason"] = None
+            else:
+                d["status"] = "confirmed"
+                d.pop("cancel_reason", None)
+                d.pop("cancelled_by", None)
+            match_b_docs.append(d)
+
+        await db.bookings.insert_many(match_a_docs + match_b_docs)
+        logger.info("Seeded Match Risk v1.2 demo bookings for operational vs behavioral cancels")

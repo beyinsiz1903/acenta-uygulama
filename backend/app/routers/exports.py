@@ -409,7 +409,7 @@ async def run_export(
         "params_snapshot": params.model_dump(),
         "file": {
             "filename": filename,
-            "content_type": "text/csv",
+            "content_type": "application/pdf" if fmt == "pdf" else "text/csv",
             "size_bytes": size_bytes,
             "sha256": sha256,
         },

@@ -263,6 +263,26 @@ export default function AdminMatchesPage() {
                           <RiskBadge cancelRate={item.cancel_rate} />
                         </TableCell>
                         <TableCell>
+                          <div className="flex items-center gap-1 text-xs">
+                            <span
+                              className={
+                                "inline-flex items-center rounded-full px-2 py-0.5 border text-[10px] " +
+                                (verifiedOnly ? "border-emerald-500 text-emerald-600" : "border-muted-foreground/40")
+                              }
+                              title={
+                                verifiedOnly
+                                  ? "Risk, yaln31zca verified outcomes kullan31larak hesapland31 (last 30d)."
+                                  : "Verified outcomes only: pasif. Risk t fm outcomes tabanl31 hesaplan31yor."
+                              }
+                              data-testid="match-risk-verified-chip"
+                            >
+                              {verifiedOnly ? "V-ONLY" : "V"}
+                              {" "}
+                              {verifiedSharePct > 0 ? `${verifiedSharePct.toFixed(0)}%` : "0%"}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
                           {item.high_risk && (
                             <Badge
                               variant="destructive"

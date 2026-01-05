@@ -101,6 +101,17 @@ class MockPmsClient(PmsClient):
         idempotency_key: str,
         payload: dict[str, Any],
     ) -> dict[str, Any]:
+        # Test-only: deterministic fixtures when explicit flag is present
+        fixture = payload.get("test_fixture") or payload.get("fixture")
+        if fixture == "price_changed_409":
+            raise PmsError(code="PRICE_CHANGED", message="price changed (fixture)", http_status=409)
+        if fixture == "no_inventory_409":
+            raise PmsError(code="NO_INVENTORY", message="no inventory (fixture)", http_status=409)
+        if fixture == "invalid_dates_400":
+            raise PmsError(code="INVALID_DATES", message="invalid dates (fixture)", http_status=400)
+        if fixture == "rate_plan_closed_409":
+            raise PmsError(code="RATE_PLAN_CLOSED", message="rate plan closed (fixture)", http_status=409)
+
         db = await get_db()
 
         # Idempotency

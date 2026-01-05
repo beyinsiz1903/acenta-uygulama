@@ -285,7 +285,10 @@ export default function AdminMatchesPage() {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => navigate(`/app/admin/matches/${item.id}`)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/app/admin/matches/${item.id}`);
+                            }}
                           >
                             Detay
                           </Button>

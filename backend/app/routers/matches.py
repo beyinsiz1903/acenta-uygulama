@@ -228,6 +228,8 @@ async def list_matches(
             action_updated_at = ua
             action_updated_by_email = action_doc.get("updated_by_email")
 
+        repeat_7 = repeat_counts.get(match_id, 0)
+
         items.append(
             MatchSummaryItem(
                 id=match_id,
@@ -242,6 +244,7 @@ async def list_matches(
                 confirm_rate=round(confirm_rate, 3),
                 cancel_rate=round(cancel_rate, 3),
                 last_booking_at=last_iso,
+                repeat_not_arrived_7=repeat_7,
                 action_status=action_status,
                 action_reason_code=action_reason_code,
                 action_updated_at=action_updated_at,

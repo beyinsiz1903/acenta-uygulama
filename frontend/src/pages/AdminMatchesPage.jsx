@@ -12,7 +12,7 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "../components/ui/drawer";
-import { Loader2, AlertCircle } from "lucide-react";
+import { Loader2, AlertCircle, Copy } from "lucide-react";
 
 function RiskBadge({ cancelRate }) {
   if (!cancelRate || cancelRate <= 0.05) {
@@ -37,6 +37,11 @@ export default function AdminMatchesPage() {
   const [eventsError, setEventsError] = useState("");
   const [eventsData, setEventsData] = useState(null);
   const [eventsOnlyCancelled, setEventsOnlyCancelled] = useState(false);
+  const [eventsSort, setEventsSort] = useState("created_desc");
+  const [eventsShowBehavioral, setEventsShowBehavioral] = useState(true);
+  const [eventsShowOperational, setEventsShowOperational] = useState(true);
+  const [eventsReasonFilter, setEventsReasonFilter] = useState("");
+
   const [selectedMatch, setSelectedMatch] = useState(null);
   const navigate = useNavigate();
 

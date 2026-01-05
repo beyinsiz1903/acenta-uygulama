@@ -269,28 +269,6 @@ export default function AdminMatchAlertsPolicyPage() {
               Son 7 gün içinde bu değerden fazla not-arrived/cancel gören eşleşmeyi yüksek risk say.
             </p>
           </div>
-
-              Son 7 gün içinde bu değerden fazla not-arrived/cancel gören eşleşmeyi yüksek risk say.
-            </p>
-          </div>
-
-                onChange={(e) =>
-                  setPolicy((prev) => ({
-                    ...prev,
-                    min_matches_total: parseInt(e.target.value || "1", 10),
-                  }))
-                }
-                data-testid="match-alerts-min-matches"
-              />
-              <p className="text-xs text-muted-foreground">
-                Belirtilen dönem içinde toplam eşleşme sayısı bu değerden küçükse alert üretilmez.
-              </p>
-            </div>
-
-            <div className="space-y-1">
-              <label htmlFor="cooldown-hours" className="text-sm font-medium">
-                Cooldown (saat)
-              </label>
           <Card className="mt-4">
             <CardHeader>
               <CardTitle>Risk Profile</CardTitle>

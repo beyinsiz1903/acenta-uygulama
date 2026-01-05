@@ -9,6 +9,7 @@ from pydantic import BaseModel
 from app.auth import get_current_user, require_roles
 from app.db import get_db
 from app.services.booking_outcomes import OPERATIONAL_REASONS, resolve_outcome_for_booking, upsert_booking_outcome, apply_pms_status_evidence
+from app.services.audit import write_audit_log
 from app.utils import now_utc
 
 router = APIRouter(prefix="/api/admin/booking-outcomes", tags=["admin-booking-outcomes"])
@@ -58,6 +59,16 @@ class BookingOutcomePmsEventResponse(BaseModel):
   outcome_version: int
   confidence: float | None = None
   evidence_count: int
+
+
+class BookingOutcomeVerifyIn(BaseModel):
+  final_outcome: Optional[str] = None
+  note: Optional[str] = None
+
+
+class BookingOutcomeOverrideIn(BaseModel):
+  final_outcome: str
+  reason: Optional[str] = None
 
 
 @router.get("", response_model=BookingOutcomeListResponse, dependencies=[Depends(require_roles(["super_admin", "admin"]))])

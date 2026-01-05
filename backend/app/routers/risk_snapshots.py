@@ -255,6 +255,3 @@ async def get_risk_trend(
         "points": [p.model_dump() for p in points],
         "delta": delta.model_dump(),
     }
-
-        "top_offenders_count": len(top),
-    }

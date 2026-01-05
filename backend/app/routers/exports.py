@@ -173,9 +173,9 @@ async def _generate_match_risk_rows(db, org_id: str, params: ExportPolicyParams,
                 "hotel_name": data.get("hotel_name"),
                 "total_matches": int(data.get("total_bookings") or 0),
                 "not_arrived_rate": cancel_rate,
-                "repeat_not_arrived_7": None,
+                "repeat_not_arrived_7": int(data.get("repeat_not_arrived_7") or 0),
                 "action_status": data.get("action_status") or "none",
-                "high_risk_flag": cancel_rate >= 0.5,
+                "high_risk_flag": cancel_rate >= 0.5 or int(data.get("repeat_not_arrived_7") or 0) >= 3,
                 "generated_at": now_str,
             }
         )

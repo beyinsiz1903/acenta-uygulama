@@ -135,6 +135,75 @@ async def recompute_booking_outcomes(
     except Exception:
       base_now = now_utc()
 
+
+
+@router.post("/{booking_id}/pms-event", response_model=BookingOutcomePmsEventResponse, dependencies=[Depends(require_roles(["super_admin"]))])
+async def apply_pms_event(
+  booking_id: str,
+  payload: BookingOutcomePmsEventIn,
+  db=Depends(get_db),
+  user=Depends(get_current_user),
+):
+  """Deterministic admin/debug endpoint to simulate a PMS status event.
+
+  - Finds the booking in db.bookings for current org.
+  - Upserts a booking_outcomes doc if needed.
+  - Applies pms_status evidence and, for status='arrived', marks outcome as arrived.
+  """
+  org_id = user.get("organization_id")
+
+  booking = await db.bookings.find_one({"organization_id": org_id, "_id": booking_id})
+  if not booking:
+    # allow also lookup by stringified _id if needed
+    from bson import ObjectId
+
+    try:
+      oid = ObjectId(booking_id)
+    except Exception:
+      raise HTTPException(status_code=404, detail="BOOKING_NOT_FOUND")
+    booking = await db.bookings.find_one({"organization_id": org_id, "_id": oid})
+    if not booking:
+      raise HTTPException(status_code=404, detail="BOOKING_NOT_FOUND")
+
+  # Ensure there is an outcome doc
+  await upsert_booking_outcome(db, booking)
+  outcome_doc = await db.booking_outcomes.find_one({"organization_id": org_id, "booking_id": str(booking.get("_id"))}) or {}
+
+  # Parse timestamp
+  from datetime import datetime
+
+  try:
+    at_dt = datetime.fromisoformat(payload.at)
+  except Exception:
+    raise HTTPException(status_code=422, detail="INVALID_AT_TIMESTAMP")
+
+  updated = apply_pms_status_evidence(
+    outcome_doc,
+    status=payload.status,
+    at=at_dt,
+    source=payload.source,
+    ref=payload.ref,
+  )
+
+  # Persist updated outcome
+  await db.booking_outcomes.update_one(
+    {"organization_id": org_id, "booking_id": updated["booking_id"]},
+    {"$set": updated},
+    upsert=True,
+  )
+
+  evidence = updated.get("evidence") or []
+
+  return BookingOutcomePmsEventResponse(
+    ok=True,
+    booking_id=str(updated.get("booking_id")),
+    final_outcome=updated.get("final_outcome") or "unknown",
+    outcome_source=updated.get("outcome_source") or "rule_inferred",
+    outcome_version=int(updated.get("outcome_version") or 1),
+    confidence=updated.get("confidence"),
+    evidence_count=len(evidence),
+  )
+
   cutoff = base_now - timedelta(days=days)
   q = {"organization_id": org_id, "created_at": {"$gte": cutoff}}
 

@@ -785,10 +785,17 @@
   run_ui: false
 
 ## test_plan:
-  current_focus: []
+  current_focus:
+    - "SCALE v1 Approval & Audit zinciri kabul kriterleri test"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
+
+## agent_communication:
+  - agent: "main"
+    message: "SCALE v1 Approval & Audit zinciri kabul kriterleri test için backend test hazırlandı. Test senaryoları: 1) Hazırlık - match blocking, 2) Request-unblock → pending task, 3) Approve → match_actions update + audit, 4) Audit trail verification. Lütfen bu test senaryolarını çalıştırın."
+  - agent: "testing"
+    message: "✅ SCALE V1 APPROVAL & AUDIT CHAIN TEST COMPLETE - All 9 test scenarios passed with 100% success rate. COMPREHENSIVE VERIFICATION COMPLETED: A) Authentication working (admin@acenta.test/admin123 with super_admin role). B) HAZIRLIK: Match blocking successful via PUT /api/admin/matches/{match_id}/action. C) REQUEST-UNBLOCK: POST /api/admin/matches/{match_id}/request-unblock working correctly (ok=true, task_id returned, status=pending, already_pending=false), task appears in approval tasks list. D) APPROVE: POST /api/admin/approval-tasks/{task_id}/approve working correctly (ok=true, status=approved, match_action_status=none), match action status updated to 'none' (unblocked). E) AUDIT TRAIL: Both required audit entries verified - approval_task.approved (status: pending→approved) and match_action.updated (status: blocked→none). All SCALE v1 approval & audit chain functionality production-ready."
 
 ## frontend:
   - task: "Admin Email Logs UI (Email Aktiviteleri) ve NotFoundPage düzeltmesi"

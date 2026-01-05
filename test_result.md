@@ -504,15 +504,18 @@
 ## test_plan:
   - task: "STORY v1 – Story 3: Risk Snapshots Trend API & Delta"
     implemented: true
-    working: false
+    working: true
     file: "/app/backend/app/routers/risk_snapshots.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: false
         agent: "main"
         comment: "Initial implementation of GET /api/admin/risk-snapshots/trend: returns chronological points array (generated_at, high_risk_rate, verified_share_avg, matches_evaluated, high_risk_matches) and delta object summarizing first vs last change for high_risk_rate and verified_share_avg (abs_change, pct_change, direction). Needs backend testing with 1/2/N snapshot documents and edge cases (no data, invalid limits)."
+      - working: true
+        agent: "testing"
+        comment: "✅ RISK SNAPSHOTS TREND API TEST COMPLETE - All 10 test scenarios passed (100% success rate). COMPREHENSIVE FUNCTIONALITY VERIFIED: A) Authentication: Admin login successful (admin@acenta.test/admin123) with super_admin role verification. B) SCENARIO 1 - No Snapshots: GET /api/admin/risk-snapshots/trend with unique snapshot_key returns correct empty response (points=[], delta=null). C) SCENARIO 2 - Single Snapshot: Created snapshot via POST /api/admin/risk-snapshots/run (dry_run=0), GET trend returns proper structure with required fields (generated_at, high_risk_rate, verified_share_avg, matches_evaluated, high_risk_matches), delta=null for single point as expected. D) SCENARIO 3 - Multiple Snapshots Delta: Created second snapshot with different parameters, GET trend returns chronological ordering (oldest→newest), delta structure correct with high_risk_rate and verified_share_avg metrics, each containing start/end/abs_change/pct_change/direction fields, direction logic working correctly (up/down/flat based on abs_change). E) SCENARIO 4 - Limit Behavior: Created third snapshot, GET trend with limit=2 returns exactly 2 most recent snapshots in chronological order, delta calculated correctly from first and last of limited points. F) SCENARIO 5 - Parameter Validation: limit=0 correctly rejected with 422 VALIDATION ERROR, limit=400 correctly rejected with 422 VALIDATION ERROR (exceeds le=365 constraint). EXAMPLE RESPONSE VERIFIED: Points contain ISO-8601 timestamps, numeric metrics (high_risk_rate=0.0, verified_share_avg=0.03575, matches_evaluated=4, high_risk_matches=0), delta shows proper percentage calculations (100% increase in verified_share_avg). All STORY v1 Risk Snapshots Trend API functionality production-ready with proper chronological sorting, delta calculations, and parameter validation working as specified."
 
   current_focus: []
   stuck_tasks: []

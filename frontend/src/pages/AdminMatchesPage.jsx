@@ -13,6 +13,7 @@ import {
   DrawerTitle,
 } from "../components/ui/drawer";
 import { Loader2, AlertCircle, Copy } from "lucide-react";
+import { safeCopyText } from "../utils/copyText";
 
 function RiskBadge({ cancelRate }) {
   if (!cancelRate || cancelRate <= 0.05) {

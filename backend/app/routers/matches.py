@@ -401,10 +401,6 @@ async def list_matches(
                 mid = f"{aid}__{hid}"
                 verified_repeat_no_show_7_by_match[mid] = int(vr.get("no_show_repeat") or 0)
 
-                    repeat_operational[key_id] = int(rr.get("operational") or 0)
-
-
-
     # Optional: load actions when requested to avoid extra cost by default
     actions_by_match_id: dict[str, dict[str, Any]] = {}
     if include_action and filtered:

@@ -163,7 +163,7 @@ export default function AdminMatchesPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {items.map((item) => {
+                  {displayedItems.map((item) => {
                     const cancelPct = (item.cancel_rate || 0) * 100;
                     return (
                       <TableRow key={item.id}>

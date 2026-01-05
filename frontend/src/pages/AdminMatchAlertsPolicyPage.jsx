@@ -212,6 +212,29 @@ export default function AdminMatchAlertsPolicyPage() {
                 type="number"
                 min="1"
                 value={policy.min_matches_total}
+
+          <div className="space-y-1">
+            <label htmlFor="repeat-threshold" className="text-sm font-medium">
+              Repeat not-arrived e57i (7 g5n)
+            </label>
+            <Input
+              id="repeat-threshold"
+              type="number"
+              min="0"
+              value={riskProfile.repeat_threshold_7}
+              onChange={(e) =>
+                setRiskProfile((prev) => ({
+                  ...prev,
+                  repeat_threshold_7: parseInt(e.target.value || "0", 10),
+                }))
+              }
+              data-testid="risk-profile-repeat-threshold"
+            />
+            <p className="text-xs text-muted-foreground">
+              Son 7 g5n i5inde bu de5erden fazla not-arrived/cancel g5ren e5fle5meyi y5ksek risk say.
+            </p>
+          </div>
+
                 onChange={(e) =>
                   setPolicy((prev) => ({
                     ...prev,

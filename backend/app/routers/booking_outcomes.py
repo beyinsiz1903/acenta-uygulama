@@ -43,6 +43,23 @@ class BookingOutcomeRecomputeResponse(BaseModel):
   counts: dict[str, int]
 
 
+class BookingOutcomePmsEventIn(BaseModel):
+  status: str
+  at: str
+  source: str = "pms:mock"
+  ref: Optional[str] = None
+
+
+class BookingOutcomePmsEventResponse(BaseModel):
+  ok: bool = True
+  booking_id: str
+  final_outcome: str
+  outcome_source: str
+  outcome_version: int
+  confidence: float | None = None
+  evidence_count: int
+
+
 @router.get("", response_model=BookingOutcomeListResponse, dependencies=[Depends(require_roles(["super_admin", "admin"]))])
 async def list_booking_outcomes(
   outcome: Optional[str] = Query(None),

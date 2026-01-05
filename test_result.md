@@ -440,6 +440,18 @@
 ##   version: "1.0"
 ##   test_sequence: 2
 ##   run_ui: true
+  - task: "PROOF v2 – Story 2 (Arrived + Evidence) backend testleri"
+    implemented: true
+    working: true
+    file: "/app/backend/app/routers/booking_outcomes.py, /app/backend/app/services/booking_outcomes.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ PROOF V2 STORY 2 (ARRIVED + EVIDENCE) TEST COMPLETE - All 7 test scenarios passed (100% success rate). COMPREHENSIVE FUNCTIONALITY VERIFIED: A) Authentication: Admin login successful (admin@acenta.test/admin123) with super_admin role verification. B) Setup: Recompute booking outcomes successful (scanned: 23, upserts: 23), existing booking_id found for testing (695c0d67a9483e2d54642638). C) SUCCESSFUL ARRIVED EVENT: POST /api/admin/booking-outcomes/{booking_id}/pms-event with status='arrived' working correctly - returns 200 OK with all required fields (ok=true, final_outcome='arrived', outcome_source='pms_event', outcome_version=2, confidence=1.0, evidence_count=1), deterministic arrived outcome generation confirmed. D) OUTCOME PERSISTENCE: GET /api/admin/booking-outcomes list endpoint shows updated booking with final_outcome='arrived' and outcome_source='pms_event', proper persistence verified. E) IDEMPOTENCY: Applying same arrived event twice maintains same outcome values (final_outcome='arrived', outcome_source='pms_event', confidence=1.0), evidence_count remains 1 (no duplicate evidence), idempotency working correctly. F) ERROR HANDLING: POST to non-existent booking_id returns 404 with detail='BOOKING_NOT_FOUND', proper error handling confirmed. All PROOF v2 Story 2 functionality production-ready with deterministic arrived outcome generation, proper evidence tracking, and idempotent PMS event processing."
+
   - task: "PROOF v1.1 – No-show deterministic patch tekrar testi (BSON fix sonrası)"
     implemented: true
     working: true

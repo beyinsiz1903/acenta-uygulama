@@ -212,22 +212,33 @@ export default function AdminMatchesPage() {
                         </TableCell>
                         <TableCell>
                           {item.action_status && item.action_status !== "none" && (
-                            <Badge
-                              variant={
-                                item.action_status === "blocked"
-                                  ? "destructive"
-                                  : item.action_status === "manual_review"
-                                  ? "secondary"
-                                  : "outline"
-                              }
-                              data-testid="match-action-status-badge"
-                            >
-                              {item.action_status === "blocked" && "Blocked"}
-                              {item.action_status === "manual_review" && "Manual review"}
-                              {item.action_status === "watchlist" && "Watchlist"}
-                              {!["blocked", "manual_review", "watchlist"].includes(item.action_status) &&
-                                item.action_status}
-                            </Badge>
+                            <>
+                              <Badge
+                                variant={
+                                  item.action_status === "blocked"
+                                    ? "outline"
+                                    : item.action_status === "manual_review"
+                                    ? "secondary"
+                                    : "outline"
+                                }
+                                data-testid={
+                                  item.action_status === "blocked"
+                                    ? "match-risk-row-blocked-badge"
+                                    : "match-action-status-badge"
+                                }
+                              >
+                                {item.action_status === "blocked" && "Blocked"}
+                                {item.action_status === "manual_review" && "Manual review"}
+                                {item.action_status === "watchlist" && "Watchlist"}
+                                {!["blocked", "manual_review", "watchlist"].includes(item.action_status) &&
+                                  item.action_status}
+                              </Badge>
+                              {item.action_status === "blocked" && (
+                                <p className="mt-1 text-[10px] text-muted-foreground max-w-[220px]">
+                                  Blocked: Uyarı/Export gönderimi yapılmaz. Delivery suppressed (blocked).
+                                </p>
+                              )}
+                            </>
                           )}
                         </TableCell>
                         <TableCell className="text-right">

@@ -14090,20 +14090,18 @@ class RepeatNotArrived7Tester:
         # Create 2 cancelled bookings within last 7 days
         from datetime import datetime, timedelta
         
-        # Dates within last 7 days
-        recent_date1 = (datetime.now() - timedelta(days=3)).strftime("%Y-%m-%d")
-        recent_date1_out = (datetime.now() - timedelta(days=2)).strftime("%Y-%m-%d")
-        recent_date2 = (datetime.now() - timedelta(days=5)).strftime("%Y-%m-%d")
-        recent_date2_out = (datetime.now() - timedelta(days=4)).strftime("%Y-%m-%d")
-        
-        # Date 8+ days ago (should not count)
-        old_date = (datetime.now() - timedelta(days=10)).strftime("%Y-%m-%d")
-        old_date_out = (datetime.now() - timedelta(days=9)).strftime("%Y-%m-%d")
+        # Use future dates for booking creation, then we'll manipulate the created_at timestamp
+        future_date1 = (datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d")
+        future_date1_out = (datetime.now() + timedelta(days=31)).strftime("%Y-%m-%d")
+        future_date2 = (datetime.now() + timedelta(days=35)).strftime("%Y-%m-%d")
+        future_date2_out = (datetime.now() + timedelta(days=36)).strftime("%Y-%m-%d")
+        future_date3 = (datetime.now() + timedelta(days=40)).strftime("%Y-%m-%d")
+        future_date3_out = (datetime.now() + timedelta(days=41)).strftime("%Y-%m-%d")
         
         bookings_to_create = [
-            {"check_in": recent_date1, "check_out": recent_date1_out, "should_count": True, "desc": "Recent cancelled 1 (3 days ago)"},
-            {"check_in": recent_date2, "check_out": recent_date2_out, "should_count": True, "desc": "Recent cancelled 2 (5 days ago)"},
-            {"check_in": old_date, "check_out": old_date_out, "should_count": False, "desc": "Old cancelled (10 days ago)"},
+            {"check_in": future_date1, "check_out": future_date1_out, "should_count": True, "desc": "Recent cancelled 1 (will be 3 days ago)"},
+            {"check_in": future_date2, "check_out": future_date2_out, "should_count": True, "desc": "Recent cancelled 2 (will be 5 days ago)"},
+            {"check_in": future_date3, "check_out": future_date3_out, "should_count": False, "desc": "Old cancelled (will be 10 days ago)"},
         ]
         
         for i, booking_info in enumerate(bookings_to_create):

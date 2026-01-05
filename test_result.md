@@ -218,6 +218,18 @@
 
 ##     needs_retesting: false
 
+  - task: "SCALE v1 Enforcement & Policy Backend Test - Action policies GET/PUT + Match blocking enforcement"
+    implemented: true
+    working: false
+    file: "/app/backend/app/routers/action_policies.py, /app/backend/app/routers/matches.py, /app/backend/app/routers/agency_booking.py, /app/backend/app/routers/web_booking.py, /app/backend/app/services/enforcement.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "❌ SCALE V1 ENFORCEMENT & POLICY TEST PARTIALLY COMPLETE - 8/9 tests passed (88.9% success rate). VERIFIED FUNCTIONALITY: A) Authentication: Admin login successful (admin@acenta.test/admin123) with super_admin role verification. B) Action Policy GET/PUT: GET /api/admin/action-policies/match-risk working correctly (200 OK, ok=true, policy.enabled bool, default_action string, rules list), PUT /api/admin/action-policies/match-risk working correctly (200 OK, policy saved with enabled=true, default_action='watchlist', rules structure preserved). C) Match Setup: Found match for testing (88e2b8e4-12e7-43e4-9d54-e39d53576b18__1ea289b7-621b-49d8-be9c-c21a6bb44f47), successfully set match action to blocked status. D) Agency Booking Enforcement: Agency login successful (agency1@demo.test/agency123), booking draft creation working, agency booking submit correctly blocked (403 Forbidden with detail.code='MATCH_BLOCKED'). FAILED FUNCTIONALITY: E) Web Booking Enforcement: POST /api/web/bookings expected 403 MATCH_BLOCKED but got 201 Created - web booking was not blocked despite hotel being part of blocked match. ROOT CAUSE: Current enforcement logic in ensure_match_not_blocked() returns early if agency_id is None (line 21-22 in enforcement.py), which means web bookings (agency_id=None) bypass enforcement checks entirely. This appears to be by design based on comment 'web bookings have no agency, so skip', but conflicts with test expectation that web bookings should also be blocked when hotel is part of blocked match. RECOMMENDATION: Clarify requirements - should web bookings to hotels in blocked matches also be blocked, or is current behavior (only agency bookings blocked) correct?"
+
 ## frontend:
 ##   - task: "FAZ-7 Admin Audit Logs UI (/app/admin/audit)"
 ##     implemented: true

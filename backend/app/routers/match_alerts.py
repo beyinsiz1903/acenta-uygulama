@@ -52,6 +52,20 @@ class MatchAlertPolicyResponse(BaseModel):
     policy: MatchAlertPolicyModel
 
 
+class RiskProfileOut(BaseModel):
+    rate_threshold: float
+    repeat_threshold_7: int
+    mode: str
+    updated_at: Optional[str] = None
+    updated_by_email: Optional[str] = None
+
+
+class RiskProfileResponse(BaseModel):
+    ok: bool = True
+    risk_profile: RiskProfileOut
+
+
+
 class MatchAlertRunItem(BaseModel):
     match_id: str
     agency_id: str

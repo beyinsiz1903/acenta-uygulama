@@ -32,7 +32,7 @@ async def test_mockpms_price_changed_conflict():
     }
 
     # create_booking connect_layer uzerinden cagrildiginda PmsError -> HTTPException(409, "PRICE_CHANGED") map eder.
-    with pytest.raises(Exception) as excinfo:
+    with pytest.raises(HTTPException) as excinfo:
         await create_booking(
             organization_id="org_demo",
             channel="test",

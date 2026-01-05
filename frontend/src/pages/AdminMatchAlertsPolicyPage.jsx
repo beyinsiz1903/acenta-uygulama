@@ -26,6 +26,15 @@ export default function AdminMatchAlertsPolicyPage() {
   const [deliveries, setDeliveries] = useState([]);
   const [deliveriesLoading, setDeliveriesLoading] = useState(false);
   const [deliveriesFilter, setDeliveriesFilter] = useState({ status: "all", channel: "all", match_id: "" });
+  const [riskProfile, setRiskProfile] = useState({
+    rate_threshold: 0.5,
+    repeat_threshold_7: 3,
+    mode: "rate_or_repeat",
+    updated_at: null,
+    updated_by_email: null,
+  });
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewHighRiskCount, setPreviewHighRiskCount] = useState(null);
 
   const loadPolicy = async () => {
     try {

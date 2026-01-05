@@ -14131,12 +14131,26 @@ class RepeatNotArrived7Tester:
                 self.log(f"❌ No search_id returned for {booking_info['desc']}")
                 return False
             
+            # Get the rate_plan_id from search results
+            rooms = search_response.get('rooms', [])
+            rate_plan_id = None
+            for room in rooms:
+                if room.get('room_type_id') == 'rt_standard':
+                    rate_plans = room.get('rate_plans', [])
+                    if rate_plans:
+                        rate_plan_id = rate_plans[0].get('rate_plan_id')
+                        break
+            
+            if not rate_plan_id:
+                self.log(f"❌ No rate_plan_id found for standard room in {booking_info['desc']}")
+                return False
+            
             # Create draft
             draft_data = {
                 "search_id": search_id,
                 "hotel_id": self.hotel_id,
                 "room_type_id": "rt_standard",
-                "rate_plan_id": "695aa08e29fad69d6cc8c4ad",  # Use the actual rate plan ID from search
+                "rate_plan_id": rate_plan_id,
                 "guest": {
                     "full_name": f"Test Guest {i+1}",
                     "email": f"guest{i+1}@test.com",

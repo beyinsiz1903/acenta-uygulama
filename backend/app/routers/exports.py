@@ -195,6 +195,100 @@ async def _generate_match_risk_rows(db, org_id: str, params: ExportPolicyParams,
                 "action_status": data.get("action_status") or "none",
                 # Unified high-risk flag: based on RiskProfile (rate OR repeat)
                 "high_risk_flag": high_risk,
+
+
+def _rows_to_pdf(rows: list[dict[str, Any]], org_id: str, risk_profile: dict[str, Any]) -> bytes:
+    """Generate Match Risk Summary PDF using ReportLab.
+
+    v1: Tek sayfa/sayfalara bölünen sade rapor.
+    """
+    buf = BytesIO()
+    doc = SimpleDocTemplate(buf, pagesize=A4)
+    styles = getSampleStyleSheet()
+    story: list[Any] = []
+
+    # Header
+    title = "SYROCE — Match Risk Summary"
+    story.append(Paragraph(title, styles["Title"]))
+    story.append(Spacer(1, 12))
+
+    meta = f"Organization: {org_id} &nbsp;&nbsp; Generated at: {now_utc().isoformat()}"
+    story.append(Paragraph(meta, styles["Normal"]))
+    story.append(Spacer(1, 12))
+
+    # Risk profile block
+    rp_lines = [
+        "<b>Risk Profile</b>",
+        f"Rate threshold: {risk_profile.get('rate_threshold', 0.5)}",
+        f"Repeat 7d threshold: {risk_profile.get('repeat_threshold_7', 3)}",
+        f"Mode: {risk_profile.get('mode', 'rate_or_repeat')}",
+    ]
+    story.append(Paragraph("<br/>".join(rp_lines), styles["Normal"]))
+    story.append(Spacer(1, 12))
+
+    # Summary table
+    headers = [
+        "Agency",
+        "Hotel",
+        "Total",
+        "Not-arrived rate",
+        "Repeat 7d",
+        "High risk",
+        "Action",
+    ]
+    data: list[list[str]] = [headers]
+
+    for r in rows:
+        agency = str(r.get("agency_name") or r.get("agency_id") or "-")
+        hotel = str(r.get("hotel_name") or r.get("hotel_id") or "-")
+        total = str(r.get("total_matches") or "0")
+        rate = float(r.get("not_arrived_rate") or 0.0)
+        repeat7 = int(r.get("repeat_not_arrived_7") or 0)
+        high = "Yes" if r.get("high_risk_flag") else "No"
+        action = str(r.get("action_status") or "none")
+
+        data.append(
+            [
+                agency[:30],
+                hotel[:30],
+                total,
+                f"{rate*100:.1f}%",
+                str(repeat7),
+                high,
+                action,
+            ]
+        )
+
+    table = Table(data, repeatRows=1)
+    table.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, 0), colors.lightgrey),
+                ("TEXTCOLOR", (0, 0), (-1, 0), colors.black),
+                ("ALIGN", (2, 1), (-1, -1), "CENTER"),
+                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                ("FONTSIZE", (0, 0), (-1, -1), 8),
+                ("BOTTOMPADDING", (0, 0), (-1, 0), 6),
+                ("GRID", (0, 0), (-1, -1), 0.25, colors.grey),
+            ]
+        )
+    )
+    story.append(table)
+    story.append(Spacer(1, 12))
+
+    # Legal microcopy / footer
+    legal = (
+        "<font size=6>Match risk raporu, operasyonel ve davranışsal iptallerden türetilmiş"
+        " istatistiksel bir özet sunar; tekil rezervasyon için konaklama kanıtı değildir." \
+        " Kararlarınızı verirken ek veri kaynakları ve iş kurallarınızı da dikkate alın.</font>"
+    )
+    story.append(Paragraph(legal, styles["Normal"]))
+
+    doc.build(story)
+    pdf_bytes = buf.getvalue()
+    buf.close()
+    return pdf_bytes
+
                 "generated_at": now_str,
             }
         )

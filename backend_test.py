@@ -27689,9 +27689,13 @@ if __name__ == "__main__":
                 tester = ProductCatalogTester()
                 exit_code = tester.run_catalog_tests()
                 sys.exit(exit_code)
+            elif test_type == "product_catalog_v1_smoke":
+                tester = ProductCatalogV1SmokeTest()
+                exit_code = tester.run_product_catalog_v1_smoke_tests()
+                sys.exit(exit_code)
             else:
                 print(f"Unknown test type: {test_type}")
-                print("Available test types: error_handler_idempotency, risk-snapshots-trend, risk_snapshots, proof_v2_story3, proof_v2_story4, proof_v2_story2, signed_download, faz5, proof_v11, executive_summary, scale_ui_proof, b2b, ops_b2b, regression, voucher_v1, ops_voucher_view, booking_timeline_v1, booking_timeline_v1_smoke, voucher_fix, b2b_bookings_list, b2b_product_name, catalog, all")
+                print("Available test types: error_handler_idempotency, risk-snapshots-trend, risk_snapshots, proof_v2_story3, proof_v2_story4, proof_v2_story2, signed_download, faz5, proof_v11, executive_summary, scale_ui_proof, b2b, ops_b2b, regression, voucher_v1, ops_voucher_view, booking_timeline_v1, booking_timeline_v1_smoke, voucher_fix, b2b_bookings_list, b2b_product_name, catalog, product_catalog_v1_smoke, all")
                 sys.exit(1)
         else:
             # Default: run comprehensive tests

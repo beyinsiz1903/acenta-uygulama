@@ -39,6 +39,7 @@ async def ensure_catalog_indexes(db):
         [("organization_id", ASCENDING), ("product_id", ASCENDING), ("code", ASCENDING)],
         unique=True,
         name="uniq_roomtype_code_per_product",
+        partialFilterExpression={"code": {"$type": "string"}}
     )
 
     # rate_plans
@@ -46,6 +47,7 @@ async def ensure_catalog_indexes(db):
         [("organization_id", ASCENDING), ("product_id", ASCENDING), ("code", ASCENDING)],
         unique=True,
         name="uniq_rateplan_code_per_product",
+        partialFilterExpression={"code": {"$type": "string"}}
     )
 
     # cancellation_policies
@@ -53,6 +55,7 @@ async def ensure_catalog_indexes(db):
         [("organization_id", ASCENDING), ("code", ASCENDING)],
         unique=True,
         name="uniq_cancel_policy_code_per_org",
+        partialFilterExpression={"code": {"$type": "string"}}
     )
 
     # audit_logs (extra entity-centric index)

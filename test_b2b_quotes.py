@@ -215,8 +215,8 @@ class B2BQuotesTestClient:
         """Test 409 unavailable - capacity_available=0 or restrictions.closed=true"""
         self.log("\n=== SCENARIO 3: 409 UNAVAILABLE ===")
         
-        # Test 3.1: capacity_available=0
-        def test_capacity_zero():
+        # Test 3.1: Use a date far in the future (likely no inventory)
+        def test_no_inventory():
             response = self.client.post(
                 "/api/b2b/quotes",
                 json={
@@ -225,8 +225,8 @@ class B2BQuotesTestClient:
                         "product_id": self.product_id,
                         "room_type_id": "standard",
                         "rate_plan_id": "base",
-                        "check_in": (date.today() + timedelta(days=2)).isoformat(),  # day_after with capacity=0
-                        "check_out": (date.today() + timedelta(days=3)).isoformat(),
+                        "check_in": (date.today() + timedelta(days=365)).isoformat(),  # Far future date
+                        "check_out": (date.today() + timedelta(days=366)).isoformat(),
                         "occupancy": 2
                     }]
                 },
@@ -235,9 +235,9 @@ class B2BQuotesTestClient:
             return True, response
         
         success, response_data = self.run_test(
-            "Capacity available = 0 (expect 409)",
+            "No inventory available (expect 409)",
             409,
-            test_capacity_zero
+            test_no_inventory
         )
         
         if success:

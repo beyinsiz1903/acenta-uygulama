@@ -4,11 +4,12 @@ from pymongo import ASCENDING, DESCENDING
 
 
 async def ensure_catalog_indexes(db):
-    # products
+    # products - make unique index partial to allow null codes from existing seed data
     await db.products.create_index(
         [("organization_id", ASCENDING), ("code", ASCENDING)],
         unique=True,
         name="uniq_product_code_per_org",
+        partialFilterExpression={"code": {"$ne": None}}
     )
     await db.products.create_index(
         [("organization_id", ASCENDING), ("type", ASCENDING), ("status", ASCENDING), ("created_at", DESCENDING)],

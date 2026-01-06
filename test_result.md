@@ -662,6 +662,17 @@
       - working: false
         agent: "testing"
         comment: "❌ OPS BOOKING TIMELINE FRONTEND SMOKE TEST COMPLETE - TIMELINE TAB NOT IMPLEMENTED. VERIFIED FUNCTIONALITY: A) Authentication: Admin login successful (admin@acenta.test/admin123) with proper super_admin role verification. B) Navigation: Successfully navigated to /app/admin/ops/b2b, B2B Ops – Booking & Case Queues page loaded correctly. C) Booking Queue: Booking Queue tab active by default, found 3 booking rows, first booking selection working correctly. D) Booking Detail Panel: 'Booking Detayı' panel working correctly, booking detail loading and display functional. E) Current Tab Structure: Only 3 tabs present ['Genel', 'Snapshots', 'Voucher'], missing 'Timeline' tab as specified in requirements. F) Voucher Tab Regression: ✅ PASSED - Voucher tab functionality working correctly (title, refresh link, 'Voucher Oluştur' button all present and functional). G) Tab Switching: All existing tabs (Genel, Snapshots, Voucher) switch correctly with proper active state indication. CRITICAL ISSUE: Timeline tab is completely missing from the implementation. Expected tabs: ['Genel', 'Snapshots', 'Voucher', 'Timeline'] but only ['Genel', 'Snapshots', 'Voucher'] are implemented. The Timeline tab should include: 1) Small title 'Timeline' + 'Yenile' link, 2) Event list items or 'Henüz event yok' message, 3) Date/time display (formatDateTime), 4) Event labels based on eventLabel, 5) 'Detay' button for JSON meta display. All other functionality working correctly - this is purely a missing feature implementation issue."
+  - task: "Ops B2B Voucher Tab FE test - Voucher creation, View HTML, Send Voucher functionality"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/OpsB2BQueuesPage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Ops B2B ekranındaki Voucher tab'ında FE değişiklikleri yapıldı. Voucher tab şu özelliklere sahip: 1) Voucher oluşturma butonu (henüz voucher yoksa), 2) View HTML linki (aktif voucher varken), 3) Voucher Gönder mini formu (email + mesaj alanları, validation), 4) History tablosu (version, status, created, created_by kolonları). Backend endpointleri: /api/ops/bookings/{id}/voucher/generate, /api/ops/bookings/{id}/voucher (HTML görüntüleme), /api/ops/bookings/{id}/voucher/resend (email gönderme)."
 
 ## frontend:
   - task: "Admin Matches Drawer Blocked Badge + Request Unblock UI Smoke Test"

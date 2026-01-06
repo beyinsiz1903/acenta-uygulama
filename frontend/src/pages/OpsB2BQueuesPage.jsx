@@ -601,6 +601,18 @@ export default function OpsB2BQueuesPage() {
 
                   <div className="space-y-2">
                     <div className="font-semibold">Aksiyonlar</div>
+                    {caseDetail.decision && (
+                      <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                        <span className="font-medium">Son karar:</span>
+                        <span>{caseDetail.decision}</span>
+                        {caseDetail.decision_by_email && (
+                          <span className="ml-1">({caseDetail.decision_by_email})</span>
+                        )}
+                        {caseDetail.decision_at && (
+                          <span className="ml-1">{formatDate(caseDetail.decision_at)}</span>
+                        )}
+                      </div>
+                    )}
                     {caseActionError && (
                       <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive">
                         <AlertCircle className="h-4 w-4 mt-0.5" />

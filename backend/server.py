@@ -11,6 +11,7 @@ from starlette.middleware.cors import CORSMiddleware
 
 from app.db import close_mongo, connect_mongo, get_db
 from app.seed import ensure_seed_data
+from app.exception_handlers import register_exception_handlers
 from app.routers.auth import router as auth_router
 from app.routers.customers import router as customers_router
 from app.routers.products import router as products_router

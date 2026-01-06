@@ -366,7 +366,7 @@ export default function AdminMatchesPage() {
             <DrawerHeader className="flex items-start justify-between">
               <div>
                 <DrawerTitle>
-                  {selectedMatch?.agency_name || selectedMatch?.agency_id} — {" "}
+                  {selectedMatch?.agency_name || selectedMatch?.agency_id}  {" "}
                   {selectedMatch?.hotel_name || selectedMatch?.hotel_id}
                 </DrawerTitle>
                 {selectedMatch && (

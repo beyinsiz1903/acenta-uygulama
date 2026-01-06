@@ -9,7 +9,8 @@ async def ensure_catalog_indexes(db):
         [("organization_id", ASCENDING), ("code", ASCENDING)],
         unique=True,
         name="uniq_product_code_per_org",
-        partialFilterExpression={"code": {"$exists": True, "$type": "string"}},
+        # NOTE: partialFilterExpression must match existing definition in DB to avoid conflicts
+        partialFilterExpression={"code": {"$type": "string"}},
     )
     await db.products.create_index(
         [("organization_id", ASCENDING), ("type", ASCENDING), ("status", ASCENDING), ("created_at", DESCENDING)],

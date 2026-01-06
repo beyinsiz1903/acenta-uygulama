@@ -433,6 +433,30 @@ async def ensure_seed_data() -> None:
             {"$set": {"commission_type": "percent", "commission_value": 10.0, "updated_at": now_utc()}},
         )
 
+    # -------------------------------
+    # B2B channels seed (stable channel_id for portal)
+    # -------------------------------
+    channels_count = await db.channels.count_documents({"organization_id": org_id}) if hasattr(db, "channels") else 0
+    try:
+        if hasattr(db, "channels") and channels_count == 0:
+            await db.channels.insert_one(
+                {
+                    "_id": "ch_b2b_portal",
+                    "organization_id": org_id,
+                    "name": "B2B Portal",
+                    "type": "b2b",
+                    "status": "active",
+                    "created_at": now_utc(),
+                    "updated_at": now_utc(),
+                    "created_by": DEFAULT_ADMIN_EMAIL,
+                    "updated_by": DEFAULT_ADMIN_EMAIL,
+                }
+            )
+    except Exception:
+        # channels collection is optional in current schema; ignore if missing
+        pass
+
+
     dg = await db.discount_groups.find_one({"organization_id": org_id, "name": "B2B İndirim"})
 
 

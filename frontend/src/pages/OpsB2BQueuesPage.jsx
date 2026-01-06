@@ -269,7 +269,7 @@ export default function OpsB2BQueuesPage() {
                       void loadBookings();
                     }}
                   >
-                    Son 7 g cn
+                    Son 7 gn
                   </Button>
                 </div>
               </div>

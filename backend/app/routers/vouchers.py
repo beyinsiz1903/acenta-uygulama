@@ -82,6 +82,31 @@ async def ops_resend_voucher(
 
     voucher_id = str(active.get("_id"))
 
+
+
+@router.get("/api/ops/bookings/{booking_id}/voucher", response_class=HTMLResponse)
+async def ops_view_voucher_html(
+    booking_id: str,
+    user=OpsUserDep,
+    db=Depends(get_db),
+):
+    """Return active voucher HTML for ops users (org-scoped)."""
+
+    org_id = user["organization_id"]
+
+    # Ensure booking exists within org
+    try:
+        booking_oid = ObjectId(booking_id)
+    except Exception:
+        raise AppError(404, "not_found", "Booking not found", {"booking_id": booking_id})
+
+    booking = await db.bookings.find_one({"_id": booking_oid, "organization_id": org_id})
+    if not booking:
+        raise AppError(404, "not_found", "Booking not found", {"booking_id": booking_id})
+
+    html = await render_voucher_html(db, org_id, booking_id)
+    return HTMLResponse(content=html)
+
     await append_delivery_log(
         db,
         organization_id=org_id,

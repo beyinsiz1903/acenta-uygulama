@@ -30,6 +30,7 @@ export const MENU_CONFIG = {
       label: "Acenta",
       children: [
         { label: "Hızlı Rezervasyon", path: "/app/agency/hotels" },
+        { label: "B2B Portal", path: "/app/b2b/portal" },
         { label: "Rezervasyonlarım", path: "/app/agency/bookings" },
         { label: "Mutabakat", path: "/app/agency/settlements" },
         { label: "Yardım", path: "/app/agency/help" },

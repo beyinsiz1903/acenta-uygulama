@@ -84,8 +84,17 @@ async def list_b2b_bookings_agency(
                 full = f"{fn} {ln}".strip()
                 primary_guest_name = full or None
 
-        # Product name: Phase 1 placeholder "-" (we don't join products here)
-        product_name: Optional[str] = "-"
+        # Product name: best-effort
+        # 1) items[0].product_name
+        # 2) items[0].product_id
+        # 3) fallback label
+        product_name: Optional[str] = first_item.get("product_name")
+        if not product_name:
+            pid = first_item.get("product_id")
+            if pid:
+                product_name = str(pid)
+            else:
+                product_name = "B2B Booking"
 
         items.append(
             BookingListItem(

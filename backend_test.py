@@ -23753,6 +23753,10 @@ if __name__ == "__main__":
                 tester = OpsB2BTester()
                 exit_code = tester.run_ops_b2b_tests()
                 sys.exit(exit_code)
+            elif test_type == "ops_b2b_phase_111":
+                tester = OpsB2BPhase111Tester()
+                exit_code = tester.run_ops_b2b_phase_111_tests()
+                sys.exit(exit_code)
             elif test_type == "regression":
                 tester = RegressionTester()
                 exit_code = tester.run_regression_tests()

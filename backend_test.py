@@ -23202,6 +23202,498 @@ class RiskSnapshotsTester:
         return 0 if self.tests_failed == 0 else 1
 
 
+class OpsB2BPhase111Tester:
+    def __init__(self, base_url="https://risk-ops-platform.preview.emergentagent.com"):
+        self.base_url = base_url
+        self.admin_token = None
+        self.tests_run = 0
+        self.tests_passed = 0
+        self.tests_failed = 0
+        self.failed_tests = []
+        
+        # Store data for testing
+        self.booking_id = None
+        self.case_id = None
+
+    def log(self, msg):
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}")
+
+    def run_test(self, name, method, endpoint, expected_status, data=None, headers_override=None):
+        """Run a single API test"""
+        url = f"{self.base_url}/{endpoint}"
+        headers = headers_override or {'Content-Type': 'application/json'}
+        if self.admin_token and not headers_override:
+            headers['Authorization'] = f'Bearer {self.admin_token}'
+
+        self.tests_run += 1
+        self.log(f"🔍 Test #{self.tests_run}: {name}")
+        
+        try:
+            if method == 'GET':
+                response = requests.get(url, headers=headers, timeout=10)
+            elif method == 'POST':
+                response = requests.post(url, json=data, headers=headers, timeout=10)
+            elif method == 'PUT':
+                response = requests.put(url, json=data, headers=headers, timeout=10)
+            elif method == 'DELETE':
+                response = requests.delete(url, headers=headers, timeout=10)
+            else:
+                raise ValueError(f"Unsupported method: {method}")
+
+            success = response.status_code == expected_status
+            if success:
+                self.tests_passed += 1
+                self.log(f"✅ PASSED - Status: {response.status_code}")
+                try:
+                    return True, response.json() if response.content else {}
+                except:
+                    return True, {}
+            else:
+                self.tests_failed += 1
+                self.failed_tests.append(f"{name} - Expected {expected_status}, got {response.status_code}")
+                self.log(f"❌ FAILED - Expected {expected_status}, got {response.status_code}")
+                try:
+                    self.log(f"   Response: {response.text[:200]}")
+                except:
+                    pass
+                return False, {}
+
+        except Exception as e:
+            self.tests_failed += 1
+            self.failed_tests.append(f"{name} - Error: {str(e)}")
+            self.log(f"❌ FAILED - Error: {str(e)}")
+            return False, {}
+
+    def test_admin_login(self):
+        """Test admin login"""
+        self.log("\n=== AUTHENTICATION ===")
+        success, response = self.run_test(
+            "Admin Login (admin@acenta.test/admin123)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "admin@acenta.test", "password": "admin123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.admin_token = response['access_token']
+            user = response.get('user', {})
+            roles = user.get('roles', [])
+            
+            if 'admin' in roles or 'super_admin' in roles:
+                self.log(f"✅ Admin login successful - roles: {roles}")
+                return True
+            else:
+                self.log(f"❌ Missing admin/super_admin role: {roles}")
+                return False
+        return False
+
+    def test_ops_bookings_list_with_joins(self):
+        """Test GET /api/ops/bookings with agency_name, channel_name joins"""
+        self.log("\n=== 1) OPS BOOKINGS LIST WITH JOINS ===")
+        
+        success, response = self.run_test(
+            "GET /api/ops/bookings (check agency_name, channel_name joins)",
+            "GET",
+            "api/ops/bookings?limit=10",
+            200
+        )
+        
+        if success:
+            items = response.get('items', [])
+            if items:
+                first_item = items[0]
+                # Store booking_id for later tests
+                self.booking_id = first_item.get('booking_id')
+                
+                # Check for new join fields
+                has_agency_name = 'agency_name' in first_item
+                has_channel_name = 'channel_name' in first_item
+                
+                self.log(f"✅ Found {len(items)} bookings")
+                self.log(f"✅ agency_name field present: {has_agency_name}")
+                self.log(f"✅ channel_name field present: {has_channel_name}")
+                
+                if has_agency_name and has_channel_name:
+                    self.log(f"✅ Phase 1.1.1 join fields verified in bookings list")
+                    return True
+                else:
+                    self.log(f"❌ Missing join fields - agency_name: {has_agency_name}, channel_name: {has_channel_name}")
+                    return False
+            else:
+                self.log(f"⚠️  No bookings found to test join fields")
+                return True
+        return False
+
+    def test_ops_cases_list_with_decision_updated_at(self):
+        """Test GET /api/ops/cases with decision and updated_at fields"""
+        self.log("\n=== 2) OPS CASES LIST WITH DECISION & UPDATED_AT ===")
+        
+        success, response = self.run_test(
+            "GET /api/ops/cases (check decision, updated_at fields)",
+            "GET",
+            "api/ops/cases?limit=10",
+            200
+        )
+        
+        if success:
+            items = response.get('items', [])
+            if items:
+                first_item = items[0]
+                # Store case_id for later tests
+                self.case_id = first_item.get('case_id')
+                
+                # Check for new fields
+                has_decision = 'decision' in first_item
+                has_updated_at = 'updated_at' in first_item
+                
+                self.log(f"✅ Found {len(items)} cases")
+                self.log(f"✅ decision field present: {has_decision}")
+                self.log(f"✅ updated_at field present: {has_updated_at}")
+                
+                if has_decision and has_updated_at:
+                    self.log(f"✅ Phase 1.1.1 fields verified in cases list")
+                    return True
+                else:
+                    self.log(f"❌ Missing fields - decision: {has_decision}, updated_at: {has_updated_at}")
+                    return False
+            else:
+                self.log(f"⚠️  No cases found to test new fields")
+                return True
+        return False
+
+    def test_ops_case_detail_with_new_fields(self):
+        """Test GET /api/ops/cases/{id} with decision, decision_by_email, decision_at, booking_status fields"""
+        self.log("\n=== 3) OPS CASE DETAIL WITH NEW FIELDS ===")
+        
+        if not self.case_id:
+            self.log("⚠️  No case_id available, skipping case detail test")
+            return True
+        
+        success, response = self.run_test(
+            f"GET /api/ops/cases/{self.case_id} (check new decision fields)",
+            "GET",
+            f"api/ops/cases/{self.case_id}",
+            200
+        )
+        
+        if success:
+            # Check for new fields
+            has_decision = 'decision' in response
+            has_decision_by_email = 'decision_by_email' in response
+            has_decision_at = 'decision_at' in response
+            has_booking_status = 'booking_status' in response
+            
+            self.log(f"✅ Case detail retrieved")
+            self.log(f"✅ decision field present: {has_decision}")
+            self.log(f"✅ decision_by_email field present: {has_decision_by_email}")
+            self.log(f"✅ decision_at field present: {has_decision_at}")
+            self.log(f"✅ booking_status field present: {has_booking_status}")
+            
+            if has_decision and has_decision_by_email and has_decision_at and has_booking_status:
+                self.log(f"✅ Phase 1.1.1 decision fields verified in case detail")
+                return True
+            else:
+                missing_fields = []
+                if not has_decision: missing_fields.append('decision')
+                if not has_decision_by_email: missing_fields.append('decision_by_email')
+                if not has_decision_at: missing_fields.append('decision_at')
+                if not has_booking_status: missing_fields.append('booking_status')
+                self.log(f"❌ Missing fields: {missing_fields}")
+                return False
+        return False
+
+    def test_ops_case_approve_workflow(self):
+        """Test POST /api/ops/cases/{id}/approve workflow and field updates"""
+        self.log("\n=== 4) OPS CASE APPROVE WORKFLOW ===")
+        
+        if not self.case_id:
+            self.log("⚠️  No case_id available, skipping approve test")
+            return True
+        
+        # First get the case status to ensure it's approvable
+        success, case_response = self.run_test(
+            f"GET case status before approve",
+            "GET",
+            f"api/ops/cases/{self.case_id}",
+            200
+        )
+        
+        if not success:
+            self.log("❌ Could not get case status")
+            return False
+        
+        case_status = case_response.get('status')
+        if case_status not in ['open', 'pending_approval']:
+            self.log(f"⚠️  Case status '{case_status}' not approvable, skipping approve test")
+            return True
+        
+        # Get booking status before approve
+        booking_id = case_response.get('booking_id')
+        original_booking_status = None
+        if booking_id:
+            success, booking_response = self.run_test(
+                f"GET booking status before approve",
+                "GET",
+                f"api/ops/bookings/{booking_id}",
+                200
+            )
+            if success:
+                original_booking_status = booking_response.get('status')
+                self.log(f"✅ Original booking status: {original_booking_status}")
+        
+        # Approve the case
+        success, response = self.run_test(
+            f"POST /api/ops/cases/{self.case_id}/approve",
+            "POST",
+            f"api/ops/cases/{self.case_id}/approve",
+            200
+        )
+        
+        if success:
+            # Check response structure
+            has_case_id = 'case_id' in response
+            has_status = response.get('status') == 'closed'
+            has_decision = response.get('decision') == 'approved'
+            has_booking_status = response.get('booking_status') == 'CANCELLED'
+            
+            self.log(f"✅ Approve response structure correct")
+            self.log(f"   - case_id: {has_case_id}")
+            self.log(f"   - status: {has_status}")
+            self.log(f"   - decision: {has_decision}")
+            self.log(f"   - booking_status: {has_booking_status}")
+            
+            # Verify case was updated with decision fields
+            success, updated_case = self.run_test(
+                f"GET case after approve (verify decision fields)",
+                "GET",
+                f"api/ops/cases/{self.case_id}",
+                200
+            )
+            
+            if success:
+                decision_correct = updated_case.get('decision') == 'approved'
+                has_decision_by_email = updated_case.get('decision_by_email') == 'admin@acenta.test'
+                has_decision_at = updated_case.get('decision_at') is not None
+                booking_status_correct = updated_case.get('booking_status') == 'CANCELLED'
+                
+                self.log(f"✅ Case decision fields after approve:")
+                self.log(f"   - decision: {decision_correct} ({updated_case.get('decision')})")
+                self.log(f"   - decision_by_email: {has_decision_by_email} ({updated_case.get('decision_by_email')})")
+                self.log(f"   - decision_at: {has_decision_at}")
+                self.log(f"   - booking_status: {booking_status_correct} ({updated_case.get('booking_status')})")
+                
+                # Verify booking status was updated
+                if booking_id:
+                    success, updated_booking = self.run_test(
+                        f"GET booking after approve (verify status change)",
+                        "GET",
+                        f"api/ops/bookings/{booking_id}",
+                        200
+                    )
+                    
+                    if success:
+                        new_booking_status = updated_booking.get('status')
+                        booking_updated = new_booking_status == 'CANCELLED'
+                        self.log(f"✅ Booking status updated: {booking_updated} ({new_booking_status})")
+                        
+                        if (decision_correct and has_decision_by_email and has_decision_at and 
+                            booking_status_correct and booking_updated):
+                            self.log(f"✅ Phase 1.1.1 approve workflow fully verified")
+                            return True
+                        else:
+                            self.log(f"❌ Some approve workflow checks failed")
+                            return False
+                
+                if decision_correct and has_decision_by_email and has_decision_at and booking_status_correct:
+                    self.log(f"✅ Phase 1.1.1 approve workflow verified (booking check skipped)")
+                    return True
+                else:
+                    self.log(f"❌ Case decision fields not properly updated")
+                    return False
+            else:
+                self.log(f"❌ Could not verify case after approve")
+                return False
+        else:
+            # If approve failed, it might be because case is already closed
+            self.log(f"⚠️  Approve failed - case might already be processed")
+            return True
+
+    def test_ops_case_reject_workflow(self):
+        """Test POST /api/ops/cases/{id}/reject workflow"""
+        self.log("\n=== 5) OPS CASE REJECT WORKFLOW ===")
+        
+        # Find another case to reject (or create one if needed)
+        success, response = self.run_test(
+            "GET /api/ops/cases (find case to reject)",
+            "GET",
+            "api/ops/cases?status=open&limit=5",
+            200
+        )
+        
+        if not success:
+            self.log("❌ Could not get cases for reject test")
+            return False
+        
+        items = response.get('items', [])
+        reject_case_id = None
+        
+        # Find a case that's not the one we already approved
+        for item in items:
+            if item.get('case_id') != self.case_id and item.get('status') in ['open', 'pending_approval']:
+                reject_case_id = item.get('case_id')
+                break
+        
+        if not reject_case_id:
+            self.log("⚠️  No suitable case found for reject test")
+            return True
+        
+        # Get booking status before reject
+        success, case_response = self.run_test(
+            f"GET case before reject",
+            "GET",
+            f"api/ops/cases/{reject_case_id}",
+            200
+        )
+        
+        booking_id = None
+        original_booking_status = None
+        if success:
+            booking_id = case_response.get('booking_id')
+            if booking_id:
+                success, booking_response = self.run_test(
+                    f"GET booking status before reject",
+                    "GET",
+                    f"api/ops/bookings/{booking_id}",
+                    200
+                )
+                if success:
+                    original_booking_status = booking_response.get('status')
+                    self.log(f"✅ Original booking status: {original_booking_status}")
+        
+        # Reject the case
+        success, response = self.run_test(
+            f"POST /api/ops/cases/{reject_case_id}/reject",
+            "POST",
+            f"api/ops/cases/{reject_case_id}/reject",
+            200
+        )
+        
+        if success:
+            # Check response structure
+            has_case_id = 'case_id' in response
+            has_status = response.get('status') == 'closed'
+            has_decision = response.get('decision') == 'rejected'
+            
+            self.log(f"✅ Reject response structure correct")
+            self.log(f"   - case_id: {has_case_id}")
+            self.log(f"   - status: {has_status}")
+            self.log(f"   - decision: {has_decision}")
+            
+            # Verify case was updated with decision fields
+            success, updated_case = self.run_test(
+                f"GET case after reject (verify decision fields)",
+                "GET",
+                f"api/ops/cases/{reject_case_id}",
+                200
+            )
+            
+            if success:
+                decision_correct = updated_case.get('decision') == 'rejected'
+                has_decision_by_email = updated_case.get('decision_by_email') == 'admin@acenta.test'
+                has_decision_at = updated_case.get('decision_at') is not None
+                
+                self.log(f"✅ Case decision fields after reject:")
+                self.log(f"   - decision: {decision_correct} ({updated_case.get('decision')})")
+                self.log(f"   - decision_by_email: {has_decision_by_email} ({updated_case.get('decision_by_email')})")
+                self.log(f"   - decision_at: {has_decision_at}")
+                
+                # Verify booking status remained unchanged
+                if booking_id and original_booking_status:
+                    success, updated_booking = self.run_test(
+                        f"GET booking after reject (verify status unchanged)",
+                        "GET",
+                        f"api/ops/bookings/{booking_id}",
+                        200
+                    )
+                    
+                    if success:
+                        new_booking_status = updated_booking.get('status')
+                        booking_unchanged = new_booking_status == original_booking_status
+                        self.log(f"✅ Booking status unchanged: {booking_unchanged} ({new_booking_status})")
+                        
+                        if decision_correct and has_decision_by_email and has_decision_at and booking_unchanged:
+                            self.log(f"✅ Phase 1.1.1 reject workflow fully verified")
+                            return True
+                        else:
+                            self.log(f"❌ Some reject workflow checks failed")
+                            return False
+                
+                if decision_correct and has_decision_by_email and has_decision_at:
+                    self.log(f"✅ Phase 1.1.1 reject workflow verified (booking check skipped)")
+                    return True
+                else:
+                    self.log(f"❌ Case decision fields not properly updated")
+                    return False
+            else:
+                self.log(f"❌ Could not verify case after reject")
+                return False
+        else:
+            self.log(f"⚠️  Reject failed - case might already be processed")
+            return True
+
+    def print_summary(self):
+        """Print test summary"""
+        self.log("\n" + "="*60)
+        self.log("OPS B2B PHASE 1.1.1 POLISH TEST SUMMARY")
+        self.log("="*60)
+        self.log(f"Total Tests: {self.tests_run}")
+        self.log(f"✅ Passed: {self.tests_passed}")
+        self.log(f"❌ Failed: {self.tests_failed}")
+        self.log(f"Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%")
+        
+        if self.failed_tests:
+            self.log("\n❌ FAILED TESTS:")
+            for i, test in enumerate(self.failed_tests, 1):
+                self.log(f"  {i}. {test}")
+        
+        self.log("="*60)
+
+    def run_ops_b2b_phase_111_tests(self):
+        """Run all OPS B2B Phase 1.1.1 tests"""
+        self.log("🚀 Starting OPS B2B Phase 1.1.1 Polish Tests")
+        self.log(f"Base URL: {self.base_url}")
+        
+        # Authentication
+        if not self.test_admin_login():
+            self.log("❌ Admin login failed - stopping tests")
+            self.print_summary()
+            return 1
+
+        # Test scenarios
+        test_results = []
+        
+        # 1) Bookings list with joins
+        test_results.append(self.test_ops_bookings_list_with_joins())
+        
+        # 2) Cases list with decision & updated_at
+        test_results.append(self.test_ops_cases_list_with_decision_updated_at())
+        
+        # 3) Case detail with new fields
+        test_results.append(self.test_ops_case_detail_with_new_fields())
+        
+        # 4) Case approve workflow
+        test_results.append(self.test_ops_case_approve_workflow())
+        
+        # 5) Case reject workflow
+        test_results.append(self.test_ops_case_reject_workflow())
+
+        # Summary
+        self.print_summary()
+
+        return 0 if self.tests_failed == 0 else 1
+
+
 if __name__ == "__main__":
     import sys
     

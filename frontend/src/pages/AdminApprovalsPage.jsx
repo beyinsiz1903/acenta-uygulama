@@ -75,8 +75,92 @@ export default function AdminApprovalsPage() {
 
   const hasItems = items && items.length > 0;
 
+  const runProofHarness = async () => {
+    try {
+      setProofLoading(true);
+      const data = await runScaleUIProof();
+      setProof(data);
+      toast({
+        title: "SCALE proof run created",
+        description: "Match blocked + request-unblock + pending task generated.",
+      });
+      await load();
+    } catch (e) {
+      toast({
+        title: "Failed to run SCALE proof",
+        description: apiErrorMessage(e),
+        variant: "destructive",
+      });
+    } finally {
+      setProofLoading(false);
+    }
+  };
+
+  const approveProofHarness = async () => {
+    if (!proof?.request_unblock?.task_id) return;
+    try {
+      setApproveProofLoading(true);
+      const data = await approveScaleUIProof(proof.request_unblock.task_id, "SCALE UI proof approve");
+      setProof((prev) => ({ ...(prev || {}), approve_result: data }));
+      toast({
+        title: "SCALE proof task approved",
+        description: "Match unblocked and audit events written.",
+      });
+      await load();
+    } catch (e) {
+      toast({
+        title: "Failed to approve SCALE proof task",
+        description: apiErrorMessage(e),
+        variant: "destructive",
+      });
+    } finally {
+      setApproveProofLoading(false);
+    }
+  };
+
   return (
     <div className="p-4 md:p-6" data-testid="approvals-page">
+      <Card className="mb-4">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm">SCALE UI Proof Harness</CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0 text-xs space-y-2">
+          <p className="text-muted-foreground">
+            Generates a demo blocked match, unblock request and approval audit trail for SCALE v1 UI proof.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              data-testid="scale-proof-run"
+              onClick={runProofHarness}
+              disabled={proofLoading}
+            >
+              {proofLoading ? "Running..." : "Run SCALE Proof"}
+            </Button>
+            {proof?.request_unblock?.task_id && (
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                data-testid="scale-proof-approve"
+                onClick={approveProofHarness}
+                disabled={approveProofLoading}
+              >
+                {approveProofLoading ? "Approving..." : "Approve Proof Task"}
+              </Button>
+            )}
+          </div>
+          <pre
+            className="mt-2 max-h-64 overflow-auto rounded bg-muted p-2 text-[11px]"
+            data-testid="scale-proof-pack"
+          >
+            {proof ? JSON.stringify(proof, null, 2) : "// no proof run yet"}
+          </pre>
+        </CardContent>
+      </Card>
+
       <div className="mb-4 flex flex-col gap-1 md:flex-row md:items-end md:justify-between">
         <div>
           <div className="text-xl font-semibold">Approvals</div>

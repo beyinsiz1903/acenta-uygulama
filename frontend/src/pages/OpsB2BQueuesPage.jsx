@@ -567,7 +567,7 @@ export default function OpsB2BQueuesPage() {
                       <div className="space-y-1">
                         <div className="font-semibold">Risk Snapshot (raw JSON)</div>
                         <Textarea
-                          value={JSON.stringify(bookingDetail.risk_snapshot || {}, null, 2)}
+                          value={safeJson(bookingDetail.risk_snapshot)}
                           readOnly
                           className="font-mono text-[11px] h-40"
                         />
@@ -576,7 +576,7 @@ export default function OpsB2BQueuesPage() {
                       <div className="space-y-1">
                         <div className="font-semibold">Policy Snapshot (raw JSON)</div>
                         <Textarea
-                          value={JSON.stringify(bookingDetail.policy_snapshot || {}, null, 2)}
+                          value={safeJson(bookingDetail.policy_snapshot)}
                           readOnly
                           className="font-mono text-[11px] h-40"
                         />

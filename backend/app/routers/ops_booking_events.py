@@ -33,12 +33,21 @@ async def list_booking_events(
         raise AppError(400, "invalid_user_context", "User is missing organization_id")
 
     # Ensure booking exists in this organization (hide events for non-existent bookings)
+    # Support both string IDs and ObjectId-backed IDs.
     booking = await db.bookings.find_one({"_id": booking_id, "organization_id": org_id})
     if not booking:
-        raise AppError(404, "not_found", "Booking not found", {"booking_id": booking_id})
+        try:
+            oid = ObjectId(booking_id)
+        except Exception:
+            raise AppError(404, "not_found", "Booking not found", {"booking_id": booking_id})
+        booking = await db.bookings.find_one({"_id": oid, "organization_id": org_id})
+        if not booking:
+            raise AppError(404, "not_found", "Booking not found", {"booking_id": booking_id})
+
+    booking_id_str = str(booking.get("_id"))
 
     cursor = (
-        db.booking_events.find({"organization_id": org_id, "booking_id": booking_id})
+        db.booking_events.find({"organization_id": org_id, "booking_id": booking_id_str})
         .sort("created_at", 1)
         .limit(limit)
     )

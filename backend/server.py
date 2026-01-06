@@ -69,6 +69,9 @@ logger = logging.getLogger("acenta-master")
 
 app = FastAPI(title="Acenta Master API", version="0.1.0")
 
+# Register global exception handlers for unified error responses
+register_exception_handlers(app)
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,

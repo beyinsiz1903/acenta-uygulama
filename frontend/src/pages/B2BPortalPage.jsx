@@ -176,7 +176,7 @@ function BookingListTab() {
                             disabled
                             title="İptal için 'Quote / Book / Cancel' sekmesindeki iptal adımını kullanın."
                           >
-                            İptal Talebi
+                            İptal Talebi
                           </Button>
                         </div>
                       </td>

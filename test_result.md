@@ -1054,10 +1054,14 @@
 
 ## test_plan:
   current_focus:
-    - "SCALE v1 Approval & Audit zinciri kabul kriterleri test"
+    - "Ops Booking Timeline FE smoke test - Timeline tab implementation and functionality"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
+
+## agent_communication:
+  - agent: "testing"
+    message: "CRITICAL FINDING: Timeline tab is completely missing from OpsB2BQueuesPage implementation. All other functionality (login, navigation, booking selection, existing tabs) working correctly. The Timeline tab needs to be implemented with: 1) Timeline title + Yenile link, 2) Event list or empty state, 3) Date/time formatting, 4) Event labels, 5) Detail buttons with JSON display. This is a missing feature, not a bug - requires main agent to implement the Timeline tab functionality."
 
 ## agent_communication:
   - agent: "main"

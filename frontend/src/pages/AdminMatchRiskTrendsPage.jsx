@@ -268,6 +268,28 @@ export default function AdminMatchRiskTrendsPage() {
               </option>
             ))}
           </select>
+
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            data-testid="match-risk-trends-download-exec-pdf"
+            onClick={() => {
+              try {
+                const url = "/api/admin/reports/match-risk/executive-summary.pdf";
+                window.open(url, "_blank");
+              } catch (e) {
+                const msg = e?.message || "PDF indirilemiyor";
+                toast({
+                  title: "Failed to download executive report",
+                  description: msg,
+                  variant: "destructive",
+                });
+              }
+            }}
+          >
+            Download Executive PDF
+          </Button>
         </div>
       </div>
 

@@ -17,10 +17,21 @@ async def ensure_catalog_indexes(db):
     async def _safe_create(collection, *args, **kwargs):
         try:
             await collection.create_index(*args, **kwargs)
-        except Exception:
-            # Ignore index option conflicts / already exists
-            # Existing deployments keep their index definition.
-            return
+        except OperationFailure as e:
+            msg = str(e).lower()
+            if (
+                "indexoptionsconflict" in msg
+                or "indexkeyspecsconflict" in msg
+                or "already exists" in msg
+            ):
+                logger.warning(
+                    "[catalog_indexes] Keeping legacy index for %s (name=%s): %s",
+                    collection.name,
+                    kwargs.get("name"),
+                    msg,
+                )
+                return
+            raise
 
     # products: enforce unique code per org only for docs that have code
     await _safe_create(

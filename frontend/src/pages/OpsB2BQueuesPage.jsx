@@ -360,8 +360,31 @@ export default function OpsB2BQueuesPage() {
               )}
 
               {bookingDetail && (
-                <div className="space-y-3">
-                  <div className="space-y-1 text-xs">
+                <div className="space-y-3 text-xs">
+                  {/* Tabs */}
+                  <div className="flex gap-2 border-b pb-2 text-xs">
+                    <button
+                      type="button"
+                      className="px-2 py-1 rounded-md bg-primary text-primary-foreground"
+                    >
+                      Genel
+                    </button>
+                    <button
+                      type="button"
+                      className="px-2 py-1 rounded-md border bg-background text-foreground"
+                    >
+                      Snapshots
+                    </button>
+                    <button
+                      type="button"
+                      className="px-2 py-1 rounded-md border bg-background text-foreground"
+                    >
+                      Voucher
+                    </button>
+                  </div>
+
+                  {/* Genel tabı (şimdilik aktif) */}
+                  <div className="space-y-1">
                     <div className="font-semibold">Genel Bilgiler</div>
                     <div className="grid grid-cols-2 gap-2">
                       <div>
@@ -391,7 +414,8 @@ export default function OpsB2BQueuesPage() {
                     </div>
                   </div>
 
-                  <div className="space-y-1 text-xs">
+                  {/* Snapshots tab içeriği */}
+                  <div className="space-y-1">
                     <div className="font-semibold">Risk Snapshot (raw JSON)</div>
                     <Textarea
                       value={JSON.stringify(bookingDetail.risk_snapshot || {}, null, 2)}
@@ -400,13 +424,21 @@ export default function OpsB2BQueuesPage() {
                     />
                   </div>
 
-                  <div className="space-y-1 text-xs">
+                  <div className="space-y-1">
                     <div className="font-semibold">Policy Snapshot (raw JSON)</div>
                     <Textarea
                       value={JSON.stringify(bookingDetail.policy_snapshot || {}, null, 2)}
                       readOnly
                       className="font-mono text-[11px] h-40"
                     />
+                  </div>
+
+                  {/* Voucher tabı (Phase 1.1 - basit versiyon) */}
+                  <div className="space-y-2 border-t pt-2">
+                    <div className="font-semibold">Voucher</div>
+                    <div className="text-[11px] text-muted-foreground">
+                      Voucher tabı için backend hazır; FE tarafında bir sonraki iterasyonda tam sekmeli yapıya geçilebilir.
+                    </div>
                   </div>
                 </div>
               )}

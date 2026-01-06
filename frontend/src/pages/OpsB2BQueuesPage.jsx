@@ -130,6 +130,10 @@ export default function OpsB2BQueuesPage() {
   const [voucherHistoryError, setVoucherHistoryError] = useState("");
   const [voucherGenerateLoading, setVoucherGenerateLoading] = useState(false);
   const [voucherResendLoading, setVoucherResendLoading] = useState(false);
+  const [voucherResendOpen, setVoucherResendOpen] = useState(false);
+  const [voucherResendEmail, setVoucherResendEmail] = useState("");
+  const [voucherResendMessage, setVoucherResendMessage] = useState("");
+  const [voucherResendError, setVoucherResendError] = useState("");
   const [bookingEvents, setBookingEvents] = useState([]);
   const [bookingEventsLoading, setBookingEventsLoading] = useState(false);
   const [bookingEventsError, setBookingEventsError] = useState("");
@@ -646,13 +650,117 @@ export default function OpsB2BQueuesPage() {
                       {hasActiveVoucher && (
                         <div className="flex flex-wrap items-center gap-3 text-[11px]">
                           <a
-                            href={`/api/ops/bookings/${bookingDetail.booking_id}/voucher`}
+                            href={`${process.env.REACT_APP_BACKEND_URL}/api/ops/bookings/${bookingDetail.booking_id}/voucher`}
                             target="_blank"
                             rel="noreferrer"
                             className="text-primary hover:underline"
                           >
                             View HTML
                           </a>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            className="h-7 px-2 text-[11px]"
+                            onClick={() => {
+                              const c = bookingDetail.customer || {};
+                              setVoucherResendEmail(c.email || "");
+                              setVoucherResendMessage("");
+                              setVoucherResendError("");
+                              setVoucherResendOpen(true);
+                            }}
+                          >
+                            Voucher Gönder
+                          </Button>
+                        </div>
+                      )}
+
+                      {voucherResendOpen && (
+                        <div className="mt-3 space-y-2 rounded-md border bg-muted/30 p-3 text-[11px]">
+                          <div className="flex items-center justify-between">
+                            <div className="font-semibold">Voucher Gönder</div>
+                            <button
+                              type="button"
+                              className="text-xs text-muted-foreground hover:underline"
+                              onClick={() => setVoucherResendOpen(false)}
+                            >
+                              Kapat
+                            </button>
+                          </div>
+                          <div className="grid grid-cols-1 gap-2">
+                            <div className="space-y-1">
+                              <Label htmlFor="voucher_resend_email" className="text-[11px]">
+                                Alıcı Email
+                              </Label>
+                              <Input
+                                id="voucher_resend_email"
+                                type="email"
+                                className="h-8 text-[11px]"
+                                value={voucherResendEmail}
+                                onChange={(e) => setVoucherResendEmail(e.target.value)}
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label htmlFor="voucher_resend_msg" className="text-[11px]">
+                                Mesaj (opsiyonel)
+                              </Label>
+                              <Textarea
+                                id="voucher_resend_msg"
+                                className="h-20 text-[11px]"
+                                value={voucherResendMessage}
+                                onChange={(e) => setVoucherResendMessage(e.target.value)}
+                              />
+                            </div>
+                          </div>
+
+                          {voucherResendError && (
+                            <div className="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/5 p-2 text-[11px] text-destructive">
+                              <AlertCircle className="h-3 w-3 mt-0.5" />
+                              <div>{voucherResendError}</div>
+                            </div>
+                          )}
+
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 px-2 text-[11px]"
+                              onClick={() => setVoucherResendOpen(false)}
+                              disabled={voucherResendLoading}
+                            >
+                              Vazgeç
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              className="h-7 px-3 text-[11px]"
+                              disabled={voucherResendLoading}
+                              onClick={async () => {
+                                setVoucherResendError("");
+                                if (!voucherResendEmail) {
+                                  setVoucherResendError("Lütfen geçerli bir email adresi girin.");
+                                  return;
+                                }
+                                setVoucherResendLoading(true);
+                                try {
+                                  await api.post(`/ops/bookings/${bookingDetail.booking_id}/voucher/resend`, {
+                                    to_email: voucherResendEmail,
+                                    message: voucherResendMessage || undefined,
+                                  });
+                                  setVoucherResendOpen(false);
+                                } catch (err) {
+                                  console.error("[OpsB2B] voucher resend error:", err);
+                                  setVoucherResendError(apiErrorMessage(err));
+                                } finally {
+                                  setVoucherResendLoading(false);
+                                }
+                              }}
+                            >
+                              {voucherResendLoading && <Loader2 className="h-3 w-3 animate-spin" />}
+                              Gönder
+                            </Button>
+                          </div>
                         </div>
                       )}
 

@@ -42,7 +42,7 @@ async def list_b2b_bookings_agency(
 
     query: Dict[str, Any] = {
         "organization_id": org_id,
-        "agency_id": ObjectId(str(agency_id)),
+        "agency_id": agency_id,
         # B2B bookings always have quote_id set
         "quote_id": {"$exists": True},
     }

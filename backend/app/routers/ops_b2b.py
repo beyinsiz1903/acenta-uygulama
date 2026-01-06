@@ -316,6 +316,25 @@ async def approve_b2b_case_ops(
         {"$set": {"status": "CANCELLED", "updated_at": now}},
     )
 
+    # Emit case decision and booking status change events
+    actor = {"role": "ops", "email": user.get("email")}
+    await emit_event(
+        db,
+        org_id,
+        booking_id,
+        "CASE_DECIDED",
+        actor=actor,
+        meta={"case_id": case_id, "decision": "approved"},
+    )
+    await emit_event(
+        db,
+        org_id,
+        booking_id,
+        "BOOKING_STATUS_CHANGED",
+        actor=actor,
+        meta={"status_from": booking.get("status"), "status_to": "CANCELLED"},
+    )
+
     return {
         "case_id": case_id,
         "status": "closed",

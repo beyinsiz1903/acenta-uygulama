@@ -7,6 +7,7 @@ from bson import ObjectId
 from app.schemas_b2b_bookings import BookingCreateRequest, BookingCreateResponse
 from app.utils import now_utc
 from app.errors import AppError
+from app.services.booking_events import emit_event
 
 
 class B2BBookingService:
@@ -79,15 +80,18 @@ class B2BBookingService:
         res = await self.bookings.insert_one(booking_doc)
         booking_id = str(res.inserted_id)
 
-        await self.booking_events.insert_one(
-            {
-                "organization_id": organization_id,
-                "booking_id": booking_id,
-                "event_type": "BOOKING_CREATED",
-                "payload": {"quote_id": str(quote_doc.get("_id"))},
-                "created_at": now,
-                "created_by_email": user_email,
-            }
-        )
+        # Emit booking created event for timeline
+        actor = {
+            "role": "agency_user",
+            "email": user_email,
+            "agency_id": agency_id,
+        }
+        meta = {
+            "status_to": booking_doc.get("status"),
+            "quote_id": str(quote_doc.get("_id")),
+            "channel_id": booking_doc.get("channel_id"),
+            "amount_sell": (booking_doc.get("amounts") or {}).get("sell"),
+        }
+        await emit_event(self.db, organization_id, booking_id, "BOOKING_CREATED", actor=actor, meta=meta)
 
         return BookingCreateResponse(booking_id=booking_id, status="CONFIRMED", voucher_status="pending")

@@ -543,19 +543,19 @@ export default function OpsB2BQueuesPage() {
                         </div>
                         <div>
                           <div className="text-muted-foreground">Agency</div>
-                          <div>{bookingDetail.agency_id || "-"}</div>
+                          <div>{bookingDetail.agency_name || bookingDetail.agency_id || "-"}</div>
                         </div>
                         <div>
                           <div className="text-muted-foreground">Channel</div>
-                          <div>{bookingDetail.channel_id || "-"}</div>
+                          <div>{bookingDetail.channel_name || bookingDetail.channel_id || "-"}</div>
                         </div>
                         <div>
                           <div className="text-muted-foreground">Created</div>
-                          <div>{formatDate(bookingDetail.created_at)}</div>
+                          <div>{formatDateTime(bookingDetail.created_at)}</div>
                         </div>
                         <div>
                           <div className="text-muted-foreground">Updated</div>
-                          <div>{formatDate(bookingDetail.updated_at)}</div>
+                          <div>{formatDateTime(bookingDetail.updated_at)}</div>
                         </div>
                       </div>
                     </div>

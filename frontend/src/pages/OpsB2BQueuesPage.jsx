@@ -271,10 +271,6 @@ export default function OpsB2BQueuesPage() {
                   >
                     Son 7 g cn
                   </Button>
-
-                  >
-                    Uygula
-                  </Button>
                 </div>
               </div>
 

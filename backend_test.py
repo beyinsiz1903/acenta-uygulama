@@ -1777,7 +1777,7 @@ class B2BBookingsListTester:
             "hotel_id": hotel_id,
             "check_in": "2025-02-01",
             "check_out": "2025-02-03",
-            "rooms": [{"adults": 2, "children": 0}]
+            "occupancy": [{"adults": 2, "children": 0}]  # Changed from "rooms" to "occupancy"
         }
         
         success, response, _ = self.run_test(

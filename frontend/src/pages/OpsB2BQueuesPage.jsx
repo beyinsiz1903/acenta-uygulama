@@ -691,6 +691,81 @@ export default function OpsB2BQueuesPage() {
                       )}
                     </div>
                   )}
+
+                  {bookingDetailTab === "timeline" && (
+                    <div className="mt-4 space-y-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="text-sm font-medium">Timeline</div>
+                        <button
+                          type="button"
+                          className="text-xs text-primary hover:underline"
+                          onClick={() => void loadBookingEvents(bookingDetail.booking_id)}
+                          disabled={bookingEventsLoading}
+                        >
+                          Yenile
+                        </button>
+                      </div>
+
+                      {bookingEventsLoading && (
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                          Yükleniyor
+                        </div>
+                      )}
+
+                      {!!bookingEventsError && (
+                        <div className="rounded-md border border-destructive/50 bg-destructive/5 p-2 text-xs text-destructive">
+                          {bookingEventsError}
+                        </div>
+                      )}
+
+                      {!bookingEventsLoading && !bookingEventsError && bookingEvents.length === 0 && (
+                        <div className="text-xs text-muted-foreground">Henüz event yok.</div>
+                      )}
+
+                      {bookingEvents.length > 0 && (
+                        <div className="space-y-2">
+                          {bookingEvents.map((ev, idx) => {
+                            const key = `${ev.created_at || "t"}:${ev.type || "x"}:${idx}`;
+                            const expanded = expandedEventIds.has(key);
+                            return (
+                              <div key={key} className="rounded-md border p-3">
+                                <div className="flex items-start justify-between gap-3">
+                                  <div className="min-w-[140px] text-xs text-muted-foreground">
+                                    {formatDateTime(ev.created_at)}
+                                  </div>
+                                  <div className="flex-1">
+                                    <div className="text-xs font-medium">{eventLabel(ev)}</div>
+                                    <div className="mt-0.5 text-[11px] text-muted-foreground">
+                                      {eventSubline(ev)}
+                                    </div>
+                                    <div className="mt-1 text-[11px] text-muted-foreground">
+                                      {ev.actor?.email ? `${ev.actor.email}` : "-"}
+                                      {ev.actor?.role ? ` · ${ev.actor.role}` : ""}
+                                      {ev.actor?.agency_id ? ` · ${ev.actor.agency_id}` : ""}
+                                    </div>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    className="text-xs text-primary hover:underline"
+                                    onClick={() => toggleEventExpand(key)}
+                                  >
+                                    {expanded ? "Kapat" : "Detay"}
+                                  </button>
+                                </div>
+
+                                {expanded && (
+                                  <pre className="mt-3 overflow-auto rounded-md bg-muted/40 p-2 text-[11px] leading-relaxed">
+                                    {safeJson({ type: ev.type, actor: ev.actor, meta: ev.meta })}
+                                  </pre>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </CardContent>

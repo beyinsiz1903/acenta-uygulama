@@ -2151,7 +2151,10 @@ class B2BBookingsListTester:
         test_results.append(self.test_auth_scenarios())
         
         # 2) Create test data (optional - use existing if available)
-        self.test_create_b2b_booking_flow()  # Don't fail if this doesn't work
+        try:
+            self.test_create_b2b_booking_flow()  # Don't fail if this doesn't work
+        except Exception as e:
+            self.log(f"⚠️  B2B booking creation failed (using existing bookings): {str(e)}")
         
         # 3) Happy path - default listing
         test_results.append(self.test_happy_path_default_listing())

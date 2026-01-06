@@ -395,81 +395,194 @@ export default function OpsB2BQueuesPage() {
                   <div className="flex gap-2 border-b pb-2 text-xs">
                     <button
                       type="button"
-                      className="px-2 py-1 rounded-md bg-primary text-primary-foreground"
+                      className={`px-2 py-1 rounded-md text-xs ${
+                        bookingDetailTab === "general"
+                          ? "bg-primary text-primary-foreground"
+                          : "border bg-background text-foreground"
+                      }`}
+                      onClick={() => setBookingDetailTab("general")}
                     >
                       Genel
                     </button>
                     <button
                       type="button"
-                      className="px-2 py-1 rounded-md border bg-background text-foreground"
+                      className={`px-2 py-1 rounded-md text-xs ${
+                        bookingDetailTab === "snapshots"
+                          ? "bg-primary text-primary-foreground"
+                          : "border bg-background text-foreground"
+                      }`}
+                      onClick={() => setBookingDetailTab("snapshots")}
                     >
                       Snapshots
                     </button>
                     <button
                       type="button"
-                      className="px-2 py-1 rounded-md border bg-background text-foreground"
+                      className={`px-2 py-1 rounded-md text-xs ${
+                        bookingDetailTab === "voucher"
+                          ? "bg-primary text-primary-foreground"
+                          : "border bg-background text-foreground"
+                      }`}
+                      onClick={() => {
+                        setBookingDetailTab("voucher");
+                        void loadVoucherHistory(bookingDetail.booking_id);
+                      }}
                     >
                       Voucher
                     </button>
                   </div>
 
-                  {/* Genel tabı (şimdilik aktif) */}
-                  <div className="space-y-1">
-                    <div className="font-semibold">Genel Bilgiler</div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <div className="text-muted-foreground">Booking ID</div>
-                        <div className="font-mono break-all">{bookingDetail.booking_id}</div>
-                      </div>
-                      <div>
-                        <div className="text-muted-foreground">Status</div>
-                        <StatusBadge status={bookingDetail.status} />
-                      </div>
-                      <div>
-                        <div className="text-muted-foreground">Agency</div>
-                        <div>{bookingDetail.agency_id || "-"}</div>
-                      </div>
-                      <div>
-                        <div className="text-muted-foreground">Channel</div>
-                        <div>{bookingDetail.channel_id || "-"}</div>
-                      </div>
-                      <div>
-                        <div className="text-muted-foreground">Created</div>
-                        <div>{formatDate(bookingDetail.created_at)}</div>
-                      </div>
-                      <div>
-                        <div className="text-muted-foreground">Updated</div>
-                        <div>{formatDate(bookingDetail.updated_at)}</div>
+                  {/* Genel tabı */}
+                  {bookingDetailTab === "general" && (
+                    <div className="space-y-1">
+                      <div className="font-semibold">Genel Bilgiler</div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <div className="text-muted-foreground">Booking ID</div>
+                          <div className="font-mono break-all">{bookingDetail.booking_id}</div>
+                        </div>
+                        <div>
+                          <div className="text-muted-foreground">Status</div>
+                          <StatusBadge status={bookingDetail.status} />
+                        </div>
+                        <div>
+                          <div className="text-muted-foreground">Agency</div>
+                          <div>{bookingDetail.agency_id || "-"}</div>
+                        </div>
+                        <div>
+                          <div className="text-muted-foreground">Channel</div>
+                          <div>{bookingDetail.channel_id || "-"}</div>
+                        </div>
+                        <div>
+                          <div className="text-muted-foreground">Created</div>
+                          <div>{formatDate(bookingDetail.created_at)}</div>
+                        </div>
+                        <div>
+                          <div className="text-muted-foreground">Updated</div>
+                          <div>{formatDate(bookingDetail.updated_at)}</div>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
 
-                  {/* Snapshots tab içeriği */}
-                  <div className="space-y-1">
-                    <div className="font-semibold">Risk Snapshot (raw JSON)</div>
-                    <Textarea
-                      value={JSON.stringify(bookingDetail.risk_snapshot || {}, null, 2)}
-                      readOnly
-                      className="font-mono text-[11px] h-40"
-                    />
-                  </div>
+                  {/* Snapshots tabı */}
+                  {bookingDetailTab === "snapshots" && (
+                    <>
+                      <div className="space-y-1">
+                        <div className="font-semibold">Risk Snapshot (raw JSON)</div>
+                        <Textarea
+                          value={JSON.stringify(bookingDetail.risk_snapshot || {}, null, 2)}
+                          readOnly
+                          className="font-mono text-[11px] h-40"
+                        />
+                      </div>
 
-                  <div className="space-y-1">
-                    <div className="font-semibold">Policy Snapshot (raw JSON)</div>
-                    <Textarea
-                      value={JSON.stringify(bookingDetail.policy_snapshot || {}, null, 2)}
-                      readOnly
-                      className="font-mono text-[11px] h-40"
-                    />
-                  </div>
+                      <div className="space-y-1">
+                        <div className="font-semibold">Policy Snapshot (raw JSON)</div>
+                        <Textarea
+                          value={JSON.stringify(bookingDetail.policy_snapshot || {}, null, 2)}
+                          readOnly
+                          className="font-mono text-[11px] h-40"
+                        />
+                      </div>
+                    </>
+                  )}
 
-                  {/* Voucher tabı (Phase 1.1 - basit versiyon) */}
-                  <div className="space-y-2 border-t pt-2">
-                    <div className="font-semibold">Voucher</div>
-                    <div className="text-[11px] text-muted-foreground">
-                      Voucher tabı için backend hazır; FE tarafında bir sonraki iterasyonda tam sekmeli yapıya geçilebilir.
+                  {/* Voucher tabı */}
+                  {bookingDetailTab === "voucher" && (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="font-semibold">Voucher</div>
+                        <button
+                          type="button"
+                          className="text-[11px] text-muted-foreground underline-offset-2 hover:underline"
+                          onClick={() => loadVoucherHistory(bookingDetail.booking_id)}
+                        >
+                          Yenile
+                        </button>
+                      </div>
+
+                      {voucherHistoryLoading && (
+                        <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                          <Loader2 className="h-3 w-3 animate-spin" /> Yükleniyor...
+                        </div>
+                      )}
+
+                      {voucherHistoryError && (
+                        <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-2 text-[11px] text-destructive">
+                          <AlertCircle className="h-3 w-3 mt-0.5" />
+                          <div>{voucherHistoryError}</div>
+                        </div>
+                      )}
+
+                      {!voucherHistoryLoading && !voucherHistoryError && voucherHistory.length === 0 && (
+                        <div className="text-[11px] text-muted-foreground">
+                          Bu booking için henüz voucher yok.
+                        </div>
+                      )}
+
+                      {/* Generate button */}
+                      <div className="flex flex-wrap gap-2 text-[11px]">
+                        {!hasActiveVoucher && (
+                          <Button
+                            type="button"
+                            size="sm"
+                            className="gap-1 text-xs"
+                            disabled={voucherGenerateLoading}
+                            onClick={async () => {
+                              setVoucherGenerateLoading(true);
+                              try {
+                                const res = await api.post(`/ops/bookings/${bookingDetail.booking_id}/voucher/generate`);
+                                console.log("[OpsB2B] voucher generate", res.data);
+                                await loadVoucherHistory(bookingDetail.booking_id);
+                                await loadBookingDetail(bookingDetail.booking_id);
+                              } catch (err) {
+                                console.error("[OpsB2B] voucher generate error", err);
+                              } finally {
+                                setVoucherGenerateLoading(false);
+                              }
+                            }}
+                          >
+                            {voucherGenerateLoading && <Loader2 className="h-3 w-3 animate-spin" />}
+                            Voucher Oluştur
+                          </Button>
+                        )}
+                      </div>
+
+                      {/* History list */}
+                      {voucherHistory.length > 0 && (
+                        <div className="mt-2 border rounded-lg overflow-hidden">
+                          <div className="grid grid-cols-4 gap-2 bg-muted/60 px-2 py-1 text-[11px] font-medium text-muted-foreground">
+                            <div>Version</div>
+                            <div>Status</div>
+                            <div>Created</div>
+                            <div>Created By</div>
+                          </div>
+                          <div className="max-h-40 overflow-y-auto text-[11px]">
+                            {voucherHistory.map((v) => (
+                              <div
+                                key={v.voucher_id}
+                                className="grid grid-cols-4 gap-2 border-t px-2 py-1 bg-background"
+                              >
+                                <div>{v.version}</div>
+                                <div>
+                                  <Badge
+                                    variant={v.status === "active" ? "secondary" : "outline"}
+                                    className="text-[10px]"
+                                  >
+                                    {v.status}
+                                  </Badge>
+                                </div>
+                                <div>{formatDate(v.created_at)}</div>
+                                <div className="truncate" title={v.created_by_email || "-"}>
+                                  {v.created_by_email || "-"}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  </div>
+                  )}
                 </div>
               )}
             </CardContent>

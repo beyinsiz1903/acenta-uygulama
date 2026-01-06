@@ -132,6 +132,7 @@ app.include_router(b2b_bookings_router)
 app.include_router(b2b_cancel_router)
 app.include_router(ops_b2b_router)
 app.include_router(vouchers_router)
+app.include_router(b2b_bookings_list_router)
 app.include_router(ops_booking_events_router)
 
 

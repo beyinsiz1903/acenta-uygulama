@@ -1818,7 +1818,8 @@ class BookingTimelineV1Tester:
                 success, events_response, _ = self.run_test(
                     f"GET /api/ops/bookings/{self.booking_id}/events (verify CANCEL_REQUESTED)",
                     "GET",
-                    f"api/ops/bookings/{self.booking_id}/events"
+                    f"api/ops/bookings/{self.booking_id}/events",
+                    200
                 )
                 
                 if success and events_response.get('items'):

@@ -48,6 +48,12 @@ export default function OpsB2BQueuesPage() {
   const [selectedBookingId, setSelectedBookingId] = useState(null);
   const [bookingDetail, setBookingDetail] = useState(null);
   const [bookingDetailLoading, setBookingDetailLoading] = useState(false);
+  const [bookingDetailTab, setBookingDetailTab] = useState("general");
+  const [voucherHistory, setVoucherHistory] = useState([]);
+  const [voucherHistoryLoading, setVoucherHistoryLoading] = useState(false);
+  const [voucherHistoryError, setVoucherHistoryError] = useState("");
+  const [voucherGenerateLoading, setVoucherGenerateLoading] = useState(false);
+  const [voucherResendLoading, setVoucherResendLoading] = useState(false);
 
   // Cases state
   const [cases, setCases] = useState([]);

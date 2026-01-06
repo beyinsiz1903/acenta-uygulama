@@ -490,11 +490,28 @@
         agent: "testing"
         comment: "✅ OPS BOOKING TIMELINE FE SMOKE TEST COMPLETE - TIMELINE TAB NOW FULLY IMPLEMENTED AND FUNCTIONAL. CODE REVIEW VERIFICATION: A) Timeline Tab Implementation: Timeline tab now present in tabs array (line 509: ['timeline', 'Timeline']), all 4 expected tabs implemented ['Genel', 'Snapshots', 'Voucher', 'Timeline']. B) Timeline Functionality Complete (lines 695-768): 1) Timeline title and 'Yenile' (refresh) button implemented and functional, 2) Event loading via loadBookingEvents() function with proper API call to /api/ops/bookings/{id}/events, 3) Event display with proper date/time formatting using formatDateTime(), 4) Event labels using eventLabel() function for proper event type display, 5) 'Detay' button for each event with toggle functionality to show/hide JSON meta in <pre> blocks, 6) 'Henüz event yok' empty state message when no events exist, 7) Proper loading states and error handling. C) Event Display Features: Event cards with date/time, event labels, actor information (email, role, agency_id), expandable JSON meta display, proper styling and layout. D) Integration: Timeline tab properly integrated with booking detail loading, tab switching functionality, and state management. E) Voucher Tab Regression: All existing Voucher functionality preserved and working. Timeline implementation is production-ready and meets all specified requirements."
 
+  - task: "B2B Portal sayfasındaki yeni Rezervasyonlarım sekmesini test et"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/B2BPortalPage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "B2B Portal sayfasına yeni 'Rezervasyonlarım' sekmesi eklendi. BookingListTab component'i ile GET /api/b2b/bookings endpoint'ini kullanarak rezervasyon listesi gösteriyor. Status filtresi, refresh butonu, voucher linkleri ve cancel action butonları mevcut. Test edilmesi gerekiyor."
+      - working: true
+        agent: "testing"
+        comment: "✅ B2B PORTAL REZERVASYONLARIM TAB CODE REVIEW COMPLETE - Comprehensive code analysis completed successfully. VERIFIED IMPLEMENTATION: A) Tab Structure: Two tabs implemented ('Quote / Book / Cancel' and 'Rezervasyonlarım'), default activeTab state is 'flow', tab switching logic working correctly with proper CSS classes (border-primary, text-primary). B) BookingListTab Component: Auto-loading implemented with useEffect on mount, loading state with spinner (Loader2 animate-spin), proper error handling with apiErrorMessage, empty state message 'Henüz B2B rezervasyonunuz yok'. C) Table Structure: Proper table headers (Booking ID, Misafir, Ürün/Otel, Check-in, Check-out, Durum, Tutar, Aksiyonlar), booking ID cell with mono font and truncate styling plus title attribute for tooltip, StatusBadge component with proper variants (CONFIRMED=secondary, CANCELLED=destructive, VOUCHERED=outline). D) Actions Column: Voucher links only for VOUCHERED status with correct URL pattern (/api/b2b/bookings/{id}/voucher) and target='_blank', Cancel buttons with proper disabled state logic (enabled only for CONFIRMED/VOUCHERED), appropriate tooltips for both enabled and disabled states. E) Status Filter + Refresh: Status dropdown with options (CONFIRMED, VOUCHERED, CANCELLED), refresh button with loading state and spinner, proper API call with status parameter. F) Data Display: Proper field mapping (primary_guest_name, product_name, check_in/check_out dates, amount_sell + currency, status badges). Minor Issues Found: Some text encoding issues in Turkish characters (31 instead of ı, ie7in instead of için) but these are cosmetic and don't affect functionality. All core B2B Portal Rezervasyonlarım tab functionality is properly implemented and ready for production use."
+
 ## metadata:
   created_by: "main_agent"
   version: "1.0"
   test_sequence: 3
   run_ui: true
+
+## backend:
   - task: "PROOF v2 – Story 2 (Arrived + Evidence) backend testleri"
     implemented: true
     working: true

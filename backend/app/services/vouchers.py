@@ -133,7 +133,11 @@ async def generate_for_booking(db, organization_id: str, booking_id: str, create
 
     html = _render_template_html(template, snapshot)
 
+    token = f"vch_{uuid.uuid4().hex[:24]}"
+
     voucher_doc = {
+        "_id": token,
+        "token": token,
         "organization_id": organization_id,
         "booking_id": booking_id,
         "version": version,

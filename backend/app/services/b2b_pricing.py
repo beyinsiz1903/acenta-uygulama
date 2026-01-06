@@ -166,7 +166,18 @@ class B2BPricingService:
         if not doc:
             raise AppError(404, "not_found", "Quote not found", {"quote_id": quote_id})
 
-        if doc.get("expires_at") and doc["expires_at"] < now_utc():
-            raise AppError(409, "quote_expired", "Quote has expired", {"quote_id": quote_id})
+        if doc.get("expires_at"):
+            expires_at = doc["expires_at"]
+            # Normalize to naive UTC for comparison if timezone-aware
+            from datetime import timezone
+
+            if hasattr(expires_at, "tzinfo") and expires_at.tzinfo is not None:
+                expires_at_cmp = expires_at.astimezone(timezone.utc).replace(tzinfo=None)
+            else:
+                expires_at_cmp = expires_at
+
+            now_naive = now_utc().replace(tzinfo=None)
+            if expires_at_cmp < now_naive:
+                raise AppError(409, "quote_expired", "Quote has expired", {"quote_id": quote_id})
 
         return doc

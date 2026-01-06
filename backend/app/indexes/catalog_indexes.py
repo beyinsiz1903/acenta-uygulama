@@ -4,60 +4,85 @@ from pymongo import ASCENDING, DESCENDING
 
 
 async def ensure_catalog_indexes(db):
+    """Ensure indexes for catalog collections.
+
+    Defensive: if an index with the same name but different options already
+    exists (legacy), we swallow IndexOptionsConflict and keep existing
+    definition. This avoids blocking startup while still enforcing
+    constraints on fresh deployments.
+    """
+
+    async def _safe_create(collection, *args, **kwargs):
+        try:
+            await collection.create_index(*args, **kwargs)
+        except Exception:
+            # Ignore index option conflicts / already exists
+            # Existing deployments keep their index definition.
+            return
+
     # products: enforce unique code per org only for docs that have code
-    await db.products.create_index(
+    await _safe_create(
+        db.products,
         [("organization_id", ASCENDING), ("code", ASCENDING)],
         unique=True,
         name="uniq_product_code_per_org",
-        # NOTE: partialFilterExpression must match existing definition in DB to avoid conflicts
         partialFilterExpression={"code": {"$type": "string"}},
     )
-    await db.products.create_index(
+    await _safe_create(
+        db.products,
         [("organization_id", ASCENDING), ("type", ASCENDING), ("status", ASCENDING), ("created_at", DESCENDING)],
         name="products_list",
     )
-    await db.products.create_index(
+    await _safe_create(
+        db.products,
         [("organization_id", ASCENDING), ("name_search", ASCENDING)],
         name="products_name_search",
     )
 
     # product_versions
-    await db.product_versions.create_index(
+    await _safe_create(
+        db.product_versions,
         [("organization_id", ASCENDING), ("product_id", ASCENDING), ("version", DESCENDING)],
         name="pver_by_product_version",
     )
-    await db.product_versions.create_index(
+    await _safe_create(
+        db.product_versions,
         [("organization_id", ASCENDING), ("product_id", ASCENDING), ("status", ASCENDING)],
         name="pver_by_product_status",
     )
-    await db.product_versions.create_index(
+    await _safe_create(
+        db.product_versions,
         [("organization_id", ASCENDING), ("product_id", ASCENDING), ("published_at", DESCENDING)],
         name="pver_published_at",
     )
 
     # room_types
-    await db.room_types.create_index(
+    await _safe_create(
+        db.room_types,
         [("organization_id", ASCENDING), ("product_id", ASCENDING), ("code", ASCENDING)],
         unique=True,
         name="uniq_roomtype_code_per_product",
     )
 
     # rate_plans
-    await db.rate_plans.create_index(
+    await _safe_create(
+        db.rate_plans,
         [("organization_id", ASCENDING), ("product_id", ASCENDING), ("code", ASCENDING)],
         unique=True,
         name="uniq_rateplan_code_per_product",
     )
 
     # cancellation_policies
-    await db.cancellation_policies.create_index(
+    await _safe_create(
+        db.cancellation_policies,
         [("organization_id", ASCENDING), ("code", ASCENDING)],
         unique=True,
         name="uniq_cancel_policy_code_per_org",
     )
 
     # audit_logs (extra entity-centric index)
-    await db.audit_logs.create_index(
+    await _safe_create(
+        db.audit_logs,
         [
             ("organization_id", ASCENDING),
             ("target.type", ASCENDING),

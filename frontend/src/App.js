@@ -21,6 +21,7 @@ import AdminExportsPage from "./pages/AdminExportsPage";
 import AdminMatchDetailPage from "./pages/AdminMatchDetailPage";
 import AdminMatchRiskTrendsPage from "./pages/AdminMatchRiskTrendsPage";
 import AdminActionPoliciesPage from "./pages/AdminActionPoliciesPage";
+import AdminApprovalsPage from "./pages/AdminApprovalsPage";
 import DashboardPage from "./pages/DashboardPage";
 import ProductsPage from "./pages/ProductsPage";
 import AgencyHotelsPage from "./pages/AgencyHotelsPage";

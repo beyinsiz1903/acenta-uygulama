@@ -1,0 +1,175 @@
+import React, { useEffect, useState } from "react";
+import { getApprovalTasks, approveApprovalTask, rejectApprovalTask, apiErrorMessage } from "../lib/api";
+import { useToast } from "../hooks/use-toast";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Button } from "../components/ui/button";
+
+function formatDateTime(iso) {
+  if (!iso) return "-";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  return d.toLocaleString("tr-TR", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+export default function AdminApprovalsPage() {
+  const { toast } = useToast();
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [rowLoading, setRowLoading] = useState({});
+  const [error, setError] = useState("");
+
+  async function load() {
+    setLoading(true);
+    setError("");
+    try {
+      const data = await getApprovalTasks({ status: "pending", limit: 50 });
+      setItems(data?.items || []);
+    } catch (e) {
+      const msg = apiErrorMessage(e);
+      setError(msg);
+      toast({ title: "Failed to load approvals", description: msg, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    void load();
+  }, []);
+
+  const handleDecision = async (id, action) => {
+    setRowLoading((prev) => ({ ...prev, [id]: true }));
+    try {
+      if (action === "approve") {
+        await approveApprovalTask(id, {});
+        toast({ title: "Task approved" });
+      } else {
+        await rejectApprovalTask(id, {});
+        toast({ title: "Task rejected" });
+      }
+      setItems((prev) => prev.filter((x) => x.id !== id));
+    } catch (e) {
+      const msg = apiErrorMessage(e);
+      toast({ title: `Failed to ${action} task`, description: msg, variant: "destructive" });
+    } finally {
+      setRowLoading((prev) => ({ ...prev, [id]: false }));
+    }
+  };
+
+  const hasItems = items && items.length > 0;
+
+  return (
+    <div className="p-4 md:p-6" data-testid="approvals-page">
+      <div className="mb-4 flex flex-col gap-1 md:flex-row md:items-end md:justify-between">
+        <div>
+          <div className="text-xl font-semibold">Approvals</div>
+          <div className="text-sm text-muted-foreground">
+            Pending unblock and other critical approval tasks for matches.
+          </div>
+        </div>
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <span>Status: pending</span>
+          <Button type="button" size="sm" variant="outline" onClick={() => load()} disabled={loading}>
+            {loading ? "Refreshing..." : "Refresh"}
+          </Button>
+        </div>
+      </div>
+
+      {error ? (
+        <div
+          className="mb-3 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+          data-testid="approvals-error"
+        >
+          {error}
+        </div>
+      ) : null}
+
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm">Pending approval tasks</CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0">
+          {!hasItems && !loading ? (
+            <div
+              className="py-8 text-sm text-muted-foreground text-center"
+              data-testid="approvals-empty"
+            >
+              No pending approvals.
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b text-xs text-muted-foreground">
+                    <th className="px-2 py-2 text-left">Requested at</th>
+                    <th className="px-2 py-2 text-left">Type</th>
+                    <th className="px-2 py-2 text-left">Target</th>
+                    <th className="px-2 py-2 text-left">Requested by</th>
+                    <th className="px-2 py-2 text-right w-40">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {items.map((item) => {
+                    const busy = !!rowLoading[item.id];
+                    const target = item.target || {};
+                    const matchId = target.match_id || "-";
+                    return (
+                      <tr
+                        key={item.id}
+                        className="border-b last:border-0 hover:bg-muted/40"
+                        data-testid={`approval-row-${item.id}`}
+                      >
+                        <td className="px-2 py-2 text-xs">
+                          {formatDateTime(item.requested_at)}
+                        </td>
+                        <td className="px-2 py-2 text-xs">
+                          <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium">
+                            {item.task_type || "-"}
+                          </span>
+                        </td>
+                        <td className="px-2 py-2 text-xs">
+                          <div className="font-mono text-[11px]">{matchId}</div>
+                        </td>
+                        <td className="px-2 py-2 text-xs">{item.requested_by_email || "-"}</td>
+                        <td className="px-2 py-2 text-right">
+                          <div className="inline-flex gap-2">
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              data-testid="approval-approve-btn"
+                              disabled={busy}
+                              onClick={() => handleDecision(item.id, "approve")}
+                            >
+                              Approve
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="ghost"
+                              data-testid="approval-reject-btn"
+                              disabled={busy}
+                              onClick={() => handleDecision(item.id, "reject")}
+                            >
+                              Reject
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

@@ -116,3 +116,24 @@ export function apiErrorMessage(err) {
     "Beklenmeyen bir hata oluştu"
   );
 }
+
+// SCALE v1: approval tasks helpers
+export async function getApprovalTasks(params = {}) {
+  const search = new URLSearchParams();
+  const status = params.status || "pending";
+  const limit = params.limit || 50;
+  if (status) search.set("status", status);
+  if (limit) search.set("limit", String(limit));
+  const res = await api.get(`/admin/approval-tasks?${search.toString()}`);
+  return res.data;
+}
+
+export async function approveApprovalTask(id, body = {}) {
+  const res = await api.post(`/admin/approval-tasks/${id}/approve`, body);
+  return res.data;
+}
+
+export async function rejectApprovalTask(id, body = {}) {
+  const res = await api.post(`/admin/approval-tasks/${id}/reject`, body);
+  return res.data;
+}

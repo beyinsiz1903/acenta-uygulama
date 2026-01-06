@@ -1833,6 +1833,231 @@ class GlobalErrorHandlerIdempotencyTester:
         return 0 if self.tests_failed == 0 else 1
 
 
+class RegressionTester:
+    def __init__(self, base_url="https://risk-ops-platform.preview.emergentagent.com"):
+        self.base_url = base_url
+        self.admin_token = None
+        self.agency_token = None
+        self.tests_run = 0
+        self.tests_passed = 0
+        self.tests_failed = 0
+        self.failed_tests = []
+
+    def log(self, msg):
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}")
+
+    def run_test(self, name, method, endpoint, expected_status, data=None, headers_override=None):
+        """Run a single API test"""
+        url = f"{self.base_url}/{endpoint}"
+        headers = headers_override or {'Content-Type': 'application/json'}
+        if self.admin_token and not headers_override:
+            headers['Authorization'] = f'Bearer {self.admin_token}'
+
+        self.tests_run += 1
+        self.log(f"🔍 Test #{self.tests_run}: {name}")
+        
+        try:
+            if method == 'GET':
+                response = requests.get(url, headers=headers, timeout=10)
+            elif method == 'POST':
+                response = requests.post(url, json=data, headers=headers, timeout=10)
+            elif method == 'PUT':
+                response = requests.put(url, json=data, headers=headers, timeout=10)
+            elif method == 'DELETE':
+                response = requests.delete(url, headers=headers, timeout=10)
+            else:
+                raise ValueError(f"Unsupported method: {method}")
+
+            success = response.status_code == expected_status
+            if success:
+                self.tests_passed += 1
+                self.log(f"✅ PASSED - Status: {response.status_code}")
+                try:
+                    return True, response.json() if response.content else {}
+                except:
+                    return True, {}
+            else:
+                self.tests_failed += 1
+                self.failed_tests.append(f"{name} - Expected {expected_status}, got {response.status_code}")
+                self.log(f"❌ FAILED - Expected {expected_status}, got {response.status_code}")
+                try:
+                    self.log(f"   Response: {response.text[:200]}")
+                except:
+                    pass
+                return False, {}
+
+        except Exception as e:
+            self.tests_failed += 1
+            self.failed_tests.append(f"{name} - Error: {str(e)}")
+            self.log(f"❌ FAILED - Error: {str(e)}")
+            return False, {}
+
+    def test_health_endpoint(self):
+        """Test /api/health endpoint"""
+        self.log("\n=== HEALTH CHECK ===")
+        success, response = self.run_test(
+            "Health Check",
+            "GET",
+            "api/health",
+            200,
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and response.get('ok'):
+            self.log("✅ Database connection OK")
+            return True
+        return False
+
+    def test_admin_login(self):
+        """Test admin login"""
+        self.log("\n=== ADMIN LOGIN ===")
+        success, response = self.run_test(
+            "Admin Login (admin@acenta.test/admin123)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "admin@acenta.test", "password": "admin123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.admin_token = response['access_token']
+            user = response.get('user', {})
+            roles = user.get('roles', [])
+            
+            if 'admin' in roles or 'super_admin' in roles:
+                self.log(f"✅ Admin login successful - roles: {roles}")
+                return True
+            else:
+                self.log(f"❌ Missing admin/super_admin role: {roles}")
+                return False
+        return False
+
+    def test_agency_login(self):
+        """Test agency1 login"""
+        self.log("\n=== AGENCY LOGIN ===")
+        success, response = self.run_test(
+            "Agency Login (agency1@demo.test/agency123)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "agency1@demo.test", "password": "agency123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.agency_token = response['access_token']
+            user = response.get('user', {})
+            roles = user.get('roles', [])
+            agency_id = user.get('agency_id')
+            
+            if 'agency_admin' in roles or 'agency_agent' in roles:
+                self.log(f"✅ Agency login successful - roles: {roles}, agency_id: {agency_id}")
+                return True
+            else:
+                self.log(f"❌ Missing agency role: {roles}")
+                return False
+        return False
+
+    def test_admin_agencies_endpoint(self):
+        """Test /api/admin/agencies endpoint"""
+        self.log("\n=== ADMIN AGENCIES ENDPOINT ===")
+        success, response = self.run_test(
+            "GET /api/admin/agencies",
+            "GET",
+            "api/admin/agencies",
+            200
+        )
+        if success:
+            agencies = response if isinstance(response, list) else response.get('items', [])
+            self.log(f"✅ Found {len(agencies)} agencies")
+            return True
+        return False
+
+    def test_agency_hotels_endpoint(self):
+        """Test /api/agency/hotels endpoint"""
+        self.log("\n=== AGENCY HOTELS ENDPOINT ===")
+        # Switch to agency token
+        original_token = self.admin_token
+        self.admin_token = self.agency_token
+        
+        success, response = self.run_test(
+            "GET /api/agency/hotels",
+            "GET",
+            "api/agency/hotels",
+            200
+        )
+        
+        # Restore admin token
+        self.admin_token = original_token
+        
+        if success:
+            hotels = response if isinstance(response, list) else response.get('items', [])
+            self.log(f"✅ Found {len(hotels)} hotels for agency")
+            return True
+        return False
+
+    def test_admin_matches_endpoint(self):
+        """Test /api/admin/matches endpoint (smoke test)"""
+        self.log("\n=== ADMIN MATCHES ENDPOINT ===")
+        success, response = self.run_test(
+            "GET /api/admin/matches",
+            "GET",
+            "api/admin/matches?days=30&min_total=1",
+            200
+        )
+        if success:
+            matches = response.get('items', []) if isinstance(response, dict) else response
+            self.log(f"✅ Matches endpoint working - found {len(matches)} matches")
+            return True
+        return False
+
+    def print_summary(self):
+        """Print test summary"""
+        self.log("\n" + "="*60)
+        self.log("REGRESSION TEST SUMMARY")
+        self.log("="*60)
+        self.log(f"Total Tests: {self.tests_run}")
+        self.log(f"✅ Passed: {self.tests_passed}")
+        self.log(f"❌ Failed: {self.tests_failed}")
+        self.log(f"Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%")
+        
+        if self.failed_tests:
+            self.log("\n❌ FAILED TESTS:")
+            for i, test in enumerate(self.failed_tests, 1):
+                self.log(f"  {i}. {test}")
+        
+        self.log("="*60)
+
+    def run_regression_tests(self):
+        """Run regression tests after B2B Phase1 changes"""
+        self.log("🚀 Starting Post-B2B Phase1 Regression Tests")
+        self.log(f"Base URL: {self.base_url}")
+        
+        # 1. Health check
+        if not self.test_health_endpoint():
+            self.log("❌ Health check failed - stopping tests")
+            self.print_summary()
+            return 1
+
+        # 2. Admin login
+        if not self.test_admin_login():
+            self.log("❌ Admin login failed - stopping tests")
+            self.print_summary()
+            return 1
+
+        # 3. Agency login
+        if not self.test_agency_login():
+            self.log("❌ Agency login failed - continuing with other tests")
+
+        # 4. Critical non-B2B endpoints smoke test
+        self.test_admin_agencies_endpoint()
+        self.test_agency_hotels_endpoint()
+        self.test_admin_matches_endpoint()
+
+        # Summary
+        self.print_summary()
+
+        return 0 if self.tests_failed == 0 else 1
+
+
 class B2BQuotesBookingsCancelTester:
     def __init__(self, base_url="https://risk-ops-platform.preview.emergentagent.com"):
         self.base_url = base_url

@@ -1539,6 +1539,18 @@ class RiskSnapshotsTrendTester:
         return 0 if self.tests_failed == 0 else 1
 
 
+class OpsVoucherViewTester:
+    def __init__(self, base_url="https://risk-ops-platform.preview.emergentagent.com"):
+        self.base_url = base_url
+        self.admin_token = None
+        self.tests_run = 0
+        self.tests_passed = 0
+        self.tests_failed = 0
+        self.failed_tests = []
+        
+        # Store data for testing
+        self.booking_id = None
+
 class VoucherV1Tester:
     def __init__(self, base_url="https://risk-ops-platform.preview.emergentagent.com"):
         self.base_url = base_url

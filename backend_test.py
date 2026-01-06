@@ -2243,6 +2243,439 @@ class ProductCatalogTester:
         return 0 if self.tests_failed == 0 else 1
 
 
+class ProductCatalogV1SmokeTest:
+    def __init__(self, base_url="https://riskops-platform.preview.emergentagent.com"):
+        self.base_url = base_url
+        self.admin_token = None
+        self.tests_run = 0
+        self.tests_passed = 0
+        self.tests_failed = 0
+        self.failed_tests = []
+        
+        # Store data for testing
+        self.product_id = None
+        self.version_id = None
+        self.room_type_id = None
+        self.rate_plan_id = None
+
+    def log(self, msg):
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}")
+
+    def run_test(self, name, method, endpoint, expected_status, data=None, headers_override=None):
+        """Run a single API test"""
+        url = f"{self.base_url}/{endpoint}"
+        headers = headers_override or {'Content-Type': 'application/json'}
+        if self.admin_token and not headers_override:
+            headers['Authorization'] = f'Bearer {self.admin_token}'
+
+        self.tests_run += 1
+        self.log(f"🔍 Test #{self.tests_run}: {name}")
+        
+        try:
+            if method == 'GET':
+                response = requests.get(url, headers=headers, timeout=10)
+            elif method == 'POST':
+                response = requests.post(url, json=data, headers=headers, timeout=10)
+            elif method == 'PUT':
+                response = requests.put(url, json=data, headers=headers, timeout=10)
+            elif method == 'DELETE':
+                response = requests.delete(url, headers=headers, timeout=10)
+            else:
+                raise ValueError(f"Unsupported method: {method}")
+
+            success = response.status_code == expected_status
+            if success:
+                self.tests_passed += 1
+                self.log(f"✅ PASSED - Status: {response.status_code}")
+                try:
+                    return True, response.json() if response.content else {}, response
+                except:
+                    return True, {}, response
+            else:
+                self.tests_failed += 1
+                self.failed_tests.append(f"{name} - Expected {expected_status}, got {response.status_code}")
+                self.log(f"❌ FAILED - Expected {expected_status}, got {response.status_code}")
+                try:
+                    self.log(f"   Response: {response.text[:500]}")
+                except:
+                    pass
+                return False, {}, response
+
+        except Exception as e:
+            self.tests_failed += 1
+            self.failed_tests.append(f"{name} - Error: {str(e)}")
+            self.log(f"❌ FAILED - Error: {str(e)}")
+            return False, {}, None
+
+    def test_admin_login(self):
+        """Test admin login"""
+        self.log("\n=== AUTHENTICATION ===")
+        success, response, _ = self.run_test(
+            "Admin Login (admin@acenta.test/admin123)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "admin@acenta.test", "password": "admin123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.admin_token = response['access_token']
+            user = response.get('user', {})
+            roles = user.get('roles', [])
+            
+            if 'admin' in roles or 'super_admin' in roles:
+                self.log(f"✅ Admin login successful - roles: {roles}")
+                return True
+            else:
+                self.log(f"❌ Missing admin/super_admin role: {roles}")
+                return False
+        return False
+
+    def test_1_product_list_500_error(self):
+        """1) Product list 500 hatası - Admin token ile GET /api/admin/catalog/products?limit=50"""
+        self.log("\n=== 1) PRODUCT LIST 500 ERROR TEST ===")
+        
+        success, response, http_response = self.run_test(
+            "GET /api/admin/catalog/products?limit=50",
+            "GET",
+            "api/admin/catalog/products?limit=50",
+            200
+        )
+        
+        if success:
+            items = response.get('items', [])
+            self.log(f"✅ Product list returned 200 OK with {len(items)} items")
+            
+            # Check if items have required fields including 'code'
+            if items:
+                first_item = items[0]
+                required_fields = ['product_id', 'type', 'code', 'status', 'created_at', 'updated_at', 'published_version']
+                missing_fields = [field for field in required_fields if field not in first_item]
+                
+                if not missing_fields:
+                    self.log(f"✅ All required fields present in items:")
+                    self.log(f"   - product_id: {first_item.get('product_id')}")
+                    self.log(f"   - type: {first_item.get('type')}")
+                    self.log(f"   - code: {first_item.get('code')}")
+                    self.log(f"   - status: {first_item.get('status')}")
+                    self.log(f"   - published_version: {first_item.get('published_version')}")
+                    
+                    # Store product_id for later tests
+                    self.product_id = first_item.get('product_id')
+                    return True
+                else:
+                    self.log(f"❌ Missing required fields: {missing_fields}")
+                    return False
+            else:
+                self.log(f"✅ Empty product list - no KeyError: 'code' issue")
+                return True
+        else:
+            self.log(f"❌ Product list failed with status {http_response.status_code if http_response else 'unknown'}")
+            return False
+
+    def test_2_publish_guard_error_format(self):
+        """2) Publish guard error formatı - Product status 'inactive' iken publish dene"""
+        self.log("\n=== 2) PUBLISH GUARD ERROR FORMAT TEST ===")
+        
+        if not self.product_id:
+            # Create a test product first
+            product_data = {
+                "type": "hotel",
+                "code": "TEST_HOTEL_001",
+                "name": {"tr": "Test Otel", "en": "Test Hotel"},
+                "default_currency": "EUR",
+                "status": "inactive"
+            }
+            success, response, _ = self.run_test(
+                "Create Test Product (inactive)",
+                "POST",
+                "api/admin/catalog/products",
+                200,
+                data=product_data
+            )
+            
+            if success and response.get('product_id'):
+                self.product_id = response['product_id']
+                self.log(f"✅ Test product created: {self.product_id}")
+            else:
+                self.log(f"❌ Failed to create test product")
+                return False
+        
+        # Create a version first
+        version_data = {
+            "content": {
+                "description": {"tr": "Test versiyon", "en": "Test version"},
+                "room_type_ids": [],
+                "rate_plan_ids": []
+            },
+            "valid_from": "2025-01-01",
+            "valid_to": "2025-12-31"
+        }
+        success, response, _ = self.run_test(
+            "Create Product Version",
+            "POST",
+            f"api/admin/catalog/products/{self.product_id}/versions",
+            200,
+            data=version_data
+        )
+        
+        if success and response.get('version_id'):
+            self.version_id = response['version_id']
+            self.log(f"✅ Version created: {self.version_id}")
+        else:
+            self.log(f"❌ Failed to create version")
+            return False
+        
+        # Try to publish while product is inactive - should get 409
+        success, response, http_response = self.run_test(
+            "Publish Version (product inactive - should fail)",
+            "POST",
+            f"api/admin/catalog/products/{self.product_id}/versions/{self.version_id}/publish",
+            409
+        )
+        
+        if success:
+            # Check error format
+            if 'error' in response:
+                error = response['error']
+                if error.get('code') == 'product_not_active':
+                    self.log(f"✅ Correct error format:")
+                    self.log(f"   - HTTP 409")
+                    self.log(f"   - error.code: {error.get('code')}")
+                    self.log(f"   - error.message: {error.get('message')}")
+                    
+                    # Now activate product and try again
+                    update_data = {"status": "active"}
+                    success2, response2, _ = self.run_test(
+                        "Update Product to Active",
+                        "PUT",
+                        f"api/admin/catalog/products/{self.product_id}",
+                        200,
+                        data=update_data
+                    )
+                    
+                    if success2:
+                        # Try publish again - should work now
+                        success3, response3, _ = self.run_test(
+                            "Publish Version (product active - should work)",
+                            "POST",
+                            f"api/admin/catalog/products/{self.product_id}/versions/{self.version_id}/publish",
+                            200
+                        )
+                        
+                        if success3:
+                            self.log(f"✅ Publish successful after activating product")
+                            return True
+                        else:
+                            self.log(f"❌ Publish failed even after activating product")
+                            return False
+                    else:
+                        self.log(f"❌ Failed to activate product")
+                        return False
+                else:
+                    self.log(f"❌ Wrong error code: {error.get('code')} (expected: product_not_active)")
+                    return False
+            else:
+                self.log(f"❌ Error response missing 'error' field")
+                return False
+        else:
+            self.log(f"❌ Expected 409 but got different status")
+            return False
+
+    def test_3_referential_integrity_error(self):
+        """3) Referential integrity hata kodu - Geçersiz room_type_ids/rate_plan_ids ile version oluştur"""
+        self.log("\n=== 3) REFERENTIAL INTEGRITY ERROR TEST ===")
+        
+        if not self.product_id:
+            self.log(f"❌ No product_id available for referential integrity test")
+            return False
+        
+        # Try to create version with invalid room_type_ids and rate_plan_ids
+        invalid_version_data = {
+            "content": {
+                "description": {"tr": "Invalid versiyon", "en": "Invalid version"},
+                "room_type_ids": ["invalid_room_type_id_123", "another_invalid_id"],
+                "rate_plan_ids": ["invalid_rate_plan_id_456", "another_invalid_rate_id"]
+            },
+            "valid_from": "2025-01-01",
+            "valid_to": "2025-12-31"
+        }
+        
+        success, response, http_response = self.run_test(
+            "Create Version with Invalid References",
+            "POST",
+            f"api/admin/catalog/products/{self.product_id}/versions",
+            409
+        )
+        
+        if success:
+            # Check error format
+            if 'error' in response:
+                error = response['error']
+                if error.get('code') == 'invalid_reference':
+                    self.log(f"✅ Correct referential integrity error:")
+                    self.log(f"   - HTTP 409")
+                    self.log(f"   - error.code: {error.get('code')}")
+                    self.log(f"   - error.message: {error.get('message')}")
+                    details = error.get('details', {})
+                    if details:
+                        self.log(f"   - error.details: {details}")
+                    return True
+                else:
+                    self.log(f"❌ Wrong error code: {error.get('code')} (expected: invalid_reference)")
+                    return False
+            else:
+                self.log(f"❌ Error response missing 'error' field")
+                return False
+        else:
+            self.log(f"❌ Expected 409 but got different status")
+            return False
+
+    def test_4_index_regressions(self):
+        """4) Index regressions - Yukarıdaki çağrılar sırasında index conflict olmamalı"""
+        self.log("\n=== 4) INDEX REGRESSIONS TEST ===")
+        
+        # Test multiple operations to ensure no index conflicts
+        operations_successful = 0
+        total_operations = 0
+        
+        # Test 1: Multiple product list calls
+        for i in range(3):
+            total_operations += 1
+            success, _, _ = self.run_test(
+                f"Product List Call #{i+1}",
+                "GET",
+                "api/admin/catalog/products?limit=10",
+                200
+            )
+            if success:
+                operations_successful += 1
+        
+        # Test 2: Create room type (if we have product_id)
+        if self.product_id:
+            room_type_data = {
+                "product_id": self.product_id,
+                "code": f"DELUXE_{int(datetime.now().timestamp())}",
+                "name": {"tr": "Deluxe Oda", "en": "Deluxe Room"},
+                "max_occupancy": 2,
+                "attributes": {}
+            }
+            total_operations += 1
+            success, response, _ = self.run_test(
+                "Create Room Type",
+                "POST",
+                "api/admin/catalog/room-types",
+                200,
+                data=room_type_data
+            )
+            if success:
+                operations_successful += 1
+                self.room_type_id = response.get('room_type_id')
+        
+        # Test 3: Create rate plan (if we have product_id)
+        if self.product_id:
+            rate_plan_data = {
+                "product_id": self.product_id,
+                "code": f"STANDARD_{int(datetime.now().timestamp())}",
+                "name": {"tr": "Standart Tarife", "en": "Standard Rate"},
+                "currency": "EUR",
+                "base_price": 100.0,
+                "attributes": {}
+            }
+            total_operations += 1
+            success, response, _ = self.run_test(
+                "Create Rate Plan",
+                "POST",
+                "api/admin/catalog/rate-plans",
+                200,
+                data=rate_plan_data
+            )
+            if success:
+                operations_successful += 1
+                self.rate_plan_id = response.get('rate_plan_id')
+        
+        # Test 4: Create cancellation policy (if we have product_id)
+        if self.product_id:
+            policy_data = {
+                "product_id": self.product_id,
+                "code": f"FLEXIBLE_{int(datetime.now().timestamp())}",
+                "name": {"tr": "Esnek İptal", "en": "Flexible Cancellation"},
+                "rules": [
+                    {
+                        "days_before": 7,
+                        "penalty_type": "percentage",
+                        "penalty_value": 10.0
+                    }
+                ]
+            }
+            total_operations += 1
+            success, response, _ = self.run_test(
+                "Create Cancellation Policy",
+                "POST",
+                "api/admin/catalog/cancellation-policies",
+                200,
+                data=policy_data
+            )
+            if success:
+                operations_successful += 1
+        
+        # Summary
+        if operations_successful == total_operations:
+            self.log(f"✅ All {total_operations} operations successful - no index conflicts detected")
+            return True
+        else:
+            self.log(f"❌ {total_operations - operations_successful} operations failed - possible index issues")
+            return False
+
+    def print_summary(self):
+        """Print test summary"""
+        self.log("\n" + "="*60)
+        self.log("PRODUCT CATALOG V1 SMOKE TEST SUMMARY")
+        self.log("="*60)
+        self.log(f"Total Tests: {self.tests_run}")
+        self.log(f"✅ Passed: {self.tests_passed}")
+        self.log(f"❌ Failed: {self.tests_failed}")
+        self.log(f"Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%")
+        
+        if self.failed_tests:
+            self.log("\n❌ FAILED TESTS:")
+            for i, test in enumerate(self.failed_tests, 1):
+                self.log(f"  {i}. {test}")
+        
+        self.log("="*60)
+
+    def run_product_catalog_v1_smoke_tests(self):
+        """Run Product Catalog v1 smoke tests"""
+        self.log("🚀 Starting Product Catalog v1 Backend Smoke Tests")
+        self.log(f"Base URL: {self.base_url}")
+        
+        # Authentication
+        if not self.test_admin_login():
+            self.log("❌ Admin login failed - stopping tests")
+            self.print_summary()
+            return 1
+
+        # Test scenarios based on review request
+        test_results = []
+        
+        # 1) Product list 500 error
+        test_results.append(self.test_1_product_list_500_error())
+        
+        # 2) Publish guard error format
+        test_results.append(self.test_2_publish_guard_error_format())
+        
+        # 3) Referential integrity error code
+        test_results.append(self.test_3_referential_integrity_error())
+        
+        # 4) Index regressions
+        test_results.append(self.test_4_index_regressions())
+
+        # Summary
+        self.print_summary()
+
+        return 0 if self.tests_failed == 0 else 1
+
+
 class B2BBookingsListTester:
     def __init__(self, base_url="https://riskops-platform.preview.emergentagent.com"):
         self.base_url = base_url

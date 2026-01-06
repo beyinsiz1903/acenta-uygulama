@@ -53,6 +53,7 @@ from app.routers.demo_scale_ui_proof import router as demo_scale_ui_proof_router
 from app.routers.b2b_quotes import router as b2b_quotes_router
 from app.routers.b2b_bookings import router as b2b_bookings_router
 from app.routers.b2b_cancel import router as b2b_cancel_router
+from app.routers.ops_b2b import router as ops_b2b_router
 from app.email_worker import email_dispatch_loop
 from app.integration_sync_worker import integration_sync_loop
 
@@ -126,6 +127,7 @@ app.include_router(demo_scale_ui_proof_router)
 app.include_router(b2b_quotes_router)
 app.include_router(b2b_bookings_router)
 app.include_router(b2b_cancel_router)
+app.include_router(ops_b2b_router)
 
 
 @app.get("/api/health")

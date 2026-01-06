@@ -1,0 +1,315 @@
+from __future__ import annotations
+
+from datetime import datetime
+from typing import Any, Dict, List, Optional
+
+from bson import ObjectId
+from fastapi import APIRouter, Depends, Query
+
+from app.auth import get_current_user, require_roles
+from app.db import get_db
+from app.errors import AppError
+from app.utils import now_utc
+
+
+router = APIRouter(prefix="/api/ops", tags=["ops-b2b"])
+
+
+OpsUserDep = Depends(require_roles(["admin", "ops", "super_admin"]))
+
+
+@router.get("/bookings")
+async def list_b2b_bookings_ops(
+    status: Optional[str] = Query(None, description="Booking status filter (e.g. CONFIRMED, CANCELLED)"),
+    from_: Optional[datetime] = Query(None, alias="from", description="Created_at >= from (ISO datetime)"),
+    to: Optional[datetime] = Query(None, alias="to", description="Created_at <= to (ISO datetime)"),
+    limit: int = Query(50, ge=1, le=200),
+    user: Dict[str, Any] = OpsUserDep,
+    db=Depends(get_db),
+) -> Dict[str, Any]:
+    """Minimal booking queue for B2B bookings (ops view).
+
+    Only bookings created via B2B flow are returned (quote_id exists).
+    """
+
+    org_id = user.get("organization_id")
+    if not org_id:
+        raise AppError(400, "invalid_user_context", "User is missing organization_id")
+
+    query: Dict[str, Any] = {
+        "organization_id": org_id,
+        # B2B bookings always have a quote_id set
+        "quote_id": {"$exists": True},
+    }
+
+    if status:
+        # Stored as upper-case (e.g. CONFIRMED, CANCELLED)
+        query["status"] = status.upper()
+
+    if from_ or to:
+        created_range: Dict[str, Any] = {}
+        if from_:
+            created_range["$gte"] = from_
+        if to:
+            created_range["$lte"] = to
+        query["created_at"] = created_range
+
+    cursor = (
+        db.bookings.find(query)
+        .sort("created_at", -1)
+        .limit(limit)
+    )
+    docs: List[Dict[str, Any]] = await cursor.to_list(length=limit)
+
+    items: List[Dict[str, Any]] = []
+    for doc in docs:
+        amounts = doc.get("amounts") or {}
+        items.append(
+            {
+                "booking_id": str(doc.get("_id")),
+                "agency_id": doc.get("agency_id"),
+                "status": doc.get("status"),
+                "created_at": doc.get("created_at"),
+                "currency": doc.get("currency"),
+                "sell_price": amounts.get("sell"),
+                "channel_id": doc.get("channel_id"),
+            }
+        )
+
+    return {"items": items}
+
+
+@router.get("/bookings/{booking_id}")
+async def get_b2b_booking_detail_ops(
+    booking_id: str,
+    user: Dict[str, Any] = OpsUserDep,
+    db=Depends(get_db),
+) -> Dict[str, Any]:
+    """Booking detail with risk/policy snapshots for ops view."""
+
+    org_id = user.get("organization_id")
+    if not org_id:
+        raise AppError(400, "invalid_user_context", "User is missing organization_id")
+
+    try:
+        oid = ObjectId(booking_id)
+    except Exception:
+        raise AppError(404, "not_found", "Booking not found", {"booking_id": booking_id})
+
+    booking = await db.bookings.find_one({"_id": oid, "organization_id": org_id})
+    if not booking:
+        raise AppError(404, "not_found", "Booking not found", {"booking_id": booking_id})
+
+    amounts = booking.get("amounts") or {}
+
+    return {
+        "booking_id": booking_id,
+        "agency_id": booking.get("agency_id"),
+        "channel_id": booking.get("channel_id"),
+        "status": booking.get("status"),
+        "payment_status": booking.get("payment_status"),
+        "created_at": booking.get("created_at"),
+        "updated_at": booking.get("updated_at"),
+        "currency": booking.get("currency"),
+        "amounts": amounts,
+        "items": booking.get("items") or [],
+        "customer": booking.get("customer") or {},
+        "travellers": booking.get("travellers") or [],
+        "quote_id": booking.get("quote_id"),
+        "risk_snapshot": booking.get("risk_snapshot") or {},
+        "policy_snapshot": booking.get("policy_snapshot") or {},
+    }
+
+
+@router.get("/cases")
+async def list_b2b_cases_ops(
+    status: Optional[str] = Query(None, description="Case status filter (open/pending_approval/closed)"),
+    type_: Optional[str] = Query(None, alias="type", description="Case type filter (e.g. cancel)"),
+    from_: Optional[datetime] = Query(None, alias="from", description="Created_at >= from (ISO datetime)"),
+    to: Optional[datetime] = Query(None, alias="to", description="Created_at <= to (ISO datetime)"),
+    limit: int = Query(50, ge=1, le=200),
+    user: Dict[str, Any] = OpsUserDep,
+    db=Depends(get_db),
+) -> Dict[str, Any]:
+    """Minimal case queue for B2B cancel cases (ops view)."""
+
+    org_id = user.get("organization_id")
+    if not org_id:
+        raise AppError(400, "invalid_user_context", "User is missing organization_id")
+
+    query: Dict[str, Any] = {
+        "organization_id": org_id,
+    }
+
+    if status:
+        query["status"] = status
+
+    if type_:
+        query["type"] = type_
+
+    if from_ or to:
+        created_range: Dict[str, Any] = {}
+        if from_:
+            created_range["$gte"] = from_
+        if to:
+            created_range["$lte"] = to
+        query["created_at"] = created_range
+
+    cursor = (
+        db.cases.find(query)
+        .sort("created_at", -1)
+        .limit(limit)
+    )
+    docs: List[Dict[str, Any]] = await cursor.to_list(length=limit)
+
+    items: List[Dict[str, Any]] = []
+    for doc in docs:
+        items.append(
+            {
+                "case_id": str(doc.get("_id")),
+                "type": doc.get("type"),
+                "booking_id": doc.get("booking_id"),
+                "status": doc.get("status"),
+                "created_at": doc.get("created_at"),
+            }
+        )
+
+    return {"items": items}
+
+
+@router.get("/cases/{case_id}")
+async def get_b2b_case_detail_ops(
+    case_id: str,
+    user: Dict[str, Any] = OpsUserDep,
+    db=Depends(get_db),
+) -> Dict[str, Any]:
+    """Case detail including cancel request payload (reason/amount/currency)."""
+
+    org_id = user.get("organization_id")
+    if not org_id:
+        raise AppError(400, "invalid_user_context", "User is missing organization_id")
+
+    try:
+        oid = ObjectId(case_id)
+    except Exception:
+        raise AppError(404, "not_found", "Case not found", {"case_id": case_id})
+
+    case = await db.cases.find_one({"_id": oid, "organization_id": org_id})
+    if not case:
+        raise AppError(404, "not_found", "Case not found", {"case_id": case_id})
+
+    return {
+        "case_id": case_id,
+        "booking_id": case.get("booking_id"),
+        "type": case.get("type"),
+        "status": case.get("status"),
+        "created_at": case.get("created_at"),
+        "updated_at": case.get("updated_at"),
+        "reason": case.get("reason"),
+        "requested_refund_currency": case.get("requested_refund_currency"),
+        "requested_refund_amount": case.get("requested_refund_amount"),
+    }
+
+
+async def _load_case_for_update(db, organization_id: str, case_id: str) -> Dict[str, Any]:
+    try:
+        oid = ObjectId(case_id)
+    except Exception:
+        raise AppError(404, "not_found", "Case not found", {"case_id": case_id})
+
+    case = await db.cases.find_one({"_id": oid, "organization_id": organization_id})
+    if not case:
+        raise AppError(404, "not_found", "Case not found", {"case_id": case_id})
+
+    if case.get("type") != "cancel":
+        raise AppError(409, "unsupported_case_type", "Only cancel cases are supported in this view", {"case_id": case_id})
+
+    status = case.get("status")
+    if status not in {"open", "pending_approval"}:
+        raise AppError(
+            409,
+            "invalid_case_state",
+            "Case cannot be modified in its current state",
+            {"case_id": case_id, "status": status},
+        )
+
+    return case
+
+
+@router.post("/cases/{case_id}/approve")
+async def approve_b2b_case_ops(
+    case_id: str,
+    user: Dict[str, Any] = OpsUserDep,
+    db=Depends(get_db),
+) -> Dict[str, Any]:
+    """Approve a cancel case: close case + mark booking as CANCELLED."""
+
+    org_id = user.get("organization_id")
+    if not org_id:
+        raise AppError(400, "invalid_user_context", "User is missing organization_id")
+
+    case = await _load_case_for_update(db, org_id, case_id)
+
+    booking_id = case.get("booking_id")
+    if not booking_id:
+        raise AppError(400, "invalid_case_payload", "Case is missing booking_id", {"case_id": case_id})
+
+    try:
+        booking_oid = ObjectId(booking_id)
+    except Exception:
+        raise AppError(404, "booking_not_found", "Booking not found", {"booking_id": booking_id})
+
+    booking = await db.bookings.find_one({"_id": booking_oid, "organization_id": org_id})
+    if not booking:
+        raise AppError(404, "booking_not_found", "Booking not found", {"booking_id": booking_id})
+
+    now = now_utc()
+
+    await db.bookings.update_one(
+        {"_id": booking_oid, "organization_id": org_id},
+        {"$set": {"status": "CANCELLED", "updated_at": now}},
+    )
+
+    await db.cases.update_one(
+        {"_id": case["_id"], "organization_id": org_id},
+        {"$set": {"status": "closed", "decision": "approved", "updated_at": now}},
+    )
+
+    return {
+        "case_id": case_id,
+        "status": "closed",
+        "decision": "approved",
+        "booking_id": booking_id,
+        "booking_status": "CANCELLED",
+    }
+
+
+@router.post("/cases/{case_id}/reject")
+async def reject_b2b_case_ops(
+    case_id: str,
+    user: Dict[str, Any] = OpsUserDep,
+    db=Depends(get_db),
+) -> Dict[str, Any]:
+    """Reject a cancel case: close case, booking status remains unchanged."""
+
+    org_id = user.get("organization_id")
+    if not org_id:
+        raise AppError(400, "invalid_user_context", "User is missing organization_id")
+
+    case = await _load_case_for_update(db, org_id, case_id)
+
+    booking_id = case.get("booking_id")
+
+    now = now_utc()
+
+    await db.cases.update_one(
+        {"_id": case["_id"], "organization_id": org_id},
+        {"$set": {"status": "closed", "decision": "rejected", "updated_at": now}},
+    )
+
+    return {
+        "case_id": case_id,
+        "status": "closed",
+        "decision": "rejected",
+        "booking_id": booking_id,
+    }

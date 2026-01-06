@@ -2087,6 +2087,298 @@ class BookingTimelineV1Tester:
         return 0 if self.tests_failed == 0 else 1
 
 
+class BookingTimelineV1SmokeTest:
+    def __init__(self, base_url="https://risk-ops-platform.preview.emergentagent.com"):
+        self.base_url = base_url
+        self.admin_token = None
+        self.tests_run = 0
+        self.tests_passed = 0
+        self.tests_failed = 0
+        self.failed_tests = []
+        
+        # Store data for testing
+        self.booking_id = None
+
+    def log(self, msg):
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}")
+
+    def run_test(self, name, method, endpoint, expected_status, data=None, headers_override=None):
+        """Run a single API test"""
+        url = f"{self.base_url}/{endpoint}"
+        headers = headers_override or {'Content-Type': 'application/json'}
+        if self.admin_token and not headers_override:
+            headers['Authorization'] = f'Bearer {self.admin_token}'
+
+        self.tests_run += 1
+        self.log(f"🔍 Test #{self.tests_run}: {name}")
+        
+        try:
+            if method == 'GET':
+                response = requests.get(url, headers=headers, timeout=10)
+            elif method == 'POST':
+                response = requests.post(url, json=data, headers=headers, timeout=10)
+            elif method == 'PUT':
+                response = requests.put(url, json=data, headers=headers, timeout=10)
+            elif method == 'DELETE':
+                response = requests.delete(url, headers=headers, timeout=10)
+            else:
+                raise ValueError(f"Unsupported method: {method}")
+
+            success = response.status_code == expected_status
+            if success:
+                self.tests_passed += 1
+                self.log(f"✅ PASSED - Status: {response.status_code}")
+                try:
+                    return True, response.json() if response.content else {}
+                except:
+                    return True, {}
+            else:
+                self.tests_failed += 1
+                self.failed_tests.append(f"{name} - Expected {expected_status}, got {response.status_code}")
+                self.log(f"❌ FAILED - Expected {expected_status}, got {response.status_code}")
+                try:
+                    self.log(f"   Response: {response.text[:200]}")
+                except:
+                    pass
+                return False, {}
+
+        except Exception as e:
+            self.tests_failed += 1
+            self.failed_tests.append(f"{name} - Error: {str(e)}")
+            self.log(f"❌ FAILED - Error: {str(e)}")
+            return False, {}
+
+    def test_admin_login(self):
+        """Test admin login"""
+        self.log("\n=== AUTHENTICATION ===")
+        success, response = self.run_test(
+            "Admin Login (admin@acenta.test/admin123)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "admin@acenta.test", "password": "admin123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.admin_token = response['access_token']
+            user = response.get('user', {})
+            roles = user.get('roles', [])
+            
+            if 'admin' in roles or 'super_admin' in roles:
+                self.log(f"✅ Admin login successful - roles: {roles}")
+                return True
+            else:
+                self.log(f"❌ Missing admin/super_admin role: {roles}")
+                return False
+        return False
+
+    def test_get_b2b_booking_id(self):
+        """Get a B2B booking ID for testing"""
+        self.log("\n=== 1) GET B2B BOOKING ID ===")
+        
+        success, response = self.run_test(
+            "Get B2B bookings (limit=1)",
+            "GET",
+            "api/ops/bookings?limit=1",
+            200
+        )
+        
+        if success and response.get('items'):
+            booking = response['items'][0]
+            self.booking_id = booking['booking_id']
+            self.log(f"✅ Found B2B booking: {self.booking_id}")
+            self.log(f"   Status: {booking.get('status')}")
+            self.log(f"   Agency: {booking.get('agency_id')}")
+            return True
+        else:
+            self.log("❌ No B2B bookings found")
+            return False
+
+    def test_booking_events_endpoint(self):
+        """Test /events endpoint"""
+        self.log("\n=== 2) TEST /EVENTS ENDPOINT ===")
+        
+        if not self.booking_id:
+            self.log("❌ No booking_id available")
+            return False
+        
+        success, response = self.run_test(
+            f"GET /api/ops/bookings/{self.booking_id}/events",
+            "GET",
+            f"api/ops/bookings/{self.booking_id}/events",
+            200
+        )
+        
+        if success:
+            events = response.get('items', [])
+            self.log(f"✅ Events endpoint working - found {len(events)} events")
+            
+            if len(events) >= 1:
+                # Check for BOOKING_CREATED or other events
+                event_types = [e.get('event_type') for e in events]
+                self.log(f"   Event types found: {event_types}")
+                
+                # Look for BOOKING_CREATED specifically
+                booking_created = [e for e in events if e.get('event_type') == 'BOOKING_CREATED']
+                if booking_created:
+                    self.log(f"✅ BOOKING_CREATED event found")
+                else:
+                    self.log(f"⚠️  No BOOKING_CREATED event, but other events exist")
+                
+                return True
+            else:
+                self.log(f"⚠️  No events found for this booking")
+                return True  # Still consider this a pass as endpoint works
+        else:
+            return False
+
+    def test_voucher_generation(self):
+        """Test voucher generation and check for VOUCHER_GENERATED event"""
+        self.log("\n=== 3) TEST VOUCHER GENERATION ===")
+        
+        if not self.booking_id:
+            self.log("❌ No booking_id available")
+            return False
+        
+        # First check booking status to see if voucher generation is possible
+        success, booking_response = self.run_test(
+            f"Check booking status",
+            "GET",
+            f"api/ops/bookings/{self.booking_id}",
+            200
+        )
+        
+        if success:
+            booking_status = booking_response.get('status')
+            self.log(f"   Booking status: {booking_status}")
+            
+            # Try to generate voucher
+            success, voucher_response = self.run_test(
+                f"Generate voucher for booking {self.booking_id}",
+                "POST",
+                f"api/ops/bookings/{self.booking_id}/voucher/generate",
+                200
+            )
+            
+            if success:
+                self.log(f"✅ Voucher generation successful")
+                self.log(f"   Response: {voucher_response}")
+                
+                # Now check for VOUCHER_GENERATED event
+                success, events_response = self.run_test(
+                    f"Check events after voucher generation",
+                    "GET",
+                    f"api/ops/bookings/{self.booking_id}/events",
+                    200
+                )
+                
+                if success:
+                    events = events_response.get('items', [])
+                    voucher_events = [e for e in events if e.get('event_type') == 'VOUCHER_GENERATED']
+                    
+                    if voucher_events:
+                        self.log(f"✅ VOUCHER_GENERATED event found")
+                        event = voucher_events[-1]  # Get the latest one
+                        self.log(f"   Event meta: {event.get('meta', {})}")
+                        return True
+                    else:
+                        self.log(f"❌ VOUCHER_GENERATED event not found")
+                        event_types = [e.get('event_type') for e in events]
+                        self.log(f"   Available event types: {event_types}")
+                        return False
+                else:
+                    self.log(f"❌ Failed to get events after voucher generation")
+                    return False
+            else:
+                # Check if it's a 520 error (which should not happen after fix)
+                self.log(f"❌ Voucher generation failed - this should not return 520 error")
+                return False
+        else:
+            self.log(f"❌ Failed to get booking details")
+            return False
+
+    def test_cancel_flow_optional(self):
+        """Optional: Test cancel flow if available"""
+        self.log("\n=== 4) TEST CANCEL FLOW (OPTIONAL) ===")
+        
+        if not self.booking_id:
+            self.log("❌ No booking_id available")
+            return True  # Optional test, return True
+        
+        # This is optional - we'll just check if there are any cancel-related events
+        success, events_response = self.run_test(
+            f"Check for cancel events",
+            "GET",
+            f"api/ops/bookings/{self.booking_id}/events",
+            200
+        )
+        
+        if success:
+            events = events_response.get('items', [])
+            cancel_events = [e for e in events if 'CANCEL' in e.get('event_type', '')]
+            case_events = [e for e in events if 'CASE' in e.get('event_type', '')]
+            
+            if cancel_events or case_events:
+                self.log(f"✅ Found cancel/case related events:")
+                for event in cancel_events + case_events:
+                    self.log(f"   - {event.get('event_type')}: {event.get('meta', {})}")
+                return True
+            else:
+                self.log(f"⚠️  No cancel/case events found (this is optional)")
+                return True
+        else:
+            self.log(f"⚠️  Could not check cancel events (this is optional)")
+            return True
+
+    def print_summary(self):
+        """Print test summary"""
+        self.log("\n" + "="*60)
+        self.log("BOOKING_TIMELINE_V1 SMOKE TEST SUMMARY")
+        self.log("="*60)
+        self.log(f"Total Tests: {self.tests_run}")
+        self.log(f"✅ Passed: {self.tests_passed}")
+        self.log(f"❌ Failed: {self.tests_failed}")
+        self.log(f"Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%")
+        
+        if self.failed_tests:
+            self.log("\n❌ FAILED TESTS:")
+            for i, test in enumerate(self.failed_tests, 1):
+                self.log(f"  {i}. {test}")
+        
+        self.log("="*60)
+
+    def run_booking_timeline_smoke_test(self):
+        """Run BOOKING_TIMELINE_V1 smoke test"""
+        self.log("🚀 Starting BOOKING_TIMELINE_V1 Smoke Test")
+        self.log(f"Base URL: {self.base_url}")
+        
+        # Authentication
+        if not self.test_admin_login():
+            self.log("❌ Admin login failed - stopping tests")
+            self.print_summary()
+            return 1
+
+        # 1) Get B2B booking ID
+        if not self.test_get_b2b_booking_id():
+            self.log("❌ Could not get B2B booking ID - stopping tests")
+            self.print_summary()
+            return 1
+
+        # 2) Test /events endpoint
+        self.test_booking_events_endpoint()
+
+        # 3) Test voucher generation
+        self.test_voucher_generation()
+
+        # 4) Optional cancel flow test
+        self.test_cancel_flow_optional()
+
+        # Summary
+        self.print_summary()
+
+        return 0 if self.tests_failed == 0 else 1
+
+
 class OpsVoucherViewTester:
     def __init__(self, base_url="https://risk-ops-platform.preview.emergentagent.com"):
         self.base_url = base_url

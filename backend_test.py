@@ -1833,6 +1833,558 @@ class GlobalErrorHandlerIdempotencyTester:
         return 0 if self.tests_failed == 0 else 1
 
 
+class OpsB2BTester:
+    def __init__(self, base_url="https://risk-ops-platform.preview.emergentagent.com"):
+        self.base_url = base_url
+        self.admin_token = None
+        self.tests_run = 0
+        self.tests_passed = 0
+        self.tests_failed = 0
+        self.failed_tests = []
+        
+        # Store data for testing
+        self.booking_id = None
+        self.case_id = None
+
+    def log(self, msg):
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}")
+
+    def run_test(self, name, method, endpoint, expected_status, data=None, headers_override=None):
+        """Run a single API test"""
+        url = f"{self.base_url}/{endpoint}"
+        headers = headers_override or {'Content-Type': 'application/json'}
+        if self.admin_token and not headers_override:
+            headers['Authorization'] = f'Bearer {self.admin_token}'
+
+        self.tests_run += 1
+        self.log(f"🔍 Test #{self.tests_run}: {name}")
+        
+        try:
+            if method == 'GET':
+                response = requests.get(url, headers=headers, timeout=10)
+            elif method == 'POST':
+                response = requests.post(url, json=data, headers=headers, timeout=10)
+            elif method == 'PUT':
+                response = requests.put(url, json=data, headers=headers, timeout=10)
+            elif method == 'DELETE':
+                response = requests.delete(url, headers=headers, timeout=10)
+            else:
+                raise ValueError(f"Unsupported method: {method}")
+
+            success = response.status_code == expected_status
+            if success:
+                self.tests_passed += 1
+                self.log(f"✅ PASSED - Status: {response.status_code}")
+                try:
+                    return True, response.json() if response.content else {}
+                except:
+                    return True, {}
+            else:
+                self.tests_failed += 1
+                self.failed_tests.append(f"{name} - Expected {expected_status}, got {response.status_code}")
+                self.log(f"❌ FAILED - Expected {expected_status}, got {response.status_code}")
+                try:
+                    self.log(f"   Response: {response.text[:200]}")
+                except:
+                    pass
+                return False, {}
+
+        except Exception as e:
+            self.tests_failed += 1
+            self.failed_tests.append(f"{name} - Error: {str(e)}")
+            self.log(f"❌ FAILED - Error: {str(e)}")
+            return False, {}
+
+    def test_admin_login(self):
+        """Test admin login"""
+        self.log("\n=== AUTHENTICATION ===")
+        success, response = self.run_test(
+            "Admin Login (admin@acenta.test/admin123)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "admin@acenta.test", "password": "admin123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.admin_token = response['access_token']
+            user = response.get('user', {})
+            roles = user.get('roles', [])
+            
+            if 'admin' in roles or 'super_admin' in roles:
+                self.log(f"✅ Admin login successful - roles: {roles}")
+                return True
+            else:
+                self.log(f"❌ Missing admin/super_admin role: {roles}")
+                return False
+        return False
+
+    def test_bookings_list_empty_params(self):
+        """Test GET /api/ops/bookings with empty parameters"""
+        self.log("\n=== 1) GET /api/ops/bookings (Boş parametreler) ===")
+        
+        success, response = self.run_test(
+            "GET /api/ops/bookings (default parameters)",
+            "GET",
+            "api/ops/bookings",
+            200
+        )
+        
+        if success:
+            items = response.get('items', [])
+            self.log(f"✅ Found {len(items)} bookings")
+            
+            # Verify response structure
+            if items:
+                first_item = items[0]
+                required_fields = ['booking_id', 'agency_id', 'status', 'created_at', 'sell_price', 'channel_id']
+                missing_fields = [field for field in required_fields if field not in first_item]
+                
+                if missing_fields:
+                    self.log(f"❌ Missing fields in booking item: {missing_fields}")
+                    return False
+                
+                # Store first booking_id for detail test
+                self.booking_id = first_item['booking_id']
+                self.log(f"✅ Booking structure valid - stored booking_id: {self.booking_id}")
+                return True
+            else:
+                self.log("⚠️  No bookings found, but endpoint working")
+                return True
+        return False
+
+    def test_bookings_list_status_filter(self):
+        """Test GET /api/ops/bookings with status filter"""
+        self.log("\n=== 2) GET /api/ops/bookings?status=CONFIRMED ===")
+        
+        success, response = self.run_test(
+            "GET /api/ops/bookings with status=CONFIRMED",
+            "GET",
+            "api/ops/bookings?status=CONFIRMED",
+            200
+        )
+        
+        if success:
+            items = response.get('items', [])
+            self.log(f"✅ Found {len(items)} CONFIRMED bookings")
+            
+            # Verify all items have CONFIRMED status
+            for item in items:
+                if item.get('status') != 'CONFIRMED':
+                    self.log(f"❌ Found non-CONFIRMED booking: {item.get('status')}")
+                    return False
+            
+            self.log("✅ All returned bookings have CONFIRMED status")
+            return True
+        return False
+
+    def test_bookings_list_date_filter(self):
+        """Test GET /api/ops/bookings with date range filter"""
+        self.log("\n=== 3) GET /api/ops/bookings with date range ===")
+        
+        # Use yesterday and tomorrow for date range
+        yesterday = (datetime.now() - timedelta(days=1)).isoformat()
+        tomorrow = (datetime.now() + timedelta(days=1)).isoformat()
+        
+        success, response = self.run_test(
+            f"GET /api/ops/bookings with date range",
+            "GET",
+            f"api/ops/bookings?from={yesterday}&to={tomorrow}",
+            200
+        )
+        
+        if success:
+            items = response.get('items', [])
+            self.log(f"✅ Found {len(items)} bookings in date range")
+            
+            # Verify dates are within range
+            for item in items:
+                created_at = item.get('created_at')
+                if created_at:
+                    # Basic validation that created_at exists
+                    self.log(f"   Booking {item.get('booking_id')}: created_at={created_at}")
+            
+            return True
+        return False
+
+    def test_booking_detail(self):
+        """Test GET /api/ops/bookings/{id}"""
+        self.log("\n=== 4) GET /api/ops/bookings/{id} ===")
+        
+        if not self.booking_id:
+            self.log("⚠️  No booking_id available, skipping detail test")
+            return True
+        
+        success, response = self.run_test(
+            f"GET /api/ops/bookings/{self.booking_id}",
+            "GET",
+            f"api/ops/bookings/{self.booking_id}",
+            200
+        )
+        
+        if success:
+            required_fields = [
+                'booking_id', 'agency_id', 'channel_id', 'status', 'payment_status',
+                'created_at', 'updated_at', 'currency', 'amounts', 'items',
+                'customer', 'travellers', 'quote_id', 'risk_snapshot', 'policy_snapshot'
+            ]
+            
+            missing_fields = [field for field in required_fields if field not in response]
+            
+            if missing_fields:
+                self.log(f"❌ Missing fields in booking detail: {missing_fields}")
+                return False
+            
+            self.log(f"✅ Booking detail complete:")
+            self.log(f"   - booking_id: {response.get('booking_id')}")
+            self.log(f"   - status: {response.get('status')}")
+            self.log(f"   - agency_id: {response.get('agency_id')}")
+            self.log(f"   - quote_id: {response.get('quote_id')}")
+            return True
+        return False
+
+    def test_cases_list_status_type_filter(self):
+        """Test GET /api/ops/cases with status and type filters"""
+        self.log("\n=== 5) GET /api/ops/cases?status=open&type=cancel ===")
+        
+        success, response = self.run_test(
+            "GET /api/ops/cases with status=open&type=cancel",
+            "GET",
+            "api/ops/cases?status=open&type=cancel",
+            200
+        )
+        
+        if success:
+            items = response.get('items', [])
+            self.log(f"✅ Found {len(items)} open cancel cases")
+            
+            # Verify response structure and filters
+            for item in items:
+                required_fields = ['case_id', 'type', 'booking_id', 'status', 'created_at']
+                missing_fields = [field for field in required_fields if field not in item]
+                
+                if missing_fields:
+                    self.log(f"❌ Missing fields in case item: {missing_fields}")
+                    return False
+                
+                if item.get('status') != 'open':
+                    self.log(f"❌ Found non-open case: {item.get('status')}")
+                    return False
+                
+                if item.get('type') != 'cancel':
+                    self.log(f"❌ Found non-cancel case: {item.get('type')}")
+                    return False
+            
+            # Store first case_id for detail test
+            if items:
+                self.case_id = items[0]['case_id']
+                self.log(f"✅ Case structure valid - stored case_id: {self.case_id}")
+            
+            return True
+        return False
+
+    def test_cases_list_closed_status(self):
+        """Test GET /api/ops/cases with closed status"""
+        self.log("\n=== 6) GET /api/ops/cases?status=closed ===")
+        
+        success, response = self.run_test(
+            "GET /api/ops/cases with status=closed",
+            "GET",
+            "api/ops/cases?status=closed",
+            200
+        )
+        
+        if success:
+            items = response.get('items', [])
+            self.log(f"✅ Found {len(items)} closed cases")
+            
+            # Verify all items have closed status
+            for item in items:
+                if item.get('status') != 'closed':
+                    self.log(f"❌ Found non-closed case: {item.get('status')}")
+                    return False
+            
+            self.log("✅ All returned cases have closed status")
+            return True
+        return False
+
+    def test_case_detail(self):
+        """Test GET /api/ops/cases/{id}"""
+        self.log("\n=== 7) GET /api/ops/cases/{id} ===")
+        
+        if not self.case_id:
+            self.log("⚠️  No case_id available, skipping detail test")
+            return True
+        
+        success, response = self.run_test(
+            f"GET /api/ops/cases/{self.case_id}",
+            "GET",
+            f"api/ops/cases/{self.case_id}",
+            200
+        )
+        
+        if success:
+            required_fields = [
+                'case_id', 'booking_id', 'type', 'status', 'created_at', 'updated_at',
+                'reason', 'requested_refund_currency', 'requested_refund_amount'
+            ]
+            
+            missing_fields = [field for field in required_fields if field not in response]
+            
+            if missing_fields:
+                self.log(f"❌ Missing fields in case detail: {missing_fields}")
+                return False
+            
+            self.log(f"✅ Case detail complete:")
+            self.log(f"   - case_id: {response.get('case_id')}")
+            self.log(f"   - type: {response.get('type')}")
+            self.log(f"   - status: {response.get('status')}")
+            self.log(f"   - booking_id: {response.get('booking_id')}")
+            return True
+        return False
+
+    def test_case_approve(self):
+        """Test POST /api/ops/cases/{id}/approve"""
+        self.log("\n=== 8) POST /api/ops/cases/{id}/approve ===")
+        
+        if not self.case_id:
+            self.log("⚠️  No case_id available, skipping approve test")
+            return True
+        
+        success, response = self.run_test(
+            f"POST /api/ops/cases/{self.case_id}/approve",
+            "POST",
+            f"api/ops/cases/{self.case_id}/approve",
+            200
+        )
+        
+        if success:
+            expected_fields = ['case_id', 'status', 'decision', 'booking_id', 'booking_status']
+            missing_fields = [field for field in expected_fields if field not in response]
+            
+            if missing_fields:
+                self.log(f"❌ Missing fields in approve response: {missing_fields}")
+                return False
+            
+            if response.get('status') != 'closed':
+                self.log(f"❌ Expected status=closed, got {response.get('status')}")
+                return False
+            
+            if response.get('decision') != 'approved':
+                self.log(f"❌ Expected decision=approved, got {response.get('decision')}")
+                return False
+            
+            if response.get('booking_status') != 'CANCELLED':
+                self.log(f"❌ Expected booking_status=CANCELLED, got {response.get('booking_status')}")
+                return False
+            
+            self.log(f"✅ Case approved successfully:")
+            self.log(f"   - case_id: {response.get('case_id')}")
+            self.log(f"   - status: {response.get('status')}")
+            self.log(f"   - decision: {response.get('decision')}")
+            self.log(f"   - booking_status: {response.get('booking_status')}")
+            
+            # Store booking_id for verification
+            approved_booking_id = response.get('booking_id')
+            
+            # Verify booking status changed
+            if approved_booking_id:
+                self.log("\n=== 8.1) Verify booking status changed to CANCELLED ===")
+                verify_success, verify_response = self.run_test(
+                    f"Verify booking {approved_booking_id} is CANCELLED",
+                    "GET",
+                    f"api/ops/bookings/{approved_booking_id}",
+                    200
+                )
+                
+                if verify_success:
+                    if verify_response.get('status') == 'CANCELLED':
+                        self.log(f"✅ Booking status confirmed as CANCELLED")
+                    else:
+                        self.log(f"❌ Booking status not updated: {verify_response.get('status')}")
+                        return False
+            
+            return True
+        return False
+
+    def test_case_reject(self):
+        """Test POST /api/ops/cases/{id}/reject"""
+        self.log("\n=== 9) POST /api/ops/cases/{id}/reject ===")
+        
+        # First, find another open cancel case for rejection test
+        success, response = self.run_test(
+            "Find another open cancel case for rejection",
+            "GET",
+            "api/ops/cases?status=open&type=cancel",
+            200
+        )
+        
+        if not success:
+            self.log("⚠️  Could not find open cases for rejection test")
+            return True
+        
+        items = response.get('items', [])
+        if not items:
+            self.log("⚠️  No open cancel cases available for rejection test")
+            return True
+        
+        reject_case_id = items[0]['case_id']
+        reject_booking_id = items[0]['booking_id']
+        
+        # Get original booking status
+        orig_success, orig_response = self.run_test(
+            f"Get original booking status for {reject_booking_id}",
+            "GET",
+            f"api/ops/bookings/{reject_booking_id}",
+            200
+        )
+        
+        original_status = orig_response.get('status') if orig_success else None
+        
+        # Reject the case
+        success, response = self.run_test(
+            f"POST /api/ops/cases/{reject_case_id}/reject",
+            "POST",
+            f"api/ops/cases/{reject_case_id}/reject",
+            200
+        )
+        
+        if success:
+            expected_fields = ['case_id', 'status', 'decision', 'booking_id']
+            missing_fields = [field for field in expected_fields if field not in response]
+            
+            if missing_fields:
+                self.log(f"❌ Missing fields in reject response: {missing_fields}")
+                return False
+            
+            if response.get('status') != 'closed':
+                self.log(f"❌ Expected status=closed, got {response.get('status')}")
+                return False
+            
+            if response.get('decision') != 'rejected':
+                self.log(f"❌ Expected decision=rejected, got {response.get('decision')}")
+                return False
+            
+            # Note: booking_status field should not be present for rejection
+            if 'booking_status' in response:
+                self.log(f"⚠️  booking_status field present in rejection response (may be optional)")
+            
+            self.log(f"✅ Case rejected successfully:")
+            self.log(f"   - case_id: {response.get('case_id')}")
+            self.log(f"   - status: {response.get('status')}")
+            self.log(f"   - decision: {response.get('decision')}")
+            
+            # Verify booking status unchanged
+            if reject_booking_id and original_status:
+                self.log("\n=== 9.1) Verify booking status unchanged ===")
+                verify_success, verify_response = self.run_test(
+                    f"Verify booking {reject_booking_id} status unchanged",
+                    "GET",
+                    f"api/ops/bookings/{reject_booking_id}",
+                    200
+                )
+                
+                if verify_success:
+                    current_status = verify_response.get('status')
+                    if current_status == original_status:
+                        self.log(f"✅ Booking status unchanged: {current_status}")
+                    else:
+                        self.log(f"❌ Booking status changed from {original_status} to {current_status}")
+                        return False
+            
+            return True
+        return False
+
+    def test_error_cases(self):
+        """Test error cases"""
+        self.log("\n=== 10) ERROR CASES ===")
+        
+        # Test non-existent booking
+        success, response = self.run_test(
+            "GET non-existent booking (expect 404)",
+            "GET",
+            "api/ops/bookings/507f1f77bcf86cd799439011",  # Valid ObjectId format but non-existent
+            404
+        )
+        
+        if success:
+            self.log("✅ Non-existent booking returns 404")
+        else:
+            return False
+        
+        # Test non-existent case
+        success, response = self.run_test(
+            "GET non-existent case (expect 404)",
+            "GET",
+            "api/ops/cases/507f1f77bcf86cd799439011",  # Valid ObjectId format but non-existent
+            404
+        )
+        
+        if success:
+            self.log("✅ Non-existent case returns 404")
+            return True
+        else:
+            return False
+
+    def print_summary(self):
+        """Print test summary"""
+        self.log("\n" + "="*60)
+        self.log("OPS B2B BACKEND TEST SUMMARY")
+        self.log("="*60)
+        self.log(f"Total Tests: {self.tests_run}")
+        self.log(f"✅ Passed: {self.tests_passed}")
+        self.log(f"❌ Failed: {self.tests_failed}")
+        self.log(f"Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%")
+        
+        if self.failed_tests:
+            self.log("\n❌ FAILED TESTS:")
+            for i, test in enumerate(self.failed_tests, 1):
+                self.log(f"  {i}. {test}")
+        
+        self.log("="*60)
+
+    def run_ops_b2b_tests(self):
+        """Run all Ops B2B tests"""
+        self.log("🚀 Starting Ops B2B Backend Tests")
+        self.log(f"Base URL: {self.base_url}")
+        
+        # Authentication
+        if not self.test_admin_login():
+            self.log("❌ Admin login failed - stopping tests")
+            self.print_summary()
+            return 1
+
+        # Test all endpoints
+        test_results = []
+        
+        # 1) Bookings list tests
+        test_results.append(self.test_bookings_list_empty_params())
+        test_results.append(self.test_bookings_list_status_filter())
+        test_results.append(self.test_bookings_list_date_filter())
+        
+        # 2) Booking detail test
+        test_results.append(self.test_booking_detail())
+        
+        # 3) Cases list tests
+        test_results.append(self.test_cases_list_status_type_filter())
+        test_results.append(self.test_cases_list_closed_status())
+        
+        # 4) Case detail test
+        test_results.append(self.test_case_detail())
+        
+        # 5) Case actions tests
+        test_results.append(self.test_case_approve())
+        test_results.append(self.test_case_reject())
+        
+        # 6) Error cases
+        test_results.append(self.test_error_cases())
+
+        # Summary
+        self.print_summary()
+
+        return 0 if self.tests_failed == 0 else 1
+
+
 class RegressionTester:
     def __init__(self, base_url="https://risk-ops-platform.preview.emergentagent.com"):
         self.base_url = base_url

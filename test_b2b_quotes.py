@@ -6,6 +6,7 @@ Tests the POST /api/b2b/quotes endpoint with various scenarios
 
 import sys
 import os
+import asyncio
 from datetime import datetime, date, timedelta
 from fastapi.testclient import TestClient
 
@@ -13,7 +14,6 @@ from fastapi.testclient import TestClient
 sys.path.insert(0, '/app/backend')
 
 from server import app
-from app.db import get_db
 
 class B2BQuotesTestClient:
     def __init__(self):

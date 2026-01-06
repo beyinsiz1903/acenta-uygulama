@@ -1539,6 +1539,710 @@ class RiskSnapshotsTrendTester:
         return 0 if self.tests_failed == 0 else 1
 
 
+class ProductCatalogTester:
+    def __init__(self, base_url="https://riskops-platform.preview.emergentagent.com"):
+        self.base_url = base_url
+        self.admin_token = None
+        self.agency_token = None
+        self.hotel_token = None
+        self.tests_run = 0
+        self.tests_passed = 0
+        self.tests_failed = 0
+        self.failed_tests = []
+        
+        # Store data for testing
+        self.product_id = None
+        self.version_id = None
+        self.room_type_id = None
+        self.rate_plan_id = None
+        self.policy_id = None
+
+    def log(self, msg):
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}")
+
+    def run_test(self, name, method, endpoint, expected_status, data=None, headers_override=None, token_override=None):
+        """Run a single API test"""
+        url = f"{self.base_url}/{endpoint}"
+        headers = headers_override or {'Content-Type': 'application/json'}
+        
+        # Use token override if provided, otherwise use admin token
+        token = token_override or self.admin_token
+        if token and not headers_override:
+            headers['Authorization'] = f'Bearer {token}'
+
+        self.tests_run += 1
+        self.log(f"🔍 Test #{self.tests_run}: {name}")
+        
+        try:
+            if method == 'GET':
+                response = requests.get(url, headers=headers, timeout=10)
+            elif method == 'POST':
+                response = requests.post(url, json=data, headers=headers, timeout=10)
+            elif method == 'PUT':
+                response = requests.put(url, json=data, headers=headers, timeout=10)
+            elif method == 'DELETE':
+                response = requests.delete(url, headers=headers, timeout=10)
+            else:
+                raise ValueError(f"Unsupported method: {method}")
+
+            success = response.status_code == expected_status
+            if success:
+                self.tests_passed += 1
+                self.log(f"✅ PASSED - Status: {response.status_code}")
+                try:
+                    return True, response.json() if response.content else {}, response
+                except:
+                    return True, {}, response
+            else:
+                self.tests_failed += 1
+                self.failed_tests.append(f"{name} - Expected {expected_status}, got {response.status_code}")
+                self.log(f"❌ FAILED - Expected {expected_status}, got {response.status_code}")
+                try:
+                    self.log(f"   Response: {response.text[:200]}")
+                except:
+                    pass
+                return False, {}, response
+
+        except Exception as e:
+            self.tests_failed += 1
+            self.failed_tests.append(f"{name} - Error: {str(e)}")
+            self.log(f"❌ FAILED - Error: {str(e)}")
+            return False, {}, None
+
+    def test_admin_login(self):
+        """Test admin login"""
+        self.log("\n=== AUTHENTICATION ===")
+        success, response, _ = self.run_test(
+            "Admin Login (admin@acenta.test/admin123)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "admin@acenta.test", "password": "admin123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.admin_token = response['access_token']
+            user = response.get('user', {})
+            roles = user.get('roles', [])
+            
+            if 'admin' in roles or 'super_admin' in roles:
+                self.log(f"✅ Admin login successful - roles: {roles}")
+                return True
+            else:
+                self.log(f"❌ Missing admin/super_admin role: {roles}")
+                return False
+        return False
+
+    def test_product_create_and_list(self):
+        """1) Product create + list"""
+        self.log("\n=== 1) PRODUCT CREATE + LIST ===")
+        
+        # Create product
+        product_data = {
+            "type": "hotel",
+            "code": "htl_ist_001",
+            "name": {"tr": "Demo Otel", "en": "Demo Hotel"},
+            "default_currency": "eur",
+            "status": "inactive"
+        }
+        success, response, _ = self.run_test(
+            "Create Product",
+            "POST",
+            "api/admin/catalog/products",
+            200,
+            data=product_data
+        )
+        
+        if success and response.get('product_id'):
+            self.product_id = response['product_id']
+            
+            # Verify response structure and code normalization
+            if (response.get('code') == 'HTL_IST_001' and 
+                response.get('default_currency') == 'EUR' and
+                response.get('status') == 'inactive'):
+                self.log(f"✅ Product created successfully:")
+                self.log(f"   - product_id: {self.product_id}")
+                self.log(f"   - code normalized: {response.get('code')} (expected: HTL_IST_001)")
+                self.log(f"   - currency normalized: {response.get('default_currency')} (expected: EUR)")
+                self.log(f"   - status: {response.get('status')}")
+            else:
+                self.log(f"❌ Product creation response validation failed")
+                return False
+        else:
+            self.log(f"❌ Product creation failed")
+            return False
+
+        # List products
+        success, response, _ = self.run_test(
+            "List Products",
+            "GET",
+            "api/admin/catalog/products?limit=50",
+            200
+        )
+        
+        if success:
+            items = response.get('items', [])
+            found_product = None
+            for item in items:
+                if item.get('product_id') == self.product_id:
+                    found_product = item
+                    break
+            
+            if found_product:
+                self.log(f"✅ Product found in list:")
+                self.log(f"   - code: {found_product.get('code')}")
+                self.log(f"   - published_version: {found_product.get('published_version')} (expected: null)")
+                if found_product.get('published_version') is None:
+                    self.log(f"✅ published_version is null as expected")
+                    return True
+                else:
+                    self.log(f"❌ published_version should be null initially")
+                    return False
+            else:
+                self.log(f"❌ Created product not found in list")
+                return False
+        else:
+            self.log(f"❌ Product list failed")
+            return False
+
+    def test_product_update(self):
+        """2) Product update"""
+        self.log("\n=== 2) PRODUCT UPDATE ===")
+        
+        if not self.product_id:
+            self.log("❌ No product_id available for update test")
+            return False
+        
+        # Update product status to active
+        update_data = {"status": "active"}
+        success, response, _ = self.run_test(
+            "Update Product Status to Active",
+            "PUT",
+            f"api/admin/catalog/products/{self.product_id}",
+            200,
+            data=update_data
+        )
+        
+        if success and response.get('status') == 'active':
+            self.log(f"✅ Product updated successfully - status: {response.get('status')}")
+        else:
+            self.log(f"❌ Product update failed")
+            return False
+        
+        # Verify in list
+        success, response, _ = self.run_test(
+            "Verify Product Status in List",
+            "GET",
+            "api/admin/catalog/products?limit=50",
+            200
+        )
+        
+        if success:
+            items = response.get('items', [])
+            found_product = None
+            for item in items:
+                if item.get('product_id') == self.product_id:
+                    found_product = item
+                    break
+            
+            if found_product and found_product.get('status') == 'active':
+                self.log(f"✅ Product status verified in list: {found_product.get('status')}")
+                return True
+            else:
+                self.log(f"❌ Product status not updated in list")
+                return False
+        else:
+            self.log(f"❌ Product list verification failed")
+            return False
+
+    def test_version_create_and_list(self):
+        """3) Version create + list"""
+        self.log("\n=== 3) VERSION CREATE + LIST ===")
+        
+        if not self.product_id:
+            self.log("❌ No product_id available for version test")
+            return False
+        
+        # Create version
+        version_data = {
+            "content": {
+                "description": {"tr": "Versiyon 1", "en": "Version 1"},
+                "amenities": ["wifi", "pool"],
+                "room_type_ids": [],
+                "rate_plan_ids": []
+            }
+        }
+        success, response, _ = self.run_test(
+            "Create Product Version",
+            "POST",
+            f"api/admin/catalog/products/{self.product_id}/versions",
+            200,
+            data=version_data
+        )
+        
+        if success and response.get('version_id'):
+            self.version_id = response['version_id']
+            if (response.get('version') == 1 and 
+                response.get('status') == 'draft'):
+                self.log(f"✅ Version created successfully:")
+                self.log(f"   - version_id: {self.version_id}")
+                self.log(f"   - version: {response.get('version')}")
+                self.log(f"   - status: {response.get('status')}")
+            else:
+                self.log(f"❌ Version creation response validation failed")
+                return False
+        else:
+            self.log(f"❌ Version creation failed")
+            return False
+        
+        # List versions
+        success, response, _ = self.run_test(
+            "List Product Versions",
+            "GET",
+            f"api/admin/catalog/products/{self.product_id}/versions",
+            200
+        )
+        
+        if success:
+            items = response.get('items', [])
+            if len(items) >= 1:
+                first_version = items[0]
+                if (first_version.get('version') == 1 and 
+                    first_version.get('status') == 'draft'):
+                    self.log(f"✅ Version found in list:")
+                    self.log(f"   - version: {first_version.get('version')}")
+                    self.log(f"   - status: {first_version.get('status')}")
+                    return True
+                else:
+                    self.log(f"❌ Version validation failed in list")
+                    return False
+            else:
+                self.log(f"❌ No versions found in list")
+                return False
+        else:
+            self.log(f"❌ Version list failed")
+            return False
+
+    def test_publish_guard_and_flow(self):
+        """4) Publish guard + publish flow"""
+        self.log("\n=== 4) PUBLISH GUARD + PUBLISH FLOW ===")
+        
+        if not self.product_id or not self.version_id:
+            self.log("❌ No product_id or version_id available for publish test")
+            return False
+        
+        # First set product to inactive and try to publish (should fail)
+        update_data = {"status": "inactive"}
+        success, response, _ = self.run_test(
+            "Set Product to Inactive",
+            "PUT",
+            f"api/admin/catalog/products/{self.product_id}",
+            200,
+            data=update_data
+        )
+        
+        if not success:
+            self.log(f"❌ Failed to set product inactive")
+            return False
+        
+        # Try to publish (should fail with 409)
+        success, response, _ = self.run_test(
+            "Try Publish with Inactive Product (should fail)",
+            "POST",
+            f"api/admin/catalog/products/{self.product_id}/versions/{self.version_id}/publish",
+            409
+        )
+        
+        if success:
+            # Check error details
+            try:
+                error_detail = response.get('detail', {})
+                if error_detail.get('code') == 'product_not_active':
+                    self.log(f"✅ Publish guard working - product_not_active error returned")
+                else:
+                    self.log(f"❌ Wrong error code: {error_detail.get('code')}")
+                    return False
+            except:
+                self.log(f"❌ Could not parse error response")
+                return False
+        else:
+            self.log(f"❌ Publish guard test failed")
+            return False
+        
+        # Set product back to active
+        update_data = {"status": "active"}
+        success, response, _ = self.run_test(
+            "Set Product Back to Active",
+            "PUT",
+            f"api/admin/catalog/products/{self.product_id}",
+            200,
+            data=update_data
+        )
+        
+        if not success:
+            self.log(f"❌ Failed to set product active")
+            return False
+        
+        # Now publish should work
+        success, response, _ = self.run_test(
+            "Publish Version (should work)",
+            "POST",
+            f"api/admin/catalog/products/{self.product_id}/versions/{self.version_id}/publish",
+            200
+        )
+        
+        if success:
+            if (response.get('status') == 'published' and 
+                response.get('published_version') == 1):
+                self.log(f"✅ Version published successfully:")
+                self.log(f"   - status: {response.get('status')}")
+                self.log(f"   - published_version: {response.get('published_version')}")
+            else:
+                self.log(f"❌ Publish response validation failed")
+                return False
+        else:
+            self.log(f"❌ Version publish failed")
+            return False
+        
+        # Verify published_version in product list
+        success, response, _ = self.run_test(
+            "Verify Published Version in Product List",
+            "GET",
+            "api/admin/catalog/products?limit=50",
+            200
+        )
+        
+        if success:
+            items = response.get('items', [])
+            found_product = None
+            for item in items:
+                if item.get('product_id') == self.product_id:
+                    found_product = item
+                    break
+            
+            if found_product and found_product.get('published_version') == 1:
+                self.log(f"✅ Published version verified in product list: {found_product.get('published_version')}")
+                return True
+            else:
+                self.log(f"❌ Published version not reflected in product list")
+                return False
+        else:
+            self.log(f"❌ Product list verification failed")
+            return False
+
+    def test_referential_integrity(self):
+        """5) Referential integrity (negative)"""
+        self.log("\n=== 5) REFERENTIAL INTEGRITY (NEGATIVE) ===")
+        
+        if not self.product_id:
+            self.log("❌ No product_id available for referential integrity test")
+            return False
+        
+        # Try to create version with invalid room_type_ids and rate_plan_ids
+        version_data = {
+            "content": {
+                "room_type_ids": ["605c3b2f9f1b2c1a2b3c4d5e"],
+                "rate_plan_ids": ["605c3b2f9f1b2c1a2b3c4d5f"]
+            }
+        }
+        success, response, _ = self.run_test(
+            "Create Version with Invalid References (should fail)",
+            "POST",
+            f"api/admin/catalog/products/{self.product_id}/versions",
+            409
+        )
+        
+        if success:
+            # Check error details
+            try:
+                error_detail = response.get('detail', {})
+                if error_detail.get('code') == 'invalid_reference':
+                    self.log(f"✅ Referential integrity working - invalid_reference error returned")
+                    self.log(f"   - Error message: {error_detail.get('message')}")
+                    return True
+                else:
+                    self.log(f"❌ Wrong error code: {error_detail.get('code')}")
+                    return False
+            except:
+                self.log(f"❌ Could not parse error response")
+                return False
+        else:
+            self.log(f"❌ Referential integrity test failed")
+            return False
+
+    def test_room_types_rate_plans_policies(self):
+        """6) Room Types / Rate Plans / Cancellation Policies (happy path)"""
+        self.log("\n=== 6) ROOM TYPES / RATE PLANS / CANCELLATION POLICIES ===")
+        
+        if not self.product_id:
+            self.log("❌ No product_id available for room types/rate plans test")
+            return False
+        
+        # Create cancellation policy
+        policy_data = {
+            "code": "pol_test_001",
+            "name": "Test Policy",
+            "rules": [
+                {
+                    "days_before": 7,
+                    "penalty_type": "percent",
+                    "percent": 50.0
+                }
+            ]
+        }
+        success, response, _ = self.run_test(
+            "Create Cancellation Policy",
+            "POST",
+            "api/admin/catalog/cancellation-policies",
+            200,
+            data=policy_data
+        )
+        
+        if success and response.get('policy_id'):
+            self.policy_id = response['policy_id']
+            if response.get('code') == 'POL_TEST_001':
+                self.log(f"✅ Cancellation policy created:")
+                self.log(f"   - policy_id: {self.policy_id}")
+                self.log(f"   - code normalized: {response.get('code')}")
+            else:
+                self.log(f"❌ Policy code normalization failed")
+                return False
+        else:
+            self.log(f"❌ Cancellation policy creation failed")
+            return False
+        
+        # Create room type
+        room_type_data = {
+            "product_id": self.product_id,
+            "code": "rmt_deluxe",
+            "name": {"tr": "Deluxe Oda", "en": "Deluxe Room"},
+            "max_occupancy": 2,
+            "attributes": {"view": "sea"}
+        }
+        success, response, _ = self.run_test(
+            "Create Room Type",
+            "POST",
+            "api/admin/catalog/room-types",
+            200,
+            data=room_type_data
+        )
+        
+        if success and response.get('room_type_id'):
+            self.room_type_id = response['room_type_id']
+            if response.get('code') == 'RMT_DELUXE':
+                self.log(f"✅ Room type created:")
+                self.log(f"   - room_type_id: {self.room_type_id}")
+                self.log(f"   - code normalized: {response.get('code')}")
+            else:
+                self.log(f"❌ Room type code normalization failed")
+                return False
+        else:
+            self.log(f"❌ Room type creation failed")
+            return False
+        
+        # Create rate plan
+        rate_plan_data = {
+            "product_id": self.product_id,
+            "code": "rpl_standard",
+            "name": {"tr": "Standart Tarife", "en": "Standard Rate"},
+            "board": "BB",
+            "cancellation_policy_id": self.policy_id,
+            "payment_type": "prepay",
+            "min_stay": 1,
+            "max_stay": 14
+        }
+        success, response, _ = self.run_test(
+            "Create Rate Plan",
+            "POST",
+            "api/admin/catalog/rate-plans",
+            200,
+            data=rate_plan_data
+        )
+        
+        if success and response.get('rate_plan_id'):
+            self.rate_plan_id = response['rate_plan_id']
+            if (response.get('code') == 'RPL_STANDARD' and
+                response.get('cancellation_policy_id') == self.policy_id):
+                self.log(f"✅ Rate plan created:")
+                self.log(f"   - rate_plan_id: {self.rate_plan_id}")
+                self.log(f"   - code normalized: {response.get('code')}")
+                self.log(f"   - policy_id: {response.get('cancellation_policy_id')}")
+            else:
+                self.log(f"❌ Rate plan validation failed")
+                return False
+        else:
+            self.log(f"❌ Rate plan creation failed")
+            return False
+        
+        # List room types
+        success, response, _ = self.run_test(
+            "List Room Types",
+            "GET",
+            f"api/admin/catalog/room-types?product_id={self.product_id}",
+            200
+        )
+        
+        if success and len(response) > 0:
+            room_type = response[0]
+            if room_type.get('code') == 'RMT_DELUXE':
+                self.log(f"✅ Room type found in list with normalized code")
+            else:
+                self.log(f"❌ Room type code not normalized in list")
+                return False
+        else:
+            self.log(f"❌ Room types list failed")
+            return False
+        
+        # List rate plans
+        success, response, _ = self.run_test(
+            "List Rate Plans",
+            "GET",
+            f"api/admin/catalog/rate-plans?product_id={self.product_id}",
+            200
+        )
+        
+        if success and len(response) > 0:
+            rate_plan = response[0]
+            if (rate_plan.get('code') == 'RPL_STANDARD' and
+                rate_plan.get('cancellation_policy_id') == self.policy_id):
+                self.log(f"✅ Rate plan found in list:")
+                self.log(f"   - code: {rate_plan.get('code')}")
+                self.log(f"   - policy_id: {rate_plan.get('cancellation_policy_id')}")
+                return True
+            else:
+                self.log(f"❌ Rate plan validation failed in list")
+                return False
+        else:
+            self.log(f"❌ Rate plans list failed")
+            return False
+
+    def test_rbac_roles(self):
+        """7) RBAC / roles"""
+        self.log("\n=== 7) RBAC / ROLES ===")
+        
+        # Test with agency token (should fail)
+        success, response, _ = self.run_test(
+            "Agency Login",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "agency1@demo.test", "password": "agency123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        
+        if success and 'access_token' in response:
+            self.agency_token = response['access_token']
+            self.log(f"✅ Agency login successful")
+        else:
+            self.log(f"❌ Agency login failed")
+            return False
+        
+        # Try to access catalog endpoints with agency token (should fail)
+        success, response, _ = self.run_test(
+            "Agency Access to Catalog (should fail)",
+            "GET",
+            "api/admin/catalog/products",
+            403,
+            token_override=self.agency_token
+        )
+        
+        if success:
+            self.log(f"✅ Agency access correctly denied (403)")
+        else:
+            self.log(f"❌ Agency access control failed")
+            return False
+        
+        # Test with hotel token (should fail)
+        success, response, _ = self.run_test(
+            "Hotel Login",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "hoteladmin@acenta.test", "password": "admin123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        
+        if success and 'access_token' in response:
+            self.hotel_token = response['access_token']
+            self.log(f"✅ Hotel login successful")
+        else:
+            self.log(f"❌ Hotel login failed")
+            return False
+        
+        # Try to access catalog endpoints with hotel token (should fail)
+        success, response, _ = self.run_test(
+            "Hotel Access to Catalog (should fail)",
+            "GET",
+            "api/admin/catalog/products",
+            403,
+            token_override=self.hotel_token
+        )
+        
+        if success:
+            self.log(f"✅ Hotel access correctly denied (403)")
+            return True
+        else:
+            self.log(f"❌ Hotel access control failed")
+            return False
+
+    def print_summary(self):
+        """Print test summary"""
+        self.log("\n" + "="*60)
+        self.log("PRODUCT CATALOG V1 BACKEND TEST SUMMARY")
+        self.log("="*60)
+        self.log(f"Total Tests: {self.tests_run}")
+        self.log(f"✅ Passed: {self.tests_passed}")
+        self.log(f"❌ Failed: {self.tests_failed}")
+        self.log(f"Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%")
+        
+        if self.failed_tests:
+            self.log("\n❌ FAILED TESTS:")
+            for i, test in enumerate(self.failed_tests, 1):
+                self.log(f"  {i}. {test}")
+        
+        self.log("="*60)
+
+    def run_catalog_tests(self):
+        """Run all catalog tests"""
+        self.log("🚀 Starting Product Catalog v1 Backend Tests")
+        self.log(f"Base URL: {self.base_url}")
+        
+        # Authentication
+        if not self.test_admin_login():
+            self.log("❌ Admin login failed - stopping tests")
+            self.print_summary()
+            return 1
+
+        # Test scenarios
+        test_results = []
+        
+        # 1) Product create + list
+        test_results.append(self.test_product_create_and_list())
+        
+        # 2) Product update
+        test_results.append(self.test_product_update())
+        
+        # 3) Version create + list
+        test_results.append(self.test_version_create_and_list())
+        
+        # 4) Publish guard + publish flow
+        test_results.append(self.test_publish_guard_and_flow())
+        
+        # 5) Referential integrity (negative)
+        test_results.append(self.test_referential_integrity())
+        
+        # 6) Room Types / Rate Plans / Cancellation Policies (happy path)
+        test_results.append(self.test_room_types_rate_plans_policies())
+        
+        # 7) RBAC / roles
+        test_results.append(self.test_rbac_roles())
+
+        # Summary
+        self.print_summary()
+
+        return 0 if self.tests_failed == 0 else 1
+
+
 class B2BBookingsListTester:
     def __init__(self, base_url="https://riskops-platform.preview.emergentagent.com"):
         self.base_url = base_url

@@ -36,7 +36,13 @@ async def create_product(db, actor: dict[str, Any], payload: dict) -> dict:
     now = now_utc()
 
     code = _normalize_code(payload["code"])
+    if not code:
+        raise AppError(422, "validation_error", "Product code is required", {"field": "code"})
+
     status = payload.get("status", "inactive")
+    default_currency = (payload["default_currency"] or "").upper()
+    if not default_currency or len(default_currency) != 3:
+        raise AppError(422, "validation_error", "Default currency must be 3-letter code", {"field": "default_currency"})
 
     doc = {
         "organization_id": org_id,
@@ -45,7 +51,7 @@ async def create_product(db, actor: dict[str, Any], payload: dict) -> dict:
         "name": payload["name"],
         "name_search": _name_search(payload.get("name")),
         "status": status,
-        "default_currency": (payload["default_currency"] or "").upper(),
+        "default_currency": default_currency,
         "created_at": now,
         "updated_at": now,
     }
@@ -89,9 +95,13 @@ async def update_product(db, actor: dict[str, Any], product_id: str, patch: dict
 
     if "code" in update:
         update["code"] = _normalize_code(update["code"])
+        if not update["code"]:
+            raise AppError(422, "validation_error", "Product code is required", {"field": "code"})
 
     if "default_currency" in update:
         update["default_currency"] = (update["default_currency"] or "").upper()
+        if not update["default_currency"] or len(update["default_currency"]) != 3:
+            raise AppError(422, "validation_error", "Default currency must be 3-letter code", {"field": "default_currency"})
 
     if "name" in update:
         update["name_search"] = _name_search(update["name"])

@@ -117,13 +117,13 @@ async def get_product(
     return ProductResponse(
         product_id=_id(doc["_id"]),
         organization_id=doc["organization_id"],
-        type=doc["type"],
-        code=doc["code"],
-        name=doc["name"],
-        status=doc["status"],
-        default_currency=doc["default_currency"],
-        created_at=doc["created_at"],
-        updated_at=doc["updated_at"],
+        type=doc.get("type") or "hotel",
+        code=doc.get("code") or "",
+        name=doc.get("name") or {},
+        status=doc.get("status") or "inactive",
+        default_currency=doc.get("default_currency") or "EUR",
+        created_at=doc.get("created_at"),
+        updated_at=doc.get("updated_at") or doc.get("created_at"),
     )
 
 

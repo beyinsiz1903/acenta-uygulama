@@ -370,7 +370,15 @@ export default function AdminMatchesPage() {
                   {selectedMatch?.hotel_name || selectedMatch?.hotel_id}
                 </DrawerTitle>
                 {selectedMatch && (
-                  <div className="mt-2">
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    {selectedMatch.action_status === "blocked" && (
+                      <Badge
+                        variant="destructive"
+                        data-testid="match-drawer-blocked-badge"
+                      >
+                        Blocked by policy
+                      </Badge>
+                    )}
                     <Button
                       type="button"
                       size="sm"

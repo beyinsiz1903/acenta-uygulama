@@ -1655,13 +1655,13 @@ class VoucherV1Tester:
         return False
 
     def test_get_latest_booking(self):
-        """Get latest B2B booking for testing"""
-        self.log("\n=== 1) OPS GENERATE - GET LATEST BOOKING ===")
+        """Get latest CONFIRMED B2B booking for testing"""
+        self.log("\n=== 1) OPS GENERATE - GET LATEST CONFIRMED BOOKING ===")
         
         success, response, _ = self.run_test(
-            "GET /api/ops/bookings?limit=1 (get latest B2B booking)",
+            "GET /api/ops/bookings?status=CONFIRMED&limit=10 (get CONFIRMED B2B booking)",
             "GET",
-            "api/ops/bookings?limit=1",
+            "api/ops/bookings?status=CONFIRMED&limit=10",
             200
         )
         
@@ -1669,10 +1669,10 @@ class VoucherV1Tester:
             items = response['items']
             if items:
                 self.booking_id = items[0]['booking_id']
-                self.log(f"✅ Found latest B2B booking: {self.booking_id}")
+                self.log(f"✅ Found CONFIRMED B2B booking: {self.booking_id}")
                 return True
             else:
-                self.log(f"❌ No B2B bookings found")
+                self.log(f"❌ No CONFIRMED B2B bookings found")
                 return False
         return False
 

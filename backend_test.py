@@ -1913,7 +1913,8 @@ class BookingTimelineV1Tester:
         success, events_response, _ = self.run_test(
             f"GET /api/ops/bookings/{self.booking_id}/events (verify chronological order)",
             "GET",
-            f"api/ops/bookings/{self.booking_id}/events"
+            f"api/ops/bookings/{self.booking_id}/events",
+            200
         )
         
         if not success or not events_response.get('items'):

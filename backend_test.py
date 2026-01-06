@@ -1875,14 +1875,19 @@ class ExecutiveSummaryPDFTester:
         """5) Test wrong auth scenarios"""
         self.log("\n=== 5) WRONG AUTH SCENARIOS ===")
         
-        # Test without token
+        # Test without token - temporarily clear admin token
+        original_token = self.admin_token
+        self.admin_token = None
+        
         success, response = self.run_test(
             "Test without token (should get 401)",
             "GET",
             "api/admin/reports/match-risk/executive-summary.pdf",
-            401,
-            headers_override={}
+            401
         )
+        
+        # Restore admin token
+        self.admin_token = original_token
         if success:
             self.log(f"✅ Correctly rejected request without token (401)")
         else:

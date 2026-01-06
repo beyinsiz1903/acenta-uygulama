@@ -21,6 +21,7 @@ export const MENU_CONFIG = {
       children: [
         { label: "Audit Logs", path: "/app/admin/audit" },
         { label: "Email Aktiviteleri", path: "/app/admin/email-logs" },
+        { label: "B2B Ops Queues", path: "/app/admin/ops/b2b" },
       ],
     },
   ],

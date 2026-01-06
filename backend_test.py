@@ -1991,11 +1991,25 @@ class B2BQuotesBookingsCancelTester:
         """1.3 POST /api/b2b/quotes - 409 unavailable"""
         self.log("\n=== 1.3) QUOTES UNAVAILABLE (INVENTORY) ===")
         
+        # First, get a real product ID
+        success, products = self.run_test(
+            "GET available products for unavailable test",
+            "GET",
+            "api/products",
+            200
+        )
+        
+        if not success or not products:
+            self.log("❌ No products available for testing")
+            return False
+        
+        product_id = products[0]['id']
+        
         # Try with a date far in the future where no inventory exists
         quote_data = {
             "channel_id": "ch_test",
             "items": [{
-                "product_id": "existing_product_id",
+                "product_id": product_id,
                 "room_type_id": "standard",
                 "rate_plan_id": "base",
                 "check_in": "2030-01-01",

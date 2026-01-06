@@ -26198,6 +26198,261 @@ class BookingTimelineV1VoucherFixTester:
         return 0 if self.tests_failed == 0 else 1
 
 
+class B2BBookingsProductNameTester:
+    def __init__(self, base_url="https://riskops-platform.preview.emergentagent.com"):
+        self.base_url = base_url
+        self.agency1_token = None
+        self.tests_run = 0
+        self.tests_passed = 0
+        self.tests_failed = 0
+        self.failed_tests = []
+
+    def log(self, msg):
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}")
+
+    def run_test(self, name, method, endpoint, expected_status, data=None, headers_override=None, token_override=None):
+        """Run a single API test"""
+        url = f"{self.base_url}/{endpoint}"
+        headers = headers_override or {'Content-Type': 'application/json'}
+        
+        token = token_override or self.agency1_token
+        if token and not headers_override:
+            headers['Authorization'] = f'Bearer {token}'
+
+        self.tests_run += 1
+        self.log(f"🔍 Test #{self.tests_run}: {name}")
+        
+        try:
+            if method == 'GET':
+                response = requests.get(url, headers=headers, timeout=10)
+            elif method == 'POST':
+                response = requests.post(url, json=data, headers=headers, timeout=10)
+            elif method == 'PUT':
+                response = requests.put(url, json=data, headers=headers, timeout=10)
+            elif method == 'DELETE':
+                response = requests.delete(url, headers=headers, timeout=10)
+            else:
+                raise ValueError(f"Unsupported method: {method}")
+
+            success = response.status_code == expected_status
+            if success:
+                self.tests_passed += 1
+                self.log(f"✅ PASSED - Status: {response.status_code}")
+                try:
+                    return True, response.json() if response.content else {}, response
+                except:
+                    return True, {}, response
+            else:
+                self.tests_failed += 1
+                self.failed_tests.append(f"{name} - Expected {expected_status}, got {response.status_code}")
+                self.log(f"❌ FAILED - Expected {expected_status}, got {response.status_code}")
+                try:
+                    self.log(f"   Response: {response.text[:200]}")
+                except:
+                    pass
+                return False, {}, response
+
+        except Exception as e:
+            self.tests_failed += 1
+            self.failed_tests.append(f"{name} - Error: {str(e)}")
+            self.log(f"❌ FAILED - Error: {str(e)}")
+            return False, {}, None
+
+    def test_agency1_login(self):
+        """Test agency1 login"""
+        self.log("\n=== AUTHENTICATION - AGENCY1 ===")
+        success, response, _ = self.run_test(
+            "Agency1 Login (agency1@demo.test/agency123)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "agency1@demo.test", "password": "agency123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.agency1_token = response['access_token']
+            user = response.get('user', {})
+            roles = user.get('roles', [])
+            agency_id = user.get('agency_id')
+            
+            if agency_id and ('agency_admin' in roles or 'agency_agent' in roles):
+                self.log(f"✅ Agency1 login successful - roles: {roles}, agency_id: {agency_id}")
+                return True
+            else:
+                self.log(f"❌ Missing agency role or agency_id: roles={roles}, agency_id={agency_id}")
+                return False
+        return False
+
+    def test_product_name_mapping(self):
+        """Test product_name best-effort mapping"""
+        self.log("\n=== 1) PRODUCT_NAME BEST-EFFORT MAPPING ===")
+        
+        # Get B2B bookings with limit=5
+        success, response, _ = self.run_test(
+            "GET /api/b2b/bookings?limit=5",
+            "GET",
+            "api/b2b/bookings?limit=5",
+            200,
+            token_override=self.agency1_token
+        )
+        
+        if not success:
+            self.log("❌ Failed to get B2B bookings")
+            return False
+        
+        items = response.get('items', [])
+        if not items:
+            self.log("❌ No B2B bookings found for testing")
+            return False
+        
+        self.log(f"✅ Found {len(items)} B2B bookings")
+        
+        # Check for bookings with product_id
+        bookings_with_product_id = []
+        for item in items:
+            if 'booking_id' in item:
+                bookings_with_product_id.append(item)
+        
+        if not bookings_with_product_id:
+            self.log("❌ No bookings with product_id found")
+            return False
+        
+        # Test the first booking
+        first_booking = bookings_with_product_id[0]
+        product_name = first_booking.get('product_name')
+        
+        self.log(f"📋 FIRST BOOKING ANALYSIS:")
+        self.log(f"   - booking_id: {first_booking.get('booking_id')}")
+        self.log(f"   - product_name: '{product_name}'")
+        self.log(f"   - status: {first_booking.get('status')}")
+        self.log(f"   - created_at: {first_booking.get('created_at')}")
+        
+        # Check if product_name is no longer "-"
+        if product_name == "-":
+            self.log("❌ FAILED: product_name is still '-' (placeholder)")
+            return False
+        elif product_name and product_name != "-":
+            self.log(f"✅ SUCCESS: product_name is now '{product_name}' (not '-')")
+            
+            # Show JSON snippet as requested
+            self.log(f"\n📄 JSON SNIPPET FOR FIRST BOOKING:")
+            import json
+            snippet = {
+                "booking_id": first_booking.get('booking_id'),
+                "product_name": first_booking.get('product_name'),
+                "status": first_booking.get('status'),
+                "created_at": first_booking.get('created_at'),
+                "currency": first_booking.get('currency'),
+                "amount_sell": first_booking.get('amount_sell')
+            }
+            self.log(json.dumps(snippet, indent=2, default=str))
+            return True
+        else:
+            self.log(f"❌ FAILED: product_name is empty or None")
+            return False
+
+    def test_regression_checks(self):
+        """Test regression - auth, limit guard, status filter"""
+        self.log("\n=== 2) REGRESSION CHECKS ===")
+        
+        # Test auth (should work)
+        success, response, _ = self.run_test(
+            "Auth check - valid agency token",
+            "GET",
+            "api/b2b/bookings?limit=1",
+            200,
+            token_override=self.agency1_token
+        )
+        if success:
+            self.log("✅ Auth working correctly")
+        else:
+            self.log("❌ Auth regression detected")
+            return False
+        
+        # Test limit guard (should fail)
+        success, response, _ = self.run_test(
+            "Limit guard check - limit=500 (should fail)",
+            "GET",
+            "api/b2b/bookings?limit=500",
+            422,
+            token_override=self.agency1_token
+        )
+        if success:
+            self.log("✅ Limit guard working correctly")
+        else:
+            self.log("❌ Limit guard regression detected")
+            return False
+        
+        # Test status filter
+        success, response, _ = self.run_test(
+            "Status filter check - status=CONFIRMED",
+            "GET",
+            "api/b2b/bookings?status=CONFIRMED&limit=5",
+            200,
+            token_override=self.agency1_token
+        )
+        if success:
+            items = response.get('items', [])
+            if items:
+                # Check if all returned items have CONFIRMED status
+                all_confirmed = all(item.get('status') == 'CONFIRMED' for item in items)
+                if all_confirmed:
+                    self.log(f"✅ Status filter working correctly - {len(items)} CONFIRMED bookings")
+                else:
+                    self.log("❌ Status filter regression - not all items are CONFIRMED")
+                    return False
+            else:
+                self.log("✅ Status filter working (no CONFIRMED bookings found)")
+        else:
+            self.log("❌ Status filter regression detected")
+            return False
+        
+        return True
+
+    def print_summary(self):
+        """Print test summary"""
+        self.log("\n" + "="*60)
+        self.log("B2B BOOKINGS PRODUCT_NAME SMOKE TEST SUMMARY")
+        self.log("="*60)
+        self.log(f"Total Tests: {self.tests_run}")
+        self.log(f"✅ Passed: {self.tests_passed}")
+        self.log(f"❌ Failed: {self.tests_failed}")
+        self.log(f"Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%")
+        
+        if self.failed_tests:
+            self.log("\n❌ FAILED TESTS:")
+            for i, test in enumerate(self.failed_tests, 1):
+                self.log(f"  {i}. {test}")
+        
+        self.log("="*60)
+
+    def run_b2b_product_name_tests(self):
+        """Run B2B bookings product_name smoke tests"""
+        self.log("🚀 Starting B2B Bookings Product_Name Smoke Tests")
+        self.log(f"Base URL: {self.base_url}")
+        
+        # Authentication
+        if not self.test_agency1_login():
+            self.log("❌ Agency1 login failed - stopping tests")
+            self.print_summary()
+            return 1
+
+        # 1) Product name mapping test
+        product_name_success = self.test_product_name_mapping()
+
+        # 2) Regression checks
+        regression_success = self.test_regression_checks()
+
+        # Summary
+        self.print_summary()
+
+        # Return success only if both tests passed
+        if product_name_success and regression_success:
+            return 0
+        else:
+            return 1
+
+
 if __name__ == "__main__":
     import sys
     

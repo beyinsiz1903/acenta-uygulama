@@ -23257,13 +23257,17 @@ if __name__ == "__main__":
                 tester = B2BQuotesBookingsCancelTester()
                 exit_code = tester.run_b2b_tests()
                 sys.exit(exit_code)
+            elif test_type == "ops_b2b":
+                tester = OpsB2BTester()
+                exit_code = tester.run_ops_b2b_tests()
+                sys.exit(exit_code)
             elif test_type == "regression":
                 tester = RegressionTester()
                 exit_code = tester.run_regression_tests()
                 sys.exit(exit_code)
             else:
                 print(f"Unknown test type: {test_type}")
-                print("Available test types: error_handler_idempotency, risk-snapshots-trend, risk_snapshots, proof_v2_story3, proof_v2_story4, proof_v2_story2, signed_download, faz5, proof_v11, executive_summary, scale_ui_proof, b2b, regression, all")
+                print("Available test types: error_handler_idempotency, risk-snapshots-trend, risk_snapshots, proof_v2_story3, proof_v2_story4, proof_v2_story2, signed_download, faz5, proof_v11, executive_summary, scale_ui_proof, b2b, ops_b2b, regression, all")
                 sys.exit(1)
         else:
             # Default: run comprehensive tests

@@ -183,6 +183,9 @@ export default function OpsB2BQueuesPage() {
     setBookingDetailLoading(true);
     setVoucherHistory([]);
     setVoucherHistoryError("");
+    setBookingEvents([]);
+    setBookingEventsError("");
+    setExpandedEventIds(new Set());
     try {
       const res = await api.get(`/ops/bookings/${id}`);
       setBookingDetail(res.data || null);

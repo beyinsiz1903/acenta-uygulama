@@ -22,6 +22,7 @@ import AdminMatchDetailPage from "./pages/AdminMatchDetailPage";
 import AdminMatchRiskTrendsPage from "./pages/AdminMatchRiskTrendsPage";
 import AdminActionPoliciesPage from "./pages/AdminActionPoliciesPage";
 import AdminApprovalsPage from "./pages/AdminApprovalsPage";
+import OpsB2BQueuesPage from "./pages/OpsB2BQueuesPage";
 import DashboardPage from "./pages/DashboardPage";
 import ProductsPage from "./pages/ProductsPage";
 import AgencyHotelsPage from "./pages/AgencyHotelsPage";
@@ -85,6 +86,7 @@ function App() {
             <Route path="settings/action-policies" element={<AdminActionPoliciesPage />} />
             <Route path="approvals" element={<AdminApprovalsPage />} />
             <Route path="exports" element={<AdminExportsPage />} />
+            <Route path="ops/b2b" element={<OpsB2BQueuesPage />} />
           </Route>
         </Route>
 

@@ -1539,6 +1539,377 @@ class RiskSnapshotsTrendTester:
         return 0 if self.tests_failed == 0 else 1
 
 
+class ScaleUIProofHarnessTester:
+    def __init__(self, base_url="https://riskdelta.preview.emergentagent.com"):
+        self.base_url = base_url
+        self.admin_token = None
+        self.tests_run = 0
+        self.tests_passed = 0
+        self.tests_failed = 0
+        self.failed_tests = []
+        
+        # Store data for testing
+        self.match_id = None
+        self.task_id = None
+
+    def log(self, msg):
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}")
+
+    def run_test(self, name, method, endpoint, expected_status, data=None, headers_override=None):
+        """Run a single API test"""
+        url = f"{self.base_url}/{endpoint}"
+        headers = headers_override or {'Content-Type': 'application/json'}
+        if self.admin_token and not headers_override:
+            headers['Authorization'] = f'Bearer {self.admin_token}'
+
+        self.tests_run += 1
+        self.log(f"🔍 Test #{self.tests_run}: {name}")
+        
+        try:
+            if method == 'GET':
+                response = requests.get(url, headers=headers, timeout=10)
+            elif method == 'POST':
+                response = requests.post(url, json=data, headers=headers, timeout=10)
+            elif method == 'PUT':
+                response = requests.put(url, json=data, headers=headers, timeout=10)
+            elif method == 'DELETE':
+                response = requests.delete(url, headers=headers, timeout=10)
+            else:
+                raise ValueError(f"Unsupported method: {method}")
+
+            success = response.status_code == expected_status
+            if success:
+                self.tests_passed += 1
+                self.log(f"✅ PASSED - Status: {response.status_code}")
+                try:
+                    return True, response.json() if response.content else {}
+                except:
+                    return True, {}
+            else:
+                self.tests_failed += 1
+                self.failed_tests.append(f"{name} - Expected {expected_status}, got {response.status_code}")
+                self.log(f"❌ FAILED - Expected {expected_status}, got {response.status_code}")
+                try:
+                    self.log(f"   Response: {response.text[:200]}")
+                except:
+                    pass
+                return False, {}
+
+        except Exception as e:
+            self.tests_failed += 1
+            self.failed_tests.append(f"{name} - Error: {str(e)}")
+            self.log(f"❌ FAILED - Error: {str(e)}")
+            return False, {}
+
+    def test_admin_login(self):
+        """Test super admin login"""
+        self.log("\n=== AUTHENTICATION ===")
+        success, response = self.run_test(
+            "Super Admin Login (admin@acenta.test/admin123)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "admin@acenta.test", "password": "admin123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.admin_token = response['access_token']
+            user = response.get('user', {})
+            roles = user.get('roles', [])
+            
+            if 'admin' in roles or 'super_admin' in roles:
+                self.log(f"✅ Super admin login successful - roles: {roles}")
+                return True
+            else:
+                self.log(f"❌ Missing admin/super_admin role: {roles}")
+                return False
+        return False
+
+    def test_run_endpoint_disabled(self):
+        """Test run endpoint when SCALE_UI_PROOF_HARNESS_ENABLED=false"""
+        self.log("\n=== 1) RUN ENDPOINT - HARNESS DISABLED ===")
+        
+        # Note: We assume SCALE_UI_PROOF_HARNESS_ENABLED=false by default
+        # In a real test, we'd need to control this environment variable
+        success, response = self.run_test(
+            "POST /run with harness disabled (expect 404)",
+            "POST",
+            "api/admin/demo/scale-ui-proof/run",
+            404,
+            data={}
+        )
+        
+        if success:
+            detail = response.get('detail', {})
+            if isinstance(detail, dict) and detail.get('code') == 'NOT_FOUND':
+                self.log(f"✅ Correct 404 response when harness disabled")
+                return True
+            else:
+                self.log(f"❌ Unexpected 404 response format: {detail}")
+                return False
+        return False
+
+    def test_run_endpoint_enabled(self):
+        """Test run endpoint when SCALE_UI_PROOF_HARNESS_ENABLED=true"""
+        self.log("\n=== 2) RUN ENDPOINT - HARNESS ENABLED ===")
+        
+        # For this test, we assume the environment variable is set to true
+        # In practice, this would be controlled by test setup
+        success, response = self.run_test(
+            "POST /run with harness enabled",
+            "POST",
+            "api/admin/demo/scale-ui-proof/run",
+            200,
+            data={}
+        )
+        
+        if success:
+            # Verify response structure
+            required_fields = ['ok', 'match_id', 'blocked_action', 'request_unblock', 'approvals_pending']
+            missing_fields = [field for field in required_fields if field not in response]
+            
+            if missing_fields:
+                self.log(f"❌ Missing required fields: {missing_fields}")
+                return False
+            
+            # Verify ok=true
+            if response.get('ok') != True:
+                self.log(f"❌ Expected ok=true, got {response.get('ok')}")
+                return False
+            
+            # Store match_id for later tests
+            self.match_id = response.get('match_id')
+            if not self.match_id:
+                self.log(f"❌ Missing match_id in response")
+                return False
+            
+            # Verify blocked_action structure
+            blocked_action = response.get('blocked_action', {})
+            if blocked_action.get('status') != 'blocked':
+                self.log(f"❌ Expected blocked_action.status='blocked', got {blocked_action.get('status')}")
+                return False
+            
+            if blocked_action.get('reason_code') != 'demo_proof_block':
+                self.log(f"❌ Expected blocked_action.reason_code='demo_proof_block', got {blocked_action.get('reason_code')}")
+                return False
+            
+            # Verify request_unblock structure
+            request_unblock = response.get('request_unblock', {})
+            if request_unblock.get('ok') != True:
+                self.log(f"❌ Expected request_unblock.ok=true, got {request_unblock.get('ok')}")
+                return False
+            
+            if request_unblock.get('status') != 'pending':
+                self.log(f"❌ Expected request_unblock.status='pending', got {request_unblock.get('status')}")
+                return False
+            
+            # Store task_id for approve test
+            self.task_id = request_unblock.get('task_id')
+            if not self.task_id:
+                self.log(f"❌ Missing task_id in request_unblock")
+                return False
+            
+            # Verify already_pending is boolean
+            already_pending = request_unblock.get('already_pending')
+            if not isinstance(already_pending, bool):
+                self.log(f"❌ Expected already_pending to be boolean, got {type(already_pending)}")
+                return False
+            
+            # Verify approvals_pending structure
+            approvals_pending = response.get('approvals_pending', {})
+            if 'items' not in approvals_pending:
+                self.log(f"❌ Missing items in approvals_pending")
+                return False
+            
+            items = approvals_pending.get('items', [])
+            if not isinstance(items, list):
+                self.log(f"❌ Expected approvals_pending.items to be array, got {type(items)}")
+                return False
+            
+            self.log(f"✅ Run endpoint successful:")
+            self.log(f"   - ok: {response.get('ok')}")
+            self.log(f"   - match_id: {self.match_id}")
+            self.log(f"   - blocked_action.status: {blocked_action.get('status')}")
+            self.log(f"   - blocked_action.reason_code: {blocked_action.get('reason_code')}")
+            self.log(f"   - request_unblock.ok: {request_unblock.get('ok')}")
+            self.log(f"   - request_unblock.task_id: {self.task_id}")
+            self.log(f"   - request_unblock.status: {request_unblock.get('status')}")
+            self.log(f"   - request_unblock.already_pending: {already_pending}")
+            self.log(f"   - approvals_pending.items: {len(items)} items")
+            
+            return True
+        return False
+
+    def test_approve_endpoint_success(self):
+        """Test approve endpoint with valid task_id"""
+        self.log("\n=== 3) APPROVE ENDPOINT - SUCCESS ===")
+        
+        if not self.task_id:
+            self.log("❌ No task_id available from run test")
+            return False
+        
+        success, response = self.run_test(
+            f"POST /approve with task_id={self.task_id}",
+            "POST",
+            "api/admin/demo/scale-ui-proof/approve",
+            200,
+            data={"task_id": self.task_id}
+        )
+        
+        if success:
+            # Verify response structure
+            required_fields = ['ok', 'approve', 'audit']
+            missing_fields = [field for field in required_fields if field not in response]
+            
+            if missing_fields:
+                self.log(f"❌ Missing required fields: {missing_fields}")
+                return False
+            
+            # Verify ok=true
+            if response.get('ok') != True:
+                self.log(f"❌ Expected ok=true, got {response.get('ok')}")
+                return False
+            
+            # Verify approve structure
+            approve = response.get('approve', {})
+            if approve.get('ok') != True:
+                self.log(f"❌ Expected approve.ok=true, got {approve.get('ok')}")
+                return False
+            
+            if approve.get('status') != 'approved':
+                self.log(f"❌ Expected approve.status='approved', got {approve.get('status')}")
+                return False
+            
+            if approve.get('match_action_status') != 'none':
+                self.log(f"❌ Expected approve.match_action_status='none', got {approve.get('match_action_status')}")
+                return False
+            
+            # Verify audit structure
+            audit = response.get('audit', {})
+            if 'approval_task' not in audit or 'match' not in audit:
+                self.log(f"❌ Missing audit.approval_task or audit.match")
+                return False
+            
+            approval_task_audit = audit.get('approval_task', {})
+            match_audit = audit.get('match', {})
+            
+            if 'items' not in approval_task_audit or 'items' not in match_audit:
+                self.log(f"❌ Missing items in audit sections")
+                return False
+            
+            approval_items = approval_task_audit.get('items', [])
+            match_items = match_audit.get('items', [])
+            
+            if not isinstance(approval_items, list) or not isinstance(match_items, list):
+                self.log(f"❌ Audit items should be arrays")
+                return False
+            
+            self.log(f"✅ Approve endpoint successful:")
+            self.log(f"   - ok: {response.get('ok')}")
+            self.log(f"   - approve.ok: {approve.get('ok')}")
+            self.log(f"   - approve.status: {approve.get('status')}")
+            self.log(f"   - approve.match_action_status: {approve.get('match_action_status')}")
+            self.log(f"   - audit.approval_task.items: {len(approval_items)} items")
+            self.log(f"   - audit.match.items: {len(match_items)} items")
+            
+            return True
+        return False
+
+    def test_approve_endpoint_invalid_task_id(self):
+        """Test approve endpoint with invalid task_id"""
+        self.log("\n=== 4) APPROVE ENDPOINT - INVALID TASK_ID ===")
+        
+        # Test with invalid ObjectId format
+        success, response = self.run_test(
+            "POST /approve with invalid task_id format",
+            "POST",
+            "api/admin/demo/scale-ui-proof/approve",
+            400,
+            data={"task_id": "invalid_task_id_format"}
+        )
+        
+        if success:
+            detail = response.get('detail', {})
+            if isinstance(detail, dict) and detail.get('code') == 'INVALID_TASK_ID':
+                self.log(f"✅ Correct 400 INVALID_TASK_ID response")
+            else:
+                self.log(f"❌ Unexpected 400 response: {detail}")
+                return False
+        else:
+            return False
+        
+        # Test with non-existent but valid ObjectId format
+        fake_task_id = "507f1f77bcf86cd799439011"  # Valid ObjectId format but doesn't exist
+        success, response = self.run_test(
+            "POST /approve with non-existent task_id",
+            "POST",
+            "api/admin/demo/scale-ui-proof/approve",
+            404,
+            data={"task_id": fake_task_id}
+        )
+        
+        if success:
+            detail = response.get('detail', {})
+            if isinstance(detail, dict) and detail.get('code') == 'TASK_NOT_FOUND':
+                self.log(f"✅ Correct 404 TASK_NOT_FOUND response")
+                return True
+            else:
+                self.log(f"❌ Unexpected 404 response: {detail}")
+                return False
+        return False
+
+    def print_summary(self):
+        """Print test summary"""
+        self.log("\n" + "="*60)
+        self.log("SCALE UI PROOF HARNESS BACKEND TEST SUMMARY")
+        self.log("="*60)
+        self.log(f"Total Tests: {self.tests_run}")
+        self.log(f"✅ Passed: {self.tests_passed}")
+        self.log(f"❌ Failed: {self.tests_failed}")
+        self.log(f"Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%")
+        
+        if self.failed_tests:
+            self.log("\n❌ FAILED TESTS:")
+            for i, test in enumerate(self.failed_tests, 1):
+                self.log(f"  {i}. {test}")
+        
+        self.log("="*60)
+
+    def run_scale_ui_proof_tests(self):
+        """Run all SCALE UI Proof Harness tests"""
+        self.log("🚀 Starting SCALE UI Proof Harness Backend Tests")
+        self.log(f"Base URL: {self.base_url}")
+        
+        # Authentication
+        if not self.test_admin_login():
+            self.log("❌ Admin login failed - stopping tests")
+            self.print_summary()
+            return 1
+
+        # Test scenarios
+        test_results = []
+        
+        # Note: In a real test environment, we'd control SCALE_UI_PROOF_HARNESS_ENABLED
+        # For now, we'll test both scenarios assuming the environment can be configured
+        
+        # 1) Test with harness disabled (expect 404)
+        # test_results.append(self.test_run_endpoint_disabled())
+        
+        # 2) Test with harness enabled
+        test_results.append(self.test_run_endpoint_enabled())
+        
+        # 3) Test approve endpoint with valid task_id
+        test_results.append(self.test_approve_endpoint_success())
+        
+        # 4) Test approve endpoint with invalid task_id
+        test_results.append(self.test_approve_endpoint_invalid_task_id())
+
+        # Summary
+        self.print_summary()
+
+        return 0 if self.tests_failed == 0 else 1
+
+
 class ExecutiveSummaryPDFTester:
     def __init__(self, base_url="https://riskdelta.preview.emergentagent.com"):
         self.base_url = base_url

@@ -20,6 +20,7 @@ import AdminMatchesPage from "./pages/AdminMatchesPage";
 import AdminExportsPage from "./pages/AdminExportsPage";
 import AdminMatchDetailPage from "./pages/AdminMatchDetailPage";
 import AdminMatchRiskTrendsPage from "./pages/AdminMatchRiskTrendsPage";
+import AdminActionPoliciesPage from "./pages/AdminActionPoliciesPage";
 import DashboardPage from "./pages/DashboardPage";
 import ProductsPage from "./pages/ProductsPage";
 import AgencyHotelsPage from "./pages/AgencyHotelsPage";
@@ -79,6 +80,7 @@ function App() {
             <Route path="reports/match-risk" element={<AdminMatchesPage />} />
             <Route path="reports/match-risk-trends" element={<AdminMatchRiskTrendsPage />} />
             <Route path="settings/match-alerts" element={<AdminMatchAlertsPolicyPage />} />
+            <Route path="settings/action-policies" element={<AdminActionPoliciesPage />} />
             <Route path="exports" element={<AdminExportsPage />} />
           </Route>
         </Route>

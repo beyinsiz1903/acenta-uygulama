@@ -1951,7 +1951,8 @@ class BookingTimelineV1Tester:
         success, limited_response, _ = self.run_test(
             f"GET /api/ops/bookings/{self.booking_id}/events?limit=2 (verify limit)",
             "GET",
-            f"api/ops/bookings/{self.booking_id}/events?limit=2"
+            f"api/ops/bookings/{self.booking_id}/events?limit=2",
+            200
         )
         
         if success and limited_response.get('items'):

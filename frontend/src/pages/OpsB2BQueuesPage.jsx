@@ -101,9 +101,12 @@ export default function OpsB2BQueuesPage() {
     setSelectedBookingId(id);
     setBookingDetail(null);
     setBookingDetailLoading(true);
+    setVoucherHistory([]);
+    setVoucherHistoryError("");
     try {
       const res = await api.get(`/ops/bookings/${id}`);
       setBookingDetail(res.data || null);
+      setBookingDetailTab("general");
     } catch (err) {
       console.error("[OpsB2B] loadBookingDetail error:", err);
       setBookingDetail(null);
@@ -111,6 +114,27 @@ export default function OpsB2BQueuesPage() {
       setBookingDetailLoading(false);
     }
   }
+
+  async function loadVoucherHistory(id) {
+    if (!id) return;
+    setVoucherHistoryLoading(true);
+    setVoucherHistoryError("");
+    try {
+      const res = await api.get(`/ops/bookings/${id}/vouchers`);
+      setVoucherHistory(res.data?.items || []);
+    } catch (err) {
+      console.error("[OpsB2B] loadVoucherHistory error:", err);
+      setVoucherHistoryError(apiErrorMessage(err));
+      setVoucherHistory([]);
+    } finally {
+      setVoucherHistoryLoading(false);
+    }
+  }
+
+  const hasActiveVoucher = useMemo(
+    () => voucherHistory?.some((v) => v.status === "active"),
+    [voucherHistory],
+  );
 
   async function loadCases() {
     setCasesLoading(true);

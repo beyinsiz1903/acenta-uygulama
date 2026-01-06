@@ -1762,14 +1762,14 @@ class B2BBookingsListTester:
             self.log("❌ Failed to get agency hotels")
             return False
         
-        hotels = response
+        hotels = response.get('items', [])
         if not hotels or len(hotels) == 0:
             self.log("❌ No hotels available for agency")
             return False
         
         hotel = hotels[0]
-        hotel_id = hotel.get('id') or hotel.get('hotel_id')
-        hotel_name = hotel.get('name') or hotel.get('hotel_name', 'Unknown Hotel')
+        hotel_id = hotel.get('hotel_id')
+        hotel_name = hotel.get('hotel_name', 'Unknown Hotel')
         self.log(f"✅ Using hotel: {hotel_name} (ID: {hotel_id})")
         
         # Search for availability

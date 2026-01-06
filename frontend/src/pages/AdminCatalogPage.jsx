@@ -182,6 +182,59 @@ function VersionsPanel({ productId }) {
           </Button>
         </div>
       </div>
+      <div className="rounded-md border p-3 space-y-3">
+        <div className="text-[11px] font-semibold">Bağlı Room Types</div>
+        <div className="text-[11px] text-muted-foreground">
+          Aşağıdan seçtiğiniz room type ve rate plan ID&apos;leri, draft içeriğinde
+          <code className="mx-1 rounded bg-muted px-1">room_type_ids</code> ve
+          <code className="mx-1 rounded bg-muted px-1">rate_plan_ids</code> alanlarına otomatik eklenecektir.
+        </div>
+        <div className="grid grid-cols-2 gap-3 text-[11px]">
+          <div className="space-y-1">
+            <div className="font-medium">Room Types</div>
+            <div className="max-h-32 overflow-y-auto space-y-1">
+              {roomTypes.map((rt) => (
+                <label key={rt.room_type_id} className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    className="h-3 w-3"
+                    checked={selectedRoomTypeIds.includes(rt.room_type_id)}
+                    onChange={() => toggleRoomType(rt.room_type_id)}
+                  />
+                  <span className="truncate">
+                    {rt.code} – {(rt.name && (rt.name.tr || rt.name.en)) || "(no name)"}
+                  </span>
+                </label>
+              ))}
+              {!roomTypes.length && (
+                <div className="text-[11px] text-muted-foreground">Henüz room type yok.</div>
+              )}
+            </div>
+          </div>
+          <div className="space-y-1">
+            <div className="font-medium">Rate Plans</div>
+            <div className="max-h-32 overflow-y-auto space-y-1">
+              {ratePlans.map((rp) => (
+                <label key={rp.rate_plan_id} className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    className="h-3 w-3"
+                    checked={selectedRatePlanIds.includes(rp.rate_plan_id)}
+                    onChange={() => toggleRatePlan(rp.rate_plan_id)}
+                  />
+                  <span className="truncate">
+                    {rp.code} – {(rp.name && (rp.name.tr || rp.name.en)) || "(no name)"}
+                  </span>
+                </label>
+              ))}
+              {!ratePlans.length && (
+                <div className="text-[11px] text-muted-foreground">Henüz rate plan yok.</div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
 
       <div className="rounded-md border overflow-hidden">
         <div className="grid grid-cols-5 bg-muted/40 px-2 py-2 text-xs font-semibold">

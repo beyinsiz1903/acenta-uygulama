@@ -839,31 +839,6 @@ async def ensure_seed_data() -> None:
                         "capacity_total": 30,
                         "capacity_available": 30,
                         "price": 1500.0,
-    # B2B inventory for demo_product_1 so B2BPricingService can find availability
-    from datetime import timedelta
-
-    today = now_utc().date()
-    check_in = (today + timedelta(days=3)).strftime("%Y-%m-%d")
-    existing_inv = await db.inventory.find_one(
-        {"organization_id": org_id, "product_id": demo_product["_id"], "date": check_in}
-    )
-    if not existing_inv:
-        await db.inventory.insert_one(
-            {
-                "organization_id": org_id,
-                "product_id": demo_product["_id"],
-                "date": check_in,
-                "capacity_total": 5,
-                "capacity_available": 5,
-                "price": 1500.0,
-                "restrictions": {"closed": False, "cta": False, "ctd": False},
-                "created_at": now_utc(),
-                "updated_at": now_utc(),
-                "created_by": DEFAULT_ADMIN_EMAIL,
-                "updated_by": DEFAULT_ADMIN_EMAIL,
-            }
-        )
-
                         "restrictions": {"closed": False, "cta": False, "ctd": False},
                         "created_at": now_utc(),
                         "updated_at": now_utc(),

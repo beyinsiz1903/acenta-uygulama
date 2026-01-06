@@ -1539,6 +1539,628 @@ class RiskSnapshotsTrendTester:
         return 0 if self.tests_failed == 0 else 1
 
 
+class B2BBookingsListTester:
+    def __init__(self, base_url="https://riskops-platform.preview.emergentagent.com"):
+        self.base_url = base_url
+        self.admin_token = None
+        self.agency1_token = None
+        self.agency2_token = None
+        self.hotel_token = None
+        self.tests_run = 0
+        self.tests_passed = 0
+        self.tests_failed = 0
+        self.failed_tests = []
+        
+        # Store data for testing
+        self.quote_id = None
+        self.booking_id = None
+        self.channel_id = None
+
+    def log(self, msg):
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}")
+
+    def run_test(self, name, method, endpoint, expected_status, data=None, headers_override=None, token_override=None):
+        """Run a single API test"""
+        url = f"{self.base_url}/{endpoint}"
+        headers = headers_override or {'Content-Type': 'application/json'}
+        
+        # Use token override if provided, otherwise use admin token
+        token = token_override or self.admin_token
+        if token and not headers_override:
+            headers['Authorization'] = f'Bearer {token}'
+
+        self.tests_run += 1
+        self.log(f"🔍 Test #{self.tests_run}: {name}")
+        
+        try:
+            if method == 'GET':
+                response = requests.get(url, headers=headers, timeout=10)
+            elif method == 'POST':
+                response = requests.post(url, json=data, headers=headers, timeout=10)
+            elif method == 'PUT':
+                response = requests.put(url, json=data, headers=headers, timeout=10)
+            elif method == 'DELETE':
+                response = requests.delete(url, headers=headers, timeout=10)
+            else:
+                raise ValueError(f"Unsupported method: {method}")
+
+            success = response.status_code == expected_status
+            if success:
+                self.tests_passed += 1
+                self.log(f"✅ PASSED - Status: {response.status_code}")
+                try:
+                    return True, response.json() if response.content else {}, response
+                except:
+                    return True, {}, response
+            else:
+                self.tests_failed += 1
+                self.failed_tests.append(f"{name} - Expected {expected_status}, got {response.status_code}")
+                self.log(f"❌ FAILED - Expected {expected_status}, got {response.status_code}")
+                try:
+                    self.log(f"   Response: {response.text[:200]}")
+                except:
+                    pass
+                return False, {}, response
+
+        except Exception as e:
+            self.tests_failed += 1
+            self.failed_tests.append(f"{name} - Error: {str(e)}")
+            self.log(f"❌ FAILED - Error: {str(e)}")
+            return False, {}, None
+
+    def test_admin_login(self):
+        """Test admin login"""
+        self.log("\n=== AUTHENTICATION - ADMIN ===")
+        success, response, _ = self.run_test(
+            "Admin Login (admin@acenta.test/admin123)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "admin@acenta.test", "password": "admin123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.admin_token = response['access_token']
+            user = response.get('user', {})
+            roles = user.get('roles', [])
+            
+            if 'admin' in roles or 'super_admin' in roles:
+                self.log(f"✅ Admin login successful - roles: {roles}")
+                return True
+            else:
+                self.log(f"❌ Missing admin/super_admin role: {roles}")
+                return False
+        return False
+
+    def test_agency1_login(self):
+        """Test agency1 login"""
+        self.log("\n=== AUTHENTICATION - AGENCY1 ===")
+        success, response, _ = self.run_test(
+            "Agency1 Login (agency1@demo.test/agency123)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "agency1@demo.test", "password": "agency123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.agency1_token = response['access_token']
+            user = response.get('user', {})
+            roles = user.get('roles', [])
+            agency_id = user.get('agency_id')
+            
+            if agency_id and ('agency_admin' in roles or 'agency_agent' in roles):
+                self.log(f"✅ Agency1 login successful - roles: {roles}, agency_id: {agency_id}")
+                return True
+            else:
+                self.log(f"❌ Missing agency role or agency_id: roles={roles}, agency_id={agency_id}")
+                return False
+        return False
+
+    def test_agency2_login(self):
+        """Test agency2 login (for multi-tenant testing)"""
+        self.log("\n=== AUTHENTICATION - AGENCY2 ===")
+        success, response, _ = self.run_test(
+            "Agency2 Login (agency2@demo.test/agency123)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "agency2@demo.test", "password": "agency123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.agency2_token = response['access_token']
+            user = response.get('user', {})
+            roles = user.get('roles', [])
+            agency_id = user.get('agency_id')
+            
+            if agency_id and ('agency_admin' in roles or 'agency_agent' in roles):
+                self.log(f"✅ Agency2 login successful - roles: {roles}, agency_id: {agency_id}")
+                return True
+            else:
+                self.log(f"❌ Missing agency role or agency_id: roles={roles}, agency_id={agency_id}")
+                return False
+        return False
+
+    def test_hotel_login(self):
+        """Test hotel admin login"""
+        self.log("\n=== AUTHENTICATION - HOTEL ===")
+        success, response, _ = self.run_test(
+            "Hotel Login (hoteladmin@acenta.test/admin123)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "hoteladmin@acenta.test", "password": "admin123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.hotel_token = response['access_token']
+            user = response.get('user', {})
+            roles = user.get('roles', [])
+            
+            if 'hotel_admin' in roles or 'hotel_staff' in roles:
+                self.log(f"✅ Hotel login successful - roles: {roles}")
+                return True
+            else:
+                self.log(f"❌ Missing hotel role: {roles}")
+                return False
+        return False
+
+    def test_auth_scenarios(self):
+        """Test authentication and authorization scenarios"""
+        self.log("\n=== 1) AUTH & AUTHORIZATION TESTS ===")
+        
+        # Test unauthenticated access
+        success, response, _ = self.run_test(
+            "Unauthenticated access (should fail)",
+            "GET",
+            "api/b2b/bookings",
+            401,
+            headers_override={}
+        )
+        if success:
+            self.log("✅ Unauthenticated access correctly denied (401)")
+        
+        # Test admin token access (should fail - only agency users allowed)
+        success, response, _ = self.run_test(
+            "Admin token access (should fail)",
+            "GET",
+            "api/b2b/bookings",
+            403,
+            token_override=self.admin_token
+        )
+        if success:
+            self.log("✅ Admin token correctly denied (403)")
+        
+        # Test hotel token access (should fail - only agency users allowed)
+        success, response, _ = self.run_test(
+            "Hotel token access (should fail)",
+            "GET",
+            "api/b2b/bookings",
+            403,
+            token_override=self.hotel_token
+        )
+        if success:
+            self.log("✅ Hotel token correctly denied (403)")
+        
+        return True
+
+    def test_create_b2b_booking_flow(self):
+        """Create a B2B booking for testing"""
+        self.log("\n=== 2) CREATE B2B BOOKING FOR TESTING ===")
+        
+        # First get available hotels for agency1
+        success, response, _ = self.run_test(
+            "Get agency hotels",
+            "GET",
+            "api/agency/hotels",
+            200,
+            token_override=self.agency1_token
+        )
+        
+        if not success or not response:
+            self.log("❌ Failed to get agency hotels")
+            return False
+        
+        hotels = response
+        if not hotels:
+            self.log("❌ No hotels available for agency")
+            return False
+        
+        hotel = hotels[0]
+        hotel_id = hotel['id']
+        self.log(f"✅ Using hotel: {hotel['name']} (ID: {hotel_id})")
+        
+        # Search for availability
+        search_data = {
+            "hotel_id": hotel_id,
+            "check_in": "2025-02-01",
+            "check_out": "2025-02-03",
+            "rooms": [{"adults": 2, "children": 0}]
+        }
+        
+        success, response, _ = self.run_test(
+            "Search availability",
+            "POST",
+            "api/agency/search",
+            200,
+            data=search_data,
+            token_override=self.agency1_token
+        )
+        
+        if not success or not response.get('search_id'):
+            self.log("❌ Search failed")
+            return False
+        
+        search_id = response['search_id']
+        rooms = response.get('rooms', [])
+        if not rooms:
+            self.log("❌ No rooms available")
+            return False
+        
+        room = rooms[0]
+        rate_plan_id = room['rate_plan_id']
+        self.channel_id = room.get('channel_id')
+        self.log(f"✅ Found available room with rate_plan_id: {rate_plan_id}")
+        
+        # Create quote
+        quote_data = {
+            "search_id": search_id,
+            "channel_id": self.channel_id,
+            "rate_plan_id": rate_plan_id,
+            "rooms": [{"adults": 2, "children": 0}]
+        }
+        
+        success, response, _ = self.run_test(
+            "Create B2B quote",
+            "POST",
+            "api/b2b/quotes",
+            200,
+            data=quote_data,
+            token_override=self.agency1_token
+        )
+        
+        if not success or not response.get('quote_id'):
+            self.log("❌ Quote creation failed")
+            return False
+        
+        self.quote_id = response['quote_id']
+        self.log(f"✅ Quote created: {self.quote_id}")
+        
+        # Create booking
+        booking_data = {
+            "quote_id": self.quote_id,
+            "customer": {
+                "name": "Ahmet Yılmaz",
+                "email": "ahmet.yilmaz@example.com"
+            },
+            "travellers": [
+                {"first_name": "Ahmet", "last_name": "Yılmaz"},
+                {"first_name": "Ayşe", "last_name": "Yılmaz"}
+            ],
+            "notes": "Test booking for B2B list endpoint"
+        }
+        
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f'Bearer {self.agency1_token}',
+            'Idempotency-Key': str(uuid.uuid4())
+        }
+        
+        success, response, _ = self.run_test(
+            "Create B2B booking",
+            "POST",
+            "api/b2b/bookings",
+            200,
+            data=booking_data,
+            headers_override=headers
+        )
+        
+        if success and response.get('booking_id'):
+            self.booking_id = response['booking_id']
+            self.log(f"✅ Booking created: {self.booking_id}")
+            return True
+        else:
+            self.log("❌ Booking creation failed")
+            return False
+
+    def test_happy_path_default_listing(self):
+        """Test default listing behavior"""
+        self.log("\n=== 3) HAPPY PATH - DEFAULT LISTING ===")
+        
+        success, response, _ = self.run_test(
+            "GET /api/b2b/bookings (default params)",
+            "GET",
+            "api/b2b/bookings?limit=50",
+            200,
+            token_override=self.agency1_token
+        )
+        
+        if not success:
+            return False
+        
+        items = response.get('items', [])
+        self.log(f"✅ Found {len(items)} bookings")
+        
+        if len(items) == 0:
+            self.log("⚠️  No bookings found - this is expected if no B2B bookings exist")
+            return True
+        
+        # Verify structure of first item
+        first_item = items[0]
+        required_fields = ['booking_id', 'status', 'created_at', 'currency', 'amount_sell', 
+                          'check_in', 'check_out', 'primary_guest_name', 'product_name']
+        
+        missing_fields = [field for field in required_fields if field not in first_item]
+        if missing_fields:
+            self.log(f"❌ Missing required fields: {missing_fields}")
+            return False
+        
+        self.log("✅ All required fields present in response")
+        
+        # Verify created_at is ISO datetime
+        created_at = first_item.get('created_at')
+        if created_at:
+            try:
+                datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+                self.log("✅ created_at is valid ISO datetime")
+            except:
+                self.log(f"❌ created_at is not valid ISO datetime: {created_at}")
+                return False
+        
+        # Verify sorting (created_at desc)
+        if len(items) >= 2:
+            first_time = datetime.fromisoformat(items[0]['created_at'].replace('Z', '+00:00'))
+            second_time = datetime.fromisoformat(items[1]['created_at'].replace('Z', '+00:00'))
+            if first_time >= second_time:
+                self.log("✅ Sorting by created_at desc verified")
+            else:
+                self.log(f"❌ Sorting incorrect: {first_time} should be >= {second_time}")
+                return False
+        
+        # Log sample data
+        self.log(f"✅ Sample booking data:")
+        self.log(f"   - booking_id: {first_item.get('booking_id')}")
+        self.log(f"   - status: {first_item.get('status')}")
+        self.log(f"   - created_at: {first_item.get('created_at')}")
+        self.log(f"   - currency: {first_item.get('currency')}")
+        self.log(f"   - amount_sell: {first_item.get('amount_sell')}")
+        self.log(f"   - check_in: {first_item.get('check_in')}")
+        self.log(f"   - check_out: {first_item.get('check_out')}")
+        self.log(f"   - primary_guest_name: {first_item.get('primary_guest_name')}")
+        self.log(f"   - product_name: {first_item.get('product_name')}")
+        
+        return True
+
+    def test_limit_guards(self):
+        """Test limit parameter validation"""
+        self.log("\n=== 4) LIMIT GUARDS ===")
+        
+        # Test limit=1
+        success, response, _ = self.run_test(
+            "GET /api/b2b/bookings?limit=1",
+            "GET",
+            "api/b2b/bookings?limit=1",
+            200,
+            token_override=self.agency1_token
+        )
+        
+        if success:
+            items = response.get('items', [])
+            if len(items) <= 1:
+                self.log(f"✅ limit=1 working correctly (returned {len(items)} items)")
+            else:
+                self.log(f"❌ limit=1 failed (returned {len(items)} items)")
+                return False
+        
+        # Test limit=500 (should be clamped to 200)
+        success, response, _ = self.run_test(
+            "GET /api/b2b/bookings?limit=500 (should clamp to 200)",
+            "GET",
+            "api/b2b/bookings?limit=500",
+            200,
+            token_override=self.agency1_token
+        )
+        
+        if success:
+            items = response.get('items', [])
+            if len(items) <= 200:
+                self.log(f"✅ limit=500 correctly clamped (returned {len(items)} items)")
+            else:
+                self.log(f"❌ limit=500 not clamped (returned {len(items)} items)")
+                return False
+        
+        # Test invalid limit (should fail)
+        success, response, _ = self.run_test(
+            "GET /api/b2b/bookings?limit=0 (should fail)",
+            "GET",
+            "api/b2b/bookings?limit=0",
+            422,
+            token_override=self.agency1_token
+        )
+        
+        if success:
+            self.log("✅ limit=0 correctly rejected (422)")
+        
+        return True
+
+    def test_status_filters(self):
+        """Test status filtering"""
+        self.log("\n=== 5) STATUS FILTERS ===")
+        
+        # Test single status filter
+        success, response, _ = self.run_test(
+            "GET /api/b2b/bookings?status=CONFIRMED",
+            "GET",
+            "api/b2b/bookings?status=CONFIRMED",
+            200,
+            token_override=self.agency1_token
+        )
+        
+        if success:
+            items = response.get('items', [])
+            confirmed_items = [item for item in items if item.get('status') == 'CONFIRMED']
+            if len(confirmed_items) == len(items):
+                self.log(f"✅ Single status filter working (all {len(items)} items are CONFIRMED)")
+            else:
+                self.log(f"❌ Single status filter failed ({len(confirmed_items)}/{len(items)} are CONFIRMED)")
+                return False
+        
+        # Test multiple status filter
+        success, response, _ = self.run_test(
+            "GET /api/b2b/bookings?status=CONFIRMED&status=VOUCHERED",
+            "GET",
+            "api/b2b/bookings?status=CONFIRMED&status=VOUCHERED",
+            200,
+            token_override=self.agency1_token
+        )
+        
+        if success:
+            items = response.get('items', [])
+            valid_statuses = {'CONFIRMED', 'VOUCHERED'}
+            valid_items = [item for item in items if item.get('status') in valid_statuses]
+            if len(valid_items) == len(items):
+                self.log(f"✅ Multiple status filter working (all {len(items)} items have valid status)")
+                if items:
+                    statuses = set(item.get('status') for item in items)
+                    self.log(f"   Found statuses: {statuses}")
+            else:
+                self.log(f"❌ Multiple status filter failed ({len(valid_items)}/{len(items)} have valid status)")
+                return False
+        
+        return True
+
+    def test_multi_tenant_scope(self):
+        """Test multi-tenant isolation"""
+        self.log("\n=== 6) MULTI-TENANT SCOPE ===")
+        
+        if not self.agency2_token:
+            self.log("⚠️  Skipping multi-tenant test - agency2 login failed")
+            return True
+        
+        # Get bookings for agency1
+        success, response1, _ = self.run_test(
+            "GET bookings for agency1",
+            "GET",
+            "api/b2b/bookings",
+            200,
+            token_override=self.agency1_token
+        )
+        
+        if not success:
+            return False
+        
+        agency1_items = response1.get('items', [])
+        
+        # Get bookings for agency2
+        success, response2, _ = self.run_test(
+            "GET bookings for agency2",
+            "GET",
+            "api/b2b/bookings",
+            200,
+            token_override=self.agency2_token
+        )
+        
+        if not success:
+            return False
+        
+        agency2_items = response2.get('items', [])
+        
+        # Check that agencies see different sets of bookings
+        agency1_ids = set(item.get('booking_id') for item in agency1_items)
+        agency2_ids = set(item.get('booking_id') for item in agency2_items)
+        
+        overlap = agency1_ids.intersection(agency2_ids)
+        if len(overlap) == 0:
+            self.log(f"✅ Multi-tenant isolation working:")
+            self.log(f"   - Agency1 sees {len(agency1_items)} bookings")
+            self.log(f"   - Agency2 sees {len(agency2_items)} bookings")
+            self.log(f"   - No overlap between agencies")
+        else:
+            self.log(f"❌ Multi-tenant isolation failed - {len(overlap)} overlapping bookings")
+            return False
+        
+        return True
+
+    def test_negative_security_scenarios(self):
+        """Test negative and security scenarios"""
+        self.log("\n=== 7) NEGATIVE & SECURITY SCENARIOS ===")
+        
+        # Already tested in test_auth_scenarios:
+        # - Unauthenticated access (401)
+        # - Admin token access (403)
+        # - Hotel token access (403)
+        
+        self.log("✅ Security scenarios already tested in auth section")
+        return True
+
+    def print_summary(self):
+        """Print test summary"""
+        self.log("\n" + "="*60)
+        self.log("B2B BOOKINGS LIST ENDPOINT TEST SUMMARY")
+        self.log("="*60)
+        self.log(f"Total Tests: {self.tests_run}")
+        self.log(f"✅ Passed: {self.tests_passed}")
+        self.log(f"❌ Failed: {self.tests_failed}")
+        self.log(f"Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%")
+        
+        if self.failed_tests:
+            self.log("\n❌ FAILED TESTS:")
+            for i, test in enumerate(self.failed_tests, 1):
+                self.log(f"  {i}. {test}")
+        
+        self.log("="*60)
+
+    def run_b2b_bookings_list_tests(self):
+        """Run all B2B bookings list tests"""
+        self.log("🚀 Starting B2B Bookings List Endpoint Tests")
+        self.log(f"Base URL: {self.base_url}")
+        
+        # Authentication
+        if not self.test_admin_login():
+            self.log("❌ Admin login failed - stopping tests")
+            self.print_summary()
+            return 1
+        
+        if not self.test_agency1_login():
+            self.log("❌ Agency1 login failed - stopping tests")
+            self.print_summary()
+            return 1
+        
+        # Optional logins (don't stop if they fail)
+        self.test_agency2_login()
+        self.test_hotel_login()
+        
+        # Test scenarios
+        test_results = []
+        
+        # 1) Auth & Authorization
+        test_results.append(self.test_auth_scenarios())
+        
+        # 2) Create test data (optional - use existing if available)
+        self.test_create_b2b_booking_flow()  # Don't fail if this doesn't work
+        
+        # 3) Happy path - default listing
+        test_results.append(self.test_happy_path_default_listing())
+        
+        # 4) Limit guards
+        test_results.append(self.test_limit_guards())
+        
+        # 5) Status filters
+        test_results.append(self.test_status_filters())
+        
+        # 6) Multi-tenant scope
+        test_results.append(self.test_multi_tenant_scope())
+        
+        # 7) Negative/security scenarios
+        test_results.append(self.test_negative_security_scenarios())
+        
+        # Summary
+        self.print_summary()
+        
+        return 0 if self.tests_failed == 0 else 1
+
+
 class BookingTimelineV1Tester:
     def __init__(self, base_url="https://riskops-platform.preview.emergentagent.com"):
         self.base_url = base_url

@@ -1625,12 +1625,12 @@ class OpsVoucherViewTester:
         return False
 
     def test_get_booking_id(self):
-        """Get a booking ID for testing"""
+        """Get a CONFIRMED booking ID for testing"""
         self.log("\n=== GET BOOKING ID ===")
         success, response, _ = self.run_test(
-            "GET /api/ops/bookings?limit=1 (get booking_id)",
+            "GET /api/ops/bookings?status=CONFIRMED&limit=1 (get CONFIRMED booking_id)",
             "GET",
-            "api/ops/bookings?limit=1",
+            "api/ops/bookings?status=CONFIRMED&limit=1",
             200
         )
         
@@ -1638,10 +1638,10 @@ class OpsVoucherViewTester:
             items = response['items']
             if items:
                 self.booking_id = items[0]['booking_id']
-                self.log(f"✅ Found booking: {self.booking_id}")
+                self.log(f"✅ Found CONFIRMED booking: {self.booking_id}")
                 return True
             else:
-                self.log(f"❌ No bookings found")
+                self.log(f"❌ No CONFIRMED bookings found")
                 return False
         return False
 

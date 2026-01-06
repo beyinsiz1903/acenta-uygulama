@@ -491,11 +491,12 @@ export default function OpsB2BQueuesPage() {
                 <div className="py-8 text-center text-sm text-muted-foreground">Kriterlere uyan case bulunamadı.</div>
               ) : (
                 <div className="border rounded-xl overflow-hidden">
-                  <div className="grid grid-cols-5 gap-2 bg-muted/60 px-3 py-2 text-[11px] font-medium text-muted-foreground">
+                  <div className="grid grid-cols-6 gap-2 bg-muted/60 px-3 py-2 text-[11px] font-medium text-muted-foreground">
                     <div>Case ID</div>
                     <div>Type</div>
                     <div>Status</div>
                     <div>Booking</div>
+                    <div>Decision</div>
                     <div>Created</div>
                   </div>
                   <div className="max-h-[360px] overflow-y-auto text-xs">

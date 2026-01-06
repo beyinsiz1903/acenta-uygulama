@@ -134,7 +134,7 @@ function BookingListTab() {
                 {items.map((b) => {
                   const s = String(b.status || "").toUpperCase();
                   const canCancel = canCancelStatuses.has(s);
-                  const voucherUrl = s === "VOUCHERED" ? `/api/b2b/bookings/${b.booking_id}/voucher` : null;
+                  const voucherUrl = s === "VOUCHERED" ? `${process.env.REACT_APP_BACKEND_URL}/api/b2b/bookings/${b.booking_id}/voucher` : null;
 
                   return (
                     <tr key={b.booking_id} className="border-b last:border-0">

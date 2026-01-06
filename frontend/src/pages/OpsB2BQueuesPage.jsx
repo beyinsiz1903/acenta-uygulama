@@ -313,8 +313,11 @@ export default function OpsB2BQueuesPage() {
                             "-"
                           )}
                         </div>
-                        <div className="truncate" title={b.channel_id || "-"}>
-                          {b.channel_id || "-"}
+                        <div
+                          className="truncate"
+                          title={b.channel_name || b.channel_id || "-"}
+                        >
+                          {b.channel_name || b.channel_id || "-"}
                         </div>
                       </button>
                     ))}

@@ -264,8 +264,8 @@ export default function OpsB2BQueuesPage() {
                       // datetime-local value (no timezone info) but we feed ISO to backend
                       const toIso = now.toISOString();
                       const fromIso = from.toISOString();
-                      setBookingFrom(toIso.slice(0, 16));
-                      setBookingTo(now.toISOString().slice(0, 16));
+                      setBookingFrom(fromIso.slice(0, 16));
+                      setBookingTo(toIso.slice(0, 16));
                       void loadBookings();
                     }}
                   >

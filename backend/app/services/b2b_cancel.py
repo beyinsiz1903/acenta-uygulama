@@ -8,6 +8,7 @@ from bson import ObjectId
 from app.schemas_b2b_cancel import CancelRequest, CancelRequestResponse
 from app.errors import AppError
 from app.utils import now_utc
+from app.services.booking_events import emit_event
 
 
 class B2BCancelService:

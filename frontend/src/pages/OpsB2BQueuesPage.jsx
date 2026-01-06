@@ -567,6 +567,10 @@ export default function OpsB2BQueuesPage() {
                         <div className="font-mono break-all">{caseDetail.booking_id || "-"}</div>
                       </div>
                       <div>
+                        <div className="text-muted-foreground">Booking Status</div>
+                        <div>{caseDetail.booking_status || "-"}</div>
+                      </div>
+                      <div>
                         <div className="text-muted-foreground">Created</div>
                         <div>{formatDate(caseDetail.created_at)}</div>
                       </div>

@@ -462,11 +462,24 @@
 ##         agent: "testing"
 ##         comment: "✅ PHASE-1 MULTI-TENANT TEST COMPLETE - All 15 test scenarios passed (100% success rate). Comprehensive testing completed: 1) /api/health OK 2) SUPER_ADMIN login (admin@acenta.test/admin123) with super_admin role confirmed 3) Admin endpoints working: GET /api/admin/agencies (2 agencies), GET /api/admin/hotels (3 hotels), GET /api/admin/agency-hotel-links (3 links) 4) PATCH /api/admin/agency-hotel-links/{id} active=false working and verified 5) AGENCY_ADMIN login agency1@demo.test/agency123 with agency_admin role and agency_id confirmed 6) Agency1 sees Demo Hotel 1 & 2 as expected 7) AGENCY_ADMIN login agency2@demo.test/agency123 working 8) Agency2 sees only Demo Hotel 3 as expected 9) Visibility rule working: after deactivating Agency A->Hotel 2 link, Agency1 now sees only Demo Hotel 1 10) Security working: Agency1 correctly denied admin access (403). Multi-tenant omurga, RBAC, and visibility rules all functioning perfectly."
 
+## frontend:
+  - task: "Ops Booking Timeline FE smoke test - Timeline tab implementation and functionality"
+    implemented: false
+    working: false
+    file: "/app/frontend/src/pages/OpsB2BQueuesPage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "❌ OPS BOOKING TIMELINE FRONTEND SMOKE TEST COMPLETE - TIMELINE TAB NOT IMPLEMENTED. VERIFIED FUNCTIONALITY: A) Authentication: Admin login successful (admin@acenta.test/admin123) with proper super_admin role verification. B) Navigation: Successfully navigated to /app/admin/ops/b2b, B2B Ops – Booking & Case Queues page loaded correctly. C) Booking Queue: Booking Queue tab active by default, found 3 booking rows, first booking selection working correctly. D) Booking Detail Panel: 'Booking Detayı' panel working correctly, booking detail loading and display functional. E) Current Tab Structure: Only 3 tabs present ['Genel', 'Snapshots', 'Voucher'], missing 'Timeline' tab as specified in requirements. F) Voucher Tab Regression: ✅ PASSED - Voucher tab functionality working correctly (title, refresh link, 'Voucher Oluştur' button all present and functional). G) Tab Switching: All existing tabs (Genel, Snapshots, Voucher) switch correctly with proper active state indication. CRITICAL ISSUE: Timeline tab is completely missing from the implementation. Expected tabs: ['Genel', 'Snapshots', 'Voucher', 'Timeline'] but only ['Genel', 'Snapshots', 'Voucher'] are implemented. The Timeline tab should include: 1) Small title 'Timeline' + 'Yenile' link, 2) Event list items or 'Henüz event yok' message, 3) Date/time display (formatDateTime), 4) Event labels based on eventLabel, 5) 'Detay' button for JSON meta display. All other functionality working correctly - this is purely a missing feature implementation issue."
+
 ## metadata:
-##   created_by: "main_agent"
-##   version: "1.0"
-##   test_sequence: 2
-##   run_ui: true
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 3
+  run_ui: true
   - task: "PROOF v2 – Story 2 (Arrived + Evidence) backend testleri"
     implemented: true
     working: true

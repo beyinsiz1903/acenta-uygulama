@@ -10,6 +10,7 @@ from app.auth import get_current_user, require_roles
 from app.db import get_db
 from app.errors import AppError
 from app.utils import now_utc
+from app.services.booking_events import emit_event
 
 
 router = APIRouter(prefix="/api/ops", tags=["ops-b2b"])

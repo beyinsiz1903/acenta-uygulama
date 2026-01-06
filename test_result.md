@@ -284,6 +284,18 @@
         agent: "testing"
         comment: "✅ B2B BOOKINGS PRODUCT_NAME MINI POLISH SMOKE TEST COMPLETE - All 5 test scenarios passed (100% success rate). MINI POLISH VERIFICATION COMPLETED: A) Authentication: Agency1 login successful (agency1@demo.test/agency123) with agency_admin role and agency_id verification. B) PRODUCT_NAME BEST-EFFORT MAPPING: GET /api/b2b/bookings?limit=5 working correctly, found 3 B2B bookings, CRITICAL IMPROVEMENT VERIFIED: First booking (booking_id: 695d010055a9ca4029955c71) now shows product_name='demo_product_1' instead of previous '-' placeholder, best-effort mapping logic working correctly (items[0].product_id used as product_name when product_name field is empty), JSON snippet confirmed: {booking_id: '695d010055a9ca4029955c71', product_name: 'demo_product_1', status: 'CANCELLED', currency: 'EUR', amount_sell: 1650.0}. C) REGRESSION CHECKS: Auth working correctly with valid agency token, limit guard working correctly (limit=500 rejected with 422), status filter working correctly (status=CONFIRMED filter applied successfully). Mini polish successfully implemented - product_name field no longer shows '-' placeholder and properly maps to product_id when product_name is not available in booking items."
 
+  - task: "Product Catalog v1 backend ikinci tur kısa smoke test"
+    implemented: true
+    working: false
+    file: "/app/backend/app/routers/admin_catalog.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "❌ PRODUCT CATALOG V1 SMOKE TEST FAILED - CRITICAL INDEX CONFLICT ISSUE DETECTED. BACKEND SERVICE FAILING TO START: A) Index Conflict Error: MongoDB index conflict preventing backend startup - 'uniq_product_code_per_org' index has conflicting partialFilterExpression definitions (existing: { code: { $type: 'string' } } vs requested: { code: { $exists: true, $type: 'string' } }). B) Service Status: Backend service repeatedly failing with 'Application startup failed. Exiting.' due to pymongo.errors.OperationFailure during index creation. C) API Unavailability: All catalog endpoints returning 500 errors or connection refused due to backend service failure. D) Test Results: Unable to complete any of the 4 requested smoke tests: 1) Product list 500 error - CONFIRMED: Backend returning 500 errors due to index conflict, 2) Publish guard error format - UNABLE TO TEST: Backend not responding, 3) Referential integrity error code - UNABLE TO TEST: Backend not responding, 4) Index regressions - CONFIRMED: Index conflicts causing service failure. ROOT CAUSE: Conflicting MongoDB index definitions in catalog_indexes.py causing startup failure. RECOMMENDATION: Fix index conflict by either dropping existing index or updating index creation logic to handle existing indexes gracefully."
+
 ## frontend:
 ##   - task: "FAZ-7 Admin Audit Logs UI (/app/admin/audit)"
 ##     implemented: true

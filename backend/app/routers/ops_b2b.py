@@ -375,6 +375,17 @@ async def reject_b2b_case_ops(
         },
     )
 
+    # Emit case decision event (rejection)
+    actor = {"role": "ops", "email": user.get("email")}
+    await emit_event(
+        db,
+        org_id,
+        booking_id,
+        "CASE_DECIDED",
+        actor=actor,
+        meta={"case_id": case_id, "decision": "rejected"},
+    )
+
     return {
         "case_id": case_id,
         "status": "closed",

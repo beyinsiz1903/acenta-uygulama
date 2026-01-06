@@ -1833,6 +1833,688 @@ class GlobalErrorHandlerIdempotencyTester:
         return 0 if self.tests_failed == 0 else 1
 
 
+class B2BQuotesBookingsCancelTester:
+    def __init__(self, base_url="https://riskdelta.preview.emergentagent.com"):
+        self.base_url = base_url
+        self.agency_token = None
+        self.tests_run = 0
+        self.tests_passed = 0
+        self.tests_failed = 0
+        self.failed_tests = []
+        
+        # Store data for testing
+        self.quote_id = None
+        self.booking_id = None
+        self.case_id = None
+
+    def log(self, msg):
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}")
+
+    def run_test(self, name, method, endpoint, expected_status, data=None, headers_override=None):
+        """Run a single API test"""
+        url = f"{self.base_url}/{endpoint}"
+        headers = headers_override or {'Content-Type': 'application/json'}
+        if self.agency_token and not headers_override:
+            headers['Authorization'] = f'Bearer {self.agency_token}'
+
+        self.tests_run += 1
+        self.log(f"🔍 Test #{self.tests_run}: {name}")
+        
+        try:
+            if method == 'GET':
+                response = requests.get(url, headers=headers, timeout=10)
+            elif method == 'POST':
+                response = requests.post(url, json=data, headers=headers, timeout=10)
+            elif method == 'PUT':
+                response = requests.put(url, json=data, headers=headers, timeout=10)
+            elif method == 'DELETE':
+                response = requests.delete(url, headers=headers, timeout=10)
+            else:
+                raise ValueError(f"Unsupported method: {method}")
+
+            success = response.status_code == expected_status
+            if success:
+                self.tests_passed += 1
+                self.log(f"✅ PASSED - Status: {response.status_code}")
+                try:
+                    return True, response.json() if response.content else {}
+                except:
+                    return True, {}
+            else:
+                self.tests_failed += 1
+                self.failed_tests.append(f"{name} - Expected {expected_status}, got {response.status_code}")
+                self.log(f"❌ FAILED - Expected {expected_status}, got {response.status_code}")
+                try:
+                    self.log(f"   Response: {response.text[:200]}")
+                except:
+                    pass
+                return False, {}
+
+        except Exception as e:
+            self.tests_failed += 1
+            self.failed_tests.append(f"{name} - Error: {str(e)}")
+            self.log(f"❌ FAILED - Error: {str(e)}")
+            return False, {}
+
+    def test_agency_login(self):
+        """Test agency login"""
+        self.log("\n=== AUTHENTICATION ===")
+        success, response = self.run_test(
+            "Agency Login (agency1@demo.test/agency123)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "agency1@demo.test", "password": "agency123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.agency_token = response['access_token']
+            user = response.get('user', {})
+            roles = user.get('roles', [])
+            agency_id = user.get('agency_id')
+            
+            if ('agency_admin' in roles or 'agency_agent' in roles) and agency_id:
+                self.log(f"✅ Agency login successful - roles: {roles}, agency_id: {agency_id}")
+                return True
+            else:
+                self.log(f"❌ Missing agency role or agency_id: roles={roles}, agency_id={agency_id}")
+                return False
+        return False
+
+    def test_quotes_validation_error(self):
+        """1.1 POST /api/b2b/quotes - 422 Validation"""
+        self.log("\n=== 1.1) QUOTES VALIDATION ERROR ===")
+        
+        # Test with empty items
+        success, response = self.run_test(
+            "POST /api/b2b/quotes with empty items (expect 422)",
+            "POST",
+            "api/b2b/quotes",
+            422,
+            data={"items": []}
+        )
+        
+        if success and response.get('error', {}).get('code') == 'validation_error':
+            self.log(f"✅ Empty items correctly rejected with validation_error")
+            
+            # Test with missing channel_id
+            success, response = self.run_test(
+                "POST /api/b2b/quotes with missing channel_id (expect 422)",
+                "POST",
+                "api/b2b/quotes",
+                422,
+                data={"items": [{"product_id": "test", "room_type_id": "test", "rate_plan_id": "test", "check_in": "2025-01-01", "check_out": "2025-01-02", "occupancy": 2}]}
+            )
+            
+            if success and response.get('error', {}).get('code') == 'validation_error':
+                self.log(f"✅ Missing channel_id correctly rejected with validation_error")
+                return True
+            else:
+                self.log(f"❌ Missing channel_id validation failed")
+                return False
+        else:
+            self.log(f"❌ Empty items validation failed")
+            return False
+
+    def test_quotes_product_not_available(self):
+        """1.2 POST /api/b2b/quotes - 409 product_not_available"""
+        self.log("\n=== 1.2) QUOTES PRODUCT NOT AVAILABLE ===")
+        
+        quote_data = {
+            "channel_id": "ch_test",
+            "items": [{
+                "product_id": "non_existing",
+                "room_type_id": "x",
+                "rate_plan_id": "x",
+                "check_in": "2025-01-15",
+                "check_out": "2025-01-16",
+                "occupancy": 2
+            }]
+        }
+        
+        success, response = self.run_test(
+            "POST /api/b2b/quotes with non-existing product (expect 409)",
+            "POST",
+            "api/b2b/quotes",
+            409,
+            data=quote_data
+        )
+        
+        if success and response.get('error', {}).get('code') == 'product_not_available':
+            self.log(f"✅ Non-existing product correctly rejected with product_not_available")
+            return True
+        else:
+            self.log(f"❌ Product not available test failed - expected 409 product_not_available")
+            return False
+
+    def test_quotes_unavailable(self):
+        """1.3 POST /api/b2b/quotes - 409 unavailable"""
+        self.log("\n=== 1.3) QUOTES UNAVAILABLE (INVENTORY) ===")
+        
+        # Try with a date far in the future where no inventory exists
+        quote_data = {
+            "channel_id": "ch_test",
+            "items": [{
+                "product_id": "existing_product_id",
+                "room_type_id": "standard",
+                "rate_plan_id": "base",
+                "check_in": "2030-01-01",
+                "check_out": "2030-01-02",
+                "occupancy": 2
+            }]
+        }
+        
+        success, response = self.run_test(
+            "POST /api/b2b/quotes with unavailable inventory (expect 409)",
+            "POST",
+            "api/b2b/quotes",
+            409,
+            data=quote_data
+        )
+        
+        if success and response.get('error', {}).get('code') == 'unavailable':
+            self.log(f"✅ Unavailable inventory correctly rejected with unavailable")
+            return True
+        else:
+            self.log(f"❌ Unavailable inventory test failed - expected 409 unavailable")
+            return False
+
+    def test_quotes_happy_path(self):
+        """1.4 POST /api/b2b/quotes - Happy path"""
+        self.log("\n=== 1.4) QUOTES HAPPY PATH ===")
+        
+        # Try with realistic data that might exist in demo environment
+        quote_data = {
+            "channel_id": "ch_demo",
+            "items": [{
+                "product_id": "demo_hotel_1",
+                "room_type_id": "standard",
+                "rate_plan_id": "base",
+                "check_in": "2025-02-01",
+                "check_out": "2025-02-02",
+                "occupancy": 2
+            }]
+        }
+        
+        success, response = self.run_test(
+            "POST /api/b2b/quotes with valid data (expect 200)",
+            "POST",
+            "api/b2b/quotes",
+            200,
+            data=quote_data
+        )
+        
+        if success:
+            quote_id = response.get('quote_id')
+            expires_at = response.get('expires_at')
+            offers = response.get('offers', [])
+            
+            if quote_id and expires_at and len(offers) > 0:
+                self.quote_id = quote_id
+                offer = offers[0]
+                applied_rules = offer.get('trace', {}).get('applied_rules', [])
+                
+                self.log(f"✅ Quote created successfully:")
+                self.log(f"   - quote_id: {quote_id}")
+                self.log(f"   - expires_at: {expires_at}")
+                self.log(f"   - offers count: {len(offers)}")
+                self.log(f"   - applied_rules: {applied_rules}")
+                return True
+            else:
+                self.log(f"❌ Quote response missing required fields")
+                return False
+        else:
+            self.log(f"❌ Quote creation failed")
+            return False
+
+    def test_bookings_missing_idempotency_header(self):
+        """2.1 POST /api/b2b/bookings - 422/400 missing idempotency header"""
+        self.log("\n=== 2.1) BOOKINGS MISSING IDEMPOTENCY HEADER ===")
+        
+        booking_data = {
+            "quote_id": "test_quote",
+            "customer": {"name": "Test Customer", "email": "test@example.com"},
+            "travellers": [{"first_name": "John", "last_name": "Doe"}]
+        }
+        
+        success, response = self.run_test(
+            "POST /api/b2b/bookings without Idempotency-Key (expect 422)",
+            "POST",
+            "api/b2b/bookings",
+            422,
+            data=booking_data
+        )
+        
+        if success:
+            self.log(f"✅ Missing Idempotency-Key correctly rejected with 422")
+            return True
+        else:
+            self.log(f"❌ Missing Idempotency-Key validation failed")
+            return False
+
+    def test_bookings_quote_not_found(self):
+        """2.2 POST /api/b2b/bookings - 404 not_found"""
+        self.log("\n=== 2.2) BOOKINGS QUOTE NOT FOUND ===")
+        
+        booking_data = {
+            "quote_id": "deadbeef",
+            "customer": {"name": "Test Customer", "email": "test@example.com"},
+            "travellers": [{"first_name": "John", "last_name": "Doe"}]
+        }
+        
+        headers = {'Content-Type': 'application/json', 'Idempotency-Key': str(uuid.uuid4())}
+        if self.agency_token:
+            headers['Authorization'] = f'Bearer {self.agency_token}'
+        
+        success, response = self.run_test(
+            "POST /api/b2b/bookings with invalid quote_id (expect 404)",
+            "POST",
+            "api/b2b/bookings",
+            404,
+            data=booking_data,
+            headers_override=headers
+        )
+        
+        if success and response.get('error', {}).get('code') == 'not_found':
+            self.log(f"✅ Invalid quote_id correctly rejected with not_found")
+            return True
+        else:
+            self.log(f"❌ Invalid quote_id test failed")
+            return False
+
+    def test_bookings_quote_expired(self):
+        """2.3 POST /api/b2b/bookings - 409 quote_expired"""
+        self.log("\n=== 2.3) BOOKINGS QUOTE EXPIRED ===")
+        
+        # This would require creating an expired quote or manipulating the database
+        # For now, we'll test with a quote that might be expired
+        booking_data = {
+            "quote_id": "expired_quote_id",
+            "customer": {"name": "Test Customer", "email": "test@example.com"},
+            "travellers": [{"first_name": "John", "last_name": "Doe"}]
+        }
+        
+        headers = {'Content-Type': 'application/json', 'Idempotency-Key': str(uuid.uuid4())}
+        if self.agency_token:
+            headers['Authorization'] = f'Bearer {self.agency_token}'
+        
+        success, response = self.run_test(
+            "POST /api/b2b/bookings with expired quote (expect 409)",
+            "POST",
+            "api/b2b/bookings",
+            409,
+            data=booking_data,
+            headers_override=headers
+        )
+        
+        if success and response.get('error', {}).get('code') == 'quote_expired':
+            self.log(f"✅ Expired quote correctly rejected with quote_expired")
+            return True
+        else:
+            self.log(f"❌ Expired quote test failed - may not have expired quote in system")
+            return False
+
+    def test_bookings_idempotency_replay(self):
+        """2.4 POST /api/b2b/bookings - Idempotency replay"""
+        self.log("\n=== 2.4) BOOKINGS IDEMPOTENCY REPLAY ===")
+        
+        if not self.quote_id:
+            self.log("⚠️  Skipping idempotency test - no valid quote_id")
+            return False
+        
+        booking_data = {
+            "quote_id": self.quote_id,
+            "customer": {"name": "Test Customer", "email": "test@example.com"},
+            "travellers": [{"first_name": "John", "last_name": "Doe"}]
+        }
+        
+        idempotency_key = str(uuid.uuid4())
+        headers = {'Content-Type': 'application/json', 'Idempotency-Key': idempotency_key}
+        if self.agency_token:
+            headers['Authorization'] = f'Bearer {self.agency_token}'
+        
+        # First call
+        success1, response1 = self.run_test(
+            "POST /api/b2b/bookings first call (expect 200)",
+            "POST",
+            "api/b2b/bookings",
+            200,
+            data=booking_data,
+            headers_override=headers
+        )
+        
+        if success1:
+            booking_id_1 = response1.get('booking_id')
+            self.booking_id = booking_id_1
+            self.log(f"✅ First booking created: {booking_id_1}")
+            
+            # Second call with same idempotency key
+            success2, response2 = self.run_test(
+                "POST /api/b2b/bookings second call (idempotent replay, expect 200)",
+                "POST",
+                "api/b2b/bookings",
+                200,
+                data=booking_data,
+                headers_override=headers
+            )
+            
+            if success2:
+                booking_id_2 = response2.get('booking_id')
+                if booking_id_1 == booking_id_2:
+                    self.log(f"✅ Idempotent replay working - same booking_id: {booking_id_2}")
+                    
+                    # Test different body with same key (should fail)
+                    different_data = {
+                        "quote_id": "different_quote",
+                        "customer": {"name": "Different Customer", "email": "different@example.com"},
+                        "travellers": [{"first_name": "Jane", "last_name": "Smith"}]
+                    }
+                    
+                    success3, response3 = self.run_test(
+                        "POST /api/b2b/bookings different body same key (expect 409)",
+                        "POST",
+                        "api/b2b/bookings",
+                        409,
+                        data=different_data,
+                        headers_override=headers
+                    )
+                    
+                    if success3 and response3.get('error', {}).get('code') == 'idempotency_key_reused':
+                        self.log(f"✅ Idempotency key reuse correctly rejected")
+                        return True
+                    else:
+                        self.log(f"❌ Idempotency key reuse test failed")
+                        return False
+                else:
+                    self.log(f"❌ Idempotent replay failed - different booking_ids: {booking_id_1} vs {booking_id_2}")
+                    return False
+            else:
+                self.log(f"❌ Second booking call failed")
+                return False
+        else:
+            self.log(f"❌ First booking call failed")
+            return False
+
+    def test_cancel_missing_idempotency_header(self):
+        """3.1 POST /api/b2b/bookings/{id}/cancel-requests - 422/400 missing header"""
+        self.log("\n=== 3.1) CANCEL MISSING IDEMPOTENCY HEADER ===")
+        
+        cancel_data = {"reason": "Test cancellation"}
+        
+        success, response = self.run_test(
+            "POST /api/b2b/bookings/test/cancel-requests without Idempotency-Key (expect 422)",
+            "POST",
+            "api/b2b/bookings/test/cancel-requests",
+            422,
+            data=cancel_data
+        )
+        
+        if success:
+            self.log(f"✅ Missing Idempotency-Key correctly rejected with 422")
+            return True
+        else:
+            self.log(f"❌ Missing Idempotency-Key validation failed")
+            return False
+
+    def test_cancel_booking_not_found(self):
+        """3.2 POST /api/b2b/bookings/{id}/cancel-requests - 404 not_found"""
+        self.log("\n=== 3.2) CANCEL BOOKING NOT FOUND ===")
+        
+        cancel_data = {"reason": "Test cancellation"}
+        headers = {'Content-Type': 'application/json', 'Idempotency-Key': str(uuid.uuid4())}
+        if self.agency_token:
+            headers['Authorization'] = f'Bearer {self.agency_token}'
+        
+        success, response = self.run_test(
+            "POST /api/b2b/bookings/invalid_id/cancel-requests (expect 404)",
+            "POST",
+            "api/b2b/bookings/invalid_booking_id/cancel-requests",
+            404,
+            data=cancel_data,
+            headers_override=headers
+        )
+        
+        if success and response.get('error', {}).get('code') == 'not_found':
+            self.log(f"✅ Invalid booking_id correctly rejected with not_found")
+            return True
+        else:
+            self.log(f"❌ Invalid booking_id test failed")
+            return False
+
+    def test_cancel_invalid_booking_state(self):
+        """3.3 POST /api/b2b/bookings/{id}/cancel-requests - 409 invalid_booking_state"""
+        self.log("\n=== 3.3) CANCEL INVALID BOOKING STATE ===")
+        
+        # This would require a cancelled booking in the system
+        # For now, we'll test with a mock scenario
+        cancel_data = {"reason": "Test cancellation"}
+        headers = {'Content-Type': 'application/json', 'Idempotency-Key': str(uuid.uuid4())}
+        if self.agency_token:
+            headers['Authorization'] = f'Bearer {self.agency_token}'
+        
+        success, response = self.run_test(
+            "POST /api/b2b/bookings/cancelled_booking/cancel-requests (expect 409)",
+            "POST",
+            "api/b2b/bookings/cancelled_booking_id/cancel-requests",
+            409,
+            data=cancel_data,
+            headers_override=headers
+        )
+        
+        if success and response.get('error', {}).get('code') == 'invalid_booking_state':
+            self.log(f"✅ Cancelled booking correctly rejected with invalid_booking_state")
+            return True
+        else:
+            self.log(f"❌ Invalid booking state test failed - may not have cancelled booking in system")
+            return False
+
+    def test_cancel_case_already_open(self):
+        """3.4 POST /api/b2b/bookings/{id}/cancel-requests - 409 case_already_open"""
+        self.log("\n=== 3.4) CANCEL CASE ALREADY OPEN ===")
+        
+        if not self.booking_id:
+            self.log("⚠️  Skipping case already open test - no valid booking_id")
+            return False
+        
+        cancel_data = {"reason": "First cancellation request"}
+        headers = {'Content-Type': 'application/json', 'Idempotency-Key': str(uuid.uuid4())}
+        if self.agency_token:
+            headers['Authorization'] = f'Bearer {self.agency_token}'
+        
+        # First cancel request
+        success1, response1 = self.run_test(
+            "POST /api/b2b/bookings/{id}/cancel-requests first call (expect 200)",
+            "POST",
+            f"api/b2b/bookings/{self.booking_id}/cancel-requests",
+            200,
+            data=cancel_data,
+            headers_override=headers
+        )
+        
+        if success1:
+            case_id = response1.get('case_id')
+            self.case_id = case_id
+            self.log(f"✅ First cancel request created: {case_id}")
+            
+            # Second cancel request with different idempotency key
+            headers2 = {'Content-Type': 'application/json', 'Idempotency-Key': str(uuid.uuid4())}
+            if self.agency_token:
+                headers2['Authorization'] = f'Bearer {self.agency_token}'
+            
+            success2, response2 = self.run_test(
+                "POST /api/b2b/bookings/{id}/cancel-requests second call (expect 409)",
+                "POST",
+                f"api/b2b/bookings/{self.booking_id}/cancel-requests",
+                409,
+                data={"reason": "Second cancellation request"},
+                headers_override=headers2
+            )
+            
+            if success2 and response2.get('error', {}).get('code') == 'case_already_open':
+                self.log(f"✅ Second cancel request correctly rejected with case_already_open")
+                return True
+            else:
+                self.log(f"❌ Case already open test failed")
+                return False
+        else:
+            self.log(f"❌ First cancel request failed")
+            return False
+
+    def test_cancel_idempotency_replay(self):
+        """3.5 POST /api/b2b/bookings/{id}/cancel-requests - Idempotency replay"""
+        self.log("\n=== 3.5) CANCEL IDEMPOTENCY REPLAY ===")
+        
+        # Create a new booking for this test
+        if not self.quote_id:
+            self.log("⚠️  Skipping cancel idempotency test - no valid quote_id")
+            return False
+        
+        # Create a new booking
+        booking_data = {
+            "quote_id": self.quote_id,
+            "customer": {"name": "Cancel Test Customer", "email": "cancel@example.com"},
+            "travellers": [{"first_name": "Cancel", "last_name": "Test"}]
+        }
+        
+        booking_headers = {'Content-Type': 'application/json', 'Idempotency-Key': str(uuid.uuid4())}
+        if self.agency_token:
+            booking_headers['Authorization'] = f'Bearer {self.agency_token}'
+        
+        success, response = self.run_test(
+            "Create booking for cancel idempotency test",
+            "POST",
+            "api/b2b/bookings",
+            200,
+            data=booking_data,
+            headers_override=booking_headers
+        )
+        
+        if not success:
+            self.log("❌ Failed to create booking for cancel idempotency test")
+            return False
+        
+        test_booking_id = response.get('booking_id')
+        self.log(f"✅ Test booking created: {test_booking_id}")
+        
+        # Test idempotency for cancel requests
+        cancel_data = {"reason": "Idempotency test cancellation"}
+        idempotency_key = str(uuid.uuid4())
+        headers = {'Content-Type': 'application/json', 'Idempotency-Key': idempotency_key}
+        if self.agency_token:
+            headers['Authorization'] = f'Bearer {self.agency_token}'
+        
+        # First cancel request
+        success1, response1 = self.run_test(
+            "POST cancel request first call (expect 200)",
+            "POST",
+            f"api/b2b/bookings/{test_booking_id}/cancel-requests",
+            200,
+            data=cancel_data,
+            headers_override=headers
+        )
+        
+        if success1:
+            case_id_1 = response1.get('case_id')
+            self.log(f"✅ First cancel request created: {case_id_1}")
+            
+            # Second call with same idempotency key and same booking
+            success2, response2 = self.run_test(
+                "POST cancel request second call (idempotent replay, expect 200)",
+                "POST",
+                f"api/b2b/bookings/{test_booking_id}/cancel-requests",
+                200,
+                data=cancel_data,
+                headers_override=headers
+            )
+            
+            if success2:
+                case_id_2 = response2.get('case_id')
+                if case_id_1 == case_id_2:
+                    self.log(f"✅ Cancel idempotent replay working - same case_id: {case_id_2}")
+                    
+                    # Test same key with different booking (should fail)
+                    if self.booking_id and self.booking_id != test_booking_id:
+                        success3, response3 = self.run_test(
+                            "POST cancel request different booking same key (expect 409)",
+                            "POST",
+                            f"api/b2b/bookings/{self.booking_id}/cancel-requests",
+                            409,
+                            data=cancel_data,
+                            headers_override=headers
+                        )
+                        
+                        if success3 and response3.get('error', {}).get('code') == 'idempotency_key_reused':
+                            self.log(f"✅ Cancel idempotency key reuse correctly rejected")
+                            return True
+                        else:
+                            self.log(f"❌ Cancel idempotency key reuse test failed")
+                            return False
+                    else:
+                        self.log(f"✅ Cancel idempotency replay working (no second booking to test key reuse)")
+                        return True
+                else:
+                    self.log(f"❌ Cancel idempotent replay failed - different case_ids: {case_id_1} vs {case_id_2}")
+                    return False
+            else:
+                self.log(f"❌ Second cancel request failed")
+                return False
+        else:
+            self.log(f"❌ First cancel request failed")
+            return False
+
+    def print_summary(self):
+        """Print test summary"""
+        self.log("\n" + "="*60)
+        self.log("B2B QUOTES & BOOKINGS & CANCEL REQUESTS TEST SUMMARY")
+        self.log("="*60)
+        self.log(f"Total Tests: {self.tests_run}")
+        self.log(f"✅ Passed: {self.tests_passed}")
+        self.log(f"❌ Failed: {self.tests_failed}")
+        self.log(f"Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%")
+        
+        if self.failed_tests:
+            self.log("\n❌ FAILED TESTS:")
+            for i, test in enumerate(self.failed_tests, 1):
+                self.log(f"  {i}. {test}")
+        
+        self.log("="*60)
+
+    def run_b2b_tests(self):
+        """Run all B2B tests"""
+        self.log("🚀 Starting B2B Quotes & Bookings & Cancel Requests Tests")
+        self.log(f"Base URL: {self.base_url}")
+        
+        # Authentication
+        if not self.test_agency_login():
+            self.log("❌ Agency login failed - stopping tests")
+            self.print_summary()
+            return 1
+
+        # 1) POST /api/b2b/quotes tests
+        self.test_quotes_validation_error()
+        self.test_quotes_product_not_available()
+        self.test_quotes_unavailable()
+        self.test_quotes_happy_path()
+
+        # 2) POST /api/b2b/bookings tests
+        self.test_bookings_missing_idempotency_header()
+        self.test_bookings_quote_not_found()
+        self.test_bookings_quote_expired()
+        self.test_bookings_idempotency_replay()
+
+        # 3) POST /api/b2b/bookings/{id}/cancel-requests tests
+        self.test_cancel_missing_idempotency_header()
+        self.test_cancel_booking_not_found()
+        self.test_cancel_invalid_booking_state()
+        self.test_cancel_case_already_open()
+        self.test_cancel_idempotency_replay()
+
+        # Summary
+        self.print_summary()
+
+        return 0 if self.tests_failed == 0 else 1
+
+
 class ScaleUIProofHarnessTester:
     def __init__(self, base_url="https://riskdelta.preview.emergentagent.com"):
         self.base_url = base_url

@@ -524,11 +524,14 @@
     file: "backend/app/routers/b2b_quotes.py, backend/app/routers/b2b_bookings.py, backend/app/routers/b2b_cancel.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: false
         agent: "main"
         comment: "Initial implementation of B2B endpoints: POST /api/b2b/quotes, POST /api/b2b/bookings (Idempotency-Key required), POST /api/b2b/bookings/{id}/cancel-requests (Idempotency-Key required). Error codes: product_not_available, unavailable, quote_expired, quote_context_mismatch, idempotency_key_reused, case_already_open, invalid_booking_state wired via AppError. Needs backend validation for happy + 409 + 422 scenarios."
+      - working: false
+        agent: "testing"
+        comment: "❌ PHASE1 B2B QUOTES & BOOKINGS & CANCEL REQUESTS TEST PARTIALLY COMPLETE - 12/15 tests passed (80% success rate). VERIFIED FUNCTIONALITY: A) Authentication: Agency login successful (agency1@demo.test/agency123) with agency_admin role and agency_id verification. B) QUOTES VALIDATION: 1.1) Empty items correctly rejected with 422 validation_error, 1.2) Missing channel_id correctly rejected with 422 validation_error, 1.3) Non-existing product correctly rejected with 409 product_not_available, 1.4) Unavailable inventory correctly rejected with 409 unavailable. C) BOOKINGS VALIDATION: 2.1) Missing Idempotency-Key correctly rejected with 422, 2.2) Invalid quote_id correctly rejected with 404 not_found. D) CANCEL VALIDATION: 3.1) Missing Idempotency-Key correctly rejected with 422, 3.2) Invalid booking_id correctly rejected with 404 not_found. FAILED FUNCTIONALITY: E) QUOTES HAPPY PATH: Quote creation failing with 409 product_not_available due to system limitation - B2B pricing service expects products to have status='active' field but current product schema doesn't include status field. F) BOOKINGS EXPIRED QUOTE: Test returns 404 not_found instead of expected 409 quote_expired (no expired quotes in system for testing). G) CANCEL INVALID BOOKING STATE: Test returns 404 not_found instead of expected 409 invalid_booking_state (no cancelled bookings in system for testing). SYSTEM LIMITATION IDENTIFIED: B2B pricing service in _ensure_product_sellable() method queries for products with status='active' but ProductIn schema doesn't include status field, causing all quote creation attempts to fail with product_not_available error. RECOMMENDATION: Either add status field to ProductIn schema or modify B2B pricing service to work without status field requirement."
 
     priority: "high"
     needs_retesting: false

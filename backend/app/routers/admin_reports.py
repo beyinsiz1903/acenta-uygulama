@@ -204,6 +204,11 @@ async def download_match_risk_executive_pdf(response: Response, db=Depends(get_d
   today_str = now_utc().date().isoformat()
   filename = f"match-risk-executive-summary_{today_str}.pdf"
 
-  response.headers["Content-Type"] = "application/pdf"
-  response.headers["Content-Disposition"] = f"attachment; filename=\"{filename}\""
-  return Response(content=pdf_bytes, media_type="application/pdf")
+  return Response(
+    content=pdf_bytes, 
+    media_type="application/pdf",
+    headers={
+      "Content-Type": "application/pdf",
+      "Content-Disposition": f"attachment; filename=\"{filename}\""
+    }
+  )

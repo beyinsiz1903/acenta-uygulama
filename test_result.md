@@ -105,6 +105,18 @@
 ## user_problem_statement: "Müsaitlik ekranını takvim/grid görünümüne, Lead pipeline'ı drag-drop Kanban'a, Rezervasyon detayını drawer'a çevir. Ayrıca agentis.com.tr referansıyla tüm uygulamanın tasarımını daha kurumsal/modern hale getir."
 
 ## backend:
+  - task: "Ops B2B backend endpointlerini test et"
+    implemented: true
+    working: true
+    file: "/app/backend/app/routers/ops_b2b.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ OPS B2B BACKEND TEST COMPLETE - All 16 test scenarios passed (100% success rate). COMPREHENSIVE FUNCTIONALITY VERIFIED: A) Authentication: Admin login successful (admin@acenta.test/admin123) with super_admin role verification. B) BOOKINGS ENDPOINTS: 1) GET /api/ops/bookings (default parameters) working correctly - found 3 bookings with proper structure (booking_id, agency_id, status, created_at, sell_price, channel_id), 2) GET /api/ops/bookings?status=CONFIRMED working correctly - all returned bookings have CONFIRMED status, 3) GET /api/ops/bookings with date range filter working correctly - found 3 bookings within specified date range, 4) GET /api/ops/bookings/{id} working correctly - booking detail contains all required fields (booking_id, agency_id, channel_id, status, payment_status, created_at, updated_at, currency, amounts, items, customer, travellers, quote_id, risk_snapshot, policy_snapshot). C) CASES ENDPOINTS: 5) GET /api/ops/cases?status=open&type=cancel working correctly - found 2 open cancel cases with proper structure (case_id, type, booking_id, status, created_at), all filters applied correctly, 6) GET /api/ops/cases?status=closed working correctly - found 0 closed cases (all filters working), 7) GET /api/ops/cases/{id} working correctly - case detail contains all required fields (case_id, booking_id, type, status, created_at, updated_at, reason, requested_refund_currency, requested_refund_amount). D) CASE ACTIONS: 8) POST /api/ops/cases/{id}/approve working correctly - case status changed to closed, decision=approved, booking_status=CANCELLED, booking status verification confirmed (booking status changed from CONFIRMED to CANCELLED), 9) POST /api/ops/cases/{id}/reject working correctly - case status changed to closed, decision=rejected, booking status remained unchanged (CONFIRMED), proper verification of unchanged booking status. E) ERROR HANDLING: Non-existent booking returns 404 not_found, non-existent case returns 404 not_found. All Ops B2B backend endpoints production-ready with proper authentication, filtering, case management workflow, and error handling working as specified."
+
   - task: "PROOF v1 backend kabul kriterleri test - Outcome engine + matches summary + RiskProfile v2 etkisi"
     implemented: true
     working: true

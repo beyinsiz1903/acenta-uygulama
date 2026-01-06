@@ -48,6 +48,7 @@ from app.routers.match_alerts import router as match_alerts_router
 from app.routers.match_unblock import router as match_unblock_router
 from app.routers.exports import router as exports_router, public_router as exports_public_router
 from app.routers.admin_reports import router as admin_reports_router
+from app.routers.demo_scale_ui_proof import router as demo_scale_ui_proof_router
 from app.email_worker import email_dispatch_loop
 from app.integration_sync_worker import integration_sync_loop
 

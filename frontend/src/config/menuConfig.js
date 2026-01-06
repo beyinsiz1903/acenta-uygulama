@@ -12,6 +12,7 @@ export const MENU_CONFIG = {
         { label: "Match Risk Trends", path: "/app/admin/reports/match-risk-trends" },
         { label: "Match Alerts", path: "/app/admin/settings/match-alerts" },
         { label: "Action Policies", path: "/app/admin/settings/action-policies" },
+        { label: "Approvals", path: "/app/admin/approvals" },
         { label: "Exports", path: "/app/admin/exports" },
       ],
     },

@@ -736,21 +736,28 @@ async def ensure_seed_data() -> None:
     # -------------------------------
     # Minimal demo data (only if empty)
     # -------------------------------
-    demo_product = await db.products.find_one({"organization_id": org_id})
+    # -------------------------------
+    # Minimal B2B demo product for quotes/booking flow
+    # -------------------------------
+    # Use stable ID "demo_product_1" so test scripts can rely on it.
+    from bson import ObjectId
+
+    demo_product = await db.products.find_one({"organization_id": org_id, "_id": "demo_product_1"})
     if not demo_product:
-        prod_res = await db.products.insert_one(
-            {
-                "organization_id": org_id,
-                "type": "tour",
-                "title": "Demo İstanbul Şehir Turu",
-                "description": "Kurulum sonrası hızlı test için örnek ürün.",
-                "created_at": now_utc(),
-                "updated_at": now_utc(),
-                "created_by": DEFAULT_ADMIN_EMAIL,
-                "updated_by": DEFAULT_ADMIN_EMAIL,
-            }
-        )
-        demo_product = await db.products.find_one({"_id": prod_res.inserted_id})
+        demo_product_doc = {
+            "_id": "demo_product_1",
+            "organization_id": org_id,
+            "type": "hotel",  # B2B hotel-style product
+            "title": "Demo B2B Hotel Product",
+            "description": "B2B quotes/bookings happy path demo ürünü.",
+            "status": "active",  # required by B2BPricingService._ensure_product_sellable
+            "created_at": now_utc(),
+            "updated_at": now_utc(),
+            "created_by": DEFAULT_ADMIN_EMAIL,
+            "updated_by": DEFAULT_ADMIN_EMAIL,
+        }
+        await db.products.insert_one(demo_product_doc)
+        demo_product = demo_product_doc
 
     demo_customer = await db.customers.find_one({"organization_id": org_id})
     if not demo_customer:

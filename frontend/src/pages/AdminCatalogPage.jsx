@@ -518,7 +518,7 @@ export default function AdminCatalogPage() {
 
           {selected?.product_id && (
             <div className="pt-2 border-t">
-              <VersionsPanel productId={selected.product_id} />
+              <VersionsPanel productId={selected.product_id} productStatus={selected.status} />
             </div>
           )}
         </div>

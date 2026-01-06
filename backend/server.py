@@ -42,6 +42,7 @@ from app.routers.action_policies import router as action_policies_router
 from app.routers.approval_tasks import router as approval_tasks_router
 from app.routers.audit import router as audit_router
 from app.routers.voucher import router as voucher_router
+from app.routers.admin_catalog import router as admin_catalog_router
 from app.routers.web_booking import router as web_booking_router
 from app.routers.risk_snapshots import router as risk_snapshots_router
 from app.routers.web_catalog import router as web_catalog_router

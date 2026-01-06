@@ -163,7 +163,12 @@ async def deployment_health() -> dict[str, Any]:
 @app.on_event("startup")
 async def _startup() -> None:
     await connect_mongo()
+
+    # Use shared DB instance for seed + indexes
+    db = await get_db()
     await ensure_seed_data()
+    await ensure_catalog_indexes(db)
+
     logger.info("Startup complete")
 
     # Start background email dispatch loop (FAZ-9.3)

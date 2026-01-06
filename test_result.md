@@ -1091,7 +1091,7 @@
 
 ## test_plan:
   current_focus:
-    - "Ops Booking Timeline FE smoke test - Timeline tab implementation and functionality"
+    - "Ops B2B Voucher Tab FE test - Voucher creation, View HTML, Send Voucher functionality"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"

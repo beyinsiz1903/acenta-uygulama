@@ -115,11 +115,26 @@ class B2BPricingService:
         now = now_utc()
         expires_at = now + timedelta(minutes=10)
 
+        # Serialize items for storage: ensure date fields are JSON/Mongo friendly (ISO strings)
+        items_serialized = []
+        for i in payload.items:
+            data = i.model_dump()
+            # Convert date objects to ISO strings for MongoDB compatibility
+            if isinstance(data.get("check_in"), (str,)):
+                pass
+            else:
+                data["check_in"] = i.check_in.isoformat()
+            if isinstance(data.get("check_out"), (str,)):
+                pass
+            else:
+                data["check_out"] = i.check_out.isoformat()
+            items_serialized.append(data)
+
         doc = {
             "organization_id": organization_id,
             "agency_id": agency_id,
             "channel_id": channel_id,
-            "items": [i.model_dump() for i in payload.items],
+            "items": items_serialized,
             "offers": [o.model_dump() for o in offers],
             "expires_at": expires_at,
             "created_at": now,

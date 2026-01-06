@@ -2176,17 +2176,45 @@ class BookingTimelineV1SmokeTest:
         """Get a B2B booking ID for testing"""
         self.log("\n=== 1) GET B2B BOOKING ID ===")
         
+        # First try to get a CONFIRMED booking for voucher testing
         success, response = self.run_test(
-            "Get B2B bookings (limit=1)",
+            "Get CONFIRMED B2B bookings",
             "GET",
-            "api/ops/bookings?limit=1",
+            "api/ops/bookings?status=CONFIRMED&limit=5",
             200
         )
         
         if success and response.get('items'):
             booking = response['items'][0]
             self.booking_id = booking['booking_id']
-            self.log(f"✅ Found B2B booking: {self.booking_id}")
+            self.log(f"✅ Found CONFIRMED B2B booking: {self.booking_id}")
+            self.log(f"   Status: {booking.get('status')}")
+            self.log(f"   Agency: {booking.get('agency_id')}")
+            return True
+        
+        # If no CONFIRMED bookings, try any booking
+        success, response = self.run_test(
+            "Get any B2B bookings (limit=5)",
+            "GET",
+            "api/ops/bookings?limit=5",
+            200
+        )
+        
+        if success and response.get('items'):
+            # Try to find a suitable booking for voucher generation
+            for booking in response['items']:
+                status = booking.get('status')
+                if status in ['CONFIRMED', 'VOUCHERED', 'COMPLETED']:
+                    self.booking_id = booking['booking_id']
+                    self.log(f"✅ Found suitable B2B booking: {self.booking_id}")
+                    self.log(f"   Status: {status}")
+                    self.log(f"   Agency: {booking.get('agency_id')}")
+                    return True
+            
+            # If no suitable booking found, use the first one anyway for events testing
+            booking = response['items'][0]
+            self.booking_id = booking['booking_id']
+            self.log(f"⚠️  Using B2B booking (may not be suitable for voucher): {self.booking_id}")
             self.log(f"   Status: {booking.get('status')}")
             self.log(f"   Agency: {booking.get('agency_id')}")
             return True

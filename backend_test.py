@@ -1625,8 +1625,24 @@ class OpsVoucherViewTester:
         return False
 
     def test_get_booking_id(self):
-        """Get a CONFIRMED booking ID for testing"""
+        """Get a VOUCHERED booking ID for testing"""
         self.log("\n=== GET BOOKING ID ===")
+        
+        # First try to find a VOUCHERED booking (already has voucher)
+        success, response, _ = self.run_test(
+            "GET /api/ops/bookings?status=VOUCHERED&limit=1 (get VOUCHERED booking_id)",
+            "GET",
+            "api/ops/bookings?status=VOUCHERED&limit=1",
+            200
+        )
+        
+        if success and response.get('items') and response['items']:
+            items = response['items']
+            self.booking_id = items[0]['booking_id']
+            self.log(f"✅ Found VOUCHERED booking: {self.booking_id}")
+            return True
+        
+        # If no VOUCHERED booking, try CONFIRMED
         success, response, _ = self.run_test(
             "GET /api/ops/bookings?status=CONFIRMED&limit=1 (get CONFIRMED booking_id)",
             "GET",
@@ -1634,15 +1650,13 @@ class OpsVoucherViewTester:
             200
         )
         
-        if success and response.get('items'):
+        if success and response.get('items') and response['items']:
             items = response['items']
-            if items:
-                self.booking_id = items[0]['booking_id']
-                self.log(f"✅ Found CONFIRMED booking: {self.booking_id}")
-                return True
-            else:
-                self.log(f"❌ No CONFIRMED bookings found")
-                return False
+            self.booking_id = items[0]['booking_id']
+            self.log(f"✅ Found CONFIRMED booking: {self.booking_id}")
+            return True
+        
+        self.log(f"❌ No suitable bookings found")
         return False
 
     def test_ops_voucher_html_view(self):

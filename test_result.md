@@ -518,6 +518,18 @@
         agent: "testing"
         comment: "✅ OPS VOUCHER HTML VIEW ENDPOINT TEST COMPLETE - All 4 test scenarios passed (100% success rate). QUICK SMOKE TEST VERIFIED: A) Authentication: Admin login successful (admin@acenta.test/admin123) with super_admin role verification. B) Booking Selection: Found VOUCHERED booking (695cf86e55a9ca4029955c6d) with existing voucher, booking status confirmed as VOUCHERED. C) OPS HTML VIEW ENDPOINT: GET /api/ops/bookings/{booking_id}/voucher working correctly - returns 200 OK with proper Content-Type: text/html; charset=utf-8, HTML content received (201 bytes), content contains expected elements (booking, guest information), similar structure to previously tested B2B HTML voucher endpoint. Ops view endpoint OK - new ops HTML view endpoint working correctly and provides same voucher content as B2B endpoint but with ops-level access control."
 
+  - task: "BOOKING_TIMELINE_V1 backend'i hızlıca test et"
+    implemented: true
+    working: false
+    file: "/app/backend/app/routers/ops_booking_events.py, /app/backend/app/routers/vouchers.py, /app/backend/app/routers/ops_b2b.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "❌ BOOKING_TIMELINE_V1 BACKEND TEST PARTIALLY COMPLETE - 6/11 tests passed (54.5% success rate). VERIFIED FUNCTIONALITY: A) Authentication: Admin login successful (admin@acenta.test/admin123) with super_admin role, Agency login successful (agency1@demo.test/agency123) with agency_admin role and agency_id verification. B) Booking Discovery: Found 3 existing B2B bookings in system (CANCELLED, VOUCHERED, CONFIRMED statuses), ops/bookings endpoint working correctly. FAILED FUNCTIONALITY: C) Booking Events Access: All booking events endpoints returning 404 'Booking not found' errors - tested booking IDs (695d010055a9ca4029955c71, 695cf86e55a9ca4029955c6d, 695cf70655a9ca4029955c66) exist in bookings collection but not accessible via /api/ops/bookings/{booking_id}/events endpoint, likely due to organization_id mismatch or empty booking_events collection. D) Voucher Generation: POST /api/ops/bookings/{booking_id}/voucher/generate returning 520 internal_error for CONFIRMED booking, preventing VOUCHER_GENERATED event testing. E) Cancel Cases: No open cancel cases found in system for CANCEL_REQUESTED + CASE_DECIDED + BOOKING_STATUS_CHANGED event testing. ROOT CAUSE ANALYSIS: The booking_events collection appears to be empty or has organization_id mismatches, preventing access to booking timeline events. This suggests either: 1) Events are not being generated when bookings are created/modified, 2) Organization context mismatch between bookings and events collections, 3) Events collection not properly seeded with test data. RECOMMENDATION: Investigate booking_events collection data integrity and organization_id consistency, or populate test data with proper event timeline examples to enable full BOOKING_TIMELINE_V1 testing."
+
 ## frontend:
   - task: "PROOF v2 UI mini-dilimi doğrulama - Risk Profile Settings & Match Dashboard Verified Chip"
     implemented: true

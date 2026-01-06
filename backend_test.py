@@ -1809,7 +1809,7 @@ class B2BBookingsListTester:
             "search_id": search_id,
             "channel_id": self.channel_id,
             "rate_plan_id": rate_plan_id,
-            "rooms": [{"adults": 2, "children": 0}]
+            "occupancy": [{"adults": 2, "children": 0}]  # Changed from "rooms" to "occupancy"
         }
         
         success, response, _ = self.run_test(

@@ -294,14 +294,25 @@ async def approve_b2b_case_ops(
 
     now = now_utc()
 
+    # First close the case with decision metadata and booking_status snapshot for ops
+    await db.cases.update_one(
+        {"_id": case["_id"], "organization_id": org_id},
+        {
+            "$set": {
+                "status": "closed",
+                "decision": "approved",
+                "decision_by_email": user.get("email"),
+                "decision_at": now,
+                "booking_status": "CANCELLED",
+                "updated_at": now,
+            }
+        },
+    )
+
+    # Then mark the booking as CANCELLED
     await db.bookings.update_one(
         {"_id": booking_oid, "organization_id": org_id},
         {"$set": {"status": "CANCELLED", "updated_at": now}},
-    )
-
-    await db.cases.update_one(
-        {"_id": case["_id"], "organization_id": org_id},
-        {"$set": {"status": "closed", "decision": "approved", "updated_at": now}},
     )
 
     return {
@@ -333,7 +344,15 @@ async def reject_b2b_case_ops(
 
     await db.cases.update_one(
         {"_id": case["_id"], "organization_id": org_id},
-        {"$set": {"status": "closed", "decision": "rejected", "updated_at": now}},
+        {
+            "$set": {
+                "status": "closed",
+                "decision": "rejected",
+                "decision_by_email": user.get("email"),
+                "decision_at": now,
+                "updated_at": now,
+            }
+        },
     )
 
     return {

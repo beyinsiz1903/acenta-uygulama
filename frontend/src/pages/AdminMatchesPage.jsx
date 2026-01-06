@@ -426,6 +426,17 @@ export default function AdminMatchesPage() {
                     </span>
                   </div>
                 )}
+
+                {selectedMatch?.action_status === "blocked" && (
+                  <div className="mt-2 flex flex-col gap-1 text-xs text-destructive">
+                    <span>
+                      This match is currently blocked by policy. New bookings will be rejected (MATCH_BLOCKED).
+                    </span>
+                    <span className="text-[11px] text-muted-foreground">
+                      To unblock, submit a request below. An admin must approve it in the Approvals queue.
+                    </span>
+                  </div>
+                )}
               </div>
               <DrawerClose asChild>
                 <Button

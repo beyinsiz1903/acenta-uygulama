@@ -504,7 +504,7 @@ export default function OpsB2BQueuesPage() {
                       <button
                         key={c.case_id}
                         type="button"
-                        className={`grid w-full grid-cols-5 gap-2 border-t px-3 py-2 text-left hover:bg-accent/60 transition ${
+                        className={`grid w-full grid-cols-6 gap-2 border-t px-3 py-2 text-left hover:bg-accent/60 transition ${
                           selectedCaseId === c.case_id ? "bg-accent/40" : "bg-background"
                         }`}
                         onClick={() => loadCaseDetail(c.case_id)}
@@ -518,6 +518,9 @@ export default function OpsB2BQueuesPage() {
                         </div>
                         <div className="truncate" title={c.booking_id || "-"}>
                           {c.booking_id || "-"}
+                        </div>
+                        <div className="truncate" title={c.decision || "-"}>
+                          {c.decision || "-"}
                         </div>
                         <div className="truncate" title={String(c.created_at || "-")}>{formatDate(c.created_at)}</div>
                       </button>

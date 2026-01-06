@@ -16,6 +16,82 @@ function formatDate(value) {
   return d.toLocaleString();
 }
 
+function formatDateTime(iso) {
+  if (!iso) return "-";
+  try {
+    const d = new Date(iso);
+    return d.toLocaleString();
+  } catch {
+    return String(iso);
+  }
+}
+
+function safeJson(obj) {
+  try {
+    return JSON.stringify(obj ?? {}, null, 2);
+  } catch {
+    return String(obj);
+  }
+}
+
+function eventLabel(ev) {
+  const t = ev?.type;
+  const m = ev?.meta || {};
+  switch (t) {
+    case "BOOKING_CREATED":
+      return "Booking oluşturuldu";
+    case "VOUCHER_GENERATED":
+      return `Voucher oluşturuldu${m.voucher_version ? ` (v${m.voucher_version})` : ""}`;
+    case "CANCEL_REQUESTED":
+      return "İptal talebi açıldı";
+    case "CASE_DECIDED":
+      return `Case kararı: ${m.decision || "-"}`;
+    case "BOOKING_STATUS_CHANGED":
+      return `Durum değişti: ${m.status_from || "-"} → ${m.status_to || "-"}`;
+    default:
+      return t || "EVENT";
+  }
+}
+
+function eventSubline(ev) {
+  const m = ev?.meta || {};
+  const t = ev?.type;
+
+  if (t === "BOOKING_CREATED") {
+    const parts = [];
+    if (m.quote_id) parts.push(`quote: ${m.quote_id}`);
+    if (m.channel_id) parts.push(`channel: ${m.channel_id}`);
+    if (m.amount_sell != null) parts.push(`sell: ${m.amount_sell}`);
+    return parts.join(" · ");
+  }
+
+  if (t === "VOUCHER_GENERATED") {
+    const parts = [];
+    if (m.voucher_id) parts.push(`voucher: ${m.voucher_id}`);
+    if (m.template_key) parts.push(`template: ${m.template_key}`);
+    return parts.join(" · ");
+  }
+
+  if (t === "CANCEL_REQUESTED") {
+    const parts = [];
+    if (m.case_id) parts.push(`case: ${m.case_id}`);
+    if (m.requested_refund_amount != null && m.requested_refund_currency) {
+      parts.push(`refund: ${m.requested_refund_amount} ${m.requested_refund_currency}`);
+    }
+    if (m.reason) parts.push(`reason: ${m.reason}`);
+    return parts.join(" · ");
+  }
+
+  if (t === "CASE_DECIDED") {
+    const parts = [];
+    if (m.case_id) parts.push(`case: ${m.case_id}`);
+    if (m.decision_by_email) parts.push(`by: ${m.decision_by_email}`);
+    return parts.join(" · ");
+  }
+
+  return "";
+}
+
 function StatusBadge({ status }) {
   if (!status) return <Badge variant="outline">-</Badge>;
   const s = String(status).toUpperCase();
@@ -48,12 +124,16 @@ export default function OpsB2BQueuesPage() {
   const [selectedBookingId, setSelectedBookingId] = useState(null);
   const [bookingDetail, setBookingDetail] = useState(null);
   const [bookingDetailLoading, setBookingDetailLoading] = useState(false);
-  const [bookingDetailTab, setBookingDetailTab] = useState("general");
+  const [bookingDetailTab, setBookingDetailTab] = useState("general"); // "general" | "snapshots" | "voucher" | "timeline"
   const [voucherHistory, setVoucherHistory] = useState([]);
   const [voucherHistoryLoading, setVoucherHistoryLoading] = useState(false);
   const [voucherHistoryError, setVoucherHistoryError] = useState("");
   const [voucherGenerateLoading, setVoucherGenerateLoading] = useState(false);
   const [voucherResendLoading, setVoucherResendLoading] = useState(false);
+  const [bookingEvents, setBookingEvents] = useState([]);
+  const [bookingEventsLoading, setBookingEventsLoading] = useState(false);
+  const [bookingEventsError, setBookingEventsError] = useState("");
+  const [expandedEventIds, setExpandedEventIds] = useState(() => new Set());
 
   // Cases state
   const [cases, setCases] = useState([]);

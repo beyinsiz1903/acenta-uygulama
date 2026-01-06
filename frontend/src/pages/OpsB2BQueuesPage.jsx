@@ -250,6 +250,9 @@ export default function OpsB2BQueuesPage() {
                     className="mt-5 w-full"
                     onClick={loadBookings}
                     disabled={bookingsLoading}
+                  >
+                    Uygula
+                  </Button>
                   <Button
                     type="button"
                     variant="ghost"

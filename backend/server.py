@@ -47,6 +47,7 @@ from app.routers.matches import router as matches_router
 from app.routers.match_alerts import router as match_alerts_router
 from app.routers.match_unblock import router as match_unblock_router
 from app.routers.exports import router as exports_router, public_router as exports_public_router
+from app.routers.admin_reports import router as admin_reports_router
 from app.email_worker import email_dispatch_loop
 from app.integration_sync_worker import integration_sync_loop
 
@@ -112,6 +113,7 @@ app.include_router(match_alerts_router)
 app.include_router(match_unblock_router)
 app.include_router(exports_router)
 app.include_router(exports_public_router)
+app.include_router(admin_reports_router)
 
 
 @app.get("/api/health")

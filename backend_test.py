@@ -2023,15 +2023,54 @@ class B2BQuotesBookingsCancelTester:
         """1.4 POST /api/b2b/quotes - Happy path"""
         self.log("\n=== 1.4) QUOTES HAPPY PATH ===")
         
-        # Try with realistic data that might exist in demo environment
+        # First, let's get available products
+        success, products = self.run_test(
+            "GET available products",
+            "GET",
+            "api/products",
+            200
+        )
+        
+        if not success or not products:
+            self.log("❌ No products available for testing")
+            return False
+        
+        product_id = products[0]['id']
+        self.log(f"✅ Found product: {product_id}")
+        
+        # Create some inventory for testing
+        from datetime import datetime, timedelta
+        tomorrow = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
+        
+        inventory_data = {
+            "product_id": product_id,
+            "date": tomorrow,
+            "capacity_total": 10,
+            "capacity_available": 5,
+            "price": 150.0
+        }
+        
+        success, _ = self.run_test(
+            "Create inventory for testing",
+            "POST",
+            "api/inventory/upsert",
+            200,
+            data=inventory_data
+        )
+        
+        if not success:
+            self.log("❌ Failed to create inventory for testing")
+            return False
+        
+        # Now try to create a quote with valid data
         quote_data = {
             "channel_id": "ch_demo",
             "items": [{
-                "product_id": "demo_hotel_1",
+                "product_id": product_id,
                 "room_type_id": "standard",
                 "rate_plan_id": "base",
-                "check_in": "2025-02-01",
-                "check_out": "2025-02-02",
+                "check_in": tomorrow,
+                "check_out": (datetime.now() + timedelta(days=2)).strftime("%Y-%m-%d"),
                 "occupancy": 2
             }]
         }

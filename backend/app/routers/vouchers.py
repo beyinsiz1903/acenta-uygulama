@@ -21,7 +21,6 @@ from app.services.vouchers import (
     generate_for_booking,
     list_vouchers_for_booking,
     render_voucher_html,
-    render_voucher_pdf,
 )
 
 

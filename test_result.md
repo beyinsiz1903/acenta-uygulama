@@ -518,6 +518,18 @@
     working: true
     file: "/app/backend/app/routers/demo_scale_ui_proof.py"
     stuck_count: 0
+  - task: "Phase1 – B2B Quotes & Bookings & CancelRequests"
+    implemented: true
+    working: false
+    file: "backend/app/routers/b2b_quotes.py, backend/app/routers/b2b_bookings.py, backend/app/routers/b2b_cancel.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "main"
+        comment: "Initial implementation of B2B endpoints: POST /api/b2b/quotes, POST /api/b2b/bookings (Idempotency-Key required), POST /api/b2b/bookings/{id}/cancel-requests (Idempotency-Key required). Error codes: product_not_available, unavailable, quote_expired, quote_context_mismatch, idempotency_key_reused, case_already_open, invalid_booking_state wired via AppError. Needs backend validation for happy + 409 + 422 scenarios."
+
     priority: "high"
     needs_retesting: false
     status_history:

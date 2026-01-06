@@ -61,18 +61,41 @@ async def list_b2b_bookings_ops(
     )
     docs: List[Dict[str, Any]] = await cursor.to_list(length=limit)
 
+    # Join agency & channel names in-memory for readability
+    agency_ids = {doc.get("agency_id") for doc in docs if doc.get("agency_id")}
+    channel_ids = {doc.get("channel_id") for doc in docs if doc.get("channel_id")}
+
+    agency_name_map: Dict[str, str] = {}
+    channel_name_map: Dict[str, str] = {}
+
+    if agency_ids:
+        agencies = await db.agencies.find(
+            {"organization_id": org_id, "_id": {"$in": list(agency_ids)}}
+        ).to_list(length=None)
+        agency_name_map = {str(a["_id"]): a.get("name") or "" for a in agencies}
+
+    if hasattr(db, "channels") and channel_ids:
+        channels = await db.channels.find(
+            {"organization_id": org_id, "_id": {"$in": list(channel_ids)}}
+        ).to_list(length=None)
+        channel_name_map = {str(c["_id"]): c.get("name") or "" for c in channels}
+
     items: List[Dict[str, Any]] = []
     for doc in docs:
         amounts = doc.get("amounts") or {}
+        agency_id = doc.get("agency_id")
+        channel_id = doc.get("channel_id")
         items.append(
             {
                 "booking_id": str(doc.get("_id")),
-                "agency_id": doc.get("agency_id"),
+                "agency_id": agency_id,
+                "agency_name": agency_name_map.get(str(agency_id)),
                 "status": doc.get("status"),
                 "created_at": doc.get("created_at"),
                 "currency": doc.get("currency"),
                 "sell_price": amounts.get("sell"),
-                "channel_id": doc.get("channel_id"),
+                "channel_id": channel_id,
+                "channel_name": channel_name_map.get(str(channel_id)),
             }
         )
 
@@ -171,6 +194,8 @@ async def list_b2b_cases_ops(
                 "booking_id": doc.get("booking_id"),
                 "status": doc.get("status"),
                 "created_at": doc.get("created_at"),
+                "updated_at": doc.get("updated_at"),
+                "decision": doc.get("decision"),
             }
         )
 
@@ -208,6 +233,10 @@ async def get_b2b_case_detail_ops(
         "reason": case.get("reason"),
         "requested_refund_currency": case.get("requested_refund_currency"),
         "requested_refund_amount": case.get("requested_refund_amount"),
+        "decision": case.get("decision"),
+        "decision_by_email": case.get("decision_by_email"),
+        "decision_at": case.get("decision_at"),
+        "booking_status": case.get("booking_status"),
     }
 
 

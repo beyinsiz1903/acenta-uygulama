@@ -637,7 +637,7 @@ export default function B2BPortalPage() {
                 <div className="space-y-1">
                   <div className="text-xs text-muted-foreground">Voucher</div>
                   <a
-                    href={`/api/b2b/bookings/${booking.booking_id}/voucher`}
+                    href={`${process.env.REACT_APP_BACKEND_URL}/api/b2b/bookings/${booking.booking_id}/voucher`}
                     target="_blank"
                     rel="noreferrer"
                     className="inline-flex items-center text-xs text-primary hover:underline"

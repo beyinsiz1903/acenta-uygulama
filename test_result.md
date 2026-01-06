@@ -288,13 +288,16 @@
     implemented: true
     working: false
     file: "/app/backend/app/routers/admin_catalog.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
     needs_retesting: false
     status_history:
       - working: false
         agent: "testing"
         comment: "❌ PRODUCT CATALOG V1 SMOKE TEST FAILED - CRITICAL INDEX CONFLICT ISSUE DETECTED. BACKEND SERVICE FAILING TO START: A) Index Conflict Error: MongoDB index conflict preventing backend startup - 'uniq_product_code_per_org' index has conflicting partialFilterExpression definitions (existing: { code: { $type: 'string' } } vs requested: { code: { $exists: true, $type: 'string' } }). B) Service Status: Backend service repeatedly failing with 'Application startup failed. Exiting.' due to pymongo.errors.OperationFailure during index creation. C) API Unavailability: All catalog endpoints returning 500 errors or connection refused due to backend service failure. D) Test Results: Unable to complete any of the 4 requested smoke tests: 1) Product list 500 error - CONFIRMED: Backend returning 500 errors due to index conflict, 2) Publish guard error format - UNABLE TO TEST: Backend not responding, 3) Referential integrity error code - UNABLE TO TEST: Backend not responding, 4) Index regressions - CONFIRMED: Index conflicts causing service failure. ROOT CAUSE: Conflicting MongoDB index definitions in catalog_indexes.py causing startup failure. RECOMMENDATION: Fix index conflict by either dropping existing index or updating index creation logic to handle existing indexes gracefully."
+      - working: false
+        agent: "testing"
+        comment: "❌ PRODUCT CATALOG V1 RE-SMOKE TEST FAILED - INDEX CONFLICT PERSISTS. BACKEND STARTUP FAILURE CONFIRMED: A) Backend Service Status: Service shows RUNNING but repeatedly crashes during startup due to MongoDB index conflicts. B) Index Conflicts Identified: 1) products.uniq_product_code_per_org - existing partialFilterExpression: { code: { $type: 'string' } } vs requested: { code: { $exists: true, $type: 'string' } }, 2) room_types.uniq_roomtype_code_per_product - existing has partialFilterExpression: { code: { $type: 'string' } } vs requested has no partialFilterExpression. C) API Endpoints: All returning 520 errors due to backend startup failure. D) FOCUSED SMOKE TEST RESULTS: 1) Backend ayağa kalkıyor mu? ❌ NO - Index conflicts prevent startup, 2) Admin login ❌ FAILED - 520 error (backend not responding), 3) GET /api/admin/catalog/products?limit=50 ❌ UNABLE TO TEST - Backend not accessible. ROOT CAUSE: catalog_indexes.py contains conflicting index definitions that don't match existing MongoDB indexes. CRITICAL ISSUE: This prevents the entire backend service from starting, making all catalog functionality unavailable."
 
 ## frontend:
 ##   - task: "FAZ-7 Admin Audit Logs UI (/app/admin/audit)"

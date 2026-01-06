@@ -4,6 +4,24 @@ from pymongo import ASCENDING, DESCENDING
 
 
 async def ensure_catalog_indexes(db):
+    # Drop existing indexes first to avoid conflicts
+    try:
+        await db.products.drop_index("uniq_product_code_per_org")
+    except:
+        pass
+    try:
+        await db.room_types.drop_index("uniq_roomtype_code_per_product")
+    except:
+        pass
+    try:
+        await db.rate_plans.drop_index("uniq_rateplan_code_per_product")
+    except:
+        pass
+    try:
+        await db.cancellation_policies.drop_index("uniq_cancel_policy_code_per_org")
+    except:
+        pass
+    
     # products - make unique index partial to allow null codes from existing seed data
     await db.products.create_index(
         [("organization_id", ASCENDING), ("code", ASCENDING)],

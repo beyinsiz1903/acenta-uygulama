@@ -21488,9 +21488,13 @@ if __name__ == "__main__":
                 tester = ExecutiveSummaryPDFTester()
                 exit_code = tester.run_executive_summary_tests()
                 sys.exit(exit_code)
+            elif test_type == "scale_ui_proof":
+                tester = ScaleUIProofHarnessTester()
+                exit_code = tester.run_scale_ui_proof_tests()
+                sys.exit(exit_code)
             else:
                 print(f"Unknown test type: {test_type}")
-                print("Available test types: risk-snapshots-trend, risk_snapshots, proof_v2_story3, proof_v2_story4, proof_v2_story2, signed_download, faz5, proof_v11, executive_summary, all")
+                print("Available test types: risk-snapshots-trend, risk_snapshots, proof_v2_story3, proof_v2_story4, proof_v2_story2, signed_download, faz5, proof_v11, executive_summary, scale_ui_proof, all")
                 sys.exit(1)
         else:
             # Default: run comprehensive tests

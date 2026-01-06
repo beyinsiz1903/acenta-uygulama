@@ -448,6 +448,7 @@ async def ensure_seed_data() -> None:
                     "status": "active",
                     "created_at": now_utc(),
                     "updated_at": now_utc(),
+    # Voucher template seed (Phase 1)\n    existing_tpl = await db.voucher_templates.find_one({\"organization_id\": org_id, \"key\": \"b2b_booking_default\"}) if hasattr(db, \"voucher_templates\") else None\n    try:\n        if hasattr(db, \"voucher_templates\") and not existing_tpl:\n            await db.voucher_templates.insert_one(\n                {\n                    \"organization_id\": org_id,\n                    \"key\": \"b2b_booking_default\",\n                    \"name\": \"B2B Booking Default Voucher\",\n                    \"html\": \"<html><body><h1>Booking Voucher</h1><p>Booking ID: {booking_id}</p><p>Guest: {customer_name} ({customer_email})</p><p>Dates: {check_in} → {check_out}</p><p>Amount: {amount_sell} {currency}</p></body></html>\",\n                    \"locale\": \"tr-TR\",\n                    \"version\": 1,\n                    \"status\": \"active\",\n                    \"created_at\": now_utc(),\n                    \"updated_at\": now_utc(),\n                    \"created_by\": DEFAULT_ADMIN_EMAIL,\n                    \"updated_by\": DEFAULT_ADMIN_EMAIL,\n                }\n            )\n    except Exception:\n        # voucher_templates collection optional; ignore if missing\n        pass\n
                     "created_by": DEFAULT_ADMIN_EMAIL,
                     "updated_by": DEFAULT_ADMIN_EMAIL,
                 }

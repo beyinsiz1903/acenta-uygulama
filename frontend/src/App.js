@@ -38,6 +38,7 @@ import AgencyBookingPendingPage from "./pages/AgencyBookingPendingPage";
 import AgencyBookingsListPage from "./pages/AgencyBookingsListPage";
 import AgencySettlementsPage from "./pages/AgencySettlementsPage";
 import AgencyHelpPage from "./pages/AgencyHelpPage";
+import B2BPortalPage from "./pages/B2BPortalPage";
 import HotelBookingsPage from "./pages/HotelBookingsPage";
 import HotelStopSellPage from "./pages/HotelStopSellPage";
 import HotelAllocationsPage from "./pages/HotelAllocationsPage";
@@ -101,6 +102,8 @@ function App() {
         </Route>
 
         {/* Agency Routes (Core Flow) */}
+        <Route path="/app/b2b/portal" element={<B2BPortalPage />} />
+
         <Route
           path="/app/agency/*"
           element={

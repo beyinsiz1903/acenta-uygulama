@@ -1,0 +1,537 @@
+import React, { useEffect, useMemo, useState } from "react";
+import { AlertCircle, CalendarDays, Loader2, User, CreditCard, Timer, XCircle } from "lucide-react";
+import { api, apiErrorMessage } from "../lib/api";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Badge } from "../components/ui/badge";
+
+// Basit helper: ISO tarih -> Date
+function parseIso(value) {
+  if (!value) return null;
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+function formatRemaining(ms) {
+  if (ms <= 0) return "0:00";
+  const totalSec = Math.floor(ms / 1000);
+  const m = Math.floor(totalSec / 60);
+  const s = totalSec % 60;
+  return `${m}:${s.toString().padStart(2, "0")}`;
+}
+
+export default function B2BPortalPage() {
+  // Quote form state
+  const [checkIn, setCheckIn] = useState("");
+  const [checkOut, setCheckOut] = useState("");
+  const [occupancy, setOccupancy] = useState(2);
+
+  // Quote result
+  const [quote, setQuote] = useState(null); // { quote_id, expires_at, offer }
+  const [quoteError, setQuoteError] = useState("");
+  const [quoteLoading, setQuoteLoading] = useState(false);
+
+  // Countdown
+  const [nowMs, setNowMs] = useState(Date.now());
+
+  // Booking state
+  const [customerName, setCustomerName] = useState("Test Müşteri");
+  const [customerEmail, setCustomerEmail] = useState("test@example.com");
+  const [travellerFirstName, setTravellerFirstName] = useState("Test");
+  const [travellerLastName, setTravellerLastName] = useState("Traveller");
+  const [booking, setBooking] = useState(null); // { booking_id, status, voucher_status }
+  const [bookingError, setBookingError] = useState("");
+  const [bookingLoading, setBookingLoading] = useState(false);
+
+  // Cancel state
+  const [cancelReason, setCancelReason] = useState("customer_request");
+  const [cancelAmount, setCancelAmount] = useState("100");
+  const [cancelCurrency, setCancelCurrency] = useState("EUR");
+  const [cancelResult, setCancelResult] = useState(null); // { case_id, status }
+  const [cancelError, setCancelError] = useState("");
+  const [cancelLoading, setCancelLoading] = useState(false);
+
+  // Global error (env/auth vs.)
+  const [globalError, setGlobalError] = useState("");
+
+  // Countdown timer effect
+  useEffect(() => {
+    const id = setInterval(() => {
+      setNowMs(Date.now());
+    }, 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  const expiresAtDate = useMemo(() => parseIso(quote?.expires_at), [quote]);
+  const remainingMs = useMemo(() => {
+    if (!expiresAtDate) return 0;
+    return expiresAtDate.getTime() - nowMs;
+  }, [expiresAtDate, nowMs]);
+
+  const isExpired = !!expiresAtDate && remainingMs <= 0;
+
+  async function handleCreateQuote(e) {
+    e.preventDefault();
+    setQuoteError("");
+    setGlobalError("");
+    setQuote(null);
+    setBooking(null);
+    setCancelResult(null);
+
+    if (!checkIn || !checkOut) {
+      setQuoteError("Giriş ve çıkış tarihleri gerekli");
+      return;
+    }
+
+    setQuoteLoading(true);
+    try {
+      const payload = {
+        channel_id: "ch_b2b_portal",
+        items: [
+          {
+            product_id: "demo_product_1",
+            room_type_id: "standard",
+            rate_plan_id: "base",
+            check_in: checkIn,
+            check_out: checkOut,
+            occupancy: occupancy ? Number(occupancy) : 1,
+          },
+        ],
+      };
+
+      console.log("[B2BPortal] Quote payload:", payload);
+
+      const resp = await api.post("/b2b/quotes", payload);
+      const data = resp.data;
+      console.log("[B2BPortal] Quote response:", data);
+
+      const firstOffer = (data.offers && data.offers[0]) || null;
+      setQuote({
+        quote_id: data.quote_id,
+        expires_at: data.expires_at,
+        offer: firstOffer,
+      });
+    } catch (err) {
+      console.error("[B2BPortal] Quote error:", err);
+      // Backend standard error body: { error: { code, message, details } }
+      const resp = err?.response?.data;
+      if (resp?.error?.code) {
+        setQuoteError(`${resp.error.code}: ${resp.error.message || "Hata oluştu"}`);
+      } else {
+        setQuoteError(apiErrorMessage(err));
+      }
+    } finally {
+      setQuoteLoading(false);
+    }
+  }
+
+  async function handleBook(e) {
+    e.preventDefault();
+    setBookingError("");
+    setCancelResult(null);
+
+    if (!quote?.quote_id) {
+      setBookingError("Önce bir teklif (quote) oluşturmanız gerekiyor");
+      return;
+    }
+
+    if (isExpired) {
+      setBookingError("Quote süresi dolmuş görünüyor (expired)");
+      return;
+    }
+
+    setBookingLoading(true);
+    try {
+      const idemKey = crypto.randomUUID();
+      console.log("[B2BPortal] BOOKING Idempotency-Key:", idemKey);
+
+      const payload = {
+        quote_id: quote.quote_id,
+        customer: {
+          name: customerName || "Demo Customer",
+          email: customerEmail || "demo@example.com",
+        },
+        travellers: [
+          {
+            first_name: travellerFirstName || "Demo",
+            last_name: travellerLastName || "Traveller",
+          },
+        ],
+      };
+
+      console.log("[B2BPortal] Booking payload:", payload);
+
+      const resp = await api.post("/b2b/bookings", payload, {
+        headers: {
+          "Idempotency-Key": idemKey,
+        },
+      });
+
+      const data = resp.data;
+      console.log("[B2BPortal] Booking response:", data);
+
+      setBooking({
+        booking_id: data.booking_id,
+        status: data.status,
+        voucher_status: data.voucher_status,
+      });
+    } catch (err) {
+      console.error("[B2BPortal] Booking error:", err);
+      const resp = err?.response?.data;
+      if (resp?.error?.code) {
+        setBookingError(`${resp.error.code}: ${resp.error.message || "Hata oluştu"}`);
+      } else {
+        setBookingError(apiErrorMessage(err));
+      }
+    } finally {
+      setBookingLoading(false);
+    }
+  }
+
+  async function handleCancel(e) {
+    e.preventDefault();
+    setCancelError("");
+
+    if (!booking?.booking_id) {
+      setCancelError("Önce bir rezervasyon oluşturmanız gerekiyor");
+      return;
+    }
+
+    setCancelLoading(true);
+    try {
+      const idemKey = crypto.randomUUID();
+      console.log("[B2BPortal] CANCEL Idempotency-Key:", idemKey);
+
+      const payload = {
+        reason: cancelReason || "customer_request",
+        requested_refund_currency: cancelCurrency || "EUR",
+        requested_refund_amount: Number(cancelAmount || 0) || 0,
+      };
+
+      console.log("[B2BPortal] Cancel payload:", payload);
+
+      const resp = await api.post(`/b2b/bookings/${booking.booking_id}/cancel-requests`, payload, {
+        headers: {
+          "Idempotency-Key": idemKey,
+        },
+      });
+
+      const data = resp.data;
+      console.log("[B2BPortal] Cancel response:", data);
+
+      setCancelResult({
+        case_id: data.case_id,
+        status: data.status,
+      });
+    } catch (err) {
+      console.error("[B2BPortal] Cancel error:", err);
+      const resp = err?.response?.data;
+      if (resp?.error?.code) {
+        setCancelError(`${resp.error.code}: ${resp.error.message || "Hata oluştu"}`);
+      } else {
+        setCancelError(apiErrorMessage(err));
+      }
+    } finally {
+      setCancelLoading(false);
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="space-y-1">
+        <h1 className="text-2xl font-bold text-foreground">B2B Portal</h1>
+        <p className="text-sm text-muted-foreground">
+          Agentis sınıfı demo akışı: Quote → Book → Cancel. Tüm istekler agency token&apos;ı ile B2B backend&apos;e gider.
+        </p>
+      </div>
+
+      {globalError && (
+        <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
+          <AlertCircle className="h-4 w-4 mt-0.5" />
+          <div>{globalError}</div>
+        </div>
+      )}
+
+      {/* 1) Search / Quote */}
+      <Card className="rounded-2xl border bg-card shadow-sm">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <CalendarDays className="h-4 w-4" />
+            1. Adım – Quote Oluştur
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <form onSubmit={handleCreateQuote} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+            <div className="space-y-1">
+              <Label htmlFor="check_in" className="flex items-center gap-2">
+                <CalendarDays className="h-4 w-4" />
+                Giriş
+              </Label>
+              <Input
+                id="check_in"
+                type="date"
+                value={checkIn}
+                onChange={(e) => setCheckIn(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-1">
+              <Label htmlFor="check_out" className="flex items-center gap-2">
+                <CalendarDays className="h-4 w-4" />
+                Çıkış
+              </Label>
+              <Input
+                id="check_out"
+                type="date"
+                value={checkOut}
+                onChange={(e) => setCheckOut(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-1">
+              <Label htmlFor="occupancy" className="flex items-center gap-2">
+                <User className="h-4 w-4" />
+                Kişi Sayısı
+              </Label>
+              <Input
+                id="occupancy"
+                type="number"
+                min={1}
+                value={occupancy}
+                onChange={(e) => setOccupancy(e.target.value)}
+              />
+            </div>
+
+            <div className="flex justify-end md:col-span-1">
+              <Button type="submit" disabled={quoteLoading} className="w-full md:w-auto gap-2">
+                {quoteLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+                {quoteLoading ? "Hesaplanıyor..." : "Quote Oluştur"}
+              </Button>
+            </div>
+          </form>
+
+          {quoteError && (
+            <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
+              <AlertCircle className="h-4 w-4 mt-0.5" />
+              <div>{quoteError}</div>
+            </div>
+          )}
+
+          {quote && (
+            <div className="mt-2 grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-1">
+                <div className="text-xs text-muted-foreground">Quote ID</div>
+                <div className="font-mono text-sm break-all">{quote.quote_id}</div>
+              </div>
+              <div className="space-y-1">
+                <div className="text-xs text-muted-foreground">Fiyat (sell)</div>
+                <div className="text-lg font-semibold text-primary">
+                  {quote.offer?.sell} {quote.offer?.currency || "EUR"}
+                </div>
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Timer className="h-3 w-3" />
+                  <span>Son kullanma</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant={isExpired ? "destructive" : "secondary"} className="text-xs">
+                    {isExpired ? "Süresi doldu" : `Kalan: ${formatRemaining(remainingMs)}`}
+                  </Badge>
+                </div>
+                <div className="text-[11px] text-muted-foreground mt-1">
+                  expires_at (UTC): {quote.expires_at}
+                </div>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* 2) Checkout / Book */}
+      <Card className="rounded-2xl border bg-card shadow-sm">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <CreditCard className="h-4 w-4" />
+            2. Adım – Rezervasyon Oluştur (Book)
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-xs text-muted-foreground">
+            Not: Book isteğinde kullanılan <span className="font-mono">Idempotency-Key</span> console&apos;a yazılıyor.
+          </p>
+          <form onSubmit={handleBook} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+            <div className="space-y-1">
+              <Label htmlFor="customer_name">Müşteri Adı</Label>
+              <Input
+                id="customer_name"
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="customer_email">Müşteri Email</Label>
+              <Input
+                id="customer_email"
+                type="email"
+                value={customerEmail}
+                onChange={(e) => setCustomerEmail(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="traveller_name">Traveller Ad Soyad</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="traveller_first_name"
+                  placeholder="Ad"
+                  value={travellerFirstName}
+                  onChange={(e) => setTravellerFirstName(e.target.value)}
+                />
+                <Input
+                  id="traveller_last_name"
+                  placeholder="Soyad"
+                  value={travellerLastName}
+                  onChange={(e) => setTravellerLastName(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="flex justify-end md:col-span-3">
+              <Button
+                type="submit"
+                disabled={bookingLoading}
+                className="w-full md:w-auto gap-2"
+              >
+                {bookingLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+                {bookingLoading ? "Gönderiliyor..." : "Rezervasyon Oluştur"}
+              </Button>
+            </div>
+          </form>
+
+          {bookingError && (
+            <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
+              <AlertCircle className="h-4 w-4 mt-0.5" />
+              <div>{bookingError}</div>
+            </div>
+          )}
+
+          {booking && (
+            <div className="mt-2 grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-1">
+                <div className="text-xs text-muted-foreground">Booking ID</div>
+                <div className="font-mono text-sm break-all">{booking.booking_id}</div>
+              </div>
+              <div className="space-y-1">
+                <div className="text-xs text-muted-foreground">Durum</div>
+                <Badge variant="secondary" className="text-xs">
+                  {booking.status}
+                </Badge>
+              </div>
+              <div className="space-y-1">
+                <div className="text-xs text-muted-foreground">Voucher Durumu</div>
+                <Badge variant="outline" className="text-xs">
+                  {booking.voucher_status}
+                </Badge>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* 3) My Booking + Cancel Request */}
+      <Card className="rounded-2xl border bg-card shadow-sm">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <XCircle className="h-4 w-4" />
+            3. Adım – İptal Talebi (Cancel Request)
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-xs text-muted-foreground">
+            Not: Cancel isteğinde kullanılan <span className="font-mono">Idempotency-Key</span> console&apos;a yazıldı.
+          </p>
+
+          {booking ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <div className="text-xs text-muted-foreground">Son Booking</div>
+                <div className="font-mono text-sm break-all">{booking.booking_id}</div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  Durum: <span className="font-medium">{booking.status}</span>
+                </div>
+              </div>
+
+              <form onSubmit={handleCancel} className="space-y-3">
+                <div className="space-y-1">
+                  <Label htmlFor="cancel_reason">İptal Nedeni</Label>
+                  <Input
+                    id="cancel_reason"
+                    value={cancelReason}
+                    onChange={(e) => setCancelReason(e.target.value)}
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <div className="space-y-1 flex-1">
+                    <Label htmlFor="cancel_amount">İade Talebi (Tutar)</Label>
+                    <Input
+                      id="cancel_amount"
+                      type="number"
+                      min={0}
+                      value={cancelAmount}
+                      onChange={(e) => setCancelAmount(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-1 w-24">
+                    <Label htmlFor="cancel_currency">Para Birimi</Label>
+                    <Input
+                      id="cancel_currency"
+                      value={cancelCurrency}
+                      onChange={(e) => setCancelCurrency(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-end">
+                  <Button
+                    type="submit"
+                    disabled={cancelLoading}
+                    className="w-full md:w-auto gap-2"
+                  >
+                    {cancelLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+                    {cancelLoading ? "Gönderiliyor..." : "İptal Talebi Oluştur"}
+                  </Button>
+                </div>
+              </form>
+            </div>
+          ) : (
+            <div className="text-sm text-muted-foreground">
+              Henüz bu oturumda oluşturulmuş bir booking yok. Önce &quot;Rezervasyon Oluştur&quot; adımını tamamlayın.
+            </div>
+          )}
+
+          {cancelError && (
+            <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
+              <AlertCircle className="h-4 w-4 mt-0.5" />
+              <div>{cancelError}</div>
+            </div>
+          )}
+
+          {cancelResult && (
+            <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <div className="text-xs text-muted-foreground">Case ID</div>
+                <div className="font-mono text-sm break-all">{cancelResult.case_id}</div>
+              </div>
+              <div className="space-y-1">
+                <div className="text-xs text-muted-foreground">Case Durumu</div>
+                <Badge variant="secondary" className="text-xs">
+                  {cancelResult.status}
+                </Badge>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

@@ -1,5 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { getApprovalTasks, approveApprovalTask, rejectApprovalTask, apiErrorMessage } from "../lib/api";
+import {
+  getApprovalTasks,
+  approveApprovalTask,
+  rejectApprovalTask,
+  apiErrorMessage,
+  runScaleUIProof,
+  approveScaleUIProof,
+} from "../lib/api";
 import { useToast } from "../hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";

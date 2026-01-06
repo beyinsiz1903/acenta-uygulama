@@ -148,11 +148,37 @@ async def generate_for_booking(db, organization_id: str, booking_id: str, create
     res = await db.vouchers.insert_one(voucher_doc)
     voucher_id = str(res.inserted_id)
 
-    # Update booking status to VOUCHERED
+    # Update booking status to VOUCHERED (if it was not already)
+    booking_status_before = booking.get("status")
     await db.bookings.update_one(
         {"_id": booking_oid, "organization_id": organization_id},
         {"$set": {"status": "VOUCHERED", "updated_at": now}},
     )
+
+    # Emit voucher-related events
+    actor = {"role": "ops", "email": created_by_email}
+    await emit_event(
+        db,
+        organization_id,
+        booking_id,
+        "VOUCHER_GENERATED",
+        actor=actor,
+        meta={
+            "voucher_id": voucher_id,
+            "voucher_version": version,
+            "template_key": DEFAULT_TEMPLATE_KEY,
+        },
+    )
+
+    if booking_status_before != "VOUCHERED":
+        await emit_event(
+            db,
+            organization_id,
+            booking_id,
+            "BOOKING_STATUS_CHANGED",
+            actor=actor,
+            meta={"status_from": booking_status_before, "status_to": "VOUCHERED"},
+        )
 
     return {
         "booking_id": booking_id,

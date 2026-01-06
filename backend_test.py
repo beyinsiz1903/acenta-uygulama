@@ -1551,6 +1551,190 @@ class OpsVoucherViewTester:
         # Store data for testing
         self.booking_id = None
 
+    def log(self, msg):
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}")
+
+    def run_test(self, name, method, endpoint, expected_status, data=None, headers_override=None):
+        """Run a single API test"""
+        url = f"{self.base_url}/{endpoint}"
+        headers = headers_override or {'Content-Type': 'application/json'}
+        if self.admin_token and not headers_override:
+            headers['Authorization'] = f'Bearer {self.admin_token}'
+
+        self.tests_run += 1
+        self.log(f"🔍 Test #{self.tests_run}: {name}")
+        
+        try:
+            if method == 'GET':
+                response = requests.get(url, headers=headers, timeout=10)
+            elif method == 'POST':
+                response = requests.post(url, json=data, headers=headers, timeout=10)
+            elif method == 'PUT':
+                response = requests.put(url, json=data, headers=headers, timeout=10)
+            elif method == 'DELETE':
+                response = requests.delete(url, headers=headers, timeout=10)
+            else:
+                raise ValueError(f"Unsupported method: {method}")
+
+            success = response.status_code == expected_status
+            if success:
+                self.tests_passed += 1
+                self.log(f"✅ PASSED - Status: {response.status_code}")
+                try:
+                    return True, response.json() if response.content else {}, response
+                except:
+                    return True, {}, response
+            else:
+                self.tests_failed += 1
+                self.failed_tests.append(f"{name} - Expected {expected_status}, got {response.status_code}")
+                self.log(f"❌ FAILED - Expected {expected_status}, got {response.status_code}")
+                try:
+                    self.log(f"   Response: {response.text[:200]}")
+                except:
+                    pass
+                return False, {}, response
+
+        except Exception as e:
+            self.tests_failed += 1
+            self.failed_tests.append(f"{name} - Error: {str(e)}")
+            self.log(f"❌ FAILED - Error: {str(e)}")
+            return False, {}, None
+
+    def test_admin_login(self):
+        """Test admin login"""
+        self.log("\n=== AUTHENTICATION ===")
+        success, response, _ = self.run_test(
+            "Admin Login (admin@acenta.test/admin123)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "admin@acenta.test", "password": "admin123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.admin_token = response['access_token']
+            user = response.get('user', {})
+            roles = user.get('roles', [])
+            
+            if 'admin' in roles or 'super_admin' in roles:
+                self.log(f"✅ Admin login successful - roles: {roles}")
+                return True
+            else:
+                self.log(f"❌ Missing admin/super_admin role: {roles}")
+                return False
+        return False
+
+    def test_get_booking_id(self):
+        """Get a booking ID for testing"""
+        self.log("\n=== GET BOOKING ID ===")
+        success, response, _ = self.run_test(
+            "GET /api/ops/bookings?limit=1 (get booking_id)",
+            "GET",
+            "api/ops/bookings?limit=1",
+            200
+        )
+        
+        if success and response.get('items'):
+            items = response['items']
+            if items:
+                self.booking_id = items[0]['booking_id']
+                self.log(f"✅ Found booking: {self.booking_id}")
+                return True
+            else:
+                self.log(f"❌ No bookings found")
+                return False
+        return False
+
+    def test_ops_voucher_html_view(self):
+        """Test ops voucher HTML view endpoint"""
+        self.log("\n=== OPS VOUCHER HTML VIEW ===")
+        
+        if not self.booking_id:
+            self.log("❌ No booking_id available for voucher view")
+            return False
+        
+        success, response, http_response = self.run_test(
+            f"GET /api/ops/bookings/{self.booking_id}/voucher (HTML view)",
+            "GET",
+            f"api/ops/bookings/{self.booking_id}/voucher",
+            200
+        )
+        
+        if success and http_response:
+            # Check Content-Type
+            content_type = http_response.headers.get('content-type', '')
+            if 'text/html' in content_type:
+                self.log(f"✅ Content-Type: {content_type}")
+                
+                # Check HTML content
+                html_content = http_response.text
+                if html_content and len(html_content) > 100:
+                    self.log(f"✅ HTML content received ({len(html_content)} bytes)")
+                    
+                    # Check for expected content similar to B2B HTML voucher
+                    expected_elements = ['booking', 'guest', 'hotel']
+                    found_elements = []
+                    for element in expected_elements:
+                        if element.lower() in html_content.lower():
+                            found_elements.append(element)
+                    
+                    if found_elements:
+                        self.log(f"✅ HTML contains expected elements: {found_elements}")
+                        self.log(f"✅ Ops voucher HTML view endpoint working correctly")
+                        return True
+                    else:
+                        self.log(f"❌ HTML missing expected booking/guest content")
+                        return False
+                else:
+                    self.log(f"❌ HTML content too short or empty")
+                    return False
+            else:
+                self.log(f"❌ Wrong Content-Type: {content_type}")
+                return False
+        return False
+
+    def print_summary(self):
+        """Print test summary"""
+        self.log("\n" + "="*60)
+        self.log("OPS VOUCHER HTML VIEW TEST SUMMARY")
+        self.log("="*60)
+        self.log(f"Total Tests: {self.tests_run}")
+        self.log(f"✅ Passed: {self.tests_passed}")
+        self.log(f"❌ Failed: {self.tests_failed}")
+        self.log(f"Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%")
+        
+        if self.failed_tests:
+            self.log("\n❌ FAILED TESTS:")
+            for i, test in enumerate(self.failed_tests, 1):
+                self.log(f"  {i}. {test}")
+        
+        self.log("="*60)
+
+    def run_ops_voucher_view_tests(self):
+        """Run ops voucher view tests"""
+        self.log("🚀 Starting Ops Voucher HTML View Tests")
+        self.log(f"Base URL: {self.base_url}")
+        
+        # Authentication
+        if not self.test_admin_login():
+            self.log("❌ Admin login failed - stopping tests")
+            self.print_summary()
+            return 1
+
+        # Get booking ID
+        if not self.test_get_booking_id():
+            self.log("❌ Could not get booking ID - stopping tests")
+            self.print_summary()
+            return 1
+
+        # Test ops voucher HTML view
+        self.test_ops_voucher_html_view()
+
+        # Summary
+        self.print_summary()
+
+        return 0 if self.tests_failed == 0 else 1
+
 class VoucherV1Tester:
     def __init__(self, base_url="https://risk-ops-platform.preview.emergentagent.com"):
         self.base_url = base_url

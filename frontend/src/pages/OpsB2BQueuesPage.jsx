@@ -593,6 +593,7 @@ export default function OpsB2BQueuesPage() {
                           type="button"
                           className="text-[11px] text-muted-foreground underline-offset-2 hover:underline"
                           onClick={() => loadVoucherHistory(bookingDetail.booking_id)}
+                          disabled={voucherHistoryLoading}
                         >
                           Yenile
                         </button>
@@ -628,12 +629,9 @@ export default function OpsB2BQueuesPage() {
                             onClick={async () => {
                               setVoucherGenerateLoading(true);
                               try {
-                                const res = await api.post(`/ops/bookings/${bookingDetail.booking_id}/voucher/generate`);
-                                console.log("[OpsB2B] voucher generate", res.data);
+                                await api.post(`/ops/bookings/${bookingDetail.booking_id}/voucher/generate`);
                                 await loadVoucherHistory(bookingDetail.booking_id);
                                 await loadBookingDetail(bookingDetail.booking_id);
-                              } catch (err) {
-                                console.error("[OpsB2B] voucher generate error", err);
                               } finally {
                                 setVoucherGenerateLoading(false);
                               }
@@ -644,6 +642,19 @@ export default function OpsB2BQueuesPage() {
                           </Button>
                         )}
                       </div>
+
+                      {hasActiveVoucher && (
+                        <div className="flex flex-wrap items-center gap-3 text-[11px]">
+                          <a
+                            href={`/api/ops/bookings/${bookingDetail.booking_id}/voucher`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-primary hover:underline"
+                          >
+                            View HTML
+                          </a>
+                        </div>
+                      )}
 
                       {/* History list */}
                       {voucherHistory.length > 0 && (
@@ -669,7 +680,7 @@ export default function OpsB2BQueuesPage() {
                                     {v.status}
                                   </Badge>
                                 </div>
-                                <div>{formatDate(v.created_at)}</div>
+                                <div>{formatDateTime(v.created_at)}</div>
                                 <div className="truncate" title={v.created_by_email || "-"}>
                                   {v.created_by_email || "-"}
                                 </div>

@@ -85,6 +85,7 @@ function App() {
             <Route path="reports/match-risk-trends" element={<AdminMatchRiskTrendsPage />} />
             <Route path="settings/match-alerts" element={<AdminMatchAlertsPolicyPage />} />
             <Route path="settings/action-policies" element={<AdminActionPoliciesPage />} />
+            <Route path="catalog" element={<AdminCatalogPage />} />
             <Route path="approvals" element={<AdminApprovalsPage />} />
             <Route path="exports" element={<AdminExportsPage />} />
             <Route path="ops/b2b" element={<OpsB2BQueuesPage />} />

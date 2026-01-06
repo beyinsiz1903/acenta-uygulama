@@ -22,6 +22,7 @@ import AdminMatchDetailPage from "./pages/AdminMatchDetailPage";
 import AdminMatchRiskTrendsPage from "./pages/AdminMatchRiskTrendsPage";
 import AdminActionPoliciesPage from "./pages/AdminActionPoliciesPage";
 import AdminApprovalsPage from "./pages/AdminApprovalsPage";
+import AdminCatalogPage from "./pages/AdminCatalogPage";
 import OpsB2BQueuesPage from "./pages/OpsB2BQueuesPage";
 import DashboardPage from "./pages/DashboardPage";
 import ProductsPage from "./pages/ProductsPage";

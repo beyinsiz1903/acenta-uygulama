@@ -250,6 +250,25 @@ export default function OpsB2BQueuesPage() {
                     className="mt-5 w-full"
                     onClick={loadBookings}
                     disabled={bookingsLoading}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="mt-5 text-xs"
+                    onClick={() => {
+                      const now = new Date();
+                      const from = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                      // datetime-local value (no timezone info) but we feed ISO to backend
+                      const toIso = now.toISOString();
+                      const fromIso = from.toISOString();
+                      setBookingFrom(toIso.slice(0, 16));
+                      setBookingTo(now.toISOString().slice(0, 16));
+                      void loadBookings();
+                    }}
+                  >
+                    Son 7 g cn
+                  </Button>
+
                   >
                     Uygula
                   </Button>

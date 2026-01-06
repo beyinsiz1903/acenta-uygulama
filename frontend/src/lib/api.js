@@ -137,3 +137,17 @@ export async function rejectApprovalTask(id, body = {}) {
   const res = await api.post(`/admin/approval-tasks/${id}/reject`, body);
   return res.data;
 }
+
+// Demo harness: SCALE UI proof helpers
+export async function runScaleUIProof(matchId) {
+  const payload = matchId ? { match_id: matchId } : {};
+  const res = await api.post("/admin/demo/scale-ui-proof/run", payload);
+  return res.data;
+}
+
+export async function approveScaleUIProof(taskId, note) {
+  const payload = { task_id: taskId };
+  if (note) payload.note = note;
+  const res = await api.post("/admin/demo/scale-ui-proof/approve", payload);
+  return res.data;
+}

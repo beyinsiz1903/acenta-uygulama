@@ -82,6 +82,18 @@ async def ops_resend_voucher(
 
     voucher_id = str(active.get("_id"))
 
+    await append_delivery_log(
+        db,
+        organization_id=org_id,
+        booking_id=booking_id,
+        voucher_id=voucher_id,
+        to_email=payload.to_email,
+        by_email=user.get("email"),
+        message=payload.message,
+    )
+
+    # Phase 1: we only log delivery, real email sending is handled elsewhere
+    return VoucherResendResponse(voucher_id=voucher_id, status="queued")
 
 
 @router.get("/api/ops/bookings/{booking_id}/voucher", response_class=HTMLResponse)

@@ -502,42 +502,30 @@ export default function OpsB2BQueuesPage() {
                 <div className="space-y-3 text-xs">
                   {/* Tabs */}
                   <div className="flex gap-2 border-b pb-2 text-xs">
-                    <button
-                      type="button"
-                      className={`px-2 py-1 rounded-md text-xs ${
-                        bookingDetailTab === "general"
-                          ? "bg-primary text-primary-foreground"
-                          : "border bg-background text-foreground"
-                      }`}
-                      onClick={() => setBookingDetailTab("general")}
-                    >
-                      Genel
-                    </button>
-                    <button
-                      type="button"
-                      className={`px-2 py-1 rounded-md text-xs ${
-                        bookingDetailTab === "snapshots"
-                          ? "bg-primary text-primary-foreground"
-                          : "border bg-background text-foreground"
-                      }`}
-                      onClick={() => setBookingDetailTab("snapshots")}
-                    >
-                      Snapshots
-                    </button>
-                    <button
-                      type="button"
-                      className={`px-2 py-1 rounded-md text-xs ${
-                        bookingDetailTab === "voucher"
-                          ? "bg-primary text-primary-foreground"
-                          : "border bg-background text-foreground"
-                      }`}
-                      onClick={() => {
-                        setBookingDetailTab("voucher");
-                        void loadVoucherHistory(bookingDetail.booking_id);
-                      }}
-                    >
-                      Voucher
-                    </button>
+                    {[
+                      ["general", "Genel"],
+                      ["snapshots", "Snapshots"],
+                      ["voucher", "Voucher"],
+                      ["timeline", "Timeline"],
+                    ].map(([key, label]) => (
+                      <button
+                        key={key}
+                        type="button"
+                        className={`px-2 py-1 rounded-md text-xs ${
+                          bookingDetailTab === key
+                            ? "bg-primary text-primary-foreground"
+                            : "border bg-background text-foreground"
+                        }`}
+                        onClick={() => {
+                          setBookingDetailTab(key);
+                          if (!bookingDetail?.booking_id) return;
+                          if (key === "voucher") void loadVoucherHistory(bookingDetail.booking_id);
+                          if (key === "timeline") void loadBookingEvents(bookingDetail.booking_id);
+                        }}
+                      >
+                        {label}
+                      </button>
+                    ))}
                   </div>
 
                   {/* Genel tabı */}

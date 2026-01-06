@@ -1788,17 +1788,21 @@ class ExecutiveSummaryPDFTester:
                 
                 if previous_hrr > 0:
                     hrr_pct_change = (hrr_abs_change / previous_hrr) * 100
+                    hrr_pct_str = f"{hrr_pct_change:.1f}%"
                 else:
                     hrr_pct_change = None
+                    hrr_pct_str = "n/a"
                 
                 if previous_vsa > 0:
                     vsa_pct_change = (vsa_abs_change / previous_vsa) * 100
+                    vsa_pct_str = f"{vsa_pct_change:.1f}%"
                 else:
                     vsa_pct_change = None
+                    vsa_pct_str = "n/a"
                 
                 self.log(f"✅ Expected trend calculations:")
-                self.log(f"   HRR change: {hrr_abs_change:.3f} ({hrr_pct_change:.1f}% if not None)")
-                self.log(f"   VSA change: {vsa_abs_change:.3f} ({vsa_pct_change:.1f}% if not None)")
+                self.log(f"   HRR change: {hrr_abs_change:.3f} ({hrr_pct_str})")
+                self.log(f"   VSA change: {vsa_abs_change:.3f} ({vsa_pct_str})")
                 
                 return True
             elif len(items) == 1:

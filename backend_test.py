@@ -1653,6 +1653,20 @@ class OpsVoucherViewTester:
             self.log("❌ No booking_id available for voucher view")
             return False
         
+        # First, generate a voucher for the booking
+        success, response, _ = self.run_test(
+            f"POST /api/ops/bookings/{self.booking_id}/voucher/generate (generate voucher first)",
+            "POST",
+            f"api/ops/bookings/{self.booking_id}/voucher/generate",
+            200
+        )
+        
+        if success:
+            self.log(f"✅ Voucher generated successfully")
+        else:
+            self.log("❌ Failed to generate voucher - trying to view existing voucher anyway")
+        
+        # Now test the HTML view endpoint
         success, response, http_response = self.run_test(
             f"GET /api/ops/bookings/{self.booking_id}/voucher (HTML view)",
             "GET",

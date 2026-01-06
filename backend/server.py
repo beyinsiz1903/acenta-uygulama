@@ -124,6 +124,8 @@ app.include_router(exports_public_router)
 app.include_router(admin_reports_router)
 app.include_router(demo_scale_ui_proof_router)
 app.include_router(b2b_quotes_router)
+app.include_router(b2b_bookings_router)
+app.include_router(b2b_cancel_router)
 
 
 @app.get("/api/health")

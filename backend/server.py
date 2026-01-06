@@ -55,6 +55,7 @@ from app.routers.b2b_bookings import router as b2b_bookings_router
 from app.routers.b2b_cancel import router as b2b_cancel_router
 from app.routers.ops_b2b import router as ops_b2b_router
 from app.routers.vouchers import router as vouchers_router
+from app.routers.b2b_bookings_list import router as b2b_bookings_list_router
 from app.routers.ops_booking_events import router as ops_booking_events_router
 from app.email_worker import email_dispatch_loop
 from app.integration_sync_worker import integration_sync_loop

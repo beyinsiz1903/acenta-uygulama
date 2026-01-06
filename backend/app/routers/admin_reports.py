@@ -93,7 +93,7 @@ def _render_match_risk_pdf_html(context: Dict[str, Any]) -> str:
     )
 
   if not context.get("has_snapshot"):
-    return f"""<html><head><meta charset='utf-8' /></head><body>
+    return """<html><head><meta charset='utf-8' /></head><body>
 <h1>Match Risk – Executive Summary</h1>
 <p>Bu organizasyon için henüz risk snapshot'ı oluşturulmadı.</p>
 </body></html>"""

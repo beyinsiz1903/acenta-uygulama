@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { api, apiErrorMessage } from "../lib/api";
 import { useToast } from "../hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Button } from "../components/ui/button";
 
 function formatPercent(value) {
   if (value == null || Number.isNaN(Number(value))) return "—";

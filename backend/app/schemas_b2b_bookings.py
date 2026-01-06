@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime
 from typing import List, Optional, Literal
 from pydantic import BaseModel, EmailStr, Field
 
@@ -28,3 +29,19 @@ class BookingCreateResponse(BaseModel):
     booking_id: str
     status: BookingStatus
     voucher_status: Literal["pending", "ready"] = "pending"
+
+
+class BookingListItem(BaseModel):
+    booking_id: str
+    status: str
+    created_at: datetime
+    currency: Optional[str] = None
+    amount_sell: Optional[float] = None
+    check_in: Optional[str] = None
+    check_out: Optional[str] = None
+    primary_guest_name: Optional[str] = None
+    product_name: Optional[str] = None
+
+
+class BookingListResponse(BaseModel):
+    items: List[BookingListItem]

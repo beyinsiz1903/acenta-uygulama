@@ -1539,6 +1539,319 @@ class RiskSnapshotsTrendTester:
         return 0 if self.tests_failed == 0 else 1
 
 
+class GlobalErrorHandlerIdempotencyTester:
+    def __init__(self, base_url="https://riskdelta.preview.emergentagent.com"):
+        self.base_url = base_url
+        self.admin_token = None
+        self.tests_run = 0
+        self.tests_passed = 0
+        self.tests_failed = 0
+        self.failed_tests = []
+
+    def log(self, msg):
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}")
+
+    def run_test(self, name, method, endpoint, expected_status, data=None, headers_override=None):
+        """Run a single API test"""
+        url = f"{self.base_url}/{endpoint}"
+        headers = headers_override or {'Content-Type': 'application/json'}
+        if self.admin_token and not headers_override:
+            headers['Authorization'] = f'Bearer {self.admin_token}'
+
+        self.tests_run += 1
+        self.log(f"🔍 Test #{self.tests_run}: {name}")
+        
+        try:
+            if method == 'GET':
+                response = requests.get(url, headers=headers, timeout=10)
+            elif method == 'POST':
+                response = requests.post(url, json=data, headers=headers, timeout=10)
+            elif method == 'PUT':
+                response = requests.put(url, json=data, headers=headers, timeout=10)
+            elif method == 'DELETE':
+                response = requests.delete(url, headers=headers, timeout=10)
+            else:
+                raise ValueError(f"Unsupported method: {method}")
+
+            success = response.status_code == expected_status
+            if success:
+                self.tests_passed += 1
+                self.log(f"✅ PASSED - Status: {response.status_code}")
+                try:
+                    return True, response.json() if response.content else {}
+                except:
+                    return True, {}
+            else:
+                self.tests_failed += 1
+                self.failed_tests.append(f"{name} - Expected {expected_status}, got {response.status_code}")
+                self.log(f"❌ FAILED - Expected {expected_status}, got {response.status_code}")
+                try:
+                    self.log(f"   Response: {response.text[:200]}")
+                except:
+                    pass
+                return False, {}
+
+        except Exception as e:
+            self.tests_failed += 1
+            self.failed_tests.append(f"{name} - Error: {str(e)}")
+            self.log(f"❌ FAILED - Error: {str(e)}")
+            return False, {}
+
+    def test_admin_login(self):
+        """Test admin login"""
+        self.log("\n=== AUTHENTICATION ===")
+        success, response = self.run_test(
+            "Admin Login (admin@acenta.test/admin123)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "admin@acenta.test", "password": "admin123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.admin_token = response['access_token']
+            user = response.get('user', {})
+            roles = user.get('roles', [])
+            
+            if 'admin' in roles or 'super_admin' in roles:
+                self.log(f"✅ Admin login successful - roles: {roles}")
+                return True
+            else:
+                self.log(f"❌ Missing admin/super_admin role: {roles}")
+                return False
+        return False
+
+    def test_error_handler_404(self):
+        """Test 404 error handler with standard error body"""
+        self.log("\n=== 1) ERROR HANDLER - 404 NOT FOUND ===")
+        
+        success, response = self.run_test(
+            "GET /api/admin/does-not-exist (expect 404)",
+            "GET",
+            "api/admin/does-not-exist",
+            404
+        )
+        
+        if success:
+            # Check error response structure
+            if 'error' in response:
+                error = response['error']
+                required_fields = ['code', 'message', 'details']
+                missing_fields = [field for field in required_fields if field not in error]
+                
+                if missing_fields:
+                    self.log(f"❌ Missing error fields: {missing_fields}")
+                    return False
+                
+                # Check specific values
+                if error.get('code') == 'not_found':
+                    self.log(f"✅ Correct 404 error structure:")
+                    self.log(f"   - code: {error.get('code')}")
+                    self.log(f"   - message: {error.get('message')}")
+                    self.log(f"   - details: {error.get('details')}")
+                    return True
+                else:
+                    self.log(f"❌ Expected code='not_found', got '{error.get('code')}'")
+                    return False
+            else:
+                self.log(f"❌ Missing 'error' field in response: {response}")
+                return False
+        return False
+
+    def test_error_handler_422(self):
+        """Test 422 validation error handler with standard error body"""
+        self.log("\n=== 2) ERROR HANDLER - 422 VALIDATION ERROR ===")
+        
+        # Send invalid payload to login endpoint
+        success, response = self.run_test(
+            "POST /api/auth/login with invalid payload (expect 422)",
+            "POST",
+            "api/auth/login",
+            422,
+            data={"invalid_field": "test"},  # Missing required email/password
+            headers_override={'Content-Type': 'application/json'}
+        )
+        
+        if success:
+            # Check error response structure
+            if 'error' in response:
+                error = response['error']
+                required_fields = ['code', 'message', 'details']
+                missing_fields = [field for field in required_fields if field not in error]
+                
+                if missing_fields:
+                    self.log(f"❌ Missing error fields: {missing_fields}")
+                    return False
+                
+                # Check specific values for validation error
+                if (error.get('code') == 'validation_error' and 
+                    error.get('message') == 'Request validation failed' and
+                    'errors' in error.get('details', {})):
+                    
+                    errors_list = error['details']['errors']
+                    self.log(f"✅ Correct 422 validation error structure:")
+                    self.log(f"   - code: {error.get('code')}")
+                    self.log(f"   - message: {error.get('message')}")
+                    self.log(f"   - details.errors: {len(errors_list)} validation errors")
+                    return True
+                else:
+                    self.log(f"❌ Incorrect validation error structure:")
+                    self.log(f"   - code: {error.get('code')}")
+                    self.log(f"   - message: {error.get('message')}")
+                    self.log(f"   - details: {error.get('details')}")
+                    return False
+            else:
+                self.log(f"❌ Missing 'error' field in response: {response}")
+                return False
+        return False
+
+    def test_idempotency_imports(self):
+        """Test idempotency module imports using Python REPL"""
+        self.log("\n=== 3) IDEMPOTENCY IMPORTS TEST ===")
+        
+        try:
+            # Test imports
+            from app.repos_idempotency import IdempotencyRepo, ensure_idempotency_indexes
+            from app.idempotency_hash import compute_request_hash
+            
+            self.log(f"✅ Successfully imported IdempotencyRepo")
+            self.log(f"✅ Successfully imported ensure_idempotency_indexes")
+            self.log(f"✅ Successfully imported compute_request_hash")
+            
+            # Test compute_request_hash deterministic behavior
+            hash1 = compute_request_hash("POST", "/test", {"a": 1})
+            hash2 = compute_request_hash("POST", "/test", {"a": 1})
+            
+            if hash1 == hash2:
+                self.log(f"✅ compute_request_hash is deterministic:")
+                self.log(f"   - Hash 1: {hash1}")
+                self.log(f"   - Hash 2: {hash2}")
+                self.log(f"   - Match: {hash1 == hash2}")
+                
+                # Test different inputs produce different hashes
+                hash3 = compute_request_hash("POST", "/test", {"a": 2})
+                if hash1 != hash3:
+                    self.log(f"✅ Different inputs produce different hashes:")
+                    self.log(f"   - Original: {hash1}")
+                    self.log(f"   - Different: {hash3}")
+                    
+                    self.tests_passed += 1
+                    return True
+                else:
+                    self.log(f"❌ Different inputs produced same hash")
+                    self.tests_failed += 1
+                    return False
+            else:
+                self.log(f"❌ compute_request_hash not deterministic: {hash1} != {hash2}")
+                self.tests_failed += 1
+                return False
+                
+        except ImportError as e:
+            self.log(f"❌ Import error: {str(e)}")
+            self.tests_failed += 1
+            self.failed_tests.append(f"Idempotency imports - Import error: {str(e)}")
+            return False
+        except Exception as e:
+            self.log(f"❌ Unexpected error: {str(e)}")
+            self.tests_failed += 1
+            self.failed_tests.append(f"Idempotency imports - Error: {str(e)}")
+            return False
+
+    def test_idempotency_indexes(self):
+        """Test idempotency index creation"""
+        self.log("\n=== 4) IDEMPOTENCY INDEXES TEST ===")
+        
+        try:
+            # Import required modules
+            from app.repos_idempotency import ensure_idempotency_indexes
+            from app.db import get_db
+            import asyncio
+            
+            # Get database instance
+            async def test_indexes():
+                db = await get_db()
+                
+                # Call ensure_idempotency_indexes (should be idempotent)
+                await ensure_idempotency_indexes(db)
+                self.log(f"✅ First call to ensure_idempotency_indexes successful")
+                
+                # Call again to test idempotency
+                await ensure_idempotency_indexes(db)
+                self.log(f"✅ Second call to ensure_idempotency_indexes successful (idempotent)")
+                
+                # Check if indexes exist
+                indexes = await db.idempotency_keys.list_indexes().to_list(None)
+                index_names = [idx['name'] for idx in indexes]
+                
+                expected_indexes = ['uniq_idem_key', 'ttl_idem_expires']
+                missing_indexes = [idx for idx in expected_indexes if idx not in index_names]
+                
+                if missing_indexes:
+                    self.log(f"❌ Missing indexes: {missing_indexes}")
+                    return False
+                else:
+                    self.log(f"✅ All required indexes present: {expected_indexes}")
+                    return True
+            
+            # Run async test
+            result = asyncio.run(test_indexes())
+            
+            if result:
+                self.tests_passed += 1
+                return True
+            else:
+                self.tests_failed += 1
+                self.failed_tests.append("Idempotency indexes - Missing required indexes")
+                return False
+                
+        except Exception as e:
+            self.log(f"❌ Error testing indexes: {str(e)}")
+            self.tests_failed += 1
+            self.failed_tests.append(f"Idempotency indexes - Error: {str(e)}")
+            return False
+
+    def print_summary(self):
+        """Print test summary"""
+        self.log("\n" + "="*60)
+        self.log("GLOBAL ERROR HANDLER + IDEMPOTENCY TEST SUMMARY")
+        self.log("="*60)
+        self.log(f"Total Tests: {self.tests_run}")
+        self.log(f"✅ Passed: {self.tests_passed}")
+        self.log(f"❌ Failed: {self.tests_failed}")
+        self.log(f"Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%")
+        
+        if self.failed_tests:
+            self.log("\n❌ FAILED TESTS:")
+            for i, test in enumerate(self.failed_tests, 1):
+                self.log(f"  {i}. {test}")
+        
+        self.log("="*60)
+
+    def run_error_handler_idempotency_tests(self):
+        """Run all error handler and idempotency tests"""
+        self.log("🚀 Starting Global Error Handler + Idempotency Infrastructure Tests")
+        self.log(f"Base URL: {self.base_url}")
+        
+        # Authentication
+        if not self.test_admin_login():
+            self.log("❌ Admin login failed - stopping tests")
+            self.print_summary()
+            return 1
+
+        # 1) Error handler tests
+        self.test_error_handler_404()
+        self.test_error_handler_422()
+
+        # 2) Idempotency infrastructure tests
+        self.test_idempotency_imports()
+        self.test_idempotency_indexes()
+
+        # Summary
+        self.print_summary()
+
+        return 0 if self.tests_failed == 0 else 1
+
+
 class ScaleUIProofHarnessTester:
     def __init__(self, base_url="https://riskdelta.preview.emergentagent.com"):
         self.base_url = base_url

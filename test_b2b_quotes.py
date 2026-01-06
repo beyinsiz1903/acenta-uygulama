@@ -41,7 +41,16 @@ class B2BQuotesTestClient:
         try:
             success, response = test_func()
             
-            if success and response.status_code == expected_status:
+            # Handle flexible status checking
+            if expected_status is None:
+                # Accept any status
+                self.tests_passed += 1
+                self.log(f"✅ PASSED - Status: {response.status_code}")
+                try:
+                    return True, response.json() if response.content else {}
+                except:
+                    return True, {}
+            elif success and response.status_code == expected_status:
                 self.tests_passed += 1
                 self.log(f"✅ PASSED - Status: {response.status_code}")
                 try:

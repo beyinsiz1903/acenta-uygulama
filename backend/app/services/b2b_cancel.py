@@ -77,4 +77,14 @@ class B2BCancelService:
         res = await self.cases.insert_one(case_doc)
         case_id = str(res.inserted_id)
 
+        # Emit cancel requested event for timeline
+        actor = {"role": "agency_user", "email": user_email, "agency_id": agency_id}
+        meta = {
+          "case_id": case_id,
+          "reason": cancel_req.reason,
+          "requested_refund_amount": cancel_req.requested_refund_amount,
+          "requested_refund_currency": cancel_req.requested_refund_currency,
+        }
+        await emit_event(self.db, organization_id, booking_id, "CANCEL_REQUESTED", actor=actor, meta=meta)
+
         return CancelRequestResponse(case_id=case_id, status="open")

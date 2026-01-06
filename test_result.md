@@ -183,6 +183,18 @@
         agent: "testing"
         comment: "✅ KABUL KRİTERLERİ BACKEND TEST COMPLETE - All 3 test scenarios passed (100% success rate). COMPREHENSIVE VERIFICATION COMPLETED: A) Authentication: Admin login successful (admin@acenta.test/admin123) with super_admin role verification. B) TEST 1 - High Risk + repeat_desc Sort: GET /api/admin/matches?days=7&min_total=1&include_action=1&only_high_risk=1&sort=repeat_desc working correctly - returned 1 item with high_risk=true, repeat_not_arrived_7 descending order verified [2], tie-breaker logic confirmed working (cancel_rate desc for same repeat values), output provided: Item 1: id=riskdelta__1ea289b7-621b-49d8-be9c-c21a6bb44f47, repeat_not_arrived_7=2, cancel_rate=0.333, total_bookings=6, high_risk=true, high_risk_reasons=['repeat']. C) TEST 2 - High Risk First Sort: GET /api/admin/matches?days=30&min_total=1&include_action=1&sort=high_risk_first working correctly - returned 6 items with proper high_risk=true items before high_risk=false items, no high_risk=true found after high_risk=false, output provided for first 6 items showing proper segregation (2 high-risk items at top, 4 non-high-risk items below). All kabul kriterleri backend functionality production-ready with proper sorting algorithms and risk classification working as specified."
 
+  - task: "Global error handler + idempotency altyapısı smoke test"
+    implemented: true
+    working: true
+    file: "/app/backend/app/exception_handlers.py, /app/backend/app/repos_idempotency.py, /app/backend/app/idempotency_hash.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ GLOBAL ERROR HANDLER + IDEMPOTENCY SMOKE TEST COMPLETE - All 5 test scenarios passed (100% success rate). COMPREHENSIVE FUNCTIONALITY VERIFIED: A) Authentication: Admin login successful (admin@acenta.test/admin123) with super_admin role verification. B) ERROR HANDLER TESTS: 1) 404 Not Found: GET /api/admin/does-not-exist returns proper 404 with standard error body structure (error.code='not_found', error.message='Not Found', error.details={}), 2) 422 Validation Error: POST /api/auth/login with invalid payload returns proper 422 with standard error body structure (error.code='validation_error', error.message='Request validation failed', error.details.errors contains 2 validation errors). C) IDEMPOTENCY INFRASTRUCTURE TESTS: 3) Module imports working correctly - repos_idempotency.IdempotencyRepo, ensure_idempotency_indexes, and idempotency_hash.compute_request_hash all importable and functional, 4) Hash function deterministic behavior verified - compute_request_hash('POST', '/test', {'a': 1}) produces identical hashes on multiple calls (aa2c420b5161678d7d87dc1c54a5c5a0847c734df1933f0f2dda87482add5712), different inputs produce different hashes as expected, 5) Database indexes verified - ensure_idempotency_indexes creates required indexes (uniq_idem_key, ttl_idem_expires) idempotently without errors, all indexes present in idempotency_keys collection. ADDITIONAL VERIFICATION: Backend health check and admin endpoints working correctly, confirming idempotency infrastructure is properly integrated and ready for use. All global error handling and idempotency infrastructure production-ready with proper error response formatting and deterministic hash computation."
+
   - task: "Kabul Kriterleri Backend Sorting Verification"
     implemented: true
     working: true

@@ -99,10 +99,14 @@ function ProductForm({ value, onChange, onSave, saving, error }) {
   );
 }
 
-function VersionsPanel({ productId }) {
+function VersionsPanel({ productId, productStatus }) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [roomTypes, setRoomTypes] = useState([]);
+  const [ratePlans, setRatePlans] = useState([]);
+  const [selectedRoomTypeIds, setSelectedRoomTypeIds] = useState([]);
+  const [selectedRatePlanIds, setSelectedRatePlanIds] = useState([]);
 
   const [newJson, setNewJson] = useState(
     '{\n  "description": {"tr": "", "en": ""},\n  "amenities": [],\n  "room_type_ids": [],\n  "rate_plan_ids": []\n}'
@@ -113,8 +117,14 @@ function VersionsPanel({ productId }) {
     setLoading(true);
     setError("");
     try {
-      const r = await api.get(`/admin/catalog/products/${productId}/versions`);
-      setItems(r.data.items || []);
+      const [verRes, roomRes, rateRes] = await Promise.all([
+        api.get(`/admin/catalog/products/${productId}/versions`),
+        api.get(`/admin/catalog/room-types`, { params: { product_id: productId } }),
+        api.get(`/admin/catalog/rate-plans`, { params: { product_id: productId } }),
+      ]);
+      setItems(verRes.data.items || []);
+      setRoomTypes(roomRes.data || []);
+      setRatePlans(rateRes.data || []);
     } catch (err) {
       setError(apiErrorMessage(err));
     } finally {
@@ -127,10 +137,24 @@ function VersionsPanel({ productId }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [productId]);
 
+  const toggleRoomType = (id) => {
+    setSelectedRoomTypeIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
+
+  const toggleRatePlan = (id) => {
+    setSelectedRatePlanIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
+
   const createDraft = async () => {
     setError("");
     try {
       const content = JSON.parse(newJson || "{}");
+      content.room_type_ids = selectedRoomTypeIds;
+      content.rate_plan_ids = selectedRatePlanIds;
       await api.post(`/admin/catalog/products/${productId}/versions`, { content });
       await load();
     } catch (err) {

@@ -44,6 +44,7 @@ export default function AdminMatchesPage() {
   const [eventsShowOperational, setEventsShowOperational] = useState(false);
   const [eventsReasonFilter, setEventsReasonFilter] = useState("");
   const [copiedBookingId, setCopiedBookingId] = useState(null);
+  const [unblockRequest, setUnblockRequest] = useState({ loading: false, alreadyPending: false, taskId: null });
 
   const [selectedMatch, setSelectedMatch] = useState(null);
   const location = useLocation();
@@ -473,13 +474,45 @@ export default function AdminMatchesPage() {
                     This match is <span className="font-semibold">blocked</span>. New bookings will be rejected (MATCH_BLOCKED).
                   </span>
                   <div className="flex items-center gap-2">
+                    {unblockRequest.alreadyPending && (
+                      <span
+                        className="text-[11px] text-muted-foreground"
+                        data-testid="match-drawer-request-unblock-pending"
+                      >
+                        Unblock request already pending approval.
+                      </span>
+                    )}
                     <Button
                       type="button"
                       size="sm"
                       variant="destructive"
                       data-testid="match-drawer-request-unblock"
+                      disabled={unblockRequest.loading || unblockRequest.alreadyPending || !!unblockRequest.taskId}
+                      onClick={async () => {
+                        if (!selectedMatch) return;
+                        try {
+                          setUnblockRequest((prev) => ({ ...prev, loading: true }));
+                          const resp = await api.post(`/admin/matches/${selectedMatch.id}/request-unblock`);
+                          const already = !!resp.data?.already_pending;
+                          const taskId = resp.data?.task_id || null;
+                          setUnblockRequest({ loading: false, alreadyPending: already, taskId });
+                          toast({
+                            title: already ? "Unblock request already pending" : "Unblock request created",
+                            description: already
+                              ? "There is already a pending approval task for this match."
+                              : "A new approval task was created in the Approvals queue.",
+                          });
+                        } catch (e) {
+                          setUnblockRequest((prev) => ({ ...prev, loading: false }));
+                          toast({
+                            title: "Failed to request unblock",
+                            description: apiErrorMessage(e),
+                            variant: "destructive",
+                          });
+                        }
+                      }}
                     >
-                      Request Unblock
+                      {unblockRequest.loading ? "Requesting..." : "Request Unblock"}
                     </Button>
                   </div>
                 </div>

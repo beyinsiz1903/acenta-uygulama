@@ -31,6 +31,10 @@ export default function AdminApprovalsPage() {
   const [rowLoading, setRowLoading] = useState({});
   const [error, setError] = useState("");
 
+  const [proof, setProof] = useState(null);
+  const [proofLoading, setProofLoading] = useState(false);
+  const [approveProofLoading, setApproveProofLoading] = useState(false);
+
   async function load() {
     setLoading(true);
     setError("");

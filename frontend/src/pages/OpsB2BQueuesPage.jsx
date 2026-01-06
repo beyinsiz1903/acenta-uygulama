@@ -135,6 +135,16 @@ export default function OpsB2BQueuesPage() {
   const [bookingEventsError, setBookingEventsError] = useState("");
   const [expandedEventIds, setExpandedEventIds] = useState(() => new Set());
 
+  function toggleEventExpand(key) {
+    setExpandedEventIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }
+
+
   // Cases state
   const [cases, setCases] = useState([]);
   const [casesLoading, setCasesLoading] = useState(false);
@@ -211,6 +221,22 @@ export default function OpsB2BQueuesPage() {
       setVoucherHistory([]);
     } finally {
       setVoucherHistoryLoading(false);
+    }
+  }
+
+  async function loadBookingEvents(id) {
+    if (!id) return;
+    setBookingEventsLoading(true);
+    setBookingEventsError("");
+    try {
+      const res = await api.get(`/ops/bookings/${id}/events?limit=200`);
+      setBookingEvents(res.data?.items || []);
+    } catch (err) {
+      console.error("[OpsB2B] loadBookingEvents error:", err);
+      setBookingEventsError(apiErrorMessage(err));
+      setBookingEvents([]);
+    } finally {
+      setBookingEventsLoading(false);
     }
   }
 

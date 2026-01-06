@@ -119,19 +119,6 @@ async def ops_view_voucher_html(
     html = await render_voucher_html(db, org_id, booking_id)
     return HTMLResponse(content=html)
 
-    await append_delivery_log(
-        db,
-        organization_id=org_id,
-        booking_id=booking_id,
-        voucher_id=voucher_id,
-        to_email=payload.to_email,
-        by_email=user.get("email"),
-        message=payload.message,
-    )
-
-    # Phase 1: we only log delivery, real email sending is handled elsewhere
-    return VoucherResendResponse(voucher_id=voucher_id, status="queued")
-
 
 @router.get("/api/b2b/bookings/{booking_id}/voucher", response_class=HTMLResponse)
 async def b2b_view_voucher_html(

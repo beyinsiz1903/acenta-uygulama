@@ -292,8 +292,11 @@ export default function OpsB2BQueuesPage() {
                         <div className="font-mono truncate" title={b.booking_id}>
                           {b.booking_id}
                         </div>
-                        <div className="truncate" title={b.agency_id || "-"}>
-                          {b.agency_id || "-"}
+                        <div
+                          className="truncate"
+                          title={b.agency_name || b.agency_id || "-"}
+                        >
+                          {b.agency_name || b.agency_id || "-"}
                         </div>
                         <div>
                           <StatusBadge status={b.status} />

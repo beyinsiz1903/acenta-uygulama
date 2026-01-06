@@ -1667,18 +1667,32 @@ class OpsVoucherViewTester:
             self.log("❌ No booking_id available for voucher view")
             return False
         
-        # First, generate a voucher for the booking
+        # Check if booking already has a voucher (VOUCHERED status)
         success, response, _ = self.run_test(
-            f"POST /api/ops/bookings/{self.booking_id}/voucher/generate (generate voucher first)",
-            "POST",
-            f"api/ops/bookings/{self.booking_id}/voucher/generate",
+            f"GET /api/ops/bookings/{self.booking_id} (check booking status)",
+            "GET",
+            f"api/ops/bookings/{self.booking_id}",
             200
         )
         
+        booking_status = None
         if success:
-            self.log(f"✅ Voucher generated successfully")
-        else:
-            self.log("❌ Failed to generate voucher - trying to view existing voucher anyway")
+            booking_status = response.get('status')
+            self.log(f"✅ Booking status: {booking_status}")
+        
+        # If not VOUCHERED, try to generate a voucher
+        if booking_status != 'VOUCHERED':
+            success, response, _ = self.run_test(
+                f"POST /api/ops/bookings/{self.booking_id}/voucher/generate (generate voucher)",
+                "POST",
+                f"api/ops/bookings/{self.booking_id}/voucher/generate",
+                200
+            )
+            
+            if success:
+                self.log(f"✅ Voucher generated successfully")
+            else:
+                self.log("⚠️ Failed to generate voucher - will test with existing voucher if any")
         
         # Now test the HTML view endpoint
         success, response, http_response = self.run_test(
@@ -1719,7 +1733,9 @@ class OpsVoucherViewTester:
             else:
                 self.log(f"❌ Wrong Content-Type: {content_type}")
                 return False
-        return False
+        else:
+            self.log(f"❌ Ops voucher HTML view endpoint failed")
+            return False
 
     def print_summary(self):
         """Print test summary"""

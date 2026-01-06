@@ -467,6 +467,24 @@ export default function AdminMatchesPage() {
             </DrawerHeader>
 
             <div className="px-4 pb-4 space-y-3">
+              {selectedMatch?.action_status === "blocked" && (
+                <div className="flex items-center justify-between gap-3 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs">
+                  <span>
+                    This match is <span className="font-semibold">blocked</span>. New bookings will be rejected (MATCH_BLOCKED).
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="destructive"
+                      data-testid="match-drawer-request-unblock"
+                    >
+                      Request Unblock
+                    </Button>
+                  </div>
+                </div>
+              )}
+
               {eventsLoading && (
                 <p
                   className="text-sm text-muted-foreground"

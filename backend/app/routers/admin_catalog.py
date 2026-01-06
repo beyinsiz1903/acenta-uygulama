@@ -88,13 +88,13 @@ async def list_products(
         out.append(
             ProductListItem(
                 product_id=pid,
-                type=it["type"],
-                code=it["code"],
-                status=it["status"],
+                type=it.get("type") or "hotel",
+                code=it.get("code") or "",
+                status=it.get("status") or "inactive",
                 name_tr=(it.get("name") or {}).get("tr"),
                 name_en=(it.get("name") or {}).get("en"),
-                created_at=it["created_at"],
-                updated_at=it["updated_at"],
+                created_at=it.get("created_at"),
+                updated_at=it.get("updated_at") or it.get("created_at"),
                 published_version=published_map.get(pid),
             )
         )

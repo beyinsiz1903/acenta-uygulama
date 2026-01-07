@@ -3915,7 +3915,9 @@ class FinancePhase2A5SettlementPaidTester:
             # Check ledger_entries
             entries = list(db.ledger_entries.find({
                 "organization_id": self.organization_id,
-                "posting_id": payment_posting_id
+                "source.type": "settlement",
+                "source.id": self.settlement_id,
+                "event": "SETTLEMENT_PAID"
             }))
             
             if len(entries) != 2:

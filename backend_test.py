@@ -3486,38 +3486,7 @@ class AdminCatalogEpicTester:
 
 
 class FinancePhase2A3Tester:
-            if (response.get('version') == 1 and 
-                response.get('status') == 'draft'):
-                self.log(f"✅ Version created successfully:")
-                self.log(f"   - version_id: {self.version_id}")
-                self.log(f"   - version: {response.get('version')}")
-                self.log(f"   - status: {response.get('status')}")
-            else:
-                self.log(f"❌ Version creation response validation failed")
-                return False
-        else:
-            self.log(f"❌ Version creation failed")
-            return False
-        
-        # List versions
-        success, response, _ = self.run_test(
-            "List Product Versions",
-            "GET",
-            f"api/admin/catalog/products/{self.product_id}/versions",
-            200
-        )
-        
-        if success:
-            items = response.get('items', [])
-            if len(items) >= 1:
-                first_version = items[0]
-                if (first_version.get('version') == 1 and 
-                    first_version.get('status') == 'draft'):
-                    self.log(f"✅ Version found in list:")
-                    self.log(f"   - version: {first_version.get('version')}")
-                    self.log(f"   - status: {first_version.get('status')}")
-                    return True
-                else:
+    def __init__(self, base_url="https://b0bfe4ce-8f24-4521-ab52-69a32cde2bba.preview.emergentagent.com"):
                     self.log(f"❌ Version validation failed in list")
                     return False
             else:

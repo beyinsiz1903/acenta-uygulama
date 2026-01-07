@@ -389,6 +389,9 @@ async def create_rate_plan(
         "payment_type": payload.payment_type,
         "min_stay": payload.min_stay,
         "max_stay": payload.max_stay,
+        "currency": payload.currency,
+        "base_net_price": payload.base_net_price,
+        "status": payload.status,
         "created_at": now,
         "updated_at": now,
     }

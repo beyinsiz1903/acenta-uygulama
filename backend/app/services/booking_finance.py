@@ -224,7 +224,10 @@ class BookingFinanceService:
         agency_code = f"AGENCY_AR_{agency_id}_{currency}"
         agency_filter = {
             "organization_id": organization_id,
+            "type": "agency",
+            "owner_id": agency_id,
             "code": agency_code,
+            "currency": currency,
         }
         now = now_utc()
         await self.db.finance_accounts.update_one(
@@ -250,7 +253,10 @@ class BookingFinanceService:
         platform_code = f"PLATFORM_AR_{currency}"
         platform_filter = {
             "organization_id": organization_id,
+            "type": "platform",
+            "owner_id": "platform",
             "code": platform_code,
+            "currency": currency,
         }
         now = now_utc()
         await self.db.finance_accounts.update_one(

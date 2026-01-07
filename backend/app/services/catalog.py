@@ -44,6 +44,17 @@ async def create_product(db, actor: dict[str, Any], payload: dict) -> dict:
     if not default_currency or len(default_currency) != 3:
         raise AppError(422, "validation_error", "Default currency must be 3-letter code", {"field": "default_currency"})
 
+    # Hotel-specific required fields (service-level guard)
+    if payload["type"] == "hotel":
+        loc = payload.get("location") or {}
+        if not loc.get("city") or not loc.get("country"):
+            raise AppError(
+                422,
+                "validation_error",
+                "Hotel products require location.city and location.country",
+                {"field": "location"},
+            )
+
     doc = {
         "organization_id": org_id,
         "type": payload["type"],
@@ -52,6 +63,7 @@ async def create_product(db, actor: dict[str, Any], payload: dict) -> dict:
         "name_search": _name_search(payload.get("name")),
         "status": status,
         "default_currency": default_currency,
+        "location": payload.get("location"),
         "created_at": now,
         "updated_at": now,
     }

@@ -43,15 +43,7 @@ def test_phase_2a_3():
     r = requests.get(f"{BASE_URL}/api/health")
     assert r.status_code == 200
 
-    supplier_id = "phase2a3_supplier"
-    if not db.suppliers.find_one({"_id": supplier_id}):
-        db.suppliers.insert_one(
-            {
-                "_id": supplier_id,
-                "organization_id": org_id,
-                "name": "Test Supplier Phase 2A.3",
-                "status": "active",
-            }
+    # supplier_id and cleanup are defined below (isolated per test run)
     # Generate isolated supplier_id for this test run (to avoid collisions)
     supplier_id = f"phase2a3_{uuid4().hex[:8]}"
 

@@ -37,7 +37,7 @@ async def test_phase_1_3():
     assert r.status_code == 200, f"Login failed: {r.status_code}"
     data = r.json()
     token = data["access_token"]
-    org_id = data["organization_id"]
+    org_id = data["user"]["organization_id"]
     headers = {"Authorization": f"Bearer {token}"}
     print(f"   ✅ Admin login successful (org: {org_id})\n")
     

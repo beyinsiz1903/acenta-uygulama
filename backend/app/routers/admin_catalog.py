@@ -410,6 +410,9 @@ async def create_rate_plan(
         payment_type=doc["payment_type"],
         min_stay=doc["min_stay"],
         max_stay=doc["max_stay"],
+        currency=doc["currency"],
+        base_net_price=doc["base_net_price"],
+        status=doc["status"],
     )
 
 

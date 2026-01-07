@@ -142,9 +142,11 @@ class AdminCatalogEpicTester:
         """1) Cancellation policies test"""
         self.log("\n=== 1) CANCELLATION POLICIES TEST ===")
         
-        # Create cancellation policy
+        # Create cancellation policy with unique code
+        import time
+        unique_suffix = int(time.time())
         policy_data = {
-            "code": "pol_flex14",
+            "code": f"pol_flex14_{unique_suffix}",
             "name": "Flexible 14d",
             "rules": [
                 {"days_before": 14, "penalty_type": "none"},

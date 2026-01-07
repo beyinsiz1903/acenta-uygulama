@@ -12,7 +12,7 @@ import pymongo
 
 
 class SettlementRunEngineTester:
-    def __init__(self, base_url="https://b0bfe4ce-8f24-4521-ab52-69a32cde2bba.preview.emergentagent.com"):
+    def __init__(self, base_url="http://localhost:8001"):
         self.base_url = base_url
         self.admin_token = None
         self.tests_run = 0

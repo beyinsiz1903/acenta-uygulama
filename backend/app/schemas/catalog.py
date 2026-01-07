@@ -17,6 +17,11 @@ class LocalizedText(BaseModel):
     en: Optional[str] = None
 
 
+class ProductLocation(BaseModel):
+    city: str
+    country: str
+
+
 class ProductCreateRequest(BaseModel):
     type: ProductType
     code: str = Field(min_length=2, max_length=64)

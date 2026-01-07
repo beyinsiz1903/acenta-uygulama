@@ -148,60 +148,87 @@ class BookingFinanceService:
         currency: str,
         occurred_at: Optional[datetime] = None,
     ) -> str:
+        """Create EUR-denominated posting for BOOKING_CONFIRMED.
+
+        - For EUR bookings: uses amounts.sell (and ensures sell_eur matches).
+        - For non-EUR bookings: requires amounts.sell_eur to be present
+          (set by Phase 2C FX integration). If missing, raises
+          fx_snapshot_missing and does NOT create any posting.
         """
-        Create ledger posting for BOOKING_CONFIRMED event.
-        
-        Returns:
-            posting_id
-        """
-        
+
+        # Load booking to derive EUR amount
+        booking = await self.db.bookings.find_one(
+            {"_id": ObjectId(booking_id), "organization_id": organization_id}
+        )
+        if not booking:
+            raise AppError(404, "booking_not_found", "Booking not found")
+
+        booking_currency = booking.get("currency") or currency
+        amounts = booking.get("amounts") or {}
+        sell = float(amounts.get("sell", sell_amount))
+        sell_eur = amounts.get("sell_eur")
+
+        if booking_currency == "EUR":
+            # Backwards compatible: sell_eur may be missing for legacy bookings
+            if sell_eur is None:
+                sell_eur = sell
+        else:
+            if sell_eur is None:
+                raise AppError(
+                    500,
+                    "fx_snapshot_missing",
+                    "Non-EUR booking is missing FX snapshot / sell_eur",
+                )
+
+        amount_eur = float(sell_eur)
+
         # Get agency account
         agency_account = await self.db.finance_accounts.find_one({
             "organization_id": organization_id,
             "type": "agency",
             "owner_id": agency_id,
         })
-        
+
         if not agency_account:
             raise AppError(
                 status_code=404,
                 code="finance_account_not_found",
                 message=f"Finance account not found for agency {agency_id}",
             )
-        
+
         # Get platform account
         platform_account = await self.db.finance_accounts.find_one({
             "organization_id": organization_id,
             "type": "platform",
         })
-        
+
         if not platform_account:
             raise AppError(
                 status_code=404,
                 code="finance_account_not_found",
                 message="Platform finance account not found",
             )
-        
-        # Create posting lines
+
+        # Create posting lines (EUR)
         lines = PostingMatrixConfig.get_booking_confirmed_lines(
             agency_account_id=agency_account["_id"],
             platform_account_id=platform_account["_id"],
-            sell_amount=sell_amount,
+            sell_amount=amount_eur,
         )
-        
-        # Post to ledger
+
+        # Post to ledger (EUR)
         posting = await LedgerPostingService.post_event(
             organization_id=organization_id,
             source_type="booking",
             source_id=booking_id,
             event="BOOKING_CONFIRMED",
-            currency=currency,
+            currency="EUR",
             lines=lines,
             occurred_at=occurred_at,
             created_by="system",
             meta={"booking_id": booking_id, "agency_id": agency_id},
         )
-        
+
         return posting["_id"]
     
     async def post_refund_approved(

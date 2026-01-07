@@ -976,7 +976,7 @@ async def ensure_seed_data() -> None:
                         "agency_id": agency_id,
                         "currency": "EUR",
                         "limit": 10000.0,
-                        "soft_limit": 11000.0,
+                        "soft_limit": 9000.0,  # soft_limit <= limit (warning at 90%)
                         "payment_terms": "NET14",
                         "status": "active",
                         "created_at": now_utc(),

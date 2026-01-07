@@ -228,10 +228,12 @@ class AdminCatalogEpicTester:
             self.log("❌ No product_id available for room types test")
             return False
         
-        # Create room type
+        # Create room type with unique code
+        import time
+        unique_suffix = int(time.time())
         room_type_data = {
             "product_id": self.product_id,
-            "code": "dlx",
+            "code": f"dlx_{unique_suffix}",
             "name": {"tr": "Deluxe Oda", "en": "Deluxe Room"},
             "max_occupancy": 3,
             "attributes": {"view": "sea"}

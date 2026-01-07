@@ -592,11 +592,31 @@ class SettlementRunService:
         paid_at: Optional[datetime] = None,
         payment_reference: Optional[str] = None,
     ) -> dict:
-        """Mark an APPROVED settlement as paid.
+        """Mark an APPROVED settlement as paid and post SETTLEMENT_PAID.
 
-        Does NOT create ledger postings (Phase 2A.5 will handle that).
+        Phase 2A.5 behaviour:
+        - If already paid and payment_posting_id is set -> 200 replay (idempotent)
+        - If already paid but payment_posting_id is missing -> 500 internal bug
+        - Otherwise: create-or-get SETTLEMENT_PAID posting, then update
+          settlement + accruals to settled.
         """
+        from app.services.supplier_finance import SupplierFinanceService, ensure_platform_ap_clearing_account
+        from app.services.ledger_posting import LedgerPostingService, PostingMatrixConfig, LedgerLine
+
         run = await self._load_run(organization_id, settlement_id)
+
+        # Idempotent replay: already paid with posting id -> return as-is
+        if run["status"] == "paid" and run.get("payment_posting_id"):
+            return self._serialize_run(run)
+
+        # Paid but no posting id -> internal inconsistency
+        if run["status"] == "paid" and not run.get("payment_posting_id"):
+            raise AppError(
+                status_code=500,
+                code="internal_error",
+                message="Settlement is paid but payment_posting_id is missing",
+            )
+
         if run["status"] != "approved":
             raise AppError(
                 status_code=409,
@@ -605,8 +625,74 @@ class SettlementRunService:
             )
 
         run_id = run["_id"]
+
+        # Ensure there is at least one line item
+        line_items = run.get("line_items") or []
+        if not line_items:
+            raise AppError(
+                status_code=409,
+                code="settlement_empty",
+                message="Cannot mark an empty settlement as paid",
+            )
+
+        # Total amount from snapshot
+        totals = run.get("totals") or {}
+        total_net = float(totals.get("total_net_payable", 0.0))
+        if total_net <= 0:
+            raise AppError(
+                status_code=409,
+                code="settlement_empty",
+                message="Settlement total must be > 0 to mark as paid",
+            )
+
+        # Resolve supplier payable and platform cash accounts
+        supplier_id = run["supplier_id"]
+        currency = run["currency"]
+
+        supp_fin = SupplierFinanceService(self.db)
+        supplier_account_id = await supp_fin.get_or_create_supplier_account(
+            organization_id, supplier_id, currency
+        )
+        platform_cash_code = f"PLATFORM_CASH_{currency}"
+        platform_cash = await self.db.finance_accounts.find_one(
+            {
+                "organization_id": organization_id,
+                "type": "platform",
+                "code": platform_cash_code,
+                "currency": currency,
+            }
+        )
+        if not platform_cash:
+            raise AppError(
+                status_code=404,
+                code="account_not_found",
+                message=f"Platform cash account {platform_cash_code} not found",
+            )
+        platform_cash_account_id = str(platform_cash["_id"])
+
+        # Idempotent posting: create-or-get SETTLEMENT_PAID
+        lines = PostingMatrixConfig.get_settlement_paid_lines(
+            supplier_payable_account_id=supplier_account_id,
+            platform_cash_account_id=platform_cash_account_id,
+            total_amount=total_net,
+        )
+
+        posting = await LedgerPostingService.post_event(
+            organization_id=organization_id,
+            source_type="settlement",
+            source_id=str(run_id),
+            event="SETTLEMENT_PAID",
+            currency=currency,
+            lines=lines,
+            occurred_at=paid_at or now_utc(),
+            created_by=paid_by,
+            meta={"settlement_id": str(run_id), "supplier_id": supplier_id},
+        )
+
+        posting_id = posting["_id"]
         paid_at = paid_at or now_utc()
 
+        # Update settlement to paid
         await self.db.settlement_runs.update_one(
             {"_id": run_id, "organization_id": organization_id},
             {
@@ -615,7 +701,25 @@ class SettlementRunService:
                     "paid_at": paid_at,
                     "paid_by_email": paid_by,
                     "payment_reference": payment_reference,
-                    # payment_posting_id remains None in Phase 2A.4
+                    "payment_posting_id": posting_id,
+                    "updated_at": paid_at,
+                }
+            },
+        )
+
+        # Mark all accruals in this settlement as settled
+        await self.db.supplier_accruals.update_many(
+            {
+                "organization_id": organization_id,
+                "settlement_id": run_id,
+                "status": "in_settlement",
+            },
+            {
+                "$set": {
+                    "status": "settled",
+                    "payment_posting_id": posting_id,
+                    "settled_at": paid_at,
+                    "settlement_paid_id": run_id,
                     "updated_at": paid_at,
                 }
             },

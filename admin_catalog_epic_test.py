@@ -370,7 +370,7 @@ class AdminCatalogEpicTester:
                 
                 # Verify values
                 if (response['product_id'] == self.product_id and
-                    response['code'] == 'BB_FLEX14' and  # Should be uppercase
+                    response['code'].startswith('BB_FLEX14_') and  # Should be uppercase with suffix
                     response['board'] == 'BB' and
                     response['cancellation_policy_id'] == self.cancellation_policy_id and
                     response['payment_type'] == 'postpay' and

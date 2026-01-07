@@ -245,6 +245,20 @@ class RefundCaseService:
             occurred_at=now_utc(),
         )
 
+        # Update booking_financials snapshot (Phase 2B.4)
+        from app.services.booking_financials import BookingFinancialsService
+
+        bfs = BookingFinancialsService(self.db)
+        await bfs.ensure_financials(organization_id, booking)
+        await bfs.apply_refund_approved(
+            organization_id=organization_id,
+            booking_id=booking_id,
+            refund_case_id=str(case["_id"]),
+            ledger_posting_id=posting_id,
+            approved_amount=approved_amount,
+            applied_at=now_utc(),
+        )
+
         # Update case to closed
         now = now_utc()
         decision = "approved" if abs(approved_amount - refundable) < 0.01 else "partial"

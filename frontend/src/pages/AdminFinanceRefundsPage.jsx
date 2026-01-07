@@ -517,7 +517,7 @@ export default function AdminFinanceRefundsPage() {
     } finally {
       setDetailLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     // load list when filters change

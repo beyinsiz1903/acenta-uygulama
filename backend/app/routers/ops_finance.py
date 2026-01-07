@@ -438,11 +438,6 @@ async def reject_refund_case(
         reason=reason,
     )
 
-        period=payload.period,
-        created_by=current_user["email"],
-    )
-    return run
-
 
 @router.get("/settlements", response_model=SettlementRunListResponse)
 async def list_settlement_runs(

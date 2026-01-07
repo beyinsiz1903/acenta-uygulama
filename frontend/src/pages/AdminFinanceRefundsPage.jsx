@@ -315,25 +315,28 @@ function MiniRefundHistory({ bookingId }) {
                 : "-"}
             </div>
             <div className="flex items-center gap-2">
-              {it.decision && (
-                <Badge
-                  variant={
-                    it.decision === "approved"
-                      ? "default"
-                      : it.decision === "rejected"
-                      ? "destructive"
-                      : "secondary"
-                  }
-                  className="text-[10px] px-1 py-0"
-                >
-                  {it.decision}
-                </Badge>
-              )}
-              {it.requested_amount != null && (
-                <span>
-                  {it.requested_amount.toFixed(2)} {it.currency || ""}
-                </span>
-              )}
+              <Badge
+                variant={
+                  it.decision === "approved"
+                    ? "default"
+                    : it.decision === "rejected"
+                    ? "destructive"
+                    : "secondary"
+                }
+                className="text-[10px] px-1 py-0"
+              >
+                {it.decision || "-"}
+              </Badge>
+              {(() => {
+                const amount =
+                  it.approved_amount ?? it.requested_amount ?? null;
+                if (amount == null) return null;
+                return (
+                  <span>
+                    {Number(amount).toFixed(2)} {it.currency || ""}
+                  </span>
+                );
+              })()}
             </div>
           </div>
           <button

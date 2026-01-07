@@ -19,6 +19,12 @@ from app.schemas_finance import (
     CreditProfile,
     CreditProfileUpdate,
     CreditProfileListResponse,
+    AccountStatement,
+    StatementItem,
+    ExposureResponse,
+    ExposureItem,
+    Payment,
+    PaymentCreate,
 )
 
 router = APIRouter(prefix="/api/ops/finance", tags=["ops_finance"])

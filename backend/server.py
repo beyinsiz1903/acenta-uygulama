@@ -12,6 +12,7 @@ from starlette.middleware.cors import CORSMiddleware
 from app.db import close_mongo, connect_mongo, get_db
 from app.seed import ensure_seed_data
 from app.indexes.catalog_indexes import ensure_catalog_indexes
+from app.indexes.pricing_indexes import ensure_pricing_indexes
 from app.exception_handlers import register_exception_handlers
 from app.routers.auth import router as auth_router
 from app.routers.customers import router as customers_router
@@ -168,6 +169,7 @@ async def _startup() -> None:
     db = await get_db()
     await ensure_seed_data()
     await ensure_catalog_indexes(db)
+    await ensure_pricing_indexes(db)
 
     logger.info("Startup complete")
 

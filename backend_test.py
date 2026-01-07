@@ -3600,23 +3600,6 @@ def main():
 
 if __name__ == "__main__":
     main()
-            return False
-        
-        # Verify published_version in product list
-        success, response, _ = self.run_test(
-            "Verify Published Version in Product List",
-            "GET",
-            "api/admin/catalog/products?limit=50",
-            200
-        )
-        
-        if success:
-            items = response.get('items', [])
-            found_product = None
-            for item in items:
-                if item.get('product_id') == self.product_id:
-                    found_product = item
-                    break
             
             if found_product and found_product.get('published_version') == 1:
                 self.log(f"✅ Published version verified in product list: {found_product.get('published_version')}")

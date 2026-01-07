@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from pymongo import ASCENDING, DESCENDING
 from pymongo.errors import OperationFailure
-from app.main import logger
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 async def ensure_catalog_indexes(db):

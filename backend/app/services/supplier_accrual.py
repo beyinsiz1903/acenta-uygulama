@@ -244,6 +244,24 @@ class SupplierAccrualService:
                         "posting_id": posting_id,
                         "net_amount": net_payable,
                         "currency": currency,
+                    },
+                    "updated_at": now_utc(),
+                }
+            },
+        )
+        
+        logger.info(f"Completed accrual posting: {posting_id} for booking {booking_id}")
+        
+        return {
+            "accrual_id": str(accrual_id),
+            "posting_id": posting_id,
+            "supplier_id": supplier_id,
+            "supplier_account_id": supplier_account_id,
+            "platform_ap_account_id": platform_ap_account_id,
+            "currency": currency,
+            "net_amount": net_payable,
+        }
+
     async def reverse_accrual_for_booking(
         self,
         organization_id: str,

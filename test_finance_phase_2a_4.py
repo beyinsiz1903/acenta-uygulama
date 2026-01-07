@@ -269,10 +269,10 @@ def test_phase_2a_4():
     # ------------------------------------------------------------------
     print("8️⃣  Cancel behaviour (draft/approved unlock, paid forbidden)...")
 
-    # New draft settlement + accrual for cancel tests
+    # New draft settlement + accrual for cancel tests (use different currency)
     payload2 = {
         "supplier_id": supplier_id,
-        "currency": "EUR",
+        "currency": "USD",
         "period": None,
     }
     r8 = requests.post(f"{BASE_URL}/api/ops/finance/settlements", json=payload2, headers=headers)

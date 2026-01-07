@@ -103,6 +103,51 @@ class B2BBookingService:
 
         res = await self.bookings.insert_one(booking_doc)
         booking_id = str(res.inserted_id)
+
+        # ===================================================================
+        # PHASE 2C: FX snapshot + amounts.sell_eur
+        # ===================================================================
+        if currency == "EUR":
+            await self.bookings.update_one(
+                {"_id": res.inserted_id},
+                {"$set": {"amounts.sell_eur": sell_amount}},
+            )
+        else:
+            from app.services.fx import FXService, ORG_FUNCTIONAL_CCY
+
+            fx_svc = FXService(self.db)
+            try:
+                snap = await fx_svc.snapshot_for_booking(
+                    organization_id=organization_id,
+                    booking_id=booking_id,
+                    quote=currency,
+                    created_by_email=user_email or "system",
+                )
+                rate = snap["rate"]
+                if not rate or rate <= 0:
+                    raise AppError(500, "fx_rate_invalid", "FX rate must be > 0")
+                sell_eur = round(float(sell_amount) / float(rate), 2)
+                await self.bookings.update_one(
+                    {"_id": res.inserted_id},
+                    {
+                        "$set": {
+                            "amounts.sell_eur": sell_eur,
+                            "fx": {
+                                "base": ORG_FUNCTIONAL_CCY,
+                                "quote": currency,
+                                "rate": rate,
+                                "as_of": snap["as_of"],
+                                "snapshot_id": snap["snapshot_id"],
+                            },
+                        }
+                    },
+                )
+            except AppError as e:
+                if e.code == "fx_rate_not_found":
+                    # Roll back booking if we cannot price FX
+                    await self.bookings.delete_one({"_id": res.inserted_id})
+                    raise
+                raise
         
         # ===================================================================
         # PHASE 1.5: Auto-posting for BOOKING_CONFIRMED

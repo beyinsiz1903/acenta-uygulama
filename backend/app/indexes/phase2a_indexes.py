@@ -61,6 +61,30 @@ async def ensure_phase2a_indexes(db):
         ],
         name="accruals_by_supplier_status",
     )
+
+    # refund_cases: queue + uniqueness per booking
+    await _safe_create(
+        db.refund_cases,
+        [("organization_id", ASCENDING), ("status", ASCENDING), ("created_at", DESCENDING)],
+        name="refund_cases_queue",
+    )
+
+    await _safe_create(
+        db.refund_cases,
+        [("organization_id", ASCENDING), ("booking_id", ASCENDING), ("created_at", DESCENDING)],
+        name="refund_cases_by_booking",
+    )
+
+    await _safe_create(
+        db.refund_cases,
+        [("organization_id", ASCENDING), ("booking_id", ASCENDING)],
+        unique=True,
+        partialFilterExpression={
+            "status": {"$in": ["open", "pending_approval"]},
+            "type": "refund",
+        },
+        name="uniq_open_refund_case_per_booking",
+    )
     
     # Settlement join/lookup
     await _safe_create(

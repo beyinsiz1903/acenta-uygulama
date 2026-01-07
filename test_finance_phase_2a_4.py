@@ -194,7 +194,6 @@ def test_phase_2a_4():
         headers=headers,
     )
     assert r5.status_code == 200, r5.text
-    data5 = r5.json()
 
     # After removal, accrual should be unlocked
     accrual_ok2 = db.supplier_accruals.find_one({"_id": accrual_ok_id})

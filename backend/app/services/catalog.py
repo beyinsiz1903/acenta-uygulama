@@ -306,6 +306,23 @@ async def publish_product_version(db, actor: dict[str, Any], product_id: str, ve
             {"status": prod.get("status")},
         )
 
+    # Additional guard for hotel products: must have at least one active rate plan
+    if prod.get("type") == "hotel":
+        active_rp_count = await db.rate_plans.count_documents(
+            {
+                "organization_id": org_id,
+                "product_id": pid,
+                "status": "active",
+            }
+        )
+        if active_rp_count <= 0:
+            raise AppError(
+                409,
+                "product_not_sellable",
+                "Product must have at least one active rate plan before publishing",
+                {},
+            )
+
     now = now_utc()
 
     # Old published → archived

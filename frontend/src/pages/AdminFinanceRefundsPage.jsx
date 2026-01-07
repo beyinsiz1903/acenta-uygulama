@@ -521,6 +521,8 @@ export default function AdminFinanceRefundsPage() {
 
   useEffect(() => {
     loadList();
+    // Intentionally not adding loadList as dependency to avoid refetch loops.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusFilter, limit]);
 
   useEffect(() => {

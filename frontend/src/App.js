@@ -23,6 +23,7 @@ import AdminMatchRiskTrendsPage from "./pages/AdminMatchRiskTrendsPage";
 import AdminActionPoliciesPage from "./pages/AdminActionPoliciesPage";
 import AdminApprovalsPage from "./pages/AdminApprovalsPage";
 import AdminCatalogPage from "./pages/AdminCatalogPage";
+import AdminCatalogHotelsPage from "./pages/AdminCatalogHotelsPage";
 import AdminPricingPage from "./pages/AdminPricingPage";
 import OpsB2BQueuesPage from "./pages/OpsB2BQueuesPage";
 import AdminFinanceRefundsPage from "./pages/AdminFinanceRefundsPage";

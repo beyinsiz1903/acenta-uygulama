@@ -10,7 +10,7 @@ import json
 from datetime import datetime, timedelta
 
 class AcentaAPITester:
-    def __init__(self, base_url="https://hotelfi.preview.emergentagent.com"):
+    def __init__(self, base_url="https://finance-platform-39.preview.emergentagent.com"):
         self.base_url = base_url
         self.token = None
         self.tests_run = 0
@@ -78,7 +78,7 @@ class AcentaAPITester:
 
 
 class SignedDownloadLinkTester:
-    def __init__(self, base_url="https://hotelfi.preview.emergentagent.com"):
+    def __init__(self, base_url="https://finance-platform-39.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.tests_run = 0
@@ -1154,7 +1154,7 @@ class SignedDownloadLinkTester:
 
 
 class RiskSnapshotsTrendTester:
-    def __init__(self, base_url="https://hotelfi.preview.emergentagent.com"):
+    def __init__(self, base_url="https://finance-platform-39.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.tests_run = 0
@@ -1541,7 +1541,7 @@ class RiskSnapshotsTrendTester:
 
 
 class SettlementRunEngineTester:
-    def __init__(self, base_url="https://b0bfe4ce-8f24-4521-ab52-69a32cde2bba.preview.emergentagent.com"):
+    def __init__(self, base_url="https://finance-platform-39.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.tests_run = 0
@@ -2336,7 +2336,7 @@ class SettlementRunEngineTester:
 
 
 class FinancePhase2A3RegressionTester:
-    def __init__(self, base_url="https://hotelfi.preview.emergentagent.com"):
+    def __init__(self, base_url="https://finance-platform-39.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.agency_token = None
@@ -2888,7 +2888,7 @@ class FinancePhase2A3RegressionTester:
 
 
 class AdminCatalogEpicTester:
-    def __init__(self, base_url="https://hotelfi.preview.emergentagent.com"):
+    def __init__(self, base_url="https://finance-platform-39.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.tests_run = 0
@@ -3487,7 +3487,7 @@ class AdminCatalogEpicTester:
 
 
 class FinancePhase2A3Tester:
-    def __init__(self, base_url="https://b0bfe4ce-8f24-4521-ab52-69a32cde2bba.preview.emergentagent.com"):
+    def __init__(self, base_url="https://finance-platform-39.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.tests_run = 0

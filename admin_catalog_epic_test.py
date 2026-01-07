@@ -330,10 +330,12 @@ class AdminCatalogEpicTester:
             self.log("❌ Missing product_id or cancellation_policy_id for rate plans test")
             return False
         
-        # Create rate plan
+        # Create rate plan with unique code
+        import time
+        unique_suffix = int(time.time())
         rate_plan_data = {
             "product_id": self.product_id,
-            "code": "bb_flex14",
+            "code": f"bb_flex14_{unique_suffix}",
             "name": {"tr": "Oda+Kahvaltı Flex", "en": "BB Flex"},
             "board": "BB",
             "cancellation_policy_id": self.cancellation_policy_id,

@@ -457,6 +457,18 @@
 ##     priority: "high"
 ##     needs_retesting: false
 ##     status_history:
+  - task: "Finance OS Phase 2B.3: Refund Cases + REFUND_APPROVED posting"
+    implemented: true
+    working: true
+    file: "/app/backend/app/services/booking_finance.py, /app/backend/app/services/refund_cases.py, /app/backend/app/routers/ops_finance.py, /app/backend/app/routers/b2b_bookings.py, /app/test_finance_phase_2b_3_refunds.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "✅ FINANCE OS PHASE 2B.3 BACKEND TEST COMPLETE - test_finance_phase_2b_3_refunds.py passed end-to-end. FIXES IMPLEMENTED: (1) BookingFinanceService.post_refund_approved now uses race-safe get-or-create for agency/platform AR accounts via update_one(..., upsert=True) + find_one filters, eliminating DuplicateKeyError on concurrent account creation and matching the supplier get-or-create robustness pattern. (2) LedgerPostingService.post_event now writes ledger_entries with a posting_id field equal to the posting header _id, enabling posting-scoped entry lookup used by the tests and ops/debug tools. (3) Refund approval/reject flow verified via RefundCaseService.approve/reject and OPS endpoints: /api/ops/finance/refunds/{id}/approve and /api/ops/finance/refunds/{id}/reject. TEST COVERAGE: Approve refund case produces exactly one REFUND_APPROVED posting with 2 ledger_entries; second approve on same case returns 409 invalid_case_state without creating new postings (idempotent behavior at case level); reject path closes case without any REFUND_APPROVED postings; guard for approved_amount > refundable returns 422 approved_amount_invalid. NOTE: In backend-only environment admin token has no agency_id, so B2B refund-request steps in the test create refund_cases directly in Mongo using the same RefundCalculatorService logic as the HTTP path; OPS endpoints remain the primary surface for approval/rejection in this phase."
+
 ##       - working: "NA"
 ##         agent: "main"
 ##         comment: "Hotel router eklendi: GET /api/hotel/bookings (hotel_id ownership + filtreler), stop-sell CRUD (/api/hotel/stop-sell), allocations CRUD (/api/hotel/allocations). Booking aksiyonları: POST /api/hotel/bookings/{id}/note, /guest-note, /cancel-request. Seed: hoteladmin@acenta.test/admin123 (hotel_admin) hotels[0] ile ilişkilendirildi. Agency booking confirm artık channel=agency_extranet, agency_name snapshot ve hotel_availability allocation sold-count room_type+date overlap ile hesaplıyor."

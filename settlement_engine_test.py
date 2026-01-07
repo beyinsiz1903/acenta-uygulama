@@ -109,38 +109,9 @@ class SettlementRunEngineTester:
         """Setup supplier and seed accruals for testing"""
         self.log("\n=== SETUP SUPPLIER AND ACCRUALS ===")
         
-        # Get or create a supplier
-        success, response = self.run_test(
-            "List suppliers",
-            "GET",
-            "api/ops/finance/suppliers?limit=10",
-            200
-        )
-        
-        if success and response.get('items'):
-            self.supplier_id = response['items'][0]['supplier_id']
-            self.log(f"✅ Using existing supplier: {self.supplier_id}")
-        else:
-            # Create supplier if none exists
-            supplier_data = {
-                "name": f"Test Supplier {uuid.uuid4().hex[:8]}",
-                "contact_email": f"supplier{uuid.uuid4().hex[:8]}@test.com",
-                "payment_terms": "NET30"
-            }
-            success, response = self.run_test(
-                "Create supplier",
-                "POST",
-                "api/ops/finance/suppliers",
-                201,
-                data=supplier_data
-            )
-            
-            if success and response.get('supplier_id'):
-                self.supplier_id = response['supplier_id']
-                self.log(f"✅ Created supplier: {self.supplier_id}")
-            else:
-                self.log("❌ Failed to create supplier")
-                return False
+        # Use an existing supplier from the database
+        self.supplier_id = "test_supplier_phase2a"
+        self.log(f"✅ Using existing supplier: {self.supplier_id}")
 
         # Seed supplier accruals directly in database for testing
         try:

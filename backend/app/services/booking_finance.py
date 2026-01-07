@@ -105,7 +105,7 @@ class BookingFinanceService:
             raise AppError(
                 status_code=409,
                 code="credit_limit_exceeded",
-                message=f"Credit limit exceeded",
+                message="Credit limit exceeded",
                 details={
                     "exposure": exposure,
                     "sell_amount": sell_amount,

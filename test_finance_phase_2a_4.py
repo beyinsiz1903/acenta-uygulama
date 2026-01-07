@@ -336,7 +336,7 @@ def test_phase_2a_4():
     # ------------------------------------------------------------------
     print("9️⃣  Mark paid only from approved (enforce state)...")
 
-    # New run3: draft -> approved -> paid
+    # New run3: draft -> approved -> paid (reuse USD to avoid open-settlement clash)
     r9 = requests.post(f"{BASE_URL}/api/ops/finance/settlements", json=payload2, headers=headers)
     assert r9.status_code == 200, r9.text
     run3 = r9.json()

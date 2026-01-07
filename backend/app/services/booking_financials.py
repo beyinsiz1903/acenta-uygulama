@@ -110,7 +110,7 @@ class BookingFinancialsService:
                     "penalty_total": penalty_total,
                     "updated_at": applied_at,
                 },
-                "${push}": {"refunds_applied": applied_entry},
+                "$push": {"refunds_applied": applied_entry},
             },
         )
 

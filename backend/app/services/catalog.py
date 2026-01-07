@@ -101,7 +101,7 @@ async def update_product(db, actor: dict[str, Any], product_id: str, patch: dict
         raise AppError(404, "not_found", "Product not found", {"product_id": product_id})
 
     update: Dict[str, Any] = {}
-    for k in ["type", "code", "name", "status", "default_currency"]:
+    for k in ["type", "code", "name", "status", "default_currency", "location"]:
         if k in patch and patch[k] is not None:
             update[k] = patch[k]
 

@@ -916,3 +916,81 @@ async def ensure_seed_data() -> None:
 
         await db.bookings.insert_many(match_a_docs + match_b_docs)
         logger.info("Seeded Match Risk v1.2 demo bookings for operational vs behavioral cancels")
+
+    # ========================================================================
+    # Finance OS Phase 1: Platform + Agency accounts + Credit profile
+    # ========================================================================
+    platform_account = await db.finance_accounts.find_one(
+        {"organization_id": org_id, "type": "platform", "code": "PLATFORM_AR_EUR"}
+    )
+    if not platform_account:
+        platform_doc = {
+            "_id": "acct_platform_ar_eur",
+            "organization_id": org_id,
+            "type": "platform",
+            "owner_id": org_id,
+            "code": "PLATFORM_AR_EUR",
+            "name": "Platform Receivables (EUR)",
+            "currency": "EUR",
+            "status": "active",
+            "created_at": now_utc(),
+            "updated_at": now_utc(),
+        }
+        await db.finance_accounts.insert_one(platform_doc)
+        logger.info("✅ Created platform finance account: PLATFORM_AR_EUR")
+
+    # Create finance accounts for all existing agencies
+    if agencies:
+        for agency in agencies:
+            agency_id = str(agency["_id"])
+            agency_code = f"AGY_{agency['name'][:10].upper().replace(' ', '_')}"
+            
+            existing_account = await db.finance_accounts.find_one(
+                {"organization_id": org_id, "type": "agency", "owner_id": agency_id}
+            )
+            
+            if not existing_account:
+                account_doc = {
+                    "_id": f"acct_agency_{agency_id}",
+                    "organization_id": org_id,
+                    "type": "agency",
+                    "owner_id": agency_id,
+                    "code": agency_code,
+                    "name": f"{agency['name']} Account",
+                    "currency": "EUR",
+                    "status": "active",
+                    "created_at": now_utc(),
+                    "updated_at": now_utc(),
+                }
+                await db.finance_accounts.insert_one(account_doc)
+                
+                # Create credit profile for agency
+                credit_doc = {
+                    "_id": f"cred_{agency_id}",
+                    "organization_id": org_id,
+                    "agency_id": agency_id,
+                    "currency": "EUR",
+                    "limit": 10000.0,
+                    "soft_limit": 11000.0,
+                    "payment_terms": "NET14",
+                    "status": "active",
+                    "created_at": now_utc(),
+                    "updated_at": now_utc(),
+                }
+                await db.credit_profiles.insert_one(credit_doc)
+                
+                # Initialize balance cache
+                balance_doc = {
+                    "_id": f"bal_{agency_id}_eur",
+                    "organization_id": org_id,
+                    "account_id": f"acct_agency_{agency_id}",
+                    "currency": "EUR",
+                    "balance": 0.0,
+                    "as_of": now_utc(),
+                    "updated_at": now_utc(),
+                }
+                await db.account_balances.insert_one(balance_doc)
+                
+                logger.info(f"✅ Created finance account + credit profile for agency: {agency['name']}")
+
+    logger.info("✅ Finance OS Phase 1 seed data complete")

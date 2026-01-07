@@ -61,6 +61,7 @@ async def create_product(
         "default_currency": doc["default_currency"],
         "created_at": doc["created_at"],
         "updated_at": doc["updated_at"],
+        "location": doc.get("location"),
     }
 
 

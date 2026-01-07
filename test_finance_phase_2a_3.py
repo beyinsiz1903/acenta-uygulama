@@ -218,6 +218,22 @@ def test_phase_2a_3():
     )
 
     # Settlement lock guard via HTTP ops endpoints (more realistic)
+    # First capture existing postings/entries for this booking
+    before_post_cnt = db.ledger_postings.count_documents(
+        {
+            "organization_id": org_id,
+            "source.type": "booking",
+            "source.id": str(locked_booking_id),
+        }
+    )
+    before_entry_cnt = db.ledger_entries.count_documents(
+        {
+            "organization_id": org_id,
+            "source.type": "booking",
+            "source.id": str(locked_booking_id),
+        }
+    )
+
     # Reverse endpoint
     r_lock_rev = requests.post(
         f"{BASE_URL}/api/ops/finance/supplier-accruals/{locked_booking_id}/reverse",
@@ -226,6 +242,21 @@ def test_phase_2a_3():
     assert r_lock_rev.status_code == 409, r_lock_rev.text
     data_rev = r_lock_rev.json()
     assert data_rev["error"]["code"] == "accrual_locked_in_settlement"
+
+    mid_post_cnt = db.ledger_postings.count_documents(
+        {
+            "organization_id": org_id,
+            "source.type": "booking",
+            "source.id": str(locked_booking_id),
+        }
+    )
+    mid_entry_cnt = db.ledger_entries.count_documents(
+        {
+            "organization_id": org_id,
+            "source.type": "booking",
+            "source.id": str(locked_booking_id),
+        }
+    )
 
     # Adjust endpoint
     r_lock_adj = requests.post(
@@ -237,17 +268,42 @@ def test_phase_2a_3():
     data_adj = r_lock_adj.json()
     assert data_adj["error"]["code"] == "accrual_locked_in_settlement"
 
-    print("   ✅ Settlement lock guard enforced for reverse and adjust")
+    after_post_cnt = db.ledger_postings.count_documents(
+        {
+            "organization_id": org_id,
+            "source.type": "booking",
+            "source.id": str(locked_booking_id),
+        }
+    )
+    after_entry_cnt = db.ledger_entries.count_documents(
+        {
+            "organization_id": org_id,
+            "source.type": "booking",
+            "source.id": str(locked_booking_id),
+        }
+    )
+
+    # No new postings/entries must be created by locked reverse/adjust
+    assert before_post_cnt == mid_post_cnt == after_post_cnt
+    assert before_entry_cnt == mid_entry_cnt == after_entry_cnt
+
+    # Accrual doc must remain locked/in_settlement
+    locked = db.supplier_accruals.find_one({"_id": locked_accrual_id})
+    assert locked["status"] == "in_settlement"
+    assert locked["settlement_id"] == "set_123"
+
+    print("   ✅ Settlement lock guard enforced for reverse and adjust (no side-effects)")
 
     # =====================================================================
-    # 3) Adjustment delta > 0
+    # 3) Adjustment delta > 0 (increase payable)
     # =====================================================================
     print("3️⃣  Adjustment delta > 0 (increase payable)...")
 
-    adj_booking_id = ObjectId()
+    # Booking A: net 800 -> 900 (delta +100)
+    adj_up_booking_id = ObjectId()
     db.bookings.insert_one(
         {
-            "_id": adj_booking_id,
+            "_id": adj_up_booking_id,
             "organization_id": org_id,
             "supplier_id": supplier_id,
             "status": "VOUCHERED",
@@ -257,12 +313,12 @@ def test_phase_2a_3():
             "items": [{"supplier_id": supplier_id}],
         }
     )
-    adj_accrual_id = ObjectId()
+    adj_up_accrual_id = ObjectId()
     db.supplier_accruals.insert_one(
         {
-            "_id": adj_accrual_id,
+            "_id": adj_up_accrual_id,
             "organization_id": org_id,
-            "booking_id": str(adj_booking_id),
+            "booking_id": str(adj_up_booking_id),
             "supplier_id": supplier_id,
             "currency": "EUR",
             "amounts": {"gross_sell": 800.0, "commission": 0.0, "net_payable": 800.0},
@@ -271,52 +327,85 @@ def test_phase_2a_3():
         }
     )
 
-    # Use service via async Motor for adjustment tests
-    import asyncio
-    from app.db import get_db
-    from app.services.supplier_accrual import SupplierAccrualService
+    r_up = requests.post(
+        f"{BASE_URL}/api/ops/finance/supplier-accruals/{adj_up_booking_id}/adjust",
+        json={"new_sell": 900.0, "new_commission": 0.0},
+        headers=headers,
+    )
+    assert r_up.status_code == 200, r_up.text
+    data_up = r_up.json()
+    assert data_up["delta"] > 0
 
-    async def _run_adjust_up():
-        motor_db = await get_db()
-        svc = SupplierAccrualService(motor_db)
-        return await svc.adjust_accrual_for_booking(
-            organization_id=org_id,
-            booking_id=str(adj_booking_id),
-            new_sell=900.0,
-            new_commission=0.0,
-            triggered_by="admin@acenta.test",
-        )
+    updated_up = db.supplier_accruals.find_one({"_id": adj_up_accrual_id})
+    assert updated_up["status"] == "adjusted"
+    assert abs(updated_up["amounts"]["net_payable"] - 900.0) < 0.01
 
-    result_up = asyncio.run(_run_adjust_up())
-    assert result_up["delta"] > 0
-
-    updated = db.supplier_accruals.find_one({"_id": adj_accrual_id})
-    assert updated["status"] == "adjusted"
-    assert abs(updated["amounts"]["net_payable"] - 900.0) < 0.01
+    post_cnt_up = db.ledger_postings.count_documents(
+        {
+            "organization_id": org_id,
+            "source.type": "booking",
+            "source.id": str(adj_up_booking_id),
+            "event": "SUPPLIER_ACCRUAL_ADJUSTED",
+        }
+    )
+    assert post_cnt_up == 1
 
     print("   ✅ Adjustment up applied correctly")
 
     # =====================================================================
-    # 4) Adjustment delta < 0
+    # 4) Adjustment delta < 0 (decrease payable)
     # =====================================================================
     print("4️⃣  Adjustment delta < 0 (decrease payable)...")
 
-    async def _run_adjust_down():
-        motor_db = await get_db()
-        svc = SupplierAccrualService(motor_db)
-        return await svc.adjust_accrual_for_booking(
-            organization_id=org_id,
-            booking_id=str(adj_booking_id),
-            new_sell=850.0,
-            new_commission=0.0,
-            triggered_by="admin@acenta.test",
-        )
+    # Booking B: net 900 -> 850 (delta -50)
+    adj_down_booking_id = ObjectId()
+    db.bookings.insert_one(
+        {
+            "_id": adj_down_booking_id,
+            "organization_id": org_id,
+            "supplier_id": supplier_id,
+            "status": "VOUCHERED",
+            "currency": "EUR",
+            "amounts": {"sell": 900.0},
+            "commission": {"amount": 0.0},
+            "items": [{"supplier_id": supplier_id}],
+        }
+    )
+    adj_down_accrual_id = ObjectId()
+    db.supplier_accruals.insert_one(
+        {
+            "_id": adj_down_accrual_id,
+            "organization_id": org_id,
+            "booking_id": str(adj_down_booking_id),
+            "supplier_id": supplier_id,
+            "currency": "EUR",
+            "amounts": {"gross_sell": 900.0, "commission": 0.0, "net_payable": 900.0},
+            "status": "accrued",
+            "settlement_id": None,
+        }
+    )
 
-    result_down = asyncio.run(_run_adjust_down())
-    assert result_down["delta"] < 0
+    r_down = requests.post(
+        f"{BASE_URL}/api/ops/finance/supplier-accruals/{adj_down_booking_id}/adjust",
+        json={"new_sell": 850.0, "new_commission": 0.0},
+        headers=headers,
+    )
+    assert r_down.status_code == 200, r_down.text
+    data_down = r_down.json()
+    assert data_down["delta"] < 0
 
-    updated2 = db.supplier_accruals.find_one({"_id": adj_accrual_id})
-    assert abs(updated2["amounts"]["net_payable"] - 850.0) < 0.01
+    updated_down = db.supplier_accruals.find_one({"_id": adj_down_accrual_id})
+    assert abs(updated_down["amounts"]["net_payable"] - 850.0) < 0.01
+
+    post_cnt_down = db.ledger_postings.count_documents(
+        {
+            "organization_id": org_id,
+            "source.type": "booking",
+            "source.id": str(adj_down_booking_id),
+            "event": "SUPPLIER_ACCRUAL_ADJUSTED",
+        }
+    )
+    assert post_cnt_down == 1
 
     print("   ✅ Adjustment down applied correctly")
 
@@ -325,40 +414,67 @@ def test_phase_2a_3():
     # =====================================================================
     print("5️⃣  Adjustment delta == 0 (no posting)...")
 
-    # Count existing postings for this booking
-    before_cnt = db.ledger_postings.count_documents(
+    # Booking C: net 850 -> 850 (delta 0, no posting)
+    adj_zero_booking_id = ObjectId()
+    db.bookings.insert_one(
+        {
+            "_id": adj_zero_booking_id,
+            "organization_id": org_id,
+            "supplier_id": supplier_id,
+            "status": "VOUCHERED",
+            "currency": "EUR",
+            "amounts": {"sell": 850.0},
+            "commission": {"amount": 0.0},
+            "items": [{"supplier_id": supplier_id}],
+        }
+    )
+    adj_zero_accrual_id = ObjectId()
+    db.supplier_accruals.insert_one(
+        {
+            "_id": adj_zero_accrual_id,
+            "organization_id": org_id,
+            "booking_id": str(adj_zero_booking_id),
+            "supplier_id": supplier_id,
+            "currency": "EUR",
+            "amounts": {"gross_sell": 850.0, "commission": 0.0, "net_payable": 850.0},
+            "status": "accrued",
+            "settlement_id": None,
+        }
+    )
+
+    before_zero_cnt = db.ledger_postings.count_documents(
         {
             "organization_id": org_id,
             "source.type": "booking",
-            "source.id": str(adj_booking_id),
+            "source.id": str(adj_zero_booking_id),
             "event": "SUPPLIER_ACCRUAL_ADJUSTED",
         }
     )
 
-    async def _run_adjust_zero():
-        motor_db = await get_db()
-        svc = SupplierAccrualService(motor_db)
-        return await svc.adjust_accrual_for_booking(
-            organization_id=org_id,
-            booking_id=str(adj_booking_id),
-            new_sell=850.0,
-            new_commission=0.0,
-            triggered_by="admin@acenta.test",
-        )
+    r_zero = requests.post(
+        f"{BASE_URL}/api/ops/finance/supplier-accruals/{adj_zero_booking_id}/adjust",
+        json={"new_sell": 850.0, "new_commission": 0.0},
+        headers=headers,
+    )
+    assert r_zero.status_code == 200, r_zero.text
+    data_zero = r_zero.json()
+    assert abs(data_zero["delta"]) < 0.01
 
-    result_zero = asyncio.run(_run_adjust_zero())
-    assert abs(result_zero["delta"]) < 0.01
-    after_cnt = db.ledger_postings.count_documents(
+    after_zero_cnt = db.ledger_postings.count_documents(
         {
             "organization_id": org_id,
             "source.type": "booking",
-            "source.id": str(adj_booking_id),
+            "source.id": str(adj_zero_booking_id),
             "event": "SUPPLIER_ACCRUAL_ADJUSTED",
         }
     )
-    assert after_cnt == before_cnt
+    assert after_zero_cnt == before_zero_cnt == 0
 
-    print("   ✅ No new posting created when delta == 0")
+    updated_zero = db.supplier_accruals.find_one({"_id": adj_zero_accrual_id})
+    assert abs(updated_zero["amounts"]["net_payable"] - 850.0) < 0.01
+    # Status may remain 'accrued' for zero-delta adjustments
+
+    print("   ✅ No posting created when delta == 0")
 
     client.close()
 

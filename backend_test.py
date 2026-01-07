@@ -3571,33 +3571,35 @@ class FinancePhase2A3Tester:
 
 
 def main():
-            200,
-            data=update_data
-        )
+    if len(sys.argv) > 1:
+        test_type = sys.argv[1]
         
-        if not success:
-            self.log(f"❌ Failed to set product active")
-            return False
-        
-        # Now publish should work
-        success, response, _ = self.run_test(
-            "Publish Version (should work)",
-            "POST",
-            f"api/admin/catalog/products/{self.product_id}/versions/{self.version_id}/publish",
-            200
-        )
-        
-        if success:
-            if (response.get('status') == 'published' and 
-                response.get('published_version') == 1):
-                self.log(f"✅ Version published successfully:")
-                self.log(f"   - status: {response.get('status')}")
-                self.log(f"   - published_version: {response.get('published_version')}")
-            else:
-                self.log(f"❌ Publish response validation failed")
-                return False
+        if test_type == "all":
+            # Run comprehensive tests
+            tester = AcentaAPITester()
+            exit_code = tester.run_all_tests()
+            sys.exit(exit_code)
+        elif test_type == "settlement_engine":
+            tester = SettlementRunEngineTester()
+            exit_code = tester.run_settlement_engine_tests()
+            sys.exit(exit_code)
+        elif test_type == "finance_phase_2a3":
+            tester = FinancePhase2A3Tester()
+            exit_code = tester.run_finance_phase_2a3_tests()
+            sys.exit(exit_code)
         else:
-            self.log(f"❌ Version publish failed")
+            print(f"Unknown test type: {test_type}")
+            print("Available test types: settlement_engine, finance_phase_2a3, all")
+            sys.exit(1)
+    else:
+        # Default: run comprehensive tests
+        tester = AcentaAPITester()
+        exit_code = tester.run_all_tests()
+        sys.exit(exit_code)
+
+
+if __name__ == "__main__":
+    main()
             return False
         
         # Verify published_version in product list

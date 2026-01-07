@@ -13,7 +13,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "../components/ui/dialog";
-import { Loader2, AlertCircle } from "lucide-react";
+import { Loader2, AlertCircle, Clipboard } from "lucide-react";
 
 function StatusBadge({ status }) {
   if (status === "closed") {

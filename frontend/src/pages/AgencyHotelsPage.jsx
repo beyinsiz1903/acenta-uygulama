@@ -79,6 +79,13 @@ export default function AgencyHotelsPage() {
     });
 
     loadHotels();
+
+    // Tarihleri P0.2 için deterministik set et (bugün+1 / bugün+3)
+    const today = new Date();
+    const plus1 = new Date(today.getTime() + 24 * 60 * 60 * 1000);
+    const plus3 = new Date(today.getTime() + 3 * 24 * 60 * 60 * 1000);
+    setCheckIn(format(plus1, "yyyy-MM-dd"));
+    setCheckOut(format(plus3, "yyyy-MM-dd"));
   }, []);
 
   async function loadHotels() {

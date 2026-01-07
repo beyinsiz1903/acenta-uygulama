@@ -219,3 +219,63 @@ class SupplierFinanceService:
         results.sort(key=lambda x: x["balance"], reverse=True)
         
         return results
+
+
+async def ensure_platform_ap_clearing_account(db, org_id: str, currency: str) -> str:
+    """
+    Ensure platform AP clearing account exists (Phase 2A.2)
+    
+    This is separate from Phase 1 platform AR account:
+    - AR (Phase 1): PLATFORM_AR_EUR (receivables from agencies)
+    - AP (Phase 2A): PLATFORM_AP_CLEARING_EUR (payables to suppliers)
+    
+    Returns:
+        account_id (str)
+    """
+    code = f"PLATFORM_AP_CLEARING_{currency}"
+    
+    # Check if exists
+    doc = await db.finance_accounts.find_one({
+        "organization_id": org_id,
+        "type": "platform",
+        "code": code,
+        "currency": currency,
+    })
+    
+    if doc:
+        return str(doc["_id"])
+    
+    # Create platform AP clearing account
+    from bson import ObjectId
+    now = now_utc()
+    
+    account_id = ObjectId()
+    account_doc = {
+        "_id": account_id,
+        "organization_id": org_id,
+        "type": "platform",
+        "owner_id": "platform",  # consistent with Phase 1
+        "code": code,
+        "name": f"Platform AP Clearing ({currency})",
+        "currency": currency,
+        "status": "active",
+        "created_at": now,
+        "updated_at": now,
+    }
+    
+    await db.finance_accounts.insert_one(account_doc)
+    logger.info(f"Created platform AP clearing account: {account_id} ({currency})")
+    
+    # Initialize balance cache (upsert)
+    balance_id = ObjectId()
+    await db.account_balances.insert_one({
+        "_id": balance_id,
+        "organization_id": org_id,
+        "account_id": str(account_id),
+        "currency": currency,
+        "balance": 0.0,
+        "as_of": now,
+        "updated_at": now,
+    })
+    
+    return str(account_id)

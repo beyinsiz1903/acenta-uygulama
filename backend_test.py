@@ -1539,12 +1539,10 @@ class RiskSnapshotsTrendTester:
         return 0 if self.tests_failed == 0 else 1
 
 
-class ProductCatalogTester:
+class AdminCatalogEpicTester:
     def __init__(self, base_url="https://riskops-platform.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
-        self.agency_token = None
-        self.hotel_token = None
         self.tests_run = 0
         self.tests_passed = 0
         self.tests_failed = 0
@@ -1552,10 +1550,9 @@ class ProductCatalogTester:
         
         # Store data for testing
         self.product_id = None
-        self.version_id = None
+        self.cancellation_policy_id = None
         self.room_type_id = None
         self.rate_plan_id = None
-        self.policy_id = None
 
     def log(self, msg):
         print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}")

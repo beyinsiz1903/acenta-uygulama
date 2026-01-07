@@ -358,6 +358,121 @@ async def upsert_credit_profile(
     - soft_limit must be >= limit (422 validation_error)
     - upsert semantics (creates if not exists)
     """
+
+# ============================================================================
+# Settlement runs (Phase 2A.4)
+# ============================================================================
+
+
+@router.post("/settlements")
+async def create_settlement_run(
+    payload: SettlementRunCreateRequest,
+    current_user=Depends(require_roles(["admin", "ops", "super_admin"])),
+    db=Depends(get_db),
+):
+    org_id = current_user["organization_id"]
+    svc = SettlementRunService(db)
+    run = await svc.create_run(
+        organization_id=org_id,
+        supplier_id=payload.supplier_id,
+        currency=payload.currency,
+        period=payload.period,
+        created_by=current_user["email"],
+    )
+    return run
+
+
+@router.get("/settlements", response_model=SettlementRunListResponse)
+async def list_settlement_runs(
+    supplier_id: Optional[str] = Query(None),
+    currency: Optional[str] = Query(None),
+    status: Optional[str] = Query(None),
+    limit: int = Query(50, ge=1, le=200),
+    current_user=Depends(require_roles(["admin", "ops", "super_admin"])),
+    db=Depends(get_db),
+):
+    org_id = current_user["organization_id"]
+    svc = SettlementRunService(db)
+    return await svc.list_runs(org_id, supplier_id, currency, status, limit)
+
+
+@router.get("/settlements/{settlement_id}", response_model=SettlementRunDetail)
+async def get_settlement_run(
+    settlement_id: str,
+    current_user=Depends(require_roles(["admin", "ops", "super_admin"])),
+    db=Depends(get_db),
+):
+    org_id = current_user["organization_id"]
+    svc = SettlementRunService(db)
+    return await svc.get_run(org_id, settlement_id)
+
+
+@router.post("/settlements/{settlement_id}/items:add")
+async def add_settlement_items(
+    settlement_id: str,
+    accrual_ids: list[str],
+    current_user=Depends(require_roles(["admin", "ops", "super_admin"])),
+    db=Depends(get_db),
+):
+    org_id = current_user["organization_id"]
+    svc = SettlementRunService(db)
+    return await svc.add_items(org_id, settlement_id, accrual_ids, current_user["email"])
+
+
+@router.post("/settlements/{settlement_id}/items:remove")
+async def remove_settlement_items(
+    settlement_id: str,
+    accrual_ids: list[str],
+    current_user=Depends(require_roles(["admin", "ops", "super_admin"])),
+    db=Depends(get_db),
+):
+    org_id = current_user["organization_id"]
+    svc = SettlementRunService(db)
+    return await svc.remove_items(org_id, settlement_id, accrual_ids, current_user["email"])
+
+
+@router.post("/settlements/{settlement_id}/approve")
+async def approve_settlement_run(
+    settlement_id: str,
+    approved_at: Optional[datetime] = None,
+    current_user=Depends(require_roles(["admin", "ops", "super_admin"])),
+    db=Depends(get_db),
+):
+    org_id = current_user["organization_id"]
+    svc = SettlementRunService(db)
+    return await svc.approve(org_id, settlement_id, current_user["email"], approved_at)
+
+
+@router.post("/settlements/{settlement_id}/cancel")
+async def cancel_settlement_run(
+    settlement_id: str,
+    reason: str,
+    current_user=Depends(require_roles(["admin", "ops", "super_admin"])),
+    db=Depends(get_db),
+):
+    org_id = current_user["organization_id"]
+    svc = SettlementRunService(db)
+    return await svc.cancel(org_id, settlement_id, current_user["email"], reason)
+
+
+@router.post("/settlements/{settlement_id}/mark-paid")
+async def mark_settlement_paid(
+    settlement_id: str,
+    paid_at: Optional[datetime] = None,
+    payment_reference: Optional[str] = None,
+    current_user=Depends(require_roles(["admin", "ops", "super_admin"])),
+    db=Depends(get_db),
+):
+    org_id = current_user["organization_id"]
+    svc = SettlementRunService(db)
+    return await svc.mark_paid(
+        org_id,
+        settlement_id,
+        paid_by=current_user["email"],
+        paid_at=paid_at,
+        payment_reference=payment_reference,
+    )
+
     profile = await _upsert_credit_profile(
         db,
         current_user["organization_id"],

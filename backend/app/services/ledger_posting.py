@@ -460,3 +460,20 @@ class PostingMatrixConfig:
             LedgerLine(account_id=supplier_account_id, direction="debit", amount=amount),
             LedgerLine(account_id=platform_ap_clearing_account_id, direction="credit", amount=amount),
         ]
+
+    @staticmethod
+    def get_settlement_paid_lines(
+        supplier_payable_account_id: str,
+        platform_cash_account_id: str,
+        total_amount: float,
+    ) -> list[LedgerLine]:
+        """SETTLEMENT_PAID event (Phase 2A.5):
+
+        - Supplier payable decreases (debit supplier payable)
+        - Platform cash/bank decreases (credit cash)
+        """
+        return [
+            LedgerLine(account_id=supplier_payable_account_id, direction="debit", amount=total_amount),
+            LedgerLine(account_id=platform_cash_account_id, direction="credit", amount=total_amount),
+        ]
+

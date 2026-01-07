@@ -41,7 +41,7 @@ function RefundQueueList({
           <div>
             <CardTitle className="text-sm font-medium">Refund Queue</CardTitle>
             <p className="text-xs text-muted-foreground mt-1">
-              Ops ie akf1 iin af1k refund case listesi.
+              Ops i50 ak151 i5in a51k refund case listesi.
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -296,7 +296,7 @@ function RefundDetailPanel({
     return (
       <Card className="h-full flex items-center justify-center">
         <p className="text-sm text-muted-foreground">
-          Soldan bir refund case see7in.
+          Soldan bir refund case se1n.
         </p>
       </Card>
     );
@@ -309,10 +309,307 @@ function RefundDetailPanel({
   return (
     <Card className="h-full flex flex-col">
       <CardHeader className="flex flex-row items-start justify-between gap-4">
-        <div>
+        <div className="space-y-1">
           <CardTitle className="text-sm font-medium">Refund Detail</CardTitle>
-          <p className="text-xs text-muted-foreground mt-1">
+          <p className="text-xs text-muted-foreground">
             Case ID: <span className="font-mono">{caseData.case_id}</span>
           </p>
           <p className="text-xs text-muted-foreground">
-            Booking: <span className="font-mono">{caseData.booking_id}</span>  b7 Agency:{
+            Booking: <span className="font-mono">{caseData.booking_id}</span>  b7 Agency: <span className="font-mono">{caseData.agency_id}</span>
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Status: <StatusBadge status={caseData.status} />
+          </p>
+        </div>
+        <div className="flex flex-col items-end gap-2">
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={onRefresh}
+            >
+              Refresh
+            </Button>
+          </div>
+          <div className="flex items-center gap-2 mt-2">
+            <Button
+              size="sm"
+              onClick={onOpenApprove}
+              disabled={!isOpen}
+            >
+              Approve
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={onOpenReject}
+              disabled={!isOpen}
+            >
+              Reject
+            </Button>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="flex-1 overflow-y-auto space-y-4 text-sm">
+        <div className="rounded-lg border bg-muted/40 p-3 space-y-1">
+          <div className="text-xs font-semibold text-muted-foreground">Request</div>
+          <div className="flex flex-wrap gap-4 text-xs">
+            <div>
+              <div className="text-muted-foreground">Requested</div>
+              <div>{requested.amount != null ? requested.amount.toFixed(2) : "-"}</div>
+            </div>
+            <div>
+              <div className="text-muted-foreground">Currency</div>
+              <div>{caseData.currency}</div>
+            </div>
+            <div className="min-w-[200px]">
+              <div className="text-muted-foreground">Message</div>
+              <div className="truncate" title={requested.message || "-"}>
+                {requested.message || "-"}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-lg border bg-muted/40 p-3 space-y-1">
+          <div className="text-xs font-semibold text-muted-foreground">Computed</div>
+          <div className="flex flex-wrap gap-4 text-xs">
+            <div>
+              <div className="text-muted-foreground">Refundable</div>
+              <div>{computed.refundable != null ? computed.refundable.toFixed(2) : "-"}</div>
+            </div>
+            <div>
+              <div className="text-muted-foreground">Penalty</div>
+              <div>{computed.penalty != null ? computed.penalty.toFixed(2) : "-"}</div>
+            </div>
+            <div>
+              <div className="text-muted-foreground">Basis</div>
+              <div>{computed.basis || "-"}</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-lg border bg-muted/40 p-3 space-y-1">
+          <div className="text-xs font-semibold text-muted-foreground">Booking financials</div>
+          {bookingFinancials ? (
+            <div className="flex flex-wrap gap-4 text-xs">
+              <div>
+                <div className="text-muted-foreground">Sell total</div>
+                <div>{bookingFinancials.sell_total != null ? bookingFinancials.sell_total.toFixed(2) : "-"}</div>
+              </div>
+              <div>
+                <div className="text-muted-foreground">Refunded total</div>
+                <div>{bookingFinancials.refunded_total != null ? bookingFinancials.refunded_total.toFixed(2) : "-"}</div>
+              </div>
+              <div>
+                <div className="text-muted-foreground">Penalty total</div>
+                <div>{bookingFinancials.penalty_total != null ? bookingFinancials.penalty_total.toFixed(2) : "-"}</div>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <AlertCircle className="h-3 w-3" />
+              <span>Financials bulunamad1.</span>
+            </div>
+          )}
+        </div>
+
+        {caseData.status === "closed" && (
+          <div className="rounded-lg border bg-muted/20 p-3 space-y-1">
+            <div className="text-xs font-semibold text-muted-foreground">Decision</div>
+            <div className="flex flex-wrap gap-4 text-xs">
+              <div>
+                <div className="text-muted-foreground">Decision</div>
+                <div>{caseData.decision || "-"}</div>
+              </div>
+              <div>
+                <div className="text-muted-foreground">Approved amount</div>
+                <div>
+                  {caseData.approved?.amount != null
+                    ? caseData.approved.amount.toFixed(2)
+                    : "-"}
+                </div>
+              </div>
+              <div>
+                <div className="text-muted-foreground">By</div>
+                <div>{caseData.decision_by_email || "-"}</div>
+              </div>
+              <div>
+                <div className="text-muted-foreground">At</div>
+                <div>
+                  {caseData.decision_at
+                    ? new Date(caseData.decision_at).toLocaleString()
+                    : "-"}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+export default function AdminFinanceRefundsPage() {
+  const [list, setList] = useState([]);
+  const [statusFilter, setStatusFilter] = useState("open");
+  const [limit, setLimit] = useState(50);
+
+  const [loadingList, setLoadingList] = useState(true);
+  const [listError, setListError] = useState("");
+
+  const [selectedCaseId, setSelectedCaseId] = useState(null);
+  const [caseData, setCaseData] = useState(null);
+  const [bookingFinancials, setBookingFinancials] = useState(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+
+  const [approveOpen, setApproveOpen] = useState(false);
+  const [rejectOpen, setRejectOpen] = useState(false);
+
+  const loadList = async () => {
+    try {
+      setLoadingList(true);
+      setListError("");
+      const params = {};
+      if (statusFilter === "open") {
+        // open bucket (backend will treat open + pending_approval)
+        params.status = "open";
+      } else if (statusFilter === "closed") {
+        params.status = "closed";
+      }
+      if (limit) params.limit = limit;
+      const resp = await api.get("/ops/finance/refunds", { params });
+      setList(resp.data?.items || []);
+    } catch (e) {
+      setListError(apiErrorMessage(e));
+    } finally {
+      setLoadingList(false);
+    }
+  };
+
+  const loadDetail = async (caseId) => {
+    if (!caseId) return;
+    try {
+      setDetailLoading(true);
+      setCaseData(null);
+      setBookingFinancials(null);
+      const resp = await api.get(`/ops/finance/refunds/${caseId}`);
+      const data = resp.data;
+      setCaseData(data);
+
+      if (data.booking_id) {
+        try {
+          const finResp = await api.get(
+            `/ops/finance/bookings/${data.booking_id}/financials`
+          );
+          setBookingFinancials(finResp.data || null);
+        } catch (e) {
+          console.error("booking_financials fetch failed", e);
+          setBookingFinancials(null);
+        }
+      }
+    } catch (e) {
+      toast({
+        title: "Refund case load failed",
+        description: apiErrorMessage(e),
+        variant: "destructive",
+      });
+    } finally {
+      setDetailLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadList();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [statusFilter, limit]);
+
+  useEffect(() => {
+    if (list && list.length > 0) {
+      const first = list[0];
+      setSelectedCaseId(first.case_id);
+      loadDetail(first.case_id);
+    } else {
+      setSelectedCaseId(null);
+      setCaseData(null);
+      setBookingFinancials(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [list]);
+
+  const onSelectCase = (caseId) => {
+    setSelectedCaseId(caseId);
+    loadDetail(caseId);
+  };
+
+  const onAfterDecision = async () => {
+    await loadList();
+    if (selectedCaseId) {
+      await loadDetail(selectedCaseId);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold text-foreground">Finance  b7 Refunds</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Refund case kuyru1 ve booking finansal snapshot g f6r fcn fcm fc.
+        </p>
+      </div>
+
+      {listError && !loadingList && (
+        <div className="flex items-center gap-2 text-destructive text-sm">
+          <AlertCircle className="h-4 w-4" />
+          <span>{listError}</span>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1.8fr)] gap-4 h-[560px]">
+        <div className="min-h-0">
+          {loadingList ? (
+            <Card className="h-full flex items-center justify-center">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </Card>
+          ) : (
+            <RefundQueueList
+              items={list}
+              statusFilter={statusFilter}
+              limit={limit}
+              onChangeStatus={setStatusFilter}
+              onChangeLimit={setLimit}
+              selectedCaseId={selectedCaseId}
+              onSelectCase={onSelectCase}
+            />
+          )}
+        </div>
+        <div className="min-h-0">
+          <RefundDetailPanel
+            caseData={caseData}
+            bookingFinancials={bookingFinancials}
+            loading={detailLoading}
+            onRefresh={() => {
+              if (selectedCaseId) loadDetail(selectedCaseId);
+            }}
+            onOpenApprove={() => setApproveOpen(true)}
+            onOpenReject={() => setRejectOpen(true)}
+          />
+        </div>
+      </div>
+
+      <RefundApproveDialog
+        open={approveOpen}
+        onOpenChange={setApproveOpen}
+        caseData={caseData}
+        onApproved={onAfterDecision}
+      />
+
+      <RefundRejectDialog
+        open={rejectOpen}
+        onOpenChange={setRejectOpen}
+        caseData={caseData}
+        onRejected={onAfterDecision}
+      />
+    </div>
+  );
+}

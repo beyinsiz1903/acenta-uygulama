@@ -13,6 +13,7 @@ from app.db import close_mongo, connect_mongo, get_db
 from app.seed import ensure_seed_data
 from app.indexes.catalog_indexes import ensure_catalog_indexes
 from app.indexes.pricing_indexes import ensure_pricing_indexes
+from app.indexes.finance_indexes import ensure_finance_indexes
 from app.exception_handlers import register_exception_handlers
 from app.routers.auth import router as auth_router
 from app.routers.customers import router as customers_router

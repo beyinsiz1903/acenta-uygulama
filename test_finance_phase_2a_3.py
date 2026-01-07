@@ -42,7 +42,7 @@ def test_phase_2a_3():
     r = requests.get(f"{BASE_URL}/api/health")
     assert r.status_code == 200
 
-    supplier_id = "test_supplier_phase2a3"
+    supplier_id = "test_supplier_phase2a3_unique"
     if not db.suppliers.find_one({"_id": supplier_id}):
         db.suppliers.insert_one(
             {

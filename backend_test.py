@@ -3715,20 +3715,44 @@ class FinancePhase2A5SettlementPaidTester:
         """Setup an approved settlement run with non-zero totals (similar to Phase 2A.4)"""
         self.log("\n=== SETUP APPROVED SETTLEMENT ===")
         
-        # Use existing supplier from database
+        # Use existing supplier from database that doesn't have open settlements
         import pymongo
         from bson import ObjectId
         try:
             client = pymongo.MongoClient("mongodb://localhost:27017/")
             db = client.test_database
             
-            supplier = db.suppliers.find_one({})
-            if supplier:
-                self.supplier_id = str(supplier['_id'])
-                self.log(f"✅ Using existing supplier: {self.supplier_id}")
+            # Find a supplier without open settlements
+            suppliers = list(db.suppliers.find({}))
+            selected_supplier = None
+            
+            for supplier in suppliers:
+                supplier_id = str(supplier['_id'])
+                # Check if this supplier has any open settlements
+                open_settlements = db.settlement_runs.count_documents({
+                    'supplier_id': supplier_id,
+                    'status': {'$in': ['draft', 'approved']}
+                })
+                
+                if open_settlements == 0:
+                    selected_supplier = supplier
+                    break
+            
+            if selected_supplier:
+                self.supplier_id = str(selected_supplier['_id'])
+                self.log(f"✅ Using supplier without open settlements: {self.supplier_id}")
             else:
-                self.log("❌ No suppliers found in database")
-                return False
+                # Use the first supplier and clean up its open settlements
+                supplier = suppliers[0]
+                self.supplier_id = str(supplier['_id'])
+                
+                # Cancel any open settlements
+                db.settlement_runs.update_many(
+                    {'supplier_id': self.supplier_id, 'status': {'$in': ['draft', 'approved']}},
+                    {'$set': {'status': 'cancelled'}}
+                )
+                
+                self.log(f"✅ Using supplier after cleanup: {self.supplier_id}")
             
             client.close()
             

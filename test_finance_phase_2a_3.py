@@ -117,12 +117,6 @@ def test_phase_2a_3():
             }
         )
 
-
-        )
-
-    # Ensure supplier accounts/balances clean-ish
-    db.supplier_accruals.delete_many({"organization_id": org_id, "supplier_id": supplier_id})
-
     # Helper to get balances for debug
     def get_supplier_balance(ccy: str) -> float:
         r2 = requests.get(

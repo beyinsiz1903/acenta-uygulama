@@ -38,7 +38,7 @@ class BookingFinancialsService:
         await self.db.booking_financials.update_one(
             flt,
             {
-                "${setOnInsert}": {
+                "$setOnInsert": {
                     "organization_id": organization_id,
                     "booking_id": booking_id_str,
                     "currency": currency,

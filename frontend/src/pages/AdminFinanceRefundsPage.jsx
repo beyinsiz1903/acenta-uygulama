@@ -485,7 +485,7 @@ export default function AdminFinanceRefundsPage() {
     } finally {
       setLoadingList(false);
     }
-  };
+  }, [limit, statusFilter]);
 
   const loadDetail = React.useCallback(async (caseId) => {
     if (!caseId) return;

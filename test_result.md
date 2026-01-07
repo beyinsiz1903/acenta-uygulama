@@ -298,6 +298,18 @@
         agent: "testing"
         comment: "✅ KABUL KRİTERLERİ BACKEND TEST COMPLETE - All 3 test scenarios passed (100% success rate). COMPREHENSIVE VERIFICATION COMPLETED: A) Authentication: Admin login successful (admin@acenta.test/admin123) with super_admin role verification. B) TEST 1 - High Risk + repeat_desc Sort: GET /api/admin/matches?days=7&min_total=1&include_action=1&only_high_risk=1&sort=repeat_desc working correctly - returned 1 item with high_risk=true, repeat_not_arrived_7 descending order verified [2], tie-breaker logic confirmed working (cancel_rate desc for same repeat values), output provided: Item 1: id=riskdelta__1ea289b7-621b-49d8-be9c-c21a6bb44f47, repeat_not_arrived_7=2, cancel_rate=0.333, total_bookings=6, high_risk=true, high_risk_reasons=['repeat']. C) TEST 2 - High Risk First Sort: GET /api/admin/matches?days=30&min_total=1&include_action=1&sort=high_risk_first working correctly - returned 6 items with proper high_risk=true items before high_risk=false items, no high_risk=true found after high_risk=false, output provided for first 6 items showing proper segregation (2 high-risk items at top, 4 non-high-risk items below). All kabul kriterleri backend functionality production-ready with proper sorting algorithms and risk classification working as specified."
 
+  - task: "Kısa backend regression: Seed değişikliği + publish guard"
+    implemented: true
+    working: true
+    file: "/app/backend/app/routers/admin_catalog.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ KISA BACKEND REGRESSION TEST COMPLETE - All 6 test scenarios passed (100% success rate). COMPREHENSIVE TURKISH REQUIREMENTS VERIFIED: A) Authentication: Admin login successful (admin@acenta.test/admin123) with proper JWT token and organization_id. B) HOTEL PRODUCTS WITH EUR RATE PLANS: GET /api/admin/catalog/products?type=hotel&limit=10 working correctly - found 7 hotel products, identified suitable product (product_id: 695eb9fc126de2312e53d974) with type='hotel', status='active', location set (Istanbul, TR), and EUR rate plans available. C) RATE PLAN VERIFICATION: GET /api/admin/catalog/rate-plans?product_id=695eb9fc126de2312e53d974 working correctly - found 1 rate plan with status='active', currency='EUR', board='BB', base_net_price=100.0 (all criteria met). D) DRAFT VERSION CREATION: POST /api/admin/catalog/products/{id}/versions with content.description working correctly - created draft version (version_id: 695eba70126de2312e53d979, status='draft', version=2). E) PUBLISH GUARD SUCCESS: POST /api/admin/catalog/products/{id}/versions/{version_id}/publish working correctly - returned 200 with product_id, published_version=2, status='published' (all required fields verified). F) SEED DATA EXAMPLES PROVIDED: Hotel example: {product_id: '695eb9fc126de2312e53d974', type: 'hotel', status: 'active', location: {city: 'Istanbul', country: 'TR'}, code: 'HTL_P0_TEST_CBD51716'}. Rate plan example: {rate_plan_id: '695eb9fc126de2312e53d975', status: 'active', currency: 'EUR', board: 'BB', base_net_price: 100.0, code: 'BB_P0_CBD51716'}. CRITICAL VERIFICATION: Seed'li hotel'in zaten active EUR BB rate_plan'ı var, bu yüzden publish 200 döndü ve tüm gerekli alanlar (product_id, published_version, status='published') doğrulandı. Catalog seed data and publish guard functionality working correctly as specified in Turkish requirements."
+
 ## backend:
 ##   - task: "FAZ-6 Komisyon & Mutabakat (model + hesaplama + settlements API + cancel reversal)"
 ##     implemented: true

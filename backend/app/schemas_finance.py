@@ -233,6 +233,54 @@ class ExposureResponse(BaseModel):
 
 
 # ============================================================================
+# ============================================================================
+# 7) Settlement runs (Phase 2A.4)
+# ============================================================================
+
+
+class SettlementRunCreateRequest(BaseModel):
+    supplier_id: str
+    currency: str
+    period: Optional[dict[str, Any]] = None
+
+
+class SettlementRunListItem(BaseModel):
+    settlement_id: str
+    supplier_id: str
+    currency: str
+    status: Literal["draft", "approved", "paid", "cancelled"]
+    totals: dict[str, Any]
+    created_at: datetime
+    approved_at: Optional[datetime] = None
+    paid_at: Optional[datetime] = None
+
+
+class SettlementRunListResponse(BaseModel):
+    items: list[SettlementRunListItem]
+
+
+class SettlementRunDetail(BaseModel):
+    settlement_id: str
+    organization_id: str
+    supplier_id: str
+    currency: str
+    status: Literal["draft", "approved", "paid", "cancelled"]
+    period: Optional[dict[str, Any]] = None
+    line_items: list[dict[str, Any]]
+    totals: dict[str, Any]
+    approved_at: Optional[datetime] = None
+    approved_by_email: Optional[str] = None
+    paid_at: Optional[datetime] = None
+    paid_by_email: Optional[str] = None
+    payment_reference: Optional[str] = None
+    payment_posting_id: Optional[str] = None
+    cancelled_at: Optional[datetime] = None
+    cancelled_by_email: Optional[str] = None
+    cancel_reason: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
+
+
 # 8) Generic responses
 # ============================================================================
 

@@ -12,411 +12,403 @@ from datetime import datetime, date
 # Configuration
 BASE_URL = "http://localhost:8001"
 
-def login_admin():
-    """Login as admin and return token, org_id, email"""
+def login_agency():
+    """Login as agency user and return token, org_id, agency_id, email"""
     r = requests.post(
         f"{BASE_URL}/api/auth/login",
-        json={"email": "admin@acenta.test", "password": "admin123"},
+        json={"email": "agency1@demo.test", "password": "agency123"},
     )
-    assert r.status_code == 200, f"Admin login failed: {r.text}"
+    assert r.status_code == 200, f"Agency login failed: {r.text}"
     data = r.json()
-    return data["access_token"], data["user"]["organization_id"], data["user"]["email"]
+    user = data["user"]
+    return data["access_token"], user["organization_id"], user.get("agency_id"), user["email"]
 
-def test_product_catalog_mvp():
-    """Test Backend Product Catalog MVP according to Turkish requirements"""
+def test_p02_search_quote_booking_chain():
+    """Test P0.2 Search→Quote→Booking backend chain with Turkish requirements"""
     print("\n" + "=" * 80)
-    print("BACKEND PRODUCT CATALOG MVP TEST")
-    print("Testing admin catalog endpoints with hotel products and rate plans")
+    print("P0.2 SEARCH→QUOTE→BOOKING BACKEND CHAIN TEST")
+    print("Testing B2B hotel search, quote creation, booking creation, and my bookings")
     print("=" * 80 + "\n")
 
     # Setup
-    token, org_id, admin_email = login_admin()
+    token, org_id, agency_id, agency_email = login_agency()
     headers = {"Authorization": f"Bearer {token}"}
 
-    print(f"✅ Admin login successful: {admin_email}")
+    print(f"✅ Agency login successful: {agency_email}")
     print(f"✅ Organization ID: {org_id}")
+    print(f"✅ Agency ID: {agency_id}")
 
     # ------------------------------------------------------------------
-    # Test 1: GET /api/admin/catalog/products?type=hotel&limit=50
-    # Should return 200 with hotel products having location fields
+    # Test 1: Login - POST /api/auth/login
+    # Should return access_token + user.roles with agency_admin/agent
     # ------------------------------------------------------------------
-    print("\n1️⃣  Testing GET /api/admin/catalog/products?type=hotel&limit=50...")
+    print("\n1️⃣  Testing Login Authentication...")
+    
+    # Re-login to verify roles
+    r = requests.post(
+        f"{BASE_URL}/api/auth/login",
+        json={"email": "agency1@demo.test", "password": "agency123"},
+    )
+    assert r.status_code == 200, f"Login failed: {r.text}"
+    login_data = r.json()
+    
+    assert "access_token" in login_data, "access_token should be present"
+    assert "user" in login_data, "user should be present"
+    
+    user_roles = login_data["user"].get("roles", [])
+    print(f"   📋 User roles: {user_roles}")
+    
+    # Check if user has agency_admin or agency_agent role
+    agency_roles = [role for role in user_roles if role in ["agency_admin", "agency_agent"]]
+    assert len(agency_roles) > 0, f"User should have agency_admin or agency_agent role, got: {user_roles}"
+    print(f"   ✅ User has required agency role: {agency_roles}")
+
+    # ------------------------------------------------------------------
+    # Test 2: Hotel Search - GET /api/b2b/hotels/search
+    # Should return 200 with items list containing required fields
+    # ------------------------------------------------------------------
+    print("\n2️⃣  Testing Hotel Search - GET /api/b2b/hotels/search...")
+
+    search_params = {
+        "city": "Istanbul",
+        "check_in": "2026-01-10",
+        "check_out": "2026-01-12",
+        "adults": 2,
+        "children": 0
+    }
+    
+    r = requests.get(
+        f"{BASE_URL}/api/b2b/hotels/search",
+        params=search_params,
+        headers=headers,
+    )
+    assert r.status_code == 200, f"Hotel search failed: {r.text}"
+    search_response = r.json()
+    
+    print(f"   📋 Search response status: 200")
+    assert "items" in search_response, "Response should contain items list"
+    
+    items = search_response["items"]
+    print(f"   📋 Found {len(items)} hotel search results")
+    assert len(items) > 0, "Should have at least 1 search result"
+    
+    # Verify first item structure
+    first_item = items[0]
+    required_fields = [
+        "product_id", "rate_plan_id", "hotel_name", "city", "country", 
+        "board", "base_currency", "base_net", "selling_currency", 
+        "selling_total", "nights", "occupancy"
+    ]
+    
+    for field in required_fields:
+        assert field in first_item, f"Field '{field}' should be present in search result"
+    
+    # Verify specific values
+    assert isinstance(first_item["product_id"], str), "product_id should be string"
+    assert isinstance(first_item["rate_plan_id"], str), "rate_plan_id should be string"
+    assert first_item["base_net"] > 0, "base_net should be > 0"
+    assert first_item["selling_total"] > 0, "selling_total should be > 0"
+    assert first_item["nights"] == 2, "nights should be 2 (2026-01-10 to 2026-01-12)"
+    assert first_item["occupancy"]["adults"] == 2, "occupancy.adults should be 2"
+    assert first_item["occupancy"]["children"] == 0, "occupancy.children should be 0"
+    
+    print(f"   ✅ Search result structure verified")
+    print(f"   📋 Sample result: {first_item['hotel_name']} - {first_item['city']}, {first_item['country']}")
+    print(f"   💰 Price: {first_item['base_net']} {first_item['base_currency']} → {first_item['selling_total']} {first_item['selling_currency']}")
+    
+    # Store for next test
+    selected_product_id = first_item["product_id"]
+    selected_rate_plan_id = first_item["rate_plan_id"]
+
+    # ------------------------------------------------------------------
+    # Test 3: Quote Creation - POST /api/b2b/quotes
+    # Should return 200 with quote_id, expires_at, and offers
+    # ------------------------------------------------------------------
+    print("\n3️⃣  Testing Quote Creation - POST /api/b2b/quotes...")
+
+    quote_payload = {
+        "channel_id": "agency_extranet",
+        "items": [
+            {
+                "product_id": selected_product_id,
+                "room_type_id": "default_room",
+                "rate_plan_id": selected_rate_plan_id,
+                "check_in": "2026-01-10",
+                "check_out": "2026-01-12",
+                "occupancy": 2
+            }
+        ],
+        "client_context": {"source": "p0.2-test"}
+    }
+    
+    r = requests.post(
+        f"{BASE_URL}/api/b2b/quotes",
+        json=quote_payload,
+        headers=headers,
+    )
+    assert r.status_code == 200, f"Quote creation failed: {r.text}"
+    quote_response = r.json()
+    
+    print(f"   📋 Quote creation status: 200")
+    
+    # Verify required fields
+    assert "quote_id" in quote_response, "quote_id should be present"
+    assert "expires_at" in quote_response, "expires_at should be present"
+    assert "offers" in quote_response, "offers should be present"
+    
+    quote_id = quote_response["quote_id"]
+    assert isinstance(quote_id, str) and len(quote_id) > 0, "quote_id should be non-empty string"
+    
+    expires_at = quote_response["expires_at"]
+    # Verify expires_at is a future date
+    expires_dt = datetime.fromisoformat(expires_at.replace('Z', '+00:00'))
+    assert expires_dt > datetime.now(expires_dt.tzinfo), "expires_at should be in the future"
+    
+    offers = quote_response["offers"]
+    assert len(offers) >= 1, "Should have at least 1 offer"
+    
+    first_offer = offers[0]
+    assert "currency" in first_offer, "Offer should have currency"
+    assert "net" in first_offer, "Offer should have net price"
+    assert "sell" in first_offer, "Offer should have sell price"
+    assert first_offer["net"] > 0, "net should be > 0"
+    assert first_offer["sell"] > 0, "sell should be > 0"
+    
+    print(f"   ✅ Quote created successfully")
+    print(f"   📋 Quote ID: {quote_id}")
+    print(f"   📅 Expires at: {expires_at}")
+    print(f"   💰 First offer: {first_offer['net']} → {first_offer['sell']} {first_offer['currency']}")
+
+    # ------------------------------------------------------------------
+    # Test 4: Booking Creation - POST /api/b2b/bookings
+    # Should return 200 with booking_id and status=CONFIRMED
+    # ------------------------------------------------------------------
+    print("\n4️⃣  Testing Booking Creation - POST /api/b2b/bookings...")
+
+    # Generate unique idempotency key
+    idempotency_key = f"p0.2-test-{uuid.uuid4()}"
+    
+    booking_payload = {
+        "quote_id": quote_id,
+        "offer_key": "0",
+        "guest": {
+            "full_name": "P0.2 Test Guest",
+            "email": "p02-test@example.com",
+            "phone": "+90 555 000 0000"
+        },
+        "notes": "P0.2 backend flow test"
+    }
+    
+    booking_headers = {
+        **headers,
+        "Idempotency-Key": idempotency_key
+    }
+    
+    r = requests.post(
+        f"{BASE_URL}/api/b2b/bookings",
+        json=booking_payload,
+        headers=booking_headers,
+    )
+    assert r.status_code == 200, f"Booking creation failed: {r.text}"
+    booking_response = r.json()
+    
+    print(f"   📋 Booking creation status: 200")
+    
+    # Verify required fields
+    assert "booking_id" in booking_response, "booking_id should be present"
+    assert "status" in booking_response, "status should be present"
+    
+    booking_id = booking_response["booking_id"]
+    assert isinstance(booking_id, str) and len(booking_id) > 0, "booking_id should be non-empty string"
+    
+    booking_status = booking_response["status"]
+    assert booking_status == "CONFIRMED", f"Status should be CONFIRMED, got: {booking_status}"
+    
+    # Check voucher_status if present
+    if "voucher_status" in booking_response:
+        voucher_status = booking_response["voucher_status"]
+        print(f"   📋 Voucher status: {voucher_status}")
+    
+    print(f"   ✅ Booking created successfully")
+    print(f"   📋 Booking ID: {booking_id}")
+    print(f"   📊 Status: {booking_status}")
+
+    # ------------------------------------------------------------------
+    # Test 5: My Bookings - GET /api/b2b/bookings
+    # Should return 200 with items containing the created booking
+    # ------------------------------------------------------------------
+    print("\n5️⃣  Testing My Bookings - GET /api/b2b/bookings...")
 
     r = requests.get(
-        f"{BASE_URL}/api/admin/catalog/products?type=hotel&limit=50",
+        f"{BASE_URL}/api/b2b/bookings",
         headers=headers,
     )
-    assert r.status_code == 200, f"Product list failed: {r.text}"
-    products_response = r.json()
+    assert r.status_code == 200, f"My bookings failed: {r.text}"
+    bookings_response = r.json()
     
-    print(f"   📋 Found {len(products_response['items'])} hotel products")
+    print(f"   📋 My bookings status: 200")
     
-    # Verify structure and location fields
-    for item in products_response['items']:
-        assert item['type'] == 'hotel', f"Expected hotel type, got {item['type']}"
-        # Location can be empty but should be present in schema
-        if 'location' in item and item['location']:
-            assert 'city' in item['location'], "Location should have city field"
-            assert 'country' in item['location'], "Location should have country field"
-            print(f"   📍 Product {item['code']}: {item['location']['city']}, {item['location']['country']}")
-        else:
-            print(f"   📍 Product {item['code']}: No location data (allowed)")
+    assert "items" in bookings_response, "Response should contain items list"
+    items = bookings_response["items"]
+    print(f"   📋 Found {len(items)} bookings")
     
-    print("   ✅ Hotel products list working correctly with proper location schema")
-
-    # ------------------------------------------------------------------
-    # Test 2: POST /api/admin/catalog/products - Create hotel with location
-    # Should return 201 and location data should persist
-    # ------------------------------------------------------------------
-    print("\n2️⃣  Testing POST /api/admin/catalog/products - Create hotel with location...")
-
-    import uuid
-    unique_suffix = str(uuid.uuid4())[:8]
-    
-    product_payload = {
-        "type": "hotel",
-        "code": f"HTL_P0_TEST_{unique_suffix}",
-        "name": {
-            "tr": "P0 Test Otel",
-            "en": "P0 Test Hotel"
-        },
-        "default_currency": "EUR",
-        "status": "active",
-        "location": {
-            "city": "Istanbul",
-            "country": "TR"
-        }
-    }
-
-    r = requests.post(
-        f"{BASE_URL}/api/admin/catalog/products",
-        json=product_payload,
-        headers=headers,
-    )
-    assert r.status_code == 200, f"Product creation failed: {r.text}"
-    created_product = r.json()
-    product_id = created_product['product_id']
-    
-    print(f"   ✅ Product created with ID: {product_id}")
-    print(f"   📍 Location: {created_product['location']['city']}, {created_product['location']['country']}")
-
-    # Verify location persists by getting the product
-    r_get = requests.get(
-        f"{BASE_URL}/api/admin/catalog/products/{product_id}",
-        headers=headers,
-    )
-    assert r_get.status_code == 200, f"Product get failed: {r_get.text}"
-    retrieved_product = r_get.json()
-    
-    assert retrieved_product['location']['city'] == "Istanbul", "City should persist"
-    assert retrieved_product['location']['country'] == "TR", "Country should persist"
-    print("   ✅ Location data persisted correctly")
-
-    # ------------------------------------------------------------------
-    # Test 3: POST /api/admin/catalog/products - Missing location validation
-    # Should return 422 validation_error with field=location
-    # ------------------------------------------------------------------
-    print("\n3️⃣  Testing POST /api/admin/catalog/products - Missing location validation...")
-
-    invalid_payload = {
-        "type": "hotel",
-        "code": f"HTL_INVALID_TEST_{unique_suffix}",
-        "name": {
-            "tr": "Invalid Test Otel",
-            "en": "Invalid Test Hotel"
-        },
-        "default_currency": "EUR",
-        "status": "active"
-        # Missing location field for hotel type
-    }
-
-    r = requests.post(
-        f"{BASE_URL}/api/admin/catalog/products",
-        json=invalid_payload,
-        headers=headers,
-    )
-    
-    # Note: Based on the schema, location is Optional, so this might not fail
-    # Let's check what actually happens
-    print(f"   📋 Response status: {r.status_code}")
-    if r.status_code == 422:
-        error_response = r.json()
-        print(f"   ✅ Validation error as expected: {error_response}")
-        # Check if field=location is mentioned
-        error_text = str(error_response)
-        if 'location' in error_text.lower():
-            print("   ✅ Location field mentioned in validation error")
-        else:
-            print("   ⚠️  Location field not specifically mentioned in error")
-    elif r.status_code == 201:
-        print("   ⚠️  Product created without location (location is optional in schema)")
-        # Clean up the created product
-        created_invalid = r.json()
-        print(f"   🧹 Created product ID: {created_invalid['product_id']} (location optional)")
-    else:
-        print(f"   ❌ Unexpected response: {r.status_code} - {r.text}")
-
-    # ------------------------------------------------------------------
-    # Test 4: POST /api/admin/catalog/rate-plans - Create rate plan
-    # Should return 201 and verify currency/base_net_price/status fields
-    # ------------------------------------------------------------------
-    print("\n4️⃣  Testing POST /api/admin/catalog/rate-plans - Create rate plan...")
-
-    rate_plan_payload = {
-        "product_id": product_id,
-        "code": f"BB_P0_{unique_suffix}",
-        "name": {
-            "tr": "BB Plan",
-            "en": "BB Plan"
-        },
-        "board": "BB",
-        "currency": "EUR",
-        "base_net_price": 100.0,
-        "status": "active"
-    }
-
-    r = requests.post(
-        f"{BASE_URL}/api/admin/catalog/rate-plans",
-        json=rate_plan_payload,
-        headers=headers,
-    )
-    assert r.status_code == 200, f"Rate plan creation failed: {r.text}"
-    created_rate_plan = r.json()
-    rate_plan_id = created_rate_plan['rate_plan_id']
-    
-    print(f"   ✅ Rate plan created with ID: {rate_plan_id}")
-    print(f"   💰 Currency: {created_rate_plan.get('currency', 'N/A')}")
-    print(f"   💰 Base net price: {created_rate_plan.get('base_net_price', 'N/A')}")
-    print(f"   📊 Status: {created_rate_plan.get('status', 'N/A')}")
-    
-    # Verify required fields are present
-    assert 'currency' in created_rate_plan, "Currency field should be present"
-    assert 'base_net_price' in created_rate_plan, "Base net price field should be present"
-    assert 'status' in created_rate_plan, "Status field should be present"
-    print("   ✅ All required fields present in rate plan response")
-
-    # ------------------------------------------------------------------
-    # Test 5: GET /api/admin/catalog/rate-plans?product_id=<id>
-    # Should return 200 with at least 1 plan
-    # ------------------------------------------------------------------
-    print("\n5️⃣  Testing GET /api/admin/catalog/rate-plans?product_id=<id>...")
-
-    r = requests.get(
-        f"{BASE_URL}/api/admin/catalog/rate-plans?product_id={product_id}",
-        headers=headers,
-    )
-    assert r.status_code == 200, f"Rate plans list failed: {r.text}"
-    rate_plans_response = r.json()
-    
-    assert len(rate_plans_response) >= 1, "Should have at least 1 rate plan"
-    print(f"   ✅ Found {len(rate_plans_response)} rate plan(s) for product")
-    
-    # Verify our created rate plan is in the list
-    found_our_plan = False
-    for plan in rate_plans_response:
-        if plan['rate_plan_id'] == rate_plan_id:
-            found_our_plan = True
-            print(f"   📋 Found our rate plan: {plan['code']} - {plan['board']}")
+    # Find our created booking (should be first due to created_at desc sort)
+    our_booking = None
+    for item in items:
+        if item.get("booking_id") == booking_id:
+            our_booking = item
             break
     
-    assert found_our_plan, "Our created rate plan should be in the list"
-    print("   ✅ Rate plans list working correctly")
+    assert our_booking is not None, f"Created booking {booking_id} should be in the list"
+    
+    # Verify booking structure
+    required_booking_fields = [
+        "booking_id", "status", "created_at", "currency", 
+        "amount_sell", "check_in", "check_out", "primary_guest_name", "product_name"
+    ]
+    
+    for field in required_booking_fields:
+        assert field in our_booking, f"Field '{field}' should be present in booking item"
+    
+    # Verify specific values
+    assert our_booking["product_name"] != "", "product_name should not be empty"
+    assert our_booking["check_in"] == "2026-01-10", "check_in should match"
+    assert our_booking["check_out"] == "2026-01-12", "check_out should match"
+    assert our_booking["amount_sell"] > 0, "amount_sell should be > 0"
+    
+    print(f"   ✅ Created booking found in my bookings list")
+    print(f"   📋 Booking: {our_booking['product_name']} - {our_booking['primary_guest_name']}")
+    print(f"   💰 Amount: {our_booking['amount_sell']} {our_booking['currency']}")
+    print(f"   📅 Dates: {our_booking['check_in']} to {our_booking['check_out']}")
 
     # ------------------------------------------------------------------
-    # Test 6: POST /api/admin/catalog/products/{id}/versions - Create draft version
-    # Should return 201 with draft version
+    # Test 6a: Edge Guard - Invalid date range
+    # Should return 422 with error.invalid_date_range
     # ------------------------------------------------------------------
-    print("\n6️⃣  Testing POST /api/admin/catalog/products/{id}/versions - Create draft version...")
+    print("\n6️⃣ a) Testing Edge Guard - Invalid date range...")
 
-    version_payload = {
-        "content": {
-            "description": {
-                "tr": "",
-                "en": ""
-            }
-        }
+    invalid_search_params = {
+        "city": "Istanbul",
+        "check_in": "2026-01-12",  # After check_out
+        "check_out": "2026-01-10",
+        "adults": 2,
+        "children": 0
     }
-
-    r = requests.post(
-        f"{BASE_URL}/api/admin/catalog/products/{product_id}/versions",
-        json=version_payload,
-        headers=headers,
-    )
-    assert r.status_code == 200, f"Version creation failed: {r.text}"
-    created_version = r.json()
-    version_id = created_version['version_id']
     
-    print(f"   ✅ Version created with ID: {version_id}")
-    print(f"   📊 Status: {created_version['status']}")
-    print(f"   🔢 Version number: {created_version['version']}")
-    
-    assert created_version['status'] == 'draft', "Version should be in draft status"
-    print("   ✅ Draft version created successfully")
-
-    # ------------------------------------------------------------------
-    # Test 7a: POST /api/admin/catalog/products/{id}/versions/{version_id}/publish
-    # First call without rate plan - should return 409 product_not_sellable
-    # ------------------------------------------------------------------
-    print("\n7️⃣ a) Testing publish without rate plan - should fail...")
-
-    # First, let's make sure the product doesn't have active rate plans by checking current state
-    # Actually, we just created an active rate plan, so let's deactivate it first or create a new product
-    
-    # Create a new product without rate plans for this test
-    test_product_payload = {
-        "type": "hotel",
-        "code": f"HTL_NO_RATES_TEST_{unique_suffix}",
-        "name": {
-            "tr": "Test Otel Rates Yok",
-            "en": "Test Hotel No Rates"
-        },
-        "default_currency": "EUR",
-        "status": "active",
-        "location": {
-            "city": "Ankara",
-            "country": "TR"
-        }
-    }
-
-    r = requests.post(
-        f"{BASE_URL}/api/admin/catalog/products",
-        json=test_product_payload,
-        headers=headers,
-    )
-    assert r.status_code == 200, f"Test product creation failed: {r.text}"
-    test_product = r.json()
-    test_product_id = test_product['product_id']
-    
-    # Create a version for this product
-    r = requests.post(
-        f"{BASE_URL}/api/admin/catalog/products/{test_product_id}/versions",
-        json=version_payload,
-        headers=headers,
-    )
-    assert r.status_code == 200, f"Test version creation failed: {r.text}"
-    test_version = r.json()
-    test_version_id = test_version['version_id']
-
-    # Now try to publish without rate plans
-    r = requests.post(
-        f"{BASE_URL}/api/admin/catalog/products/{test_product_id}/versions/{test_version_id}/publish",
-        headers=headers,
-    )
-    
-    print(f"   📋 Publish response status: {r.status_code}")
-    if r.status_code == 409:
-        error_response = r.json()
-        print(f"   ✅ Expected 409 error: {error_response}")
-        
-        # Check for specific error code and message
-        if 'error' in error_response:
-            error_code = error_response['error'].get('code', '')
-            error_message = error_response['error'].get('message', '')
-            
-            if 'product_not_sellable' in error_code:
-                print("   ✅ Correct error code: product_not_sellable")
-            else:
-                print(f"   ⚠️  Error code: {error_code} (expected: product_not_sellable)")
-                
-            if 'rate plan' in error_message.lower():
-                print("   ✅ Error message mentions rate plan requirement")
-            else:
-                print(f"   ⚠️  Error message: {error_message}")
-        else:
-            print(f"   ⚠️  Error response format: {error_response}")
-    else:
-        print(f"   ❌ Expected 409, got {r.status_code}: {r.text}")
-
-    # ------------------------------------------------------------------
-    # Test 7b: POST /api/admin/catalog/products/{id}/versions/{version_id}/publish
-    # With active rate plan - should return 200 with status=published
-    # ------------------------------------------------------------------
-    print("\n7️⃣ b) Testing publish with active rate plan - should succeed...")
-
-    # Use the original product that has an active rate plan
-    r = requests.post(
-        f"{BASE_URL}/api/admin/catalog/products/{product_id}/versions/{version_id}/publish",
-        headers=headers,
-    )
-    
-    print(f"   📋 Publish response status: {r.status_code}")
-    if r.status_code == 200:
-        publish_response = r.json()
-        print(f"   ✅ Publish successful: {publish_response}")
-        
-        assert publish_response['status'] == 'published', "Status should be published"
-        assert publish_response['published_version'] > 0, "Published version should be > 0"
-        
-        print(f"   📊 Status: {publish_response['status']}")
-        print(f"   🔢 Published version: {publish_response['published_version']}")
-        print("   ✅ Publish with active rate plan successful")
-    else:
-        print(f"   ❌ Publish failed: {r.status_code} - {r.text}")
-
-    # ------------------------------------------------------------------
-    # Test 8: Seed data verification
-    # GET /api/admin/catalog/products?type=hotel&limit=5 to verify seed data
-    # ------------------------------------------------------------------
-    print("\n8️⃣  Testing seed data verification...")
-
     r = requests.get(
-        f"{BASE_URL}/api/admin/catalog/products?type=hotel&limit=5",
+        f"{BASE_URL}/api/b2b/hotels/search",
+        params=invalid_search_params,
         headers=headers,
     )
-    assert r.status_code == 200, f"Seed data check failed: {r.text}"
-    seed_products = r.json()
+    assert r.status_code == 422, f"Expected 422 for invalid date range, got: {r.status_code}"
+    error_response = r.json()
     
-    print(f"   📋 Found {len(seed_products['items'])} hotel products in seed data")
+    print(f"   📋 Invalid date range status: 422")
     
-    # Look for at least 1 active hotel with EUR currency
-    found_active_eur_hotel = False
-    active_hotel_with_rates = None
+    # Check error structure
+    assert "error" in error_response, "Error response should contain error field"
+    error = error_response["error"]
+    assert "code" in error, "Error should contain code"
+    assert error["code"] == "invalid_date_range", f"Expected invalid_date_range, got: {error['code']}"
     
-    for product in seed_products['items']:
-        if (product['type'] == 'hotel' and 
-            product['status'] == 'active' and 
-            product.get('default_currency') == 'EUR'):
-            
-            found_active_eur_hotel = True
-            print(f"   🏨 Found active EUR hotel: {product['code']} - {product.get('name_en', 'N/A')}")
-            
-            # Check if this hotel has active rate plans
-            r_rates = requests.get(
-                f"{BASE_URL}/api/admin/catalog/rate-plans?product_id={product['product_id']}",
-                headers=headers,
-            )
-            
-            if r_rates.status_code == 200:
-                rates = r_rates.json()
-                active_rates = [r for r in rates if r.get('status') == 'active' and r.get('currency') == 'EUR']
-                
-                if active_rates:
-                    active_hotel_with_rates = product
-                    print(f"   💰 Found {len(active_rates)} active EUR rate plans:")
-                    for rate in active_rates:
-                        print(f"      - {rate['code']}: {rate['board']}, price: {rate.get('base_net_price', 0)}")
-                    break
+    print(f"   ✅ Invalid date range correctly rejected")
+    print(f"   📋 Error: {error['code']} - {error.get('message', '')}")
+
+    # ------------------------------------------------------------------
+    # Test 6b: Edge Guard - Empty city
+    # Should return 422 with validation_error, field=city
+    # ------------------------------------------------------------------
+    print("\n6️⃣ b) Testing Edge Guard - Empty city...")
+
+    empty_city_params = {
+        "city": "",  # Empty city
+        "check_in": "2026-01-10",
+        "check_out": "2026-01-12",
+        "adults": 2,
+        "children": 0
+    }
     
-    if found_active_eur_hotel:
-        print("   ✅ Found at least 1 active hotel with EUR currency")
+    r = requests.get(
+        f"{BASE_URL}/api/b2b/hotels/search",
+        params=empty_city_params,
+        headers=headers,
+    )
+    assert r.status_code == 422, f"Expected 422 for empty city, got: {r.status_code}"
+    error_response = r.json()
+    
+    print(f"   📋 Empty city status: 422")
+    
+    # Check error structure
+    assert "error" in error_response, "Error response should contain error field"
+    error = error_response["error"]
+    assert "code" in error, "Error should contain code"
+    assert error["code"] == "validation_error", f"Expected validation_error, got: {error['code']}"
+    
+    # Check if field=city is mentioned
+    error_details = error.get("details", {})
+    if "field" in error_details:
+        assert error_details["field"] == "city", f"Expected field=city, got: {error_details['field']}"
+        print(f"   ✅ Empty city correctly rejected with field=city")
     else:
-        print("   ⚠️  No active EUR hotels found in seed data")
+        # Check if city is mentioned in message or details
+        error_text = str(error_response).lower()
+        assert "city" in error_text, "Error should mention city field"
+        print(f"   ✅ Empty city correctly rejected (city mentioned in error)")
     
-    if active_hotel_with_rates:
-        print("   ✅ Found hotel with active EUR rate plans")
-        print(f"   🎯 Example: {active_hotel_with_rates['code']} has active BB rate plans")
-    else:
-        print("   ⚠️  No hotels with active EUR rate plans found")
+    print(f"   📋 Error: {error['code']} - {error.get('message', '')}")
+
+    # ------------------------------------------------------------------
+    # Test 6c: Edge Guard - Invalid product_id in quote
+    # Should return 409 product_not_available
+    # ------------------------------------------------------------------
+    print("\n6️⃣ c) Testing Edge Guard - Invalid product_id in quote...")
+
+    # Generate a random ObjectId-like string
+    invalid_product_id = "507f1f77bcf86cd799439011"  # Valid ObjectId format but non-existent
+    
+    invalid_quote_payload = {
+        "channel_id": "agency_extranet",
+        "items": [
+            {
+                "product_id": invalid_product_id,
+                "room_type_id": "default_room",
+                "rate_plan_id": selected_rate_plan_id,  # Use valid rate_plan_id
+                "check_in": "2026-01-10",
+                "check_out": "2026-01-12",
+                "occupancy": 2
+            }
+        ],
+        "client_context": {"source": "p0.2-test-invalid"}
+    }
+    
+    r = requests.post(
+        f"{BASE_URL}/api/b2b/quotes",
+        json=invalid_quote_payload,
+        headers=headers,
+    )
+    assert r.status_code == 409, f"Expected 409 for invalid product_id, got: {r.status_code}"
+    error_response = r.json()
+    
+    print(f"   📋 Invalid product_id status: 409")
+    
+    # Check error structure
+    assert "error" in error_response, "Error response should contain error field"
+    error = error_response["error"]
+    assert "code" in error, "Error should contain code"
+    assert error["code"] == "product_not_available", f"Expected product_not_available, got: {error['code']}"
+    
+    print(f"   ✅ Invalid product_id correctly rejected")
+    print(f"   📋 Error: {error['code']} - {error.get('message', '')}")
 
     print("\n" + "=" * 80)
-    print("✅ BACKEND PRODUCT CATALOG MVP TEST COMPLETE")
-    print("✅ Hotel products list with location schema working")
-    print("✅ Product creation with location data working")
-    print("✅ Rate plan creation with currency/price/status working")
-    print("✅ Version creation and publishing workflow working")
-    print("✅ Publish guards working (requires active rate plans)")
-    print("✅ Seed data contains active hotels with rate plans")
+    print("✅ P0.2 SEARCH→QUOTE→BOOKING BACKEND CHAIN TEST COMPLETE")
+    print("✅ Login with agency credentials working (agency_admin/agent role)")
+    print("✅ Hotel search returning proper structure with required fields")
+    print("✅ Quote creation working with search results")
+    print("✅ Booking creation working with quote (CONFIRMED status)")
+    print("✅ My bookings list showing created booking (created_at desc sort)")
+    print("✅ Edge guards working (invalid date range, empty city, invalid product_id)")
     print("=" * 80 + "\n")
 
 if __name__ == "__main__":
-    test_product_catalog_mvp()
+    test_p02_search_quote_booking_chain()

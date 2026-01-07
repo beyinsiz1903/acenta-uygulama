@@ -7,6 +7,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, Query
 from typing import Literal, Optional
 from datetime import datetime
+from bson import ObjectId
 
 from app.db import get_db
 from app.auth import require_roles, get_current_user

@@ -177,6 +177,7 @@ async def _startup() -> None:
     await ensure_catalog_indexes(db)
     await ensure_pricing_indexes(db)
     await ensure_finance_indexes(db)
+    await ensure_phase2a_indexes(db)
 
     logger.info("Startup complete")
 

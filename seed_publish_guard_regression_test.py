@@ -102,12 +102,12 @@ def test_seed_publish_guard_regression():
         print("   ❌ Uygun product bulunamadı! Kriterler:")
         print("      - type='hotel'")
         print("      - status='active'")
-        print("      - default_currency='EUR'")
         print("      - location.city ve location.country set edilmiş")
+        print("      - EUR currency'li rate plan var")
         
         # Mevcut productları listele
         for i, product in enumerate(products_response['items']):
-            print(f"      Product {i+1}: type={product.get('type')}, status={product.get('status')}, currency={product.get('default_currency')}, location={product.get('location')}")
+            print(f"      Product {i+1}: type={product.get('type')}, status={product.get('status')}, location={product.get('location')}")
         
         raise AssertionError("Uygun hotel product bulunamadı")
 

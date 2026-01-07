@@ -88,6 +88,15 @@ def safe_int(v: Any, default: int = 0) -> int:
         return default
 
 
+def model_dump(obj: Any) -> dict[str, Any]:
+    """Pydantic v1/v2 uyumlu dump helper."""
+    if hasattr(obj, "model_dump"):
+        return obj.model_dump()
+    if hasattr(obj, "dict"):
+        return obj.dict()
+    return dict(obj)
+
+
 def date_range_yyyy_mm_dd(start: str, end: str) -> list[str]:
     """Inclusive start, exclusive end (accommodation nights)."""
     from datetime import date, timedelta

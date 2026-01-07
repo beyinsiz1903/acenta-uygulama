@@ -168,12 +168,10 @@ async def _upsert_credit_profile(
     
     # Validation: soft_limit >= limit
     if payload.soft_limit is not None and payload.soft_limit < payload.limit:
-        raise HTTPException(
+        raise AppError(
             status_code=422,
-            detail=error_response(
-                code="validation_error",
-                message="soft_limit must be >= limit",
-            ),
+            code="validation_error",
+            message="soft_limit must be >= limit",
         )
     
     now = now_utc()

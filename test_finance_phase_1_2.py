@@ -152,7 +152,8 @@ def test_phase_1_2():
     
     # Test 9: PUT with new agency_id (upsert - create)
     print("9️⃣  Testing PUT /api/ops/finance/credit-profiles/{agency_id} (upsert create)...")
-    new_agency_id = "test_agency_upsert_123"
+    import uuid
+    new_agency_id = f"test_agency_{uuid.uuid4().hex[:8]}"
     create_payload = {
         "limit": 5000.0,
         "soft_limit": 6000.0,

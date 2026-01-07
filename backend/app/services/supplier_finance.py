@@ -100,12 +100,12 @@ class SupplierFinanceService:
                 return str(existing["_id"])
             raise
         
-        # Initialize balance cache with ObjectId
+        # Initialize balance cache; use the same type for account_id as finance_accounts._id
         balance_id = ObjectId()
         balance_doc = {
             "_id": balance_id,
             "organization_id": organization_id,
-            "account_id": str(account_id),
+            "account_id": account_id,  # ObjectId
             "currency": currency,
             "balance": 0.0,
             "as_of": now,
@@ -163,7 +163,7 @@ class SupplierFinanceService:
         
         balance = await self.db.account_balances.find_one({
             "organization_id": organization_id,
-            "account_id": str(account["_id"]),
+            "account_id": account["_id"],
             "currency": currency,
         })
         
@@ -191,7 +191,7 @@ class SupplierFinanceService:
         results = []
         for account in accounts:
             supplier_id = account["owner_id"]
-            account_id = str(account["_id"])
+            account_id = account["_id"]
             
             # Get balance
             balance = await self.db.account_balances.find_one({

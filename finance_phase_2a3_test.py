@@ -505,7 +505,8 @@ class FinancePhase2A3Tester:
         self.test_supplier_balance_endpoint()
         self.test_error_cases()
         self.test_ledger_postings_verification()
-        self.test_ops_case_approval_flow()
+        self.test_comprehensive_reverse_flow()
+        self.test_adjustment_logic()
 
         # Summary
         self.print_summary()

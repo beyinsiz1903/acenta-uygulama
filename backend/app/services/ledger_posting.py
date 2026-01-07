@@ -80,7 +80,7 @@ class LedgerPostingService:
     @staticmethod
     async def post_event(
         organization_id: str,
-        source_type: Literal["booking", "refund", "payment", "adjustment"],
+        source_type: Literal["booking", "refund", "payment", "adjustment", "settlement"],
         source_id: str,
         event: str,
         currency: str,

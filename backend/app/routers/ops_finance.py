@@ -336,3 +336,99 @@ async def upsert_credit_profile(
     )
     
     return profile
+
+
+# ============================================================================
+# TEST/DEBUG endpoints (Phase 1 only)
+# ============================================================================
+
+from app.services.ledger_posting import LedgerPostingService, LedgerLine, PostingMatrixConfig
+from pydantic import BaseModel as PydanticBaseModel
+
+
+class TestPostingRequest(PydanticBaseModel):
+    """Test posting request for Phase 1.3 testing"""
+    source_type: Literal["booking", "refund", "payment", "adjustment"]
+    source_id: str
+    event: str
+    agency_account_id: str
+    platform_account_id: str
+    amount: float
+
+
+@router.post("/_test/posting")
+async def test_posting(
+    payload: TestPostingRequest,
+    current_user=Depends(require_roles(["admin", "ops", "super_admin"])),
+):
+    """
+    TEST ENDPOINT: Create a ledger posting (Phase 1.3 testing only)
+    
+    DO NOT USE IN PRODUCTION
+    """
+    # Determine lines based on event
+    if payload.event == "BOOKING_CONFIRMED":
+        lines = PostingMatrixConfig.get_booking_confirmed_lines(
+            agency_account_id=payload.agency_account_id,
+            platform_account_id=payload.platform_account_id,
+            sell_amount=payload.amount,
+        )
+    elif payload.event == "PAYMENT_RECEIVED":
+        lines = PostingMatrixConfig.get_payment_received_lines(
+            agency_account_id=payload.agency_account_id,
+            platform_account_id=payload.platform_account_id,
+            payment_amount=payload.amount,
+        )
+    elif payload.event == "REFUND_APPROVED":
+        lines = PostingMatrixConfig.get_refund_approved_lines(
+            agency_account_id=payload.agency_account_id,
+            platform_account_id=payload.platform_account_id,
+            refund_amount=payload.amount,
+        )
+    else:
+        raise AppError(
+            status_code=422,
+            code="invalid_event",
+            message=f"Unsupported event: {payload.event}",
+        )
+    
+    posting = await LedgerPostingService.post_event(
+        organization_id=current_user["organization_id"],
+        source_type=payload.source_type,
+        source_id=payload.source_id,
+        event=payload.event,
+        currency="EUR",
+        lines=lines,
+    )
+    
+    return {
+        "ok": True,
+        "posting_id": posting["_id"],
+        "event": posting["event"],
+        "lines_count": len(posting["lines"]),
+    }
+
+
+class TestRecalcRequest(PydanticBaseModel):
+    """Test recalc request"""
+    account_id: str
+
+
+@router.post("/_test/recalc")
+async def test_recalc(
+    payload: TestRecalcRequest,
+    current_user=Depends(require_roles(["admin", "ops", "super_admin"])),
+):
+    """
+    TEST ENDPOINT: Recalculate account balance (Phase 1.3 testing only)
+    """
+    result = await LedgerPostingService.recalculate_balance(
+        organization_id=current_user["organization_id"],
+        account_id=payload.account_id,
+        currency="EUR",
+    )
+    
+    return {
+        "ok": True,
+        **result,
+    }

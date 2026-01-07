@@ -340,7 +340,7 @@ async def list_cancel_policies(
     items = await cur.to_list(length=500)
     return [
         CancellationPolicyResponse(
-            cancellation_policy_id=_id(x["_id"]),
+            policy_id=_id(x["_id"]),
             code=x["code"],
             name=x["name"],
             rules=x.get("rules") or [],

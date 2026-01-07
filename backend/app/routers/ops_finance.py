@@ -428,7 +428,7 @@ async def approve_settlement_run(
 @router.post("/settlements/{settlement_id}/cancel")
 async def cancel_settlement_run(
     settlement_id: str,
-    reason: str,
+    reason: Optional[str] = None,
     current_user=Depends(require_roles(["admin", "ops", "super_admin"])),
     db=Depends(get_db),
 ):

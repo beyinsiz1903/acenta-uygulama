@@ -119,7 +119,7 @@ def test_product_catalog_mvp():
 
     invalid_payload = {
         "type": "hotel",
-        "code": "HTL_INVALID_TEST",
+        "code": f"HTL_INVALID_TEST_{unique_suffix}",
         "name": {
             "tr": "Invalid Test Otel",
             "en": "Invalid Test Hotel"

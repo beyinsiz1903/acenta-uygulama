@@ -356,25 +356,6 @@ function MiniRefundHistory({ bookingId }) {
   );
 }
 
-        </div>
-        <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={submitting}
-          >
-            Cancel
-          </Button>
-          <Button onClick={onSubmit} disabled={submitting}>
-            {submitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-            Approve
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
 function RefundRejectDialog({ open, onOpenChange, caseData, onRejected }) {
   const [reason, setReason] = useState("");
   const [submitting, setSubmitting] = useState(false);

@@ -264,7 +264,7 @@ def test_product_catalog_mvp():
     # Create a new product without rate plans for this test
     test_product_payload = {
         "type": "hotel",
-        "code": "HTL_NO_RATES_TEST",
+        "code": f"HTL_NO_RATES_TEST_{unique_suffix}",
         "name": {
             "tr": "Test Otel Rates Yok",
             "en": "Test Hotel No Rates"

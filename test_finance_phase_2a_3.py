@@ -111,25 +111,22 @@ def test_phase_2a_3():
 
     balance_before = get_supplier_balance("EUR")
 
-    # Call reverse via service entrypoint (internal import)
-    from app.services.supplier_accrual import SupplierAccrualService
+    # Create a cancel case and approve via ops endpoint (triggers reverse hook)
+    case_doc = {
+        "organization_id": org_id,
+        "booking_id": str(booking_id),
+        "type": "cancel",
+        "status": "open",
+    }
+    case_id = db.cases.insert_one(case_doc).inserted_id
 
-    svc = SupplierAccrualService(db)
-    result = None
-    import asyncio
+    r = requests.post(
+        f"{BASE_URL}/api/ops/cases/{case_id}/approve",
+        headers=headers,
+    )
+    assert r.status_code == 200, r.text
 
-    async def _run_reverse():
-        nonlocal result
-        result = await svc.reverse_accrual_for_booking(
-            organization_id=org_id,
-            booking_id=str(booking_id),
-            triggered_by="admin@acenta.test",
-        )
-
-    asyncio.run(_run_reverse())
-
-    assert result is not None
-    print("   ✅ reverse_accrual_for_booking returned", result)
+    print("   ✅ /api/ops/cases/{case_id}/approve called successfully")
 
     # Supplier balance should decrease by net_payable
     balance_after = get_supplier_balance("EUR")
@@ -177,7 +174,14 @@ def test_phase_2a_3():
         }
     )
 
+    # Settlement lock guard via service (Motor DB)
+    import asyncio
+    from app.db import get_db
+    from app.services.supplier_accrual import SupplierAccrualService
+
     async def _run_locked_reverse():
+        motor_db = await get_db()
+        svc = SupplierAccrualService(motor_db)
         try:
             await svc.reverse_accrual_for_booking(
                 organization_id=org_id,
@@ -191,6 +195,8 @@ def test_phase_2a_3():
     asyncio.run(_run_locked_reverse())
 
     async def _run_locked_adjust():
+        motor_db = await get_db()
+        svc = SupplierAccrualService(motor_db)
         try:
             await svc.adjust_accrual_for_booking(
                 organization_id=org_id,

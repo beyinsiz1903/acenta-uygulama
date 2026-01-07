@@ -37,6 +37,7 @@ class ProductUpdateRequest(BaseModel):
     name: Optional[LocalizedText] = None
     default_currency: Optional[str] = Field(default=None, min_length=3, max_length=3)
     status: Optional[ProductStatus] = None
+    location: Optional[ProductLocation] = None
 
 
 class ProductResponse(BaseModel):

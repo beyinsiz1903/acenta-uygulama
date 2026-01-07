@@ -235,6 +235,7 @@ class BookingFinanceService:
         self,
         organization_id: str,
         booking_id: str,
+        case_id: str,
         agency_id: str,
         refund_amount: float,
         currency: str,
@@ -315,7 +316,7 @@ class BookingFinanceService:
         posting = await LedgerPostingService.post_event(
             organization_id=organization_id,
             source_type="refund_case",
-            source_id=booking_id,
+            source_id=case_id,
             event="REFUND_APPROVED",
             currency=eur_currency,
             lines=lines,

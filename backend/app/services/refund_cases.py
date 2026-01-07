@@ -300,6 +300,7 @@ class RefundCaseService:
         posting_id = await self.booking_finance.post_refund_approved(
             organization_id=organization_id,
             booking_id=booking_id,
+            case_id=case_id,
             agency_id=agency_id,
             refund_amount=approved_amount_eur,
             currency="EUR",

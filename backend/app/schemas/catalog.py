@@ -63,6 +63,7 @@ class ProductListItem(BaseModel):
     created_at: datetime
     updated_at: datetime
     published_version: Optional[int] = None
+    location: Optional[ProductLocation] = None
 
 
 class ProductListResponse(BaseModel):

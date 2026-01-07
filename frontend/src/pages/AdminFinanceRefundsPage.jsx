@@ -522,8 +522,7 @@ export default function AdminFinanceRefundsPage() {
   useEffect(() => {
     // load list when filters change
     loadList();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [statusFilter, limit]);
+  }, [statusFilter, limit, loadList]);
 
   useEffect(() => {
     if (list && list.length > 0) {

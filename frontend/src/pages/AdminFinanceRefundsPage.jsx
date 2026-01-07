@@ -451,8 +451,6 @@ function RefundDetailPanel({
 }
 
 export default function AdminFinanceRefundsPage() {
-  // NOTE: keep hooks simple; eslint exhaustive-deps is noisy here.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const [list, setList] = useState([]);
   const [statusFilter, setStatusFilter] = useState("open");
   const [limit, setLimit] = useState(50);

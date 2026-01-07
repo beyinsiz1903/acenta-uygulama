@@ -172,12 +172,12 @@ async def _upsert_credit_profile(
 ):
     """Upsert credit profile (create if not exists, update if exists)"""
     
-    # Validation: soft_limit >= limit
-    if payload.soft_limit is not None and payload.soft_limit < payload.limit:
+    # Validation: soft_limit <= limit (soft limit is warning threshold, must be below hard limit)
+    if payload.soft_limit is not None and payload.soft_limit > payload.limit:
         raise AppError(
             status_code=422,
             code="validation_error",
-            message="soft_limit must be >= limit",
+            message="soft_limit must be <= limit (soft limit is warning threshold)",
         )
     
     now = now_utc()

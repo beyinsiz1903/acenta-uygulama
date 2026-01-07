@@ -16,6 +16,7 @@ class B2BBookingService:
         self.db = db
         self.bookings = db.bookings
         self.booking_events = db.booking_events
+        self.finance = BookingFinanceService(db)
 
     async def _load_snapshots_for_match(self, organization_id: str, match_id: str) -> Dict[str, Any]:
         # TODO: integrate with Syroce PROOF/SCALE snapshot loaders

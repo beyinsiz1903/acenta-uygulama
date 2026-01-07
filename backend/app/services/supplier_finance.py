@@ -66,60 +66,84 @@ class SupplierFinanceService:
                 message=f"Supplier {supplier_id} not found",
             )
         
-        # Create account with ObjectId
-        account_id = ObjectId()
-        account_code = f"SUPP_{supplier_id[:8]}_{currency}"
+        # Create account with ObjectId and unique code derived from it
+        from pymongo.errors import DuplicateKeyError
+
         now = now_utc()
-        
-        account_doc = {
-            "_id": account_id,
-            "organization_id": organization_id,
-            "type": "supplier",
-            "owner_id": supplier_id,
-            "code": account_code,
-            "name": f"{supplier.get('name', 'Supplier')} Payables ({currency})",
-            "currency": currency,
-            "status": "active",
-            "created_at": now,
-            "updated_at": now,
-        }
-        
-        try:
-            await self.db.finance_accounts.insert_one(account_doc)
-            logger.info(f"Created supplier account: {account_id} for supplier {supplier_id}")
-        except Exception:
-            # Check if duplicate (race condition)
-            existing = await self.db.finance_accounts.find_one({
+
+        # Retry a few times in case of rare code collisions
+        for attempt in range(3):
+            account_id = ObjectId()
+            account_code = f"SUPP_{str(account_id)[:8]}_{currency}"
+
+            account_doc = {
+                "_id": account_id,
                 "organization_id": organization_id,
                 "type": "supplier",
                 "owner_id": supplier_id,
+                "code": account_code,
+                "name": f"{supplier.get('name', 'Supplier')} Payables ({currency})",
                 "currency": currency,
-            })
-            if existing:
-                logger.warning(f"Supplier account already exists (race condition): {existing['_id']}")
-                return str(existing["_id"])
-            raise
-        
-        # Initialize balance cache; use the same type for account_id as finance_accounts._id
-        balance_id = ObjectId()
-        balance_doc = {
-            "_id": balance_id,
-            "organization_id": organization_id,
-            "account_id": account_id,  # ObjectId
-            "currency": currency,
-            "balance": 0.0,
-            "as_of": now,
-            "updated_at": now,
-        }
-        
-        try:
-            await self.db.account_balances.insert_one(balance_doc)
-        except Exception as e:
-            # Balance insert failed, but account created - log and continue
-            logger.error(f"Failed to create balance for account {account_id}: {e}")
-        
-        # Return raw ObjectId so downstream ledger lines use same type
-        return account_id
+                "status": "active",
+                "created_at": now,
+                "updated_at": now,
+            }
+
+            try:
+                await self.db.finance_accounts.insert_one(account_doc)
+                logger.info(f"Created supplier account: {account_id} for supplier {supplier_id}")
+
+                # Initialize balance cache (string account_id for consistency with other accounts)
+                balance_id = ObjectId()
+                balance_doc = {
+                    "_id": balance_id,
+                    "organization_id": organization_id,
+                    "account_id": str(account_id),
+                    "currency": currency,
+                    "balance": 0.0,
+                    "as_of": now,
+                    "updated_at": now,
+                }
+                try:
+                    await self.db.account_balances.insert_one(balance_doc)
+                except Exception as e:
+                    # Balance insert failed, but account created - log and continue
+                    logger.error(f"Failed to create balance for account {account_id}: {e}")
+
+                return str(account_id)
+
+            except DuplicateKeyError:
+                # Code collision or unique index hit, retry
+                logger.warning(
+                    "Duplicate supplier finance account code detected for %s (attempt %s)",
+                    supplier_id,
+                    attempt + 1,
+                )
+                continue
+
+            except Exception:
+                # Check if account now exists for this supplier/currency (race condition)
+                existing = await self.db.finance_accounts.find_one(
+                    {
+                        "organization_id": organization_id,
+                        "type": "supplier",
+                        "owner_id": supplier_id,
+                        "currency": currency,
+                    }
+                )
+                if existing:
+                    logger.warning(
+                        "Supplier account already exists (race condition): %s", existing["_id"]
+                    )
+                    return str(existing["_id"])
+                raise
+
+        # If we get here, we failed to create an account after retries
+        raise AppError(
+            status_code=500,
+            code="supplier_account_create_failed",
+            message=f"Failed to create supplier account for {supplier_id} {currency}",
+        )
     
     async def get_supplier_accounts(
         self,
@@ -164,7 +188,7 @@ class SupplierFinanceService:
         
         balance = await self.db.account_balances.find_one({
             "organization_id": organization_id,
-            "account_id": account["_id"],
+            "account_id": str(account["_id"]),
             "currency": currency,
         })
         
@@ -192,7 +216,7 @@ class SupplierFinanceService:
         results = []
         for account in accounts:
             supplier_id = account["owner_id"]
-            account_id = account["_id"]
+            account_id = str(account["_id"])
             
             # Get balance
             balance = await self.db.account_balances.find_one({

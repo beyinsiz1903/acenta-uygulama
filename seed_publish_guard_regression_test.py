@@ -85,18 +85,18 @@ def test_seed_publish_guard_regression():
         print(f"      - product_id: {product_id}")
         print(f"      - type: {suitable_product['type']}")
         print(f"      - status: {suitable_product['status']}")
-        print(f"      - default_currency: {suitable_product['default_currency']}")
         print(f"      - location: {suitable_product['location']['city']}, {suitable_product['location']['country']}")
+        print(f"      - has EUR rate plans: Yes")
         
         # JSON örneği için seed'li hotel bilgilerini kaydet
         seed_hotel_example = {
             "product_id": suitable_product['product_id'],
             "type": suitable_product['type'],
             "status": suitable_product['status'],
-            "default_currency": suitable_product['default_currency'],
             "location": suitable_product['location'],
             "code": suitable_product.get('code', ''),
-            "name": suitable_product.get('name', {})
+            "name_tr": suitable_product.get('name_tr', ''),
+            "name_en": suitable_product.get('name_en', '')
         }
     else:
         print("   ❌ Uygun product bulunamadı! Kriterler:")

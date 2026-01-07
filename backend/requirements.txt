@@ -31,3 +31,4 @@ pydyf>=0.11.0
 Pyphen>=0.9.1
 tinyhtml5>=2.0.0b1
 httpx>=0.24.0
+reportlab>=4.0.0

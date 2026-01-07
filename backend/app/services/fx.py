@@ -146,10 +146,33 @@ class FXService:
       "created_at": now,
       "created_by_email": created_by_email,
     }
-    res = await self.db.fx_rate_snapshots.insert_one(snapshot)
+    try:
+      res = await self.db.fx_rate_snapshots.insert_one(snapshot)
+      inserted_id = res.inserted_id
+    except DuplicateKeyError:
+      # Another concurrent request created the same snapshot; fetch and return it
+      existing = await self.db.fx_rate_snapshots.find_one(
+        {
+          "organization_id": organization_id,
+          "context.type": "booking",
+          "context.id": booking_id,
+          "base": base,
+          "quote": quote,
+        }
+      )
+      if existing:
+        return {
+          "snapshot_id": str(existing["_id"]),
+          "base": existing["base"],
+          "quote": existing["quote"],
+          "rate": float(existing["rate"]),
+          "as_of": existing["as_of"],
+        }
+      # If for some reason we still don't find it, bubble up
+      raise
 
     return {
-      "snapshot_id": str(res.inserted_id),
+      "snapshot_id": str(inserted_id),
       "base": fx.base,
       "quote": fx.quote,
       "rate": fx.rate,

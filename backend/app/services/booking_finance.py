@@ -240,21 +240,23 @@ class BookingFinanceService:
         currency: str,
         occurred_at: Optional[datetime] = None,
     ) -> str:
+        """Create EUR-denominated posting for REFUND_APPROVED event.
+
+        `refund_amount` is expected to be in EUR already (approved.amount_eur).
+        Accounts are still keyed by currency code for AR structure, but
+        ledger currency is always EUR in Phase 2C.
         """
-        Create ledger posting for REFUND_APPROVED event.
-        
-        Returns:
-            posting_id
-        """
-        
+
+        eur_currency = "EUR"
+
         # Get or create agency AR account (AGENCY_AR_{agency_id}_{currency})
-        agency_code = f"AGENCY_AR_{agency_id}_{currency}"
+        agency_code = f"AGENCY_AR_{agency_id}_{eur_currency}"
         agency_filter = {
             "organization_id": organization_id,
             "type": "agency",
             "owner_id": agency_id,
             "code": agency_code,
-            "currency": currency,
+            "currency": eur_currency,
         }
         now = now_utc()
         await self.db.finance_accounts.update_one(
@@ -265,8 +267,8 @@ class BookingFinanceService:
                     "type": "agency",
                     "owner_id": agency_id,
                     "code": agency_code,
-                    "name": f"Agency AR {agency_id} {currency}",
-                    "currency": currency,
+                    "name": f"Agency AR {agency_id} {eur_currency}",
+                    "currency": eur_currency,
                     "status": "active",
                     "created_at": now,
                     "updated_at": now,
@@ -276,8 +278,8 @@ class BookingFinanceService:
         )
         agency_account = await self.db.finance_accounts.find_one(agency_filter)
 
-        # Get or create platform AR account (PLATFORM_AR_{currency})
-        platform_code = f"PLATFORM_AR_{currency}"
+        # Get or create platform AR account (PLATFORM_AR_{EUR})
+        platform_code = f"PLATFORM_AR_{eur_currency}"
         platform_filter = {
             "organization_id": organization_id,
             "code": platform_code,
@@ -291,8 +293,8 @@ class BookingFinanceService:
                     "type": "platform",
                     "owner_id": "platform",
                     "code": platform_code,
-                    "name": f"Platform AR {currency}",
-                    "currency": currency,
+                    "name": f"Platform AR {eur_currency}",
+                    "currency": eur_currency,
                     "status": "active",
                     "created_at": now,
                     "updated_at": now,
@@ -301,25 +303,25 @@ class BookingFinanceService:
             upsert=True,
         )
         platform_account = await self.db.finance_accounts.find_one(platform_filter)
-        
-        # Create posting lines
+
+        # Create posting lines (EUR)
         lines = PostingMatrixConfig.get_refund_approved_lines(
             agency_account_id=str(agency_account["_id"]),
             platform_ar_account_id=str(platform_account["_id"]),
             refund_amount=refund_amount,
         )
-        
-        # Post to ledger
+
+        # Post to ledger (EUR)
         posting = await LedgerPostingService.post_event(
             organization_id=organization_id,
-            source_type="booking",
+            source_type="refund_case",
             source_id=booking_id,
             event="REFUND_APPROVED",
-            currency=currency,
+            currency=eur_currency,
             lines=lines,
             occurred_at=occurred_at,
             created_by="system",
             meta={"booking_id": booking_id, "agency_id": agency_id},
         )
-        
+
         return posting["_id"]

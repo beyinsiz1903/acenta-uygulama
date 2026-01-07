@@ -3715,38 +3715,25 @@ class FinancePhase2A5SettlementPaidTester:
         """Setup an approved settlement run with non-zero totals (similar to Phase 2A.4)"""
         self.log("\n=== SETUP APPROVED SETTLEMENT ===")
         
-        # Get or create a supplier
-        success, response = self.run_test(
-            "List suppliers",
-            "GET",
-            "api/ops/finance/suppliers?limit=10",
-            200
-        )
-        
-        if success and response.get('items'):
-            self.supplier_id = response['items'][0]['supplier_id']
-            self.log(f"✅ Using existing supplier: {self.supplier_id}")
-        else:
-            # Create supplier if none exists
-            supplier_data = {
-                "name": f"Test Supplier {uuid.uuid4().hex[:8]}",
-                "contact_email": f"supplier{uuid.uuid4().hex[:8]}@test.com",
-                "payment_terms": "NET30"
-            }
-            success, response = self.run_test(
-                "Create supplier",
-                "POST",
-                "api/ops/finance/suppliers",
-                201,
-                data=supplier_data
-            )
+        # Use existing supplier from database
+        import pymongo
+        try:
+            client = pymongo.MongoClient("mongodb://localhost:27017/")
+            db = client.test_database
             
-            if success and response.get('supplier_id'):
-                self.supplier_id = response['supplier_id']
-                self.log(f"✅ Created supplier: {self.supplier_id}")
+            supplier = db.suppliers.find_one({})
+            if supplier:
+                self.supplier_id = str(supplier['_id'])
+                self.log(f"✅ Using existing supplier: {self.supplier_id}")
             else:
-                self.log("❌ Failed to create supplier")
+                self.log("❌ No suppliers found in database")
                 return False
+            
+            client.close()
+            
+        except Exception as e:
+            self.log(f"❌ Failed to get supplier: {str(e)}")
+            return False
 
         # Create settlement run
         settlement_data = {
@@ -3773,9 +3760,6 @@ class FinancePhase2A5SettlementPaidTester:
             return False
 
         # Seed supplier accruals for testing
-        import pymongo
-        from bson import ObjectId
-        
         try:
             client = pymongo.MongoClient("mongodb://localhost:27017/")
             db = client.test_database

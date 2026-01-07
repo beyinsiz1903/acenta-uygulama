@@ -358,6 +358,10 @@ async def create_settlement_run(
         organization_id=org_id,
         supplier_id=payload.supplier_id,
         currency=payload.currency,
+        period=payload.period,
+        created_by=current_user["email"],
+    )
+    return run
 
 # ============================================================================
 # Refund cases (Phase 2B.3)

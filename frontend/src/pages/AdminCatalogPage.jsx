@@ -193,7 +193,11 @@ function VersionsPanel({ productId, productStatus }) {
 
       <div className="rounded-md border p-3 space-y-2">
         <div className="text-xs text-muted-foreground">
-          Create draft version (content JSON)
+          Create draft version (content JSON). 
+          <span className="font-medium">Not:</span> JSON içindeki
+          <code className="mx-1 rounded bg-muted px-1">room_type_ids</code> ve
+          <code className="mx-1 rounded bg-muted px-1">rate_plan_ids</code> alanları, aşağıdaki seçimlerinizle
+          her zaman overwrite edilir.
         </div>
         <Textarea
           className="font-mono text-xs h-40"

@@ -16,7 +16,7 @@ def main():
     log("Testing POST /api/b2b/quotes with various scenarios")
     
     # Use the external URL from frontend env
-    base_url = "https://app-improvement-19.preview.emergentagent.com"
+    base_url = "https://hotelfi.preview.emergentagent.com"
     
     tests_run = 0
     tests_passed = 0

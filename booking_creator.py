@@ -8,7 +8,7 @@ import uuid
 from datetime import datetime, timedelta
 
 class BookingCreator:
-    def __init__(self, base_url="https://app-improvement-19.preview.emergentagent.com"):
+    def __init__(self, base_url="https://hotelfi.preview.emergentagent.com"):
         self.base_url = base_url
         self.agency_token = None
         self.hotel_token = None

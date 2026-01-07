@@ -9,7 +9,7 @@ import uuid
 from datetime import datetime, timedelta
 
 class AcentaAPITester:
-    def __init__(self, base_url="https://app-improvement-19.preview.emergentagent.com"):
+    def __init__(self, base_url="https://hotelfi.preview.emergentagent.com"):
         self.base_url = base_url
         self.token = None
         self.tests_run = 0
@@ -77,7 +77,7 @@ class AcentaAPITester:
 
 
 class SignedDownloadLinkTester:
-    def __init__(self, base_url="https://app-improvement-19.preview.emergentagent.com"):
+    def __init__(self, base_url="https://hotelfi.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.tests_run = 0
@@ -1153,7 +1153,7 @@ class SignedDownloadLinkTester:
 
 
 class RiskSnapshotsTrendTester:
-    def __init__(self, base_url="https://app-improvement-19.preview.emergentagent.com"):
+    def __init__(self, base_url="https://hotelfi.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.tests_run = 0
@@ -1540,7 +1540,7 @@ class RiskSnapshotsTrendTester:
 
 
 class AdminCatalogEpicTester:
-    def __init__(self, base_url="https://app-improvement-19.preview.emergentagent.com"):
+    def __init__(self, base_url="https://hotelfi.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.tests_run = 0
@@ -2613,7 +2613,7 @@ class AdminCatalogEpicTester:
 
 
 class ProductCatalogV1SmokeTest:
-    def __init__(self, base_url="https://app-improvement-19.preview.emergentagent.com"):
+    def __init__(self, base_url="https://hotelfi.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.tests_run = 0
@@ -3046,7 +3046,7 @@ class ProductCatalogV1SmokeTest:
 
 
 class B2BBookingsListTester:
-    def __init__(self, base_url="https://app-improvement-19.preview.emergentagent.com"):
+    def __init__(self, base_url="https://hotelfi.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.agency1_token = None
@@ -3684,7 +3684,7 @@ class B2BBookingsListTester:
 
 
 class BookingTimelineV1Tester:
-    def __init__(self, base_url="https://app-improvement-19.preview.emergentagent.com"):
+    def __init__(self, base_url="https://hotelfi.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.agency_token = None
@@ -4232,7 +4232,7 @@ class BookingTimelineV1Tester:
 
 
 class BookingTimelineV1SmokeTest:
-    def __init__(self, base_url="https://app-improvement-19.preview.emergentagent.com"):
+    def __init__(self, base_url="https://hotelfi.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.tests_run = 0
@@ -4572,7 +4572,7 @@ class BookingTimelineV1SmokeTest:
 
 
 class OpsVoucherViewTester:
-    def __init__(self, base_url="https://app-improvement-19.preview.emergentagent.com"):
+    def __init__(self, base_url="https://hotelfi.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.tests_run = 0
@@ -4812,7 +4812,7 @@ class OpsVoucherViewTester:
         return 0 if self.tests_failed == 0 else 1
 
 class VoucherV1Tester:
-    def __init__(self, base_url="https://app-improvement-19.preview.emergentagent.com"):
+    def __init__(self, base_url="https://hotelfi.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.agency_token = None
@@ -5279,7 +5279,7 @@ class VoucherV1Tester:
 
 
 class GlobalErrorHandlerIdempotencyTester:
-    def __init__(self, base_url="https://app-improvement-19.preview.emergentagent.com"):
+    def __init__(self, base_url="https://hotelfi.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.tests_run = 0
@@ -5573,7 +5573,7 @@ class GlobalErrorHandlerIdempotencyTester:
 
 
 class OpsB2BTester:
-    def __init__(self, base_url="https://app-improvement-19.preview.emergentagent.com"):
+    def __init__(self, base_url="https://hotelfi.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.tests_run = 0
@@ -6125,7 +6125,7 @@ class OpsB2BTester:
 
 
 class RegressionTester:
-    def __init__(self, base_url="https://app-improvement-19.preview.emergentagent.com"):
+    def __init__(self, base_url="https://hotelfi.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.agency_token = None
@@ -6350,7 +6350,7 @@ class RegressionTester:
 
 
 class B2BQuotesBookingsCancelTester:
-    def __init__(self, base_url="https://app-improvement-19.preview.emergentagent.com"):
+    def __init__(self, base_url="https://hotelfi.preview.emergentagent.com"):
         self.base_url = base_url
         self.agency_token = None
         self.tests_run = 0
@@ -7036,7 +7036,7 @@ class B2BQuotesBookingsCancelTester:
 
 
 class ScaleUIProofHarnessTester:
-    def __init__(self, base_url="https://app-improvement-19.preview.emergentagent.com"):
+    def __init__(self, base_url="https://hotelfi.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.tests_run = 0
@@ -7407,7 +7407,7 @@ class ScaleUIProofHarnessTester:
 
 
 class ExecutiveSummaryPDFTester:
-    def __init__(self, base_url="https://app-improvement-19.preview.emergentagent.com"):
+    def __init__(self, base_url="https://hotelfi.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.agency_token = None
@@ -7839,7 +7839,7 @@ class ExecutiveSummaryPDFTester:
 
 
 class FAZ5HotelExtranetTester:
-    def __init__(self, base_url="https://app-improvement-19.preview.emergentagent.com"):
+    def __init__(self, base_url="https://hotelfi.preview.emergentagent.com"):
         self.base_url = base_url
         self.hotel_token = None
         self.agency_token = None
@@ -9025,7 +9025,7 @@ class ProofV2Story3Tester:
         return 0 if self.tests_failed == 0 else 1
 
 class ProofV11NoShowTester:
-    def __init__(self, base_url="https://app-improvement-19.preview.emergentagent.com"):
+    def __init__(self, base_url="https://hotelfi.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.tests_run = 0
@@ -9404,7 +9404,7 @@ class ProofV11NoShowTester:
         return 0 if self.tests_failed == 0 else 1
 
 class ProofV1BackendTester:
-    def __init__(self, base_url="https://app-improvement-19.preview.emergentagent.com"):
+    def __init__(self, base_url="https://hotelfi.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.tests_run = 0
@@ -9919,7 +9919,7 @@ class ProofV1BackendTester:
 
 
 class FAZ101IntegrationSyncTester:
-    def __init__(self, base_url="https://app-improvement-19.preview.emergentagent.com"):
+    def __init__(self, base_url="https://hotelfi.preview.emergentagent.com"):
         self.base_url = base_url
         self.hotel_token = None
         self.tests_run = 0
@@ -10298,7 +10298,7 @@ class FAZ101IntegrationSyncTester:
 
 
 class ExportsEmailV0Tester:
-    def __init__(self, base_url="https://app-improvement-19.preview.emergentagent.com"):
+    def __init__(self, base_url="https://hotelfi.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.tests_run = 0
@@ -10625,7 +10625,7 @@ class ExportsEmailV0Tester:
 
 
 class WebhookV1BackendTester:
-    def __init__(self, base_url="https://app-improvement-19.preview.emergentagent.com"):
+    def __init__(self, base_url="https://hotelfi.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.agency_token = None
@@ -11130,7 +11130,7 @@ class WebhookV1BackendTester:
 
 
 class P4MatchesIncludeActionTester:
-    def __init__(self, base_url="https://app-improvement-19.preview.emergentagent.com"):
+    def __init__(self, base_url="https://hotelfi.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.agency_token = None
@@ -11517,7 +11517,7 @@ class P4MatchesIncludeActionTester:
 
 
 class MatchActionsTester:
-    def __init__(self, base_url="https://app-improvement-19.preview.emergentagent.com"):
+    def __init__(self, base_url="https://hotelfi.preview.emergentagent.com"):
         self.base_url = base_url
         self.super_admin_token = None
         self.agency_token = None
@@ -11989,7 +11989,7 @@ class MatchActionsTester:
 
 
 class FAZ121AdminMetricsSmokeTest:
-    def __init__(self, base_url="https://app-improvement-19.preview.emergentagent.com"):
+    def __init__(self, base_url="https://hotelfi.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.tests_run = 0
@@ -12760,7 +12760,7 @@ class FAZ8BookingSubmitIntentTester:
 
 
 class VoucherHTMLChangesTester:
-    def __init__(self, base_url="https://app-improvement-19.preview.emergentagent.com"):
+    def __init__(self, base_url="https://hotelfi.preview.emergentagent.com"):
         self.base_url = base_url
         self.agency_token = None
         self.hotel_token = None
@@ -13201,7 +13201,7 @@ class VoucherHTMLChangesTester:
 
 
 class AdminOverrideTester:
-    def __init__(self, base_url="https://app-improvement-19.preview.emergentagent.com"):
+    def __init__(self, base_url="https://hotelfi.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.agency_token = None
@@ -13798,7 +13798,7 @@ class AdminOverrideTester:
 
 
 class FAZ93AdminEmailOutboxTester:
-    def __init__(self, base_url="https://app-improvement-19.preview.emergentagent.com"):
+    def __init__(self, base_url="https://hotelfi.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.agency_token = None
@@ -14347,7 +14347,7 @@ class FAZ93AdminEmailOutboxTester:
 
 
 class FAZ93EmailOutboxTester:
-    def __init__(self, base_url="https://app-improvement-19.preview.emergentagent.com"):
+    def __init__(self, base_url="https://hotelfi.preview.emergentagent.com"):
         self.base_url = base_url
         self.agency_token = None
         self.hotel_token = None
@@ -14877,7 +14877,7 @@ class FAZ93EmailOutboxTester:
 
 
 class FAZ91BookingDetailTester:
-    def __init__(self, base_url="https://app-improvement-19.preview.emergentagent.com"):
+    def __init__(self, base_url="https://hotelfi.preview.emergentagent.com"):
         self.base_url = base_url
         self.agency_token = None
         self.hotel_token = None
@@ -15524,7 +15524,7 @@ class FAZ91BookingDetailTester:
 
 
 class FAZ8PMSTester:
-    def __init__(self, base_url="https://app-improvement-19.preview.emergentagent.com"):
+    def __init__(self, base_url="https://hotelfi.preview.emergentagent.com"):
         self.base_url = base_url
         self.agency_token = None
         self.super_admin_token = None
@@ -16183,7 +16183,7 @@ class FAZ8PMSTester:
 
 
 class FAZ9VoucherEmailTester:
-    def __init__(self, base_url="https://app-improvement-19.preview.emergentagent.com"):
+    def __init__(self, base_url="https://hotelfi.preview.emergentagent.com"):
         self.base_url = base_url
         self.agency_token = None
         self.tests_run = 0
@@ -16489,7 +16489,7 @@ class FAZ9VoucherEmailTester:
 
 
 class FAZ6CommissionTester:
-    def __init__(self, base_url="https://app-improvement-19.preview.emergentagent.com"):
+    def __init__(self, base_url="https://hotelfi.preview.emergentagent.com"):
         self.base_url = base_url
         self.super_admin_token = None
         self.agency_token = None
@@ -17221,7 +17221,7 @@ class FAZ6CommissionTester:
 
 
 class FAZ7AuditCacheEventsTester:
-    def __init__(self, base_url="https://app-improvement-19.preview.emergentagent.com"):
+    def __init__(self, base_url="https://hotelfi.preview.emergentagent.com"):
         self.base_url = base_url
         self.hotel_token = None
         self.agency_token = None
@@ -17891,7 +17891,7 @@ class FAZ7AuditCacheEventsTester:
 
 
 class FAZ92VoucherTokenTester:
-    def __init__(self, base_url="https://app-improvement-19.preview.emergentagent.com"):
+    def __init__(self, base_url="https://hotelfi.preview.emergentagent.com"):
         self.base_url = base_url
         self.agency_token = None
         self.hotel_token = None
@@ -18340,7 +18340,7 @@ class FAZ92VoucherTokenTester:
 
 
 class FAZ9xAgencyHotelsTester:
-    def __init__(self, base_url="https://app-improvement-19.preview.emergentagent.com"):
+    def __init__(self, base_url="https://hotelfi.preview.emergentagent.com"):
         self.base_url = base_url
         self.agency_token = None
         self.tests_run = 0
@@ -18936,7 +18936,7 @@ class FAZ9xAgencyHotelsTester:
 
 
 class FAZ10HotelIntegrationsTester:
-    def __init__(self, base_url="https://app-improvement-19.preview.emergentagent.com"):
+    def __init__(self, base_url="https://hotelfi.preview.emergentagent.com"):
         self.base_url = base_url
         self.hotel_token = None
         self.agency_token = None
@@ -19327,7 +19327,7 @@ class FAZ10HotelIntegrationsTester:
 
 
 class FAZ101IntegrationSyncTester:
-    def __init__(self, base_url="https://app-improvement-19.preview.emergentagent.com"):
+    def __init__(self, base_url="https://hotelfi.preview.emergentagent.com"):
         self.base_url = base_url
         self.hotel_token = None
         self.agency_token = None
@@ -20212,7 +20212,7 @@ class FAZDWebBookingTester:
 
 
 class P4V0MatchesTester:
-    def __init__(self, base_url="https://app-improvement-19.preview.emergentagent.com"):
+    def __init__(self, base_url="https://hotelfi.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.agency_token = None
@@ -20594,7 +20594,7 @@ class P4V0MatchesTester:
 
 
 class AlertingV0Tester:
-    def __init__(self, base_url="https://app-improvement-19.preview.emergentagent.com"):
+    def __init__(self, base_url="https://hotelfi.preview.emergentagent.com"):
         self.base_url = base_url
         self.super_admin_token = None
         self.agency_token = None
@@ -21171,7 +21171,7 @@ class AlertingV0Tester:
 
 
 class AlertingV0DeliveriesTester:
-    def __init__(self, base_url="https://app-improvement-19.preview.emergentagent.com"):
+    def __init__(self, base_url="https://hotelfi.preview.emergentagent.com"):
         self.base_url = base_url
         self.super_admin_token = None
         self.agency_token = None
@@ -22148,7 +22148,7 @@ class ExportsV0BackendTester:
 
 
 class RepeatNotArrived7Tester:
-    def __init__(self, base_url="https://app-improvement-19.preview.emergentagent.com"):
+    def __init__(self, base_url="https://hotelfi.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.agency_token = None
@@ -22759,7 +22759,7 @@ class RepeatNotArrived7Tester:
 
 
 class MatchRiskV12Tester:
-    def __init__(self, base_url="https://app-improvement-19.preview.emergentagent.com"):
+    def __init__(self, base_url="https://hotelfi.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.tests_run = 0
@@ -23580,7 +23580,7 @@ Download: /api/exports/download/abc123token456def789
 
 
 class MatchRiskDashboardTester:
-    def __init__(self, base_url="https://app-improvement-19.preview.emergentagent.com"):
+    def __init__(self, base_url="https://hotelfi.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.tests_run = 0
@@ -23871,7 +23871,7 @@ class MatchRiskDashboardTester:
 
 
 class MatchRiskHighRiskFilterTester:
-    def __init__(self, base_url="https://app-improvement-19.preview.emergentagent.com"):
+    def __init__(self, base_url="https://hotelfi.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.tests_run = 0
@@ -24225,7 +24225,7 @@ class MatchRiskHighRiskFilterTester:
 
 
 class MatchRiskSortingTester:
-    def __init__(self, base_url="https://app-improvement-19.preview.emergentagent.com"):
+    def __init__(self, base_url="https://hotelfi.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.tests_run = 0
@@ -24468,7 +24468,7 @@ class MatchRiskSortingTester:
 
 
 class ExportDeepLinkTester:
-    def __init__(self, base_url="https://app-improvement-19.preview.emergentagent.com"):
+    def __init__(self, base_url="https://hotelfi.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.tests_run = 0
@@ -24675,7 +24675,7 @@ class ExportDeepLinkTester:
 
 
 class ScaleV1EnforcementTester:
-    def __init__(self, base_url="https://app-improvement-19.preview.emergentagent.com"):
+    def __init__(self, base_url="https://hotelfi.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.agency_token = None
@@ -25156,7 +25156,7 @@ class ScaleV1EnforcementTester:
 
 
 class ScaleV1ApprovalAuditTester:
-    def __init__(self, base_url="https://app-improvement-19.preview.emergentagent.com"):
+    def __init__(self, base_url="https://hotelfi.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.tests_run = 0
@@ -25734,7 +25734,7 @@ def main():
 
 
 class ProofV2Story2ArrivedTester:
-    def __init__(self, base_url="https://app-improvement-19.preview.emergentagent.com"):
+    def __init__(self, base_url="https://hotelfi.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.tests_run = 0
@@ -26942,7 +26942,7 @@ class RiskSnapshotsTester:
 
 
 class OpsB2BPhase111Tester:
-    def __init__(self, base_url="https://app-improvement-19.preview.emergentagent.com"):
+    def __init__(self, base_url="https://hotelfi.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.tests_run = 0
@@ -27433,7 +27433,7 @@ class OpsB2BPhase111Tester:
         return 0 if self.tests_failed == 0 else 1
 
 class BookingTimelineV1VoucherFixTester:
-    def __init__(self, base_url="https://app-improvement-19.preview.emergentagent.com"):
+    def __init__(self, base_url="https://hotelfi.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.tests_run = 0
@@ -27705,7 +27705,7 @@ class BookingTimelineV1VoucherFixTester:
 
 
 class B2BBookingsProductNameTester:
-    def __init__(self, base_url="https://app-improvement-19.preview.emergentagent.com"):
+    def __init__(self, base_url="https://hotelfi.preview.emergentagent.com"):
         self.base_url = base_url
         self.agency1_token = None
         self.tests_run = 0

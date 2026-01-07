@@ -9,7 +9,7 @@ import uuid
 from datetime import datetime
 
 class LeadKanbanTester:
-    def __init__(self, base_url="https://app-improvement-19.preview.emergentagent.com"):
+    def __init__(self, base_url="https://hotelfi.preview.emergentagent.com"):
         self.base_url = base_url
         self.token = None
         self.tests_run = 0

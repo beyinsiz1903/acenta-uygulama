@@ -126,6 +126,7 @@ async def get_product(
         default_currency=doc.get("default_currency") or "EUR",
         created_at=doc.get("created_at"),
         updated_at=doc.get("updated_at") or doc.get("created_at"),
+        location=doc.get("location"),
     )
 
 

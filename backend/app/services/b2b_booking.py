@@ -41,6 +41,20 @@ class B2BBookingService:
         # MVP: single item/offer
         offer = offers[0]
         item_in = items[0]
+        
+        currency = offer.get("currency", "EUR")
+        sell_amount = offer.get("sell", 0.0)
+        
+        # ===================================================================
+        # PHASE 1.5: Credit Check (before booking creation)
+        # ===================================================================
+        credit_check = await self.finance.check_credit_and_get_flags(
+            organization_id=organization_id,
+            agency_id=agency_id,
+            sell_amount=sell_amount,
+            currency=currency,
+        )
+        # If credit check fails, AppError is raised (409 credit_limit_exceeded)
 
         match_id = item_in.get("match_id") or f"{agency_id}__{item_in.get('product_id')}"
         snapshots = await self._load_snapshots_for_match(organization_id, match_id)
@@ -51,10 +65,10 @@ class B2BBookingService:
             "channel_id": quote_doc.get("channel_id"),
             "status": "CONFIRMED",
             "payment_status": "unpaid",
-            "currency": offer.get("currency", "EUR"),
+            "currency": currency,
             "amounts": {
                 "net": offer.get("net", 0.0),
-                "sell": offer.get("sell", 0.0),
+                "sell": sell_amount,
             },
             "items": [
                 {
@@ -74,6 +88,13 @@ class B2BBookingService:
             "quote_id": str(quote_doc.get("_id")),
             "risk_snapshot": snapshots.get("risk_snapshot"),
             "policy_snapshot": snapshots.get("policy_snapshot"),
+            # PHASE 1.5: Finance integration fields
+            "finance": {
+                "currency": currency,
+                "sell_amount": sell_amount,
+                "posting": {},  # will be populated after posting
+            },
+            "finance_flags": credit_check["flags"],
             "created_at": now,
             "updated_at": now,
             "created_by_email": user_email,
@@ -81,6 +102,29 @@ class B2BBookingService:
 
         res = await self.bookings.insert_one(booking_doc)
         booking_id = str(res.inserted_id)
+        
+        # ===================================================================
+        # PHASE 1.5: Auto-posting for BOOKING_CONFIRMED
+        # ===================================================================
+        try:
+            posting_id = await self.finance.post_booking_confirmed(
+                organization_id=organization_id,
+                booking_id=booking_id,
+                agency_id=agency_id,
+                sell_amount=sell_amount,
+                currency=currency,
+                occurred_at=now,
+            )
+            
+            # Update booking with posting_id
+            await self.bookings.update_one(
+                {"_id": res.inserted_id},
+                {"$set": {"finance.posting.booking_confirmed_posting_id": posting_id}}
+            )
+        except Exception as e:
+            # Log error but don't fail booking (posting can be retried)
+            import logging
+            logging.error(f"Failed to post booking confirmed: {e}")
 
         # Emit booking created event for timeline
         actor = {

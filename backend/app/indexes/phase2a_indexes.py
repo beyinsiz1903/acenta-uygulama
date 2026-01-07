@@ -112,6 +112,39 @@ async def ensure_phase2a_indexes(db):
         [("organization_id", ASCENDING), ("settlement_id", ASCENDING)],
         name="accruals_by_settlement",
     )
+
+    # ========================================================================
+    # fx_rates & fx_rate_snapshots (Phase 2C)
+    # ========================================================================
+
+    # fx_rates: lookup by (org, base, quote, as_of desc)
+    await _safe_create(
+        db.fx_rates,
+        [("organization_id", ASCENDING), ("base", ASCENDING), ("quote", ASCENDING), ("as_of", DESCENDING)],
+        name="fx_rates_by_pair_asof",
+    )
+
+    # Optional uniqueness on exact (org, base, quote, as_of)
+    await _safe_create(
+        db.fx_rates,
+        [("organization_id", ASCENDING), ("base", ASCENDING), ("quote", ASCENDING), ("as_of", ASCENDING)],
+        unique=True,
+        name="uniq_fx_rate_by_pair_asof",
+    )
+
+    # fx_rate_snapshots: 1 snapshot per booking+pair
+    await _safe_create(
+        db.fx_rate_snapshots,
+        [
+            ("organization_id", ASCENDING),
+            ("context.type", ASCENDING),
+            ("context.id", ASCENDING),
+            ("base", ASCENDING),
+            ("quote", ASCENDING),
+        ],
+        unique=True,
+        name="uniq_fx_snapshot_booking_pair",
+    )
     
     # Ops debug (recent accruals)
     await _safe_create(

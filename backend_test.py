@@ -3483,21 +3483,9 @@ class AdminCatalogEpicTester:
         self.print_summary()
 
         return 0 if self.tests_failed == 0 else 1
-                "amenities": ["wifi", "pool"],
-                "room_type_ids": [],
-                "rate_plan_ids": []
-            }
-        }
-        success, response, _ = self.run_test(
-            "Create Product Version",
-            "POST",
-            f"api/admin/catalog/products/{self.product_id}/versions",
-            200,
-            data=version_data
-        )
-        
-        if success and response.get('version_id'):
-            self.version_id = response['version_id']
+
+
+class FinancePhase2A3Tester:
             if (response.get('version') == 1 and 
                 response.get('status') == 'draft'):
                 self.log(f"✅ Version created successfully:")

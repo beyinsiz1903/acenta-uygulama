@@ -28,6 +28,7 @@ class ProductCreateRequest(BaseModel):
     name: LocalizedText
     default_currency: str = Field(min_length=3, max_length=3)
     status: ProductStatus = "inactive"
+    location: Optional[ProductLocation] = None
 
 
 class ProductUpdateRequest(BaseModel):

@@ -271,6 +271,11 @@ def test_phase_2a_3():
         }
     )
 
+    # Use service via async Motor for adjustment tests
+    import asyncio
+    from app.db import get_db
+    from app.services.supplier_accrual import SupplierAccrualService
+
     async def _run_adjust_up():
         motor_db = await get_db()
         svc = SupplierAccrualService(motor_db)

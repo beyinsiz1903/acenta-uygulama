@@ -76,10 +76,10 @@ async def _create_account(db, org_id: str, payload: FinanceAccountCreate):
     if existing:
         raise HTTPException(
             status_code=409,
-            detail=ErrorResponse(
+            detail=error_response(
                 code="account_code_exists",
                 message=f"Account with code '{payload.code}' already exists",
-            ).model_dump(),
+            ),
         )
     
     account_id = f"acct_{uuid.uuid4()}"

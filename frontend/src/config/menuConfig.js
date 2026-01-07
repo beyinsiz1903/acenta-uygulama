@@ -14,6 +14,7 @@ export const MENU_CONFIG = {
         { label: "Action Policies", path: "/app/admin/settings/action-policies" },
         { label: "Approvals", path: "/app/admin/approvals" },
         { label: "Exports", path: "/app/admin/exports" },
+        { label: "Finance Refunds", path: "/app/admin/finance/refunds" },
       ],
     },
     {

@@ -25,6 +25,7 @@ import AdminApprovalsPage from "./pages/AdminApprovalsPage";
 import AdminCatalogPage from "./pages/AdminCatalogPage";
 import AdminPricingPage from "./pages/AdminPricingPage";
 import OpsB2BQueuesPage from "./pages/OpsB2BQueuesPage";
+import AdminFinanceRefundsPage from "./pages/AdminFinanceRefundsPage";
 import DashboardPage from "./pages/DashboardPage";
 import ProductsPage from "./pages/ProductsPage";
 import AgencyHotelsPage from "./pages/AgencyHotelsPage";
@@ -90,6 +91,7 @@ function App() {
             <Route path="pricing" element={<AdminPricingPage />} />
             <Route path="approvals" element={<AdminApprovalsPage />} />
             <Route path="exports" element={<AdminExportsPage />} />
+            <Route path="finance/refunds" element={<AdminFinanceRefundsPage />} />
             <Route path="ops/b2b" element={<OpsB2BQueuesPage />} />
           </Route>
         </Route>

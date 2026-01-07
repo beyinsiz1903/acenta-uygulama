@@ -440,6 +440,9 @@ async def list_rate_plans(
             payment_type=x.get("payment_type") or "postpay",
             min_stay=x.get("min_stay", 1),
             max_stay=x.get("max_stay", 30),
+            currency=x.get("currency", "EUR"),
+            base_net_price=x.get("base_net_price", 0.0),
+            status=x.get("status", "active"),
         )
         for x in items
     ]

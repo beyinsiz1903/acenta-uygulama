@@ -560,6 +560,54 @@ async def get_supplier_payable_summary(
         "items": balances,
     }
 
+@router.get("/supplier-accruals")
+async def list_supplier_accruals(
+    supplier_id: Optional[str] = Query(None),
+    status: Optional[str] = Query(None),
+    limit: int = Query(50, ge=1, le=200),
+    current_user=Depends(require_roles(["admin", "ops", "super_admin"])),
+    db=Depends(get_db),
+):
+    """List supplier accruals for ops/debug.
+
+    Filters:
+    - supplier_id (optional)
+    - status (optional)
+    """
+    org_id = current_user["organization_id"]
+
+    query: dict[str, Any] = {"organization_id": org_id}
+    if supplier_id:
+        query["supplier_id"] = supplier_id
+    if status:
+        query["status"] = status
+
+    cursor = (
+        db.supplier_accruals.find(query)
+        .sort("accrued_at", -1)
+        .limit(limit)
+    )
+    docs = await cursor.to_list(length=limit)
+
+    items = []
+    for doc in docs:
+        amounts = doc.get("amounts") or {}
+        items.append(
+            {
+                "accrual_id": str(doc.get("_id")),
+                "booking_id": doc.get("booking_id"),
+                "supplier_id": doc.get("supplier_id"),
+                "currency": doc.get("currency"),
+                "net_payable": amounts.get("net_payable"),
+                "status": doc.get("status"),
+                "accrued_at": doc.get("accrued_at"),
+                "settlement_id": doc.get("settlement_id"),
+            }
+        )
+
+    return {"items": items}
+
+
 
 # ============================================================================
 # Phase 1.4: Statement & Exposure APIs

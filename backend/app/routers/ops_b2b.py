@@ -290,6 +290,21 @@ async def approve_b2b_case_ops(
         raise AppError(404, "booking_not_found", "Booking not found", {"booking_id": booking_id})
 
     booking = await db.bookings.find_one({"_id": booking_oid, "organization_id": org_id})
+    previous_status = booking.get("status")
+
+    # If booking was VOUCHERED, reverse supplier accrual before status change
+    if previous_status == "VOUCHERED":
+        from app.services.supplier_accrual import SupplierAccrualService
+
+        accrual_svc = SupplierAccrualService(db)
+        await accrual_svc.reverse_accrual_for_booking(
+            organization_id=org_id,
+            booking_id=booking_id,
+            triggered_by=user.get("email"),
+            trigger="ops_cancel_approved",
+        )
+
+
     if not booking:
         raise AppError(404, "booking_not_found", "Booking not found", {"booking_id": booking_id})
 

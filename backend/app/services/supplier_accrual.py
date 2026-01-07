@@ -244,6 +244,264 @@ class SupplierAccrualService:
                         "posting_id": posting_id,
                         "net_amount": net_payable,
                         "currency": currency,
+    async def reverse_accrual_for_booking(
+        self,
+        organization_id: str,
+        booking_id: str,
+        triggered_by: str,
+        trigger: str = "ops_cancel_approved",
+    ) -> dict:
+        """Reverse supplier accrual for a booking (SUPPLIER_ACCRUAL_REVERSED).
+
+        Contracts:
+        - Uses supplier_accruals.amounts.net_payable as source-of-truth
+        - Idempotent via ledger_postings unique key
+        - Fails with 404 accrual_not_found if no accrual exists
+        - Fails with 409 invalid_booking_state if booking is not VOUCHERED
+        - Fails with 409 accrual_locked_in_settlement if settlement_id/status lock present
+        """
+        booking = await self._load_booking(organization_id, booking_id)
+        if booking.get("status") != "VOUCHERED":
+            raise AppError(
+                status_code=409,
+                code="invalid_booking_state",
+                message="Reverse requires booking VOUCHERED",
+                details={"booking_id": booking_id, "current_status": booking.get("status")},
+            )
+
+        accrual = await self.db.supplier_accruals.find_one(
+            {"organization_id": organization_id, "booking_id": booking_id},
+        )
+        if not accrual:
+            raise AppError(
+                status_code=404,
+                code="accrual_not_found",
+                message="No supplier accrual found for booking",
+                details={"booking_id": booking_id},
+            )
+
+        # Settlement lock guard
+        status = accrual.get("status")
+        if accrual.get("settlement_id") is not None or status in {"in_settlement", "settled"}:
+            raise AppError(
+                status_code=409,
+                code="accrual_locked_in_settlement",
+                message="Accrual is locked in settlement and cannot be reversed",
+                details={"booking_id": booking_id, "accrual_id": str(accrual.get("_id"))},
+            )
+
+        supplier_id = accrual.get("supplier_id")
+        currency = accrual.get("currency")
+        net_payable = (accrual.get("amounts") or {}).get("net_payable", 0.0)
+
+        # Ensure accounts
+        supplier_account_id = await self.supp_fin.get_or_create_supplier_account(
+            organization_id, supplier_id, currency,
+        )
+        platform_ap_account_id = await ensure_platform_ap_clearing_account(
+            self.db, organization_id, currency,
+        )
+
+        # Idempotent posting: if posting already exists, return it
+        lines = PostingMatrixConfig.get_supplier_accrual_reversed_lines(
+            supplier_account_id=supplier_account_id,
+            platform_ap_clearing_account_id=platform_ap_account_id,
+            net_amount=net_payable,
+        )
+        posting = await self.ledger.post_event(
+            organization_id=organization_id,
+            source_type="booking",
+            source_id=booking_id,
+            event="SUPPLIER_ACCRUAL_REVERSED",
+            currency=currency,
+            lines=lines,
+            occurred_at=now_utc(),
+            created_by=triggered_by,
+            meta={
+                "accrual_id": str(accrual.get("_id")),
+                "supplier_id": supplier_id,
+                "trigger": trigger,
+            },
+        )
+
+        # If status already reversed and posting existed, we still return OK with existing posting
+        posting_id = posting["_id"]
+        now = now_utc()
+        await self.db.supplier_accruals.update_one(
+            {"_id": accrual["_id"]},
+            {
+                "$set": {
+                    "status": "reversed",
+                    "reversed_posting_id": posting_id,
+                    "reversed_at": now,
+                    "updated_at": now,
+                }
+            },
+        )
+
+        return {
+            "accrual_id": str(accrual.get("_id")),
+            "posting_id": posting_id,
+            "supplier_id": supplier_id,
+            "supplier_account_id": supplier_account_id,
+            "platform_ap_account_id": platform_ap_account_id,
+            "currency": currency,
+            "net_amount": net_payable,
+        }
+
+    async def adjust_accrual_for_booking(
+        self,
+        organization_id: str,
+        booking_id: str,
+        new_sell: float,
+        new_commission: float,
+        triggered_by: str,
+        trigger: str = "adjustment",
+    ) -> dict:
+        """Adjust supplier accrual for a booking (SUPPLIER_ACCRUAL_ADJUSTED).
+
+        Contracts:
+        - old_net = supplier_accruals.amounts.net_payable
+        - new_net = new_sell - new_commission
+        - delta = new_net - old_net
+        - delta > 0: DEBIT platform AP, CREDIT supplier payable
+        - delta < 0: DEBIT supplier payable, CREDIT platform AP
+        - delta == 0: no posting
+        - Settlement lock guard identical to reverse
+        - 404 accrual_not_found if missing
+        """
+        booking = await self._load_booking(organization_id, booking_id)
+
+        accrual = await self.db.supplier_accruals.find_one(
+            {"organization_id": organization_id, "booking_id": booking_id},
+        )
+        if not accrual:
+            raise AppError(
+                status_code=404,
+                code="accrual_not_found",
+                message="No supplier accrual found for booking",
+                details={"booking_id": booking_id},
+            )
+
+        # Currency guard: booking/accrual currency mismatch is not allowed
+        accrual_currency = accrual.get("currency")
+        booking_currency = booking.get("currency")
+        if accrual_currency != booking_currency:
+            raise AppError(
+                status_code=409,
+                code="currency_mismatch",
+                message="Booking currency does not match accrual currency",
+                details={"booking_currency": booking_currency, "accrual_currency": accrual_currency},
+            )
+
+        # Settlement lock guard
+        status = accrual.get("status")
+        if accrual.get("settlement_id") is not None or status in {"in_settlement", "settled"}:
+            raise AppError(
+                status_code=409,
+                code="accrual_locked_in_settlement",
+                message="Accrual is locked in settlement and cannot be adjusted",
+                details={"booking_id": booking_id, "accrual_id": str(accrual.get("_id"))},
+            )
+
+        old_net = (accrual.get("amounts") or {}).get("net_payable", 0.0)
+        new_net = float(new_sell) - float(new_commission)
+        delta = new_net - old_net
+
+        supplier_id = accrual.get("supplier_id")
+        currency = accrual_currency
+
+        # If no change, only persist amounts if needed, no posting
+        now = now_utc()
+        if abs(delta) < 0.01:
+            await self.db.supplier_accruals.update_one(
+                {"_id": accrual["_id"]},
+                {
+                    "$set": {
+                        "amounts.net_payable": new_net,
+                        "updated_at": now,
+                    }
+                },
+            )
+            return {
+                "accrual_id": str(accrual.get("_id")),
+                "posting_id": None,
+                "supplier_id": supplier_id,
+                "currency": currency,
+                "old_net": old_net,
+                "new_net": new_net,
+                "delta": delta,
+            }
+
+        supplier_account_id = await self.supp_fin.get_or_create_supplier_account(
+            organization_id, supplier_id, currency,
+        )
+        platform_ap_account_id = await ensure_platform_ap_clearing_account(
+            self.db, organization_id, currency,
+        )
+
+        lines = PostingMatrixConfig.get_supplier_accrual_adjusted_lines(
+            supplier_account_id=supplier_account_id,
+            platform_ap_clearing_account_id=platform_ap_account_id,
+            delta=delta,
+        )
+        posting = await self.ledger.post_event(
+            organization_id=organization_id,
+            source_type="booking",
+            source_id=booking_id,
+            event="SUPPLIER_ACCRUAL_ADJUSTED",
+            currency=currency,
+            lines=lines,
+            occurred_at=now,
+            created_by=triggered_by,
+            meta={
+                "accrual_id": str(accrual.get("_id")),
+                "supplier_id": supplier_id,
+                "trigger": trigger,
+                "old_net": old_net,
+                "new_net": new_net,
+                "delta": delta,
+            },
+        )
+
+        posting_id = posting["_id"]
+
+        # Persist new net + adjustment log
+        await self.db.supplier_accruals.update_one(
+            {"_id": accrual["_id"]},
+            {
+                "$set": {
+                    "status": "adjusted",
+                    "amounts.net_payable": new_net,
+                    "updated_at": now,
+                },
+                "$push": {
+                    "adjustments": {
+                        "old_net": old_net,
+                        "new_net": new_net,
+                        "delta": delta,
+                        "posting_id": posting_id,
+                        "adjusted_at": now,
+                        "adjusted_by": triggered_by,
+                        "trigger": trigger,
+                    }
+                },
+            },
+        )
+
+        return {
+            "accrual_id": str(accrual.get("_id")),
+            "posting_id": posting_id,
+            "supplier_id": supplier_id,
+            "supplier_account_id": supplier_account_id,
+            "platform_ap_account_id": platform_ap_account_id,
+            "currency": currency,
+            "old_net": old_net,
+            "new_net": new_net,
+            "delta": delta,
+        }
+
+
                     },
                     "updated_at": now_utc(),
                 }

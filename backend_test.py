@@ -3717,6 +3717,7 @@ class FinancePhase2A5SettlementPaidTester:
         
         # Use existing supplier from database
         import pymongo
+        from bson import ObjectId
         try:
             client = pymongo.MongoClient("mongodb://localhost:27017/")
             db = client.test_database

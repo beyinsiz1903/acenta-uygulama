@@ -463,6 +463,14 @@ function RefundDetailPanel({
             </div>
           </div>
         )}
+
+        {/* Last 5 closed refunds for this booking */}
+        <div className="rounded-lg border bg-muted/10 p-3 space-y-2">
+          <div className="text-xs font-semibold text-muted-foreground">
+            Bu booking i e7in son 5 kapal31 refund
+          </div>
+          <MiniRefundHistory bookingId={caseData.booking_id} />
+        </div>
       </CardContent>
     </Card>
   );

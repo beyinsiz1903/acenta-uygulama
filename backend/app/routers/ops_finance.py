@@ -427,6 +427,40 @@ async def approve_refund_case(
     )
 
 
+@router.get("/bookings/{booking_id}/financials")
+async def get_booking_financials(
+    booking_id: str,
+    current_user=Depends(require_roles(["admin", "ops", "super_admin"])),
+    db=Depends(get_db),
+):
+    """Get or initialize booking_financials snapshot for a booking (Phase 2B.4).
+
+    - If booking does not exist: 404
+    - If booking exists but financials doc is missing: ensure + return
+    """
+    org_id = current_user["organization_id"]
+
+    from app.errors import AppError
+
+    booking = await db.bookings.find_one({"_id": ObjectId(booking_id), "organization_id": org_id})
+    if not booking:
+        raise AppError(
+            status_code=404,
+            code="booking_not_found",
+            message="Booking not found",
+        )
+
+    svc = BookingFinancialsService(db)
+    doc = await svc.ensure_financials(org_id, booking)
+
+    # Simple JSON-serializable dict (ObjectId -> str)
+    doc["id"] = str(doc.get("_id"))
+    doc["booking_id"] = str(doc.get("booking_id"))
+    doc.pop("_id", None)
+
+    return doc
+
+
 @router.post("/refunds/{case_id}/reject")
 async def reject_refund_case(
     case_id: str,

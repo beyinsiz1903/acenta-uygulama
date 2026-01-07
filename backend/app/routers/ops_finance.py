@@ -438,3 +438,306 @@ async def test_recalc(
         "ok": True,
         **result,
     }
+
+
+# ============================================================================
+# Phase 1.4: Statement & Exposure APIs
+# ============================================================================
+
+@router.get("/accounts/{account_id}/statement", response_model=AccountStatement)
+async def get_account_statement(
+    account_id: str,
+    from_date: Optional[datetime] = Query(None, alias="from"),
+    to_date: Optional[datetime] = Query(None, alias="to"),
+    limit: int = Query(100, ge=1, le=500),
+    current_user=Depends(require_roles(["admin", "ops", "super_admin"])),
+    db=Depends(get_db),
+):
+    """
+    Get account statement (movement history)
+    
+    Auth: admin|ops|super_admin
+    Query: from, to (ISO datetime), limit
+    Sorting: posted_at asc (statement logic)
+    """
+    org_id = current_user["organization_id"]
+    
+    # Verify account exists and belongs to org
+    account = await db.finance_accounts.find_one({
+        "_id": account_id,
+        "organization_id": org_id,
+    })
+    if not account:
+        raise AppError(
+            status_code=404,
+            code="account_not_found",
+            message=f"Account {account_id} not found",
+        )
+    
+    currency = account["currency"]
+    
+    # Calculate opening balance (if from_date specified)
+    opening_balance = 0.0
+    if from_date:
+        # Get all entries before from_date
+        entries_before = await db.ledger_entries.find({
+            "organization_id": org_id,
+            "account_id": account_id,
+            "currency": currency,
+            "posted_at": {"$lt": from_date},
+        }).to_list(length=10000)
+        
+        # Apply balance rules
+        account_type = account.get("type")
+        total_debit = sum(e["amount"] for e in entries_before if e["direction"] == "debit")
+        total_credit = sum(e["amount"] for e in entries_before if e["direction"] == "credit")
+        
+        if account_type == "agency":
+            opening_balance = total_debit - total_credit
+        elif account_type == "platform":
+            opening_balance = total_credit - total_debit
+        else:
+            opening_balance = total_debit - total_credit
+    
+    # Get entries for statement period
+    query = {
+        "organization_id": org_id,
+        "account_id": account_id,
+        "currency": currency,
+    }
+    
+    if from_date:
+        query["posted_at"] = {"$gte": from_date}
+    if to_date:
+        if "posted_at" not in query:
+            query["posted_at"] = {}
+        query["posted_at"]["$lte"] = to_date
+    
+    cursor = db.ledger_entries.find(query).sort("posted_at", 1).limit(limit)
+    entries = await cursor.to_list(length=limit)
+    
+    # Build statement items
+    items = []
+    running_balance = opening_balance
+    
+    for entry in entries:
+        # Apply delta based on direction and account type
+        account_type = account.get("type")
+        if account_type == "agency":
+            delta = entry["amount"] if entry["direction"] == "debit" else -entry["amount"]
+        elif account_type == "platform":
+            delta = entry["amount"] if entry["direction"] == "credit" else -entry["amount"]
+        else:
+            delta = entry["amount"] if entry["direction"] == "debit" else -entry["amount"]
+        
+        running_balance += delta
+        
+        items.append(
+            StatementItem(
+                posted_at=entry["posted_at"],
+                direction=entry["direction"],
+                amount=entry["amount"],
+                event=entry["event"],
+                source=entry["source"],
+                memo=entry.get("memo", ""),
+            )
+        )
+    
+    closing_balance = running_balance
+    
+    return AccountStatement(
+        account_id=account_id,
+        currency=currency,
+        opening_balance=opening_balance,
+        closing_balance=closing_balance,
+        items=items,
+    )
+
+
+@router.get("/exposure", response_model=ExposureResponse)
+async def get_exposure_dashboard(
+    limit: int = Query(50, ge=1, le=200),
+    current_user=Depends(require_roles(["admin", "ops", "super_admin"])),
+    db=Depends(get_db),
+):
+    """
+    Get exposure dashboard for all agencies
+    
+    Auth: admin|ops|super_admin
+    Shows: agency exposure vs credit limit
+    Status: ok | near_limit | over_limit
+    """
+    org_id = current_user["organization_id"]
+    
+    # Get all agency accounts
+    agency_accounts = await db.finance_accounts.find({
+        "organization_id": org_id,
+        "type": "agency",
+    }).to_list(length=limit)
+    
+    items = []
+    
+    for account in agency_accounts:
+        account_id = account["_id"]
+        agency_id = account["owner_id"]
+        
+        # Get balance
+        balance = await db.account_balances.find_one({
+            "organization_id": org_id,
+            "account_id": account_id,
+            "currency": "EUR",
+        })
+        
+        exposure = balance["balance"] if balance else 0.0
+        
+        # Get credit profile
+        credit_profile = await db.credit_profiles.find_one({
+            "organization_id": org_id,
+            "agency_id": agency_id,
+        })
+        
+        if not credit_profile:
+            # No credit profile, skip
+            continue
+        
+        credit_limit = credit_profile["limit"]
+        soft_limit = credit_profile.get("soft_limit")
+        payment_terms = credit_profile["payment_terms"]
+        
+        # Calculate status
+        if exposure >= credit_limit:
+            status = "over_limit"
+        elif soft_limit and exposure >= soft_limit:
+            status = "near_limit"
+        else:
+            status = "ok"
+        
+        # Get agency name
+        agency = await db.agencies.find_one({"_id": agency_id})
+        agency_name = agency["name"] if agency else f"Agency {agency_id[:8]}"
+        
+        items.append(
+            ExposureItem(
+                agency_id=agency_id,
+                agency_name=agency_name,
+                currency="EUR",
+                exposure=exposure,
+                credit_limit=credit_limit,
+                soft_limit=soft_limit,
+                payment_terms=payment_terms,
+                status=status,
+            )
+        )
+    
+    # Sort by exposure desc (highest risk first)
+    items.sort(key=lambda x: x.exposure, reverse=True)
+    
+    return ExposureResponse(items=items)
+
+
+@router.post("/payments", response_model=Payment, status_code=201)
+async def create_manual_payment(
+    payload: PaymentCreate,
+    current_user=Depends(require_roles(["admin", "ops", "super_admin"])),
+    db=Depends(get_db),
+):
+    """
+    Create manual payment entry
+    
+    Auth: admin|ops|super_admin
+    Behavior:
+    1. Create payment document
+    2. Create ledger posting (agency credit, platform debit)
+    3. Update balances automatically via posting service
+    """
+    org_id = current_user["organization_id"]
+    
+    # Validate amount
+    if payload.amount <= 0:
+        raise AppError(
+            status_code=422,
+            code="validation_error",
+            message="Amount must be > 0",
+        )
+    
+    # Verify account exists
+    account = await db.finance_accounts.find_one({
+        "_id": payload.account_id,
+        "organization_id": org_id,
+    })
+    if not account:
+        raise AppError(
+            status_code=404,
+            code="account_not_found",
+            message=f"Account {payload.account_id} not found",
+        )
+    
+    # Currency mismatch check
+    if account["currency"] != payload.currency:
+        raise AppError(
+            status_code=409,
+            code="currency_mismatch",
+            message=f"Account currency {account['currency']} != payment currency {payload.currency}",
+        )
+    
+    # Create payment document
+    import uuid
+    payment_id = f"pay_{uuid.uuid4()}"
+    now = now_utc()
+    received_at = payload.received_at or now
+    
+    payment_doc = {
+        "_id": payment_id,
+        "organization_id": org_id,
+        "account_id": payload.account_id,
+        "currency": payload.currency,
+        "amount": payload.amount,
+        "method": payload.method,
+        "reference": payload.reference,
+        "received_at": received_at,
+        "created_at": now,
+        "created_by_email": current_user["email"],
+    }
+    
+    await db.payments.insert_one(payment_doc)
+    
+    # Create ledger posting
+    # Payment: agency pays platform (credit agency, debit platform)
+    # Get platform account
+    platform_account = await db.finance_accounts.find_one({
+        "organization_id": org_id,
+        "type": "platform",
+    })
+    
+    if platform_account:
+        from app.services.ledger_posting import LedgerPostingService, PostingMatrixConfig
+        
+        lines = PostingMatrixConfig.get_payment_received_lines(
+            agency_account_id=payload.account_id,
+            platform_account_id=platform_account["_id"],
+            payment_amount=payload.amount,
+        )
+        
+        await LedgerPostingService.post_event(
+            organization_id=org_id,
+            source_type="payment",
+            source_id=payment_id,
+            event="PAYMENT_RECEIVED",
+            currency=payload.currency,
+            lines=lines,
+            occurred_at=received_at,
+            created_by=current_user["email"],
+        )
+    
+    return Payment(
+        payment_id=payment_id,
+        organization_id=org_id,
+        account_id=payload.account_id,
+        currency=payload.currency,
+        amount=payload.amount,
+        method=payload.method,
+        reference=payload.reference,
+        received_at=received_at,
+        created_at=now,
+        created_by_email=current_user["email"],
+    )

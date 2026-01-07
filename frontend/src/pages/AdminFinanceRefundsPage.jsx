@@ -216,6 +216,25 @@ function RefundApproveDialog({ open, onOpenChange, caseData, onApproved }) {
               onChange={(e) => setPaymentRef(e.target.value)}
             />
           </div>
+        </div>
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={submitting}
+          >
+            Cancel
+          </Button>
+          <Button onClick={onSubmit} disabled={submitting}>
+            {submitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+            Approve
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function MiniRefundHistory({ bookingId }) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);

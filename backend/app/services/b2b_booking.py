@@ -136,6 +136,7 @@ class B2BBookingService:
                                 "base": ORG_FUNCTIONAL_CCY,
                                 "quote": currency,
                                 "rate": rate,
+                                "rate_basis": "QUOTE_PER_EUR",
                                 "as_of": snap["as_of"],
                                 "snapshot_id": snap["snapshot_id"],
                             },

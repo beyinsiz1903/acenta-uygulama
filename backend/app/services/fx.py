@@ -142,6 +142,7 @@ class FXService:
       "base": fx.base,
       "quote": fx.quote,
       "rate": fx.rate,
+      "rate_basis": "QUOTE_PER_EUR",  # 1 EUR = rate * quote
       "as_of": fx.as_of,
       "created_at": now,
       "created_by_email": created_by_email,

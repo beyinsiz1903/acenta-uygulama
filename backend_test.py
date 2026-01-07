@@ -26883,6 +26883,796 @@ class ScaleV1ApprovalAuditTester:
         return 0 if self.tests_failed == 0 else 1
 
 
+class FinancePhase2A5SettlementPaidTester:
+    def __init__(self, base_url="https://demobackend.emergentagent.com"):
+        self.base_url = base_url
+        self.admin_token = None
+        self.tests_run = 0
+        self.tests_passed = 0
+        self.tests_failed = 0
+        self.failed_tests = []
+        
+        # Store data for testing
+        self.organization_id = None
+        self.supplier_id = None
+        self.settlement_id = None
+        self.settlement_id_2 = None
+        self.accrual_a_id = None
+        self.accrual_b_id = None
+
+    def log(self, msg):
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}")
+
+    def run_test(self, name, method, endpoint, expected_status, data=None, headers_override=None):
+        """Run a single API test"""
+        url = f"{self.base_url}/{endpoint}"
+        headers = headers_override or {'Content-Type': 'application/json'}
+        if self.admin_token and not headers_override:
+            headers['Authorization'] = f'Bearer {self.admin_token}'
+
+        self.tests_run += 1
+        self.log(f"🔍 Test #{self.tests_run}: {name}")
+        
+        try:
+            if method == 'GET':
+                response = requests.get(url, headers=headers, timeout=10)
+            elif method == 'POST':
+                response = requests.post(url, json=data, headers=headers, timeout=10)
+            elif method == 'PUT':
+                response = requests.put(url, json=data, headers=headers, timeout=10)
+            elif method == 'DELETE':
+                response = requests.delete(url, headers=headers, timeout=10)
+            else:
+                raise ValueError(f"Unsupported method: {method}")
+
+            success = response.status_code == expected_status
+            if success:
+                self.tests_passed += 1
+                self.log(f"✅ PASSED - Status: {response.status_code}")
+                try:
+                    return True, response.json() if response.content else {}
+                except:
+                    return True, {}
+            else:
+                self.tests_failed += 1
+                self.failed_tests.append(f"{name} - Expected {expected_status}, got {response.status_code}")
+                self.log(f"❌ FAILED - Expected {expected_status}, got {response.status_code}")
+                try:
+                    self.log(f"   Response: {response.text[:200]}")
+                except:
+                    pass
+                return False, {}
+
+        except Exception as e:
+            self.tests_failed += 1
+            self.failed_tests.append(f"{name} - Error: {str(e)}")
+            self.log(f"❌ FAILED - Error: {str(e)}")
+            return False, {}
+
+    def test_admin_login(self):
+        """Test admin login"""
+        self.log("\n=== AUTHENTICATION ===")
+        success, response = self.run_test(
+            "Admin Login (admin@acenta.test/admin123)",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": "admin@acenta.test", "password": "admin123"},
+            headers_override={'Content-Type': 'application/json'}
+        )
+        if success and 'access_token' in response:
+            self.admin_token = response['access_token']
+            user = response.get('user', {})
+            roles = user.get('roles', [])
+            self.organization_id = user.get('organization_id')
+            
+            if 'admin' in roles or 'super_admin' in roles:
+                self.log(f"✅ Admin login successful - roles: {roles}, org: {self.organization_id}")
+                return True
+            else:
+                self.log(f"❌ Missing admin/super_admin role: {roles}")
+                return False
+        return False
+
+    def test_setup_platform_cash_account(self):
+        """Ensure PLATFORM_CASH_EUR account exists"""
+        self.log("\n=== SETUP PLATFORM CASH ACCOUNT ===")
+        
+        # Check if PLATFORM_CASH_EUR exists
+        success, response = self.run_test(
+            "Check existing PLATFORM_CASH_EUR account",
+            "GET",
+            "api/ops/finance/accounts?type=platform&limit=50",
+            200
+        )
+        
+        if success:
+            items = response.get('items', [])
+            platform_cash_eur = None
+            for item in items:
+                if item.get('code') == 'PLATFORM_CASH_EUR' and item.get('currency') == 'EUR':
+                    platform_cash_eur = item
+                    break
+            
+            if platform_cash_eur:
+                self.log(f"✅ PLATFORM_CASH_EUR account exists: {platform_cash_eur['account_id']}")
+                return True
+            else:
+                # Create PLATFORM_CASH_EUR account
+                account_data = {
+                    "type": "platform",
+                    "owner_id": "platform",
+                    "code": "PLATFORM_CASH_EUR",
+                    "name": "Platform Cash EUR",
+                    "currency": "EUR",
+                    "status": "active"
+                }
+                success, response = self.run_test(
+                    "Create PLATFORM_CASH_EUR account",
+                    "POST",
+                    "api/ops/finance/accounts",
+                    201,
+                    data=account_data
+                )
+                
+                if success:
+                    self.log(f"✅ Created PLATFORM_CASH_EUR account: {response.get('account_id')}")
+                    return True
+                else:
+                    self.log("❌ Failed to create PLATFORM_CASH_EUR account")
+                    return False
+        return False
+
+    def test_setup_approved_settlement(self):
+        """Setup an approved settlement run with non-zero totals (similar to Phase 2A.4)"""
+        self.log("\n=== SETUP APPROVED SETTLEMENT ===")
+        
+        # Get or create a supplier
+        success, response = self.run_test(
+            "List suppliers",
+            "GET",
+            "api/ops/finance/suppliers?limit=10",
+            200
+        )
+        
+        if success and response.get('items'):
+            self.supplier_id = response['items'][0]['supplier_id']
+            self.log(f"✅ Using existing supplier: {self.supplier_id}")
+        else:
+            # Create supplier if none exists
+            supplier_data = {
+                "name": f"Test Supplier {uuid.uuid4().hex[:8]}",
+                "contact_email": f"supplier{uuid.uuid4().hex[:8]}@test.com",
+                "payment_terms": "NET30"
+            }
+            success, response = self.run_test(
+                "Create supplier",
+                "POST",
+                "api/ops/finance/suppliers",
+                201,
+                data=supplier_data
+            )
+            
+            if success and response.get('supplier_id'):
+                self.supplier_id = response['supplier_id']
+                self.log(f"✅ Created supplier: {self.supplier_id}")
+            else:
+                self.log("❌ Failed to create supplier")
+                return False
+
+        # Create settlement run
+        settlement_data = {
+            "supplier_id": self.supplier_id,
+            "currency": "EUR",
+            "period": {
+                "from_date": "2024-01-01",
+                "to_date": "2024-01-31"
+            }
+        }
+        success, response = self.run_test(
+            "Create settlement run",
+            "POST",
+            "api/ops/finance/settlements",
+            200,
+            data=settlement_data
+        )
+        
+        if success and response.get('settlement_id'):
+            self.settlement_id = response['settlement_id']
+            self.log(f"✅ Created settlement run: {self.settlement_id}")
+        else:
+            self.log("❌ Failed to create settlement run")
+            return False
+
+        # Seed supplier accruals for testing
+        import pymongo
+        from bson import ObjectId
+        
+        try:
+            client = pymongo.MongoClient("mongodb://localhost:27017/")
+            db = client.test_database
+            
+            now = datetime.utcnow()
+            
+            # Create test accruals
+            accrual_a = {
+                "_id": ObjectId(),
+                "organization_id": self.organization_id,
+                "booking_id": str(ObjectId()),
+                "supplier_id": self.supplier_id,
+                "currency": "EUR",
+                "amounts": {"net_payable": 500.0},
+                "status": "accrued",
+                "settlement_id": None,
+                "accrued_at": now,
+                "created_at": now,
+                "updated_at": now
+            }
+            
+            accrual_b = {
+                "_id": ObjectId(),
+                "organization_id": self.organization_id,
+                "booking_id": str(ObjectId()),
+                "supplier_id": self.supplier_id,
+                "currency": "EUR",
+                "amounts": {"net_payable": 750.0},
+                "status": "accrued",
+                "settlement_id": None,
+                "accrued_at": now,
+                "created_at": now,
+                "updated_at": now
+            }
+            
+            db.supplier_accruals.insert_many([accrual_a, accrual_b])
+            
+            self.accrual_a_id = str(accrual_a["_id"])
+            self.accrual_b_id = str(accrual_b["_id"])
+            
+            self.log(f"✅ Seeded accruals: A={self.accrual_a_id}, B={self.accrual_b_id}")
+            client.close()
+            
+        except Exception as e:
+            self.log(f"❌ Failed to seed accruals: {str(e)}")
+            return False
+
+        # Add items to settlement
+        success, response = self.run_test(
+            "Add items to settlement",
+            "POST",
+            f"api/ops/finance/settlements/{self.settlement_id}/items:add",
+            200,
+            data=[self.accrual_a_id, self.accrual_b_id]
+        )
+        
+        if success:
+            self.log(f"✅ Added items to settlement: {response.get('added', 0)} items")
+        else:
+            self.log("❌ Failed to add items to settlement")
+            return False
+
+        # Approve settlement
+        success, response = self.run_test(
+            "Approve settlement",
+            "POST",
+            f"api/ops/finance/settlements/{self.settlement_id}/approve",
+            200
+        )
+        
+        if success and response.get('status') == 'approved':
+            totals = response.get('totals', {})
+            self.log(f"✅ Settlement approved with totals: {totals}")
+            return totals.get('total_net_payable', 0) > 0
+        else:
+            self.log("❌ Failed to approve settlement")
+            return False
+
+    def test_happy_path_mark_paid(self):
+        """Test 1: Happy path (approved -> mark-paid)"""
+        self.log("\n=== TEST 1: HAPPY PATH (APPROVED -> MARK-PAID) ===")
+        
+        payment_reference = f"PAY-{uuid.uuid4().hex[:8]}"
+        
+        success, response = self.run_test(
+            "Mark settlement as paid",
+            "POST",
+            f"api/ops/finance/settlements/{self.settlement_id}/mark-paid",
+            200,
+            data={"payment_reference": payment_reference}
+        )
+        
+        if not success:
+            return False
+        
+        # Verify response structure
+        if response.get('status') != 'paid':
+            self.log(f"❌ Expected status 'paid', got '{response.get('status')}'")
+            return False
+        
+        if not response.get('payment_posting_id'):
+            self.log("❌ payment_posting_id not set")
+            return False
+        
+        payment_posting_id = response.get('payment_posting_id')
+        self.log(f"✅ Settlement marked as paid with posting_id: {payment_posting_id}")
+        
+        # Verify database state
+        try:
+            import pymongo
+            from bson import ObjectId
+            client = pymongo.MongoClient("mongodb://localhost:27017/")
+            db = client.test_database
+            
+            # Check ledger_postings
+            posting = db.ledger_postings.find_one({
+                "organization_id": self.organization_id,
+                "source.type": "settlement",
+                "source.id": self.settlement_id,
+                "event": "SETTLEMENT_PAID"
+            })
+            
+            if not posting:
+                self.log("❌ SETTLEMENT_PAID posting not found")
+                return False
+            
+            lines = posting.get('lines', [])
+            if len(lines) != 2:
+                self.log(f"❌ Expected 2 lines, got {len(lines)}")
+                return False
+            
+            # Verify line structure (supplier payable DEBIT, platform cash CREDIT)
+            debit_line = None
+            credit_line = None
+            for line in lines:
+                if line.get('direction') == 'debit':
+                    debit_line = line
+                elif line.get('direction') == 'credit':
+                    credit_line = line
+            
+            if not debit_line or not credit_line:
+                self.log("❌ Missing debit or credit line")
+                return False
+            
+            total_amount = 1250.0  # 500 + 750 from our test accruals
+            if debit_line.get('amount') != total_amount or credit_line.get('amount') != total_amount:
+                self.log(f"❌ Line amounts don't match total: expected {total_amount}, got debit={debit_line.get('amount')}, credit={credit_line.get('amount')}")
+                return False
+            
+            self.log(f"✅ Ledger posting verified: debit={debit_line['amount']}, credit={credit_line['amount']}")
+            
+            # Check ledger_entries
+            entries = list(db.ledger_entries.find({
+                "organization_id": self.organization_id,
+                "posting_id": payment_posting_id
+            }))
+            
+            if len(entries) != 2:
+                self.log(f"❌ Expected 2 ledger entries, got {len(entries)}")
+                return False
+            
+            self.log(f"✅ Ledger entries verified: {len(entries)} entries")
+            
+            # Check settlement_runs document
+            settlement = db.settlement_runs.find_one({"_id": ObjectId(self.settlement_id)})
+            if not settlement:
+                self.log("❌ Settlement not found")
+                return False
+            
+            if settlement.get('status') != 'paid':
+                self.log(f"❌ Settlement status not 'paid': {settlement.get('status')}")
+                return False
+            
+            if settlement.get('payment_posting_id') != payment_posting_id:
+                self.log("❌ Settlement payment_posting_id mismatch")
+                return False
+            
+            if not settlement.get('paid_at'):
+                self.log("❌ Settlement paid_at not set")
+                return False
+            
+            if settlement.get('payment_reference') != payment_reference:
+                self.log("❌ Settlement payment_reference mismatch")
+                return False
+            
+            self.log("✅ Settlement document verified")
+            
+            # Check supplier_accruals
+            accruals = list(db.supplier_accruals.find({
+                "settlement_id": ObjectId(self.settlement_id)
+            }))
+            
+            for accrual in accruals:
+                if accrual.get('status') != 'settled':
+                    self.log(f"❌ Accrual status not 'settled': {accrual.get('status')}")
+                    return False
+                
+                if accrual.get('payment_posting_id') != payment_posting_id:
+                    self.log("❌ Accrual payment_posting_id mismatch")
+                    return False
+                
+                if not accrual.get('settled_at'):
+                    self.log("❌ Accrual settled_at not set")
+                    return False
+                
+                if str(accrual.get('settlement_id')) != self.settlement_id:
+                    self.log("❌ Accrual settlement_id mismatch (audit link)")
+                    return False
+            
+            self.log(f"✅ Supplier accruals verified: {len(accruals)} accruals settled")
+            
+            client.close()
+            return True
+            
+        except Exception as e:
+            self.log(f"❌ Database verification failed: {str(e)}")
+            return False
+
+    def test_retry_behavior(self):
+        """Test 2: Retry behavior (200 replay)"""
+        self.log("\n=== TEST 2: RETRY BEHAVIOR (200 REPLAY) ===")
+        
+        # Get current posting count before retry
+        try:
+            import pymongo
+            client = pymongo.MongoClient("mongodb://localhost:27017/")
+            db = client.test_database
+            
+            posting_count_before = db.ledger_postings.count_documents({
+                "organization_id": self.organization_id,
+                "source.type": "settlement",
+                "source.id": self.settlement_id,
+                "event": "SETTLEMENT_PAID"
+            })
+            
+            entry_count_before = db.ledger_entries.count_documents({
+                "organization_id": self.organization_id,
+                "event": "SETTLEMENT_PAID"
+            })
+            
+            client.close()
+            
+        except Exception as e:
+            self.log(f"❌ Failed to get initial counts: {str(e)}")
+            return False
+        
+        # Call mark-paid again on the same settlement
+        success, response = self.run_test(
+            "Mark settlement as paid (retry)",
+            "POST",
+            f"api/ops/finance/settlements/{self.settlement_id}/mark-paid",
+            200,
+            data={"payment_reference": "RETRY-REF"}
+        )
+        
+        if not success:
+            return False
+        
+        # Verify response
+        if response.get('status') != 'paid':
+            self.log(f"❌ Expected status 'paid', got '{response.get('status')}'")
+            return False
+        
+        original_posting_id = response.get('payment_posting_id')
+        if not original_posting_id:
+            self.log("❌ payment_posting_id not returned")
+            return False
+        
+        self.log(f"✅ Retry returned same payment_posting_id: {original_posting_id}")
+        
+        # Verify no additional postings created
+        try:
+            import pymongo
+            client = pymongo.MongoClient("mongodb://localhost:27017/")
+            db = client.test_database
+            
+            posting_count_after = db.ledger_postings.count_documents({
+                "organization_id": self.organization_id,
+                "source.type": "settlement",
+                "source.id": self.settlement_id,
+                "event": "SETTLEMENT_PAID"
+            })
+            
+            entry_count_after = db.ledger_entries.count_documents({
+                "organization_id": self.organization_id,
+                "event": "SETTLEMENT_PAID"
+            })
+            
+            if posting_count_after != posting_count_before:
+                self.log(f"❌ Additional postings created: {posting_count_before} -> {posting_count_after}")
+                return False
+            
+            if entry_count_after != entry_count_before:
+                self.log(f"❌ Additional entries created: {entry_count_before} -> {entry_count_after}")
+                return False
+            
+            self.log("✅ No additional ledger_postings or ledger_entries created")
+            
+            client.close()
+            return True
+            
+        except Exception as e:
+            self.log(f"❌ Database verification failed: {str(e)}")
+            return False
+
+    def test_account_not_found_guard(self):
+        """Test 3: account_not_found guard"""
+        self.log("\n=== TEST 3: ACCOUNT_NOT_FOUND GUARD ===")
+        
+        # Create a settlement with GBP currency (assuming PLATFORM_CASH_GBP doesn't exist)
+        settlement_data = {
+            "supplier_id": self.supplier_id,
+            "currency": "GBP",
+            "period": {
+                "from_date": "2024-01-01",
+                "to_date": "2024-01-31"
+            }
+        }
+        success, response = self.run_test(
+            "Create GBP settlement run",
+            "POST",
+            "api/ops/finance/settlements",
+            200,
+            data=settlement_data
+        )
+        
+        if not success:
+            return False
+        
+        gbp_settlement_id = response.get('settlement_id')
+        self.log(f"✅ Created GBP settlement: {gbp_settlement_id}")
+        
+        # Seed GBP accrual
+        try:
+            import pymongo
+            from bson import ObjectId
+            client = pymongo.MongoClient("mongodb://localhost:27017/")
+            db = client.test_database
+            
+            now = datetime.utcnow()
+            accrual_gbp = {
+                "_id": ObjectId(),
+                "organization_id": self.organization_id,
+                "booking_id": str(ObjectId()),
+                "supplier_id": self.supplier_id,
+                "currency": "GBP",
+                "amounts": {"net_payable": 100.0},
+                "status": "accrued",
+                "settlement_id": None,
+                "accrued_at": now,
+                "created_at": now,
+                "updated_at": now
+            }
+            
+            db.supplier_accruals.insert_one(accrual_gbp)
+            accrual_gbp_id = str(accrual_gbp["_id"])
+            
+            client.close()
+            
+        except Exception as e:
+            self.log(f"❌ Failed to seed GBP accrual: {str(e)}")
+            return False
+        
+        # Add item and approve
+        success, response = self.run_test(
+            "Add GBP accrual to settlement",
+            "POST",
+            f"api/ops/finance/settlements/{gbp_settlement_id}/items:add",
+            200,
+            data=[accrual_gbp_id]
+        )
+        
+        if not success:
+            return False
+        
+        success, response = self.run_test(
+            "Approve GBP settlement",
+            "POST",
+            f"api/ops/finance/settlements/{gbp_settlement_id}/approve",
+            200
+        )
+        
+        if not success:
+            return False
+        
+        # Try to mark as paid (should fail with 404 account_not_found)
+        success, response = self.run_test(
+            "Mark GBP settlement as paid (should fail)",
+            "POST",
+            f"api/ops/finance/settlements/{gbp_settlement_id}/mark-paid",
+            404,
+            data={"payment_reference": "GBP-PAY"}
+        )
+        
+        if not success:
+            return False
+        
+        # Verify error code
+        if response.get('error', {}).get('code') != 'account_not_found':
+            self.log(f"❌ Expected error code 'account_not_found', got '{response.get('error', {}).get('code')}'")
+            return False
+        
+        self.log("✅ Correct 404 account_not_found error returned")
+        
+        # Verify no side effects
+        try:
+            import pymongo
+            from bson import ObjectId
+            client = pymongo.MongoClient("mongodb://localhost:27017/")
+            db = client.test_database
+            
+            # No SETTLEMENT_PAID postings should be created
+            posting_count = db.ledger_postings.count_documents({
+                "organization_id": self.organization_id,
+                "source.type": "settlement",
+                "source.id": gbp_settlement_id,
+                "event": "SETTLEMENT_PAID"
+            })
+            
+            if posting_count > 0:
+                self.log(f"❌ Unexpected SETTLEMENT_PAID postings created: {posting_count}")
+                return False
+            
+            # Settlement should remain approved
+            settlement = db.settlement_runs.find_one({"_id": ObjectId(gbp_settlement_id)})
+            if settlement.get('status') != 'approved':
+                self.log(f"❌ Settlement status changed: {settlement.get('status')}")
+                return False
+            
+            if settlement.get('payment_posting_id'):
+                self.log("❌ payment_posting_id was set despite failure")
+                return False
+            
+            # Accruals should remain in_settlement
+            accrual = db.supplier_accruals.find_one({"_id": ObjectId(accrual_gbp_id)})
+            if accrual.get('status') != 'in_settlement':
+                self.log(f"❌ Accrual status changed: {accrual.get('status')}")
+                return False
+            
+            self.log("✅ No side effects - settlement and accruals unchanged")
+            
+            client.close()
+            return True
+            
+        except Exception as e:
+            self.log(f"❌ Database verification failed: {str(e)}")
+            return False
+
+    def test_bad_state_guards(self):
+        """Test 4: Bad state guards"""
+        self.log("\n=== TEST 4: BAD STATE GUARDS ===")
+        
+        # Test mark-paid on DRAFT run
+        draft_settlement_data = {
+            "supplier_id": self.supplier_id,
+            "currency": "EUR",
+            "period": {
+                "from_date": "2024-02-01",
+                "to_date": "2024-02-28"
+            }
+        }
+        success, response = self.run_test(
+            "Create draft settlement",
+            "POST",
+            "api/ops/finance/settlements",
+            200,
+            data=draft_settlement_data
+        )
+        
+        if not success:
+            return False
+        
+        draft_settlement_id = response.get('settlement_id')
+        
+        success, response = self.run_test(
+            "Mark draft settlement as paid (should fail)",
+            "POST",
+            f"api/ops/finance/settlements/{draft_settlement_id}/mark-paid",
+            409,
+            data={"payment_reference": "DRAFT-PAY"}
+        )
+        
+        if not success:
+            return False
+        
+        if response.get('error', {}).get('code') != 'settlement_not_approved':
+            self.log(f"❌ Expected error code 'settlement_not_approved', got '{response.get('error', {}).get('code')}'")
+            return False
+        
+        self.log("✅ Draft settlement correctly rejected with 409 settlement_not_approved")
+        
+        # Test mark-paid on empty APPROVED run
+        success, response = self.run_test(
+            "Approve empty settlement (should fail)",
+            "POST",
+            f"api/ops/finance/settlements/{draft_settlement_id}/approve",
+            409
+        )
+        
+        if success or response.get('error', {}).get('code') != 'settlement_empty':
+            self.log("✅ Empty settlement correctly rejected with 409 settlement_empty")
+        else:
+            self.log("❌ Empty settlement approval test failed")
+            return False
+        
+        # Test cancel on PAID run
+        success, response = self.run_test(
+            "Cancel paid settlement (should fail)",
+            "POST",
+            f"api/ops/finance/settlements/{self.settlement_id}/cancel",
+            409,
+            data={"reason": "Test cancel"}
+        )
+        
+        if not success:
+            return False
+        
+        if response.get('error', {}).get('code') != 'settlement_already_paid':
+            self.log(f"❌ Expected error code 'settlement_already_paid', got '{response.get('error', {}).get('code')}'")
+            return False
+        
+        self.log("✅ Paid settlement correctly rejected with 409 settlement_already_paid")
+        
+        return True
+
+    def print_summary(self):
+        """Print test summary"""
+        self.log("\n" + "="*60)
+        self.log("FINANCE OS PHASE 2A.5 SETTLEMENT PAID POSTING TEST SUMMARY")
+        self.log("="*60)
+        self.log(f"Total Tests: {self.tests_run}")
+        self.log(f"✅ Passed: {self.tests_passed}")
+        self.log(f"❌ Failed: {self.tests_failed}")
+        self.log(f"Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%")
+        
+        if self.failed_tests:
+            self.log("\n❌ FAILED TESTS:")
+            for i, test in enumerate(self.failed_tests, 1):
+                self.log(f"  {i}. {test}")
+        
+        self.log("="*60)
+
+    def run_phase_2a5_tests(self):
+        """Run all Phase 2A.5 settlement paid posting tests"""
+        self.log("🚀 Starting Finance OS Phase 2A.5 Settlement Paid Posting Tests")
+        self.log(f"Base URL: {self.base_url}")
+        
+        # Authentication
+        if not self.test_admin_login():
+            self.log("❌ Admin login failed - stopping tests")
+            self.print_summary()
+            return 1
+
+        # Setup
+        if not self.test_setup_platform_cash_account():
+            self.log("❌ Platform cash account setup failed - stopping tests")
+            self.print_summary()
+            return 1
+
+        if not self.test_setup_approved_settlement():
+            self.log("❌ Approved settlement setup failed - stopping tests")
+            self.print_summary()
+            return 1
+
+        # Test scenarios
+        scenario_results = []
+        
+        # 1) Happy path (approved -> mark-paid)
+        scenario_results.append(self.test_happy_path_mark_paid())
+        
+        # 2) Retry behavior (200 replay)
+        scenario_results.append(self.test_retry_behavior())
+        
+        # 3) account_not_found guard
+        scenario_results.append(self.test_account_not_found_guard())
+        
+        # 4) Bad state guards
+        scenario_results.append(self.test_bad_state_guards())
+
+        # Summary
+        self.print_summary()
+
+        return 0 if self.tests_failed == 0 else 1
+
+
 def main():
     if len(sys.argv) > 1:
         if sys.argv[1] == "faz5":

@@ -6,6 +6,8 @@ from __future__ import annotations
 
 from typing import Optional, Dict, Any
 from datetime import datetime
+from bson import ObjectId
+
 
 from app.errors import AppError
 from app.services.ledger_posting import LedgerPostingService, PostingMatrixConfig

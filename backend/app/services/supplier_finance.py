@@ -87,7 +87,7 @@ class SupplierFinanceService:
         try:
             await self.db.finance_accounts.insert_one(account_doc)
             logger.info(f"Created supplier account: {account_id} for supplier {supplier_id}")
-        except Exception as e:
+        except Exception:
             # Check if duplicate (race condition)
             existing = await self.db.finance_accounts.find_one({
                 "organization_id": organization_id,

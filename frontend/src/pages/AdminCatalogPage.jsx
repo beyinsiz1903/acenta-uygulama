@@ -291,6 +291,12 @@ function VersionsPanel({ productId, productStatus }) {
                     size="xs"
                     className="h-7 px-2 text-[11px]"
                     onClick={() => publish(v.version_id)}
+                    disabled={productStatus !== "active"}
+                    title={
+                      productStatus !== "active"
+                        ? "Yayınlamak için ürün status=active olmalı."
+                        : undefined
+                    }
                   >
                     Publish
                   </Button>

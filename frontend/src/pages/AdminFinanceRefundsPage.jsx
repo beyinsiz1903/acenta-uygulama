@@ -490,8 +490,8 @@ export default function AdminFinanceRefundsPage() {
       setListError("");
       const params = {};
       if (statusFilter === "open") {
-        // open bucket (backend will treat open + pending_approval)
-        params.status = "open";
+        // Open bucket = open + pending_approval
+        params.status = "open,pending_approval";
       } else if (statusFilter === "closed") {
         params.status = "closed";
       }

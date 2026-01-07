@@ -3572,7 +3572,7 @@ class FinancePhase2A3Tester:
 
 
 class FinancePhase2A5SettlementPaidTester:
-    def __init__(self, base_url="https://demobackend.emergentagent.com"):
+    def __init__(self, base_url="http://localhost:8001"):
         self.base_url = base_url
         self.admin_token = None
         self.tests_run = 0

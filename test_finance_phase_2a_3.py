@@ -217,49 +217,25 @@ def test_phase_2a_3():
         }
     )
 
-    # Settlement lock guard via service (Motor DB)
-    import asyncio
-    from app.db import get_db
-    from app.services.supplier_accrual import SupplierAccrualService
-    from app.errors import AppError
+    # Settlement lock guard via HTTP ops endpoints (more realistic)
+    # Reverse endpoint
+    r_lock_rev = requests.post(
+        f"{BASE_URL}/api/ops/finance/supplier-accruals/{locked_booking_id}/reverse",
+        headers=headers,
+    )
+    assert r_lock_rev.status_code == 409, r_lock_rev.text
+    data_rev = r_lock_rev.json()
+    assert data_rev["error"]["code"] == "accrual_locked_in_settlement"
 
-    async def _run_locked_reverse():
-        motor_db = await get_db()
-        svc = SupplierAccrualService(motor_db)
-        try:
-            await svc.reverse_accrual_for_booking(
-                organization_id=org_id,
-                booking_id=str(locked_booking_id),
-                triggered_by="admin@acenta.test",
-            )
-            raise AssertionError(
-                "Expected AppError(code=accrual_locked_in_settlement) but no error raised"
-            )
-        except AppError as e:
-            assert e.code == "accrual_locked_in_settlement"
-            assert e.status_code == 409
-
-    asyncio.run(_run_locked_reverse())
-
-    async def _run_locked_adjust():
-        motor_db = await get_db()
-        svc = SupplierAccrualService(motor_db)
-        try:
-            await svc.adjust_accrual_for_booking(
-                organization_id=org_id,
-                booking_id=str(locked_booking_id),
-                new_sell=600.0,
-                new_commission=60.0,
-                triggered_by="admin@acenta.test",
-            )
-            raise AssertionError(
-                "Expected AppError(code=accrual_locked_in_settlement) but no error raised"
-            )
-        except AppError as e:
-            assert e.code == "accrual_locked_in_settlement"
-            assert e.status_code == 409
-
-    asyncio.run(_run_locked_adjust())
+    # Adjust endpoint
+    r_lock_adj = requests.post(
+        f"{BASE_URL}/api/ops/finance/supplier-accruals/{locked_booking_id}/adjust",
+        json={"new_sell": 600.0, "new_commission": 60.0},
+        headers=headers,
+    )
+    assert r_lock_adj.status_code == 409, r_lock_adj.text
+    data_adj = r_lock_adj.json()
+    assert data_adj["error"]["code"] == "accrual_locked_in_settlement"
 
     print("   ✅ Settlement lock guard enforced for reverse and adjust")
 

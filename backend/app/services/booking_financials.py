@@ -105,7 +105,7 @@ class BookingFinancialsService:
         await self.db.booking_financials.update_one(
             flt,
             {
-                "${set}": {
+                "$set": {
                     "refunded_total": new_refunded,
                     "penalty_total": penalty_total,
                     "updated_at": applied_at,

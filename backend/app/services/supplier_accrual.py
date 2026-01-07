@@ -38,6 +38,7 @@ class SupplierAccrualService:
         self.db = db
         self.ledger = LedgerPostingService()
         self.supp_fin = SupplierFinanceService(db)
+
     async def _load_booking(self, organization_id: str, booking_id: str) -> dict:
         """Load booking by ID with support for ObjectId/string _id."""
         # Try ObjectId first (normal case)

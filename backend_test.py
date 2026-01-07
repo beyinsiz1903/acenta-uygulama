@@ -69,9 +69,12 @@ def test_product_catalog_mvp():
     # ------------------------------------------------------------------
     print("\n2️⃣  Testing POST /api/admin/catalog/products - Create hotel with location...")
 
+    import uuid
+    unique_suffix = str(uuid.uuid4())[:8]
+    
     product_payload = {
         "type": "hotel",
-        "code": "HTL_P0_TEST",
+        "code": f"HTL_P0_TEST_{unique_suffix}",
         "name": {
             "tr": "P0 Test Otel",
             "en": "P0 Test Hotel"

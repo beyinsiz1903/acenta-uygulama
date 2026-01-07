@@ -97,6 +97,7 @@ async def list_products(
                 created_at=it.get("created_at"),
                 updated_at=it.get("updated_at") or it.get("created_at"),
                 published_version=published_map.get(pid),
+                location=it.get("location"),
             )
         )
     return ProductListResponse(items=out, next_cursor=next_cursor)

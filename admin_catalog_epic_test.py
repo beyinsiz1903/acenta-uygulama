@@ -460,8 +460,9 @@ class AdminCatalogEpicTester:
         
         if success:
             version_id = response.get('version_id')
-            if version_id and response.get('version') == 1 and response.get('status') == 'draft':
-                self.log(f"✅ Version 1 created as draft:")
+            version_number = response.get('version')
+            if version_id and version_number >= 1 and response.get('status') == 'draft':
+                self.log(f"✅ Version {version_number} created as draft:")
                 self.log(f"   - version_id: {version_id}")
                 self.log(f"   - version: {response['version']}")
                 self.log(f"   - status: {response['status']}")

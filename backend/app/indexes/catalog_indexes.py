@@ -85,6 +85,7 @@ async def ensure_catalog_indexes(db):
         [("organization_id", ASCENDING), ("product_id", ASCENDING), ("code", ASCENDING)],
         unique=True,
         name="uniq_rateplan_code_per_product",
+        partialFilterExpression={"code": {"$type": "string"}, "product_id": {"$type": "string"}},
     )
 
     # cancellation_policies

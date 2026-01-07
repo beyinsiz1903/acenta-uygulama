@@ -64,11 +64,22 @@ class B2BPricingService:
         # TODO: integrate real inventory + contract + rules pricing.
         await self._ensure_product_sellable(organization_id, item.product_id)
 
+        # Convert string product_id to ObjectId for inventory lookup
+        try:
+            product_oid = ObjectId(item.product_id)
+        except Exception:
+            raise AppError(
+                409,
+                "product_not_available",
+                "Invalid product ID format",
+                {"product_id": str(item.product_id)},
+            )
+
         # For now, we fake availability using inventory collection if present
         inv_doc = await self.inventory.find_one(
             {
                 "organization_id": organization_id,
-                "product_id": item.product_id,
+                "product_id": product_oid,
                 "date": item.check_in.isoformat(),
             }
         )

@@ -79,3 +79,44 @@ async def create_b2b_booking(
         return BookingCreateResponse(**body)
 
     return JSONResponse(status_code=status, content=body)
+
+
+
+@router.post("/bookings/{booking_id}/refund-requests")
+async def create_refund_request(
+    booking_id: str,
+    payload: dict,
+    user=Depends(get_current_user),
+    db=Depends(get_db),
+):
+    """Agency-initiated refund request for a booking.
+
+    - Does not change booking status.
+    - Creates a refund_case with computed amounts.
+    """
+    org_id = user.get("organization_id")
+    agency_id = user.get("agency_id")
+    if not agency_id:
+        raise AppError(
+            status_code=403,
+            code="forbidden",
+            message="User is not bound to an agency",
+        )
+
+    requested_amount = payload.get("amount")
+    requested_message = payload.get("message")
+    reason = payload.get("reason", "customer_request")
+
+    from app.services.refund_cases import RefundCaseService
+
+    svc = RefundCaseService(db)
+    case = await svc.create_refund_request(
+        organization_id=org_id,
+        booking_id=booking_id,
+        agency_id=agency_id,
+        requested_amount=requested_amount,
+        requested_message=requested_message,
+        reason=reason,
+        created_by=user.get("email"),
+    )
+    return case

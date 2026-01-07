@@ -50,6 +50,7 @@ class ProductResponse(BaseModel):
     default_currency: str
     created_at: datetime
     updated_at: datetime
+    location: Optional[ProductLocation] = None
 
 
 class ProductListItem(BaseModel):

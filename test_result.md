@@ -510,6 +510,18 @@
 ##         agent: "main"
 ##         comment: "Follow-up fix: Stop-sell/Allocation delete aksiyonları optimistic UI ile güncellendi (silince anında listeden düşer + sonra reload). Ayrıca axios 401 interceptor: token temizlenir ve /login'e redirect edilir (session timeout UX)." 
 
+  - task: "Finance OS Phase 2B.5.1: Refund UI queue polish + mini-list"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/AdminFinanceRefundsPage.jsx, /app/backend/app/services/refund_cases.py, /app/backend/app/routers/ops_finance.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "2B.5.1 FE: Refund detail paneline 'Bu booking için son 5 kapalı refund' mini-list eklendi; GET /api/ops/finance/refunds?booking_id=...&status=closed&limit=5 ile besleniyor; loading/error/empty states mevcut; decision badge (approved/rejected/partial veya -) gösteriliyor; approved_amount yoksa requested_amount fallback ile gösteriliyor; case_id kopyalama butonu eklendi. Refunds queue listesi agency_name, booking_status, computed_refundable, computed_penalty, decision ve updated_at kolonlarıyla zenginleştirildi; 'Open / Pending' filtresi backend status=open,pending_approval CSV paramı ile uyumlu."
+
 
 ## backend:
 ##   - task: "Lead Kanban drag-drop sonrası stage/status ve sıralama (sort_index) kalıcılığı"

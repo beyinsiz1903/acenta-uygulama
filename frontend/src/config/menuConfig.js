@@ -5,6 +5,7 @@ export const MENU_CONFIG = {
       children: [
         { label: "Acentalar", path: "/app/admin/agencies" },
         { label: "Oteller", path: "/app/admin/hotels" },
+        { label: "Catalog", path: "/app/admin/catalog/hotels" },
         { label: "Link Yönetimi", path: "/app/admin/links" },
         { label: "Pilot Dashboard", path: "/app/admin/pilot-dashboard" },
         { label: "Metrikler", path: "/app/admin/metrics" },

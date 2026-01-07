@@ -88,6 +88,8 @@ def test_phase_2a_3():
 
     # Create accrual document matching Phase 2A.2 shape
     accrual_id = ObjectId()
+    from datetime import datetime
+
     db.supplier_accruals.insert_one(
         {
             "_id": accrual_id,
@@ -101,7 +103,7 @@ def test_phase_2a_3():
                 "net_payable": net_payable,
             },
             "status": "accrued",
-            "accrued_at": pymongo.datetime.datetime.utcnow(),
+            "accrued_at": datetime.utcnow(),
             "accrual_posting_id": "test_post_phase2a3_seed",
             "settlement_id": None,
         }

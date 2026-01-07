@@ -218,37 +218,66 @@ class BookingFinanceService:
             posting_id
         """
         
-        # Get agency account
-        agency_account = await self.db.finance_accounts.find_one({
-            "organization_id": organization_id,
-            "type": "agency",
-            "owner_id": agency_id,
-        })
-        
+        # Get or create agency AR account (AGENCY_AR_{agency_id}_{currency})
+        agency_code = f"AGENCY_AR_{agency_id}_{currency}"
+        agency_account = await self.db.finance_accounts.find_one(
+            {
+                "organization_id": organization_id,
+                "type": "agency",
+                "owner_id": agency_id,
+                "code": agency_code,
+                "currency": currency,
+            }
+        )
         if not agency_account:
-            raise AppError(
-                status_code=404,
-                code="finance_account_not_found",
-                message=f"Finance account not found for agency {agency_id}",
-            )
-        
-        # Get platform account
-        platform_account = await self.db.finance_accounts.find_one({
-            "organization_id": organization_id,
-            "type": "platform",
-        })
-        
+            now = datetime.utcnow()
+            agency_account_id = ObjectId()
+            agency_account = {
+                "_id": agency_account_id,
+                "organization_id": organization_id,
+                "type": "agency",
+                "owner_id": agency_id,
+                "code": agency_code,
+                "name": f"Agency AR {agency_id} {currency}",
+                "currency": currency,
+                "status": "active",
+                "created_at": now,
+                "updated_at": now,
+            }
+            await self.db.finance_accounts.insert_one(agency_account)
+
+        # Get or create platform AR account (PLATFORM_AR_{currency})
+        platform_code = f"PLATFORM_AR_{currency}"
+        platform_account = await self.db.finance_accounts.find_one(
+            {
+                "organization_id": organization_id,
+                "type": "platform",
+                "owner_id": "platform",
+                "code": platform_code,
+                "currency": currency,
+            }
+        )
         if not platform_account:
-            raise AppError(
-                status_code=404,
-                code="finance_account_not_found",
-                message="Platform finance account not found",
-            )
+            now = datetime.utcnow()
+            platform_account_id = ObjectId()
+            platform_account = {
+                "_id": platform_account_id,
+                "organization_id": organization_id,
+                "type": "platform",
+                "owner_id": "platform",
+                "code": platform_code,
+                "name": f"Platform AR {currency}",
+                "currency": currency,
+                "status": "active",
+                "created_at": now,
+                "updated_at": now,
+            }
+            await self.db.finance_accounts.insert_one(platform_account)
         
         # Create posting lines
         lines = PostingMatrixConfig.get_refund_approved_lines(
-            agency_account_id=agency_account["_id"],
-            platform_account_id=platform_account["_id"],
+            agency_account_id=str(agency_account["_id"]),
+            platform_ar_account_id=str(platform_account["_id"]),
             refund_amount=refund_amount,
         )
         

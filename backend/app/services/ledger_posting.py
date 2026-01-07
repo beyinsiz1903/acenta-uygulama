@@ -383,21 +383,6 @@ class PostingMatrixConfig:
         ]
     
     @staticmethod
-    def get_refund_approved_lines(
-        agency_account_id: str,
-        platform_account_id: str,
-        refund_amount: float,
-    ) -> list[LedgerLine]:
-        """
-        REFUND_APPROVED event:
-        - Platform refunds agency (credit agency, debit platform)
-        """
-        return [
-            LedgerLine(account_id=agency_account_id, direction="credit", amount=refund_amount),
-            LedgerLine(account_id=platform_account_id, direction="debit", amount=refund_amount),
-        ]
-    
-    @staticmethod
     def get_supplier_accrued_lines(
         supplier_account_id: str,
         platform_ap_clearing_account_id: str,

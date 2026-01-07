@@ -163,7 +163,7 @@ def test_product_catalog_mvp():
 
     rate_plan_payload = {
         "product_id": product_id,
-        "code": "BB_P0",
+        "code": f"BB_P0_{unique_suffix}",
         "name": {
             "tr": "BB Plan",
             "en": "BB Plan"

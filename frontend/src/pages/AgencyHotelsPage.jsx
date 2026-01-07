@@ -190,6 +190,340 @@ export default function AgencyHotelsPage() {
         </div>
 
         <div className="rounded-2xl border bg-card shadow-sm p-12 flex flex-col items-center justify-center gap-4">
+      {/* P0.2 Search → Quote → Booking form */}
+      <Card className="rounded-2xl border bg-card shadow-sm">
+        <CardContent className="p-4 space-y-4">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-muted-foreground">P0.2 · Arama & Fiyat</p>
+              <StepBar current={step} />
+            </div>
+            <div className="text-xs text-muted-foreground max-w-xs">
+              Bu blok, Agentis seviyesinde tek akışı taşır: katalog → arama → fiyat → misafir.
+            </div>
+          </div>
+
+          {/* Step 1: Arama formu */}
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-3 items-end">
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">Şehir</label>
+              <Input value={city} onChange={(e) => setCity(e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">Giriş</label>
+              <Input type="date" value={checkIn} onChange={(e) => setCheckIn(e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">Çıkış</label>
+              <Input type="date" value={checkOut} onChange={(e) => setCheckOut(e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">Yetişkin</label>
+              <Input
+                type="number"
+                min={1}
+                max={8}
+                value={adults}
+                onChange={(e) => setAdults(Number(e.target.value) || 1)}
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">Çocuk</label>
+              <Input
+                type="number"
+                min={0}
+                max={8}
+                value={children}
+                onChange={(e) => setChildren(Number(e.target.value) || 0)}
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              onClick={async () => {
+                setSearchError("");
+                setSearchResults([]);
+                setSelectedOffer(null);
+                setQuote(null);
+                setBooking(null);
+
+                if (!city.trim() || !checkIn || !checkOut) {
+                  setSearchError("Şehir, giriş ve çıkış tarihleri zorunludur.");
+                  setStep(1);
+                  return;
+                }
+
+                setSearchLoading(true);
+                try {
+                  const params = new URLSearchParams({
+                    city: city.trim(),
+                    check_in: checkIn,
+                    check_out: checkOut,
+                    adults: String(adults || 1),
+                    children: String(children || 0),
+                  });
+                  const res = await api.get(`/b2b/hotels/search?${params.toString()}`);
+                  const items = res.data?.items || [];
+                  setSearchResults(items);
+                  if (items.length) {
+                    setStep(2);
+                  } else {
+                    setStep(1);
+                    setSearchError("Bu kriterlerle uygun sonuç bulunamadı.");
+                  }
+                } catch (err) {
+                  setSearchError(apiErrorMessage(err));
+                  setStep(1);
+                } finally {
+                  setSearchLoading(false);
+                }
+              }}
+              disabled={searchLoading}
+            >
+              {searchLoading && <Loader2 className="h-3 w-3 animate-spin" />}
+              Fiyatları Gör
+            </Button>
+            {searchError && (
+              <div className="text-xs text-destructive">{searchError}</div>
+            )}
+          </div>
+
+          {/* Step 2: Sonuç listesi + Quote seçimi */}
+          {searchResults.length > 0 && (
+            <div className="space-y-3">
+              <p className="text-xs font-medium text-muted-foreground">
+                Adım 2/3 — Sonuçlar ({searchResults.length})
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {searchResults.map((item, idx) => {
+                  const isSelected =
+                    selectedOffer &&
+                    selectedOffer.product_id === item.product_id &&
+                    selectedOffer.rate_plan_id === item.rate_plan_id;
+
+                  return (
+                    <Card
+                      key={`${item.product_id}-${item.rate_plan_id}-${idx}`}
+                      className={`rounded-2xl border shadow-sm cursor-pointer transition ${
+                        isSelected ? "border-primary ring-1 ring-primary/40" : "hover:border-primary/40"
+                      }`}
+                      onClick={() => {
+                        setSelectedOffer({ ...item });
+                        setStep(2);
+                      }}
+                    >
+                      <CardContent className="p-4 space-y-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <div>
+                            <div className="text-sm font-semibold">{item.hotel_name}</div>
+                            <div className="text-xs text-muted-foreground">
+                              {item.city}, {item.country}
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-lg font-semibold">
+                              {item.selling_total} {item.selling_currency}
+                            </div>
+                            <div className="text-[11px] text-muted-foreground">
+                              {item.nights} gece · {item.occupancy?.adults || 0} yetişkin
+                            </div>
+                            <div className="text-[11px] text-muted-foreground">
+                              Net: {item.base_net} {item.base_currency}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-[11px] text-muted-foreground flex items-center justify-between">
+                          <span>Plan: {item.board}</span>
+                          {isSelected && <span className="text-primary font-medium">Seçili</span>}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  disabled={!selectedOffer || quoteLoading}
+                  onClick={async () => {
+                    if (!selectedOffer) return;
+                    setQuoteError("");
+                    setQuote(null);
+                    setBooking(null);
+
+                    try {
+                      setQuoteLoading(true);
+                      const payload = {
+                        channel_id: "agency_extranet",
+                        items: [
+                          {
+                            product_id: selectedOffer.product_id,
+                            room_type_id: "default_room",
+                            rate_plan_id: selectedOffer.rate_plan_id,
+                            check_in: checkIn,
+                            check_out: checkOut,
+                            occupancy: selectedOffer.occupancy?.adults || adults || 2,
+                          },
+                        ],
+                        client_context: { source: "p0.2-agency-hotels" },
+                      };
+                      const res = await api.post("/b2b/quotes", payload);
+                      const q = res.data;
+                      const offer = (q.offers && q.offers[0]) || null;
+                      setQuote({ ...q, offer });
+                      setStep(3);
+                    } catch (err) {
+                      setQuoteError(apiErrorMessage(err));
+                      setStep(2);
+                    } finally {
+                      setQuoteLoading(false);
+                    }
+                  }}
+                >
+                  {quoteLoading && <Loader2 className="h-3 w-3 animate-spin" />}
+                  Seçili Fiyatla Devam Et
+                </Button>
+                {quoteError && <div className="text-xs text-destructive">{quoteError}</div>}
+              </div>
+            </div>
+          )}
+
+          {/* Step 3: Misafir bilgisi ve rezervasyon */}
+          {quote && (
+            <div className="space-y-3 border-t pt-4 mt-2">
+              <p className="text-xs font-medium text-muted-foreground">Adım 3/3 — Misafir bilgisi</p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                <div className="space-y-1">
+                  <div className="font-semibold text-foreground">Otel</div>
+                  <div className="text-sm">{selectedOffer?.hotel_name}</div>
+                  <div className="text-[11px] text-muted-foreground">
+                    {city}, {selectedOffer?.country}
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <div className="font-semibold text-foreground">Konaklama</div>
+                  <div className="text-sm">
+                    {checkIn} → {checkOut}
+                  </div>
+                  <div className="text-[11px] text-muted-foreground">
+                    {quote.offer?.currency} {quote.offer?.sell} · {adults} yetişkin
+                  </div>
+                </div>
+                <div className="space-y-1 text-right">
+                  <div className="font-semibold text-foreground">Toplam</div>
+                  <div className="text-lg font-semibold">
+                    {quote.offer?.sell} {quote.offer?.currency}
+                  </div>
+                  <div className="text-[11px] text-muted-foreground">Quote ID: {quote.quote_id}</div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground">Müşteri Adı</label>
+                  <Input
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground">Müşteri Email</label>
+                  <Input
+                    type="email"
+                    value={customerEmail}
+                    onChange={(e) => setCustomerEmail(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground">Misafir (Ad / Soyad)</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input
+                      placeholder="Ad"
+                      value={travellerFirstName}
+                      onChange={(e) => setTravellerFirstName(e.target.value)}
+                    />
+                    <Input
+                      placeholder="Soyad"
+                      value={travellerLastName}
+                      onChange={(e) => setTravellerLastName(e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  onClick={async () => {
+                    if (!quote?.quote_id) return;
+                    setBookingError("");
+                    setBooking(null);
+                    setBookingLoading(true);
+                    try {
+                      const payload = {
+                        quote_id: quote.quote_id,
+                        customer: {
+                          name: customerName || "P0.2 Test Misafir",
+                          email: customerEmail || "p02-test@example.com",
+                        },
+                        travellers: [
+                          {
+                            first_name: travellerFirstName || "P0.2",
+                            last_name: travellerLastName || "Guest",
+                          },
+                        ],
+                        notes: "P0.2 agency hotelflow",
+                      };
+                      const headers = {
+                        "Idempotency-Key": `p0.2-agency-hotels-${Date.now()}`,
+                      };
+                      const res = await api.post("/b2b/bookings", payload, { headers });
+                      setBooking(res.data);
+                    } catch (err) {
+                      setBookingError(apiErrorMessage(err));
+                    } finally {
+                      setBookingLoading(false);
+                    }
+                  }}
+                  disabled={bookingLoading}
+                >
+                  {bookingLoading && <Loader2 className="h-3 w-3 animate-spin" />}
+                  Rezervasyonu Oluştur
+                </Button>
+                {bookingError && <div className="text-xs text-destructive">{bookingError}</div>}
+              </div>
+
+              {booking && (
+                <div className="mt-2 rounded-xl border bg-muted/20 px-3 py-2 text-xs flex items-center justify-between">
+                  <div className="space-y-1">
+                    <div className="font-semibold text-foreground">
+                      Rezervasyon Oluşturuldu
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                      Booking ID: <span className="font-mono">{booking.booking_id}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => navigate("/app/agency/bookings")}
+                    >
+                      Rezervasyonlarım
+                    </Button>
+                    {/* Voucher view: B2B portal üzerinden veya doğrudan backend link ile açılabilir. */}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
           <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center">
             <Hotel className="h-8 w-8 text-muted-foreground" />
           </div>

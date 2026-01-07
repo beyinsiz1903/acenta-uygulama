@@ -608,6 +608,65 @@ async def list_supplier_accruals(
     return {"items": items}
 
 
+from pydantic import BaseModel as PydanticBaseModel
+
+
+class SupplierAccrualAdjustRequest(PydanticBaseModel):
+    new_sell: float
+    new_commission: float
+    trigger: Optional[str] = "ops_manual_adjust"
+
+
+@router.post("/supplier-accruals/{booking_id}/reverse")
+async def reverse_supplier_accrual(
+    booking_id: str,
+    current_user=Depends(require_roles(["admin", "ops", "super_admin"])),
+    db=Depends(get_db),
+):
+    """Manually reverse supplier accrual for a booking.
+
+    Thin wrapper around SupplierAccrualService.reverse_accrual_for_booking.
+    """
+    org_id = current_user["organization_id"]
+    from app.services.supplier_accrual import SupplierAccrualService
+
+    svc = SupplierAccrualService(db)
+    result = await svc.reverse_accrual_for_booking(
+        organization_id=org_id,
+        booking_id=str(booking_id),
+        triggered_by=current_user["email"],
+        trigger="ops_manual_reverse",
+    )
+    return result
+
+
+@router.post("/supplier-accruals/{booking_id}/adjust")
+async def adjust_supplier_accrual(
+    booking_id: str,
+    payload: SupplierAccrualAdjustRequest,
+    current_user=Depends(require_roles(["admin", "ops", "super_admin"])),
+    db=Depends(get_db),
+):
+    """Manually adjust supplier accrual for a booking.
+
+    Thin wrapper around SupplierAccrualService.adjust_accrual_for_booking.
+    """
+    org_id = current_user["organization_id"]
+    from app.services.supplier_accrual import SupplierAccrualService
+
+    svc = SupplierAccrualService(db)
+    result = await svc.adjust_accrual_for_booking(
+        organization_id=org_id,
+        booking_id=str(booking_id),
+        new_sell=payload.new_sell,
+        new_commission=payload.new_commission,
+        triggered_by=current_user["email"],
+        trigger=payload.trigger or "ops_manual_adjust",
+    )
+    return result
+
+
+
 
 # ============================================================================
 # Phase 1.4: Statement & Exposure APIs

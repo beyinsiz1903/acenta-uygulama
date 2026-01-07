@@ -12,6 +12,7 @@ Scenarios:
 import requests
 import pymongo
 from bson import ObjectId
+from uuid import uuid4
 
 BASE_URL = "http://localhost:8001"
 MONGO_URL = "mongodb://localhost:27017/"
@@ -51,6 +52,80 @@ def test_phase_2a_3():
                 "name": "Test Supplier Phase 2A.3",
                 "status": "active",
             }
+    # Generate isolated supplier_id for this test run (to avoid collisions)
+    supplier_id = f"phase2a3_{uuid4().hex[:8]}"
+
+    # Targeted cleanup for this supplier and any test bookings we will create
+    # (done before inserting fresh data)
+    # We will pre-generate booking IDs so we can filter by them later if needed.
+    booking_id = ObjectId()
+    locked_booking_id = ObjectId()
+    adj_booking_id = ObjectId()
+
+    # Clean supplier-specific finance data
+    # 1) Supplier accruals
+    db.supplier_accruals.delete_many({"organization_id": org_id, "supplier_id": supplier_id})
+
+    # 2) Supplier finance accounts and balances
+    supplier_accounts = list(
+        db.finance_accounts.find(
+            {
+                "organization_id": org_id,
+                "type": "supplier",
+                "owner_id": supplier_id,
+            }
+        )
+    )
+    if supplier_accounts:
+        account_ids = [str(a["_id"]) for a in supplier_accounts]
+        db.account_balances.delete_many(
+            {
+                "organization_id": org_id,
+                "account_id": {"$in": account_ids},
+            }
+        )
+        db.finance_accounts.delete_many({"_id": {"$in": [a["_id"] for a in supplier_accounts]}})
+
+    # 3) Ledger postings and entries for our test bookings and supplier events only
+    test_booking_ids = [str(booking_id), str(locked_booking_id), str(adj_booking_id)]
+    supplier_events = [
+        "SUPPLIER_ACCRUED",
+        "SUPPLIER_ACCRUAL_REVERSED",
+        "SUPPLIER_ACCRUAL_ADJUSTED",
+    ]
+    db.ledger_postings.delete_many(
+        {
+            "organization_id": org_id,
+            "source.type": "booking",
+            "source.id": {"$in": test_booking_ids},
+            "event": {"$in": supplier_events},
+        }
+    )
+    db.ledger_entries.delete_many(
+        {
+            "organization_id": org_id,
+            "source.type": "booking",
+            "source.id": {"$in": test_booking_ids},
+            "event": {"$in": supplier_events},
+        }
+    )
+
+    # 4) Cases & bookings for these test booking IDs
+    db.cases.delete_many({"organization_id": org_id, "booking_id": {"$in": test_booking_ids}})
+    db.bookings.delete_many({"_id": {"$in": [booking_id, locked_booking_id, adj_booking_id]}})
+
+    # Ensure supplier exists after cleanup
+    if not db.suppliers.find_one({"_id": supplier_id}):
+        db.suppliers.insert_one(
+            {
+                "_id": supplier_id,
+                "organization_id": org_id,
+                "name": "Test Supplier Phase 2A.3",
+                "status": "active",
+            }
+        )
+
+
         )
 
     # Ensure supplier accounts/balances clean-ish

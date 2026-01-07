@@ -382,3 +382,21 @@ class PostingMatrixConfig:
             LedgerLine(account_id=agency_account_id, direction="credit", amount=refund_amount),
             LedgerLine(account_id=platform_account_id, direction="debit", amount=refund_amount),
         ]
+    
+    @staticmethod
+    def get_supplier_accrued_lines(
+        supplier_account_id: str,
+        platform_ap_clearing_account_id: str,
+        net_amount: float,
+    ) -> list[LedgerLine]:
+        """
+        SUPPLIER_ACCRUED event (Phase 2A.2):
+        - Supplier payable increases (credit supplier)
+        - Platform AP clearing increases (debit platform AP)
+        
+        Note: This is separate from Phase 1 platform AR account.
+        """
+        return [
+            LedgerLine(account_id=platform_ap_clearing_account_id, direction="debit", amount=net_amount),
+            LedgerLine(account_id=supplier_account_id, direction="credit", amount=net_amount),
+        ]

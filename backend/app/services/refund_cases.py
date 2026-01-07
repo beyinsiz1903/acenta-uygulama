@@ -1,0 +1,299 @@
+from __future__ import annotations
+
+"""Refund case service (Phase 2B.3)
+
+- Manages refund_cases lifecycle (create/list/detail/approve/reject)
+- Uses RefundCalculatorService for computed amounts
+- Posts REFUND_APPROVED ledger event via BookingFinanceService (Phase 1 helper)
+
+NOTE: Booking status is NOT changed in 2B.3 (cancel lifecycle stays separate).
+"""
+
+from datetime import datetime
+from typing import Any, Optional
+
+from bson import ObjectId
+
+from app.errors import AppError
+from app.services.booking_finance import BookingFinanceService
+from app.services.refund_calculator import RefundCalculatorService
+from app.utils import now_utc
+
+
+class RefundCaseService:
+    def __init__(self, db):
+        self.db = db
+        self.calculator = RefundCalculatorService(currency="EUR")
+        self.booking_finance = BookingFinanceService(db)
+
+    # ------------------------------------------------------------------
+    # Helpers
+    # ------------------------------------------------------------------
+
+    async def _load_case(self, organization_id: str, case_id: str) -> dict:
+        try:
+            oid = ObjectId(case_id)
+        except Exception:
+            raise AppError(
+                status_code=404,
+                code="refund_case_not_found",
+                message="Refund case not found",
+            )
+
+        doc = await self.db.refund_cases.find_one(
+            {"_id": oid, "organization_id": organization_id}
+        )
+        if not doc:
+            raise AppError(
+                status_code=404,
+                code="refund_case_not_found",
+                message="Refund case not found",
+            )
+        return doc
+
+    # ------------------------------------------------------------------
+    # Public API
+    # ------------------------------------------------------------------
+
+    async def create_refund_request(
+        self,
+        organization_id: str,
+        booking_id: str,
+        agency_id: str,
+        requested_amount: Optional[float],
+        requested_message: Optional[str],
+        reason: str,
+        created_by: str,
+    ) -> dict:
+        """Create a refund case for a booking.
+
+        - Currency must be EUR (Phase 2B)
+        - Booking status must be in allowed set
+        - Partial unique index enforces one open/pending case per booking
+        """
+        # Load booking
+        booking = await self.db.bookings.find_one(
+            {"_id": ObjectId(booking_id), "organization_id": organization_id}
+        )
+        if not booking:
+            raise AppError(
+                status_code=404,
+                code="booking_not_found",
+                message="Booking not found",
+            )
+
+        currency = booking.get("currency")
+        if currency != "EUR":
+            raise AppError(
+                status_code=409,
+                code="currency_not_supported",
+                message="Refunds supported only for EUR in Phase 2B",
+            )
+
+        status = booking.get("status")
+        if status not in {"CONFIRMED", "VOUCHERED", "CANCELLED"}:
+            raise AppError(
+                status_code=409,
+                code="invalid_booking_state",
+                message=f"Booking status {status} not eligible for refund",
+            )
+
+        # Compute refund/penalty
+        now = now_utc()
+        manual = float(requested_amount) if requested_amount is not None else None
+        comp = self.calculator.compute_refund(booking, now, mode="policy_first", manual_requested_amount=manual)
+
+        case_id = ObjectId()
+        doc = {
+            "_id": case_id,
+            "organization_id": organization_id,
+            "type": "refund",
+            "booking_id": booking_id,
+            "agency_id": agency_id,
+            "status": "open",
+            "reason": reason or "customer_request",
+            "currency": currency,
+            "requested": {
+                "amount": manual if manual is not None else comp.refundable,
+                "message": requested_message,
+            },
+            "computed": {
+                "gross_sell": comp.gross_sell,
+                "penalty": comp.penalty,
+                "refundable": comp.refundable,
+                "basis": comp.basis,
+                "policy_ref": comp.policy_ref,
+            },
+            "decision": None,
+            "approved": {"amount": None},
+            "ledger_posting_id": None,
+            "booking_financials_id": None,
+            "created_at": now,
+            "updated_at": now,
+            "decision_by_email": None,
+            "decision_at": None,
+        }
+
+        try:
+            await self.db.refund_cases.insert_one(doc)
+        except Exception as e:
+            # Map duplicate key from partial unique index
+            if "uniq_open_refund_case_per_booking" in str(e):
+                raise AppError(
+                    status_code=409,
+                    code="refund_case_already_open",
+                    message="An open refund case already exists for this booking",
+                )
+            raise
+
+        return await self.get_case(organization_id, str(case_id))
+
+    async def list_refunds(
+        self,
+        organization_id: str,
+        status: Optional[str],
+        limit: int = 50,
+    ) -> dict:
+        query: dict[str, Any] = {"organization_id": organization_id, "type": "refund"}
+        if status:
+            query["status"] = status
+
+        cursor = (
+            self.db.refund_cases.find(query)
+            .sort("created_at", -1)
+            .limit(limit)
+        )
+        docs = await cursor.to_list(length=limit)
+
+        items = []
+        for doc in docs:
+            items.append(
+                {
+                    "case_id": str(doc["_id"]),
+                    "booking_id": doc.get("booking_id"),
+                    "agency_id": doc.get("agency_id"),
+                    "status": doc.get("status"),
+                    "requested_amount": (doc.get("requested") or {}).get("amount"),
+                    "refundable": (doc.get("computed") or {}).get("refundable"),
+                    "created_at": doc.get("created_at"),
+                }
+            )
+
+        return {"items": items}
+
+    async def get_case(self, organization_id: str, case_id: str) -> dict:
+        doc = await self._load_case(organization_id, case_id)
+        # serialize simple
+        doc["case_id"] = str(doc.pop("_id"))
+        return doc
+
+    async def approve(
+        self,
+        organization_id: str,
+        case_id: str,
+        approved_amount: float,
+        decided_by: str,
+        payment_reference: Optional[str] = None,
+    ) -> dict:
+        case = await self._load_case(organization_id, case_id)
+        if case["status"] not in {"open", "pending_approval"}:
+            raise AppError(
+                status_code=409,
+                code="invalid_case_state",
+                message="Refund case is not open for approval",
+            )
+
+        computed = case.get("computed") or {}
+        refundable = float(computed.get("refundable", 0.0))
+
+        if approved_amount <= 0 or approved_amount > refundable + 0.01:
+            raise AppError(
+                status_code=422,
+                code="approved_amount_invalid",
+                message="Approved amount must be > 0 and <= refundable",
+            )
+
+        # Load booking to ensure currency and context
+        booking_id = case["booking_id"]
+        booking = await self.db.bookings.find_one(
+            {"_id": ObjectId(booking_id), "organization_id": organization_id}
+        )
+        if not booking:
+            raise AppError(
+                status_code=404,
+                code="booking_not_found",
+                message="Booking not found for refund case",
+            )
+
+        currency = booking.get("currency")
+        if currency != "EUR":
+            raise AppError(
+                status_code=409,
+                code="currency_not_supported",
+                message="Refunds supported only for EUR in Phase 2B",
+            )
+
+        agency_id = case["agency_id"]
+
+        # Post REFUND_APPROVED via booking finance service (AR-only correction)
+        posting_id = await self.booking_finance.post_refund_approved(
+            organization_id=organization_id,
+            booking_id=booking_id,
+            agency_id=agency_id,
+            refund_amount=approved_amount,
+            currency=currency,
+            occurred_at=now_utc(),
+        )
+
+        # Update case to closed
+        now = now_utc()
+        decision = "approved" if abs(approved_amount - refundable) < 0.01 else "partial"
+
+        await self.db.refund_cases.update_one(
+            {"_id": case["_id"], "organization_id": organization_id},
+            {
+                "$set": {
+                    "status": "closed",
+                    "decision": decision,
+                    "approved": {"amount": approved_amount},
+                    "ledger_posting_id": posting_id,
+                    "decision_by_email": decided_by,
+                    "decision_at": now,
+                    "updated_at": now,
+                }
+            },
+        )
+
+        return await self.get_case(organization_id, case_id)
+
+    async def reject(
+        self,
+        organization_id: str,
+        case_id: str,
+        decided_by: str,
+        reason: Optional[str] = None,
+    ) -> dict:
+        case = await self._load_case(organization_id, case_id)
+        if case["status"] not in {"open", "pending_approval"}:
+            raise AppError(
+                status_code=409,
+                code="invalid_case_state",
+                message="Refund case is not open for rejection",
+            )
+
+        now = now_utc()
+        await self.db.refund_cases.update_one(
+            {"_id": case["_id"], "organization_id": organization_id},
+            {
+                "$set": {
+                    "status": "closed",
+                    "decision": "rejected",
+                    "decision_by_email": decided_by,
+                    "decision_at": now,
+                    "updated_at": now,
+                    "cancel_reason": reason,
+                }
+            },
+        )
+
+        return await self.get_case(organization_id, case_id)

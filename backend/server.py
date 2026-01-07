@@ -145,6 +145,7 @@ app.include_router(ops_finance_router)
 app.include_router(vouchers_router)
 app.include_router(b2b_bookings_list_router)
 app.include_router(ops_booking_events_router)
+app.include_router(b2b_hotels_search_router)
 
 
 @app.get("/api/health")

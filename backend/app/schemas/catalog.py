@@ -94,7 +94,7 @@ class CancellationPolicyCreateRequest(BaseModel):
 
 
 class CancellationPolicyResponse(BaseModel):
-    policy_id: str
+    cancellation_policy_id: str
     code: str
     name: str
     rules: List[CancellationRule]

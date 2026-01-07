@@ -1539,10 +1539,11 @@ class RiskSnapshotsTrendTester:
         return 0 if self.tests_failed == 0 else 1
 
 
-class FinancePhase2A3Tester:
+class FinancePhase2A3RegressionTester:
     def __init__(self, base_url="https://hotelfi.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
+        self.agency_token = None
         self.tests_run = 0
         self.tests_passed = 0
         self.tests_failed = 0
@@ -1553,6 +1554,9 @@ class FinancePhase2A3Tester:
         self.booking_id = None
         self.case_id = None
         self.accrual_id = None
+        self.agency_id = None
+        self.quote_id = None
+        self.organization_id = None
 
     def log(self, msg):
         print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}")

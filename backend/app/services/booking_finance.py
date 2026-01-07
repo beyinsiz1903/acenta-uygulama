@@ -315,8 +315,8 @@ class BookingFinanceService:
         # Post to ledger (EUR)
         posting = await LedgerPostingService.post_event(
             organization_id=organization_id,
-            source_type="refund_case",
-            source_id=case_id,
+            source_type="booking",
+            source_id=booking_id,
             event="REFUND_APPROVED",
             currency=eur_currency,
             lines=lines,

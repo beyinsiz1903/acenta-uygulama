@@ -63,7 +63,7 @@ def test_phase_1_5():
     profiles = r.json()["items"]
     assert len(profiles) > 0
     profile = profiles[0]
-    limit = profile["credit_limit"]
+    limit = profile["limit"]
     soft_limit = profile.get("soft_limit")
     
     print(f"   Credit limit: {limit} EUR")

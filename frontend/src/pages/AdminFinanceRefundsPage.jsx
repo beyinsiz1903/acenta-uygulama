@@ -81,13 +81,16 @@ function RefundQueueList({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-xs">Created</TableHead>
                   <TableHead className="text-xs">Case</TableHead>
-                  <TableHead className="text-xs">Booking</TableHead>
                   <TableHead className="text-xs">Agency</TableHead>
+                  <TableHead className="text-xs">Booking</TableHead>
+                  <TableHead className="text-xs">Booking Status</TableHead>
                   <TableHead className="text-xs text-right">Requested</TableHead>
                   <TableHead className="text-xs text-right">Refundable</TableHead>
+                  <TableHead className="text-xs text-right">Penalty</TableHead>
                   <TableHead className="text-xs">Status</TableHead>
+                  <TableHead className="text-xs">Decision</TableHead>
+                  <TableHead className="text-xs">Updated</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

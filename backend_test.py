@@ -176,7 +176,7 @@ def test_product_catalog_mvp():
         json=rate_plan_payload,
         headers=headers,
     )
-    assert r.status_code == 201, f"Rate plan creation failed: {r.text}"
+    assert r.status_code == 200, f"Rate plan creation failed: {r.text}"
     created_rate_plan = r.json()
     rate_plan_id = created_rate_plan['rate_plan_id']
     

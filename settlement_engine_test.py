@@ -371,6 +371,15 @@ class SettlementRunEngineTester:
         """Test 3) Approve snapshot & immutability"""
         self.log("\n=== 3) APPROVE SNAPSHOT & IMMUTABILITY ===")
         
+        # First remove accrual A if it's still in the settlement
+        success, response = self.run_test(
+            "Remove accrual A from settlement (cleanup)",
+            "POST",
+            f"api/ops/finance/settlements/{self.settlement_id}/items:remove",
+            200,
+            data=[self.accrual_a_id]
+        )
+        
         # Re-add accrual A to settlement
         success, response = self.run_test(
             "Re-add accrual A to settlement",

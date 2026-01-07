@@ -168,6 +168,7 @@ class LedgerPostingService:
             entry_doc = {
                 "_id": entry_id,
                 "organization_id": organization_id,
+                "posting_id": posting_id,
                 "account_id": line.account_id,
                 "currency": currency,
                 "direction": line.direction,

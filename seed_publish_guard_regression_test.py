@@ -60,14 +60,24 @@ def test_seed_publish_guard_regression():
     suitable_product = None
     for product in products_response['items']:
         if (product.get('type') == 'hotel' and 
-            product.get('status') == 'active' and 
-            product.get('default_currency') == 'EUR' and
+            product.get('status') == 'active' and
             product.get('location') and
             product['location'].get('city') and
             product['location'].get('country')):
             
-            suitable_product = product
-            break
+            # Bu product için rate planları kontrol et - EUR currency olmalı
+            product_id_temp = product['product_id']
+            r_temp = requests.get(
+                f"{BASE_URL}/api/admin/catalog/rate-plans?product_id={product_id_temp}",
+                headers=headers,
+            )
+            if r_temp.status_code == 200:
+                temp_rates = r_temp.json()
+                # EUR currency'li rate plan var mı kontrol et
+                has_eur_rates = any(rate.get('currency') == 'EUR' for rate in temp_rates)
+                if has_eur_rates:
+                    suitable_product = product
+                    break
     
     if suitable_product:
         product_id = suitable_product['product_id']

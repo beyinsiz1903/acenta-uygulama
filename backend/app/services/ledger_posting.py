@@ -217,7 +217,17 @@ class LedgerPostingService:
         - Platform account: balance = total_credit - total_debit (receivables)
         """
         # Determine account type to apply correct balance rule
+        # account_id may be string (most accounts) or stringified ObjectId
         account = await db.finance_accounts.find_one({"_id": account_id})
+        if not account and isinstance(account_id, str) and len(account_id) == 24:
+            # Fallback: try interpreting as ObjectId for supplier/platform accounts
+            try:
+                from bson import ObjectId as _ObjectId
+
+                account = await db.finance_accounts.find_one({"_id": _ObjectId(account_id)})
+            except Exception:
+                account = None
+
         if not account:
             # Account not found, skip balance update (defensive)
             return

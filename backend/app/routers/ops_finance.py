@@ -380,6 +380,7 @@ async def create_settlement_run(
 @router.get("/refunds")
 async def list_refunds(
     status: Optional[str] = Query(None),
+    booking_id: Optional[str] = Query(None),
     limit: int = Query(50, ge=1, le=200),
     current_user=Depends(require_roles(["admin", "ops", "super_admin"])),
     db=Depends(get_db),
@@ -388,7 +389,7 @@ async def list_refunds(
     from app.services.refund_cases import RefundCaseService
 
     svc = RefundCaseService(db)
-    return await svc.list_refunds(org_id, status, limit)
+    return await svc.list_refunds(org_id, status, limit, booking_id)
 
 
 @router.get("/refunds/{case_id}")

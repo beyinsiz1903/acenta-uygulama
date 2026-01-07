@@ -153,10 +153,17 @@ class RefundCaseService:
         organization_id: str,
         status: Optional[str],
         limit: int = 50,
+        booking_id: Optional[str] = None,
     ) -> dict:
         query: dict[str, Any] = {"organization_id": organization_id, "type": "refund"}
         if status:
-            query["status"] = status
+            # allow CSV status like "open,pending_approval"
+            if "," in status:
+                query["status"] = {"$in": [s.strip() for s in status.split(",") if s.strip()]}
+            else:
+                query["status"] = status
+        if booking_id:
+            query["booking_id"] = booking_id
 
         cursor = (
             self.db.refund_cases.find(query)
@@ -165,17 +172,52 @@ class RefundCaseService:
         )
         docs = await cursor.to_list(length=limit)
 
+        # Preload agencies and bookings for simple joins
+        agency_ids = {doc.get("agency_id") for doc in docs if doc.get("agency_id")}
+        booking_ids = {doc.get("booking_id") for doc in docs if doc.get("booking_id")}
+
+        agency_name_by_id: dict[str, Optional[str]] = {}
+        if agency_ids:
+            agency_cursor = self.db.agencies.find(
+                {"_id": {"$in": list(agency_ids)}, "organization_id": organization_id},
+                {"_id": 1, "name": 1},
+            )
+            for ag in await agency_cursor.to_list(length=len(agency_ids)):
+                agency_name_by_id[str(ag["_id"])] = ag.get("name")
+
+        booking_status_by_id: dict[str, Optional[str]] = {}
+        booking_created_by_id: dict[str, Optional[datetime]] = {}
+        if booking_ids:
+            booking_cursor = self.db.bookings.find(
+                {"_id": {"$in": [ObjectId(bid) for bid in booking_ids]}, "organization_id": organization_id},
+                {"_id": 1, "status": 1, "created_at": 1},
+            )
+            for bk in await booking_cursor.to_list(length=len(booking_ids)):
+                booking_status_by_id[str(bk["_id"])] = bk.get("status")
+                booking_created_by_id[str(bk["_id"])] = bk.get("created_at")
+
         items = []
         for doc in docs:
+            bid = doc.get("booking_id")
+            aid = doc.get("agency_id")
+            computed = doc.get("computed") or {}
+            requested = doc.get("requested") or {}
             items.append(
                 {
                     "case_id": str(doc["_id"]),
-                    "booking_id": doc.get("booking_id"),
-                    "agency_id": doc.get("agency_id"),
+                    "booking_id": bid,
+                    "agency_id": aid,
+                    "agency_name": agency_name_by_id.get(aid),
+                    "booking_status": booking_status_by_id.get(bid),
                     "status": doc.get("status"),
-                    "requested_amount": (doc.get("requested") or {}).get("amount"),
-                    "refundable": (doc.get("computed") or {}).get("refundable"),
+                    "decision": doc.get("decision"),
+                    "currency": doc.get("currency"),
+                    "requested_amount": requested.get("amount"),
+                    "computed_refundable": float(computed.get("refundable", 0.0)) if computed.get("refundable") is not None else None,
+                    "computed_penalty": float(computed.get("penalty", 0.0)) if computed.get("penalty") is not None else None,
                     "created_at": doc.get("created_at"),
+                    "updated_at": doc.get("updated_at"),
+                    "booking_created_at": booking_created_by_id.get(bid),
                 }
             )
 

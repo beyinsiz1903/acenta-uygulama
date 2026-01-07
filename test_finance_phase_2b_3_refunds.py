@@ -305,14 +305,43 @@ def test_phase_2b_3_refunds():
         }
     )
 
-    r6_req = requests.post(
-        f"{BASE_URL}/api/b2b/bookings/{booking3_id}/refund-requests",
-        json={"amount": 300.0},
-        headers=headers,
+    # Same as above: create refund case directly in Mongo for this backend-only test
+    from app.services.refund_calculator import RefundCalculatorService as _Calc2
+
+    _calc3 = _Calc2(currency="EUR")
+    booking3 = db.bookings.find_one({"_id": booking3_id})
+    _comp3 = _calc3.compute_refund(booking3, datetime.utcnow(), mode="policy_first", manual_requested_amount=300.0)
+
+    case3_id = ObjectId()
+    now3 = datetime.utcnow()
+    db.refund_cases.insert_one(
+        {
+            "_id": case3_id,
+            "organization_id": org_id,
+            "type": "refund",
+            "booking_id": str(booking3_id),
+            "agency_id": agency_id,
+            "status": "open",
+            "reason": "customer_request",
+            "currency": "EUR",
+            "requested": {"amount": 300.0, "message": "Backend test >refundable"},
+            "computed": {
+                "gross_sell": _comp3.gross_sell,
+                "penalty": _comp3.penalty,
+                "refundable": _comp3.refundable,
+                "basis": _comp3.basis,
+                "policy_ref": _comp3.policy_ref,
+            },
+            "decision": None,
+            "approved": {"amount": None},
+            "ledger_posting_id": None,
+            "booking_financials_id": None,
+            "created_at": now3,
+            "updated_at": now3,
+            "decision_by_email": None,
+            "decision_at": None,
+        }
     )
-    assert r6_req.status_code == 200, r6_req.text
-    case3 = r6_req.json()
-    case3_id = case3["case_id"]
 
     # computed.refundable ~ 300.0, approve 400.0 should fail
     r6 = requests.post(

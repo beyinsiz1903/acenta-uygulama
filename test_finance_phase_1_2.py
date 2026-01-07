@@ -173,11 +173,11 @@ def test_phase_1_2():
     print(f"      Agency: {data['agency_id']}")
     print(f"      Limit: {data['limit']} {data['currency']}\n")
     
-    # Test 10: PUT with invalid soft_limit < limit (422 validation_error)
-    print("🔟 Testing PUT with soft_limit < limit (422 validation_error)...")
+    # Test 10: PUT with invalid soft_limit > limit (422 validation_error)
+    print("🔟 Testing PUT with soft_limit > limit (422 validation_error)...")
     invalid_payload = {
         "limit": 10000.0,
-        "soft_limit": 5000.0,  # invalid: < limit
+        "soft_limit": 11000.0,  # invalid: > limit
         "payment_terms": "NET14",
         "status": "active"
     }

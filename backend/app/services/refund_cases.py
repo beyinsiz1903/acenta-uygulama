@@ -278,12 +278,21 @@ class RefundCaseService:
             )
 
         currency = booking.get("currency")
-        if currency != "EUR":
-            raise AppError(
-                status_code=409,
-                code="currency_not_supported",
-                message="Refunds supported only for EUR in Phase 2B",
-            )
+        fx = booking.get("fx") or {}
+
+        # Compute approved amount in EUR (Phase 2C)
+        if currency == "EUR":
+            approved_amount_eur = approved_amount
+        else:
+            rate_basis = fx.get("rate_basis")
+            rate = fx.get("rate")
+            if rate_basis != "QUOTE_PER_EUR" or not rate or float(rate) <= 0:
+                raise AppError(
+                    500,
+                    "fx_snapshot_missing",
+                    "FX rate or rate_basis missing/invalid for non-EUR refund",
+                )
+            approved_amount_eur = round(float(approved_amount) / float(rate), 2)
 
         agency_id = case["agency_id"]
 
@@ -292,8 +301,8 @@ class RefundCaseService:
             organization_id=organization_id,
             booking_id=booking_id,
             agency_id=agency_id,
-            refund_amount=approved_amount,
-            currency=currency,
+            refund_amount=approved_amount_eur,
+            currency="EUR",
             occurred_at=now_utc(),
         )
 

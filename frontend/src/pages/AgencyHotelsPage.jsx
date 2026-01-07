@@ -128,7 +128,7 @@ export default function AgencyHotelsPage() {
     });
   }, [hotels, search, locationFilter, statusFilter]);
 
-  // Loading state
+  // Loading state (legacy hotel list)
   if (loading) {
     return (
       <div className="space-y-6">

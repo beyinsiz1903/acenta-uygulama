@@ -324,7 +324,7 @@ async def create_cancel_policy(
         raise AppError(409, "duplicate_code", "Code already exists", {"code": doc["code"]})
 
     return CancellationPolicyResponse(
-        cancellation_policy_id=_id(res.inserted_id),
+        policy_id=_id(res.inserted_id),
         code=doc["code"],
         name=doc["name"],
         rules=doc["rules"],

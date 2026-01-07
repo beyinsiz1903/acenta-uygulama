@@ -10,6 +10,8 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any, Optional
 
+from pymongo.errors import DuplicateKeyError
+
 from app.errors import AppError
 from app.utils import now_utc
 

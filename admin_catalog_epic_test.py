@@ -483,11 +483,17 @@ class AdminCatalogEpicTester:
         if success:
             versions = response.get('items', [])
             if len(versions) >= 1:
-                version = versions[0]
-                if version.get('version') == 1 and version.get('status') == 'draft':
+                # Find our version
+                our_version = None
+                for v in versions:
+                    if v.get('version_id') == version_id:
+                        our_version = v
+                        break
+                
+                if our_version and our_version.get('status') == 'draft':
                     self.log(f"✅ Version found in list with correct status")
                 else:
-                    self.log(f"❌ Version status incorrect in list: {version}")
+                    self.log(f"❌ Version status incorrect in list: {our_version}")
                     return False
             else:
                 self.log(f"❌ No versions found in list")

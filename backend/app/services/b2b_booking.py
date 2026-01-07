@@ -69,6 +69,7 @@ class B2BBookingService:
             "amounts": {
                 "net": offer.get("net", 0.0),
                 "sell": sell_amount,
+                # sell_eur will be set after FX snapshot for non-EUR bookings
             },
             "items": [
                 {

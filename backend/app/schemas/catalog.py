@@ -117,6 +117,9 @@ class RatePlanCreateRequest(BaseModel):
     payment_type: Literal["prepay", "postpay", "mixed"] = "postpay"
     min_stay: int = Field(default=1, ge=1, le=365)
     max_stay: int = Field(default=30, ge=1, le=365)
+    currency: str = Field(default="EUR", min_length=3, max_length=3)
+    base_net_price: float = Field(default=0.0, ge=0)
+    status: Literal["active", "inactive"] = "active"
 
 
 class RatePlanResponse(BaseModel):
@@ -129,6 +132,9 @@ class RatePlanResponse(BaseModel):
     payment_type: str
     min_stay: int
     max_stay: int
+    currency: str = "EUR"
+    base_net_price: float = 0.0
+    status: Literal["active", "inactive"] = "active"
 
 
 class ProductVersionContent(BaseModel):

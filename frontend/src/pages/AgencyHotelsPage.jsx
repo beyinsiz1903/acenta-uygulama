@@ -27,12 +27,38 @@ function isLinkActive(hotel) {
 
 export default function AgencyHotelsPage() {
   const navigate = useNavigate();
+  // Legacy agency_hotel_links listing (FAZ-7). Kept for backward compatibility but P0.2'de
+  // asıl arama/fiyatlama akışını alttaki 3 adımlı search/quote/booking akışı taşıyor.
   const [hotels, setHotels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [locationFilter, setLocationFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+
+  // P0.2 Search → Quote → Booking state
+  const [step, setStep] = useState(1); // 1: arama, 2: fiyat, 3: misafir
+  const [city, setCity] = useState("Istanbul");
+  const [checkIn, setCheckIn] = useState("");
+  const [checkOut, setCheckOut] = useState("");
+  const [adults, setAdults] = useState(2);
+  const [children, setChildren] = useState(0);
+  const [searchResults, setSearchResults] = useState([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchError, setSearchError] = useState("");
+
+  const [selectedOffer, setSelectedOffer] = useState(null); // { product_id, rate_plan_id, ... }
+  const [quote, setQuote] = useState(null); // { quote_id, expires_at, offer }
+  const [quoteLoading, setQuoteLoading] = useState(false);
+  const [quoteError, setQuoteError] = useState("");
+
+  const [customerName, setCustomerName] = useState("P0.2 Test Misafir");
+  const [customerEmail, setCustomerEmail] = useState("p02-test@example.com");
+  const [travellerFirstName, setTravellerFirstName] = useState("P0.2");
+  const [travellerLastName, setTravellerLastName] = useState("Guest");
+  const [booking, setBooking] = useState(null);
+  const [bookingLoading, setBookingLoading] = useState(false);
+  const [bookingError, setBookingError] = useState("");
 
   const user = getUser();
 

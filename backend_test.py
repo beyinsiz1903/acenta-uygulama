@@ -3601,13 +3601,6 @@ def main():
 
 if __name__ == "__main__":
     main()
-        else:
-            self.log(f"❌ Product list verification failed")
-            return False
-
-    def test_referential_integrity(self):
-        """5) Referential integrity (negative)"""
-        self.log("\n=== 5) REFERENTIAL INTEGRITY (NEGATIVE) ===")
         
         if not self.product_id:
             self.log("❌ No product_id available for referential integrity test")

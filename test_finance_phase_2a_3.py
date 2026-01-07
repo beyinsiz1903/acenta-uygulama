@@ -289,6 +289,8 @@ def test_phase_2a_3():
     )
 
     async def _run_adjust_up():
+        motor_db = await get_db()
+        svc = SupplierAccrualService(motor_db)
         return await svc.adjust_accrual_for_booking(
             organization_id=org_id,
             booking_id=str(adj_booking_id),

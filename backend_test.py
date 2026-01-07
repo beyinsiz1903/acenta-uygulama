@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """
-Backend Product Catalog MVP Test
-Testing admin catalog endpoints with hotel products, rate plans, and publishing workflow
+P0.2 Search→Quote→Booking Backend Chain Test
+Testing B2B hotel search, quote creation, booking creation, and my bookings endpoints
 """
 
 import requests
 import json
-from datetime import datetime
+import uuid
+from datetime import datetime, date
 
 # Configuration
 BASE_URL = "http://localhost:8001"

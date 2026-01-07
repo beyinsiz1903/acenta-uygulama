@@ -400,3 +400,50 @@ class PostingMatrixConfig:
             LedgerLine(account_id=platform_ap_clearing_account_id, direction="debit", amount=net_amount),
             LedgerLine(account_id=supplier_account_id, direction="credit", amount=net_amount),
         ]
+
+    @staticmethod
+    def get_supplier_accrual_reversed_lines(
+        supplier_account_id: str,
+        platform_ap_clearing_account_id: str,
+        net_amount: float,
+    ) -> list[LedgerLine]:
+        """
+        SUPPLIER_ACCRUAL_REVERSED event (Phase 2A.3):
+        - Reverse of SUPPLIER_ACCRUED
+        - Supplier payable decreases (debit supplier)
+        - Platform AP clearing decreases (credit platform AP)
+        """
+        return [
+            LedgerLine(account_id=supplier_account_id, direction="debit", amount=net_amount),
+            LedgerLine(account_id=platform_ap_clearing_account_id, direction="credit", amount=net_amount),
+        ]
+
+    @staticmethod
+    def get_supplier_accrual_adjusted_lines(
+        supplier_account_id: str,
+        platform_ap_clearing_account_id: str,
+        delta: float,
+    ) -> list[LedgerLine]:
+        """
+        SUPPLIER_ACCRUAL_ADJUSTED event (Phase 2A.3):
+        - Adjustment of supplier payable based on net payable delta
+        - delta > 0: supplier payable increases (credit supplier)
+        - delta < 0: supplier payable decreases (debit supplier)
+        """
+        if delta == 0:
+            return []
+
+        amount = abs(delta)
+
+        if delta > 0:
+            # Platform AP clearing increases (debit), supplier payable increases (credit)
+            return [
+                LedgerLine(account_id=platform_ap_clearing_account_id, direction="debit", amount=amount),
+                LedgerLine(account_id=supplier_account_id, direction="credit", amount=amount),
+            ]
+
+        # delta < 0: supplier payable decreases, platform AP clearing decreases
+        return [
+            LedgerLine(account_id=supplier_account_id, direction="debit", amount=amount),
+            LedgerLine(account_id=platform_ap_clearing_account_id, direction="credit", amount=amount),
+        ]

@@ -70,11 +70,18 @@ class SupplierAccrualService:
             AppError: 404 not_found, 409 invalid_booking_state, 409 supplier_id_missing, 409 invalid_commission
         """
         
-        # Step 0: Booking lookup + scope
-        booking = await self.db.bookings.find_one({
-            "_id": booking_id,
-            "organization_id": organization_id,
-        })
+        # Step 0: Booking lookup + scope (support both ObjectId and string _id)
+        try:
+            from bson import ObjectId as _ObjectId
+
+            booking_oid = _ObjectId(booking_id)
+            booking = await self.db.bookings.find_one(
+                {"_id": booking_oid, "organization_id": organization_id}
+            )
+        except Exception:
+            booking = await self.db.bookings.find_one(
+                {"_id": booking_id, "organization_id": organization_id}
+            )
         
         if not booking:
             raise AppError(

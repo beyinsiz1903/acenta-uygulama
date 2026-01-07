@@ -3588,9 +3588,13 @@ def main():
             tester = FinancePhase2A3Tester()
             exit_code = tester.run_finance_phase_2a3_tests()
             sys.exit(exit_code)
+        elif test_type == "phase_2a5":
+            tester = FinancePhase2A5SettlementPaidTester()
+            exit_code = tester.run_phase_2a5_tests()
+            sys.exit(exit_code)
         else:
             print(f"Unknown test type: {test_type}")
-            print("Available test types: settlement_engine, finance_phase_2a3, all")
+            print("Available test types: settlement_engine, finance_phase_2a3, phase_2a5, all")
             sys.exit(1)
     else:
         # Default: run comprehensive tests

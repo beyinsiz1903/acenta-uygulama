@@ -53,7 +53,7 @@ function RefundQueueList({
                 onChange={(e) => onChangeStatus(e.target.value)}
               >
                 <option value="all">All</option>
-                <option value="open">Open</option>
+                <option value="open">Open / Pending</option>
                 <option value="closed">Closed</option>
               </select>
             </div>

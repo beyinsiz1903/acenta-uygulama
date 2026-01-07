@@ -397,7 +397,7 @@ def test_phase_2a_4():
     assert r9e.status_code == 200, r9e.text
     data9e = r9e.json()
     assert data9e["status"] == "paid"
-    assert data9e["payment_posting_id"] is None
+    assert data9e["payment_posting_id"] is not None
 
     # Cancel on paid must fail
     r9f = requests.post(

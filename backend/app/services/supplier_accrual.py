@@ -38,6 +38,32 @@ class SupplierAccrualService:
         self.db = db
         self.ledger = LedgerPostingService()
         self.supp_fin = SupplierFinanceService(db)
+    async def _load_booking(self, organization_id: str, booking_id: str) -> dict:
+        """Load booking by ID with support for ObjectId/string _id."""
+        # Try ObjectId first (normal case)
+        try:
+            oid = ObjectId(booking_id)
+            booking = await self.db.bookings.find_one({
+                "_id": oid,
+                "organization_id": organization_id,
+            })
+        except Exception:
+            # Fallback: some tests may use string _id
+            booking = await self.db.bookings.find_one({
+                "_id": booking_id,
+                "organization_id": organization_id,
+            })
+
+        if not booking:
+            raise AppError(
+                status_code=404,
+                code="not_found",
+                message=f"Booking {booking_id} not found",
+            )
+
+        return booking
+
+
     
     async def post_accrual_for_booking(
         self,

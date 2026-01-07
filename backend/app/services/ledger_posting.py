@@ -477,3 +477,19 @@ class PostingMatrixConfig:
             LedgerLine(account_id=platform_cash_account_id, direction="credit", amount=total_amount),
         ]
 
+    @staticmethod
+    def get_refund_approved_lines(
+        agency_account_id: str,
+        platform_ar_account_id: str,
+        refund_amount: float,
+    ) -> list[LedgerLine]:
+        """REFUND_APPROVED event (Phase 2B.3):
+
+        - Platform AR decreases (debit PLATFORM_AR_{CCY})
+        - Agency AR decreases (credit AGENCY_AR_{agency_id}_{CCY})
+        """
+        return [
+            LedgerLine(account_id=platform_ar_account_id, direction="debit", amount=refund_amount),
+            LedgerLine(account_id=agency_account_id, direction="credit", amount=refund_amount),
+        ]
+

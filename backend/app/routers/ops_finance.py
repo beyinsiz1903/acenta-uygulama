@@ -455,14 +455,6 @@ async def mark_settlement_paid(
         payment_reference=payment_reference,
     )
 
-    profile = await _upsert_credit_profile(
-        db,
-        current_user["organization_id"],
-        agency_id,
-        payload,
-    )
-    
-    return profile
 
 
 # ============================================================================

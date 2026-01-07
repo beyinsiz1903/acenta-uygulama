@@ -384,6 +384,19 @@
         agent: "testing"
         comment: "✅ B2B BOOKINGS PRODUCT_NAME MINI POLISH SMOKE TEST COMPLETE - All 5 test scenarios passed (100% success rate). MINI POLISH VERIFICATION COMPLETED: A) Authentication: Agency1 login successful (agency1@demo.test/agency123) with agency_admin role and agency_id verification. B) PRODUCT_NAME BEST-EFFORT MAPPING: GET /api/b2b/bookings?limit=5 working correctly, found 3 B2B bookings, CRITICAL IMPROVEMENT VERIFIED: First booking (booking_id: 695d010055a9ca4029955c71) now shows product_name='demo_product_1' instead of previous '-' placeholder, best-effort mapping logic working correctly (items[0].product_id used as product_name when product_name field is empty), JSON snippet confirmed: {booking_id: '695d010055a9ca4029955c71', product_name: 'demo_product_1', status: 'CANCELLED', currency: 'EUR', amount_sell: 1650.0}. C) REGRESSION CHECKS: Auth working correctly with valid agency token, limit guard working correctly (limit=500 rejected with 422), status filter working correctly (status=CONFIRMED filter applied successfully). Mini polish successfully implemented - product_name field no longer shows '-' placeholder and properly maps to product_id when product_name is not available in booking items."
 
+## frontend:
+  - task: "P0.2 Hızlı Rezervasyon 3-step UI Flow"
+    implemented: true
+    working: false
+    file: "/app/frontend/src/pages/AgencyHotelsPage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "❌ P0.2 UI FLOW PARTIALLY WORKING - Backend chain fully functional but frontend UI issues detected. BACKEND VERIFICATION: ✅ Authentication working (agency1@demo.test/agency123 login successful), ✅ GET /api/agency/hotels returns 2 hotels (Demo Hotel 1: Satışa Kapalı, Demo Hotel 2: Satışa Açık), ✅ GET /api/b2b/hotels/search returns 2 results with proper pricing (P0 Test Otel: 200 EUR → 220 EUR, 2 nights, 2 adults), ✅ Complete Search→Quote→Booking backend chain verified working from previous tests. FRONTEND ISSUES: ❌ P0.2 block not visible on /app/agency/hotels page - shows legacy hotel list view instead of 3-step booking flow, ❌ Page structure shows 'Hızlı Rezervasyon' title but P0.2 search form not rendered, ❌ Authentication redirects working but P0.2 UI components not displaying. ROOT CAUSE ANALYSIS: Frontend code in AgencyHotelsPage.jsx contains P0.2 implementation (lines 39-525) with search form, StepBar, and 3-step flow, but UI is not rendering the P0.2 block. Possible causes: 1) Conditional rendering logic issue (hotels.length check), 2) CSS/styling hiding the P0.2 block, 3) React component state management issue. RECOMMENDATION: Main agent should investigate why P0.2 block is not rendering despite being implemented in the code. Backend APIs are fully functional and ready for frontend integration."
+
   - task: "Product Catalog v1 backend ikinci tur kısa smoke test"
     implemented: true
     working: true

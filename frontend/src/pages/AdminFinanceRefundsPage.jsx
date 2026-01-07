@@ -216,6 +216,127 @@ function RefundApproveDialog({ open, onOpenChange, caseData, onApproved }) {
               onChange={(e) => setPaymentRef(e.target.value)}
             />
           </div>
+function MiniRefundHistory({ bookingId }) {
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!bookingId) {
+      setItems([]);
+      setError("");
+      return;
+    }
+    let cancelled = false;
+    const run = async () => {
+      try {
+        setLoading(true);
+        setError("");
+        const resp = await api.get("/ops/finance/refunds", {
+          params: { booking_id: bookingId, status: "closed", limit: 5 },
+        });
+        if (cancelled) return;
+        setItems(resp.data?.items || []);
+      } catch (e) {
+        if (cancelled) return;
+        setError("Liste yfklenemedi");
+        setItems([]);
+      } finally {
+        if (cancelled) return;
+        setLoading(false);
+      }
+    };
+    run();
+    return () => {
+      cancelled = true;
+    };
+  }, [bookingId]);
+
+  if (!bookingId) {
+    return null;
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <Loader2 className="h-3 w-3 animate-spin" />
+        <span>Yfkleniyor...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center gap-2 text-xs text-destructive">
+        <AlertCircle className="h-3 w-3" />
+        <span>{error}</span>
+      </div>
+    );
+  }
+
+  if (!items.length) {
+    return (
+      <div className="text-xs text-muted-foreground">
+        Bu booking icin kapal refund yok.
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-1 text-xs">
+      {items.map((it) => (
+        <div
+          key={it.case_id}
+          className="flex flex-wrap items-center justify-between gap-2 border-b last:border-0 py-1"
+        >
+          <div className="flex flex-col gap-0.5">
+            <div className="text-[11px] text-muted-foreground">
+              {it.updated_at
+                ? new Date(it.updated_at).toLocaleString()
+                : "-"}
+            </div>
+            <div className="flex items-center gap-2">
+              {it.decision && (
+                <Badge
+                  variant={
+                    it.decision === "approved"
+                      ? "default"
+                      : it.decision === "rejected"
+                      ? "destructive"
+                      : "secondary"
+                  }
+                  className="text-[10px] px-1 py-0"
+                >
+                  {it.decision}
+                </Badge>
+              )}
+              {it.requested_amount != null && (
+                <span>
+                  {it.requested_amount.toFixed(2)} {it.currency || ""}
+                </span>
+              )}
+            </div>
+          </div>
+          <button
+            type="button"
+            className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground"
+            onClick={async () => {
+              try {
+                await navigator.clipboard.writeText(it.case_id);
+              } catch (e) {
+                console.error("copy case_id failed", e);
+              }
+            }}
+          >
+            <Clipboard className="h-3 w-3" />
+            <span className="font-mono truncate max-w-[120px]">{it.case_id}</span>
+          </button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
         </div>
         <DialogFooter>
           <Button

@@ -30,8 +30,19 @@ class B2BPricingService:
         self.price_quotes = db.price_quotes
 
     async def _ensure_product_sellable(self, organization_id: str, product_id: str) -> dict:
+        # Convert string product_id to ObjectId for MongoDB lookup
+        try:
+            product_oid = ObjectId(product_id)
+        except Exception:
+            raise AppError(
+                409,
+                "product_not_available",
+                "Invalid product ID format",
+                {"product_id": str(product_id)},
+            )
+            
         doc = await self.products.find_one(
-            {"organization_id": organization_id, "_id": product_id, "status": "active"},
+            {"organization_id": organization_id, "_id": product_oid, "status": "active"},
             {"_id": 1},
         )
         if not doc:

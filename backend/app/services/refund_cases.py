@@ -330,7 +330,7 @@ class RefundCaseService:
                 "$set": {
                     "status": "closed",
                     "decision": decision,
-                    "approved": {"amount": approved_amount},
+                    "approved": {"amount": approved_amount, "amount_eur": approved_amount_eur},
                     "ledger_posting_id": posting_id,
                     "decision_by_email": decided_by,
                     "decision_at": now,

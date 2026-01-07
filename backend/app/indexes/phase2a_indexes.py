@@ -85,6 +85,26 @@ async def ensure_phase2a_indexes(db):
         },
         name="uniq_open_refund_case_per_booking",
     )
+
+    # booking_financials (Phase 2B.4)
+    await _safe_create(
+        db.booking_financials,
+        [("organization_id", ASCENDING), ("booking_id", ASCENDING)],
+        unique=True,
+        name="uniq_booking_financials_per_booking",
+    )
+
+    await _safe_create(
+        db.booking_financials,
+        [("organization_id", ASCENDING), ("updated_at", DESCENDING)],
+        name="booking_financials_recent",
+    )
+
+    await _safe_create(
+        db.booking_financials,
+        [("organization_id", ASCENDING), ("refunds_applied.refund_case_id", ASCENDING)],
+        name="booking_financials_by_refund_case",
+    )
     
     # Settlement join/lookup
     await _safe_create(

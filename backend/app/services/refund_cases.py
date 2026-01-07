@@ -167,6 +167,7 @@ class RefundCaseService:
 
         cursor = (
             self.db.refund_cases.find(query)
+            .sort("updated_at", -1)
             .sort("created_at", -1)
             .limit(limit)
         )

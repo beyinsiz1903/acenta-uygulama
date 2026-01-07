@@ -466,7 +466,7 @@ export default function AdminFinanceRefundsPage() {
   const [approveOpen, setApproveOpen] = useState(false);
   const [rejectOpen, setRejectOpen] = useState(false);
 
-  const loadList = async () => {
+  const loadList = React.useCallback(async () => {
     try {
       setLoadingList(true);
       setListError("");

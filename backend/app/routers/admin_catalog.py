@@ -26,6 +26,7 @@ from app.schemas.catalog import (
     CancellationPolicyCreateRequest,
     CancellationPolicyResponse,
 )
+from pymongo.errors import DuplicateKeyError
 from app.services import catalog as svc
 
 
@@ -319,11 +320,11 @@ async def create_cancel_policy(
     }
     try:
         res = await db.cancellation_policies.insert_one(doc)
-    except Exception:
-        raise AppError(409, "duplicate_code", "Policy code exists", {"code": payload.code})
+    except DuplicateKeyError:
+        raise AppError(409, "duplicate_code", "Code already exists", {"code": doc["code"]})
 
     return CancellationPolicyResponse(
-        policy_id=_id(res.inserted_id),
+        cancellation_policy_id=_id(res.inserted_id),
         code=doc["code"],
         name=doc["name"],
         rules=doc["rules"],
@@ -339,7 +340,7 @@ async def list_cancel_policies(
     items = await cur.to_list(length=500)
     return [
         CancellationPolicyResponse(
-            policy_id=_id(x["_id"]),
+            cancellation_policy_id=_id(x["_id"]),
             code=x["code"],
             name=x["name"],
             rules=x.get("rules") or [],

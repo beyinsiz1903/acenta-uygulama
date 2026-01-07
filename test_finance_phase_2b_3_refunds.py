@@ -115,17 +115,9 @@ def test_phase_2b_3_refunds():
     # Manual path: refundable should be 300.0, penalty 700.0
     assert abs(case["computed"]["refundable"] - 300.0) < 0.01
     assert r1.status_code == 200, r1.text
-    case = r1.json()
-    case_id = case["case_id"]
-
-    assert case["status"] == "open"
-    assert case["type"] == "refund"
-    assert case["booking_id"] == str(booking_id)
-    assert abs(case["computed"]["gross_sell"] - 1000.0) < 0.01
-    # Manual path: refundable should be 300.0, penalty 700.0
-    assert abs(case["computed"]["refundable"] - 300.0) < 0.01
-
     print("   ✅ Refund case created with computed amounts")
+
+    case_id = case_id
 
     # ------------------------------------------------------------------
     # 2) Duplicate request -> 409 refund_case_already_open

@@ -118,7 +118,8 @@ class SupplierFinanceService:
             # Balance insert failed, but account created - log and continue
             logger.error(f"Failed to create balance for account {account_id}: {e}")
         
-        return str(account_id)
+        # Return raw ObjectId so downstream ledger lines use same type
+        return account_id
     
     async def get_supplier_accounts(
         self,

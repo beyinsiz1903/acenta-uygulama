@@ -28054,6 +28054,10 @@ if __name__ == "__main__":
                 tester = B2BBookingsProductNameTester()
                 exit_code = tester.run_b2b_product_name_tests()
                 sys.exit(exit_code)
+            elif test_type == "admin_catalog_epic":
+                tester = AdminCatalogEpicTester()
+                exit_code = tester.run_admin_catalog_epic_tests()
+                sys.exit(exit_code)
             elif test_type == "catalog":
                 tester = ProductCatalogTester()
                 exit_code = tester.run_catalog_tests()

@@ -53,7 +53,12 @@ async def ensure_phase2a_indexes(db):
     # Supplier list / dashboard filters
     await _safe_create(
         db.supplier_accruals,
-        [("organization_id", ASCENDING), ("supplier_id", ASCENDING), ("status", ASCENDING), ("accrued_at", DESCENDING)],
+        [
+            ("organization_id", ASCENDING),
+            ("supplier_id", ASCENDING),
+            ("status", ASCENDING),
+            ("accrued_at", DESCENDING),
+        ],
         name="accruals_by_supplier_status",
     )
     
@@ -71,4 +76,40 @@ async def ensure_phase2a_indexes(db):
         name="accruals_recent",
     )
 
+    # ========================================================================
+    # settlement_runs (Phase 2A.4)
+    # ========================================================================
+
+    # List/filter by supplier/currency/status
+    await _safe_create(
+        db.settlement_runs,
+        [
+            ("organization_id", ASCENDING),
+            ("supplier_id", ASCENDING),
+            ("currency", ASCENDING),
+            ("status", ASCENDING),
+        ],
+        name="settlements_by_supplier_currency_status",
+    )
+
+    # Recent settlements per org
+    await _safe_create(
+        db.settlement_runs,
+        [("organization_id", ASCENDING), ("created_at", DESCENDING)],
+        name="settlements_recent",
+    )
+
+    # Optional: prevent multiple OPEN (draft/approved) runs per (supplier, currency)
+    await _safe_create(
+        db.settlement_runs,
+        [
+            ("organization_id", ASCENDING),
+            ("supplier_id", ASCENDING),
+            ("currency", ASCENDING),
+        ],
+        unique=True,
+        partialFilterExpression={"status": {"$in": ["draft", "approved"]}},
+        name="uniq_open_run_per_supplier_currency",
+    )
+    
     logger.info("✅ Phase 2A indexes ensured successfully")

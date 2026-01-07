@@ -297,10 +297,10 @@ def test_phase_2a_4():
     # ------------------------------------------------------------------
     print("8️⃣  Cancel behaviour (draft/approved unlock, paid forbidden)...")
 
-    # New draft settlement + accrual for cancel tests (can reuse EUR; previous run was cancelled)
+    # New draft settlement + accrual for cancel tests (use USD to avoid clash with EUR run)
     payload2 = {
         "supplier_id": supplier_id,
-        "currency": "EUR",
+        "currency": "USD",
         "period": None,
     }
     r8 = requests.post(f"{BASE_URL}/api/ops/finance/settlements", json=payload2, headers=headers)
@@ -364,8 +364,13 @@ def test_phase_2a_4():
     # ------------------------------------------------------------------
     print("9️⃣  Mark paid only from approved (enforce state)...")
 
-    # New run3: draft -> approved -> paid (reuse USD to avoid open-settlement clash)
-    r9 = requests.post(f"{BASE_URL}/api/ops/finance/settlements", json=payload2, headers=headers)
+    # New run3: draft -> approved -> paid (reuse EUR; previous EUR run was cancelled above)
+    payload3 = {
+        "supplier_id": supplier_id,
+        "currency": "EUR",
+        "period": None,
+    }
+    r9 = requests.post(f"{BASE_URL}/api/ops/finance/settlements", json=payload3, headers=headers)
     assert r9.status_code == 200, r9.text
     run3 = r9.json()
     settlement3_id = run3["settlement_id"]

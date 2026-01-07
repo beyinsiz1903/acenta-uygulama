@@ -72,6 +72,34 @@ def test_phase_2a_4():
     # ------------------------------------------------------------------
     print("1️⃣  Create settlement run (draft)...")
 
+    # Ensure platform cash account for EUR (needed for Phase 2A.5 mark-paid)
+    platform_cash_code = "PLATFORM_CASH_EUR"
+    existing_cash = db.finance_accounts.find_one(
+        {
+            "organization_id": org_id,
+            "type": "platform",
+            "code": platform_cash_code,
+            "currency": "EUR",
+        }
+    )
+    if not existing_cash:
+        cash_id = ObjectId()
+        now_seed = datetime.utcnow()
+        db.finance_accounts.insert_one(
+            {
+                "_id": cash_id,
+                "organization_id": org_id,
+                "type": "platform",
+                "owner_id": "platform",
+                "code": platform_cash_code,
+                "name": "Platform Cash EUR",
+                "currency": "EUR",
+                "status": "active",
+                "created_at": now_seed,
+                "updated_at": now_seed,
+            }
+        )
+
     payload = {
         "supplier_id": supplier_id,
         "currency": "EUR",
@@ -269,10 +297,10 @@ def test_phase_2a_4():
     # ------------------------------------------------------------------
     print("8️⃣  Cancel behaviour (draft/approved unlock, paid forbidden)...")
 
-    # New draft settlement + accrual for cancel tests (use different currency)
+    # New draft settlement + accrual for cancel tests (can reuse EUR; previous run was cancelled)
     payload2 = {
         "supplier_id": supplier_id,
-        "currency": "USD",
+        "currency": "EUR",
         "period": None,
     }
     r8 = requests.post(f"{BASE_URL}/api/ops/finance/settlements", json=payload2, headers=headers)

@@ -208,7 +208,7 @@ export default function AgencyHotelsPage() {
 
   const hasFiltered = filtered.length > 0;
 
-  // Data table
+  // Data table (legacy hotel list summary) + P0.2 search/quote/booking flow
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">

@@ -1,0 +1,384 @@
+"""
+Finance OS Phase 1.3: Ledger Core Logic
+Double-entry posting service with exactly-once guarantees
+"""
+from __future__ import annotations
+
+import hashlib
+import json
+from typing import Literal, Optional
+from datetime import datetime
+from pydantic import BaseModel
+
+from app.db import get_db
+from app.errors import AppError
+from app.utils import now_utc
+
+
+class LedgerLine(BaseModel):
+    """Single line in a ledger posting"""
+    account_id: str
+    direction: Literal["debit", "credit"]
+    amount: float
+
+
+class LedgerPostingService:
+    """
+    Core ledger posting service implementing:
+    - Double-entry accounting
+    - Exactly-once guarantees (idempotency)
+    - Immutable entries
+    - Balance cache updates
+    """
+    
+    @staticmethod
+    def _compute_checksum(source_type: str, source_id: str, event: str, lines: list[LedgerLine]) -> str:
+        """Compute SHA256 checksum for posting integrity"""
+        data = {
+            "source_type": source_type,
+            "source_id": source_id,
+            "event": event,
+            "lines": [
+                {"account_id": line.account_id, "direction": line.direction, "amount": line.amount}
+                for line in lines
+            ]
+        }
+        payload = json.dumps(data, sort_keys=True)
+        return hashlib.sha256(payload.encode()).hexdigest()
+    
+    @staticmethod
+    def _validate_lines(lines: list[LedgerLine], currency: str):
+        """Validate posting lines"""
+        # Must have at least 2 lines (double-entry)
+        if len(lines) < 2:
+            raise AppError(
+                status_code=422,
+                code="ledger_posting_invalid",
+                message="Posting must have at least 2 lines (double-entry)",
+            )
+        
+        # All amounts must be positive
+        for line in lines:
+            if line.amount <= 0:
+                raise AppError(
+                    status_code=422,
+                    code="ledger_posting_invalid",
+                    message=f"Amount must be > 0, got {line.amount}",
+                )
+        
+        # Debit total must equal credit total
+        debit_total = sum(line.amount for line in lines if line.direction == "debit")
+        credit_total = sum(line.amount for line in lines if line.direction == "credit")
+        
+        if abs(debit_total - credit_total) > 0.01:  # floating point tolerance
+            raise AppError(
+                status_code=409,
+                code="ledger_unbalanced",
+                message=f"Debit total ({debit_total}) must equal credit total ({credit_total})",
+            )
+    
+    @staticmethod
+    async def post_event(
+        organization_id: str,
+        source_type: Literal["booking", "refund", "payment", "adjustment"],
+        source_id: str,
+        event: str,
+        currency: str,
+        lines: list[LedgerLine],
+        occurred_at: Optional[datetime] = None,
+        created_by: str = "system",
+        meta: Optional[dict] = None,
+    ) -> dict:
+        """
+        Post a financial event to the ledger with exactly-once guarantee.
+        
+        Args:
+            organization_id: Organization ID
+            source_type: Type of source (booking, refund, payment, adjustment)
+            source_id: Source document ID
+            event: Event name (BOOKING_CONFIRMED, PAYMENT_RECEIVED, etc.)
+            currency: Currency code
+            lines: List of ledger lines (must balance)
+            occurred_at: Business event timestamp (defaults to now)
+            created_by: User/system creating the posting
+            meta: Optional metadata
+            
+        Returns:
+            Posting document
+            
+        Raises:
+            AppError: If validation fails or posting is unbalanced
+        """
+        db = await get_db()
+        
+        # Validation
+        LedgerPostingService._validate_lines(lines, currency)
+        
+        if occurred_at is None:
+            occurred_at = now_utc()
+        
+        # Idempotency guard: check if posting already exists
+        existing_posting = await db.ledger_postings.find_one({
+            "organization_id": organization_id,
+            "source.type": source_type,
+            "source.id": source_id,
+            "event": event,
+        })
+        
+        if existing_posting:
+            # Idempotent replay: return existing posting
+            return existing_posting
+        
+        # Compute checksum
+        checksum = LedgerPostingService._compute_checksum(source_type, source_id, event, lines)
+        
+        # Create posting header
+        import uuid
+        posting_id = f"post_{uuid.uuid4()}"
+        now = now_utc()
+        
+        posting_doc = {
+            "_id": posting_id,
+            "organization_id": organization_id,
+            "source": {
+                "type": source_type,
+                "id": source_id,
+            },
+            "event": event,
+            "currency": currency,
+            "lines": [
+                {
+                    "account_id": line.account_id,
+                    "direction": line.direction,
+                    "amount": line.amount,
+                }
+                for line in lines
+            ],
+            "checksum": checksum,
+            "created_at": now,
+            "created_by": created_by,
+        }
+        
+        await db.ledger_postings.insert_one(posting_doc)
+        
+        # Create immutable ledger entries
+        entry_docs = []
+        for line in lines:
+            entry_id = f"le_{uuid.uuid4()}"
+            entry_doc = {
+                "_id": entry_id,
+                "organization_id": organization_id,
+                "account_id": line.account_id,
+                "currency": currency,
+                "direction": line.direction,
+                "amount": line.amount,
+                "occurred_at": occurred_at,
+                "posted_at": now,
+                "source": {
+                    "type": source_type,
+                    "id": source_id,
+                },
+                "event": event,
+                "memo": f"{event} {source_type}/{source_id}",
+                "meta": meta or {},
+            }
+            entry_docs.append(entry_doc)
+        
+        if entry_docs:
+            await db.ledger_entries.insert_many(entry_docs)
+        
+        # Update account balances (atomic)
+        for line in lines:
+            await LedgerPostingService._update_balance(
+                db,
+                organization_id,
+                line.account_id,
+                currency,
+                line.direction,
+                line.amount,
+            )
+        
+        return posting_doc
+    
+    @staticmethod
+    async def _update_balance(
+        db,
+        organization_id: str,
+        account_id: str,
+        currency: str,
+        direction: Literal["debit", "credit"],
+        amount: float,
+    ):
+        """
+        Update account balance cache atomically.
+        
+        Balance rules (Phase 1):
+        - Agency account: balance = total_debit - total_credit (exposure)
+        - Platform account: balance = total_credit - total_debit (receivables)
+        """
+        # Determine account type to apply correct balance rule
+        account = await db.finance_accounts.find_one({"_id": account_id})
+        if not account:
+            # Account not found, skip balance update (defensive)
+            return
+        
+        account_type = account.get("type")
+        
+        # Apply balance rules
+        if account_type == "agency":
+            # Agency: balance = debit - credit (exposure increases with debit)
+            delta = amount if direction == "debit" else -amount
+        elif account_type == "platform":
+            # Platform: balance = credit - debit (receivables increase with credit)
+            delta = amount if direction == "credit" else -amount
+        else:
+            # Supplier or other: use agency rule (debit - credit)
+            delta = amount if direction == "debit" else -amount
+        
+        # Atomic update with upsert
+        now = now_utc()
+        await db.account_balances.update_one(
+            {
+                "organization_id": organization_id,
+                "account_id": account_id,
+                "currency": currency,
+            },
+            {
+                "$inc": {"balance": delta},
+                "$set": {"as_of": now, "updated_at": now},
+            },
+            upsert=True,
+        )
+    
+    @staticmethod
+    async def recalculate_balance(
+        organization_id: str,
+        account_id: str,
+        currency: str,
+    ) -> dict:
+        """
+        Recalculate balance from ledger entries (safety net / debug tool).
+        
+        This is a full scan and should only be used for:
+        - Recovery from balance corruption
+        - Ops debugging
+        - Balance verification
+        
+        NOT for normal operations (balance cache is updated on each posting).
+        """
+        db = await get_db()
+        
+        # Get account type to apply correct balance rule
+        account = await db.finance_accounts.find_one({"_id": account_id})
+        if not account:
+            raise AppError(
+                status_code=404,
+                code="account_not_found",
+                message=f"Account {account_id} not found",
+            )
+        
+        account_type = account.get("type")
+        
+        # Aggregate all entries for this account
+        entries = await db.ledger_entries.find({
+            "organization_id": organization_id,
+            "account_id": account_id,
+            "currency": currency,
+        }).to_list(length=10000)
+        
+        # Calculate totals
+        total_debit = sum(e["amount"] for e in entries if e["direction"] == "debit")
+        total_credit = sum(e["amount"] for e in entries if e["direction"] == "credit")
+        
+        # Apply balance rules
+        if account_type == "agency":
+            balance = total_debit - total_credit
+        elif account_type == "platform":
+            balance = total_credit - total_debit
+        else:
+            balance = total_debit - total_credit
+        
+        # Update balance cache
+        now = now_utc()
+        await db.account_balances.update_one(
+            {
+                "organization_id": organization_id,
+                "account_id": account_id,
+                "currency": currency,
+            },
+            {
+                "$set": {
+                    "balance": balance,
+                    "as_of": now,
+                    "updated_at": now,
+                }
+            },
+            upsert=True,
+        )
+        
+        return {
+            "account_id": account_id,
+            "currency": currency,
+            "balance": balance,
+            "total_debit": total_debit,
+            "total_credit": total_credit,
+            "entry_count": len(entries),
+            "recalculated_at": now,
+        }
+
+
+# ============================================================================
+# Posting Event Matrix (Phase 1 configuration)
+# ============================================================================
+
+class PostingMatrixConfig:
+    """
+    Configuration for booking/payment/refund → ledger posting mapping.
+    
+    This is the "source of truth" for Phase 1 financial events.
+    """
+    
+    @staticmethod
+    def get_booking_confirmed_lines(
+        agency_account_id: str,
+        platform_account_id: str,
+        sell_amount: float,
+    ) -> list[LedgerLine]:
+        """
+        BOOKING_CONFIRMED event:
+        - Agency owes platform (debit agency, credit platform)
+        """
+        return [
+            LedgerLine(account_id=agency_account_id, direction="debit", amount=sell_amount),
+            LedgerLine(account_id=platform_account_id, direction="credit", amount=sell_amount),
+        ]
+    
+    @staticmethod
+    def get_payment_received_lines(
+        agency_account_id: str,
+        platform_account_id: str,
+        payment_amount: float,
+    ) -> list[LedgerLine]:
+        """
+        PAYMENT_RECEIVED event:
+        - Agency pays platform (credit agency, debit platform)
+        """
+        return [
+            LedgerLine(account_id=agency_account_id, direction="credit", amount=payment_amount),
+            LedgerLine(account_id=platform_account_id, direction="debit", amount=payment_amount),
+        ]
+    
+    @staticmethod
+    def get_refund_approved_lines(
+        agency_account_id: str,
+        platform_account_id: str,
+        refund_amount: float,
+    ) -> list[LedgerLine]:
+        """
+        REFUND_APPROVED event:
+        - Platform refunds agency (credit agency, debit platform)
+        """
+        return [
+            LedgerLine(account_id=agency_account_id, direction="credit", amount=refund_amount),
+            LedgerLine(account_id=platform_account_id, direction="debit", amount=refund_amount),
+        ]

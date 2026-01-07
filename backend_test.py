@@ -190,12 +190,16 @@ def test_p02_search_quote_booking_chain():
     
     booking_payload = {
         "quote_id": quote_id,
-        "offer_key": "0",
-        "guest": {
-            "full_name": "P0.2 Test Guest",
-            "email": "p02-test@example.com",
-            "phone": "+90 555 000 0000"
+        "customer": {
+            "name": "P0.2 Test Guest",
+            "email": "p02-test@example.com"
         },
+        "travellers": [
+            {
+                "first_name": "P0.2 Test",
+                "last_name": "Guest"
+            }
+        ],
         "notes": "P0.2 backend flow test"
     }
     

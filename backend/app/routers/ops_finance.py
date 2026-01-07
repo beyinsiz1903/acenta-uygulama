@@ -358,6 +358,82 @@ async def create_settlement_run(
         organization_id=org_id,
         supplier_id=payload.supplier_id,
         currency=payload.currency,
+
+# ============================================================================
+# Refund cases (Phase 2B.3)
+# ============================================================================
+
+
+@router.get("/refunds")
+async def list_refunds(
+    status: Optional[str] = Query(None),
+    limit: int = Query(50, ge=1, le=200),
+    current_user=Depends(require_roles(["admin", "ops", "super_admin"])),
+    db=Depends(get_db),
+):
+    org_id = current_user["organization_id"]
+    from app.services.refund_cases import RefundCaseService
+
+    svc = RefundCaseService(db)
+    return await svc.list_refunds(org_id, status, limit)
+
+
+@router.get("/refunds/{case_id}")
+async def get_refund_case(
+    case_id: str,
+    current_user=Depends(require_roles(["admin", "ops", "super_admin"])),
+    db=Depends(get_db),
+):
+    org_id = current_user["organization_id"]
+    from app.services.refund_cases import RefundCaseService
+
+    svc = RefundCaseService(db)
+    return await svc.get_case(org_id, case_id)
+
+
+@router.post("/refunds/{case_id}/approve")
+async def approve_refund_case(
+    case_id: str,
+    payload: dict,
+    current_user=Depends(require_roles(["admin", "ops", "super_admin"])),
+    db=Depends(get_db),
+):
+    org_id = current_user["organization_id"]
+    from app.services.refund_cases import RefundCaseService
+
+    approved_amount = float(payload.get("approved_amount"))
+    payment_reference = payload.get("payment_reference")
+
+    svc = RefundCaseService(db)
+    return await svc.approve(
+        organization_id=org_id,
+        case_id=case_id,
+        approved_amount=approved_amount,
+        decided_by=current_user["email"],
+        payment_reference=payment_reference,
+    )
+
+
+@router.post("/refunds/{case_id}/reject")
+async def reject_refund_case(
+    case_id: str,
+    payload: dict,
+    current_user=Depends(require_roles(["admin", "ops", "super_admin"])),
+    db=Depends(get_db),
+):
+    org_id = current_user["organization_id"]
+    from app.services.refund_cases import RefundCaseService
+
+    reason = payload.get("reason")
+
+    svc = RefundCaseService(db)
+    return await svc.reject(
+        organization_id=org_id,
+        case_id=case_id,
+        decided_by=current_user["email"],
+        reason=reason,
+    )
+
         period=payload.period,
         created_by=current_user["email"],
     )

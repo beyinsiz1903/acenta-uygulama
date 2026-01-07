@@ -241,8 +241,11 @@ class LedgerPostingService:
         elif account_type == "platform":
             # Platform: balance = credit - debit (receivables increase with credit)
             delta = amount if direction == "credit" else -amount
+        elif account_type == "supplier":
+            # Supplier payable: balance = credit - debit (higher credit = more payable)
+            delta = amount if direction == "credit" else -amount
         else:
-            # Supplier or other: use agency rule (debit - credit)
+            # Other: default to agency rule (debit - credit)
             delta = amount if direction == "debit" else -amount
         
         # Atomic update with upsert

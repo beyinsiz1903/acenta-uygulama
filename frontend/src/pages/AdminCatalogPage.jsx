@@ -511,6 +511,11 @@ export default function AdminCatalogPage() {
             <div className="font-semibold text-sm">
               {selected ? "Product Detail" : "Create Product"}
             </div>
+            {selected && selected.status !== "active" && (
+              <div className="ml-4 rounded-md border border-amber-400/60 bg-amber-50 px-2 py-1 text-[11px] text-amber-900">
+                Product inactive c bb publish disabled
+              </div>
+            )}
             {selected?.product_id && (
               <div className="text-[11px] text-muted-foreground">
                 ID: <span className="font-mono">{selected.product_id}</span>

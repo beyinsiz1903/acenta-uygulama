@@ -221,6 +221,7 @@ def test_phase_2a_3():
     import asyncio
     from app.db import get_db
     from app.services.supplier_accrual import SupplierAccrualService
+    from app.errors import AppError
 
     async def _run_locked_reverse():
         motor_db = await get_db()
@@ -231,9 +232,12 @@ def test_phase_2a_3():
                 booking_id=str(locked_booking_id),
                 triggered_by="admin@acenta.test",
             )
-            assert False, "Expected accrual_locked_in_settlement"
-        except Exception as e:  # AppError string check
-            assert "accrual_locked_in_settlement" in str(e)
+            raise AssertionError(
+                "Expected AppError(code=accrual_locked_in_settlement) but no error raised"
+            )
+        except AppError as e:
+            assert e.code == "accrual_locked_in_settlement"
+            assert e.status_code == 409
 
     asyncio.run(_run_locked_reverse())
 
@@ -248,9 +252,12 @@ def test_phase_2a_3():
                 new_commission=60.0,
                 triggered_by="admin@acenta.test",
             )
-            assert False, "Expected accrual_locked_in_settlement"
-        except Exception as e:
-            assert "accrual_locked_in_settlement" in str(e)
+            raise AssertionError(
+                "Expected AppError(code=accrual_locked_in_settlement) but no error raised"
+            )
+        except AppError as e:
+            assert e.code == "accrual_locked_in_settlement"
+            assert e.status_code == 409
 
     asyncio.run(_run_locked_adjust())
 

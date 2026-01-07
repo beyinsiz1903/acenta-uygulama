@@ -3601,13 +3601,6 @@ def main():
 
 if __name__ == "__main__":
     main()
-            
-            if found_product and found_product.get('published_version') == 1:
-                self.log(f"✅ Published version verified in product list: {found_product.get('published_version')}")
-                return True
-            else:
-                self.log(f"❌ Published version not reflected in product list")
-                return False
         else:
             self.log(f"❌ Product list verification failed")
             return False

@@ -64,11 +64,13 @@ def test_phase_1_2():
     
     # Test 5: POST /api/ops/finance/accounts (create new)
     print("5️⃣  Testing POST /api/ops/finance/accounts (create new)...")
+    import random
+    random_suffix = random.randint(1000, 9999)
     new_account_payload = {
         "type": "agency",
-        "owner_id": "test_owner_123",
-        "code": "AGY_TEST_NEW",
-        "name": "Test Agency New Account",
+        "owner_id": f"test_owner_{random_suffix}",
+        "code": f"AGY_TEST_{random_suffix}",
+        "name": f"Test Agency {random_suffix}",
         "currency": "EUR",
         "status": "active"
     }
@@ -79,7 +81,7 @@ def test_phase_1_2():
     )
     assert r.status_code == 201, f"POST account failed: {r.status_code} - {r.text}"
     data = r.json()
-    assert data["code"] == "AGY_TEST_NEW", "Account code mismatch"
+    assert data["code"] == f"AGY_TEST_{random_suffix}", "Account code mismatch"
     assert data["type"] == "agency", "Account type mismatch"
     created_account_id = data["account_id"]
     print(f"   ✅ Account created: {data['account_id']}")

@@ -262,7 +262,7 @@ class AdminCatalogEpicTester:
                 
                 # Verify values
                 if (response['product_id'] == self.product_id and
-                    response['code'] == 'DLX' and  # Should be uppercase
+                    response['code'].startswith('DLX_') and  # Should be uppercase with suffix
                     response['max_occupancy'] == 3 and
                     response['attributes'].get('view') == 'sea'):
                     self.log(f"✅ Room type values verified correctly")

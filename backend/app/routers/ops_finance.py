@@ -340,6 +340,14 @@ async def upsert_credit_profile(
     - soft_limit must be >= limit (422 validation_error)
     - upsert semantics (creates if not exists)
     """
+    profile = await _upsert_credit_profile(
+        db,
+        current_user["organization_id"],
+        agency_id,
+        payload,
+    )
+    
+    return profile
 
 # ============================================================================
 # Settlement runs (Phase 2A.4)

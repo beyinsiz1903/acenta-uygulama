@@ -56,7 +56,12 @@ class SettlementRunEngineTester:
             else:
                 raise ValueError(f"Unsupported method: {method}")
 
-            success = response.status_code == expected_status
+            # Handle multiple expected status codes
+            if isinstance(expected_status, list):
+                success = response.status_code in expected_status
+            else:
+                success = response.status_code == expected_status
+                
             if success:
                 self.tests_passed += 1
                 self.log(f"✅ PASSED - Status: {response.status_code}")

@@ -769,6 +769,7 @@ async def ensure_seed_data() -> None:
 
     demo_product = await db.products.find_one({"organization_id": org_id, "_id": "demo_product_1"})
     if not demo_product:
+        # Legacy structure for B2B booking engine (title/description)
         demo_product_doc = {
             "_id": "demo_product_1",
             "organization_id": org_id,
@@ -783,6 +784,51 @@ async def ensure_seed_data() -> None:
         }
         await db.products.insert_one(demo_product_doc)
         demo_product = demo_product_doc
+
+    # Ensure at least one catalog-style EUR hotel product + rate plan for Commerce OS
+    hotel_catalog = await db.products.find_one(
+        {
+            "organization_id": org_id,
+            "type": "hotel",
+            "status": "active",
+            "default_currency": "EUR",
+        }
+    )
+    if not hotel_catalog:
+        from datetime import datetime as _dt
+        now = now_utc()
+        hotel_doc = {
+            "organization_id": org_id,
+            "type": "hotel",
+            "code": "HTL_P0_DEMO",
+            "name": {"tr": "P0 Demo Otel", "en": "P0 Demo Hotel"},
+            "name_search": "p0 demo otel",
+            "status": "active",
+            "default_currency": "EUR",
+            "location": {"city": "Istanbul", "country": "TR"},
+            "created_at": now,
+            "updated_at": now,
+        }
+        res_h = await db.products.insert_one(hotel_doc)
+        hotel_id = res_h.inserted_id
+
+        rate_doc = {
+            "organization_id": org_id,
+            "product_id": hotel_id,
+            "code": "BB_P0",
+            "name": {"tr": "BB Plan", "en": "BB Plan"},
+            "board": "BB",
+            "cancellation_policy_id": None,
+            "payment_type": "postpay",
+            "min_stay": 1,
+            "max_stay": 30,
+            "currency": "EUR",
+            "base_net_price": 100.0,
+            "status": "active",
+            "created_at": now,
+            "updated_at": now,
+        }
+        await db.rate_plans.insert_one(rate_doc)
 
     demo_customer = await db.customers.find_one({"organization_id": org_id})
     if not demo_customer:

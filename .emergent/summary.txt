@@ -1,244 +1,82 @@
 <analysis>**original_problem_statement:**
-The user wants to upgrade the application, which is a B2B Hotel Reservation and Risk Management Platform named Acenta Master.
+The user initially requested to build a comprehensive **Finance / Ledger OS** for their B2B Hotel Reservation Platform, Acenta Master. After completing most of the finance-related phases (Accounts Receivable, Accounts Payable, Settlements, Refunds, FX), the focus has pivoted.
 
-The main feature request is to build a new **Finance / Ledger OS** from scratch to serve as the money backbone of the application, scaling it to be like Agentis. This involves a phased implementation.
+The new primary objective is to build a **Commerce OS** to achieve feature parity with a competitor product named Agentis. This involves a new product roadmap broken down into priority phases (P0, P1, P2) to systematically build out the missing commerce capabilities.
 
-**PRODUCT REQUIREMENTS:**
+**PRODUCT REQUIREMENTS (New Roadmap):**
 
-*   **Phase 1: Finance / Ledger OS Core (COMPLETED)**
-    *   Build core ledger entities, services, and APIs for Accounts Receivable (agency side).
-    *   Integrate credit checks and automated ledger postings into the booking flow.
-
-*   **Phase 2A: Supplier Settlement & Invoicing (COMPLETED)**
-    *   Build the Accounts Payable (AP) side of the ledger for supplier settlements.
-    *   Implement logic for supplier accruals on  bookings, handle cancellations/adjustments, and build a settlement run engine ().
-    *   Create a  ledger event to close the loop on supplier payables.
-
-*   **Phase 2B: Advanced Cancellation & Penalties (IN PROGRESS)**
-    *   Introduce a  system to manage refund requests.
-    *   Build a penalty calculation service based on booking policies.
-    *   Implement a  ledger event to adjust agency accounts receivable.
-
-*   **Phase 2C: Multi-Currency + FX Management (Future)**
-    *   Add support for multi-currency bookings and foreign exchange rate management.
+*   **P0: Satılabilir MVP (Sellable MVP)**
+    *   **P0.1: Product Catalog MVP (IN PROGRESS):** Build the backend and minimal Ops UI to create and manage hotel products and their rate plans. This is the current task.
+    *   **P0.2: B2B Booking UX:** Build the frontend search, quote, and booking flow for agencies.
+    *   **P0.3: FX / EUR Ledger Finalization:** Finalize and test the multi-currency implementation.
+    *   **P0.4: Voucher/PDF Delivery:** Implement voucher generation and email delivery.
+*   **P1: Sales Power-ups:**
+    *   Implement a rule-based pricing engine (markups/overrides).
+    *   Add support for product bundling (packages).
+    *   Enhance the after-sales UI (amendments).
+*   **P2: Scale & Platform:**
+    *   Build a channel/reseller API layer.
+    *   Implement availability/inventory management.
+    *   Create a sales reporting layer.
 
 **User's preferred language**: Türkçe
 
 **what currently exists?**
-The application is a full-stack B2B Hotel Reservation platform (Acenta Master) using FastAPI, React, and MongoDB. The Finance OS is significantly developed:
-*   **Phase 1 (Accounts Receivable)** is complete.
-*   **Phase 2A (Accounts Payable)** is complete, including supplier account creation, accruals, adjustments, and the full settlement run engine with  ledger postings.
-*   **Phase 2B (Penalties & Refunds)** is in progress.
-    *   **2B.1**: The  collection schema and unique indexes are defined.
-    *   **2B.2**: The  for calculating penalties and refundable amounts is implemented and unit-tested.
-    *   **2B.3**: The service layer (), API endpoints (B2B and OPS), and ledger posting logic () are implemented. However, the approval flow is currently broken.
+The application is a full-stack B2B platform with a robust, recently built Finance OS. All finance features, including multi-currency handling (FX) and refunds, are implemented on the backend. The frontend includes a comprehensive Ops UI for managing refund cases.
+
+The agent has just begun **P0.1 Sprint 1**, which focuses on building the Product Catalog. A discovery phase has been completed, revealing that  and  collections and related API routers already exist. The approved plan is to extend and align this existing infrastructure with the new hotel-focused product model, rather than building from scratch.
 
 **Last working item**:
-- **Last item agent was working**: Implementing and debugging **Phase 2B.3: Refund Case Approval API & Ledger Posting**. The agent created the , the associated OPS endpoints (), and integrated the  ledger posting logic into the  flow.
-- **Status**: IN PROGRESS
-- **Agent Testing Done**: Y (but it failed)
-- **Which testing method agent to use?**: backend testing agent. The primary test file is . Run it with ============================= test session starts ==============================
-platform linux -- Python 3.11.14, pytest-9.0.2, pluggy-1.6.0
-rootdir: /app
-plugins: anyio-4.12.0
-collected 1 item
-
-test_finance_phase_2b_3_refunds.py F                                     [100%]
-
-=================================== FAILURES ===================================
-___________________________ test_phase_2b_3_refunds ____________________________
-
-    def test_phase_2b_3_refunds():
-        print("\n" + "=" * 80)
-        print("FINANCE OS PHASE 2B.3 BACKEND TEST - REFUND CASES")
-        print("=" * 80 + "\n")
-    
-        client = pymongo.MongoClient(MONGO_URL)
-        db = client["test_database"]
-    
-        token, org_id, admin_email = _login_admin()
-        headers = {"Authorization": f"Bearer {token}"}
-    
-        # Ensure clean state for this test supplier/agency/booking group
-        supplier_id = f"phase2b_sup_{ObjectId()}"
-        agency_id = f"phase2b_ag_{ObjectId()}"
-    
-        db.suppliers.insert_one(
-            {"_id": supplier_id, "organization_id": org_id, "name": "2B Supplier", "status": "active"}
-        )
-        db.agencies.insert_one(
-            {"_id": agency_id, "organization_id": org_id, "name": "2B Agency", "status": "active"}
-        )
-    
-        # Create a booking directly in Mongo
-        booking_id = ObjectId()
-        db.bookings.insert_one(
-            {
-                "_id": booking_id,
-                "organization_id": org_id,
-                "agency_id": agency_id,
-                "supplier_id": supplier_id,
-                "status": "CONFIRMED",
-                "currency": "EUR",
-                "amounts": {"sell": 1000.0},
-                "commission": {"amount": 100.0},
-            }
-        )
-    
-        # ------------------------------------------------------------------
-        # 1) B2B refund request -> open case + computed
-        # ------------------------------------------------------------------
-        print("1️⃣  Create refund request (B2B)...")
-    
-        # For this backend test, call internal router directly via ops (no sessioned agency login)
-        # Since admin user is not agency-scoped in this environment, call refund
-        # creation via service route is not possible directly through B2B HTTP.
-        # Instead, create refund_case directly in Mongo using the same calculator
-        # assumptions as the API.
-        from app.services.refund_calculator import RefundCalculatorService
-    
-        calc = RefundCalculatorService(currency="EUR")
-        booking = db.bookings.find_one({"_id": booking_id})
-        comp = calc.compute_refund(booking, datetime.utcnow(), mode="policy_first", manual_requested_amount=300.0)
-    
-        case_id = ObjectId()
-        now = datetime.utcnow()
-        db.refund_cases.insert_one(
-            {
-                "_id": case_id,
-                "organization_id": org_id,
-                "type": "refund",
-                "booking_id": str(booking_id),
-                "agency_id": agency_id,
-                "status": "open",
-                "reason": "customer_request",
-                "currency": "EUR",
-                "requested": {"amount": 300.0, "message": "Customer requested partial refund"},
-                "computed": {
-                    "gross_sell": comp.gross_sell,
-                    "penalty": comp.penalty,
-                    "refundable": comp.refundable,
-                    "basis": comp.basis,
-                    "policy_ref": comp.policy_ref,
-                },
-                "decision": None,
-                "approved": {"amount": None},
-                "ledger_posting_id": None,
-                "booking_financials_id": None,
-                "created_at": now,
-                "updated_at": now,
-                "decision_by_email": None,
-                "decision_at": None,
-            }
-        )
-    
-        case = db.refund_cases.find_one({"_id": case_id})
-    
-        assert case["status"] == "open"
-        assert case["type"] == "refund"
-        assert case["booking_id"] == str(booking_id)
-        assert abs(case["computed"]["gross_sell"] - 1000.0) < 0.01
-        # Manual path: refundable should be 300.0, penalty 700.0
-        assert abs(case["computed"]["refundable"] - 300.0) < 0.01
-        print("   ✅ Refund case created with computed amounts")
-    
-        case_id = str(case_id)
-    
-        # ------------------------------------------------------------------
-        # 2) Duplicate request -> 409 refund_case_already_open
-        # ------------------------------------------------------------------
-        print("2️⃣  Duplicate refund request blocked (direct DB create only in this test)...")
-    
-        # In this backend-only test, duplicate enforcement is provided by the
-        # partial unique index; we simulated initial insert via Mongo, so a
-        # second insert with same (org, booking_id, status open) would fail.
-        # B2B HTTP path is forbidden for admin (no agency_id), so we do not
-        # assert HTTP 409 here.
-    
-        print("   ✅ Duplicate open-case guard covered by partial index in DB")
-    
-        # ------------------------------------------------------------------
-        # 3) Approve full -> posting + case closed
-        # ------------------------------------------------------------------
-        print("3️⃣  Approve refund case (full/manual)...")
-    
-        # Approve with approved_amount <= refundable
-        r3 = requests.post(
-            f"{BASE_URL}/api/ops/finance/refunds/{case_id}/approve",
-            json={"approved_amount": 300.0},
-            headers=headers,
-        )
->       assert r3.status_code == 200, r3.text
-E       AssertionError: {"error":{"code":"internal_error","message":"Unexpected server error","details":{}}}
-E       assert 500 == 200
-E        +  where 500 = <Response [500]>.status_code
-
-test_finance_phase_2b_3_refunds.py:145: AssertionError
------------------------------ Captured stdout call -----------------------------
-
-================================================================================
-FINANCE OS PHASE 2B.3 BACKEND TEST - REFUND CASES
-================================================================================
-
-1️⃣  Create refund request (B2B)...
-   ✅ Refund case created with computed amounts
-2️⃣  Duplicate refund request blocked (direct DB create only in this test)...
-   ✅ Duplicate open-case guard covered by partial index in DB
-3️⃣  Approve refund case (full/manual)...
-=========================== short test summary info ============================
-FAILED test_finance_phase_2b_3_refunds.py::test_phase_2b_3_refunds - Assertio...
-============================== 1 failed in 0.70s ===============================.
+- **Last item agent was working**: Planning and discovery for **P0.1 Sprint 1: Product Catalog MVP**. The agent analyzed the existing product-related files (, , ) and received user approval on a plan to extend this structure to meet the blueprint's requirements for a manageable hotel catalog.
+- **Status**: NOT STARTED
+- **Agent Testing Done**: N
+- **Which testing method agent to use?**: backend testing agent (or manual curl) for the new catalog APIs. A frontend testing agent or screenshot tool will be needed for the minimal Ops UI.
 - **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
-- **Issue 1**: [P0] The refund approval endpoint () fails with a 500 .
-  - **Attempted fixes**: The agent identified the root cause by analyzing the logs. No code fix has been applied yet.
-  - **Next debug checklist**:
-    1.  Go to .
-    2.  Locate the  and  helper methods (or the logic inside ).
-    3.  The current implementation attempts to  without handling the case where the account already exists, causing a .
-    4.  Modify this logic to implement a robust get-or-create pattern. Wrap the  call in a  block. In the  block, re-query for the account to handle race conditions, as specified by the user.
-  - **Why fix this issue and what will be achieved with the fix?**: This is a hard blocker for the entire refund feature. Fixing it will make the refund approval process functional and allow the  ledger event to be posted correctly.
-  - **Status**: IN PROGRESS
-  - **Is recurring issue?**: Y (A similar race condition issue was seen with supplier account creation and was fixed with a retry loop. The same robust pattern should be applied here).
-  - **Should Test frontend/backend/both after fix?**: backend
+There are no pending bugs. The current work is new feature development.
 
 **In progress Task List**:
-- **Task 1**: [P0] Finalize Phase 2B.3: Refund Case API & Ledger Posting
-  - **Where to resume**: Apply the fix for the  in  as described in Issue 1. After the fix, run the test file  until all tests pass.
-  - **What will be achieved with this?**: A fully functional and tested refund case management system, where ops can approve refunds, and the correct financial postings are made to the ledger.
-  - **Status**: IN PROGRESS
-  - **Should Test frontend/backend/both after fix?**: backend
-  - **Blocked on something**: Blocked on fixing Issue 1.
+- **Task 1**: [P0] Implement **P0.1 Sprint 1: Product Catalog MVP**.
+  - **Where to resume**: The agent has a clear, user-approved blueprint. The next step is to begin implementation:
+    1.  **Schema Alignment:** Analyze existing  and  collections. Map the blueprint's concepts (e.g., , , ) to existing fields or add them where necessary without renaming existing fields.
+    2.  **Ops API Implementation:** Extend the existing routers (, ) to implement the required Ops endpoints for creating/managing hotels and their rate plans (, , etc.).
+    3.  **Seed Data Update:** Modify  to ensure at least one hotel product is  with an  EUR rate plan, providing deterministic data for the next phase (P0.2).
+    4.  **Minimal Ops UI:** Connect a simple frontend page (list/detail) for hotel management to the new Ops APIs.
+  - **What will be achieved with this?**: A foundational, ops-manageable product catalog for hotels. This will enable the next phase (P0.2: B2B Search & Booking UX) to be built on real, not mocked, data.
+  - **Status**: NOT STARTED
+  - **Should Test frontend/backend/both after fix?**: backend first, then frontend.
+  - **Blocked on something**: No.
 
 **Upcoming and Future Tasks**
 **Upcoming Tasks:**
--   **P1: Phase 2B.4: Implement  collection**: Create and update a  document upon refund approval to serve as a simple, denormalized source of truth for the final financial state of a booking (total sell, total refund, total penalty).
--   **P2: Phase 2B.5: Build Refund Case UI**: Develop the frontend UI for the ops team to view and manage the refund case queue.
+*   **P0.2: B2B Booking UX + My Bookings:** Build the frontend search, quote, and booking flow for agencies. Create the My Bookings page.
+*   **P0.3: FX / EUR Ledger Finalization (Testing):** Write the final, comprehensive tests for the already-implemented Phase 2C.3 (Booking FX) and 2C.4 (Ledger Posting) logic.
+*   **P0.4: Voucher / PDF / Email Delivery (MVP):** Implement voucher generation and delivery.
 
 **Future Tasks:**
--   **Phase 2C: Multi-Currency + FX Management**: Add support for multi-currency bookings and foreign exchange rate management.
--   **Ledger Robustness**: Implement the  flag and self-healing logic in  to guard against rare crash scenarios where a posting header is created but its entries are not.
+*   **P1.1:** Rule-based pricing (Markup/Markdown).
+*   **P1.2:** Package/Bundling capabilities.
+*   **P1.3:** After-sales UI enhancements (Amend flow).
+*   **P2.1:** Channel/Reseller API layer.
+*   **P2.2:** Availability/Inventory Management.
+*   **P2.3:** Sales Reporting Layer.
 
 **Completed work in this session**
-- **Phase 2A.3: Supplier Accrual Cancellation & Adjustment**:
-  - Implemented  and  ledger events.
-  - Added new ops endpoints (, ) for manual adjustments.
-  - Fixed a critical bug in the supplier balance cache logic related to  vs.  type mismatches.
-- **Phase 2A.4: Settlement Run Engine**:
-  - Created  collection and associated services ().
-  - Implemented the  state machine with atomic locking of accruals.
-  - Built a full suite of OPS APIs for creating and managing settlement runs.
-- **Phase 2A.5: Settlement Paid Posting**:
-  - Implemented the  ledger event, triggered by  API.
-  - The logic correctly debits the supplier payable account and credits a platform cash account.
-  - Implemented a  replay strategy for idempotent  calls.
-- **Phase 2B.1 & 2B.2: Refund Case Foundations**:
-  - Created  collection with a partial unique index to prevent duplicate open cases per booking.
-  - Implemented and unit-tested  to calculate penalties based on booking policies.
-- **Phase 2B.3 (Partial): Refund Case Implementation**:
-  - Created  and wired up OPS APIs for approve/reject.
-  - Implemented  posting logic in .
+- **Finance OS Phase 2B & 2C Finalization**:
+  - Fixed the refund approval flow ().
+  - Implemented the  denormalized collection.
+  - Built the complete **Ops Refund Case UI** on the frontend, including a queue, detail panel, and approve/reject modals.
+  - Polished the backend and frontend for the refund queue (added , improved filtering).
+  - Implemented the entire **multi-currency (FX) backend logic** (Phase 2C.1-2C.4), including:
+    -  and race-proof  collections.
+    - Integration into the booking creation flow with a delete rollback safety mechanism.
+    - Conversion of all ledger postings (booking confirmation, refunds) to be EUR-based, with  guards.
+
+- **Syroce vs. Agentis Gap Analysis**:
+  - Performed a detailed analysis comparing Syroce to a competitor, Agentis.
+  - Identified the primary gap as the Commerce OS (Catalog, Pricing, B2B UX).
+  - Created and received approval for a new P0/P1/P2 roadmap to address these gaps.
 
 **Earlier issues found/mentioned but not fixed**
 None.
@@ -250,275 +88,84 @@ None.
 
 
 **Key Technical Concepts**
--   **Backend**: FastAPI
--   **Frontend**: React
--   **Database**: MongoDB
--   **Finance Core**:
-    -   Double-Entry, Idempotent, Immutable Ledger.
-    -   **State Machine**: Settlement Runs ( ->  -> ).
-    -   **Approval Snapshot**:  stores an immutable snapshot of line items upon approval for audit purposes.
-    -   **Atomic Locking**: Using filtered MongoDB updates to lock  when they are added to a settlement run.
-    -   **Partial Unique Indexes**: Enforcing business rules like one open settlement per supplier+currency and one open refund case per booking.
+- **Finance OS**: Double-entry, Idempotent, Immutable Ledger; State Machines; Atomic Locking.
+- **FX Management**:  store, booking-level ,  rate basis for all calculations.
+- **Commerce OS (New)**: The agent is now building this, starting with a Product Catalog (, ) and an Ops management layer.
 
 **key DB schema**
--   : Chart of accounts.
--   , : The core immutable ledger.
--   , , : Agency credit and payment management.
--   : Records of money owed to suppliers for bookings.
--   : (New) Batches of supplier accruals for processing payment.
--   : (New) Manages the lifecycle of refund requests from agencies.
+- ****: Exists. To be aligned for hotel products (, , , etc.).
+- ****: Exists. To be aligned for hotel rate plans (, , , ).
+- ****: Stores FX rates against timestamps.
+- ****: Locks the FX rate used for a specific transaction (e.g., a booking).
+- : Denormalized financial summary per booking.
+- : Manages refund requests.
+- , : For supplier payments.
+- , : The core immutable ledger.
 
 **changes in tech stack**
 None.
 
 **All files of reference**
-*   **New Services**:
-    *   : Manages the lifecycle of supplier settlement runs.
-    *   : Calculates penalties and refundable amounts.
-    *   : Manages the lifecycle of refund cases.
-*   **Significantly Updated Files**:
-    *   : Added new line configurations for settlement and refund events.
-    *   : Added logic for  posting and account creation. **This is where the current bug resides.**
-    *   : Added all new endpoints for managing settlements and refund cases.
-    *   : Added endpoint for agencies to request refunds.
-    *   : Added all Pydantic models for settlements and refunds.
-    *   : Added new indexes for  and .
-*   **New Test Files**:
+*   **To be extended/modified for P0.1**:
     *   
     *   
     *   
     *   
+*   **Examples of existing patterns**:
+    *    (for Ops API patterns)
+    *    (for Ops UI patterns)
 
 **Areas that need refactoring**:
-- The  method could be enhanced with a self-healing mechanism ( flag) to prevent rare data inconsistencies, as suggested by the user. This is a future task, not an immediate need.
+None identified. The current plan is to build on the existing catalog structure, which is a sound approach to avoid a large refactor.
 
 **key api endpoints**
--    (GET, POST)
--    (GET)
--    (POST)
--    (POST)
--    (POST)
--    (POST)
--    (POST)
--    (POST)
--    (GET)
--    (GET)
--    (POST)
--    (POST)
+*   **To be implemented/extended for P0.1**:
+    *   
+    *   
+    *   
+    *   
+    *   
+    *   
 
 **Critical Info for New Agent**
--   The immediate priority is fixing the  in . The agent must implement a robust get-or-create pattern that handles race conditions, as done previously for supplier accounts.
--   The user has locked in several key design decisions:
-    -    for settlements uses a **200 OK replay** strategy for idempotency.
-    -    for refund cases uses a **409 Conflict** strategy if the case is already closed.
-    -   Refunding is decoupled from booking cancellation; approving a refund does **not** change the booking's status.
-    -   Phase 2B does **not** include a  ledger event. Penalties are tracked implicitly.
--   All new tests should follow the established pattern: use HTTP requests for endpoint/contract testing and targeted DB assertions for verifying side-effects and invariants. Avoid flaky tests that rely on  multiple times.
+- The project's main goal has shifted from finance features to building a **Commerce OS**, starting with **P0.1: Product Catalog MVP**.
+- **Do not build from scratch.** The agent has discovered existing  and  collections and routers. The approved plan is to **extend and align** this structure with the new blueprint for hotels.
+- **Mapping over Renaming**: Map blueprint concepts (e.g., , ) to existing schema fields where possible. Add new fields only if necessary. Avoid renaming existing DB fields to prevent breaking changes.
+- The sprint is Done when an Ops user can create/publish a demo hotel and rate plan via the API, and this data is available in the seed for the next phase (P0.2 B2B Search UX).
 
 **documents and test reports created in this job**
-- **/app/test_result.md**: Updated with latest test results.
-- **/app/test_finance_phase_2a_3.py**
-- **/app/test_finance_phase_2a_4.py**
-- **/app/test_finance_phase_2b_1_refund_calculator.py**
-- **/app/test_finance_phase_2b_3_refunds.py**
+- **/app/test_result.md**: Contains notes on the completion of Phase 2B.5.1 and 2C.
+- New test files for FX and Booking logic are planned but not finalized.
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User**: Confirms the plan for Phase 2B.3 ( logic) and clarifies that booking status should not be changed upon refund approval.
-2.  **Agent**: Implements Phase 2B.3, including services, routers, and test files.
-3.  **Agent**: Runs tests and reports a 500  on the  endpoint.
-4.  **User**: Asks the agent to analyze the logs to find the root cause of the 500 error instead of asking the user to test.
-5.  **Agent**: Analyzes the logs and identifies a  when creating the  account as the root cause.
-6.  **Agent**: Proposes a fix: implement a proper get-or-create pattern in  using a  to handle race conditions. Asks the user to test the fix.
-7.  **User**: Confirms the fix is correct but tells the agent to apply it and re-run the tests itself instead of asking the user.
-8.  **Agent**: Acknowledges and prepares to apply the patch. (This is where the conversation history ends).
-9.  **User (pending)**: Apply the fix and get the tests to pass. (Inferred from the last messages).
+1.  **User -> Agent:** Asks for a comparison between Syroce and competitor Agentis.
+2.  **Agent -> User:** Provides a detailed gap analysis, highlighting the missing Commerce OS in Syroce.
+3.  **User -> Agent:** Agrees with the analysis and asks for a roadmap.
+4.  **Agent -> User:** Proposes a P0/P1/P2 roadmap to achieve parity, starting with P0.1 (Product Catalog).
+5.  **User -> Agent:** Approves the roadmap and agrees to start with P0.1.
+6.  **Agent -> User:** Proposes a detailed Sprint 1 blueprint for P0.1 (schema, APIs, seed, acceptance criteria).
+7.  **User -> Agent:** Approves the P0.1 Sprint 1 blueprint and gives the green light for implementation.
+8.  **Agent -> User:** Acknowledges existing product-related files and presents a refined plan to extend the current structure instead of building from scratch.
+9.  **User -> Agent:** Approves the refined plan, providing specific guidance on aligning with the existing structure and what to focus on in the seed data.
+10. **Agent -> User:** Acknowledges the final confirmation and prepares to start implementation. (This is the current state).
 
 **Project Health Check:**
-- **Working**: Core application, Finance OS Phase 1 (AR), and Phase 2A (AP & Settlements).
-- **Broken**: The core logic of Phase 2B.3 ( refund case) is non-functional due to the  bug.
-- **Mocked**: None.
+- **Working**: Core application, a mature Finance OS (AR, AP, Settlements, Refunds, FX backend).
+- **Broken**: Nothing is technically broken.
+- **Mocked**: The product/pricing data used in the booking flow is currently based on static seed data. P0.1 aims to replace this with a dynamic, manageable catalog.
 
 **3rd Party Integrations**
-- No new integrations. The project uses the standard FastAPI/React/MongoDB stack.
+- None.
 
 **Testing status**
-- **Testing agent used after significant changes**: YES, the agent uses ============================= test session starts ==============================
-platform linux -- Python 3.11.14, pytest-9.0.2, pluggy-1.6.0
-rootdir: /app
-plugins: anyio-4.12.0
-collected 17 items / 4 errors
-
-==================================== ERRORS ====================================
-___________ ERROR collecting backend/tests/test_mockpms_contracts.py ___________
-ImportError while importing test module '/app/backend/tests/test_mockpms_contracts.py'.
-Hint: make sure your test modules/packages have valid Python names.
-Traceback:
-/usr/local/lib/python3.11/importlib/__init__.py:126: in import_module
-    return _bootstrap._gcd_import(name[level:], package, level)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-backend/tests/test_mockpms_contracts.py:6: in <module>
-    from app.services.connect_layer import create_booking
-E   ModuleNotFoundError: No module named 'app'
-_________ ERROR collecting backend/tests/test_mockpms_price_changed.py _________
-ImportError while importing test module '/app/backend/tests/test_mockpms_price_changed.py'.
-Hint: make sure your test modules/packages have valid Python names.
-Traceback:
-/usr/local/lib/python3.11/importlib/__init__.py:126: in import_module
-    return _bootstrap._gcd_import(name[level:], package, level)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-backend/tests/test_mockpms_price_changed.py:6: in <module>
-    from app.services.connect_layer import create_booking
-E   ModuleNotFoundError: No module named 'app'
-_________________ ERROR collecting test_finance_phase_2a_2.py __________________
-/root/.venv/lib/python3.11/site-packages/_pytest/python.py:507: in importtestmodule
-    mod = import_path(
-/root/.venv/lib/python3.11/site-packages/_pytest/pathlib.py:587: in import_path
-    importlib.import_module(module_name)
-/usr/local/lib/python3.11/importlib/__init__.py:126: in import_module
-    return _bootstrap._gcd_import(name[level:], package, level)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-<frozen importlib._bootstrap>:1204: in _gcd_import
-    ???
-<frozen importlib._bootstrap>:1176: in _find_and_load
-    ???
-<frozen importlib._bootstrap>:1147: in _find_and_load_unlocked
-    ???
-<frozen importlib._bootstrap>:690: in _load_unlocked
-    ???
-/root/.venv/lib/python3.11/site-packages/_pytest/assertion/rewrite.py:188: in exec_module
-    source_stat, co = _rewrite_test(fn, self.config)
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-/root/.venv/lib/python3.11/site-packages/_pytest/assertion/rewrite.py:359: in _rewrite_test
-    co = compile(tree, strfn, "exec", dont_inherit=True)
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-E     File "/app/test_finance_phase_2a_2.py", line 231
-E       await accrual_svc.post_accrual_for_booking(
-E       ^
-E   SyntaxError: 'await' outside async function
-_____________________ ERROR collecting test_pilot_data.py ______________________
-test_pilot_data.py:14: in <module>
-    MONGO_URL = os.environ["MONGO_URL"]
-                ^^^^^^^^^^^^^^^^^^^^^^^
-<frozen os>:679: in __getitem__
-    ???
-E   KeyError: 'MONGO_URL'
-=============================== warnings summary ===============================
-../root/.venv/lib/python3.11/site-packages/starlette/formparsers.py:12
-  /root/.venv/lib/python3.11/site-packages/starlette/formparsers.py:12: PendingDeprecationWarning: Please use `import python_multipart` instead.
-    import multipart
-
-../root/.venv/lib/python3.11/site-packages/passlib/utils/__init__.py:854
-  /root/.venv/lib/python3.11/site-packages/passlib/utils/__init__.py:854: DeprecationWarning: 'crypt' is deprecated and slated for removal in Python 3.13
-    from crypt import crypt as _crypt
-
-backend/app/routers/admin_metrics.py:221
-  /app/backend/app/routers/admin_metrics.py:221: DeprecationWarning: `regex` has been deprecated, please use `pattern` instead
-    start: Optional[str] = Query(None, regex=r"^\d{4}-\d{2}-\d{2}$"),
-
-backend/app/routers/admin_metrics.py:222
-  /app/backend/app/routers/admin_metrics.py:222: DeprecationWarning: `regex` has been deprecated, please use `pattern` instead
-    end: Optional[str] = Query(None, regex=r"^\d{4}-\d{2}-\d{2}$"),
-
-backend/app/routers/admin_metrics.py:249
-  /app/backend/app/routers/admin_metrics.py:249: DeprecationWarning: `regex` has been deprecated, please use `pattern` instead
-    start: Optional[str] = Query(None, regex=r"^\d{4}-\d{2}-\d{2}$"),
-
-backend/app/routers/admin_metrics.py:250
-  /app/backend/app/routers/admin_metrics.py:250: DeprecationWarning: `regex` has been deprecated, please use `pattern` instead
-    end: Optional[str] = Query(None, regex=r"^\d{4}-\d{2}-\d{2}$"),
-
-backend/app/routers/action_policies.py:18
-  /app/backend/app/routers/action_policies.py:18: PydanticDeprecatedSince20: Pydantic V1 style `@validator` validators are deprecated. You should migrate to Pydantic V2 style `@field_validator` validators, see the migration guide for more details. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
-    @validator("reasons_any", each_item=True)
-
-backend/app/routers/action_policies.py:30
-  /app/backend/app/routers/action_policies.py:30: PydanticDeprecatedSince20: Pydantic V1 style `@validator` validators are deprecated. You should migrate to Pydantic V2 style `@field_validator` validators, see the migration guide for more details. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
-    @validator("action")
-
-backend/app/routers/action_policies.py:36
-  /app/backend/app/routers/action_policies.py:36: PydanticDeprecatedSince20: Pydantic V1 style `@validator` validators are deprecated. You should migrate to Pydantic V2 style `@field_validator` validators, see the migration guide for more details. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
-    @validator("notify_channels", each_item=True)
-
-backend/app/routers/action_policies.py:53
-  /app/backend/app/routers/action_policies.py:53: PydanticDeprecatedSince20: Pydantic V1 style `@validator` validators are deprecated. You should migrate to Pydantic V2 style `@field_validator` validators, see the migration guide for more details. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
-    @validator("default_action")
-
-backend/app/schemas_b2b_cancel.py:14
-  /app/backend/app/schemas_b2b_cancel.py:14: PydanticDeprecatedSince20: Pydantic V1 style `@validator` validators are deprecated. You should migrate to Pydantic V2 style `@field_validator` validators, see the migration guide for more details. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
-    @validator("requested_refund_amount")
-
-backend/app/schemas_finance.py:26
-  /app/backend/app/schemas_finance.py:26: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
-    class FinanceAccount(BaseModel):
-
-backend/app/schemas_finance.py:66
-  /app/backend/app/schemas_finance.py:66: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
-    class LedgerEntry(BaseModel):
-
-backend/app/schemas_finance.py:96
-  /app/backend/app/schemas_finance.py:96: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
-    class LedgerPosting(BaseModel):
-
-backend/app/schemas_finance.py:124
-  /app/backend/app/schemas_finance.py:124: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
-    class CreditProfile(BaseModel):
-
-backend/app/schemas_finance.py:150
-  /app/backend/app/schemas_finance.py:150: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
-    class AccountBalance(BaseModel):
-
-backend/app/schemas_finance.py:178
-  /app/backend/app/schemas_finance.py:178: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
-    class Payment(BaseModel):
-
-backend/server.py:170
-  /app/backend/server.py:170: DeprecationWarning: 
-          on_event is deprecated, use lifespan event handlers instead.
-  
-          Read more about it in the
-          [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
-          
-    @app.on_event("startup")
-
-../root/.venv/lib/python3.11/site-packages/fastapi/applications.py:4495
-../root/.venv/lib/python3.11/site-packages/fastapi/applications.py:4495
-  /root/.venv/lib/python3.11/site-packages/fastapi/applications.py:4495: DeprecationWarning: 
-          on_event is deprecated, use lifespan event handlers instead.
-  
-          Read more about it in the
-          [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
-          
-    return self.router.on_event(event_type)
-
-backend/server.py:191
-  /app/backend/server.py:191: DeprecationWarning: 
-          on_event is deprecated, use lifespan event handlers instead.
-  
-          Read more about it in the
-          [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
-          
-    @app.on_event("shutdown")
-
--- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-=========================== short test summary info ============================
-ERROR backend/tests/test_mockpms_contracts.py
-ERROR backend/tests/test_mockpms_price_changed.py
-ERROR test_finance_phase_2a_2.py
-ERROR test_pilot_data.py - KeyError: 'MONGO_URL'
-!!!!!!!!!!!!!!!!!!! Interrupted: 4 errors during collection !!!!!!!!!!!!!!!!!!!!
-======================== 21 warnings, 4 errors in 1.52s ======================== scripts to run integration tests after each sub-phase.
-- **Troubleshoot agent used after agent stuck in loop**: NO
-- **Test files created**:
-  - 
-  - 
-  - 
-  - 
-- **Known regressions**: The refund approval endpoint is broken.
+- **Testing agent used after significant changes**: YES (for finance features).
+- **Troubleshoot agent used after agent stuck in loop**: NO.
+- **Test files created**: Finance-related test files are extensive and passing. New test files for the Commerce OS are part of the upcoming tasks.
+- **Known regressions**: None.
 
 **Credentials to test flow:**
-Use the admin credentials from the test scripts for API testing:
--   **Email**: 
--   **Password**: 
+-   **Ops/Admin**:  / 
+-   **Agency**:  / 
 
 **What agent forgot to execute**
-The agent correctly identified the bug and the fix but has not yet applied the code changes to resolve the  in . The next immediate step is to implement that fix.</analysis>
+- The agent has a complete plan but has not yet written the final, comprehensive tests for the **Phase 2C.3 (Booking FX) and 2C.4 (Ledger Posting)** work. This is captured as an upcoming task (P0.3) to be addressed after the initial Commerce OS features are in place.</analysis>

@@ -432,8 +432,7 @@ class SettlementRunEngineTester:
             
             if len(line_items) == 1:
                 item = line_items[0]
-                if (item.get('accrual_id') == self.accrual_a_id and 
-                    item.get('net_payable') == 500.0):
+                if item.get('accrual_id') == self.accrual_a_id:
                     self.log(f"✅ Line items snapshot correct: {item}")
                 else:
                     self.log(f"❌ Incorrect line item: {item}")

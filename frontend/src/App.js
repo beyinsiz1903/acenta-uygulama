@@ -23,6 +23,7 @@ import AdminMatchRiskTrendsPage from "./pages/AdminMatchRiskTrendsPage";
 import AdminActionPoliciesPage from "./pages/AdminActionPoliciesPage";
 import AdminApprovalsPage from "./pages/AdminApprovalsPage";
 import AdminCatalogPage from "./pages/AdminCatalogPage";
+import AdminPricingPage from "./pages/AdminPricingPage";
 import OpsB2BQueuesPage from "./pages/OpsB2BQueuesPage";
 import DashboardPage from "./pages/DashboardPage";
 import ProductsPage from "./pages/ProductsPage";
@@ -86,6 +87,7 @@ function App() {
             <Route path="settings/match-alerts" element={<AdminMatchAlertsPolicyPage />} />
             <Route path="settings/action-policies" element={<AdminActionPoliciesPage />} />
             <Route path="catalog" element={<AdminCatalogPage />} />
+            <Route path="pricing" element={<AdminPricingPage />} />
             <Route path="approvals" element={<AdminApprovalsPage />} />
             <Route path="exports" element={<AdminExportsPage />} />
             <Route path="ops/b2b" element={<OpsB2BQueuesPage />} />

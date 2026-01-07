@@ -222,59 +222,55 @@ class BookingFinanceService:
         
         # Get or create agency AR account (AGENCY_AR_{agency_id}_{currency})
         agency_code = f"AGENCY_AR_{agency_id}_{currency}"
-        agency_account = await self.db.finance_accounts.find_one(
+        agency_filter = {
+            "organization_id": organization_id,
+            "code": agency_code,
+        }
+        now = now_utc()
+        await self.db.finance_accounts.update_one(
+            agency_filter,
             {
-                "organization_id": organization_id,
-                "type": "agency",
-                "owner_id": agency_id,
-                "code": agency_code,
-                "currency": currency,
-            }
+                "$setOnInsert": {
+                    "organization_id": organization_id,
+                    "type": "agency",
+                    "owner_id": agency_id,
+                    "code": agency_code,
+                    "name": f"Agency AR {agency_id} {currency}",
+                    "currency": currency,
+                    "status": "active",
+                    "created_at": now,
+                    "updated_at": now,
+                }
+            },
+            upsert=True,
         )
-        if not agency_account:
-            now = datetime.utcnow()
-            agency_account_id = ObjectId()
-            agency_account = {
-                "_id": agency_account_id,
-                "organization_id": organization_id,
-                "type": "agency",
-                "owner_id": agency_id,
-                "code": agency_code,
-                "name": f"Agency AR {agency_id} {currency}",
-                "currency": currency,
-                "status": "active",
-                "created_at": now,
-                "updated_at": now,
-            }
-            await self.db.finance_accounts.insert_one(agency_account)
+        agency_account = await self.db.finance_accounts.find_one(agency_filter)
 
         # Get or create platform AR account (PLATFORM_AR_{currency})
         platform_code = f"PLATFORM_AR_{currency}"
-        platform_account = await self.db.finance_accounts.find_one(
+        platform_filter = {
+            "organization_id": organization_id,
+            "code": platform_code,
+        }
+        now = now_utc()
+        await self.db.finance_accounts.update_one(
+            platform_filter,
             {
-                "organization_id": organization_id,
-                "type": "platform",
-                "owner_id": "platform",
-                "code": platform_code,
-                "currency": currency,
-            }
+                "$setOnInsert": {
+                    "organization_id": organization_id,
+                    "type": "platform",
+                    "owner_id": "platform",
+                    "code": platform_code,
+                    "name": f"Platform AR {currency}",
+                    "currency": currency,
+                    "status": "active",
+                    "created_at": now,
+                    "updated_at": now,
+                }
+            },
+            upsert=True,
         )
-        if not platform_account:
-            now = datetime.utcnow()
-            platform_account_id = ObjectId()
-            platform_account = {
-                "_id": platform_account_id,
-                "organization_id": organization_id,
-                "type": "platform",
-                "owner_id": "platform",
-                "code": platform_code,
-                "name": f"Platform AR {currency}",
-                "currency": currency,
-                "status": "active",
-                "created_at": now,
-                "updated_at": now,
-            }
-            await self.db.finance_accounts.insert_one(platform_account)
+        platform_account = await self.db.finance_accounts.find_one(platform_filter)
         
         # Create posting lines
         lines = PostingMatrixConfig.get_refund_approved_lines(

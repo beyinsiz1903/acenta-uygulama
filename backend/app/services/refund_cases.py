@@ -188,13 +188,20 @@ class RefundCaseService:
         booking_status_by_id: dict[str, Optional[str]] = {}
         booking_created_by_id: dict[str, Optional[datetime]] = {}
         if booking_ids:
-            booking_cursor = self.db.bookings.find(
-                {"_id": {"$in": [ObjectId(bid) for bid in booking_ids]}, "organization_id": organization_id},
-                {"_id": 1, "status": 1, "created_at": 1},
-            )
-            for bk in await booking_cursor.to_list(length=len(booking_ids)):
-                booking_status_by_id[str(bk["_id"])] = bk.get("status")
-                booking_created_by_id[str(bk["_id"])] = bk.get("created_at")
+            valid_oids: list[ObjectId] = []
+            for bid in booking_ids:
+                if bid and ObjectId.is_valid(bid):
+                    valid_oids.append(ObjectId(bid))
+
+            if valid_oids:
+                booking_cursor = self.db.bookings.find(
+                    {"_id": {"$in": valid_oids}, "organization_id": organization_id},
+                    {"_id": 1, "status": 1, "created_at": 1},
+                )
+                for bk in await booking_cursor.to_list(length=len(valid_oids)):
+                    bid_str = str(bk["_id"])
+                    booking_status_by_id[bid_str] = bk.get("status")
+                    booking_created_by_id[bid_str] = bk.get("created_at")
 
         items = []
         for doc in docs:
@@ -202,6 +209,8 @@ class RefundCaseService:
             aid = doc.get("agency_id")
             computed = doc.get("computed") or {}
             requested = doc.get("requested") or {}
+            ref = computed.get("refundable")
+            pen = computed.get("penalty")
             items.append(
                 {
                     "case_id": str(doc["_id"]),
@@ -213,8 +222,8 @@ class RefundCaseService:
                     "decision": doc.get("decision"),
                     "currency": doc.get("currency"),
                     "requested_amount": requested.get("amount"),
-                    "computed_refundable": float(computed.get("refundable", 0.0)) if computed.get("refundable") is not None else None,
-                    "computed_penalty": float(computed.get("penalty", 0.0)) if computed.get("penalty") is not None else None,
+                    "computed_refundable": float(ref) if ref is not None else None,
+                    "computed_penalty": float(pen) if pen is not None else None,
                     "created_at": doc.get("created_at"),
                     "updated_at": doc.get("updated_at"),
                     "booking_created_at": booking_created_by_id.get(bid),

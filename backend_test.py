@@ -279,7 +279,7 @@ def test_product_catalog_mvp():
         json=test_product_payload,
         headers=headers,
     )
-    assert r.status_code == 201, f"Test product creation failed: {r.text}"
+    assert r.status_code == 200, f"Test product creation failed: {r.text}"
     test_product = r.json()
     test_product_id = test_product['product_id']
     

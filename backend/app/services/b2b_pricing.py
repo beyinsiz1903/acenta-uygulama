@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import List, Dict, Any
 
+from bson import ObjectId
 from app.schemas_b2b_quotes import (
     QuoteItemRequest,
     QuoteCreateRequest,

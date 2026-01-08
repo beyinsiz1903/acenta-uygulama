@@ -16,6 +16,9 @@ from app.schemas_pricing import (
     PricingRateGridResponse,
     PricingRuleCreateRequest,
     PricingRuleResponse,
+    SimplePricingRuleCreate,
+    SimplePricingRuleUpdate,
+    SimplePricingRuleResponse,
 )
 from app.utils import now_utc
 

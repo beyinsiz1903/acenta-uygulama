@@ -222,6 +222,25 @@ async def ensure_seed_data() -> None:
         ("organization_id", 1),
     ], unique=True)
 
+    # P1.2: pricing_rules indexes
+    await db.pricing_rules.create_index([
+        ("organization_id", 1),
+        ("status", 1),
+        ("priority", -1),
+    ])
+    await db.pricing_rules.create_index([
+        ("organization_id", 1),
+        ("status", 1),
+        ("scope.agency_id", 1),
+        ("scope.product_id", 1),
+        ("scope.product_type", 1),
+    ])
+    await db.pricing_rules.create_index([
+        ("organization_id", 1),
+        ("validity.from", 1),
+        ("validity.to", 1),
+    ])
+
     # SCALE v1: approval_tasks indexes
     await db.approval_tasks.create_index([
         ("organization_id", 1),

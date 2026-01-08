@@ -272,5 +272,161 @@ async def list_rules(
                 updated_at=d.get("updated_at", datetime.utcnow()),
                 created_by_email=d.get("created_by_email"),
             )
+
+
+@router.post("/rules/simple", response_model=SimplePricingRuleResponse)
+async def create_simple_rule(
+    payload: SimplePricingRuleCreate,
+    db=Depends(get_db),
+    user: dict[str, Any] = Depends(require_roles(["super_admin", "admin"])),
+):
+    """Create a simple markup_percent pricing rule (P1.2 MVP).
+
+    - action.type is fixed to "markup_percent"
+    - value is validated between 0 and 100 by schema
+    - validity semantics: from <= check_in < to (to is exclusive)
+    """
+    org_id = user["organization_id"]
+    now = now_utc()
+
+    # Normalise product_type for v1 (only hotel supported if provided)
+    scope = payload.scope
+    if scope.product_type and scope.product_type.lower() != "hotel":
+        raise AppError(
+            422,
+            "unsupported_product_type",
+            "Only product_type='hotel' is supported in P1.2 simple rules",
+            {"product_type": scope.product_type},
+        )
+
+    # Prepare validity dict for storage (date -> ISO string)
+    validity = {
+        "from": payload.validity.from_.isoformat(),
+        "to": payload.validity.to.isoformat(),
+    }
+
+    doc = {
+        "organization_id": org_id,
+        "status": "active",
+        "priority": payload.priority,
+        "scope": payload.scope.model_dump(exclude_none=True),
+        "validity": validity,
+        "action": payload.action.model_dump(),
+        "notes": payload.notes,
+        "created_at": now,
+        "updated_at": now,
+        "created_by_email": user.get("email"),
+    }
+
+    res = await db.pricing_rules.insert_one(doc)
+    doc["_id"] = res.inserted_id
+
+    return SimplePricingRuleResponse(
+        rule_id=_id(doc["_id"]),
+        organization_id=org_id,
+        status=doc["status"],
+        priority=doc["priority"],
+        scope=doc["scope"],
+        validity=doc["validity"],
+        action=doc["action"],
+        notes=doc.get("notes"),
+        created_at=doc["created_at"],
+        updated_at=doc["updated_at"],
+        created_by_email=doc.get("created_by_email"),
+    )
+
+
+@router.put("/rules/{rule_id}", response_model=SimplePricingRuleResponse)
+async def update_simple_rule(
+    rule_id: str,
+    payload: SimplePricingRuleUpdate,
+    db=Depends(get_db),
+    user: dict[str, Any] = Depends(require_roles(["super_admin", "admin"])),
+):
+    """Update simple pricing rule fields (P1.2 MVP).
+
+    Patch semantics: only provided fields are updated.
+    """
+    org_id = user["organization_id"]
+
+    try:
+        rid = ObjectId(rule_id)
+    except Exception:
+        raise AppError(404, "not_found", "Rule not found", {"rule_id": rule_id})
+
+    existing = await db.pricing_rules.find_one({"_id": rid, "organization_id": org_id})
+    if not existing:
+        raise AppError(404, "not_found", "Rule not found", {"rule_id": rule_id})
+
+    update: dict[str, Any] = {}
+
+    if payload.priority is not None:
+        update["priority"] = payload.priority
+
+    if payload.scope is not None:
+        scope = payload.scope
+        if scope.product_type and scope.product_type.lower() != "hotel":
+            raise AppError(
+                422,
+                "unsupported_product_type",
+                "Only product_type='hotel' is supported in P1.2 simple rules",
+                {"product_type": scope.product_type},
+            )
+        update["scope"] = scope.model_dump(exclude_none=True)
+
+    if payload.validity is not None:
+        update["validity"] = {
+            "from": payload.validity.from_.isoformat(),
+            "to": payload.validity.to.isoformat(),
+        }
+
+    if payload.action is not None:
+        # Only markup_percent is allowed; schema already enforces this
+        update["action"] = payload.action.model_dump()
+
+    if payload.status is not None:
+        if payload.status not in {"active", "inactive"}:
+            raise AppError(422, "invalid_status", "Status must be 'active' or 'inactive'", {"status": payload.status})
+        update["status"] = payload.status
+
+    if payload.notes is not None:
+        update["notes"] = payload.notes
+
+    if not update:
+        # Nothing to update; return current state
+        existing["_id"] = rid
+        return SimplePricingRuleResponse(
+            rule_id=_id(existing["_id"]),
+            organization_id=org_id,
+            status=existing.get("status", "active"),
+            priority=existing.get("priority", 0),
+            scope=existing.get("scope") or {},
+            validity=existing.get("validity") or {},
+            action=existing.get("action") or {},
+            notes=existing.get("notes"),
+            created_at=existing.get("created_at", now_utc()),
+            updated_at=existing.get("updated_at", now_utc()),
+            created_by_email=existing.get("created_by_email"),
+        )
+
+    update["updated_at"] = now_utc()
+
+    await db.pricing_rules.update_one({"_id": rid, "organization_id": org_id}, {"$set": update})
+    doc = await db.pricing_rules.find_one({"_id": rid, "organization_id": org_id})
+
+    return SimplePricingRuleResponse(
+        rule_id=_id(doc["_id"]),
+        organization_id=org_id,
+        status=doc.get("status", "active"),
+        priority=doc.get("priority", 0),
+        scope=doc.get("scope") or {},
+        validity=doc.get("validity") or {},
+        action=doc.get("action") or {},
+        notes=doc.get("notes"),
+        created_at=doc.get("created_at", now_utc()),
+        updated_at=doc.get("updated_at", now_utc()),
+        created_by_email=doc.get("created_by_email"),
+    )
+
         )
     return out

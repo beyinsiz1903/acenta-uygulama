@@ -166,18 +166,18 @@ class B2BPricingService:
     ) -> QuoteCreateResponse:
         # Price each item
         offers: List[QuoteOffer] = []
-        for idx, item in enumerate(payload.items):
-            offer = await self._price_item(
-                organization_id,
+
         # Determine selling currency once per quote based on agency settings
         agency = await self.db.agencies.find_one({"_id": agency_id, "organization_id": organization_id})
         settings = (agency or {}).get("settings") or {}
         target_currency = (settings.get("selling_currency") or "EUR").upper()
 
-
-                agency_id,
-                channel_id,
-                item,
+        for idx, item in enumerate(payload.items):
+            offer = await self._price_item(
+                organization_id=organization_id,
+                agency_id=agency_id,
+                channel_id=channel_id,
+                item=item,
                 target_currency=target_currency,
             )
             offer.item_key = str(idx)

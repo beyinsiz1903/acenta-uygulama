@@ -377,6 +377,66 @@ async def ensure_seed_data() -> None:
         await db.agencies.insert_many([a1, a2])
         agencies = [a1, a2]
 
+    # P1.2 demo pricing rules (idempotent)
+    # Validity semantics: from <= check_in < to (to is exclusive)
+    if hasattr(db, "pricing_rules"):
+        # Default hotel markup: 10%
+        existing_default = await db.pricing_rules.find_one(
+            {
+                "organization_id": org_id,
+                "notes": "seed_p12_default_hotel_markup",
+                "scope.product_type": "hotel",
+                "action.type": "markup_percent",
+                "action.value": 10.0,
+            }
+        )
+        if not existing_default:
+            now = now_utc()
+            await db.pricing_rules.insert_one(
+                {
+                    "organization_id": org_id,
+                    "status": "active",
+                    "priority": 100,
+                    "scope": {"product_type": "hotel"},
+                    "validity": {"from": "2026-01-01", "to": "2027-01-01"},
+                    "action": {"type": "markup_percent", "value": 10.0},
+                    "notes": "seed_p12_default_hotel_markup",
+                    "created_at": now,
+                    "updated_at": now,
+                    "created_by_email": DEFAULT_ADMIN_EMAIL,
+                }
+            )
+
+        # Agency1-specific markup: 12%
+        agency1 = await db.agencies.find_one({"organization_id": org_id, "name": "Demo Acente A"})
+        if agency1:
+            existing_ag1 = await db.pricing_rules.find_one(
+                {
+                    "organization_id": org_id,
+                    "notes": "seed_p12_agency1_markup",
+                    "scope.product_type": "hotel",
+                    "scope.agency_id": agency1["_id"],
+                    "action.type": "markup_percent",
+                    "action.value": 12.0,
+                }
+            )
+            if not existing_ag1:
+                now = now_utc()
+                await db.pricing_rules.insert_one(
+                    {
+                        "organization_id": org_id,
+                        "status": "active",
+                        "priority": 200,
+                        "scope": {"product_type": "hotel", "agency_id": agency1["_id"]},
+                        "validity": {"from": "2026-01-01", "to": "2027-01-01"},
+                        "action": {"type": "markup_percent", "value": 12.0},
+                        "notes": "seed_p12_agency1_markup",
+                        "created_at": now,
+                        "updated_at": now,
+                        "created_by_email": DEFAULT_ADMIN_EMAIL,
+                    }
+                )
+
     # Create 3 hotels if none
     hotels = await db.hotels.find({"organization_id": org_id}).to_list(10)
     if len(hotels) == 0:

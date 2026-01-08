@@ -110,6 +110,7 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
       setVoucherLoading(false);
       setLedgerSummary(null);
       setLedgerError("");
+      setCancelLoading(false);
     }
     onOpenChange?.(next);
   };

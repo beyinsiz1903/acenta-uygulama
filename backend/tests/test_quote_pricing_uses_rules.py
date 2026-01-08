@@ -189,7 +189,7 @@ async def test_quote_pricing_uses_rules_for_agency1_vs_other(async_client, admin
     from app.auth import create_access_token
 
     token_other = create_access_token(
-        subject=str(other_user["_id"]),
+        subject=other_user["email"],  # Use email as subject, not user ID
         organization_id=org_id,
         roles=other_user.get("roles", [])
     )

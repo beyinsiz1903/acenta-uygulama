@@ -34,8 +34,7 @@ async def test_non_eur_booking_fx_and_ledger(async_client, admin_token, agency_t
     # 1) agency1 kullanicisi ile basit bir booking yarat (mevcut P0.2 flow uzerinden)
     # Burada direkt olarak b2b booking create endpoint'ini kullaniyoruz.
 
-    # a) Agency kullanicisi ile login olmaya gerek yok; admin ile ops/b2b booking akisi test
-    headers_agency = {"Authorization": f"Bearer {agency_token}"}
+    # a) Agency kullanicisi ile login olmaya gerek yok; mevcut booking'ler uzerinden calisiyoruz.
 
     # Use a simple existing search to obtain a product offer via P0.2 flow if needed.
     # For simplicity in this test, assume there is already at least one existing booking

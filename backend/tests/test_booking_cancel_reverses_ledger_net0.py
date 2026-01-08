@@ -57,7 +57,7 @@ async def test_booking_cancel_creates_net_zero_ledger_and_full_refund(async_clie
     assert data["status"] == "CANCELLED"
     assert data["refund_status"] == "COMPLETED"
 
-    # 3) Booking dokümanını kontrol et
+    # 4) Booking dokümanını kontrol et
     booking_after = await db.bookings.find_one({"_id": ObjectId(booking_id), "organization_id": org_id})
     assert booking_after is not None
     assert booking_after.get("status") == "CANCELLED"

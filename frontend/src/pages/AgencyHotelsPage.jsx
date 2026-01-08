@@ -505,7 +505,7 @@ export default function AgencyHotelsPage() {
                         notes: "P0.2 agency hotelflow",
                       };
                       const headers = {
-                        "Idempotency-Key": `p0.2-agency-hotels-${Date.now()}`,
+                        "Idempotency-Key": `p0.2-${quote.quote_id}`,
                       };
                       const res = await api.post("/b2b/bookings", payload, { headers });
                       setBooking(res.data);
@@ -894,7 +894,7 @@ export default function AgencyHotelsPage() {
                         notes: "P0.2 agency hotelflow",
                       };
                       const headers = {
-                        "Idempotency-Key": `p0.2-agency-hotels-${Date.now()}`,
+                        "Idempotency-Key": `p0.2-${quote.quote_id}`,
                       };
                       const res = await api.post("/b2b/bookings", payload, { headers });
                       setBooking(res.data);

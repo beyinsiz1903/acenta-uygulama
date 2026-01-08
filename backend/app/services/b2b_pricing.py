@@ -169,6 +169,12 @@ class B2BPricingService:
         for idx, item in enumerate(payload.items):
             offer = await self._price_item(
                 organization_id,
+        # Determine selling currency once per quote based on agency settings
+        agency = await self.db.agencies.find_one({"_id": agency_id, "organization_id": organization_id})
+        settings = (agency or {}).get("settings") or {}
+        target_currency = (settings.get("selling_currency") or "EUR").upper()
+
+
                 agency_id,
                 channel_id,
                 item,

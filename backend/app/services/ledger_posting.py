@@ -427,6 +427,36 @@ class PostingMatrixConfig:
             )
         return lines
 
+    @staticmethod
+    def get_booking_amended_delta_lines(
+        agency_account_id: str,
+        platform_account_id: str,
+        delta_amount: float,
+        increase: bool,
+    ) -> list[LedgerLine]:
+        """BOOKING_AMENDED event (delta-only posting).
+
+        - delta_amount is always positive.
+        - increase=True  -> exposure increases (similar to BOOKING_CONFIRMED)
+        - increase=False -> exposure decreases (reverse directions)
+        """
+        if delta_amount <= 0:
+            return []
+
+        if increase:
+            # Same pattern as BOOKING_CONFIRMED but with delta
+            return [
+                LedgerLine(account_id=agency_account_id, direction="debit", amount=delta_amount),
+                LedgerLine(account_id=platform_account_id, direction="credit", amount=delta_amount),
+            ]
+
+        # Decrease exposure: reverse directions
+        return [
+            LedgerLine(account_id=agency_account_id, direction="credit", amount=delta_amount),
+            LedgerLine(account_id=platform_account_id, direction="debit", amount=delta_amount),
+        ]
+
+
 
     
     @staticmethod

@@ -230,6 +230,85 @@ class BookingFinanceService:
         )
 
         return posting["_id"]
+
+    async def post_booking_amended_delta(
+        self,
+        organization_id: str,
+        booking_id: str,
+        agency_id: str,
+        amend_id: str,
+        delta_amount_eur: float,
+        occurred_at: Optional[datetime] = None,
+    ) -> Optional[str]:
+        """Post EUR-denominated delta for BOOKING_AMENDED event.
+
+        - Only posts if delta_amount_eur != 0 (within small tolerance).
+        - Uses absolute amount with direction flips instead of negative lines.
+        - Idempotent per (booking_id, amend_id): relies on LedgerPostingService
+          idempotency (uniq_posting_per_source_event) combined with meta.amend_id.
+        """
+        if abs(delta_amount_eur) <= 0.005:
+            return None
+
+        # Load booking to ensure it still belongs to this org
+        from bson import ObjectId as _ObjectId
+
+        booking = await self.db.bookings.find_one(
+            {"_id": _ObjectId(booking_id), "organization_id": organization_id}
+        )
+        if not booking:
+            raise AppError(404, "booking_not_found", "Booking not found")
+
+        # Get agency + platform accounts
+        agency_account = await self.db.finance_accounts.find_one(
+            {
+                "organization_id": organization_id,
+                "type": "agency",
+                "owner_id": agency_id,
+            }
+        )
+        if not agency_account:
+            raise AppError(
+                status_code=404,
+                code="finance_account_not_found",
+                message=f"Finance account not found for agency {agency_id}",
+            )
+
+        platform_account = await self.db.finance_accounts.find_one(
+            {"organization_id": organization_id, "type": "platform"}
+        )
+        if not platform_account:
+            raise AppError(
+                status_code=404,
+                code="finance_account_not_found",
+                message="Platform finance account not found",
+            )
+
+        amount = float(abs(delta_amount_eur))
+        is_increase = delta_amount_eur > 0
+
+        # Normalize: amounts always positive, direction encodes sign
+        lines = PostingMatrixConfig.get_booking_amended_delta_lines(
+            agency_account_id=str(agency_account["_id"]),
+            platform_account_id=str(platform_account["_id"]),
+            delta_amount=amount,
+            increase=is_increase,
+        )
+
+        posting = await LedgerPostingService.post_event(
+            organization_id=organization_id,
+            source_type="booking",
+            source_id=booking_id,
+            event="BOOKING_AMENDED",
+            currency="EUR",
+            lines=lines,
+            occurred_at=occurred_at,
+            created_by="system",
+            meta={"booking_id": booking_id, "agency_id": agency_id, "amend_id": amend_id},
+        )
+
+        return posting["_id"]
+
     
 
     async def post_booking_cancelled(

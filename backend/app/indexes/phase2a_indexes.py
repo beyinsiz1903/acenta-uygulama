@@ -189,4 +189,17 @@ async def ensure_phase2a_indexes(db):
         name="uniq_open_run_per_supplier_currency",
     )
     
+
+    # booking_amendments: per-booking+request idempotency
+    await _safe_create(
+        db.booking_amendments,
+        [
+            ("organization_id", ASCENDING),
+            ("booking_id", ASCENDING),
+            ("request_id", ASCENDING),
+        ],
+        unique=True,
+        name="uniq_booking_amend_request_per_booking",
+    )
+
     logger.info("✅ Phase 2A indexes ensured successfully")

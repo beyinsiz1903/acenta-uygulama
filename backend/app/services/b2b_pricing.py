@@ -98,11 +98,6 @@ class B2BPricingService:
                     "check_out": item.check_out.isoformat(),
                 },
             )
-        # Determine selling currency from agency settings (feature flag)
-        agency = await self.db.agencies.find_one({"_id": agency_id, "organization_id": organization_id})
-        settings = (agency or {}).get("settings") or {}
-        target_currency = (settings.get("selling_currency") or target_currency or "EUR").upper()
-
         # For now, we only support EUR and TRY explicitly
         if target_currency not in {"EUR", "TRY"}:
             raise AppError(
@@ -168,7 +163,7 @@ class B2BPricingService:
         offers: List[QuoteOffer] = []
 
         # Determine selling currency once per quote based on agency settings
-        agency = await self.db.agencies.find_one({"_id": agency_id, "organization_id": organization_id})
+        agency = await self.db.agencies.find_one({"_id": str(agency_id), "organization_id": organization_id})
         settings = (agency or {}).get("settings") or {}
         target_currency = (settings.get("selling_currency") or "EUR").upper()
 

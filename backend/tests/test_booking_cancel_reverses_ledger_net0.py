@@ -91,10 +91,32 @@ async def test_booking_cancel_creates_net_zero_ledger_and_full_refund(async_clie
     # Balanced ledger overall
     assert total_debit == pytest.approx(total_credit, abs=0.02)
 
-    # Event-bazlı mutlak tutarlar eşit olmalı
-    confirmed_amount = sum(float(p.get("debit", 0.0) or 0.0) + float(p.get("credit", 0.0) or 0.0)
-                           for p in postings if p.get("event") == "BOOKING_CONFIRMED")
-    cancelled_amount = sum(float(p.get("debit", 0.0) or 0.0) + float(p.get("credit", 0.0) or 0.0)
-                           for p in postings if p.get("event") == "BOOKING_CANCELLED")
+    # Net exposure agency/platform bazında penalty_eur civarında olmalı
+    # (Bu testte seed ile cancel_penalty_percent = 20.0 varsayılıyor.)
+    from collections import defaultdict
 
-    assert confirmed_amount == pytest.approx(cancelled_amount, abs=0.02)
+    by_account = defaultdict(lambda: {"debit": 0.0, "credit": 0.0})
+    for p in postings:
+        acc = p.get("account_id")
+        if acc is None:
+            continue
+        by_account[acc]["debit"] += float(p.get("debit", 0.0) or 0.0)
+        by_account[acc]["credit"] += float(p.get("credit", 0.0) or 0.0)
+
+    # Agency ve platform hesaplarını ayırt etmek için finance_accounts'a bak
+    fa_cursor = db.finance_accounts.find({"organization_id": org_id})
+    accounts = await fa_cursor.to_list(length=20)
+    agency_accounts = {a["_id"] for a in accounts if a.get("type") == "agency"}
+    platform_accounts = {a["_id"] for a in accounts if a.get("type") == "platform"}
+
+    net_agency = sum(
+        by_account[acc]["debit"] - by_account[acc]["credit"] for acc in by_account if acc in agency_accounts
+    )
+    net_platform = sum(
+        by_account[acc]["credit"] - by_account[acc]["debit"] for acc in by_account if acc in platform_accounts
+    )
+
+    # Penalty, sell_total_eur'un yaklaşık %20'si olmalı
+    expected_penalty = sell_total_eur * 0.2
+    assert net_agency == pytest.approx(expected_penalty, abs=0.05)
+    assert net_platform == pytest.approx(expected_penalty, abs=0.05)

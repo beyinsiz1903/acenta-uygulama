@@ -260,14 +260,37 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
               onClick={handleCopyVoucherLink}
               disabled={!booking || voucherLoading}
             >
-              {voucherLoading ? "Voucher oluşturuluyor..." : "Voucher Linkini Kopyala"}
+              Voucher Linki
             </Button>
             <Button
               variant="outline"
-              onClick={handleOpenVoucherPdf}
-              disabled={!booking || voucherLoading}
+              onClick={async () => {
+                if (!bookingId) return;
+                const pdfUrl = `/b2b/bookings/${bookingId}/voucher.pdf`;
+                const htmlUrl = `/b2b/bookings/${bookingId}/voucher`;
+                try {
+                  const res = await api.get(pdfUrl, { responseType: "blob" });
+                  const blob = new Blob([res.data], { type: "application/pdf" });
+                  const url = window.URL.createObjectURL(blob);
+                  window.open(url, "_blank", "noopener,noreferrer");
+                } catch (e) {
+                  const msg = apiErrorMessage(e) || "";
+                  if (
+                    msg.toLowerCase().includes("pdf_not_configured") ||
+                    msg.toLowerCase().includes("pdf_render_failed")
+                  ) {
+                    toast.info("PDF şimdilik kullanılamıyor, HTML voucher açıldı.");
+                    const base = ""; // relative
+                    const url = `${base}/api/b2b/bookings/${bookingId}/voucher`;
+                    window.open(url, "_blank", "noopener,noreferrer");
+                  } else {
+                    toast.error(msg || "Voucher açılamadı");
+                  }
+                }
+              }}
+              disabled={!booking}
             >
-              PDF İndir
+              Voucher
             </Button>
           </div>
         </SheetFooter>

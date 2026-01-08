@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import math
+import uuid
 
 import pytest
 

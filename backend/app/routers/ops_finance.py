@@ -644,6 +644,7 @@ async def test_posting(
         "posting_id": posting["_id"],
         "event": posting["event"],
         "lines_count": len(posting["lines"]),
+        "organization_id": current_user["organization_id"],
     }
 
 

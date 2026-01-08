@@ -27,6 +27,7 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
   const [ledgerSummary, setLedgerSummary] = useState(null);
   const [ledgerLoading, setLedgerLoading] = useState(false);
   const [ledgerError, setLedgerError] = useState("");
+  const [cancelLoading, setCancelLoading] = useState(false);
 
   useEffect(() => {
     if (!open || !bookingId) {

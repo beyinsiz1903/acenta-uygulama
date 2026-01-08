@@ -17,9 +17,70 @@ def approx_equal(a: float, b: float, *, abs_tol: float = TOLERANCE_ABS, rel_tol:
 
 
 async def _create_simple_booking(client, token: str) -> str:
-    from app.tests.test_booking_financials_fx import _create_simple_booking as _helper  # type: ignore
+    """Use existing P0.2 flow to create a booking and return booking_id."""
+    import uuid
+    from app.utils import now_utc
+    
+    headers = {"Authorization": f"Bearer {token}"}
 
-    return await _helper(client, token)
+    # 1) Search hotels for Istanbul with deterministic dates
+    today = now_utc().date()
+    # Use dates further in the future to avoid availability issues
+    check_in = today.replace(year=2026, month=1, day=10)
+    check_out = today.replace(year=2026, month=1, day=12)
+
+    params = {
+        "city": "Istanbul",
+        "check_in": check_in.isoformat(),
+        "check_out": check_out.isoformat(),
+        "adults": "2",
+        "children": "0",
+    }
+    res = await client.get("/api/b2b/hotels/search", headers=headers, params=params)
+    assert res.status_code == 200
+    data = res.json()
+    items = data.get("items") or []
+    assert items, "P0.2 search did not return any items"
+
+    first = items[0]
+    product_id = first["product_id"]
+    rate_plan_id = first["rate_plan_id"]
+
+    # 2) Create quote
+    quote_payload = {
+        "channel_id": "agency_extranet",
+        "items": [
+            {
+                "product_id": product_id,
+                "room_type_id": "default_room",
+                "rate_plan_id": rate_plan_id,
+                "check_in": check_in.isoformat(),
+                "check_out": check_out.isoformat(),
+                "occupancy": 2,
+            }
+        ],
+        "client_context": {"source": "p0.3-fx-test"},
+    }
+    res = await client.post("/api/b2b/quotes", headers=headers, json=quote_payload)
+    assert res.status_code == 200, f"Quote creation failed: {res.status_code} - {res.text}"
+    quote = res.json()
+    quote_id = quote["quote_id"]
+
+    # 3) Create booking
+    booking_payload = {
+        "quote_id": quote_id,
+        "customer": {"name": "FX Test", "email": "fx@test.com"},
+        "travellers": [{"first_name": "FX", "last_name": "Test"}],
+        "notes": "P0.3 FX test booking",
+    }
+    res = await client.post(
+        "/api/b2b/bookings",
+        headers={**headers, "Idempotency-Key": f"p0.3-fx-booking-{uuid.uuid4().hex[:8]}"},
+        json=booking_payload,
+    )
+    assert res.status_code == 200, f"Booking creation failed: {res.status_code} - {res.text}"
+    booking = res.json()
+    return booking["booking_id"]
 
 
 @pytest.mark.anyio

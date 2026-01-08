@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-P0.2 Search→Quote→Booking Backend Chain Test
-Testing B2B hotel search, quote creation, booking creation, and my bookings endpoints
+P0.4 Voucher PDF Backend Chain Test
+Testing booking → voucher HTML → voucher PDF flow with Turkish requirements
 """
 
 import requests
@@ -9,8 +9,8 @@ import json
 import uuid
 from datetime import datetime, date
 
-# Configuration
-BASE_URL = "http://localhost:8001"
+# Configuration - Use production URL from frontend/.env
+BASE_URL = "https://commerce-os.preview.emergentagent.com"
 
 def login_agency():
     """Login as agency user and return token, org_id, agency_id, email"""

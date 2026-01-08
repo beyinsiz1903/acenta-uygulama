@@ -95,7 +95,6 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
     async function handleCancel() {
       if (!bookingId || !booking) return;
       if (booking.status !== "CONFIRMED") return;
-      // eslint-disable-next-line no-alert
       const ok = window.confirm("Bu rezervasyonu iptal etmek istediğinize emin misiniz?");
       if (!ok) return;
       setCancelLoading(true);

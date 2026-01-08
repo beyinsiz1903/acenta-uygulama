@@ -287,6 +287,35 @@ async def render_voucher_html(db, organization_id: str, booking_id: str) -> str:
 
 
 async def render_voucher_pdf(db, organization_id: str, booking_id: str) -> bytes:
-    # Phase 1: PDF rendering not yet configured, always raise
-    raise AppError(501, "pdf_not_configured", "PDF rendering not yet configured", {"booking_id": booking_id})
+    """Render voucher HTML as PDF bytes.
+
+    Phase P0.4: minimal implementation using WeasyPrint (or compatible backend).
+    If PDF rendering stack is not available, raise a clear AppError.
+    """
+
+    # Reuse HTML rendering logic; this ensures we always respect the active voucher
+    html = await render_voucher_html(db, organization_id, booking_id)
+
+    try:
+        from weasyprint import HTML  # type: ignore
+    except Exception as exc:  # pragma: no cover - environment specific
+        raise AppError(
+            501,
+            "pdf_not_configured",
+            "PDF rendering backend is not available on this environment",
+            {"booking_id": booking_id, "error": str(exc)},
+        ) from exc
+
+    try:
+        pdf_bytes = HTML(string=html).write_pdf()
+    except Exception as exc:  # pragma: no cover - render failure
+        raise AppError(
+            500,
+            "pdf_render_failed",
+            "Voucher PDF rendering failed",
+            {"booking_id": booking_id, "error": str(exc)},
+        ) from exc
+
+    # Optionally, we could persist pdf_path/meta on the voucher doc here.
+    return pdf_bytes
 

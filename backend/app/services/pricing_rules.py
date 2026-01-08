@@ -126,12 +126,22 @@ class PricingRulesService:
 
         try:
             if v_from:
-                # Stored as YYYY-MM-DD string
-                d_from = date.fromisoformat(v_from)
+                if isinstance(v_from, str):
+                    d_from = date.fromisoformat(v_from)
+                elif isinstance(v_from, datetime):
+                    d_from = v_from.date()
+                else:  # date or other date-like
+                    d_from = v_from
                 if check_in < d_from:
                     return False
             if v_to:
-                d_to = date.fromisoformat(v_to)
+                if isinstance(v_to, str):
+                    d_to = date.fromisoformat(v_to)
+                elif isinstance(v_to, datetime):
+                    d_to = v_to.date()
+                else:
+                    d_to = v_to
+                # validity.to is exclusive: from <= check_in < to
                 if check_in >= d_to:
                     return False
         except ValueError:

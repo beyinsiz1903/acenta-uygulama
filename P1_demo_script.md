@@ -276,5 +276,61 @@ Mesaj:
 
 ---
 
-Bu P1 demo runbook’u, P1.1 ve P1.2’yi birlikte, hem UI hem terminal/pytest
+## 5. P1.4 Flat Penalty Cancellation (20%)
+
+Bu ek bölüm, P1.3 iptal akışını flat penalty ile zenginleştirir:
+
+> "CONFIRMED booking → CANCEL, %80 iade / %20 ceza; defterde bu
+>  ayrışma net şekilde görülebilir."
+
+### 5.1. UI: İptal ve Toast Mesajı
+
+1. `agency1@demo.test` ile `/app/agency/bookings` sayfasına gidin.
+2. CONFIRMED bir booking satırını açın (drawer).
+3. "İptal Et" butonuna tıklayın.
+4. Başarılı iptal sonrasında toast mesajında şunu görmelisiniz:
+
+   - `Rezervasyon iptal edildi. İade: XX.XX EUR, Ceza: YY.YY EUR`
+
+Bu, backend'in refund/penalty ayrıştırmasını doğrudan UI üzerinden
+kullanıcıya yansıtıyor.
+
+### 5.2. Policy ve Finans Dokümanı Doğrulaması
+
+- `organizations.settings.cancel_penalty_percent == 20.0` olmalı (seed ile gelir).
+- İlgili booking için `booking_financials` dokümanında:
+
+  - `sell_total_eur` (örn. 110.0)
+  - `refunded_total` (örn. 88.0)
+  - `penalty_total` (örn. 22.0)
+  - `refunded_total + penalty_total ≈ sell_total_eur`
+
+### 5.3. Ledger: Balanced + Net Penalty
+
+Aynı booking için `ledger_postings` üzerinde BOOKING_CONFIRMED ve
+BOOKING_CANCELLED event’lerine baktığınızda:
+
+- Toplam debit ≈ toplam credit (ledger balanced),
+- Agency hesapları için net (debit - credit) ≈ penalty_eur,
+- Platform hesapları için net (credit - debit) ≈ penalty_eur.
+
+Bu, %20 cezanın defterde doğru taraflara yansıdığını gösterir.
+
+### 5.4. pytest: P1.4 Kontrat Testi
+
+```bash
+cd /app/backend
+pytest backend/tests/test_booking_cancel_reverses_ledger_net0.py -q
+```
+
+Artık bu test, "net-0" yerine **"net penalty"** kontratını doğrular:
+
+- Booking.status CANCELLED,
+- `refunded_total + penalty_total ≈ sell_total_eur`,
+- Ledger balanced,
+- Agency/platform net exposure ≈ sell_total_eur * 0.2.
+
+---
+
+Bu P1 demo runbook’u, P1.1, P1.2 ve P1.4’ü birlikte, hem UI hem terminal/pytest
 üzerinden tekrar edilebilir biçimde kanıtlamak için hazırdır.

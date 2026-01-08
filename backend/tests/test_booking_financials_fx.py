@@ -79,7 +79,7 @@ async def _create_simple_booking(client, token: str) -> str:
     }
     res = await client.post(
         "/api/b2b/bookings",
-        headers={**headers, "Idempotency-Key": "p0.3-fx-booking"},
+        headers={**headers, "Idempotency-Key": f"p0.3-fx-booking-{uuid.uuid4().hex[:8]}"},
         json=booking_payload,
     )
     assert res.status_code == 200, f"Booking creation failed: {res.status_code} - {res.text}"

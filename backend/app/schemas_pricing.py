@@ -118,6 +118,66 @@ class PricingRuleResponse(PricingRuleCreateRequest):
 # ---- Pricing trace ----
 
 
+# ---- P1.2 Simple pricing rules (markup_percent only) ----
+
+
+class SimpleRuleValidity(BaseModel):
+    """Validity window for simple rules (P1.2 MVP).
+
+    Semantics: from <= check_in < to  (to is exclusive).
+    """
+
+    from_: date = Field(alias="from")
+    to: date
+
+    class Config:
+        allow_population_by_field_name = True
+
+
+class SimpleRuleScope(BaseModel):
+    agency_id: Optional[str] = None
+    product_id: Optional[str] = None
+    product_type: Optional[str] = None  # v1: "hotel" expected
+
+
+class SimpleRuleAction(BaseModel):
+    type: Literal["markup_percent"] = "markup_percent"
+    value: float = Field(ge=0.0, le=100.0)
+
+
+class SimplePricingRuleCreate(BaseModel):
+    priority: int = 100
+    scope: SimpleRuleScope
+    validity: SimpleRuleValidity
+    action: SimpleRuleAction
+    notes: Optional[str] = None
+
+
+class SimplePricingRuleUpdate(BaseModel):
+    priority: Optional[int] = None
+    scope: Optional[SimpleRuleScope] = None
+    validity: Optional[SimpleRuleValidity] = None
+    action: Optional[SimpleRuleAction] = None
+    status: Optional[Literal["active", "inactive"]] = None
+    notes: Optional[str] = None
+
+
+class SimplePricingRuleResponse(BaseModel):
+    rule_id: str
+    organization_id: str
+    status: str
+    priority: int
+    scope: dict[str, Any]
+    validity: dict[str, Any]
+    action: dict[str, Any]
+    notes: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
+    created_by_email: Optional[str] = None
+
+
+
+
 class PricingTraceStep(BaseModel):
     type: Literal["grid_base", "rule"]
     label: str

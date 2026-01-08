@@ -127,11 +127,11 @@ export default function AgencyHotelsPage() {
         (statusFilter === "restricted" && statusKey === "kısıtlı") ||
         (statusFilter === "closed" && statusKey === "satışa kapalı");
 
-  const currentStep = quote ? 3 : searchResults.length > 0 ? 2 : 1;
-
       return matchesQuery && matchesLocation && matchesStatus;
     });
   }, [hotels, search, locationFilter, statusFilter]);
+
+  const currentStep = quote ? 3 : searchResults.length > 0 ? 2 : 1;
 
   // Loading state (legacy hotel list)
   if (loading) {

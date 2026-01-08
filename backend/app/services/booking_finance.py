@@ -317,11 +317,20 @@ class BookingFinanceService:
                 message="Platform finance account not found",
             )
 
-        lines = PostingMatrixConfig.get_booking_cancelled_lines(
-            agency_account_id=agency_account["_id"],
-            platform_account_id=platform_account["_id"],
-            sell_amount=amount_eur,
-        )
+        # Lines: full reversal + optional penalty
+        if penalty_eur > 0:
+            lines = PostingMatrixConfig.get_booking_cancelled_with_penalty_lines(
+                agency_account_id=agency_account["_id"],
+                platform_account_id=platform_account["_id"],
+                sell_amount=amount_eur,
+                penalty_amount=penalty_eur,
+            )
+        else:
+            lines = PostingMatrixConfig.get_booking_cancelled_lines(
+                agency_account_id=agency_account["_id"],
+                platform_account_id=platform_account["_id"],
+                sell_amount=amount_eur,
+            )
 
         posting = await LedgerPostingService.post_event(
             organization_id=organization_id,

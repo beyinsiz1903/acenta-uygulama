@@ -250,6 +250,21 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
               {subtitle && (
                 <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>
               )}
+              <div className="flex items-center justify-between gap-2 mt-4">
+                <div className="flex items-center gap-2">
+                  {booking?.status === "CONFIRMED" && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={cancelLoading}
+                      onClick={handleCancel}
+                    >
+                      {cancelLoading ? "İptal ediliyor..." : "İptal Et"}
+                    </Button>
+                  )}
+                </div>
+              </div>
+
             </div>
             <StatusBadge status_tr={booking?.status_tr} status={booking?.status} />
           </div>

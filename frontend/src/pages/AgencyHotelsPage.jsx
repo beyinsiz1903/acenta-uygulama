@@ -295,7 +295,12 @@ export default function AgencyHotelsPage() {
                     setSearchError("Bu kriterlerle uygun sonuç bulunamadı.");
                   }
                 } catch (err) {
-                  setSearchError(apiErrorMessage(err));
+                  const msg = apiErrorMessage(err);
+                  if (msg.toLowerCase().includes("invalid_date_range")) {
+                    setDateError("Çıkış tarihi, giriş tarihinden sonra olmalı.");
+                  } else {
+                    setSearchError(msg);
+                  }
                   setStep(1);
                 } finally {
                   setSearchLoading(false);
@@ -679,7 +684,12 @@ export default function AgencyHotelsPage() {
                     setSearchError("Bu kriterlerle uygun sonuç bulunamadı.");
                   }
                 } catch (err) {
-                  setSearchError(apiErrorMessage(err));
+                  const msg = apiErrorMessage(err);
+                  if (msg.toLowerCase().includes("invalid_date_range")) {
+                    setDateError("Çıkış tarihi, giriş tarihinden sonra olmalı.");
+                  } else {
+                    setSearchError(msg);
+                  }
                   setStep(1);
                 } finally {
                   setSearchLoading(false);

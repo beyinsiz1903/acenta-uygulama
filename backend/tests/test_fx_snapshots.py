@@ -104,7 +104,7 @@ async def test_fx_snapshots_freeze_rate_per_booking(async_client, admin_token, a
 
         booking_payload = {
             "quote_id": quote["quote_id"],
-            "customer": {"name": f"FX Snap {rate_hint}", "email": "fxsnap@test.local"},
+            "customer": {"name": f"FX Snap {rate_hint}", "email": "fxsnap@test.com"},
             "travellers": [{"first_name": "FX", "last_name": "Snap"}],
             "notes": f"FX snapshot test {rate_hint}",
         }

@@ -189,13 +189,9 @@ async def test_quote_pricing_uses_rules_for_agency1_vs_other(async_client, admin
     from app.auth import create_access_token
 
     token_other = create_access_token(
-        {
-            "sub": str(other_user["_id"]),
-            "email": other_user["email"],
-            "organization_id": org_id,
-            "agency_id": other_agency_id,
-            "roles": other_user.get("roles", []),
-        }
+        subject=str(other_user["_id"]),
+        organization_id=org_id,
+        roles=other_user.get("roles", [])
     )
     headers_other = {"Authorization": f"Bearer {token_other}"}
 

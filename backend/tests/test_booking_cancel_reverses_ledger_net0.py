@@ -62,7 +62,7 @@ async def test_booking_cancel_creates_net_zero_ledger_and_full_refund(async_clie
     assert booking_after is not None
     assert booking_after.get("status") == "CANCELLED"
 
-    # 4) Booking financials: full refund, no penalty
+    # 5) Booking financials: full refund, no penalty
     bf = await db.booking_financials.find_one({"organization_id": org_id, "booking_id": booking_id})
     assert bf is not None, "booking_financials document must exist after cancellation"
 

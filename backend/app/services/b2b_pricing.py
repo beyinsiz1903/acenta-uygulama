@@ -147,7 +147,7 @@ class B2BPricingService:
 
         return QuoteOffer(
             item_key="0",  # caller will override with actual index
-            currency="EUR",
+            currency=currency,
             net=net,
             sell=sell,
             restrictions=restrictions,

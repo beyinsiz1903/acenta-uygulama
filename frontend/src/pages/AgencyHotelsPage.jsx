@@ -249,14 +249,24 @@ export default function AgencyHotelsPage() {
               size="sm"
               onClick={async () => {
                 setSearchError("");
+                setCityError("");
+                setDateError("");
                 setSearchResults([]);
                 setSelectedOffer(null);
                 setQuote(null);
                 setBooking(null);
 
-                if (!city.trim() || !checkIn || !checkOut) {
-                  setSearchError("Şehir, giriş ve çıkış tarihleri zorunludur.");
-                  setStep(1);
+                const cityTrimmed = city.trim();
+                let hasError = false;
+                if (!cityTrimmed) {
+                  setCityError("Şehir boş bırakılamaz.");
+                  hasError = true;
+                }
+                if (!checkIn || !checkOut) {
+                  setDateError("Giriş ve çıkış tarihleri zorunludur.");
+                  hasError = true;
+                }
+                if (hasError) {
                   return;
                 }
 
@@ -617,14 +627,24 @@ export default function AgencyHotelsPage() {
               size="sm"
               onClick={async () => {
                 setSearchError("");
+                setCityError("");
+                setDateError("");
                 setSearchResults([]);
                 setSelectedOffer(null);
                 setQuote(null);
                 setBooking(null);
 
-                if (!city.trim() || !checkIn || !checkOut) {
-                  setSearchError("Şehir, giriş ve çıkış tarihleri zorunludur.");
-                  setStep(1);
+                const cityTrimmed = city.trim();
+                let hasError = false;
+                if (!cityTrimmed) {
+                  setCityError("Şehir boş bırakılamaz.");
+                  hasError = true;
+                }
+                if (!checkIn || !checkOut) {
+                  setDateError("Giriş ve çıkış tarihleri zorunludur.");
+                  hasError = true;
+                }
+                if (hasError) {
                   return;
                 }
 

@@ -213,6 +213,9 @@ export default function AgencyHotelsPage() {
             <div className="space-y-1">
               <label className="text-xs text-muted-foreground">Şehir</label>
               <Input value={city} onChange={(e) => setCity(e.target.value)} />
+              {cityError && (
+                <div className="text-xs text-destructive">{cityError}</div>
+              )}
             </div>
             <div className="space-y-1">
               <label className="text-xs text-muted-foreground">Giriş</label>
@@ -591,6 +594,9 @@ export default function AgencyHotelsPage() {
             <div className="space-y-1">
               <label className="text-xs text-muted-foreground">Şehir</label>
               <Input value={city} onChange={(e) => setCity(e.target.value)} />
+              {cityError && (
+                <div className="text-xs text-destructive">{cityError}</div>
+              )}
             </div>
             <div className="space-y-1">
               <label className="text-xs text-muted-foreground">Giriş</label>

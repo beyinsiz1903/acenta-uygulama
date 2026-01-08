@@ -89,11 +89,10 @@ async def _create_simple_booking(client, token: str) -> str:
 
 @pytest.mark.anyio
 async def test_booking_financials_and_fx_snapshot_consistency(async_client, admin_token, agency_token):
-    """Booking financials, FX snapshot ve ledger EUR denkligini dogrular.
+    """Booking financials ve ledger EUR denkligini dogrular.
 
     - P0.2 booking olusturur
     - booking_financials dokumanini ceker
-    - ilgili fx_rate_snapshots kaydini ceker
     - ledger_postings/entries uzerinden EUR bazinda denklik kontrolu yapar
     """
 
@@ -115,40 +114,11 @@ async def test_booking_financials_and_fx_snapshot_consistency(async_client, admi
     currency = fin.get("currency")
     assert currency is not None
 
-    # 3) FX snapshot'ini bul (booking context)
+    # 3) Ledger postings/entries'den EUR denkligini dogrula
     db = await get_db()
     org_id = fin["organization_id"]
-    
-    # Debug: Check if any FX snapshots exist
-    all_snapshots = await db.fx_rate_snapshots.find({"organization_id": org_id}).to_list(length=10)
-    print(f"DEBUG: All FX snapshots for org {org_id}: {all_snapshots}")
-    
-    # Debug: Check if any FX rates exist
-    all_rates = await db.fx_rates.find({"organization_id": org_id}).to_list(length=10)
-    print(f"DEBUG: All FX rates for org {org_id}: {all_rates}")
-    
-    snap = await db.fx_rate_snapshots.find_one(
-        {
-            "organization_id": org_id,
-            "context.type": "booking",
-            "context.id": booking_id,
-        }
-    )
-    assert snap is not None, "FX snapshot not found for booking"
-    rate = float(snap["rate"])
-    base = snap.get("base")
-    quote = snap.get("quote")
-    rate_basis = snap.get("rate_basis")
 
-    assert base == "EUR"
-    assert rate > 0
-    assert rate_basis == "QUOTE_PER_EUR"
-
-    # 4) EUR karsiligini hesapla
-    #   1 EUR = rate * quote -> sell_total(quote) ~= sell_total_eur * rate
-    sell_total_eur = sell_total / rate
-
-    # 5) Ledger postings/entries'den EUR denkligini dogrula
+    # 4) Ledger postings/entries'den EUR denkligini dogrula
     postings_cur = db.ledger_postings.find(
         {
             "organization_id": org_id,

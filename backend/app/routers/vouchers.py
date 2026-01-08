@@ -173,12 +173,12 @@ async def b2b_download_voucher_pdf(
     if not booking:
         raise AppError(404, "not_found", "Booking not found", {"booking_id": booking_id})
 
-    # Phase 1: always raise configured error
     from app.services.vouchers import render_voucher_pdf  # noqa: WPS433
 
-    # This will always raise AppError(501, pdf_not_configured, ...)
-    await render_voucher_pdf(db, org_id, booking_id)
+    pdf_bytes = await render_voucher_pdf(db, org_id, booking_id)
 
-    # Unreachable, but keeps type checkers happy
-    return Response(status_code=501)
+    headers = {
+        "Content-Disposition": f"inline; filename=\"voucher-{booking_id}.pdf\"",
+    }
+    return Response(content=pdf_bytes, media_type="application/pdf", headers=headers)
 

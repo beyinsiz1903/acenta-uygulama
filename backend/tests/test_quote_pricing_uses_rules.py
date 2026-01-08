@@ -38,19 +38,78 @@ async def test_quote_pricing_uses_rules_for_agency1_vs_other(async_client, admin
 
     other_agency_id = other_agency["_id"]
 
-    # Inventory'de satışa açık bir ürün bul (her iki agency de aynı ürünü kullanıyor)
-    inv = await db.inventory.find_one({"organization_id": org_id})
-    assert inv is not None, "No inventory found for demo org; seed should create one."
+    # Use ObjectId-based product instead of string-based demo_product_1
+    # Find a product with ObjectId format that has inventory
+    from bson import ObjectId
+    
+    # Look for ObjectId-based products with inventory
+    inv = await db.inventory.find_one({
+        "organization_id": org_id,
+        "product_id": {"$type": "objectId"}  # Only ObjectId products
+    })
+    
+    if not inv:
+        # Fallback: create inventory for an existing ObjectId product
+        product = await db.products.find_one({
+            "organization_id": org_id,
+            "_id": {"$type": "objectId"}
+        })
+        assert product is not None, "No ObjectId product found"
+        
+        product_id = str(product["_id"])
+        check_in = date.today() + timedelta(days=1)
+        check_out = check_in + timedelta(days=1)
+        
+        # Create inventory for this product
+        await db.inventory.insert_one({
+            "organization_id": org_id,
+            "product_id": product["_id"],
+            "date": check_in.isoformat(),
+            "capacity_available": 10,
+            "price": 100.0,
+            "restrictions": {"closed": False}
+        })
+        
+        # Find or create rate plan
+        rate_plan = await db.rate_plans.find_one({"organization_id": org_id, "product_id": product["_id"]})
+        if not rate_plan:
+            # Create a rate plan
+            rate_plan_doc = {
+                "organization_id": org_id,
+                "product_id": product["_id"],
+                "name": "Standard",
+                "currency": "EUR",
+                "base_price": 100.0,
+                "seasons": [],
+                "actions": []
+            }
+            result = await db.rate_plans.insert_one(rate_plan_doc)
+            rate_plan_id = str(result.inserted_id)
+        else:
+            rate_plan_id = str(rate_plan["_id"])
+    else:
+        product_id = str(inv["product_id"])
+        check_in_str = inv["date"]  # ISO string
+        check_in = date.fromisoformat(check_in_str)
+        check_out = check_in + timedelta(days=1)
 
-    product_id = str(inv["product_id"])
-    check_in_str = inv["date"]  # ISO string
-    check_in = date.fromisoformat(check_in_str)
-    check_out = check_in + timedelta(days=1)
-
-    # Find rate plan for the product
-    rate_plan = await db.rate_plans.find_one({"organization_id": org_id, "product_id": product_id})
-    assert rate_plan is not None, f"No rate plan found for product {product_id}"
-    rate_plan_id = str(rate_plan["_id"])
+        # Find rate plan for the product
+        rate_plan = await db.rate_plans.find_one({"organization_id": org_id, "product_id": inv["product_id"]})
+        if not rate_plan:
+            # Create a rate plan
+            rate_plan_doc = {
+                "organization_id": org_id,
+                "product_id": inv["product_id"],
+                "name": "Standard",
+                "currency": "EUR",
+                "base_price": 100.0,
+                "seasons": [],
+                "actions": []
+            }
+            result = await db.rate_plans.insert_one(rate_plan_doc)
+            rate_plan_id = str(result.inserted_id)
+        else:
+            rate_plan_id = str(rate_plan["_id"])
 
     # Ortak quote payload
     payload = {

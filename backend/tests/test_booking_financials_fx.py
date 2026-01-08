@@ -28,8 +28,9 @@ async def _create_simple_booking(client, token: str) -> str:
 
     # 1) Search hotels for Istanbul with deterministic dates
     today = now_utc().date()
-    check_in = today.replace(day=today.day + 1)
-    check_out = today.replace(day=today.day + 3)
+    # Use dates further in the future to avoid availability issues
+    check_in = today.replace(year=2026, month=1, day=10)
+    check_out = today.replace(year=2026, month=1, day=12)
 
     params = {
         "city": "Istanbul",

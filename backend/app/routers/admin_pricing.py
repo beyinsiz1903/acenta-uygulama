@@ -272,6 +272,8 @@ async def list_rules(
                 updated_at=d.get("updated_at", datetime.utcnow()),
                 created_by_email=d.get("created_by_email"),
             )
+        )
+    return out
 
 
 @router.post("/rules/simple", response_model=SimplePricingRuleResponse)

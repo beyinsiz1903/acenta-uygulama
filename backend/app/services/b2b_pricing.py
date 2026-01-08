@@ -128,6 +128,12 @@ class B2BPricingService:
 
             rate = Decimal(str(fx.rate))
             net_eur = Decimal(str(base_price_eur))
+        # Determine selling currency from agency settings (feature flag)
+        agency = await self.db.agencies.find_one({"_id": agency_id, "organization_id": organization_id})
+        settings = (agency or {}).get("settings") or {}
+        target_currency = (settings.get("selling_currency") or "EUR").upper()
+
+
             net_try_internal = (net_eur * rate).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)
             sell_try_internal = (net_try_internal * Decimal("1.1")).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)
 

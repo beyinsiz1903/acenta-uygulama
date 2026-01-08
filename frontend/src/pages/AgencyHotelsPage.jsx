@@ -224,6 +224,9 @@ export default function AgencyHotelsPage() {
             <div className="space-y-1">
               <label className="text-xs text-muted-foreground">Çıkış</label>
               <Input type="date" value={checkOut} onChange={(e) => setCheckOut(e.target.value)} />
+              {dateError && (
+                <div className="text-xs text-destructive">{dateError}</div>
+              )}
             </div>
             <div className="space-y-1">
               <label className="text-xs text-muted-foreground">Yetişkin</label>
@@ -605,6 +608,9 @@ export default function AgencyHotelsPage() {
             <div className="space-y-1">
               <label className="text-xs text-muted-foreground">Çıkış</label>
               <Input type="date" value={checkOut} onChange={(e) => setCheckOut(e.target.value)} />
+              {dateError && (
+                <div className="text-xs text-destructive">{dateError}</div>
+              )}
             </div>
             <div className="space-y-1">
               <label className="text-xs text-muted-foreground">Yetişkin</label>

@@ -70,6 +70,28 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
         setLedgerLoading(false);
       }
     }
+    async function handleCancel() {
+      if (!bookingId || !booking) return;
+      if (booking.status !== "CONFIRMED") return;
+      // eslint-disable-next-line no-alert
+      const ok = window.confirm("Bu rezervasyonu iptal etmek istediğinize emin misiniz?");
+      if (!ok) return;
+      setCancelLoading(true);
+      try {
+        const resp = await api.post(`/b2b/bookings/${bookingId}/cancel`, {});
+        const updated = {
+          ...booking,
+          status: resp.data?.status || "CANCELLED",
+        };
+        setBooking(updated);
+        toast.success("Rezervasyon iptal edildi.");
+      } catch (e) {
+        toast.error(apiErrorMessage(e));
+      } finally {
+        setCancelLoading(false);
+      }
+    }
+
 
     load();
     loadLedger();

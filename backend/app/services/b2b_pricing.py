@@ -60,6 +60,7 @@ class B2BPricingService:
         agency_id: str,
         channel_id: str,
         item: QuoteItemRequest,
+        target_currency: str = "EUR",
     ) -> QuoteOffer:
         # TODO: integrate real inventory + contract + rules pricing.
         await self._ensure_product_sellable(organization_id, item.product_id)
@@ -97,11 +98,45 @@ class B2BPricingService:
                     "check_out": item.check_out.isoformat(),
                 },
             )
+        # Determine target selling currency (EUR or TRY)
+        target_currency = (target_currency or "EUR").upper()
 
-        # Dummy pricing: use inventory.price if exists, otherwise placeholder
-        base_price = float(inv_doc.get("price") or 100.0)
-        net = round(base_price, 2)
-        sell = round(base_price * 1.1, 2)  # simple 10% markup placeholder
+        # For now, we only support EUR and TRY explicitly
+        if target_currency not in {"EUR", "TRY"}:
+            raise AppError(
+                422,
+                "unsupported_currency",
+                f"Unsupported selling currency: {target_currency}",
+                {"target_currency": target_currency},
+            )
+
+        # Dummy pricing in base currency (EUR) from inventory
+        base_price_eur = float(inv_doc.get("price") or 100.0)
+
+        # P1.1: simple FX handling for TRY; functional currency is EUR
+        if target_currency == "EUR":
+            net = round(base_price_eur, 2)
+            sell = round(base_price_eur * 1.1, 2)
+            currency = "EUR"
+        else:
+            # SELLING IN TRY: convert EUR base to TRY using FXService
+            from decimal import Decimal, ROUND_HALF_UP
+            from app.services.fx import FXService
+
+            fx_svc = FXService(self.db)
+            fx = await fx_svc.get_rate(organization_id, quote="TRY")
+
+            rate = Decimal(str(fx.rate))
+            net_eur = Decimal(str(base_price_eur))
+            net_try_internal = (net_eur * rate).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)
+            sell_try_internal = (net_try_internal * Decimal("1.1")).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)
+
+            net = float(net_try_internal.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
+            sell = float(sell_try_internal.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
+            currency = "TRY"
+
+
+        # NOTE: net/sell/currency are now computed above based on target_currency
 
         restrictions = PriceRestriction(
             min_stay=1,

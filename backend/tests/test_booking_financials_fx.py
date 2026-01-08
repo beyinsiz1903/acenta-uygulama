@@ -81,7 +81,7 @@ async def _create_simple_booking(client, token: str) -> str:
         headers={**headers, "Idempotency-Key": "p0.3-fx-booking"},
         json=booking_payload,
     )
-    assert res.status_code == 200
+    assert res.status_code == 200, f"Booking creation failed: {res.status_code} - {res.text}"
     booking = res.json()
     return booking["booking_id"]
 

@@ -185,6 +185,32 @@ async def ensure_seed_data() -> None:
         ("organization_id", 1),
         ("match_id", 1),
     ], unique=True)
+
+    # FX rates seed for EUR/TRY (P1.1 non-EUR booking flow)
+    # Idempotent: inserts a demo rate only if no EUR/TRY rate exists yet.
+    if hasattr(db, "fx_rates"):
+        existing_fx = await db.fx_rates.find_one(
+            {
+                "organization_id": org_id,
+                "base": "EUR",
+                "quote": "TRY",
+            }
+        )
+        if not existing_fx:
+            await db.fx_rates.insert_one(
+                {
+                    "organization_id": org_id,
+                    "base": "EUR",
+                    "quote": "TRY",
+                    "rate": 34.25,
+                    "rate_basis": "QUOTE_PER_EUR",
+                    "as_of": now_utc(),
+                    "created_at": now_utc(),
+                    "updated_at": now_utc(),
+                    "created_by": DEFAULT_ADMIN_EMAIL,
+                    "updated_by": DEFAULT_ADMIN_EMAIL,
+                }
+            )
     await db.match_actions.create_index([
         ("organization_id", 1),
         ("status", 1),

@@ -29,6 +29,27 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
   const [ledgerError, setLedgerError] = useState("");
   const [cancelLoading, setCancelLoading] = useState(false);
 
+  async function handleCancel() {
+    if (!bookingId || !booking) return;
+    if (booking.status !== "CONFIRMED") return;
+    const ok = window.confirm("Bu rezervasyonu iptal etmek istediğinize emin misiniz?");
+    if (!ok) return;
+    setCancelLoading(true);
+    try {
+      const resp = await api.post(`/b2b/bookings/${bookingId}/cancel`, {});
+      const updated = {
+        ...booking,
+        status: resp.data?.status || "CANCELLED",
+      };
+      setBooking(updated);
+      toast.success("Rezervasyon iptal edildi.");
+    } catch (e) {
+      toast.error(apiErrorMessage(e));
+    } finally {
+      setCancelLoading(false);
+    }
+  }
+
   useEffect(() => {
     if (!open || !bookingId) {
       setError("");

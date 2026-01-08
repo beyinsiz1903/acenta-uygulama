@@ -14,6 +14,12 @@ async def async_client() -> AsyncGenerator[httpx.AsyncClient, None]:
     async with httpx.AsyncClient(base_url=BASE_URL, timeout=30.0) as client:
         yield client
 
+
+@pytest.fixture
+async def admin_headers(admin_token: str) -> dict:
+    """Convenience fixture returning Authorization header for admin."""
+    return {"Authorization": f"Bearer {admin_token}"}
+
 @pytest.fixture
 async def admin_token(async_client: httpx.AsyncClient) -> str:
     """Login as admin and return access token"""

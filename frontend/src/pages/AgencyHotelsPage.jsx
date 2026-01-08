@@ -542,8 +542,40 @@ export default function AgencyHotelsPage() {
                     >
                       Rezervasyonlarım
                     </Button>
-                    <Button size="sm" variant="outline" disabled>
-                      Voucher (Yakında)
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={async () => {
+                        if (!booking?.booking_id) return;
+                        const pdfUrl = `/b2b/bookings/${booking.booking_id}/voucher.pdf`;
+                        const htmlUrl = `/b2b/bookings/${booking.booking_id}/voucher`;
+                        try {
+                          const res = await api.get(pdfUrl, { responseType: "blob" });
+                          const blob = new Blob([res.data], { type: "application/pdf" });
+                          const url = window.URL.createObjectURL(blob);
+                          window.open(url, "_blank");
+                        } catch (err) {
+                          const msg = apiErrorMessage(err) || "";
+                          if (
+                            msg.toLowerCase().includes("pdf_not_configured") ||
+                            msg.toLowerCase().includes("pdf_render_failed")
+                          ) {
+                            toast({
+                              title: "Voucher PDF kullanılamıyor",
+                              description: "PDF şimdilik kullanılamıyor, HTML voucher açıldı.",
+                            });
+                            window.open(htmlUrl, "_blank");
+                          } else {
+                            toast({
+                              title: "Voucher açılamadı",
+                              description: msg,
+                              variant: "destructive",
+                            });
+                          }
+                        }
+                      }}
+                    >
+                      Voucher
                     </Button>
                   </div>
                 </div>
@@ -933,8 +965,40 @@ export default function AgencyHotelsPage() {
                     >
                       Rezervasyonlarım
                     </Button>
-                    <Button size="sm" variant="outline" disabled>
-                      Voucher (Yakında)
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={async () => {
+                        if (!booking?.booking_id) return;
+                        const pdfUrl = `/b2b/bookings/${booking.booking_id}/voucher.pdf`;
+                        const htmlUrl = `/b2b/bookings/${booking.booking_id}/voucher`;
+                        try {
+                          const res = await api.get(pdfUrl, { responseType: "blob" });
+                          const blob = new Blob([res.data], { type: "application/pdf" });
+                          const url = window.URL.createObjectURL(blob);
+                          window.open(url, "_blank");
+                        } catch (err) {
+                          const msg = apiErrorMessage(err) || "";
+                          if (
+                            msg.toLowerCase().includes("pdf_not_configured") ||
+                            msg.toLowerCase().includes("pdf_render_failed")
+                          ) {
+                            toast({
+                              title: "Voucher PDF kullanılamıyor",
+                              description: "PDF şimdilik kullanılamıyor, HTML voucher açıldı.",
+                            });
+                            window.open(htmlUrl, "_blank");
+                          } else {
+                            toast({
+                              title: "Voucher açılamadı",
+                              description: msg,
+                              variant: "destructive",
+                            });
+                          }
+                        }
+                      }}
+                    >
+                      Voucher
                     </Button>
                   </div>
                 </div>

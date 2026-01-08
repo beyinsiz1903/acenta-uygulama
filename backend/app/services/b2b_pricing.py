@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 from typing import List, Dict, Any
+from decimal import Decimal, ROUND_HALF_UP
 
 from bson import ObjectId
 from app.schemas_b2b_quotes import (
@@ -14,6 +15,7 @@ from app.schemas_b2b_quotes import (
 )
 from app.errors import AppError
 from app.utils import now_utc
+from app.services.pricing_rules import PricingRulesService
 
 
 class B2BPricingService:
@@ -98,6 +100,7 @@ class B2BPricingService:
                     "check_out": item.check_out.isoformat(),
                 },
             )
+
         # For now, we only support EUR and TRY explicitly
         if target_currency not in {"EUR", "TRY"}:
             raise AppError(
@@ -107,32 +110,45 @@ class B2BPricingService:
                 {"target_currency": target_currency},
             )
 
-        # Dummy pricing in base currency (EUR) from inventory
+        # Base price in functional currency (EUR) from inventory
         base_price_eur = float(inv_doc.get("price") or 100.0)
+        net_eur_internal = Decimal(str(base_price_eur))
 
-        # P1.1: simple FX handling for TRY; functional currency is EUR
+        # P1.2: resolve markup from pricing rules
+        rules_svc = PricingRulesService(self.db)
+        # QuoteItemRequest.check_in is already a date; service normalises datetime/date
+        markup_percent = await rules_svc.resolve_markup_percent(
+            organization_id,
+            agency_id=agency_id,
+            product_id=item.product_id,
+            product_type="hotel",
+            check_in=item.check_in,
+        )
+
+        factor = Decimal("1") + (Decimal(str(markup_percent)) / Decimal("100"))
+
         if target_currency == "EUR":
-            net = round(base_price_eur, 2)
-            sell = round(base_price_eur * 1.1, 2)
+            # EUR selling: apply markup on EUR net
+            sell_eur_internal = (net_eur_internal * factor).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)
+            net = float(net_eur_internal.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
+            sell = float(sell_eur_internal.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
             currency = "EUR"
         else:
-            # SELLING IN TRY: convert EUR base to TRY using FXService
-            from decimal import Decimal, ROUND_HALF_UP
+            # SELLING IN TRY: convert EUR base to TRY using FXService, then apply markup in TRY
             from app.services.fx import FXService
 
             fx_svc = FXService(self.db)
             fx = await fx_svc.get_rate(organization_id, quote="TRY")
 
             rate = Decimal(str(fx.rate))
-            net_eur = Decimal(str(base_price_eur))
-            net_try_internal = (net_eur * rate).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)
-            sell_try_internal = (net_try_internal * Decimal("1.1")).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)
+            net_try_internal = (net_eur_internal * rate).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)
+            sell_try_internal = (net_try_internal * factor).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)
 
             net = float(net_try_internal.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
             sell = float(sell_try_internal.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
             currency = "TRY"
 
-        # NOTE: net/sell/currency are now computed above based on target_currency
+        # NOTE: net/sell/currency are now computed above based on target_currency and rules
 
         restrictions = PriceRestriction(
             min_stay=1,

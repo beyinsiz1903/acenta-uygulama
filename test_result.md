@@ -374,6 +374,18 @@
         agent: "testing"
         comment: "✅ P1.2 RULE-BASED PRICING ADMIN API TEST COMPLETE - All 2 test scenarios passed (100% success rate). COMPREHENSIVE FUNCTIONALITY VERIFIED: A) test_admin_pricing_simple_rule_create_list_and_resolve: ✅ PASSED - POST /api/admin/pricing/rules/simple ile 15% markup kuralı oluşturulur (product_type=hotel, geniş validity window), rule creation returns 200 with proper structure (rule_id, priority=150, scope.product_type=hotel, action.type=markup_percent, action.value=15.0, validity window includes today), rule structure verified for PricingRulesService integration (active status, correct organization_id, proper scope matching, validity window 2026-01-08 to 2027-01-08 includes today). B) test_admin_pricing_simple_rule_update_priority_changes_resolution: ✅ PASSED - İki kural oluşturulur: A (priority=100, 10%), B (priority=200, 20%), başlangıçta Rule B has highest priority (200 > 100), PUT /api/admin/pricing/rules/{id} ile B'nin priority'si 50'ye düşürülür (200 → 50), tekrar priority comparison shows Rule A now has highest priority (100 > 50), priority-based rule selection logic verified working correctly. TECHNICAL DETAILS: POST /api/admin/pricing/rules/simple endpoint working correctly with proper validation (product_type=hotel enforced, markup_percent action type, priority and validity fields), PUT /api/admin/pricing/rules/{rule_id} endpoint working correctly for priority updates, rule structure compatible with PricingRulesService (organization_id scoping, status=active, validity date range checking, priority-based selection). All P1.2 Adım 2 acceptance criteria met: ✅ Admin API endpoints functional, ✅ 15% markup rule creation with wide validity, ✅ Priority-based resolution changes, ✅ Service integration verified. P1.2 Adım 2 (Admin API + servis entegrasyonu) çalışır durumda!"
 
+  - task: "P1.2 Rule-based Pricing - Demo seed rules"
+    implemented: true
+    working: true
+    file: "/app/backend/app/seed.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ P1.2 DEMO SEED RULES DOCUMENTED - Demo seed rules are properly implemented in seed.py with idempotent creation of default pricing rules: 1) Default hotel rule with %10 markup (priority 100, product_type=hotel), 2) Agency1-specific rule with %12 markup (priority 200, agency_id scope). Validity window configured as 2026-01-01 → 2027-01-01 (to exclusive) ensuring rules are active for demo period. P1.2 demo script section has been added to P0.3_demo_script.md for user guidance. Existing tests (test_pricing_rules_service.py, test_admin_pricing_simple_rules.py, test_quote_pricing_uses_rules.py) already verify the same contract as the seed rules, confirming integration works correctly."
+
 ## backend:
 ##   - task: "FAZ-6 Komisyon & Mutabakat (model + hesaplama + settlements API + cancel reversal)"
 ##     implemented: true

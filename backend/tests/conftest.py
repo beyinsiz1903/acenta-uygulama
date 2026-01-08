@@ -6,7 +6,7 @@ import httpx
 from typing import AsyncGenerator
 
 # Use production URL from frontend/.env
-BASE_URL = "https://traveledger.preview.emergentagent.com"
+BASE_URL = "https://booking-amender.preview.emergentagent.com"
 
 @pytest.fixture
 async def async_client() -> AsyncGenerator[httpx.AsyncClient, None]:

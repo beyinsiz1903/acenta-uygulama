@@ -64,7 +64,7 @@ async def _create_simple_booking(client, token: str) -> str:
         "client_context": {"source": "p0.3-fx-test"},
     }
     res = await client.post("/api/b2b/quotes", headers=headers, json=quote_payload)
-    assert res.status_code == 200
+    assert res.status_code == 200, f"Quote creation failed: {res.status_code} - {res.text}"
     quote = res.json()
     quote_id = quote["quote_id"]
 

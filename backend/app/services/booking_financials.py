@@ -31,6 +31,8 @@ class BookingFinancialsService:
         currency = booking.get("currency")
         amounts = booking.get("amounts") or {}
         sell_total = float(amounts.get("sell", 0.0))
+        sell_total_eur = float(amounts.get("sell_eur", sell_total))
+        fx = booking.get("fx") or None
 
         now = now_utc()
         flt = {"organization_id": organization_id, "booking_id": booking_id_str}
@@ -43,6 +45,8 @@ class BookingFinancialsService:
                     "booking_id": booking_id_str,
                     "currency": currency,
                     "sell_total": sell_total,
+                    "sell_total_eur": sell_total_eur,
+                    "fx_snapshot": fx,
                     "refunded_total": 0.0,
                     "penalty_total": sell_total,
                     "refunds_applied": [],

@@ -289,7 +289,6 @@ class BookingFinanceService:
         refund_eur_dec = (sell_eur_dec - penalty_eur_dec).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
         penalty_eur = float(penalty_eur_dec)
-        refund_eur = float(refund_eur_dec)
 
         # Get agency account
         agency_account = await self.db.finance_accounts.find_one(

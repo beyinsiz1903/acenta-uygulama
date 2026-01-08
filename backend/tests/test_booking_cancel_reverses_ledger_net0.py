@@ -49,7 +49,7 @@ async def test_booking_cancel_creates_net_zero_ledger_and_full_refund(async_clie
 
     booking_id = str(booking["_id"])
 
-    # 2) Cancel endpoint'i çağır
+    # 3) Cancel endpoint'i çağır
     resp = await client.post(f"/api/b2b/bookings/{booking_id}/cancel", json={}, headers=headers)
     assert resp.status_code == 200, resp.text
     data = resp.json()

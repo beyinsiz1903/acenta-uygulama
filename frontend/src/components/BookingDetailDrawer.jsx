@@ -42,7 +42,14 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
         status: resp.data?.status || "CANCELLED",
       };
       setBooking(updated);
-      toast.success("Rezervasyon iptal edildi.");
+      const { refund_eur, penalty_eur } = resp.data || {};
+      if (Number.isFinite(refund_eur) && Number.isFinite(penalty_eur)) {
+        toast.success(
+          `Rezervasyon iptal edildi. İade: ${refund_eur.toFixed(2)} EUR, Ceza: ${penalty_eur.toFixed(2)} EUR`
+        );
+      } else {
+        toast.success("Rezervasyon iptal edildi.");
+      }
     } catch (e) {
       toast.error(apiErrorMessage(e));
     } finally {

@@ -34,6 +34,7 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
       setError("");
       setLedgerSummary(null);
       setLedgerError("");
+      setCancelLoading(false);
       return;
     }
 

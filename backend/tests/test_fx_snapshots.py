@@ -111,7 +111,7 @@ async def test_fx_snapshots_freeze_rate_per_booking(async_client, admin_token, a
         }
         res = await client.post(
             "/api/b2b/bookings",
-            headers={**headers, "Idempotency-Key": f"p0.3-fx-snap-{rate_hint}"},
+            headers={**headers, "Idempotency-Key": f"p0.3-fx-snap-{rate_hint}-{uuid.uuid4().hex[:8]}"},
             json=booking_payload,
         )
         assert res.status_code == 200

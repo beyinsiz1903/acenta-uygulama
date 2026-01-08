@@ -172,7 +172,13 @@ class B2BPricingService:
         # Price each item
         offers: List[QuoteOffer] = []
         for idx, item in enumerate(payload.items):
-            offer = await self._price_item(organization_id, agency_id, channel_id, item)
+            offer = await self._price_item(
+                organization_id,
+                agency_id,
+                channel_id,
+                item,
+                target_currency=target_currency,
+            )
             offer.item_key = str(idx)
             offers.append(offer)
 

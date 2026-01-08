@@ -84,6 +84,8 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
       setError("");
       setVoucherToken(null);
       setVoucherLoading(false);
+      setLedgerSummary(null);
+      setLedgerError("");
     }
     onOpenChange?.(next);
   };

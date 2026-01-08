@@ -242,6 +242,77 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
           {!loading && !error && booking && (
             <div className="space-y-4">
               <div>
+
+              {booking && (
+                <>
+                  <Separator className="my-4" />
+                  <div>
+                    <h3 className="text-sm font-medium text-muted-foreground mb-2">
+                      Ledger Özeti
+                    </h3>
+                    {ledgerLoading && (
+                      <p className="text-xs text-muted-foreground">Ledger özeti yükleniyor...</p>
+                    )}
+                    {!ledgerLoading && ledgerError && (
+                      <p className="text-xs text-destructive">{ledgerError}</p>
+                    )}
+                    {!ledgerLoading && !ledgerError && ledgerSummary && (
+                      <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-xs">
+                        <div className="flex flex-col">
+                          <span className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                            Para Birimi
+                          </span>
+                          <span>{ledgerSummary.currency}</span>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                            Kayıt Sayısı
+                          </span>
+                          <span>{ledgerSummary.postings_count}</span>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                            Toplam Debit
+                          </span>
+                          <span>{Number(ledgerSummary.total_debit).toFixed(2)}</span>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                            Toplam Credit
+                          </span>
+                          <span>{Number(ledgerSummary.total_credit).toFixed(2)}</span>
+                        </div>
+                        <div className="flex flex-col col-span-2">
+                          <span className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                            Fark (Debit - Credit)
+                          </span>
+                          <span>{Number(ledgerSummary.diff).toFixed(4)}</span>
+                        </div>
+                        {ledgerSummary.events && ledgerSummary.events.length > 0 && (
+                          <div className="flex flex-col col-span-2">
+                            <span className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                              Event Seti
+                            </span>
+                            <span>{ledgerSummary.events.join(", ")}</span>
+                          </div>
+                        )}
+                        <div className="flex flex-col col-span-2">
+                          <span className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                            Kaynak Koleksiyon
+                          </span>
+                          <span>{ledgerSummary.source_collection}</span>
+                        </div>
+                      </div>
+                    )}
+                    {!ledgerLoading && !ledgerError && !ledgerSummary && (
+                      <p className="text-xs text-muted-foreground">
+                        Bu booking için henüz ledger kaydı bulunamadı.
+                      </p>
+                    )}
+                  </div>
+                </>
+              )}
+
                 <h3 className="text-sm font-medium text-muted-foreground mb-2">
                   Özet / Summary
                 </h3>

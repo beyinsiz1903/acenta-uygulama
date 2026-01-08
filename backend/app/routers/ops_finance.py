@@ -462,6 +462,97 @@ async def get_booking_financials(
     return doc
 
 
+@router.get("/bookings/{booking_id}/ledger-summary")
+async def get_booking_ledger_summary(
+    booking_id: str,
+    current_user=Depends(require_roles(["admin", "ops", "super_admin"])),
+    db=Depends(get_db),
+):
+    """Return simple ledger balance proof for a booking.
+
+    - Scope: source.type="booking" && source.id=booking_id
+    - Implementation: önce ledger_postings, yoksa ledger_entries fallback
+    - Bu endpoint yeni business rule eklemez; sadece mevcut ledger durumunu
+      ops tarafında kolay okunabilir hale getirir.
+    """
+    org_id = current_user["organization_id"]
+
+    # Booking'in bu org'da var oldugunu dogrula
+    try:
+        booking_oid = ObjectId(booking_id)
+    except Exception:
+        raise AppError(
+            status_code=404,
+            code="booking_not_found",
+            message="Booking not found",
+        )
+
+    booking = await db.bookings.find_one({"_id": booking_oid, "organization_id": org_id})
+    if not booking:
+        raise AppError(
+            status_code=404,
+            code="booking_not_found",
+            message="Booking not found",
+        )
+
+    query = {
+        "organization_id": org_id,
+        "source.type": "booking",
+        "source.id": booking_id,
+    }
+
+    # 1) Önce ledger_postings uzerinden toplamlar
+    postings = await db.ledger_postings.find(query).to_list(length=1000)
+    source_collection = "ledger_postings"
+
+    if postings:
+        total_debit = sum(float(p.get("debit", 0.0) or 0.0) for p in postings)
+        total_credit = sum(float(p.get("credit", 0.0) or 0.0) for p in postings)
+        events = sorted({p.get("event") for p in postings if p.get("event")})
+        currency = postings[0].get("currency", "EUR")
+        count = len(postings)
+    else:
+        # 2) postings yoksa ledger_entries fallback
+        entries = await db.ledger_entries.find(query).to_list(length=1000)
+        if entries:
+            source_collection = "ledger_entries"
+            total_debit = sum(
+                float(e.get("amount", 0.0) or 0.0)
+                for e in entries
+                if e.get("direction") == "debit"
+            )
+            total_credit = sum(
+                float(e.get("amount", 0.0) or 0.0)
+                for e in entries
+                if e.get("direction") == "credit"
+            )
+            events = sorted({e.get("event") for e in entries if e.get("event")})
+            currency = entries[0].get("currency", "EUR")
+            count = len(entries)
+        else:
+            source_collection = "none"
+            total_debit = 0.0
+            total_credit = 0.0
+            events: list[str] = []
+            currency = "EUR"
+            count = 0
+
+    diff = total_debit - total_credit
+
+    return {
+        "booking_id": booking_id,
+        "organization_id": org_id,
+        "currency": currency,
+        "source_collection": source_collection,
+        "postings_count": count,
+        "total_debit": total_debit,
+        "total_credit": total_credit,
+        "diff": diff,
+        "events": events,
+    }
+
+
+
 @router.post("/refunds/{case_id}/reject")
 async def reject_refund_case(
     case_id: str,

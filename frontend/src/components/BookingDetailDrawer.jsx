@@ -31,6 +31,8 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
   useEffect(() => {
     if (!open || !bookingId) {
       setError("");
+      setLedgerSummary(null);
+      setLedgerError("");
       return;
     }
 

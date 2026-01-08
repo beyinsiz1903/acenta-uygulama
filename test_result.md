@@ -1420,7 +1420,20 @@
   - agent: "testing"
     message: "✅ KISA BACKEND REGRESSION TEST COMPLETE - All 6 test scenarios passed (100% success rate). TURKISH REQUIREMENTS FULLY VERIFIED: 1) Admin login (admin@acenta.test/admin123) successful with proper token, 2) GET /api/admin/catalog/products?type=hotel&limit=10 found suitable hotel with type='hotel', status='active', location set (Istanbul, TR), and EUR rate plans, 3) GET /api/admin/catalog/rate-plans verified active EUR BB rate plan with base_net_price=100.0, 4) POST /api/admin/catalog/products/{id}/versions created draft version successfully, 5) POST /api/admin/catalog/products/{id}/versions/{version_id}/publish returned 200 with product_id, published_version=2, status='published' (all required fields verified), 6) Seed data examples provided in report. CRITICAL FINDING: Seed'li hotel'in zaten active EUR BB rate_plan'ı var, bu yüzden publish guard passed and returned 200 as expected. Catalog seed data and publish guard functionality working correctly per Turkish specification."
 
-## frontend:
+## backend:
+  - task: "P1.x After-sales v1 - Cancel flow backend"
+    implemented: true
+    working: true
+    file: "/app/backend/tests/test_booking_cancel_reverses_ledger_net0.py, /app/backend/app/routers/b2b_bookings.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ P1.X AFTER-SALES V1 CANCEL FLOW BACKEND TEST COMPLETE - test_booking_cancel_reverses_ledger_net0.py PASSED (100% success rate). COMPREHENSIVE VERIFICATION: A) Test Fix Applied: Updated test to find CONFIRMED bookings that belong to the correct agency (agency_id filter added) since cancel endpoint requires booking ownership verification. B) Cancel Endpoint Working: POST /api/b2b/bookings/{booking_id}/cancel working correctly - returns 200 with booking_id, status='CANCELLED', refund_status='COMPLETED', booking status updated in database, idempotent behavior (returns same response if already cancelled). C) Financial Integration: booking_financials.refunded_total set to sell_total_eur with penalty_total=0.0 (full refund, no penalty), BOOKING_CANCELLED ledger posting created via BookingFinanceService.post_booking_cancelled(). D) Ledger Balance Verification: Test validates that BOOKING_CONFIRMED + BOOKING_CANCELLED ledger postings create net-zero balance (total_debit ≈ total_credit), event amounts are equal in absolute terms (confirmed_amount ≈ cancelled_amount), proper double-entry accounting maintained. E) Test Environment: Found 5 CONFIRMED bookings for correct agency (92322c2f-7f0d-43ae-8839-2b76e701afc6), test successfully cancelled booking and verified all financial contracts. CRITICAL CONTRACTS VERIFIED: ✅ Booking.status = 'CANCELLED', ✅ booking_financials.refunded_total ≈ sell_total_eur, penalty_total ≈ 0, ✅ Ledger postings balanced (CONFIRMED + CANCELLED events net to ~0), ✅ Mutlak tutarlar eşit (CONFIRMED ve CANCELLED event'lerinin absolute amounts equal). P1.x After-sales v1 cancel flow backend is production-ready and meets all acceptance criteria."
+
+## agent_communication:
   - task: "Admin Email Logs UI (Email Aktiviteleri) ve NotFoundPage düzeltmesi"
     implemented: true
     working: true

@@ -72,7 +72,7 @@ async def _create_simple_booking(client, token: str) -> str:
     # 3) Create booking
     booking_payload = {
         "quote_id": quote_id,
-        "customer": {"name": "FX Test", "email": "fx@test.local"},
+        "customer": {"name": "FX Test", "email": "fx@test.com"},
         "travellers": [{"first_name": "FX", "last_name": "Test"}],
         "notes": "P0.3 FX test booking",
     }

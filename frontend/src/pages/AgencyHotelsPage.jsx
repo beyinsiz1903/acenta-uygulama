@@ -46,6 +46,9 @@ export default function AgencyHotelsPage() {
   const [searchResults, setSearchResults] = useState([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchError, setSearchError] = useState("");
+  const [cityError, setCityError] = useState("");
+  const [dateError, setDateError] = useState("");
+
 
   const [selectedOffer, setSelectedOffer] = useState(null); // { product_id, rate_plan_id, ... }
   const [quote, setQuote] = useState(null); // { quote_id, expires_at, offer }
@@ -123,6 +126,8 @@ export default function AgencyHotelsPage() {
         (statusFilter === "open" && statusKey === "satışa açık") ||
         (statusFilter === "restricted" && statusKey === "kısıtlı") ||
         (statusFilter === "closed" && statusKey === "satışa kapalı");
+
+  const currentStep = quote ? 3 : searchResults.length > 0 ? 2 : 1;
 
       return matchesQuery && matchesLocation && matchesStatus;
     });

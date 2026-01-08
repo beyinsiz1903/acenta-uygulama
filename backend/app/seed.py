@@ -222,6 +222,13 @@ async def ensure_seed_data() -> None:
         ("organization_id", 1),
     ], unique=True)
 
+    # P1.4: org-level cancel penalty percent (flat 20%)
+    await db.organizations.update_one(
+        {"_id": org_id},
+        {"$set": {"settings.cancel_penalty_percent": 20.0}},
+        upsert=False,
+    )
+
     # P1.2: pricing_rules indexes
     await db.pricing_rules.create_index([
         ("organization_id", 1),

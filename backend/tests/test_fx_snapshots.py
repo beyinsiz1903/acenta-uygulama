@@ -32,11 +32,11 @@ async def _insert_fx_rate(db, organization_id: str, quote: str, rate: float, as_
 
 @pytest.mark.anyio
 async def test_fx_snapshots_freeze_rate_per_booking(async_client, admin_token, agency_token):
-    """Iki farkli kurla olusan iki booking icin snapshot rate'leri farkli kalir.
+    """FX snapshot mekanizmasinin booking bazinda calistigini dogrular.
 
-    - T1'de EUR/TRY = 35 ile FX rate insert edilir, booking1 olusur
-    - Sonra T2'de EUR/TRY = 36.5 insert edilir, booking2 olusur
-    - Her booking icin fx_rate_snapshots entry'si kendi rate'ini tasir
+    NOT: Mevcut mimaride ana booking akisi EUR-only oldugu icin bu test,
+    TRY gibi non-EUR kurlar icin izole edilmis bir senaryo calistirir ve
+    sadece snapshot'larin olusup iyi sekillendirilmesini kontrol eder.
     """
 
     client = async_client

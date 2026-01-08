@@ -23,6 +23,17 @@ def login_agency():
     user = data["user"]
     return data["access_token"], user["organization_id"], user.get("agency_id"), user["email"]
 
+def login_admin():
+    """Login as admin user and return token, org_id, email"""
+    r = requests.post(
+        f"{BASE_URL}/api/auth/login",
+        json={"email": "admin@acenta.test", "password": "admin123"},
+    )
+    assert r.status_code == 200, f"Admin login failed: {r.text}"
+    data = r.json()
+    user = data["user"]
+    return data["access_token"], user["organization_id"], user["email"]
+
 def test_p02_search_quote_booking_chain():
     """Test P0.2 Search→Quote→Booking backend chain with Turkish requirements"""
     print("\n" + "=" * 80)

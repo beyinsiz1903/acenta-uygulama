@@ -66,8 +66,8 @@ async def test_fx_snapshots_freeze_rate_per_booking(async_client, admin_token, a
         # at different times after inserting rates ensures different snapshots.
         headers = {"Authorization": f"Bearer {agency_token}"}
         today_local = _now().date()
-        check_in = today_local.replace(day=today_local.day + 1)
-        check_out = today_local.replace(day=today_local.day + 2)
+        check_in = today_local.replace(year=2026, month=1, day=10)
+        check_out = today_local.replace(year=2026, month=1, day=12)
         params = {
             "city": "Istanbul",
             "check_in": check_in.isoformat(),

@@ -42,13 +42,13 @@ async def test_quote_pricing_uses_rules_for_agency1_vs_other(async_client, admin
     # Rule 1: Default hotel rule (10% markup, priority 100)
     # Rule 2: Agency1-specific rule (12% markup, priority 200)
     
-    # Clean up existing test rules first
+    # Clean up ALL existing test rules first
     await db.pricing_rules.delete_many({
         "organization_id": org_id,
-        "notes": {"$in": ["test_p12_agency1_rule", "test_p12_default_rule"]}
+        "notes": {"$regex": "test_"}
     })
     
-    # Create default hotel rule (10% markup)
+    # Create default hotel rule (10% markup) - highest priority for non-agency-specific
     default_rule = {
         "organization_id": org_id,
         "status": "active",
@@ -60,7 +60,7 @@ async def test_quote_pricing_uses_rules_for_agency1_vs_other(async_client, admin
     }
     await db.pricing_rules.insert_one(default_rule)
     
-    # Create agency1-specific rule (12% markup)
+    # Create agency1-specific rule (12% markup) - higher priority
     agency1_rule = {
         "organization_id": org_id,
         "status": "active",

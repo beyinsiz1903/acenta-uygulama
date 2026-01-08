@@ -429,6 +429,3 @@ async def update_simple_rule(
         updated_at=doc.get("updated_at", now_utc()),
         created_by_email=doc.get("created_by_email"),
     )
-
-        )
-    return out

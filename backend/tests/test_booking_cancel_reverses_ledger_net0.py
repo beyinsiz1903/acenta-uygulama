@@ -73,7 +73,7 @@ async def test_booking_cancel_creates_net_zero_ledger_and_full_refund(async_clie
     assert refunded_total == pytest.approx(sell_total_eur)
     assert penalty_total == pytest.approx(0.0)
 
-    # 5) Ledger postings: BOOKING_CONFIRMED + BOOKING_CANCELLED net 0
+    # 6) Ledger postings: BOOKING_CONFIRMED + BOOKING_CANCELLED net 0
     postings = await db.ledger_postings.find(
         {
             "organization_id": org_id,

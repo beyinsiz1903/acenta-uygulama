@@ -71,6 +71,7 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
     }
 
     load();
+    loadLedger();
 
     return () => {
       cancelled = true;

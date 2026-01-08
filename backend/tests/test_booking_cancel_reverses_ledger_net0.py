@@ -27,13 +27,27 @@ async def test_booking_cancel_creates_net_zero_ledger_and_full_refund(async_clie
     headers = {"Authorization": f"Bearer {agency_token}"}
     db = await get_db()
 
-    # 1) Mevcut bir CONFIRMED booking bul (P0.2 akışının ürettiği)
-    booking = await db.bookings.find_one({"status": "CONFIRMED"})
+    # 1) Get agency info from token to find bookings that belong to this agency
+    # First, get user info from the agency token
+    user_resp = await client.get("/api/auth/me", headers=headers)
+    assert user_resp.status_code == 200, f"Failed to get user info: {user_resp.text}"
+    user_data = user_resp.json()
+    agency_id = user_data.get("agency_id")
+    org_id = user_data.get("organization_id")
+    
+    if not agency_id:
+        pytest.skip("Agency user does not have agency_id; cannot test booking cancellation.")
+
+    # 2) Find a CONFIRMED booking that belongs to this agency
+    booking = await db.bookings.find_one({
+        "status": "CONFIRMED",
+        "organization_id": org_id,
+        "agency_id": agency_id
+    })
     if not booking:
-        pytest.skip("No CONFIRMED booking found; P0.2 flow must create at least one booking for this test.")
+        pytest.skip("No CONFIRMED booking found for this agency; P0.2 flow must create at least one booking for this test.")
 
     booking_id = str(booking["_id"])
-    org_id = booking["organization_id"]
 
     # 2) Cancel endpoint'i çağır
     resp = await client.post(f"/api/b2b/bookings/{booking_id}/cancel", json={}, headers=headers)

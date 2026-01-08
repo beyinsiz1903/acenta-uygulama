@@ -202,24 +202,25 @@ async def cancel_b2b_booking(
         occurred_at=now,
     )
 
-    # Update booking_financials refunded_total (full refund, no penalty)
+    # Update booking_financials refunded_total / penalty_total using current values
     bf = await db.booking_financials.find_one(
         {"organization_id": org_id, "booking_id": booking_id}
     )
-    if bf:
-        sell_total_eur = float(bf.get("sell_total_eur", 0.0))
-        await db.booking_financials.update_one(
-            {"organization_id": org_id, "booking_id": booking_id},
-            {
-                "$set": {
-                    "refunded_total": sell_total_eur,
-                    "penalty_total": 0.0,
-                }
-            },
-        )
 
-    return {
+    refund_eur = None
+    penalty_eur = None
+    if bf:
+        refund_eur = float(bf.get("refunded_total", 0.0))
+        penalty_eur = float(bf.get("penalty_total", 0.0))
+
+    resp = {
         "booking_id": booking_id,
         "status": "CANCELLED",
         "refund_status": "COMPLETED",
     }
+    if refund_eur is not None:
+        resp["refund_eur"] = refund_eur
+    if penalty_eur is not None:
+        resp["penalty_eur"] = penalty_eur
+
+    return resp

@@ -54,6 +54,22 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
       }
     }
 
+
+    async function loadLedger() {
+      if (!bookingId) return;
+      setLedgerLoading(true);
+      setLedgerError("");
+      try {
+        const resp = await api.get(`/ops/finance/bookings/${bookingId}/ledger-summary`);
+        setLedgerSummary(resp.data || null);
+      } catch (e) {
+        setLedgerError(apiErrorMessage(e));
+        setLedgerSummary(null);
+      } finally {
+        setLedgerLoading(false);
+      }
+    }
+
     load();
 
     return () => {

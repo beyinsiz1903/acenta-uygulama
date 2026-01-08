@@ -120,3 +120,106 @@ async def create_refund_request(
         created_by=user.get("email"),
     )
     return case
+
+
+
+@router.post(
+    "/bookings/{booking_id}/cancel",
+    dependencies=[Depends(require_roles(["agency_agent", "agency_admin"]))],
+)
+async def cancel_b2b_booking(
+    booking_id: str,
+    payload: dict | None = None,
+    user=Depends(get_current_user),
+    db=Depends(get_db),
+):
+    """Cancel a CONFIRMED booking (after-sales v1).
+
+    - Idempotent: if booking is already CANCELLED, returns current state.
+    - Creates BOOKING_CANCELLED ledger posting as exact reversal of
+      BOOKING_CONFIRMED in EUR.
+    """
+    org_id = user.get("organization_id")
+    agency_id = user.get("agency_id")
+    if not agency_id:
+        raise AppError(403, "forbidden", "User is not bound to an agency")
+
+    from bson import ObjectId
+
+    try:
+        oid = ObjectId(booking_id)
+    except Exception:
+        raise AppError(404, "booking_not_found", "Booking not found", {"booking_id": booking_id})
+
+    booking = await db.bookings.find_one(
+        {"_id": oid, "organization_id": org_id, "agency_id": agency_id}
+    )
+    if not booking:
+        raise AppError(404, "booking_not_found", "Booking not found", {"booking_id": booking_id})
+
+    status = booking.get("status")
+    if status == "CANCELLED":
+        # Idempotent behaviour: return current state
+        return {
+            "booking_id": booking_id,
+            "status": status,
+            "refund_status": "COMPLETED",
+        }
+
+    if status != "CONFIRMED":
+        raise AppError(
+            409,
+            "cannot_cancel_in_status",
+            f"Cannot cancel booking in status {status}",
+            {"booking_id": booking_id, "status": status},
+        )
+
+    reason = (payload or {}).get("reason", "customer_request")
+
+    # Update booking status
+    from app.utils import now_utc
+
+    now = now_utc()
+    await db.bookings.update_one(
+        {"_id": oid, "organization_id": org_id},
+        {
+            "$set": {
+                "status": "CANCELLED",
+                "cancel_reason": reason,
+                "cancelled_at": now,
+            }
+        },
+    )
+
+    # Post BOOKING_CANCELLED event to ledger
+    from app.services.booking_finance import BookingFinanceService
+
+    bfs = BookingFinanceService(db)
+    await bfs.post_booking_cancelled(
+        organization_id=org_id,
+        booking_id=booking_id,
+        agency_id=agency_id,
+        occurred_at=now,
+    )
+
+    # Update booking_financials refunded_total (full refund, no penalty)
+    bf = await db.booking_financials.find_one(
+        {"organization_id": org_id, "booking_id": booking_id}
+    )
+    if bf:
+        sell_total_eur = float(bf.get("sell_total_eur", 0.0))
+        await db.booking_financials.update_one(
+            {"organization_id": org_id, "booking_id": booking_id},
+            {
+                "$set": {
+                    "refunded_total": sell_total_eur,
+                    "penalty_total": 0.0,
+                }
+            },
+        )
+
+    return {
+        "booking_id": booking_id,
+        "status": "CANCELLED",
+        "refund_status": "COMPLETED",
+    }

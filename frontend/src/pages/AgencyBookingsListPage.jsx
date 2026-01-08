@@ -40,6 +40,12 @@ export default function AgencyBookingsListPage() {
   const [arrivalFilter, setArrivalFilter] = useState("all"); // all|today
 
   useEffect(() => {
+    const url = new URL(window.location.href);
+    const newId = url.searchParams.get("new");
+    if (newId) {
+      setHighlightId(newId);
+      setTimeout(() => setHighlightId(null), 8000);
+    }
     loadBookings();
   }, []);
 

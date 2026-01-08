@@ -206,5 +206,10 @@ async def test_quote_pricing_uses_rules_for_agency1_vs_other(async_client, admin
     ratio_other = sell_other / net_other if net_other > 0 else 0.0
 
     # Beklenen oranlar: 1.12 ve 1.10 civari (tolerans ile)
+    print(f"Agency1 ratio: {ratio_a1} (expected ~1.12)")
+    print(f"Other agency ratio: {ratio_other} (expected ~1.10)")
+    print(f"Agency1 net: {net_a1}, sell: {sell_a1}")
+    print(f"Other agency net: {net_other}, sell: {sell_other}")
+    
     assert 1.11 <= ratio_a1 <= 1.13, f"agency1 markup ratio expected ~1.12, got {ratio_a1}"
     assert 1.09 <= ratio_other <= 1.11, f"other agency markup ratio expected ~1.10, got {ratio_other}"

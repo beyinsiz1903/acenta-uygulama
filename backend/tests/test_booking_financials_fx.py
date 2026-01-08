@@ -104,8 +104,10 @@ async def test_booking_financials_and_fx_snapshot_consistency(async_client, admi
     # 2) Admin context ile booking_financials snapshot'ini al
     headers_admin = {"Authorization": f"Bearer {admin_token}"}
     res = await client.get(f"/api/ops/finance/bookings/{booking_id}/financials", headers=headers_admin)
-    assert res.status_code == 200
+    assert res.status_code == 200, f"Booking financials failed: {res.status_code} - {res.text}"
     fin = res.json()
+    
+    print(f"DEBUG: Booking financials response: {fin}")
 
     sell_total = float(fin.get("sell_total", 0.0))
     assert sell_total > 0
@@ -115,6 +117,15 @@ async def test_booking_financials_and_fx_snapshot_consistency(async_client, admi
     # 3) FX snapshot'ini bul (booking context)
     db = await get_db()
     org_id = fin["organization_id"]
+    
+    # Debug: Check if any FX snapshots exist
+    all_snapshots = await db.fx_rate_snapshots.find({"organization_id": org_id}).to_list(length=10)
+    print(f"DEBUG: All FX snapshots for org {org_id}: {all_snapshots}")
+    
+    # Debug: Check if any FX rates exist
+    all_rates = await db.fx_rates.find({"organization_id": org_id}).to_list(length=10)
+    print(f"DEBUG: All FX rates for org {org_id}: {all_rates}")
+    
     snap = await db.fx_rate_snapshots.find_one(
         {
             "organization_id": org_id,

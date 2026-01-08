@@ -27,6 +27,7 @@ export default function AgencyBookingsListPage() {
   const user = getUser();
 
   const [bookings, setBookings] = useState([]);
+  const [highlightId, setHighlightId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedId, setSelectedId] = useState(null);

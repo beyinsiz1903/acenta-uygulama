@@ -32,9 +32,9 @@ async def test_quote_pricing_uses_rules_for_agency1_vs_other(async_client, admin
     agency1_id = agency1["_id"]
 
     # Demo'da ikinci bir acente varsa onu "other" agency olarak kullan, yoksa SKIP
-    other_agency = await db.agencies.find_one({"organization_id": org_id, "_id": {"$ne": agency1_id}})
+    other_agency = await db.agencies.find_one({"organization_id": org_id, "name": "Demo Acente B"})
     if not other_agency:
-        pytest.skip("No second agency found to compare rule-based pricing")
+        pytest.skip("No second agency (Demo Acente B) found to compare rule-based pricing")
 
     other_agency_id = other_agency["_id"]
 

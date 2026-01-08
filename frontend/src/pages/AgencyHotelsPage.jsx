@@ -201,7 +201,7 @@ export default function AgencyHotelsPage() {
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <div className="space-y-1">
               <p className="text-xs font-medium text-muted-foreground">P0.2 · Arama & Fiyat</p>
-              <StepBar current={step} />
+              <StepBar current={currentStep} />
             </div>
             <div className="text-xs text-muted-foreground max-w-xs">
               Bu blok, Agentis seviyesinde tek akışı taşır: katalog → arama → fiyat → misafir.
@@ -569,7 +569,7 @@ export default function AgencyHotelsPage() {
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <div className="space-y-1">
               <p className="text-xs font-medium text-muted-foreground">P0.2 · Arama & Fiyat</p>
-              <StepBar current={step} />
+              <StepBar current={currentStep} />
             </div>
             <div className="text-xs text-muted-foreground max-w-xs">
               Bu blok, Agentis seviyesinde tek akışı taşır: katalog → arama → fiyat → misafir.

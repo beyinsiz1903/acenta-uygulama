@@ -24,6 +24,9 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
   const [error, setError] = useState("");
   const [voucherToken, setVoucherToken] = useState(null);
   const [voucherLoading, setVoucherLoading] = useState(false);
+  const [ledgerSummary, setLedgerSummary] = useState(null);
+  const [ledgerLoading, setLedgerLoading] = useState(false);
+  const [ledgerError, setLedgerError] = useState("");
 
   useEffect(() => {
     if (!open || !bookingId) {

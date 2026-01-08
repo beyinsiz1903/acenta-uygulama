@@ -38,6 +38,40 @@ async def test_quote_pricing_uses_rules_for_agency1_vs_other(async_client, admin
 
     other_agency_id = other_agency["_id"]
 
+    # Setup pricing rules for the test
+    # Rule 1: Default hotel rule (10% markup, priority 100)
+    # Rule 2: Agency1-specific rule (12% markup, priority 200)
+    
+    # Clean up existing test rules first
+    await db.pricing_rules.delete_many({
+        "organization_id": org_id,
+        "notes": {"$in": ["test_p12_agency1_rule", "test_p12_default_rule"]}
+    })
+    
+    # Create default hotel rule (10% markup)
+    default_rule = {
+        "organization_id": org_id,
+        "status": "active",
+        "priority": 100,
+        "scope": {"product_type": "hotel"},
+        "validity": {"from": "2026-01-01", "to": "2027-01-01"},
+        "action": {"type": "markup_percent", "value": 10.0},
+        "notes": "test_p12_default_rule"
+    }
+    await db.pricing_rules.insert_one(default_rule)
+    
+    # Create agency1-specific rule (12% markup)
+    agency1_rule = {
+        "organization_id": org_id,
+        "status": "active",
+        "priority": 200,
+        "scope": {"product_type": "hotel", "agency_id": agency1_id},
+        "validity": {"from": "2026-01-01", "to": "2027-01-01"},
+        "action": {"type": "markup_percent", "value": 12.0},
+        "notes": "test_p12_agency1_rule"
+    }
+    await db.pricing_rules.insert_one(agency1_rule)
+
     # Use ObjectId-based product instead of string-based demo_product_1
     # Find a product with ObjectId format that has inventory
     from bson import ObjectId

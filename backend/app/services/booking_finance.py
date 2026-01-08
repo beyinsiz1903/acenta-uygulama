@@ -231,6 +231,96 @@ class BookingFinanceService:
 
         return posting["_id"]
     
+
+    async def post_booking_cancelled(
+        self,
+        organization_id: str,
+        booking_id: str,
+        agency_id: str,
+        occurred_at: Optional[datetime] = None,
+    ) -> Optional[str]:
+        """Create EUR-denominated posting for BOOKING_CANCELLED.
+
+        - Uses booking.amounts.sell_eur as canonical EUR amount.
+        - If a BOOKING_CANCELLED posting already exists for this booking,
+          behaves idempotently and returns without creating a new posting.
+        """
+
+        booking = await self.db.bookings.find_one(
+            {"_id": ObjectId(booking_id), "organization_id": organization_id}
+        )
+        if not booking:
+            raise AppError(404, "booking_not_found", "Booking not found")
+
+        # Idempotency: if a BOOKING_CANCELLED posting already exists, do nothing
+        existing = await self.db.ledger_postings.find_one(
+            {
+                "organization_id": organization_id,
+                "source.type": "booking",
+                "source.id": booking_id,
+                "event": "BOOKING_CANCELLED",
+            }
+        )
+        if existing:
+            return None
+
+        amounts = booking.get("amounts") or {}
+        sell_eur = amounts.get("sell_eur")
+        if sell_eur is None:
+            raise AppError(
+                500,
+                "fx_snapshot_missing",
+                "Booking is missing sell_eur for cancellation",
+            )
+
+        amount_eur = float(sell_eur)
+
+        # Get agency account
+        agency_account = await self.db.finance_accounts.find_one(
+            {
+                "organization_id": organization_id,
+                "type": "agency",
+                "owner_id": agency_id,
+            }
+        )
+        if not agency_account:
+            raise AppError(
+                status_code=404,
+                code="finance_account_not_found",
+                message=f"Finance account not found for agency {agency_id}",
+            )
+
+        # Get platform account
+        platform_account = await self.db.finance_accounts.find_one(
+            {"organization_id": organization_id, "type": "platform"}
+        )
+        if not platform_account:
+            raise AppError(
+                status_code=404,
+                code="finance_account_not_found",
+                message="Platform finance account not found",
+            )
+
+        lines = PostingMatrixConfig.get_booking_cancelled_lines(
+            agency_account_id=agency_account["_id"],
+            platform_account_id=platform_account["_id"],
+            sell_amount=amount_eur,
+        )
+
+        posting = await LedgerPostingService.post_event(
+            organization_id=organization_id,
+            source_type="booking",
+            source_id=booking_id,
+            event="BOOKING_CANCELLED",
+            currency="EUR",
+            lines=lines,
+            occurred_at=occurred_at,
+            created_by="system",
+            meta={"booking_id": booking_id, "agency_id": agency_id},
+        )
+
+        return posting["_id"]
+
     async def post_refund_approved(
         self,
         organization_id: str,

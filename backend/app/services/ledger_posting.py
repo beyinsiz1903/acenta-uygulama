@@ -366,6 +366,33 @@ class PostingMatrixConfig:
             LedgerLine(account_id=agency_account_id, direction="debit", amount=sell_amount),
             LedgerLine(account_id=platform_account_id, direction="credit", amount=sell_amount),
         ]
+    @staticmethod
+    def get_booking_cancelled_lines(
+        agency_account_id: str,
+        platform_account_id: str,
+        sell_amount: float,
+    ) -> list[LedgerLine]:
+        """BOOKING_CANCELLED event.
+
+        Implemented as an exact reversal of BOOKING_CONFIRMED so that
+        BOOKING_CONFIRMED + BOOKING_CANCELLED is net-zero in EUR.
+        """
+        confirmed = PostingMatrixConfig.get_booking_confirmed_lines(
+            agency_account_id=agency_account_id,
+            platform_account_id=platform_account_id,
+            sell_amount=sell_amount,
+        )
+        reversed_lines: list[LedgerLine] = []
+        for line in confirmed:
+            reversed_lines.append(
+                LedgerLine(
+                    account_id=line.account_id,
+                    direction="credit" if line.direction == "debit" else "debit",
+                    amount=line.amount,
+                )
+            )
+        return reversed_lines
+
     
     @staticmethod
     def get_payment_received_lines(

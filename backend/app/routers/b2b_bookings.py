@@ -224,3 +224,106 @@ async def cancel_b2b_booking(
         resp["penalty_eur"] = penalty_eur
 
     return resp
+
+
+
+@router.post(
+    "/bookings/{booking_id}/amend/quote",
+    dependencies=[Depends(require_roles(["agency_agent", "agency_admin"]))],
+)
+async def amend_booking_quote(
+    booking_id: str,
+    payload: dict,
+    user=Depends(get_current_user),
+    db=Depends(get_db),
+):
+    """Generate a pricing proposal for a booking date change.
+
+    - Idempotent per (organization_id, booking_id, request_id).
+    - Does NOT change booking or financials.
+    """
+    org_id = user.get("organization_id")
+    agency_id = user.get("agency_id")
+    if not agency_id:
+        raise AppError(403, "forbidden", "User is not bound to an agency")
+
+    from datetime import date
+    from app.schemas.booking_amendments import BookingAmendQuoteRequest
+    from app.services.booking_amendments import BookingAmendmentsService
+
+    try:
+        req = BookingAmendQuoteRequest(
+            check_in=date.fromisoformat(str(payload.get("check_in"))),
+            check_out=date.fromisoformat(str(payload.get("check_out"))),
+            request_id=str(payload.get("request_id")),
+        )
+    except Exception as e:
+        raise AppError(422, "validation_error", f"Invalid amend quote payload: {e}")
+
+    svc = BookingAmendmentsService(db)
+    doc = await svc.create_quote(
+        organization_id=org_id,
+        agency_id=agency_id,
+        booking_id=booking_id,
+        request_id=req.request_id,
+        new_check_in=req.check_in,
+        new_check_out=req.check_out,
+        user_email=user.get("email"),
+    )
+
+    # Serialize for API (hide internal _id)
+    doc_out = {
+        "amend_id": str(doc.get("_id")),
+        "booking_id": doc.get("booking_id"),
+        "status": doc.get("status"),
+        "before": doc.get("before"),
+        "after": doc.get("after"),
+        "delta": doc.get("delta"),
+    }
+    return doc_out
+
+
+@router.post(
+    "/bookings/{booking_id}/amend/confirm",
+    dependencies=[Depends(require_roles(["agency_agent", "agency_admin"]))],
+)
+async def amend_booking_confirm(
+    booking_id: str,
+    payload: dict,
+    user=Depends(get_current_user),
+    db=Depends(get_db),
+):
+    """Confirm a previously proposed booking amendment.
+
+    - Idempotent per amend_id: repeated calls do not duplicate ledger postings.
+    - Updates booking dates and financial mirrors, posts delta-only ledger event.
+    """
+    org_id = user.get("organization_id")
+    agency_id = user.get("agency_id")
+    if not agency_id:
+        raise AppError(403, "forbidden", "User is not bound to an agency")
+
+    amend_id = str(payload.get("amend_id") or "").strip()
+    if not amend_id:
+        raise AppError(422, "validation_error", "amend_id is required for confirm")
+
+    from app.services.booking_amendments import BookingAmendmentsService
+
+    svc = BookingAmendmentsService(db)
+    doc = await svc.confirm_amendment(
+        organization_id=org_id,
+        agency_id=agency_id,
+        booking_id=booking_id,
+        amend_id=amend_id,
+        user_email=user.get("email"),
+    )
+
+    doc_out = {
+        "amend_id": str(doc.get("_id")),
+        "booking_id": doc.get("booking_id"),
+        "status": doc.get("status"),
+        "before": doc.get("before"),
+        "after": doc.get("after"),
+        "delta": doc.get("delta"),
+    }
+    return doc_out

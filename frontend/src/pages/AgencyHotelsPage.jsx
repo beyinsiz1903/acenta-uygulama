@@ -537,11 +537,13 @@ export default function AgencyHotelsPage() {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => navigate("/app/agency/bookings")}
+                      onClick={() => navigate(`/app/agency/bookings?new=${booking.booking_id}`)}
                     >
                       Rezervasyonlarım
                     </Button>
-                    {/* Voucher view: B2B portal üzerinden veya doğrudan backend link ile açılabilir. */}
+                    <Button size="sm" variant="outline" disabled>
+                      Voucher (Yakında)
+                    </Button>
                   </div>
                 </div>
               )}
@@ -926,11 +928,13 @@ export default function AgencyHotelsPage() {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => navigate("/app/agency/bookings")}
+                      onClick={() => navigate(`/app/agency/bookings?new=${booking.booking_id}`)}
                     >
                       Rezervasyonlarım
                     </Button>
-                    {/* Voucher view: B2B portal üzerinden veya doğrudan backend link ile açılabilir. */}
+                    <Button size="sm" variant="outline" disabled>
+                      Voucher (Yakında)
+                    </Button>
                   </div>
                 </div>
               )}

@@ -47,12 +47,18 @@ async def test_quote_pricing_uses_rules_for_agency1_vs_other(async_client, admin
     check_in = date.fromisoformat(check_in_str)
     check_out = check_in + timedelta(days=1)
 
+    # Find rate plan for the product
+    rate_plan = await db.rate_plans.find_one({"organization_id": org_id, "product_id": product_id})
+    assert rate_plan is not None, f"No rate plan found for product {product_id}"
+    rate_plan_id = str(rate_plan["_id"])
+
     # Ortak quote payload
     payload = {
         "channel_id": "b2b_demo",
         "items": [
             {
                 "product_id": product_id,
+                "rate_plan_id": rate_plan_id,
                 "room_type_id": inv.get("room_type_id", "standard"),
                 "check_in": check_in.isoformat(),
                 "check_out": check_out.isoformat(),

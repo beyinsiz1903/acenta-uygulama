@@ -168,7 +168,7 @@ class PricingRulesService:
     def _select_best(self, rules: list[PricingRule]) -> PricingRule:
         # Highest priority wins; tie-breaker on updated_at (desc), then _id desc as fallback
         def sort_key(r: PricingRule):
-            ts = r.updated_at or datetime.min
+            ts = r.updated_at or datetime(1970, 1, 1)  # Use epoch instead of datetime.min
             return (-r.priority, -int(ts.timestamp()), str(r.id))
 
         return sorted(rules, key=sort_key)[0]

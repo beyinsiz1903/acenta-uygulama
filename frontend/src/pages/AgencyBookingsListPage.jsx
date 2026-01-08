@@ -224,7 +224,9 @@ export default function AgencyBookingsListPage() {
               return (
                 <TableRow 
                   key={booking.id}
-                  className="cursor-pointer hover:bg-accent/50"
+                  className={`cursor-pointer hover:bg-accent/50 ${
+                    highlightId === booking.id ? "bg-primary/5" : ""
+                  }`}
                   onClick={() => {
                     setSelectedId(booking.id);
                     setDrawerOpen(true);

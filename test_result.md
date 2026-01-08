@@ -324,7 +324,7 @@
 
   - task: "P0.3 FX & Ledger backend testleri"
     implemented: true
-    working: false
+    working: true
     file: "/app/backend/tests/test_booking_financials_fx.py, /app/backend/tests/test_fx_snapshots.py, /app/backend/tests/test_refund_fx_ledger.py"
     stuck_count: 0
     priority: "high"

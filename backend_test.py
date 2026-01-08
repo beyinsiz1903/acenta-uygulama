@@ -426,4 +426,5 @@ def test_p02_search_quote_booking_chain():
     print("=" * 80 + "\n")
 
 if __name__ == "__main__":
-    test_p02_search_quote_booking_chain()
+    # Run P0.4 Voucher PDF backend chain test
+    test_p04_voucher_pdf_backend_chain()

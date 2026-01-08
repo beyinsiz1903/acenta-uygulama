@@ -393,6 +393,41 @@ class PostingMatrixConfig:
             )
         return reversed_lines
 
+    @staticmethod
+    def get_booking_cancelled_with_penalty_lines(
+        agency_account_id: str,
+        platform_account_id: str,
+        sell_amount: float,
+        penalty_amount: float,
+    ) -> list[LedgerLine]:
+        """BOOKING_CANCELLED with flat penalty.
+
+        - First fully reverses BOOKING_CONFIRMED (net-zero),
+        - Then adds a penalty line (agency debit, platform credit).
+        """
+        lines = PostingMatrixConfig.get_booking_cancelled_lines(
+            agency_account_id=agency_account_id,
+            platform_account_id=platform_account_id,
+            sell_amount=sell_amount,
+        )
+        if penalty_amount > 0:
+            lines.append(
+                LedgerLine(
+                    account_id=agency_account_id,
+                    direction="debit",
+                    amount=penalty_amount,
+                )
+            )
+            lines.append(
+                LedgerLine(
+                    account_id=platform_account_id,
+                    direction="credit",
+                    amount=penalty_amount,
+                )
+            )
+        return lines
+
+
     
     @staticmethod
     def get_payment_received_lines(

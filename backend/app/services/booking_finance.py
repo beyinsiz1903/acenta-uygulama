@@ -275,6 +275,22 @@ class BookingFinanceService:
 
         amount_eur = float(sell_eur)
 
+        # P1.4: org-level flat penalty percent (default 0)
+        org = await self.db.organizations.find_one({"id": organization_id}) or await self.db.organizations.find_one({"_id": organization_id})
+        settings = (org or {}).get("settings") or {}
+        penalty_percent = float(settings.get("cancel_penalty_percent", 0.0))
+
+        from decimal import Decimal, ROUND_HALF_UP
+
+        sell_eur_dec = Decimal(str(amount_eur))
+        penalty_eur_dec = (sell_eur_dec * Decimal(str(penalty_percent)) / Decimal("100")).quantize(
+            Decimal("0.01"), rounding=ROUND_HALF_UP
+        )
+        refund_eur_dec = (sell_eur_dec - penalty_eur_dec).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+        penalty_eur = float(penalty_eur_dec)
+        refund_eur = float(refund_eur_dec)
+
         # Get agency account
         agency_account = await self.db.finance_accounts.find_one(
             {

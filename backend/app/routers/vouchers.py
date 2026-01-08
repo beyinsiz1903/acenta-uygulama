@@ -155,7 +155,7 @@ async def b2b_download_voucher_pdf(
 ) -> Response:
     """Return voucher PDF for agency-scoped booking.
 
-    Phase 1: PDF rendering not configured; raise AppError(501, pdf_not_configured).
+    P0.4: render active voucher to PDF and stream bytes back to caller.
     """
 
     org_id = user.get("organization_id")

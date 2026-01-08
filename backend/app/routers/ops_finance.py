@@ -620,7 +620,7 @@ async def test_posting(
     elif payload.event == "REFUND_APPROVED":
         lines = PostingMatrixConfig.get_refund_approved_lines(
             agency_account_id=payload.agency_account_id,
-            platform_account_id=payload.platform_account_id,
+            platform_ar_account_id=payload.platform_account_id,
             refund_amount=payload.amount,
         )
     else:

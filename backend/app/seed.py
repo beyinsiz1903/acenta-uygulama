@@ -313,6 +313,7 @@ async def ensure_seed_data() -> None:
             "organization_id": org_id,
             "name": "Demo Acente A",
             "is_active": True,
+            "settings": {"selling_currency": "TRY"},
             "created_at": now,
             "updated_at": now,
             "created_by": DEFAULT_ADMIN_EMAIL,

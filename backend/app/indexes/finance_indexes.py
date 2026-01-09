@@ -87,11 +87,16 @@ async def ensure_finance_indexes(db):
     # ========================================================================
     # 3) ledger_postings (idempotency header)
     # ========================================================================
+    # For booking-level events we rely on higher-level idempotency (request_id,
+    # amend_id, etc.), so we do not enforce a global per-(source,event) unique
+    # constraint here. This allows multiple BOOKING_AMENDED postings for the
+    # same booking (multi-amend v1.5).
     await _safe_create(
         db.ledger_postings,
-        [("organization_id", ASCENDING), ("source.type", ASCENDING), ("source.id", ASCENDING), ("event", ASCENDING)],
+        [("organization_id", ASCENDING), ("source.type", ASCENDING), ("source.id", ASCENDING), ("event", ASCENDING), ("meta.amend_id", ASCENDING)],
         unique=True,
         name="uniq_posting_per_source_event",
+        partialFilterExpression={"meta.amend_id": {"$exists": True}},
     )
     await _safe_create(
         db.ledger_postings,

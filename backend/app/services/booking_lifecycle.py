@@ -62,6 +62,13 @@ class BookingLifecycleService:
         """
 
         status = booking.get("status")
+        if status == "CANCELLED":
+            raise AppError(
+                409,
+                "cannot_amend_in_status",
+                f"Cannot amend booking in status {status}",
+                {"status": status},
+            )
         if status != "CONFIRMED":
             raise AppError(
                 409,

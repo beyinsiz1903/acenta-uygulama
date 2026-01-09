@@ -2,18 +2,21 @@
 
 Key principles:
 - No remote BASE_URL usage; all HTTP calls go through local ASGI app.
-- Single Motor/Mongo client per test session via FastAPI get_db override.
+- Single Motor/Mongo client per test session.
 - httpx.AsyncClient(app=app, base_url="http://test") used for all HTTP tests.
+- AnyIO is the single async runner via pytest-anyio (@pytest.mark.anyio).
 """
 
-from typing import AsyncGenerator, Callable, Dict, Any
+from typing import AsyncGenerator, Dict, Any
 
 import os
 import sys
 from pathlib import Path
+import uuid
 
 import pytest
 import httpx
+from motor.motor_asyncio import AsyncIOMotorClient
 
 # Ensure backend root is on sys.path so that `server` module is importable
 ROOT_DIR = Path(__file__).resolve().parents[1]
@@ -24,39 +27,68 @@ from server import app
 from app.db import get_db
 
 
+MONGO_URL = os.environ.get("MONGO_URL", "mongodb://localhost:27017")
+
+
 @pytest.fixture(scope="session")
-async def test_db() -> AsyncGenerator[Any, None]:
-    """Provide a shared Motor database instance for tests.
+def anyio_backend() -> str:
+    """Force pytest-anyio to use asyncio event loop."""
 
-    Uses the application's get_db helper so that connection lifecycle is
-    aligned with the actual app's Mongo client.
+    return "asyncio"
+
+
+@pytest.fixture(scope="session")
+async def motor_client() -> AsyncGenerator[AsyncIOMotorClient, None]:
+    """Session-scoped Motor client for all tests.
+
+    This avoids creating/closing clients per test and keeps a single
+    event loop / IO stack for Mongo.
     """
 
-    db = await get_db()
-    yield db
-    # NOTE: We intentionally do not close the global client here; FastAPI
-    # startup/shutdown hooks handle connect_mongo/close_mongo.
+    client = AsyncIOMotorClient(MONGO_URL)
+    try:
+        yield client
+    finally:
+        client.close()
 
 
-@pytest.fixture
-async def db(test_db) -> Any:
-    """Per-test database handle.
+@pytest.fixture(scope="function")
+async def test_db(motor_client: AsyncIOMotorClient) -> AsyncGenerator[Any, None]:
+    """Function-scoped isolated database for each test.
 
-    This returns the same logical DB object but allows per-test cleanup if
-    needed without touching the global Motor client.
+    Each test gets its own temporary database, dropped on teardown.
     """
 
-    return test_db
+    db_name = f"agentis_test_{uuid.uuid4().hex}"
+    db = motor_client[db_name]
+    try:
+        yield db
+    finally:
+        await motor_client.drop_database(db_name)
 
 
-@pytest.fixture
-async def async_client(test_db) -> AsyncGenerator[httpx.AsyncClient, None]:
+@pytest.fixture(scope="function")
+async def app_with_overrides(test_db) -> AsyncGenerator[Any, None]:
+    """FastAPI app instance whose get_db dependency points to test_db."""
+
+    async def override_get_db():
+        yield test_db
+
+    app.dependency_overrides[get_db] = override_get_db
+    try:
+        yield app
+    finally:
+        app.dependency_overrides.clear()
+
+
+@pytest.fixture(scope="function")
+async def async_client(app_with_overrides) -> AsyncGenerator[httpx.AsyncClient, None]:
     """Async HTTP client bound to the FastAPI app instance.
 
     All tests should use this client instead of remote preview URLs.
     """
 
-    async with httpx.AsyncClient(app=app, base_url="http://test", timeout=30.0) as client:
+    async with httpx.AsyncClient(app=app_with_overrides, base_url="http://test", timeout=30.0) as client:
         yield client
 
 

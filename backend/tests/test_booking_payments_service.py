@@ -8,7 +8,6 @@ from app.services.booking_payments import (
     _compute_status,
     BookingPaymentsService,
 )
-from app.utils import now_utc
 
 
 @pytest.mark.anyio

@@ -1619,8 +1619,8 @@ def test_syroce_f12_multi_amend_backend():
                 "product_id": product_id,
                 "room_type_id": "default_room",
                 "rate_plan_id": rate_plan_id,
-                "check_in": "2026-02-01",
-                "check_out": "2026-02-03",
+                "check_in": "2026-01-10",
+                "check_out": "2026-01-12",
                 "occupancy": 2
             }
         ],

@@ -45,15 +45,18 @@ class BookingPaymentsService:
     to avoid float drift.
     """
 
-    @staticmethod
+    def __init__(self, db):
+        self.db = db
+
     async def get_or_create_aggregate(
+        self,
         organization_id: str,
         agency_id: str,
         booking_id: str,
         currency: str,
         total_cents: int,
     ) -> Dict[str, Any]:
-        db = await get_db()
+        db = self.db
 
         doc = await db.booking_payments.find_one(
             {"organization_id": organization_id, "booking_id": booking_id}

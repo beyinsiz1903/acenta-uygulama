@@ -344,6 +344,25 @@ class BookingAmendmentsService:
             },
         )
 
+        # Append BOOKING_AMENDED lifecycle event (audit only, status unchanged)
+        from app.services.booking_lifecycle import BookingLifecycleService
+
+        lifecycle = BookingLifecycleService(self.db)
+        await lifecycle.append_event(
+            organization_id=organization_id,
+            agency_id=agency_id,
+            booking_id=booking_id,
+            event="BOOKING_AMENDED",
+            occurred_at=now,
+            request_id=amend.get("request_id"),
+            before=before,
+            after=after,
+            meta={
+                "amend_id": amend_id,
+                "delta_sell_eur": delta_sell_eur,
+            },
+        )
+
         amend["status"] = "CONFIRMED"
         amend["confirmed_at"] = now
         amend["confirmed_by_email"] = user_email

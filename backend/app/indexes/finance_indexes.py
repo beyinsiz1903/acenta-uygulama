@@ -133,4 +133,20 @@ async def ensure_finance_indexes(db):
         name="payments_by_created",
     )
 
+    # ========================================================================
+    # 7) booking_events (lifecycle log)
+    # ========================================================================
+    await _safe_create(
+        db.booking_events,
+        [("organization_id", ASCENDING), ("booking_id", ASCENDING), ("occurred_at", DESCENDING)],
+        name="booking_events_by_booking",
+    )
+    await _safe_create(
+        db.booking_events,
+        [("organization_id", ASCENDING), ("booking_id", ASCENDING), ("event", ASCENDING), ("request_id", ASCENDING)],
+        unique=True,
+        name="uniq_booking_event_per_request",
+        partialFilterExpression={"request_id": {"$type": "string"}},
+    )
+
     logger.info("✅ Finance indexes ensured successfully")

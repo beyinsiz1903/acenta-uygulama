@@ -157,39 +157,22 @@ async def cancel_b2b_booking(
     if not booking:
         raise AppError(404, "booking_not_found", "Booking not found", {"booking_id": booking_id})
 
-    status = booking.get("status")
-    if status == "CANCELLED":
+    from app.services.booking_lifecycle import BookingLifecycleService
+    from app.utils import now_utc
+
+    lifecycle = BookingLifecycleService(db)
+    decision = await lifecycle.assert_can_cancel(booking)
+    if decision == "already_cancelled":
         # Idempotent behaviour: return current state
         return {
             "booking_id": booking_id,
-            "status": status,
+            "status": booking.get("status"),
             "refund_status": "COMPLETED",
         }
 
-    if status != "CONFIRMED":
-        raise AppError(
-            409,
-            "cannot_cancel_in_status",
-            f"Cannot cancel booking in status {status}",
-            {"booking_id": booking_id, "status": status},
-        )
-
     reason = (payload or {}).get("reason", "customer_request")
 
-    # Update booking status
-    from app.utils import now_utc
-
     now = now_utc()
-    await db.bookings.update_one(
-        {"_id": oid, "organization_id": org_id},
-        {
-            "$set": {
-                "status": "CANCELLED",
-                "cancel_reason": reason,
-                "cancelled_at": now,
-            }
-        },
-    )
 
     # Post BOOKING_CANCELLED event to ledger
     from app.services.booking_finance import BookingFinanceService

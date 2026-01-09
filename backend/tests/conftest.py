@@ -16,6 +16,7 @@ import uuid
 
 import pytest
 import httpx
+from httpx import ASGITransport
 from motor.motor_asyncio import AsyncIOMotorClient
 
 # Ensure backend root is on sys.path so that `server` module is importable

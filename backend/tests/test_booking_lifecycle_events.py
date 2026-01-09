@@ -4,7 +4,6 @@ import pytest
 
 from bson import ObjectId
 
-from app.db import get_db
 from app.services.booking_lifecycle import BookingLifecycleService
 from app.utils import now_utc
 

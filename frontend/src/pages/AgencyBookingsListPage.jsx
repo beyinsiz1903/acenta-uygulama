@@ -332,7 +332,24 @@ export default function AgencyBookingsListPage() {
         bookingId={selectedId}
         mode="agency"
         open={drawerOpen}
-        onOpenChange={setDrawerOpen}
+        onOpenChange={(next) => {
+          setDrawerOpen(next);
+          if (!next) {
+            // modal kapandıktan sonra listeyi tazele (amend/cancel vb. sonrası)
+            loadBookings();
+          }
+        }}
+        onBookingChanged={(updated) => {
+          if (!updated?.id) return;
+          setBookings((prev) => {
+            const list = Array.isArray(prev) ? [...prev] : [];
+            const idx = list.findIndex((b) => b.id === updated.id);
+            if (idx >= 0) {
+              list[idx] = { ...list[idx], ...updated };
+            }
+            return list;
+          });
+        }}
       />
     </div>
   );

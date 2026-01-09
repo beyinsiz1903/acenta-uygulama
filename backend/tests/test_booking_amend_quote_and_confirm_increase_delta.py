@@ -189,18 +189,68 @@ async def test_booking_amend_quote_and_confirm_increase_delta(async_client, agen
             "source.type": "booking",
             "source.id": booking_id,
             "event": "BOOKING_AMENDED",
+            "meta.amend_id": amend_id,
         }
     ).to_list(length=10)
 
     assert len(postings) == 1, f"Expected 1 BOOKING_AMENDED posting, got {len(postings)}"
     p = postings[0]
+    posting_id = p.get("_id")
     assert p.get("currency") == "EUR"
 
     lines = p.get("lines") or []
     assert len(lines) == 2
+
+    # Direction & amount: delta > 0 => agency debit, platform credit, amount = |delta_eur|
+    agency_accounts = await db.finance_accounts.find(
+        {"organization_id": org_id, "type": "agency", "owner_id": agency_id}
+    ).to_list(length=10)
+    platform_accounts = await db.finance_accounts.find(
+        {"organization_id": org_id, "type": "platform"}
+    ).to_list(length=10)
+    agency_ids = {str(a["_id"]) for a in agency_accounts}
+    platform_ids = {str(a["_id"]) for a in platform_accounts}
+
+    agency_lines = [ln for ln in lines if ln.get("account_id") in agency_ids]
+    platform_lines = [ln for ln in lines if ln.get("account_id") in platform_ids]
+
+    assert len(agency_lines) == 1, f"Expected 1 agency line, got {len(agency_lines)}"
+    assert len(platform_lines) == 1, f"Expected 1 platform line, got {len(platform_lines)}"
+
+    agency_line = agency_lines[0]
+    platform_line = platform_lines[0]
+
+    assert agency_line.get("direction") == "debit"
+    assert platform_line.get("direction") == "credit"
+
+    amt_agency = float(agency_line.get("amount", 0.0))
+    amt_platform = float(platform_line.get("amount", 0.0))
+    assert amt_agency == pytest.approx(abs(delta_sell_eur), abs=0.05)
+    assert amt_platform == pytest.approx(abs(delta_sell_eur), abs=0.05)
 
     total_debit = sum(float(ln.get("amount", 0.0)) for ln in lines if ln.get("direction") == "debit")
     total_credit = sum(float(ln.get("amount", 0.0)) for ln in lines if ln.get("direction") == "credit")
 
     assert total_debit == pytest.approx(total_credit, abs=0.01)
     assert total_debit == pytest.approx(abs(delta_sell_eur), abs=0.05)
+
+    # 10) Confirm idempotency: ikinci confirm yeni posting olusturmamali
+    r_conf2 = await client.post(
+        f"/api/b2b/bookings/{booking_id}/amend/confirm",
+        json={"amend_id": amend_id},
+        headers=headers,
+    )
+    assert r_conf2.status_code == 200, r_conf2.text
+
+    postings_after = await db.ledger_postings.find(
+        {
+            "organization_id": org_id,
+            "source.type": "booking",
+            "source.id": booking_id,
+            "event": "BOOKING_AMENDED",
+            "meta.amend_id": amend_id,
+        }
+    ).to_list(length=10)
+
+    assert len(postings_after) == 1
+    assert postings_after[0].get("_id") == posting_id

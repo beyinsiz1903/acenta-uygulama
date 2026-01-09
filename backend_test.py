@@ -2054,7 +2054,7 @@ def test_syroce_f12_multi_amend_backend():
     assert error["details"]["status"] == "CANCELLED", \
         f"Error details should show CANCELLED status, got: {error['details']['status']}"
     
-    print(f"   ✅ Amend on cancelled booking correctly rejected: 409 cannot_amend_in_status")
+    print(f"   ✅ Amend on cancelled booking correctly rejected: 409 amend_not_supported_in_status")
     print(f"   📋 Error: {error['code']} - {error.get('message', '')}")
 
     print("\n" + "=" * 80)

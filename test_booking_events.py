@@ -88,8 +88,8 @@ def test_booking_events_lifecycle():
                 "product_id": product_id,
                 "room_type_id": "default_room",
                 "rate_plan_id": rate_plan_id,
-                "check_in": "2026-01-30",
-                "check_out": "2026-02-01",
+                "check_in": "2026-01-10",
+                "check_out": "2026-01-12",
                 "occupancy": 2
             }
         ],

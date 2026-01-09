@@ -1707,8 +1707,8 @@ def test_syroce_f12_multi_amend_backend():
     
     # Step 1: Create amend quote (extend by 1 night)
     amend_quote_payload = {
-        "check_in": "2026-02-01",
-        "check_out": "2026-02-04",  # Extended by 1 night
+        "check_in": "2026-01-10",
+        "check_out": "2026-01-13",  # Extended by 1 night
         "request_id": f"amend-1-{uuid.uuid4()}"
     }
     

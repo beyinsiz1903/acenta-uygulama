@@ -153,10 +153,6 @@ class BookingLifecycleService:
             new_status = "CANCELLED"
         # BOOKING_AMENDED -> status remains as-is
 
-        update_fields: Dict[str, Any] = {
-            "last_event": {
-                "event": event,
-                "occurred_at": occurred_at,
         # Optional monotonic amendment sequence for multi-amend flows
         if event == "BOOKING_AMENDED":
             seq_doc = await self.db.bookings.find_one_and_update(
@@ -169,7 +165,10 @@ class BookingLifecycleService:
             if seq_doc and "amend_seq" in seq_doc:
                 doc["meta"]["amend_sequence"] = int(seq_doc["amend_seq"])
 
-
+        update_fields: Dict[str, Any] = {
+            "last_event": {
+                "event": event,
+                "occurred_at": occurred_at,
                 "request_id": request_id,
             }
         }

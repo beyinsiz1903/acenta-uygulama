@@ -327,6 +327,61 @@ async def amend_booking_confirm(
         "status": doc.get("status"),
         "before": doc.get("before"),
         "after": doc.get("after"),
+
+
+@router.get(
+    "/bookings/{booking_id}/events",
+    dependencies=[Depends(require_roles(["agency_agent", "agency_admin"]))],
+)
+async def get_booking_events(
+    booking_id: str,
+    user=Depends(get_current_user),
+    db=Depends(get_db),
+):
+    """Return booking lifecycle events (timeline) for debugging/ops.
+
+    - Owner-guarded: only same organization/agency can see events.
+    - Events ordered by occurred_at desc.
+    """
+    org_id = user.get("organization_id")
+    agency_id = user.get("agency_id")
+    if not agency_id:
+        raise AppError(403, "forbidden", "User is not bound to an agency")
+
+    from bson import ObjectId
+
+    try:
+        oid = ObjectId(booking_id)
+    except Exception:
+        raise AppError(404, "booking_not_found", "Booking not found", {"booking_id": booking_id})
+
+    booking = await db.bookings.find_one(
+        {"_id": oid, "organization_id": org_id, "agency_id": agency_id},
+        {"_id": 0, "organization_id": 1, "agency_id": 1},
+    )
+    if not booking:
+        raise AppError(404, "booking_not_found", "Booking not found", {"booking_id": booking_id})
+
+    cursor = db.booking_events.find(
+        {"organization_id": org_id, "booking_id": booking_id}
+    ).sort("occurred_at", -1)
+    events = []
+    async for ev in cursor:
+        ev.pop("_id", None)
+        events.append(
+            {
+                "event": ev.get("event"),
+                "occurred_at": ev.get("occurred_at"),
+                "request_id": ev.get("request_id"),
+                "before": ev.get("before", {}),
+                "after": ev.get("after", {}),
+                "meta": ev.get("meta", {}),
+                "created_by": ev.get("created_by", {}),
+            }
+        )
+
+    return {"booking_id": booking_id, "events": events}
+
         "delta": doc.get("delta"),
     }
     return doc_out

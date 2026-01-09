@@ -1762,7 +1762,7 @@ def test_syroce_f12_multi_amend_backend():
     
     print(f"   ✅ Booking dates updated: {our_booking['check_in']} to {our_booking['check_out']}")
     
-    # Verify ledger posting was created
+    # Verify ledger posting was created (only if delta > 0.005)
     r = requests.get(
         f"{BASE_URL}/api/ops/finance/bookings/{confirmed_booking_id}/ledger-summary",
         headers=admin_headers,
@@ -1772,11 +1772,15 @@ def test_syroce_f12_multi_amend_backend():
     first_amend_summary = r.json()
     print(f"   📊 Ledger after first amend - Postings: {first_amend_summary['postings_count']}")
     
-    # Should have more postings now (BOOKING_CONFIRMED + BOOKING_AMENDED)
-    assert first_amend_summary['postings_count'] > baseline_summary['postings_count'], \
-        "Should have additional BOOKING_AMENDED posting"
+    # Ledger posting is only created if delta > 0.005
+    if abs(first_delta_sell_eur) > 0.005:
+        assert first_amend_summary['postings_count'] > baseline_summary['postings_count'], \
+            "Should have additional BOOKING_AMENDED posting when delta > 0.005"
+        print(f"   ✅ BOOKING_AMENDED ledger posting created (delta: {first_delta_sell_eur})")
+    else:
+        print(f"   📋 No ledger posting created (delta {first_delta_sell_eur} <= 0.005, as expected)")
     
-    # Check booking events for BOOKING_AMENDED with amend_sequence = 1
+    # Check booking events for BOOKING_AMENDED with amend_sequence = 1 (always created)
     r = requests.get(
         f"{BASE_URL}/api/b2b/bookings/{confirmed_booking_id}/events",
         headers=agency_headers,

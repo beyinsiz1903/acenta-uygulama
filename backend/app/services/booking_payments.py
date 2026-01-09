@@ -143,6 +143,60 @@ class BookingPaymentsService:
         raise AppError(409, "payment_concurrency_conflict", "Concurrent modification detected for booking payments")
 
 
+    @staticmethod
+    async def apply_capture_succeeded(
+        organization_id: str,
+        agency_id: str,
+        booking_id: str,
+        payment_id: str,
+        *,
+        amount_cents: int,
+    ) -> tuple[dict, dict]:
+        """Apply a successful capture to the aggregate.
+
+        Tx insert, booking_events and ledger are handled by higher-level
+        orchestration; this helper only updates the booking_payments
+        projection with CAS semantics and invariants.
+        """
+
+        if amount_cents <= 0:
+            raise AppError(422, "payment_capture_invalid_amount", "Capture amount must be > 0")
+
+        before, after = await BookingPaymentsService._cas_update_amounts(
+            organization_id,
+            booking_id,
+            delta_paid_cents=amount_cents,
+            delta_refunded_cents=0,
+        )
+        return before, after
+
+    @staticmethod
+    async def apply_refund_succeeded(
+        organization_id: str,
+        agency_id: str,
+        booking_id: str,
+        payment_id: str,
+        *,
+        amount_cents: int,
+    ) -> tuple[dict, dict]:
+        """Apply a successful refund to the aggregate.
+
+        Ensures refunded does not exceed paid and updates status according to
+        the F2.1 refund rules (partial refund keeps PAID, full refund => REFUNDED).
+        """
+
+        if amount_cents <= 0:
+            raise AppError(422, "payment_refund_invalid_amount", "Refund amount must be > 0")
+
+        before, after = await BookingPaymentsService._cas_update_amounts(
+            organization_id,
+            booking_id,
+            delta_paid_cents=0,
+            delta_refunded_cents=amount_cents,
+        )
+        return before, after
+
+
 class BookingPaymentTxLogger:
     """Append-only logger for booking_payment_transactions.
 

@@ -104,6 +104,25 @@ class B2BBookingService:
         res = await self.bookings.insert_one(booking_doc)
         booking_id = str(res.inserted_id)
 
+        # Append lifecycle event for booking creation/confirmation
+        from app.services.booking_lifecycle import BookingLifecycleService
+
+        lifecycle = BookingLifecycleService(self.db)
+        await lifecycle.append_event(
+            organization_id=organization_id,
+            agency_id=agency_id,
+            booking_id=booking_id,
+            event="BOOKING_CONFIRMED",
+            occurred_at=now,
+            before={"status": "PENDING"},
+            after={"status": "CONFIRMED"},
+            meta={
+                "quote_id": str(quote_doc.get("_id")),
+                "channel_id": quote_doc.get("channel_id"),
+                "amount_sell": sell_amount,
+            },
+        )
+
         # ===================================================================
         # PHASE 2C: FX snapshot + amounts.sell_eur
         # ===================================================================

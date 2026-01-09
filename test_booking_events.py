@@ -57,8 +57,8 @@ def test_booking_events_lifecycle():
     # Search for hotels
     search_params = {
         "city": "Istanbul",
-        "check_in": "2026-01-30",
-        "check_out": "2026-02-01",
+        "check_in": "2026-01-10",
+        "check_out": "2026-01-12",
         "adults": 2,
         "children": 0
     }

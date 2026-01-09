@@ -23,9 +23,13 @@ class BookingFinancialsService:
     # Init / upsert
     # ------------------------------------------------------------------
     async def ensure_financials(self, organization_id: str, booking: dict) -> dict:
-        """Ensure booking_financials document exists for a booking.
+        """Ensure booking_financials document exists and mirrors core totals.
 
-        Uses upsert with $setOnInsert to be idempotent.
+        Semantics:
+        - Creates a document if missing (idempotent per booking)
+        - On existing docs, keeps refunded/penalty history but updates
+          sell_total / sell_total_eur / fx_snapshot from the latest
+          booking snapshot (amend-friendly mirror).
         """
         booking_id_str = str(booking["_id"])
         currency = booking.get("currency")
@@ -37,6 +41,7 @@ class BookingFinancialsService:
         now = now_utc()
         flt = {"organization_id": organization_id, "booking_id": booking_id_str}
 
+        # Upsert shell if missing
         await self.db.booking_financials.update_one(
             flt,
             {
@@ -58,6 +63,35 @@ class BookingFinancialsService:
         )
 
         doc = await self.db.booking_financials.find_one(flt)
+        if not doc:
+            return {}
+
+        # Mirror core totals from latest booking snapshot, but DO NOT touch
+        # refunded_total / penalty_total / refunds_applied.
+        needs_update = False
+        update_fields: dict[str, Any] = {}
+
+        if abs(float(doc.get("sell_total", 0.0)) - sell_total) > 0.005:
+            update_fields["sell_total"] = sell_total
+            needs_update = True
+        if abs(float(doc.get("sell_total_eur", 0.0)) - sell_total_eur) > 0.005:
+            update_fields["sell_total_eur"] = sell_total_eur
+            needs_update = True
+        if (doc.get("currency") or currency) != currency:
+            update_fields["currency"] = currency
+            needs_update = True
+        if fx is not None and (doc.get("fx_snapshot") or None) != fx:
+            update_fields["fx_snapshot"] = fx
+            needs_update = True
+
+        if needs_update:
+            update_fields["updated_at"] = now
+            await self.db.booking_financials.update_one(
+                flt,
+                {"$set": update_fields},
+            )
+            doc = await self.db.booking_financials.find_one(flt)
+
         return doc or {}
 
     # ------------------------------------------------------------------

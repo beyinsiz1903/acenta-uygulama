@@ -384,7 +384,3 @@ async def get_booking_events(
         )
 
     return {"booking_id": booking_id, "events": events}
-
-        "delta": doc.get("delta"),
-    }
-    return doc_out

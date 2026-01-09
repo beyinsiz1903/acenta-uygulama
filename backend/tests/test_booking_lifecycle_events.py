@@ -9,8 +9,8 @@ from app.utils import now_utc
 
 
 @pytest.mark.anyio
-async def test_append_confirm_event_updates_projection():
-    db = await get_db()
+async def test_append_confirm_event_updates_projection(test_db):
+    db = test_db
     svc = BookingLifecycleService(db)
 
     now = now_utc()

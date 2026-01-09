@@ -154,4 +154,65 @@ async def ensure_finance_indexes(db):
         partialFilterExpression={"request_id": {"$type": "string"}},
     )
 
+    # ========================================================================
+    # 8) booking_payments (booking-level payment aggregate)
+    # ========================================================================
+    await _safe_create(
+        db.booking_payments,
+        [("organization_id", ASCENDING), ("booking_id", ASCENDING)],
+        unique=True,
+        name="uniq_booking_payment_per_booking",
+    )
+    await _safe_create(
+        db.booking_payments,
+        [("organization_id", ASCENDING), ("stripe.payment_intent_id", ASCENDING)],
+        unique=True,
+        name="uniq_booking_payment_per_pi",
+        partialFilterExpression={"stripe.payment_intent_id": {"$type": "string"}},
+    )
+    await _safe_create(
+        db.booking_payments,
+        [
+            ("organization_id", ASCENDING),
+            ("agency_id", ASCENDING),
+            ("status", ASCENDING),
+            ("updated_at", DESCENDING),
+        ],
+        name="booking_payments_by_agency_status",
+    )
+
+    # ========================================================================
+    # 9) booking_payment_transactions (append-only payment ops log)
+    # ========================================================================
+    await _safe_create(
+        db.booking_payment_transactions,
+        [("organization_id", ASCENDING), ("booking_id", ASCENDING), ("occurred_at", ASCENDING)],
+        name="booking_payment_tx_by_booking_time",
+    )
+    await _safe_create(
+        db.booking_payment_transactions,
+        [("payment_id", ASCENDING), ("occurred_at", ASCENDING)],
+        name="booking_payment_tx_by_payment_time",
+    )
+    await _safe_create(
+        db.booking_payment_transactions,
+        [("provider", ASCENDING), ("provider_event_id", ASCENDING)],
+        unique=True,
+        name="uniq_booking_payment_tx_per_provider_event",
+        partialFilterExpression={"provider_event_id": {"$type": "string"}},
+    )
+    await _safe_create(
+        db.booking_payment_transactions,
+        [
+            ("organization_id", ASCENDING),
+            ("booking_id", ASCENDING),
+            ("request_id", ASCENDING),
+            ("type", ASCENDING),
+        ],
+        unique=True,
+        name="uniq_booking_payment_tx_per_request_type",
+        partialFilterExpression={"request_id": {"$type": "string"}},
+    )
+
+
     logger.info("✅ Finance indexes ensured successfully")

@@ -132,6 +132,31 @@ class LedgerPostingService:
         # Compute checksum
         checksum = LedgerPostingService._compute_checksum(source_type, source_id, event, lines)
         
+        # Normalise meta for safe storage (ObjectId, datetime, Decimal etc.)
+        def _normalise_meta(value):
+            from bson import ObjectId  # type: ignore
+            from decimal import Decimal
+            from datetime import datetime as _dt
+
+            if value is None:
+                return None
+            if isinstance(value, dict):
+                return {k: _normalise_meta(v) for k, v in value.items()}
+            if isinstance(value, list):
+                return [_normalise_meta(v) for v in value]
+            if isinstance(value, ObjectId):
+                return str(value)
+            if isinstance(value, _dt):
+                try:
+                    return value.isoformat()
+                except Exception:
+                    return str(value)
+            if isinstance(value, Decimal):
+                return float(value)
+            return value
+
+        normalised_meta = _normalise_meta(meta) if meta is not None else None
+        
         # Create posting header
         import uuid
         posting_id = f"post_{uuid.uuid4()}"
@@ -158,6 +183,8 @@ class LedgerPostingService:
             "created_at": now,
             "created_by": created_by,
         }
+        if normalised_meta is not None:
+            posting_doc["meta"] = normalised_meta
         
         await db.ledger_postings.insert_one(posting_doc)
         

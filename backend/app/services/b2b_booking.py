@@ -30,6 +30,7 @@ class B2BBookingService:
         user_email: str | None,
         quote_doc: Dict[str, Any],
         booking_req: BookingCreateRequest,
+        request_id: str | None = None,
     ) -> BookingCreateResponse:
         now = now_utc()
 
@@ -114,6 +115,7 @@ class B2BBookingService:
             booking_id=booking_id,
             event="BOOKING_CONFIRMED",
             occurred_at=now,
+            request_id=request_id,
             before={"status": "PENDING"},
             after={"status": "CONFIRMED"},
             meta={

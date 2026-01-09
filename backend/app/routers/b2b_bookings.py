@@ -61,6 +61,7 @@ async def create_b2b_booking(
             user_email=user.get("email"),
             quote_doc=quote_doc,
             booking_req=payload,
+            request_id=idempotency_key,
         )
         return 200, booking.model_dump()
 
@@ -132,6 +133,7 @@ async def cancel_b2b_booking(
     payload: dict | None = None,
     user=Depends(get_current_user),
     db=Depends(get_db),
+    idempotency_key: str | None = Header(None, alias="Idempotency-Key"),
 ):
     """Cancel a CONFIRMED booking (after-sales v1).
 

@@ -11,7 +11,7 @@ from typing import AsyncGenerator, Callable, Dict, Any
 import pytest
 import httpx
 
-from app.server import app
+from backend.server import app
 from app.db import get_db
 
 

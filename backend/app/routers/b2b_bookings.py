@@ -209,21 +209,15 @@ async def cancel_b2b_booking(
         meta=meta,
     )
 
-    refund_eur = None
-    penalty_eur = None
-    if bf:
-        refund_eur = float(bf.get("refunded_total", 0.0))
-        penalty_eur = float(bf.get("penalty_total", 0.0))
-
     resp = {
         "booking_id": booking_id,
         "status": "CANCELLED",
         "refund_status": "COMPLETED",
     }
-    if refund_eur is not None:
-        resp["refund_eur"] = refund_eur
-    if penalty_eur is not None:
-        resp["penalty_eur"] = penalty_eur
+    if meta["refund_eur"] is not None:
+        resp["refund_eur"] = meta["refund_eur"]
+    if meta["penalty_eur"] is not None:
+        resp["penalty_eur"] = meta["penalty_eur"]
 
     return resp
 

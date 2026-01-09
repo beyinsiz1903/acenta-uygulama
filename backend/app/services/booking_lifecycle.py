@@ -157,6 +157,19 @@ class BookingLifecycleService:
             "last_event": {
                 "event": event,
                 "occurred_at": occurred_at,
+        # Optional monotonic amendment sequence for multi-amend flows
+        if event == "BOOKING_AMENDED":
+            seq_doc = await self.db.bookings.find_one_and_update(
+                {"_id": oid, "organization_id": organization_id},
+                {"$inc": {"amend_seq": 1}},
+                projection={"amend_seq": 1},
+                upsert=False,
+                return_document=True,
+            )
+            if seq_doc and "amend_seq" in seq_doc:
+                doc["meta"]["amend_sequence"] = int(seq_doc["amend_seq"])
+
+
                 "request_id": request_id,
             }
         }

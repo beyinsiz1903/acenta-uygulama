@@ -383,7 +383,7 @@ async def get_booking_events(
         raise AppError(404, "booking_not_found", "Booking not found", {"booking_id": booking_id})
 
     cursor = db.booking_events.find(
-        {"organization_id": org_id, "booking_id": booking_id}
+        {"organization_id": org_id, "booking_id": booking_id, "event": {"$exists": True}}
     ).sort("occurred_at", -1)
     events = []
     async for ev in cursor:

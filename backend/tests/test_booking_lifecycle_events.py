@@ -62,8 +62,8 @@ async def test_append_confirm_event_updates_projection(test_db):
 
 
 @pytest.mark.anyio
-async def test_cancel_guard_and_single_event():
-    db = await get_db()
+async def test_cancel_guard_and_single_event(test_db):
+    db = test_db
     svc = BookingLifecycleService(db)
 
     now = now_utc()
@@ -113,8 +113,8 @@ async def test_cancel_guard_and_single_event():
 
 
 @pytest.mark.anyio
-async def test_amend_event_does_not_change_status():
-    db = await get_db()
+async def test_amend_event_does_not_change_status(test_db):
+    db = test_db
     svc = BookingLifecycleService(db)
 
     now = now_utc()

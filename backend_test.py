@@ -1804,8 +1804,8 @@ def test_syroce_f12_multi_amend_backend():
     
     # Step 1: Create second amend quote (shorten back)
     second_amend_quote_payload = {
-        "check_in": "2026-02-02",  # Changed start date
-        "check_out": "2026-02-04", # Keep same end date
+        "check_in": "2026-01-11",  # Changed start date
+        "check_out": "2026-01-13", # Keep same end date
         "request_id": f"amend-2-{uuid.uuid4()}"
     }
     

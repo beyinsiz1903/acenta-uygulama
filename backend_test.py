@@ -2000,8 +2000,8 @@ def test_syroce_f12_multi_amend_backend():
     
     # Now try to amend the cancelled booking - should get 409 cannot_amend_in_status
     cancelled_amend_payload = {
-        "check_in": "2026-02-11",
-        "check_out": "2026-02-13",
+        "check_in": "2026-01-16",
+        "check_out": "2026-01-18",
         "request_id": f"cancelled-amend-{uuid.uuid4()}"
     }
     

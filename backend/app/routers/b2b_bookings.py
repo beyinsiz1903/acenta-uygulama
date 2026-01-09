@@ -187,24 +187,26 @@ async def cancel_b2b_booking(
         occurred_at=now,
     )
 
-    # Append BOOKING_CANCELLED lifecycle event
+    # Update booking_financials refunded_total / penalty_total using current values
+    bf = await db.booking_financials.find_one(
+        {"organization_id": org_id, "booking_id": booking_id}
+    )
+
+    meta = {
+        "reason": reason,
+        "refund_eur": float(bf.get("refunded_total", 0.0)) if bf else None,
+        "penalty_eur": float(bf.get("penalty_total", 0.0)) if bf else None,
+    }
     await lifecycle.append_event(
         organization_id=org_id,
         agency_id=agency_id,
         booking_id=booking_id,
         event="BOOKING_CANCELLED",
         occurred_at=now,
+        request_id=idempotency_key,
         before={"status": "CONFIRMED"},
         after={"status": "CANCELLED"},
-        meta={
-            "reason": reason,
-            "refund_status": "COMPLETED",
-        },
-    )
-
-    # Update booking_financials refunded_total / penalty_total using current values
-    bf = await db.booking_financials.find_one(
-        {"organization_id": org_id, "booking_id": booking_id}
+        meta=meta,
     )
 
     refund_eur = None

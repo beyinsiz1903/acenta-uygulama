@@ -18,6 +18,8 @@ Idempotent and safe to re-run.
 
 from typing import Dict
 
+from bson import ObjectId
+
 from app.db import get_db
 
 

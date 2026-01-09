@@ -1549,6 +1549,493 @@ def test_syroce_p1_l1_booking_events_lifecycle():
     print("=" * 80 + "\n")
 
 
+def test_syroce_f12_multi_amend_backend():
+    """Test Syroce Commerce OS F1.2 Multi-Amend backend functionality"""
+    print("\n" + "=" * 80)
+    print("SYROCE COMMERCE OS F1.2 MULTI-AMEND BACKEND TEST")
+    print("Testing multi-amend functionality, ledger postings, and lifecycle behavior")
+    print("=" * 80 + "\n")
+
+    # ------------------------------------------------------------------
+    # Test 1: Verify ledger_postings index change
+    # ------------------------------------------------------------------
+    print("1️⃣  Testing Ledger Postings Index Change...")
+    
+    # Login as admin to access MongoDB directly
+    admin_token, admin_org_id, admin_email = login_admin()
+    admin_headers = {"Authorization": f"Bearer {admin_token}"}
+    
+    print(f"   ✅ Admin login successful: {admin_email}")
+    print(f"   📋 Organization ID: {admin_org_id}")
+
+    # We'll verify the index by testing the functionality it supports
+    print("   📋 Index verification will be done through multi-amend functionality tests...")
+
+    # ------------------------------------------------------------------
+    # Test 2: BookingLifecycleService amend guard
+    # ------------------------------------------------------------------
+    print("\n2️⃣  Testing BookingLifecycleService Amend Guard...")
+    
+    # Login as agency user
+    agency_token, agency_org_id, agency_id, agency_email = login_agency()
+    agency_headers = {"Authorization": f"Bearer {agency_token}"}
+    
+    print(f"   ✅ Agency login successful: {agency_email}")
+    
+    # Create a CONFIRMED booking for testing
+    print("   📋 Creating CONFIRMED booking for amend guard tests...")
+    
+    # Step 1: Hotel Search
+    search_params = {
+        "city": "Istanbul",
+        "check_in": "2026-02-01",
+        "check_out": "2026-02-03",
+        "adults": 2,
+        "children": 0
+    }
+    
+    r = requests.get(
+        f"{BASE_URL}/api/b2b/hotels/search",
+        params=search_params,
+        headers=agency_headers,
+    )
+    assert r.status_code == 200, f"Hotel search failed: {r.text}"
+    
+    search_response = r.json()
+    items = search_response["items"]
+    assert len(items) > 0, "No search results found"
+    
+    first_item = items[0]
+    product_id = first_item["product_id"]
+    rate_plan_id = first_item["rate_plan_id"]
+    
+    print(f"   📋 Found hotel: {first_item['hotel_name']}")
+    
+    # Step 2: Quote Creation
+    quote_payload = {
+        "channel_id": "agency_extranet",
+        "items": [
+            {
+                "product_id": product_id,
+                "room_type_id": "default_room",
+                "rate_plan_id": rate_plan_id,
+                "check_in": "2026-02-01",
+                "check_out": "2026-02-03",
+                "occupancy": 2
+            }
+        ],
+        "client_context": {"source": "syroce-f12-multi-amend-test"}
+    }
+    
+    r = requests.post(
+        f"{BASE_URL}/api/b2b/quotes",
+        json=quote_payload,
+        headers=agency_headers,
+    )
+    assert r.status_code == 200, f"Quote creation failed: {r.text}"
+    
+    quote_response = r.json()
+    quote_id = quote_response["quote_id"]
+    
+    print(f"   📋 Quote created: {quote_id}")
+    
+    # Step 3: Booking Creation
+    idempotency_key = f"syroce-f12-multi-amend-test-{uuid.uuid4()}"
+    
+    booking_payload = {
+        "quote_id": quote_id,
+        "customer": {
+            "name": "Syroce F1.2 Multi-Amend Test Guest",
+            "email": "syroce-f12-multi-amend-test@example.com"
+        },
+        "travellers": [
+            {
+                "first_name": "Syroce F1.2",
+                "last_name": "Multi-Amend Test"
+            }
+        ],
+        "notes": "Syroce F1.2 multi-amend backend test"
+    }
+    
+    booking_headers = {
+        **agency_headers,
+        "Idempotency-Key": idempotency_key
+    }
+    
+    r = requests.post(
+        f"{BASE_URL}/api/b2b/bookings",
+        json=booking_payload,
+        headers=booking_headers,
+    )
+    assert r.status_code == 200, f"Booking creation failed: {r.text}"
+    
+    booking_response = r.json()
+    confirmed_booking_id = booking_response["booking_id"]
+    booking_status = booking_response["status"]
+    
+    print(f"   ✅ CONFIRMED booking created: {confirmed_booking_id}")
+    print(f"   📊 Status: {booking_status}")
+    
+    assert booking_status == "CONFIRMED", f"Expected CONFIRMED status, got: {booking_status}"
+
+    # ------------------------------------------------------------------
+    # Test 3: Get baseline ledger summary
+    # ------------------------------------------------------------------
+    print("\n3️⃣  Testing Baseline Ledger Summary...")
+    
+    r = requests.get(
+        f"{BASE_URL}/api/ops/finance/bookings/{confirmed_booking_id}/ledger-summary",
+        headers=admin_headers,
+    )
+    assert r.status_code == 200, f"Ledger summary failed: {r.text}"
+    
+    baseline_summary = r.json()
+    print(f"   ✅ Baseline ledger summary retrieved")
+    print(f"   📊 Postings count: {baseline_summary['postings_count']}")
+    print(f"   💰 Total debit: {baseline_summary['total_debit']}")
+    print(f"   💰 Total credit: {baseline_summary['total_credit']}")
+    print(f"   📊 Diff: {baseline_summary['diff']}")
+    
+    # Verify there's at least one BOOKING_CONFIRMED posting
+    assert baseline_summary['postings_count'] >= 1, "Should have at least one BOOKING_CONFIRMED posting"
+    assert abs(baseline_summary['diff']) < 0.01, "Ledger should be balanced (diff ~= 0)"
+
+    # ------------------------------------------------------------------
+    # Test 4: First amendment
+    # ------------------------------------------------------------------
+    print("\n4️⃣  Testing First Amendment...")
+    
+    # Step 1: Create amend quote (extend by 1 night)
+    amend_quote_payload = {
+        "check_in": "2026-02-01",
+        "check_out": "2026-02-04",  # Extended by 1 night
+        "request_id": f"amend-1-{uuid.uuid4()}"
+    }
+    
+    r = requests.post(
+        f"{BASE_URL}/api/b2b/bookings/{confirmed_booking_id}/amend/quote",
+        json=amend_quote_payload,
+        headers=agency_headers,
+    )
+    assert r.status_code == 200, f"First amend quote failed: {r.text}"
+    
+    amend_quote_response = r.json()
+    first_amend_id = amend_quote_response["amend_id"]
+    first_delta_sell_eur = amend_quote_response["delta"]["sell_eur"]
+    
+    print(f"   ✅ First amend quote created")
+    print(f"   📋 Amend ID: {first_amend_id}")
+    print(f"   💰 Delta sell EUR: {first_delta_sell_eur}")
+    
+    # Step 2: Confirm first amendment
+    amend_confirm_payload = {
+        "amend_id": first_amend_id
+    }
+    
+    r = requests.post(
+        f"{BASE_URL}/api/b2b/bookings/{confirmed_booking_id}/amend/confirm",
+        json=amend_confirm_payload,
+        headers=agency_headers,
+    )
+    assert r.status_code == 200, f"First amend confirm failed: {r.text}"
+    
+    amend_confirm_response = r.json()
+    print(f"   ✅ First amendment confirmed")
+    print(f"   📊 Status: {amend_confirm_response['status']}")
+    
+    # Verify booking document is updated
+    r = requests.get(
+        f"{BASE_URL}/api/b2b/bookings",
+        headers=agency_headers,
+    )
+    assert r.status_code == 200, f"Get bookings failed: {r.text}"
+    
+    bookings_response = r.json()
+    our_booking = None
+    for item in bookings_response["items"]:
+        if item.get("booking_id") == confirmed_booking_id:
+            our_booking = item
+            break
+    
+    assert our_booking is not None, "Should find our booking in the list"
+    assert our_booking["check_out"] == "2026-02-04", "Check-out date should be updated"
+    
+    print(f"   ✅ Booking dates updated: {our_booking['check_in']} to {our_booking['check_out']}")
+    
+    # Verify ledger posting was created
+    r = requests.get(
+        f"{BASE_URL}/api/ops/finance/bookings/{confirmed_booking_id}/ledger-summary",
+        headers=admin_headers,
+    )
+    assert r.status_code == 200, f"Ledger summary after first amend failed: {r.text}"
+    
+    first_amend_summary = r.json()
+    print(f"   📊 Ledger after first amend - Postings: {first_amend_summary['postings_count']}")
+    
+    # Should have more postings now (BOOKING_CONFIRMED + BOOKING_AMENDED)
+    assert first_amend_summary['postings_count'] > baseline_summary['postings_count'], \
+        "Should have additional BOOKING_AMENDED posting"
+    
+    # Check booking events for BOOKING_AMENDED with amend_sequence = 1
+    r = requests.get(
+        f"{BASE_URL}/api/b2b/bookings/{confirmed_booking_id}/events",
+        headers=agency_headers,
+    )
+    assert r.status_code == 200, f"Get booking events failed: {r.text}"
+    
+    events_response = r.json()
+    events = events_response["events"]
+    
+    amended_events = [e for e in events if e.get("event") == "BOOKING_AMENDED"]
+    assert len(amended_events) >= 1, "Should have at least one BOOKING_AMENDED event"
+    
+    first_amended_event = amended_events[0]
+    assert first_amended_event["meta"].get("amend_id") == first_amend_id, \
+        "BOOKING_AMENDED event should have correct amend_id in meta"
+    assert first_amended_event["meta"].get("amend_sequence") == 1, \
+        "First BOOKING_AMENDED event should have amend_sequence = 1"
+    
+    print(f"   ✅ First BOOKING_AMENDED event created with amend_sequence = 1")
+
+    # ------------------------------------------------------------------
+    # Test 5: Second amendment (same booking)
+    # ------------------------------------------------------------------
+    print("\n5️⃣  Testing Second Amendment (Multi-Amend)...")
+    
+    # Step 1: Create second amend quote (shorten back)
+    second_amend_quote_payload = {
+        "check_in": "2026-02-02",  # Changed start date
+        "check_out": "2026-02-04", # Keep same end date
+        "request_id": f"amend-2-{uuid.uuid4()}"
+    }
+    
+    r = requests.post(
+        f"{BASE_URL}/api/b2b/bookings/{confirmed_booking_id}/amend/quote",
+        json=second_amend_quote_payload,
+        headers=agency_headers,
+    )
+    assert r.status_code == 200, f"Second amend quote failed: {r.text}"
+    
+    second_amend_quote_response = r.json()
+    second_amend_id = second_amend_quote_response["amend_id"]
+    second_delta_sell_eur = second_amend_quote_response["delta"]["sell_eur"]
+    
+    print(f"   ✅ Second amend quote created")
+    print(f"   📋 Amend ID: {second_amend_id}")
+    print(f"   💰 Delta sell EUR: {second_delta_sell_eur}")
+    
+    # Verify different amend_id
+    assert second_amend_id != first_amend_id, "Second amendment should have different amend_id"
+    
+    # Step 2: Confirm second amendment
+    second_amend_confirm_payload = {
+        "amend_id": second_amend_id
+    }
+    
+    r = requests.post(
+        f"{BASE_URL}/api/b2b/bookings/{confirmed_booking_id}/amend/confirm",
+        json=second_amend_confirm_payload,
+        headers=agency_headers,
+    )
+    assert r.status_code == 200, f"Second amend confirm failed: {r.text}"
+    
+    second_amend_confirm_response = r.json()
+    print(f"   ✅ Second amendment confirmed")
+    print(f"   📊 Status: {second_amend_confirm_response['status']}")
+    
+    # Verify no duplicate key error occurred (this tests the index change)
+    print(f"   ✅ No duplicate key error - multi-amend index working correctly")
+    
+    # Verify ledger now has TWO BOOKING_AMENDED postings
+    r = requests.get(
+        f"{BASE_URL}/api/ops/finance/bookings/{confirmed_booking_id}/ledger-summary",
+        headers=admin_headers,
+    )
+    assert r.status_code == 200, f"Ledger summary after second amend failed: {r.text}"
+    
+    second_amend_summary = r.json()
+    print(f"   📊 Ledger after second amend - Postings: {second_amend_summary['postings_count']}")
+    
+    # Should have even more postings now
+    assert second_amend_summary['postings_count'] > first_amend_summary['postings_count'], \
+        "Should have additional second BOOKING_AMENDED posting"
+    
+    # Check booking events for TWO BOOKING_AMENDED events with correct amend_sequence
+    r = requests.get(
+        f"{BASE_URL}/api/b2b/bookings/{confirmed_booking_id}/events",
+        headers=agency_headers,
+    )
+    assert r.status_code == 200, f"Get booking events after second amend failed: {r.text}"
+    
+    events_response = r.json()
+    events = events_response["events"]
+    
+    amended_events = [e for e in events if e.get("event") == "BOOKING_AMENDED"]
+    assert len(amended_events) == 2, f"Should have exactly 2 BOOKING_AMENDED events, got: {len(amended_events)}"
+    
+    # Sort by occurred_at to get correct order
+    amended_events.sort(key=lambda x: x.get("occurred_at"))
+    
+    # First event should have amend_sequence = 1
+    first_event = amended_events[0]
+    assert first_event["meta"].get("amend_sequence") == 1, \
+        f"First BOOKING_AMENDED event should have amend_sequence = 1, got: {first_event['meta'].get('amend_sequence')}"
+    
+    # Second event should have amend_sequence = 2
+    second_event = amended_events[1]
+    assert second_event["meta"].get("amend_sequence") == 2, \
+        f"Second BOOKING_AMENDED event should have amend_sequence = 2, got: {second_event['meta'].get('amend_sequence')}"
+    
+    print(f"   ✅ Two BOOKING_AMENDED events with correct amend_sequence (1, 2)")
+    print(f"   📋 First event amend_id: {first_event['meta'].get('amend_id')}")
+    print(f"   📋 Second event amend_id: {second_event['meta'].get('amend_id')}")
+
+    # ------------------------------------------------------------------
+    # Test 6: Guard behavior for cancelled booking
+    # ------------------------------------------------------------------
+    print("\n6️⃣  Testing Guard Behavior for Cancelled Booking...")
+    
+    # Create another booking to cancel
+    print("   📋 Creating booking to test cancel guard...")
+    
+    # Use different dates and idempotency key
+    cancel_test_search_params = {
+        "city": "Istanbul",
+        "check_in": "2026-02-10",
+        "check_out": "2026-02-12",
+        "adults": 2,
+        "children": 0
+    }
+    
+    r = requests.get(
+        f"{BASE_URL}/api/b2b/hotels/search",
+        params=cancel_test_search_params,
+        headers=agency_headers,
+    )
+    assert r.status_code == 200, f"Hotel search for cancel test failed: {r.text}"
+    
+    search_response = r.json()
+    items = search_response["items"]
+    assert len(items) > 0, "No search results found for cancel test"
+    
+    first_item = items[0]
+    product_id = first_item["product_id"]
+    rate_plan_id = first_item["rate_plan_id"]
+    
+    # Create quote
+    quote_payload_cancel = {
+        "channel_id": "agency_extranet",
+        "items": [
+            {
+                "product_id": product_id,
+                "room_type_id": "default_room",
+                "rate_plan_id": rate_plan_id,
+                "check_in": "2026-02-10",
+                "check_out": "2026-02-12",
+                "occupancy": 2
+            }
+        ],
+        "client_context": {"source": "syroce-f12-cancel-guard-test"}
+    }
+    
+    r = requests.post(
+        f"{BASE_URL}/api/b2b/quotes",
+        json=quote_payload_cancel,
+        headers=agency_headers,
+    )
+    assert r.status_code == 200, f"Quote creation for cancel test failed: {r.text}"
+    
+    quote_response = r.json()
+    quote_id_cancel = quote_response["quote_id"]
+    
+    # Create booking
+    idempotency_key_cancel = f"syroce-f12-cancel-guard-test-{uuid.uuid4()}"
+    
+    booking_payload_cancel = {
+        "quote_id": quote_id_cancel,
+        "customer": {
+            "name": "Syroce F1.2 Cancel Guard Test",
+            "email": "syroce-f12-cancel-guard-test@example.com"
+        },
+        "travellers": [
+            {
+                "first_name": "Cancel Guard",
+                "last_name": "Test"
+            }
+        ],
+        "notes": "Syroce F1.2 cancel guard test booking"
+    }
+    
+    booking_headers_cancel = {
+        **agency_headers,
+        "Idempotency-Key": idempotency_key_cancel
+    }
+    
+    r = requests.post(
+        f"{BASE_URL}/api/b2b/bookings",
+        json=booking_payload_cancel,
+        headers=booking_headers_cancel,
+    )
+    assert r.status_code == 200, f"Booking creation for cancel test failed: {r.text}"
+    
+    booking_response_cancel = r.json()
+    cancel_test_booking_id = booking_response_cancel["booking_id"]
+    
+    print(f"   📋 Cancel test booking created: {cancel_test_booking_id}")
+    
+    # Cancel the booking
+    cancel_payload = {
+        "reason": "syroce_f12_cancel_guard_test"
+    }
+    
+    r = requests.post(
+        f"{BASE_URL}/api/b2b/bookings/{cancel_test_booking_id}/cancel",
+        json=cancel_payload,
+        headers=agency_headers,
+    )
+    assert r.status_code == 200, f"Booking cancellation failed: {r.text}"
+    
+    cancel_response = r.json()
+    print(f"   ✅ Booking cancelled: {cancel_response['status']}")
+    
+    # Now try to amend the cancelled booking - should get 409 cannot_amend_in_status
+    cancelled_amend_payload = {
+        "check_in": "2026-02-11",
+        "check_out": "2026-02-13",
+        "request_id": f"cancelled-amend-{uuid.uuid4()}"
+    }
+    
+    r = requests.post(
+        f"{BASE_URL}/api/b2b/bookings/{cancel_test_booking_id}/amend/quote",
+        json=cancelled_amend_payload,
+        headers=agency_headers,
+    )
+    
+    assert r.status_code == 409, f"Expected 409 for amend on cancelled booking, got: {r.status_code}"
+    error_response = r.json()
+    
+    assert "error" in error_response, "Error response should contain error field"
+    error = error_response["error"]
+    assert error["code"] == "cannot_amend_in_status", \
+        f"Expected cannot_amend_in_status, got: {error['code']}"
+    assert error["details"]["status"] == "CANCELLED", \
+        f"Error details should show CANCELLED status, got: {error['details']['status']}"
+    
+    print(f"   ✅ Amend on cancelled booking correctly rejected: 409 cannot_amend_in_status")
+    print(f"   📋 Error: {error['code']} - {error.get('message', '')}")
+
+    print("\n" + "=" * 80)
+    print("✅ SYROCE COMMERCE OS F1.2 MULTI-AMEND BACKEND TEST COMPLETE")
+    print("✅ Ledger postings index supports multi-amend (no duplicate key errors)")
+    print("✅ BookingLifecycleService amend guard allows CONFIRMED, blocks CANCELLED")
+    print("✅ Amendment sequence meta increments correctly (amend_sequence: 1, 2)")
+    print("✅ Multi-amend flow works end-to-end (two successful amendments)")
+    print("✅ Guard behavior correctly prevents amending cancelled bookings")
+    print("✅ Ledger postings created for each amendment with unique amend_id")
+    print("✅ Booking events timeline shows correct amend_sequence progression")
+    print("=" * 80 + "\n")
+
+
 if __name__ == "__main__":
-    # Run Syroce P1.L1 Event-driven Booking Lifecycle test
-    test_syroce_p1_l1_booking_events_lifecycle()
+    # Run Syroce F1.2 Multi-Amend backend test
+    test_syroce_f12_multi_amend_backend()

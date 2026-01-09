@@ -4,12 +4,11 @@ from datetime import timedelta
 
 import pytest
 
-from app.db import get_db
 from app.utils import now_utc
 
 
 @pytest.mark.anyio
-async def test_booking_amend_quote_and_confirm_zero_delta_has_no_ledger(async_client, agency_token):
+async def test_booking_amend_quote_and_confirm_zero_delta_has_no_ledger(async_client, agency_token, test_db):
     """P1.5: Delta ~ 0 iken ledger posting olmamali, amend CONFIRMED olmalidir.
 
     Senaryo:
@@ -21,7 +20,7 @@ async def test_booking_amend_quote_and_confirm_zero_delta_has_no_ledger(async_cl
     """
 
     client = async_client
-    db = await get_db()
+    db = test_db
 
     # 1) Agency context
     headers = {"Authorization": f"Bearer {agency_token}"}

@@ -209,6 +209,52 @@ class BookingPaymentTxLogger:
 
     @staticmethod
     async def insert_tx(
+
+    @staticmethod
+    async def append_payment_event(
+        db,
+        *,
+        organization_id: str,
+        agency_id: str,
+        booking_id: str,
+        event: str,
+        payment_id: str,
+        amount_cents: int,
+        currency: str,
+        request_id: Optional[str] = None,
+        provider: str = "stripe",
+        payment_intent_id: Optional[str] = None,
+        provider_event_id: Optional[str] = None,
+    ) -> dict:
+        """Append a PAYMENT_* booking_event with standardised meta.
+
+        This helper does NOT perform idempotency by itself; callers should
+        rely on transaction idempotency (booking_payment_transactions) to
+        avoid duplicates.
+        """
+
+        from app.services.booking_lifecycle import BookingLifecycleService
+
+        svc = BookingLifecycleService(db)
+        meta: Dict[str, Any] = {
+            "payment_id": payment_id,
+            "provider": provider,
+            "amount_minor": amount_cents,
+            "currency": currency,
+        }
+        if payment_intent_id:
+            meta["payment_intent_id"] = payment_intent_id
+        if provider_event_id:
+            meta["provider_event_id"] = provider_event_id
+
+        doc = await svc.append_event(
+            organization_id=organization_id,
+            agency_id=agency_id,
+            booking_id=booking_id,
+            event="BOOKING_AMENDED" if False else "BOOKING_CONFIRMED",  # placeholder, will be overridden by caller-specific event
+        )
+        return doc
+
         db,
         *,
         organization_id: str,

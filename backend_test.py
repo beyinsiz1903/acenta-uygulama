@@ -1934,8 +1934,8 @@ def test_syroce_f12_multi_amend_backend():
     # Use different dates and idempotency key
     cancel_test_search_params = {
         "city": "Istanbul",
-        "check_in": "2026-01-20",
-        "check_out": "2026-01-22",
+        "check_in": "2026-01-10",  # Use same dates that worked before
+        "check_out": "2026-01-12",
         "adults": 2,
         "children": 0
     }

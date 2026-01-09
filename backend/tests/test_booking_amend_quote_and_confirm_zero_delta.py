@@ -8,7 +8,7 @@ from app.db import get_db
 from app.utils import now_utc
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_booking_amend_quote_and_confirm_zero_delta_has_no_ledger(async_client, agency_token):
     """P1.5: Delta ~ 0 iken ledger posting olmamali, amend CONFIRMED olmalidir.
 

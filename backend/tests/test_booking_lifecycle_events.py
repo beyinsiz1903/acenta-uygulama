@@ -9,7 +9,7 @@ from app.services.booking_lifecycle import BookingLifecycleService
 from app.utils import now_utc
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_append_confirm_event_updates_projection():
     db = await get_db()
     svc = BookingLifecycleService(db)
@@ -62,7 +62,7 @@ async def test_append_confirm_event_updates_projection():
     assert booking_after.get("lifecycle_version") == 1
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_cancel_guard_and_single_event():
     db = await get_db()
     svc = BookingLifecycleService(db)
@@ -113,7 +113,7 @@ async def test_cancel_guard_and_single_event():
     assert decision2 == "already_cancelled"
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_amend_event_does_not_change_status():
     db = await get_db()
     svc = BookingLifecycleService(db)

@@ -8,7 +8,7 @@ from app.db import get_db
 from app.utils import now_utc
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_booking_amend_quote_and_confirm_decrease_delta(async_client, agency_token):
     """P1.5: Amend flow (quote + confirm) with negative delta.
 

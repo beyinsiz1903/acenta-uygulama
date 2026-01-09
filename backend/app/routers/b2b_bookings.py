@@ -327,6 +327,9 @@ async def amend_booking_confirm(
         "status": doc.get("status"),
         "before": doc.get("before"),
         "after": doc.get("after"),
+        "delta": doc.get("delta"),
+    }
+    return doc_out
 
 
 @router.get(

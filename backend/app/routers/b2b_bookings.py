@@ -222,6 +222,26 @@ async def amend_booking_quote(
 ):
     """Generate a pricing proposal for a booking date change.
 
+    # Append lifecycle event (BOOKING_CANCELLED)
+    before_snapshot = {"status": booking.get("status")}  # CONFIRMED
+    after_snapshot = {"status": "CANCELLED"}
+    meta = {
+        "reason": reason,
+        "refund_eur": float(bf.get("refunded_total", 0.0)) if bf else None,
+        "penalty_eur": float(bf.get("penalty_total", 0.0)) if bf else None,
+    }
+    await lifecycle.append_event(
+        organization_id=org_id,
+        agency_id=agency_id,
+        booking_id=booking_id,
+        event="BOOKING_CANCELLED",
+        occurred_at=now,
+        before=before_snapshot,
+        after=after_snapshot,
+        meta=meta,
+    )
+
+
     - Idempotent per (organization_id, booking_id, request_id).
     - Does NOT change booking or financials.
     """

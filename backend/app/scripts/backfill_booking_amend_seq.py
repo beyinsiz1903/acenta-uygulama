@@ -56,8 +56,13 @@ async def backfill_booking_amend_seq() -> None:
         if not org_id or not booking_id:
             continue
 
+        try:
+            oid = ObjectId(booking_id)
+        except Exception:
+            continue
+
         await db.bookings.update_one(
-            {"_id": db.to_object_id(booking_id), "organization_id": org_id},
+            {"_id": oid, "organization_id": org_id},
             {"$set": {"amend_seq": count}},
         )
 

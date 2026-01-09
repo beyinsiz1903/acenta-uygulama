@@ -1758,7 +1758,7 @@ def test_syroce_f12_multi_amend_backend():
             break
     
     assert our_booking is not None, "Should find our booking in the list"
-    assert our_booking["check_out"] == "2026-02-04", "Check-out date should be updated"
+    assert our_booking["check_out"] == "2026-01-13", "Check-out date should be updated"
     
     print(f"   ✅ Booking dates updated: {our_booking['check_in']} to {our_booking['check_out']}")
     

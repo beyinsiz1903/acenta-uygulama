@@ -123,8 +123,8 @@ async def test_booking_amend_quote_and_confirm_zero_delta_has_no_ledger(async_cl
     delta = q.get("delta") or {}
     delta_sell_eur = float(delta.get("sell_eur", 0.0))
 
-    # Delta ~ 0 bekliyoruz
-    assert abs(delta_sell_eur) <= 0.01
+    # Delta ~ 0 bekliyoruz (guard ile ayni tolerans)
+    assert abs(delta_sell_eur) <= 0.005
 
     amend_id = q.get("amend_id")
     assert amend_id

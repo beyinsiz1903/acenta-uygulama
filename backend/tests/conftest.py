@@ -89,7 +89,8 @@ async def async_client(app_with_overrides) -> AsyncGenerator[httpx.AsyncClient, 
     All tests should use this client instead of remote preview URLs.
     """
 
-    async with httpx.AsyncClient(app=app_with_overrides, base_url="http://test", timeout=30.0) as client:
+    transport = ASGITransport(app=app_with_overrides)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test", timeout=30.0) as client:
         yield client
 
 

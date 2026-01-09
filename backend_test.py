@@ -742,8 +742,8 @@ def create_p02_booking(agency_headers):
     # Step 1: Hotel Search
     search_params = {
         "city": "Istanbul",
-        "check_in": "2026-01-20",
-        "check_out": "2026-01-22",
+        "check_in": "2026-01-10",
+        "check_out": "2026-01-12",
         "adults": 2,
         "children": 0
     }
@@ -773,8 +773,8 @@ def create_p02_booking(agency_headers):
                 "product_id": product_id,
                 "room_type_id": "default_room",
                 "rate_plan_id": rate_plan_id,
-                "check_in": "2026-01-20",
-                "check_out": "2026-01-22",
+                "check_in": "2026-01-10",
+                "check_out": "2026-01-12",
                 "occupancy": 2
             }
         ],
@@ -1071,8 +1071,8 @@ def test_syroce_p1_l1_booking_events_lifecycle():
     # Step 1: Hotel Search
     search_params = {
         "city": "Istanbul",
-        "check_in": "2026-01-20",
-        "check_out": "2026-01-22",
+        "check_in": "2026-01-10",
+        "check_out": "2026-01-12",
         "adults": 2,
         "children": 0
     }
@@ -1102,8 +1102,8 @@ def test_syroce_p1_l1_booking_events_lifecycle():
                 "product_id": product_id,
                 "room_type_id": "default_room",
                 "rate_plan_id": rate_plan_id,
-                "check_in": "2026-01-20",
-                "check_out": "2026-01-22",
+                "check_in": "2026-01-10",
+                "check_out": "2026-01-12",
                 "occupancy": 2
             }
         ],
@@ -1963,8 +1963,8 @@ def test_syroce_f12_multi_amend_backend():
                 "product_id": product_id,
                 "room_type_id": "default_room",
                 "rate_plan_id": rate_plan_id,
-                "check_in": "2026-01-20",
-                "check_out": "2026-01-22",
+                "check_in": "2026-01-10",
+                "check_out": "2026-01-12",
                 "occupancy": 2
             }
         ],

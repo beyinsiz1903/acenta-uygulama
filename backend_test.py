@@ -1850,7 +1850,7 @@ def test_syroce_f12_multi_amend_backend():
     # Verify no duplicate key error occurred (this tests the index change)
     print(f"   ✅ No duplicate key error - multi-amend index working correctly")
     
-    # Verify ledger now has TWO BOOKING_AMENDED postings
+    # Verify ledger now has additional BOOKING_AMENDED postings (if deltas > 0.005)
     r = requests.get(
         f"{BASE_URL}/api/ops/finance/bookings/{confirmed_booking_id}/ledger-summary",
         headers=admin_headers,
@@ -1860,11 +1860,23 @@ def test_syroce_f12_multi_amend_backend():
     second_amend_summary = r.json()
     print(f"   📊 Ledger after second amend - Postings: {second_amend_summary['postings_count']}")
     
-    # Should have even more postings now
-    assert second_amend_summary['postings_count'] > first_amend_summary['postings_count'], \
-        "Should have additional second BOOKING_AMENDED posting"
+    # Count expected postings based on deltas
+    expected_amend_postings = 0
+    if abs(first_delta_sell_eur) > 0.005:
+        expected_amend_postings += 1
+    if abs(second_delta_sell_eur) > 0.005:
+        expected_amend_postings += 1
     
-    # Check booking events for TWO BOOKING_AMENDED events with correct amend_sequence
+    expected_total_postings = baseline_summary['postings_count'] + expected_amend_postings
+    
+    if expected_amend_postings > 0:
+        assert second_amend_summary['postings_count'] == expected_total_postings, \
+            f"Should have {expected_total_postings} total postings, got {second_amend_summary['postings_count']}"
+        print(f"   ✅ Correct number of ledger postings created ({expected_amend_postings} amendments)")
+    else:
+        print(f"   📋 No amendment ledger postings created (both deltas <= 0.005, as expected)")
+    
+    # Check booking events for TWO BOOKING_AMENDED events with correct amend_sequence (always created)
     r = requests.get(
         f"{BASE_URL}/api/b2b/bookings/{confirmed_booking_id}/events",
         headers=agency_headers,
@@ -1893,6 +1905,11 @@ def test_syroce_f12_multi_amend_backend():
     print(f"   ✅ Two BOOKING_AMENDED events with correct amend_sequence (1, 2)")
     print(f"   📋 First event amend_id: {first_event['meta'].get('amend_id')}")
     print(f"   📋 Second event amend_id: {second_event['meta'].get('amend_id')}")
+    
+    # Verify different amend_ids (this tests the index change allowing multiple postings)
+    assert first_event["meta"].get("amend_id") != second_event["meta"].get("amend_id"), \
+        "Amendment events should have different amend_ids"
+    print(f"   ✅ Multi-amend index working: different amend_ids allowed")
 
     # ------------------------------------------------------------------
     # Test 6: Guard behavior for cancelled booking

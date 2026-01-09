@@ -2049,8 +2049,8 @@ def test_syroce_f12_multi_amend_backend():
     
     assert "error" in error_response, "Error response should contain error field"
     error = error_response["error"]
-    assert error["code"] == "cannot_amend_in_status", \
-        f"Expected cannot_amend_in_status, got: {error['code']}"
+    assert error["code"] == "amend_not_supported_in_status", \
+        f"Expected amend_not_supported_in_status, got: {error['code']}"
     assert error["details"]["status"] == "CANCELLED", \
         f"Error details should show CANCELLED status, got: {error['details']['status']}"
     

@@ -904,6 +904,7 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
         </div>
 
         <SheetFooter className="gap-2 border-t pt-3 flex flex-row items-center justify-between">
+        </>
           <div className="text-xs text-muted-foreground">
             {booking?.code && <span>PNR: {booking.code}</span>}
           </div>

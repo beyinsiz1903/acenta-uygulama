@@ -585,15 +585,15 @@
 
   - task: "BookingDetailDrawer Timeline UI Functionality Test"
     implemented: true
-    working: "NA"
+    working: false
     file: "/app/frontend/src/components/BookingDetailDrawer.jsx"
     stuck_count: 0
     priority: "high"
     needs_retesting: true
     status_history:
-      - working: "NA"
+      - working: false
         agent: "testing"
-        comment: "Timeline UI functionality needs comprehensive testing. Features to verify: 1) Details/Timeline tab switching with custom button tab bar, 2) Timeline tab lazy-loading events from /b2b/bookings/{bookingId}/events endpoint, 3) Event normalization supporting event/type and created_at/occurred_at fields, 4) Loading/error/empty/success states, 5) Auto-refresh after Cancel/Amend operations when Timeline tab is active, 6) Turkish event labels and date formatting, 7) Event metadata display. Testing scenarios: Happy path with events, Empty timeline, Cancel/Amend refresh behavior, Error state handling."
+        comment: "❌ TIMELINE UI TESTING BLOCKED BY CRITICAL JSX SYNTAX ERRORS - Unable to complete comprehensive testing due to frontend compilation failures. CRITICAL ISSUES FOUND: A) JSX SYNTAX ERROR: BookingDetailDrawer.jsx has structural issues preventing frontend compilation - 'Expected corresponding JSX closing tag for <>' error at line 855, causing webpack compilation failure and preventing UI from loading properly. B) CODE ANALYSIS VERIFICATION: ✅ Timeline UI implementation is present and comprehensive: 1) Details/Timeline tab switching implemented with custom button tab bar (lines 604-627), 2) Timeline tab lazy-loading from /b2b/bookings/{bookingId}/events endpoint (lines 161-184), 3) Event normalization supporting event/type and created_at/occurred_at fields (lines 51-63), 4) Loading/error/empty/success states implemented (lines 829-860), 5) Auto-refresh after Cancel/Amend operations when Timeline tab is active (lines 294-296, 330-331), 6) Turkish event labels and date formatting (lines 90-107, 75-88), 7) Event metadata display with actor, amount, reason (lines 109-138). C) IMPLEMENTATION STATUS: All required Timeline UI features are implemented in code but blocked by JSX syntax errors. URGENT ACTION REQUIRED: Main agent must fix JSX syntax errors in BookingDetailDrawer.jsx before Timeline UI can be tested. Specific issues: mismatched JSX tags, duplicate function definitions, structural inconsistencies. Once syntax errors are resolved, Timeline UI should be fully functional based on code analysis."
 
 ## backend:
 ##   - task: "FAZ-8 PMS entegrasyonuna hazırlık: Connect Layer + PmsClient adapter + source=local|pms işaretleme"

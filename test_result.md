@@ -1461,10 +1461,8 @@
 
 ## test_plan:
   current_focus:
-    - "Finance OS Phase 2A.3: Supplier Accrual Reverse & Adjustment Logic"
-    - "Ops B2B Voucher Tab FE test - Voucher creation, View HTML, Send Voucher functionality"
-  stuck_tasks: 
-    - "Finance OS Phase 2A.3: Supplier Accrual Reverse & Adjustment Logic"
+    - "BookingDetailDrawer Timeline UI Functionality Test"
+  stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 

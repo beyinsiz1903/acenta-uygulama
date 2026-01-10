@@ -2602,5 +2602,5 @@ def test_syroce_f12_multi_amend_backend():
 
 
 if __name__ == "__main__":
-    # Run Syroce F1.2 Multi-Amend backend test
-    test_syroce_f12_multi_amend_backend()
+    # Run F2.1 Booking Payments Core Service test
+    test_f21_booking_payments_core_service()

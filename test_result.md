@@ -422,6 +422,19 @@
 
 ##     needs_retesting: false
 
+## backend:
+##   - task: "F2.1 Booking Payments Core Service"
+##     implemented: true
+##     working: "NA"
+##     file: "/app/backend/app/services/booking_payments.py, /app/backend/tests/test_booking_payments_service.py"
+##     stuck_count: 0
+##     priority: "high"
+##     needs_retesting: true
+##     status_history:
+##       - working: "NA"
+##         agent: "main"
+##         comment: "F2.1 BookingPaymentsService icin temel aggregate ve CAS mantigi kuruldu; BookingPaymentsOrchestrator ile record_capture_succeeded / record_refund_succeeded akisi insert_tx -> booking_events.append -> ledger.post -> aggregate.update seklinde uctan uca tanimlandi. Mevcut unit test (test_booking_payments_service.py) yeni DB injection pattern'i ile yesil durumda. Simdi backend testing agent ile capture/refund senaryolarini HTTP seviyesinde kosmak gerekiyor."
+
   - task: "SCALE v1 Enforcement & Policy Backend Test - Action policies GET/PUT + Match blocking enforcement"
     implemented: true
     working: false

@@ -2000,6 +2000,27 @@ def test_f21_booking_payments_core_service():
             refund_posting_response = r.json()
             print(f"   ✅ REFUND_APPROVED posting created: {refund_posting_response.get('posting_id')}")
             print(f"   📋 Lines count: {refund_posting_response.get('lines_count')}")
+            
+            # Test idempotency: repeat the same refund posting
+            print("   📋 Testing REFUND_APPROVED idempotency...")
+            
+            r2 = requests.post(
+                f"{BASE_URL}/api/ops/finance/_test/posting",
+                json=refund_posting_payload,  # Same payload
+                headers=admin_headers,
+            )
+            
+            if r2.status_code == 200:
+                refund_posting_response2 = r2.json()
+                refund_posting_id_2 = refund_posting_response2.get('posting_id')
+                
+                # Check if we got the same posting ID (idempotent) or a new one
+                if refund_posting_id_2 == refund_posting_response.get('posting_id'):
+                    print(f"   ✅ Idempotency working: same posting_id returned")
+                else:
+                    print(f"   ⚠️  New posting created: {refund_posting_id_2} (may be expected if no idempotency key used)")
+            else:
+                print(f"   ❌ Idempotent REFUND_APPROVED posting failed: {r2.status_code} - {r2.text}")
         else:
             print(f"   ❌ REFUND_APPROVED posting failed: {r.status_code} - {r.text}")
     else:

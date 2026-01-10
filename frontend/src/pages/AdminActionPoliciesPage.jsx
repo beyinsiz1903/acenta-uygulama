@@ -180,7 +180,7 @@ export default function AdminActionPoliciesPage() {
         <div>
           <div className="text-xl font-semibold">Match Action Policies (Risk)</div>
           <div className="text-sm text-muted-foreground">
-            High-risk match durumunda otomatik watchlist / block davran315flar31n31 tan31mlay31n.
+            High-risk match durumunda otomatik watchlist / block davranışlarını tanımlayın.
           </div>
         </div>
 

@@ -707,7 +707,7 @@ export default function AdminFinanceRefundsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Finance · Refunds"
+        title="Refund Kuyruğu"
         subtitle="Refund case kuyruğu ve ilgili booking finansal özeti."
       />
 

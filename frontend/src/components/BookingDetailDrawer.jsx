@@ -637,10 +637,10 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
               )}
 
               {!loading && !error && booking && (
-                  <div className="space-y-4">
-                    <div>
-                      {booking && (
-                        <React.Fragment>
+                <div className="space-y-4">
+                  <div>
+                    {booking && (
+                      <React.Fragment>
                           {amendMode && (
                             <div className="mt-4 border rounded-md p-3 space-y-3">
                               <h3 className="text-sm font-medium text-muted-foreground">

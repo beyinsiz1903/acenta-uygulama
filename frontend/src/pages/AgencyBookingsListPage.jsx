@@ -12,6 +12,7 @@ import {
 } from "../components/ui/table";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
+import PageHeader from "../components/PageHeader";
 import { formatMoney } from "../lib/format";
 import { formatDateTime } from "../utils/formatters";
 import { BookingDetailDrawer } from "../components/BookingDetailDrawer";

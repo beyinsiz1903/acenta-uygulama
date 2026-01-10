@@ -100,7 +100,6 @@ class BookingPaymentsService:
 
         Returns (before, after) aggregate documents.
         """
-        db = await get_db()
 
         for attempt in range(2):
             current = await db.booking_payments.find_one(

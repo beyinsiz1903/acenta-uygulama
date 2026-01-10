@@ -3,6 +3,8 @@ import { api, apiErrorMessage } from "../lib/api";
 import { toast } from "../components/ui/sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import PageHeader from "../components/PageHeader";
+import EmptyState from "../components/EmptyState";
+import ErrorState from "../components/ErrorState";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
@@ -75,9 +77,10 @@ function RefundQueueList({
       </CardHeader>
       <CardContent className="flex-1 overflow-y-auto">
         {items.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            Bu filtrelerle refund case bulunamad1.
-          </p>
+          <EmptyState
+            title="Henz refund case yok"
+            description="Bu filtrelerle refund case bulunamad3. Farkl5 filtrelerle tekrar deneyin."
+          />
         ) : (
           <div className="overflow-x-auto">
             <Table>
@@ -709,10 +712,12 @@ export default function AdminFinanceRefundsPage() {
       />
 
       {listError && !loadingList && (
-        <div className="flex items-center gap-2 text-destructive text-sm">
-          <AlertCircle className="h-4 w-4" />
-          <span>{listError}</span>
-        </div>
+        <ErrorState
+          title="Refund listesi yrklenemedi"
+          description={listError}
+          onRetry={loadList}
+          className="max-w-xl"
+        />
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1.8fr)] gap-4 h-[560px]">

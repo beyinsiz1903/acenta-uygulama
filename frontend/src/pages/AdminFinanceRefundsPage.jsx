@@ -707,8 +707,8 @@ export default function AdminFinanceRefundsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Refund Kuyruğu"
-        subtitle="Ops ekibi için refund case kuyruğu ve ilgili booking finansal özeti."
+        title="Finance · Refunds"
+        subtitle="Refund case kuyruğu ve ilgili booking finansal özeti."
       />
 
       {listError && !loadingList && (

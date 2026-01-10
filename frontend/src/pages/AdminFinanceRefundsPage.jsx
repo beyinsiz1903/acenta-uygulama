@@ -703,12 +703,10 @@ export default function AdminFinanceRefundsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Finance Refunds</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Refund case kuyruğu ve booking finansal snapshot.
-        </p>
-      </div>
+      <PageHeader
+        title="Refund Kuyruğu"
+        subtitle="Ops ekibi için refund case kuyruğu ve ilgili booking finansal özeti."
+      />
 
       {listError && !loadingList && (
         <div className="flex items-center gap-2 text-destructive text-sm">

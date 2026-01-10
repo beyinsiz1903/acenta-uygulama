@@ -5,6 +5,7 @@ from typing import Any, Dict, Optional, Tuple
 
 from bson import ObjectId
 
+from app.db import get_db
 from app.errors import AppError
 from app.utils import now_utc
 

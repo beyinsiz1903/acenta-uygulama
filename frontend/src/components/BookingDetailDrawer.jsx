@@ -854,7 +854,10 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
           {activeTab === "timeline" && (
             <div className="space-y-3">
               {eventsLoading && (
-                <p className="text-sm text-muted-foreground px-1">Timeline yükleniyor...</p>
+                <div className="flex items-center gap-2 px-1">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span className="text-sm text-muted-foreground">Timeline yükleniyor...</span>
+                </div>
               )}
 
               {!eventsLoading && eventsError && (

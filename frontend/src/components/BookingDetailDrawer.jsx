@@ -115,7 +115,7 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
       ev.created_by?.email ||
       meta.created_by_email;
 
-    if (actorEmail) lines.push(`Actor: ${actorEmail}`);
+    if (actorEmail) lines.push(`Kullanıcı: ${actorEmail}`);
 
     const amount =
       meta.amount_cents ?? meta.amount_minor ?? meta.amount;

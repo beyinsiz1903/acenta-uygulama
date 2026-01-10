@@ -706,7 +706,7 @@ export default function AdminFinanceRefundsPage() {
       <div>
         <h1 className="text-2xl font-bold text-foreground">Finance Refunds</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Refund case kuyru1 ve booking finansal snapshot g f6r fcn fcm fc.
+          Refund case kuyruğu ve booking finansal snapshot.
         </p>
       </div>
 

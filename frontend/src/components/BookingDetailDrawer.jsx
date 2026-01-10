@@ -632,11 +632,11 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
                 <p className="text-sm text-muted-foreground px-1">Yükleniyor...</p>
               )}
 
-                {!loading && error && (
-                  <p className="text-sm text-destructive px-1">{error}</p>
-                )}
+              {!loading && error && (
+                <p className="text-sm text-destructive px-1">{error}</p>
+              )}
 
-                {!loading && !error && booking && (
+              {!loading && !error && booking && (
                   <div className="space-y-4">
                     <div>
                       {booking && (

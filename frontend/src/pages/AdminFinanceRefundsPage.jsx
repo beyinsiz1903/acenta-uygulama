@@ -713,7 +713,7 @@ export default function AdminFinanceRefundsPage() {
 
       {listError && !loadingList && (
         <ErrorState
-          title="Refund listesi yrklenemedi"
+          title="Refund listesi yüklenemedi"
           description={listError}
           onRetry={loadList}
           className="max-w-xl"

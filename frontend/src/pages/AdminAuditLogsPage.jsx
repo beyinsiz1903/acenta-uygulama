@@ -238,9 +238,13 @@ export default function AdminAuditLogsPage() {
         </div>
 
         {error ? (
-          <div className="mt-3 rounded-xl border border-destructive/50 bg-destructive/5 p-3 flex items-start gap-3">
-            <AlertCircle className="h-5 w-5 text-destructive mt-0.5" />
-            <div className="text-sm text-foreground">{error}</div>
+          <div className="mt-3">
+            <ErrorState
+              title="Audit log listesi yrklenemedi"
+              description={error}
+              onRetry={load}
+              compact
+            />
           </div>
         ) : null}
       </div>

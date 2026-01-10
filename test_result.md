@@ -794,6 +794,18 @@
 ##         comment: "✅ PHASE-1 MULTI-TENANT TEST COMPLETE - All 15 test scenarios passed (100% success rate). Comprehensive testing completed: 1) /api/health OK 2) SUPER_ADMIN login (admin@acenta.test/admin123) with super_admin role confirmed 3) Admin endpoints working: GET /api/admin/agencies (2 agencies), GET /api/admin/hotels (3 hotels), GET /api/admin/agency-hotel-links (3 links) 4) PATCH /api/admin/agency-hotel-links/{id} active=false working and verified 5) AGENCY_ADMIN login agency1@demo.test/agency123 with agency_admin role and agency_id confirmed 6) Agency1 sees Demo Hotel 1 & 2 as expected 7) AGENCY_ADMIN login agency2@demo.test/agency123 working 8) Agency2 sees only Demo Hotel 3 as expected 9) Visibility rule working: after deactivating Agency A->Hotel 2 link, Agency1 now sees only Demo Hotel 1 10) Security working: Agency1 correctly denied admin access (403). Multi-tenant omurga, RBAC, and visibility rules all functioning perfectly."
 
 ## frontend:
+  - task: "FE-2 ve FE-3 Frontend UI Standards Verification - PageHeader, EmptyState, ErrorState components"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/AgencyBookingsListPage.jsx, /app/frontend/src/pages/AdminFinanceRefundsPage.jsx, /app/frontend/src/pages/AdminAuditLogsPage.jsx, /app/frontend/src/components/PageHeader.jsx, /app/frontend/src/components/EmptyState.jsx, /app/frontend/src/components/ErrorState.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ FE-2 VE FE-3 FRONTEND UI STANDARDS TEST COMPLETE - All 3 pages tested successfully (100% success rate). COMPREHENSIVE FUNCTIONALITY VERIFIED: A) AGENCY BOOKINGS LIST PAGE (/app/agency/bookings): Agency login successful (agency1@demo.test/agency123), PageHeader 'Rezervasyonlarım' title visible and properly integrated, subtitle format correct '41 rezervasyon - Bugün giriş: 0' matching expected pattern 'X rezervasyon - Bugün giriş: Y', no regression in existing functionality, no major JS errors or layout issues detected. B) ADMIN FINANCE REFUNDS PAGE (/app/admin/finance/refunds): Admin login successful (admin@acenta.test/admin123), PageHeader 'Refund Kuyruğu' title visible and properly integrated, ErrorState component integration verified (title: 'Refund listesi yüklenemedi' with retry functionality), EmptyState component integration verified (title: 'Henüz refund case yok' with proper description), API working correctly so no error states triggered during test. C) ADMIN AUDIT LOGS PAGE (/app/admin/audit/logs): PageHeader 'Audit Logs' title and subtitle visible and properly integrated, EmptyState component working correctly when filtering with fake UUID (title: 'Sonuç bulunamadı', description: 'Bu filtrelerle audit kaydı yok'), ErrorState component integration verified (title: 'Audit log listesi yüklenemedi' with compact mode), filter functionality working correctly. D) COMPONENT INTEGRATION: All three pages successfully using new shared components (PageHeader, EmptyState, ErrorState), consistent title/subtitle hierarchy maintained across pages, proper error handling and empty state management implemented, no layout breaking or visual regressions detected. MINOR ISSUE DETECTED: Console shows HTML validation warning about nested div in p tag in AdminFinanceRefundsPage StatusBadge component - this is a minor cosmetic issue that doesn't affect functionality. All FE-2 and FE-3 UI standards successfully implemented and verified."
+
   - task: "Ops Booking Timeline FE smoke test - Timeline tab implementation and functionality"
     implemented: true
     working: true

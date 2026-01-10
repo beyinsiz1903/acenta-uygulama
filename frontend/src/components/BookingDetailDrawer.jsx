@@ -949,7 +949,6 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
             </Button>
           </div>
         </SheetFooter>
-        </>
       </SheetContent>
     </Sheet>
   );

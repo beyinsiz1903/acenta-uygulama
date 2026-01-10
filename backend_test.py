@@ -1607,6 +1607,10 @@ def test_f21_booking_payments_core_service():
     # ------------------------------------------------------------------
     print("\n2️⃣  Scenario A: Capture Happy Path with Idempotency...")
     
+    # Initialize account variables for later use
+    agency_account_id = None
+    platform_account_id = None
+    
     # Test capture via direct service call (simulating Stripe webhook)
     print("   📋 Testing capture_succeeded flow...")
     

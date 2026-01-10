@@ -357,9 +357,7 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
       } else {
         toast.success("Rezervasyon iptal edildi.");
       }
-      if (activeTab === "timeline") {
-        setEventsLoaded(false);
-      }
+      setEventsLoaded(false);
     } catch (e) {
       toast.error(apiErrorMessage(e));
     } finally {

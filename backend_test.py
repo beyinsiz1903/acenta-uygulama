@@ -1766,10 +1766,49 @@ def test_f21_booking_payments_core_service():
             posting_response = r.json()
             print(f"   ✅ PAYMENT_RECEIVED posting created: {posting_response.get('posting_id')}")
             print(f"   📋 Lines count: {posting_response.get('lines_count')}")
+        # Test idempotency: repeat the same posting
+        print("   📋 Testing PAYMENT_RECEIVED idempotency...")
+        
+        r2 = requests.post(
+            f"{BASE_URL}/api/ops/finance/_test/posting",
+            json=posting_payload,  # Same payload
+            headers=admin_headers,
+        )
+        
+        if r2.status_code == 200:
+            posting_response2 = r2.json()
+            posting_id_2 = posting_response2.get('posting_id')
+            
+            # Check if we got the same posting ID (idempotent) or a new one
+            if posting_id_2 == posting_response.get('posting_id'):
+                print(f"   ✅ Idempotency working: same posting_id returned")
+            else:
+                print(f"   ⚠️  New posting created: {posting_id_2} (may be expected if no idempotency key used)")
         else:
-            print(f"   ❌ PAYMENT_RECEIVED posting failed: {r.status_code} - {r.text}")
+            print(f"   ❌ Idempotent PAYMENT_RECEIVED posting failed: {r2.status_code} - {r2.text}")
     else:
         print("   ⚠️  Cannot create PAYMENT_RECEIVED posting - missing account IDs")
+    
+    # Check updated ledger summary after posting
+    r = requests.get(
+        f"{BASE_URL}/api/ops/finance/bookings/{booking_id}/ledger-summary",
+        headers=admin_headers,
+    )
+    
+    if r.status_code == 200:
+        updated_ledger_summary = r.json()
+        updated_postings_count = updated_ledger_summary.get("postings_count", 0)
+        updated_events = updated_ledger_summary.get("events", [])
+        
+        print(f"   📊 Updated ledger summary: postings_count={updated_postings_count}")
+        
+        # Check for PAYMENT_RECEIVED events
+        payment_events = [e for e in updated_events if "PAYMENT" in e]
+        if payment_events:
+            print(f"   ✅ Found payment-related ledger events: {payment_events}")
+        else:
+            print(f"   📋 No payment-related ledger events found in booking ledger")
+            print(f"   📋 Note: Test postings may not be associated with specific booking")
 
     # Verify capture effects (regardless of endpoint availability)
     print("   📋 Verifying capture effects...")

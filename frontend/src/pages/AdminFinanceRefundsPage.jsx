@@ -45,7 +45,7 @@ function RefundQueueList({
           <div>
             <CardTitle className="text-sm font-medium">Refund Queue</CardTitle>
             <p className="text-xs text-muted-foreground mt-1">
-              Ops i50 ak151 i5in a51k refund case listesi.
+              Ops ekibi için açık refund case listesi.
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -78,8 +78,8 @@ function RefundQueueList({
       <CardContent className="flex-1 overflow-y-auto">
         {items.length === 0 ? (
           <EmptyState
-            title="Henz refund case yok"
-            description="Bu filtrelerle refund case bulunamad3. Farkl5 filtrelerle tekrar deneyin."
+            title="Henüz refund case yok"
+            description="Bu ortamda refund akışı henüz veri üretmemiş olabilir."
           />
         ) : (
           <div className="overflow-x-auto">

@@ -145,9 +145,8 @@ class BookingPaymentsService:
         raise AppError(409, "payment_concurrency_conflict", "Concurrent modification detected for booking payments")
 
 
-    @staticmethod
     async def apply_capture_succeeded(
-        db,
+        self,
         organization_id: str,
         agency_id: str,
         booking_id: str,
@@ -155,18 +154,17 @@ class BookingPaymentsService:
         *,
         amount_cents: int,
     ) -> tuple[dict, dict]:
-        """Apply a successful capture to the aggregate.
+        """Apply a successful capture to the aggregate only.
 
-        Tx insert, booking_events and ledger are handled by higher-level
-        orchestration; this helper only updates the booking_payments
-        projection with CAS semantics and invariants.
+        This helper updates the booking_payments projection using CAS semantics
+        and enforces invariants. Higher-level orchestration (tx log, events,
+        ledger) is handled by record_capture_succeeded().
         """
 
         if amount_cents <= 0:
             raise AppError(422, "payment_capture_invalid_amount", "Capture amount must be > 0")
 
-        before, after = await BookingPaymentsService._cas_update_amounts(
-            db,
+        before, after = await self._cas_update_amounts(
             organization_id,
             booking_id,
             delta_paid_cents=amount_cents,
@@ -174,9 +172,8 @@ class BookingPaymentsService:
         )
         return before, after
 
-    @staticmethod
     async def apply_refund_succeeded(
-        db,
+        self,
         organization_id: str,
         agency_id: str,
         booking_id: str,
@@ -184,17 +181,17 @@ class BookingPaymentsService:
         *,
         amount_cents: int,
     ) -> tuple[dict, dict]:
-        """Apply a successful refund to the aggregate.
+        """Apply a successful refund to the aggregate only.
 
         Ensures refunded does not exceed paid and updates status according to
         the F2.1 refund rules (partial refund keeps PAID, full refund => REFUNDED).
+        Higher-level orchestration is handled by record_refund_succeeded().
         """
 
         if amount_cents <= 0:
             raise AppError(422, "payment_refund_invalid_amount", "Refund amount must be > 0")
 
-        before, after = await BookingPaymentsService._cas_update_amounts(
-            db,
+        before, after = await self._cas_update_amounts(
             organization_id,
             booking_id,
             delta_paid_cents=0,
@@ -310,6 +307,8 @@ class BookingPaymentTxLogger:
             organization_id=organization_id,
             agency_id=agency_id,
             booking_id=booking_id,
-            event="BOOKING_AMENDED" if False else "BOOKING_CONFIRMED",  # placeholder, will be overridden by caller-specific event
+            event=event,
+            request_id=request_id,
+            meta=meta,
         )
         return doc

@@ -598,7 +598,6 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
           </div>
         </SheetHeader>
 
-        <>
         <div className="flex-1 overflow-y-auto py-4">
           {/* DETAY / TIMELINE SEKME BAFLARI */}
           <div className="mb-4 border-b flex gap-4 text-sm">

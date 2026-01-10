@@ -167,6 +167,7 @@ class BookingPaymentsService:
             raise AppError(422, "payment_capture_invalid_amount", "Capture amount must be > 0")
 
         before, after = await BookingPaymentsService._cas_update_amounts(
+            db,
             organization_id,
             booking_id,
             delta_paid_cents=amount_cents,

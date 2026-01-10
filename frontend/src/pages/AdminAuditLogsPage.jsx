@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import { AlertCircle, ClipboardCopy, RefreshCw, Search } from "lucide-react";
 import { api, apiErrorMessage } from "../lib/api";
 
+import PageHeader from "../components/PageHeader";
+
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";

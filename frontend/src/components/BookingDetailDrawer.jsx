@@ -323,9 +323,7 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
       }
       setAmendMode(false);
       setAmendProposal(null);
-      if (activeTab === "timeline") {
-        setEventsLoaded(false);
-      }
+      setEventsLoaded(false);
       await reloadAfterAmend();
     } catch (e) {
       const msg = apiErrorMessage(e);

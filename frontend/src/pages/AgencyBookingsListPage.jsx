@@ -78,12 +78,10 @@ export default function AgencyBookingsListPage() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Rezervasyonlarım</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Acentanızın rezervasyonları
-          </p>
-        </div>
+        <PageHeader
+          title="Rezervasyonlarım"
+          subtitle="Acentanızın rezervasyonlarının listesi."
+        />
 
         <div className="rounded-2xl border bg-card shadow-sm p-12 flex flex-col items-center justify-center gap-4">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />

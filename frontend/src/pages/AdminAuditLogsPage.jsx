@@ -134,12 +134,10 @@ export default function AdminAuditLogsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Audit Logs</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Kritik operasyonları 30 saniyede bulun: kim ne yaptı?
-          </p>
-        </div>
+        <PageHeader
+          title="Audit Logs"
+          subtitle="Kritik operasyonları hızlıca bul: kim ne yaptı?"
+        />
 
         <div className="flex items-center gap-2">
           <Button variant="outline" onClick={load} disabled={loading}>

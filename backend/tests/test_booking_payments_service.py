@@ -30,7 +30,7 @@ async def test_amount_status_rules_refund_behaviour(test_db):
 
 @pytest.mark.anyio
 async def test_cas_update_amounts_concurrency_and_invariants(test_db):
-    service = BookingPaymentsService
+    service = BookingPaymentsService(test_db)
     org_id = "org_test"
     agency_id = "ag_test"
     booking_id = "bkg_1"

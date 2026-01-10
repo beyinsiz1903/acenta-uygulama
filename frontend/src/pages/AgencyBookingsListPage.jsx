@@ -186,12 +186,10 @@ export default function AgencyBookingsListPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Rezervasyonlarım</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {bookings.length} rezervasyon - Bugün giriş: {todayArrivals}
-          </p>
-        </div>
+        <PageHeader
+          title="Rezervasyonlarım"
+          subtitle={`${bookings.length} rezervasyon - Bugün giriş: ${todayArrivals}`}
+        />
         <Button onClick={() => navigate("/app/agency/hotels")} className="gap-2">
           <Search className="h-4 w-4" />
           Yeni Arama

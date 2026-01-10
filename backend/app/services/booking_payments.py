@@ -90,6 +90,7 @@ class BookingPaymentsService:
 
     @staticmethod
     async def _cas_update_amounts(
+        db,
         organization_id: str,
         booking_id: str,
         delta_paid_cents: int = 0,

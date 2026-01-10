@@ -312,3 +312,201 @@ class BookingPaymentTxLogger:
             meta=meta,
         )
         return doc
+
+
+
+class BookingPaymentsOrchestrator:
+    """High-level orchestration for payment captures and refunds.
+
+    Follows the strict contract:
+
+    insert_tx (idempotent) -> booking_events.append -> ledger.post ->
+    booking_payments aggregate.update.
+    """
+
+    def __init__(self, db):
+        self.db = db
+        self._aggregates = BookingPaymentsService(db)
+
+    async def record_capture_succeeded(
+        self,
+        *,
+        organization_id: str,
+        agency_id: str,
+        booking_id: str,
+        payment_id: str,
+        provider: str,
+        currency: str,
+        amount_cents: int,
+        occurred_at,
+        request_id: Optional[str] = None,
+        provider_event_id: Optional[str] = None,
+        provider_object_id: Optional[str] = None,
+        payment_intent_id: Optional[str] = None,
+        actor: Optional[Dict[str, Any]] = None,
+        raw: Optional[Dict[str, Any]] = None,
+    ) -> Optional[Dict[str, Any]]:
+        """Record a successful payment capture in an idempotent way.
+
+        If the underlying booking_payment_transactions insert hits a
+        DuplicateKeyError (same request_id/provider_event_id), this becomes
+        a no-op and returns None.
+        """
+
+        # 1) Insert transaction (idempotent)
+        tx = await BookingPaymentTxLogger.insert_tx(
+            self.db,
+            organization_id=organization_id,
+            agency_id=agency_id,
+            booking_id=booking_id,
+            payment_id=payment_id,
+            tx_type="capture_succeeded",
+            provider=provider,
+            amount_cents=amount_cents,
+            currency=currency,
+            occurred_at=occurred_at,
+            request_id=request_id,
+            provider_event_id=provider_event_id,
+            provider_object_id=provider_object_id,
+            raw=raw,
+        )
+        if tx is None:
+            # Idempotent replay -> skip side effects
+            return None
+
+        # 2) Append booking event (PAYMENT_CAPTURED)
+        await BookingPaymentTxLogger.append_payment_event(
+            self.db,
+            organization_id=organization_id,
+            agency_id=agency_id,
+            booking_id=booking_id,
+            event="PAYMENT_CAPTURED",
+            payment_id=payment_id,
+            amount_cents=amount_cents,
+            currency=currency,
+            request_id=request_id,
+            provider=provider,
+            payment_intent_id=payment_intent_id,
+            provider_event_id=provider_event_id,
+        )
+
+        # 3) Post ledger entry (PAYMENT_RECEIVED) via existing matrix
+        from app.services.booking_finance import BookingFinanceService
+
+        finance = BookingFinanceService(self.db)
+
+        # We reuse BookingFinanceService helpers which already know how to
+        # locate or create the relevant agency/platform finance accounts and
+        # post PAYMENT_RECEIVED using PostingMatrixConfig.
+        # NOTE: For F2.1 MVP we assume amount is in EUR; non-EUR flows will be
+        # wired through FX in later phases.
+        await finance.post_payment_received(
+            organization_id=organization_id,
+            agency_id=agency_id,
+            booking_id=booking_id,
+            payment_amount=float(amount_cents) / 100.0,
+            currency=currency,
+            occurred_at=occurred_at,
+        )
+
+        # 4) Update booking_payments aggregate (CAS)
+        before, after = await self._aggregates.apply_capture_succeeded(
+            organization_id=organization_id,
+            agency_id=agency_id,
+            booking_id=booking_id,
+            payment_id=payment_id,
+            amount_cents=amount_cents,
+        )
+
+        return {
+            "tx": tx,
+            "aggregate_before": before,
+            "aggregate_after": after,
+        }
+
+    async def record_refund_succeeded(
+        self,
+        *,
+        organization_id: str,
+        agency_id: str,
+        booking_id: str,
+        payment_id: str,
+        provider: str,
+        currency: str,
+        amount_cents: int,
+        occurred_at,
+        request_id: Optional[str] = None,
+        provider_event_id: Optional[str] = None,
+        provider_object_id: Optional[str] = None,
+        payment_intent_id: Optional[str] = None,
+        actor: Optional[Dict[str, Any]] = None,
+        raw: Optional[Dict[str, Any]] = None,
+    ) -> Optional[Dict[str, Any]]:
+        """Record a successful refund in an idempotent way.
+
+        Follows the same idempotent contract as record_capture_succeeded().
+        """
+
+        # 1) Insert transaction (idempotent)
+        tx = await BookingPaymentTxLogger.insert_tx(
+            self.db,
+            organization_id=organization_id,
+            agency_id=agency_id,
+            booking_id=booking_id,
+            payment_id=payment_id,
+            tx_type="refund_succeeded",
+            provider=provider,
+            amount_cents=amount_cents,
+            currency=currency,
+            occurred_at=occurred_at,
+            request_id=request_id,
+            provider_event_id=provider_event_id,
+            provider_object_id=provider_object_id,
+            raw=raw,
+        )
+        if tx is None:
+            return None
+
+        # 2) Append booking event (PAYMENT_REFUNDED)
+        await BookingPaymentTxLogger.append_payment_event(
+            self.db,
+            organization_id=organization_id,
+            agency_id=agency_id,
+            booking_id=booking_id,
+            event="PAYMENT_REFUNDED",
+            payment_id=payment_id,
+            amount_cents=amount_cents,
+            currency=currency,
+            request_id=request_id,
+            provider=provider,
+            payment_intent_id=payment_intent_id,
+            provider_event_id=provider_event_id,
+        )
+
+        # 3) Post ledger entry (REFUND_APPROVED) via BookingFinanceService
+        from app.services.booking_finance import BookingFinanceService
+
+        finance = BookingFinanceService(self.db)
+        await finance.post_refund_approved_for_booking(
+            organization_id=organization_id,
+            booking_id=booking_id,
+            agency_id=agency_id,
+            refund_amount=float(amount_cents) / 100.0,
+            currency=currency,
+            occurred_at=occurred_at,
+        )
+
+        # 4) Update booking_payments aggregate (CAS)
+        before, after = await self._aggregates.apply_refund_succeeded(
+            organization_id=organization_id,
+            agency_id=agency_id,
+            booking_id=booking_id,
+            payment_id=payment_id,
+            amount_cents=amount_cents,
+        )
+
+        return {
+            "tx": tx,
+            "aggregate_before": before,
+            "aggregate_after": after,
+        }

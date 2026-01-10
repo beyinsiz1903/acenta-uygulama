@@ -583,6 +583,18 @@
         agent: "testing"
         comment: "✅ P1 MICRO-FAZ EXPORT-TO-MATCH RISK DASHBOARD DEEP LINK + TOAST FRONTEND TEST COMPLETE - All 4 test scenarios passed (100% success rate). CRITICAL FUNCTIONALITY VERIFIED: A) Authentication: Super admin login successful (admin@acenta.test/admin123) with proper super_admin role verification. B) AdminExportsPage Template Control: Successfully accessed /app/admin/exports, Archive tab functional, match_risk_daily policy selected, 'Copy deep link template' button working correctly. EVIDENCE 1 - Backend API returns correct template: '/app/admin/reports/match-risk?match_id={match_id}&open_drawer=1&source=export' (matches expected pattern exactly). C) New Dashboard Route Implementation: Added missing route '/app/admin/reports/match-risk' that redirects to AdminMatchesPage component, route now accessible and functional. D) Real Match ID Deep Link: EVIDENCE 2 - Deep link URL '/app/admin/reports/match-risk?match_id=riskdelta__1ea289b7-621b-49d8-be9c-c21a6bb44f47&open_drawer=1&source=export' successfully auto-opens drawer, events table visible with match data, drawer functionality working correctly. E) Negative Scenario + Toast: Invalid match_id correctly handled (drawer does not open), toast mechanism confirmed working via AdminMatchesPage useEffect logic. EVIDENCE 3 - Toast implementation verified: AdminMatchesPage contains proper toast logic with title 'Match not found in current view' and description 'Try increasing days or lowering min_total.' All Export-to-Match Risk Dashboard Deep Link functionality production-ready with proper template generation, new route implementation, auto-open behavior, and error handling with toast notifications."
 
+  - task: "BookingDetailDrawer Timeline UI Functionality Test"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/components/BookingDetailDrawer.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Timeline UI functionality needs comprehensive testing. Features to verify: 1) Details/Timeline tab switching with custom button tab bar, 2) Timeline tab lazy-loading events from /b2b/bookings/{bookingId}/events endpoint, 3) Event normalization supporting event/type and created_at/occurred_at fields, 4) Loading/error/empty/success states, 5) Auto-refresh after Cancel/Amend operations when Timeline tab is active, 6) Turkish event labels and date formatting, 7) Event metadata display. Testing scenarios: Happy path with events, Empty timeline, Cancel/Amend refresh behavior, Error state handling."
+
 ## backend:
 ##   - task: "FAZ-8 PMS entegrasyonuna hazırlık: Connect Layer + PmsClient adapter + source=local|pms işaretleme"
 ##     implemented: true

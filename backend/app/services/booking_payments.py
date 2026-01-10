@@ -87,9 +87,8 @@ class BookingPaymentsService:
         await db.booking_payments.insert_one(aggregate)
         return aggregate
 
-    @staticmethod
     async def _cas_update_amounts(
-        db,
+        self,
         organization_id: str,
         booking_id: str,
         delta_paid_cents: int = 0,
@@ -100,6 +99,7 @@ class BookingPaymentsService:
         Returns (before, after) aggregate documents.
         """
 
+        db = self.db
         for attempt in range(2):
             current = await db.booking_payments.find_one(
                 {"organization_id": organization_id, "booking_id": booking_id}

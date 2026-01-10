@@ -1692,43 +1692,58 @@ def test_f21_booking_payments_core_service():
     
     # Get agency and platform accounts for the ledger posting
     r = requests.get(
-        f"{BASE_URL}/api/ops/finance/accounts?type=agency&limit=10",
+        f"{BASE_URL}/api/ops/finance/accounts?limit=50",
         headers=admin_headers,
     )
     
     agency_account_id = None
-    if r.status_code == 200:
-        accounts_data = r.json()
-        accounts = accounts_data.get("items", [])
-        for account in accounts:
-            if account.get("owner_id") == agency_id:
-                agency_account_id = account["account_id"]
-                break
-        
-        if agency_account_id:
-            print(f"   📋 Found agency account: {agency_account_id}")
-        else:
-            print("   ⚠️  No agency account found for this agency")
-    
-    # Get platform account
-    r = requests.get(
-        f"{BASE_URL}/api/ops/finance/accounts?type=platform&limit=10",
-        headers=admin_headers,
-    )
-    
     platform_account_id = None
+    
     if r.status_code == 200:
         accounts_data = r.json()
         accounts = accounts_data.get("items", [])
-        for account in accounts:
-            if account.get("type") == "platform":
-                platform_account_id = account["account_id"]
-                break
         
-        if platform_account_id:
-            print(f"   📋 Found platform account: {platform_account_id}")
-        else:
+        print(f"   📋 Found {len(accounts)} total finance accounts")
+        
+        # Look for agency account for this specific agency
+        for account in accounts:
+            if account.get("type") == "agency" and account.get("owner_id") == agency_id:
+                agency_account_id = account["account_id"]
+                print(f"   📋 Found agency account: {agency_account_id}")
+                break
+            elif account.get("type") == "platform":
+                platform_account_id = account["account_id"]
+                print(f"   📋 Found platform account: {platform_account_id}")
+        
+        # If no agency account found, create one
+        if not agency_account_id:
+            print("   📋 No agency account found, creating one...")
+            
+            create_account_payload = {
+                "type": "agency",
+                "owner_id": agency_id,
+                "code": f"AGY_{agency_id[:8].upper()}",
+                "name": f"Agency Account for {agency_id}",
+                "currency": "EUR"
+            }
+            
+            r_create = requests.post(
+                f"{BASE_URL}/api/ops/finance/accounts",
+                json=create_account_payload,
+                headers=admin_headers,
+            )
+            
+            if r_create.status_code == 201:
+                created_account = r_create.json()
+                agency_account_id = created_account["account_id"]
+                print(f"   ✅ Created agency account: {agency_account_id}")
+            else:
+                print(f"   ❌ Failed to create agency account: {r_create.status_code} - {r_create.text}")
+        
+        if not platform_account_id:
             print("   ⚠️  No platform account found")
+    else:
+        print(f"   ❌ Failed to get accounts: {r.status_code} - {r.text}")
     
     # If we have both accounts, create a PAYMENT_RECEIVED posting to simulate capture
     if agency_account_id and platform_account_id:

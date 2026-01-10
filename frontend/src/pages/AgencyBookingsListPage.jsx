@@ -151,12 +151,10 @@ export default function AgencyBookingsListPage() {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Rezervasyonlarım</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              Acentanızın rezervasyonları
-            </p>
-          </div>
+          <PageHeader
+            title="Rezervasyonlarım"
+            subtitle="Acentanızın rezervasyonlarının listesi."
+          />
           <Button onClick={() => navigate("/app/agency/hotels")} className="gap-2">
             <Search className="h-4 w-4" />
             Yeni Arama

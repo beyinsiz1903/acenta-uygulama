@@ -862,11 +862,20 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
               )}
 
               {!eventsLoading && eventsError && (
-                <p className="text-sm text-destructive px-1">Timeline yüklenemedi: {eventsError}</p>
+                <ErrorState
+                  title={eventsError.title || "Timeline yüklenemedi"}
+                  description={eventsError.description || "Beklenmeyen bir hata oluştu."}
+                  onRetry={() => loadEvents(bookingId)}
+                  className="max-w-md"
+                />
               )}
 
-              {!eventsLoading && !eventsError && sortedEvents.length === 0 && (
-                <p className="text-sm text-muted-foreground px-1">Bu rezervasyon için event kaydı yok.</p>
+              {!eventsLoading && !eventsError && eventsLoaded && sortedEvents.length === 0 && (
+                <EmptyState
+                  title="Bu rezervasyon için event kaydı yok"
+                  description="Henüz bu rezervasyon için timeline olayı üretilmemiş olabilir."
+                  className="py-8"
+                />
               )}
 
               {!eventsLoading && !eventsError && sortedEvents.length > 0 && (

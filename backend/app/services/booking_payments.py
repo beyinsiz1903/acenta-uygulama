@@ -148,6 +148,7 @@ class BookingPaymentsService:
 
     @staticmethod
     async def apply_capture_succeeded(
+        db,
         organization_id: str,
         agency_id: str,
         booking_id: str,

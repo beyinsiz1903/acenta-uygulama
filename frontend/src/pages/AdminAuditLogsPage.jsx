@@ -271,8 +271,11 @@ export default function AdminAuditLogsPage() {
               </TableRow>
             ) : sorted.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="py-10 text-center text-sm text-muted-foreground">
-                  Kayıt yok.
+                <TableCell colSpan={7} className="py-8">
+                  <EmptyState
+                    title="Sonuç bulunamadı"
+                    description="Bu filtrelerle audit kaydı yok. Filtreleri değiştirip tekrar deneyin."
+                  />
                 </TableCell>
               </TableRow>
             ) : (

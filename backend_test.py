@@ -10,7 +10,7 @@ import uuid
 from datetime import datetime, date
 
 # Configuration - Use production URL from frontend/.env
-BASE_URL = "https://hotel-lifecycle.preview.emergentagent.com"
+BASE_URL = "https://b2breserve.preview.emergentagent.com"
 
 def login_agency():
     """Login as agency user and return token, org_id, agency_id, email"""

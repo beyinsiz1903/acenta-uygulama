@@ -847,6 +847,8 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
                   </div>
                 </React.Fragment>
               )}
+                </div>
+              )}
             </div>
           )}
 

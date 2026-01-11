@@ -125,17 +125,32 @@ app.include_router(booking_outcomes_router)
 app.include_router(action_policies_router)
 app.include_router(approval_tasks_router)
 app.include_router(audit_router)
-app.include_router(voucher_router)
+if ENABLE_VOUCHER_PDF:
+    app.include_router(voucher_router)
+else:
+    logger.info("[config] ENABLE_VOUCHER_PDF is false - voucher routes disabled")
+
 app.include_router(admin_catalog_router)
 app.include_router(admin_pricing_router)
-app.include_router(web_booking_router)
+
+if ENABLE_SELF_SERVICE_PORTAL:
+    app.include_router(web_booking_router)
+    app.include_router(web_catalog_router)
+else:
+    logger.info("[config] ENABLE_SELF_SERVICE_PORTAL is false - web booking/catalog routes disabled")
+
 app.include_router(risk_snapshots_router)
-app.include_router(web_catalog_router)
 app.include_router(matches_router)
 app.include_router(match_alerts_router)
 app.include_router(match_unblock_router)
+
 app.include_router(exports_router)
-app.include_router(exports_public_router)
+
+if ENABLE_PARTNER_API:
+    app.include_router(exports_public_router)
+else:
+    logger.info("[config] ENABLE_PARTNER_API is false - public export routes disabled")
+
 app.include_router(admin_reports_router)
 app.include_router(demo_scale_ui_proof_router)
 app.include_router(b2b_quotes_router)

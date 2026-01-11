@@ -1057,18 +1057,18 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
               )}
 
               {!paymentLoading && !paymentError && paymentState && paymentState.aggregate && (
-                <div className="mt-4 border-t pt-3 space-y-3">
-                  <h3 className="text-sm font-medium text-muted-foreground">Stripe Ödeme Aksiyonları</h3>
-                  <p className="text-xs text-muted-foreground">
-                    Bu alan sadece admin/ops/super_admin kullanıcıları içindir. Acenta ve otel rolleri için
-                    yalnızca okuma modunda görüntülenir.
-                  </p>
-                  {/* TODO: Role bazlı gate: RequireAuth üstünde zaten var; burada ek bir kontrol istenirse, */}
-                  {/* localStorage'daki acenta_user içinden user.roles okunarak isPrivileged hesaplanabilir. */}
-                </div>
-              )}
+                <>
+                  <div className="mt-4 border-t pt-3 space-y-3">
+                    <h3 className="text-sm font-medium text-muted-foreground">Stripe Ödeme Aksiyonları</h3>
+                    <p className="text-xs text-muted-foreground">
+                      Bu alan sadece admin/ops/super_admin kullanıcıları içindir. Acenta ve otel rolleri için
+                      yalnızca okuma modunda görüntülenir.
+                    </p>
+                    {/* TODO: Role bazlı gate: RequireAuth üstünde zaten var; burada ek bir kontrol istenirse, */}
+                    {/* localStorage'daki acenta_user içinden user.roles okunarak isPrivileged hesaplanabilir. */}
+                  </div>
 
-                <div className="space-y-4">
+                  <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     <div className="flex flex-col">
                       <span className="text-xs text-muted-foreground uppercase tracking-wide">

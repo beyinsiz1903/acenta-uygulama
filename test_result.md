@@ -342,14 +342,6 @@
     stuck_count: 0
     priority: "high"
     needs_retesting: false
-
-  - task: "F2.2 Stripe Payments Core Backend"
-    implemented: true
-    working: false
-    file: "/app/backend/app/services/stripe_adapter.py, /app/backend/app/services/stripe_handlers.py, /app/backend/app/routers/payments_stripe.py, /app/backend/tests/test_payments_stripe_contract_phase1.py"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
@@ -370,6 +362,14 @@
       - working: true
         agent: "testing"
         comment: "✅ P0.3 FX & LEDGER BACKEND TURKISH REQUIREMENTS TEST COMPLETE - All 4 test scenarios passed (100% success rate). COMPREHENSIVE FUNCTIONALITY VERIFIED: A) Authentication: Admin login successful (admin@acenta.test/admin123) with proper super_admin role verification. B) NEW LEDGER-SUMMARY ENDPOINT: 1) GET /api/ops/finance/bookings/{booking_id}/ledger-summary with valid booking_id working correctly - returns 200 with all required fields (booking_id, organization_id, currency, source_collection, postings_count, total_debit, total_credit, diff, events), source_collection='ledger_postings' as expected, found 1 posting with BOOKING_CONFIRMED event. 2) Invalid booking_id format correctly rejected with 404 booking_not_found error. 3) Valid ObjectId format but non-existent booking_id correctly rejected with 404 booking_not_found error. C) FX SNAPSHOTS PYTEST EXECUTION: test_fx_snapshots.py executed successfully with pytest, correctly SKIPPED with message 'EUR-only env: FX snapshots not expected for bookings' - this is expected behavior in EUR-only architecture where FX snapshots are only created for non-EUR currencies. Test validates that FX snapshot mechanism exists but appropriately skips when not applicable. TURKISH REQUIREMENTS MET: ✅ Yeni endpoint GET /api/ops/finance/bookings/{booking_id}/ledger-summary çalışıyor (geçerli booking_id için 200, geçersiz için 404), ✅ FX snapshot testi EUR-only ortamda beklenen şekilde SKIP oluyor, ✅ Tüm hata senaryoları doğru şekilde işleniyor. All P0.3 FX & Ledger backend functionality production-ready with proper error handling and EUR-only architecture compliance."
+
+  - task: "F2.2 Stripe Payments Core Backend"
+    implemented: true
+    working: false
+    file: "/app/backend/app/services/stripe_adapter.py, /app/backend/app/services/stripe_handlers.py, /app/backend/app/routers/payments_stripe.py, /app/backend/tests/test_payments_stripe_contract_phase1.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
 
   - task: "P1.2 Rule-based Pricing - PricingRulesService"
     implemented: true

@@ -333,6 +333,11 @@ class B2BPricingService:
 
         quote.pop("coupon", None)
         quote["totals"] = totals
+        
+        # Convert ObjectId to string for JSON serialization
+        if "_id" in quote:
+            quote["_id"] = str(quote["_id"])
+        
         return quote
 
     async def ensure_quote_valid(

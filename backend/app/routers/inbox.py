@@ -145,7 +145,12 @@ async def create_thread(body: CreateThreadBody, user=Depends(get_current_user), 
         raise AppError(403, "FORBIDDEN", "Missing organization context")
 
     # Verify booking belongs to org
-    booking = await db.bookings.find_one({"_id": body.booking_id, "organization_id": org_id})
+    try:
+        booking_oid = ObjectId(body.booking_id)
+    except Exception:
+        raise AppError(404, "BOOKING_NOT_FOUND", "Booking not found", {"booking_id": body.booking_id})
+    
+    booking = await db.bookings.find_one({"_id": booking_oid, "organization_id": org_id})
     if not booking:
         raise AppError(404, "BOOKING_NOT_FOUND", "Booking not found", {"booking_id": body.booking_id})
 

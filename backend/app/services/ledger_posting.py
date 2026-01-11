@@ -131,6 +131,36 @@ class LedgerPostingService:
         
         # Compute checksum
         checksum = LedgerPostingService._compute_checksum(source_type, source_id, event, lines)
+
+        # Compute header totals and enrich lines with explicit debit/credit
+        debit_total = 0.0
+        credit_total = 0.0
+        posting_lines: list[dict] = []
+        for line in lines:
+            direction = (line.direction or "").lower()
+            amount = float(line.amount)
+
+            if direction == "debit":
+                debit = amount
+                credit = 0.0
+                debit_total += amount
+            elif direction == "credit":
+                debit = 0.0
+                credit = amount
+                credit_total += amount
+            else:
+                debit = 0.0
+                credit = 0.0
+
+            posting_lines.append(
+                {
+                    "account_id": str(line.account_id),
+                    "direction": line.direction,
+                    "amount": amount,
+                    "debit": debit,
+                    "credit": credit,
+                }
+            )
         
         # Normalise meta for safe storage (ObjectId, datetime, Decimal etc.)
         def _normalise_meta(value):

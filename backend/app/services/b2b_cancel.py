@@ -26,12 +26,17 @@ class B2BCancelService:
         booking_id: str,
         cancel_req: CancelRequest,
     ) -> CancelRequestResponse:
+        criteria: Dict[str, Any] = {
+            "organization_id": organization_id,
+            "agency_id": agency_id,
+        }
         try:
-            oid = ObjectId(booking_id)
+            criteria["_id"] = ObjectId(booking_id)
         except Exception:
-            raise AppError(404, "not_found", "Booking not found", {"booking_id": booking_id})
+            # Fallback for string-based ids
+            criteria["_id"] = booking_id
 
-        booking = await self.bookings.find_one({"_id": oid, "organization_id": organization_id, "agency_id": agency_id})
+        booking = await self.bookings.find_one(criteria)
         if not booking:
             # hide existence if not same agency
             raise AppError(404, "not_found", "Booking not found", {"booking_id": booking_id})

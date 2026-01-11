@@ -1,58 +1,11 @@
+import { adminNav } from "../nav/adminNav";
+import { agencyNav } from "../nav/agencyNav";
+import { hotelNav } from "../nav/hotelNav";
+
 export const MENU_CONFIG = {
-  super_admin: [
-    {
-      label: "Admin",
-      children: [
-        { label: "Acentalar", path: "/app/admin/agencies" },
-        { label: "Oteller", path: "/app/admin/hotels" },
-        { label: "Catalog", path: "/app/admin/catalog/hotels" },
-        { label: "Link Yönetimi", path: "/app/admin/links" },
-        { label: "Pilot Dashboard", path: "/app/admin/pilot-dashboard" },
-        { label: "Metrikler", path: "/app/admin/metrics" },
-        { label: "Match Risk", path: "/app/admin/matches" },
-        { label: "Match Risk Trends", path: "/app/admin/reports/match-risk-trends" },
-        { label: "Match Alerts", path: "/app/admin/settings/match-alerts" },
-        { label: "Action Policies", path: "/app/admin/settings/action-policies" },
-        { label: "Approvals", path: "/app/admin/approvals" },
-        { label: "Exports", path: "/app/admin/exports" },
-        { label: "Finance Refunds", path: "/app/admin/finance/refunds" },
-      ],
-    },
-    {
-      label: "Ops (Gelişmiş)",
-      children: [
-        { label: "Audit Logs", path: "/app/admin/audit" },
-        { label: "Email Aktiviteleri", path: "/app/admin/email-logs" },
-        { label: "B2B Ops Queues", path: "/app/admin/ops/b2b" },
-      ],
-    },
-  ],
-
-  agency: [
-    {
-      label: "Acenta",
-      children: [
-        { label: "Hızlı Rezervasyon", path: "/app/agency/hotels" },
-        { label: "B2B Portal", path: "/app/b2b/portal" },
-        { label: "Rezervasyonlarım", path: "/app/agency/bookings" },
-        { label: "Mutabakat", path: "/app/agency/settlements" },
-        { label: "Yardım", path: "/app/agency/help" },
-      ],
-    },
-  ],
-
-  hotel: [
-    {
-      label: "Otel",
-      children: [
-        { label: "Rezervasyonlarım", path: "/app/hotel/bookings" },
-        { label: "Satışa Kapat", path: "/app/hotel/stop-sell" },
-        { label: "Acenta Kotası", path: "/app/hotel/allocations" },
-        { label: "Mutabakat", path: "/app/hotel/settlements" },
-        { label: "Yardım", path: "/app/hotel/help" },
-      ],
-    },
-  ],
+  super_admin: adminNav,
+  agency: agencyNav,
+  hotel: hotelNav,
 };
 
 export function getMenuForUser(user) {

@@ -134,6 +134,24 @@ async def seeded_test_db(motor_client: AsyncIOMotorClient) -> AsyncGenerator[Any
 
         yield db
     finally:
+
+
+@pytest.fixture(autouse=True)
+async def stripe_handlers_db(monkeypatch, test_db):
+    """Route stripe_handlers.get_db to test_db for all tests.
+
+    Ensures Stripe webhook handlers use the same isolated database as the
+    async_client / app_with_overrides fixtures.
+    """
+
+    from app.services import stripe_handlers as handlers  # type: ignore
+
+    async def _fake_get_db():
+        return test_db
+
+    monkeypatch.setattr(handlers, "get_db", _fake_get_db)
+    yield
+
         await motor_client.drop_database(db_name)
 
 

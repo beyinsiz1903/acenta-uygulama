@@ -258,6 +258,124 @@ async def minimal_search_seed(test_db, async_client: httpx.AsyncClient, agency_t
     # Upsert product (hotel) in test_db
     prod_filter = {
         "organization_id": org_id,
+
+
+@pytest.fixture(autouse=True)
+async def minimal_finance_seed(test_db, async_client: httpx.AsyncClient, agency_token: str):
+    """Seed minimal finance data so bookings can be created in FX tests.
+
+    This creates agency and platform finance accounts, a credit profile and
+    a zero balance for the agency account in the isolated test_db.
+    """
+
+    import os
+
+    current_test = os.environ.get("PYTEST_CURRENT_TEST", "")
+    if not any(
+        key in current_test
+        for key in [
+            "test_booking_financials_fx",
+            "test_fx_snapshots",
+            "test_booking_cancel_reverses_ledger_net0",
+        ]
+    ):
+        yield
+        return
+
+    # Resolve org/agency from /api/auth/me using agency_token
+    headers = {"Authorization": f"Bearer {agency_token}"}
+    me_resp = await async_client.get("/api/auth/me", headers=headers)
+    assert me_resp.status_code == 200, f"/auth/me failed: {me_resp.text}"
+    me = me_resp.json()
+
+    org_id = me.get("organization_id")
+    agency_id = me.get("agency_id")
+    assert org_id and agency_id, f"Missing org/agency in /auth/me: {me}"
+
+    now = now_utc()
+
+    # 1) Agency finance account required by booking finance checks
+    agency_acct_filter = {
+        "organization_id": org_id,
+        "type": "agency",
+        "owner_id": agency_id,
+    }
+    agency_acct_doc = {
+        **agency_acct_filter,
+        "currency": "EUR",
+        "code": "AGENCY_AR",
+        "name": "Agency Receivable",
+        "status": "active",
+        "created_at": now,
+        "updated_at": now,
+    }
+    await test_db.finance_accounts.update_one(
+        agency_acct_filter,
+        {"$setOnInsert": agency_acct_doc},
+        upsert=True,
+    )
+
+    agency_account = await test_db.finance_accounts.find_one(agency_acct_filter)
+    assert agency_account is not None
+
+    # 2) Platform finance account required by booking_confirmed posting
+    platform_acct_filter = {
+        "organization_id": org_id,
+        "type": "platform",
+    }
+    platform_acct_doc = {
+        **platform_acct_filter,
+        "currency": "EUR",
+        "code": "PLATFORM",
+        "name": "Platform Clearing",
+        "status": "active",
+        "created_at": now,
+        "updated_at": now,
+    }
+    await test_db.finance_accounts.update_one(
+        platform_acct_filter,
+        {"$setOnInsert": platform_acct_doc},
+        upsert=True,
+    )
+
+    # 3) Credit profile for the agency (high limit to avoid limit errors)
+    credit_profile_filter = {
+        "organization_id": org_id,
+        "agency_id": agency_id,
+    }
+    credit_profile_doc = {
+        **credit_profile_filter,
+        "limit": 1_000_000.0,
+        "soft_limit": 500_000.0,
+        "created_at": now,
+        "updated_at": now,
+    }
+    await test_db.credit_profiles.update_one(
+        credit_profile_filter,
+        {"$setOnInsert": credit_profile_doc},
+        upsert=True,
+    )
+
+    # 4) Zero balance for the agency account
+    balance_filter = {
+        "organization_id": org_id,
+        "account_id": agency_account["_id"],
+        "currency": "EUR",
+    }
+    balance_doc = {
+        **balance_filter,
+        "balance": 0.0,
+        "created_at": now,
+        "updated_at": now,
+    }
+    await test_db.account_balances.update_one(
+        balance_filter,
+        {"$setOnInsert": balance_doc},
+        upsert=True,
+    )
+
+    yield
+
         "type": "hotel",
         "status": "active",
         "location.city": "Istanbul",

@@ -77,7 +77,11 @@ async def _handle_payment_intent_succeeded(event: Dict[str, Any]) -> Tuple[int, 
 
     occurred_at = now_utc()
 
-    result = await orchestrator.record_capture_succeeded(
+    # Side effects (tx log, events, ledger, aggregates) are handled by the
+    # orchestrator. We intentionally do not expose the rich result in the
+    # webhook response body to avoid JSON serialisation issues with ObjectId
+    # and datetime instances.
+    await orchestrator.record_capture_succeeded(
         organization_id=organization_id,
         agency_id=agency_id,
         booking_id=booking_id,
@@ -92,7 +96,7 @@ async def _handle_payment_intent_succeeded(event: Dict[str, Any]) -> Tuple[int, 
         raw=event,
     )
 
-    return 200, {"ok": True, "result": result}
+    return 200, {"ok": True}
 
 
 async def _handle_charge_refunded(event: Dict[str, Any]) -> Tuple[int, Dict[str, Any]]:

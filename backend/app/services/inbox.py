@@ -77,6 +77,8 @@ def _build_system_body_for_event(event_type: str, meta: Dict[str, Any]) -> str:
         return "Ödeme iade edildi."
     if et == "VOUCHER_ISSUED":
         return "Voucher oluşturuldu."
+    if et == "VOUCHER_GENERATED":
+        return "Voucher oluşturuldu."
     if et == "GUEST_REQUEST_CANCEL":
         reason = meta.get("reason") or ""
         return f"Misafir iptal talebi gönderdi. {reason}".strip()

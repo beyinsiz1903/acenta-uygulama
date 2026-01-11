@@ -503,20 +503,20 @@ def patch_cancel_test_get_db(monkeypatch, test_db):
 
 @pytest.fixture(autouse=True)
 async def seed_confirmed_booking_for_cancel_net0(test_db, async_client: httpx.AsyncClient, agency_token: str):
-    """Ensure there is at least one CONFIRMED booking for cancel net0 test.
+    """Ensure there is at least one real CONFIRMED booking for cancel net0 test.
 
-    This seeds a minimal CONFIRMED booking into test_db for the agency/org of
-    the agency_token, so that the test can find a booking and drive the cancel
-    flow without relying on global DB state.
+    Uses the existing P0.2 HTTP flow (search -> quote -> booking) so that
+    booking_financials and FX snapshots are correctly populated.
     """
     import os
-    from bson import ObjectId
 
     current_test = os.environ.get("PYTEST_CURRENT_TEST", "")
     if "test_booking_cancel_reverses_ledger_net0.py" not in current_test:
         return
 
     headers = {"Authorization": f"Bearer {agency_token}"}
+
+    # Resolve org/agency
     me_resp = await async_client.get("/api/auth/me", headers=headers)
     assert me_resp.status_code == 200, f"/auth/me failed in seed_confirmed_booking: {me_resp.text}"
     me = me_resp.json()
@@ -531,22 +531,62 @@ async def seed_confirmed_booking_for_cancel_net0(test_db, async_client: httpx.As
     if existing:
         return
 
-    now = now_utc()
-    booking_id = ObjectId()
+    # 1) Hotel search (dates chosen to align with FX tests)
+    params = {
+        "city": "Istanbul",
+        "check_in": "2026-01-10",
+        "check_out": "2026-01-12",
+        "adults": "2",
+        "children": "0",
+    }
+    s = await async_client.get("/api/b2b/hotels/search", headers=headers, params=params)
+    assert s.status_code == 200, f"hotel search failed: {s.text}"
+    data = s.json() or {}
+    items = data.get("items") or []
+    assert items, f"hotel search returned empty: {data}"
 
-    await test_db.bookings.insert_one(
-        {
-            "_id": booking_id,
-            "organization_id": org_id,
-            "agency_id": agency_id,
-            "status": "CONFIRMED",
-            "code": "CANCEL-NET0-TEST",
-            "currency": "EUR",
-            "total_amount": 110.0,
-            "created_at": now,
-            "updated_at": now,
-        }
+    item = items[0]
+    product_id = item.get("product_id") or item.get("id") or item.get("_id")
+    assert product_id, f"cannot resolve product_id from search item: {item}"
+    rate_plan_id = item.get("rate_plan_id") or item.get("ratePlanId")
+    assert rate_plan_id, f"cannot resolve rate_plan_id from search item: {item}"
+
+    # 2) Quote create (reuse P0.2 payload shape from FX tests)
+    quote_payload = {
+        "channel_id": "agency_extranet",
+        "items": [
+            {
+                "product_id": product_id,
+                "room_type_id": "default_room",
+                "rate_plan_id": rate_plan_id,
+                "check_in": params["check_in"],
+                "check_out": params["check_out"],
+                "occupancy": 2,
+            }
+        ],
+        "client_context": {"source": "cancel-net0-seed"},
+    }
+    q = await async_client.post("/api/b2b/quotes", headers=headers, json=quote_payload)
+    assert q.status_code == 200, f"quote create failed: {q.status_code} - {q.text}"
+    quote = q.json() or {}
+    quote_id = quote.get("quote_id") or quote.get("id") or quote.get("_id")
+    assert quote_id, f"cannot resolve quote_id from quote response: {quote}"
+
+    # 3) Booking create via P0.2 endpoint
+    booking_payload = {
+        "quote_id": quote_id,
+        "customer": {"name": "Cancel Test", "email": "cancel@test.com"},
+        "travellers": [{"first_name": "Cancel", "last_name": "Test"}],
+        "notes": "Cancel net0 seed booking",
+    }
+    from uuid import uuid4
+
+    b = await async_client.post(
+        "/api/b2b/bookings",
+        headers={**headers, "Idempotency-Key": f"cancel-net0-seed-{uuid4().hex[:8]}"},
+        json=booking_payload,
     )
+    assert b.status_code == 200, f"booking create failed: {b.status_code} - {b.text}"
 
 
 @pytest.fixture

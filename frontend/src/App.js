@@ -111,7 +111,6 @@ function App() {
             </RequireAuth>
           }
         />
-        </Route>
 
         {/* Core App Routes (Dashboard, Products, etc.) */}
         <Route

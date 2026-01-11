@@ -201,14 +201,11 @@ class LedgerPostingService:
             },
             "event": event,
             "currency": currency,
-            "lines": [
-                {
-                    "account_id": line.account_id,
-                    "direction": line.direction,
-                    "amount": line.amount,
-                }
-                for line in lines
-            ],
+            # Header-level totals for convenience (used by tests and ops views)
+            "debit": debit_total,
+            "credit": credit_total,
+            # Enriched lines with explicit debit/credit per account
+            "lines": posting_lines,
             "checksum": checksum,
             "created_at": now,
             "created_by": created_by,

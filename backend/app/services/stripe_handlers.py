@@ -31,6 +31,8 @@ async def verify_and_parse_stripe_event(raw_body: bytes, signature: str | None) 
 
     webhook_secret = os.environ.get("STRIPE_WEBHOOK_SECRET")
     if not webhook_secret:
+        # In production we want Stripe to retry when webhook is misconfigured,
+        # but contract tests will set this via test fixtures.
         raise AppError(500, "stripe_webhook_not_configured", "Stripe webhook secret is not configured")
 
     if not signature:

@@ -79,7 +79,14 @@ async def test_voucher_issue_idempotent_per_version_and_reason(async_client, tes
     issue_reason=INITIAL even if the endpoint is called twice.
     """
 
-    org_id = "org_demo2"
+    # Get admin user's organization_id
+    login_resp = await async_client.post(
+        "/api/auth/login",
+        json={"email": "admin@acenta.test", "password": "admin123"},
+    )
+    assert login_resp.status_code == 200
+    admin_user = login_resp.json()["user"]
+    org_id = admin_user["organization_id"]
 
     booking_doc = {
         "_id": "bkg_voucher_2",

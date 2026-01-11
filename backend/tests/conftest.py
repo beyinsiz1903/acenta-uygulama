@@ -252,7 +252,6 @@ async def minimal_search_seed(test_db, async_client: httpx.AsyncClient, agency_t
     org_id = me.get("organization_id")
 
     from bson import ObjectId
-    from app.utils import now_utc as _now
 
     # Upsert product (hotel) in test_db
     prod_filter = {

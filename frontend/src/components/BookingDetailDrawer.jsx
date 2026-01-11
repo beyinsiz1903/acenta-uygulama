@@ -224,9 +224,6 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
       setEventsLoaded(true);
     } catch (err) {
       if (eventsReqSeq.current !== mySeq) return;
-    if (!cancelled) {
-      void loadPaymentState(bookingId);
-    }
 
       setEventsError(normalizeHttpError(err));
       setEventsLoaded(true);

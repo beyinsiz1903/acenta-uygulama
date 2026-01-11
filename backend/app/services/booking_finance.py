@@ -539,3 +539,24 @@ class BookingFinanceService:
         # For testing purposes, return a dummy posting ID
         # In a real implementation, this would create ledger entries
         return f"posting_{booking_id}_{payment_amount}"
+    
+    async def post_refund_approved_for_booking(
+        self,
+        organization_id: str,
+        booking_id: str,
+        agency_id: str,
+        refund_amount: float,
+        currency: str,
+        occurred_at: Optional[datetime] = None,
+    ) -> str:
+        """Create EUR-denominated posting for REFUND_APPROVED.
+        
+        This is a stub implementation for F2.2 Stripe integration.
+        For testing purposes, we'll return a dummy posting ID.
+        """
+        if occurred_at is None:
+            occurred_at = now_utc()
+            
+        # For testing purposes, return a dummy posting ID
+        # In a real implementation, this would create ledger entries
+        return f"refund_posting_{booking_id}_{refund_amount}"

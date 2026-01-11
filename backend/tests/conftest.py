@@ -238,7 +238,7 @@ async def seed_p02_catalog(async_client: httpx.AsyncClient, agency_token: str, a
     agency_id = me.get("agency_id")
 
     # 1) Create a simple product (hotel) via admin catalog if none exists
-    admin_headers = {"Authorization": f"Bearer {await admin_token(async_client)}"}
+    admin_headers = {"Authorization": f"Bearer {admin_token}"}
 
     # Use Istanbul and EUR as in tests
     payload = {

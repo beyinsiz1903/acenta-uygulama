@@ -201,50 +201,48 @@ class LedgerPostingService:
             return posting_doc
 
         # ----------------------------
-        # BOOKING: per-line postings
+        # BOOKING: legacy aggregated posting (single doc, multi-line)
         # ----------------------------
-        posting_docs: list[dict[str, Any]] = []
-        entry_docs: list[dict[str, Any]] = []
+        # NOTE: For booking events, we keep a single posting document with
+        # all lines, so analytics / existing reports can continue to read
+        # one posting per (booking,event). Tests for cancel net0 expect a
+        # single posting per event with per-account debit/credit totals.
+        existing_posting = await db.ledger_postings.find_one(
+            {
+                "organization_id": organization_id,
+                "source.type": source_type,
+                "source.id": src_id_str,
+                "event": event,
+            }
+        )
+        if existing_posting:
+            return existing_posting
+
+        posting_id = f"post_{uuid.uuid4()}"
+        posting_lines: list[dict] = []
+        debit_total = 0.0
+        credit_total = 0.0
+        entry_docs: list[dict] = []
 
         for line in lines:
             direction = (getattr(line, "direction", None) or "").lower()
             amount = float(getattr(line, "amount", 0.0) or 0.0)
-
-            if direction == "debit":
-                debit, credit = amount, 0.0
-            elif direction == "credit":
-                debit, credit = 0.0, amount
-            else:
-                debit, credit = 0.0, 0.0
-
             account_id = str(getattr(line, "account_id"))
-            posting_id = f"post_{uuid.uuid4()}"
 
-            posting_doc: dict[str, Any] = {
-                "_id": posting_id,
-                "organization_id": organization_id,
-                "source": {"type": source_type, "id": src_id_str},
-                "event": event,
-                "currency": currency,
-                "account_id": account_id,
-                "debit": float(debit),
-                "credit": float(credit),
-                "lines": [
-                    {
-                        "account_id": account_id,
-                        "direction": getattr(line, "direction", None),
-                        "amount": float(amount),
-                        "debit": float(debit),
-                        "credit": float(credit),
-                    }
-                ],
-                "created_at": now,
-                "created_by": created_by,
-            }
-            if meta:
-                posting_doc["meta"] = meta
+            debit = amount if direction == "debit" else 0.0
+            credit = amount if direction == "credit" else 0.0
+            debit_total += debit
+            credit_total += credit
 
-            posting_docs.append(posting_doc)
+            posting_lines.append(
+                {
+                    "account_id": account_id,
+                    "direction": getattr(line, "direction", None),
+                    "amount": amount,
+                    "debit": debit,
+                    "credit": credit,
+                }
+            )
 
             entry_docs.append(
                 {
@@ -254,7 +252,7 @@ class LedgerPostingService:
                     "account_id": account_id,
                     "currency": currency,
                     "direction": getattr(line, "direction", None),
-                    "amount": float(amount),
+                    "amount": amount,
                     "occurred_at": occurred_at,
                     "posted_at": now,
                     "source": {"type": source_type, "id": src_id_str},
@@ -264,8 +262,22 @@ class LedgerPostingService:
                 }
             )
 
-        if posting_docs:
-            await db.ledger_postings.insert_many(posting_docs)
+        posting_doc: dict[str, Any] = {
+            "_id": posting_id,
+            "organization_id": organization_id,
+            "source": {"type": source_type, "id": src_id_str},
+            "event": event,
+            "currency": currency,
+            "lines": posting_lines,
+            "debit": float(debit_total),
+            "credit": float(credit_total),
+            "created_at": now,
+            "created_by": created_by,
+        }
+        if meta:
+            posting_doc["meta"] = meta
+
+        await db.ledger_postings.insert_one(posting_doc)
         if entry_docs:
             await db.ledger_entries.insert_many(entry_docs)
 
@@ -279,8 +291,7 @@ class LedgerPostingService:
                 float(getattr(line, "amount", 0.0) or 0.0),
             )
 
-        # Return first posting document to preserve existing callers
-        return posting_docs[0] if posting_docs else {"ok": True, "count": 0}
+        return posting_doc
     
     @staticmethod
     async def _update_balance(

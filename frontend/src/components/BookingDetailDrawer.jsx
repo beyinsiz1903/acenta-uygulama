@@ -553,6 +553,7 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
 
     load();
     loadLedger();
+    loadPayment();
 
     return () => {
       cancelled = true;

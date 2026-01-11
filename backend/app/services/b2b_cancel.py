@@ -30,13 +30,19 @@ class B2BCancelService:
             "organization_id": organization_id,
             "agency_id": agency_id,
         }
-        try:
-            criteria["_id"] = ObjectId(booking_id)
-        except Exception:
-            # Fallback for string-based ids
-            criteria["_id"] = booking_id
 
-        booking = await self.bookings.find_one(criteria)
+        booking = None
+        # 1) Try ObjectId-based lookup first
+        try:
+            oid = ObjectId(booking_id)
+            booking = await self.bookings.find_one({**criteria, "_id": oid})
+        except Exception:
+            booking = None
+
+        # 2) Fallback to string-based _id if not found
+        if not booking:
+            booking = await self.bookings.find_one({**criteria, "_id": booking_id})
+
         if not booking:
             # hide existence if not same agency
             raise AppError(404, "not_found", "Booking not found", {"booking_id": booking_id})

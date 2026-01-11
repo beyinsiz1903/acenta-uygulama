@@ -161,7 +161,6 @@ async def cancel_b2b_booking(
     if not booking:
         raise AppError(404, "booking_not_found", "Booking not found", {"booking_id": booking_id})
 
-    from app.services.booking_lifecycle import BookingLifecycleService
     from app.utils import now_utc
 
     lifecycle = BookingLifecycleService(db)

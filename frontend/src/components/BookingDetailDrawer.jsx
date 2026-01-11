@@ -558,7 +558,7 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
     return () => {
       cancelled = true;
     };
-  }, [open, bookingId, mode]);
+  }, [open, bookingId, mode, loadPaymentState]);
 
   const handleOpenChange = (next) => {
     if (!next) {

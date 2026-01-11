@@ -148,6 +148,7 @@ app.include_router(ops_booking_events_router)
 from app.routers.payments_stripe import router as payments_stripe_router
 
 app.include_router(b2b_hotels_search_router)
+app.include_router(payments_stripe_router)
 
 
 @app.get("/api/health")

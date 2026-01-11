@@ -22,6 +22,7 @@ from app.services.vouchers import (
     list_vouchers_for_booking,
     render_voucher_html,
 )
+from app.services.voucher_pdf import issue_voucher_pdf, get_latest_voucher_pdf
 
 
 router = APIRouter(tags=["vouchers"])

@@ -176,6 +176,61 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
     }
   }, []);
 
+  const stopPaymentPolling = useCallback(() => {
+    if (pollingTimerRef.current) {
+      clearInterval(pollingTimerRef.current);
+      pollingTimerRef.current = null;
+    }
+    setPollingPayment(false);
+  }, []);
+
+  const startPaymentPolling = useCallback(
+    (id, { expectedEventType = "PAYMENT_CAPTURED", timeoutMs = 30_000 } = {}) => {
+      if (!id) return;
+      stopPaymentPolling();
+      pollingStartedAtRef.current = Date.now();
+      setPollingPayment(true);
+
+      const tick = async () => {
+        const nowTs = Date.now();
+        if (!bookingId) {
+          stopPaymentPolling();
+          return;
+        }
+
+        try {
+          await loadPaymentState(id);
+          await loadEvents(id);
+        } catch {
+          // errors are handled inside loaders
+        }
+
+        const aggregate = paymentState?.aggregate;
+        const status = aggregate?.status;
+
+        const isTerminal = ["succeeded", "canceled", "failed", "requires_payment_method"].includes(
+          (status || "").toLowerCase(),
+        );
+        const hasExpectedEvent = events.some((ev) => ev.type === expectedEventType);
+        const elapsed = nowTs - (pollingStartedAtRef.current || nowTs);
+
+        if (isTerminal || hasExpectedEvent || elapsed >= timeoutMs) {
+          stopPaymentPolling();
+          if (elapsed >= timeoutMs && !isTerminal && !hasExpectedEvent) {
+            toast.message("Webhook gecikiyor", {
+              description:
+                "İşlem Stripe tarafında alınmış olabilir, webhook henüz işlenmedi. Birazdan tekrar deneyin.",
+            });
+          }
+        }
+      };
+
+      tick();
+      pollingTimerRef.current = setInterval(tick, 5_000);
+    },
+    [bookingId, events, loadEvents, loadPaymentState, paymentState, stopPaymentPolling],
+  );
+
   const handleOpenAmend = () => {
     if (!bookingId || !booking) return;
     if (booking.status !== "CONFIRMED") return;

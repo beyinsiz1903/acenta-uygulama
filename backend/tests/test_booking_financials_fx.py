@@ -17,7 +17,7 @@ def approx_equal(a: float, b: float, *, abs_tol: float = TOLERANCE_ABS, rel_tol:
     return math.isclose(a, b, rel_tol=rel_tol, abs_tol=abs_tol)
 
 
-async def _create_simple_booking(client, token: str) -> str:
+async def _create_simple_booking(client, token: str, *, use_seeded_db: bool = False) -> str:
     """Use existing P0.2 flow to create a booking and return booking_id.
 
     This helper intentionally stays high-level: it assumes that the

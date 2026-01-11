@@ -1046,6 +1046,144 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
                       yalnızca okuma modunda görüntülenir.
                     </p>
                   </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-[1.2fr_0.8fr] gap-3 text-xs items-end">
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[11px] text-muted-foreground uppercase tracking-wide">
+                        Tahsilat Tutarı (EUR)
+                      </label>
+                      <input
+                        type="number"
+                        min={0}
+                        step="0.01"
+                        value={paymentAmountInput}
+                        onChange={(e) => setPaymentAmountInput(e.target.value)}
+                        className="h-8 w-full rounded-md border border-input bg-background px-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                      />
+                      <p className="text-[11px] text-muted-foreground">
+                        Varsayılan olarak kalan tahsilat tutarı öne gelir. Değiştirerek kısmi ödeme alabilirsiniz.
+                      </p>
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[11px] text-muted-foreground uppercase tracking-wide">
+                        PaymentIntent ID
+                      </label>
+                      <input
+                        type="text"
+                        value={lastPaymentIntentId}
+                        onChange={(e) => setLastPaymentIntentId(e.target.value)}
+                        placeholder="pi_..."
+                        className="h-8 w-full rounded-md border border-input bg-background px-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                      />
+                      <p className="text-[11px] text-muted-foreground">
+                        Create Intent ile üretilen son PaymentIntent ID otomatik dolacaktır.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      disabled={paymentActionLoading || !bookingId}
+                      onClick={async () => {
+                        if (!bookingId) return;
+                        const amountFloat = Number(String(paymentAmountInput).replace(",", "."));
+                        if (!Number.isFinite(amountFloat) || amountFloat <= 0) {
+                          toast.error("Geçerli bir tutar girin.");
+                          return;
+                        }
+                        const amountCents = Math.round(amountFloat * 100);
+
+                        setPaymentActionLoading(true);
+                        setPaymentActionStatus("create_intent");
+                        try {
+                          const idem = makeIdempotencyKey({
+                            bookingId,
+                            action: "create_intent",
+                            amountCents,
+                          });
+                          const resp = await api.post(
+                            "/payments/stripe/create-intent",
+                            {
+                              booking_id: bookingId,
+                              amount_cents: amountCents,
+                              currency: paymentState.aggregate.currency || "EUR",
+                            },
+                            {
+                              headers: {
+                                "Idempotency-Key": idem,
+                              },
+                            },
+                          );
+                          const pi = resp.data?.payment_intent || {};
+                          if (pi.id) {
+                            setLastPaymentIntentId(pi.id);
+                          }
+                          toast.success("PaymentIntent oluşturuldu.");
+                        } catch (e) {
+                          const msg = apiErrorMessage(e);
+                          toast.error(msg || "PaymentIntent oluşturulamadı");
+                        } finally {
+                          setPaymentActionLoading(false);
+                          setPaymentActionStatus("");
+                        }
+                      }}
+                    >
+                      {paymentActionLoading && paymentActionStatus === "create_intent"
+                        ? "Oluşturuluyor..."
+                        : "Create Payment Intent"}
+                    </Button>
+
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="default"
+                      disabled={paymentActionLoading || !bookingId || !lastPaymentIntentId}
+                      onClick={async () => {
+                        if (!bookingId || !lastPaymentIntentId) return;
+                        setPaymentActionLoading(true);
+                        setPaymentActionStatus("capture");
+                        try {
+                          const idem = makeIdempotencyKey({
+                            bookingId,
+                            action: "capture",
+                            amountCents: 0,
+                          });
+                          await api.post(
+                            "/payments/stripe/capture",
+                            { payment_intent_id: lastPaymentIntentId },
+                            {
+                              headers: {
+                                "Idempotency-Key": idem,
+                              },
+                            },
+                          );
+                          toast.success("Capture isteği Stripe'a gönderildi. Webhook bekleniyor...");
+                          setPollingPayment(true);
+                          // Basit polling: payment-state + events birkaç kez yenilenir.
+                          // İleri fazda startPaymentPolling ile daha sofistike hale getirilebilir.
+                        } catch (e) {
+                          const msg = apiErrorMessage(e);
+                          toast.error(msg || "Capture başarısız oldu");
+                        } finally {
+                          setPaymentActionLoading(false);
+                          setPaymentActionStatus("");
+                        }
+                      }}
+                    >
+                      {paymentActionLoading && paymentActionStatus === "capture"
+                        ? "Capture gönderiliyor..."
+                        : "Capture"}
+                    </Button>
+
+                    {pollingPayment && (
+                      <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+                        <Loader2 className="h-3 w-3 animate-spin" /> Webhook bekleniyor...
+                      </span>
+                    )}
+                  </div>
+
 
                   <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-3 text-sm">

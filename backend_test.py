@@ -3579,5 +3579,5 @@ def test_syroce_f12_multi_amend_backend():
 
 
 if __name__ == "__main__":
-    # Run FAZ 4 Inbox/Bildirim Merkezi backend smoke test
-    test_faz4_inbox_backend_smoke()
+    # Run FAZ 4 Inbox comprehensive test
+    test_faz4_inbox_comprehensive()

@@ -70,6 +70,77 @@ async def motor_client() -> AsyncGenerator[AsyncIOMotorClient, None]:
 
 
 @pytest.fixture(scope="function")
+async def seeded_test_db(motor_client: AsyncIOMotorClient) -> AsyncGenerator[Any, None]:
+    """Function-scoped DB with minimal catalog/inventory seed for hotel search.
+
+    Ensures P0.2 /api/b2b/hotels/search returns at least one item for
+    deterministic FX and refund tests.
+    """
+
+    db_name = f"agentis_test_seeded_{uuid.uuid4().hex}"
+    db = motor_client[db_name]
+
+    try:
+        # Minimal organization
+        org_id = "org_demo"
+        await db.organizations.insert_one({"_id": org_id, "slug": "default", "name": "Demo Org"})
+
+        # Minimal agency linked to org
+        await db.agencies.insert_one({
+            "_id": "agency_demo",
+            "organization_id": org_id,
+            "name": "Demo Agency",
+            "settings": {"selling_currency": "EUR"},
+        })
+
+        # One active hotel product in Istanbul with EUR rate plan
+        from app.utils import now_utc as _now
+
+        hotel_id = ObjectId()
+        await db.products.insert_one({
+            "_id": hotel_id,
+            "organization_id": org_id,
+            "type": "hotel",
+            "status": "active",
+            "name": {"tr": "Test Hotel"},
+            "location": {"city": "Istanbul", "country": "TR"},
+            "default_currency": "EUR",
+            "created_at": _now(),
+        })
+
+        rate_plan_id = ObjectId()
+        await db.rate_plans.insert_one({
+            "_id": rate_plan_id,
+            "organization_id": org_id,
+            "product_id": hotel_id,
+            "status": "active",
+            "currency": "EUR",
+            "board": "BB",
+            "base_net_price": 100.0,
+        })
+
+        # Simple inventory for the FX tests' date window (2026-01-10 .. 2026-01-12)
+        from datetime import date, timedelta
+
+        start = date(2026, 1, 10)
+        for offset in range(0, 2):
+            d = start + timedelta(days=offset)
+            await db.inventory.insert_one({
+                "organization_id": org_id,
+                "product_id": hotel_id,
+                "date": d.isoformat(),
+                "capacity_available": 10,
+                "price": 100.0,
+                "restrictions": {"closed": False},
+            })
+
+        yield db
+    finally:
+        await motor_client.drop_database(db_name)
+
+
+
+@pytest.fixture(scope="function")
 async def test_db(motor_client: AsyncIOMotorClient) -> AsyncGenerator[Any, None]:
     """Function-scoped isolated database for each test.
 

@@ -225,44 +225,99 @@ async def admin_token(async_client: httpx.AsyncClient) -> str:
 
 
 @pytest.fixture(autouse=True)
-async def seed_p02_catalog(async_client: httpx.AsyncClient, agency_token: str, admin_token: str):
-    """Ensure P0.2 /api/b2b/hotels/search returns at least one item for FX tests.
+async def minimal_search_seed(test_db, async_client: httpx.AsyncClient, agency_token: str):
+    """Seed minimal catalog (products + rate_plans) directly into test_db.
 
-    Seeds a minimal hotel + rate plan for the organization/agency of agency_token
-    directly through the admin/catalog APIs to respect all business invariants.
+    Ensures P0.2 /api/b2b/hotels/search returns at least one item for FX tests.
     """
 
-    # Resolve org/agency from /api/auth/me
+    # Only run the HTTP validation for FX / cancel tests to avoid slowing full suite
+    import os
+
+    current_test = os.environ.get("PYTEST_CURRENT_TEST", "")
+    run_http_check = any(
+        key in current_test
+        for key in [
+            "test_booking_financials_fx",
+            "test_fx_snapshots",
+            "test_booking_cancel_reverses_ledger_net0",
+        ]
+    )
+
+    # Resolve org/agency from /api/auth/me using agency_token
     headers = {"Authorization": f"Bearer {agency_token}"}
     me_resp = await async_client.get("/api/auth/me", headers=headers)
     assert me_resp.status_code == 200, f"/auth/me failed: {me_resp.text}"
     me = me_resp.json()
     org_id = me.get("organization_id")
-    agency_id = me.get("agency_id")
 
-    # 1) Create a simple product (hotel) via admin catalog if none exists
-    admin_headers = {"Authorization": f"Bearer {admin_token}"}
+    from bson import ObjectId
+    from app.utils import now_utc as _now
 
-    # Use Istanbul and EUR as in tests
-    payload = {
-        "code": "FXTEST-HOTEL",
-        "name": {"tr": "FX Test Hotel"},
+    # Upsert product (hotel) in test_db
+    prod_filter = {
+        "organization_id": org_id,
         "type": "hotel",
-        "location": {"city": "Istanbul", "country": "TR"},
-        "default_currency": "EUR",
+        "status": "active",
+        "location.city": "Istanbul",
+        "code": "FXTEST-HOTEL",
     }
+    existing_prod = await test_db.products.find_one(prod_filter)
+    if existing_prod:
+        product_id = existing_prod["_id"]
+    else:
+        product_id = ObjectId()
+        prod_doc = {
+            "_id": product_id,
+            "organization_id": org_id,
+            "type": "hotel",
+            "status": "active",
+            "code": "FXTEST-HOTEL",
+            "name": {"tr": "FX Test Hotel"},
+            "location": {"city": "Istanbul", "country": "TR"},
+            "default_currency": "EUR",
+            "created_at": _now(),
+        }
+        await test_db.products.insert_one(prod_doc)
 
-    # Ignore duplicate_code errors (if already seeded)
-    resp = await async_client.post("/api/admin/catalog/products", headers=admin_headers, json=payload)
-    if resp.status_code not in (200, 201):
+    # Upsert active EUR rate plan with base_net_price > 0
+    rp_filter = {
+        "organization_id": org_id,
+        "product_id": product_id,
+        "status": "active",
+        "currency": "EUR",
+        "code": "FXTEST-RP",
+    }
+    existing_rp = await test_db.rate_plans.find_one(rp_filter)
+    if not existing_rp:
+        rp_doc = {
+            "organization_id": org_id,
+            "product_id": product_id,
+            "status": "active",
+            "currency": "EUR",
+            "code": "FXTEST-RP",
+            "board": "BB",
+            "base_net_price": 100.0,
+        }
+        await test_db.rate_plans.insert_one(rp_doc)
+
+    # Optional HTTP-level validation only for FX-related tests
+    if run_http_check:
+        today = _now().date()
+        check_in = today.replace(year=2026, month=1, day=10)
+        check_out = today.replace(year=2026, month=1, day=12)
+        params = {
+            "city": "Istanbul",
+            "check_in": check_in.isoformat(),
+            "check_out": check_out.isoformat(),
+            "adults": "2",
+            "children": "0",
+        }
+        resp = await async_client.get("/api/b2b/hotels/search", headers=headers, params=params)
+        assert resp.status_code == 200, f"seed search failed: {resp.text}"
         data = resp.json()
-        if not (data.get("error", {}).get("code") == "duplicate_code"):
-            raise AssertionError(f"Failed to seed FX test product: {resp.text}")
-
-    # 2) Ensure at least one active EUR rate plan with base_net_price > 0 exists
-    # For simplicity, rely on existing admin endpoints or assume pricing rules
-    # will generate a non-zero base_net_price for the product.
-    # P0.2 search only requires products + rate_plans; inventory is not checked.
+        items = data.get("items") or []
+        assert items, f"Seeded search returned no items: {data}"
 
     yield
 

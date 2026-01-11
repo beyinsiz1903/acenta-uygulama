@@ -389,7 +389,11 @@ async def minimal_finance_seed(test_db, async_client: httpx.AsyncClient, agency_
         "type": "agency",
         "owner_id": agency_id,
     }
+    from bson import ObjectId
+
+    agency_acct_id = str(ObjectId())
     agency_acct_doc = {
+        "_id": agency_acct_id,
         **agency_acct_filter,
         "currency": "EUR",
         "code": "AGENCY_AR",
@@ -399,20 +403,21 @@ async def minimal_finance_seed(test_db, async_client: httpx.AsyncClient, agency_
         "updated_at": now,
     }
     await test_db.finance_accounts.update_one(
-        agency_acct_filter,
+        {"_id": agency_acct_id},
         {"$setOnInsert": agency_acct_doc},
         upsert=True,
     )
 
-    agency_account = await test_db.finance_accounts.find_one(agency_acct_filter)
-    assert agency_account is not None
+    agency_account = agency_acct_doc
 
     # 2) Platform finance account required by booking_confirmed posting
     platform_acct_filter = {
         "organization_id": org_id,
         "type": "platform",
     }
+    platform_acct_id = str(ObjectId())
     platform_acct_doc = {
+        "_id": platform_acct_id,
         **platform_acct_filter,
         "currency": "EUR",
         "code": "PLATFORM",
@@ -422,7 +427,7 @@ async def minimal_finance_seed(test_db, async_client: httpx.AsyncClient, agency_
         "updated_at": now,
     }
     await test_db.finance_accounts.update_one(
-        platform_acct_filter,
+        {"_id": platform_acct_id},
         {"$setOnInsert": platform_acct_doc},
         upsert=True,
     )

@@ -241,6 +241,10 @@ async def test_charge_refunded_idempotent_on_refund_id(monkeypatch, async_client
         return event_payload
 
     monkeypatch.setattr(handlers, "verify_and_parse_stripe_event", fake_construct_event)
+    # Monkeypatch get_db to return test_db
+    async def fake_get_db():
+        return test_db
+    monkeypatch.setattr(handlers, "get_db", fake_get_db)
 
     # 1st delivery
     resp1 = await async_client.post(

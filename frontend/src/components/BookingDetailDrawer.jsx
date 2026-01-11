@@ -518,6 +518,30 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
       setLedgerError("");
       try {
         const resp = await api.get(`/ops/finance/bookings/${bookingId}/ledger-summary`);
+    async function loadPayment() {
+      if (!bookingId) return;
+      await loadPaymentState(bookingId);
+      // Varsayılan amount input'u aggregate üzerinden doldur
+      try {
+        const resp = await api.get(PAYMENT_STATE_ENDPOINT(bookingId));
+        const data = resp.data || {};
+        const agg = data.aggregate || {};
+        const total = Number(agg.amount_total ?? 0);
+        const paid = Number(agg.amount_paid ?? 0);
+        const remaining = total - paid;
+        const safeRemaining = Number.isFinite(remaining) ? Math.max(0, remaining) : 0;
+        if (safeRemaining > 0) {
+          setPaymentAmountInput(String((safeRemaining / 100).toFixed(2)));
+        } else if (total > 0) {
+          setPaymentAmountInput(String((total / 100).toFixed(2)));
+        } else {
+          setPaymentAmountInput("");
+        }
+      } catch {
+        // ignore, loadPaymentState zaten error state'i yönetiyor
+      }
+    }
+
         setLedgerSummary(resp.data || null);
       } catch (e) {
         setLedgerError(apiErrorMessage(e));

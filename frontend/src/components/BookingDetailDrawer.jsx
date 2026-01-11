@@ -1127,6 +1127,7 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
                     </div>
                   )}
                 </div>
+                </>
               )}
             </div>
           )}

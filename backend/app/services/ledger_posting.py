@@ -279,7 +279,8 @@ class LedgerPostingService:
                 float(getattr(line, "amount", 0.0) or 0.0),
             )
 
-        return {"ok": True, "count": len(posting_docs)}
+        # Return first posting document to preserve existing callers
+        return posting_docs[0] if posting_docs else {"ok": True, "count": 0}
     
     @staticmethod
     async def _update_balance(

@@ -188,6 +188,13 @@ async def cancel_b2b_booking(
         occurred_at=now,
     )
 
+    # Ensure booking_financials snapshot exists and mirrors latest booking totals
+    # so that refund / penalty calculations and ops views are consistent.
+    booking_after = await db.bookings.find_one({"_id": ObjectId(booking_id), "organization_id": org_id})
+    if booking_after:
+        bf_service = BookingFinancialsService(db)
+        await bf_service.ensure_financials(org_id, booking_after)
+
     # Update booking_financials refunded_total / penalty_total using current values
     bf = await db.booking_financials.find_one(
         {"organization_id": org_id, "booking_id": booking_id}

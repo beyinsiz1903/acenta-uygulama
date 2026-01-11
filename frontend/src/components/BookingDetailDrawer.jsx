@@ -151,6 +151,8 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
     `amend_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
 
   const PAYMENT_STATE_ENDPOINT = (id) => `/ops/finance/bookings/${id}/payment-state`;
+  const EVENTS_ENDPOINT = (id) => `/b2b/bookings/${id}/events`;
+  const [pollingPayment, setPollingPayment] = useState(false);
 
   const loadPaymentState = useCallback(async (id) => {
     if (!id) return;
@@ -160,9 +162,6 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
       const resp = await api.get(PAYMENT_STATE_ENDPOINT(id));
       setPaymentState(resp.data || null);
     } catch (e) {
-  const [pollingPayment, setPollingPayment] = useState(false);
-  const EVENTS_ENDPOINT = (id) => `/b2b/bookings/${id}/events`;
-
       setPaymentError(apiErrorMessage(e));
       setPaymentState(null);
     } finally {

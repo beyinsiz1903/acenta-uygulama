@@ -643,6 +643,53 @@ async def seed_confirmed_booking_for_cancel_net0(test_db, async_client: httpx.As
     assert b.status_code == 200, f"booking create failed: {b.status_code} - {b.text}"
 
 
+@pytest.fixture(autouse=True)
+async def patch_fx_tests_get_db(monkeypatch, test_db):
+    """Route FX-related tests + ledger_posting to the isolated test_db.
+
+    Ensures:
+    - tests/test_booking_financials_fx.py and tests/test_fx_snapshots.py use test_db
+      for their get_db calls
+    - LedgerPostingService.post_event also writes to test_db for these tests
+    """
+    import os
+
+    current_test = os.environ.get("PYTEST_CURRENT_TEST", "")
+    if not any(
+        key in current_test
+        for key in [
+            "test_booking_financials_fx.py",
+            "test_fx_snapshots.py",
+        ]
+    ):
+        yield
+    else:
+        async def _get_test_db():
+            return test_db
+
+        # Patch test modules' local get_db bindings
+        for modname in [
+            "tests.test_booking_financials_fx",
+            "test_booking_financials_fx",
+            "tests.test_fx_snapshots",
+            "test_fx_snapshots",
+        ]:
+            try:
+                m = __import__(modname, fromlist=["*"])
+                monkeypatch.setattr(m, "get_db", _get_test_db, raising=False)
+            except Exception:
+                pass
+
+        # Ensure ledger_posting service also uses test_db
+        try:
+            import app.services.ledger_posting as lp_mod
+            monkeypatch.setattr(lp_mod, "get_db", _get_test_db, raising=False)
+        except Exception:
+            pass
+
+        yield
+
+
 @pytest.fixture
 async def admin_headers(admin_token: str) -> Dict[str, str]:
     """Convenience fixture returning Authorization header for admin."""

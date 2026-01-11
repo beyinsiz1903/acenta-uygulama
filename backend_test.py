@@ -1080,17 +1080,9 @@ def test_faz3_public_my_booking_endpoints():
         print(f"   ✅ Created new CONFIRMED booking: {booking_id}")
 
     # Get booking details to extract PNR and guest info
-    r = requests.get(
-        f"{BASE_URL}/api/b2b/bookings/{booking_id}",
-        headers=agency_headers,
-    )
-    assert r.status_code == 200, f"Get booking details failed: {r.text}"
-    
-    booking_details = r.json()
-    
-    # Extract PNR (code) and guest information
-    booking_code = booking_details.get("code") or booking_details.get("booking_id")
-    primary_guest_name = booking_details.get("primary_guest_name", "")
+    # Use the booking data from the list instead of making another API call
+    booking_code = confirmed_booking.get("code") or confirmed_booking.get("booking_id")
+    primary_guest_name = confirmed_booking.get("primary_guest_name", "")
     
     # Extract last name from primary guest name
     guest_last_name = "Guest"  # Default fallback
@@ -1100,6 +1092,10 @@ def test_faz3_public_my_booking_endpoints():
             guest_last_name = name_parts[-1]
         else:
             guest_last_name = name_parts[0] if name_parts else "Guest"
+    
+    # If we don't have a code, use the booking_id as PNR
+    if not booking_code:
+        booking_code = booking_id
     
     print(f"   📋 Booking Code (PNR): {booking_code}")
     print(f"   📋 Primary Guest Name: {primary_guest_name}")

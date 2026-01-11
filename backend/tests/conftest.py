@@ -102,7 +102,7 @@ async def seeded_test_db(motor_client: AsyncIOMotorClient) -> AsyncGenerator[Any
             "name": {"tr": "Test Hotel"},
             "location": {"city": "Istanbul", "country": "TR"},
             "default_currency": "EUR",
-            "created_at": _now(),
+            "created_at": now_utc(),
         })
 
         rate_plan_id = ObjectId()

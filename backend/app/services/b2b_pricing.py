@@ -31,6 +31,7 @@ class B2BPricingService:
         self.products = db.products
         self.inventory = db.inventory
         self.price_quotes = db.price_quotes
+        self.coupons = CouponService(db)
 
     async def _ensure_product_sellable(self, organization_id: str, product_id: str) -> dict:
         # Convert string product_id to ObjectId for MongoDB lookup

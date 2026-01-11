@@ -116,54 +116,56 @@ class LedgerPostingService:
         
         if occurred_at is None:
             occurred_at = now_utc()
-        
-        # Idempotency guard: check if posting already exists
-        existing_posting = await db.ledger_postings.find_one({
-            "organization_id": organization_id,
-            "source.type": source_type,
-            "source.id": source_id,
-            "event": event,
-        })
-        
-        if existing_posting:
-            # Idempotent replay: return existing posting
-            return existing_posting
-        
-        # Compute checksum
-        checksum = LedgerPostingService._compute_checksum(source_type, source_id, event, lines)
+        meta = meta or {}
 
-        # Compute header totals and enrich lines with explicit debit/credit
-        debit_total = 0.0
-        credit_total = 0.0
-        posting_lines: list[dict] = []
-        for line in lines:
-            direction = (line.direction or "").lower()
-            amount = float(line.amount)
+        # Non-booking: keep existing exactly-once, single-document behavior
+        if source_type != "booking":
+            existing_posting = await db.ledger_postings.find_one({
+                "organization_id": organization_id,
+                "source.type": source_type,
+                "source.id": str(source_id),
+                "event": event,
+            })
 
-            if direction == "debit":
-                debit = amount
-                credit = 0.0
-                debit_total += amount
-            elif direction == "credit":
-                debit = 0.0
-                credit = amount
-                credit_total += amount
-            else:
-                debit = 0.0
-                credit = 0.0
+            if existing_posting:
+                return existing_posting
 
-            posting_lines.append(
-                {
-                    "account_id": str(line.account_id),
-                    "direction": line.direction,
-                    "amount": amount,
-                    "debit": debit,
-                    "credit": credit,
-                }
-            )
-        
-        # Normalise meta for safe storage (ObjectId, datetime, Decimal etc.)
-        def _normalise_meta(value):
+            # -----------------------------------------------------------------
+            # Legacy single-document behavior (checksum + multi-line posting)
+            # -----------------------------------------------------------------
+            checksum = LedgerPostingService._compute_checksum(source_type, source_id, event, lines)
+
+            debit_total = 0.0
+            credit_total = 0.0
+            posting_lines: list[dict] = []
+            for line in lines:
+                direction = (line.direction or "").lower()
+                amount = float(line.amount)
+
+                if direction == "debit":
+                    debit = amount
+                    credit = 0.0
+                    debit_total += amount
+                elif direction == "credit":
+                    debit = 0.0
+                    credit = amount
+                    credit_total += amount
+                else:
+                    debit = 0.0
+                    credit = 0.0
+
+                posting_lines.append(
+                    {
+                        "account_id": str(line.account_id),
+                        "direction": line.direction,
+                        "amount": amount,
+                        "debit": debit,
+                        "credit": credit,
+                    }
+                )
+
+            # Normalise meta for safe storage (ObjectId, datetime, Decimal etc.)
+            def _normalise_meta(value):
             from bson import ObjectId  # type: ignore
             from decimal import Decimal
             from datetime import datetime as _dt

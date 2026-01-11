@@ -46,6 +46,10 @@ async def motor_client() -> AsyncGenerator[AsyncIOMotorClient, None]:
     event loop / IO stack for Mongo.
     """
 
+    # Ensure Stripe webhook secret is set for contract tests
+    # to exercise real signature verification logic deterministically.
+    os.environ.setdefault("STRIPE_WEBHOOK_SECRET", "whsec_test")
+
     client = AsyncIOMotorClient(MONGO_URL)
     try:
         yield client

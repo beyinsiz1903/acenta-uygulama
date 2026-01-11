@@ -1,0 +1,278 @@
+import React, { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
+import { api, apiErrorMessage } from "../lib/api";
+import { Button } from "../components/ui/button";
+import EmptyState from "../components/EmptyState";
+import ErrorState from "../components/ErrorState";
+import { Loader2 } from "lucide-react";
+
+function useQuery() {
+  const { search } = useLocation();
+  return React.useMemo(() => new URLSearchParams(search), [search]);
+}
+
+function InboxPage() {
+  const query = useQuery();
+  const initialBookingId = query.get("booking_id") || "";
+
+  const [threads, setThreads] = useState([]);
+  const [threadsLoading, setThreadsLoading] = useState(false);
+  const [threadsError, setThreadsError] = useState("");
+  const [statusFilter, setStatusFilter] = useState("OPEN");
+  const [selectedThreadId, setSelectedThreadId] = useState(null);
+
+  const [threadDetail, setThreadDetail] = useState(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState("");
+  const [newMessage, setNewMessage] = useState("");
+  const [sendLoading, setSendLoading] = useState(false);
+
+  const loadThreads = async (opts = {}) => {
+    const { bookingId = initialBookingId } = opts;
+    setThreadsLoading(true);
+    setThreadsError("");
+
+    const params = new URLSearchParams();
+    if (statusFilter && statusFilter !== "ALL") params.set("status", statusFilter);
+    if (bookingId) params.set("booking_id", bookingId);
+
+    try {
+      const resp = await api.get(`/inbox/threads?${params.toString()}`);
+      setThreads(resp.data || []);
+      if (!selectedThreadId && resp.data && resp.data.length > 0) {
+        setSelectedThreadId(resp.data[0].id);
+      }
+    } catch (e) {
+      setThreadsError(apiErrorMessage(e));
+      setThreads([]);
+    } finally {
+      setThreadsLoading(false);
+    }
+  };
+
+  const loadThreadDetail = async (id) => {
+    if (!id) return;
+    setDetailLoading(true);
+    setDetailError("");
+    try {
+      const resp = await api.get(`/inbox/threads/${id}`);
+      setThreadDetail(resp.data || null);
+    } catch (e) {
+      setDetailError(apiErrorMessage(e));
+      setThreadDetail(null);
+    } finally {
+      setDetailLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void loadThreads();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [statusFilter, initialBookingId]);
+
+  useEffect(() => {
+    if (selectedThreadId) {
+      void loadThreadDetail(selectedThreadId);
+    }
+  }, [selectedThreadId]);
+
+  const handleSendMessage = async (e) => {
+    e.preventDefault();
+    if (!newMessage.trim() || !selectedThreadId) return;
+
+    setSendLoading(true);
+    try {
+      const resp = await api.post(`/inbox/threads/${selectedThreadId}/messages`, {
+        body: newMessage.trim(),
+      });
+      setNewMessage("");
+      // Optimistic update
+      setThreadDetail((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          messages: [...prev.messages, resp.data],
+        };
+      });
+    } catch (e) {
+      setDetailError(apiErrorMessage(e));
+    } finally {
+      setSendLoading(false);
+    }
+  };
+
+  return (
+    <div className="h-[calc(100vh-64px)] flex">
+      {/* Thread list */}
+      <div className="w-full md:w-1/3 border-r bg-background flex flex-col">
+        <div className="p-3 border-b flex items-center justify-between gap-2">
+          <div className="flex gap-1 text-xs">
+            {[
+              ["OPEN", "Açık"],
+              ["CLOSED", "Kapalı"],
+              ["ALL", "Hepsi"],
+            ].map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setStatusFilter(value)}
+                className={`px-2 py-1 rounded-full border text-xs ${
+                  statusFilter === value
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "border-muted text-muted-foreground"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto">
+          {threadsLoading && (
+            <div className="p-4 flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Inbox yükleniyor...
+            </div>
+          )}
+
+          {!threadsLoading && threadsError && (
+            <div className="p-4">
+              <ErrorState
+                title="Inbox yüklenemedi"
+                description={threadsError}
+                onRetry={() => loadThreads()}
+              />
+            </div>
+          )}
+
+          {!threadsLoading && !threadsError && threads.length === 0 && (
+            <div className="p-4">
+              <EmptyState
+                title="Herhangi bir thread yok"
+                description="Henüz bu organizasyon için bir inbox kaydı oluşmamış."
+              />
+            </div>
+          )}
+
+          {!threadsLoading && !threadsError && threads.length > 0 && (
+            <ul className="divide-y">
+              {threads.map((t) => (
+                <li
+                  key={t.id}
+                  className={`p-3 cursor-pointer text-sm hover:bg-muted/60 ${
+                    selectedThreadId === t.id ? "bg-muted" : ""
+                  }`}
+                  onClick={() => setSelectedThreadId(t.id)}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-medium truncate max-w-[70%]">{t.subject}</span>
+                    <span className="text-[10px] uppercase text-muted-foreground">
+                      {t.type}
+                    </span>
+                  </div>
+                  {t.booking_id && (
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      Booking: {t.booking_id}
+                    </p>
+                  )}
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    {t.last_message_at || ""}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+
+      {/* Message panel */}
+      <div className="hidden md:flex flex-1 flex-col bg-background">
+        {!selectedThreadId && (
+          <div className="flex-1 flex items-center justify-center">
+            <EmptyState
+              title="Bir thread seçin"
+              description="Soldaki listeden bir thread seçerek mesajları görüntüleyin."
+            />
+          </div>
+        )}
+
+        {selectedThreadId && (
+          <div className="flex-1 flex flex-col">
+            <div className="p-3 border-b">
+              <h2 className="text-sm font-semibold">
+                {threadDetail?.thread?.subject || "Thread"}
+              </h2>
+              {threadDetail?.thread?.booking_id && (
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Booking: {threadDetail.thread.booking_id}
+                </p>
+              )}
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-3 space-y-2">
+              {detailLoading && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Mesajlar yükleniyor...
+                </div>
+              )}
+
+              {!detailLoading && detailError && (
+                <ErrorState
+                  title="Thread yüklenemedi"
+                  description={detailError}
+                  onRetry={() => loadThreadDetail(selectedThreadId)}
+                />
+              )}
+
+              {!detailLoading && !detailError && threadDetail && (
+                <div className="space-y-2 text-sm">
+                  {threadDetail.messages.map((m) => (
+                    <div
+                      key={m.id}
+                      className={`max-w-[80%] px-3 py-2 rounded-2xl border text-sm whitespace-pre-wrap ${
+                        m.sender_type === "SYSTEM"
+                          ? "bg-muted text-muted-foreground border-muted/60"
+                          : "bg-primary/5 text-foreground border-primary/20 ml-auto"
+                      }`}
+                    >
+                      {m.event_type && (
+                        <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-0.5">
+                          {m.event_type}
+                        </div>
+                      )}
+                      <div>{m.body}</div>
+                      {m.sender_email && (
+                        <div className="mt-1 text-[10px] text-muted-foreground">
+                          {m.sender_email}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {selectedThreadId && (
+              <form onSubmit={handleSendMessage} className="border-t p-3 flex items-center gap-2">
+                <textarea
+                  className="flex-1 resize-none text-sm border rounded-lg px-2 py-1 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
+                  rows={2}
+                  placeholder="Mesaj yazın..."
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                />
+                <Button type="submit" size="sm" disabled={sendLoading || !newMessage.trim()}>
+                  {sendLoading ? "Gönderiliyor..." : "Gönder"}
+                </Button>
+              </form>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default InboxPage;

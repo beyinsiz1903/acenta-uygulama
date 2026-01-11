@@ -15,6 +15,7 @@ from app.indexes.catalog_indexes import ensure_catalog_indexes
 from app.indexes.pricing_indexes import ensure_pricing_indexes
 from app.indexes.finance_indexes import ensure_finance_indexes
 from app.indexes.phase2a_indexes import ensure_phase2a_indexes
+from app.indexes.voucher_indexes import ensure_voucher_indexes
 from app.exception_handlers import register_exception_handlers
 from app.config import ENABLE_VOUCHER_PDF, ENABLE_SELF_SERVICE_PORTAL, ENABLE_PARTNER_API
 from app.routers.auth import router as auth_router
@@ -199,6 +200,7 @@ async def _startup() -> None:
     await ensure_pricing_indexes(db)
     await ensure_finance_indexes(db)
     await ensure_phase2a_indexes(db)
+    await ensure_voucher_indexes(db)
 
     logger.info("Startup complete")
 

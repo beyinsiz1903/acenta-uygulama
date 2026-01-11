@@ -22,8 +22,8 @@ async def create_test_coupon():
     await connect_mongo()
     db = await get_db()
     
-    # Organization ID for org_demo (from seed data)
-    org_id = "org_demo"
+    # Organization ID from agency login (not org_demo)
+    org_id = "695e03c80b04ed31c4eaa899"
     
     # Check if coupon already exists
     existing = await db.coupons.find_one({

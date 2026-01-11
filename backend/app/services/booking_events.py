@@ -35,6 +35,23 @@ async def emit_event(
 
     try:
         await db.booking_events.insert_one(doc)
+
+    # Mirror key booking events into inbox as SYSTEM messages
+    if type in {
+        "BOOKING_CONFIRMED",
+        "PAYMENT_CAPTURED",
+        "PAYMENT_REFUNDED",
+        "VOUCHER_ISSUED",
+        "GUEST_REQUEST_CANCEL",
+        "GUEST_REQUEST_AMEND",
+    }:
+        await append_system_message_for_event(
+            db,
+            organization_id=organization_id,
+            booking_id=str(booking_id),
+            event_type=type,
+            meta=meta or {},
+        )
         return True
     except Exception:
         logger.exception("emit_event_failed", extra={"organization_id": organization_id, "booking_id": booking_id, "type": type})

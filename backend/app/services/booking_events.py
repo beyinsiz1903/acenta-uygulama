@@ -26,7 +26,7 @@ async def emit_event(
     doc: Dict[str, Any] = {
         "organization_id": organization_id,
         "booking_id": str(booking_id),
-        "type": type,
+        "event": type,
         "created_at": now_utc(),
         "actor": actor or {},
         "meta": meta or {},

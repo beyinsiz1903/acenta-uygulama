@@ -65,6 +65,10 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
   const [eventsLoaded, setEventsLoaded] = useState(false);
   const eventsReqSeq = useRef(0);
 
+  const [pollingPayment, setPollingPayment] = useState(false);
+  const pollingTimerRef = useRef(null);
+  const pollingStartedAtRef = useRef(null);
+
   function normalizeEvents(payload) {
     const arr = Array.isArray(payload) ? payload : (payload?.items || []);
     return arr.map((e) => ({

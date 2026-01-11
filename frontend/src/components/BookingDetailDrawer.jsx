@@ -652,6 +652,17 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
             <button
               type="button"
               className={
+                activeTab === "payments"
+                  ? "border-b-2 border-primary pb-2 font-medium"
+                  : "pb-2 text-muted-foreground"
+              }
+              onClick={() => setActiveTab("payments")}
+            >
+              Payments
+            </button>
+            <button
+              type="button"
+              className={
                 activeTab === "timeline"
                   ? "border-b-2 border-primary pb-2 font-medium"
                   : "pb-2 text-muted-foreground"

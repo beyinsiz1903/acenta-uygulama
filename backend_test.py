@@ -4221,5 +4221,5 @@ def test_syroce_f12_multi_amend_backend():
 
 
 if __name__ == "__main__":
-    # Run FAZ 5 Kupon backend smoke test
-    test_faz5_coupon_backend_smoke()
+    # Run FAZ 2 Stripe Payments backend validation
+    test_faz2_stripe_payments_backend_validation()

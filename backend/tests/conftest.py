@@ -438,6 +438,32 @@ async def minimal_finance_seed(test_db, async_client: httpx.AsyncClient, agency_
         "agency_id": agency_id,
     }
     credit_profile_doc = {
+
+
+@pytest.fixture(autouse=True)
+def patch_cancel_test_get_db(monkeypatch, test_db):
+    """Ensure cancel net0 test uses test_db instead of global DB.
+
+    The test `test_booking_cancel_reverses_ledger_net0.py` does:
+
+        from app.db import get_db
+        db = await get_db()
+
+    which would otherwise hit the global DB. We patch the imported symbol in
+    that test module so that it returns the isolated test_db instead.
+    """
+    import os
+
+    current_test = os.environ.get("PYTEST_CURRENT_TEST", "")
+    if "test_booking_cancel_reverses_ledger_net0.py" not in current_test:
+        return
+
+    async def _get_test_db():
+        return test_db
+
+    import tests.test_booking_cancel_reverses_ledger_net0 as tmod
+    monkeypatch.setattr(tmod, "get_db", _get_test_db, raising=True)
+
         **credit_profile_filter,
         "limit": 1_000_000.0,
         "soft_limit": 500_000.0,

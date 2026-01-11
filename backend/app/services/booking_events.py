@@ -4,6 +4,7 @@ from typing import Any, Dict, Optional
 import logging
 
 from app.utils import now_utc
+from app.services.inbox import append_system_message_for_event
 
 
 logger = logging.getLogger("booking_events")

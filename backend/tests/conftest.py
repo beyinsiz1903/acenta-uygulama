@@ -222,7 +222,7 @@ async def admin_token(async_client: httpx.AsyncClient) -> str:
 
 
 @pytest.fixture(autouse=True)
-async def seed_p02_catalog(async_client: httpx.AsyncClient, agency_token: str):
+async def seed_p02_catalog(async_client: httpx.AsyncClient, agency_token: str, admin_token: str):
     """Ensure P0.2 /api/b2b/hotels/search returns at least one item for FX tests.
 
     Seeds a minimal hotel + rate plan for the organization/agency of agency_token

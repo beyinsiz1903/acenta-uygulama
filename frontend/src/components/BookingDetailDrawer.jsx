@@ -1057,7 +1057,6 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
               )}
 
               {!paymentLoading && !paymentError && paymentState && paymentState.aggregate && (
-              {!paymentLoading && !paymentError && paymentState && paymentState.aggregate && (
                 <div className="mt-4 border-t pt-3 space-y-3">
                   <h3 className="text-sm font-medium text-muted-foreground">Stripe Ödeme Aksiyonları</h3>
                   <p className="text-xs text-muted-foreground">

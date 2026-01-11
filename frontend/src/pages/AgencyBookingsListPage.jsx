@@ -130,19 +130,11 @@ export default function AgencyBookingsListPage() {
           subtitle="Acentanızın rezervasyonlarının listesi."
         />
 
-        <div className="rounded-2xl border border-destructive/50 bg-destructive/5 p-8 flex flex-col items-center justify-center gap-4">
-          <AlertCircle className="h-10 w-10 text-destructive" />
-          <div className="text-center">
-            <p className="font-semibold text-foreground">Rezervasyonlar yüklenemedi</p>
-            <p className="text-sm text-muted-foreground mt-1">{error}</p>
-          </div>
-          <button
-            onClick={loadBookings}
-            className="mt-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition"
-          >
-            Tekrar Dene
-          </button>
-        </div>
+        <ErrorState
+          title="Rezervasyonlar yüklenemedi"
+          description={error}
+          onRetry={loadBookings}
+        />
       </div>
     );
   }

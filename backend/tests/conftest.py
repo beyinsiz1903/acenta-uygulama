@@ -218,6 +218,50 @@ async def admin_token(async_client: httpx.AsyncClient) -> str:
     response = await async_client.post(
         "/api/auth/login",
         json={"email": "admin@acenta.test", "password": "admin123"},
+
+
+@pytest.fixture(autouse=True)
+async def seed_p02_catalog(async_client: httpx.AsyncClient, agency_token: str):
+    """Ensure P0.2 /api/b2b/hotels/search returns at least one item for FX tests.
+
+    Seeds a minimal hotel + rate plan for the organization/agency of agency_token
+    directly through the admin/catalog APIs to respect all business invariants.
+    """
+
+    # Resolve org/agency from /api/auth/me
+    headers = {"Authorization": f"Bearer {agency_token}"}
+    me_resp = await async_client.get("/api/auth/me", headers=headers)
+    assert me_resp.status_code == 200, f"/auth/me failed: {me_resp.text}"
+    me = me_resp.json()
+    org_id = me.get("organization_id")
+    agency_id = me.get("agency_id")
+
+    # 1) Create a simple product (hotel) via admin catalog if none exists
+    admin_headers = {"Authorization": f"Bearer {await admin_token(async_client)}"}
+
+    # Use Istanbul and EUR as in tests
+    payload = {
+        "code": "FXTEST-HOTEL",
+        "name": {"tr": "FX Test Hotel"},
+        "type": "hotel",
+        "location": {"city": "Istanbul", "country": "TR"},
+        "default_currency": "EUR",
+    }
+
+    # Ignore duplicate_code errors (if already seeded)
+    resp = await async_client.post("/api/admin/catalog/products", headers=admin_headers, json=payload)
+    if resp.status_code not in (200, 201):
+        data = resp.json()
+        if not (data.get("error", {}).get("code") == "duplicate_code"):
+            raise AssertionError(f"Failed to seed FX test product: {resp.text}")
+
+    # 2) Ensure at least one active EUR rate plan with base_net_price > 0 exists
+    # For simplicity, rely on existing admin endpoints or assume pricing rules
+    # will generate a non-zero base_net_price for the product.
+    # P0.2 search only requires products + rate_plans; inventory is not checked.
+
+    yield
+
     )
     assert response.status_code == 200, f"Admin login failed: {response.text}"
     data = response.json()

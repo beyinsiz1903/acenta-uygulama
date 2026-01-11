@@ -1376,9 +1376,34 @@ def test_faz5_coupon_backend_smoke():
     print(f"   📋 If coupon doesn't exist, the test will show NOT_FOUND status (which is also valid)")
 
     # ------------------------------------------------------------------
-    # Test 4: Apply coupon - POST /api/b2b/quotes/{quote_id}/apply-coupon?code=TEST10
+    # Test 4: Test with invalid coupon first (should work without serialization issues)
     # ------------------------------------------------------------------
-    print("\n4️⃣  Testing Apply Coupon - POST /api/b2b/quotes/{quote_id}/apply-coupon...")
+    print("\n4️⃣  Testing Invalid Coupon Code First...")
+    
+    r = requests.post(
+        f"{BASE_URL}/api/b2b/quotes/{quote_id}/apply-coupon?code=INVALID123",
+        headers=agency_headers,
+    )
+    
+    print(f"   📋 Invalid coupon response status: {r.status_code}")
+    
+    if r.status_code == 200:
+        invalid_response = r.json()
+        print(f"   ✅ Invalid coupon handled correctly: 200")
+        print(f"   📋 Response keys: {list(invalid_response.keys())}")
+        
+        if "coupon" in invalid_response:
+            coupon = invalid_response["coupon"]
+            print(f"   📋 Coupon status: {coupon.get('status')}")
+            print(f"   📋 Coupon reason: {coupon.get('reason')}")
+    else:
+        print(f"   ❌ Invalid coupon failed: {r.status_code} - {r.text}")
+        return
+
+    # ------------------------------------------------------------------
+    # Test 5: Apply valid coupon - POST /api/b2b/quotes/{quote_id}/apply-coupon?code=TEST10
+    # ------------------------------------------------------------------
+    print("\n5️⃣  Testing Apply Valid Coupon - POST /api/b2b/quotes/{quote_id}/apply-coupon...")
     
     r = requests.post(
         f"{BASE_URL}/api/b2b/quotes/{quote_id}/apply-coupon?code=TEST10",

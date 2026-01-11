@@ -3341,5 +3341,5 @@ def test_syroce_f12_multi_amend_backend():
 
 
 if __name__ == "__main__":
-    # Run FAZ 3 Public Self-Service /my-booking test
-    test_faz3_public_my_booking_endpoints()
+    # Run FAZ 4 Inbox/Bildirim Merkezi backend smoke test
+    test_faz4_inbox_backend_smoke()

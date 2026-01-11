@@ -227,6 +227,7 @@ class B2BPricingService:
         }
         res = await self.price_quotes.insert_one(doc)
         quote_id = str(res.inserted_id)
+        return QuoteCreateResponse(quote_id=quote_id, expires_at=expires_at, offers=offers)
 
     async def apply_coupon_to_quote(
         self,

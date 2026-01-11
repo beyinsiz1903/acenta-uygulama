@@ -7,6 +7,7 @@ Testing booking → voucher HTML → voucher PDF flow with Turkish requirements
 import requests
 import json
 import uuid
+import asyncio
 from datetime import datetime, date
 
 # Configuration - Use production URL from frontend/.env

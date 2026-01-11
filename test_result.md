@@ -342,6 +342,14 @@
     stuck_count: 0
     priority: "high"
     needs_retesting: false
+
+  - task: "F2.2 Stripe Payments Core Backend"
+    implemented: true
+    working: false
+    file: "/app/backend/app/services/stripe_adapter.py, /app/backend/app/services/stripe_handlers.py, /app/backend/app/routers/payments_stripe.py, /app/backend/tests/test_payments_stripe_contract_phase1.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"

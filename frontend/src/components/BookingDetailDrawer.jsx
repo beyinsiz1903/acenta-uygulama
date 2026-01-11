@@ -590,6 +590,17 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
           <div className="flex items-start justify-between gap-3">
             <div>
               <SheetTitle className="text-xl font-semibold">{titleHotel}</SheetTitle>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={paymentLoading || !bookingId}
+                    onClick={() => loadPaymentState(bookingId)}
+                  >
+                    {paymentLoading ? "Ödeme durumu yükleniyor..." : "Ödeme Durumu"}
+                  </Button>
+                </div>
+
               {subtitle && (
                 <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>
               )}

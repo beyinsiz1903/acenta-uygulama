@@ -145,14 +145,6 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
   const generateAmendRequestId = () =>
     `amend_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
 
-  const handleOpenAmend = () => {
-    if (!bookingId || !booking) return;
-    if (booking.status !== "CONFIRMED") return;
-    setAmendMode(true);
-    setAmendError("");
-    setAmendProposal(null);
-    setAmendRequestId(generateAmendRequestId());
-    const item0 = booking?.items?.[0] || {};
   const PAYMENT_STATE_ENDPOINT = (id) => `/ops/finance/bookings/${id}/payment-state`;
 
   const loadPaymentState = useCallback(async (id) => {
@@ -170,6 +162,14 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
     }
   }, []);
 
+  const handleOpenAmend = () => {
+    if (!bookingId || !booking) return;
+    if (booking.status !== "CONFIRMED") return;
+    setAmendMode(true);
+    setAmendError("");
+    setAmendProposal(null);
+    setAmendRequestId(generateAmendRequestId());
+    const item0 = booking?.items?.[0] || {};
     setAmendCheckIn(booking.check_in_date || item0.check_in || "");
     setAmendCheckOut(booking.check_out_date || item0.check_out || "");
   };

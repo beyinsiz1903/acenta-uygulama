@@ -66,6 +66,109 @@ async def ops_list_vouchers_for_booking(
     return VoucherHistoryResponse(items=items)
 
 
+class VoucherIssueRequest(BaseModel):
+    issue_reason: str = "INITIAL"  # INITIAL | AMEND | CANCEL
+    locale: str = "tr"
+
+
+class VoucherFileMeta(BaseModel):
+    id: str
+    booking_id: str
+    version: int
+    issue_reason: str
+    locale: str
+    filename: str
+    mime: str
+    size_bytes: int
+    created_at: datetime | None = None
+    created_by: str | None = None
+
+
+@router.post("/api/ops/bookings/{booking_id}/voucher/issue", response_model=VoucherFileMeta)
+async def ops_issue_voucher_pdf(
+    booking_id: str,
+    payload: VoucherIssueRequest,
+    user=OpsUserDep,
+    db=Depends(get_db),
+) -> VoucherFileMeta:
+    """Issue a voucher PDF for a booking (ops/admin only).
+
+    This builds on the existing voucher HTML (services.vouchers) and persists
+    a binary PDF file in files_vouchers. It also emits a VOUCHER_ISSUED event
+    that is visible on the booking timeline.
+    """
+
+    org_id = user["organization_id"]
+    email = user.get("email") or "ops@system"
+
+    # Normalize issue_reason
+    issue_reason = (payload.issue_reason or "INITIAL").upper()
+    if issue_reason not in {"INITIAL", "AMEND", "CANCEL"}:
+        issue_reason = "INITIAL"
+
+    meta = await issue_voucher_pdf(
+        db,
+        organization_id=org_id,
+        booking_id=booking_id,
+        issue_reason=issue_reason,  # type: ignore[arg-type]
+        locale=payload.locale or "tr",
+        issued_by=email,
+    )
+
+    return VoucherFileMeta(**meta)
+
+
+@router.get("/api/b2b/bookings/{booking_id}/voucher/latest")
+async def b2b_download_latest_voucher_pdf(
+    booking_id: str,
+    user=Depends(get_current_user),
+    db=Depends(get_db),
+) -> Response:
+    """Download latest voucher PDF for a booking (agency/hotel/admin).
+
+    For Phase 1 we allow any authenticated user scoped to the same
+    organization, with booking-level ownership checks for agency/hotel roles.
+    """
+
+    org_id = user.get("organization_id")
+    roles = set(user.get("roles") or [])
+    if not org_id:
+        raise AppError(403, "forbidden", "Missing organization context")
+
+    # Ownership checks: agency/hotel users must own the booking
+    try:
+        booking_oid = ObjectId(booking_id)
+    except Exception:
+        raise AppError(404, "not_found", "Booking not found", {"booking_id": booking_id})
+
+    booking = await db.bookings.find_one({"_id": booking_oid, "organization_id": org_id})
+    if not booking:
+        raise AppError(404, "not_found", "Booking not found", {"booking_id": booking_id})
+
+    if roles & {"agency_admin", "agency_agent"}:
+        if str(booking.get("agency_id")) != str(user.get("agency_id")):
+            raise AppError(403, "forbidden", "Booking does not belong to this agency")
+
+    if roles & {"hotel_admin", "hotel_staff"}:
+        if str(booking.get("hotel_id")) != str(user.get("hotel_id")):
+            raise AppError(403, "forbidden", "Booking does not belong to this hotel")
+
+    # Admin/ops users can access any booking within org
+
+    pdf_bytes, meta = await get_latest_voucher_pdf(
+        db,
+        organization_id=org_id,
+        booking_id=booking_id,
+    )
+
+    filename = meta.get("filename") or f"voucher-{booking_id}.pdf"
+    headers = {
+        "Content-Disposition": f"inline; filename=\"{filename}\"",
+    }
+    return Response(content=pdf_bytes, media_type="application/pdf", headers=headers)
+
+
+
 @router.post("/api/ops/bookings/{booking_id}/voucher/resend", response_model=VoucherResendResponse)
 async def ops_resend_voucher(
     booking_id: str,

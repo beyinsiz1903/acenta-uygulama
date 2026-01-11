@@ -42,7 +42,8 @@ async def test_payment_intent_succeeded_currency_mismatch_returns_500(monkeypatc
     """
 
     # Create a dummy booking + aggregate in EUR so orchestrator has something to work with
-    orchestrator = BookingPaymentsOrchestrator(test_db)
+    db = test_db
+    orchestrator = BookingPaymentsOrchestrator(db)
     booking_id = "bkg_stripe_1"
     org_id = "org_demo"
     agency_id = "agency_demo"
@@ -103,7 +104,8 @@ async def test_payment_intent_succeeded_idempotent_on_provider_ids(monkeypatch, 
     second call must be a no-op (still 200) and not duplicate tx.
     """
 
-    orchestrator = BookingPaymentsOrchestrator(test_db)
+    db = test_db
+    orchestrator = BookingPaymentsOrchestrator(db)
     booking_id = "bkg_stripe_2"
     org_id = "org_demo"
     agency_id = "agency_demo"
@@ -174,7 +176,8 @@ async def test_charge_refunded_idempotent_on_refund_id(monkeypatch, async_client
     provider_object_id, so duplicate events must not double-apply refund.
     """
 
-    orchestrator = BookingPaymentsOrchestrator(test_db)
+    db = test_db
+    orchestrator = BookingPaymentsOrchestrator(db)
     booking_id = "bkg_stripe_3"
     org_id = "org_demo"
     agency_id = "agency_demo"

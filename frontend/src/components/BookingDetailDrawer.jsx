@@ -101,6 +101,8 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
         return "Ödeme Alındı";
       case "PAYMENT_REFUNDED":
         return "Ödeme İade Edildi";
+      case "VOUCHER_ISSUED":
+        return "Voucher Oluşturuldu";
       default:
         return type || "Event";
     }

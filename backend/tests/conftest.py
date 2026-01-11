@@ -93,6 +93,8 @@ async def seeded_test_db(motor_client: AsyncIOMotorClient) -> AsyncGenerator[Any
         })
 
         # One active hotel product in Istanbul with EUR rate plan
+        from bson import ObjectId
+        
         hotel_id = ObjectId()
         await db.products.insert_one({
             "_id": hotel_id,

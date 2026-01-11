@@ -255,16 +255,16 @@ class BookingPaymentTxLogger:
         if raw is not None:
             doc["raw"] = raw
 
+        from pymongo.errors import DuplicateKeyError
+
         try:
             res = await db.booking_payment_transactions.insert_one(doc)
             doc["_id"] = res.inserted_id
             return doc
-        except Exception as e:  # duplicate key => idempotent no-op
-            from pymongo.errors import DuplicateKeyError
-
-            if isinstance(e, DuplicateKeyError):
-                return None
-            raise
+        except DuplicateKeyError:
+            # Idempotent replay based on unique index (provider_event_id/request_id)
+            # -> signal to caller that this is a no-op.
+            return None
 
     @staticmethod
     async def append_payment_event(

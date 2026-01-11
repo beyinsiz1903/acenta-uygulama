@@ -155,6 +155,21 @@ async def stripe_handlers_db(monkeypatch, test_db):
 
 
 
+@pytest.fixture(autouse=True)
+async def ensure_finance_indexes_for_test_db(test_db):
+    """Ensure finance-related indexes exist in the isolated test_db.
+
+    This makes booking_payment_transactions and booking_payments idempotency
+    semantics deterministic for Stripe contract and FX tests.
+    """
+
+    from app.indexes.finance_indexes import ensure_finance_indexes
+
+    await ensure_finance_indexes(test_db)
+    yield
+
+
+
 @pytest.fixture(scope="function")
 async def test_db(motor_client: AsyncIOMotorClient) -> AsyncGenerator[Any, None]:
     """Function-scoped isolated database for each test.

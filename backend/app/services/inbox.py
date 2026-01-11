@@ -13,6 +13,7 @@ from typing import Any, Dict, Optional
 from bson import ObjectId
 
 from app.utils import now_utc
+from app.errors import AppError
 
 
 async def get_or_create_booking_thread(db, *, organization_id: str, booking: dict[str, Any]) -> dict[str, Any]:

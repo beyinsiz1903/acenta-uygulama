@@ -258,6 +258,33 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
     if (eventsLoaded) return;
     if (eventsLoading) return;
 
+  useEffect(() => {
+    if (!pollingPayment || !bookingId) return;
+
+    let cancelled = false;
+
+    const poll = async () => {
+      for (let i = 0; i < 5; i += 1) {
+        if (cancelled) return;
+        try {
+          await loadPaymentState(bookingId);
+        } catch {
+          // ignore, next iteration
+        }
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+      }
+      if (!cancelled) {
+        setPollingPayment(false);
+      }
+    };
+
+    void poll();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [pollingPayment, bookingId, loadPaymentState]);
+
     void loadEvents(bookingId);
   }, [activeTab, bookingId, eventsLoaded, eventsLoading, loadEvents]);
 

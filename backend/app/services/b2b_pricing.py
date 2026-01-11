@@ -228,6 +228,107 @@ class B2BPricingService:
         res = await self.price_quotes.insert_one(doc)
         quote_id = str(res.inserted_id)
 
+    async def apply_coupon_to_quote(
+        self,
+        *,
+        organization_id: str,
+        agency_id: str,
+        quote_id: str,
+        code: str,
+    ) -> dict[str, Any]:
+        """Apply a coupon code to an existing quote and recalculate totals.
+
+        Returns the updated quote document (Mongo shape).
+        """
+
+        quote = await self.ensure_quote_valid(
+            organization_id=organization_id,
+            agency_id=agency_id,
+            quote_id=quote_id,
+        )
+
+        coupon_doc, result = await self.coupons.evaluate_for_quote(
+            organization_id=organization_id,
+            agency_id=agency_id,
+            quote=quote,
+            code=code,
+        )
+
+        coupon_payload: dict[str, Any] = {
+            "code": code.strip().upper(),
+            "status": result["status"],
+            "amount_cents": result["amount_cents"],
+            "currency": result["currency"],
+            "reason": result["reason"],
+        }
+        if coupon_doc:
+            coupon_payload["coupon_id"] = str(coupon_doc.get("_id"))
+
+        # Compute totals: base_total from offers, coupon_total from result
+        offers = quote.get("offers") or []
+        base_total = sum(float(o.get("sell") or 0.0) for o in offers)
+        coupon_total = result["amount_cents"] / 100.0
+        final_total = base_total - coupon_total
+
+        totals = {
+            "base_total": base_total,
+            "coupon_total": coupon_total,
+            "final_total": final_total,
+            "currency": result["currency"],
+        }
+
+        update_doc = {
+            "coupon": coupon_payload,
+            "totals": totals,
+        }
+
+        from bson import ObjectId
+
+        await self.price_quotes.update_one(
+            {"_id": ObjectId(quote_id)},
+            {"$set": update_doc},
+        )
+
+        quote.update(update_doc)
+        return quote
+
+    async def clear_coupon_from_quote(
+        self,
+        *,
+        organization_id: str,
+        agency_id: str,
+        quote_id: str,
+    ) -> dict[str, Any]:
+        """Remove coupon info from a quote (reset totals to base)."""
+
+        quote = await self.ensure_quote_valid(
+            organization_id=organization_id,
+            agency_id=agency_id,
+            quote_id=quote_id,
+        )
+
+        offers = quote.get("offers") or []
+        base_total = sum(float(o.get("sell") or 0.0) for o in offers)
+        currency = offers[0].get("currency") if offers else "EUR"
+
+        totals = {
+            "base_total": base_total,
+            "coupon_total": 0.0,
+            "final_total": base_total,
+            "currency": currency,
+        }
+
+        from bson import ObjectId
+
+        await self.price_quotes.update_one(
+            {"_id": ObjectId(quote_id)},
+            {"$unset": {"coupon": ""}, "$set": {"totals": totals}},
+        )
+
+        quote.pop("coupon", None)
+        quote["totals"] = totals
+        return quote
+
         return QuoteCreateResponse(quote_id=quote_id, expires_at=expires_at, offers=offers)
 
     async def ensure_quote_valid(

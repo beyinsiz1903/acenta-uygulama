@@ -153,8 +153,6 @@ async def stripe_handlers_db(monkeypatch, test_db):
     monkeypatch.setattr(handlers, "get_db", _fake_get_db)
     yield
 
-        await motor_client.drop_database(db_name)
-
 
 
 @pytest.fixture(scope="function")

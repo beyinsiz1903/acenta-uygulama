@@ -518,6 +518,15 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
       setLedgerError("");
       try {
         const resp = await api.get(`/ops/finance/bookings/${bookingId}/ledger-summary`);
+        setLedgerSummary(resp.data || null);
+      } catch (e) {
+        setLedgerError(apiErrorMessage(e));
+        setLedgerSummary(null);
+      } finally {
+        setLedgerLoading(false);
+      }
+    }
+
     async function loadPayment() {
       if (!bookingId) return;
       await loadPaymentState(bookingId);
@@ -539,15 +548,6 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
         }
       } catch {
         // ignore, loadPaymentState zaten error state'i yönetiyor
-      }
-    }
-
-        setLedgerSummary(resp.data || null);
-      } catch (e) {
-        setLedgerError(apiErrorMessage(e));
-        setLedgerSummary(null);
-      } finally {
-        setLedgerLoading(false);
       }
     }
 

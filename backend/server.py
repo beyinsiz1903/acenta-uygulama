@@ -25,6 +25,7 @@ from app.routers.customers import router as customers_router
 from app.routers.products import router as products_router
 from app.routers.rateplans import router as rateplans_router
 from app.routers.inventory import router as inventory_router
+from app.routers.inbox import router as inbox_router
 from app.routers.reservations import router as reservations_router
 from app.routers.leads import router as leads_router
 from app.routers.quotes import router as quotes_router

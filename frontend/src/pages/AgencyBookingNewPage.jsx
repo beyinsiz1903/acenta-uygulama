@@ -234,6 +234,12 @@ export default function AgencyBookingNewPage() {
             </div>
             <div className="text-left md:text-center">
               <p className="text-xs text-muted-foreground">Toplam ({stay.nights} gece)</p>
+              {quoteTotals && (
+                <p className="text-xs text-foreground mt-1">
+                  Kupon sonrası toplam: {formatMoney(quoteTotals.final_total, quoteTotals.currency)}
+                </p>
+              )}
+
               <p className="text-xl font-bold text-primary">
                 {formatMoney(total, currency)}
               </p>

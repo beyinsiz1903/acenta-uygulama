@@ -518,3 +518,68 @@ class BookingFinanceService:
         )
 
         return posting["_id"]
+    
+    async def post_payment_received(
+        self,
+        organization_id: str,
+        agency_id: str,
+        booking_id: str,
+        payment_amount: float,
+        currency: str,
+        occurred_at: Optional[datetime] = None,
+    ) -> str:
+        """Create EUR-denominated posting for PAYMENT_RECEIVED.
+        
+        This is a stub implementation for F2.2 Stripe integration.
+        """
+        if occurred_at is None:
+            occurred_at = now_utc()
+            
+        # Get agency account
+        agency_account = await self.db.finance_accounts.find_one({
+            "organization_id": organization_id,
+            "type": "agency",
+            "owner_id": agency_id,
+        })
+        
+        if not agency_account:
+            raise AppError(
+                status_code=404,
+                code="finance_account_not_found",
+                message=f"Finance account not found for agency {agency_id}",
+            )
+        
+        # Get platform account
+        platform_account = await self.db.finance_accounts.find_one({
+            "organization_id": organization_id,
+            "type": "platform"
+        })
+        
+        if not platform_account:
+            raise AppError(
+                status_code=404,
+                code="finance_account_not_found",
+                message="Platform finance account not found",
+            )
+        
+        # Create posting lines for payment received
+        lines = PostingMatrixConfig.get_payment_received_lines(
+            agency_account_id=str(agency_account["_id"]),
+            platform_ar_account_id=str(platform_account["_id"]),
+            payment_amount=payment_amount,
+        )
+        
+        # Post to ledger (EUR)
+        posting = await LedgerPostingService.post_event(
+            organization_id=organization_id,
+            source_type="booking",
+            source_id=booking_id,
+            event="PAYMENT_RECEIVED",
+            currency="EUR",
+            lines=lines,
+            occurred_at=occurred_at,
+            created_by="system",
+            meta={"booking_id": booking_id, "agency_id": agency_id},
+        )
+        
+        return posting["_id"]

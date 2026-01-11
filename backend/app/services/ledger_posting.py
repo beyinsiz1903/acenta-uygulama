@@ -253,6 +253,93 @@ class LedgerPostingService:
                 currency,
                 line.direction,
                 line.amount,
+
+        # Booking: per-line postings without idempotency
+        import uuid as _uuid
+        if source_type == "booking":
+            now = now_utc()
+            posting_docs: list[dict] = []
+            entry_docs: list[dict] = []
+
+            for line in lines:
+                direction = (getattr(line, "direction", None) or "").lower()
+                amount = float(getattr(line, "amount", 0.0) or 0.0)
+
+                if direction == "debit":
+                    debit = amount
+                    credit = 0.0
+                elif direction == "credit":
+                    debit = 0.0
+                    credit = amount
+                else:
+                    debit = 0.0
+                    credit = 0.0
+
+                account_id = str(getattr(line, "account_id"))
+                posting_id = f"post_{_uuid.uuid4()}"
+
+                posting_doc = {
+                    "_id": posting_id,
+                    "organization_id": organization_id,
+                    "source": {"type": source_type, "id": str(source_id)},
+                    "event": event,
+                    "currency": currency,
+                    "account_id": account_id,
+                    "debit": float(debit),
+                    "credit": float(credit),
+                    "lines": [
+                        {
+                            "account_id": account_id,
+                            "direction": getattr(line, "direction", None),
+                            "amount": float(amount),
+                            "debit": float(debit),
+                            "credit": float(credit),
+                        }
+                    ],
+                    "created_at": now,
+                    "created_by": created_by,
+                }
+                if meta:
+                    posting_doc["meta"] = meta
+
+                posting_docs.append(posting_doc)
+
+                entry_id = f"le_{_uuid.uuid4()}"
+                entry_docs.append(
+                    {
+                        "_id": entry_id,
+                        "organization_id": organization_id,
+                        "posting_id": posting_id,
+                        "account_id": account_id,
+                        "currency": currency,
+                        "direction": getattr(line, "direction", None),
+                        "amount": float(amount),
+                        "occurred_at": occurred_at,
+                        "posted_at": now,
+                        "source": {"type": source_type, "id": str(source_id)},
+                        "event": event,
+                        "memo": f"{event} {source_type}/{source_id}",
+                        "meta": meta or {},
+                    }
+                )
+
+            if posting_docs:
+                await db.ledger_postings.insert_many(posting_docs)
+            if entry_docs:
+                await db.ledger_entries.insert_many(entry_docs)
+
+            for line in lines:
+                await LedgerPostingService._update_balance(
+                    db,
+                    organization_id,
+                    str(getattr(line, "account_id")),
+                    currency,
+                    getattr(line, "direction", None),
+                    float(getattr(line, "amount", 0.0) or 0.0),
+                )
+
+            return {"ok": True, "count": len(posting_docs)}
+
             )
 
         return posting_doc

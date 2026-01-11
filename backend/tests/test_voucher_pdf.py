@@ -110,8 +110,39 @@ async def test_voucher_issue_idempotent_per_version_and_reason(async_client, tes
         "status": "CONFIRMED",
         "code": "BKG-VCH-2",
         "created_at": now_utc(),
+        "customer": {"name": "Test Customer", "email": "test@example.com"},
+        "items": [{"check_in": "2026-01-10", "check_out": "2026-01-12"}],
+        "currency": "EUR",
+        "amounts": {"sell": 100.0},
     }
     await test_db.bookings.insert_one(booking_doc)
+
+    # Create a voucher template
+    template_doc = {
+        "organization_id": org_id,
+        "key": "b2b_booking_default",
+        "name": "Default B2B Booking Template",
+        "html": "<html><body><h1>Voucher for {{booking_id}}</h1><p>Customer: {{customer_name}}</p></body></html>",
+        "created_at": now_utc(),
+    }
+    await test_db.voucher_templates.insert_one(template_doc)
+
+    # Create an active voucher
+    voucher_doc = {
+        "organization_id": org_id,
+        "booking_id": "bkg_voucher_2",
+        "version": 1,
+        "status": "active",
+        "template_key": "b2b_booking_default",
+        "data_snapshot": {
+            "booking_id": "bkg_voucher_2",
+            "customer_name": "Test Customer",
+            "status": "CONFIRMED",
+        },
+        "created_at": now_utc(),
+        "created_by_email": "admin@acenta.test",
+    }
+    await test_db.vouchers.insert_one(voucher_doc)
 
     for _ in range(2):
         resp_issue = await async_client.post(

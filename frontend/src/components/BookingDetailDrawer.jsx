@@ -231,7 +231,7 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
       if (eventsReqSeq.current !== mySeq) return;
       setEventsLoading(false);
     }
-  }, []);
+  }, [bookingId]);
 
   useEffect(() => {
     setEvents([]);

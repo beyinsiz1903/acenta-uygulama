@@ -276,7 +276,7 @@ async def minimal_search_seed(test_db, async_client: httpx.AsyncClient, agency_t
             "name": {"tr": "FX Test Hotel"},
             "location": {"city": "Istanbul", "country": "TR"},
             "default_currency": "EUR",
-            "created_at": _now(),
+            "created_at": now_utc(),
         }
         await test_db.products.insert_one(prod_doc)
 

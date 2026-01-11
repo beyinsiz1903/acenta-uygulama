@@ -154,23 +154,17 @@ export default function AgencyBookingsListPage() {
           </Button>
         </div>
 
-        <div className="rounded-2xl border bg-card shadow-sm p-12 flex flex-col items-center justify-center gap-4">
-          <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center">
-            <Ticket className="h-8 w-8 text-muted-foreground" />
-          </div>
-          <div className="text-center max-w-md">
-            <p className="font-semibold text-foreground">
-              Henüz rezervasyon yok
-            </p>
-            <p className="text-sm text-muted-foreground mt-2">
-              Hızlı Rezervasyon ekranından arama yapıp rezervasyon oluşturabilirsiniz.
-            </p>
-          </div>
-          <Button onClick={() => navigate("/app/agency/hotels")} className="mt-4 gap-2">
-            <Search className="h-4 w-4" />
-            Otel Ara
-          </Button>
-        </div>
+        <EmptyState
+          title="Henüz rezervasyon yok"
+          description="Hızlı Rezervasyon ekranından arama yapıp rezervasyon oluşturabilirsiniz."
+          icon={<Ticket className="h-8 w-8 text-muted-foreground" />}
+          action={
+            <Button onClick={() => navigate("/app/agency/hotels")} className="gap-2">
+              <Search className="h-4 w-4" />
+              Otel Ara
+            </Button>
+          }
+        />
       </div>
     );
   }

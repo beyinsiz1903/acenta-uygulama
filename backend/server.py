@@ -210,6 +210,7 @@ async def _startup() -> None:
     await ensure_voucher_indexes(db)
     await ensure_public_indexes(db)
     await ensure_inbox_indexes(db)
+    await ensure_coupon_indexes(db)
 
     logger.info("Startup complete")
 

@@ -303,7 +303,7 @@ async def minimal_search_seed(test_db, async_client: httpx.AsyncClient, agency_t
 
     # Optional HTTP-level validation only for FX-related tests
     if run_http_check:
-        today = _now().date()
+        today = now_utc().date()
         check_in = today.replace(year=2026, month=1, day=10)
         check_out = today.replace(year=2026, month=1, day=12)
         params = {

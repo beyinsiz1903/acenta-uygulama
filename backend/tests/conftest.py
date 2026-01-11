@@ -302,6 +302,32 @@ async def minimal_search_seed(test_db, async_client: httpx.AsyncClient, agency_t
         }
         await test_db.rate_plans.insert_one(rp_doc)
 
+
+    # Seed minimal inventory/availability for inventory-based availability check
+    # (b2b_pricing._price_item reads from `inventory` collection)
+    check_in_date = today.replace(year=2026, month=1, day=10)
+    for offset in range(0, 2):
+        d = check_in_date + timedelta(days=offset)
+        await test_db.inventory.update_one(
+            {
+                "organization_id": org_id,
+                "product_id": product_id,
+                "date": d.isoformat(),
+            },
+            {
+                "$set": {
+                    "organization_id": org_id,
+                    "product_id": product_id,
+                    "date": d.isoformat(),
+                    "capacity_available": 10,
+                    "price": 100.0,
+                    "restrictions": {"closed": False},
+                    "updated_at": now_utc(),
+                }
+            },
+            upsert=True,
+        )
+
     # Optional HTTP-level validation only for FX-related tests
     if run_http_check:
         today = now_utc().date()

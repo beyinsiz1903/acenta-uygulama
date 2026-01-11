@@ -160,6 +160,9 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
       const resp = await api.get(PAYMENT_STATE_ENDPOINT(id));
       setPaymentState(resp.data || null);
     } catch (e) {
+  const [pollingPayment, setPollingPayment] = useState(false);
+  const EVENTS_ENDPOINT = (id) => `/b2b/bookings/${id}/events`;
+
       setPaymentError(apiErrorMessage(e));
       setPaymentState(null);
     } finally {

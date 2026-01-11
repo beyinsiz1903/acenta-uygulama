@@ -11,6 +11,8 @@ import { Badge } from "../components/ui/badge";
 import { formatMoney } from "../lib/format";
 import { toast } from "sonner";
 import StepBar from "../components/StepBar";
+import CouponInput from "../components/CouponInput";
+
 
 
 export default function AgencyBookingNewPage() {

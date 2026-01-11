@@ -922,8 +922,7 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
               variant="outline"
               onClick={async () => {
                 if (!bookingId) return;
-                const pdfUrl = `/b2b/bookings/${bookingId}/voucher.pdf`;
-                const htmlUrl = `/b2b/bookings/${bookingId}/voucher`;
+                const pdfUrl = `/b2b/bookings/${bookingId}/voucher/latest`;
                 try {
                   const res = await api.get(pdfUrl, { responseType: "blob" });
                   const blob = new Blob([res.data], { type: "application/pdf" });
@@ -931,17 +930,7 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
                   window.open(url, "_blank", "noopener,noreferrer");
                 } catch (e) {
                   const msg = apiErrorMessage(e) || "";
-                  if (
-                    msg.toLowerCase().includes("pdf_not_configured") ||
-                    msg.toLowerCase().includes("pdf_render_failed")
-                  ) {
-                    toast.info("PDF şimdilik kullanılamıyor, HTML voucher açıldı.");
-                    const base = ""; // relative
-                    const url = `${base}/api/b2b/bookings/${bookingId}/voucher`;
-                    window.open(url, "_blank", "noopener,noreferrer");
-                  } else {
-                    toast.error(msg || "Voucher açılamadı");
-                  }
+                  toast.error(msg || "Voucher açılamadı");
                 }
               }}
               disabled={!booking}

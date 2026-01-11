@@ -375,6 +375,14 @@
         agent: "testing"
         comment: "✅ F2.2 STRIPE PAYMENTS BACKEND TESTS COMPLETE - All 5 contract tests passed (100% success rate). COVERED SCENARIOS: 1) Invalid Signature: Webhook correctly returns 400 with error.code='stripe_invalid_signature' when Stripe-Signature header is invalid, proving real signature verification. 2) Currency Mismatch: payment_intent.succeeded with non-EUR currency returns 500 with error.code='stripe_currency_mismatch', enforcing EUR-only Phase 1 policy and triggering Stripe retry. 3) Capture Idempotency: Two identical payment_intent.succeeded events (same event.id + payment_intent id) both return 200 with body.ok=true, booking_payment_transactions contains exactly one document for provider_object_id=pi_id, proving idempotent tx logging. 4) Refund Idempotency: Two identical charge.refunded events (same event.id + refund id) both return 200 with body.ok=true, booking_payment_transactions contains exactly one document for provider_object_id=refund_id, proving idempotent refund logging. 5) HTTP Idempotency-Key Propagation: /api/payments/stripe/create-intent and /api/payments/stripe/capture endpoints correctly pass Idempotency-Key header to Stripe adapter (create_payment_intent/capture_payment_intent), verified via monkeypatch. IMPLEMENTATION NOTES: Webhook handlers now return minimal JSON bodies ({"ok": true}) and do not leak internal result payloads containing ObjectId/datetime, avoiding JSON serialization issues. BookingFinanceService exposes callable methods for Stripe path; BookingPaymentsOrchestrator wired through as designed. Stripe adapter uses anyio.to_thread.run_sync to call StripeClient with manual capture and metadata. F2.2 backend contract is production-ready and fully covered by tests."
 
+  - task: "FAZ 1 Voucher PDF Issuance"
+    implemented: true
+    working: false
+    file: "/app/backend/app/services/voucher_pdf.py, /app/backend/app/routers/vouchers.py, /app/backend/app/indexes/voucher_indexes.py, /app/backend/tests/test_voucher_pdf.py, /app/frontend/src/components/BookingDetailDrawer.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+
   - task: "P1.2 Rule-based Pricing - PricingRulesService"
     implemented: true
     working: true

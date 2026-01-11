@@ -129,7 +129,9 @@ async def _handle_charge_refunded(event: Dict[str, Any]) -> Tuple[int, Dict[str,
 
     occurred_at = now_utc()
 
-    result = await orchestrator.record_refund_succeeded(
+    # See note in _handle_payment_intent_succeeded: we keep webhook responses
+    # minimal to avoid leaking internal representation details.
+    await orchestrator.record_refund_succeeded(
         organization_id=organization_id,
         agency_id=agency_id,
         booking_id=booking_id,
@@ -144,7 +146,7 @@ async def _handle_charge_refunded(event: Dict[str, Any]) -> Tuple[int, Dict[str,
         raw=event,
     )
 
-    return 200, {"ok": True, "result": result}
+    return 200, {"ok": True}
 
 
 async def handle_stripe_webhook(raw_body: bytes, signature: str | None) -> Tuple[int, Dict[str, Any]]:

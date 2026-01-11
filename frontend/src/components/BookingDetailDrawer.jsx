@@ -703,6 +703,9 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
                       variant="outline"
                       size="sm"
                       disabled={paymentLoading || !bookingId}
+      const user = getUser();
+      const isPrivileged = user?.roles?.some((r) => ["admin", "ops", "super_admin"].includes(r));
+
                       onClick={() => loadPaymentState(bookingId)}
                     >
                       {paymentLoading ? "Ödeme durumu yükleniyor..." : "Ödeme Durumu"}

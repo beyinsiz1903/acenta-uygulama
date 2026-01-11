@@ -7,6 +7,8 @@ import { toast } from "sonner";
 import { buildBookingCopyText } from "../utils/buildBookingCopyText";
 import { api, apiErrorMessage } from "../lib/api";
 import { Loader2 } from "lucide-react";
+import { makeIdempotencyKey } from "../lib/payments";
+
 import EmptyState from "../components/EmptyState";
 import ErrorState from "../components/ErrorState";
 

@@ -438,6 +438,37 @@ async def minimal_finance_seed(test_db, async_client: httpx.AsyncClient, agency_
         "agency_id": agency_id,
     }
     credit_profile_doc = {
+        **credit_profile_filter,
+        "limit": 1_000_000.0,
+        "soft_limit": 500_000.0,
+        "created_at": now,
+        "updated_at": now,
+    }
+    await test_db.credit_profiles.update_one(
+        credit_profile_filter,
+        {"$setOnInsert": credit_profile_doc},
+        upsert=True,
+    )
+
+    # 4) Zero balance for the agency account
+    balance_filter = {
+        "organization_id": org_id,
+        "account_id": agency_account["_id"],
+        "currency": "EUR",
+    }
+    balance_doc = {
+        **balance_filter,
+        "balance": 0.0,
+        "created_at": now,
+        "updated_at": now,
+    }
+    await test_db.account_balances.update_one(
+        balance_filter,
+        {"$setOnInsert": balance_doc},
+        upsert=True,
+    )
+
+    yield
 
 
 @pytest.fixture(autouse=True)

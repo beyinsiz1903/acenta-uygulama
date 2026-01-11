@@ -83,7 +83,12 @@ async def test_payment_intent_succeeded_currency_mismatch_returns_500(monkeypatc
     async def fake_construct_event(*args, **kwargs):  # pragma: no cover - simple shim
         return event_payload
 
+    # Monkeypatch get_db to return test_db
+    async def fake_get_db():
+        return test_db
+
     monkeypatch.setattr(handlers, "verify_and_parse_stripe_event", fake_construct_event)
+    monkeypatch.setattr(handlers, "get_db", fake_get_db)
 
     resp = await async_client.post(
         "/api/payments/stripe/webhook",

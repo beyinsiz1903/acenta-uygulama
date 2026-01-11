@@ -255,6 +255,7 @@ async def test_charge_refunded_idempotent_on_refund_id(monkeypatch, async_client
         headers={"Stripe-Signature": "valid-for-test"},
     )
     assert resp1.status_code == 200
+    assert resp1.json()["ok"] is True
 
     # 2nd delivery (replay)
     resp2 = await async_client.post(
@@ -263,6 +264,7 @@ async def test_charge_refunded_idempotent_on_refund_id(monkeypatch, async_client
         headers={"Stripe-Signature": "valid-for-test"},
     )
     assert resp2.status_code == 200
+    assert resp2.json()["ok"] is True
 
     # Ensure only one tx (per refund id)
     tx_docs = await test_db.booking_payment_transactions.find({"provider_object_id": refund_id}).to_list(10)

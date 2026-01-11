@@ -188,18 +188,18 @@ class LedgerPostingService:
             return value
 
         normalised_meta = _normalise_meta(meta) if meta is not None else None
-        
+
         # Create posting header
         import uuid
         posting_id = f"post_{uuid.uuid4()}"
         now = now_utc()
-        
+
         posting_doc = {
             "_id": posting_id,
             "organization_id": organization_id,
             "source": {
                 "type": source_type,
-                "id": source_id,
+                "id": str(source_id),
             },
             "event": event,
             "currency": currency,
@@ -214,9 +214,9 @@ class LedgerPostingService:
         }
         if normalised_meta is not None:
             posting_doc["meta"] = normalised_meta
-        
+
         await db.ledger_postings.insert_one(posting_doc)
-        
+
         # Create immutable ledger entries
         entry_docs = []
         for line in lines:
@@ -233,17 +233,17 @@ class LedgerPostingService:
                 "posted_at": now,
                 "source": {
                     "type": source_type,
-                    "id": source_id,
+                    "id": str(source_id),
                 },
                 "event": event,
                 "memo": f"{event} {source_type}/{source_id}",
                 "meta": meta or {},
             }
             entry_docs.append(entry_doc)
-        
+
         if entry_docs:
             await db.ledger_entries.insert_many(entry_docs)
-        
+
         # Update account balances (atomic)
         for line in lines:
             await LedgerPostingService._update_balance(
@@ -254,7 +254,7 @@ class LedgerPostingService:
                 line.direction,
                 line.amount,
             )
-        
+
         return posting_doc
     
     @staticmethod

@@ -258,6 +258,95 @@ async def minimal_search_seed(test_db, async_client: httpx.AsyncClient, agency_t
     # Upsert product (hotel) in test_db
     prod_filter = {
         "organization_id": org_id,
+        "type": "hotel",
+        "status": "active",
+        "location.city": "Istanbul",
+        "code": "FXTEST-HOTEL",
+    }
+    existing_prod = await test_db.products.find_one(prod_filter)
+    if existing_prod:
+        product_id = existing_prod["_id"]
+    else:
+        product_id = ObjectId()
+        prod_doc = {
+            "_id": product_id,
+            "organization_id": org_id,
+            "type": "hotel",
+            "status": "active",
+            "code": "FXTEST-HOTEL",
+            "name": {"tr": "FX Test Hotel"},
+            "location": {"city": "Istanbul", "country": "TR"},
+            "default_currency": "EUR",
+            "created_at": now_utc(),
+        }
+        await test_db.products.insert_one(prod_doc)
+
+    # Upsert active EUR rate plan with base_net_price > 0
+    rp_filter = {
+        "organization_id": org_id,
+        "product_id": product_id,
+        "status": "active",
+        "currency": "EUR",
+        "code": "FXTEST-RP",
+    }
+    existing_rp = await test_db.rate_plans.find_one(rp_filter)
+    if not existing_rp:
+        rp_doc = {
+            "organization_id": org_id,
+            "product_id": product_id,
+            "status": "active",
+            "currency": "EUR",
+            "code": "FXTEST-RP",
+            "board": "BB",
+            "base_net_price": 100.0,
+        }
+        await test_db.rate_plans.insert_one(rp_doc)
+
+    # Seed minimal inventory/availability for inventory-based availability check
+    # (b2b_pricing._price_item reads from `inventory` collection)
+    today = now_utc().date()
+    check_in_date = today.replace(year=2026, month=1, day=10)
+    for offset in range(0, 2):
+        d = check_in_date + timedelta(days=offset)
+        await test_db.inventory.update_one(
+            {
+                "organization_id": org_id,
+                "product_id": product_id,
+                "date": d.isoformat(),
+            },
+            {
+                "$set": {
+                    "organization_id": org_id,
+                    "product_id": product_id,
+                    "date": d.isoformat(),
+                    "capacity_available": 10,
+                    "price": 100.0,
+                    "restrictions": {"closed": False},
+                    "updated_at": now_utc(),
+                }
+            },
+            upsert=True,
+        )
+
+    # Optional HTTP-level validation only for FX-related tests
+    if run_http_check:
+        today = now_utc().date()
+        check_in = today.replace(year=2026, month=1, day=10)
+        check_out = today.replace(year=2026, month=1, day=12)
+        params = {
+            "city": "Istanbul",
+            "check_in": check_in.isoformat(),
+            "check_out": check_out.isoformat(),
+            "adults": "2",
+            "children": "0",
+        }
+        resp = await async_client.get("/api/b2b/hotels/search", headers=headers, params=params)
+        assert resp.status_code == 200, f"seed search failed: {resp.text}"
+        data = resp.json()
+        items = data.get("items") or []
+        assert items, f"Seeded search returned no items: {data}"
+
+    yield
 
 
 @pytest.fixture(autouse=True)

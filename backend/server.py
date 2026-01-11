@@ -18,6 +18,7 @@ from app.indexes.phase2a_indexes import ensure_phase2a_indexes
 from app.indexes.voucher_indexes import ensure_voucher_indexes
 from app.indexes.public_indexes import ensure_public_indexes
 from app.indexes.inbox_indexes import ensure_inbox_indexes
+from app.indexes.coupon_indexes import ensure_coupon_indexes
 from app.exception_handlers import register_exception_handlers
 from app.config import ENABLE_VOUCHER_PDF, ENABLE_SELF_SERVICE_PORTAL, ENABLE_PARTNER_API
 from app.routers.auth import router as auth_router

@@ -1721,3 +1721,69 @@
     message: "✅ SYROCE P1.L1 EVENT-DRIVEN BOOKING LIFECYCLE TEST COMPLETE - All test scenarios passed (100% success rate). COMPREHENSIVE FUNCTIONALITY VERIFIED: A) BOOKING_EVENTS COLLECTION & INDEXES: booking_events collection working correctly with required indexes - (organization_id, booking_id, occurred_at desc) for timeline queries, partial unique index on (organization_id, booking_id, event, request_id) where request_id is string for idempotency. B) BOOKING CONFIRM FLOW: POST /api/b2b/bookings with Idempotency-Key header working correctly - booking.status == CONFIRMED in DB verified, booking_events contains BOOKING_CONFIRMED event with proper meta (quote_id, channel_id, amount_sell), idempotency working correctly (same Idempotency-Key returns same booking_id and does NOT create duplicate BOOKING_CONFIRMED event). C) BOOKING CANCEL FLOW: POST /api/b2b/bookings/{id}/cancel working correctly - returns status=CANCELLED, refund_status=COMPLETED, booking.status in DB == CANCELLED verified, booking_events contains exactly one BOOKING_CANCELLED event with proper meta (reason, refund_status), idempotency working correctly (second cancel call returns same status and does NOT create duplicate BOOKING_CANCELLED event). D) TIMELINE ENDPOINT: GET /api/b2b/bookings/{id}/events working correctly - returns proper structure {booking_id, events}, events sorted by occurred_at desc verified, event structure contains required fields (event, occurred_at, request_id, meta), proper PII handling in response. E) LIFECYCLE SERVICE INTEGRATION: BookingLifecycleService.append_event working correctly with idempotency per (org, booking_id, event, request_id), proper projection updates to booking.status and booking.last_event, BOOKING_CONFIRMED and BOOKING_CANCELLED events properly updating booking status. CRITICAL FIX APPLIED: Added missing lifecycle.append_event call to cancel endpoint to ensure BOOKING_CANCELLED events are created. All Syroce P1.L1 booking events lifecycle functionality production-ready with proper idempotency guards and event ordering."
   - agent: "testing"
     message: "✅ SYROCE COMMERCE OS F1.2 MULTI-AMEND BACKEND SMOKE TEST COMPLETE - All 6 test scenarios passed (100% success rate). COMPREHENSIVE VERIFICATION OF MULTI-AMEND FUNCTIONALITY: A) LEDGER POSTINGS INDEX VERIFICATION: Index uniq_posting_per_source_event successfully updated to include meta.amend_id with partial filter (only when meta.amend_id exists), allowing multiple BOOKING_AMENDED events for same booking with different amend_ids, verified through successful multi-amend flow without duplicate key errors. B) BOOKING LIFECYCLE SERVICE AMEND GUARD: assert_can_amend function working correctly - allows amendments for CONFIRMED bookings, blocks CANCELLED bookings with proper error code amend_not_supported_in_status (409), guard behavior functioning as expected. C) AMENDMENT SEQUENCE META: BOOKING_AMENDED events created with correct amend_id tracking in meta, though amend_sequence field requires booking.amend_seq initialization (noted for future enhancement), core amendment tracking functional. D) MULTI-AMEND FLOW END-TO-END: Successfully performed two amendments on same booking (6960c9701e698a48678171dd), first amendment: amend_id=6960c9701e698a48678171e1, second amendment: amend_id=6960c9701e698a48678171e3, no duplicate key errors encountered, booking dates updated correctly (2026-01-10 to 2026-01-13), booking events timeline shows 2 BOOKING_AMENDED events with unique amend_ids. E) GUARD BEHAVIOR FOR CANCELLED BOOKINGS: Created test booking, cancelled it successfully, attempted amendment on cancelled booking correctly rejected with 409 amend_not_supported_in_status, proper status validation enforced. F) LEDGER BEHAVIOR: Ledger postings created only when delta > 0.005 EUR (by design), BOOKING_AMENDED events always created regardless of financial delta, multi-amend index allows multiple postings per booking when financial changes exist. CRITICAL SUCCESS METRICS: ✅ Multi-amend index prevents duplicate key errors, ✅ Amendment guard properly validates booking status, ✅ Booking events created for all amendments with unique amend_ids, ✅ End-to-end multi-amend flow fully functional, ✅ Proper error handling for invalid amendment attempts. All Syroce Commerce OS F1.2 multi-amend acceptance criteria successfully verified with backend functionality production-ready."
+
+
+## agent_communication:
+    -agent: "testing"
+    -message: "FAZ 0 Backend Regression Test completed. Stripe contract tests have critical failures (3/5 failed), booking financials and refund tests blocked by hotel search dependency, but booking payments service and MockPMS contracts are working correctly. Feature flag changes appear stable but underlying payment and booking systems need attention."
+
+## backend:
+  - task: "FAZ 0 Backend Regression Test - Stripe Contracts"
+    implemented: true
+    working: false
+    file: "/app/backend/tests/test_payments_stripe_contract_phase1.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "❌ STRIPE CONTRACT TESTS FAILED - 3/5 tests failed (60% failure rate). FAILED TESTS: 1) test_stripe_webhook_rejects_invalid_signature: Expected 400 but got 500 - webhook signature validation not working properly, 2) test_payment_intent_succeeded_idempotent_on_provider_ids: No booking_payment_transactions created - idempotency mechanism not functioning, 3) test_charge_refunded_idempotent_on_refund_id: Second refund attempt returned 409 instead of 200 - refund idempotency broken. PASSED TESTS: 2) test_payment_intent_succeeded_rejects_non_eur_currency and test_http_idempotency_key_propagation working correctly. CRITICAL ISSUES: Stripe webhook signature verification failing (500 instead of 400), payment transaction logging not working, refund idempotency returning conflicts instead of success."
+
+  - task: "FAZ 0 Backend Regression Test - Booking Financials FX"
+    implemented: true
+    working: false
+    file: "/app/backend/tests/test_booking_financials_fx.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "❌ BOOKING FINANCIALS FX TEST FAILED - 0/1 tests passed (100% failure rate). FAILED TEST: test_booking_financials_and_fx_snapshot_consistency failed because P0.2 search returned no hotel items for Istanbul 2026-01-10 to 2026-01-12. The test depends on hotel search functionality which is not returning any results, preventing booking creation and subsequent financial/FX testing. CRITICAL ISSUE: Hotel search endpoint returning empty results, blocking entire booking creation flow needed for financial testing."
+
+  - task: "FAZ 0 Backend Regression Test - Refund FX Ledger"
+    implemented: true
+    working: false
+    file: "/app/backend/tests/test_refund_fx_ledger.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "❌ REFUND FX LEDGER TEST FAILED - 0/1 tests passed (100% failure rate). FAILED TEST: test_refund_creates_reversal_and_net_eur_zero failed because P0.2 search returned no hotel items for Istanbul 2026-01-10 to 2026-01-12. Same root cause as booking financials test - hotel search endpoint not returning results, preventing booking creation needed for refund testing. CRITICAL ISSUE: Hotel search dependency blocking refund ledger testing."
+
+  - task: "FAZ 0 Backend Regression Test - Booking Payments Service"
+    implemented: true
+    working: true
+    file: "/app/backend/tests/test_booking_payments_service.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ BOOKING PAYMENTS SERVICE TEST PASSED - 2/3 tests passed, 1 skipped (100% success rate for executed tests). PASSED TESTS: test_booking_payments_orchestrator_basic_flow and test_booking_payments_aggregates_crud working correctly. SKIPPED TEST: test_booking_payments_stripe_integration_mocked skipped as expected. All core booking payments service functionality working properly."
+
+  - task: "FAZ 0 Backend Regression Test - MockPMS Contracts"
+    implemented: true
+    working: true
+    file: "/app/backend/tests/test_mockpms_contracts.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ MOCKPMS CONTRACTS TEST PASSED - 4/4 tests passed (100% success rate). ALL TESTS PASSED: test_mockpms_search_basic_contract, test_mockpms_quote_basic_contract, test_mockpms_booking_basic_contract, and test_mockpms_price_changed_409_contract all working correctly. MockPMS integration contracts are stable and functioning as expected."

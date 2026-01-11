@@ -548,8 +548,6 @@ async def seed_confirmed_booking_for_cancel_net0(test_db, async_client: httpx.As
         }
     )
 
-        pass
-
 
 @pytest.fixture
 async def admin_headers(admin_token: str) -> Dict[str, str]:

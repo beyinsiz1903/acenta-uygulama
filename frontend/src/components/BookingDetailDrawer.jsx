@@ -53,6 +53,12 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [paymentError, setPaymentError] = useState("");
 
+  const [paymentAmountInput, setPaymentAmountInput] = useState("");
+  const [lastPaymentIntentId, setLastPaymentIntentId] = useState("");
+  const [pollingPayment, setPollingPayment] = useState(false);
+  const pollingTimerRef = useRef(null);
+  const pollingStartedAtRef = useRef(null);
+
   const [events, setEvents] = useState([]);
   const [eventsLoading, setEventsLoading] = useState(false);
   const [eventsError, setEventsError] = useState("");

@@ -1071,14 +1071,22 @@ def test_faz4_inbox_backend_smoke():
     bookings_response = r.json()
     items = bookings_response.get("items", [])
     
-    if items:
-        booking_id = items[0]["booking_id"]
-        booking_status = items[0]["status"]
-        print(f"   ✅ Found existing booking: {booking_id} (status: {booking_status})")
+    # Look for a CONFIRMED booking specifically
+    confirmed_booking = None
+    for booking in items:
+        if booking.get("status") == "CONFIRMED":
+            confirmed_booking = booking
+            break
+    
+    if confirmed_booking:
+        booking_id = confirmed_booking["booking_id"]
+        booking_status = confirmed_booking["status"]
+        print(f"   ✅ Found existing CONFIRMED booking: {booking_id} (status: {booking_status})")
     else:
-        print("   ⚠️  No existing bookings found, creating new one...")
+        print("   ⚠️  No CONFIRMED booking found, creating new one...")
         booking_id = create_p02_booking(agency_headers)
-        print(f"   ✅ Created new booking: {booking_id}")
+        booking_status = "CONFIRMED"
+        print(f"   ✅ Created new CONFIRMED booking: {booking_id}")
 
     # ------------------------------------------------------------------
     # Test 3: Trigger booking event to create inbox system message

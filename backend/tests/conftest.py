@@ -383,6 +383,22 @@ async def minimal_finance_seed(test_db, async_client: httpx.AsyncClient, agency_
 
     now = now_utc()
 
+    # Ensure organization document exists with cancel penalty settings
+    await test_db.organizations.update_one(
+        {"_id": org_id},
+        {
+            "$setOnInsert": {
+                "_id": org_id,
+                "slug": "default",
+                "name": "Demo Org",
+                "created_at": now,
+                "updated_at": now,
+            },
+            "$set": {"settings.cancel_penalty_percent": 20.0},
+        },
+        upsert=True,
+    )
+
     # 1) Agency finance account required by booking finance checks
     agency_acct_filter = {
         "organization_id": org_id,

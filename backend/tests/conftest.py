@@ -219,6 +219,9 @@ async def admin_token(async_client: httpx.AsyncClient) -> str:
         "/api/auth/login",
         json={"email": "admin@acenta.test", "password": "admin123"},
     )
+    assert response.status_code == 200, f"Admin login failed: {response.text}"
+    data = response.json()
+    return data["access_token"]
 
 
 @pytest.fixture(autouse=True)

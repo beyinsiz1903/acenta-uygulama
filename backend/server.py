@@ -59,6 +59,7 @@ from app.routers.match_unblock import router as match_unblock_router
 from app.routers.exports import router as exports_router, public_router as exports_public_router
 from app.routers.admin_reports import router as admin_reports_router
 from app.routers.demo_scale_ui_proof import router as demo_scale_ui_proof_router
+from app.routers.public_my_booking import router as public_my_booking_router
 from app.routers.b2b_quotes import router as b2b_quotes_router
 from app.routers.b2b_bookings import router as b2b_bookings_router
 from app.routers.b2b_cancel import router as b2b_cancel_router

@@ -153,6 +153,23 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
     setAmendProposal(null);
     setAmendRequestId(generateAmendRequestId());
     const item0 = booking?.items?.[0] || {};
+  const PAYMENT_STATE_ENDPOINT = (id) => `/ops/finance/bookings/${id}/payment-state`;
+
+  const loadPaymentState = useCallback(async (id) => {
+    if (!id) return;
+    setPaymentLoading(true);
+    setPaymentError("");
+    try {
+      const resp = await api.get(PAYMENT_STATE_ENDPOINT(id));
+      setPaymentState(resp.data || null);
+    } catch (e) {
+      setPaymentError(apiErrorMessage(e));
+      setPaymentState(null);
+    } finally {
+      setPaymentLoading(false);
+    }
+  }, []);
+
     setAmendCheckIn(booking.check_in_date || item0.check_in || "");
     setAmendCheckOut(booking.check_out_date || item0.check_out || "");
   };

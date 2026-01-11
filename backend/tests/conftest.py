@@ -26,6 +26,7 @@ if str(ROOT_DIR) not in sys.path:
 
 from server import app
 from app.db import get_db
+from app.utils import now_utc
 
 
 MONGO_URL = os.environ.get("MONGO_URL", "mongodb://localhost:27017")

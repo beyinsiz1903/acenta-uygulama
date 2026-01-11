@@ -44,6 +44,9 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
 
   const [activeTab, setActiveTab] = useState("details");
   const [paymentState, setPaymentState] = useState(null);
+  const [paymentActionLoading, setPaymentActionLoading] = useState(false);
+  const [paymentActionStatus, setPaymentActionStatus] = useState("");
+
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [paymentError, setPaymentError] = useState("");
 

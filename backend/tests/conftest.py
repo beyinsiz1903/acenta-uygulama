@@ -495,17 +495,33 @@ def patch_cancel_test_get_db(monkeypatch, test_db):
     import tests.test_booking_cancel_reverses_ledger_net0 as tmod
     monkeypatch.setattr(tmod, "get_db", _get_test_db, raising=True)
 
-        **credit_profile_filter,
-        "limit": 1_000_000.0,
-        "soft_limit": 500_000.0,
-        "created_at": now,
-        "updated_at": now,
-    }
-    await test_db.credit_profiles.update_one(
-        credit_profile_filter,
-        {"$setOnInsert": credit_profile_doc},
-        upsert=True,
+
+@pytest.fixture
+async def admin_headers(admin_token: str) -> Dict[str, str]:
+    """Convenience fixture returning Authorization header for admin."""
+
+    return {"Authorization": f"Bearer {admin_token}"}
+
+
+@pytest.fixture
+async def agency_token(async_client: httpx.AsyncClient) -> str:
+    """Login as agency user and return access token."""
+
+    response = await async_client.post(
+        "/api/auth/login",
+        json={"email": "agency1@demo.test", "password": "agency123"},
     )
+    assert response.status_code == 200, f"Agency login failed: {response.text}"
+    data = response.json()
+    return data["access_token"]
+
+
+@pytest.fixture
+async def agency_headers(agency_token: str) -> Dict[str, str]:
+    """Convenience fixture returning Authorization header for agency."""
+
+    return {"Authorization": f"Bearer {agency_token}"}
+
 
     # 4) Zero balance for the agency account
     balance_filter = {

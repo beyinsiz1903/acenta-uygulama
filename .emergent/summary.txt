@@ -1,150 +1,237 @@
 <analysis>**original_problem_statement:**
-The user's high-level goal is to build a Commerce OS for their B2B Hotel Reservation Platform, achieving functional parity with a competitor named Agentis. This involves a series of features built upon an event-driven architecture.
+The user's high-level goal is to build a Commerce OS for their B2B Hotel Reservation Platform, achieving functional parity with a competitor named Agentis. The development is structured into a series of FAZ (Phase) feature requests.
 
-The session began with a detailed brief from the user outlining several major features:
-- **KAPSAM 1 (Rezervasyon & After-sales):**
-    - **1.1 (P0):** Finalize the Amend Booking UI.
-    - **1.2 (P1):** Add support for multiple amendments to a single booking.
-    - **1.3:** Implement real PDF voucher generation, removing the mock.
-    - **1.4:** Create a self-service customer portal.
-- **KAPSAM 2 (Ödeme & Tahsilat):** Implement a Stripe-first payment core, including a new  model, payment links, and webhooks.
-- **KAPSAM 3 & 4 (B2B & Entegrasyon):** Future goals including a sub-agency module, partner API, and webhooks.
-
-The primary focus of this session was to complete the remaining Phase 1 tasks (F1.1, F1.2, F1.3) and then begin the foundation for Phase 2 (F2.1 Payments Core).
+**Product Requirements (from user's phased requests):**
+- **FAZ 0:** Stabilize the codebase by adding backend feature flags () and standardizing frontend navigation menus and state components (, ).
+- **FAZ 1:** Implement real PDF voucher generation using WeasyPrint, store the generated PDFs in the database ( collection), create associated API endpoints, and integrate this into the booking timeline and .
+- **FAZ 2:** Build the admin/ops UI for the existing Stripe backend to allow creating and capturing payment intents, with a UX that polls for webhook confirmation.
+- **FAZ 3:** Create a public self-service My Booking portal where guests can view their reservation, download vouchers, and (optionally) request cancellations/amendments using a secure, expiring token accessed via PNR and last name/email.
+- **FAZ 4:** Implement an Inbox / Bildirim Merkezi (Notification Center) to consolidate system notifications (from booking events) and user messages into conversation threads linked to bookings.
+- **FAZ 5:** Create a Coupon/Campaign engine allowing the application of percentage or fixed-amount discounts at the quote stage, with an admin UI for coupon management.
+- **FAZ 6:** Implement a sub-agency hierarchy with commission splitting, credit limit roll-ups, and corresponding ledger entries to reflect the financial relationships between master and sub-agencies.
 
 **User's preferred language**: Türkçe
 
 **what currently exists?**
-The application is a full-stack platform (React/FastAPI/MongoDB) with a stable event-driven booking, amendment, and cancellation flow.
-- **Backend:** The F2.1  dependency injection issue is resolved, and its basic test harness is working. The core architecture for event-sourcing and ledger posting is in place.
-- **Frontend:**
-    - A series of UI/UX improvements have been completed. This includes fixing garbled Turkish text and encoding issues (, ).
-    - A shared  component was created and integrated into key admin pages (, , ) to standardize typography.
-    - Shared  and  components were created and wired into the data-loading logic for  and .
-    - A recurring HTML validation warning was fixed by changing the root element of  from  to .
+The application is a modular full-stack platform (React/FastAPI/MongoDB). The core booking, finance, and event-sourcing architecture is mature.
+
+- **FAZ 0 (Stabilization):** Completed. Backend feature flags are in , and frontend navigation menus are centralized in . Key pages like  now use shared  and  components.
+- **FAZ 1 (PDF Vouchers):** Completed. A new service () generates PDFs using WeasyPrint and stores them in a new  collection. New API endpoints (, ) are live. The  has a Voucher download button, and  events appear on the timeline.
+- **FAZ 2 (Stripe UI):** Partially completed. The  has a new Payments tab that can fetch and display the payment status and transaction history for a booking in a read-only state.
+- **FAZ 3 (Public Portal):** Partially completed. The backend for the My Booking portal is implemented with a new  collection (with TTL), rate-limited access request endpoint, and public DTOs that mask PII. The frontend has the  access request form and the  detail page for viewing booking info and downloading vouchers.
+- **FAZ 4 (Inbox):** Completed. A full-featured inbox system is implemented. New collections  and  are created. The  service now automatically creates system messages in the inbox for critical booking events. A new  page provides a two-column layout for threads and messages. A button in  links directly to the relevant booking's inbox thread.
+- **FAZ 5 (Coupons):** Partially completed. The backend  and  service can evaluate and apply percentage/amount-based coupons to quotes. The B2B quote API now has  and  (delete) endpoints. The frontend  includes a  component to apply discounts at the quote stage.
 
 **Last working item**:
-- **Last item agent was working**: Designing and finalizing the complete backend architecture and test plan for F2.2 Stripe Payments integration. The agreed-upon scope is **manual capture** and **full payment** only for Phase 1.
-- **Status**: IN PROGRESS
+- **Last item agent was working**: The agent was in the process of analyzing and creating a detailed implementation plan for **FAZ 6 — Sub-Agency Hiyerarşisi**. This involves modeling commission schemes, extending the ledger for commission splits, and creating exposure roll-up logic.
+- **Status**: NOT STARTED
 - **Agent Testing Done**: N
-- **Which testing method agent to use?**: backend testing agent
+- **Which testing method agent to use?**: both
 - **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
-- **Issue 1**: [P0] Implement the F2.2 Stripe Payments backend.
+- **Issue 1 (P0):** Complete FAZ 5 - Coupon Engine.
+- **Issue 2 (P1):** Complete FAZ 3 - Public Self-Service Portal.
+- **Issue 3 (P2):** Complete FAZ 2 - Stripe Ödeme UI.
+- **Issue 4 (P3):** Address existing test failures.
 
 **Issues Detail:**
 - **Issue 1:**
-    - **Description**: The backend for Stripe integration (adapter, webhook handlers, API endpoints) needs to be implemented. The architectural design and a comprehensive test plan have been fully debated and approved by the user.
-    - **Attempted fixes**: None, this is a new implementation task. The agent has a complete design and test plan ready.
+    - **Description**: The coupon logic is only implemented at the quote level. The audit trail for when a coupon is used in a final booking is missing.
+    - **Attempted fixes**: None. This is the next logical step in the feature.
     - **Next debug checklist**:
-        1. Create the test file  with the 5 agreed-upon test cases (refund idempotency, capture idempotency, currency mismatch, invalid signature, missing metadata).
-        2. Implement  ensuring  is passed correctly and  is used for async safety.
-        3. Implement  with logic for  and , including the currency mismatch guard.
-        4. Implement the  router with , , and  endpoints, ensuring correct HTTP status codes (200/400/500) are returned based on the contract.
-        5. Run the tests to validate the implementation.
-    - **Why fix this issue and what will be achieved with the fix?**: This is the core of the payment processing functionality (KAPSAM 2) and the main active development task.
-    - **Status**: NOT STARTED
+        1. Modify the booking creation logic to copy the  object from the finalized quote into the new booking document.
+        2. In the same logic, call  to create a  event.
+        3. In the same logic, call the  method to update the coupon's usage count.
+        4. Implement the admin CRUD backend () and corresponding frontend page () for managing coupons.
+    - **Why fix this issue and what will be achieved with the fix?**: This will complete the coupon lifecycle, providing a full audit trail and enabling administrative control over campaigns.
+    - **Status**: IN PROGRESS
     - **Is recurring issue?**: N
+    - **Should Test frontend/backend/both after fix?**: both
+    - **Blocked on other issue**: None
+
+- **Issue 2:**
+    - **Description**: The public My Booking portal creates an access token but doesn't actually email it to the user. It also lacks the functionality for guests to request cancellations or amendments.
+    - **Attempted fixes**: None. These were planned for a subsequent iteration.
+    - **Next debug checklist**:
+        1. Integrate  into the  endpoint in  to send an email containing the  link.
+        2. Implement the backend endpoints  and . These should create a  event and ideally an .
+        3. Add the corresponding cancel/amend forms to the  frontend component.
+    - **Why fix this issue and what will be achieved with the fix?**: This will make the self-service portal fully functional and useful for end-users, reducing manual support load.
+    - **Status**: IN PROGRESS
+    - **Is recurring issue?**: N
+    - **Should Test frontend/backend/both after fix?**: both
+    - **Blocked on other issue**: None
+
+- **Issue 3:**
+    - **Description**: The Payments tab in the  is read-only. It lacks the UI for admins/ops to actually create and capture payments.
+    - **Attempted fixes**: A detailed plan was created but implementation was deprioritized by the user in favor of other phases.
+    - **Next debug checklist**:
+        1. Add Create Payment Intent and Capture buttons to the Payments tab, visible only to admin/ops roles.
+        2. Implement the frontend logic to call the  and  endpoints, using the  helper.
+        3. Implement the webhook bekleniyor polling mechanism: after capture, set a processing state and poll the  and  endpoints until the  event appears.
+    - **Why fix this issue and what will be achieved with the fix?**: This will complete the end-to-end payment flow, allowing operators to manage Stripe payments directly from the UI.
+    - **Status**: IN PROGRESS
+    - **Is recurring issue?**: N
+    - **Should Test frontend/backend/both after fix?**: both
+    - **Blocked on other issue**: None
+
+- **Issue 4:**
+    - **Description**: The testing agent report in message 145 indicated pre-existing test failures related to Stripe contracts and FX/hotel search, which were not introduced in this session but remain in the codebase.
+    - **Attempted fixes**: None. The agent noted these were existing issues and proceeded with the user's requested tasks.
+    - **Next debug checklist**:
+        1. Run the full backend test suite to identify all failing tests.
+        2. Analyze the failures in , , and .
+        3. Debug the underlying issues, which may be related to test setup (e.g., hotel search returning empty) or Stripe webhook handling.
+    - **Why fix this issue and what will be achieved with the fix?**: Fixing these tests will improve codebase stability and ensure the reliability of the finance and payment modules.
+    - **Status**: NOT STARTED
+    - **Is recurring issue?**: Y
     - **Should Test frontend/backend/both after fix?**: backend
     - **Blocked on other issue**: None
 
 **In progress Task List**:
-- **Task 1**: [P0] Implement F2.2 Stripe Payments Core Backend
-    - **Where to resume**: The detailed design and test plan are complete. The next step is to create the test file  and then implement the adapter, handlers, and router as per the plan.
-    - **What will be achieved with this?**: A production-grade, test-covered, and idempotent backend for handling Stripe payments (manual capture, full payment), ready for UI integration.
+- **Task 1**: [P0] Complete FAZ 5 - Kupon / Kampanya / Aksiyon Motoru
+    - **Where to resume**: Implement the booking-level audit trail for coupon usage as detailed in 'Issue 1'.
+    - **What will be achieved with this?**: A fully auditable coupon system with administrative controls.
     - **Status**: IN PROGRESS
-    - **Should Test frontend/backend/both after fix?**: backend
+    - **Should Test frontend/backend/both after fix?**: both
+    - **Blocked on something**: No
+
+- **Task 2**: [P1] Complete FAZ 3 - Public Self-Service My Booking Portal
+    - **Where to resume**: Implement the email sending and cancel/amend request functionality as detailed in 'Issue 2'.
+    - **What will be achieved with this?**: A fully functional guest self-service portal.
+    - **Status**: IN PROGRESS
+    - **Should Test frontend/backend/both after fix?**: both
+    - **Blocked on something**: No
+
+- **Task 3**: [P2] Complete FAZ 2 - Stripe Ödeme UI
+    - **Where to resume**: Add the interactive create/capture buttons and polling logic to the Payments tab as detailed in 'Issue 3'.
+    - **What will be achieved with this?**: A fully interactive payment management UI for operators.
+    - **Status**: IN PROGRESS
+    - **Should Test frontend/backend/both after fix?**: frontend
     - **Blocked on something**: No
 
 **Upcoming and Future Tasks**
 **Upcoming Tasks:**
-- **Timeline UI (P1):** Implement a Timeline tab in the  to display booking lifecycle events from the  endpoint. A detailed, production-grade technical plan for this feature has already been created and approved (messages 243-252).
-- **Stripe Frontend (P1):** Build the UI to interact with the F2.2 Stripe backend, such as an admin button to trigger the  endpoint.
+- **FAZ 6 — Sub-Agency Hiyerarşisi (P0)**: Implement the sub-agency model, including commission schemes, ledger splits for master/sub-agencies, and credit exposure roll-ups, based on the detailed plan created in messages 537-544.
 
 **Future Tasks:**
-- **P1.3:** Implement PDF Voucher generation (removing the mock).
-- **P1.4:** Create a self-service customer portal ().
-- **KAPSAM 2:** Build out full payment UI, payment links, and multi-currency support.
-- **KAPSAM 3:** B2B Sub-agency module (hierarchy, commissions).
-- **KAPSAM 4:** Public Partner API and webhook publishing system.
+- **KAPSAM 1:** Fully remove the mock PDF voucher generation and ensure all email flows use the new  system.
+- **KAPSAM 2:** Build out the full payment UI, including payment links and multi-currency support beyond EUR.
+- **KAPSAM 4:** Build the public Partner API and a webhook publishing system for external partners.
+- **FAZ 4 Enhancements:** Add thread status toggling (Open/Closed) and unread message counts to the Inbox.
+- **FAZ 5 Enhancements:** Integrate  with the pricing rules engine for automatic, audience-based discounts.
 
 **Completed work in this session**
-- **F2.1 - Payments Core Backend Fix**: Resolved the critical DB dependency injection issue in  and its test, unblocking the payments-related work.
-- **FE-2 - Shared  Component**: Created  and integrated it into , , and  to standardize page titles.
-- **FE-3 - Shared / Components**: Created and wired  and  into the data-loading logic of  and .
-- **FE-1 - UI Copy & Encoding Fixes**: Fixed garbled Turkish text and encoding issues on  and .
-- **Tech Debt -  HTML Fix**: Resolved a console warning by changing the root element of  from  to , making it semantically correct for inline use.
+- **FAZ 0 - Stabilization**: Implemented backend feature flags and standardized frontend navigation and state components.
+- **FAZ 1 - PDF Vouchers**: Implemented a complete flow for generating and storing real PDF vouchers in the database, with corresponding APIs and UI integration in the .
+- **FAZ 4 - Inbox / Bildirim Merkezi**: Built a fully functional internal messaging system with automatic system notifications for key booking events and a dedicated UI.
+- **FAZ 3 - Public Portal (Core)**: Built the core backend (token generation, PII-masked DTOs) and frontend (access request and detail pages) for the guest self-service portal.
+- **FAZ 5 - Coupon Engine (Quote-level)**: Implemented the backend logic and frontend UI to apply coupons at the quote stage.
+- **FAZ 2 - Stripe UI (Read-only)**: Added a Payments tab to the  to display payment status and transaction history.
 
 **Earlier issues found/mentioned but not fixed**
-None. The UI issues from the previous handoff were all addressed in this session.
+- **Issue 1**: Stripe contract tests are failing. The test agent reported issues with webhook signature validation (returning 500 instead of 400) and idempotency.
+    - **Debug checklist**: Review  and the webhook handling logic in .
+    - **Why to solve this issue and what will be achieved with this?**: Ensures the payment backend is robust and reliable.
+    - **Should Test frontend/backend/both after fix**: backend
+    - **Is recurring issue?**: Y
+- **Issue 2**: Booking Financials FX and Refund FX Ledger tests are failing because the hotel search in the test setup returns no results, blocking booking creation.
+    - **Debug checklist**: Check the seed data and test setup for  and  to ensure the mock hotel search can find properties.
+    - **Why to solve this issue and what will be achieved with this?**: Unblocks testing for critical financial and ledger functionalities.
+    - **Should Test frontend/backend/both after fix**: backend
+    - **Is recurring issue?**: Y
 
 **Known issue recurrence from previous fork**
-- **Issue recurrence in previous fork**: A recurring DB dependency injection pattern issue.
+- **Issue recurrence in previous fork**: Recurring DB dependency injection pattern issue.
 - **Recurrence count**: 2
-- **Status**: RESOLVED (The agent successfully fixed this for  at the start of this session).
+- **Status**: RESOLVED (The agent in the previous session fixed this for , but the pattern is worth noting for future services).
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- **Stripe Integration**: Manual capture, full payment, webhook processing.
-- **Adapter Pattern**: Isolating the Stripe SDK in  to decouple it from business logic.
-- **Webhook Error Handling**: Differentiating between transient errors (500 for retry), signature errors (400), and permanent business logic errors (200 for no-op).
-- **Idempotency**: Using  for Stripe API calls and a unique index on  ( or ) in the  collection.
-- **Async Safety**: Using  to run synchronous SDK calls in an async context without blocking the event loop.
+- **Feature Flags**: Using  and environment variables to conditionally enable/disable routes and features (, , etc.).
+- **Public Access Tokens**: Generating short-lived, secure tokens for guest access, stored in a collection with a MongoDB TTL index for automatic expiration.
+- **Rate Limiting**: A simple IP + key-based rate limiting mechanism for public-facing APIs.
+- **PII Masking**: Removing sensitive personal data (email, phone) from DTOs served on public endpoints.
+- **Inbox Architecture**: A thread-based messaging system (, ) that hooks into the existing  service to create a unified notification center.
+- **Coupon Engine**: A service-oriented architecture for applying stackable discounts at the quote stage with validation rules for eligibility, usage limits, and validity period.
 
 **key DB schema**
-No new schemas were added, but F2.2 work will heavily use:
-- ****: 
-- ****: 
+- ****:  - Stores generated PDF vouchers.
+- ****:  - Manages public access with a TTL index on .
+- ****:  - Represents a conversation.
+- ****:  - An individual message within a thread.
+- ****:  - Defines discount coupons.
+- ****: (Updated) Now includes  and  objects to reflect applied discounts.
+- ** / **: (Planned for FAZ 6) To be extended with , , .
+- ****: (Planned for FAZ 6) .
 
 **changes in tech stack**
-- **Stripe**: Added as a new integration for payment processing.
+No changes to the core tech stack (React/FastAPI/MongoDB).  is now a confirmed dependency for PDF generation.
 
 **All files of reference**
--  (To be created)
--  (To be created)
--  (To be created)
--  (To be created)
--  (Target for Timeline UI)
+- **New Services**: 
+- **New Routers**: 
+- **New Indexes**: 
+- **New Frontend Pages**: 
+- **Core Modified Files**: , , , 
+
+**Areas that need refactoring**:
+- The agent noted that there are two parallel voucher systems: the legacy token-based one () and the new PDF storage one (, ). These could be consolidated in the future to simplify the architecture.
+
+**key api endpoints**
+- : Initiates a guest session.
+- : Fetches a PII-masked booking view.
+- : Downloads the latest PDF voucher for a booking.
+- : Generates and stores a new PDF voucher.
+- : Lists conversation threads.
+- : Gets a thread and its messages.
+- : Sends a new message.
+- : Applies a coupon to a quote.
+- : Removes a coupon from a quote.
 
 **Critical Info for New Agent**
-- The session started by fixing a backend blocker (F2.1), then pivoted to a series of user-directed frontend improvements (FE-1, FE-2, FE-3), and finally pivoted again to designing the F2.2 Stripe backend.
-- A detailed, production-grade plan for the **Timeline UI** was created and approved, but its implementation was **put on hold** in favor of the Stripe work. Do not start the Timeline UI until the Stripe backend is complete.
-- The current task is to implement the **F2.2 Stripe Backend**. The design and a 5-part test suite are complete and user-approved. The immediate next step is to create the test file () and then implement the feature.
+- The user is driving development through a series of FAZ (Phase) requests. Always confirm the plan for the next phase with the user before starting implementation.
+- The project has a clear, phased roadmap. The immediate priority is **FAZ 6 (Sub-Agency Hierarchy)**, for which a detailed plan already exists (messages 537-544).
+- After FAZ 6, prioritize completing the pending items from FAZ 5, FAZ 3, and FAZ 2.
+- The codebase contains some pre-existing failing backend tests (Stripe, FX). These were not introduced in this session but should be addressed to ensure stability.
+- The agent has successfully created several major features from scratch following the user's detailed plans, including a public portal and an inbox system.
 
 **documents and test reports created in this job**
-None.
+- The  file was updated multiple times to reflect the status of backend tests for new features like vouchers and coupons. The final state indicates that new feature tests are passing, but some older tests remain red.
 
 **Last 10 User Messages and any pending HUMAN messages**
-- The last 10 messages were a detailed, back-and-forth design and refinement process for the F2.2 Stripe backend and its test suite.
-- **Key Decisions Made:**
-    1.  **Scope**:  capture and  only.
-    2.  **Architecture**: State mutation happens ONLY via webhooks, which call the existing . API endpoints only trigger actions on Stripe.
-    3.  **Idempotency**: Guaranteed by  on Stripe's side and  ( or ) unique index on the DB side.
-    4.  **Error Handling**: Confirmed specific HTTP codes for webhook responses (400 for invalid signature, 500 for transient errors/currency mismatch, 200 for business logic skips).
-    5.  **Currency Policy**: For Phase 1, only EUR is supported. A currency mismatch in a webhook is a critical error and should return HTTP 500.
-- **Final Outcome:** A complete, 5-part test plan was finalized to prove idempotency, currency mismatch handling, and error responses. The agent is ready to start coding.
+1.  (FAZ 6): User approved the plan to start implementing the Sub-Agency hierarchy.
+2. : User provided the detailed spec for FAZ 6.
+3. : User approved the plan to implement FAZ 5 (Coupons).
+4. : User provided the spec for the Coupon engine.
+5. : User approved the plan to implement FAZ 4 (Inbox).
+6. : User provided the spec for the Inbox/Notification Center.
+7. : User approved the plan to implement FAZ 3 (Public Portal).
+8. : User provided the spec for the My Booking portal.
+9. : User approved the plan to continue implementing FAZ 2 (Stripe UI).
+10. : User provided the spec for the Stripe admin UI.
 
 **Project Health Check:**
-- **Working**: Booking lifecycle, amend flow, test harness, and the newly standardized frontend components (, , etc.).
-- **Broken**: Nothing is currently broken.
-- **Mocked**: PDF Voucher generation.
+- **Working**: Core booking/finance/event flows, PDF voucher generation/storage (FAZ 1), Inbox system (FAZ 4), Public portal core (FAZ 3), Coupon application at quote level (FAZ 5).
+- **Broken**: Some existing backend tests for Stripe and FX ledger are failing.
+- **Mocked**: The email sending for the public portal access token is not yet implemented; the system only creates the token in the DB and shows a success message.
 
 **3rd Party Integrations**
-- **Stripe**: Planned for payment processing. The agent should use  to get the SDK and implementation details, and use a test key from the environment.
-- **WeasyPrint**: For PDF generation (currently mocked).
+- **Stripe**: Used for payment processing. The backend is integrated and has contract tests (some of which are currently failing). A read-only UI exists.
+- **WeasyPrint**: Used for generating PDF vouchers from HTML templates. Fully integrated and working as part of FAZ 1.
 
 **Testing status**
-- **Testing agent used after significant changes**: YES (for the frontend changes).
-- **Troubleshoot agent used after agent stuck in loop**: NO
-- **Test files created**: None yet, but  is the next file to be created.
-- **Known regressions**: None.
+- **Testing agent used after significant changes**: YES. The agent ran smoke tests for new backend features (vouchers, public portal, inbox, coupons) and confirmed they were working as expected.
+- **Troubleshoot agent used after agent stuck in loop**: NO.
+- **Test files created**: 
+- **Known regressions**: None introduced in this session, but pre-existing test failures in Stripe and FX modules were identified.
 
 **Credentials to test flow:**
 - **Ops/Admin**:  / 
 - **Agency 1 (TRY, 12% markup)**:  / 
 
 **What agent forgot to execute**
-The agent did not implement the **Timeline UI** feature, but this was due to a deliberate pivot by the user to prioritize the Stripe payment integration. The detailed plan for the Timeline UI exists and should be treated as the next major upcoming task.</analysis>
+The agent diligently followed the user's phased plan. The incomplete parts of various phases (e.g., the interactive parts of the Stripe UI, the admin UI for coupons) were not forgotten but rather deprioritized by the user in favor of moving on to the next phase. These are captured in the 'Pending/In progress' lists. The highest priority is to start the user's latest request, FAZ 6.</analysis>

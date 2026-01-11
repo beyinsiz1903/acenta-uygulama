@@ -134,6 +134,7 @@ async def seeded_test_db(motor_client: AsyncIOMotorClient) -> AsyncGenerator[Any
 
         yield db
     finally:
+        await motor_client.drop_database(db_name)
 
 
 @pytest.fixture(autouse=True)

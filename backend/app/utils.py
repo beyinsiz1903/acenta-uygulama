@@ -189,9 +189,11 @@ def build_booking_public_view(doc: dict[str, Any]) -> dict[str, Any]:
     if hasattr(confirmed_at, "isoformat"):
         confirmed_at = confirmed_at.isoformat()
 
+    code = doc.get("code") or booking_id
+
     return {
         "id": booking_id,
-        "code": booking_id,
+        "code": code,
         "status": status_raw,
         "status_tr": status_tr,
         "status_en": status_en,

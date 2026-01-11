@@ -254,6 +254,15 @@ export default function AgencyBookingNewPage() {
                 </p>
               )}
               {typeof commissionAmount === "number" && (
+          <CouponInput
+            quoteId={searchParams.get("quote_id") || ""}
+            onUpdated={(updatedQuote) => {
+              if (updatedQuote && updatedQuote.totals) {
+                setQuoteTotals(updatedQuote.totals);
+              }
+            }}
+          />
+
                 <p className="text-xs text-muted-foreground">
                   Komisyon: {formatMoney(commissionAmount, currency)}
                   {typeof commissionRate === "number" && ` (%${commissionRate})`}

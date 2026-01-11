@@ -31,9 +31,6 @@ from app.db import get_db
 MONGO_URL = os.environ.get("MONGO_URL", "mongodb://localhost:27017")
 
 
-@pytest.fixture(scope="session")
-
-
 @pytest.fixture(autouse=True, scope="session")
 def stripe_webhook_secret_env() -> None:
     """Ensure STRIPE_WEBHOOK_SECRET is set in test environment.

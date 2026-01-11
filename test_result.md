@@ -369,7 +369,11 @@
     file: "/app/backend/app/services/stripe_adapter.py, /app/backend/app/services/stripe_handlers.py, /app/backend/app/routers/payments_stripe.py, /app/backend/tests/test_payments_stripe_contract_phase1.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "❌ F2.2 STRIPE PAYMENTS BACKEND TESTS PARTIALLY WORKING - 3/5 tests passed (60% success rate). DETAILED PYTEST EXECUTION: A) test_stripe_webhook_rejects_invalid_signature: ✅ PASSED - Webhook correctly returns 400 for invalid Stripe signature, proper error structure returned with error.code='stripe_invalid_signature'. B) test_payment_intent_succeeded_currency_mismatch_returns_500: ✅ PASSED - Webhook correctly returns 500 for non-EUR currency (USD), proper error structure with error.code='stripe_currency_mismatch', EUR-only policy enforced correctly. C) test_capture_and_refund_endpoints_set_idempotency_keys: ✅ PASSED - Both /api/payments/stripe/create-intent and /api/payments/stripe/capture endpoints correctly pass Idempotency-Key headers to Stripe adapter, monkeypatch verification working correctly. CRITICAL ISSUES FOUND: ❌ test_payment_intent_succeeded_idempotent_on_provider_ids: FAILED - JSON serialization error with datetime objects in webhook response. Handler processes successfully but fails to serialize response containing datetime fields. ❌ test_charge_refunded_idempotent_on_refund_id: FAILED - Same JSON serialization issue with datetime objects in refund webhook response. TECHNICAL FIXES APPLIED: 1) Added missing to_dict() method to AppError class for proper error serialization, 2) Added stripe package dependency (pip install stripe), 3) Added stub implementations for post_payment_received() and post_refund_approved_for_booking() methods in BookingFinanceService, 4) Fixed database dependency injection in tests by monkeypatching get_db() function in stripe_handlers module. CORE FUNCTIONALITY STATUS: ✅ Stripe signature verification working correctly, ✅ Currency validation (EUR-only policy) working correctly, ✅ Idempotency key passthrough working correctly, ❌ Payment intent webhook processing blocked by JSON serialization of datetime objects, ❌ Refund webhook processing blocked by same serialization issue. NEXT ACTIONS NEEDED: Fix datetime serialization in webhook response bodies to complete F2.2 Stripe contract implementation."
 
   - task: "P1.2 Rule-based Pricing - PricingRulesService"
     implemented: true

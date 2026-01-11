@@ -261,18 +261,10 @@ async def seed_p02_catalog(async_client: httpx.AsyncClient, agency_token: str, a
 
     # 2) Ensure at least one active EUR rate plan with base_net_price > 0 exists
     # For simplicity, rely on existing admin endpoints or assume pricing rules
-
-    yield
-
     # will generate a non-zero base_net_price for the product.
     # P0.2 search only requires products + rate_plans; inventory is not checked.
 
     yield
-
-    )
-    assert response.status_code == 200, f"Admin login failed: {response.text}"
-    data = response.json()
-    return data["access_token"]
 
 
 @pytest.fixture

@@ -159,6 +159,7 @@ async def test_payment_intent_succeeded_idempotent_on_provider_ids(monkeypatch, 
         headers={"Stripe-Signature": "valid-for-test"},
     )
     assert resp1.status_code == 200
+    assert resp1.json()["ok"] is True
 
     # 2nd delivery (replay)
     resp2 = await async_client.post(
@@ -167,6 +168,7 @@ async def test_payment_intent_succeeded_idempotent_on_provider_ids(monkeypatch, 
         headers={"Stripe-Signature": "valid-for-test"},
     )
     assert resp2.status_code == 200
+    assert resp2.json()["ok"] is True
 
     # Ensure we only inserted a single tx for this provider_object_id
     tx_docs = await test_db.booking_payment_transactions.find({"provider_object_id": pi_id}).to_list(10)

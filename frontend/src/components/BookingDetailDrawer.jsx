@@ -602,6 +602,17 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
     ["Pansiyon / Board", booking?.board_type],
     ["Pax", booking ? `${booking.adults ?? "-"} / ${booking.children ?? 0}` : null],
     [
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={paymentLoading || !bookingId}
+                    onClick={() => loadPaymentState(bookingId)}
+                  >
+                    {paymentLoading ? "Ödeme durumu yükleniyor..." : "Ödeme Durumu"}
+                  </Button>
+                </div>
+
       "Tutar / Total",
       booking?.total_amount != null
         ? `${Number(booking.total_amount).toLocaleString("tr-TR", {

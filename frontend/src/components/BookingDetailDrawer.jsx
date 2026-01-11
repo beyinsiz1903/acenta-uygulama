@@ -198,7 +198,7 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
 
       const tick = async () => {
         const nowTs = Date.now();
-        if (!bookingId) {
+        if (!id) {
           stopPaymentPolling();
           return;
         }
@@ -552,6 +552,7 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
       setAmendMode(false);
       setAmendProposal(null);
       setAmendError("");
+      stopPaymentPolling();
     }
     onOpenChange?.(next);
   };
@@ -1160,9 +1161,7 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
                             },
                           );
                           toast.success("Capture isteği Stripe'a gönderildi. Webhook bekleniyor...");
-                          setPollingPayment(true);
-                          // Basit polling: payment-state + events birkaç kez yenilenir.
-                          // İleri fazda startPaymentPolling ile daha sofistike hale getirilebilir.
+                          startPaymentPolling(bookingId, { expectedEventType: "PAYMENT_CAPTURED", timeoutMs: 30_000 });
                         } catch (e) {
                           const msg = apiErrorMessage(e);
                           toast.error(msg || "Capture başarısız oldu");

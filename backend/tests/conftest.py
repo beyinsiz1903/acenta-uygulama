@@ -305,6 +305,7 @@ async def minimal_search_seed(test_db, async_client: httpx.AsyncClient, agency_t
 
     # Seed minimal inventory/availability for inventory-based availability check
     # (b2b_pricing._price_item reads from `inventory` collection)
+    today = now_utc().date()
     check_in_date = today.replace(year=2026, month=1, day=10)
     for offset in range(0, 2):
         d = check_in_date + timedelta(days=offset)

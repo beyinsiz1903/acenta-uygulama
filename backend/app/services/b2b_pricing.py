@@ -330,8 +330,6 @@ class B2BPricingService:
         quote["totals"] = totals
         return quote
 
-        return QuoteCreateResponse(quote_id=quote_id, expires_at=expires_at, offers=offers)
-
     async def ensure_quote_valid(
         self,
         *,

@@ -136,7 +136,7 @@ async def test_voucher_issue_idempotent_per_version_and_reason(async_client, tes
     org_id = admin_user["organization_id"]
 
     booking_doc = {
-        "_id": "bkg_voucher_2",
+        "_id": ObjectId("507f1f77bcf86cd799439012"),  # Use proper ObjectId
         "organization_id": org_id,
         "agency_id": "agency_demo2",
         "status": "CONFIRMED",
@@ -162,12 +162,12 @@ async def test_voucher_issue_idempotent_per_version_and_reason(async_client, tes
     # Create an active voucher
     voucher_doc = {
         "organization_id": org_id,
-        "booking_id": "bkg_voucher_2",
+        "booking_id": "507f1f77bcf86cd799439012",  # Use string version of ObjectId
         "version": 1,
         "status": "active",
         "template_key": "b2b_booking_default",
         "data_snapshot": {
-            "booking_id": "bkg_voucher_2",
+            "booking_id": "507f1f77bcf86cd799439012",
             "customer_name": "Test Customer",
             "status": "CONFIRMED",
         },
@@ -178,13 +178,13 @@ async def test_voucher_issue_idempotent_per_version_and_reason(async_client, tes
 
     for _ in range(2):
         resp_issue = await async_client.post(
-            "/api/ops/bookings/bkg_voucher_2/voucher/issue",
+            "/api/ops/bookings/507f1f77bcf86cd799439012/voucher/issue",
             headers=admin_headers,
             json={"issue_reason": "INITIAL", "locale": "tr"},
         )
         assert resp_issue.status_code == 200
 
-    docs = await test_db.files_vouchers.find({"booking_id": "bkg_voucher_2"}).to_list(10)
+    docs = await test_db.files_vouchers.find({"booking_id": "507f1f77bcf86cd799439012"}).to_list(10)
     # Even with the simplified implementation, we at least ensure that
     # there is at least one file and not an explosion of duplicates.
     assert len(docs) >= 1

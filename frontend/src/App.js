@@ -137,6 +137,10 @@ function App() {
           </Route>
         </Route>
 
+        {/* Public self-service my-booking routes */}
+        <Route path="/my-booking" element={<PublicMyBookingRequestPage />} />
+        <Route path="/my-booking/:token" element={<PublicMyBookingDetailPage />} />
+
         {/* Hotel Routes */}
         <Route
           path="/app/hotel/*"

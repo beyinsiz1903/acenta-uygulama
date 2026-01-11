@@ -1842,3 +1842,20 @@
       - working: true
         agent: "testing"
         comment: "✅ MOCKPMS CONTRACTS TEST PASSED - 4/4 tests passed (100% success rate). ALL TESTS PASSED: test_mockpms_search_basic_contract, test_mockpms_quote_basic_contract, test_mockpms_booking_basic_contract, and test_mockpms_price_changed_409_contract all working correctly. MockPMS integration contracts are stable and functioning as expected."
+
+## metadata:
+  created_by: "testing_agent"
+  version: "1.1"
+  test_sequence: 1
+  run_ui: false
+
+## test_plan:
+  current_focus:
+    - "FAZ 5 Kupon Backend Smoke Test"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+## agent_communication:
+  - agent: "testing"
+    message: "FAZ 5 kupon backend akışı başarıyla test edildi. Tüm temel fonksiyonlar çalışıyor: kupon uygulama (POST /api/b2b/quotes/{quote_id}/apply-coupon), kupon temizleme (DELETE /api/b2b/quotes/{quote_id}/coupon), kimlik doğrulama (agency user gerekli), hata yönetimi (geçersiz kod, olmayan quote). ObjectId serileştirme sorunu düzeltildi. Test coupon (TEST10, 10% indirim) oluşturuldu ve test verileri hazırlandı."

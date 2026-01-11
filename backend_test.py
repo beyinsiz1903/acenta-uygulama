@@ -3063,5 +3063,5 @@ def test_syroce_f12_multi_amend_backend():
 
 
 if __name__ == "__main__":
-    # Run F2.1 Booking Payments Core Service test
-    test_f21_booking_payments_core_service()
+    # Run FAZ 3 Public Self-Service /my-booking test
+    test_faz3_public_my_booking_endpoints()

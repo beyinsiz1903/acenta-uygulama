@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Ticket, Calendar, Users, Loader2, AlertCircle, Search } from "lucide-react";
+import { Ticket, Calendar, Users, Loader2, Search } from "lucide-react";
 import { api, apiErrorMessage, getUser } from "../lib/api";
 import {
   Table,

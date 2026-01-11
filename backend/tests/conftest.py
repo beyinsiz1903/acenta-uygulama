@@ -502,6 +502,44 @@ def patch_cancel_test_get_db(monkeypatch, test_db):
 
 
 @pytest.fixture(autouse=True)
+async def patch_cancel_net0_get_db(monkeypatch, test_db):
+    """Ensure cancel net0 test uses test_db for both direct get_db and ledger posting.
+
+    - Patches the test module's local get_db binding
+    - Patches app.services.ledger_posting.get_db so LedgerPostingService writes to test_db
+    """
+    import os
+
+    current_test = os.environ.get("PYTEST_CURRENT_TEST", "")
+    if "test_booking_cancel_reverses_ledger_net0.py" not in current_test:
+        yield
+        return
+
+    async def _get_test_db():
+        return test_db
+
+    # Patch common module import paths for the cancel net0 test module
+    for modname in [
+        "tests.test_booking_cancel_reverses_ledger_net0",
+        "test_booking_cancel_reverses_ledger_net0",
+    ]:
+        try:
+            m = __import__(modname, fromlist=["*"])
+            monkeypatch.setattr(m, "get_db", _get_test_db, raising=False)
+        except Exception:
+            pass
+
+    # Patch bound get_db inside ledger_posting so postings go to test_db
+    try:
+        import app.services.ledger_posting as lp_mod
+        monkeypatch.setattr(lp_mod, "get_db", _get_test_db, raising=False)
+    except Exception:
+        pass
+
+    yield
+
+
+@pytest.fixture(autouse=True)
 async def seed_confirmed_booking_for_cancel_net0(test_db, async_client: httpx.AsyncClient, agency_token: str):
     """Ensure there is at least one real CONFIRMED booking for cancel net0 test.
 

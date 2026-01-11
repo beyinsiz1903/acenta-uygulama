@@ -23,6 +23,7 @@ export default function AgencyBookingNewPage() {
   const [loading, setLoading] = useState(false);
   const [loadingMode, setLoadingMode] = useState(null); // "pending" | "confirmed" | null
   const [submitMode, setSubmitMode] = useState("confirmed"); // "confirmed" | "pending"
+  const [quoteTotals, setQuoteTotals] = useState(null);
   const [formData, setFormData] = useState({
     full_name: "",
     email: "",

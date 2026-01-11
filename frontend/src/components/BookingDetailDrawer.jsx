@@ -1099,7 +1099,7 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
               }}
               disabled={!bookingId}
             >
-              Inbox'ta Aç
+              Inbox&apos;ta Aç
             </Button>
             <Button variant="outline" onClick={handleCopy} disabled={!booking}>
               Bilgileri Kopyala

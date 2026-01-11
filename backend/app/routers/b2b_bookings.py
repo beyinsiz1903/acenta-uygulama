@@ -10,6 +10,8 @@ from app.repos_idempotency import IdempotencyRepo
 from app.schemas_b2b_bookings import BookingCreateRequest, BookingCreateResponse
 from app.services.b2b_pricing import B2BPricingService
 from app.services.b2b_booking import B2BBookingService
+from app.services.booking_lifecycle import BookingLifecycleService
+from app.services.booking_financials import BookingFinancialsService
 
 router = APIRouter(prefix="/api/b2b", tags=["b2b-bookings"])
 

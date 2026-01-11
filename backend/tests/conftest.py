@@ -41,6 +41,7 @@ def stripe_webhook_secret_env() -> None:
 
     os.environ.setdefault("STRIPE_WEBHOOK_SECRET", "whsec_test")
 
+@pytest.fixture(scope="session")
 def anyio_backend() -> str:
     """Force pytest-anyio to use asyncio event loop."""
 

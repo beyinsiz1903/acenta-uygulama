@@ -498,6 +498,55 @@ def patch_cancel_test_get_db(monkeypatch, test_db):
         import test_booking_cancel_reverses_ledger_net0 as m2
         monkeypatch.setattr(m2, "get_db", _get_test_db, raising=False)
     except Exception:
+
+
+@pytest.fixture(autouse=True)
+async def seed_confirmed_booking_for_cancel_net0(test_db, async_client: httpx.AsyncClient, agency_token: str):
+    """Ensure there is at least one CONFIRMED booking for cancel net0 test.
+
+    This seeds a minimal CONFIRMED booking into test_db for the agency/org of
+    the agency_token, so that the test can find a booking and drive the cancel
+    flow without relying on global DB state.
+    """
+    import os
+    from bson import ObjectId
+
+    current_test = os.environ.get("PYTEST_CURRENT_TEST", "")
+    if "test_booking_cancel_reverses_ledger_net0.py" not in current_test:
+        return
+
+    headers = {"Authorization": f"Bearer {agency_token}"}
+    me_resp = await async_client.get("/api/auth/me", headers=headers)
+    assert me_resp.status_code == 200, f"/auth/me failed in seed_confirmed_booking: {me_resp.text}"
+    me = me_resp.json()
+    org_id = me["organization_id"]
+    agency_id = me["agency_id"]
+
+    # If there is already a CONFIRMED booking for this agency/org in test_db, do nothing
+    existing = await test_db.bookings.find_one(
+        {"organization_id": org_id, "agency_id": agency_id, "status": "CONFIRMED"},
+        {"_id": 1},
+    )
+    if existing:
+        return
+
+    now = now_utc()
+    booking_id = ObjectId()
+
+    await test_db.bookings.insert_one(
+        {
+            "_id": booking_id,
+            "organization_id": org_id,
+            "agency_id": agency_id,
+            "status": "CONFIRMED",
+            "code": "CANCEL-NET0-TEST",
+            "currency": "EUR",
+            "total_amount": 110.0,
+            "created_at": now,
+            "updated_at": now,
+        }
+    )
+
         pass
 
 

@@ -852,41 +852,6 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
                               Event Seti
                             </span>
                             <span>{ledgerSummary.events.join(", ")}</span>
-          {activeTab === "payments" && (
-            <div className="space-y-3">
-              {paymentLoading && (
-                <div className="flex items-center gap-2 px-1">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span className="text-sm text-muted-foreground">Ödeme durumu yükleniyor...</span>
-                </div>
-              )}
-
-              {!paymentLoading && paymentError && (
-                <ErrorState
-                  title="Ödeme durumu yüklenemedi"
-                  description={paymentError}
-                  onRetry={() => loadPaymentState(bookingId)}
-                  className="max-w-md"
-                />
-              )}
-
-              {!paymentLoading && !paymentError && (!paymentState || !paymentState.aggregate) && (
-                <EmptyState
-                  title="Bu booking için ödeme kaydı yok"
-                  description="Henüz bu rezervasyon için Stripe üzerinden bir tahsilat başlatılmamış."
-                  className="py-8"
-                />
-              )}
-
-              {!paymentLoading && !paymentError && paymentState && paymentState.aggregate && (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-3 text-sm">
-                    <div className="flex flex-col">
-                      <span className="text-xs text-muted-foreground uppercase tracking-wide">
-                        Toplam
-                      </span>
-                      <span>
-                        {Number(paymentState.aggregate.amount_total / 100).toFixed(2)}{
                           </div>
                         )}
                         <div className="flex flex-col col-span-2">
@@ -931,6 +896,96 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
                 </React.Fragment>
               )}
                   </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === "payments" && (
+            <div className="space-y-3">
+              {paymentLoading && (
+                <div className="flex items-center gap-2 px-1">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span className="text-sm text-muted-foreground">Ödeme durumu yükleniyor...</span>
+                </div>
+              )}
+
+              {!paymentLoading && paymentError && (
+                <ErrorState
+                  title="Ödeme durumu yüklenemedi"
+                  description={paymentError}
+                  onRetry={() => loadPaymentState(bookingId)}
+                  className="max-w-md"
+                />
+              )}
+
+              {!paymentLoading && !paymentError && (!paymentState || !paymentState.aggregate) && (
+                <EmptyState
+                  title="Bu booking için ödeme kaydı yok"
+                  description="Henüz bu rezervasyon için Stripe üzerinden bir tahsilat başlatılmamış."
+                  className="py-8"
+                />
+              )}
+
+              {!paymentLoading && !paymentError && paymentState && paymentState.aggregate && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="flex flex-col">
+                      <span className="text-xs text-muted-foreground uppercase tracking-wide">
+                        Toplam Tutar
+                      </span>
+                      <span>
+                        {Number(paymentState.aggregate.amount_total / 100).toFixed(2)} {paymentState.aggregate.currency}
+                      </span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-xs text-muted-foreground uppercase tracking-wide">
+                        Ödenen
+                      </span>
+                      <span>
+                        {Number(paymentState.aggregate.amount_paid / 100).toFixed(2)} {paymentState.aggregate.currency}
+                      </span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-xs text-muted-foreground uppercase tracking-wide">
+                        İade Edilen
+                      </span>
+                      <span>
+                        {Number(paymentState.aggregate.amount_refunded / 100).toFixed(2)} {paymentState.aggregate.currency}
+                      </span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-xs text-muted-foreground uppercase tracking-wide">
+                        Ödeme Durumu
+                      </span>
+                      <span>{paymentState.aggregate.status}</span>
+                    </div>
+                  </div>
+
+                  {paymentState.transactions && paymentState.transactions.length > 0 && (
+                    <div className="space-y-2 text-xs">
+                      <h3 className="text-sm font-medium text-muted-foreground">İşlem Geçmişi</h3>
+                      <div className="space-y-1">
+                        {paymentState.transactions.map((tx) => (
+                          <div key={`${tx.type}-${tx.occurred_at || tx.created_at}`} className="flex items-center justify-between border-b border-muted py-1">
+                            <div className="flex flex-col">
+                              <span className="font-medium">
+                                {tx.type === "capture_succeeded" ? "Capture" : tx.type === "refund_succeeded" ? "Refund" : tx.type}
+                              </span>
+                              <span className="text-[11px] text-muted-foreground">
+                                {tx.occurred_at || tx.created_at}
+                              </span>
+                            </div>
+                            <div className="text-right">
+                              <span className="font-semibold">
+                                {Number(tx.amount / 100).toFixed(2)} {tx.currency}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

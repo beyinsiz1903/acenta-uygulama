@@ -102,7 +102,20 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-## user_problem_statement: "FAZ 4 Inbox/Bildirim Merkezi için backend API'lerini temel bir smoke testiyle doğrulamak istiyorum."
+## user_problem_statement: "FAZ 5 kupon backend akışını smoke-test etmek istiyorum."
+
+## backend:
+  - task: "FAZ 5 Kupon Backend Smoke Test"
+    implemented: true
+    working: true
+    file: "/app/backend/app/indexes/coupon_indexes.py, /app/backend/app/services/coupons.py, /app/backend/app/services/b2b_pricing.py, /app/backend/app/routers/b2b_quotes.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ FAZ 5 KUPON BACKEND SMOKE TEST COMPLETE - All 8 test scenarios passed (100% success rate). COMPREHENSIVE FUNCTIONALITY VERIFIED: A) AUTHENTICATION: Admin login successful (admin@acenta.test/admin123), Agency login successful (agency1@demo.test/agency123) with proper JWT token and organization/agency ID extraction. B) B2B QUOTE CREATION: Successfully created B2B quote via P0.2 search→quote flow (quote_id: 69637b1ea2b77616fb5099cd), quote total: 112.0 EUR, proper quote structure with offers and pricing. C) TEST COUPON SETUP: Created TEST10 coupon in database (organization: 695e03c80b04ed31c4eaa899, discount: 10% PERCENT, scope: B2B, active: true, usage: 0/10), coupon properly configured with valid date range and usage limits. D) APPLY COUPON API: POST /api/b2b/quotes/{quote_id}/apply-coupon?code=TEST10 working correctly - returns 200 with coupon.status=APPLIED, coupon.code=TEST10, coupon.reason=OK, applies 10% discount correctly (base: 112.0 EUR → discount: 11.2 EUR → final: 100.8 EUR), totals.coupon_total > 0 and totals.final_total < totals.base_total verified. E) CLEAR COUPON API: DELETE /api/b2b/quotes/{quote_id}/coupon working correctly - returns 200, coupon field cleared (None/null), totals reset correctly (coupon_total=0.0, final_total=base_total=112.0 EUR). F) AUTHENTICATION ENFORCEMENT: Agency role requirement properly enforced - admin token correctly denied access with 403 Forbidden, confirming agency user requirement. G) ERROR HANDLING: Invalid coupon code (INVALID123) correctly handled with 200 + coupon.status=NOT_FOUND, no discount applied for invalid coupon, non-existent quote correctly rejected with 404 not_found. H) COUPON EVALUATION LOGIC: CouponService.evaluate_for_quote working correctly - finds active coupons by organization_id + code, validates scope=B2B, applies usage limits, calculates PERCENT discount correctly (10% of 112.0 = 11.2 EUR). CRITICAL FIXES APPLIED: 1) Fixed ObjectId serialization issue in b2b_pricing.py (converted _id to string for JSON response), 2) Created test inventory for dates 2026-01-15 to 2026-01-17 with capacity_available=10, 3) Created TEST10 coupon with correct organization_id (695e03c80b04ed31c4eaa899) matching agency organization. ACCEPTANCE CRITERIA MET: ✅ POST /api/b2b/quotes/{quote_id}/apply-coupon returns 200 with coupon.status=APPLIED, ✅ Discount applied correctly (coupon_total > 0, final_total < base_total), ✅ DELETE /api/b2b/quotes/{quote_id}/coupon returns 200 and clears coupon, ✅ Totals reset correctly (coupon_total=0, final_total=base_total), ✅ Authentication enforced (agency user required, admin denied), ✅ Error handling working (invalid code → NOT_FOUND, non-existent quote → 404). FAZ 5 kupon backend functionality production-ready with complete coupon evaluation, application, and clearing workflow."
 
 ## backend:
   - task: "FAZ 4 Inbox/Bildirim Merkezi Backend Smoke Test"

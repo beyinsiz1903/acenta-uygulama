@@ -11,7 +11,7 @@ import asyncio
 from datetime import datetime, date
 
 # Configuration - Use production URL from frontend/.env
-BASE_URL = "https://bookingsystem-13.preview.emergentagent.com"
+BASE_URL = "https://travelreserve-3.preview.emergentagent.com"
 
 def login_agency():
     """Login as agency user and return token, org_id, agency_id, email"""

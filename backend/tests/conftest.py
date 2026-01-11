@@ -156,7 +156,7 @@ async def stripe_handlers_db(monkeypatch, test_db):
 
 
 @pytest.fixture(autouse=True)
-async def ensure_finance_indexes_for_test_db(test_db):
+async def ensure_finance_indexes_for_test_db(test_db, anyio_backend):
     """Ensure finance-related indexes exist in the isolated test_db.
 
     This makes booking_payment_transactions and booking_payments idempotency

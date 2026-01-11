@@ -6,7 +6,7 @@ import { Badge } from "./ui/badge";
 import { Separator } from "./ui/separator";
 import { toast } from "sonner";
 import { buildBookingCopyText } from "../utils/buildBookingCopyText";
-import { api, apiErrorMessage } from "../lib/api";
+import { api, apiErrorMessage, getUser } from "../lib/api";
 import { Loader2 } from "lucide-react";
 import { makeIdempotencyKey } from "../lib/payments";
 

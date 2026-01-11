@@ -473,21 +473,12 @@ async def minimal_finance_seed(test_db, async_client: httpx.AsyncClient, agency_
 
 @pytest.fixture(autouse=True)
 def patch_cancel_test_get_db(monkeypatch, test_db):
-    """Force cancel net0 test to use test_db instead of global DB.
+    """Ensure cancel net0 test's local get_db binding returns test_db only.
 
-    The test `test_booking_cancel_reverses_ledger_net0.py` does::
-
-        from app.db import get_db
-        db = await get_db()
-
-    Meanwhile HTTP uses FastAPI dependency overrides -> test_db. This fixture
-    ensures that all direct `get_db` call sites also return test_db for that
-    specific test.
+    We do NOT patch app.db.get_db itself to avoid impacting auth/other routes.
+    Instead we patch the test module's imported symbol.
     """
     import os
-    import sys
-    import types
-    import app.db as app_db
 
     current_test = os.environ.get("PYTEST_CURRENT_TEST", "")
     if "test_booking_cancel_reverses_ledger_net0.py" not in current_test:
@@ -496,26 +487,18 @@ def patch_cancel_test_get_db(monkeypatch, test_db):
     async def _get_test_db():
         return test_db
 
-    # 1) Patch app.db.get_db itself
-    if hasattr(app_db, "get_db"):
-        monkeypatch.setattr(app_db, "get_db", _get_test_db, raising=False)
+    # Patch common module import paths for the test module
+    try:
+        import tests.test_booking_cancel_reverses_ledger_net0 as m
+        monkeypatch.setattr(m, "get_db", _get_test_db, raising=False)
+    except Exception:
+        pass
 
-    # If app.db keeps a global DB handle, point it to test_db as well
-    if hasattr(app_db, "_db"):
-        monkeypatch.setattr(app_db, "_db", test_db, raising=False)
-
-    # 2) Patch any modules that already imported get_db from app.db
-    for mod in list(sys.modules.values()):
-        if not isinstance(mod, types.ModuleType):
-            continue
-        if not hasattr(mod, "get_db"):
-            continue
-        try:
-            attr = getattr(mod, "get_db")
-        except Exception:
-            continue
-        if callable(attr) and getattr(attr, "__module__", "") == "app.db":
-            monkeypatch.setattr(mod, "get_db", _get_test_db, raising=False)
+    try:
+        import test_booking_cancel_reverses_ledger_net0 as m2
+        monkeypatch.setattr(m2, "get_db", _get_test_db, raising=False)
+    except Exception:
+        pass
 
 
 @pytest.fixture

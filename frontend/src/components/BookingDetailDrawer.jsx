@@ -46,6 +46,10 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
   const [activeTab, setActiveTab] = useState("details");
   const navigate = useNavigate();
 
+  // Check if user has privileged role for payment actions
+  const user = getUser();
+  const isPrivileged = user?.roles?.some((r) => ["admin", "ops", "super_admin"].includes(r));
+
   const [paymentState, setPaymentState] = useState(null);
   const [paymentActionLoading, setPaymentActionLoading] = useState(false);
   const [paymentActionStatus, setPaymentActionStatus] = useState("");

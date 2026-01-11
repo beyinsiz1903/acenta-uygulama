@@ -1097,18 +1097,22 @@ def test_faz4_inbox_backend_smoke():
     # First, let's try voucher generation which should trigger VOUCHER_ISSUED
     print("   📋 Attempting to trigger VOUCHER_ISSUED event via voucher generation...")
     
-    r = requests.post(
-        f"{BASE_URL}/api/ops/bookings/{booking_id}/voucher/generate",
-        headers=admin_headers,
-    )
-    
-    if r.status_code == 200:
-        voucher_response = r.json()
-        print(f"   ✅ Voucher generation successful")
-        print(f"   📋 Voucher ID: {voucher_response.get('voucher_id')}")
-        print("   📋 This should have triggered VOUCHER_ISSUED event → inbox SYSTEM message")
+    if booking_status == "CONFIRMED":
+        r = requests.post(
+            f"{BASE_URL}/api/ops/bookings/{booking_id}/voucher/generate",
+            headers=admin_headers,
+        )
+        
+        if r.status_code == 200:
+            voucher_response = r.json()
+            print(f"   ✅ Voucher generation successful")
+            print(f"   📋 Voucher ID: {voucher_response.get('voucher_id')}")
+            print("   📋 This should have triggered VOUCHER_ISSUED event → inbox SYSTEM message")
+        else:
+            print(f"   ⚠️  Voucher generation failed: {r.status_code} - {r.text}")
+            print("   📋 Will test with existing booking events if any")
     else:
-        print(f"   ⚠️  Voucher generation failed: {r.status_code} - {r.text}")
+        print(f"   📋 Booking status is {booking_status}, cannot generate voucher")
         print("   📋 Will test with existing booking events if any")
 
     # ------------------------------------------------------------------

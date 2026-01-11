@@ -498,6 +498,7 @@ def patch_cancel_test_get_db(monkeypatch, test_db):
         import test_booking_cancel_reverses_ledger_net0 as m2
         monkeypatch.setattr(m2, "get_db", _get_test_db, raising=False)
     except Exception:
+        pass
 
 
 @pytest.fixture(autouse=True)

@@ -155,10 +155,6 @@ async def append_user_message(
     Returns the inserted message doc (with id as string).
     """
 
-    from logging import getLogger
-
-    logger = getLogger("inbox")
-
     try:
         oid = ObjectId(thread_id)
     except Exception:

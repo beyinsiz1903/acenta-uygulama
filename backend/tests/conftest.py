@@ -218,6 +218,7 @@ async def admin_token(async_client: httpx.AsyncClient) -> str:
     response = await async_client.post(
         "/api/auth/login",
         json={"email": "admin@acenta.test", "password": "admin123"},
+    )
 
 
 @pytest.fixture(autouse=True)

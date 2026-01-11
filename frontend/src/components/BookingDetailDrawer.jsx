@@ -220,6 +220,10 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
 
     const mySeq = ++eventsReqSeq.current;
 
+    if (!cancelled) {
+      void loadPaymentState(bookingId);
+    }
+
     setEventsLoading(true);
     setEventsError("");
 

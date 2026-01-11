@@ -19,8 +19,23 @@ async def test_ops_issue_and_b2b_download_latest_voucher_pdf(async_client, test_
     - agency user can GET /api/b2b/bookings/{id}/voucher/latest and receive PDF bytes
     """
 
-    org_id = "org_demo"
-    agency_id = "agency_demo"
+    # Get admin user's organization_id
+    login_resp = await async_client.post(
+        "/api/auth/login",
+        json={"email": "admin@acenta.test", "password": "admin123"},
+    )
+    assert login_resp.status_code == 200
+    admin_user = login_resp.json()["user"]
+    org_id = admin_user["organization_id"]
+
+    # Get agency user's agency_id
+    agency_login_resp = await async_client.post(
+        "/api/auth/login",
+        json={"email": "agency1@demo.test", "password": "agency123"},
+    )
+    assert agency_login_resp.status_code == 200
+    agency_user = agency_login_resp.json()["user"]
+    agency_id = agency_user["agency_id"]
 
     # Seed minimal booking document
     booking_doc = {

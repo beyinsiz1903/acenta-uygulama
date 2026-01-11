@@ -151,8 +151,7 @@ app.include_router(exports_router)
 
 if ENABLE_PARTNER_API:
     app.include_router(exports_public_router)
-
-app.include_router(public_my_booking_router)
+    app.include_router(public_my_booking_router)
 else:
     logger.info("[config] ENABLE_PARTNER_API is false - public export routes disabled")
 

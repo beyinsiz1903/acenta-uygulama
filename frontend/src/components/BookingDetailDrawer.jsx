@@ -1045,8 +1045,6 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
                       Bu alan sadece admin/ops/super_admin kullanıcıları içindir. Acenta ve otel rolleri için
                       yalnızca okuma modunda görüntülenir.
                     </p>
-                    {/* TODO: Role bazlı gate: RequireAuth üstünde zaten var; burada ek bir kontrol istenirse, */}
-                    {/* localStorage'daki acenta_user içinden user.roles okunarak isPrivileged hesaplanabilir. */}
                   </div>
 
                   <div className="space-y-4">

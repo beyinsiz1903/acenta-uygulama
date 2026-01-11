@@ -7,6 +7,9 @@ import RequireAuth from "./components/RequireAuth";
 import AppShell from "./components/AppShell";
 import AdminLayout from "./layouts/AdminLayout";
 import AgencyLayout from "./layouts/AgencyLayout";
+import PublicMyBookingRequestPage from "./pages/PublicMyBookingRequestPage";
+import PublicMyBookingDetailPage from "./pages/PublicMyBookingDetailPage";
+
 import HotelLayout from "./layouts/HotelLayout";
 import AdminAgenciesPage from "./pages/AdminAgenciesPage";
 import AdminHotelsPage from "./pages/AdminHotelsPage";

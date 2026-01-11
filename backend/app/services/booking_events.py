@@ -42,6 +42,7 @@ async def emit_event(
             "PAYMENT_CAPTURED",
             "PAYMENT_REFUNDED",
             "VOUCHER_ISSUED",
+            "VOUCHER_GENERATED",
             "GUEST_REQUEST_CANCEL",
             "GUEST_REQUEST_AMEND",
         }:

@@ -77,6 +77,9 @@ async def list_threads(
 
     summaries: List[InboxThreadSummary] = []
     for d in docs:
+        last_message_at = d.get("last_message_at") or d.get("updated_at")
+        last_message_at_str = str(last_message_at) if last_message_at else ""
+        
         summaries.append(
             InboxThreadSummary(
                 id=str(d.get("_id")),
@@ -84,7 +87,7 @@ async def list_threads(
                 booking_id=d.get("booking_id"),
                 subject=d.get("subject") or "(Başlık yok)",
                 status=d.get("status") or "OPEN",
-                last_message_at=(d.get("last_message_at") or d.get("updated_at") or ""),
+                last_message_at=last_message_at_str,
             )
         )
 

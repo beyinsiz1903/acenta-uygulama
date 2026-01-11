@@ -254,6 +254,42 @@ async def _upsert_credit_profile(
         )
 
 
+
+
+@router.get("/bookings/{booking_id}/payment-state")
+async def get_booking_payment_state(
+    booking_id: str,
+    user=Depends(require_roles(["admin", "ops", "super_admin"])),
+    db=Depends(get_db),
+) -> dict[str, Any]:
+    """Return booking payment aggregate + recent transactions summary.
+
+    Used by admin/ops UI to display booking-level Stripe payment state.
+    """
+
+    org_id = user["organization_id"]
+
+    aggregate = await db.booking_payments.find_one(
+        {"organization_id": org_id, "booking_id": booking_id},
+        {"_id": 0},
+    )
+
+    cursor = (
+        db.booking_payment_transactions.find(
+            {"organization_id": org_id, "booking_id": booking_id}
+        )
+        .sort("occurred_at", -1)
+        .limit(20)
+    )
+    txs = await cursor.to_list(length=20)
+    for tx in txs:
+        tx.pop("_id", None)
+
+    return {
+        "aggregate": aggregate,
+        "transactions": txs,
+    }
+
 # ============================================================================
 # Endpoints
 # ============================================================================

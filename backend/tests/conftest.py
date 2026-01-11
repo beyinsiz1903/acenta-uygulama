@@ -32,6 +32,18 @@ MONGO_URL = os.environ.get("MONGO_URL", "mongodb://localhost:27017")
 
 
 @pytest.fixture(scope="session")
+
+
+@pytest.fixture(autouse=True, scope="session")
+def stripe_webhook_secret_env() -> None:
+    """Ensure STRIPE_WEBHOOK_SECRET is set in test environment.
+
+    This avoids 500s in webhook tests caused by missing configuration and
+    allows contract tests to exercise signature verification deterministically.
+    """
+
+    os.environ.setdefault("STRIPE_WEBHOOK_SECRET", "whsec_test")
+
 def anyio_backend() -> str:
     """Force pytest-anyio to use asyncio event loop."""
 

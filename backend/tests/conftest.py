@@ -125,3 +125,10 @@ async def agency_token(async_client: httpx.AsyncClient) -> str:
     assert response.status_code == 200, f"Agency login failed: {response.text}"
     data = response.json()
     return data["access_token"]
+
+
+@pytest.fixture
+async def agency_headers(agency_token: str) -> Dict[str, str]:
+    """Convenience fixture returning Authorization header for agency."""
+
+    return {"Authorization": f"Bearer {agency_token}"}

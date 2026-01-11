@@ -275,7 +275,7 @@ class LedgerPostingService:
                     debit = 0.0
                     credit = 0.0
 
-                account_id = str(getattr(line, "account_id"))
+                account_id = getattr(line, "account_id")
                 posting_id = f"post_{_uuid.uuid4()}"
 
                 posting_doc = {

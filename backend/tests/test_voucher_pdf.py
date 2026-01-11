@@ -39,7 +39,7 @@ async def test_ops_issue_and_b2b_download_latest_voucher_pdf(async_client, test_
 
     # Seed minimal booking document
     booking_doc = {
-        "_id": "bkg_voucher_1",
+        "_id": ObjectId("507f1f77bcf86cd799439011"),  # Use proper ObjectId
         "organization_id": org_id,
         "agency_id": agency_id,
         "status": "CONFIRMED",
@@ -65,12 +65,12 @@ async def test_ops_issue_and_b2b_download_latest_voucher_pdf(async_client, test_
     # Create an active voucher
     voucher_doc = {
         "organization_id": org_id,
-        "booking_id": "bkg_voucher_1",
+        "booking_id": "507f1f77bcf86cd799439011",  # Use string version of ObjectId
         "version": 1,
         "status": "active",
         "template_key": "b2b_booking_default",
         "data_snapshot": {
-            "booking_id": "bkg_voucher_1",
+            "booking_id": "507f1f77bcf86cd799439011",
             "customer_name": "Test Customer",
             "status": "CONFIRMED",
         },
@@ -81,30 +81,30 @@ async def test_ops_issue_and_b2b_download_latest_voucher_pdf(async_client, test_
 
     # Issue voucher as admin/ops
     resp_issue = await async_client.post(
-        "/api/ops/bookings/bkg_voucher_1/voucher/issue",
+        "/api/ops/bookings/507f1f77bcf86cd799439011/voucher/issue",
         headers=admin_headers,
         json={"issue_reason": "INITIAL", "locale": "tr"},
     )
     assert resp_issue.status_code == 200
     data_issue = resp_issue.json()
-    assert data_issue["booking_id"] == "bkg_voucher_1"
+    assert data_issue["booking_id"] == "507f1f77bcf86cd799439011"
     assert data_issue["issue_reason"] == "INITIAL"
     assert data_issue["filename"].endswith(".pdf")
 
     # Check files_vouchers collection
-    file_docs = await test_db.files_vouchers.find({"booking_id": "bkg_voucher_1"}).to_list(10)
+    file_docs = await test_db.files_vouchers.find({"booking_id": "507f1f77bcf86cd799439011"}).to_list(10)
     assert len(file_docs) == 1
     file_doc = file_docs[0]
     assert isinstance(file_doc.get("content"), (bytes, bytearray))
     assert file_doc["version"] == 1
 
     # Check booking_events contains VOUCHER_ISSUED
-    ev_docs = await test_db.booking_events.find({"booking_id": "bkg_voucher_1", "event": "VOUCHER_ISSUED"}).to_list(10)
+    ev_docs = await test_db.booking_events.find({"booking_id": "507f1f77bcf86cd799439011", "event": "VOUCHER_ISSUED"}).to_list(10)
     assert len(ev_docs) == 1
 
     # Download via b2b latest endpoint as agency user
     resp_dl = await async_client.get(
-        "/api/b2b/bookings/bkg_voucher_1/voucher/latest",
+        "/api/b2b/bookings/507f1f77bcf86cd799439011/voucher/latest",
         headers=agency_headers,
     )
     assert resp_dl.status_code == 200

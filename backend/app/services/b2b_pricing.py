@@ -13,6 +13,7 @@ from app.schemas_b2b_quotes import (
     PriceRestriction,
     PricingTrace,
 )
+from app.services.coupons import CouponService
 from app.errors import AppError
 from app.utils import now_utc
 from app.services.pricing_rules import PricingRulesService

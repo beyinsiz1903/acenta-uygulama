@@ -16,6 +16,7 @@ from app.indexes.pricing_indexes import ensure_pricing_indexes
 from app.indexes.finance_indexes import ensure_finance_indexes
 from app.indexes.phase2a_indexes import ensure_phase2a_indexes
 from app.exception_handlers import register_exception_handlers
+from app.config import ENABLE_VOUCHER_PDF, ENABLE_SELF_SERVICE_PORTAL, ENABLE_PARTNER_API
 from app.routers.auth import router as auth_router
 from app.routers.customers import router as customers_router
 from app.routers.products import router as products_router

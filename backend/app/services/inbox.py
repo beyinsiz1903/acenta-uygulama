@@ -187,7 +187,7 @@ async def append_user_message(
 
     await db.inbox_threads.update_one(
         {"_id": oid},
-        {"$set": {"last_message_at": now, "updated_at": now}, "$setOnInsert": {"status": "OPEN"}},
+        {"$set": {"last_message_at": now, "updated_at": now}},
     )
 
     msg_doc["id"] = str(msg_doc.pop("_id"))

@@ -257,6 +257,9 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
     if (eventsLoaded) return;
     if (eventsLoading) return;
 
+    void loadEvents(bookingId);
+  }, [activeTab, bookingId, eventsLoaded, eventsLoading, loadEvents]);
+
   useEffect(() => {
     if (!pollingPayment || !bookingId) return;
 
@@ -283,9 +286,6 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
       cancelled = true;
     };
   }, [pollingPayment, bookingId, loadPaymentState]);
-
-    void loadEvents(bookingId);
-  }, [activeTab, bookingId, eventsLoaded, eventsLoading, loadEvents]);
 
   const reloadAfterAmend = async () => {
     if (!bookingId) return;

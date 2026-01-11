@@ -15,158 +15,131 @@ The primary focus of this session was to complete the remaining Phase 1 tasks (F
 **User's preferred language**: Türkçe
 
 **what currently exists?**
-The application is a full-stack platform (React/FastAPI/MongoDB).
-- The event-driven booking lifecycle backend (P1.L1) is complete and stable.
-- The **Amend Flow UI (F1.1)** is complete and user-accepted. The UI in  shows the price difference and refreshes the parent list upon completion.
-- **Multi-Amend support (F1.2)** is complete and user-accepted. The backend now supports amending a booking multiple times, and a backfill script for the  counter has been created.
-- The **backend test harness has been refactored (F1.3)** and is now stable. The  error has been resolved by standardizing on a local  and proper DB fixtures.
-- For the **Payments Core (F2.0/F2.1)**, the foundational data models (, ) and their MongoDB indexes have been created. A skeleton  file exists but is incomplete and not correctly integrated with the test harness.
+The application is a full-stack platform (React/FastAPI/MongoDB) with a stable event-driven booking, amendment, and cancellation flow.
+- **Backend:** The F2.1  dependency injection issue is resolved, and its basic test harness is working. The core architecture for event-sourcing and ledger posting is in place.
+- **Frontend:**
+    - A series of UI/UX improvements have been completed. This includes fixing garbled Turkish text and encoding issues (, ).
+    - A shared  component was created and integrated into key admin pages (, , ) to standardize typography.
+    - Shared  and  components were created and wired into the data-loading logic for  and .
+    - A recurring HTML validation warning was fixed by changing the root element of  from  to .
 
 **Last working item**:
-- **Last item agent was working**: The user requested a detailed analysis of the frontend, asking the agent to log in as admin and investigate empty pages and font/copy inconsistencies. The agent performed a file-based analysis of all frontend pages.
-- **Status**: IN PROGRESS. The analysis itself is complete, but the findings (e.g., garbled text, inconsistent typography) have not been acted upon. This was a diversion from the main task of implementing the F2.1 Payments Core.
-- **Agent Testing Done**: N/A (Analysis task)
-- **Which testing method agent to use?**: manual testing by curl
+- **Last item agent was working**: Designing and finalizing the complete backend architecture and test plan for F2.2 Stripe Payments integration. The agreed-upon scope is **manual capture** and **full payment** only for Phase 1.
+- **Status**: IN PROGRESS
+- **Agent Testing Done**: N
+- **Which testing method agent to use?**: backend testing agent
 - **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
-- **Issue 1**: [P0] The F2.1 Payments Core service layer is incomplete and blocked.
-- **Issue 2**: [P1] There are UI/UX inconsistencies and bugs across the frontend.
+- **Issue 1**: [P0] Implement the F2.2 Stripe Payments backend.
 
 **Issues Detail:**
 - **Issue 1:**
-    - **Description**: The core logic for the F2.1 Payments service is not implemented. The agent created the  service file but struggled to integrate it with the test harness due to a recurring DB injection problem, causing tests to fail and stalling progress. The key orchestration logic () has not been built.
-    - **Attempted fixes**: The agent created the service file and a failing test case. It identified that the service was incorrectly using a global  instead of the injected  from the test fixture, causing state leakage between tests.
+    - **Description**: The backend for Stripe integration (adapter, webhook handlers, API endpoints) needs to be implemented. The architectural design and a comprehensive test plan have been fully debated and approved by the user.
+    - **Attempted fixes**: None, this is a new implementation task. The agent has a complete design and test plan ready.
     - **Next debug checklist**:
-        1. Refactor  in  to accept a  instance in its constructor () instead of calling  internally.
-        2. Update  to instantiate the service with the  fixture: .
-        3. Re-run the tests to confirm they now pass and operate on an isolated database.
-        4. Implement the orchestration functions (, ) as per the agreed-upon contract.
-    - **Why fix this issue and what will be achieved with the fix?**: This is the foundational step for all payment processing features (KAPSAM 2) and is the main active development task.
-    - **Status**: BLOCKED
-    - **Is recurring issue?**: Y (The agent faced the exact same DB injection issue during the F1.3 test harness refactor).
-    - **Should Test frontend/backend/both after fix?**: backend
-    - **Blocked on other issue**: None
-
-- **Issue 2:**
-    - **Description**: The agent's recent UI analysis revealed several frontend issues:
-        - Garbled/corrupted Turkish text on  (e.g., , ).
-        - Inconsistent typography (font sizes, weights) for page headers across different admin and agency pages, not adhering to a global style guide.
-    - **Attempted fixes**: None. This was an analysis task.
-    - **Next debug checklist**:
-        1. For garbled text:  the corrupted strings in  with the correct Turkish text.
-        2. For typography: Propose creating a shared  component to standardize title and subtitle styles across the application.
-    - **Why fix this issue and what will be achieved with the fix?**: Improves UI quality, professionalism, and user experience.
+        1. Create the test file  with the 5 agreed-upon test cases (refund idempotency, capture idempotency, currency mismatch, invalid signature, missing metadata).
+        2. Implement  ensuring  is passed correctly and  is used for async safety.
+        3. Implement  with logic for  and , including the currency mismatch guard.
+        4. Implement the  router with , , and  endpoints, ensuring correct HTTP status codes (200/400/500) are returned based on the contract.
+        5. Run the tests to validate the implementation.
+    - **Why fix this issue and what will be achieved with the fix?**: This is the core of the payment processing functionality (KAPSAM 2) and the main active development task.
     - **Status**: NOT STARTED
     - **Is recurring issue?**: N
-    - **Should Test frontend/backend/both after fix?**: frontend
+    - **Should Test frontend/backend/both after fix?**: backend
     - **Blocked on other issue**: None
 
 **In progress Task List**:
-- **Task 1**: [P0] Implement F2.1 Payments Core Service Layer.
-    - **Where to resume**: . The immediate next step is to fix the DB dependency injection pattern as described in Issue 1. Once the test harness is correctly integrated, implement the  and  orchestration logic, ensuring the  sequence is followed.
-    - **What will be achieved with this?**: A robust, testable, and idempotent service layer for handling payment captures and refunds, forming the backbone of the payment system.
+- **Task 1**: [P0] Implement F2.2 Stripe Payments Core Backend
+    - **Where to resume**: The detailed design and test plan are complete. The next step is to create the test file  and then implement the adapter, handlers, and router as per the plan.
+    - **What will be achieved with this?**: A production-grade, test-covered, and idempotent backend for handling Stripe payments (manual capture, full payment), ready for UI integration.
     - **Status**: IN PROGRESS
     - **Should Test frontend/backend/both after fix?**: backend
-    - **Blocked on something**: Blocked on resolving the DB injection issue in its own service file.
+    - **Blocked on something**: No
 
 **Upcoming and Future Tasks**
 **Upcoming Tasks:**
-- **F2.2: Stripe Adapter & Webhook Integration (P0):**
-    - Create a  adapter to communicate with the Stripe API.
-    - Implement a webhook handler () with signature verification to receive and process events like .
-    - Connect the webhook handler to the  service function.
-- **UI/UX Fixes (P1):**
-    - Fix garbled text on .
-    - Standardize page headers with a shared component to resolve typography inconsistencies.
-- **Timeline UI (P1):** Add a Timeline or History view to the  that displays data from the  endpoint.
+- **Timeline UI (P1):** Implement a Timeline tab in the  to display booking lifecycle events from the  endpoint. A detailed, production-grade technical plan for this feature has already been created and approved (messages 243-252).
+- **Stripe Frontend (P1):** Build the UI to interact with the F2.2 Stripe backend, such as an admin button to trigger the  endpoint.
 
 **Future Tasks:**
 - **P1.3:** Implement PDF Voucher generation (removing the mock).
 - **P1.4:** Create a self-service customer portal ().
-- **KAPSAM 2:** Build out the payment UI, payment links, and multi-currency support.
+- **KAPSAM 2:** Build out full payment UI, payment links, and multi-currency support.
 - **KAPSAM 3:** B2B Sub-agency module (hierarchy, commissions).
 - **KAPSAM 4:** Public Partner API and webhook publishing system.
 
 **Completed work in this session**
-- **F1.1: Amend UI E2E Stabilization:** Finalized the amend flow UI in , including a detailed price difference box and automatic parent list refresh.
-- **F1.2: Multi-Amend Support:** Implemented backend logic to allow multiple amendments per booking, including a refactored ledger index and an  counter with a backfill script.
-- **F1.3: Backend Test Harness Refactor:** Stabilized the backend test suite by moving to a local ASGI client () and fixing the .
-- **F2.0: Payments Data Model:** Created the  (aggregate) and  (log) MongoDB collections and their corresponding indexes in .
-- **Frontend Analysis:** Performed a comprehensive review of all frontend pages, identifying reasons for empty states (lack of data vs. broken UI) and documenting typography/copy inconsistencies.
+- **F2.1 - Payments Core Backend Fix**: Resolved the critical DB dependency injection issue in  and its test, unblocking the payments-related work.
+- **FE-2 - Shared  Component**: Created  and integrated it into , , and  to standardize page titles.
+- **FE-3 - Shared / Components**: Created and wired  and  into the data-loading logic of  and .
+- **FE-1 - UI Copy & Encoding Fixes**: Fixed garbled Turkish text and encoding issues on  and .
+- **Tech Debt -  HTML Fix**: Resolved a console warning by changing the root element of  from  to , making it semantically correct for inline use.
 
 **Earlier issues found/mentioned but not fixed**
-- **Issue 1**: Garbled text (e.g., ) on .
-- **Issue 2**: Inconsistent typography for page headers across the application.
-- **Why to solve these issues**: To improve the overall quality and professionalism of the UI.
-- **Should Test frontend/backend/both after fix**: frontend
+None. The UI issues from the previous handoff were all addressed in this session.
 
 **Known issue recurrence from previous fork**
-- **Issue recurrence in previous fork**: The agent is struggling with implementing a DB dependency injection pattern for a new service ().
-- **Recurrence count**: 2 (This exact issue of  vs.  fixture was the root cause of the F1.3 test instability and is now blocking F2.1).
-- **Status**: IN PROGRESS
+- **Issue recurrence in previous fork**: A recurring DB dependency injection pattern issue.
+- **Recurrence count**: 2
+- **Status**: RESOLVED (The agent successfully fixed this for  at the start of this session).
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- **Event Sourcing (Lite):** Using  as the append-only log for booking state.
-- **Projection:** The  collection is a denormalized, query-optimized projection of the event log.
-- **Delta-Only Ledger Posting:** Financial amendments post only the difference to the ledger.
-- **DB Dependency Injection for Services:** Services should be initialized with a DB connection () to allow for isolated testing with a  fixture.
-- **Optimistic Concurrency:** Using a  field with a compare-and-swap update pattern to prevent race conditions.
-- **Idempotency:** Using  and  with unique indexes to ensure operations are not processed multiple times.
+- **Stripe Integration**: Manual capture, full payment, webhook processing.
+- **Adapter Pattern**: Isolating the Stripe SDK in  to decouple it from business logic.
+- **Webhook Error Handling**: Differentiating between transient errors (500 for retry), signature errors (400), and permanent business logic errors (200 for no-op).
+- **Idempotency**: Using  for Stripe API calls and a unique index on  ( or ) in the  collection.
+- **Async Safety**: Using  to run synchronous SDK calls in an async context without blocking the event loop.
 
 **key DB schema**
+No new schemas were added, but F2.2 work will heavily use:
 - ****: 
 - ****: 
 
 **changes in tech stack**
-None.
+- **Stripe**: Added as a new integration for payment processing.
 
 **All files of reference**
-- : The main file for the in-progress payments service.
-- : The failing test file for the payments service.
-- : The source of truth for the stable test harness setup.
-- : The completed amend flow UI.
-- : The page with garbled text that needs fixing.
+-  (To be created)
+-  (To be created)
+-  (To be created)
+-  (To be created)
+-  (Target for Timeline UI)
 
 **Critical Info for New Agent**
-- **User Frustration:** The user has expressed frustration with conversational loops and lack of progress. It is critical to follow the detailed briefs provided by the user precisely and avoid getting stuck. Prioritize completing the agreed-upon tasks over asking for more input.
-- **Recurring Blocker:** The primary blocker is a recurring inability to correctly implement the DB dependency injection pattern for new services. The solution is in : services must be initialized with the  fixture () rather than calling a global  function.
-- **Payment Orchestration Contract:** The user has defined a very specific, non-negotiable orchestration for payment processing: . This must be implemented exactly as specified.
+- The session started by fixing a backend blocker (F2.1), then pivoted to a series of user-directed frontend improvements (FE-1, FE-2, FE-3), and finally pivoted again to designing the F2.2 Stripe backend.
+- A detailed, production-grade plan for the **Timeline UI** was created and approved, but its implementation was **put on hold** in favor of the Stripe work. Do not start the Timeline UI until the Stripe backend is complete.
+- The current task is to implement the **F2.2 Stripe Backend**. The design and a 5-part test suite are complete and user-approved. The immediate next step is to create the test file () and then implement the feature.
 
 **documents and test reports created in this job**
-- 
-- 
-- 
+None.
 
 **Last 10 User Messages and any pending HUMAN messages**
-10. User asks for a detailed architectural summary of the application. 
-9. User provides a massive, detailed brief for achieving parity with a competitor, Agentis, outlining scopes for payments, sub-agencies, etc. 
-8. Agent proposes a phased plan (F1.1, F1.2, F1.3) and asks for payment provider confirmation. 
-7. User approves the plan, chooses Stripe, and gives the go-ahead for F1.1. 
-6. After F1.1 is done, user accepts it and provides very specific technical direction for F1.2 (Multi-Amend). 
-5. After F1.2 is done, user points out the need for a backfill script and tells the agent to prepare for F1.3. 
-4. User provides another massive, detailed brief for F1.3 (Test Harness Refactor). 
-3. After a long struggle, user accepts F1.3 and asks the agent to propose the next feature. 
-2. Agent proposes starting the payments core; user agrees and provides a detailed brief for F2.0. A series of refinements to the F2.0 contract follow. 
-1. User gets frustrated with the agent's lack of progress on F2.1, then pivots and asks for a full UI/UX analysis of all pages. 
+- The last 10 messages were a detailed, back-and-forth design and refinement process for the F2.2 Stripe backend and its test suite.
+- **Key Decisions Made:**
+    1.  **Scope**:  capture and  only.
+    2.  **Architecture**: State mutation happens ONLY via webhooks, which call the existing . API endpoints only trigger actions on Stripe.
+    3.  **Idempotency**: Guaranteed by  on Stripe's side and  ( or ) unique index on the DB side.
+    4.  **Error Handling**: Confirmed specific HTTP codes for webhook responses (400 for invalid signature, 500 for transient errors/currency mismatch, 200 for business logic skips).
+    5.  **Currency Policy**: For Phase 1, only EUR is supported. A currency mismatch in a webhook is a critical error and should return HTTP 500.
+- **Final Outcome:** A complete, 5-part test plan was finalized to prove idempotency, currency mismatch handling, and error responses. The agent is ready to start coding.
 
 **Project Health Check:**
-- **Working:** Booking creation, cancellation, and amendment flows (backend and frontend). Backend test suite is stable.
-- **Broken**: The  is non-functional and its tests are failing due to a DB injection issue.
+- **Working**: Booking lifecycle, amend flow, test harness, and the newly standardized frontend components (, , etc.).
+- **Broken**: Nothing is currently broken.
 - **Mocked**: PDF Voucher generation.
 
 **3rd Party Integrations**
-- **WeasyPrint**: For PDF generation.
-- **Stripe**: Planned for payment processing. A test key is expected to be in the environment.
+- **Stripe**: Planned for payment processing. The agent should use  to get the SDK and implementation details, and use a test key from the environment.
+- **WeasyPrint**: For PDF generation (currently mocked).
 
 **Testing status**
-- **Testing agent used after significant changes**: YES
+- **Testing agent used after significant changes**: YES (for the frontend changes).
 - **Troubleshoot agent used after agent stuck in loop**: NO
-- **Test files created**:
-    - 
+- **Test files created**: None yet, but  is the next file to be created.
 - **Known regressions**: None.
 
 **Credentials to test flow:**
@@ -174,4 +147,4 @@ None.
 - **Agency 1 (TRY, 12% markup)**:  / 
 
 **What agent forgot to execute**
-The agent has not yet implemented the core orchestration logic () for the F2.1 Payments Core, despite multiple detailed prompts and refinements from the user. It got stuck on the DB dependency injection problem, which is a recurring issue from a previous task.</analysis>
+The agent did not implement the **Timeline UI** feature, but this was due to a deliberate pivot by the user to prioritize the Stripe payment integration. The detailed plan for the Timeline UI exists and should be treated as the next major upcoming task.</analysis>

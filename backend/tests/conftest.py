@@ -234,6 +234,7 @@ async def minimal_search_seed(test_db, async_client: httpx.AsyncClient, agency_t
 
     # Only run the HTTP validation for FX / cancel tests to avoid slowing full suite
     import os
+    from datetime import timedelta
 
     current_test = os.environ.get("PYTEST_CURRENT_TEST", "")
     run_http_check = any(

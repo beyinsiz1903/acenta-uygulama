@@ -159,6 +159,8 @@ export default function AgencyBookingNewPage() {
   }
 
   const { hotel, stay, occupancy } = searchData;
+  const [quoteTotals, setQuoteTotals] = useState(null);
+
 
   const total = selectedRatePlan.price.total;
   const currency = selectedRatePlan.price.currency;

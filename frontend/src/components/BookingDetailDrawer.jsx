@@ -1091,6 +1091,16 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
             {booking?.code && <span>PNR: {booking.code}</span>}
           </div>
           <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (!bookingId) return;
+                navigate(`/app/inbox?booking_id=${bookingId}`);
+              }}
+              disabled={!bookingId}
+            >
+              Inbox'ta Aç
+            </Button>
             <Button variant="outline" onClick={handleCopy} disabled={!booking}>
               Bilgileri Kopyala
             </Button>

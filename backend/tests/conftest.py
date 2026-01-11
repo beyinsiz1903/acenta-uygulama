@@ -93,8 +93,6 @@ async def seeded_test_db(motor_client: AsyncIOMotorClient) -> AsyncGenerator[Any
         })
 
         # One active hotel product in Istanbul with EUR rate plan
-        from app.utils import now_utc as _now
-
         hotel_id = ObjectId()
         await db.products.insert_one({
             "_id": hotel_id,

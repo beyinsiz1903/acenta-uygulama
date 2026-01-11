@@ -1,0 +1,162 @@
+from __future__ import annotations
+
+"""Stripe webhook handlers for F2.2 manual capture + full payment.
+
+The public entrypoint is `handle_stripe_webhook`, which is called from the
+FastAPI router. This module is responsible for:
+- verifying the Stripe signature
+- routing supported event types to concrete handlers
+- enforcing EUR-only currency policy
+- delegating side effects to BookingPaymentsOrchestrator
+"""
+
+from typing import Any, Dict, Tuple
+
+import os
+import json
+
+import stripe  # type: ignore
+
+from app.errors import AppError
+from app.utils import now_utc
+from app.services.booking_payments import BookingPaymentsOrchestrator
+from app.db import get_db
+
+
+async def verify_and_parse_stripe_event(raw_body: bytes, signature: str | None) -> Dict[str, Any]:
+    """Verify Stripe signature and return event payload as dict.
+
+    Raises AppError(400, ...) on invalid signature.
+    """
+
+    webhook_secret = os.environ.get("STRIPE_WEBHOOK_SECRET")
+    if not webhook_secret:
+        raise AppError(500, "stripe_webhook_not_configured", "Stripe webhook secret is not configured")
+
+    if not signature:
+        raise AppError(400, "stripe_invalid_signature", "Missing Stripe-Signature header")
+
+    try:
+        event = stripe.Webhook.construct_event(  # type: ignore[attr-defined]
+            payload=raw_body.decode("utf-8"), sig_header=signature, secret=webhook_secret
+        )
+    except stripe.error.SignatureVerificationError as exc:  # type: ignore[attr-defined]
+        raise AppError(400, "stripe_invalid_signature", str(exc))
+
+    # Normalise to dict
+    if hasattr(event, "to_dict"):
+        return event.to_dict()
+    if isinstance(event, dict):
+        return event
+    # Fallback
+    return json.loads(str(event))
+
+
+async def _handle_payment_intent_succeeded(event: Dict[str, Any]) -> Tuple[int, Dict[str, Any]]:
+    obj = event.get("data", {}).get("object", {})
+    pi_id = obj.get("id")
+    amount_received = int(obj.get("amount_received", 0))
+    currency = str(obj.get("currency", "")).lower()
+    metadata = obj.get("metadata") or {}
+
+    booking_id = metadata.get("booking_id")
+    organization_id = metadata.get("organization_id")
+    agency_id = metadata.get("agency_id")
+    payment_id = metadata.get("payment_id") or pi_id
+
+    if not (booking_id and organization_id and agency_id and payment_id and pi_id):
+        # Business-level malformed payload; accept with 200 but no-op
+        return 200, {"ok": True, "skipped": "missing_metadata"}
+
+    if currency != "eur":
+        # Phase 1: only EUR supported. Signal retry to Stripe.
+        raise AppError(500, "stripe_currency_mismatch", f"Unsupported currency {currency} for booking {booking_id}")
+
+    db = await get_db()
+    orchestrator = BookingPaymentsOrchestrator(db)
+
+    occurred_at = now_utc()
+
+    result = await orchestrator.record_capture_succeeded(
+        organization_id=organization_id,
+        agency_id=agency_id,
+        booking_id=booking_id,
+        payment_id=payment_id,
+        provider="stripe",
+        currency="EUR",
+        amount_cents=amount_received,
+        occurred_at=occurred_at,
+        provider_event_id=event.get("id"),
+        provider_object_id=pi_id,
+        payment_intent_id=pi_id,
+        raw=event,
+    )
+
+    return 200, {"ok": True, "result": result}
+
+
+async def _handle_charge_refunded(event: Dict[str, Any]) -> Tuple[int, Dict[str, Any]]:
+    obj = event.get("data", {}).get("object", {})
+
+    currency = str(obj.get("currency", "")).lower()
+    if currency != "eur":
+        raise AppError(500, "stripe_currency_mismatch", f"Unsupported currency {currency} in refund event")
+
+    metadata = obj.get("metadata") or {}
+    booking_id = metadata.get("booking_id")
+    organization_id = metadata.get("organization_id")
+    agency_id = metadata.get("agency_id")
+    payment_id = metadata.get("payment_id") or obj.get("payment_intent")
+
+    if not (booking_id and organization_id and agency_id and payment_id):
+        return 200, {"ok": True, "skipped": "missing_metadata"}
+
+    refunds = (obj.get("refunds") or {}).get("data") or []
+    if not refunds:
+        return 200, {"ok": True, "skipped": "no_refunds"}
+
+    # For Phase 1 we assume single full refund; use first refund object
+    refund_obj = refunds[0]
+    refund_id = refund_obj.get("id")
+    amount = int(refund_obj.get("amount", 0))
+
+    db = await get_db()
+    orchestrator = BookingPaymentsOrchestrator(db)
+
+    occurred_at = now_utc()
+
+    result = await orchestrator.record_refund_succeeded(
+        organization_id=organization_id,
+        agency_id=agency_id,
+        booking_id=booking_id,
+        payment_id=payment_id,
+        provider="stripe",
+        currency="EUR",
+        amount_cents=amount,
+        occurred_at=occurred_at,
+        provider_event_id=event.get("id"),
+        provider_object_id=refund_id,
+        payment_intent_id=obj.get("payment_intent"),
+        raw=event,
+    )
+
+    return 200, {"ok": True, "result": result}
+
+
+async def handle_stripe_webhook(raw_body: bytes, signature: str | None) -> Tuple[int, Dict[str, Any]]:
+    """Main entrypoint used by the FastAPI router.
+
+    Returns (status_code, response_body_dict).
+    """
+
+    event = await verify_and_parse_stripe_event(raw_body, signature)
+    event_type = event.get("type")
+
+    if event_type == "payment_intent.succeeded":
+        return await _handle_payment_intent_succeeded(event)
+
+    if event_type == "charge.refunded":
+        return await _handle_charge_refunded(event)
+
+    # Unknown / unsupported events: 200 OK, no-op
+    return 200, {"ok": True, "ignored": event_type}

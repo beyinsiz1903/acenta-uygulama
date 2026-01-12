@@ -74,6 +74,7 @@ from app.routers.ops_booking_events import router as ops_booking_events_router
 from app.routers.b2b_hotels_search import router as b2b_hotels_search_router
 from app.routers.ops_click_to_pay import router as ops_click_to_pay_router
 from app.routers.public_click_to_pay import router as public_click_to_pay_router
+from app.routers.public_search import router as public_search_router
 from app.email_worker import email_dispatch_loop
 from app.integration_sync_worker import integration_sync_loop
 
@@ -179,6 +180,7 @@ app.include_router(ops_cases_router)
 app.include_router(payments_stripe_router)
 app.include_router(ops_click_to_pay_router)
 app.include_router(public_click_to_pay_router)
+app.include_router(public_search_router)
 
 
 @app.get("/api/health")

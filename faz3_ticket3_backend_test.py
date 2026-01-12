@@ -332,7 +332,7 @@ class FAZ3Ticket3BackendTest:
         # Verify booking_event created
         booking_event = await self.db.booking_events.find_one({
             "booking_id": self.test_booking_id,
-            "type": "GUEST_REQUEST_CANCEL"
+            "event": "GUEST_REQUEST_CANCEL"
         })
         
         if not booking_event:

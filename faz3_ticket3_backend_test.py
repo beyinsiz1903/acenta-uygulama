@@ -346,7 +346,7 @@ class FAZ3Ticket3BackendTest:
         
         # Clear existing amend cases
         await self.db.ops_cases.delete_many({"booking_id": self.test_booking_id, "type": "amend"})
-        await self.db.booking_events.delete_many({"booking_id": self.test_booking_id, "type": "GUEST_REQUEST_AMEND"})
+        await self.db.booking_events.delete_many({"booking_id": self.test_booking_id, "event": "GUEST_REQUEST_AMEND"})
         
         resp = self.client.post(f"{API_BASE}/public/my-booking/{token}/request-amend", json={
             "note": "Test amend request",

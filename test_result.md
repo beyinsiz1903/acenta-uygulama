@@ -522,6 +522,18 @@
         -working: true
         -agent: "testing"
         -comment: "✅ FAZ 3 / TICKET 2 PUBLIC MY BOOKING FRONTEND TEST COMPLETE - 5/5 core scenarios verified (100% success rate for testable functionality). COMPREHENSIVE FUNCTIONALITY VERIFIED: 1️⃣ /my-booking ENTRY FORM: ✅ Email and booking_code inputs visible and functional, ✅ Empty form validation working correctly (toast: 'Lütfen rezervasyon kodu ve e-posta adresinizi girin.'), ✅ Valid form submission working (API call to /api/public/my-booking/request-link returns 200), ✅ Success message shown correctly ('Eğer eşleşen bir rezervasyon varsa link e-posta adresinize gönderildi.'), ✅ No redirect to login on 401 (URL stays on /my-booking as required). 2️⃣ INVALID TOKEN ERROR HANDLING: ✅ Invalid token shows proper error state ('Rezervasyon bulunamadı veya süresi doldu'), ✅ 'Yeni bağlantı iste' button visible and functional, ✅ Button correctly redirects to /my-booking entry page. 3️⃣ BOOKING DETAIL STRUCTURE: ✅ data-testid='my-booking-summary-grid' exists in component code, ✅ Voucher download button ('Voucher İndir') exists in code, ✅ Cancel request section ('İptal Talebi') with textarea and validation exists, ✅ Amend request section ('Değişiklik Talebi') with validation exists, ✅ All UI elements properly structured and ready for valid token scenarios. 4️⃣ CANCEL REQUEST FUNCTIONALITY: ✅ Cancel section renders with booking data, ✅ Empty/filled note handling implemented, ✅ API call to /public/my-booking/{token}/request-cancel implemented, ✅ Success alert ('İptal talebiniz alındı. Ops ekibi sizinle iletişime geçecek.') implemented, ✅ Loading state and button disable logic working. 5️⃣ AMEND REQUEST FUNCTIONALITY: ✅ Amend section renders with booking data, ✅ Validation for empty requested_changes implemented ('Lütfen talep ettiğiniz değişiklikleri yazın.'), ✅ API call to /public/my-booking/{token}/request-amend implemented, ✅ Success alert ('Değişiklik talebiniz alındı. Ops ekibi sizinle iletişime geçecek.') implemented, ✅ Form reset after successful submission implemented. TECHNICAL VERIFICATION: ✅ No JavaScript errors during form interactions, ✅ Proper error handling for API failures, ✅ Toast notifications working correctly, ✅ Loading states and button disabling working, ✅ Form validation working as specified. LIMITATIONS: ⚠️ Full end-to-end booking detail testing limited by lack of valid tokens in test environment (expected - requires real booking data), ⚠️ Minor 404 console errors for missing resources (non-critical). ACCEPTANCE CRITERIA MET: ✅ Entry form validation and submission working, ✅ No login redirect on 401 responses, ✅ Invalid token error state working, ✅ All UI components properly implemented and structured, ✅ Cancel/amend request functionality fully implemented. FAZ 3 Ticket 2 public my-booking frontend functionality is production-ready with all specified Turkish UI flows working correctly."
+  - task: "EPIC 1 / T1.3 – Ops Guest Case Drawer timeline & 404 handling"
+    implemented: true
+    working: false
+    file: "/app/frontend/src/components/OpsGuestCaseDrawer.jsx, /app/frontend/src/pages/OpsGuestCasesPage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "main"
+        comment: "Ops guest case drawer’a booking timeline entegrasyonu için loadTimeline fonksiyonu useCallback ile stabilize edildi, 404 durumları için boş timeline state’i gösterilecek şekilde hata kontrolü eklendi. Ops akışı: case listele → case detayı aç → case kapat → timeline’da OPS_CASE_CLOSED event’ini doğrulamak üzere frontend testing agent ile E2E senaryo koşturulacak." 
+
 
 ## backend:
 ##   - task: "FAZ-6 Komisyon & Mutabakat (model + hesaplama + settlements API + cancel reversal)"

@@ -48,6 +48,7 @@ import AgencyBookingsListPage from "./pages/AgencyBookingsListPage";
 import AgencySettlementsPage from "./pages/AgencySettlementsPage";
 import AgencyHelpPage from "./pages/AgencyHelpPage";
 import B2BPortalPage from "./pages/B2BPortalPage";
+import OpsGuestCasesPage from "./pages/OpsGuestCasesPage";
 import HotelBookingsPage from "./pages/HotelBookingsPage";
 import HotelStopSellPage from "./pages/HotelStopSellPage";
 import HotelAllocationsPage from "./pages/HotelAllocationsPage";

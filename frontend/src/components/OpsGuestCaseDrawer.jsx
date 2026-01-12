@@ -50,6 +50,7 @@ function OpsGuestCaseDrawer({ caseId, open, onClose, onClosed }) {
       setData(null);
       setError("");
       setCloseNote("");
+      setTimelineItems([]);
       return;
     }
 
@@ -68,36 +69,11 @@ function OpsGuestCaseDrawer({ caseId, open, onClose, onClosed }) {
         setError(apiErrorMessage(e));
       } finally {
         setLoading(false);
-  const loadTimeline = async (bookingId) => {
-    if (!bookingId) {
-      setTimelineItems([]);
-      return;
-    }
-    setTimelineLoading(true);
-    setTimelineError("");
-    try {
-      const res = await api.get(`/ops/bookings/${bookingId}/events`, {
-        params: { limit: 50 },
-      });
-      const all = res.data?.items || [];
-      // Son 5 eventi created_at DESC ile göster
-      const last5 = [...all]
-        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-        .slice(0, 5);
-      setTimelineItems(last5);
-    } catch (e) {
-      setTimelineError(apiErrorMessage(e));
-      setTimelineItems([]);
-    } finally {
-      setTimelineLoading(false);
-    }
-  };
-
       }
     };
 
     load();
-  }, [open, caseId]);
+  }, [open, caseId, loadTimeline]);
 
   const isClosed = data?.status === "closed";
 

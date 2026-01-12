@@ -16,9 +16,20 @@ class EmailSendError(Exception):
 
 
 def _get_ses_client():
-    region = require_env("AWS_REGION")
-    access_key = require_env("AWS_ACCESS_KEY_ID")
-    secret_key = require_env("AWS_SECRET_ACCESS_KEY")
+    """Return a configured SES client or None if SES is not configured.
+
+    For FAZ-1 we treat missing SES configuration as a non-fatal condition so
+    that public flows (e.g. /my-booking request-link) never hard-fail just
+    because email infra is not wired yet.
+    """
+
+    try:
+        region = require_env("AWS_REGION")
+        access_key = require_env("AWS_ACCESS_KEY_ID")
+        secret_key = require_env("AWS_SECRET_ACCESS_KEY")
+    except Exception as e:  # pragma: no cover - environment dependent
+        logger.warning("SES not configured, skipping email send: %s", e)
+        return None
 
     return boto3.client(
         "ses",

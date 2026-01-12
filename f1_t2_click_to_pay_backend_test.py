@@ -82,7 +82,11 @@ def create_test_booking_for_admin_org(admin_headers, admin_org_id):
     
     if r.status_code == 200:
         agencies_data = r.json()
-        agencies = agencies_data.get("items", [])
+        # Handle both list and dict responses
+        if isinstance(agencies_data, list):
+            agencies = agencies_data
+        else:
+            agencies = agencies_data.get("items", [])
         
         if agencies:
             # Use the first agency in the admin's organization

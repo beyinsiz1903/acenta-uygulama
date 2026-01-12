@@ -203,7 +203,13 @@ def test_faz3_comprehensive_backend_contracts():
     print("1️⃣  Testing /api/public/my-booking/request-link detailed behavior...")
     
     # Setup: Get or create test booking
-    booking_id, guest_email, booking_code = create_test_booking_with_minimal_search_seed()
+    booking_id = "6964b7f974a85d8893716c4c"
+    guest_email = "faz3-comprehensive@example.com"
+    booking_code = "FAZ3TEST001"
+    
+    print(f"   📋 Using test booking: {booking_id}")
+    print(f"   📋 Guest email: {guest_email}")
+    print(f"   📋 Booking code: {booking_code}")
     
     # Test 1.1: Non-existent booking_code+email combination
     print("\n   🔍 Test 1.1: Non-existent booking_code+email - should NOT create records...")

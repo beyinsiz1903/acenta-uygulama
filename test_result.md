@@ -511,6 +511,18 @@
         comment: "❌ OPS CASES API TEST PARTIALLY COMPLETE - 4/6 test scenarios passed (66.7% success rate). WORKING FUNCTIONALITY: ✅ Admin authentication successful (admin@acenta.test/admin123) with proper organization_id extraction, ✅ GET /api/ops/cases working correctly - returns 200 with items array containing 9 cases, default behavior shows both open and closed cases (not filtering to status=open as expected), ✅ Status and type query parameters working correctly - ?status=open returns 2 cases, ?status=closed returns 7 cases, ?type=cancel returns 9 cases, all filters applied correctly, ✅ RBAC controls working - agency user correctly denied access with 403 'Yetki yok' error, proper role-based access control enforced. CRITICAL ISSUES FOUND: ❌ ROUTING CONFLICT: ops_b2b router (/api/ops) conflicts with ops_cases router (/api/ops/cases) - both routers resolve to /api/ops/cases/{case_id} but use different collections and ID formats: ops_b2b uses 'cases' collection with ObjectId format and 'Case not found' error, ops_cases uses 'ops_cases' collection with string format and 'Ops case not found' error. ops_b2b router is included first in server.py, so it intercepts requests meant for ops_cases router. ❌ PAGINATION INFO MISSING: GET /api/ops/cases returns only {items: [...]} instead of expected {items, page, page_size, total} structure from service layer. UNABLE TO TEST: Individual case operations (GET /api/ops/cases/{case_id}, POST /api/ops/cases/{case_id}/close) due to routing conflict - requests are intercepted by ops_b2b router. RESOLUTION NEEDED: 1) Change ops_cases router prefix to /api/ops-cases or /api/ops/case-management, 2) Or change ops_b2b cases route to /b2b-cases/{case_id}, 3) Fix pagination response structure in router. Turkish requirements partially met - list and filter functionality working, but individual case access and close operations blocked by routing conflict."
 
 ## frontend:
+  - task: "F1.T1 Ops Booking Detail Page"
+    implemented: true
+    working: false
+    file: "/app/backend/app/routers/ops_cases.py, /app/backend/app/services/ops_cases.py, /app/frontend/src/pages/ops/OpsBookingDetailPage.jsx, /app/frontend/src/App.js, /app/frontend/src/lib/opsCases.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "main"
+        comment: "Ops Booking Detail için ilk sürüm: backend’de ops_cases list_cases fonksiyonuna booking_id filtresi eklendi, /api/ops/guest-cases endpoint’i booking_id query parametrelerini kabul eder hale getirildi. Frontend’de /app/ops/bookings/:bookingId route’u ve OpsBookingDetailPage oluşturuldu; Summary, Ledger, Timeline ve Cases tab’ları booking + ledger-summary + events + guest-cases verilerini gösteriyor, Cases tab’inde satırdan OpsGuestCaseDrawer açılıyor. Payments tab’ı şimdilik placeholder metinle bırakıldı; bir sonraki iterasyonda mevcut BookingDetailDrawer Payments sekmesiyle entegre edilecek. E2E ve manuel testler henüz koşulmadı."
+
   - task: "FAZ 3 / Ticket 2 – Public My Booking frontend akışını test et"
     implemented: true
     working: true

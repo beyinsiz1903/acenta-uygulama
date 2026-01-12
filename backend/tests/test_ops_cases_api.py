@@ -183,7 +183,7 @@ async def test_get_case_wrong_org_404(async_client: httpx.AsyncClient):
     token = login_resp.json()["access_token"]
 
     resp = await async_client.get(
-        "/api/ops/cases/CASE-ORG-A",
+        "/api/ops/guest-cases/CASE-ORG-A",
         headers={"Authorization": f"Bearer {token}"},
     )
     assert resp.status_code == 404
@@ -227,7 +227,7 @@ async def test_close_case_sets_status_and_emits_event(async_client: httpx.AsyncC
     token = login_resp.json()["access_token"]
 
     resp = await async_client.post(
-        "/api/ops/cases/CASE-CLOSE-1/close",
+        "/api/ops/guest-cases/CASE-CLOSE-1/close",
         json={"note": "Ops note"},
         headers={"Authorization": f"Bearer {token}"},
     )
@@ -288,7 +288,7 @@ async def test_close_case_idempotent(async_client: httpx.AsyncClient):
 
     # First close
     resp1 = await async_client.post(
-        "/api/ops/cases/CASE-IDEM-1/close",
+        "/api/ops/guest-cases/CASE-IDEM-1/close",
         json={"note": "First"},
         headers={"Authorization": f"Bearer {token}"},
     )

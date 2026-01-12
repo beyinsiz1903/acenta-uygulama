@@ -1,0 +1,230 @@
+{
+  "summary": {
+    "total_tests": 3,
+    "passed_tests": 2,
+    "failed_tests": 1,
+    "success_rate": 66.66666666666666
+  },
+  "detailed_results": [
+    {
+      "test": "rate_limit_progression",
+      "total_requests": 15,
+      "status_codes": [
+        520,
+        520,
+        520,
+        520,
+        520,
+        520,
+        520,
+        520,
+        520,
+        520,
+        520,
+        520,
+        520,
+        520,
+        520
+      ],
+      "first_429_at_request": null,
+      "rate_limit_triggered": false,
+      "responses": [
+        {
+          "request_num": 1,
+          "status_code": 520,
+          "timestamp": "2026-01-12T20:23:29.594540",
+          "body": {
+            "error": {
+              "code": "internal_error",
+              "message": "Unexpected server error",
+              "details": {}
+            }
+          }
+        },
+        {
+          "request_num": 2,
+          "status_code": 520,
+          "timestamp": "2026-01-12T20:23:29.807573",
+          "body": {
+            "error": {
+              "code": "internal_error",
+              "message": "Unexpected server error",
+              "details": {}
+            }
+          }
+        },
+        {
+          "request_num": 3,
+          "status_code": 520,
+          "timestamp": "2026-01-12T20:23:30.020779",
+          "body": {
+            "error": {
+              "code": "internal_error",
+              "message": "Unexpected server error",
+              "details": {}
+            }
+          }
+        },
+        {
+          "request_num": 4,
+          "status_code": 520,
+          "timestamp": "2026-01-12T20:23:30.231540",
+          "body": {
+            "error": {
+              "code": "internal_error",
+              "message": "Unexpected server error",
+              "details": {}
+            }
+          }
+        },
+        {
+          "request_num": 5,
+          "status_code": 520,
+          "timestamp": "2026-01-12T20:23:30.441841",
+          "body": {
+            "error": {
+              "code": "internal_error",
+              "message": "Unexpected server error",
+              "details": {}
+            }
+          }
+        },
+        {
+          "request_num": 6,
+          "status_code": 520,
+          "timestamp": "2026-01-12T20:23:30.654121",
+          "body": {
+            "error": {
+              "code": "internal_error",
+              "message": "Unexpected server error",
+              "details": {}
+            }
+          }
+        },
+        {
+          "request_num": 7,
+          "status_code": 520,
+          "timestamp": "2026-01-12T20:23:30.865224",
+          "body": {
+            "error": {
+              "code": "internal_error",
+              "message": "Unexpected server error",
+              "details": {}
+            }
+          }
+        },
+        {
+          "request_num": 8,
+          "status_code": 520,
+          "timestamp": "2026-01-12T20:23:31.075753",
+          "body": {
+            "error": {
+              "code": "internal_error",
+              "message": "Unexpected server error",
+              "details": {}
+            }
+          }
+        },
+        {
+          "request_num": 9,
+          "status_code": 520,
+          "timestamp": "2026-01-12T20:23:31.285605",
+          "body": {
+            "error": {
+              "code": "internal_error",
+              "message": "Unexpected server error",
+              "details": {}
+            }
+          }
+        },
+        {
+          "request_num": 10,
+          "status_code": 520,
+          "timestamp": "2026-01-12T20:23:31.494861",
+          "body": {
+            "error": {
+              "code": "internal_error",
+              "message": "Unexpected server error",
+              "details": {}
+            }
+          }
+        },
+        {
+          "request_num": 11,
+          "status_code": 520,
+          "timestamp": "2026-01-12T20:23:31.705640",
+          "body": {
+            "error": {
+              "code": "internal_error",
+              "message": "Unexpected server error",
+              "details": {}
+            }
+          }
+        },
+        {
+          "request_num": 12,
+          "status_code": 520,
+          "timestamp": "2026-01-12T20:23:31.917088",
+          "body": {
+            "error": {
+              "code": "internal_error",
+              "message": "Unexpected server error",
+              "details": {}
+            }
+          }
+        },
+        {
+          "request_num": 13,
+          "status_code": 520,
+          "timestamp": "2026-01-12T20:23:32.130610",
+          "body": {
+            "error": {
+              "code": "internal_error",
+              "message": "Unexpected server error",
+              "details": {}
+            }
+          }
+        },
+        {
+          "request_num": 14,
+          "status_code": 520,
+          "timestamp": "2026-01-12T20:23:32.341479",
+          "body": {
+            "error": {
+              "code": "internal_error",
+              "message": "Unexpected server error",
+              "details": {}
+            }
+          }
+        },
+        {
+          "request_num": 15,
+          "status_code": 520,
+          "timestamp": "2026-01-12T20:23:32.551900",
+          "body": {
+            "error": {
+              "code": "internal_error",
+              "message": "Unexpected server error",
+              "details": {}
+            }
+          }
+        }
+      ],
+      "passed": false
+    },
+    {
+      "test": "telemetry_final_state",
+      "access_count": 1,
+      "window_count": 1,
+      "last_ip": "10.64.133.207",
+      "window_start_at": "2026-01-12 20:23:29.588000",
+      "passed": true
+    },
+    {
+      "test": "ip_reset_simulation",
+      "note": "Real IP change testing requires infrastructure setup",
+      "original_ip_response": 520,
+      "passed": true
+    }
+  ]
+}

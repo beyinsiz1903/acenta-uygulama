@@ -576,7 +576,7 @@ def test_faz3_comprehensive_backend_contracts():
     
     print(f"   ✅ First cancel request: records created")
     print(f"   📋 ops_cases: {ops_cases_before} → {ops_cases_after} (+{ops_cases_after - ops_cases_before})")
-    print(f"   📋 booking_events: {booking_events_before} → {booking_events_after} (+{booking_events_after - booking_events_before})")
+    print(f"   📋 booking_events: {booking_events_before} → {booking_events_after} (change: {booking_events_after - booking_events_before})")
     print(f"   📋 Case ID: {first_case_id}")
     print(f"   📋 ops_case type: {ops_case['type']}, status: {ops_case['status']}, source: {ops_case['source']}")
     

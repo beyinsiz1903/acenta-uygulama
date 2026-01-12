@@ -10,10 +10,12 @@ logger = logging.getLogger(__name__)
 
 
 async def ensure_public_indexes(db):
-    """Ensure TTL + uniqueness for booking_public_tokens.
+    """Ensure TTL + uniqueness for booking_public_tokens and ops_cases.
 
-    - Unique token field (public access token)
-    - TTL on expires_at (30 minutes or configurable at write time)
+    - Unique token_hash field (hashed public token)
+    - Legacy unique token field (plaintext, kept for backwards compatibility)
+    - TTL on expires_at (controlled by write-time TTL, currently 24h)
+    - Minimal indexes for ops_cases (guest portal cases)
     """
 
     async def _safe_create(collection, *args, **kwargs):
@@ -35,11 +37,20 @@ async def ensure_public_indexes(db):
                 return
             raise
 
+    # Legacy unique index on plaintext token (Phase-0). Kept for backwards compatibility.
     await _safe_create(
         db.booking_public_tokens,
         [("token", ASCENDING)],
         unique=True,
         name="uniq_public_token",
+    )
+
+    # New unique index on token_hash (Phase-1+)
+    await _safe_create(
+        db.booking_public_tokens,
+        [("token_hash", ASCENDING)],
+        unique=True,
+        name="uniq_public_token_hash",
     )
 
     # TTL on expires_at (cleanup only). 0 means expire exactly at expires_at.
@@ -48,4 +59,20 @@ async def ensure_public_indexes(db):
         [("expires_at", ASCENDING)],
         expireAfterSeconds=0,
         name="ttl_public_token_expires_at",
+    )
+
+    # ------------------------------------------------------------------
+    # ops_cases indexes (guest portal requests)
+    # ------------------------------------------------------------------
+    await _safe_create(
+        db.ops_cases,
+        [("booking_id", ASCENDING), ("type", ASCENDING), ("status", ASCENDING)],
+        name="ops_cases_by_booking_type_status",
+    )
+
+    await _safe_create(
+        db.ops_cases,
+        [("case_id", ASCENDING)],
+        unique=True,
+        name="uniq_ops_case_id",
     )

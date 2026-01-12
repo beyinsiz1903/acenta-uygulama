@@ -1,7 +1,7 @@
 import { api, apiErrorMessage } from "./api";
 
 export async function listOpsGuestCases(params = {}) {
-  const res = await api.get("/ops/guest-cases", { params });
+  const res = await api.get("/ops/guest-cases/", { params });
   return res.data;
 }
 

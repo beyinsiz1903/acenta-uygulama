@@ -52,11 +52,23 @@ def send_email_ses(
 
     This is a synchronous helper intended to be called from FastAPI background
     tasks or short-lived request handlers.
+
+    Phase-1 behavior: if SES is not configured (missing env vars), we log a
+    warning and act as a no-op instead of raising. This keeps public flows
+    (like /my-booking request-link) from failing with 500/520 just because
+    email infra is not ready.
     """
 
-    source = require_env("AWS_SES_FROM_EMAIL")
-
     client = _get_ses_client()
+    if client is None:
+        logger.warning("send_email_ses called but SES is not configured; skipping send to %s", to_address)
+        return {"ok": False, "skipped": True, "reason": "ses_not_configured"}
+
+    try:
+        source = require_env("AWS_SES_FROM_EMAIL")
+    except Exception as e:  # pragma: no cover - environment dependent
+        logger.warning("AWS_SES_FROM_EMAIL missing; skipping SES send: %s", e)
+        return {"ok": False, "skipped": True, "reason": "ses_not_configured"}
 
     destination = {"ToAddresses": [to_address]}
 

@@ -1,34 +1,32 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { api, apiErrorMessage } from "../lib/api";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { toast } from "sonner";
 
 function PublicMyBookingRequestPage() {
-  const [pnr, setPnr] = useState("");
-  const [lastName, setLastName] = useState("");
+  const [bookingCode, setBookingCode] = useState("");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const navigate = useNavigate();
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!pnr || (!lastName && !email)) {
-      toast.error("Lütfen PNR ve soyad veya e-posta girin.");
+    const code = bookingCode.trim();
+    const emailValue = email.trim();
+    if (!code || !emailValue) {
+      toast.error("Lütfen rezervasyon kodu ve e-posta adresinizi girin.");
       return;
     }
 
     setLoading(true);
     try {
-      await api.post("/public/my-booking/request-access", {
-        pnr: pnr.trim(),
-        last_name: lastName.trim() || undefined,
-        email: email.trim() || undefined,
+      await api.post("/public/my-booking/request-link", {
+        booking_code: code,
+        email: emailValue,
       });
-      toast.success("Erişim linki (varsa) kayıtlı e-posta adresinize gönderildi.");
+      toast.success("Eğer eşleşen bir rezervasyon varsa link e-posta adresinize gönderildi.");
     } catch (err) {
+      // Sadece genel hata mesajı göster; backend zaten enumeration-safe
       toast.error(apiErrorMessage(err));
     } finally {
       setLoading(false);

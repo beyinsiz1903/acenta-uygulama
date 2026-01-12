@@ -486,6 +486,18 @@
         agent: "testing"
         comment: "✅ P1.2 DEMO SEED RULES DOCUMENTED - Demo seed rules are properly implemented in seed.py with idempotent creation of default pricing rules: 1) Default hotel rule with %10 markup (priority 100, product_type=hotel), 2) Agency1-specific rule with %12 markup (priority 200, agency_id scope). Validity window configured as 2026-01-01 → 2027-01-01 (to exclusive) ensuring rules are active for demo period. P1.2 demo script section has been added to P0.3_demo_script.md for user guidance. Existing tests (test_pricing_rules_service.py, test_admin_pricing_simple_rules.py, test_quote_pricing_uses_rules.py) already verify the same contract as the seed rules, confirming integration works correctly."
 
+  - task: "Ops Cases API Test - Turkish Requirements"
+    implemented: true
+    working: false
+    file: "/app/backend/app/routers/ops_cases.py, /app/backend/app/services/ops_cases.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "❌ OPS CASES API TEST PARTIALLY COMPLETE - 4/6 test scenarios passed (66.7% success rate). WORKING FUNCTIONALITY: ✅ Admin authentication successful (admin@acenta.test/admin123) with proper organization_id extraction, ✅ GET /api/ops/cases working correctly - returns 200 with items array containing 9 cases, default behavior shows both open and closed cases (not filtering to status=open as expected), ✅ Status and type query parameters working correctly - ?status=open returns 2 cases, ?status=closed returns 7 cases, ?type=cancel returns 9 cases, all filters applied correctly, ✅ RBAC controls working - agency user correctly denied access with 403 'Yetki yok' error, proper role-based access control enforced. CRITICAL ISSUES FOUND: ❌ ROUTING CONFLICT: ops_b2b router (/api/ops) conflicts with ops_cases router (/api/ops/cases) - both routers resolve to /api/ops/cases/{case_id} but use different collections and ID formats: ops_b2b uses 'cases' collection with ObjectId format and 'Case not found' error, ops_cases uses 'ops_cases' collection with string format and 'Ops case not found' error. ops_b2b router is included first in server.py, so it intercepts requests meant for ops_cases router. ❌ PAGINATION INFO MISSING: GET /api/ops/cases returns only {items: [...]} instead of expected {items, page, page_size, total} structure from service layer. UNABLE TO TEST: Individual case operations (GET /api/ops/cases/{case_id}, POST /api/ops/cases/{case_id}/close) due to routing conflict - requests are intercepted by ops_b2b router. RESOLUTION NEEDED: 1) Change ops_cases router prefix to /api/ops-cases or /api/ops/case-management, 2) Or change ops_b2b cases route to /b2b-cases/{case_id}, 3) Fix pagination response structure in router. Turkish requirements partially met - list and filter functionality working, but individual case access and close operations blocked by routing conflict."
+
 ## frontend:
   - task: "FAZ 3 / Ticket 2 – Public My Booking frontend akışını test et"
     implemented: true

@@ -5,6 +5,12 @@ export async function listOpsGuestCases(params = {}) {
   return res.data;
 }
 
+export async function listOpsGuestCasesForBooking(bookingId) {
+  if (!bookingId) return { items: [], page: 1, page_size: 20, total: 0 };
+  const res = await api.get("/ops/guest-cases/", { params: { booking_id: bookingId } });
+  return res.data;
+}
+
 export async function getOpsGuestCase(caseId) {
   const res = await api.get(`/ops/guest-cases/${caseId}`);
   return res.data;

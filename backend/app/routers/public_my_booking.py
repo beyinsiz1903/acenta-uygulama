@@ -177,18 +177,20 @@ async def request_link(body: MyBookingRequestLinkBody, request: Request):
 
 
 async def _resolve_public_token(db, token: str) -> tuple[dict[str, Any], dict[str, Any]]:
-    now = now_utc()
-    token_doc = await db.booking_public_tokens.find_one(
-        {"token": token, "expires_at": {"$gt": now}},
-    )
-    if not token_doc:
-        raise HTTPException(status_code=404, detail="TOKEN_NOT_FOUND_OR_EXPIRED")
+    """Backward-compatible adapter around services.public_my_booking.resolve_public_token.
 
-    booking = await db.bookings.find_one({"_id": token_doc["booking_id"]})
-    if not booking:
-        raise HTTPException(status_code=404, detail="BOOKING_NOT_FOUND")
+    Keeps existing router contract but delegates the heavy lifting to the
+    shared service helper which implements hash-based lookups + legacy
+    fallback/upgrade.
+    """
 
-    return token_doc, booking
+    from app.errors import AppError
+
+    try:
+        token_doc, booking = await resolve_public_token(db, token)
+        return token_doc, booking
+    except AppError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message)
 
 
 @router.get("/{token}", response_model=MyBookingPublicView)

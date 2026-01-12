@@ -87,6 +87,12 @@ class ClickToPayRateLimitTester:
             return await self.create_manual_test_token(booking_id)
         
         create_data = create_response.json()
+        
+        # Eğer ok: false ise (Stripe unavailable), manuel token oluştur
+        if not create_data.get("ok", False):
+            print(f"⚠️  Payment link creation returned ok:false - {create_data.get('reason', 'unknown')}")
+            return await self.create_manual_test_token(booking_id)
+        
         token = create_data.get("token")
         if not token:
             raise Exception("No token returned from payment link creation")

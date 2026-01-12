@@ -29,10 +29,12 @@ export default function LoginPage() {
       let redirectPath = redirectByRole(resp.data.user);
       try {
         const saved = window.sessionStorage.getItem("acenta_post_login_redirect");
-        const expired = window.sessionStorage.getItem("acenta_session_expired");
-        if (expired === "1" && saved) {
+
+        // Minimal guard: only allow internal app routes
+        if (saved && typeof saved === "string" && saved.startsWith("/app")) {
           redirectPath = saved;
         }
+
         window.sessionStorage.removeItem("acenta_post_login_redirect");
         window.sessionStorage.removeItem("acenta_session_expired");
       } catch {
@@ -50,6 +52,15 @@ export default function LoginPage() {
   const params = new URLSearchParams(location.search);
   const reason = params.get("reason");
 
+  let showExpired = reason === "session_expired";
+  try {
+    if (!showExpired && typeof window !== "undefined") {
+      showExpired = window.sessionStorage.getItem("acenta_session_expired") === "1";
+    }
+  } catch {
+    // ignore storage errors
+  }
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
       <div className="w-full max-w-md">
@@ -63,7 +74,7 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {reason === "session_expired" && (
+        {showExpired && (
           <div className="mb-4 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
             Oturumunuz sona erdi. Tekrar giriş yaptıktan sonra kaldığınız sayfaya döneceksiniz.
           </div>

@@ -90,34 +90,43 @@ api.interceptors.response.use(
   (resp) => resp,
   (err) => {
     if (err?.response?.status === 401) {
-      // Session expired / unauthorized — remember where we came from and why
-      try {
-        const { pathname, search, hash } = window.location;
-        const from = `${pathname}${search}${hash}`;
-        window.sessionStorage.setItem("acenta_post_login_redirect", from);
-        window.sessionStorage.setItem("acenta_session_expired", "1");
-      } catch {
-        // ignore storage errors
-      }
-
-      try {
-        clearToken();
-      } catch {
-        // ignore
-      }
-
-      // Avoid infinite redirect loops; send user to login with reason flag
       try {
         if (typeof window !== "undefined") {
-          const pathname = window.location?.pathname || "";
+          const { pathname, search, hash, origin } = window.location;
+
+          // 1) return-to: only set when not already on /login and do not overwrite existing
           if (!pathname.startsWith("/login")) {
-            const url = new URL("/login", window.location.origin);
+            const from = `${pathname}${search}${hash}`;
+            const existing = window.sessionStorage.getItem("acenta_post_login_redirect");
+            if (!existing) {
+              window.sessionStorage.setItem("acenta_post_login_redirect", from);
+            }
+            window.sessionStorage.setItem("acenta_session_expired", "1");
+          } else {
+            // On login, still keep the flag for UX messaging
+            window.sessionStorage.setItem("acenta_session_expired", "1");
+          }
+
+          // 2) Token cleanup
+          try {
+            clearToken();
+          } catch {
+            // ignore
+          }
+
+          // 3) Normalize login URL with reason parameter
+          const current = new URL(window.location.href);
+          const isLogin = current.pathname.startsWith("/login");
+          const hasReason = current.searchParams.get("reason") === "session_expired";
+
+          if (!isLogin || !hasReason) {
+            const url = new URL("/login", origin);
             url.searchParams.set("reason", "session_expired");
             window.location.replace(url.toString());
           }
         }
       } catch {
-        // ignore navigation errors
+        // ignore any navigation/storage errors
       }
     }
     return Promise.reject(err);

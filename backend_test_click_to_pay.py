@@ -187,12 +187,12 @@ class ClickToPayTester:
         print("\n🧪 Test 2: Nothing to collect")
         
         org_id = self.default_org_id
-        booking_id = "BKG-CLICK-2"
+        booking_id = self.booking_id_2
         now = now_utc()
         
         # Create test booking
         await self.db.bookings.insert_one({
-            "_id": booking_id,
+            "_id": ObjectId(booking_id),
             "organization_id": org_id,
             "agency_id": "agency_ctp2",
             "currency": "EUR",

@@ -1522,6 +1522,18 @@
         agent: "testing"
         comment: "✅ PROOF V2 STORY 4 (VERIFIED-AWARE RISK CALCULATION) TEST COMPLETE - All 11 test scenarios passed (100% success rate). COMPREHENSIVE FUNCTIONALITY VERIFIED: A) Authentication: Super admin login successful (admin@acenta.test/admin123) with proper super_admin role verification. B) RiskProfile Genişletme Testi: 1.1) GET /api/admin/match-alerts/risk-profile working correctly - all required fields present in risk_profile (rate_threshold, repeat_threshold_7, no_show_rate_threshold, repeat_no_show_threshold_7, min_verified_bookings, prefer_verified_only), current values verified. 1.2) PUT /api/admin/match-alerts/risk-profile working correctly - update and verification successful, all risk profile values updated correctly. C) Matches Summary Verified Metrikler: 2.1) GET /api/admin/matches?days=30&min_total=1&include_action=1&sort=repeat_desc working correctly - all verified metrics present and valid (verified_bookings_30d: 1, verified_no_show_30d: 1, verified_share: 0.143, risk_inputs.verified_only: false), test match 88e2b8e4-12e7-43e4-9d54-e39d53576b18__1ea289b7-621b-49d8-be9c-c21a6bb44f47 used for testing. D) prefer_verified_only OFF → Fallback: 3.1) Set prefer_verified_only=false working correctly, 3.2) GET matches behavior verified - risk_inputs.verified_only=false, fallback to all outcomes working as expected. E) prefer_verified_only ON + Verified Yeterli: 4.1) Case A (high thresholds) working correctly - verified_only=true, high_risk=false achieved with rate_threshold=1.1, repeat_threshold_7=99. 4.2) Case B (low repeat threshold) working correctly - verified_only=true, high_risk=true, reasons=['repeat'] achieved with rate_threshold=1.1, repeat_threshold_7=0. TECHNICAL FIXES APPLIED: Fixed field name mismatch in booking_outcomes queries (changed 'booked_at' to 'created_at' and 'checkin_date' to 'created_at' for proper database compatibility). All verified-aware risk calculation functionality production-ready with proper verified metrics calculation, prefer_verified_only logic, and fallback behavior."
 
+  - task: "FAZ 3 / Ticket 3 E2E Public My Booking Flow"
+    implemented: true
+    working: false
+    file: "/app/backend/app/routers/public_my_booking.py"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "❌ E2E FLOW BLOCKED BY BACKEND API ISSUE - Frontend UI fully functional (5/5 tests passed): /my-booking entry form, validation, invalid token handling, Turkish interface, error messages all working correctly. CRITICAL BACKEND ISSUE: /api/public/my-booking/request-link endpoint returns 500/520 errors due to missing AWS SES configuration (AWS_SES_FROM_EMAIL env var). Email system failing prevents token generation and complete E2E flow. Database structure correct, test data created successfully. REQUIRES: AWS SES configuration fix to enable email_outbox → token generation → complete E2E testing of cancel/amend flows."
+
 ## frontend:
     stuck_count: 0
     priority: "high"

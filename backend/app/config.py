@@ -31,6 +31,12 @@ def _env_flag(name: str, default: bool = True) -> bool:
     return default
 
 
+# Application constants
+API_PREFIX = "/api"
+APP_NAME = "Booking Suite API"
+APP_VERSION = "1.0.0"
+CORS_ORIGINS = ["*"]  # Allow all origins for development
+
 # Feature flags (FAZ 0)
 ENABLE_VOUCHER_PDF: bool = _env_flag("ENABLE_VOUCHER_PDF", default=True)
 ENABLE_SELF_SERVICE_PORTAL: bool = _env_flag("ENABLE_SELF_SERVICE_PORTAL", default=True)

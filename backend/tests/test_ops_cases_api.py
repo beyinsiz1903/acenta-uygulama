@@ -296,7 +296,7 @@ async def test_close_case_idempotent(async_client: httpx.AsyncClient):
 
     # Second close (idempotent)
     resp2 = await async_client.post(
-        "/api/ops/cases/CASE-IDEM-1/close",
+        "/api/ops/guest-cases/CASE-IDEM-1/close",
         json={"note": "Second"},
         headers={"Authorization": f"Bearer {token}"},
     )

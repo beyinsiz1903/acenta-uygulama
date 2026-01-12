@@ -94,12 +94,12 @@ class ClickToPayTester:
         print("\n🧪 Test 1: Happy path with stubbed Stripe")
         
         org_id = self.default_org_id
-        booking_id = "BKG-CLICK-1"
+        booking_id = self.booking_id_1
         now = now_utc()
         
         # Create test booking
         await self.db.bookings.insert_one({
-            "_id": booking_id,
+            "_id": ObjectId(booking_id),
             "organization_id": org_id,
             "agency_id": "agency_ctp",
             "currency": "EUR",

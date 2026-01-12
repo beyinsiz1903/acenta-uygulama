@@ -34,6 +34,11 @@ function OpsGuestCaseDrawer({ caseId, open, onClose, onClosed }) {
       try {
         const doc = await getOpsGuestCase(caseId);
         setData(doc);
+        if (doc?.booking_id) {
+          await loadTimeline(doc.booking_id);
+        } else {
+          setTimelineItems([]);
+        }
       } catch (e) {
         setError(apiErrorMessage(e));
       } finally {

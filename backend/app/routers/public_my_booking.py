@@ -17,10 +17,9 @@ from app.services.booking_events import emit_event
 router = APIRouter(prefix="/api/public/my-booking", tags=["public_my_booking"])
 
 
-class MyBookingRequestAccessBody(BaseModel):
-    pnr: str
-    last_name: Optional[str] = None
-    email: Optional[EmailStr] = None
+class MyBookingRequestLinkBody(BaseModel):
+    booking_code: str
+    email: EmailStr
 
 
 class MyBookingPublicView(BaseModel):

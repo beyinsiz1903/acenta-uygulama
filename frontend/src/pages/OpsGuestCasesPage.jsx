@@ -158,7 +158,7 @@ function OpsGuestCasesPage() {
           <Select
             value={source || "all"}
             onValueChange={(val) => {
-              setSource(val === "" ? "" : val);
+              setSource(val === "all" ? "" : val);
               setPage(1);
             }}
           >

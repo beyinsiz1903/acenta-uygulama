@@ -10,6 +10,10 @@ import AgencyLayout from "./layouts/AgencyLayout";
 import PublicMyBookingRequestPage from "./pages/PublicMyBookingRequestPage";
 import PublicMyBookingDetailPage from "./pages/PublicMyBookingDetailPage";
 import PublicClickToPayPage from "./pages/public/PublicClickToPayPage";
+import BookSearchPage from "./pages/public/BookSearchPage";
+import BookProductPage from "./pages/public/BookProductPage";
+import BookCheckoutPage from "./pages/public/BookCheckoutPage";
+import BookCompletePage from "./pages/public/BookCompletePage";
 
 import HotelLayout from "./layouts/HotelLayout";
 import AdminAgenciesPage from "./pages/AdminAgenciesPage";

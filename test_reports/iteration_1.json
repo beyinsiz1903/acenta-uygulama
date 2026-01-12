@@ -89,8 +89,8 @@
     }
   ],
   "test_environment": {
-    "backend_url": "https://travelreserve-3.preview.emergentagent.com/api",
-    "frontend_url": "https://travelreserve-3.preview.emergentagent.com",
+    "backend_url": "https://bookingsuite-7.preview.emergentagent.com/api",
+    "frontend_url": "https://bookingsuite-7.preview.emergentagent.com",
     "test_credentials": {
       "admin": "admin@acenta.test / admin123"
     },

@@ -210,7 +210,6 @@ def test_ops_cases_api():
     if open_items:
         test_case = open_items[0]
         test_case_id = test_case["case_id"]
-        test_case_org_id = test_case["organization_id"]
         
         print(f"   📋 Testing with case_id: {test_case_id}")
         

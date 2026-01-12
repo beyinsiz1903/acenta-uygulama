@@ -207,9 +207,46 @@ export default function OpsBookingDetailPage() {
               </TabsContent>
 
               <TabsContent value="payments" className="mt-0">
-                <div className="text-xs text-muted-foreground">
-                  Payments görünümü için mevcut BookingDetailDrawer Payments sekmesi reuse edilecek.
-                  Ops flow entegrasyonu bir sonraki iterasyonda zenginleştirilecek.
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <div className="text-xs text-muted-foreground">Click-to-Pay</div>
+                      <div className="text-[11px] text-muted-foreground">
+                        Misafire ödeme linki göndererek kalan tahsilatı tek adımda tamamlayın.
+                      </div>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={!booking}
+                      onClick={async () => {
+                        if (!booking) return;
+                        try {
+                          const res = await createClickToPayLink(booking.booking_id || bookingId);
+                          if (!res.ok) {
+                            if (res.reason === "nothing_to_collect") {
+                              toast.info("Kalan tahsilat yok.");
+                            } else {
+                              toast.error("Ödeme linki oluşturulamadı.");
+                            }
+                            return;
+                          }
+                          const origin = window.location.origin;
+                          const url = `${origin}${res.url}`;
+                          await navigator.clipboard.writeText(url).catch(() => {});
+                          toast.success("Ödeme linki oluşturuldu ve panoya kopyalandı.");
+                        } catch (e) {
+                          toast.error(apiErrorMessage(e));
+                        }
+                      }}
+                    >
+                      Ödeme linki oluştur
+                    </Button>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">
+                    Link, 24 saat sonra otomatik olarak geçersiz hale gelir. Ödeme başarıyla tamamlandığında
+                    Stripe webhook ve ledger akışı mevcut payment-state görünümünü güncelleyecektir.
+                  </p>
                 </div>
               </TabsContent>
 

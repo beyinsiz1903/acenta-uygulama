@@ -256,10 +256,13 @@ class ClickToPayTester:
         booking_id = "BKG-CLICK-3"
         now = now_utc()
         
-        # Create booking in org_A
+        # Create booking in a different org (simulate cross-org access)
+        # Since auth is hardcoded to default org, we'll create booking in different org
+        # but user will be from default org - this should result in 404
+        different_org_id = "different_org_id"
         await self.db.bookings.insert_one({
             "_id": booking_id,
-            "organization_id": "org_A",
+            "organization_id": different_org_id,
             "agency_id": "agency_A",
             "currency": "EUR",
             "amounts": {"sell": 50.0},
@@ -268,7 +271,7 @@ class ClickToPayTester:
             "updated_at": now,
         })
         
-        # Login as admin from org_B
+        # Login as admin from default org
         login_resp = await self.client.post(
             "/api/auth/login",
             json={"email": "admin@acenta.test", "password": "admin123"},

@@ -243,7 +243,7 @@ def test_ops_cases_api():
     
     print(f"\n   📋 RESOLUTION NEEDED:")
     print(f"      1. Change ops_cases router prefix to /api/ops-cases or /api/ops/case-management")
-    print(f"      2. Or change ops_b2b cases route to /b2b-cases/{case_id}")
+    print(f"      2. Or change ops_b2b cases route to /b2b-cases/{{case_id}}")
     print(f"      3. Ensure no route conflicts between routers")
     
     # Skip the rest of the individual case tests due to routing conflict

@@ -81,6 +81,12 @@ class ClickToPayTester:
                 "is_active": True,
             })
             
+        # Generate test booking IDs
+        self.booking_id_1 = str(ObjectId())
+        self.booking_id_2 = str(ObjectId())
+        self.booking_id_3 = str(ObjectId())
+        self.booking_id_expired = str(ObjectId())
+            
         print("✅ Test data setup complete")
         
     async def test_happy_path_stubbed_stripe(self):

@@ -90,19 +90,34 @@ api.interceptors.response.use(
   (resp) => resp,
   (err) => {
     if (err?.response?.status === 401) {
-      // Session expired / unauthorized
+      // Session expired / unauthorized — remember where we came from and why
+      try {
+        const { pathname, search, hash } = window.location;
+        const from = `${pathname}${search}${hash}`;
+        window.sessionStorage.setItem("acenta_post_login_redirect", from);
+        window.sessionStorage.setItem("acenta_session_expired", "1");
+      } catch {
+        // ignore storage errors
+      }
+
       try {
         clearToken();
       } catch {
         // ignore
       }
 
-      // Avoid infinite redirect loops
-      if (typeof window !== "undefined") {
-        const pathname = window.location?.pathname || "";
-        if (!pathname.startsWith("/login")) {
-          window.location.replace("/login");
+      // Avoid infinite redirect loops; send user to login with reason flag
+      try {
+        if (typeof window !== "undefined") {
+          const pathname = window.location?.pathname || "";
+          if (!pathname.startsWith("/login")) {
+            const url = new URL("/login", window.location.origin);
+            url.searchParams.set("reason", "session_expired");
+            window.location.replace(url.toString());
+          }
         }
+      } catch {
+        // ignore navigation errors
       }
     }
     return Promise.reject(err);

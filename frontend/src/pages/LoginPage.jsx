@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 import { api, apiErrorMessage, setToken, setUser } from "../lib/api";
 import { redirectByRole } from "../utils/redirectByRole";
@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [email, setEmail] = useState("admin@acenta.test");
   const [password, setPassword] = useState("admin123");
   const [loading, setLoading] = useState(false);

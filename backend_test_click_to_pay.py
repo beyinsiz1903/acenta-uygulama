@@ -179,7 +179,7 @@ class ClickToPayTester:
         """Test 2: Nothing to collect scenario"""
         print("\n🧪 Test 2: Nothing to collect")
         
-        org_id = "org_click_to_pay_nothing"
+        org_id = self.default_org_id
         booking_id = "BKG-CLICK-2"
         now = now_utc()
         

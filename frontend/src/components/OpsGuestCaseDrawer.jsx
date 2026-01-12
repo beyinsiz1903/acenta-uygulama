@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { X, Loader2 } from "lucide-react";
 
 import { getOpsGuestCase, closeOpsGuestCase, apiErrorMessage } from "../lib/opsCases";
@@ -20,30 +20,39 @@ function OpsGuestCaseDrawer({ caseId, open, onClose, onClosed }) {
   const [timelineError, setTimelineError] = useState("");
   const [timelineItems, setTimelineItems] = useState([]);
 
-  const loadTimeline = async (bookingId) => {
-    if (!bookingId) {
-      setTimelineItems([]);
-      return;
-    }
-    setTimelineLoading(true);
-    setTimelineError("");
-    try {
-      const res = await api.get(`/ops/bookings/${bookingId}/events`, {
-        params: { limit: 50 },
-      });
-      const all = res.data?.items || [];
-      // Son 5 eventi created_at DESC ile göster
-      const last5 = [...all]
-        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-        .slice(0, 5);
-      setTimelineItems(last5);
-    } catch (e) {
-      setTimelineError(apiErrorMessage(e));
-      setTimelineItems([]);
-    } finally {
-      setTimelineLoading(false);
-    }
-  };
+  const loadTimeline = useCallback(
+    async (bookingId) => {
+      if (!bookingId) {
+        setTimelineItems([]);
+        return;
+      }
+      setTimelineLoading(true);
+      setTimelineError("");
+      try {
+        const res = await api.get(`/ops/bookings/${bookingId}/events`, {
+          params: { limit: 50 },
+        });
+        const all = res.data?.items || [];
+        // Son 5 eventi created_at DESC ile göster
+        const last5 = [...all]
+          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+          .slice(0, 5);
+        setTimelineItems(last5);
+      } catch (e) {
+        // Booking bulunamadı (ör. orphan case) → error yerine empty göster
+        if (e?.response?.status === 404) {
+          setTimelineError("");
+          setTimelineItems([]);
+        } else {
+          setTimelineError(apiErrorMessage(e));
+          setTimelineItems([]);
+        }
+      } finally {
+        setTimelineLoading(false);
+      }
+    },
+    [],
+  );
 
   useEffect(() => {
     if (!open || !caseId) {

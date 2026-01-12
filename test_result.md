@@ -1091,6 +1091,21 @@
         agent: "testing"
         comment: "✅ P1.1 TRY FLOW KANITI TEST COMPLETE - Test correctly SKIPPED as expected (100% success rate). COMPREHENSIVE VERIFICATION: A) Test Execution: pytest backend/tests/test_non_eur_booking_fx_and_ledger.py executed successfully from /app/backend directory. B) EXPECTED SKIP BEHAVIOR: Test correctly skipped with message 'Non-EUR P1.1 flow not yet active in this environment (booking currency is still EUR)' - this confirms that agency1 has bookings with currency='EUR' and TRY flow is not yet active in this environment. C) Test Logic Verification: Test properly checks existing booking currency for agency1 (agency1@demo.test), finds EUR currency bookings, and appropriately skips when TRY flow is not active. D) Contract Validation Ready: Test contains all 5 required contract validations for when TRY flow becomes active: 1) Booking.currency == 'TRY' and amounts.sell>0, 2) amounts.sell_eur>0 and sell_eur ≈ sell / rate (rate_basis='QUOTE_PER_EUR'), 3) booking_financials.sell_total and sell_total_eur match booking.amounts.sell and sell_eur, 4) fx_rate_snapshots context={type:'booking',id:booking_id}, base/quote/rate_basis correct, 5) ledger_postings EUR and total debit/credit ≈ booking.amounts.sell_eur (balanced). CONCLUSION: P1.1 TRY flow proof test is working correctly - it appropriately skips in EUR-only environment and is ready to validate all 5 contracts when TRY bookings are implemented. Test infrastructure is production-ready."
 
+  - task: "EPIC 1 / T1.3 – Ops Guest Cases frontend akışını test et"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/OpsGuestCasesPage.jsx, /app/frontend/src/components/OpsGuestCaseDrawer.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "EPIC 1 / T1.3 frontend implementation completed. OpsGuestCasesPage with filter bar, table, and OpsGuestCaseDrawer with case meta, booking timeline, and closure functionality implemented. Needs comprehensive testing of all scenarios including login, list view, drawer functionality, timeline loading, 404 handling, case closure, and regression testing."
+      - working: true
+        agent: "testing"
+        comment: "✅ EPIC 1 / T1.3 OPS GUEST CASES FRONTEND TEST COMPLETE - All 7 test scenarios passed successfully. COMPREHENSIVE FUNCTIONALITY VERIFIED: 1) LOGIN FLOW: Successfully logged in with admin@acenta.test/admin123, redirected to dashboard as expected. 2) OPS GUEST CASES LIST: Successfully navigated to /app/ops/guest-cases, filter bar rendered with Durum/Tip/Kaynak dropdowns and search field, table headers rendered correctly (Case ID, Rezervasyon Kodu, Tip, Durum, Kaynak, Oluşturulma), found 4 case rows in table (requirement: at least 1), no errors on page. 3) CASE DETAIL DRAWER: OpsGuestCaseDrawer opens successfully when clicking case row, drawer contains all required sections - case meta (Durum, Booking ID, Rezervasyon Kodu), Misafir Talebi section, Booking Timeline block visible. 4) BOOKING TIMELINE LOADING: Timeline section loads properly, shows appropriate empty state 'Gösterilecek event yok.' when no events available, timeline requests are made to /api/ops/bookings/{booking_id}/events endpoint, TR locale formatting verified for timestamps. 5) 404 HANDLING: Implementation correctly handles orphan cases (invalid booking_id) by showing empty state instead of global error, timelineError remains empty and component doesn't break as required. 6) CASE CLOSURE: Case closure functionality working - closure note input available, 'Case'i kapat' button functional, success toast appears on closure, case status updates to 'Kapalı', OPS_CASE_CLOSED event appears in timeline with proper meta (Case ID and Note fields). 7) REGRESSION: Drawer close/reopen functionality working, no JavaScript console errors, no 401 authentication loops detected. All acceptance criteria met with proper Turkish locale formatting and error handling."
+
 ## frontend:
   - task: "PROOF v2 UI mini-dilimi doğrulama - Risk Profile Settings & Match Dashboard Verified Chip"
     implemented: true

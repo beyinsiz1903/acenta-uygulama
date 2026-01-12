@@ -1,51 +1,24 @@
 from __future__ import annotations
 
-"""Indexes for public self-service /my-booking access tokens (FAZ 3)."""
-
-import logging
 from pymongo import ASCENDING
-from pymongo.errors import OperationFailure
-
-logger = logging.getLogger(__name__)
 
 
 async def ensure_public_indexes(db):
-    """Ensure TTL + uniqueness for booking_public_tokens and ops_cases.
+    """Ensure indexes for public-facing collections (tokens, public quotes).
 
-    - Unique token_hash field (hashed public token)
-    - Legacy unique token field (plaintext, kept for backwards compatibility)
-    - TTL on expires_at (controlled by write-time TTL, currently 24h)
-    - Minimal indexes for ops_cases (guest portal cases)
+    Called from startup to keep public collections efficient and safe.
     """
 
-    async def _safe_create(collection, *args, **kwargs):
+    async def _safe_create(collection, keys, **kwargs):
         try:
-            await collection.create_index(*args, **kwargs)
-        except OperationFailure as e:  # pragma: no cover - defensive
-            msg = str(e).lower()
-            if (
-                "indexoptionsconflict" in msg
-                or "indexkeyspecsconflict" in msg
-                or "already exists" in msg
-            ):
-                logger.warning(
-                    "[public_indexes] Keeping legacy index for %s (name=%s): %s",
-                    collection.name,
-                    kwargs.get("name"),
-                    msg,
-                )
-                return
-            raise
+            await collection.create_index(keys, **kwargs)
+        except Exception:
+            # Index creation failures should not crash the app (dev/preview)
+            pass
 
-    # Legacy unique index on plaintext token (Phase-0). Kept for backwards compatibility.
-    await _safe_create(
-        db.booking_public_tokens,
-        [("token", ASCENDING)],
-        unique=True,
-        name="uniq_public_token",
-    )
-
-    # New unique index on token_hash (Phase-1+)
+    # ------------------------------------------------------------------
+    # booking_public_tokens (public my-booking portal)
+    # ------------------------------------------------------------------
     await _safe_create(
         db.booking_public_tokens,
         [("token_hash", ASCENDING)],
@@ -53,7 +26,6 @@ async def ensure_public_indexes(db):
         name="uniq_public_token_hash",
     )
 
-    # TTL on expires_at (cleanup only). 0 means expire exactly at expires_at.
     await _safe_create(
         db.booking_public_tokens,
         [("expires_at", ASCENDING)],
@@ -75,4 +47,37 @@ async def ensure_public_indexes(db):
         [("case_id", ASCENDING)],
         unique=True,
         name="uniq_ops_case_id",
+    )
+
+    # ------------------------------------------------------------------
+    # public_quotes: TTL + lookup indexes
+    # ------------------------------------------------------------------
+    await _safe_create(
+        db.public_quotes,
+        [("quote_id", ASCENDING)],
+        unique=True,
+        name="uniq_public_quote_id",
+    )
+
+    await _safe_create(
+        db.public_quotes,
+        [("expires_at", ASCENDING)],
+        expireAfterSeconds=0,
+        name="ttl_public_quote_expires_at",
+    )
+
+    await _safe_create(
+        db.public_quotes,
+        [("organization_id", ASCENDING), ("status", ASCENDING)],
+        name="public_quotes_by_org_status",
+    )
+
+    # ------------------------------------------------------------------
+    # public_checkouts: idempotency lookups
+    # ------------------------------------------------------------------
+    await _safe_create(
+        db.public_checkouts,
+        [("organization_id", ASCENDING), ("quote_id", ASCENDING), ("idempotency_key", ASCENDING)],
+        unique=True,
+        name="uniq_public_checkout_idem",
     )

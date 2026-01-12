@@ -568,6 +568,18 @@
         agent: "testing"
         comment: "❌ OPS CASES API TEST PARTIALLY COMPLETE - 4/6 test scenarios passed (66.7% success rate). WORKING FUNCTIONALITY: ✅ Admin authentication successful (admin@acenta.test/admin123) with proper organization_id extraction, ✅ GET /api/ops/cases working correctly - returns 200 with items array containing 9 cases, default behavior shows both open and closed cases (not filtering to status=open as expected), ✅ Status and type query parameters working correctly - ?status=open returns 2 cases, ?status=closed returns 7 cases, ?type=cancel returns 9 cases, all filters applied correctly, ✅ RBAC controls working - agency user correctly denied access with 403 'Yetki yok' error, proper role-based access control enforced. CRITICAL ISSUES FOUND: ❌ ROUTING CONFLICT: ops_b2b router (/api/ops) conflicts with ops_cases router (/api/ops/cases) - both routers resolve to /api/ops/cases/{case_id} but use different collections and ID formats: ops_b2b uses 'cases' collection with ObjectId format and 'Case not found' error, ops_cases uses 'ops_cases' collection with string format and 'Ops case not found' error. ops_b2b router is included first in server.py, so it intercepts requests meant for ops_cases router. ❌ PAGINATION INFO MISSING: GET /api/ops/cases returns only {items: [...]} instead of expected {items, page, page_size, total} structure from service layer. UNABLE TO TEST: Individual case operations (GET /api/ops/cases/{case_id}, POST /api/ops/cases/{case_id}/close) due to routing conflict - requests are intercepted by ops_b2b router. RESOLUTION NEEDED: 1) Change ops_cases router prefix to /api/ops-cases or /api/ops/case-management, 2) Or change ops_b2b cases route to /b2b-cases/{case_id}, 3) Fix pagination response structure in router. Turkish requirements partially met - list and filter functionality working, but individual case access and close operations blocked by routing conflict."
   - task: "F2.T2 Public Quote + Checkout backend"
+  - task: "F2.FE.T1 Public /book search & listing skeleton"
+    implemented: true
+    working: false
+    file: "/app/frontend/src/lib/publicBooking.js, /app/frontend/src/pages/public/BookSearchPage.jsx, /app/frontend/src/pages/public/BookProductPage.jsx, /app/frontend/src/pages/public/BookCheckoutPage.jsx, /app/frontend/src/pages/public/BookCompletePage.jsx, /app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "main"
+        comment: "Public booking engine iskeleti: /book route'u public_search API ile entegre edilerek org parametresiyle tenant-aware ürün listesi gösteriyor, kartlardan 'Seç' ile /book/:productId?org=... sayfasına, oradan da skeleton checkout ve complete sayfalarına yönlendirme yapılıyor. Quote/checkout çağrıları henüz eklenmedi; bir sonraki ticket F2.FE.T2 altında ele alınacak."
+
     implemented: true
     working: false
     file: "/app/backend/app/services/public_checkout.py, /app/backend/app/routers/public_checkout.py, /app/backend/tests/test_public_checkout_api.py, /app/backend/app/indexes/public_indexes.py, /app/backend/server.py"

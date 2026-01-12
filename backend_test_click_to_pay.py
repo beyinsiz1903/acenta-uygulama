@@ -326,7 +326,7 @@ class ClickToPayTester:
         await self.db.click_to_pay_links.insert_one({
             "token_hash": token_hash,
             "expires_at": now.replace(year=now.year - 1),  # clearly in the past
-            "organization_id": "org_expired",
+            "organization_id": self.default_org_id,
             "booking_id": "BKG-EXPIRED",
             "payment_intent_id": "pi_expired",
             "amount_cents": 1000,

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { X, Loader2 } from "lucide-react";
 
 import { getOpsGuestCase, closeOpsGuestCase, apiErrorMessage } from "../lib/opsCases";
+import { api } from "../lib/api";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Textarea } from "../components/ui/textarea";

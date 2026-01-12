@@ -93,5 +93,3 @@ async def retrieve_payment_intent(*, payment_intent_id: str) -> Dict[str, Any]:
         return pi.to_dict() if hasattr(pi, "to_dict") else dict(pi)
 
     return await anyio.to_thread.run_sync(_retrieve)
-
-    return await anyio.to_thread.run_sync(_capture)

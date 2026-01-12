@@ -136,9 +136,9 @@ function OpsGuestCasesPage() {
         <div className="flex flex-col gap-1 w-full md:w-[180px]">
           <label className="text-xs font-medium text-muted-foreground">Tip</label>
           <Select
-            value={type || ""}
+            value={type || "all"}
             onValueChange={(val) => {
-              setType(val === "" ? "" : val);
+              setType(val === "all" ? "" : val);
               setPage(1);
             }}
           >

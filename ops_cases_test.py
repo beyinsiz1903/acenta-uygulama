@@ -438,12 +438,13 @@ def test_ops_cases_api():
     print("✅ GET /api/ops/cases working with default status=open filter")
     print("✅ Status and type query parameters working correctly")
     print("✅ Organization isolation verified")
-    print("✅ GET /api/ops/cases/{case_id} working with proper access control")
-    print("✅ POST /api/ops/cases/{case_id}/close working with proper response structure")
-    print("✅ Database updates verified (status=closed, closed_at, closed_by)")
-    print("✅ Idempotent behavior verified (second close returns same result)")
-    print("✅ Booking events creation verified (OPS_CASE_CLOSED)")
+    print("❌ CRITICAL ISSUE FOUND: ROUTING CONFLICT")
+    print("   📋 ops_b2b router (/api/ops) conflicts with ops_cases router (/api/ops/cases)")
+    print("   📋 ops_b2b router intercepts /api/ops/cases/{case_id} requests")
+    print("   📋 ops_b2b uses 'cases' collection with ObjectId, ops_cases uses 'ops_cases' collection with string IDs")
+    print("   📋 This prevents testing of individual case access and close functionality")
     print("✅ RBAC controls verified (non-admin/ops users properly restricted)")
+    print("⚠️  Individual case operations need routing conflict resolution")
     print("=" * 80 + "\n")
 
 if __name__ == "__main__":

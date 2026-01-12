@@ -435,6 +435,18 @@
     priority: "high"
     needs_retesting: true
 
+  - task: "FAZ 2 Stripe Payments UI E2E Test"
+    implemented: true
+    working: false
+    file: "/app/frontend/src/components/BookingDetailDrawer.jsx, /app/frontend/src/pages/OpsB2BQueuesPage.jsx, /app/frontend/src/pages/AgencyBookingsListPage.jsx"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        -working: false
+        -agent: "testing"
+        -comment: "❌ FAZ 2 STRIPE PAYMENTS UI E2E TEST PARTIALLY COMPLETE - Authentication and navigation successful, but unable to access BookingDetailDrawer with Payments tab due to system limitations. VERIFIED FUNCTIONALITY: A) AUTHENTICATION: Admin login successful (admin@acenta.test/admin123) with proper JWT token and super_admin role verification. B) NAVIGATION: Successfully navigated to /app/admin/ops/b2b page, found B2B Ops booking queue with multiple bookings (VOUCHERED, CANCELLED, CONFIRMED statuses), booking data properly displayed in table format. C) COMPONENT STRUCTURE VERIFIED: BookingDetailDrawer component exists with Payments tab implementation, Stripe payment functionality implemented with role gating (admin/ops/super_admin access), payment state loading, Create Payment Intent, and Capture functionality with polling behavior for webhooks. CRITICAL ISSUES FOUND: ❌ OpsB2BQueuesPage does not use BookingDetailDrawer component - uses different booking detail implementation without Payments tab, ❌ Admin user cannot access /app/agency/bookings (authorization error: 'Yetkiniz Yok'), ❌ No direct way to access BookingDetailDrawer with Payments tab from admin interface, ❌ Session management issues causing redirects to login page during navigation. IMPLEMENTATION STATUS: ✅ Stripe Payments UI code exists and is properly implemented in BookingDetailDrawer.jsx, ✅ Role gating implemented correctly (isPrivileged check for admin/ops/super_admin), ✅ Payment state management, Create Payment Intent, Capture, and polling functionality implemented, ✅ EmptyState and error handling implemented, ❌ Missing integration between admin ops interface and BookingDetailDrawer component. RECOMMENDATIONS: 1) Integrate BookingDetailDrawer component into OpsB2BQueuesPage to enable Payments tab access for admin users, 2) Add proper routing or modify role permissions to allow admin access to booking detail functionality, 3) Fix session management to prevent unexpected redirects during navigation, 4) Consider adding direct admin interface for Stripe payment management. The Stripe Payments UI implementation is technically sound but not accessible through the current admin interface structure."
+
   - task: "P1.2 Rule-based Pricing - PricingRulesService"
     implemented: true
     working: true

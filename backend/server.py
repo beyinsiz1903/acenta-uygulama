@@ -177,6 +177,8 @@ from app.routers.payments_stripe import router as payments_stripe_router
 app.include_router(b2b_hotels_search_router)
 app.include_router(ops_cases_router)
 app.include_router(payments_stripe_router)
+app.include_router(ops_click_to_pay_router)
+app.include_router(public_click_to_pay_router)
 
 
 @app.get("/api/health")

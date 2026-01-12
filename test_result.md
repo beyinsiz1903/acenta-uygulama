@@ -1594,8 +1594,9 @@
 
 ## test_plan:
   current_focus:
-    - "FAZ 4 Inbox/Bildirim Merkezi Backend Smoke Test"
-  stuck_tasks: []
+    - "FAZ 3 / Ticket 3 E2E Public My Booking Flow"
+  stuck_tasks: 
+    - "FAZ 3 / Ticket 3 E2E Public My Booking Flow - Backend API email configuration issue"
   test_all: false
   test_priority: "high_first"
 

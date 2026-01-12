@@ -105,7 +105,7 @@ async def create_click_to_pay_link(
     booking_id = payload.booking_id
 
     # Ownership check: ensure booking belongs to this org
-    booking = await db.bookings.find_one({"_id": booking_id, "organization_id": org_id})
+    booking = await db.bookings.find_one({"_id": ObjectId(booking_id), "organization_id": org_id})
     if not booking:
         raise HTTPException(status_code=404, detail="BOOKING_NOT_FOUND")
 

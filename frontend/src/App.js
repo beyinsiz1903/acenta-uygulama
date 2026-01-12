@@ -77,6 +77,10 @@ function App() {
         <Route path="/booking" element={<WebBookingPage />} />
         <Route path="/unauthorized" element={<UnauthorizedPage />} />
         <Route path="/pay/:token" element={<PublicClickToPayPage />} />
+        <Route path="/book" element={<BookSearchPage />} />
+        <Route path="/book/:productId" element={<BookProductPage />} />
+        <Route path="/book/:productId/checkout" element={<BookCheckoutPage />} />
+        <Route path="/book/complete" element={<BookCompletePage />} />
 
         {/* Admin Routes */}
         <Route

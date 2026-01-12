@@ -548,6 +548,22 @@
       - working: true
         agent: "testing"
         comment: "✅ B2B BOOKINGS PRODUCT_NAME MINI POLISH SMOKE TEST COMPLETE - All 5 test scenarios passed (100% success rate). MINI POLISH VERIFICATION COMPLETED: A) Authentication: Agency1 login successful (agency1@demo.test/agency123) with agency_admin role and agency_id verification. B) PRODUCT_NAME BEST-EFFORT MAPPING: GET /api/b2b/bookings?limit=5 working correctly, found 3 B2B bookings, CRITICAL IMPROVEMENT VERIFIED: First booking (booking_id: 695d010055a9ca4029955c71) now shows product_name='demo_product_1' instead of previous '-' placeholder, best-effort mapping logic working correctly (items[0].product_id used as product_name when product_name field is empty), JSON snippet confirmed: {booking_id: '695d010055a9ca4029955c71', product_name: 'demo_product_1', status: 'CANCELLED', currency: 'EUR', amount_sell: 1650.0}. C) REGRESSION CHECKS: Auth working correctly with valid agency token, limit guard working correctly (limit=500 rejected with 422), status filter working correctly (status=CONFIRMED filter applied successfully). Mini polish successfully implemented - product_name field no longer shows '-' placeholder and properly maps to product_id when product_name is not available in booking items."
+
+## frontend:
+  - task: "Auth & session UX (FAZ 2 Stripe UI öncesi stabilizasyon) için şu akışı test et"
+    implemented: true
+    working: false
+    file: "/app/frontend/src/components/RequireAuth.jsx, /app/frontend/src/pages/LoginPage.jsx, /app/frontend/src/lib/api.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Auth & session UX testing task created for FAZ 2 Stripe UI stabilization. Need to test: 1) Login with admin@acenta.test/admin123, 2) Navigate to /app/reservations and interact with drawer buttons, 3) Delete acenta_token from storage without refresh, 4) Verify 401 behavior (redirect to /login?reason=session_expired with warning), 5) Re-login and verify redirect back to previous page, 6) Verify UI works normally without login loops."
+      - working: false
+        agent: "testing"
+        comment: "❌ AUTH & SESSION UX TEST PARTIALLY WORKING - 4/6 test scenarios passed. WORKING COMPONENTS: ✅ Login flow working correctly (admin@acenta.test/admin123), ✅ 401 detection and redirect to login working (when token deleted and navigating to protected pages), ✅ UI functionality working normally after re-login (no infinite login loops), ✅ Session expired warning message implemented and displays correctly ('Oturumunuz sona erdi. Tekrar giriş yaptıktan sonra kaldığınız sayfaya döneceksiniz.'). CRITICAL ISSUES FOUND: ❌ Missing ?reason=session_expired query parameter - when 401 occurs, user is redirected to /login but without the expected query parameter, ❌ Redirect back to previous page NOT working - after re-login, user is redirected to default admin route (/app/admin/agencies) instead of the page they were on before 401 (e.g., /app/admin/matches). TECHNICAL ANALYSIS: The axios interceptor in /app/frontend/src/lib/api.js correctly detects 401 responses and sets sessionStorage values ('acenta_post_login_redirect' and 'acenta_session_expired'), but the redirect URL construction is missing the reason=session_expired query parameter. The LoginPage.jsx correctly reads sessionStorage values and should redirect back, but this functionality is not working as expected. ACCEPTANCE CRITERIA STATUS: ✅ Login working, ✅ 401 redirect working, ❌ Missing ?reason=session_expired query param, ✅ Session expired warning shown, ❌ Redirect back to previous page not working, ✅ UI works normally after re-login. ROUTE NOTE: /app/reservations route does not exist - used /app/admin/agencies and /app/admin/matches for testing instead."
   - task: "P0.4 Voucher PDF backend zinciri testi (agency context)"
     implemented: true
     working: false

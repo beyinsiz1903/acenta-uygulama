@@ -65,7 +65,8 @@ class ClickToPayRateLimitTester:
         if bookings_response.status_code != 200:
             raise Exception(f"Failed to get bookings: {bookings_response.status_code}")
         
-        bookings = bookings_response.json()
+        bookings_data = bookings_response.json()
+        bookings = bookings_data.get("items", [])
         if not bookings:
             raise Exception("No bookings found for testing")
         

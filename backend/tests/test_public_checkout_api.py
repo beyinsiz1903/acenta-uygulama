@@ -78,8 +78,9 @@ async def test_public_quote_happy_path(async_client, test_db):
 
 
 @pytest.mark.anyio
-async def test_public_checkout_happy_path_stubbed_stripe(monkeypatch, async_client):
-    db = await get_db()
+async def test_public_checkout_happy_path_stubbed_stripe(monkeypatch, async_client, test_db):
+    # Use test_db instead of get_db()
+    db = test_db
 
     await db.products.delete_many({})
     await db.product_versions.delete_many({})

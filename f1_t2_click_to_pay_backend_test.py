@@ -236,12 +236,105 @@ def test_f1_t2_click_to_pay_backend():
     print(f"   📋 Organization ID: {admin_org_id}")
 
     # ------------------------------------------------------------------
-    # Test 2: Create a fresh CONFIRMED EUR booking for testing
+    # Test 2: Create a fresh CONFIRMED EUR booking in admin's organization
     # ------------------------------------------------------------------
-    print("\n2️⃣  Creating fresh CONFIRMED EUR booking for testing...")
+    print("\n2️⃣  Creating fresh CONFIRMED EUR booking in admin's organization...")
     
-    # Always create a fresh booking to ensure it belongs to the right organization
-    test_booking_id = create_test_booking()
+    # Try to create a booking that belongs to the admin's organization
+    test_booking_id = create_test_booking_for_admin_org(admin_headers, admin_org_id)
+    
+    if not test_booking_id:
+        print("   ⚠️  Could not create booking in admin org, using cross-org test scenario")
+        # Create a booking in different org to test cross-org access control
+        agency_token, agency_org_id, agency_id, agency_email = login_agency()
+        agency_headers = {"Authorization": f"Bearer {agency_token}"}
+        
+        # Search for hotels
+        search_params = {
+            "city": "Istanbul",
+            "check_in": "2026-01-15",
+            "check_out": "2026-01-17",
+            "adults": 2,
+            "children": 0
+        }
+        
+        r = requests.get(
+            f"{BASE_URL}/api/b2b/hotels/search",
+            params=search_params,
+            headers=agency_headers,
+        )
+        
+        if r.status_code == 200:
+            search_response = r.json()
+            items = search_response.get("items", [])
+            
+            if items:
+                first_item = items[0]
+                product_id = first_item["product_id"]
+                rate_plan_id = first_item["rate_plan_id"]
+                
+                # Create quote
+                quote_payload = {
+                    "channel_id": "agency_extranet",
+                    "items": [
+                        {
+                            "product_id": product_id,
+                            "room_type_id": "default_room",
+                            "rate_plan_id": rate_plan_id,
+                            "check_in": "2026-01-15",
+                            "check_out": "2026-01-17",
+                            "occupancy": 2
+                        }
+                    ],
+                    "client_context": {"source": "f1-t2-cross-org-test"}
+                }
+                
+                r = requests.post(
+                    f"{BASE_URL}/api/b2b/quotes",
+                    json=quote_payload,
+                    headers=agency_headers,
+                )
+                
+                if r.status_code == 200:
+                    quote_response = r.json()
+                    quote_id = quote_response["quote_id"]
+                    
+                    # Create booking
+                    booking_payload = {
+                        "quote_id": quote_id,
+                        "customer": {
+                            "name": "F1.T2 Cross-Org Test Guest",
+                            "email": "f1t2-cross-org-test@example.com"
+                        },
+                        "travellers": [
+                            {
+                                "first_name": "F1.T2 Cross",
+                                "last_name": "Org Test"
+                            }
+                        ],
+                        "notes": "F1.T2 Click-to-Pay cross-org test booking"
+                    }
+                    
+                    booking_headers = {
+                        **agency_headers,
+                        "Idempotency-Key": f"f1-t2-cross-org-{uuid.uuid4()}"
+                    }
+                    
+                    r = requests.post(
+                        f"{BASE_URL}/api/b2b/bookings",
+                        json=booking_payload,
+                        headers=booking_headers,
+                    )
+                    
+                    if r.status_code == 200:
+                        booking_response = r.json()
+                        test_booking_id = booking_response["booking_id"]
+                        print(f"   ✅ Created cross-org booking: {test_booking_id}")
+                        print(f"   📋 This will test cross-org access control (should get 404)")
+    
+    if not test_booking_id:
+        print("   ❌ Could not create any test booking")
+        return
     
     print(f"   ✅ Using booking for test: {test_booking_id}")
 

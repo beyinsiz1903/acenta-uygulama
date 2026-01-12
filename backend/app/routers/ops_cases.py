@@ -5,13 +5,13 @@ from typing import Any, Dict, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel
 
-from app.auth import get_current_user, require_roles
+from app.auth import require_roles
 from app.db import get_db
 from app.errors import AppError
 from app.services.ops_cases import list_cases, get_case, close_case
 
 
-router = APIRouter(prefix="/api/ops/cases", tags=["ops_cases"])
+router = APIRouter(prefix="/api/ops/guest-cases", tags=["ops_guest_cases"])
 
 
 OpsUserDep = Depends(require_roles(["admin", "ops", "super_admin"]))

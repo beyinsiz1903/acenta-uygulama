@@ -207,7 +207,7 @@ function OpsGuestCaseDrawer({ caseId, open, onClose, onClosed }) {
                       onClick={handleClose}
                     >
                       {closing ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : null}
-                      Case'i kapat
+                      Case&apos;i kapat
                     </Button>
                   </>
                 )}

@@ -181,6 +181,54 @@ function OpsGuestCaseDrawer({ caseId, open, onClose, onClosed }) {
                   </div>
                   <div>
                     <span className="font-medium">Rezervasyon Kodu:</span> {data.booking_code || "-"}
+              {/* Booking timeline */}
+              <div className="mt-4 pt-3 border-t space-y-2">
+                <div className="text-xs font-medium text-muted-foreground">İlgili Booking Timeline</div>
+                {timelineLoading ? (
+                  <div className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Loader2 className="h-3 w-3 animate-spin" /> Yükleniyor...
+                  </div>
+                ) : timelineError ? (
+                  <ErrorState description={timelineError} compact />
+                ) : timelineItems.length === 0 ? (
+                  <div className="text-[11px] text-muted-foreground">Gösterilecek event yok.</div>
+                ) : (
+                  <ul className="space-y-1 text-xs">
+                    {timelineItems.map((ev) => {
+                      const created = ev.created_at ? new Date(ev.created_at) : null;
+                      let label = ev.type || ev.event || "Event";
+                      let metaLine = "";
+                      if (ev.type === "OPS_CASE_CLOSED") {
+                        label = "Ops Case Kapatıldı";
+                        const m = ev.meta || {};
+                        const parts = [];
+                        if (m.case_id) parts.push(`Case ID: ${m.case_id}`);
+                        if (m.note) parts.push(`Not: ${m.note}`);
+                        if (m.actor_email) parts.push(`Kapatma: ${m.actor_email}`);
+                        metaLine = parts.join(" · ");
+                      } else if (ev.meta && ev.meta.note) {
+                        metaLine = ev.meta.note;
+                      }
+                      return (
+                        <li key={ev._id || `${ev.type}-${ev.created_at}`} className="border-l pl-2 ml-1">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="font-medium">{label}</span>
+                            {created && (
+                              <span className="text-[11px] text-muted-foreground">
+                                {created.toLocaleString("tr-TR")}
+                              </span>
+                            )}
+                          </div>
+                          {metaLine && (
+                            <div className="text-[11px] text-muted-foreground break-words">{metaLine}</div>
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
+
                   </div>
                 </div>
               </div>

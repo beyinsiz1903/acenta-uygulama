@@ -2070,8 +2070,7 @@
   run_ui: false
 
 ## test_plan:
-  current_focus:
-    - "F1.T2 Click-to-Pay Backend Flow Test"
+  current_focus: []
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"

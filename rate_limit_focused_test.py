@@ -255,7 +255,10 @@ class RateLimitFocusedTester:
             print(f"\n🔍 Rate Limit Analysis:")
             if rate_limit_test["rate_limit_triggered"]:
                 print(f"   ✅ Rate limiting triggered at request {rate_limit_test['first_429_at_request']}")
-                print(f"   📊 Status code distribution: {dict(zip(*zip(*[(code, rate_limit_test['status_codes'].count(code)) for code in set(rate_limit_test['status_codes'])]))}")
+                status_counts = {}
+                for code in rate_limit_test['status_codes']:
+                    status_counts[code] = status_counts.get(code, 0) + 1
+                print(f"   📊 Status code distribution: {status_counts}")
             else:
                 print(f"   ❌ Rate limiting not triggered")
                 print(f"   📊 All responses: {set(rate_limit_test['status_codes'])}")

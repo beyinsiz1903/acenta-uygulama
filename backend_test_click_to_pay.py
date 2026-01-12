@@ -334,7 +334,7 @@ class ClickToPayTester:
             "token_hash": token_hash,
             "expires_at": now.replace(year=now.year - 1),  # clearly in the past
             "organization_id": self.default_org_id,
-            "booking_id": "BKG-EXPIRED",
+            "booking_id": self.booking_id_expired,
             "payment_intent_id": "pi_expired",
             "amount_cents": 1000,
             "currency": "eur",

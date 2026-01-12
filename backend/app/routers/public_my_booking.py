@@ -85,61 +85,93 @@ async def _rate_limit_public_request(db, *, ip: str, key: str, max_per_window: i
         )
 
 
-@router.post("/request-access", response_model=MyBookingTokenResponse)
-async def request_access(body: MyBookingRequestAccessBody, request: Request):
-    """Request access link for a booking using PNR + last_name/email.
+@router.post("/request-link", response_model=MyBookingTokenResponse)
+async def request_link(body: MyBookingRequestLinkBody, request: Request):
+    """Request a /my-booking link by email + booking code.
 
-    Always returns ok=true to avoid leaking existence. Actual delivery of the
-    token (via email) can be implemented later; this endpoint focuses on
-    validating the combination and creating a short-lived public token.
+    Security/UX contract:
+    - Always returns ok=true (even when booking not found or rate-limited)
+      to avoid leaking existence (no enumeration).
+    - When booking is found and not rate-limited, a public token is created
+      and an email_outbox job is enqueued with PUBLIC_BASE_URL/my-booking/{token}.
     """
 
     db = await get_db()
 
     client_ip = request.client.host if request.client else "unknown"
-    await _rate_limit_public_request(db, ip=client_ip, key=body.pnr)
+    user_agent = request.headers.get("User-Agent", "")
 
-    if not (body.last_name or body.email):
-        # We still respond ok=true but do nothing
+    email_raw = body.email.strip()
+    email_lower = email_raw.lower()
+    code = body.booking_code.strip()
+
+    # Rate limit: per-IP + per (email,booking_code) key
+    try:
+      
+        await _rate_limit_public_request(db, ip=client_ip, key=code)
+        await _rate_limit_public_request(db, ip=client_ip, key=f"{email_lower}|{code}")
+    except HTTPException:
+        # Even if rate limit is exceeded we still return ok=true without doing
+        # any work; this avoids leaking quota information.
         return MyBookingTokenResponse()
 
-    # Find booking by PNR (code) and last_name/email match
-    criteria = {"code": body.pnr}
-    or_filters: List[dict[str, Any]] = []
-    if body.last_name:
-        or_filters.append({"guest.last_name": {"$regex": f"^{body.last_name}$", "$options": "i"}})
-        or_filters.append({"guest.full_name": {"$regex": body.last_name, "$options": "i"}})
-    if body.email:
-        or_filters.append({"guest.email": {"$regex": f"^{body.email}$", "$options": "i"}})
-
-    if or_filters:
-        criteria["$or"] = or_filters
+    # Find booking by code + guest email (case-insensitive)
+    criteria: dict[str, Any] = {
+        "code": code,
+        "guest.email": {"$regex": f"^{email_lower}$", "$options": "i"},
+    }
 
     booking = await db.bookings.find_one(criteria)
     if not booking:
         # Do not reveal existence; just return ok
         return MyBookingTokenResponse()
 
-    # Create public token document
-    from secrets import token_urlsafe
+    # Create public token document (hash-based)
+    token = await create_public_token(
+        db,
+        booking=booking,
+        email=email_lower,
+        client_ip=client_ip,
+        user_agent=user_agent,
+    )
 
-    token = f"pub_{token_urlsafe(32)}"
-    now = now_utc()
-    expires_at = now + timedelta(minutes=30)
+    # Enqueue email with /my-booking/{token} link via email_outbox
+    import os
 
-    doc = {
-        "token": token,
-        "booking_id": str(booking["_id"]),
-        "organization_id": booking.get("organization_id"),
-        "scopes": ["VIEW", "DOWNLOAD_VOUCHER", "REQUEST_CANCEL", "REQUEST_AMEND"],
-        "created_at": now,
-        "expires_at": expires_at,
-        "created_ip": client_ip,
-    }
+    base = os.environ.get("PUBLIC_BASE_URL", "").rstrip("/")
+    if base:
+        link = f"{base}/my-booking/{token}"
+    else:
+        link = f"/my-booking/{token}"
 
-    await db.booking_public_tokens.insert_one(doc)
+    org_id = booking.get("organization_id") or ""
 
-    # TODO: enqueue email with token link using email_outbox
+    subject = "Rezervasyon bağlantınız / Your booking link"
+    html_body = f"""
+<p>Merhaba,</p>
+<p>Rezervasyonunuzu görüntülemek için aşağıdaki bağlantıyı kullanabilirsiniz:</p>
+<p><a href=\"{link}\">Rezervasyonumu Görüntüle</a></p>
+<hr />
+<p>Hello,</p>
+<p>You can view your booking using the link below:</p>
+<p><a href=\"{link}\">View My Booking</a></p>
+""".strip()
+    text_body = f"Rezervasyonunuzu bu bağlantıdan görüntüleyebilirsiniz / You can view your booking at: {link}".strip()
+
+    if org_id:
+        try:
+            await enqueue_generic_email(
+                db,
+                organization_id=str(org_id),
+                to_addresses=[email_raw],
+                subject=subject,
+                html_body=html_body,
+                text_body=text_body,
+                event_type="my_booking.link",
+            )
+        except Exception:
+            # Outbox failures must not leak; main behavior is still ok=true
+            pass
 
     return MyBookingTokenResponse()
 

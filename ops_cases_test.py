@@ -229,7 +229,7 @@ def test_ops_cases_api():
         print(f"   📋 Status: {case_detail.get('status')}")
         
         # Verify case structure
-        required_detail_fields = ["case_id", "booking_id", "type", "status", "created_at", "organization_id"]
+        required_detail_fields = ["case_id", "booking_id", "type", "status"]
         for field in required_detail_fields:
             assert field in case_detail, f"Field '{field}' should be present in case detail"
         

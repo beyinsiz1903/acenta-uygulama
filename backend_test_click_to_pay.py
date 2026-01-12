@@ -50,27 +50,27 @@ class ClickToPayTester:
         await self.db.bookings.delete_many({"_id": {"$regex": "^BKG-CLICK-"}})
         await self.db.booking_payments.delete_many({"booking_id": {"$regex": "^BKG-CLICK-"}})
         await self.db.click_to_pay_links.delete_many({"booking_id": {"$regex": "^BKG-CLICK-"}})
-        await self.db.users.delete_many({"email": "admin@acenta.test"})
-        await self.db.organizations.delete_many({"_id": {"$regex": "^org_click_to_pay"}})
         
-        # Create test organizations
-        orgs = [
-            {"_id": "org_click_to_pay", "name": "Click to Pay Org", "slug": "click-to-pay"},
-            {"_id": "org_click_to_pay_nothing", "name": "Nothing to Collect Org", "slug": "nothing-to-collect"},
-            {"_id": "org_A", "name": "Org A", "slug": "org-a"},
-            {"_id": "org_B", "name": "Org B", "slug": "org-b"},
-            {"_id": "org_expired", "name": "Expired Org", "slug": "expired"}
-        ]
-        
-        for org in orgs:
-            org["created_at"] = now_utc()
-            org["updated_at"] = now_utc()
-            await self.db.organizations.insert_one(org)
+        # Ensure default organization exists (required by auth system)
+        default_org = await self.db.organizations.find_one({"slug": "default"})
+        if not default_org:
+            org_doc = {
+                "name": "Varsayılan Acenta",
+                "slug": "default",
+                "created_at": now_utc(),
+                "updated_at": now_utc(),
+                "settings": {"currency": "TRY"},
+            }
+            result = await self.db.organizations.insert_one(org_doc)
+            self.default_org_id = str(result.inserted_id)
+        else:
+            self.default_org_id = str(default_org["_id"])
             
-        # Create admin user for each org
-        for org in orgs:
+        # Ensure admin user exists in default org
+        admin = await self.db.users.find_one({"organization_id": self.default_org_id, "email": "admin@acenta.test"})
+        if not admin:
             await self.db.users.insert_one({
-                "organization_id": org["_id"],
+                "organization_id": self.default_org_id,
                 "email": "admin@acenta.test",
                 "name": "Admin",
                 "password_hash": hash_password("admin123"),

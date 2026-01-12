@@ -105,12 +105,18 @@ async def create_payment_link(
     )
 
 
-async def resolve_payment_link(db, token: str) -> Tuple[Dict[str, Any], Dict[str, Any]]:
-    """Resolve a raw token to (link_doc, booking_doc).
+async def resolve_payment_link(
+    db,
+    token: str,
+    *,
+    client_ip: str | None = None,
+) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+    """Resolve a raw token to (link_doc, booking_doc) with basic rate limiting.
 
     Rules:
     - Look up by token_hash and expires_at > now
     - If no document is found or booking is missing, raise 404 AppError
+    - Apply a lightweight per-token+IP throttle window in telemetry
     - On success, update basic telemetry counters (best-effort)
     """
 
@@ -141,20 +147,54 @@ async def resolve_payment_link(db, token: str) -> Tuple[Dict[str, Any], Dict[str
     if not booking:
         raise AppError(404, "BOOKING_NOT_FOUND", "Booking not found for payment link")
 
-    # Telemetry best-effort update
+    # Telemetry + lightweight rate limiting (per token + IP)
     try:
         telemetry = link.get("telemetry") or {}
+        access_count = int(telemetry.get("access_count", 0)) + 1
+        window_start_at = telemetry.get("window_start_at")
+        window_count = int(telemetry.get("window_count", 0))
+        last_ip = telemetry.get("last_ip")
+
+        WINDOW_SECONDS = 60
+        MAX_PER_WINDOW = 10
+
+        # Reset window if IP değişti veya pencere süresi doldu
+        if (
+            not window_start_at
+            or (now - window_start_at).total_seconds() > WINDOW_SECONDS
+            or (client_ip and client_ip != last_ip)
+        ):
+            window_start_at = now
+            window_count = 1
+        else:
+            window_count += 1
+
+        if client_ip and window_count > MAX_PER_WINDOW:
+            # Çok sık deneme: bu IP + token kombinasyonu için rate limit
+            raise AppError(
+                429,
+                "CLICK_TO_PAY_RATE_LIMITED",
+                "Too many attempts for this payment link from this IP",
+            )
+
         telemetry.update(
             {
-                "access_count": int(telemetry.get("access_count", 0)) + 1,
+                "access_count": access_count,
                 "last_access_at": now,
+                "last_ip": client_ip or last_ip,
+                "window_start_at": window_start_at,
+                "window_count": window_count,
             }
         )
         await db.click_to_pay_links.update_one(
             {"_id": link["_id"]},
             {"$set": {"telemetry": telemetry}},
         )
+    except AppError:
+        # Rate-limit AppError yukarı fırlatılır
+        raise
     except Exception:
+        # Telemetry hataları ana akışı bozmamalı
         pass
 
     return link, booking

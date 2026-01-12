@@ -38,12 +38,16 @@ async def get_click_to_pay_token(
 
     # Basic rate-limiting and cache headers can be added later (EPIC hardening).
 
+    client_ip = request.client.host if request.client else None
+
     try:
-        link, booking = await resolve_payment_link(db, token)
+        link, booking = await resolve_payment_link(db, token, client_ip=client_ip)
     except AppError as exc:
         # Map to generic 404 to avoid token enumeration.
         if exc.status_code == 404:
             return JSONResponse(status_code=404, content={"error": "NOT_FOUND"})
+        if exc.status_code == 429 and getattr(exc, "code", "") == "CLICK_TO_PAY_RATE_LIMITED":
+            return JSONResponse(status_code=429, content={"error": "RATE_LIMITED"})
         raise
 
     pi_id = link.get("payment_intent_id")

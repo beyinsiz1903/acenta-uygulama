@@ -166,7 +166,7 @@ function OpsGuestCasesPage() {
               <SelectValue placeholder="T1m1" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">T1m1</SelectItem>
+              <SelectItem value="all">T1m1</SelectItem>
               <SelectItem value="guest_portal">Guest portal</SelectItem>
             </SelectContent>
           </Select>

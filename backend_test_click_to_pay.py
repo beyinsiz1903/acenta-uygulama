@@ -86,7 +86,7 @@ class ClickToPayTester:
         """Test 1: Happy path with stubbed Stripe"""
         print("\n🧪 Test 1: Happy path with stubbed Stripe")
         
-        org_id = "org_click_to_pay"
+        org_id = self.default_org_id
         booking_id = "BKG-CLICK-1"
         now = now_utc()
         

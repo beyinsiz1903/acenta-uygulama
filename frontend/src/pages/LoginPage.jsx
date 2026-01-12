@@ -25,8 +25,20 @@ export default function LoginPage() {
       setToken(resp.data.access_token);
       setUser(resp.data.user);
       
-      // Role-based redirect
-      const redirectPath = redirectByRole(resp.data.user);
+      // Role-based redirect with optional return-to from sessionStorage
+      let redirectPath = redirectByRole(resp.data.user);
+      try {
+        const saved = window.sessionStorage.getItem("acenta_post_login_redirect");
+        const expired = window.sessionStorage.getItem("acenta_session_expired");
+        if (expired === "1" && saved) {
+          redirectPath = saved;
+        }
+        window.sessionStorage.removeItem("acenta_post_login_redirect");
+        window.sessionStorage.removeItem("acenta_session_expired");
+      } catch {
+        // ignore storage errors
+      }
+
       navigate(redirectPath, { replace: true });
     } catch (err) {
       setError(apiErrorMessage(err));

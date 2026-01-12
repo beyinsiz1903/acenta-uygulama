@@ -182,14 +182,12 @@ def test_f1_t2_click_to_pay_backend():
     print(f"   📋 Organization ID: {admin_org_id}")
 
     # ------------------------------------------------------------------
-    # Test 2: Find or create a CONFIRMED EUR booking
+    # Test 2: Create a fresh CONFIRMED EUR booking for testing
     # ------------------------------------------------------------------
-    print("\n2️⃣  Finding CONFIRMED EUR booking for testing...")
+    print("\n2️⃣  Creating fresh CONFIRMED EUR booking for testing...")
     
-    test_booking_id = find_confirmed_eur_booking(admin_headers)
-    
-    if not test_booking_id:
-        test_booking_id = create_test_booking()
+    # Always create a fresh booking to ensure it belongs to the right organization
+    test_booking_id = create_test_booking()
     
     print(f"   ✅ Using booking for test: {test_booking_id}")
 

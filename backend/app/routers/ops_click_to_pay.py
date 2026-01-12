@@ -67,7 +67,7 @@ async def _compute_remaining_cents(db, organization_id: str, booking_id: str) ->
         paid_cents = int(aggregate.get("amount_paid", 0))
     else:
         # Fallback: derive from booking amounts
-        booking = await db.bookings.find_one({"_id": booking_id, "organization_id": organization_id})
+        booking = await db.bookings.find_one({"_id": ObjectId(booking_id), "organization_id": organization_id})
         if not booking:
             raise AppError(404, "booking_not_found", "Booking not found for click-to-pay")
         currency = str(booking.get("currency") or "EUR").lower()

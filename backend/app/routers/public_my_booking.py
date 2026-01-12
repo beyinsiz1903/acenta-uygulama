@@ -193,6 +193,158 @@ async def _resolve_public_token(db, token: str) -> tuple[dict[str, Any], dict[st
         raise HTTPException(status_code=exc.status_code, detail=exc.message)
 
 
+@router.post("/{token}/request-cancel", response_model=MyBookingActionResponse)
+async def request_cancel(token: str, request: Request, body: dict[str, Any]):
+    """Guest-initiated cancel *request* via public token.
+
+    Does NOT cancel the booking immediately; instead creates an ops_case and
+    emits a booking_event (GUEST_REQUEST_CANCEL). Idempotent per
+    (booking_id, type=cancel, status=open).
+    """
+
+    db = await get_db()
+    client_ip = request.client.host if request.client else "unknown"
+    user_agent = request.headers.get("User-Agent", "")
+
+    token_doc, booking = await _resolve_public_token(db, token)
+    booking_id = str(booking["_id"])
+    org_id = booking.get("organization_id") or ""
+
+    note = (body.get("note") or "").strip()
+
+    # Idempotency: reuse existing open case for this booking + type if present
+    existing = await db.ops_cases.find_one(
+        {
+            "booking_id": booking_id,
+            "type": "cancel",
+            "status": "open",
+        }
+    )
+    if existing:
+        case_id = existing.get("case_id") or str(existing["_id"])
+        return MyBookingActionResponse(ok=True, case_id=case_id)
+
+    now = now_utc()
+    case_id = f"CASE-{booking_id}-{int(now.timestamp())}"
+
+    case_doc = {
+        "case_id": case_id,
+        "type": "cancel",
+        "status": "open",
+        "booking_id": booking_id,
+        "organization_id": org_id,
+        "source": "guest_portal",
+        "payload": {
+            "note": note,
+            "token_id": str(token_doc.get("_id")),
+        },
+        "request_context": {
+            "ip": client_ip,
+            "user_agent": user_agent,
+        },
+        "created_at": now,
+        "updated_at": now,
+    }
+
+    await db.ops_cases.insert_one(case_doc)
+
+    # Emit booking_event for guest request
+    meta = {
+        "note": note,
+        "ip": client_ip,
+        "user_agent": user_agent,
+        "token_id": str(token_doc.get("_id")),
+    }
+    if org_id:
+        await emit_event(
+            db,
+            organization_id=str(org_id),
+            booking_id=booking_id,
+            type="GUEST_REQUEST_CANCEL",
+            actor=None,
+            meta=meta,
+        )
+
+    return MyBookingActionResponse(ok=True, case_id=case_id)
+
+
+@router.post("/{token}/request-amend", response_model=MyBookingActionResponse)
+async def request_amend(token: str, request: Request, body: dict[str, Any]):
+    """Guest-initiated amend *request* via public token.
+
+    Similar to request_cancel: creates an ops_case + booking_event but does
+    not change booking state immediately.
+    """
+
+    db = await get_db()
+    client_ip = request.client.host if request.client else "unknown"
+    user_agent = request.headers.get("User-Agent", "")
+
+    token_doc, booking = await _resolve_public_token(db, token)
+    booking_id = str(booking["_id"])
+    org_id = booking.get("organization_id") or ""
+
+    note = (body.get("note") or "").strip()
+    requested_changes = body.get("requested_changes")
+
+    # Idempotency: reuse existing open case for this booking + type if present
+    existing = await db.ops_cases.find_one(
+        {
+            "booking_id": booking_id,
+            "type": "amend",
+            "status": "open",
+        }
+    )
+    if existing:
+        case_id = existing.get("case_id") or str(existing["_id"])
+        return MyBookingActionResponse(ok=True, case_id=case_id)
+
+    now = now_utc()
+    case_id = f"CASE-{booking_id}-{int(now.timestamp())}-AMEND"
+
+    case_doc = {
+        "case_id": case_id,
+        "type": "amend",
+        "status": "open",
+        "booking_id": booking_id,
+        "organization_id": org_id,
+        "source": "guest_portal",
+        "payload": {
+            "note": note,
+            "requested_changes": requested_changes,
+            "token_id": str(token_doc.get("_id")),
+        },
+        "request_context": {
+            "ip": client_ip,
+            "user_agent": user_agent,
+        },
+        "created_at": now,
+        "updated_at": now,
+    }
+
+    await db.ops_cases.insert_one(case_doc)
+
+    meta = {
+        "note": note,
+        "requested_changes": requested_changes,
+        "ip": client_ip,
+        "user_agent": user_agent,
+        "token_id": str(token_doc.get("_id")),
+    }
+    if org_id:
+        await emit_event(
+            db,
+            organization_id=str(org_id),
+            booking_id=booking_id,
+            type="GUEST_REQUEST_AMEND",
+            actor=None,
+            meta=meta,
+        )
+
+    return MyBookingActionResponse(ok=True, case_id=case_id)
+
+
+
 @router.get("/{token}", response_model=MyBookingPublicView)
 async def get_my_booking(token: str):
     db = await get_db()

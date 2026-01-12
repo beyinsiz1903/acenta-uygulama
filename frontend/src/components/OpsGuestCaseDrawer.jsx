@@ -16,6 +16,10 @@ function OpsGuestCaseDrawer({ caseId, open, onClose, onClosed }) {
   const [closing, setClosing] = useState(false);
   const [closeNote, setCloseNote] = useState("");
 
+  const [timelineLoading, setTimelineLoading] = useState(false);
+  const [timelineError, setTimelineError] = useState("");
+  const [timelineItems, setTimelineItems] = useState([]);
+
   useEffect(() => {
     if (!open || !caseId) {
       setData(null);

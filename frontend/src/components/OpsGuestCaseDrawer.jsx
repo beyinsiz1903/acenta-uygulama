@@ -186,7 +186,7 @@ function OpsGuestCaseDrawer({ caseId, open, onClose, onClosed }) {
               {/* Close action */}
               <div className="mt-4 pt-3 border-t space-y-2">
                 <div className="flex items-center justify-between">
-                  <div className="text-xs font-medium text-muted-foreground">Case'i kapat</div>
+                  <div className="text-xs font-medium text-muted-foreground">Case&apos;i kapat</div>
                   {isClosed && (
                     <span className="text-[11px] text-muted-foreground">Bu case zaten kapal1.</span>
                   )}

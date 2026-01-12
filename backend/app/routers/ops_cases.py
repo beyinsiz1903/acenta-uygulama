@@ -29,7 +29,7 @@ class OpsCaseCloseBody(BaseModel):
 
 @router.get("/")
 async def list_ops_cases(
-    status: Optional[str] = Query(None),
+    status: Optional[str] = Query("open"),
     type: Optional[str] = Query(None),
     source: Optional[str] = Query(None),
     q: Optional[str] = Query(None),

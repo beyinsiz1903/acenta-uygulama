@@ -74,7 +74,7 @@ async def test_list_cases_default_open(async_client: httpx.AsyncClient, minimal_
     token = login_resp.json()["access_token"]
 
     resp = await async_client.get(
-        "/api/ops/cases", headers={"Authorization": f"Bearer {token}"}
+        "/api/ops/guest-cases", headers={"Authorization": f"Bearer {token}"}
     )
     assert resp.status_code == 200
     data = resp.json()
@@ -135,7 +135,7 @@ async def test_list_cases_filter_type_and_status(async_client: httpx.AsyncClient
     token = login_resp.json()["access_token"]
 
     resp = await async_client.get(
-        "/api/ops/cases?status=open&type=cancel",
+        "/api/ops/guest-cases?status=open&type=cancel",
         headers={"Authorization": f"Bearer {token}"},
     )
     assert resp.status_code == 200

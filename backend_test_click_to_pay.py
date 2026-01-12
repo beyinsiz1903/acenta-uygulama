@@ -260,7 +260,7 @@ class ClickToPayTester:
         """Test 3: Wrong organization ownership"""
         print("\n🧪 Test 3: Wrong organization ownership")
         
-        booking_id = "BKG-CLICK-3"
+        booking_id = self.booking_id_3
         now = now_utc()
         
         # Create booking in a different org (simulate cross-org access)
@@ -268,7 +268,7 @@ class ClickToPayTester:
         # but user will be from default org - this should result in 404
         different_org_id = "different_org_id"
         await self.db.bookings.insert_one({
-            "_id": booking_id,
+            "_id": ObjectId(booking_id),
             "organization_id": different_org_id,
             "agency_id": "agency_A",
             "currency": "EUR",

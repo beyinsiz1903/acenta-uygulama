@@ -3,10 +3,10 @@ import { X, Loader2 } from "lucide-react";
 
 import { getOpsGuestCase, closeOpsGuestCase, apiErrorMessage } from "../lib/opsCases";
 import { api } from "../lib/api";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Textarea } from "../components/ui/textarea";
-import ErrorState from "../components/ErrorState";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Textarea } from "./ui/textarea";
+import ErrorState from "./ErrorState";
 import { toast } from "sonner";
 
 function OpsGuestCaseDrawer({ caseId, open, onClose, onClosed }) {

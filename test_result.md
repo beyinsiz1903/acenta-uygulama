@@ -2055,7 +2055,7 @@
 
 ## test_plan:
   current_focus:
-    - "FAZ 3 / Ticket 2 – Public My Booking frontend akışını test et"
+    - "F1.T2 Click-to-Pay Backend Flow Test"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"

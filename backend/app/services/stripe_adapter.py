@@ -30,8 +30,9 @@ async def create_payment_intent(
     currency: str,
     metadata: Dict[str, str],
     idempotency_key: Optional[str] = None,
+    capture_method: str = "manual",
 ) -> Dict[str, Any]:
-    """Create a manual-capture PaymentIntent.
+    """Create a Stripe PaymentIntent.
 
     Runs the sync Stripe SDK in a worker thread via anyio.to_thread.run_sync to
     avoid blocking the event loop.
@@ -46,7 +47,7 @@ async def create_payment_intent(
         kwargs: Dict[str, Any] = {
             "amount": float(amount_cents),
             "currency": currency.lower(),
-            "capture_method": "manual",
+            "capture_method": capture_method,
             "metadata": metadata,
         }
         headers: Dict[str, str] = {}
@@ -75,5 +76,22 @@ async def capture_payment_intent(
 
         pi = client.payment_intents.capture(payment_intent_id, headers=headers)
         return pi.to_dict() if hasattr(pi, "to_dict") else dict(pi)
+
+
+
+async def retrieve_payment_intent(*, payment_intent_id: str) -> Dict[str, Any]:
+    """Retrieve a PaymentIntent by id.
+
+    Thin async wrapper around the Stripe client. Used by public click-to-pay
+    endpoint to obtain client_secret.
+    """
+
+    client = _stripe_client()
+
+    def _retrieve() -> Dict[str, Any]:  # pragma: no cover - thin sync wrapper
+        pi = client.payment_intents.retrieve(payment_intent_id)
+        return pi.to_dict() if hasattr(pi, "to_dict") else dict(pi)
+
+    return await anyio.to_thread.run_sync(_retrieve)
 
     return await anyio.to_thread.run_sync(_capture)

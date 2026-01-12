@@ -67,6 +67,7 @@ async def create_intent(
         currency=payload.currency,
         metadata=metadata,
         idempotency_key=idem_key,
+        capture_method="manual",
     )
 
     return {"payment_intent": pi}

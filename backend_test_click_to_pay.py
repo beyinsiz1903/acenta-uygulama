@@ -19,6 +19,7 @@ from server import app
 from app.db import get_db
 from app.utils import now_utc
 from app.auth import hash_password
+from bson import ObjectId
 
 
 class ClickToPayTester:

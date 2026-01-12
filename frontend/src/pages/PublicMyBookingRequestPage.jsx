@@ -38,47 +38,37 @@ function PublicMyBookingRequestPage() {
       <div className="w-full max-w-md bg-background rounded-2xl shadow-lg p-6 space-y-4">
         <h1 className="text-xl font-semibold text-foreground text-center">Rezervasyonumu Görüntüle</h1>
         <p className="text-sm text-muted-foreground text-center">
-          PNR ve soyad veya e-posta adresinizi girerek rezervasyon özetinizi
-          görüntülemek için tek kullanımlık bir erişim linki isteyebilirsiniz.
+          Rezervasyon kodunuz ve e-posta adresinizi girerek rezervasyon özetinizi
+          görüntülemek için bir erişim linki isteyebilirsiniz.
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4 mt-2">
           <div className="space-y-1">
-            <label className="text-sm font-medium text-foreground">PNR</label>
+            <label className="text-sm font-medium text-foreground">Rezervasyon Kodu</label>
             <Input
-              value={pnr}
-              onChange={(e) => setPnr(e.target.value.toUpperCase())}
+              value={bookingCode}
+              onChange={(e) => setBookingCode(e.target.value.toUpperCase())}
               placeholder="Örn: ABC123"
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <label className="text-sm font-medium text-foreground">Soyad</label>
-              <Input
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                placeholder="Opsiyonel"
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="text-sm font-medium text-foreground">E-posta</label>
-              <Input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Opsiyonel"
-              />
-            </div>
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-foreground">E-posta</label>
+            <Input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="ornek@eposta.com"
+            />
           </div>
 
           <Button type="submit" className="w-full mt-2" disabled={loading}>
-            {loading ? "Gönderiliyor..." : "Erişim Linki Gönder"}
+            {loading ? "Gönderiliyor..." : "Rezervasyon Linki Gönder"}
           </Button>
         </form>
 
         <p className="text-[11px] text-muted-foreground text-center">
-          Güvenlik için, doğru kombinasyon girilmiş olsa bile sadece “istek alındı”
+          Güvenlik için, doğru bilgiler girilmiş olsa bile sadece “istek alındı”
           mesajı gösterilir; rezervasyonun varlığı bu ekrandan teyit edilmez.
         </p>
       </div>

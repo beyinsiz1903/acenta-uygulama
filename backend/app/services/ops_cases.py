@@ -13,6 +13,7 @@ async def list_cases(
     status: Optional[str] = None,
     type: Optional[str] = None,
     source: Optional[str] = None,
+    booking_id: Optional[str] = None,
     q: Optional[str] = None,
     page: int = 1,
     page_size: int = 20,
@@ -20,7 +21,7 @@ async def list_cases(
     """List ops_cases for an organization with basic filters and paging.
 
     - Filters by organization_id (required)
-    - Optional filters: status, type, source
+    - Optional filters: status, type, source, booking_id
     - Optional search `q` on case_id and booking_code (if present)
     - Sorted by created_at desc
     """
@@ -32,6 +33,8 @@ async def list_cases(
         query["type"] = type
     if source:
         query["source"] = source
+    if booking_id:
+        query["booking_id"] = booking_id
 
     if q:
         # Simple OR search on case_id and booking_code (if present)

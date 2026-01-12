@@ -125,62 +125,125 @@ class ClickToPayTester:
         token = login_resp.json()["access_token"]
         headers = {"Authorization": f"Bearer {token}"}
         
-        # Test ops endpoint to create link
-        resp = await self.client.post(
-            "/api/ops/payments/click-to-pay/",
-            json={"booking_id": booking_id},
-            headers=headers,
-        )
+        # Stub Stripe adapter
+        from app.services import stripe_adapter
         
-        print(f"   POST /api/ops/payments/click-to-pay/ -> {resp.status_code}")
+        captured_args = {}
         
-        if resp.status_code != 200:
-            print(f"❌ Click-to-pay creation failed: {resp.status_code} - {resp.text}")
-            return False
-            
-        body = resp.json()
+        async def fake_create_payment_intent(*, amount_cents: int, currency: str, metadata: dict, idempotency_key=None, capture_method: str = "manual"):
+            captured_args["amount_cents"] = amount_cents
+            captured_args["currency"] = currency
+            captured_args["metadata"] = metadata
+            captured_args["capture_method"] = capture_method
+            return {
+                "id": "pi_fake_click_to_pay",
+                "client_secret": "cs_test_click_to_pay",
+            }
         
-        # Verify response structure
-        if not body.get("ok"):
-            print(f"❌ Response ok=false: {body}")
-            return False
-            
-        if not body.get("url", "").startswith("/pay/"):
-            print(f"❌ Invalid URL format: {body.get('url')}")
-            return False
-            
-        if body.get("amount_cents", 0) <= 0:
-            print(f"❌ Invalid amount_cents: {body.get('amount_cents')}")
-            return False
-            
-        if body.get("currency", "").upper() != "EUR":
-            print(f"❌ Invalid currency: {body.get('currency')}")
-            return False
-            
-        # Verify link persisted in database
-        link_doc = await self.db.click_to_pay_links.find_one({"organization_id": org_id, "booking_id": booking_id})
-        if not link_doc:
-            print("❌ Click-to-pay link not found in database")
-            return False
-            
-        # Test public endpoint
-        token_part = body["url"].split("/pay/")[-1]
-        public_resp = await self.client.get(f"/api/public/pay/{token_part}")
+        async def fake_retrieve_payment_intent(*, payment_intent_id: str):
+            return {
+                "id": payment_intent_id,
+                "client_secret": "cs_test_click_to_pay",
+            }
         
-        print(f"   GET /api/public/pay/{token_part} -> {public_resp.status_code}")
+        # Monkey patch the stripe adapter
+        original_create = stripe_adapter.create_payment_intent
+        original_retrieve = stripe_adapter.retrieve_payment_intent
+        stripe_adapter.create_payment_intent = fake_create_payment_intent
+        stripe_adapter.retrieve_payment_intent = fake_retrieve_payment_intent
         
-        if public_resp.status_code != 200:
-            print(f"❌ Public pay endpoint failed: {public_resp.status_code} - {public_resp.text}")
-            return False
+        try:
+            # Test ops endpoint to create link
+            resp = await self.client.post(
+                "/api/ops/payments/click-to-pay/",
+                json={"booking_id": booking_id},
+                headers=headers,
+            )
             
-        pdata = public_resp.json()
-        
-        if not pdata.get("ok"):
-            print(f"❌ Public response ok=false: {pdata}")
-            return False
+            print(f"   POST /api/ops/payments/click-to-pay/ -> {resp.status_code}")
             
-        print("✅ Happy path test passed")
-        return True
+            if resp.status_code != 200:
+                print(f"❌ Click-to-pay creation failed: {resp.status_code} - {resp.text}")
+                return False
+                
+            body = resp.json()
+            
+            # Verify response structure
+            if not body.get("ok"):
+                print(f"❌ Response ok=false: {body}")
+                return False
+                
+            if not body.get("url", "").startswith("/pay/"):
+                print(f"❌ Invalid URL format: {body.get('url')}")
+                return False
+                
+            if body.get("amount_cents", 0) <= 0:
+                print(f"❌ Invalid amount_cents: {body.get('amount_cents')}")
+                return False
+                
+            if body.get("currency", "").upper() != "EUR":
+                print(f"❌ Invalid currency: {body.get('currency')}")
+                return False
+                
+            # Verify Stripe metadata
+            if captured_args.get("currency") != "eur":
+                print(f"❌ Wrong Stripe currency: {captured_args.get('currency')}")
+                return False
+                
+            if captured_args.get("capture_method") != "automatic":
+                print(f"❌ Wrong capture method: {captured_args.get('capture_method')}")
+                return False
+                
+            meta = captured_args.get("metadata", {})
+            if meta.get("source") != "click_to_pay":
+                print(f"❌ Wrong metadata source: {meta.get('source')}")
+                return False
+                
+            if meta.get("booking_id") != booking_id:
+                print(f"❌ Wrong metadata booking_id: {meta.get('booking_id')}")
+                return False
+                
+            if meta.get("organization_id") != org_id:
+                print(f"❌ Wrong metadata organization_id: {meta.get('organization_id')}")
+                return False
+                
+            if meta.get("agency_id") != "agency_ctp":
+                print(f"❌ Wrong metadata agency_id: {meta.get('agency_id')}")
+                return False
+            
+            # Verify link persisted in database
+            link_doc = await self.db.click_to_pay_links.find_one({"organization_id": org_id, "booking_id": booking_id})
+            if not link_doc:
+                print("❌ Click-to-pay link not found in database")
+                return False
+                
+            # Test public endpoint
+            token_part = body["url"].split("/pay/")[-1]
+            public_resp = await self.client.get(f"/api/public/pay/{token_part}")
+            
+            print(f"   GET /api/public/pay/{token_part} -> {public_resp.status_code}")
+            
+            if public_resp.status_code != 200:
+                print(f"❌ Public pay endpoint failed: {public_resp.status_code} - {public_resp.text}")
+                return False
+                
+            pdata = public_resp.json()
+            
+            if not pdata.get("ok"):
+                print(f"❌ Public response ok=false: {pdata}")
+                return False
+                
+            if pdata.get("client_secret") != "cs_test_click_to_pay":
+                print(f"❌ Wrong client_secret: {pdata.get('client_secret')}")
+                return False
+                
+            print("✅ Happy path test passed")
+            return True
+            
+        finally:
+            # Restore original functions
+            stripe_adapter.create_payment_intent = original_create
+            stripe_adapter.retrieve_payment_intent = original_retrieve
         
     async def test_nothing_to_collect(self):
         """Test 2: Nothing to collect scenario"""

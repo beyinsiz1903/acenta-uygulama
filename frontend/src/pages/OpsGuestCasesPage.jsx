@@ -146,7 +146,7 @@ function OpsGuestCasesPage() {
               <SelectValue placeholder="T1m1" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">T1m1</SelectItem>
+              <SelectItem value="all">T1m1</SelectItem>
               <SelectItem value="cancel">0ptal talebi</SelectItem>
               <SelectItem value="amend">Defifiklik talebi</SelectItem>
             </SelectContent>

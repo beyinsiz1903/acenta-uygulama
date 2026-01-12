@@ -214,5 +214,22 @@ async def ensure_finance_indexes(db):
         partialFilterExpression={"request_id": {"$type": "string"}},
     )
 
+    # ========================================================================
+    # 10) click_to_pay_links
+    # ========================================================================
+    # Click-to-pay links: token_hash uniqueness + TTL index on expires_at
+    await _safe_create(
+        db.click_to_pay_links,
+        [("token_hash", ASCENDING)],
+        unique=True,
+        name="uniq_click_to_pay_token_hash",
+    )
+    await _safe_create(
+        db.click_to_pay_links,
+        [("expires_at", ASCENDING)],
+        expireAfterSeconds=0,
+        name="ttl_click_to_pay_expires_at",
+    )
+
 
     logger.info("✅ Finance indexes ensured successfully")

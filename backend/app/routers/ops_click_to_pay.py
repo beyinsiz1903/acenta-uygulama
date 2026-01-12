@@ -139,18 +139,37 @@ async def create_click_to_pay_link(
         "source": "click_to_pay",
     }
 
-    pi = await stripe_adapter.create_payment_intent(
-        amount_cents=remaining_cents,
-        currency=currency,
-        metadata=metadata,
-        idempotency_key=None,
-        capture_method="automatic",
-    )
+    try:
+        pi = await stripe_adapter.create_payment_intent(
+            amount_cents=remaining_cents,
+            currency=currency,
+            metadata=metadata,
+            idempotency_key=None,
+            capture_method="automatic",
+        )
+    except Exception:
+        # Provider unavailable or misconfigured; return a controlled response so
+        # ops UI and tests can handle this state deterministically.
+        return {
+            "ok": False,
+            "reason": "provider_unavailable",
+            "url": None,
+            "expires_at": None,
+            "amount_cents": None,
+            "currency": currency,
+        }
 
     payment_intent_id = pi.get("id")
     client_secret = pi.get("client_secret")
     if not payment_intent_id or not client_secret:
-        raise AppError(500, "stripe_pi_missing_fields", "Stripe PaymentIntent missing id/client_secret")
+        return {
+            "ok": False,
+            "reason": "provider_unavailable",
+            "url": None,
+            "expires_at": None,
+            "amount_cents": None,
+            "currency": currency,
+        }
 
     # Persist click-to-pay link
     link = await create_payment_link(

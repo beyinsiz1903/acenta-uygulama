@@ -538,6 +538,18 @@
     implemented: true
     working: false
     file: "/app/frontend/src/components/OpsGuestCaseDrawer.jsx, /app/frontend/src/pages/OpsGuestCasesPage.jsx"
+  - task: "F1.T2 Click-to-Pay backend+frontend integration"
+    implemented: true
+    working: false
+    file: "/app/backend/app/services/click_to_pay.py, /app/backend/app/routers/ops_click_to_pay.py, /app/backend/app/routers/public_click_to_pay.py, /app/backend/app/services/stripe_adapter.py, /app/backend/app/indexes/finance_indexes.py, /app/frontend/src/pages/ops/OpsBookingDetailPage.jsx, /app/frontend/src/pages/public/PublicClickToPayPage.jsx, /app/frontend/src/lib/clickToPay.js, /app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "main"
+        comment: "F1.T2 için ilk implementasyon: backend’de click_to_pay_links modeli (token_hash + TTL), ops endpoint /api/ops/payments/click-to-pay ile remaining amount’tan automatic capture PaymentIntent oluşturuluyor ve link kaydediliyor; public endpoint /api/public/pay/{token} token’ı resolve edip PaymentIntent client_secret + amount/currency + booking_code dönüyor. Frontend’de OpsBookingDetailPage Payments sekmesine ‘Ödeme linki oluştur’ butonu eklendi; /ops/payments/click-to-pay/ çağrısı sonrası /pay/:token URL’i origin ile compose edilip panoya kopyalanıyor. Public tarafta /pay/:token route’u, Stripe Elements formu ve basic success/error state’leri oluşturuldu. E2E testler henüz koşturulmadı."
+
     stuck_count: 0
     priority: "high"
     needs_retesting: true

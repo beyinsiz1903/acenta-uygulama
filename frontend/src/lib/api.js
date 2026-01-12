@@ -94,6 +94,11 @@ api.interceptors.response.use(
         if (typeof window !== "undefined") {
           const { pathname, search, hash, origin } = window.location;
 
+          // Public routes (my-booking) must never redirect to login on 401
+          if (pathname.startsWith("/my-booking")) {
+            return Promise.reject(err);
+          }
+
           // 1) return-to: only set when not already on /login and do not overwrite existing
           if (!pathname.startsWith("/login")) {
             const from = `${pathname}${search}${hash}`;

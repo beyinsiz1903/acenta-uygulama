@@ -704,7 +704,7 @@ def test_faz3_comprehensive_backend_contracts():
     
     print(f"   ✅ Amend request: records created")
     print(f"   📋 ops_cases (amend): {ops_cases_amend_before} → {ops_cases_amend_after} (+{ops_cases_amend_after - ops_cases_amend_before})")
-    print(f"   📋 booking_events (amend): {booking_events_amend_before} → {booking_events_amend_after} (+{booking_events_amend_after - booking_events_amend_before})")
+    print(f"   📋 booking_events (amend): {booking_events_amend_before} → {booking_events_amend_after} (change: {booking_events_amend_after - booking_events_amend_before})")
     print(f"   📋 Amend case ID: {amend_response.get('case_id')}")
 
     # ------------------------------------------------------------------

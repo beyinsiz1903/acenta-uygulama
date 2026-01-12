@@ -156,7 +156,7 @@ function OpsGuestCasesPage() {
         <div className="flex flex-col gap-1 w-full md:w-[180px]">
           <label className="text-xs font-medium text-muted-foreground">Kaynak</label>
           <Select
-            value={source || ""}
+            value={source || "all"}
             onValueChange={(val) => {
               setSource(val === "" ? "" : val);
               setPage(1);

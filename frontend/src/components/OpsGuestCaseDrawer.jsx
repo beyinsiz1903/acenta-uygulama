@@ -81,10 +81,23 @@ function OpsGuestCaseDrawer({ caseId, open, onClose, onClosed }) {
     setClosing(true);
     try {
       const res = await closeOpsGuestCase(caseId, closeNote || undefined);
-      toast.success("Case bafar1yla kapat1ld1.");
-      setData((prev) => (prev ? { ...prev, status: "closed", closed_at: new Date().toISOString(), close_note: closeNote || prev.close_note } : prev));
+      toast.success("Case başarıyla kapatıldı.");
+      setData((prev) =>
+        prev
+          ? {
+              ...prev,
+              status: "closed",
+              closed_at: new Date().toISOString(),
+              close_note: closeNote || prev.close_note,
+            }
+          : prev,
+      );
       setCloseNote("");
       if (onClosed) onClosed();
+      // Timeline'ı da tazele (yeni OPS_CASE_CLOSED event'ini görmek için)
+      if (data?.booking_id) {
+        await loadTimeline(data.booking_id);
+      }
     } catch (e) {
       toast.error(apiErrorMessage(e));
     } finally {

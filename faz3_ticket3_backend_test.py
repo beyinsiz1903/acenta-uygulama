@@ -299,7 +299,7 @@ class FAZ3Ticket3BackendTest:
         
         # Clear existing ops_cases for clean test
         await self.db.ops_cases.delete_many({"booking_id": self.test_booking_id, "type": "cancel"})
-        await self.db.booking_events.delete_many({"booking_id": self.test_booking_id, "type": "GUEST_REQUEST_CANCEL"})
+        await self.db.booking_events.delete_many({"booking_id": self.test_booking_id, "event": "GUEST_REQUEST_CANCEL"})
         
         resp = self.client.post(f"{API_BASE}/public/my-booking/{token}/request-cancel", json={
             "note": "Test cancel request"

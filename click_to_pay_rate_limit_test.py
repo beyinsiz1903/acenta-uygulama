@@ -105,15 +105,16 @@ class ClickToPayRateLimitTester:
         print("🛠️  Creating manual test token...")
         
         # MongoDB'ye direkt test token ekle
-        from motor.motor_asyncio import AsyncIOMotorClient
         import os
-        
-        mongo_url = os.environ.get("MONGO_URL", "mongodb://localhost:27017/test_database")
-        mongo_client = AsyncIOMotorClient(mongo_url)
-        db = mongo_client.get_default_database()
-        
         import hashlib
         import secrets
+        
+        # MongoDB connection using pymongo (sync)
+        from pymongo import MongoClient
+        
+        mongo_url = os.environ.get("MONGO_URL", "mongodb://localhost:27017/test_database")
+        mongo_client = MongoClient(mongo_url)
+        db = mongo_client.get_default_database()
         
         token = f"ctp_{secrets.token_urlsafe(24)}"
         token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
@@ -139,8 +140,8 @@ class ClickToPayRateLimitTester:
             "created_by": "test_setup",
         }
         
-        await db.click_to_pay_links.insert_one(doc)
-        await mongo_client.close()
+        db.click_to_pay_links.insert_one(doc)
+        mongo_client.close()
         
         print(f"✅ Manual test token created: {token}")
         return token

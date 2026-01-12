@@ -9,6 +9,7 @@ import AdminLayout from "./layouts/AdminLayout";
 import AgencyLayout from "./layouts/AgencyLayout";
 import PublicMyBookingRequestPage from "./pages/PublicMyBookingRequestPage";
 import PublicMyBookingDetailPage from "./pages/PublicMyBookingDetailPage";
+import PublicClickToPayPage from "./pages/public/PublicClickToPayPage";
 
 import HotelLayout from "./layouts/HotelLayout";
 import AdminAgenciesPage from "./pages/AdminAgenciesPage";
@@ -71,6 +72,7 @@ function App() {
         <Route path="/test/simple" element={<SimpleBookingTest />} />
         <Route path="/booking" element={<WebBookingPage />} />
         <Route path="/unauthorized" element={<UnauthorizedPage />} />
+        <Route path="/pay/:token" element={<PublicClickToPayPage />} />
 
         {/* Admin Routes */}
         <Route

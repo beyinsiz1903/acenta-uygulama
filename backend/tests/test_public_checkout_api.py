@@ -214,8 +214,9 @@ async def test_public_checkout_happy_path_stubbed_stripe(monkeypatch, async_clie
 
 
 @pytest.mark.anyio
-async def test_public_checkout_expired_quote(async_client):
-    db = await get_db()
+async def test_public_checkout_expired_quote(async_client, test_db):
+    # Use test_db instead of get_db()
+    db = test_db
 
     await db.public_quotes.delete_many({})
 

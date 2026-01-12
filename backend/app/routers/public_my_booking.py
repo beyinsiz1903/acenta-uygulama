@@ -49,6 +49,11 @@ class MyBookingTokenResponse(BaseModel):
     ok: bool = True
 
 
+class MyBookingActionResponse(BaseModel):
+    ok: bool = True
+    case_id: str | None = None
+
+
 async def _rate_limit_public_request(db, *, ip: str, key: str, max_per_window: int = 5, window_minutes: int = 10) -> None:
     """Very simple rate limiter for public access requests.
 

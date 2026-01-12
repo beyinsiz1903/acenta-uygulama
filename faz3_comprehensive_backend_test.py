@@ -67,27 +67,30 @@ def login_admin():
 def create_test_booking_with_minimal_search_seed():
     """Create a test booking using existing seed data or P0.2 flow"""
     
-    # First try to find existing bookings
+    # First try to find existing bookings with proper guest email
     client = get_mongo_client()
     db = client.get_default_database()
     
-    # Look for existing bookings
-    existing_booking = db.bookings.find_one({"status": "CONFIRMED"})
+    # Look for existing bookings with guest email
+    existing_booking = db.bookings.find_one({
+        "status": "CONFIRMED",
+        "guest.email": {"$exists": True, "$ne": ""}
+    })
     
     if existing_booking:
         booking_id = str(existing_booking["_id"])
-        guest_email = existing_booking.get("guest", {}).get("email", "test@example.com")
+        guest_email = existing_booking.get("guest", {}).get("email")
         booking_code = existing_booking.get("code", booking_id)
         
-        print(f"   📋 Found existing booking: {booking_id}")
+        print(f"   📋 Found existing booking with guest email: {booking_id}")
         print(f"   📋 Guest email: {guest_email}")
         print(f"   📋 Booking code: {booking_code}")
         
         client.close()
         return booking_id, guest_email, booking_code
     
-    # If no existing booking, create one via P0.2 flow
-    print("   📋 No existing booking found, creating new one...")
+    # If no existing booking with guest email, create one via P0.2 flow
+    print("   📋 No existing booking with guest email found, creating new one...")
     
     agency_token, agency_org_id, agency_id, agency_email = login_agency()
     agency_headers = {"Authorization": f"Bearer {agency_token}"}

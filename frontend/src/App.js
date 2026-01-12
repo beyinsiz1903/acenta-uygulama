@@ -123,6 +123,7 @@ function App() {
         >
           <Route index element={<DashboardPage />} />
           <Route path="products" element={<ProductsPage />} />
+          <Route path="ops/guest-cases" element={<OpsGuestCasesPage />} />
         </Route>
 
         {/* Agency Routes (Core Flow) */}

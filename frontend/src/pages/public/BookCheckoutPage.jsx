@@ -190,7 +190,7 @@ export default function BookCheckoutPage() {
         <Card className="w-full max-w-lg p-4 space-y-3">
           <EmptyState
             title="Checkout için geçerli bir teklif bulunamadı"
-            description="Devam etmek için önce bir teklif oluşturmanız gerekiyor."
+            description="Devam etmek için önce teklif adımında tarih ve kişi bilgilerini girerek yeni bir teklif oluşturun."
             action={
               <div className="flex flex-col sm:flex-row gap-2 justify-center">
                 {productId && org && (

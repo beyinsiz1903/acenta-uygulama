@@ -2294,6 +2294,18 @@
         agent: "testing"
         comment: "✅ MOCKPMS CONTRACTS TEST PASSED - 4/4 tests passed (100% success rate). ALL TESTS PASSED: test_mockpms_search_basic_contract, test_mockpms_quote_basic_contract, test_mockpms_booking_basic_contract, and test_mockpms_price_changed_409_contract all working correctly. MockPMS integration contracts are stable and functioning as expected."
 
+  - task: "CRM Deals Backend Smoke Test"
+    implemented: true
+    working: true
+    file: "/app/backend/app/routers/crm_deals.py, /app/backend/app/services/crm_deals.py, /app/backend/app/schemas_crm.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ CRM DEALS BACKEND SMOKE TEST COMPLETE - All 7 test scenarios passed (100% success rate). COMPREHENSIVE FUNCTIONALITY VERIFIED: A) AUTH & ERİŞİM KONTROLLERİ: Anonymous GET /api/crm/deals correctly rejected with 401 Unauthorized, admin login successful (admin@acenta.test/admin123) with proper JWT token and organization_id extraction (695e03c80b04ed31c4eaa899), authenticated GET /api/crm/deals returns proper structure {items: [], total: 0, page: 1, page_size: 50}. B) DEAL CREATE + LIST: POST /api/crm/deals working correctly with body {customer_id: null, title: 'Test Deal 1', amount: 1000, currency: 'EUR'}, response verified: id starts with 'deal_' prefix (deal_8bf207b96ac04b49826f631bf12ac4e3), organization_id populated correctly, stage='new' (default), status='open' (default), no '_id' field leaked in response, GET /api/crm/deals?status=open finds created deal in list. C) STAGE/STATUS NORMALİZASYONU: PATCH /api/crm/deals/{id} with {stage: 'quoted'} working correctly (stage='quoted', status remains 'open'), PATCH with {stage: 'won'} working correctly with normalization (stage='won', status='won' - normalize function enforced), GET /api/crm/deals?status=won finds deal in won list. D) LINK-BOOKING ENDPOINT: POST /api/crm/deals/{id}/link-booking with {booking_id: 'bk_test_123'} working correctly, response verified: won_booking_id='bk_test_123', stage='won' (idempotent enforce), status='won' (idempotent enforce). E) EMPTY PATCH GUARD: PATCH /api/crm/deals/{id} with empty body {} correctly returns 400 with detail='No fields to update'. F) ORG ISOLATION: All deals in list have correct organization_id matching admin org (695e03c80b04ed31c4eaa899), filter always applied with organization_id, org scoping working correctly. G) EDGE CASES: Non-existent deal PATCH returns 404, non-existent deal link-booking returns 404. CRITICAL FINDINGS: ✅ Deal ID'leri 'deal_' prefix'i ile başlıyor, ✅ Response body'de '_id' alanı sızıntısı yok, ✅ Stage/status normalizasyonu çalışıyor (won stage → won status), ✅ Empty patch guard implementasyonu doğru, ✅ Organization scoping tüm endpoint'lerde çalışıyor, ✅ Hiçbir 500/stack trace görülmedi. ACCEPTANCE CRITERIA MET: ✅ Anonymous istek 401 döndürüyor, ✅ Admin token ile 200 + doğru şema, ✅ Deal create çalışıyor (deal_ prefix, organization_id dolu, default stage/status), ✅ Stage/status normalizasyonu (won stage → won status), ✅ Link-booking endpoint çalışıyor (idempotent enforce), ✅ Empty patch guard (400 'No fields to update'), ✅ Org isolation (organization_id ile filter). CRM Deals backend API production-ready with complete functionality as per Turkish specification requirements."
+
 ## metadata:
   created_by: "testing_agent"
   version: "1.1"

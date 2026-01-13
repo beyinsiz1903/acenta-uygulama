@@ -117,6 +117,12 @@ export default function BookProductPage() {
             </div>
           </div>
 
+          {!org && (
+            <div className="text-xs text-red-600">
+              Kuruluş parametresi eksik. Lütfen URL'ye ?org=&lt;organization_id&gt; parametresi ekleyin.
+            </div>
+          )}
+
           <div className="grid grid-cols-3 gap-2">
             <div className="space-y-1">
               <label className="font-medium">Yetişkin</label>

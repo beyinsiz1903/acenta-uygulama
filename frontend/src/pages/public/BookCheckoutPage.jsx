@@ -1,12 +1,71 @@
 import React, { useState } from "react";
 import { useParams, useSearchParams, useNavigate } from "react-router-dom";
+import { loadStripe } from "@stripe/stripe-js";
+import { Elements, CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 
 import { Card } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { createPublicCheckout, apiErrorMessage } from "../../lib/publicBooking";
 
-export default function BookCheckoutPage() {
-  const { productId } = useParams();
+const STRIPE_PUBLISHABLE_KEY = window.STRIPE_PUBLISHABLE_KEY || process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY || "";
+const stripePromise = STRIPE_PUBLISHABLE_KEY ? loadStripe(STRIPE_PUBLISHABLE_KEY) : Promise.resolve(null);
+
+function PublicCheckoutPaymentForm({ clientSecret, bookingCode, onSuccess }) {
+  const stripe = useStripe();
+  const elements = useElements();
+
+  const [paying, setPaying] = useState(false);
+  const [stripeError, setStripeError] = useState("");
+
+  const handlePay = async (e) => {
+    e.preventDefault();
+    if (!stripe || !elements || !clientSecret) return;
+
+    setPaying(true);
+    setStripeError("");
+
+    try {
+      const card = elements.getElement(CardElement);
+      if (!card) {
+        setStripeError("Kart alanı yüklenemedi.");
+        setPaying(false);
+        return;
+      }
+
+      const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+        payment_method: { card },
+      });
+
+      if (error) {
+        setStripeError(error.message || "Ödeme başarısız oldu. Lütfen tekrar deneyin.");
+        setPaying(false);
+        return;
+      }
+
+      if (paymentIntent && paymentIntent.status === "succeeded") {
+        onSuccess(bookingCode);
+      } else {
+        setStripeError("Ödeme henüz tamamlanmadı. Lütfen tekrar deneyin.");
+      }
+    } catch (err) {
+      setStripeError("Ödeme sırasında bir hata oluştu. Lütfen tekrar deneyin.");
+    } finally {
+      setPaying(false);
+    }
+  };
+
+  if (!clientSecret) {
+    return (
+      <p className="text-xs text-red-600">
+        Ödeme başlatılamadı. Lütfen daha sonra tekrar deneyin veya destek ile iletişime geçin.
+      </p>
+    );
+  }
+
+  if (!STRIPE_PUBLISHABLE_KEY) {
+    return (
+      <p className="text-xs text-red-600">
+        Stripe yapılandırması eksik. Ödeme formu gösterilemiyor ancak rezervasyon kodunuz:{  const { productId } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 

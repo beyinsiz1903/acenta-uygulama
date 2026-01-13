@@ -174,6 +174,55 @@ async def request_link(body: MyBookingRequestLinkBody, request: Request):
 """.strip()
     text_body = f"Rezervasyonunuzu bu bağlantıdan görüntüleyebilirsiniz / You can view your booking at: {link}".strip()
 
+
+
+@router.post("/create-token", response_model=MyBookingInstantTokenResponse)
+async def create_instant_token(body: MyBookingInstantTokenBody, request: Request):
+    """Instant /my-booking access token for public confirmation page.
+
+    Contract:
+    - Always returns 200 with {ok: true}
+    - When booking is found and not rate-limited, includes `token` and `expires_at`.
+    - When not found or rate-limited, omits token/expires_at for enumeration safety.
+    """
+
+    db = await get_db()
+    client_ip = request.client.host if request.client else "noip"
+
+    # Rate limit per IP + org+booking_code combination
+    rate_key = f"instant-token|{body.org}|{body.booking_code}"
+    try:
+        await _rate_limit_public_request(db, ip=client_ip, key=rate_key)
+    except HTTPException:
+        # Enumeration-safe: still return ok=true without token
+        return MyBookingInstantTokenResponse(ok=True)
+
+    # Find booking by organization + booking_code
+    booking = await db.bookings.find_one(
+        {"organization_id": body.org, "booking_code": body.booking_code}
+    )
+    if not booking:
+        return MyBookingInstantTokenResponse(ok=True)
+
+    # Create public token; reuse existing helper (24h TTL by default)
+    token = await create_public_token(
+        db,
+        booking=booking,
+        email=None,
+        client_ip=client_ip,
+        user_agent=request.headers.get("User-Agent", ""),
+    )
+
+    # Compute expiry as now + PUBLIC_TOKEN_TTL_HOURS (best-effort, independent of DB)
+    now = now_utc()
+    expires_at = now + timedelta(hours=PUBLIC_TOKEN_TTL_HOURS)
+
+    return MyBookingInstantTokenResponse(
+        ok=True,
+        token=token,
+        expires_at=expires_at.isoformat(),
+    )
+
     if org_id:
         try:
             await enqueue_generic_email(

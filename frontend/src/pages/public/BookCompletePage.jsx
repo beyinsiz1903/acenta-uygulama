@@ -152,11 +152,9 @@ export default function BookCompletePage() {
           <Button
             size="sm"
             variant="outline"
-            onClick={() => {
-              window.location.href = "/my-booking";
-            }}
+            onClick={handleViewBooking}
           >
-            Rezervasyonumu Görüntüle
+            {instantToken ? "Hemen Görüntüle" : "Rezervasyonumu Görüntüle"}
           </Button>
         </div>
 

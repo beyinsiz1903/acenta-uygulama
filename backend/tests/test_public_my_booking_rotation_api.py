@@ -63,7 +63,7 @@ async def test_root_token_first_use_rotates_and_marks_used(async_client, test_db
 async def test_root_token_second_use_is_not_found(async_client, test_db):
     """Second resolve of the same root token must behave as NOT_FOUND."""
 
-    db = await get_db()
+    db = test_db
 
     await db.bookings.delete_many({})
     await db.booking_public_tokens.delete_many({})

@@ -231,8 +231,9 @@
 
 ## test_plan:
   current_focus:
-    - "F3.T2 BookCompletePage instant MyBooking button"
-  stuck_tasks: []
+    - "F2.FE.T3 Checkout & Complete polish"
+  stuck_tasks:
+    - "F2.FE.T3 Checkout & Complete polish"
   test_all: false
   test_priority: "high_first"
 

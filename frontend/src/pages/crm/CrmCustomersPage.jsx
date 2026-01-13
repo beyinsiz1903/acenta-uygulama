@@ -253,7 +253,7 @@ export default function CrmCustomersPage() {
             setPage(1);
             setTag(e.target.value);
           }}
-          placeholder="Etiket (f6r: vip)"
+          placeholder="Etiket (ör: vip)"
           style={{ padding: 10, borderRadius: 10, border: "1px solid #ddd", width: 180 }}
         />
 

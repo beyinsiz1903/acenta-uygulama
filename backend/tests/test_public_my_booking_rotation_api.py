@@ -95,7 +95,7 @@ async def test_root_token_second_use_is_not_found(async_client, test_db):
 async def test_rotated_token_multi_use_without_further_rotation(async_client, test_db):
     """Rotated token should be multi-use and not return next_token again."""
 
-    db = await get_db()
+    db = test_db
 
     await db.bookings.delete_many({})
     await db.booking_public_tokens.delete_many({})

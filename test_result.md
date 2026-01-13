@@ -190,6 +190,21 @@
     priority: "high"
     needs_retesting: false
     status_history:
+      - working: true
+        agent: "testing"
+        comment: "F2.FE.T2 frontend flow previously tested and confirmed working."
+
+  - task: "F2.FE.T3 Checkout & Complete polish"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/public/BookCheckoutPage.jsx, /app/frontend/src/pages/public/BookCompletePage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Checkout & Complete sayfalarna guard eklendi (eksik org/quote_id/booking_code i 7cin EmptyState + CTA), checkout formunda loading/disabled state gelendirildi ve provider_unavailable/Stripe hata durumlar i 7cin Trk e mesaj + opsiyonel 'Detay' gsterimi eklendi. L0tfen yeni guard ve hata durumlar i 7in test ekle."
       - working: "NA"
         agent: "main"
         comment: "Initial implementation + normalized error handling for quote form, client-side date validation, and navigation to /book/:productId/checkout with quote_id + org. Please verify 404/422/429 behaviors and success path from /book → /book/:productId → /book/:productId/checkout."

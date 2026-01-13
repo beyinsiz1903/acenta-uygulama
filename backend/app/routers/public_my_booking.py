@@ -414,8 +414,23 @@ async def request_amend(token: str, request: Request, body: dict[str, Any]):
 async def get_my_booking(token: str):
     db = await get_db()
 
-    token_doc, booking = await _resolve_public_token(db, token)
+    from app.errors import AppError
+
+    try:
+        # One-time + rotasyonlu resolve
+        token_doc, booking, new_token_doc = await resolve_public_token_with_rotation(db, token)
+    except AppError as exc:
+        # Mevcut F3 kontratına uygun 404 dönüşü için HTTPException fırlatıyoruz
+        raise HTTPException(status_code=exc.status_code, detail=exc.message)
+
     view = build_booking_public_view(booking)
+
+    # Opsiyonel: frontend için next_token ekle (rotasyon sonrası)
+    if new_token_doc and new_token_doc.get("token_hash"):
+        # Raw token'ı bilmiyoruz; FE tarafında sadece /book/complete → /my-booking/{token}
+        # flow’unda mevcut token kullanılacak. Şimdilik response modelini bozmayalım.
+        # Gerekirse ileride ayrı bir response modeline next_token alanı eklenebilir.
+        pass
 
     # Mask PII: drop guest_email/phone from view
     view.pop("guest_email", None)

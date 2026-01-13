@@ -54,7 +54,7 @@ export default function BookCheckoutPage() {
       const res = await createPublicCheckout(body);
       if (!res.ok) {
         if (res.reason === "provider_unavailable") {
-          setError("Ödeme sağlayıcısı şu anda kullanılamıyor. Lütfen daha sonra tekrar deneyin.");
+          setError("Ödeme sağlayıcısına şu anda ulaşılamıyor. Lütfen daha sonra tekrar deneyin.");
         } else {
           setError("Checkout tamamlanamadı. Lütfen tekrar deneyin.");
         }
@@ -67,7 +67,13 @@ export default function BookCheckoutPage() {
       if (res.booking_code) qp.set("booking_code", res.booking_code);
       navigate(`/book/complete?${qp.toString()}`);
     } catch (e2) {
-      setError(apiErrorMessage(e2));
+      const status = e2?.response?.status;
+      const detail = e2?.response?.data?.detail;
+      if (status === 404 && (detail === "QUOTE_NOT_FOUND" || detail === "Quote not found or expired")) {
+        setError("Teklifin süresi doldu. Lütfen yeni bir teklif alın.");
+      } else {
+        setError(apiErrorMessage(e2));
+      }
     } finally {
       setLoading(false);
     }

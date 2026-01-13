@@ -104,6 +104,7 @@ function PublicCheckoutPaymentForm({ clientSecret, bookingCode, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState(null);
+  const [clientSecret, setClientSecret] = useState("");
 
   const getIdempotencyKey = () => {
     const keyName = `public_checkout_idem_${quoteId}`;

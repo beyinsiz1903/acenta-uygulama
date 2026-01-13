@@ -35,7 +35,7 @@ async def http_list_customers(
     page: int = 1,
     page_size: int = 25,
     db=Depends(get_db),
-    current_user: AuthUser = Depends(guard_scopes(["agency_agent", "super_admin"])),
+    current_user: AuthUser = Depends(require_roles(["agency_agent", "super_admin"])),
 ):
     org_id = current_user.organization_id
     items, total = await list_customers(
@@ -54,7 +54,7 @@ async def http_list_customers(
 async def http_create_customer(
     body: CustomerCreate,
     db=Depends(get_db),
-    current_user: AuthUser = Depends(guard_scopes(["agency_agent", "super_admin"])),
+    current_user: AuthUser = Depends(require_roles(["agency_agent", "super_admin"])),
 ):
     org_id = current_user.organization_id
     user_id = current_user.id
@@ -71,7 +71,7 @@ async def http_create_customer(
 async def http_get_customer_detail(
     customer_id: str,
     db=Depends(get_db),
-    current_user: AuthUser = Depends(guard_scopes(["agency_agent", "super_admin"])),
+    current_user: AuthUser = Depends(require_roles(["agency_agent", "super_admin"])),
 ):
     org_id = current_user.organization_id
     data = await get_customer_detail(db, org_id, customer_id)
@@ -85,7 +85,7 @@ async def http_patch_customer(
     customer_id: str,
     body: CustomerPatch,
     db=Depends(get_db),
-    current_user: AuthUser = Depends(guard_scopes(["agency_agent", "super_admin"])),
+    current_user: AuthUser = Depends(require_roles(["agency_agent", "super_admin"])),
 ):
     org_id = current_user.organization_id
     user_id = current_user.id

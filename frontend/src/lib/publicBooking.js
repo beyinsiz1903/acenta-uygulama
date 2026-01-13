@@ -7,7 +7,7 @@ export async function searchPublic(params = {}) {
   } catch (e) {
     const status = e?.response?.status ?? null;
     const data = e?.response?.data || {};
-    const code = data.code || data.error || data.detail || null;
+    const code = data.code || data.error || data.detail || data?.error?.code || null;
     const message = apiErrorMessage(e);
     const normalized = { status, code, message, raw: e };
     throw normalized;
@@ -15,13 +15,29 @@ export async function searchPublic(params = {}) {
 }
 
 export async function createPublicQuote(body) {
-  const res = await api.post("/public/quote", body);
-  return res.data;
+  try {
+    const res = await api.post("/public/quote", body);
+    return res.data;
+  } catch (e) {
+    const status = e?.response?.status ?? null;
+    const data = e?.response?.data || {};
+    const code = data.code || data.error || data.detail || data?.error?.code || null;
+    const message = apiErrorMessage(e);
+    throw { status, code, message, raw: e };
+  }
 }
 
 export async function createPublicCheckout(body) {
-  const res = await api.post("/public/checkout", body);
-  return res.data;
+  try {
+    const res = await api.post("/public/checkout", body);
+    return res.data;
+  } catch (e) {
+    const status = e?.response?.status ?? null;
+    const data = e?.response?.data || {};
+    const code = data.code || data.error || data.detail || data?.error?.code || null;
+    const message = apiErrorMessage(e);
+    throw { status, code, message, raw: e };
+  }
 }
 
 export async function getPublicBookingSummary({ org, booking_code }) {

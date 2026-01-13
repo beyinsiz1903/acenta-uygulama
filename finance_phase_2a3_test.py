@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 from bson import ObjectId
 
 class FinancePhase2A3Tester:
-    def __init__(self, base_url="https://syroce-book.preview.emergentagent.com"):
+    def __init__(self, base_url="https://b2b-hotel-suite.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.tests_run = 0

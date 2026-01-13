@@ -5,4 +5,14 @@ export async function searchPublic(params = {}) {
   return res.data;
 }
 
+export async function createPublicQuote(body) {
+  const res = await api.post("/public/quote", body);
+  return res.data;
+}
+
+export async function createPublicCheckout(body) {
+  const res = await api.post("/public/checkout", body);
+  return res.data;
+}
+
 export { apiErrorMessage };

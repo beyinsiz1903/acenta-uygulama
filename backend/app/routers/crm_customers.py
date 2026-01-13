@@ -85,9 +85,9 @@ async def http_patch_customer(
     customer_id: str,
     body: CustomerPatch,
     db=Depends(get_db),
-    current_user: AuthUser = Depends(require_roles(["agency_agent", "super_admin"])),
+    current_user: dict = Depends(require_roles(["agency_agent", "super_admin"])),
 ):
-    org_id = current_user.organization_id
+    org_id = current_user.get("organization_id")
 
     updated = await patch_customer(db, org_id, customer_id, body.model_dump())
     if not updated:

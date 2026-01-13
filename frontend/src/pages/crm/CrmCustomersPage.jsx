@@ -194,8 +194,8 @@ export default function CrmCustomersPage() {
     <div style={{ padding: 16 }}>
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
         <div>
-          <h1 style={{ margin: 0, fontSize: 22 }}>CRM b7 Mf50fteriler</h1>
-          <div style={{ color: "#666", marginTop: 4, fontSize: 13 }}>Mf50fterileri aray0fn, etiketleyin ve detay0fna inin.</div>
+          <h1 style={{ margin: 0, fontSize: 22 }}>CRM • Müşteriler</h1>
+          <div style={{ color: "#666", marginTop: 4, fontSize: 13 }}>Müşterileri arayın, etiketleyin ve detayına inin.</div>
         </div>
         <button
           onClick={openCreate}

@@ -159,9 +159,28 @@ async def get_customer_detail(
     if not customer:
         return None
 
-    recent_bookings = []
-    open_deals = []
-    open_tasks = []
+    recent_bookings: list[dict] = []
+
+    # TODO: When bookings.customer_id is introduced, wire recent_bookings here.
+
+    open_deals = await db.crm_deals.find(
+        {
+            "organization_id": organization_id,
+            "customer_id": customer_id,
+            "status": "open",
+        },
+        {"_id": 0},
+    ).sort([("updated_at", -1)]).limit(10).to_list(length=10)
+
+    open_tasks = await db.crm_tasks.find(
+        {
+            "organization_id": organization_id,
+            "related_type": "customer",
+            "related_id": customer_id,
+            "status": "open",
+        },
+        {"_id": 0},
+    ).sort([("due_date", 1), ("updated_at", -1)]).limit(10).to_list(length=10)
 
     return {
         "customer": customer,

@@ -318,7 +318,7 @@ export default function OpsBookingDetailPage() {
                         title = `MyBooking token oluşturuldu (${channel})`;
                         const parts = [];
                         if (prefix) parts.push(`prefix=${prefix}`);
-                        if (expires) parts.push(`expires_at=${expires}`);
+                        if (expires) parts.push(`expires_at=${formatDateTime(expires)}`);
                         subtitle = parts.join(" • ");
                       } else if (eventType === "MY_BOOKING_TOKEN_ROTATED") {
                         const rootPrefix = meta.root_hash_prefix || "";

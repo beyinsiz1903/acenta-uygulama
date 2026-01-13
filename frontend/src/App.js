@@ -125,7 +125,7 @@ function App() {
           }
         />
 
-        {/* Core App Routes (Dashboard, Products, etc.) */}
+        {/* Core App Routes (Dashboard, Products, CRM, etc.) */}
         <Route
           path="/app/*"
           element={

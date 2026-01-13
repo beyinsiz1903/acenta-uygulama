@@ -110,6 +110,7 @@ export default function BookCheckoutPage() {
   const [error, setError] = useState("");
   const [result, setResult] = useState(null);
   const [clientSecret, setClientSecret] = useState("");
+  const [providerError, setProviderError] = useState(null);
   const [showProviderDetails, setShowProviderDetails] = useState(false);
 
   const getIdempotencyKey = () => {
@@ -128,6 +129,7 @@ export default function BookCheckoutPage() {
     setLoading(true);
     setError("");
     setShowProviderDetails(false);
+    setProviderError(null);
     setResult(null);
 
     try {

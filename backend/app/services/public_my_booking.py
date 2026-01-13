@@ -253,16 +253,3 @@ async def resolve_public_token_with_rotation(db, token: str) -> Tuple[dict[str, 
     )
 
     return token_doc, booking, new_token_doc
-
-            "last_ua": token_doc.get("last_ua"),
-        }
-        # We don't have fresh IP/UA here; endpoints can set them if needed.
-        await db.booking_public_tokens.update_one(
-            {"_id": token_doc["_id"]},
-            {"$inc": {"access_count": 1}, "$set": update},
-        )
-    except Exception:
-        # Telemetry failures must not break main flow
-        pass
-
-    return token_doc, booking

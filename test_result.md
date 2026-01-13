@@ -2140,10 +2140,12 @@
   run_ui: false
 
 ## test_plan:
-  current_focus: []
-  stuck_tasks: []
+  current_focus:
+    - "FAZ 2 / F2.FE.T2.1 Public Book Quote + Checkout Flow Test"
+  stuck_tasks:
+    - "FAZ 2 / F2.FE.T2.1 Public Book Quote + Checkout Flow Test"
   test_all: false
-  test_priority: "high_first"
+  test_priority: "stuck_first"
 
 ## agent_communication:
   - agent: "testing"

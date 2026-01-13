@@ -300,6 +300,7 @@ async def resolve_public_token_with_rotation(db, token: str) -> Tuple[dict[str, 
             client_ip=token_doc.get("last_ip") or token_doc.get("created_ip"),
             user_agent=token_doc.get("last_ua") or token_doc.get("created_ua"),
             rotated_from_token_hash=token_doc.get("token_hash"),
+            channel="instant",
         )
 
     return token_doc, booking, next_token

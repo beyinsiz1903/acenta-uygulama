@@ -17,7 +17,12 @@ async def ensure_seed_data() -> None:
 
     await db.organizations.create_index("slug", unique=True)
     await db.users.create_index([("organization_id", 1), ("email", 1)], unique=True)
-    await db.customers.create_index([("organization_id", 1), ("email", 1)])
+    await db.customers.create_index([("organization_id", 1), ("email", 1)])  # legacy index (Phase 0)
+
+    # FAZ-3: CRM-related indexes
+    from app.indexes.crm_indexes import ensure_crm_indexes
+
+    await ensure_crm_indexes(db)
     await db.products.create_index([("organization_id", 1), ("type", 1)])
     await db.rate_plans.create_index([("organization_id", 1), ("product_id", 1)])
     await db.inventory.create_index([("organization_id", 1), ("product_id", 1), ("date", 1)], unique=True)

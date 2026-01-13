@@ -165,6 +165,17 @@ function PublicCheckoutPaymentForm({ clientSecret, bookingCode, onSuccess }) {
     <div className="min-h-screen bg-slate-50 px-4 py-6 flex justify-center">
       <Card className="w-full max-w-lg p-4 space-y-3">
         <div className="space-y-1">
+ {result.booking_code}
+                </p>
+              )
+            ) : (
+              <p className="text-xs text-red-600">
+                Ödeme başlatılamadı. Lütfen daha sonra tekrar deneyin veya destek ile iletişime geçin.
+              </p>
+            )}
+          </div>
+        )}
+
           <h1 className="text-lg font-semibold">Checkout (v1)</h1>
           <p className="text-xs text-muted-foreground">
             Bu adımda misafir bilgilerini alıyor ve backend üzerinden public checkout isteği gönderiyoruz.

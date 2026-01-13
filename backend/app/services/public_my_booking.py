@@ -212,13 +212,19 @@ async def resolve_public_token_with_rotation(db, token: str) -> Tuple[dict[str, 
         # Root token: exactly-once use. Only transition from implicit/explicit active + no rotation parent.
         root_filter: dict[str, Any] = {
             **base_filter,
-            "$or": [
-                {"status": "active"},
-                {"status": {"$exists": False}},
-            ],
-            "$or": [
-                {"rotated_from_token_hash": None},
-                {"rotated_from_token_hash": {"$exists": False}},
+            "$and": [
+                {
+                    "$or": [
+                        {"status": "active"},
+                        {"status": {"$exists": False}},
+                    ]
+                },
+                {
+                    "$or": [
+                        {"rotated_from_token_hash": None},
+                        {"rotated_from_token_hash": {"$exists": False}},
+                    ]
+                },
             ],
         }
 

@@ -24,7 +24,13 @@ async def ensure_public_indexes(db):
     # ------------------------------------------------------------------
     # booking_public_tokens (public my-booking portal)
     # ------------------------------------------------------------------
+    # New-style hash-based unique index
     await _safe_create(
+        db.booking_public_tokens,
+        [("token_hash", ASCENDING)],
+        unique=True,
+        name="uniq_public_token_hash",
+    )
 
     # Legacy plaintext token index (if present) - ensure it is a partial unique
     # index so that new hash-only documents without `token` field do not hit
@@ -55,12 +61,6 @@ async def ensure_public_indexes(db):
                     "Failed to recreate uniq_public_token index on booking_public_tokens: %s",
                     exc,
                 )
-
-        db.booking_public_tokens,
-        [("token_hash", ASCENDING)],
-        unique=True,
-        name="uniq_public_token_hash",
-    )
 
     await _safe_create(
         db.booking_public_tokens,

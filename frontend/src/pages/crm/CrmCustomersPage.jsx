@@ -326,7 +326,7 @@ export default function CrmCustomersPage() {
           <div style={{ padding: 18 }}>
             <div style={{ fontSize: 16, fontWeight: 600 }}>Henüz müşteri yok.</div>
             <div style={{ marginTop: 6, color: "#666" }}>
-              İlk müşterinizi oluşturmak için "Yeni Müşteri" butonunu kullanın.
+              İlk müşterinizi oluşturmak için Yeni Müşteri butonunu kullanın.
             </div>
 
             <button

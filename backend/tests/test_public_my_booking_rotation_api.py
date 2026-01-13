@@ -139,7 +139,7 @@ async def test_root_token_race_results_in_single_rotation(async_client, test_db)
     This exercises the concurrency-safe find_one_and_update guard.
     """
 
-    db = await get_db()
+    db = test_db
 
     await db.bookings.delete_many({})
     await db.booking_public_tokens.delete_many({})

@@ -268,7 +268,7 @@ async def resolve_public_token_with_rotation(db, token: str) -> Tuple[dict[str, 
             "_id": token_doc["_id"],
             "expires_at": {"$gt": now},
             "status": {"$ne": "revoked"},
-            "rotated_from_token_hash": {"$ne": None},
+            "rotated_from_token_hash": {"$type": "string"},
         }
 
         update_fields = {

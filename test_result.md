@@ -182,6 +182,18 @@
         agent: "testing"
 
 ## frontend:
+  - task: "PR#4 CRM Customers Frontend Smoke Test"
+    implemented: true
+    working: false
+    file: "/app/frontend/src/pages/crm/CrmCustomersPage.jsx, /app/frontend/src/pages/crm/CrmCustomerDetailPage.jsx, /app/frontend/src/lib/crm.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "❌ PR#4 CRM CUSTOMERS FRONTEND SMOKE TEST CRITICAL ISSUES FOUND - Backend APIs working perfectly but frontend has critical routing and encoding issues. BACKEND VERIFICATION (100% SUCCESS): ✅ Authentication working (admin@acenta.test/admin123), ✅ GET /api/crm/customers returns proper list with 7 customers, ✅ POST /api/crm/customers creates customers correctly (fixed missing await in router), ✅ GET /api/crm/customers/{id} returns detailed customer data with recent_bookings/open_deals/open_tasks, ✅ PATCH /api/crm/customers/{id} updates tags correctly (vip, istanbul), ✅ Search filter working (?search=Test%20CRM returns 1 result), ✅ Type filter working (?type=individual vs ?type=corporate), ✅ Tag filter working (?tag=vip returns 5 results). CRITICAL FRONTEND ISSUES: ❌ ROUTING NOT CONFIGURED: CRM routes missing from App.js - added imports and routes for /app/crm/customers and /app/crm/customers/:customerId manually, ❌ CHARACTER ENCODING CORRUPTION: Frontend files have severe encoding issues - Turkish characters corrupted (Müşteri → Mf50fteri, Önceki → d6nceki, Özet → d6zet), making UI text unreadable, ❌ BROWSER TESTING BLOCKED: Playwright browser crashes with SIGSEGV error preventing comprehensive UI testing, ❌ MISSING AWAIT FIX: Fixed missing await in backend create_customer router (line 61) - was causing 500 errors. IMPACT: While backend is production-ready, frontend cannot be properly tested due to routing issues and text encoding corruption. Users would see garbled Turkish text throughout the CRM interface. REQUIRES IMMEDIATE FIXES: 1) Fix character encoding in CRM frontend files, 2) Ensure CRM routes are properly configured in App.js, 3) Investigate browser testing environment issues."
+
   - task: "F2.FE.T2 BookProductPage quote form + checkout navigation"
     implemented: true
     working: true

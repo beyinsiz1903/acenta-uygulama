@@ -174,6 +174,22 @@ async def request_link(body: MyBookingRequestLinkBody, request: Request):
 """.strip()
     text_body = f"Rezervasyonunuzu bu bağlantıdan görüntüleyebilirsiniz / You can view your booking at: {link}".strip()
 
+    if org_id:
+        try:
+            await enqueue_generic_email(
+                db,
+                organization_id=str(org_id),
+                to_addresses=[email_raw],
+                subject=subject,
+                html_body=html_body,
+                text_body=text_body,
+                event_type="my_booking.link",
+            )
+        except Exception:
+            # Outbox failures must not leak; main behavior is still ok=true
+            pass
+
+    return MyBookingTokenResponse()
 
 
 @router.post("/create-token", response_model=MyBookingInstantTokenResponse, response_model_exclude_none=True)

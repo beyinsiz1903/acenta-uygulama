@@ -1,0 +1,69 @@
+from __future__ import annotations
+
+from pymongo import ASCENDING, DESCENDING
+
+
+async def ensure_crm_indexes(db):
+    """Ensure indexes for CRM-related collections (customers, deals, tasks, activities).
+
+    Called from seed/startup alongside other index initializers.
+    """
+
+    import logging
+
+    logger = logging.getLogger(__name__)
+
+    async def _safe_create(collection, keys, **kwargs):
+        name = kwargs.get("name")
+        try:
+            await collection.create_index(keys, **kwargs)
+        except Exception as exc:
+            logger.warning("Failed to ensure index %s on %s: %s", name, collection.name, exc)
+
+    # customers
+    await _safe_create(
+        db.customers,
+        [("organization_id", ASCENDING), ("name", ASCENDING)],
+        name="crm_customers_by_org_name",
+    )
+
+    await _safe_create(
+        db.customers,
+        [("organization_id", ASCENDING), ("tags", ASCENDING)],
+        name="crm_customers_by_org_tags",
+    )
+
+    await _safe_create(
+        db.customers,
+        [("organization_id", ASCENDING), ("contacts.value", ASCENDING)],
+        name="crm_customers_by_org_contact",
+    )
+
+    # future CRM collections (deals, tasks, activities) - prepared for next PRs
+    await _safe_create(
+        db.crm_deals,
+        [("organization_id", ASCENDING), ("stage", ASCENDING), ("owner_user_id", ASCENDING)],
+        name="crm_deals_by_org_stage_owner",
+    )
+
+    await _safe_create(
+        db.crm_tasks,
+        [
+            ("organization_id", ASCENDING),
+            ("owner_user_id", ASCENDING),
+            ("due_date", ASCENDING),
+            ("status", ASCENDING),
+        ],
+        name="crm_tasks_by_org_owner_due_status",
+    )
+
+    await _safe_create(
+        db.crm_activities,
+        [
+            ("organization_id", ASCENDING),
+            ("related_type", ASCENDING),
+            ("related_id", ASCENDING),
+            ("created_at", DESCENDING),
+        ],
+        name="crm_activities_by_org_related_created",
+    )

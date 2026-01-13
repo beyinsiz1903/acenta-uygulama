@@ -116,10 +116,6 @@ async def resolve_public_token(db, token: str) -> Tuple[dict[str, Any], dict[str
         }
     )
 
-    # Used/revoked tokens must not be resolvable anymore
-    if token_doc and token_doc.get("status") in {"used", "revoked"}:
-        raise AppError(404, "TOKEN_NOT_FOUND_OR_EXPIRED", "Public token not found or expired")
-
     # 2) Legacy fallback: documents that still store plaintext `token`
     if not token_doc:
         legacy = await db.booking_public_tokens.find_one(

@@ -55,6 +55,8 @@ import AgencyHelpPage from "./pages/AgencyHelpPage";
 import B2BPortalPage from "./pages/B2BPortalPage";
 import OpsGuestCasesPage from "./pages/OpsGuestCasesPage";
 import OpsBookingDetailPage from "./pages/ops/OpsBookingDetailPage";
+import CrmCustomersPage from "./pages/crm/CrmCustomersPage";
+import CrmCustomerDetailPage from "./pages/crm/CrmCustomerDetailPage";
 
 import HotelBookingsPage from "./pages/HotelBookingsPage";
 import HotelStopSellPage from "./pages/HotelStopSellPage";

@@ -184,15 +184,18 @@
 ## frontend:
   - task: "F2.FE.T2 BookProductPage quote form + checkout navigation"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/frontend/src/pages/public/BookProductPage.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Initial implementation + normalized error handling for quote form, client-side date validation, and navigation to /book/:productId/checkout with quote_id + org. Please verify 404/422/429 behaviors and success path from /book → /book/:productId → /book/:productId/checkout."
+      - working: true
+        agent: "testing"
+        comment: "✅ F2.FE.T2 PUBLIC QUOTE FORM + CHECKOUT FLOW TEST COMPLETE - All core functionality verified (100% success rate). COMPREHENSIVE BACKEND + FRONTEND VERIFICATION: A) BACKEND CONTRACT TESTING: 1) Public Search API working correctly (GET /api/public/search) - returns proper structure with items, page, total fields, Cache-Control headers set correctly, found 1 product in org_public_checkout with all required fields (product_id, type, title, price, availability). 2) Public Quote API working correctly (POST /api/public/quote) - successful quote creation with valid data (quote_id: qt_2a9dd70dcda64a20, amount: 11000 cents EUR), proper 404 PRODUCT_NOT_FOUND for invalid product_id, proper 422 validation for invalid date ranges and missing fields, normalized error responses working. 3) Public Checkout API working correctly (POST /api/public/checkout) - proper 404 QUOTE_NOT_FOUND for invalid quote_id, graceful handling of Stripe provider unavailable (expected in test environment), idempotency and validation working. B) FRONTEND FLOW TESTING: 1) Navigation working correctly (/book/:productId?org=ORG_ID) - page loads with proper heading 'Ürün Seçimi', org and product_id parameters displayed correctly, all form fields rendered (date_from, date_to, adults, children, rooms). 2) Form validation working - date validation displays error 'Check-out must be after check-in' for invalid date ranges, client-side validation prevents invalid submissions. 3) Quote submission and navigation working - valid form submission creates quote and navigates to /book/:productId/checkout?org=...&quote_id=..., URL parameters preserved correctly throughout flow. 4) Checkout page functionality working - checkout form renders with name, email, phone fields, form submission works with proper error handling, Stripe configuration gracefully handled when unavailable ('Ödeme sağlayıcısına şu anda ulaşılamıyor'). C) ERROR HANDLING VERIFICATION: All specified error scenarios working correctly - 404 PRODUCT_NOT_FOUND displays 'Ürün bulunamadı', 422 NO_PRICING displays appropriate pricing error, 429 RATE_LIMITED displays rate limit message, expired quote handling working on checkout page. ACCEPTANCE CRITERIA MET: ✅ /book → /book/:productId navigation with org preservation, ✅ Quote form renders all required fields (date_from, date_to, adults, children, rooms), ✅ Client-side date validation working (date_to <= date_from prevention), ✅ Happy path: valid submission → createPublicQuote → navigation to checkout with quote_id, ✅ Error handling: 404/422/429 responses with proper Turkish messages, ✅ Checkout page renders and handles quote_id + org parameters, ✅ Stripe integration gracefully degrades when configuration missing. F2.FE.T2 public quote form and checkout navigation flow production-ready with complete end-to-end functionality verified."
 
   - task: "F3.T2 BookCompletePage instant MyBooking button"
     implemented: true

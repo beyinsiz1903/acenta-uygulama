@@ -1,0 +1,114 @@
+from __future__ import annotations
+
+from datetime import datetime
+from typing import List, Literal, Optional
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel, constr
+
+from app.auth import require_roles
+from app.db import get_db
+from app.services.crm_tasks import create_task, list_tasks, patch_task
+
+
+router = APIRouter(prefix="/api/crm/tasks", tags=["crm-tasks"])
+
+
+class TaskOut(BaseModel):
+    id: str
+    organization_id: str
+    owner_user_id: str
+    title: str
+    status: Literal["open", "done"] = "open"
+    priority: Literal["low", "normal", "high"] = "normal"
+    due_date: Optional[datetime] = None
+    related_type: Optional[Literal["customer", "deal", "booking"]] = None
+    related_id: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
+
+
+class TaskCreate(BaseModel):
+    title: constr(strip_whitespace=True, min_length=1)
+    owner_user_id: Optional[str] = None
+    status: Optional[Literal["open", "done"]] = None
+    priority: Optional[Literal["low", "normal", "high"]] = "normal"
+    due_date: Optional[datetime] = None
+    related_type: Optional[Literal["customer", "deal", "booking"]] = None
+    related_id: Optional[str] = None
+
+
+class TaskPatch(BaseModel):
+    title: Optional[constr(strip_whitespace=True, min_length=1)] = None
+    owner_user_id: Optional[str] = None
+    status: Optional[Literal["open", "done"]] = None
+    priority: Optional[Literal["low", "normal", "high"]] = None
+    due_date: Optional[datetime] = None
+
+
+class TaskListResponse(BaseModel):
+    items: List[TaskOut]
+    total: int
+    page: int
+    page_size: int
+
+
+@router.get("", response_model=TaskListResponse)
+async def http_list_tasks(
+    owner: Optional[str] = None,
+    status: Optional[Literal["open", "done"]] = "open",
+    due: Optional[Literal["today", "overdue", "week"]] = None,
+    relatedType: Optional[Literal["customer", "deal", "booking"]] = None,
+    relatedId: Optional[str] = None,
+    page: int = 1,
+    page_size: int = 50,
+    db=Depends(get_db),
+    current_user: dict = Depends(require_roles(["agency_agent", "super_admin"])),
+):
+    org_id = current_user.get("organization_id")
+    owner_user_id = owner or current_user.get("id")
+
+    items, total = await list_tasks(
+        db,
+        org_id,
+        owner_user_id=owner_user_id,
+        status=status or "open",
+        due=due,
+        related_type=relatedType,
+        related_id=relatedId,
+        page=page,
+        page_size=page_size,
+    )
+    return {"items": items, "total": total, "page": page, "page_size": page_size}
+
+
+@router.post("", response_model=TaskOut)
+async def http_create_task(
+    body: TaskCreate,
+    db=Depends(get_db),
+    current_user: dict = Depends(require_roles(["agency_agent", "super_admin"])),
+):
+    org_id = current_user.get("organization_id")
+    user_id = current_user.get("id")
+
+    task = await create_task(db, org_id, user_id, body.model_dump())
+    return task
+
+
+@router.patch("/{task_id}", response_model=TaskOut)
+async def http_patch_task(
+    task_id: str,
+    body: TaskPatch,
+    db=Depends(get_db),
+    current_user: dict = Depends(require_roles(["agency_agent", "super_admin"])),
+):
+    org_id = current_user.get("organization_id")
+
+    patch_dict = body.model_dump(exclude_unset=True)
+    if not any(v is not None for v in patch_dict.values()):
+        raise HTTPException(status_code=400, detail="No fields to update")
+
+    updated = await patch_task(db, org_id, task_id, patch_dict)
+    if not updated:
+        raise HTTPException(status_code=404, detail="Task not found")
+    return updated

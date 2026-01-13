@@ -60,9 +60,10 @@ export default function BookProductPage() {
       setQuote(res);
 
       const qp = new URLSearchParams();
-      qp.set("org", encodeURIComponent(org));
-      qp.set("quote_id", encodeURIComponent(res.quote_id));
-      navigate(`/book/${productId}/checkout?${qp.toString()}`);
+      qp.set("org", org);
+      qp.set("quote_id", res.quote_id);
+      const qs = qp.toString();
+      navigate(qs ? `/book/${productId}/checkout?${qs}` : `/book/${productId}/checkout`);
     } catch (e2) {
       if (e2 && typeof e2 === "object" && (e2.status || e2.message)) {
         setError(e2);

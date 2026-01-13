@@ -178,7 +178,8 @@ async def resolve_public_token(db, token: str) -> Tuple[dict[str, Any], dict[str
 
 
 async def resolve_public_token_with_rotation(db, token: str) -> Tuple[dict[str, Any], dict[str, Any], str | None]:
-    """Resolve a token and perform one-time rotation semantics (B1).
+    """Resolve a token and perform one-time rotation semantics (B1) on top of
+    the existing resolve_public_token helper.
 
     - Root token (rotated_from_token_hash is null/missing): one-time.
       * First resolve: marks root as used, creates a rotated active token.
@@ -189,29 +190,19 @@ async def resolve_public_token_with_rotation(db, token: str) -> Tuple[dict[str, 
     Returns: (token_doc, booking_doc, next_raw_token or None).
     """
 
+    # First, reuse the existing resolver to benefit from hash + legacy lookup
+    # and its 404 semantics.
+    token_doc, booking = await resolve_public_token(db, token)
+
     now = now_utc()
-    hashed = _hash_token(token)
-
-    base_filter: dict[str, Any] = {
-        "token_hash": hashed,
-        "expires_at": {"$gt": now},
-    }
-
-    # Load token once to decide root vs rotated semantics
-    token_doc = await db.booking_public_tokens.find_one(base_filter)
-    if not token_doc:
-        raise AppError(404, "TOKEN_NOT_FOUND_OR_EXPIRED", "Public token not found or expired")
-
-    if token_doc.get("status") == "revoked":
-        raise AppError(404, "TOKEN_NOT_FOUND_OR_EXPIRED", "Public token not found or expired")
-
     is_root = token_doc.get("rotated_from_token_hash") in (None, "")
 
-    # Concurrency-safe state transition
+    # Concurrency-safe state transition based on document _id
     if is_root:
         # Root token: exactly-once use. Only transition from implicit/explicit active + no rotation parent.
         root_filter: dict[str, Any] = {
-            **base_filter,
+            "_id": token_doc["_id"],
+            "expires_at": {"$gt": now},
             "$and": [
                 {
                     "$or": [
@@ -249,7 +240,8 @@ async def resolve_public_token_with_rotation(db, token: str) -> Tuple[dict[str, 
     else:
         # Rotated token: keep status as-is (usually active) but update telemetry/usage.
         rotated_filter: dict[str, Any] = {
-            **base_filter,
+            "_id": token_doc["_id"],
+            "expires_at": {"$gt": now},
             "status": {"$ne": "revoked"},
             "rotated_from_token_hash": {"$ne": None},
         }
@@ -270,22 +262,6 @@ async def resolve_public_token_with_rotation(db, token: str) -> Tuple[dict[str, 
             raise AppError(404, "TOKEN_NOT_FOUND_OR_EXPIRED", "Public token not found or expired")
 
         token_doc = updated
-
-    booking_id = token_doc.get("booking_id")
-    if not booking_id:
-        raise AppError(404, "BOOKING_NOT_FOUND", "Booking not found for token")
-
-    booking = await db.bookings.find_one({"_id": booking_id})
-    if not booking:
-        try:
-            oid = ObjectId(booking_id)
-        except Exception:
-            oid = None
-        if oid is not None:
-            booking = await db.bookings.find_one({"_id": oid})
-
-    if not booking:
-        raise AppError(404, "BOOKING_NOT_FOUND", "Booking not found")
 
     # For root tokens, create a rotated replacement chained to this one.
     next_token: str | None = None

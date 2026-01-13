@@ -324,8 +324,8 @@ export default function OpsBookingDetailPage() {
                         const rootPrefix = meta.root_hash_prefix || "";
                         const rotatedPrefix = meta.rotated_hash_prefix || "";
                         title = "MyBooking token rotate edildi";
-                        if (rootPrefix || rotatedPrefix) {
-                          subtitle = `${rootPrefix || "?"} → ${rotatedPrefix || "?"}`;
+                        if (rootPrefix && rotatedPrefix) {
+                          subtitle = `${rootPrefix} → ${rotatedPrefix}`;
                         }
                       } else if (eventType === "MY_BOOKING_TOKEN_ACCESSED") {
                         const tokenType = meta.token_type || "unknown";

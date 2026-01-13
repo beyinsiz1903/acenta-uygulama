@@ -147,10 +147,7 @@ function PublicCheckoutPaymentForm({ clientSecret, bookingCode, onSuccess }) {
       }
 
       setResult(res);
-
-      const qp = new URLSearchParams();
-      if (res.booking_code) qp.set("booking_code", res.booking_code);
-      navigate(`/book/complete?${qp.toString()}`);
+      setClientSecret(res.client_secret || "");
     } catch (e2) {
       const status = e2?.response?.status;
       const detail = e2?.response?.data?.detail;

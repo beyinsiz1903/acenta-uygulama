@@ -32,8 +32,18 @@ export default function BookProductPage() {
     e.preventDefault();
     if (!org) return;
 
+    // Basit client-side tarih doğrulaması (YYYY-MM-DD string karşılaştırması)
+    if (!dateFrom || !dateTo || dateTo <= dateFrom) {
+      setError({
+        status: null,
+        code: "INVALID_DATES",
+        message: "Çıkış tarihi giriş tarihinden sonra olmalıdır.",
+      });
+      return;
+    }
+
     setLoading(true);
-    setError("");
+    setError(null);
     setQuote(null);
 
     try {

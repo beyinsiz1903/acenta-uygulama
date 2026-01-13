@@ -212,9 +212,9 @@ async def resolve_public_token_with_rotation(db, token: str) -> Tuple[dict[str, 
     Returns: (token_doc, booking_doc, next_raw_token or None).
     """
 
-    # First, reuse the existing resolver to benefit from hash + legacy lookup
-    # and its 404 semantics.
-    token_doc, booking = await resolve_public_token(db, token)
+    # First, reuse low-level lookup to benefit from hash + legacy resolution
+    # without applying telemetry updates twice.
+    token_doc, booking = await _lookup_token_and_booking(db, token)
 
     now = now_utc()
     is_root = token_doc.get("rotated_from_token_hash") in (None, "")

@@ -75,6 +75,9 @@ export default function BookCompletePage() {
   const navigate = useNavigate();
   const statusBadge = summary?.status || "PENDING_PAYMENT";
 
+  const qpBackToSearch = new URLSearchParams();
+  if (org) qpBackToSearch.set("org", org);
+
   const handleViewBooking = () => {
     if (instantToken) {
       navigate(`/my-booking/${instantToken}`);

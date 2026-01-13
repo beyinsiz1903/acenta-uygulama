@@ -71,7 +71,16 @@ export default function BookCompletePage() {
     loadInstantToken();
   }, [bookingCode, org]);
 
+  const navigate = useNavigate();
   const statusBadge = summary?.status || "PENDING_PAYMENT";
+
+  const handleViewBooking = () => {
+    if (instantToken) {
+      navigate(`/my-booking/${instantToken}`);
+    } else {
+      navigate("/my-booking");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 px-4 py-6 flex justify-center">

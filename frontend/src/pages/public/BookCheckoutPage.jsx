@@ -5,6 +5,31 @@ import { Elements, CardElement, useStripe, useElements } from "@stripe/react-str
 
 import { Card } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
+ {bookingCode || "(henüz oluşturulmadı)"}.
+      </p>
+    );
+  }
+
+  return (
+    <form onSubmit={handlePay} className="space-y-3 mt-3 text-xs">
+      <div className="space-y-1">
+        <label className="font-medium">Kart Bilgileri</label>
+        <div className="border rounded-md px-2 py-2 bg-background">
+          <CardElement options={{ hidePostalCode: true }} />
+        </div>
+      </div>
+
+      {stripeError && <p className="text-xs text-red-600">{stripeError}</p>}
+
+      <Button type="submit" size="sm" disabled={paying || !stripe}>
+        {paying ? "Ödeme işleniyor..." : "Ödemeyi Tamamla"}
+      </Button>
+    </form>
+  );
+}
+
+export default function BookCheckoutPage() {
+
 import { createPublicCheckout, apiErrorMessage } from "../../lib/publicBooking";
 
 const STRIPE_PUBLISHABLE_KEY = window.STRIPE_PUBLISHABLE_KEY || process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY || "";

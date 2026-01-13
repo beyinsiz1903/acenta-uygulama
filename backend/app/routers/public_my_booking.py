@@ -412,9 +412,7 @@ async def request_amend(token: str, request: Request, body: dict[str, Any]):
 
 
 @router.get("/{token}", response_model=MyBookingPublicView)
-async def get_my_booking(token: str):
-    db = await get_db()
-
+async def get_my_booking(token: str, db=Depends(get_db)):
     from app.errors import AppError
 
     try:

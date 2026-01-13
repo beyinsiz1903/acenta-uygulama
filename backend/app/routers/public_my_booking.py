@@ -13,6 +13,7 @@ from app.utils import now_utc, build_booking_public_view
 from app.services.public_my_booking import (
     create_public_token,
     resolve_public_token,
+    resolve_public_token_with_rotation,
     PUBLIC_TOKEN_TTL_HOURS,
 )
 from app.services.email_outbox import enqueue_generic_email

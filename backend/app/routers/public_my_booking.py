@@ -419,20 +419,16 @@ async def get_my_booking(token: str):
 
     try:
         # One-time + rotasyonlu resolve (B1: kök token one-time, rotated multi-use)
-        token_doc, booking, new_token_doc = await resolve_public_token_with_rotation(db, token)
-    except AppError as exc:
+        token_doc, booking, next_token = await resolve_public_token_with_rotation(db, token)
+    except AppError:
         # Public layer: her durumda enumeration-safe 404/expired davranışı koru
-        raise HTTPException(status_code=exc.status_code, detail=exc.message)
+        raise HTTPException(status_code=404, detail="NOT_FOUND")
 
     view = build_booking_public_view(booking)
 
     # Opsiyonel: frontend için next_token ekle (sadece kök token kullanımlarında gelir)
-    if new_token_doc and new_token_doc.get("token_hash"):
-        # new_token_doc kendisi hash üzerinden tutuluyor; FE için raw token zaten
-        # URL’deki mevcut değerden geliyor. İstersek burada future use için
-        # next_token alanını expose edebiliriz.
-        # Şimdilik kontrat sade kalsın; response modeline alan eklemeden bırakıyoruz.
-        pass
+    if next_token:
+        view["next_token"] = next_token
 
     # Mask PII: drop guest_email/phone from view
     view.pop("guest_email", None)

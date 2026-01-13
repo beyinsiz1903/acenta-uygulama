@@ -22,7 +22,7 @@
 ##     file: "file_path.py"
 ##     stuck_count: 0
 ##     priority: "high"  # or "medium" or "low"
-##     needs_retesting: false
+##     needs_retesting: true
 ##     status_history:
 ##         -working: true  # or false or "NA"
 ##         -agent: "main"  # or "testing" or "user"
@@ -35,7 +35,7 @@
 ##     file: "file_path.js"
 ##     stuck_count: 0
 ##     priority: "high"  # or "medium" or "low"
-##     needs_retesting: false
+##     needs_retesting: true
 ##     status_history:
 ##         -working: true  # or false or "NA"
 ##         -agent: "main"  # or "testing" or "user"
@@ -121,7 +121,7 @@
     file: "/app/backend/app/routers/public_my_booking.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -134,7 +134,7 @@
     file: "/app/backend/app/routers/public_my_booking.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -147,7 +147,7 @@
     file: "/app/backend/app/indexes/coupon_indexes.py, /app/backend/app/services/coupons.py, /app/backend/app/services/b2b_pricing.py, /app/backend/app/routers/b2b_quotes.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -160,7 +160,7 @@
     file: "/app/backend/app/routers/inbox.py, /app/backend/app/services/inbox.py, /app/backend/app/services/booking_events.py, /app/backend/app/indexes/inbox_indexes.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -173,7 +173,7 @@
     file: "/app/backend/app/routers/public_my_booking.py, /app/backend/app/indexes/public_indexes.py, /app/backend/app/utils.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -188,7 +188,7 @@
     file: "/app/frontend/src/pages/public/BookProductPage.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -200,7 +200,7 @@
     file: "/app/frontend/src/pages/public/BookCheckoutPage.jsx, /app/frontend/src/pages/public/BookCompletePage.jsx"
     stuck_count: 2
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
@@ -220,7 +220,7 @@
     file: "/app/frontend/src/pages/public/BookCompletePage.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
@@ -258,7 +258,7 @@
     file: "/app/backend/app/services/booking_lifecycle.py, /app/backend/app/services/booking_amendments.py, /app/backend/app/routers/b2b_bookings.py, /app/backend/app/indexes/finance_indexes.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -271,7 +271,7 @@
     file: "/app/backend/app/schemas_finance.py, /app/backend/app/indexes/finance_indexes.py, /app/backend/app/seed.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "main"
@@ -283,7 +283,7 @@
     file: "/app/backend/app/routers/ops_finance.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "main"
@@ -295,7 +295,7 @@
     file: "/app/backend/app/services/ledger_posting.py, /app/backend/app/routers/ops_finance.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "main"
@@ -307,7 +307,7 @@
     file: "/app/backend/app/routers/ops_finance.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "main"
@@ -319,7 +319,7 @@
     file: "/app/backend/app/services/supplier_accrual.py, /app/backend/app/services/ledger_posting.py, /app/backend/app/routers/ops_b2b.py, /app/backend/app/routers/ops_finance.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: false
         agent: "testing"
@@ -334,7 +334,7 @@
     file: "/app/finance_phase_2a3_regression_test.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -347,7 +347,7 @@
     file: "/app/backend/app/routers/ops_cases.py, /app/backend/app/services/ops_cases.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -359,7 +359,7 @@
     file: "/app/backend/app/routers/ops_b2b.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -374,7 +374,7 @@
     file: "/app/backend/app/routers/booking_outcomes.py, /app/backend/app/routers/matches.py, /app/backend/app/routers/match_alerts.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -386,7 +386,7 @@
     file: "/app/backend/app/routers/exports.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -398,7 +398,7 @@
     file: "/app/backend/app/routers/matches.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -410,7 +410,7 @@
     file: "/app/backend/app/routers/matches.py, /app/backend/app/routers/match_alerts.py, /app/backend/app/routers/exports.py"
     stuck_count: 1
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: false
         agent: "testing"
@@ -425,7 +425,7 @@
     file: "/app/backend/app/routers/public_search.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -437,7 +437,7 @@
     file: "/app/backend/app/routers/public_checkout.py, /app/backend/app/services/public_checkout.py, /app/backend/tests/test_public_checkout_api.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -449,7 +449,7 @@
     file: "/app/backend/app/routers/public_bookings.py, /app/frontend/src/pages/public/BookCompletePage.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -461,7 +461,7 @@
     file: "/app/frontend/src/pages/ops/OpsBookingDetailPage.jsx, /app/frontend/src/pages/public/PublicClickToPayPage.jsx, /app/frontend/src/lib/clickToPay.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: false
         agent: "testing"
@@ -473,7 +473,7 @@
     file: "/app/backend/app/routers/ops_click_to_pay.py, /app/backend/app/routers/public_click_to_pay.py, /app/backend/app/services/click_to_pay.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: false
         agent: "testing"
@@ -491,7 +491,7 @@
     file: "/app/frontend/src/pages/public/BookSearchPage.jsx, /app/frontend/src/pages/public/BookProductPage.jsx, /app/frontend/src/pages/public/BookCheckoutPage.jsx, /app/frontend/src/pages/public/BookCompletePage.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -503,7 +503,7 @@
     file: "/app/frontend/src/pages/public/BookCheckoutPage.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -515,7 +515,7 @@
     file: "/app/backend/app/routers/matches.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -527,7 +527,7 @@
     file: "/app/backend/app/routers/matches.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -542,7 +542,7 @@
     file: "/app/backend/app/exception_handlers.py, /app/backend/app/repos_idempotency.py, /app/backend/app/idempotency_hash.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -554,7 +554,7 @@
     file: "/app/backend/app/routers/matches.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -566,7 +566,7 @@
     file: "/app/backend/app/routers/admin_catalog.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -578,7 +578,7 @@
     file: "/app/backend/app/routers/b2b_hotels_search.py, /app/backend/app/routers/b2b_quotes.py, /app/backend/app/routers/b2b_bookings.py, /app/backend/app/routers/b2b_bookings_list.py, /app/backend/app/services/b2b_pricing.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -590,7 +590,7 @@
     file: "/app/backend/tests/test_booking_financials_fx.py, /app/backend/tests/test_fx_snapshots.py, /app/backend/tests/test_refund_fx_ledger.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
@@ -618,7 +618,7 @@
     file: "/app/backend/app/services/stripe_adapter.py, /app/backend/app/services/stripe_handlers.py, /app/backend/app/routers/payments_stripe.py, /app/backend/tests/test_payments_stripe_contract_phase1.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -638,7 +638,7 @@
     file: "/app/frontend/src/components/BookingDetailDrawer.jsx, /app/frontend/src/pages/OpsB2BQueuesPage.jsx, /app/frontend/src/pages/AgencyBookingsListPage.jsx"
     stuck_count: 1
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
         -working: false
         -agent: "testing"
@@ -650,7 +650,7 @@
     file: "/app/backend/app/services/pricing_rules.py, /app/backend/tests/test_pricing_rules_service.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -662,7 +662,7 @@
     file: "/app/backend/app/routers/admin_pricing.py, /app/backend/app/services/pricing_rules.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -674,7 +674,7 @@
     file: "/app/backend/app/seed.py"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -686,7 +686,7 @@
     file: "/app/backend/app/routers/ops_cases.py, /app/backend/app/services/ops_cases.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: false
         agent: "testing"
@@ -735,7 +735,7 @@
     file: "/app/frontend/src/pages/PublicMyBookingRequestPage.jsx, /app/frontend/src/pages/PublicMyBookingDetailPage.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
         -working: true
         -agent: "testing"
@@ -780,13 +780,13 @@
 ##     file: "/app/backend/app/services/audit.py, /app/backend/app/services/events.py, /app/backend/app/services/search_cache.py, /app/backend/app/routers/audit.py, /app/backend/app/routers/search.py, /app/backend/app/routers/agency_booking.py, /app/backend/app/routers/bookings.py, /app/backend/app/routers/hotel.py, /app/backend/app/routers/admin.py, /app/backend/app/utils.py, /app/backend/app/seed.py, /app/backend/server.py"
 ##     stuck_count: 0
 ##     priority: "high"
-##     needs_retesting: false
+##     needs_retesting: true
 ##     status_history:
 ##       - working: "NA"
 ##         agent: "main"
 ##         comment: "Audit log gerçek eklendi (diff/light snapshot): booking confirm/cancel + hotel booking note/guest-note/cancel-request + stop-sell CRUD + allocation CRUD + agency-hotel link create/update. Origin: ip+user-agent+path+X-App-Version (+X-Request-Id opsiyonel). Search cache: /api/agency/search canonical payload ile Mongo cache + TTL index (5dk). Events: booking.created/updated/cancelled outbox (booking_events) delivered=false. Data hygiene: date_to_utc_midnight helper; booking confirm’de check_in_date/check_out_date; stop-sell/allocation create/update’de *_dt alanları." 
 
-##     needs_retesting: false
+##     needs_retesting: true
 
 ## backend:
 ##   - task: "F2.1 Booking Payments Core Service"
@@ -795,7 +795,7 @@
 ##     file: "/app/backend/app/services/booking_payments.py, /app/backend/tests/test_booking_payments_service.py"
 ##     stuck_count: 0
 ##     priority: "high"
-##     needs_retesting: false
+##     needs_retesting: true
 ##     status_history:
 ##       - working: "NA"
 ##         agent: "main"
@@ -810,7 +810,7 @@
     file: "/app/backend/app/routers/action_policies.py, /app/backend/app/routers/matches.py, /app/backend/app/routers/agency_booking.py, /app/backend/app/routers/web_booking.py, /app/backend/app/services/enforcement.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: false
         agent: "testing"
@@ -822,7 +822,7 @@
     file: "/app/backend/app/routers/approval_tasks.py, /app/backend/app/routers/match_unblock.py, /app/backend/app/routers/matches.py, /app/backend/app/routers/audit.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -834,7 +834,7 @@
     file: "/app/backend/app/routers/b2b_bookings_list.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -850,7 +850,7 @@
     file: "/app/frontend/src/components/RequireAuth.jsx, /app/frontend/src/pages/LoginPage.jsx, /app/frontend/src/lib/api.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
@@ -864,7 +864,7 @@
     file: "/app/backend/app/routers/vouchers.py, /app/backend/app/services/vouchers.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: false
         agent: "testing"
@@ -877,7 +877,7 @@
     file: "/app/frontend/src/pages/AgencyHotelsPage.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: false
         agent: "testing"
@@ -892,7 +892,7 @@
     file: "/app/backend/app/routers/admin_catalog.py"
     stuck_count: 1
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: false
         agent: "testing"
@@ -913,7 +913,7 @@
     file: "/app/backend/app/routers/ops_finance.py, /app/backend/app/services/settlement_runs.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -926,7 +926,7 @@
     file: "/app/frontend/src/pages/AdminCatalogHotelsPage.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
         -working: true
         -agent: "testing"
@@ -938,7 +938,7 @@
 ##     file: "/app/frontend/src/pages/AdminAuditLogsPage.jsx, /app/frontend/src/config/menuConfig.js, /app/frontend/src/App.js, /app/frontend/src/lib/api.js, /app/frontend/src/utils/appVersion.js"
 ##     stuck_count: 0
 ##     priority: "high"
-##     needs_retesting: false
+##     needs_retesting: true
 ##     status_history:
 
 ##   - task: "Admin Match Risk Drawer UX - Filter/Sort ve Booking ID Copy Functionality"
@@ -947,7 +947,7 @@
 ##     file: "/app/frontend/src/pages/AdminMatchesPage.jsx"
 ##     stuck_count: 0
 ##     priority: "high"
-##     needs_retesting: false
+##     needs_retesting: true
 ##     status_history:
 ##       - working: true
 ##         agent: "testing"
@@ -959,7 +959,7 @@
     file: "/app/frontend/src/pages/AdminExportsPage.jsx, /app/frontend/src/pages/AdminMatchesPage.jsx, /app/frontend/src/App.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -971,7 +971,7 @@
     file: "/app/frontend/src/components/BookingDetailDrawer.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: false
         agent: "testing"
@@ -987,7 +987,7 @@
 ##     file: "/app/backend/app/services/pms_client.py, /app/backend/app/services/mock_pms.py, /app/backend/app/services/connect_layer.py, /app/backend/app/services/pms_booking_mapper.py, /app/backend/app/services/source_utils.py, /app/backend/app/routers/search.py, /app/backend/app/routers/agency_booking.py, /app/backend/app/routers/bookings.py, /app/backend/app/schemas.py, /app/backend/app/routers/rateplans.py, /app/backend/app/routers/inventory.py, /app/backend/app/services/inventory.py, /app/backend/app/routers/hotel.py, /app/backend/app/seed.py"
 ##     stuck_count: 0
 ##     priority: "high"
-##     needs_retesting: false
+##     needs_retesting: true
 ##     status_history:
 ##       - working: "NA"
 ##         agent: "main"
@@ -1011,7 +1011,7 @@
 ##     file: "/app/backend/app/routers/hotel.py, /app/backend/app/services/hotel_availability.py, /app/backend/app/routers/agency_booking.py, /app/backend/app/seed.py, /app/backend/server.py"
 ##     stuck_count: 0
 ##     priority: "high"
-##     needs_retesting: false
+##     needs_retesting: true
 ##     status_history:
   - task: "Finance OS Phase 2B.3: Refund Cases + REFUND_APPROVED posting"
     implemented: true
@@ -1019,7 +1019,7 @@
     file: "/app/backend/app/services/booking_finance.py, /app/backend/app/services/refund_cases.py, /app/backend/app/routers/ops_finance.py, /app/backend/app/routers/b2b_bookings.py, /app/test_finance_phase_2b_3_refunds.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "main"
@@ -1034,7 +1034,7 @@
     file: "/app/backend/app/services/booking_financials.py, /app/backend/app/routers/ops_finance.py, /app/test_finance_phase_2b_4_booking_financials.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -1054,7 +1054,7 @@
 ##     file: "/app/frontend/src/App.js, /app/frontend/src/config/menuConfig.js, /app/frontend/src/pages/HotelBookingsPage.jsx, /app/frontend/src/pages/HotelStopSellPage.jsx, /app/frontend/src/pages/HotelAllocationsPage.jsx, /app/frontend/src/layouts/HotelLayout.jsx"
 ##     stuck_count: 0
 ##     priority: "high"
-##     needs_retesting: false
+##     needs_retesting: true
 ##     status_history:
 ##       - working: "NA"
 ##         agent: "main"
@@ -1072,7 +1072,7 @@
     file: "/app/frontend/src/pages/AdminFinanceRefundsPage.jsx, /app/backend/app/services/refund_cases.py, /app/backend/app/routers/ops_finance.py"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "main"
@@ -1086,7 +1086,7 @@
 ##     file: "/app/backend/app/routers/leads.py, /app/backend/app/schemas.py, /app/backend/app/seed.py"
 ##     stuck_count: 0
 ##     priority: "high"
-##     needs_retesting: false
+##     needs_retesting: true
 ##     status_history:
 ##       - working: "NA"
 ##         agent: "main"
@@ -1100,7 +1100,7 @@
 ##     file: "/app/backend/app/routers/reservations.py, /app/backend/app/seed.py"
 ##     stuck_count: 0
 ##     priority: "high"
-##     needs_retesting: false
+##     needs_retesting: true
 ##     status_history:
 ##       - working: "NA"
 ##         agent: "main"
@@ -1114,7 +1114,7 @@
 ##     file: "/app/backend/app/services/email.py, /app/backend/app/routers/voucher.py, /app/backend/server.py"
 ##     stuck_count: 0
 ##     priority: "high"
-##     needs_retesting: false
+##     needs_retesting: true
 ##     status_history:
 ##       - working: true
 ##         agent: "testing"
@@ -1125,7 +1125,7 @@
 ##     file: "/app/backend/app/routers/voucher.py, /app/backend/app/seed.py"
 ##     stuck_count: 0
 ##     priority: "high"
-##     needs_retesting: false
+##     needs_retesting: true
 ##     status_history:
 ##       - working: true
 ##         agent: "testing"
@@ -1137,7 +1137,7 @@
     file: "/app/backend/app/services/booking_lifecycle.py, /app/backend/app/routers/b2b_bookings.py, /app/backend/app/indexes/finance_indexes.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -1147,7 +1147,7 @@
 ##     implemented: true
 ##     working: true
 ##     files: ["/app/backend/app/seed.py"]
-##     needs_retesting: false
+##     needs_retesting: true
 ##     comment: "Seed artık org içinde ürün/müşteri yoksa demo veri ekliyor; demo ürün için rate plan ve 60 günlük inventory oluşturuyor. Amaç: Rezervasyon form dropdown'larının boş kalmaması ve side-drawer canlı test. Backend testleri ile doğrulandı." 
 ##   - task: "FAZ-12.1 AdminMetricsPage - date range + period normalize + CSV + smoke test"
 ##     implemented: true
@@ -1155,7 +1155,7 @@
 ##     files: ["/app/frontend/src/pages/AdminMetricsPage.jsx", "/app/tests/e2e/agency-booking.spec.ts"]
 ##     stuck_count: 0
 ##     priority: "high"
-##     needs_retesting: false
+##     needs_retesting: true
 ##     status_history:
 ##       - working: "NA"
 ##         agent: "main"
@@ -1168,7 +1168,7 @@
 ##   - task: "Phase-1 multi-tenant omurga (agencies/hotels/agency_hotel_links) + RBAC role normalization + /api/admin + /api/agency/hotels"
 ##     implemented: true
 ##     working: true
-##     needs_retesting: false
+##     needs_retesting: true
 ##     files:
 ##       - "/app/backend/app/routers/admin.py"
 ##       - "/app/backend/app/routers/agency.py"
@@ -1197,7 +1197,7 @@
     file: "/app/frontend/src/pages/AgencyBookingsListPage.jsx, /app/frontend/src/pages/AdminFinanceRefundsPage.jsx, /app/frontend/src/pages/AdminAuditLogsPage.jsx, /app/frontend/src/components/PageHeader.jsx, /app/frontend/src/components/EmptyState.jsx, /app/frontend/src/components/ErrorState.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -1209,7 +1209,7 @@
     file: "/app/frontend/src/pages/OpsB2BQueuesPage.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: false
         agent: "testing"
@@ -1224,7 +1224,7 @@
     file: "/app/frontend/src/pages/B2BPortalPage.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
@@ -1239,7 +1239,7 @@
     file: "/app/frontend/src/pages/ops/OpsBookingDetailPage.jsx, /app/frontend/src/pages/OpsB2BQueuesPage.jsx, /app/frontend/src/components/OpsGuestCaseDrawer.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
@@ -1261,7 +1261,7 @@
     file: "/app/backend/app/routers/booking_outcomes.py, /app/backend/app/services/booking_outcomes.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -1273,7 +1273,7 @@
     file: "/app/backend/app/routers/booking_outcomes.py, /app/backend/app/routers/audit.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -1285,7 +1285,7 @@
     file: "/app/backend/app/routers/booking_outcomes.py, /app/backend/app/routers/matches.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -1297,7 +1297,7 @@
     file: "/app/backend/app/routers/vouchers.py, /app/backend/app/services/vouchers.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -1312,7 +1312,7 @@
     file: "/app/backend/app/routers/ops_booking_events.py, /app/backend/app/routers/vouchers.py, /app/backend/app/routers/ops_b2b.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: false
         agent: "testing"
@@ -1330,7 +1330,7 @@
     file: "/app/backend/tests/test_non_eur_booking_fx_and_ledger.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "testing"
@@ -1342,7 +1342,7 @@
     file: "/app/frontend/src/pages/OpsGuestCasesPage.jsx, /app/frontend/src/components/OpsGuestCaseDrawer.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
@@ -1358,7 +1358,7 @@
     file: "/app/frontend/src/pages/AdminMatchAlertsPolicyPage.jsx, /app/frontend/src/pages/AdminMatchesPage.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -1370,7 +1370,7 @@
     file: "/app/frontend/src/pages/B2BPortalPage.jsx, /app/frontend/src/config/menuConfig.js, /app/frontend/src/App.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -1382,7 +1382,7 @@
     file: "/app/backend/app/routers/risk_snapshots.py, /app/backend/app/services/risk_snapshots.py, /app/backend/app/models/risk_snapshots.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -1399,7 +1399,7 @@
     file: "backend/app/routers/b2b_quotes.py, backend/app/routers/b2b_bookings.py, backend/app/routers/b2b_cancel.py, backend/app/services/b2b_pricing.py, backend/app/seed.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: false
         agent: "main"
@@ -1412,7 +1412,7 @@
         comment: "✅ PHASE1 B2B QUOTES & BOOKINGS & CANCEL REQUESTS HAPPY CHAIN VERIFIED MANUALLY - Seed güncellendi: products koleksiyonunda _id='demo_product_1', status='active' B2B demo ürünü, inventory koleksiyonunda aynı ürün için önümüzdeki 60 gün için kapasite ve price=1500.0, channels koleksiyonunda _id='ch_b2b_portal', status='active' kanal kaydı eklendi. B2BPricingService, price_quotes içine Pydantic date alanlarını ISO string olarak serialize edecek şekilde düzeltildi; ensure_quote_valid içinde expires_at için naive/aware datetime normalize edildi. MANUEL TESTLER: 1) POST /api/b2b/quotes (agency1@demo.test, channel_id='ch_b2b_portal', product_id='demo_product_1', check_in=t+3, check_out=t+5) 200 OK döndü, body: quote_id, expires_at ve tek bir offer (EUR, net=1500.0, sell=1650.0, allotment_available=30). 2) POST /api/b2b/bookings aynı quote_id ile, valid Idempotency-Key header ile 200 OK döndü, body: booking_id='...', status='CONFIRMED', voucher_status='pending'. Aynı Idempotency-Key ile tekrarlanan çağrı idempotent çalıştı (aynı booking_id döndü, 200 OK). 3) POST /api/b2b/bookings/{booking_id}/cancel-requests valid Idempotency-Key ile 200 OK döndü, body: case_id='...', status='open'. Aynı Idempotency-Key ile replay aynı case_id ile 200 OK döndü (idempotent). NEGATİF SENARYOLAR: 4) Çok uzak gelecekteki tarih (t+365) ile quote denemesi 409 unavailable ve detaylarda product_id, room_type_id, check_in, check_out alanlarıyla döndü. 5) price_quotes içindeki son kaydın expires_at alanı manuel olarak geçmişe çekilip aynı quote_id ile booking denemesi 409 quote_expired hata kodu ve ilgili quote_id ile döndü. 6) agency1 için oluşturulan quote_id, agency2@demo.test ile booking denendiğinde 404 not_found (quote başka agency'e ait olduğu için) döndü; bu davranış future 'quote_context_mismatch' testi için yeterli. Tüm ana akış (Quote → Book → Cancel) ve temel 409/404 senaryoları backend tarafında stabil ve öngörülebilir hale getirildi."
 
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -1424,7 +1424,7 @@
     file: "/app/frontend/src/pages/OpsB2BQueuesPage.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: false
         agent: "testing"
@@ -1435,7 +1435,7 @@
     file: "/app/frontend/src/pages/OpsB2BQueuesPage.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
@@ -1451,7 +1451,7 @@
     file: "/app/frontend/src/pages/AdminMatchesPage.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -1463,7 +1463,7 @@
     file: "/app/frontend/src/pages/AdminMatchRiskTrendsPage.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -1476,7 +1476,7 @@
     file: "/app/backend/app/routers/public_my_booking.py, /app/backend/app/services/email_outbox.py, /app/backend/app/services/email.py, /app/backend/app/email_worker.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -1576,7 +1576,7 @@
     file: "/app/backend/app/routers/match_alerts.py, /app/backend/app/services/match_webhook.py, /app/backend/requirements.txt"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -1588,7 +1588,7 @@
     file: "/app/backend/app/routers/exports.py, /app/backend/app/services/email_outbox.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -1600,7 +1600,7 @@
     file: "/app/backend/app/routers/exports.py, /app/backend/server.py, /app/backend/app/seed.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -1612,7 +1612,7 @@
     file: "/app/backend/app/routers/exports.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -1624,7 +1624,7 @@
     file: "/app/backend/app/routers/admin_reports.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -1636,7 +1636,7 @@
     file: "/app/backend/app/routers/b2b_quotes.py, /app/backend/app/services/b2b_pricing.py, /app/backend/app/schemas_b2b_quotes.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -1648,7 +1648,7 @@
     file: "/app/backend/app/routers/admin.py, /app/backend/app/services/hotel_availability.py, /app/backend/app/schemas.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -1660,7 +1660,7 @@
     file: "/app/backend/app/routers/admin.py, /app/backend/app/services/hotel_availability.py, /app/backend/app/schemas.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -1675,7 +1675,7 @@
     file: "/app/backend/app/routers/hotel_integrations.py, /app/backend/app/routers/agency.py, /app/backend/app/seed.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -1687,7 +1687,7 @@
     file: "/app/backend/app/routers/hotel_integrations.py, /app/backend/app/integration_sync_worker.py, /app/backend/app/seed.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: false
         agent: "testing"
@@ -1702,7 +1702,7 @@
     file: "/app/backend/app/services/email_outbox.py, /app/backend/app/email_worker.py, /app/backend/app/services/email.py, /app/backend/app/routers/agency_booking.py, /app/backend/app/routers/bookings.py, /app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
@@ -1717,7 +1717,7 @@
     file: "/app/backend/app/routers/admin.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -1729,7 +1729,7 @@
     file: "/app/backend/app/routers/voucher.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -1744,7 +1744,7 @@
     file: "/app/backend/app/routers/agency_booking.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -1756,7 +1756,7 @@
     file: "/app/backend/app/routers/web_booking.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -1768,7 +1768,7 @@
     file: "/app/backend/app/routers/matches.py, /app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -1780,7 +1780,7 @@
     file: "/app/backend/app/routers/match_alerts.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -1792,7 +1792,7 @@
     file: "/app/backend/app/routers/match_alerts.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -1804,7 +1804,7 @@
     file: "/app/backend/app/routers/exports.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -1816,7 +1816,7 @@
     file: "/app/backend/app/routers/matches.py, /app/backend/app/services/risk_profile.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -1828,7 +1828,7 @@
     file: "/app/backend/app/routers/public_my_booking.py"
     stuck_count: 1
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: false
         agent: "testing"
@@ -1837,7 +1837,7 @@
 ## frontend:
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -1850,7 +1850,7 @@
     file: "/app/frontend/src/pages/AgencySettlementsPage.jsx, /app/frontend/src/pages/HotelSettlementsPage.jsx, /app/frontend/src/config/menuConfig.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: false
         agent: "testing"
@@ -1865,7 +1865,7 @@
     file: "/app/frontend/src/pages/AgencyHotelsPage.jsx, /app/frontend/src/pages/AgencyHotelDetailPage.jsx, /app/frontend/src/pages/AgencySearchResultsPage.jsx, /app/frontend/src/pages/AgencyBookingNewPage.jsx, /app/frontend/src/pages/AgencyBookingDraftPage.jsx, /app/frontend/src/pages/AgencyBookingsListPage.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: false
         agent: "testing"
@@ -1880,7 +1880,7 @@
     file: "/app/frontend/src/components/BookingDetailDrawer.jsx, /app/frontend/src/pages/AgencyBookingsListPage.jsx, /app/frontend/src/pages/HotelBookingsPage.jsx, /app/frontend/src/utils/buildBookingCopyText.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -1925,7 +1925,7 @@
     file: "/app/backend/tests/test_booking_cancel_reverses_ledger_net0.py, /app/backend/app/routers/b2b_bookings.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -1941,7 +1941,7 @@
     file: "/app/frontend/src/pages/AdminEmailLogsPage.jsx, /app/frontend/src/pages/NotFoundPage.jsx, /app/frontend/src/config/menuConfig.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -1953,7 +1953,7 @@
     file: "/app/frontend/src/pages/AdminApprovalsPage.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -2069,7 +2069,7 @@
     file: "/app/frontend/src/components/BookingDetailDrawer.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "testing"
@@ -2081,7 +2081,7 @@
     file: "/app/frontend/src/pages/OpsB2BQueuesPage.jsx, /app/frontend/src/pages/B2BPortalPage.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
@@ -2099,7 +2099,7 @@
     file: "/app/frontend/src/pages/HotelBookingsPage.jsx, /app/frontend/src/pages/HotelStopSellPage.jsx, /app/frontend/src/pages/HotelAllocationsPage.jsx, /app/frontend/src/pages/HotelSettlementsPage.jsx, /app/frontend/src/pages/HotelIntegrationsPage.jsx, /app/frontend/src/pages/HotelHelpPage.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: false
         agent: "testing"
@@ -2111,7 +2111,7 @@
     file: "/app/backend/tests/test_quote_pricing_uses_rules.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -2136,7 +2136,7 @@
     file: "/app/frontend/src/pages/public/BookProductPage.jsx, /app/frontend/src/pages/public/BookCheckoutPage.jsx, /app/frontend/src/pages/public/BookSearchPage.jsx, /app/frontend/src/pages/public/BookCompletePage.jsx"
     stuck_count: 2
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: false
         agent: "testing"
@@ -2151,7 +2151,7 @@
     file: "/app/frontend/src/pages/OpsGuestCasesPage.jsx, /app/frontend/src/components/OpsGuestCaseDrawer.jsx, /app/frontend/src/lib/opsCases.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
@@ -2192,7 +2192,7 @@
     file: "/app/backend/tests/test_payments_stripe_contract_phase1.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: false
         agent: "testing"
@@ -2204,7 +2204,7 @@
     file: "/app/backend/tests/test_voucher_pdf.py, /app/backend/app/services/voucher_pdf.py, /app/backend/app/routers/vouchers.py, /app/backend/app/indexes/voucher_indexes.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -2216,7 +2216,7 @@
     file: "/app/backend/tests/test_booking_financials_fx.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: false
         agent: "testing"
@@ -2228,7 +2228,7 @@
     file: "/app/backend/tests/test_refund_fx_ledger.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: false
         agent: "testing"
@@ -2240,7 +2240,7 @@
     file: "/app/backend/tests/test_booking_payments_service.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"
@@ -2252,7 +2252,7 @@
     file: "/app/backend/tests/test_mockpms_contracts.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "testing"

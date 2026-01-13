@@ -119,7 +119,7 @@ export default function BookProductPage() {
 
           {!org && (
             <div className="text-xs text-red-600">
-              Kuruluş parametresi eksik. Lütfen URL'ye ?org=&lt;organization_id&gt; parametresi ekleyin.
+              Kuruluş parametresi eksik. Lütfen URL&apos;ye ?org=&lt;organization_id&gt; parametresi ekleyin.
             </div>
           )}
 

@@ -6,11 +6,15 @@ from datetime import timedelta
 from typing import Any, List, Literal, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 
 from app.db import get_db
 from app.utils import now_utc, build_booking_public_view
-from app.services.public_my_booking import create_public_token, resolve_public_token
+from app.services.public_my_booking import (
+    create_public_token,
+    resolve_public_token,
+    PUBLIC_TOKEN_TTL_HOURS,
+)
 from app.services.email_outbox import enqueue_generic_email
 from app.services.booking_events import emit_event
 
@@ -20,6 +24,18 @@ router = APIRouter(prefix="/api/public/my-booking", tags=["public_my_booking"])
 class MyBookingRequestLinkBody(BaseModel):
     booking_code: str
     email: EmailStr
+
+
+
+class MyBookingInstantTokenBody(BaseModel):
+    org: str = Field(..., min_length=1)
+    booking_code: str = Field(..., min_length=1)
+
+
+class MyBookingInstantTokenResponse(BaseModel):
+    ok: bool = True
+    token: Optional[str] = None
+    expires_at: Optional[str] = None
 
 
 class MyBookingPublicView(BaseModel):

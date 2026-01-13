@@ -42,8 +42,14 @@ async def ensure_crm_indexes(db):
     # future CRM collections (deals, tasks, activities) - prepared for next PRs
     await _safe_create(
         db.crm_deals,
-        [("organization_id", ASCENDING), ("stage", ASCENDING), ("owner_user_id", ASCENDING)],
-        name="crm_deals_by_org_stage_owner",
+        [("organization_id", ASCENDING), ("status", ASCENDING), ("stage", ASCENDING), ("owner_user_id", ASCENDING)],
+        name="crm_deals_by_org_status_stage_owner",
+    )
+
+    await _safe_create(
+        db.crm_deals,
+        [("organization_id", ASCENDING), ("customer_id", ASCENDING), ("status", ASCENDING), ("updated_at", DESCENDING)],
+        name="crm_deals_by_org_customer_status_updated",
     )
 
     await _safe_create(
@@ -51,10 +57,21 @@ async def ensure_crm_indexes(db):
         [
             ("organization_id", ASCENDING),
             ("owner_user_id", ASCENDING),
+            ("status", ASCENDING),
             ("due_date", ASCENDING),
+        ],
+        name="crm_tasks_by_org_owner_status_due",
+    )
+
+    await _safe_create(
+        db.crm_tasks,
+        [
+            ("organization_id", ASCENDING),
+            ("related_type", ASCENDING),
+            ("related_id", ASCENDING),
             ("status", ASCENDING),
         ],
-        name="crm_tasks_by_org_owner_due_status",
+        name="crm_tasks_by_org_related_status",
     )
 
     await _safe_create(

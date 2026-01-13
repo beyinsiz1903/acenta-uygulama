@@ -229,6 +229,11 @@ export default function BookCheckoutPage() {
               </div>
             }
           />
+          {isE2E && (
+            <div data-testid="e2e-guard" className="mt-2 text-[10px] text-muted-foreground">
+              GUARD_RENDERED: missing org/quote_id
+            </div>
+          )}
         </Card>
       </div>
     );

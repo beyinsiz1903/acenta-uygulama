@@ -25,6 +25,37 @@ async def ensure_public_indexes(db):
     # booking_public_tokens (public my-booking portal)
     # ------------------------------------------------------------------
     await _safe_create(
+
+    # Legacy plaintext token index (if present) - ensure it is a partial unique
+    # index so that new hash-only documents without `token` field do not hit
+    # E11000 on {token: null}.
+    try:
+        await db.booking_public_tokens.create_index(
+            [("token", ASCENDING)],
+            name="uniq_public_token",
+            unique=True,
+            partialFilterExpression={"token": {"$exists": True}},
+        )
+    except Exception as exc:
+        # If the index already exists with different options, attempt drop+recreate
+        from pymongo.errors import OperationFailure
+
+        if isinstance(exc, OperationFailure) and "already exists" in str(exc).lower():
+            try:
+                await db.booking_public_tokens.drop_index("uniq_public_token")
+                await db.booking_public_tokens.create_index(
+                    [("token", ASCENDING)],
+                    name="uniq_public_token",
+                    unique=True,
+                    partialFilterExpression={"token": {"$exists": True}},
+                )
+            except Exception:
+                # Final fallback: log but do not crash
+                logger.warning(
+                    "Failed to recreate uniq_public_token index on booking_public_tokens: %s",
+                    exc,
+                )
+
         db.booking_public_tokens,
         [("token_hash", ASCENDING)],
         unique=True,

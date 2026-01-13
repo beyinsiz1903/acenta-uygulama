@@ -274,7 +274,25 @@ export default function BookCheckoutPage() {
             />
           </div>
 
-          {error && <div className="text-xs text-red-600">{error}</div>}
+          {error && (
+          <div className="text-xs text-red-600 space-y-1">
+            <p>{error}</p>
+            {result?.provider_error && (
+              <button
+                type="button"
+                className="text-[11px] underline"
+                onClick={() => setShowProviderDetails((v) => !v)}
+              >
+                {showProviderDetails ? "Detayı gizle" : "Detay"}
+              </button>
+            )}
+            {showProviderDetails && result?.provider_error && (
+              <pre className="text-[10px] bg-slate-100 rounded p-2 overflow-x-auto">
+                {JSON.stringify(result.provider_error, null, 2)}
+              </pre>
+            )}
+          </div>
+        )}
 
           {result && (
             <div className="text-xs space-y-1 border-t pt-2 mt-2">

@@ -54,10 +54,10 @@ async def http_list_customers(
 async def http_create_customer(
     body: CustomerCreate,
     db=Depends(get_db),
-    current_user: AuthUser = Depends(require_roles(["agency_agent", "super_admin"])),
+    current_user: dict = Depends(require_roles(["agency_agent", "super_admin"])),
 ):
-    org_id = current_user.organization_id
-    user_id = current_user.id
+    org_id = current_user.get("organization_id")
+    user_id = current_user.get("id")
 
     customer = create_customer(db, org_id, user_id, body.model_dump())
 

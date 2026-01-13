@@ -26,4 +26,9 @@ export async function requestMyBookingLink(body) {
   return res.data;
 }
 
+export async function createMyBookingToken(body) {
+  const res = await api.post("/public/my-booking/create-token", body);
+  return res.data;
+}
+
 export { apiErrorMessage };

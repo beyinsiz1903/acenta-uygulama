@@ -86,6 +86,31 @@ export default function BookCompletePage() {
     }
   };
 
+  if (!bookingCode) {
+    return (
+      <div className="min-h-screen bg-slate-50 px-4 py-6 flex justify-center">
+        <Card className="w-full max-w-lg p-4 space-y-3">
+          <EmptyState
+            title="Rezervasyon bilgisi bulunamadı"
+            description="Bu sayfaya doğrudan erişmek için geçerli bir rezervasyon kodu gerekir. Lütfen arama adımından tekrar başlayın."
+            action={
+              <div className="flex flex-col sm:flex-row gap-2 justify-center">
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    navigate(`/book?${qpBackToSearch.toString()}`);
+                  }}
+                >
+                  Aramaya dön
+                </Button>
+              </div>
+            }
+          />
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 px-4 py-6 flex justify-center">
       <Card className="w-full max-w-lg p-4 space-y-3 text-center">

@@ -8,7 +8,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase as Database
 
 
 async def _normalize_stage_and_status(stage: Optional[str], status: Optional[str]) -> tuple[Optional[str], Optional[str]]:
-  	"""Enforce stage/status consistency.
+    """Enforce stage/status consistency.
 
     - stage won -> status won
     - stage lost -> status lost

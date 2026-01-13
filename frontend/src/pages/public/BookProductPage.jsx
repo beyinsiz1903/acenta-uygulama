@@ -60,11 +60,15 @@ export default function BookProductPage() {
       setQuote(res);
 
       const qp = new URLSearchParams();
-      qp.set("org", org);
-      qp.set("quote_id", res.quote_id);
+      qp.set("org", encodeURIComponent(org));
+      qp.set("quote_id", encodeURIComponent(res.quote_id));
       navigate(`/book/${productId}/checkout?${qp.toString()}`);
     } catch (e2) {
-      setError(apiErrorMessage(e2));
+      if (e2 && typeof e2 === "object" && (e2.status || e2.message)) {
+        setError(e2);
+      } else {
+        setError({ status: null, code: null, message: apiErrorMessage(e2) });
+      }
     } finally {
       setLoading(false);
     }

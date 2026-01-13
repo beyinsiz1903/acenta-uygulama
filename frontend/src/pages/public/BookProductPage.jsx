@@ -159,7 +159,18 @@ export default function BookProductPage() {
             </div>
           </div>
 
-          {error && <div className="text-red-600 text-xs">{error}</div>}
+          {error && (
+            <div className="text-red-600 text-xs">
+              {error.status === 404 || error.code === "PRODUCT_NOT_FOUND"
+                ? "Ürün bulunamadı."
+                : error.status === 422 &&
+                  (error.code === "NO_PRICING_AVAILABLE" || error.code === "NO_PRICING")
+                ? "Bu tarihler için fiyat bulunamadı."
+                : error.status === 429 || error.code === "RATE_LIMITED"
+                ? "Çok fazla istek atıldı, lütfen 1 dakika sonra tekrar deneyin."
+                : error.message || "Beklenmeyen bir hata oluştu."}
+            </div>
+          )}
 
           <div className="flex justify-end gap-2 pt-2">
             <Button type="button" variant="outline" size="sm" onClick={() => navigate(-1)}>

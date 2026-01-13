@@ -15,4 +15,9 @@ export async function createPublicCheckout(body) {
   return res.data;
 }
 
+export async function getPublicBookingSummary({ org, booking_code }) {
+  const res = await api.get(`/public/bookings/by-code/${booking_code}`, { params: { org } });
+  return res.data;
+}
+
 export { apiErrorMessage };

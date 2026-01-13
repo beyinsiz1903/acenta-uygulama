@@ -200,7 +200,7 @@
     file: "/app/frontend/src/pages/public/BookCheckoutPage.jsx, /app/frontend/src/pages/public/BookCompletePage.jsx"
     stuck_count: 1
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"

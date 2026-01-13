@@ -169,6 +169,85 @@ async def resolve_public_token(db, token: str) -> Tuple[dict[str, Any], dict[str
         update: dict[str, Any] = {
             "last_access_at": now,
             "last_ip": token_doc.get("last_ip"),
+
+
+async def resolve_public_token_with_rotation(db, token: str) -> Tuple[dict[str, Any], dict[str, Any], dict[str, Any] | None]:
+    """Resolve a token and perform one-time rotation semantics.
+
+    - Resolves the incoming token (must be active).
+    - Marks the resolved token as used and updates telemetry.
+    - Creates a new active token for the same booking (rotation).
+    - Returns (token_doc, booking_doc, new_token_doc).
+    """
+
+    now = now_utc()
+    hashed = _hash_token(token)
+
+    # Active token required for rotation
+    token_doc = await db.booking_public_tokens.find_one(
+        {
+            "token_hash": hashed,
+            "expires_at": {"$gt": now},
+            "status": {"$ne": "revoked"},
+        }
+    )
+
+    if not token_doc or token_doc.get("status") == "used":
+        raise AppError(404, "TOKEN_NOT_FOUND_OR_EXPIRED", "Public token not found or expired")
+
+    booking_id = token_doc.get("booking_id")
+    if not booking_id:
+        raise AppError(404, "BOOKING_NOT_FOUND", "Booking not found for token")
+
+    booking = await db.bookings.find_one({"_id": booking_id})
+    if not booking:
+        try:
+            oid = ObjectId(booking_id)
+        except Exception:
+            oid = None
+        if oid is not None:
+            booking = await db.bookings.find_one({"_id": oid})
+
+    if not booking:
+        raise AppError(404, "BOOKING_NOT_FOUND", "Booking not found")
+
+    # Mark current token as used + telemetry
+    try:
+        update_fields: dict[str, Any] = {
+            "status": "used",
+            "last_used_at": now,
+        }
+        if token_doc.get("first_used_at") is None:
+            update_fields["first_used_at"] = now
+
+        await db.booking_public_tokens.update_one(
+            {"_id": token_doc["_id"]},
+            {
+                "$set": update_fields,
+                "$inc": {"access_count": 1},
+            },
+        )
+    except Exception:
+        # Telemetry / status failures must not leak booking existence
+        pass
+
+    # Create a rotated replacement token chained to this one
+    new_token = await create_public_token(
+        db,
+        booking=booking,
+        email=token_doc.get("email_lower"),
+        client_ip=token_doc.get("last_ip") or token_doc.get("created_ip"),
+        user_agent=token_doc.get("last_ua") or token_doc.get("created_ua"),
+        rotated_from_token_hash=token_doc.get("token_hash"),
+    )
+
+    new_hashed = _hash_token(new_token)
+    new_token_doc = await db.booking_public_tokens.find_one(
+        {"token_hash": new_hashed, "booking_id": booking_id}
+    )
+
+    return token_doc, booking, new_token_doc
+
             "last_ua": token_doc.get("last_ua"),
         }
         # We don't have fresh IP/UA here; endpoints can set them if needed.

@@ -417,19 +417,20 @@ async def get_my_booking(token: str):
     from app.errors import AppError
 
     try:
-        # One-time + rotasyonlu resolve
+        # One-time + rotasyonlu resolve (B1: kök token one-time, rotated multi-use)
         token_doc, booking, new_token_doc = await resolve_public_token_with_rotation(db, token)
     except AppError as exc:
-        # Mevcut F3 kontratına uygun 404 dönüşü için HTTPException fırlatıyoruz
+        # Public layer: her durumda enumeration-safe 404/expired davranışı koru
         raise HTTPException(status_code=exc.status_code, detail=exc.message)
 
     view = build_booking_public_view(booking)
 
-    # Opsiyonel: frontend için next_token ekle (rotasyon sonrası)
+    # Opsiyonel: frontend için next_token ekle (sadece kök token kullanımlarında gelir)
     if new_token_doc and new_token_doc.get("token_hash"):
-        # Raw token'ı bilmiyoruz; FE tarafında sadece /book/complete → /my-booking/{token}
-        # flow’unda mevcut token kullanılacak. Şimdilik response modelini bozmayalım.
-        # Gerekirse ileride ayrı bir response modeline next_token alanı eklenebilir.
+        # new_token_doc kendisi hash üzerinden tutuluyor; FE için raw token zaten
+        # URL’deki mevcut değerden geliyor. İstersek burada future use için
+        # next_token alanını expose edebiliriz.
+        # Şimdilik kontrat sade kalsın; response modeline alan eklemeden bırakıyoruz.
         pass
 
     # Mask PII: drop guest_email/phone from view

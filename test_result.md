@@ -112,7 +112,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-## user_problem_statement: "F3.T1 – /book/complete üzerinden MyBooking link iste akışını test et."
+## user_problem_statement: "F3.T2 – /book/complete üzerinden MyBooking 'Hemen görüntüle' instant token akışını test et."
 
 ## backend:
   - task: "F3.T1 MyBooking Request Link Backend Contract Test"

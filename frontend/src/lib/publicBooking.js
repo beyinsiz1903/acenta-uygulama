@@ -20,4 +20,10 @@ export async function getPublicBookingSummary({ org, booking_code }) {
   return res.data;
 }
 
+export async function requestMyBookingLink(body) {
+  // Backend expects snake_case fields: booking_code, email
+  const res = await api.post("/public/my-booking/request-link", body);
+  return res.data;
+}
+
 export { apiErrorMessage };

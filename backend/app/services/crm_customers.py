@@ -7,31 +7,70 @@ from uuid import uuid4
 from motor.motor_asyncio import AsyncIOMotorDatabase as Database
 
 
-def _public_customer(doc: Dict[str, Any]) -> Dict[str, Any]:
-    if not doc:
-        return doc
-    data = dict(doc)
-    data.pop("_id", None)
-    return data
+def _normalize_contacts(contacts: Optional[List[Dict[str, Any]]]) -> List[Dict[str, Any]]:
+    if not contacts:
+        return []
+    normalized: List[Dict[str, Any]] = []
+    primary_seen = False
+    for raw in contacts:
+        c = dict(raw)
+        if c.get("type") not in {"phone", "email"}:
+            continue
+        # Trim value
+        value = str(c.get("value", "")).strip()
+        if not value:
+            continue
+        c["value"] = value
+        # Only one primary
+        if c.get("is_primary") and not primary_seen:
+            primary_seen = True
+            c["is_primary"] = True
+        else:
+            c["is_primary"] = False
+        normalized.append(c)
+    return normalized
 
 
-def create_customer(db: Database, organization_id: str, user_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+def _normalize_tags(tags: Optional[List[str]]) -> List[str]:
+    if not tags:
+        return []
+    seen = set()
+    result: List[str] = []
+    for raw in tags:
+        if raw is None:
+            continue
+        t = str(raw).strip().lower()
+        if not t:
+            continue
+        if t in seen:
+            continue
+        seen.add(t)
+        result.append(t)
+    return result
+
+
+async def create_customer(db: Database, organization_id: str, user_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
     now = datetime.utcnow()
     customer_id = f"cust_{uuid4().hex}"
+
+    tags = _normalize_tags(data.get("tags"))
+    contacts = _normalize_contacts(data.get("contacts"))
+
     doc = {
         "id": customer_id,
         "organization_id": organization_id,
         "type": data.get("type", "individual"),
         "name": data["name"],
         "tc_vkn": data.get("tc_vkn"),
-        "tags": data.get("tags", []),
-        "contacts": data.get("contacts", []),
+        "tags": tags,
+        "contacts": contacts,
         "assigned_user_id": data.get("assigned_user_id"),
         "created_at": now,
         "updated_at": now,
     }
-    db.customers.insert_one(doc)
-    return _public_customer(doc)
+    await db.customers.insert_one(doc)
+    doc.pop("_id", None)
+    return doc
 
 
 async def list_customers(
@@ -91,6 +130,12 @@ async def patch_customer(
     patch: Dict[str, Any],
 ) -> Optional[Dict[str, Any]]:
     update = {k: v for k, v in patch.items() if v is not None}
+
+    if "tags" in update:
+        update["tags"] = _normalize_tags(update.get("tags"))
+    if "contacts" in update:
+        update["contacts"] = _normalize_contacts(update.get("contacts"))
+
     if not update:
         return await get_customer(db, organization_id, customer_id)
 

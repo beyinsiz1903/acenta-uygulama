@@ -177,29 +177,93 @@ async def resolve_public_token(db, token: str) -> Tuple[dict[str, Any], dict[str
         pass
 
 
-async def resolve_public_token_with_rotation(db, token: str) -> Tuple[dict[str, Any], dict[str, Any], dict[str, Any] | None]:
-    """Resolve a token and perform one-time rotation semantics.
+async def resolve_public_token_with_rotation(db, token: str) -> Tuple[dict[str, Any], dict[str, Any], str | None]:
+    """Resolve a token and perform one-time rotation semantics (B1).
 
-    - Resolves the incoming token (must be active).
-    - Marks the resolved token as used and updates telemetry.
-    - Creates a new active token for the same booking (rotation).
-    - Returns (token_doc, booking_doc, new_token_doc).
+    - Root token (rotated_from_token_hash is null/missing): one-time.
+      * First resolve: marks root as used, creates a rotated active token.
+      * Subsequent resolves: behave as not found/expired.
+    - Rotated tokens (have rotated_from_token_hash): multi-use session tokens.
+      * Resolve updates telemetry but does not rotate again.
+
+    Returns: (token_doc, booking_doc, next_raw_token or None).
     """
 
     now = now_utc()
     hashed = _hash_token(token)
 
-    # Active token required for rotation
-    token_doc = await db.booking_public_tokens.find_one(
-        {
-            "token_hash": hashed,
-            "expires_at": {"$gt": now},
-            "status": {"$ne": "revoked"},
-        }
-    )
+    base_filter: dict[str, Any] = {
+        "token_hash": hashed,
+        "expires_at": {"$gt": now},
+    }
 
-    if not token_doc or token_doc.get("status") == "used":
+    # Load token once to decide root vs rotated semantics
+    token_doc = await db.booking_public_tokens.find_one(base_filter)
+    if not token_doc:
         raise AppError(404, "TOKEN_NOT_FOUND_OR_EXPIRED", "Public token not found or expired")
+
+    if token_doc.get("status") == "revoked":
+        raise AppError(404, "TOKEN_NOT_FOUND_OR_EXPIRED", "Public token not found or expired")
+
+    is_root = token_doc.get("rotated_from_token_hash") in (None, "")
+
+    # Concurrency-safe state transition
+    if is_root:
+        # Root token: exactly-once use. Only transition from implicit/explicit active + no rotation parent.
+        root_filter: dict[str, Any] = {
+            **base_filter,
+            "$or": [
+                {"status": "active"},
+                {"status": {"$exists": False}},
+            ],
+            "$or": [
+                {"rotated_from_token_hash": None},
+                {"rotated_from_token_hash": {"$exists": False}},
+            ],
+        }
+
+        update_fields: dict[str, Any] = {
+            "status": "used",
+            "last_used_at": now,
+            "last_access_at": now,
+        }
+        if token_doc.get("first_used_at") is None:
+            update_fields["first_used_at"] = now
+
+        updated = await db.booking_public_tokens.find_one_and_update(
+            root_filter,
+            {"$set": update_fields, "$inc": {"access_count": 1}},
+            return_document=True,
+        )
+        if not updated:
+            # Another request already consumed or expired this token
+            raise AppError(404, "TOKEN_NOT_FOUND_OR_EXPIRED", "Public token not found or expired")
+
+        token_doc = updated
+    else:
+        # Rotated token: keep status as-is (usually active) but update telemetry/usage.
+        rotated_filter: dict[str, Any] = {
+            **base_filter,
+            "status": {"$ne": "revoked"},
+            "rotated_from_token_hash": {"$ne": None},
+        }
+
+        update_fields = {
+            "last_used_at": now,
+            "last_access_at": now,
+        }
+        if token_doc.get("first_used_at") is None:
+            update_fields["first_used_at"] = now
+
+        updated = await db.booking_public_tokens.find_one_and_update(
+            rotated_filter,
+            {"$set": update_fields, "$inc": {"access_count": 1}},
+            return_document=True,
+        )
+        if not updated:
+            raise AppError(404, "TOKEN_NOT_FOUND_OR_EXPIRED", "Public token not found or expired")
+
+        token_doc = updated
 
     booking_id = token_doc.get("booking_id")
     if not booking_id:
@@ -217,39 +281,16 @@ async def resolve_public_token_with_rotation(db, token: str) -> Tuple[dict[str, 
     if not booking:
         raise AppError(404, "BOOKING_NOT_FOUND", "Booking not found")
 
-    # Mark current token as used + telemetry
-    try:
-        update_fields: dict[str, Any] = {
-            "status": "used",
-            "last_used_at": now,
-        }
-        if token_doc.get("first_used_at") is None:
-            update_fields["first_used_at"] = now
-
-        await db.booking_public_tokens.update_one(
-            {"_id": token_doc["_id"]},
-            {
-                "$set": update_fields,
-                "$inc": {"access_count": 1},
-            },
+    # For root tokens, create a rotated replacement chained to this one.
+    next_token: str | None = None
+    if is_root:
+        next_token = await create_public_token(
+            db,
+            booking=booking,
+            email=token_doc.get("email_lower"),
+            client_ip=token_doc.get("last_ip") or token_doc.get("created_ip"),
+            user_agent=token_doc.get("last_ua") or token_doc.get("created_ua"),
+            rotated_from_token_hash=token_doc.get("token_hash"),
         )
-    except Exception:
-        # Telemetry / status failures must not leak booking existence
-        pass
 
-    # Create a rotated replacement token chained to this one
-    new_token = await create_public_token(
-        db,
-        booking=booking,
-        email=token_doc.get("email_lower"),
-        client_ip=token_doc.get("last_ip") or token_doc.get("created_ip"),
-        user_agent=token_doc.get("last_ua") or token_doc.get("created_ua"),
-        rotated_from_token_hash=token_doc.get("token_hash"),
-    )
-
-    new_hashed = _hash_token(new_token)
-    new_token_doc = await db.booking_public_tokens.find_one(
-        {"token_hash": new_hashed, "booking_id": booking_id}
-    )
-
-    return token_doc, booking, new_token_doc
+    return token_doc, booking, next_token

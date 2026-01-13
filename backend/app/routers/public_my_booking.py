@@ -60,6 +60,7 @@ class MyBookingPublicView(BaseModel):
     special_requests: Optional[str] = None
     confirmed_at: Optional[str] = None
     created_at: Optional[str] = None
+    next_token: Optional[str] = None
 
 
 class MyBookingTokenResponse(BaseModel):

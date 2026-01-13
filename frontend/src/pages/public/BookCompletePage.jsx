@@ -108,7 +108,8 @@ export default function BookCompletePage() {
                 <Button
                   size="sm"
                   onClick={() => {
-                    navigate(`/book?${qpBackToSearch.toString()}`);
+                    const qs = qpBackToSearch.toString();
+                    navigate(qs ? `/book?${qs}` : "/book");
                   }}
                 >
                   Aramaya dön

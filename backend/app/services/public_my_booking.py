@@ -93,16 +93,13 @@ async def create_public_token(
     return token
 
 
-async def resolve_public_token(db, token: str) -> Tuple[dict[str, Any], dict[str, Any]]:
-    """Resolve a public token to (token_doc, booking_doc) with hash + legacy fallback.
+async def _lookup_token_and_booking(db, token: str) -> Tuple[dict[str, Any], dict[str, Any]]:
+    """Low-level resolver for public tokens.
 
-    Resolution rules:
-    - Primary lookup: token_hash == sha256(token) AND expires_at > now AND not revoked.
-    - Legacy fallback: if no match by hash, try the older `token` field.
-      When a legacy doc is found, we *upgrade* it by setting token_hash and
-      optionally unsetting the plaintext token field.
-    - If nothing matches or booking is missing, raise AppError(404,...).
-    - On success, we also update basic access telemetry (access_count, last_*).
+    - Primary lookup by token_hash (new documents)
+    - Legacy fallback by plaintext `token` with idempotent upgrade to token_hash
+    - Applies TTL and basic status checks (revoked/expired)
+    - NO telemetry or status updates here; callers decide how to update.
     """
 
     now = now_utc()
@@ -125,22 +122,31 @@ async def resolve_public_token(db, token: str) -> Tuple[dict[str, Any], dict[str
             }
         )
         if legacy:
-            # Upgrade in-place: set token_hash, optionally unset plaintext token
-            update: dict[str, Any] = {"token_hash": hashed}
+            # Idempotent upgrade: only set token_hash if it doesn't exist yet
+            from pymongo.errors import DuplicateKeyError
+
             try:
                 await db.booking_public_tokens.update_one(
-                    {"_id": legacy["_id"]},
-                    {"$set": update, "$unset": {"token": ""}},
+                    {"_id": legacy["_id"], "token_hash": {"$exists": False}},
+                    {"$set": {"token_hash": hashed}, "$unset": {"token": 1}},
                 )
-            except Exception:
-                # Best-effort; if unset fails we still continue
-                await db.booking_public_tokens.update_one(
-                    {"_id": legacy["_id"]},
-                    {"$set": update},
-                )
-            token_doc = {**legacy, **update}
+            except DuplicateKeyError:
+                # If another process already wrote the same hash, log and continue
+                # with a hash-based read below.
+                pass
+
+            # Re-read by hash to get the upgraded view (or any existing hash-doc)
+            token_doc = await db.booking_public_tokens.find_one(
+                {
+                    "token_hash": hashed,
+                    "expires_at": {"$gt": now},
+                }
+            )
 
     if not token_doc:
+        raise AppError(404, "TOKEN_NOT_FOUND_OR_EXPIRED", "Public token not found or expired")
+
+    if token_doc.get("status") == "revoked":
         raise AppError(404, "TOKEN_NOT_FOUND_OR_EXPIRED", "Public token not found or expired")
 
     booking_id = token_doc.get("booking_id")
@@ -160,14 +166,28 @@ async def resolve_public_token(db, token: str) -> Tuple[dict[str, Any], dict[str
     if not booking:
         raise AppError(404, "BOOKING_NOT_FOUND", "Booking not found")
 
+    return token_doc, booking
+
+
+async def resolve_public_token(db, token: str) -> Tuple[dict[str, Any], dict[str, Any]]:
+    """Resolve a public token for non-rotating use cases (cancel/amend/voucher).
+
+    This wraps _lookup_token_and_booking and applies basic telemetry updates.
+    """
+
+    now = now_utc()
+    token_doc, booking = await _lookup_token_and_booking(db, token)
+
     # Update telemetry (best-effort)
     try:
         update: dict[str, Any] = {
             "last_access_at": now,
-            "last_ip": token_doc.get("last_ip"),
-            "last_ua": token_doc.get("last_ua"),
         }
-        # We don't have fresh IP/UA here; endpoints can set them if needed.
+        if token_doc.get("last_ip") is not None:
+            update["last_ip"] = token_doc.get("last_ip")
+        if token_doc.get("last_ua") is not None:
+            update["last_ua"] = token_doc.get("last_ua")
+
         await db.booking_public_tokens.update_one(
             {"_id": token_doc["_id"]},
             {"$inc": {"access_count": 1}, "$set": update},
@@ -175,6 +195,8 @@ async def resolve_public_token(db, token: str) -> Tuple[dict[str, Any], dict[str
     except Exception:
         # Telemetry failures must not break main flow
         pass
+
+    return token_doc, booking
 
 
 async def resolve_public_token_with_rotation(db, token: str) -> Tuple[dict[str, Any], dict[str, Any], str | None]:

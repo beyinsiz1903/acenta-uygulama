@@ -182,6 +182,18 @@
         agent: "testing"
 
 ## frontend:
+  - task: "F2.FE.T2 BookProductPage quote form + checkout navigation"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/public/BookProductPage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Initial implementation + normalized error handling for quote form, client-side date validation, and navigation to /book/:productId/checkout with quote_id + org. Please verify 404/422/429 behaviors and success path from /book → /book/:productId → /book/:productId/checkout."
+
   - task: "F3.T2 BookCompletePage instant MyBooking button"
     implemented: true
     working: true

@@ -9,12 +9,17 @@ async def ensure_public_indexes(db):
     Called from startup to keep public collections efficient and safe.
     """
 
+    import logging
+
+    logger = logging.getLogger(__name__)
+
     async def _safe_create(collection, keys, **kwargs):
+        name = kwargs.get("name")
         try:
             await collection.create_index(keys, **kwargs)
-        except Exception:
+        except Exception as exc:
             # Index creation failures should not crash the app (dev/preview)
-            pass
+            logger.warning("Failed to ensure index %s on %s: %s", name, collection.name, exc)
 
     # ------------------------------------------------------------------
     # booking_public_tokens (public my-booking portal)

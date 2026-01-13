@@ -22,8 +22,15 @@ function formatAmount(amountCents, currency) {
 export default function BookCompletePage() {
   const [searchParams] = useSearchParams();
 
-  const bookingCode = searchParams.get("booking_code") || "";
-  const org = searchParams.get("org") || "";
+  const normalizeParam = (value) => {
+    if (value == null) return "";
+    const trimmed = value.trim();
+    if (!trimmed || trimmed === "undefined" || trimmed === "null") return "";
+    return trimmed;
+  };
+
+  const bookingCode = normalizeParam(searchParams.get("booking_code"));
+  const org = normalizeParam(searchParams.get("org"));
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");

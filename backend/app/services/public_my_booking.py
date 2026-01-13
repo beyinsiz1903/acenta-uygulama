@@ -247,6 +247,9 @@ async def resolve_public_token_with_rotation(db, token: str) -> Tuple[dict[str, 
         or token_doc.get("rotated_from_token_hash") is None
     )
 
+    # Token type for telemetry / events
+    token_type = "root" if is_root else "rotated"
+
     # Concurrency-safe state transition based on document _id
     if is_root:
         # Root token: exactly-once use. Only transition from implicit/explicit active + no rotation parent.

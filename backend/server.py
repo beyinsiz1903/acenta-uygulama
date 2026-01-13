@@ -35,8 +35,10 @@ from app.routers.search import router as search_router
 from app.routers.vouchers import router as vouchers_router
 from app.routers.web_booking import router as web_booking_router
 from app.routers.web_catalog import router as web_catalog_router
+from app.routers.crm_customers import router as crm_customers_router
 from app.email_worker import email_dispatch_loop
 from app.indexes import finance_indexes, inbox_indexes, pricing_indexes, public_indexes, voucher_indexes
+from app.indexes import crm_indexes
 from app.integration_sync_worker import integration_sync_loop
 
 

@@ -35,6 +35,21 @@ async def ensure_public_indexes(db):
     # Legacy plaintext token index (if present) - ensure it is a partial unique
     # index so that new hash-only documents without `token` field do not hit
     # E11000 on {token: null}.
+    # Ensure legacy uniq_public_token index is partial unique on token exists
+    info = await db.booking_public_tokens.index_information()
+    existing = info.get("uniq_public_token")
+    needs_drop = False
+    if existing:
+        # If there is no partialFilterExpression, it's the old non-partial index
+        if "partialFilterExpression" not in existing:
+            needs_drop = True
+
+    if needs_drop:
+        try:
+            await db.booking_public_tokens.drop_index("uniq_public_token")
+        except Exception as exc:
+            logger.warning("Failed to drop legacy uniq_public_token index: %s", exc)
+
     try:
         await db.booking_public_tokens.create_index(
             [("token", ASCENDING)],
@@ -43,24 +58,11 @@ async def ensure_public_indexes(db):
             partialFilterExpression={"token": {"$exists": True}},
         )
     except Exception as exc:
-        # If the index already exists with different options, attempt drop+recreate
-        from pymongo.errors import OperationFailure
-
-        if isinstance(exc, OperationFailure) and "already exists" in str(exc).lower():
-            try:
-                await db.booking_public_tokens.drop_index("uniq_public_token")
-                await db.booking_public_tokens.create_index(
-                    [("token", ASCENDING)],
-                    name="uniq_public_token",
-                    unique=True,
-                    partialFilterExpression={"token": {"$exists": True}},
-                )
-            except Exception:
-                # Final fallback: log but do not crash
-                logger.warning(
-                    "Failed to recreate uniq_public_token index on booking_public_tokens: %s",
-                    exc,
-                )
+        # Final fallback: log but do not crash
+        logger.warning(
+            "Failed to ensure partial uniq_public_token index on booking_public_tokens: %s",
+            exc,
+        )
 
     await _safe_create(
         db.booking_public_tokens,

@@ -243,6 +243,7 @@
 
 ## test_plan:
   current_focus:
+    - "PR#4 CRM Customers Frontend Smoke Test"
     - "F2.FE.T3 Checkout & Complete polish"
   stuck_tasks:
     - "F2.FE.T3 Checkout & Complete polish"
@@ -250,6 +251,8 @@
   test_priority: "high_first"
 
 ## agent_communication:
+  - agent: "testing"
+    message: "❌ PR#4 CRM CUSTOMERS FRONTEND SMOKE TEST CRITICAL ISSUES FOUND - Backend APIs working perfectly (100% success rate) but frontend has critical routing and encoding issues. BACKEND VERIFICATION: All CRM APIs working correctly - authentication, customer list/create/detail/patch, search/type/tag filters all functional. Fixed missing await in create_customer router. CRITICAL FRONTEND ISSUES: 1) CRM routes missing from App.js (manually added), 2) Severe character encoding corruption in frontend files (Turkish text garbled: Müşteri → Mf50fteri), 3) Browser testing blocked by Playwright crashes. While backend is production-ready, frontend cannot be properly tested due to encoding corruption making UI text unreadable. REQUIRES IMMEDIATE FIXES: Fix character encoding in CRM frontend files and ensure proper routing configuration."
   - agent: "main"
     message: "F3.T2: Implemented POST /api/public/my-booking/create-token (enumeration-safe, org+booking_code, rate-limited) + Jest-free FE integration on /book/complete (instant token fetch + conditional 'Hemen görüntüle' button). Please run backend contract tests for the new endpoint and an end-to-end frontend flow from /book → checkout → /book/complete to verify instant button visibility and navigation to /my-booking/{token}."
   - agent: "testing"

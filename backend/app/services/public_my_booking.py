@@ -326,7 +326,45 @@ async def resolve_public_token_with_rotation(db, token: str) -> Tuple[dict[str, 
             client_ip=token_doc.get("last_ip") or token_doc.get("created_ip"),
             user_agent=token_doc.get("last_ua") or token_doc.get("created_ua"),
             rotated_from_token_hash=token_doc.get("token_hash"),
-            channel="instant",
+            channel="rotation",
         )
+
+        # Emit rotation event after new token is created
+        try:
+            root_prefix = (token_doc.get("token_hash") or "")[:8]
+            rotated_hash = _hash_token(next_token)
+            rotated_prefix = rotated_hash[:8]
+            await emit_event(
+                db,
+                organization_id=str(token_doc.get("organization_id")),
+                booking_id=str(token_doc.get("booking_id")),
+                type="MY_BOOKING_TOKEN_ROTATED",
+                actor={"type": "system", "source": "public_my_booking"},
+                meta={
+                    "root_hash_prefix": root_prefix,
+                    "rotated_hash_prefix": rotated_prefix,
+                },
+            )
+        except Exception:
+            # Rotation events must not affect main flow
+            pass
+
+    # Emit ACCESS event for both root and rotated tokens
+    try:
+        await emit_event(
+            db,
+            organization_id=str(token_doc.get("organization_id")),
+            booking_id=str(token_doc.get("booking_id")),
+            type="MY_BOOKING_TOKEN_ACCESSED",
+            actor={"type": "system", "source": "public_my_booking"},
+            meta={
+                "token_type": token_type,
+                "has_ip": bool(token_doc.get("last_ip") or token_doc.get("created_ip")),
+                "has_ua": bool(token_doc.get("last_ua") or token_doc.get("created_ua")),
+                "sampled": False,
+            },
+        )
+    except Exception:
+        pass
 
     return token_doc, booking, next_token

@@ -112,7 +112,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-## user_problem_statement: "FAZ 2 – Stripe Payments UI backend entegrasyonunun zaten çalışan kontratlarını (create-intent, capture, webhook) yeniden doğrula."
+## user_problem_statement: "F3.T1 – /book/complete üzerinden MyBooking link iste akışını test et."
 
 ## backend:
   - task: "FAZ 2 Stripe Payments Backend Validation"

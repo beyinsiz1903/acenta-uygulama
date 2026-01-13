@@ -53,6 +53,24 @@ export default function BookCompletePage() {
     load();
   }, [bookingCode, org]);
 
+  useEffect(() => {
+    if (!bookingCode || !org) return;
+
+    async function loadInstantToken() {
+      try {
+        const data = await createMyBookingToken({ org, booking_code: bookingCode });
+        if (data && data.token) {
+          setInstantToken(data.token);
+        }
+      } catch (e) {
+        // Silent fail; instant access is "nice to have" only
+        console.error("Instant MyBooking token error", e);
+      }
+    }
+
+    loadInstantToken();
+  }, [bookingCode, org]);
+
   const statusBadge = summary?.status || "PENDING_PAYMENT";
 
   return (

@@ -219,11 +219,14 @@
     file: "/app/frontend/src/pages/crm/CrmPipelinePage.jsx, /app/frontend/src/lib/crm.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: false
         agent: "main"
         comment: "Initial implementation of CRM Pipeline Kanban board (Yeni / Nitelikli / Teklif Gönderildi / Kazanıldı / Kaybedildi), owner filtresi (sadece benim fırsatlarım) ve Yeni Fırsat modalı tamamlandı. Lütfen encoding, kolon bazlı gruplaya, stage değişimi ve optimistic UI davranışı için detaylı frontend testi yap."
+      - working: false
+        agent: "testing"
+        comment: "❌ CRM PIPELINE KANBAN SAYFASI CRITICAL ENCODING ISSUES FOUND - Core functionality working but severe Turkish character encoding problems detected. COMPREHENSIVE TEST RESULTS (80% SUCCESS): ✅ LOGIN & NAVIGATION: admin@acenta.test/admin123 login successful, successful navigation to /app/crm/pipeline route. ✅ BACKEND API INTEGRATION: All 3 parallel API strategy working correctly (status=open, status=won, status=lost), owner filter working with proper parameter passing (owner=696552a9f1cc0f5606f137e3), backend APIs responding with 200 OK, deal creation API working (POST /api/crm/deals), stage change API working (PATCH /api/crm/deals/{id}). ✅ KANBAN BOARD STRUCTURE: All 5 columns visible (Yeni, Nitelikli, Teklif Gönderildi, Kazanıldı, Kaybedildi), proper column headers and count display, empty state 'Kayıt yok' working correctly, deal cards displaying with proper structure (title, amount+currency, customer_id, owner_user_id). ✅ OWNER FILTER: Checkbox defaulted to checked (Sadece benim fırsatlarım), toggle functionality working with proper network requests, owner parameter correctly added/removed from API calls. ✅ OPTIMISTIC UI: Stage change dropdown working, optimistic UI updates happening immediately, backend PATCH requests being made correctly. ❌ CRITICAL ENCODING ISSUES: Turkish characters severely corrupted throughout the UI: Page title shows 'CRM \\u2022 Pipeline' instead of 'CRM • Pipeline', Description text shows 'Sat315f f15rsatlar31n31z31 a5famalara gf6re izleyin' instead of proper Turkish, Modal labels show 'Ba5fl31k', 'M15fsteri', 'F15rsat' instead of 'Başlık', 'Müşteri', 'Fırsat', Column headers show 'Gf6nderildi', 'Kazanf1ld31' instead of 'Gönderildi', 'Kazanıldı', All Turkish text appears as corrupted Unicode making interface unprofessional. ✅ TECHNICAL VERIFICATION: No JavaScript/React errors in console, no 401/403 API errors, backend integration fully functional, 3 fetch strategy confirmed, total count display working. IMPACT: While all core functionality (API integration, owner filter, stage changes, new deal creation) works perfectly, the severe encoding corruption makes the interface unusable for Turkish users. REQUIRES IMMEDIATE FIX: CrmPipelinePage.jsx needs complete character encoding correction similar to what was done for CrmCustomersPage.jsx - all Turkish characters must be properly encoded to display correctly in the browser."
 
   - task: "F2.FE.T2 BookProductPage quote form + checkout navigation"
     implemented: true

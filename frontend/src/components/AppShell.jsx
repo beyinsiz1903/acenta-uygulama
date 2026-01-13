@@ -73,6 +73,16 @@ export default function AppShell() {
     })();
   }, []);
 
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.location.search && window.location.search.includes("e2e=1")) {
+      import("../version").then(({ BUILD_STAMP }) => {
+        window.__BUILD_STAMP__ = BUILD_STAMP;
+        // eslint-disable-next-line no-console
+        console.info("BUILD_STAMP", BUILD_STAMP);
+      });
+    }
+  }, []);
+
   const sidebarStats = useMemo(() => {
     const map = new Map((resSummary || []).map((r) => [r.status, Number(r.count || 0)]));
     const total = (resSummary || []).reduce((a, r) => a + Number(r.count || 0), 0);

@@ -24,6 +24,7 @@ from bson import ObjectId
 
 from app.errors import AppError
 from app.utils import now_utc
+from app.services.booking_events import emit_event
 
 
 PUBLIC_TOKEN_TTL_HOURS = 24

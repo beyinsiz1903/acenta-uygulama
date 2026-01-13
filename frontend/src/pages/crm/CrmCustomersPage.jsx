@@ -242,7 +242,7 @@ export default function CrmCustomersPage() {
           }}
           style={{ padding: 10, borderRadius: 10, border: "1px solid #ddd" }}
         >
-          <option value="">Tf5mf5</option>
+          <option value="">Tümü</option>
           <option value="individual">Bireysel</option>
           <option value="corporate">Kurumsal</option>
         </select>

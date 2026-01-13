@@ -1,0 +1,1 @@
+from app.routers.crm_customers import router as crm_customers_router

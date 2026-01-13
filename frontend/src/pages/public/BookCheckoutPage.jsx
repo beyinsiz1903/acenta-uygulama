@@ -127,6 +127,7 @@ export default function BookCheckoutPage() {
 
     setLoading(true);
     setError("");
+    setShowProviderDetails(false);
     setResult(null);
 
     try {
@@ -175,6 +176,47 @@ export default function BookCheckoutPage() {
       setLoading(false);
     }
   };
+
+  if (!org || !quoteId) {
+    const qpBackToSearch = new URLSearchParams();
+    if (org) qpBackToSearch.set("org", org);
+
+    return (
+      <div className="min-h-screen bg-slate-50 px-4 py-6 flex justify-center">
+        <Card className="w-full max-w-lg p-4 space-y-3">
+          <EmptyState
+            title="Checkout için geçerli bir teklif bulunamadı"
+            description="Devam etmek için önce bir teklif oluşturmanız gerekiyor."
+            action={
+              <div className="flex flex-col sm:flex-row gap-2 justify-center">
+                {productId && org && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      const qp = new URLSearchParams();
+                      qp.set("org", encodeURIComponent(org));
+                      navigate(`/book/${productId}?${qp.toString()}`);
+                    }}
+                  >
+                    Teklif adımına dön
+                  </Button>
+                )}
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    navigate(`/book?${qpBackToSearch.toString()}`);
+                  }}
+                >
+                  Aramaya dön
+                </Button>
+              </div>
+            }
+          />
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 px-4 py-6 flex justify-center">

@@ -53,6 +53,7 @@ async def lifespan(app: FastAPI):
     await pricing_indexes.ensure_pricing_indexes(db)
     await voucher_indexes.ensure_voucher_indexes(db)
     await public_indexes.ensure_public_indexes(db)
+    await crm_indexes.ensure_crm_indexes(db)
 
     yield
 

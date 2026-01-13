@@ -99,8 +99,15 @@ export default function BookCheckoutPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  const org = searchParams.get("org") || "";
-  const quoteId = searchParams.get("quote_id") || "";
+  const normalizeParam = (value) => {
+    if (value == null) return "";
+    const trimmed = value.trim();
+    if (!trimmed || trimmed === "undefined" || trimmed === "null") return "";
+    return trimmed;
+  };
+
+  const org = normalizeParam(searchParams.get("org"));
+  const quoteId = normalizeParam(searchParams.get("quote_id"));
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -199,8 +206,9 @@ export default function BookCheckoutPage() {
                     variant="outline"
                     onClick={() => {
                       const qp = new URLSearchParams();
-                      qp.set("org", encodeURIComponent(org));
-                      navigate(`/book/${productId}?${qp.toString()}`);
+                      qp.set("org", org);
+                      const qs = qp.toString();
+                      navigate(qs ? `/book/${productId}?${qs}` : `/book/${productId}`);
                     }}
                   >
                     Teklif adımına dön

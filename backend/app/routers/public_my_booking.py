@@ -151,6 +151,7 @@ async def request_link(body: MyBookingRequestLinkBody, request: Request):
         email=email_lower,
         client_ip=client_ip,
         user_agent=user_agent,
+        channel="email",
     )
 
     # Enqueue email with /my-booking/{token} link via email_outbox

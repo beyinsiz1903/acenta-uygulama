@@ -5,13 +5,12 @@ from typing import Any
 import asyncio
 import pytest
 
-from app.db import get_db
 from app.utils import now_utc
 from app.services.public_my_booking import create_public_token, _hash_token
 
 
 @pytest.mark.anyio
-async def test_root_token_first_use_rotates_and_marks_used(async_client):
+async def test_root_token_first_use_rotates_and_marks_used(async_client, test_db):
     """Root token first resolve should mark it used and create exactly one rotated token."""
 
     db = await get_db()

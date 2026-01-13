@@ -29,16 +29,24 @@ def find_published_product():
         
         # Find a product with published version
         product = db.products.find_one({
-            "status": "active",
-            "organization_id": {"$in": ["org_public_A", "org_public_B", "org_public_quote"]}
+            "status": "active"
         })
         
         if product:
             product_id = str(product["_id"])
             org_id = product["organization_id"]
-            print(f"   ✅ Found product: {product_id} in org: {org_id}")
-            mongo_client.close()
-            return product_id, org_id
+            
+            # Check if it has a published version
+            version = db.product_versions.find_one({
+                "product_id": product["_id"],
+                "status": "published"
+            })
+            
+            if version:
+                print(f"   ✅ Found product: {product_id} in org: {org_id}")
+                print(f"   ✅ Has published version: {version.get('version')}")
+                mongo_client.close()
+                return product_id, org_id
         
         mongo_client.close()
         print("   ⚠️  No published product found, using test values")

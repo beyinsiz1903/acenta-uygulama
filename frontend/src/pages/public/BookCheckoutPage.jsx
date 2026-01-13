@@ -332,7 +332,7 @@ export default function BookCheckoutPage() {
 
         {result && (
           <div className="mt-4 border-t pt-3 space-y-2 text-xs">
-            {result.provider_error && !error && (
+            {providerError && !error && (
               <div className="text-xs text-red-600 space-y-1">
                 <p>Ödeme sırasında bir hata oluştu. Lütfen tekrar deneyin.</p>
                 <button
@@ -344,7 +344,15 @@ export default function BookCheckoutPage() {
                 </button>
                 {showProviderDetails && (
                   <pre className="text-[10px] bg-slate-100 rounded p-2 overflow-x-auto">
-                    {JSON.stringify(result.provider_error, null, 2)}
+                    {JSON.stringify(
+                      {
+                        code: providerError?.code,
+                        type: providerError?.type,
+                        message: providerError?.message,
+                      },
+                      null,
+                      2,
+                    )}
                   </pre>
                 )}
               </div>

@@ -131,6 +131,49 @@ export default function BookCompletePage() {
             Rezervasyonumu Görüntüle
           </Button>
         </div>
+
+        <div className="mt-4 border-t pt-3 text-left text-xs space-y-2">
+          <div className="font-medium">E-posta ile rezervasyon linki gönder</div>
+          <p className="text-[11px] text-muted-foreground">
+            E-posta adresinizi girdiğinizde, bu rezervasyonla eşleşen bir kayıt bulunursa birkaç dakika
+            içinde My Booking bağlantısı e-posta ile göndereceğiz.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-2 items-center">
+            <input
+              type="email"
+              className="w-full rounded-md border px-2 py-1 text-xs"
+              placeholder="ornek@misafir.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+            <Button
+              size="sm"
+              disabled={!email || linkRequestLoading || !bookingCode}
+              onClick={async () => {
+                setLinkRequestError("");
+                setLinkRequestMessage("");
+                try {
+                  setLinkRequestLoading(true);
+                  await requestMyBookingLink({
+                    email,
+                    booking_code: bookingCode,
+                  });
+                  setLinkRequestMessage(
+                    "Eğer bu e-posta ile eşleşen bir rezervasyon bulunursa, birkaç dakika içinde bağlantı gönderilecektir.",
+                  );
+                } catch (e) {
+                  setLinkRequestError(apiErrorMessage(e));
+                } finally {
+                  setLinkRequestLoading(false);
+                }
+              }}
+            >
+              {linkRequestLoading ? "Gönderiliyor..." : "Link gönder"}
+            </Button>
+          </div>
+          {linkRequestMessage && <p className="text-[11px] text-green-700">{linkRequestMessage}</p>}
+          {linkRequestError && <p className="text-[11px] text-red-600">{linkRequestError}</p>}
+        </div>
       </Card>
     </div>
   );

@@ -148,7 +148,8 @@ export default function BookCheckoutPage() {
       const res = await createPublicCheckout(body);
       if (!res.ok) {
         if (res.reason === "provider_unavailable") {
-          setError("Ödeme sağlayıcısına şu anda ulaşılamıyor. Lütfen daha sonra tekrar deneyin.");
+          setProviderError(res.provider_error || null);
+          setError("Ödeme sağlayıcısına şu anda ulaşılamıyor. Lütfen birkaç dakika sonra tekrar deneyin. Teklifinizin süresi dolarsa yeniden teklif oluşturmanız gerekebilir.");
         } else {
           setError("Checkout tamamlanamadı. Lütfen tekrar deneyin.");
         }
@@ -157,6 +158,7 @@ export default function BookCheckoutPage() {
 
       setResult(res);
       setClientSecret(res.client_secret || "");
+      setProviderError(null);
     } catch (e2) {
       const status = e2?.status ?? e2?.response?.status;
       const code = e2?.code;

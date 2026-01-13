@@ -104,6 +104,7 @@ app.include_router(search_router, prefix=API_PREFIX)
 app.include_router(vouchers_router, prefix=API_PREFIX)
 app.include_router(web_booking_router, prefix=API_PREFIX)
 app.include_router(web_catalog_router, prefix=API_PREFIX)
+app.include_router(crm_customers_router)
 
 app.include_router(auth_router)
 

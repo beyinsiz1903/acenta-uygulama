@@ -176,7 +176,7 @@ async def request_link(body: MyBookingRequestLinkBody, request: Request):
 
 
 
-@router.post("/create-token", response_model=MyBookingInstantTokenResponse)
+@router.post("/create-token", response_model=MyBookingInstantTokenResponse, response_model_exclude_none=True)
 async def create_instant_token(body: MyBookingInstantTokenBody, request: Request):
     """Instant /my-booking access token for public confirmation page.
 

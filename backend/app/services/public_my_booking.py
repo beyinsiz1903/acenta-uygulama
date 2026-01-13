@@ -47,6 +47,7 @@ async def create_public_token(
     client_ip: str | None = None,
     user_agent: str | None = None,
     rotated_from_token_hash: str | None = None,
+    channel: str | None = None,
 ) -> str:
     """Create a new booking_public_tokens document and return the raw token.
 

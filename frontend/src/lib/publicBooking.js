@@ -1,8 +1,17 @@
 import { api, apiErrorMessage } from "./api";
 
 export async function searchPublic(params = {}) {
-  const res = await api.get("/public/search", { params });
-  return res.data;
+  try {
+    const res = await api.get("/public/search", { params });
+    return res.data;
+  } catch (e) {
+    const status = e?.response?.status ?? null;
+    const data = e?.response?.data || {};
+    const code = data.code || data.error || data.detail || null;
+    const message = apiErrorMessage(e);
+    const normalized = { status, code, message, raw: e };
+    throw normalized;
+  }
 }
 
 export async function createPublicQuote(body) {

@@ -212,6 +212,19 @@
         agent: "testing"
         comment: "❌ CRM GÖREVLER SAYFASI CRITICAL ENCODING ISSUES FOUND - Core functionality working but severe Turkish character encoding problems detected. COMPREHENSIVE TEST RESULTS (75% SUCCESS): ✅ LOGIN & NAVIGATION: admin@acenta.test/admin123 login successful, CRM Müşteriler and CRM Görevler links visible in left menu, successful navigation to /app/crm/tasks route. ✅ TAB FUNCTIONALITY: All three tabs found and working ('Bugün', 'Gecikenler', 'Bu Hafta'), tab switching working with proper active style changes (background: #111), task count updates correctly per tab (Bugün: 0, Gecikenler: 1, Bu Hafta: 1), empty state message 'Bu filtrede görev yok' displays correctly when no tasks. ✅ TASK DISPLAY & INTERACTION: Task table renders correctly with proper headers, task rows show title, status/priority badges ('Açık'/'Tamamlandı', 'Düşük'/'Normal'/'Yüksek'), due date formatting working, task completion flow functional - button shows 'Tamamlandı olarak işaretle' → 'İşaretleniyor…' → task marked as done in backend, backend API integration working (verified task status changed from 'open' to 'done'). ✅ TECHNICAL VERIFICATION: No JavaScript/React errors in console, no 401/403 API errors, backend APIs responding correctly, task filtering by due date working (today/overdue/week). ❌ CRITICAL ENCODING ISSUES: Turkish characters displaying as Unicode escape sequences throughout the UI: 'ö' shows as '\\u00f6', 'ü' shows as '\\u00fc', 'ç' shows as '\\u00e7', 'ı' shows as '\\u0131', 'ş' shows as '\\u015f', 'ğ' shows as '\\u011f'. IMPACT: Page title shows 'CRM \\u2022 G\\u00f6revler' instead of 'CRM • Görevler', table headers show 'Ba\\u015fl\\u0131k' instead of 'Başlık', all Turkish text appears as escaped Unicode making the interface unprofessional and hard to read. BACKEND VERIFICATION: 4 tasks total (2 completed during test, 2 remaining open), task completion API working correctly, proper task filtering by status and due date. REQUIRES IMMEDIATE FIX: CrmTasksPage.jsx needs character encoding correction similar to what was done for CrmCustomersPage.jsx - all Turkish characters must be properly encoded to display correctly in the browser."
 
+
+  - task: "CRM Pipeline Page Frontend Test"
+    implemented: true
+    working: false
+    file: "/app/frontend/src/pages/crm/CrmPipelinePage.jsx, /app/frontend/src/lib/crm.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "main"
+        comment: "Initial implementation of CRM Pipeline Kanban board (Yeni / Nitelikli / Teklif Gönderildi / Kazanıldı / Kaybedildi), owner filtresi (sadece benim fırsatlarım) ve Yeni Fırsat modalı tamamlandı. Lütfen encoding, kolon bazlı gruplaya, stage değişimi ve optimistic UI davranışı için detaylı frontend testi yap."
+
   - task: "F2.FE.T2 BookProductPage quote form + checkout navigation"
     implemented: true
     working: true

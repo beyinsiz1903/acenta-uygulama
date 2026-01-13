@@ -261,7 +261,7 @@
 
 ## test_plan:
   current_focus:
-    - "CRM Tasks Page Frontend Test"
+    - "CRM Pipeline Page Frontend Test"
   stuck_tasks:
     - "F2.FE.T3 Checkout & Complete polish"
   test_all: false

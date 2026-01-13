@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { Card } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
-import { getPublicBookingSummary, requestMyBookingLink, apiErrorMessage } from "../../lib/publicBooking";
+import { getPublicBookingSummary, requestMyBookingLink, createMyBookingToken, apiErrorMessage } from "../../lib/publicBooking";
 
 function formatAmount(amountCents, currency) {
   const amount = (amountCents || 0) / 100;

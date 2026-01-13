@@ -45,6 +45,7 @@ async def create_public_token(
     email: str | None,
     client_ip: str | None = None,
     user_agent: str | None = None,
+    rotated_from_token_hash: str | None = None,
 ) -> str:
     """Create a new booking_public_tokens document and return the raw token.
 
@@ -76,11 +77,16 @@ async def create_public_token(
         "created_at": now,
         "created_ip": client_ip or None,
         "created_ua": user_agent or None,
-        # Telemetry for multi-use tokens
+        # Lifecycle & telemetry
+        "status": "active",  # active | used | revoked (future)
+        "first_used_at": None,
+        "last_used_at": None,
         "access_count": 0,
         "last_access_at": None,
         "last_ip": None,
         "last_ua": None,
+        # Rotation chain
+        "rotated_from_token_hash": rotated_from_token_hash,
     }
 
     await db.booking_public_tokens.insert_one(doc)

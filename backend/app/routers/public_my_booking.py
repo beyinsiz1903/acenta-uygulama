@@ -239,23 +239,6 @@ async def create_instant_token(body: MyBookingInstantTokenBody, request: Request
         expires_at=expires_at.isoformat(),
     )
 
-    if org_id:
-        try:
-            await enqueue_generic_email(
-                db,
-                organization_id=str(org_id),
-                to_addresses=[email_raw],
-                subject=subject,
-                html_body=html_body,
-                text_body=text_body,
-                event_type="my_booking.link",
-            )
-        except Exception:
-            # Outbox failures must not leak; main behavior is still ok=true
-            pass
-
-    return MyBookingTokenResponse()
-
 
 async def _resolve_public_token(db, token: str) -> tuple[dict[str, Any], dict[str, Any]]:
     """Backward-compatible adapter around services.public_my_booking.resolve_public_token.

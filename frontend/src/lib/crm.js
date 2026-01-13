@@ -36,3 +36,30 @@ export async function patchCustomer(id, body) {
     throw { message: apiErrorMessage(err), raw: err };
   }
 }
+
+export async function listTasks(params) {
+  try {
+    const res = await api.get("/crm/tasks", { params });
+    return res.data; // { items, total, page, page_size }
+  } catch (err) {
+    throw { message: apiErrorMessage(err), raw: err };
+  }
+}
+
+export async function createTask(body) {
+  try {
+    const res = await api.post("/crm/tasks", body);
+    return res.data; // TaskOut
+  } catch (err) {
+    throw { message: apiErrorMessage(err), raw: err };
+  }
+}
+
+export async function patchTask(id, body) {
+  try {
+    const res = await api.patch(`/crm/tasks/${id}`, body);
+    return res.data; // TaskOut
+  } catch (err) {
+    throw { message: apiErrorMessage(err), raw: err };
+  }
+}

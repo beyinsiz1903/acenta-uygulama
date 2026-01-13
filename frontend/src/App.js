@@ -57,6 +57,7 @@ import OpsGuestCasesPage from "./pages/OpsGuestCasesPage";
 import OpsBookingDetailPage from "./pages/ops/OpsBookingDetailPage";
 import CrmCustomersPage from "./pages/crm/CrmCustomersPage";
 import CrmCustomerDetailPage from "./pages/crm/CrmCustomerDetailPage";
+import CrmTasksPage from "./pages/crm/CrmTasksPage";
 
 import HotelBookingsPage from "./pages/HotelBookingsPage";
 import HotelStopSellPage from "./pages/HotelStopSellPage";
@@ -139,6 +140,8 @@ function App() {
           <Route index element={<DashboardPage />} />
           <Route path="products" element={<ProductsPage />} />
           <Route path="crm/customers" element={<CrmCustomersPage />} />
+          <Route path="crm/tasks" element={<CrmTasksPage />} />
+
           <Route path="crm/customers/:customerId" element={<CrmCustomerDetailPage />} />
           <Route path="ops/guest-cases" element={<OpsGuestCasesPage />} />
           <Route path="ops/bookings/:bookingId" element={<OpsBookingDetailPage />} />

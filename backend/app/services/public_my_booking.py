@@ -92,6 +92,29 @@ async def create_public_token(
     }
 
     await db.booking_public_tokens.insert_one(doc)
+
+    # Emit event after successful insert
+    try:
+        org_id = str(organization_id)
+        prefix = token_hash[:8]
+        meta = {
+            "booking_id": booking_id,
+            "token_hash_prefix": prefix,
+            "expires_at": expires_at.isoformat(),
+            "channel": channel or "unknown",
+        }
+        await emit_event(
+            db,
+            organization_id=org_id,
+            booking_id=booking_id,
+            type="MY_BOOKING_TOKEN_CREATED",
+            actor={"type": "system", "source": "public_my_booking"},
+            meta=meta,
+        )
+    except Exception:
+        # Event failures must not affect token creation
+        pass
+
     return token
 
 

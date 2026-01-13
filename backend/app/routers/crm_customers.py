@@ -88,7 +88,11 @@ async def http_patch_customer(
 ):
     org_id = current_user.get("organization_id")
 
-    updated = await patch_customer(db, org_id, customer_id, body.model_dump())
+    patch_dict = body.model_dump(exclude_unset=True)
+    if not any(v is not None for v in patch_dict.values()):
+        raise HTTPException(status_code=400, detail="No fields to update")
+
+    updated = await patch_customer(db, org_id, customer_id, patch_dict)
     if not updated:
         raise HTTPException(status_code=404, detail="Customer not found")
 

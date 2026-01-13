@@ -249,7 +249,6 @@
 
 ## test_plan:
   current_focus:
-    - "PR#4 CRM Customers Frontend Smoke Test"
     - "F2.FE.T3 Checkout & Complete polish"
   stuck_tasks:
     - "F2.FE.T3 Checkout & Complete polish"

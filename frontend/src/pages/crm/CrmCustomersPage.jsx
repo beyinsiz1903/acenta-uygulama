@@ -1,7 +1,9 @@
+// frontend/src/pages/crm/CrmCustomersPage.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { createCustomer, listCustomers } from "../../lib/crm";
 
+// ---- utils ----
 function useDebouncedValue(value, delayMs = 350) {
   const [debounced, setDebounced] = useState(value);
   useEffect(() => {
@@ -17,12 +19,16 @@ function formatRelativeTime(dateIso) {
   const diffMs = d.getTime() - Date.now();
   const diffSec = Math.round(diffMs / 1000);
   const rtf = new Intl.RelativeTimeFormat("tr", { numeric: "auto" });
+
   const abs = Math.abs(diffSec);
   if (abs < 60) return rtf.format(diffSec, "second");
+
   const diffMin = Math.round(diffSec / 60);
   if (Math.abs(diffMin) < 60) return rtf.format(diffMin, "minute");
+
   const diffHour = Math.round(diffMin / 60);
   if (Math.abs(diffHour) < 24) return rtf.format(diffHour, "hour");
+
   const diffDay = Math.round(diffHour / 24);
   return rtf.format(diffDay, "day");
 }
@@ -46,8 +52,9 @@ function Badge({ children }) {
   );
 }
 
-function Modal({ open, title, onClose, children }) {
+function Modal({ open, title, onClose, children, disableClose }) {
   if (!open) return null;
+
   return (
     <div
       role="dialog"
@@ -62,7 +69,7 @@ function Modal({ open, title, onClose, children }) {
         padding: 16,
         zIndex: 1000,
       }}
-      onMouseDown={onClose}
+      onMouseDown={() => (disableClose ? null : onClose())}
     >
       <div
         style={{
@@ -76,29 +83,46 @@ function Modal({ open, title, onClose, children }) {
       >
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <h2 style={{ margin: 0, fontSize: 18 }}>{title}</h2>
-          <button onClick={onClose} style={{ border: "none", background: "transparent", fontSize: 18, cursor: "pointer" }}>
+          <button
+            type="button"
+            onClick={() => (disableClose ? null : onClose())}
+            style={{
+              border: "none",
+              background: "transparent",
+              fontSize: 18,
+              cursor: disableClose ? "not-allowed" : "pointer",
+              opacity: disableClose ? 0.5 : 1,
+            }}
+            aria-label="Kapat"
+            title="Kapat"
+          >
             ×
           </button>
         </div>
+
         <div style={{ marginTop: 12 }}>{children}</div>
       </div>
     </div>
   );
 }
 
+// ---- page ----
 export default function CrmCustomersPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
+  // Read URL state
   const initialSearch = searchParams.get("search") || "";
   const initialType = searchParams.get("type") || "";
   const initialTag = searchParams.get("tag") || "";
-  const initialPage = Number(searchParams.get("page") || "1");
+  const initialPageRaw = Number(searchParams.get("page") || "1");
+  const initialPage = Number.isFinite(initialPageRaw) && initialPageRaw > 0 ? initialPageRaw : 1;
 
+  // Local state
   const [search, setSearch] = useState(initialSearch);
-  const [type, setType] = useState(initialType);
-  const [tag, setTag] = useState(initialTag);
-  const [page, setPage] = useState(Number.isFinite(initialPage) && initialPage > 0 ? initialPage : 1);
+  const [type, setType] = useState(initialType); // "" | "individual" | "corporate"
+  const [tag, setTag] = useState(initialTag); // single tag MVP
+  const [page, setPage] = useState(initialPage);
 
   const debouncedSearch = useDebouncedValue(search, 350);
 
@@ -106,6 +130,7 @@ export default function CrmCustomersPage() {
   const [loading, setLoading] = useState(false);
   const [errMsg, setErrMsg] = useState("");
 
+  // Create modal state
   const [createOpen, setCreateOpen] = useState(false);
   const [createLoading, setCreateLoading] = useState(false);
   const [createErr, setCreateErr] = useState("");
@@ -126,6 +151,7 @@ export default function CrmCustomersPage() {
     return qp;
   }, [debouncedSearch, type, tag, page]);
 
+  // Sync URL with current state (keep back navigation usable)
   useEffect(() => {
     const next = {};
     if (search?.trim()) next.search = search.trim();
@@ -167,18 +193,25 @@ export default function CrmCustomersPage() {
     e.preventDefault();
     setCreateErr("");
     setCreateLoading(true);
+
     try {
+      const name = newName.trim();
       const contacts = [];
+
       if (newEmail.trim()) contacts.push({ type: "email", value: newEmail.trim(), is_primary: true });
       if (newPhone.trim()) contacts.push({ type: "phone", value: newPhone.trim(), is_primary: !contacts.length });
+
       const payload = {
-        name: newName.trim(),
+        name,
         type: newType,
         contacts,
       };
+
       const created = await createCustomer(payload);
+
       setCreateOpen(false);
       await refresh();
+
       navigate(`/app/crm/customers/${created.id}`);
     } catch (e2) {
       setCreateErr(e2.message || "Müşteri oluşturulamadı.");
@@ -187,16 +220,21 @@ export default function CrmCustomersPage() {
     }
   }
 
+  const pageSize = data.page_size || 25;
   const hasPrev = page > 1;
-  const hasNext = data.total > page * (data.page_size || 25);
+  const hasNext = data.total > page * pageSize;
 
   return (
     <div style={{ padding: 16 }}>
+      {/* Header */}
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
         <div>
           <h1 style={{ margin: 0, fontSize: 22 }}>CRM • Müşteriler</h1>
-          <div style={{ color: "#666", marginTop: 4, fontSize: 13 }}>Müşterileri arayın, etiketleyin ve detayına inin.</div>
+          <div style={{ color: "#666", marginTop: 4, fontSize: 13 }}>
+            Müşterileri arayın, etiketleyin ve detayına inin.
+          </div>
         </div>
+
         <button
           onClick={openCreate}
           style={{
@@ -208,10 +246,11 @@ export default function CrmCustomersPage() {
             cursor: "pointer",
           }}
         >
-          Yeni Mf50fteri
+          Yeni Müşteri
         </button>
       </div>
 
+      {/* Filters */}
       <div
         style={{
           marginTop: 14,
@@ -231,7 +270,13 @@ export default function CrmCustomersPage() {
             setSearch(e.target.value);
           }}
           placeholder="Ara: isim / e-posta / telefon"
-          style={{ padding: 10, borderRadius: 10, border: "1px solid #ddd", minWidth: 280, flex: "1 1 280px" }}
+          style={{
+            padding: 10,
+            borderRadius: 10,
+            border: "1px solid #ddd",
+            minWidth: 280,
+            flex: "1 1 280px",
+          }}
         />
 
         <select
@@ -254,7 +299,7 @@ export default function CrmCustomersPage() {
             setTag(e.target.value);
           }}
           placeholder="Etiket (ör: vip)"
-          style={{ padding: 10, borderRadius: 10, border: "1px solid #ddd", width: 180 }}
+          style={{ padding: 10, borderRadius: 10, border: "1px solid #ddd", width: 200 }}
         />
 
         <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 10 }}>
@@ -264,115 +309,146 @@ export default function CrmCustomersPage() {
         </div>
       </div>
 
-      <div style={{ marginTop: 12 }}>
-        {errMsg ? (
-          <div style={{ padding: 12, border: "1px solid #f2caca", background: "#fff5f5", borderRadius: 12, color: "#8a1f1f" }}>{errMsg}</div>
-        ) : null}
+      {/* Errors */}
+      {errMsg ? (
+        <div style={{ marginTop: 12, padding: 12, border: "1px solid #f2caca", background: "#fff5f5", borderRadius: 12, color: "#8a1f1f" }}>
+          {errMsg}
+        </div>
+      ) : null}
 
-        <div style={{ marginTop: 10, border: "1px solid #eee", borderRadius: 12, overflow: "hidden" }}>
-          <div style={{ padding: 10, borderBottom: "1px solid #eee", background: "#fafafa", fontSize: 13, color: "#666" }}>
-            {loading ? "Yfckleniyore280a6" : "Liste"}
-          </div>
+      {/* Table */}
+      <div style={{ marginTop: 10, border: "1px solid #eee", borderRadius: 12, overflow: "hidden" }}>
+        <div style={{ padding: 10, borderBottom: "1px solid #eee", background: "#fafafa", fontSize: 13, color: "#666" }}>
+          {loading ? `Yükleniyor${"\u2026"}` : "Liste"}
+        </div>
 
-          {!loading && data.items?.length === 0 ? (
-            <div style={{ padding: 18 }}>
-              <div style={{ fontSize: 16, fontWeight: 600 }}>Henfcz mf50fteri yok.</div>
-              <div style={{ marginTop: 6, color: "#666" }}>İlk mf50fterinizi oluf5turmak if7in “Yeni Mf50fteri” butonunu kullan0fn.</div>
-              <button
-                onClick={openCreate}
-                style={{ marginTop: 12, padding: "10px 12px", borderRadius: 10, border: "1px solid #111", background: "#111", color: "white", cursor: "pointer" }}
-              >
-                Yeni Mf50fteri Oluf5tur
-              </button>
+        {!loading && (data.items || []).length === 0 ? (
+          <div style={{ padding: 18 }}>
+            <div style={{ fontSize: 16, fontWeight: 600 }}>Henüz müşteri yok.</div>
+            <div style={{ marginTop: 6, color: "#666" }}>
+              İlk müşterinizi oluşturmak için "Yeni Müşteri" butonunu kullanın.
             </div>
-          ) : (
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead>
-                <tr style={{ background: "#fff" }}>
-                  <th style={{ textAlign: "left", padding: 12, fontSize: 12, color: "#666", borderBottom: "1px solid #eee" }}>Ad0f</th>
-                  <th style={{ textAlign: "left", padding: 12, fontSize: 12, color: "#666", borderBottom: "1px solid #eee" }}>Tip</th>
-                  <th style={{ textAlign: "left", padding: 12, fontSize: 12, color: "#666", borderBottom: "1px solid #eee" }}>Etiketler</th>
-                  <th style={{ textAlign: "left", padding: 12, fontSize: 12, color: "#666", borderBottom: "1px solid #eee" }}>Son gfcncelleme</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.items?.map((c) => {
-                  const tagsArr = c.tags || [];
-                  const shownTags = tagsArr.slice(0, 3);
-                  const remaining = tagsArr.length - shownTags.length;
 
-                  return (
-                    <tr
-                      key={c.id}
-                      onClick={() => navigate(`/app/crm/customers/${c.id}`)}
-                      style={{ cursor: "pointer" }}
-                    >
-                      <td style={{ padding: 12, borderBottom: "1px solid #f3f3f3" }}>
-                        <div style={{ fontWeight: 600 }}>{c.name}</div>
-                        <div style={{ fontSize: 12, color: "#666", marginTop: 2 }}>
-                          {(c.contacts || []).filter((x) => x?.is_primary)?.map((x, idx) => (
+            <button
+              onClick={openCreate}
+              style={{
+                marginTop: 12,
+                padding: "10px 12px",
+                borderRadius: 10,
+                border: "1px solid #111",
+                background: "#111",
+                color: "white",
+                cursor: "pointer",
+              }}
+            >
+              Yeni Müşteri Oluştur
+            </button>
+          </div>
+        ) : (
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead>
+              <tr style={{ background: "#fff" }}>
+                <th style={{ textAlign: "left", padding: 12, fontSize: 12, color: "#666", borderBottom: "1px solid #eee" }}>Adı</th>
+                <th style={{ textAlign: "left", padding: 12, fontSize: 12, color: "#666", borderBottom: "1px solid #eee" }}>Tip</th>
+                <th style={{ textAlign: "left", padding: 12, fontSize: 12, color: "#666", borderBottom: "1px solid #eee" }}>Etiketler</th>
+                <th style={{ textAlign: "left", padding: 12, fontSize: 12, color: "#666", borderBottom: "1px solid #eee" }}>Son güncelleme</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {(data.items || []).map((c) => {
+                const tagsArr = c.tags || [];
+                const shownTags = tagsArr.slice(0, 3);
+                const remaining = tagsArr.length - shownTags.length;
+
+                const primaryContacts = (c.contacts || []).filter((x) => x?.is_primary);
+
+                return (
+                  <tr
+                    key={c.id}
+                    onClick={() => navigate(`/app/crm/customers/${c.id}`)}
+                    style={{ cursor: "pointer" }}
+                  >
+                    <td style={{ padding: 12, borderBottom: "1px solid #f3f3f3" }}>
+                      <div style={{ fontWeight: 600 }}>{c.name}</div>
+
+                      <div style={{ fontSize: 12, color: "#666", marginTop: 2 }}>
+                        {primaryContacts.length ? (
+                          primaryContacts.map((x, idx) => (
                             <span key={idx} style={{ marginRight: 10 }}>
                               {x.type === "email" ? "✉️" : "📞"} {x.value}
                             </span>
-                          ))}
-                        </div>
-                      </td>
-                      <td style={{ padding: 12, borderBottom: "1px solid #f3f3f3" }}>
-                        <Badge>{c.type === "corporate" ? "Kurumsal" : "Bireysel"}</Badge>
-                      </td>
-                      <td style={{ padding: 12, borderBottom: "1px solid #f3f3f3" }}>
-                        {shownTags.map((t) => (
-                          <Badge key={t}>{t}</Badge>
-                        ))}
-                        {remaining > 0 ? <Badge>+{remaining}</Badge> : null}
-                      </td>
-                      <td style={{ padding: 12, borderBottom: "1px solid #f3f3f3", color: "#444" }}>
-                        {formatRelativeTime(c.updated_at)}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          )}
-        </div>
+                          ))
+                        ) : (
+                          <span>Birincil iletişim yok</span>
+                        )}
+                      </div>
+                    </td>
 
-        <div style={{ marginTop: 12, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <button
-            disabled={!hasPrev || loading}
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            style={{
-              padding: "8px 10px",
-              borderRadius: 10,
-              border: "1px solid #ddd",
-              background: hasPrev ? "#fff" : "#f6f6f6",
-              cursor: hasPrev ? "pointer" : "not-allowed",
-            }}
-          >
-            d6nceki
-          </button>
+                    <td style={{ padding: 12, borderBottom: "1px solid #f3f3f3" }}>
+                      <Badge>{c.type === "corporate" ? "Kurumsal" : "Bireysel"}</Badge>
+                    </td>
 
-          <div style={{ fontSize: 13, color: "#666" }}>
-            Sayfa <b>{page}</b>
-          </div>
+                    <td style={{ padding: 12, borderBottom: "1px solid #f3f3f3" }}>
+                      {shownTags.map((t) => (
+                        <Badge key={t}>{t}</Badge>
+                      ))}
+                      {remaining > 0 ? <Badge>+{remaining}</Badge> : null}
+                    </td>
 
-          <button
-            disabled={!hasNext || loading}
-            onClick={() => setPage((p) => p + 1)}
-            style={{
-              padding: "8px 10px",
-              borderRadius: 10,
-              border: "1px solid #ddd",
-              background: hasNext ? "#fff" : "#f6f6f6",
-              cursor: hasNext ? "pointer" : "not-allowed",
-            }}
-          >
-            Sonraki
-          </button>
-        </div>
+                    <td style={{ padding: 12, borderBottom: "1px solid #f3f3f3", color: "#444" }}>
+                      {formatRelativeTime(c.updated_at)}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
       </div>
 
-      <Modal open={createOpen} title="Yeni Mf50fteri Oluf5tur" onClose={() => (createLoading ? null : setCreateOpen(false))}>
+      {/* Pagination */}
+      <div style={{ marginTop: 12, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <button
+          disabled={!hasPrev || loading}
+          onClick={() => setPage((p) => Math.max(1, p - 1))}
+          style={{
+            padding: "8px 10px",
+            borderRadius: 10,
+            border: "1px solid #ddd",
+            background: hasPrev ? "#fff" : "#f6f6f6",
+            cursor: hasPrev ? "pointer" : "not-allowed",
+          }}
+        >
+          Önceki
+        </button>
+
+        <div style={{ fontSize: 13, color: "#666" }}>
+          Sayfa <b>{page}</b>
+        </div>
+
+        <button
+          disabled={!hasNext || loading}
+          onClick={() => setPage((p) => p + 1)}
+          style={{
+            padding: "8px 10px",
+            borderRadius: 10,
+            border: "1px solid #ddd",
+            background: hasNext ? "#fff" : "#f6f6f6",
+            cursor: hasNext ? "pointer" : "not-allowed",
+          }}
+        >
+          Sonraki
+        </button>
+      </div>
+
+      {/* Create modal */}
+      <Modal
+        open={createOpen}
+        title="Yeni Müşteri Oluştur"
+        onClose={() => setCreateOpen(false)}
+        disableClose={createLoading}
+      >
         <form onSubmit={submitCreate}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
             <div style={{ gridColumn: "1 / -1" }}>
@@ -382,8 +458,14 @@ export default function CrmCustomersPage() {
                 onChange={(e) => setNewName(e.target.value)}
                 required
                 minLength={2}
-                placeholder="d6rn: ACME Travel"
-                style={{ marginTop: 6, width: "100%", padding: 10, borderRadius: 10, border: "1px solid #ddd" }}
+                placeholder="Örn: ACME Travel"
+                style={{
+                  marginTop: 6,
+                  width: "100%",
+                  padding: 10,
+                  borderRadius: 10,
+                  border: "1px solid #ddd",
+                }}
               />
             </div>
 
@@ -392,7 +474,13 @@ export default function CrmCustomersPage() {
               <select
                 value={newType}
                 onChange={(e) => setNewType(e.target.value)}
-                style={{ marginTop: 6, width: "100%", padding: 10, borderRadius: 10, border: "1px solid #ddd" }}
+                style={{
+                  marginTop: 6,
+                  width: "100%",
+                  padding: 10,
+                  borderRadius: 10,
+                  border: "1px solid #ddd",
+                }}
               >
                 <option value="individual">Bireysel</option>
                 <option value="corporate">Kurumsal</option>
@@ -405,7 +493,13 @@ export default function CrmCustomersPage() {
                 value={newEmail}
                 onChange={(e) => setNewEmail(e.target.value)}
                 placeholder="ops@acme.com"
-                style={{ marginTop: 6, width: "100%", padding: 10, borderRadius: 10, border: "1px solid #ddd" }}
+                style={{
+                  marginTop: 6,
+                  width: "100%",
+                  padding: 10,
+                  borderRadius: 10,
+                  border: "1px solid #ddd",
+                }}
               />
             </div>
 
@@ -415,7 +509,13 @@ export default function CrmCustomersPage() {
                 value={newPhone}
                 onChange={(e) => setNewPhone(e.target.value)}
                 placeholder="+90..."
-                style={{ marginTop: 6, width: "100%", padding: 10, borderRadius: 10, border: "1px solid #ddd" }}
+                style={{
+                  marginTop: 6,
+                  width: "100%",
+                  padding: 10,
+                  borderRadius: 10,
+                  border: "1px solid #ddd",
+                }}
               />
             </div>
           </div>
@@ -431,16 +531,30 @@ export default function CrmCustomersPage() {
               type="button"
               onClick={() => setCreateOpen(false)}
               disabled={createLoading}
-              style={{ padding: "10px 12px", borderRadius: 10, border: "1px solid #ddd", background: "#fff", cursor: "pointer" }}
+              style={{
+                padding: "10px 12px",
+                borderRadius: 10,
+                border: "1px solid #ddd",
+                background: "#fff",
+                cursor: "pointer",
+              }}
             >
               İptal
             </button>
+
             <button
               type="submit"
               disabled={createLoading || newName.trim().length < 2}
-              style={{ padding: "10px 12px", borderRadius: 10, border: "1px solid #111", background: "#111", color: "white", cursor: "pointer" }}
+              style={{
+                padding: "10px 12px",
+                borderRadius: 10,
+                border: "1px solid #111",
+                background: "#111",
+                color: "white",
+                cursor: "pointer",
+              }}
             >
-              {createLoading ? "Oluf5turuluyore280a6" : "Oluf5tur"}
+              {createLoading ? `Oluşturuluyor${"\u2026"}` : "Oluştur"}
             </button>
           </div>
         </form>

@@ -138,6 +138,15 @@ export default function AppShell() {
             </Button>
           </div>
         </div>
+
+      if (typeof window !== "undefined" && window.location.search && window.location.search.includes("e2e=1")) {
+        import("../version").then(({ BUILD_STAMP }) => {
+          window.__BUILD_STAMP__ = BUILD_STAMP;
+          // eslint-disable-next-line no-console
+          console.info("BUILD_STAMP", BUILD_STAMP);
+        });
+      }
+
       </div>
 
       {/* Mobile nav drawer */}

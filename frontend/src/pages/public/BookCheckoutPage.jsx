@@ -281,7 +281,7 @@ export default function BookCheckoutPage() {
           {error && (
           <div className="text-xs text-red-600 space-y-1">
             <p>{error}</p>
-            {result?.provider_error && (
+            {providerError && (
               <button
                 type="button"
                 className="text-[11px] underline"
@@ -290,9 +290,17 @@ export default function BookCheckoutPage() {
                 {showProviderDetails ? "Detayı gizle" : "Detay"}
               </button>
             )}
-            {showProviderDetails && result?.provider_error && (
+            {showProviderDetails && providerError && (
               <pre className="text-[10px] bg-slate-100 rounded p-2 overflow-x-auto">
-                {JSON.stringify(result.provider_error, null, 2)}
+                {JSON.stringify(
+                  {
+                    code: providerError?.code,
+                    type: providerError?.type,
+                    message: providerError?.message,
+                  },
+                  null,
+                  2,
+                )}
               </pre>
             )}
           </div>

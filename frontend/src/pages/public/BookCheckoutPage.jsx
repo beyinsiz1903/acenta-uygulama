@@ -230,10 +230,6 @@ function PublicCheckoutPaymentForm({ clientSecret, bookingCode, onSuccess }) {
                 <span className="font-medium">Payment Intent:</span>{" "}
                 <span className="font-mono break-all">{result.payment_intent_id}</span>
               </div>
-              <div>
-                <span className="font-medium">Client secret:</span>{" "}
-                <span className="font-mono break-all">{result.client_secret}</span>
-              </div>
             </div>
           )}
 
@@ -243,7 +239,26 @@ function PublicCheckoutPaymentForm({ clientSecret, bookingCode, onSuccess }) {
             </Button>
           </div>
         </form>
-      </Card>
+
+        {result && (
+          <div className="mt-4 border-t pt-3 space-y-2 text-xs">
+            <div className="font-medium">Ödeme</div>
+            {clientSecret ? (
+              STRIPE_PUBLISHABLE_KEY ? (
+                <Elements stripe={stripePromise} options={{ clientSecret }}>
+                  <PublicCheckoutPaymentForm
+                    clientSecret={clientSecret}
+                    bookingCode={result.booking_code}
+                    onSuccess={(code) => {
+                      const qp = new URLSearchParams();
+                      if (code) qp.set("booking_code", code);
+                      navigate(`/book/complete?${qp.toString()}`);
+                    }}
+                  />
+                </Elements>
+              ) : (
+                <p className="text-xs text-red-600">
+                  Stripe yapılandırması eksik. Ödeme formu gösterilemiyor ancak rezervasyon kodunuz:{      </Card>
     </div>
   );
 }

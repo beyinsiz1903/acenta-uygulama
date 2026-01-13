@@ -27,6 +27,10 @@ export default function BookCompletePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [summary, setSummary] = useState(null);
+  const [email, setEmail] = useState("");
+  const [linkRequestLoading, setLinkRequestLoading] = useState(false);
+  const [linkRequestError, setLinkRequestError] = useState("");
+  const [linkRequestMessage, setLinkRequestMessage] = useState("");
 
   useEffect(() => {
     if (!bookingCode || !org) return;

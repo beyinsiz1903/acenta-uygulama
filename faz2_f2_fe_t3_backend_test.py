@@ -134,6 +134,8 @@ def test_public_booking_summary_different_org():
 
 def setup_webdriver():
     """Setup Chrome WebDriver with appropriate options"""
+    from selenium.webdriver.chrome.service import Service
+    
     chrome_options = Options()
     chrome_options.add_argument("--headless")
     chrome_options.add_argument("--no-sandbox")
@@ -143,7 +145,8 @@ def setup_webdriver():
     chrome_options.binary_location = "/usr/bin/chromium"
     
     try:
-        driver = webdriver.Chrome(options=chrome_options)
+        service = Service("/usr/bin/chromedriver")
+        driver = webdriver.Chrome(service=service, options=chrome_options)
         return driver
     except Exception as e:
         print(f"   ❌ Failed to setup WebDriver: {e}")

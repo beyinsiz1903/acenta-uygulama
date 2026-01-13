@@ -2,16 +2,23 @@
 """
 FAZ 2 / F2.FE.T3 Public booking summary endpoint ve complete sayfası entegrasyonunu test et.
 
-Backend test for public booking summary API endpoints.
+Comprehensive test for both backend API and frontend integration.
 """
 
 import json
 import requests
 import sys
+import time
 from datetime import datetime
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.options import Options
+from selenium.common.exceptions import TimeoutException, NoSuchElementException
 
-# Use the production backend URL from frontend .env
-BACKEND_URL = "https://bookingsuite-7.preview.emergentagent.com"
+# Use the production URL from frontend .env
+BASE_URL = "https://bookingsuite-7.preview.emergentagent.com"
 
 def test_public_booking_summary_happy_path():
     """Test GET /api/public/bookings/by-code/PB-TEST123?org=org_public_summary"""

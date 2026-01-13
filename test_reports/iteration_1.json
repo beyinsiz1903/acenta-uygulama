@@ -89,8 +89,8 @@
     }
   ],
   "test_environment": {
-    "backend_url": "https://b2b-commerce-os.preview.emergentagent.com/api",
-    "frontend_url": "https://b2b-commerce-os.preview.emergentagent.com",
+    "backend_url": "https://syroce-book.preview.emergentagent.com/api",
+    "frontend_url": "https://syroce-book.preview.emergentagent.com",
     "test_credentials": {
       "admin": "admin@acenta.test / admin123"
     },

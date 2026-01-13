@@ -116,6 +116,11 @@ export default function BookCompletePage() {
               </div>
             }
           />
+          {isE2E && (
+            <div data-testid="e2e-guard" className="mt-2 text-[10px] text-muted-foreground">
+              GUARD_RENDERED: missing booking_code
+            </div>
+          )}
         </Card>
       </div>
     );

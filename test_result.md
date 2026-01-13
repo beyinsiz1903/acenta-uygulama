@@ -196,7 +196,7 @@
 
   - task: "F2.FE.T3 Checkout & Complete polish"
     implemented: true
-    working: false
+    working: "NA"
     file: "/app/frontend/src/pages/public/BookCheckoutPage.jsx, /app/frontend/src/pages/public/BookCompletePage.jsx"
     stuck_count: 2
     priority: "high"

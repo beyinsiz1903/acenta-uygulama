@@ -109,6 +109,9 @@ export default function BookCheckoutPage() {
   const org = normalizeParam(searchParams.get("org"));
   const quoteId = normalizeParam(searchParams.get("quote_id"));
 
+  const isE2E =
+    typeof window !== "undefined" && window.location.search && window.location.search.includes("e2e=1");
+
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");

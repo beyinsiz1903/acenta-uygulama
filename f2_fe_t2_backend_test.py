@@ -60,9 +60,9 @@ def test_public_search_api():
     """Test public search API that supports product selection"""
     print("\n1️⃣  Public Search API Test...")
     
-    # Test with org_public_A
+    # Test with org_public_checkout (where we know there's a product)
     params = {
-        "org": "org_public_A",
+        "org": "org_public_checkout",
         "page": 1,
         "page_size": 10
     }
@@ -97,17 +97,18 @@ def test_public_search_api():
                 assert field in item, f"{field} field required in item"
             
             print(f"   ✅ Item structure verified: product_id, type, title, price, availability")
-            return items[0]["product_id"], "org_public_A"
+            print(f"   ✅ First product: {item['product_id']} - {item['title']}")
+            return items[0]["product_id"], "org_public_checkout"
         else:
             print(f"   📋 No products found in search results")
-            return None, "org_public_A"
+            return None, "org_public_checkout"
     
     elif r.status_code == 429:
         print(f"   ✅ 429 RATE_LIMITED - rate limiting working")
-        return None, "org_public_A"
+        return None, "org_public_checkout"
     else:
         print(f"   ❌ Unexpected status: {r.status_code} - {r.text}")
-        return None, "org_public_A"
+        return None, "org_public_checkout"
 
 def test_public_quote_api(product_id, org_id):
     """Test public quote API - the core of the quote form"""

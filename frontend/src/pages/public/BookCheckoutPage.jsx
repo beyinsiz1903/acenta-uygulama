@@ -153,12 +153,21 @@ export default function BookCheckoutPage() {
       setResult(res);
       setClientSecret(res.client_secret || "");
     } catch (e2) {
-      const status = e2?.response?.status;
-      const detail = e2?.response?.data?.detail;
-      if (status === 404 && (detail === "QUOTE_NOT_FOUND" || detail === "Quote not found or expired")) {
+      const status = e2?.status ?? e2?.response?.status;
+      const code = e2?.code;
+      const detail = e2?.raw?.response?.data?.detail || e2?.response?.data?.detail;
+
+      if (
+        status === 404 &&
+        (code === "QUOTE_NOT_FOUND" || detail === "QUOTE_NOT_FOUND" || detail === "Quote not found or expired")
+      ) {
         setError("Teklifin süresi doldu. Lütfen yeni bir teklif alın.");
+      } else if (status === 404 && detail === "NOT_FOUND" && quoteId) {
+        setError("Teklif bulunamadı veya süresi doldu. Lütfen yeni bir teklif alın.");
+      } else if (status === 429 || code === "RATE_LIMITED") {
+        setError("Çok fazla istek atıldı, lütfen 1 dakika sonra tekrar deneyin.");
       } else {
-        setError(apiErrorMessage(e2));
+        setError(e2.message || apiErrorMessage(e2.raw || e2));
       }
     } finally {
       setLoading(false);

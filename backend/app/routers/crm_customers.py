@@ -35,9 +35,9 @@ async def http_list_customers(
     page: int = 1,
     page_size: int = 25,
     db=Depends(get_db),
-    current_user: AuthUser = Depends(require_roles(["agency_agent", "super_admin"])),
+    current_user: dict = Depends(require_roles(["agency_agent", "super_admin"])),
 ):
-    org_id = current_user.organization_id
+    org_id = current_user.get("organization_id")
     items, total = await list_customers(
         db,
         org_id,

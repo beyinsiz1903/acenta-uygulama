@@ -58,7 +58,7 @@ async def http_create_customer(
     org_id = current_user.get("organization_id")
     user_id = current_user.get("id")
 
-    customer = create_customer(db, org_id, user_id, body.model_dump())
+    customer = await create_customer(db, org_id, user_id, body.model_dump())
 
     # CRM events will be wired in a later PR (F3.CRM.Events)
     # emit_crm_event(...)

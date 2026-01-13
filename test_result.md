@@ -2020,6 +2020,21 @@
     message: "✅ P0.3 FX & LEDGER PYTEST EXECUTION COMPLETED - Ran 3 specific pytest files as requested. RESULTS: test_booking_financials_fx.py ✅ PASSED (EUR ledger balance verified), test_fx_snapshots.py ❌ FAILED (no FX snapshots created for EUR bookings - expected behavior in EUR-only architecture), test_refund_fx_ledger.py ✅ PASSED (ledger balance verified, refund endpoints exist but no POST API). KEY FINDING: FX functionality works correctly but only triggers for non-EUR currencies. Current EUR-only booking flow means FX snapshots are not created, which aligns with architectural expectations. Ledger integration is functional with proper EUR debit/credit balance verification. The test failure in test_fx_snapshots.py is expected behavior, not a bug, as the system is designed for EUR-only operations and FX snapshots are only created for non-EUR currency conversions."
 
 ## frontend:
+  - task: "FAZ 2 / F2.FE.T2.1 Public Book Quote + Checkout Flow"
+    implemented: true
+    working: false
+    file: "/app/frontend/src/pages/public/BookProductPage.jsx, /app/frontend/src/pages/public/BookCheckoutPage.jsx, /app/frontend/src/pages/public/BookSearchPage.jsx, /app/frontend/src/pages/public/BookCompletePage.jsx"
+    stuck_count: 2
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "❌ FAZ 2 / F2.FE.T2.1 Public Book Quote + Checkout Flow Test FAILED - Critical form rendering issue discovered. BLOCKING ISSUE: React form components are not rendering on BookProductPage and BookCheckoutPage. Pages load with titles and navigation but NO input fields (date, guest count, name, email, phone) are rendered. This makes the entire booking flow non-functional. Backend APIs are working (return proper 422 validation errors), but frontend forms are completely broken. Root cause appears to be React component rendering pipeline issue specific to form elements. IMPACT: Users cannot complete bookings - no way to input dates, guest information, or submit forms. Requires immediate investigation of React component state management and form rendering logic."
+      - working: false
+        agent: "testing"
+        comment: "❌ FAZ 2 / F2.FE.T2.1 CRITICAL FORM RENDERING ISSUE PERSISTS - Comprehensive testing confirms the same blocking issue reported previously. DETAILED FINDINGS: 1) BookSearchPage: EmptyState loads but Demo/debug entry section NOT rendering (missing input field and button), 2) BookProductPage: Page loads with title 'Ürün Seçimi' but ZERO form elements render (no date inputs, number inputs, or submit buttons), 3) BookCheckoutPage: Page loads with title 'Checkout (v1 Skeleton)' but ZERO form elements render (no text, email, tel inputs or submit buttons), 4) BookCompletePage: Booking code displays correctly but 'Rezervasyonumu Görüntüle' button NOT rendering. BACKEND STATUS: All public APIs working correctly (/api/public/search returns empty results as expected, /api/public/quote returns proper validation errors). ROOT CAUSE: React component rendering pipeline completely broken for form elements across all public booking pages. This is a systematic React rendering issue, not individual component problems. IMPACT: Entire public booking flow non-functional - users cannot input any data or submit forms. Requires immediate React debugging and component rendering investigation."
+
   - task: "EPIC 1 / T1.2 – Ops Guest Cases UI e2e testi"
     implemented: true
     working: true

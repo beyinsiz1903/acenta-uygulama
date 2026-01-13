@@ -71,9 +71,9 @@ async def http_create_customer(
 async def http_get_customer_detail(
     customer_id: str,
     db=Depends(get_db),
-    current_user: AuthUser = Depends(require_roles(["agency_agent", "super_admin"])),
+    current_user: dict = Depends(require_roles(["agency_agent", "super_admin"])),
 ):
-    org_id = current_user.organization_id
+    org_id = current_user.get("organization_id")
     data = await get_customer_detail(db, org_id, customer_id)
     if not data:
         raise HTTPException(status_code=404, detail="Customer not found")

@@ -5,6 +5,7 @@ import { Elements, CardElement, useStripe, useElements } from "@stripe/react-str
 
 import { Card } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
+import EmptyState from "../../components/EmptyState";
 import { createPublicCheckout, apiErrorMessage } from "../../lib/publicBooking";
 
 const STRIPE_PUBLISHABLE_KEY =

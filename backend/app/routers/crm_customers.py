@@ -6,8 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
 from app.db import get_db
-from app.auth import guard_scopes
-from app.schemas.main import AuthUser
+from app.auth import require_roles
 from app.schemas_crm import CustomerCreate, CustomerPatch, CustomerOut, CustomerDetailOut
 from app.services.crm_customers import (
     create_customer,

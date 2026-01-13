@@ -304,16 +304,59 @@ export default function OpsBookingDetailPage() {
                 )}
                 {!eventsLoading && !eventsError && events.length > 0 && (
                   <ul className="space-y-2 text-xs">
-                    {events.map((ev) => (
-                      <li key={`${ev.type}-${ev.created_at || ev.occurred_at}`} className="border-l pl-2 ml-1">
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="font-medium">{ev.type || ev.event || "Event"}</span>
-                          <span className="text-[11px] text-muted-foreground">
-                            {formatDateTime(ev.created_at || ev.occurred_at)}
-                          </span>
-                        </div>
-                      </li>
-                    ))}
+                    {events.map((ev, idx) => {
+                      const eventType = ev.type || ev.event || "Event";
+                      const meta = ev.meta || {};
+
+                      let title = eventType;
+                      let subtitle = "";
+
+                      if (eventType === "MY_BOOKING_TOKEN_CREATED") {
+                        const channel = meta.channel || "unknown";
+                        const prefix = meta.token_hash_prefix || "";
+                        const expires = meta.expires_at || meta.expiry || "";
+                        title = `MyBooking token oluşturuldu (${channel})`;
+                        const parts = [];
+                        if (prefix) parts.push(`prefix=${prefix}`);
+                        if (expires) parts.push(`expires_at=${expires}`);
+                        subtitle = parts.join(" • ");
+                      } else if (eventType === "MY_BOOKING_TOKEN_ROTATED") {
+                        const rootPrefix = meta.root_hash_prefix || "";
+                        const rotatedPrefix = meta.rotated_hash_prefix || "";
+                        title = "MyBooking token rotate edildi";
+                        if (rootPrefix || rotatedPrefix) {
+                          subtitle = `${rootPrefix || "?"} → ${rotatedPrefix || "?"}`;
+                        }
+                      } else if (eventType === "MY_BOOKING_TOKEN_ACCESSED") {
+                        const tokenType = meta.token_type || "unknown";
+                        const hasIp = meta.has_ip ? "var" : "yok";
+                        const hasUa = meta.has_ua ? "var" : "yok";
+                        const sampled = meta.sampled === true;
+                        title = `MyBooking erişildi (${tokenType})`;
+                        subtitle = `IP:${hasIp} • UA:${hasUa} • sampled=${sampled ? "true" : "false"}`;
+                      }
+
+                      const when = ev.created_at || ev.occurred_at;
+
+                      return (
+                        <li
+                          key={`${eventType}-${ev.created_at || ev.occurred_at || idx}`}
+                          className="border-l pl-2 ml-1"
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="font-medium">{title}</span>
+                            <span className="text-[11px] text-muted-foreground">
+                              {formatDateTime(when)}
+                            </span>
+                          </div>
+                          {subtitle && (
+                            <div className="mt-0.5 text-[11px] text-muted-foreground">
+                              {subtitle}
+                            </div>
+                          )}
+                        </li>
+                      );
+                    })}
                   </ul>
                 )}
               </TabsContent>

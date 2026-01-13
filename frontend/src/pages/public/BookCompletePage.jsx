@@ -32,6 +32,9 @@ export default function BookCompletePage() {
   const bookingCode = normalizeParam(searchParams.get("booking_code"));
   const org = normalizeParam(searchParams.get("org"));
 
+  const isE2E =
+    typeof window !== "undefined" && window.location.search && window.location.search.includes("e2e=1");
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [summary, setSummary] = useState(null);

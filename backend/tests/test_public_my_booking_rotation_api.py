@@ -13,7 +13,7 @@ from app.services.public_my_booking import create_public_token, _hash_token
 async def test_root_token_first_use_rotates_and_marks_used(async_client, test_db):
     """Root token first resolve should mark it used and create exactly one rotated token."""
 
-    db = await get_db()
+    db = test_db
 
     # Clean state
     await db.bookings.delete_many({})

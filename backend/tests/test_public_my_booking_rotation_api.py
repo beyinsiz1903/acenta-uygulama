@@ -133,7 +133,7 @@ async def test_rotated_token_multi_use_without_further_rotation(async_client, te
 
 
 @pytest.mark.anyio
-async def test_root_token_race_results_in_single_rotation(async_client):
+async def test_root_token_race_results_in_single_rotation(async_client, test_db):
     """Two parallel resolves of the same root token must yield one 200 + one 404 and a single rotated token.
 
     This exercises the concurrency-safe find_one_and_update guard.

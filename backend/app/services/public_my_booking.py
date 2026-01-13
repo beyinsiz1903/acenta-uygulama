@@ -217,7 +217,10 @@ async def resolve_public_token_with_rotation(db, token: str) -> Tuple[dict[str, 
     token_doc, booking = await _lookup_token_and_booking(db, token)
 
     now = now_utc()
-    is_root = token_doc.get("rotated_from_token_hash") in (None, "")
+    is_root = (
+        "rotated_from_token_hash" not in token_doc
+        or token_doc.get("rotated_from_token_hash") is None
+    )
 
     # Concurrency-safe state transition based on document _id
     if is_root:

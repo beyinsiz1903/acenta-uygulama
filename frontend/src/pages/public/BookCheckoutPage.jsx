@@ -5,35 +5,14 @@ import { Elements, CardElement, useStripe, useElements } from "@stripe/react-str
 
 import { Card } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
- {bookingCode || "(henüz oluşturulmadı)"}.
-      </p>
-    );
-  }
-
-  return (
-    <form onSubmit={handlePay} className="space-y-3 mt-3 text-xs">
-      <div className="space-y-1">
-        <label className="font-medium">Kart Bilgileri</label>
-        <div className="border rounded-md px-2 py-2 bg-background">
-          <CardElement options={{ hidePostalCode: true }} />
-        </div>
-      </div>
-
-      {stripeError && <p className="text-xs text-red-600">{stripeError}</p>}
-
-      <Button type="submit" size="sm" disabled={paying || !stripe}>
-        {paying ? "Ödeme işleniyor..." : "Ödemeyi Tamamla"}
-      </Button>
-    </form>
-  );
-}
-
-export default function BookCheckoutPage() {
-
 import { createPublicCheckout, apiErrorMessage } from "../../lib/publicBooking";
 
-const STRIPE_PUBLISHABLE_KEY = window.STRIPE_PUBLISHABLE_KEY || process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY || "";
-const stripePromise = STRIPE_PUBLISHABLE_KEY ? loadStripe(STRIPE_PUBLISHABLE_KEY) : Promise.resolve(null);
+const STRIPE_PUBLISHABLE_KEY =
+  window.STRIPE_PUBLISHABLE_KEY || process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY || "";
+
+const stripePromise = STRIPE_PUBLISHABLE_KEY
+  ? loadStripe(STRIPE_PUBLISHABLE_KEY)
+  : Promise.resolve(null);
 
 function PublicCheckoutPaymentForm({ clientSecret, bookingCode, onSuccess }) {
   const stripe = useStripe();
@@ -90,7 +69,32 @@ function PublicCheckoutPaymentForm({ clientSecret, bookingCode, onSuccess }) {
   if (!STRIPE_PUBLISHABLE_KEY) {
     return (
       <p className="text-xs text-red-600">
-        Stripe yapılandırması eksik. Ödeme formu gösterilemiyor ancak rezervasyon kodunuz:{  const { productId } = useParams();
+        Stripe yapılandırması eksik. Ödeme formu gösterilemiyor ancak rezervasyon kodunuz:
+        <span className="font-mono"> {bookingCode || "(henüz oluşturulmadı)"}</span>.
+      </p>
+    );
+  }
+
+  return (
+    <form onSubmit={handlePay} className="space-y-3 mt-3 text-xs">
+      <div className="space-y-1">
+        <label className="font-medium">Kart Bilgileri</label>
+        <div className="border rounded-md px-2 py-2 bg-background">
+          <CardElement options={{ hidePostalCode: true }} />
+        </div>
+      </div>
+
+      {stripeError && <p className="text-xs text-red-600">{stripeError}</p>}
+
+      <Button type="submit" size="sm" disabled={paying || !stripe}>
+        {paying ? "Ödeme işleniyor..." : "Ödemeyi Tamamla"}
+      </Button>
+    </form>
+  );
+}
+
+export default function BookCheckoutPage() {
+  const { productId } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
@@ -165,21 +169,10 @@ function PublicCheckoutPaymentForm({ clientSecret, bookingCode, onSuccess }) {
     <div className="min-h-screen bg-slate-50 px-4 py-6 flex justify-center">
       <Card className="w-full max-w-lg p-4 space-y-3">
         <div className="space-y-1">
- {result.booking_code}
-                </p>
-              )
-            ) : (
-              <p className="text-xs text-red-600">
-                Ödeme başlatılamadı. Lütfen daha sonra tekrar deneyin veya destek ile iletişime geçin.
-              </p>
-            )}
-          </div>
-        )}
-
-          <h1 className="text-lg font-semibold">Checkout (v1)</h1>
+          <h1 className="text-lg font-semibold">Checkout</h1>
           <p className="text-xs text-muted-foreground">
             Bu adımda misafir bilgilerini alıyor ve backend üzerinden public checkout isteği gönderiyoruz.
-            Stripe kart formu bir sonraki iterasyonda eklenecek.
+            Ödeme kart formu ile bu sayfada tamamlanacaktır.
           </p>
         </div>
 
@@ -191,7 +184,8 @@ function PublicCheckoutPaymentForm({ clientSecret, bookingCode, onSuccess }) {
             <span className="font-medium">Org:</span> <span className="font-mono break-all">{org || "-"}</span>
           </div>
           <div>
-            <span className="font-medium">Quote ID:</span> <span className="font-mono break-all">{quoteId || "(henüz oluşturulmadı)"}</span>
+            <span className="font-medium">Quote ID:</span>{" "}
+            <span className="font-mono break-all">{quoteId || "(henüz oluşturulmadı)"}</span>
           </div>
         </div>
 
@@ -232,10 +226,12 @@ function PublicCheckoutPaymentForm({ clientSecret, bookingCode, onSuccess }) {
           {result && (
             <div className="text-xs space-y-1 border-t pt-2 mt-2">
               <div>
-                <span className="font-medium">Booking ID:</span> <span className="font-mono">{result.booking_id}</span>
+                <span className="font-medium">Booking ID:</span>{" "}
+                <span className="font-mono">{result.booking_id}</span>
               </div>
               <div>
-                <span className="font-medium">Booking code:</span> <span className="font-mono">{result.booking_code}</span>
+                <span className="font-medium">Booking code:</span>{" "}
+                <span className="font-mono">{result.booking_code}</span>
               </div>
               <div>
                 <span className="font-medium">Payment Intent:</span>{" "}
@@ -269,7 +265,18 @@ function PublicCheckoutPaymentForm({ clientSecret, bookingCode, onSuccess }) {
                 </Elements>
               ) : (
                 <p className="text-xs text-red-600">
-                  Stripe yapılandırması eksik. Ödeme formu gösterilemiyor ancak rezervasyon kodunuz:{      </Card>
+                  Stripe yapılandırması eksik. Ödeme formu gösterilemiyor ancak rezervasyon kodunuz:
+                  <span className="font-mono"> {result.booking_code}</span>.
+                </p>
+              )
+            ) : (
+              <p className="text-xs text-red-600">
+                Ödeme başlatılamadı. Lütfen daha sonra tekrar deneyin veya destek ile iletişime geçin.
+              </p>
+            )}
+          </div>
+        )}
+      </Card>
     </div>
   );
 }

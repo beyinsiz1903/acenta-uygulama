@@ -63,3 +63,30 @@ export async function patchTask(id, body) {
     throw { message: apiErrorMessage(err), raw: err };
   }
 }
+
+export async function listDeals(params) {
+  try {
+    const res = await api.get("/crm/deals", { params });
+    return res.data; // { items, total, page, page_size }
+  } catch (err) {
+    throw { message: apiErrorMessage(err), raw: err };
+  }
+}
+
+export async function createDeal(body) {
+  try {
+    const res = await api.post("/crm/deals", body);
+    return res.data; // DealOut
+  } catch (err) {
+    throw { message: apiErrorMessage(err), raw: err };
+  }
+}
+
+export async function patchDeal(id, body) {
+  try {
+    const res = await api.patch(`/crm/deals/${id}`, body);
+    return res.data; // DealOut
+  } catch (err) {
+    throw { message: apiErrorMessage(err), raw: err };
+  }
+}

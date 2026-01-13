@@ -25,7 +25,7 @@ export default function BookProductPage() {
   const [rooms, setRooms] = useState(1);
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState(null);
   const [quote, setQuote] = useState(null);
 
   const handleSubmit = async (e) => {

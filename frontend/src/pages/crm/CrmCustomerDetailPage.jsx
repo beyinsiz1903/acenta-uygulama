@@ -247,6 +247,9 @@ export default function CrmCustomerDetailPage() {
   const openDeals = detail?.open_deals || [];
   const openTasks = detail?.open_tasks || [];
 
+  const mergedIntoId = customer.merged_into;
+  const isMerged = Boolean(customer.is_merged && mergedIntoId);
+
   return (
     <div style={{ padding: 16 }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
@@ -267,6 +270,41 @@ export default function CrmCustomerDetailPage() {
           ID: <code>{customer.id}</code>
         </div>
       </div>
+
+      {isMerged ? (
+        <div
+          style={{
+            marginTop: 12,
+            padding: 12,
+            borderRadius: 12,
+            border: "1px solid #f2caca",
+            background: "#fff5f5",
+            color: "#8a1f1f",
+            fontSize: 13,
+          }}
+        >
+          <div style={{ fontWeight: 600, marginBottom: 4 }}>Bu m\u00fc\u015fteri kayd\u0131 birle\u015ftirildi.</div>
+          <div>
+            T\u00fcm i\u015flemler <code>{mergedIntoId}</code> ID'li ana kay\u0131t \u00fczerinden y\u00fcr\u00fct\u00fcl\u00fcyor.
+            {" "}
+            <button
+              type="button"
+              onClick={() => navigate(`/app/crm/customers/${mergedIntoId}`)}
+              style={{
+                marginLeft: 4,
+                padding: "4px 8px",
+                borderRadius: 999,
+                border: "1px solid #111",
+                background: "#fff",
+                cursor: "pointer",
+                fontSize: 12,
+              }}
+            >
+              Ana kay\u0131da a\u00e7
+            </button>
+          </div>
+        </div>
+      ) : null}
 
       {/* Header card */}
       <div style={{ marginTop: 12, border: "1px solid #eee", borderRadius: 12, padding: 14 }}>

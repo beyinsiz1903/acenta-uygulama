@@ -122,7 +122,7 @@ class TestRunner:
         
         # Test linking customer to booking
         link_response = await self.client.patch(
-            f"{API_BASE}/api/ops/bookings/{booking_id}/customer",
+            f"{API_BASE}/api/api/ops/bookings/{booking_id}/customer",
             json={"customer_id": customer_id},
             headers=self.get_headers()
         )
@@ -164,7 +164,7 @@ class TestRunner:
         
         # First link the customer
         await self.client.patch(
-            f"{API_BASE}/api/ops/bookings/{booking_id}/customer",
+            f"{API_BASE}/api/api/ops/bookings/{booking_id}/customer",
             json={"customer_id": customer_id},
             headers=self.get_headers()
         )
@@ -173,7 +173,7 @@ class TestRunner:
         
         # Test unlinking (customer_id = null)
         unlink_response = await self.client.patch(
-            f"{API_BASE}/api/ops/bookings/{booking_id}/customer",
+            f"{API_BASE}/api/api/ops/bookings/{booking_id}/customer",
             json={"customer_id": None},
             headers=self.get_headers()
         )
@@ -211,7 +211,7 @@ class TestRunner:
         invalid_booking_id = "invalid-booking-id-123"
         
         response = await self.client.patch(
-            f"{API_BASE}/api/ops/bookings/{invalid_booking_id}/customer",
+            f"{API_BASE}/api/api/ops/bookings/{invalid_booking_id}/customer",
             json={"customer_id": "cust_test123"},
             headers=self.get_headers()
         )
@@ -241,7 +241,7 @@ class TestRunner:
         nonexistent_booking_id = "507f1f77bcf86cd799439011"
         
         response = await self.client.patch(
-            f"{API_BASE}/api/ops/bookings/{nonexistent_booking_id}/customer",
+            f"{API_BASE}/api/api/ops/bookings/{nonexistent_booking_id}/customer",
             json={"customer_id": "cust_test123"},
             headers=self.get_headers()
         )
@@ -274,7 +274,7 @@ class TestRunner:
         fake_customer_id = "cust_different_org_123456"
         
         response = await self.client.patch(
-            f"{API_BASE}/api/ops/bookings/{booking_id}/customer",
+            f"{API_BASE}/api/api/ops/bookings/{booking_id}/customer",
             json={"customer_id": fake_customer_id},
             headers=self.get_headers()
         )
@@ -307,7 +307,7 @@ class TestRunner:
         
         # Test booking detail before linking
         detail_response = await self.client.get(
-            f"{API_BASE}/api/ops/bookings/{booking_id}",
+            f"{API_BASE}/api/api/ops/bookings/{booking_id}",
             headers=self.get_headers()
         )
         
@@ -326,7 +326,7 @@ class TestRunner:
                 
                 # Link customer to booking
                 link_response = await self.client.patch(
-                    f"{API_BASE}/ops/bookings/{booking_id}/customer",
+                    f"{API_BASE}/api/ops/bookings/{booking_id}/customer",
                     json={"customer_id": customer_id},
                     headers=self.get_headers()
                 )
@@ -334,7 +334,7 @@ class TestRunner:
                 if link_response.status_code == 200:
                     # Check booking detail after linking
                     detail_after_response = await self.client.get(
-                        f"{API_BASE}/api/ops/bookings/{booking_id}",
+                        f"{API_BASE}/api/api/ops/bookings/{booking_id}",
                         headers=self.get_headers()
                     )
                     
@@ -392,7 +392,7 @@ class TestRunner:
                 
                 # Link customer to booking
                 link_response = await self.client.patch(
-                    f"{API_BASE}/ops/bookings/{booking_id}/customer",
+                    f"{API_BASE}/api/ops/bookings/{booking_id}/customer",
                     json={"customer_id": customer_id},
                     headers=self.get_headers()
                 )
@@ -465,7 +465,7 @@ class TestRunner:
         
         test_results = []
         
-        # Test 1: PATCH /api/ops/bookings/{booking_id}/customer scenarios
+        # Test 1: PATCH /api/api/ops/bookings/{booking_id}/customer scenarios
         test_results.append(await self.test_patch_customer_link_valid_scenario())
         test_results.append(await self.test_patch_customer_unlink_scenario())
         test_results.append(await self.test_patch_invalid_booking_id())

@@ -146,6 +146,7 @@ async def get_b2b_booking_detail_ops(
         "quote_id": booking.get("quote_id"),
         "risk_snapshot": booking.get("risk_snapshot") or {},
         "policy_snapshot": booking.get("policy_snapshot") or {},
+    }
 
 
 class OpsBookingCustomerLinkIn(BaseModel):

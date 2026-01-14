@@ -32,6 +32,14 @@ def get_mongo_client():
     mongo_url = os.environ.get("MONGO_URL", "mongodb://localhost:27017/test_database")
     return MongoClient(mongo_url)
 
+def normalize_email(email):
+    """Normalize email for duplicate detection"""
+    return email.strip().lower()
+
+def normalize_phone(phone):
+    """Normalize phone for duplicate detection"""
+    return ''.join(filter(str.isdigit, phone))
+
 def find_confirmed_eur_booking(admin_headers):
     """Find an existing CONFIRMED EUR booking for testing"""
     print("   📋 Looking for existing CONFIRMED EUR booking...")

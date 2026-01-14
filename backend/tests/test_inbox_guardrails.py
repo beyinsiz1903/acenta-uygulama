@@ -103,8 +103,10 @@ class TestInboxGuardrails:
         valid_statuses = ["open", "pending", "done"]
         
         for status in valid_statuses:
+            # The status is passed as JSON body according to the Pydantic model
             response = await self.client.patch(
-                f"/api/inbox/threads/{self.test_thread_id}/status?status={status}"
+                f"/api/inbox/threads/{self.test_thread_id}/status",
+                json={"status": status}
             )
             
             assert response.status_code == 200, f"Status update to '{status}' failed: {response.text}"
@@ -115,7 +117,8 @@ class TestInboxGuardrails:
             
         # Test invalid status
         response = await self.client.patch(
-            f"/api/inbox/threads/{self.test_thread_id}/status?status=invalid"
+            f"/api/inbox/threads/{self.test_thread_id}/status",
+            json={"status": "invalid"}
         )
         
         assert response.status_code == 422, f"Invalid status should return 422, got {response.status_code}: {response.text}"
@@ -132,7 +135,8 @@ class TestInboxGuardrails:
         # Test non-existent thread
         fake_thread_id = "507f1f77bcf86cd799439011"  # Valid ObjectId format but non-existent
         response = await self.client.patch(
-            f"/api/inbox/threads/{fake_thread_id}/status?status=open"
+            f"/api/inbox/threads/{fake_thread_id}/status",
+            json={"status": "open"}
         )
         
         assert response.status_code == 404, f"Non-existent thread should return 404, got {response.status_code}: {response.text}"

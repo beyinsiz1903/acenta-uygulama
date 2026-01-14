@@ -117,6 +117,38 @@ async def http_patch_customer(
         raise HTTPException(status_code=404, detail="Customer not found")
 
     # CRM events will be wired in a later PR (F3.CRM.Events)
+
+
+@router.post("/merge", response_model=CustomerMergeResultOut)
+async def http_merge_customers(
+    body: CustomerMergeRequest,
+    db=Depends(get_db),
+    current_user: dict = Depends(require_roles(["admin", "super_admin"])),
+):
+    org_id = current_user.get("organization_id")
+    user_id = current_user.get("id") or "system"
+
+    try:
+        result = await perform_customer_merge(
+            db,
+            org_id,
+            primary_id=body.primary_id,
+            duplicate_ids=body.duplicate_ids,
+            dry_run=body.dry_run,
+            merged_by_user_id=user_id,
+        )
+    except ValueError as exc:
+        msg = str(exc)
+        if msg == "primary_id is required":
+            raise HTTPException(status_code=400, detail="primary_id_required")
+        if msg == "primary_customer_not_found":
+            raise HTTPException(status_code=404, detail="primary_customer_not_found")
+        if msg == "customer_merge_conflict":
+            raise HTTPException(status_code=409, detail="customer_merge_conflict")
+        raise HTTPException(status_code=400, detail="merge_failed")
+
+    return result
+
     # emit_crm_event(...)
 
     return updated

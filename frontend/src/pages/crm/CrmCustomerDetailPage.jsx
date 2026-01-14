@@ -551,22 +551,23 @@ export default function CrmCustomerDetailPage() {
               <div style={{ fontWeight: 700 }}>Son Rezervasyonlar</div>
 
               <div style={{ marginTop: 8 }}>
-              {recentBookings.length ? (
-                <ul style={{ margin: 0, paddingLeft: 16 }}>
-                  {recentBookings.map((b) => (
-                    <li key={b.id} style={{ marginBottom: 8 }}>
-                      <div style={{ fontWeight: 600 }}>{b.id}</div>
-                      <div style={{ fontSize: 12, color: "#666" }}>
-                        {(b.status || "-") + " • " +
-                          (b.total_amount ? `${b.total_amount} ${b.currency || ""}` : "") +
-                          (b.created_at ? ` • ${new Date(b.created_at).toLocaleString("tr-TR")}` : "")}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <div style={{ color: "#666", fontSize: 13 }}>Bu müşteri için henüz rezervasyon yok.</div>
-              )}
+                {recentBookings.length ? (
+                  <ul style={{ margin: 0, paddingLeft: 16 }}>
+                    {recentBookings.map((b) => (
+                      <li key={b.id} style={{ marginBottom: 8 }}>
+                        <div style={{ fontWeight: 600 }}>{b.id}</div>
+                        <div style={{ fontSize: 12, color: "#666" }}>
+                          {(b.status || "-") + " • " +
+                            (b.total_amount ? `${b.total_amount} ${b.currency || ""}` : "") +
+                            (b.created_at ? ` • ${new Date(b.created_at).toLocaleString("tr-TR")}` : "")}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div style={{ color: "#666", fontSize: 13 }}>Bu müşteri için henüz rezervasyon yok.</div>
+                )}
+              </div>
             </div>
           </div>
 

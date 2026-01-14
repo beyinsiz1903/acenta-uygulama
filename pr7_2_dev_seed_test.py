@@ -309,9 +309,9 @@ class DevSeedTester:
                 self.test_results["api_tests"]["failed"] += 1
                 self.test_results["api_tests"]["details"].append(f"❌ GET /api/crm/customers?search=seed failed: {response.status_code}")
 
-            # Test 2: GET /api/ops/bookings?page_size=5
-            print("\n📡 Testing GET /api/ops/bookings?page_size=5")
-            response = requests.get(f"{self.backend_url}/ops/bookings?page_size=5", headers=headers, timeout=10)
+            # Test 2: GET /api/api/ops/bookings?page_size=5 (note: double API prefix due to router configuration)
+            print("\n📡 Testing GET /api/api/ops/bookings?page_size=5")
+            response = requests.get(f"{self.backend_url}/api/ops/bookings?page_size=5", headers=headers, timeout=10)
             
             if response.status_code == 200:
                 bookings_data = response.json()

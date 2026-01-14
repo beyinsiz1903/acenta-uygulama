@@ -48,7 +48,6 @@ def setup_duplicate_test_data(admin_headers, admin_org_id):
     test_customers = [
         # Email duplicates
         {
-            "id": "cust_dup_email_1",
             "name": "Duplicate Email 1",
             "type": "individual",
             "contacts": [
@@ -58,12 +57,9 @@ def setup_duplicate_test_data(admin_headers, admin_org_id):
                     "is_primary": True
                 }
             ],
-            "tags": ["test", "duplicate"],
-            "created_at": datetime.utcnow() - timedelta(days=10),  # Older
-            "updated_at": datetime.utcnow() - timedelta(days=5)    # Older
+            "tags": ["test", "duplicate"]
         },
         {
-            "id": "cust_dup_email_2", 
             "name": "Duplicate Email 2",
             "type": "individual",
             "contacts": [
@@ -73,13 +69,10 @@ def setup_duplicate_test_data(admin_headers, admin_org_id):
                     "is_primary": True
                 }
             ],
-            "tags": ["test", "duplicate"],
-            "created_at": datetime.utcnow() - timedelta(days=5),   # Newer
-            "updated_at": datetime.utcnow() - timedelta(days=1)    # Newer
+            "tags": ["test", "duplicate"]
         },
         # Phone duplicates
         {
-            "id": "cust_dup_phone_1",
             "name": "Duplicate Phone 1", 
             "type": "individual",
             "contacts": [
@@ -89,12 +82,9 @@ def setup_duplicate_test_data(admin_headers, admin_org_id):
                     "is_primary": True
                 }
             ],
-            "tags": ["test", "duplicate"],
-            "created_at": datetime.utcnow() - timedelta(days=8),
-            "updated_at": datetime.utcnow() - timedelta(days=3)
+            "tags": ["test", "duplicate"]
         },
         {
-            "id": "cust_dup_phone_2",
             "name": "Duplicate Phone 2",
             "type": "individual", 
             "contacts": [
@@ -104,36 +94,30 @@ def setup_duplicate_test_data(admin_headers, admin_org_id):
                     "is_primary": True
                 }
             ],
-            "tags": ["test", "duplicate"],
-            "created_at": datetime.utcnow() - timedelta(days=6),
-            "updated_at": datetime.utcnow() - timedelta(days=2)
+            "tags": ["test", "duplicate"]
         }
     ]
     
-    # Insert test data directly into MongoDB
-    try:
-        mongo_client = get_mongo_client()
-        db = mongo_client.get_default_database()
-        
-        # Remove existing test data first
-        db.customers.delete_many({
-            "organization_id": admin_org_id,
-            "id": {"$in": ["cust_dup_email_1", "cust_dup_email_2", "cust_dup_phone_1", "cust_dup_phone_2"]}
-        })
-        
-        # Insert new test data
-        for customer in test_customers:
-            customer["organization_id"] = admin_org_id
-            db.customers.insert_one(customer)
-            
-        print(f"   ✅ Inserted {len(test_customers)} test customers")
-        mongo_client.close()
-        
-        return test_customers
-        
-    except Exception as e:
-        print(f"   ❌ Failed to setup test data: {e}")
-        return []
+    # Create customers via API
+    created_customers = []
+    for customer_data in test_customers:
+        try:
+            r = requests.post(
+                f"{BASE_URL}/api/crm/customers",
+                json=customer_data,
+                headers=admin_headers,
+            )
+            if r.status_code == 200:
+                created_customer = r.json()
+                created_customers.append(created_customer)
+                print(f"   ✅ Created customer: {created_customer['id']} - {created_customer['name']}")
+            else:
+                print(f"   ❌ Failed to create customer {customer_data['name']}: {r.status_code} - {r.text}")
+        except Exception as e:
+            print(f"   ❌ Error creating customer {customer_data['name']}: {e}")
+    
+    print(f"   ✅ Created {len(created_customers)} test customers")
+    return created_customers
 
 def cleanup_duplicate_test_data(admin_org_id):
     """Clean up test data after testing"""

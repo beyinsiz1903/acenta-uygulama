@@ -125,7 +125,7 @@ function App() {
         <Route
           path="/app/inbox"
           element={
-            <RequireAuth roles={["super_admin", "admin", "ops", "agency_admin", "agency_agent", "hotel_admin", "hotel_staff"]}>
+            <RequireAuth roles={["admin", "super_admin", "ops"]}>
               <InboxPage />
             </RequireAuth>
           }

@@ -334,7 +334,7 @@
 
 ## test_plan:
   current_focus:
-    - "PR#8 CRM Activities UI Test"
+    - "PR#8.1 CRM Customer Detail ObjectId/datetime Normalization Fix"
   stuck_tasks:
     - "F2.FE.T3 Checkout & Complete polish"
   test_all: false

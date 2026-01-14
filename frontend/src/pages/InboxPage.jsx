@@ -37,6 +37,7 @@ function InboxPage() {
   const [errMessages, setErrMessages] = useState("");
 
   const [threadErrorShown, setThreadErrorShown] = useState(false);
+  const [threadNotFound, setThreadNotFound] = useState(false);
 
   const [newMessage, setNewMessage] = useState("");
   const [sendLoading, setSendLoading] = useState(false);

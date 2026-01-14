@@ -18,7 +18,7 @@ import motor.motor_asyncio
 
 # Backend URL from environment
 BACKEND_URL = os.getenv("REACT_APP_BACKEND_URL", "https://b2b-hotel-suite.preview.emergentagent.com")
-API_BASE = f"{BACKEND_URL}/api"
+API_BASE = f"{BACKEND_URL}/api/api"  # Note: double /api due to router configuration
 
 # MongoDB connection
 MONGO_URL = os.getenv("MONGO_URL", "mongodb://localhost:27017/b2b_hotel_suite")

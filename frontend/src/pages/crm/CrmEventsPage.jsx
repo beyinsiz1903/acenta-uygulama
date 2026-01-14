@@ -25,6 +25,39 @@ function getEntityLink(event) {
   }
 }
 
+async function copyTextToClipboard(text) {
+  if (!text) return { ok: false, method: "empty" };
+
+  // 1) Modern API
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return { ok: true, method: "clipboard" };
+    }
+  } catch (e) {
+    // fall through to fallback
+  }
+
+  // 2) execCommand fallback
+  try {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly", "");
+    ta.style.position = "fixed";
+    ta.style.top = "-9999px";
+    ta.style.left = "-9999px";
+    document.body.appendChild(ta);
+    ta.select();
+    ta.setSelectionRange(0, ta.value.length);
+
+    const ok = document.execCommand("copy");
+    document.body.removeChild(ta);
+    return { ok, method: "execCommand" };
+  } catch (e) {
+    return { ok: false, method: "failed" };
+  }
+}
+
 function EventRow({ event, onToggle }) {
   const [open, setOpen] = useState(false);
 

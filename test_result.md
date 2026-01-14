@@ -117,7 +117,7 @@
 
 test_plan:
   current_focus:
-    - "PR#7.6d CRM Events Deep-Link + Entity Context Test"
+    - "PR#7.6e CRM Events Mini Polish Test"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"

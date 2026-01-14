@@ -295,12 +295,24 @@ function InboxPage() {
 
         {selectedThreadId && (
           <div className="flex-1 flex flex-col">
-            <div className="p-3 border-b">
+            <div className="p-3 border-b flex items-center justify-between gap-2">
               <h2 className="text-sm font-semibold">
                 {selectedThreadId
                   ? threads.find((t) => t.id === selectedThreadId)?.subject || "Thread"
                   : "Thread"}
               </h2>
+              {selectedThreadId && (
+                <InboxThreadStatusControls
+                  thread={threads.find((t) => t.id === selectedThreadId)}
+                  onStatusChange={(nextStatus) => {
+                    setThreads((prev) =>
+                      prev.map((t) =>
+                        t.id === selectedThreadId ? { ...t, status: nextStatus } : t
+                      )
+                    );
+                  }}
+                />
+              )}
             </div>
 
             <div className="flex-1 overflow-y-auto p-3 space-y-2">

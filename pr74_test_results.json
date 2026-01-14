@@ -1,59 +1,69 @@
 {
   "deterministic_email_test": {
-    "customer_m1_id": "cust_e5a3b251c10e425e8b53660ea3562d72",
-    "customer_m2_id": "cust_2f40687c30434c03a3e41889747123bd",
+    "customer_m1_id": "cust_0904a03487934ff289e89e295d20a81f",
+    "customer_m2_id": "cust_7925afea858d41f8a83e8874ef8504e4",
     "customer_ids": [
-      "cust_e5a3b251c10e425e8b53660ea3562d72",
-      "cust_2f40687c30434c03a3e41889747123bd"
+      "cust_0904a03487934ff289e89e295d20a81f",
+      "cust_7925afea858d41f8a83e8874ef8504e4"
     ],
-    "older_updated_at": "2026-01-14T08:27:36.051240",
-    "newer_updated_at": "2026-01-14T09:57:36.051240",
-    "selected_customer_id": "cust_2f40687c30434c03a3e41889747123bd",
+    "older_updated_at": "2026-01-14T08:28:02.700294",
+    "newer_updated_at": "2026-01-14T09:58:02.700294",
+    "selected_customer_id": "cust_7925afea858d41f8a83e8874ef8504e4",
     "all_calls_consistent": true,
     "selected_newer_customer": true,
     "selected_ids": [
-      "cust_2f40687c30434c03a3e41889747123bd",
-      "cust_2f40687c30434c03a3e41889747123bd",
-      "cust_2f40687c30434c03a3e41889747123bd"
+      "cust_7925afea858d41f8a83e8874ef8504e4",
+      "cust_7925afea858d41f8a83e8874ef8504e4",
+      "cust_7925afea858d41f8a83e8874ef8504e4"
     ],
-    "reversed_selected_customer_id": "cust_e5a3b251c10e425e8b53660ea3562d72",
+    "reversed_selected_customer_id": "cust_0904a03487934ff289e89e295d20a81f",
     "reversed_all_calls_consistent": true,
     "reversed_selected_m1": true,
     "reversed_selected_ids": [
-      "cust_e5a3b251c10e425e8b53660ea3562d72",
-      "cust_e5a3b251c10e425e8b53660ea3562d72",
-      "cust_e5a3b251c10e425e8b53660ea3562d72"
+      "cust_0904a03487934ff289e89e295d20a81f",
+      "cust_0904a03487934ff289e89e295d20a81f",
+      "cust_0904a03487934ff289e89e295d20a81f"
     ]
   },
   "deterministic_phone_test": {
-    "customer_m3_id": "cust_e383e9bab1c64bbda68ab85c0cbcb7a5",
-    "customer_m4_id": "cust_62a9e22f1a1e45269d41949a919592d3",
+    "customer_m3_id": "cust_d8a35957c4174f9e92881f49ef0c5440",
+    "customer_m4_id": "cust_175c615225f74fc485803150ae098c51",
     "customer_ids": [
-      "cust_e383e9bab1c64bbda68ab85c0cbcb7a5",
-      "cust_62a9e22f1a1e45269d41949a919592d3"
+      "cust_d8a35957c4174f9e92881f49ef0c5440",
+      "cust_175c615225f74fc485803150ae098c51"
     ],
     "input_phone": "+90 (555) 000 0003",
     "normalized_phone": "905550000003",
-    "older_updated_at": "2026-01-14T09:27:36.059929",
-    "newer_updated_at": "2026-01-14T10:12:36.059929",
-    "selected_customer_id": "cust_62a9e22f1a1e45269d41949a919592d3",
+    "older_updated_at": "2026-01-14T09:28:02.709645",
+    "newer_updated_at": "2026-01-14T10:13:02.709645",
+    "selected_customer_id": "cust_175c615225f74fc485803150ae098c51",
     "all_calls_consistent": true,
     "selected_newer_customer": true,
     "selected_ids": [
-      "cust_62a9e22f1a1e45269d41949a919592d3",
-      "cust_62a9e22f1a1e45269d41949a919592d3",
-      "cust_62a9e22f1a1e45269d41949a919592d3"
+      "cust_175c615225f74fc485803150ae098c51",
+      "cust_175c615225f74fc485803150ae098c51",
+      "cust_175c615225f74fc485803150ae098c51"
     ]
   },
-  "duplicate_key_retry_test": {},
+  "duplicate_key_retry_test": {
+    "test_email": "duplicate.test@example.com",
+    "first_customer_id": "cust_43b38e28cdc642eaad87007c09bd555b",
+    "duplicate_error_caught": false,
+    "found_customer_id": "cust_d9a1ca42ec1f4b869f06c21ea14c6f9e",
+    "customers_count": 2,
+    "customer_ids": [
+      "cust_43b38e28cdc642eaad87007c09bd555b"
+    ],
+    "retry_logic_working": false
+  },
   "normalization_test": {
     "customer_ids": [
-      "cust_6b2092c2848c4e2487da599c57eedd7d",
-      "cust_47a73eaf2a4e492089eff7fe1e62ac99"
+      "cust_995e095e17424cc38222ea24eecfbe64",
+      "cust_4d84d2304e1844f7ad73f453f0c31c88"
     ],
     "normalization_results": [
       {
-        "customer_id": "cust_6b2092c2848c4e2487da599c57eedd7d",
+        "customer_id": "cust_995e095e17424cc38222ea24eecfbe64",
         "input_email": "TEST@EXAMPLE.COM",
         "stored_email": "test@example.com",
         "expected_email": "test@example.com",
@@ -64,7 +74,7 @@
         "phone_normalized": true
       },
       {
-        "customer_id": "cust_47a73eaf2a4e492089eff7fe1e62ac99",
+        "customer_id": "cust_4d84d2304e1844f7ad73f453f0c31c88",
         "input_email": "MixedCase@Test.Example",
         "stored_email": "mixedcase@test.example",
         "expected_email": "mixedcase@test.example",
@@ -77,14 +87,14 @@
     ],
     "search_tests": [
       {
-        "customer_id": "cust_6b2092c2848c4e2487da599c57eedd7d",
+        "customer_id": "cust_995e095e17424cc38222ea24eecfbe64",
         "email_search_matches": 1,
         "phone_search_matches": 1,
         "email_exact_match": true,
         "phone_exact_match": true
       },
       {
-        "customer_id": "cust_47a73eaf2a4e492089eff7fe1e62ac99",
+        "customer_id": "cust_4d84d2304e1844f7ad73f453f0c31c88",
         "email_search_matches": 1,
         "phone_search_matches": 1,
         "email_exact_match": true,
@@ -95,7 +105,7 @@
     "all_searchable": true
   },
   "unique_index_verification": {
-    "index_found": false,
-    "error": "crm_customers_by_org_contact_unique index not found"
+    "index_found": true,
+    "index_name": "crm_customers_by_org_contact_unique"
   }
 }

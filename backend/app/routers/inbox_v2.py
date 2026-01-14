@@ -134,6 +134,8 @@ async def http_create_message(
         source="api",
     )
 
+    return msg
+
 
 @router.patch("/threads/{thread_id}/status")
 async def http_update_thread_status(
@@ -154,6 +156,3 @@ async def http_update_thread_status(
     )
 
     return updated
-
-
-    return msg

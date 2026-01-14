@@ -199,13 +199,6 @@ export default function CrmCustomerDetailPage() {
   const openDeals = detail?.open_deals || [];
   const openTasks = detail?.open_tasks || [];
 
-  const [activities, setActivities] = useState([]);
-  const [activitiesTotal, setActivitiesTotal] = useState(0);
-  const [activitiesLoading, setActivitiesLoading] = useState(false);
-  const [activitiesErr, setActivitiesErr] = useState("");
-  const [newBody, setNewBody] = useState("");
-  const [creating, setCreating] = useState(false);
-
   async function loadActivities() {
     setActivitiesLoading(true);
     setActivitiesErr("");

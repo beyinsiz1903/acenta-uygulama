@@ -278,8 +278,6 @@ function CrmBookingSnapshot({ booking, bookingId, onCustomerLinked }) {
   );
 }
 
-}
-
 export default function OpsBookingDetailPage() {
   const { bookingId } = useParams();
   const navigate = useNavigate();

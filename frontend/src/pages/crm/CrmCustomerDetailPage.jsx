@@ -482,7 +482,6 @@ export default function CrmCustomerDetailPage() {
           {/* Left column */}
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {/* Inbox panel */}
-            {/*
             <div style={{ border: "1px solid #eee", borderRadius: 12, padding: 12 }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
                 <h2 style={{ margin: 0, fontSize: 16 }}>Inbox</h2>
@@ -543,7 +542,6 @@ export default function CrmCustomerDetailPage() {
                 </div>
               )}
             </div>
-            */}
 
             {/* Recent bookings */}
             <div style={{ border: "1px solid #eee", borderRadius: 12, padding: 12 }}>

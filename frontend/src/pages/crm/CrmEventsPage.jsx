@@ -343,6 +343,7 @@ export default function CrmEventsPage() {
 
   async function load(reset) {
     if (!isAdmin || loading) return;
+    const start = Date.now();
     setLoading(true);
     setErrMsg("");
     try {
@@ -359,6 +360,12 @@ export default function CrmEventsPage() {
     } catch (e) {
       setErrMsg(e.message || "Olaylar ycklenemedi.");
     } finally {
+      const elapsed = Date.now() - start;
+      const minMs = 300;
+      const waitMs = Math.max(0, minMs - elapsed);
+      if (waitMs) {
+        await new Promise((resolve) => setTimeout(resolve, waitMs));
+      }
       setLoading(false);
     }
   }

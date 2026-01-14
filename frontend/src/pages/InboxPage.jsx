@@ -207,6 +207,15 @@ function InboxPage() {
         </div>
 
         <div className="flex-1 overflow-y-auto">
+          {threadNotFound && (
+            <div
+              data-testid="inbox-thread-not-found"
+              className="px-3 py-2 text-xs text-destructive bg-destructive/5 border-b border-destructive/30"
+            >
+              Thread bulunamad31 veya erifim yok.
+            </div>
+          )}
+
           {threadsLoading && (
             <div className="p-4 flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" />

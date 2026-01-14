@@ -84,6 +84,7 @@ def test_auto_customer_match():
     print("\n3️⃣  Testing B2B booking creation...")
     
     # First, let's check if we can create a simple quote
+    from datetime import date
     quote_payload = {
         "channel_id": "test_channel",
         "items": [{

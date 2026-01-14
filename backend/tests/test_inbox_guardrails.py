@@ -297,10 +297,8 @@ class TestInboxGuardrails:
         print(f"Testing auto-reopen with thread ID: {self.test_thread_id}")
         
         # Set thread status to "done"
-        status_data = {"status": "done"}
         response = await self.client.patch(
-            f"/api/inbox/threads/{self.test_thread_id}/status",
-            json=status_data
+            f"/api/inbox/threads/{self.test_thread_id}/status?status=done"
         )
         
         assert response.status_code == 200, f"Failed to set status to done: {response.text}"
@@ -320,7 +318,7 @@ class TestInboxGuardrails:
         # Post a new message
         message_data = {
             "direction": "internal",
-            "body": "Auto-reopen test message",
+            "body": f"Auto-reopen test message - {time.time()}",
             "attachments": []
         }
         

@@ -465,27 +465,106 @@ export default function CrmCustomerDetailPage() {
             <div>
               <div style={{ fontWeight: 700 }}>Aktiviteler</div>
               <div style={{ marginTop: 4, fontSize: 13, color: "#666" }}>
-                Notlar / görüşmeler / e-postalar (PR#3 sonrası dolacak)
+                {"Notlar / g\u00f6r\u00fc\u015fmeler / e-postalar"}
               </div>
             </div>
-
-            <button
-              disabled
-              style={{
-                padding: "8px 10px",
-                borderRadius: 10,
-                border: "1px solid #ddd",
-                background: "#f6f6f6",
-                color: "#888",
-              }}
-              title="PR#3 (activities) geldikten sonra aktif olacak"
-            >
-              Yeni Aktivite
-            </button>
           </div>
 
-          <div style={{ marginTop: 12, color: "#666", fontSize: 13 }}>
-            Bu müşteri için henüz aktivite kaydı yok.
+          {/* New activity form */}
+          <form onSubmit={handleCreateActivity} style={{ marginTop: 12 }}>
+            <textarea
+              value={newBody}
+              onChange={(e) => setNewBody(e.target.value)}
+              placeholder={"K\u0131sa bir not yaz\u0131n..."}
+              rows={3}
+              style={{
+                width: "100%",
+                padding: 10,
+                borderRadius: 10,
+                border: "1px solid #ddd",
+                fontSize: 13,
+                resize: "vertical",
+              }}
+            />
+            <div style={{ marginTop: 8, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+              <div style={{ fontSize: 12, color: "#666" }}>
+                {activitiesTotal ? `${activitiesTotal} aktivite` : "Hen\u00fcz aktivite yok"}
+              </div>
+              <button
+                type="submit"
+                disabled={creating || !newBody.trim()}
+                style={{
+                  padding: "8px 10px",
+                  borderRadius: 10,
+                  border: "1px solid #111",
+                  background: "#111",
+                  color: "white",
+                  cursor: creating || !newBody.trim() ? "not-allowed" : "pointer",
+                  fontSize: 13,
+                }}
+              >
+                {creating ? "Ekleniyor..." : "Not ekle"}
+              </button>
+            </div>
+          </form>
+
+          {/* Activity list */}
+          <div style={{ marginTop: 12 }}>
+            {activitiesLoading ? (
+              <div style={{ color: "#666", fontSize: 13 }}>Aktiviteler y\u00fckleniyor...</div>
+            ) : activitiesErr ? (
+              <div
+                style={{
+                  padding: 10,
+                  borderRadius: 10,
+                  border: "1px solid #f2caca",
+                  background: "#fff5f5",
+                  color: "#8a1f1f",
+                  fontSize: 13,
+                }}
+              >
+                {activitiesErr}
+              </div>
+            ) : !activities.length ? (
+              <div style={{ color: "#666", fontSize: 13 }}>Bu m\u00fc\u015fteri i\u00e7in hen\u00fcz aktivite kayd\u0131 yok.</div>
+            ) : (
+              <ul style={{ listStyle: "none", margin: 0, padding: 0, marginTop: 8 }}>
+                {activities.map((act) => (
+                  <li
+                    key={act.id}
+                    style={{
+                      border: "1px solid #eee",
+                      borderRadius: 10,
+                      padding: 10,
+                      marginBottom: 8,
+                      background: "#fafafa",
+                    }}
+                  >
+                    <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
+                      <div style={{ fontSize: 11, fontWeight: 600, color: "#444" }}>
+                        {act.type === "note" ? "Not" : act.type}
+                      </div>
+                      <div style={{ fontSize: 11, color: "#666" }}>
+                        {act.created_at
+                          ? new Date(act.created_at).toLocaleString("tr-TR")
+                          : ""}
+                      </div>
+                    </div>
+                    <div
+                      style={{
+                        marginTop: 4,
+                        fontSize: 13,
+                        color: "#333",
+                        whiteSpace: "pre-wrap",
+                        wordBreak: "break-word",
+                      }}
+                    >
+                      {act.body}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </div>
       ) : null}

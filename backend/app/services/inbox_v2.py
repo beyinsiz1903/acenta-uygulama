@@ -7,6 +7,7 @@ import re
 
 from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorDatabase as Database
+from datetime import timedelta
 
 from app.errors import AppError
 from app.services.crm_events import log_crm_event

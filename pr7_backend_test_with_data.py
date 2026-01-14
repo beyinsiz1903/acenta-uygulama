@@ -373,8 +373,9 @@ class TestRunner:
         print(f"   Created test customer: {customer_id}")
         
         # Test customer detail before any bookings are linked
+        crm_api_base = f"{BACKEND_URL}/api"
         detail_response = await self.client.get(
-            f"{API_BASE}/crm/customers/{customer_id}",
+            f"{crm_api_base}/crm/customers/{customer_id}",
             headers=self.get_headers()
         )
         

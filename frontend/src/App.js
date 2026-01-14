@@ -145,6 +145,7 @@ function App() {
           <Route path="crm/duplicates" element={<CrmDuplicateCustomersPage />} />
           <Route path="crm/pipeline" element={<CrmPipelinePage />} />
           <Route path="crm/tasks" element={<CrmTasksPage />} />
+          <Route path="crm/events" element={<CrmEventsPage />} />
           <Route path="crm/customers/:customerId" element={<CrmCustomerDetailPage />} />
           <Route path="ops/guest-cases" element={<OpsGuestCasesPage />} />
           <Route path="ops/bookings/:bookingId" element={<OpsBookingDetailPage />} />

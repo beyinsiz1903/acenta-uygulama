@@ -336,7 +336,7 @@ def test_pr75a_duplicate_detection_endpoint():
     print("\n6️⃣  Empty result verification...")
     
     # Clean up test data
-    cleanup_duplicate_test_data(admin_org_id)
+    cleanup_duplicate_test_data(created_customers)
     
     # Test endpoint again - should return empty list
     r = requests.get(

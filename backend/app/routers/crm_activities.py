@@ -72,4 +72,19 @@ async def http_create_activity(
     user_id = current_user.get("id")
 
     act = await create_activity(db, org_id, user_id, body.model_dump())
+
+    # Fire-and-forget CRM event (activity created)
+    from app.services.crm_events import log_crm_event
+
+    await log_crm_event(
+        db,
+        org_id,
+        entity_type="activity",
+        entity_id=act["id"],
+        action="created",
+        payload={"fields": list(body.model_fields_set)},
+        actor={"id": user_id, "roles": current_user.get("roles") or []},
+        source="api",
+    )
+
     return act

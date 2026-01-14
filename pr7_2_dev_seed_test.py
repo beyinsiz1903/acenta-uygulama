@@ -331,7 +331,7 @@ class DevSeedTester:
                 else:
                     print(f"❌ Missing seed bookings - Linked: {found_linked}, Unlinked: {found_unlinked}")
                     self.test_results["api_tests"]["failed"] += 1
-                    self.test_results["api_tests"]["details"].append(f"❌ GET /api/ops/bookings missing seed bookings - Linked: {found_linked}, Unlinked: {found_unlinked}")
+                    self.test_results["api_tests"]["details"].append(f"❌ GET /api/api/ops/bookings missing seed bookings - Linked: {found_linked}, Unlinked: {found_unlinked}")
             else:
                 print(f"❌ API call failed with status {response.status_code}: {response.text}")
                 self.test_results["api_tests"]["failed"] += 1

@@ -100,6 +100,13 @@ async def http_patch_customer(
         raise HTTPException(status_code=400, detail="No fields to update")
 
     updated = await patch_customer(db, org_id, customer_id, patch_dict)
+    if not updated:
+        raise HTTPException(status_code=404, detail="Customer not found")
+
+    # CRM events will be wired in a later PR (F3.CRM.Events)
+    # emit_crm_event(...)
+
+    return updated
 
 
 @router.get("/duplicates", response_model=List[DuplicateCustomerClusterOut])
@@ -110,11 +117,3 @@ async def http_list_duplicate_customers(
     org_id = current_user.get("organization_id")
     clusters = await find_duplicate_customers(db, org_id)
     return clusters
-
-    if not updated:
-        raise HTTPException(status_code=404, detail="Customer not found")
-
-    # CRM events will be wired in a later PR (F3.CRM.Events)
-    # emit_crm_event(...)
-
-    return updated

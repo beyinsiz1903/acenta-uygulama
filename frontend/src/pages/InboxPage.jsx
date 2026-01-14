@@ -381,4 +381,60 @@ function InboxPage() {
   );
 }
 
+function InboxThreadStatusControls({ thread, onStatusChange }) {
+  if (!thread) return null;
+  const status = (thread.status || "open").toLowerCase();
+
+  const labelMap = {
+    open: "Açık",
+    pending: "Beklemede",
+    done: "Tamamlandı",
+  };
+
+  const handleUpdate = async (next) => {
+    try {
+      await updateInboxThreadStatus(thread.id, next);
+      onStatusChange(next);
+      toast.success("Durum güncellendi.");
+    } catch (e) {
+      toast.error(e.message || "Durum güncellenemedi.");
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-2 text-xs">
+      <span className="px-2 py-1 rounded-full border border-muted text-muted-foreground">
+        {labelMap[status] || status}
+      </span>
+      {status !== "open" && (
+        <button
+          type="button"
+          className="px-2 py-1 border rounded-full text-xs hover:bg-muted"
+          onClick={() => handleUpdate("open")}
+        >
+          Yeniden Aç
+        </button>
+      )}
+      {status === "open" && (
+        <>
+          <button
+            type="button"
+            className="px-2 py-1 border rounded-full text-xs hover:bg-muted"
+            onClick={() => handleUpdate("pending")}
+          >
+            Beklemeye Al
+          </button>
+          <button
+            type="button"
+            className="px-2 py-1 border rounded-full text-xs hover:bg-muted"
+            onClick={() => handleUpdate("done")}
+          >
+            Tamamla
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
+
 export default InboxPage;

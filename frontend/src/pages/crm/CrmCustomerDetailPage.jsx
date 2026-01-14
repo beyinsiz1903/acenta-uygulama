@@ -82,6 +82,14 @@ export default function CrmCustomerDetailPage() {
   const [savingTags, setSavingTags] = useState(false);
   const [tagsErr, setTagsErr] = useState("");
 
+  // Activities state
+  const [activities, setActivities] = useState([]);
+  const [activitiesTotal, setActivitiesTotal] = useState(0);
+  const [activitiesLoading, setActivitiesLoading] = useState(false);
+  const [activitiesErr, setActivitiesErr] = useState("");
+  const [newBody, setNewBody] = useState("");
+  const [creating, setCreating] = useState(false);
+
   const computedTagsText = useMemo(() => {
     const tags = customer?.tags || [];
     return tags.join(", ");

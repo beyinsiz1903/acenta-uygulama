@@ -206,6 +206,18 @@
         agent: "testing"
 
 ## frontend:
+  - task: "PR#8 CRM Activities UI Test"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/crm/CrmCustomerDetailPage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "PR#8 CRM Activities UI implemented with Turkish text, textarea placeholder 'Kısa bir not yazın...', activity count display, 'Not ekle' button with loading states, and API integration for POST /api/crm/activities. Need comprehensive testing of UI components, note creation flow, encoding, and error handling."
+
   - task: "PR#7.1 CRM Özeti UI Test"
     implemented: true
     working: false

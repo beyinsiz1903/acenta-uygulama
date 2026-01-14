@@ -564,47 +564,50 @@ export default function CrmCustomerDetailPage() {
             </div>
           </div>
 
-          {/* Open deals */}
-          <div style={{ border: "1px solid #eee", borderRadius: 12, padding: 12 }}>
-            <div style={{ fontWeight: 700 }}>Açık Fırsatlar</div>
+          {/* Right column */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {/* Open deals */}
+            <div style={{ border: "1px solid #eee", borderRadius: 12, padding: 12 }}>
+              <div style={{ fontWeight: 700 }}>Açık Fırsatlar</div>
 
-            <div style={{ marginTop: 8 }}>
-              {openDeals.length ? (
-                <ul style={{ margin: 0, paddingLeft: 16 }}>
-                  {openDeals.map((d) => (
-                    <li key={d.id} style={{ marginBottom: 8 }}>
-                      <div style={{ fontWeight: 600 }}>{d.title || d.id}</div>
-                      <div style={{ fontSize: 12, color: "#666" }}>
-                        Stage: {d.stage || "-"} {d.amount ? ` • ${d.amount} ${d.currency || ""}` : ""}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <div style={{ color: "#666", fontSize: 13 }}>Henüz açık fırsat yok. (PR#3 ile dolacak)</div>
-              )}
+              <div style={{ marginTop: 8 }}>
+                {openDeals.length ? (
+                  <ul style={{ margin: 0, paddingLeft: 16 }}>
+                    {openDeals.map((d) => (
+                      <li key={d.id} style={{ marginBottom: 8 }}>
+                        <div style={{ fontWeight: 600 }}>{d.title || d.id}</div>
+                        <div style={{ fontSize: 12, color: "#666" }}>
+                          Stage: {d.stage || "-"} {d.amount ? ` • ${d.amount} ${d.currency || ""}` : ""}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div style={{ color: "#666", fontSize: 13 }}>Henüz açık fırsat yok. (PR#3 ile dolacak)</div>
+                )}
+              </div>
             </div>
-          </div>
 
-          {/* Open tasks */}
-          <div style={{ border: "1px solid #eee", borderRadius: 12, padding: 12 }}>
-            <div style={{ fontWeight: 700 }}>Açık Görevler</div>
+            {/* Open tasks */}
+            <div style={{ border: "1px solid #eee", borderRadius: 12, padding: 12 }}>
+              <div style={{ fontWeight: 700 }}>Açık Görevler</div>
 
-            <div style={{ marginTop: 8 }}>
-              {openTasks.length ? (
-                <ul style={{ margin: 0, paddingLeft: 16 }}>
-                  {openTasks.map((t) => (
-                    <li key={t.id} style={{ marginBottom: 8 }}>
-                      <div style={{ fontWeight: 600 }}>{t.title || t.id}</div>
-                      <div style={{ fontSize: 12, color: "#666" }}>
-                        Due: {t.due_date ? new Date(t.due_date).toLocaleString("tr-TR") : "-"} • Priority: {t.priority || "-"}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <div style={{ color: "#666", fontSize: 13 }}>Henüz açık görev yok. (PR#3 ile dolacak)</div>
-              )}
+              <div style={{ marginTop: 8 }}>
+                {openTasks.length ? (
+                  <ul style={{ margin: 0, paddingLeft: 16 }}>
+                    {openTasks.map((t) => (
+                      <li key={t.id} style={{ marginBottom: 8 }}>
+                        <div style={{ fontWeight: 600 }}>{t.title || t.id}</div>
+                        <div style={{ fontSize: 12, color: "#666" }}>
+                          Due: {t.due_date ? new Date(t.due_date).toLocaleString("tr-TR") : "-"} • Priority: {t.priority || "-"}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div style={{ color: "#666", fontSize: 13 }}>Henüz açık görev yok. (PR#3 ile dolacak)</div>
+                )}
+              </div>
             </div>
           </div>
         </div>

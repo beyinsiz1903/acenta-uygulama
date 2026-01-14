@@ -238,6 +238,7 @@ function InboxPage() {
                 <li
                   key={t.id}
                   data-testid="inbox-thread-row"
+                  data-selected={selectedThreadId === t.id ? "true" : undefined}
                   className={`p-3 cursor-pointer text-sm hover:bg-muted/60 ${
                     selectedThreadId === t.id ? "bg-muted" : ""
                   }`}

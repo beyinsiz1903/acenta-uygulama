@@ -125,11 +125,11 @@
 
   - task: "FAZ 2 / F2.FE.T2.1 Public Book Quote + Checkout Flow"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/frontend/src/pages/public/BookProductPage.jsx, /app/frontend/src/pages/public/BookCheckoutPage.jsx"
-    stuck_count: 1
+    stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: false
         agent: "testing"

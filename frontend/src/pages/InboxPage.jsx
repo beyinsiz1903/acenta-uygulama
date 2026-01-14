@@ -266,17 +266,14 @@ function InboxPage() {
           <div className="flex-1 flex flex-col">
             <div className="p-3 border-b">
               <h2 className="text-sm font-semibold">
-                {threadDetail?.thread?.subject || "Thread"}
+                {selectedThreadId
+                  ? threads.find((t) => t.id === selectedThreadId)?.subject || "Thread"
+                  : "Thread"}
               </h2>
-              {threadDetail?.thread?.booking_id && (
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Booking: {threadDetail.thread.booking_id}
-                </p>
-              )}
             </div>
 
             <div className="flex-1 overflow-y-auto p-3 space-y-2">
-              {detailLoading && (
+              {loadingMessages && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   Mesajlar yükleniyor...

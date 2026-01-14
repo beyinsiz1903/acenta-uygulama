@@ -52,7 +52,7 @@ async def http_list_threads(
     return {"items": items, "total": total, "page": page, "page_size": min(max(page_size, 1), 200)}
 
 
-@router.post("/threads", response_model=PaginatedThreadsOut.__fields__["items"].outer_type_.__args__[0])
+@router.post("/threads")
 async def http_create_thread(
     body: CreateThreadRequest,
     db=Depends(get_db),

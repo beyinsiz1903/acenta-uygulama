@@ -475,9 +475,73 @@ export default function CrmCustomerDetailPage() {
 
       {/* Tab content */}
       {activeTab === "overview" ? (
-        <div style={{ marginTop: 12, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
-          {/* Recent bookings */}
-          <div style={{ border: "1px solid #eee", borderRadius: 12, padding: 12 }}>
+        <div style={{ marginTop: 12, display: "grid", gridTemplateColumns: "minmax(0, 2fr) minmax(0, 1.5fr)", gap: 16 }}>
+          {/* Left column */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {/* Inbox panel */}
+            <div style={{ border: "1px solid #eee", borderRadius: 12, padding: 12 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                <h2 style={{ margin: 0, fontSize: 16 }}>Inbox</h2>
+                {inboxTotal > 0 ? (
+                  <span style={{ fontSize: 12, color: "#666" }}>{inboxTotal} thread</span>
+                ) : null}
+              </div>
+
+              {inboxLoading ? (
+                <div style={{ marginTop: 8, fontSize: 13, color: "#666" }}>Inbox yükleniyor...</div>
+              ) : inboxErr ? (
+                <div style={{ marginTop: 8, fontSize: 13, color: "#8a1f1f" }}>Inbox yükleme hatası: {inboxErr}</div>
+              ) : inboxThreads.length === 0 ? (
+                <div style={{ marginTop: 8, fontSize: 13, color: "#666" }}>Bu müşteri için henüz inbox kaydı yok.</div>
+              ) : (
+                <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 6 }}>
+                  {inboxThreads.map((t) => (
+                    <div
+                      key={t.id}
+                      style={{
+                        padding: 8,
+                        borderRadius: 10,
+                        border: "1px solid #eee",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: 8,
+                        fontSize: 13,
+                      }}
+                    >
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                          {t.subject || "(Konu yok)"}
+                        </div>
+                        <div style={{ marginTop: 2, fontSize: 12, color: "#666" }}>
+                          {t.channel || "internal"} • {t.last_message_at || ""}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          window.location.href = `/app/inbox?thread=${t.id}`;
+                        }}
+                        style={{
+                          padding: "6px 10px",
+                          borderRadius: 999,
+                          border: "1px solid #111",
+                          background: "#fff",
+                          cursor: "pointer",
+                          fontSize: 12,
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        Inbox'ta aç
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Recent bookings */}
+            <div style={{ border: "1px solid #eee", borderRadius: 12, padding: 12 }}>
             <div style={{ fontWeight: 700 }}>Son Rezervasyonlar</div>
 
             <div style={{ marginTop: 8 }}>

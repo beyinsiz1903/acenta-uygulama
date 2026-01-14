@@ -114,6 +114,7 @@ app.include_router(crm_customers_router)
 app.include_router(crm_deals_router)
 app.include_router(crm_tasks_router)
 app.include_router(crm_activities_router)
+app.include_router(crm_events_router)
 
 app.include_router(auth_router)
 

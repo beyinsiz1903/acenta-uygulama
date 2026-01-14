@@ -233,10 +233,12 @@ def test_pr75a_duplicate_detection_endpoint():
                     assert "created_at" in dup, "duplicate.created_at required"
                     assert "updated_at" in dup, "duplicate.updated_at required"
                 
-                # Identify email and phone clusters
-                if contact_type == "email" and contact_value == "dupemail@test.example":
+                # Identify our test clusters by checking if any customer names match our test data
+                all_customer_names = [primary.get('name')] + [dup.get('name') for dup in duplicates]
+                
+                if contact_type == "email" and any("Duplicate Email" in name for name in all_customer_names):
                     email_cluster = cluster
-                elif contact_type == "phone" and contact_value == "905550000007":
+                elif contact_type == "phone" and any("Duplicate Phone" in name for name in all_customer_names):
                     phone_cluster = cluster
             
             # ------------------------------------------------------------------

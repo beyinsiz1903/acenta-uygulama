@@ -26,7 +26,7 @@ function InboxPage() {
   const [page, setPage] = useState(1);
   const [pageSize] = useState(50);
   const [total, setTotal] = useState(0);
-  const [selectedThreadId, setSelectedThreadId] = useState("");
+  const [selectedThreadId, setSelectedThreadId] = useState(initialThreadId || "");
 
   const [messages, setMessages] = useState([]);
   const [messagesTotal, setMessagesTotal] = useState(0);

@@ -97,8 +97,10 @@ class TestRunner:
             "tags": ["test", "pr7"]
         }
         
+        # CRM endpoints use single /api prefix
+        crm_api_base = f"{BACKEND_URL}/api"
         response = await self.client.post(
-            f"{API_BASE}/crm/customers",
+            f"{crm_api_base}/crm/customers",
             json=customer_data,
             headers=self.get_headers()
         )

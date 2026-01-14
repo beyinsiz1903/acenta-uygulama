@@ -265,6 +265,7 @@ export default function BookCheckoutPage() {
             <label className="font-medium">E-posta</label>
             <input
               type="email"
+              data-testid="checkout-email"
               className="w-full rounded-md border px-2 py-1"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -275,6 +276,7 @@ export default function BookCheckoutPage() {
             <label className="font-medium">Telefon</label>
             <input
               type="tel"
+              data-testid="checkout-phone"
               className="w-full rounded-md border px-2 py-1"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}

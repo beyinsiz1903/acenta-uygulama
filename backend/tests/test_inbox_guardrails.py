@@ -154,13 +154,16 @@ class TestInboxGuardrails:
         """
         print(f"Testing rate limiting with thread ID: {self.test_thread_id}")
         
+        # Wait a bit to avoid rate limiting from previous tests
+        await asyncio.sleep(2)
+        
         # Send 5 messages quickly
         successful_requests = 0
         
         for i in range(5):
             message_data = {
                 "direction": "internal",
-                "body": f"Rate limit test message {i + 1}",
+                "body": f"Rate limit test message {i + 1} - {time.time()}",  # Make each message unique
                 "attachments": []
             }
             
@@ -179,7 +182,7 @@ class TestInboxGuardrails:
         # 6th request should be rate limited
         message_data = {
             "direction": "internal", 
-            "body": "Rate limit test message 6 - should be blocked",
+            "body": f"Rate limit test message 6 - should be blocked - {time.time()}",
             "attachments": []
         }
         
@@ -191,9 +194,15 @@ class TestInboxGuardrails:
         assert response.status_code == 429, f"6th request should return 429, got {response.status_code}: {response.text}"
         
         error_data = response.json()
-        assert error_data.get("code") == "RATE_LIMIT_EXCEEDED", f"Expected RATE_LIMIT_EXCEEDED error code, got: {error_data}"
+        # Check if error is nested under "error" key
+        if "error" in error_data:
+            error_info = error_data["error"]
+        else:
+            error_info = error_data
+            
+        assert error_info.get("code") == "RATE_LIMIT_EXCEEDED", f"Expected RATE_LIMIT_EXCEEDED error code, got: {error_data}"
         
-        details = error_data.get("details", {})
+        details = error_info.get("details", {})
         assert details.get("retry_after_seconds") == 60, f"Expected retry_after_seconds=60, got: {details}"
 
     async def test_deduplication_window(self):

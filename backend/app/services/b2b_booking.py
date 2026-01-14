@@ -108,11 +108,10 @@ class B2BBookingService:
                 self.db,
                 organization_id,
                 booking=booking_doc,
-                created_by_user_id=str(user_id) if user_id else None,
+                created_by_user_id=None,
             )
             if customer_id:
                 booking_doc["customer_id"] = customer_id
-
 
 
         res = await self.bookings.insert_one(booking_doc)

@@ -282,6 +282,65 @@ async def create_message(
         "organization_id": organization_id,
         "thread_id": oid,
         "direction": direction,
+
+
+async def update_thread_status(
+    db: Database,
+    organization_id: str,
+    thread_id: str,
+    *,
+    new_status: str,
+    actor: Dict[str, Any],
+) -> Dict[str, Any]:
+    new_status_norm = (new_status or "").lower()
+    if new_status_norm not in {"open", "pending", "done"}:
+        raise AppError(422, "INVALID_STATUS", "Invalid thread status", {"status": new_status})
+
+    thread = await get_thread_raw(db, organization_id, thread_id)
+    old_status = (thread.get("status") or "open").lower()
+
+    if old_status == new_status_norm:
+        # No-op but still return normalized thread
+        updated = thread
+    else:
+        now = now_utc()
+        await db.inbox_threads.update_one(
+            {"_id": thread["_id"], "organization_id": organization_id},
+            {"$set": {"status": new_status_norm, "updated_at": now}},
+        )
+        updated = await db.inbox_threads.find_one({"_id": thread["_id"], "organization_id": organization_id})
+
+        try:
+            await log_crm_event(
+                db,
+                organization_id,
+                entity_type="inbox_thread",
+                entity_id=str(thread["_id"]),
+                action="status_changed",
+                payload={"old_status": old_status, "new_status": new_status_norm},
+                actor={"id": actor.get("id"), "roles": actor.get("roles") or []},
+                source="api",
+            )
+        except Exception:
+            logger.exception(
+                "log_crm_event_failed_for_inbox_thread_status_change",
+                extra={"thread_id": str(thread["_id"]), "old": old_status, "new": new_status_norm},
+            )
+
+    return {
+        "id": str(updated["_id"]),
+        "organization_id": updated.get("organization_id"),
+        "channel": updated.get("channel") or updated.get("type") or "internal",
+        "subject": updated.get("subject") or "",
+        "status": (updated.get("status") or "open").lower(),
+        "customer_id": updated.get("customer_id"),
+        "participants": updated.get("participants") or [],
+        "last_message_at": updated.get("last_message_at") or updated.get("updated_at"),
+        "created_at": updated.get("created_at"),
+        "updated_at": updated.get("updated_at"),
+        "message_count": updated.get("message_count", 0),
+    }
+
         "body": body_str,
         "attachments": attachments or [],
         "actor_user_id": actor_user_id,

@@ -214,8 +214,11 @@ class TestInboxGuardrails:
         """
         print(f"Testing deduplication with thread ID: {self.test_thread_id}")
         
+        # Wait to avoid rate limiting from previous tests
+        await asyncio.sleep(65)  # Wait for rate limit to reset
+        
         # Send first message
-        duplicate_body = "dup-test"
+        duplicate_body = f"dup-test-{time.time()}"  # Make it unique to avoid conflicts with previous tests
         message_data = {
             "direction": "internal",
             "body": duplicate_body,
@@ -268,7 +271,7 @@ class TestInboxGuardrails:
         # In a real test environment, you would wait 11 seconds, but for efficiency we'll use a different body
         new_message_data = {
             "direction": "internal",
-            "body": "dup-test-after-window",
+            "body": f"dup-test-after-window-{time.time()}",
             "attachments": []
         }
         

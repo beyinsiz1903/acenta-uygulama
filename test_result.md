@@ -112,7 +112,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-## user_problem_statement: "Test PR#7.0 backend değişiklikleri: PATCH /api/ops/bookings/{booking_id}/customer endpoint, ops booking detail customer_id field, CRM customer recent_bookings behavior, and security/org scope validation."
+## user_problem_statement: "Test PR#7.1 CRM Özeti UI implementation on ops booking detail page: CRM Snapshot card with Turkish text, empty state handling, customer linking functionality, open deals/tasks display, and error handling."
 
 ## backend:
   - task: "PR#7.0 Customer-Booking Linking Backend Test"

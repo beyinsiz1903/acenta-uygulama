@@ -234,13 +234,13 @@ async def create_message(
     # Rate limiting: max 5 messages per 60 seconds per user per thread
     actor_user_id = actor.get("id")
     if actor_user_id:
-        window_start = now.replace(second=now.second - 60 if now.second >= 60 else 0)
+        recent_window_start = now - timedelta(seconds=60)
         recent_count = await db.inbox_messages.count_documents(
             {
                 "organization_id": organization_id,
                 "thread_id": oid,
                 "actor_user_id": actor_user_id,
-                "created_at": {"$gte": now_utc().replace(second=now.second - 60 if now.second >= 60 else 0)},
+                "created_at": {"$gte": recent_window_start},
             }
         )
         if recent_count >= 5:

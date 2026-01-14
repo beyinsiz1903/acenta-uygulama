@@ -119,19 +119,20 @@ def setup_duplicate_test_data(admin_headers, admin_org_id):
     print(f"   ✅ Created {len(created_customers)} test customers")
     return created_customers
 
-def cleanup_duplicate_test_data(admin_org_id):
+def cleanup_duplicate_test_data(created_customers):
     """Clean up test data after testing"""
     try:
         mongo_client = get_mongo_client()
         db = mongo_client.get_default_database()
         
-        # Remove test data
-        result = db.customers.delete_many({
-            "organization_id": admin_org_id,
-            "id": {"$in": ["cust_dup_email_1", "cust_dup_email_2", "cust_dup_phone_1", "cust_dup_phone_2"]}
-        })
+        # Remove test data by IDs
+        customer_ids = [customer['id'] for customer in created_customers]
+        if customer_ids:
+            result = db.customers.delete_many({
+                "id": {"$in": customer_ids}
+            })
+            print(f"   ✅ Cleaned up {result.deleted_count} test customers")
         
-        print(f"   ✅ Cleaned up {result.deleted_count} test customers")
         mongo_client.close()
         
     except Exception as e:

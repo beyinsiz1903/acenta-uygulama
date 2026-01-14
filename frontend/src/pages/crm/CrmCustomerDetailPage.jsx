@@ -490,13 +490,16 @@ export default function CrmCustomerDetailPage() {
                 ) : null}
               </div>
 
-              {inboxLoading ? (
+              {inboxLoading && (
                 <div style={{ marginTop: 8, fontSize: 13, color: "#666" }}>Inbox yükleniyor...</div>
-              ) : inboxErr ? (
+              )}
+              {!inboxLoading && inboxErr && (
                 <div style={{ marginTop: 8, fontSize: 13, color: "#8a1f1f" }}>Inbox yükleme hatası: {inboxErr}</div>
-              ) : inboxThreads.length === 0 ? (
+              )}
+              {!inboxLoading && !inboxErr && inboxThreads.length === 0 && (
                 <div style={{ marginTop: 8, fontSize: 13, color: "#666" }}>Bu müşteri için henüz inbox kaydı yok.</div>
-              ) : (
+              )}
+              {!inboxLoading && !inboxErr && inboxThreads.length > 0 && (
                 <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 6 }}>
                   {inboxThreads.map((t) => (
                     <div

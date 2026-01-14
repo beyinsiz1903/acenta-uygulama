@@ -148,7 +148,3 @@ async def http_merge_customers(
         raise HTTPException(status_code=400, detail="merge_failed")
 
     return result
-
-    # emit_crm_event(...)
-
-    return updated

@@ -121,17 +121,87 @@ function EventRow({ event, onToggle }) {
             fontSize: 12,
           }}
         >
-          <pre
-            style={{
-              margin: 0,
-              whiteSpace: "pre-wrap",
-              wordBreak: "break-word",
-              fontSize: 12,
-              fontFamily: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
-            }}
-          >
-            {JSON.stringify(event.payload || {}, null, 2)}
-          </pre>
+          {(() => {
+            const p = event.payload || {};
+            const chips = [];
+            if (p.customer_id) {
+              chips.push({
+                label: `Mffteri: ${p.customer_id}`,
+                href: `/app/crm/customers/${p.customer_id}`,
+              });
+            }
+            if (p.booking_id) {
+              chips.push({
+                label: `Rezervasyon: ${p.booking_id}`,
+                href: `/app/ops/bookings/${p.booking_id}`,
+              });
+            }
+            if (p.primary_id) {
+              chips.push({
+                label: `Primary mffteri: ${p.primary_id}`,
+                href: `/app/crm/customers/${p.primary_id}`,
+              });
+            }
+            if (Array.isArray(p.merged_ids)) {
+              p.merged_ids.forEach((id) => {
+                chips.push({
+                  label: `Birlefen: ${id}`,
+                  href: `/app/crm/customers/${id}`,
+                });
+              });
+            }
+
+            const hasPayload = p && Object.keys(p).length > 0;
+
+            return (
+              <>
+                {chips.length ? (
+                  <div
+                    style={{
+                      marginBottom: 8,
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: 6,
+                    }}
+                  >
+                    {chips.map((chip, idx) => (
+                      <a
+                        key={idx}
+                        href={chip.href}
+                        style={{
+                          fontSize: 11,
+                          padding: "4px 8px",
+                          borderRadius: 999,
+                          border: "1px solid #e5e7eb",
+                          background: "#f9fafb",
+                          color: "#111827",
+                        }}
+                      >
+                        {chip.label}
+                      </a>
+                    ))}
+                  </div>
+                ) : null}
+
+                {hasPayload ? (
+                  <pre
+                    style={{
+                      margin: 0,
+                      whiteSpace: "pre-wrap",
+                      wordBreak: "break-word",
+                      fontSize: 12,
+                      fontFamily:
+                        "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
+                    }}
+                  >
+                    {JSON.stringify(p, null, 2)}
+                  </pre>
+                ) : (
+                  <div style={{ fontSize: 12, color: "#6b7280" }}>Payload yok.</div>
+                )}
+              </>
+            );
+          })()}
         </div>
       ) : null}
     </div>

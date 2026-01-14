@@ -50,3 +50,12 @@ export async function createInboxMessage(threadId, body) {
     throw { message: apiErrorMessage(err), raw: err };
   }
 }
+
+export async function updateInboxThreadStatus(threadId, status) {
+  try {
+    const res = await api.patch(`/inbox/threads/${threadId}/status`, { status });
+    return res.data;
+  } catch (err) {
+    throw { message: apiErrorMessage(err), raw: err };
+  }
+}

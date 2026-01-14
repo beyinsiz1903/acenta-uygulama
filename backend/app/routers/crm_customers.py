@@ -104,7 +104,7 @@ async def http_get_customer_detail(
     current_user: dict = Depends(require_roles(["agency_agent", "super_admin"])),
 ):
     org_id = current_user.get("organization_id")
-    data = await get_customer_detail(db, org_id, customer_id)
+    data = await get_customer_detail_v2(db, org_id, customer_id)
     if not data:
         raise HTTPException(status_code=404, detail="Customer not found")
     return data

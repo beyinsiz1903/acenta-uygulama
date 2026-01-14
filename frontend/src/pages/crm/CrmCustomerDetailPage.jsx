@@ -226,13 +226,6 @@ export default function CrmCustomerDetailPage() {
     }
   }
 
-  useEffect(() => {
-    if (activeTab === "activities") {
-      loadActivities();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, customerId]);
-
   async function handleCreateActivity(e) {
     e.preventDefault();
     if (!newBody.trim()) return;

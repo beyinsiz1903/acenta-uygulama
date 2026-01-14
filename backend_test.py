@@ -161,9 +161,9 @@ def test_pr75a_duplicate_detection_endpoint():
     print(f"   📋 Organization ID: {admin_org_id}")
     
     # Setup test data
-    test_customers = setup_duplicate_test_data(admin_headers, admin_org_id)
+    created_customers = setup_duplicate_test_data(admin_headers, admin_org_id)
     
-    if not test_customers:
+    if not created_customers:
         print("   ❌ Test data setup failed, aborting test")
         return
 

@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 from typing import Any, Dict, List, Optional, Tuple
+import hashlib
 import logging
 import re
-from uuid import uuid4
 
 from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorDatabase as Database
@@ -231,25 +231,91 @@ async def create_message(
 
     now = now_utc()
 
+    # Rate limiting: max 5 messages per 60 seconds per user per thread
+    actor_user_id = actor.get("id")
+    if actor_user_id:
+        window_start = now.replace(second=now.second - 60 if now.second >= 60 else 0)
+        recent_count = await db.inbox_messages.count_documents(
+            {
+                "organization_id": organization_id,
+                "thread_id": oid,
+                "actor_user_id": actor_user_id,
+                "created_at": {"$gte": now_utc().replace(second=now.second - 60 if now.second >= 60 else 0)},
+            }
+        )
+        if recent_count >= 5:
+            # Optionally set Retry-After via headers at exception handler layer
+            raise AppError(
+                429,
+                "RATE_LIMIT_EXCEEDED",
+                "Too many messages in a short period",
+                {"retry_after_seconds": 60},
+            )
+
+    # Deduplication: same body within 10 seconds for same user/thread
+    body_hash = hashlib.sha256(body_str.encode("utf-8")).hexdigest()
+    dedup_window_start = now_utc().replace(second=now.second - 10 if now.second >= 10 else 0)
+    existing = await db.inbox_messages.find_one(
+        {
+            "organization_id": organization_id,
+            "thread_id": oid,
+            "actor_user_id": actor_user_id,
+            "body_hash": body_hash,
+            "created_at": {"$gte": dedup_window_start},
+        }
+    )
+    if existing:
+        return {
+            "id": str(existing.get("_id")),
+            "organization_id": organization_id,
+            "thread_id": str(oid),
+            "direction": existing.get("direction") or direction,
+            "body": existing.get("body") or body_str,
+            "attachments": existing.get("attachments") or [],
+            "actor_user_id": existing.get("actor_user_id"),
+            "actor_roles": existing.get("actor_roles") or [],
+            "source": existing.get("source") or source,
+            "created_at": existing.get("created_at") or now,
+        }
+
     msg_doc: Dict[str, Any] = {
         "organization_id": organization_id,
         "thread_id": oid,
         "direction": direction,
         "body": body_str,
         "attachments": attachments or [],
-        "actor_user_id": actor.get("id"),
+        "actor_user_id": actor_user_id,
         "actor_roles": actor.get("roles") or [],
         "source": source,
         "created_at": now,
+        "body_hash": body_hash,
     }
 
     res = await db.inbox_messages.insert_one(msg_doc)
     msg_doc["_id"] = res.inserted_id
 
+    # Auto-reopen: if thread is done, move back to open on any new message
+    update_fields: Dict[str, Any] = {"last_message_at": now, "updated_at": now}
+    if (thread.get("status") or "open").lower() == "done":
+        update_fields["status"] = "open"
+        try:
+            await log_crm_event(
+                db,
+                organization_id,
+                entity_type="inbox_thread",
+                entity_id=str(oid),
+                action="status_changed",
+                payload={"old_status": "done", "new_status": "open"},
+                actor={"id": actor_user_id, "roles": actor.get("roles") or []},
+                source=source,
+            )
+        except Exception:
+            logger.exception("log_crm_event_failed_for_inbox_thread_status_auto_reopen", extra={"thread_id": str(oid)})
+
     await db.inbox_threads.update_one(
         {"_id": oid, "organization_id": organization_id},
         {
-            "$set": {"last_message_at": now, "updated_at": now},
+            "$set": update_fields,
             "$inc": {"message_count": 1},
         },
     )
@@ -263,7 +329,7 @@ async def create_message(
             entity_id=str(res.inserted_id),
             action="created",
             payload={"thread_id": str(oid), "direction": direction},
-            actor={"id": actor.get("id"), "roles": actor.get("roles") or []},
+            actor={"id": actor_user_id, "roles": actor.get("roles") or []},
             source=source,
         )
     except Exception:

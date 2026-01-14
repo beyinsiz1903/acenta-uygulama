@@ -13,56 +13,97 @@ function useQuery() {
 }
 
 function InboxPage() {
+  const user = getUser();
   const query = useQuery();
   const initialBookingId = query.get("booking_id") || "";
 
   const [threads, setThreads] = useState([]);
   const [threadsLoading, setThreadsLoading] = useState(false);
   const [threadsError, setThreadsError] = useState("");
-  const [statusFilter, setStatusFilter] = useState("OPEN");
-  const [selectedThreadId, setSelectedThreadId] = useState(null);
+  const [statusFilter, setStatusFilter] = useState("open");
+  const [searchQ, setSearchQ] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(50);
+  const [total, setTotal] = useState(0);
+  const [selectedThreadId, setSelectedThreadId] = useState("");
 
-  const [threadDetail, setThreadDetail] = useState(null);
-  const [detailLoading, setDetailLoading] = useState(false);
-  const [detailError, setDetailError] = useState("");
+  const [messages, setMessages] = useState([]);
+  const [messagesTotal, setMessagesTotal] = useState(0);
+  const [messagesPage, setMessagesPage] = useState(1);
+  const [messagesPageSize] = useState(50);
+  const [loadingMessages, setLoadingMessages] = useState(false);
+  const [errMessages, setErrMessages] = useState("");
+
   const [newMessage, setNewMessage] = useState("");
   const [sendLoading, setSendLoading] = useState(false);
 
+  const isAllowed = useMemo(() => {
+    const roles = (user && user.roles) || [];
+    return roles.includes("admin") || roles.includes("super_admin") || roles.includes("ops");
+  }, [user]);
+
+  const hasMoreThreads = threads.length < total;
+  const hasMoreMessages = messages.length < messagesTotal;
+
   const loadThreads = async (opts = {}) => {
-    const { bookingId = initialBookingId } = opts;
+    if (!isAllowed) return;
+    const reset = opts.reset || false;
+    const effectivePage = reset ? 1 : page;
+
     setThreadsLoading(true);
     setThreadsError("");
 
-    const params = new URLSearchParams();
-    if (statusFilter && statusFilter !== "ALL") params.set("status", statusFilter);
-    if (bookingId) params.set("booking_id", bookingId);
-
     try {
-      const resp = await api.get(`/inbox/threads?${params.toString()}`);
-      setThreads(resp.data || []);
-      if (!selectedThreadId && resp.data && resp.data.length > 0) {
-        setSelectedThreadId(resp.data[0].id);
+      const res = await listInboxThreads({
+        status: statusFilter || undefined,
+        q: searchQ || undefined,
+        page: effectivePage,
+        pageSize,
+      });
+      const items = res.items || [];
+      if (reset) {
+        setThreads(items);
+      } else {
+        setThreads((prev) => [...prev, ...items]);
+      }
+      setTotal(res.total || 0);
+      setPage(res.page || effectivePage);
+      if (!selectedThreadId && items.length > 0) {
+        setSelectedThreadId(items[0].id);
       }
     } catch (e) {
-      setThreadsError(apiErrorMessage(e));
-      setThreads([]);
+      setThreadsError(e.message || "Inbox y\u00fcklenemedi.");
+      if (reset) setThreads([]);
     } finally {
       setThreadsLoading(false);
     }
   };
 
-  const loadThreadDetail = async (id) => {
-    if (!id) return;
-    setDetailLoading(true);
-    setDetailError("");
+  const loadMessages = async (threadId, opts = {}) => {
+    if (!isAllowed || !threadId) return;
+    const reset = opts.reset || false;
+    const effectivePage = reset ? 1 : messagesPage;
+
+    setLoadingMessages(true);
+    setErrMessages("");
     try {
-      const resp = await api.get(`/inbox/threads/${id}`);
-      setThreadDetail(resp.data || null);
+      const res = await listInboxMessages(threadId, {
+        page: effectivePage,
+        pageSize: messagesPageSize,
+      });
+      const items = res.items || [];
+      if (reset) {
+        setMessages(items);
+      } else {
+        setMessages((prev) => [...prev, ...items]);
+      }
+      setMessagesTotal(res.total || 0);
+      setMessagesPage(res.page || effectivePage);
     } catch (e) {
-      setDetailError(apiErrorMessage(e));
-      setThreadDetail(null);
+      setErrMessages(e.message || "Mesajlar y\u00fcklenemedi.");
+      if (reset) setMessages([]);
     } finally {
-      setDetailLoading(false);
+      setLoadingMessages(false);
     }
   };
 

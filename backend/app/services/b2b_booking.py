@@ -7,6 +7,7 @@ from bson import ObjectId
 from app.schemas_b2b_bookings import BookingCreateRequest, BookingCreateResponse
 from app.utils import now_utc
 from app.errors import AppError
+from app.services.crm_customers import find_or_create_customer_for_booking
 from app.services.booking_events import emit_event
 from app.services.booking_finance import BookingFinanceService
 

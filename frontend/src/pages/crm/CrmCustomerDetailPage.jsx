@@ -196,6 +196,21 @@ export default function CrmCustomerDetailPage() {
     }
   }
 
+  async function loadInboxThreads() {
+    setInboxLoading(true);
+    setInboxErr("");
+    try {
+      const res = await listCustomerInboxThreads(customerId, { page: 1, pageSize: 20 });
+      setInboxThreads(res?.items || []);
+      setInboxTotal(res?.total || 0);
+    } catch (e) {
+      setInboxErr(e.message || "Inbox yüklenemedi.");
+      setInboxThreads([]);
+    } finally {
+      setInboxLoading(false);
+    }
+  }
+
   async function handleCreateActivity(e) {
     e.preventDefault();
     if (!newBody.trim()) return;
@@ -210,21 +225,6 @@ export default function CrmCustomerDetailPage() {
       });
       setNewBody("");
       await loadActivities();
-  async function loadInboxThreads() {
-    setInboxLoading(true);
-    setInboxErr("");
-    try {
-      const res = await listCustomerInboxThreads(customerId, { page: 1, pageSize: 20 });
-      setInboxThreads(res?.items || []);
-      setInboxTotal(res?.total || 0);
-    } catch (e) {
-      setInboxErr(e.message || "Inbox y\u00fcklenemedi.");
-      setInboxThreads([]);
-    } finally {
-      setInboxLoading(false);
-    }
-  }
-
     } catch (e) {
       setActivitiesErr(e.message || "Aktivite eklenemedi.");
     } finally {

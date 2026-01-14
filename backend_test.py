@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-F1.T2 Click-to-Pay Backend Test - ObjectId Fix Verification
-Testing the complete Click-to-Pay backend flow after ObjectId fixes as requested in Turkish specification
+PR#7.5a Duplicate Detection (Dry-Run) Endpoint Test
+Testing the duplicate customer detection endpoint as requested in Turkish specification
 """
 
 import requests

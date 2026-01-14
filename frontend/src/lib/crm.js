@@ -156,3 +156,17 @@ export async function listCustomerInboxThreads(customerId, params) {
     throw { message: apiErrorMessage(err), raw: err };
   }
 }
+
+export async function listCustomerInboxThreads(customerId, params) {
+  try {
+    const res = await api.get(`/crm/customers/${customerId}/inbox-threads`, {
+      params: {
+        page: params?.page ?? 1,
+        page_size: params?.pageSize ?? 50,
+      },
+    });
+    return res.data; // PaginatedThreadsOut
+  } catch (err) {
+    throw { message: apiErrorMessage(err), raw: err };
+  }
+}

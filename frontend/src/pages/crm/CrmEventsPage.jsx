@@ -336,6 +336,7 @@ export default function CrmEventsPage() {
 
   function applyFilters(e) {
     e?.preventDefault?.();
+    if (loading) return;
     setPage(1);
     load(true);
   }

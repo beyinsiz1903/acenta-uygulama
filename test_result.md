@@ -208,15 +208,18 @@
 ## frontend:
   - task: "PR#8 CRM Activities UI Test"
     implemented: true
-    working: "NA"
+    working: false
     file: "/app/frontend/src/pages/crm/CrmCustomerDetailPage.jsx"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "PR#8 CRM Activities UI implemented with Turkish text, textarea placeholder 'Kısa bir not yazın...', activity count display, 'Not ekle' button with loading states, and API integration for POST /api/crm/activities. Need comprehensive testing of UI components, note creation flow, encoding, and error handling."
+      - working: false
+        agent: "testing"
+        comment: "❌ PR#8 CRM ACTIVITIES UI TEST BLOCKED - Frontend UI not testable due to critical backend issue. COMPREHENSIVE ANALYSIS: A) BACKEND API STATUS: ✅ Activities API fully functional (GET /api/crm/activities, POST /api/crm/activities working correctly), ✅ Activity creation/listing/filtering working perfectly, ✅ Proper JSON responses with correct Turkish text encoding. B) FRONTEND BLOCKING ISSUE: ❌ Customer detail page shows 'Request failed with status code 520' error, ❌ Root cause: ObjectId serialization error in GET /api/crm/customers/{id} endpoint (Pydantic cannot serialize MongoDB ObjectId), ❌ Backend logs show: 'PydanticSerializationError: Unable to serialize unknown type: <class 'bson.objectid.ObjectId'>', ❌ Activities UI components not rendered because customer detail fails to load. C) UI IMPLEMENTATION VERIFICATION: ✅ CrmCustomerDetailPage.jsx contains proper Activities tab implementation with Turkish text, ✅ Source code shows correct placeholder 'Kısa bir not yazın...', button states, and API integration, ✅ No encoding corruption detected in available UI components. D) WORKAROUND TESTING: ✅ CRM customers list page working perfectly with proper Turkish encoding, ✅ Navigation to customer detail works but fails on data loading, ✅ Activities backend API tested directly and confirmed fully functional. IMPACT: While Activities UI is properly implemented, it cannot be tested end-to-end due to the customer detail API failure. The ObjectId serialization issue prevents the customer detail page from loading, which blocks access to the Activities tab. REQUIRES IMMEDIATE FIX: Backend ObjectId serialization in customer detail endpoint must be resolved before Activities UI can be properly tested."
 
   - task: "PR#7.1 CRM Özeti UI Test"
     implemented: true

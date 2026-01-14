@@ -23,6 +23,7 @@ from app.routers.inbox import router as inbox_router
 from app.routers.matches import router as matches_router
 from app.routers.ops_b2b import router as ops_b2b_router
 from app.routers.ops_booking_events import router as ops_booking_events_router
+from app.routers.ops_click_to_pay import router as ops_click_to_pay_router
 from app.routers.ops_finance import router as ops_finance_router
 from app.routers.payments import router as payments_router
 from app.routers.payments_stripe import router as payments_stripe_router

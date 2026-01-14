@@ -140,6 +140,47 @@ export default function CrmCustomerDetailPage() {
     }
   }
 
+  async function loadActivities() {
+    setActivitiesLoading(true);
+    setActivitiesErr("");
+    try {
+      const res = await listActivities({
+        relatedType: "customer",
+        relatedId: customerId,
+        page: 1,
+        page_size: 20,
+      });
+      setActivities(res?.items || []);
+      setActivitiesTotal(res?.total || 0);
+    } catch (e) {
+      setActivitiesErr(e.message || "Aktiviteler y\u00fcklenemedi.");
+      setActivities([]);
+    } finally {
+      setActivitiesLoading(false);
+    }
+  }
+
+  async function handleCreateActivity(e) {
+    e.preventDefault();
+    if (!newBody.trim()) return;
+    setCreating(true);
+    setActivitiesErr("");
+    try {
+      await createActivity({
+        type: "note",
+        body: newBody.trim(),
+        related_type: "customer",
+        related_id: customerId,
+      });
+      setNewBody("");
+      await loadActivities();
+    } catch (e) {
+      setActivitiesErr(e.message || "Aktivite eklenemedi.");
+    } finally {
+      setCreating(false);
+    }
+  }
+
   // ---- Render states ----
   if (loading) {
     return (

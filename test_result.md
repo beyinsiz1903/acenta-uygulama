@@ -112,7 +112,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-## user_problem_statement: "Test PR#7.1 CRM Özeti UI implementation on ops booking detail page: CRM Snapshot card with Turkish text, empty state handling, customer linking functionality, open deals/tasks display, and error handling."
+## user_problem_statement: "Test PR#8 CRM Activities UI'yi test et. Login with admin@acenta.test / admin123, navigate to /app/crm/customers/cust_seed_linked, click Aktiviteler tab, test UI components (header, textarea placeholder, activity count, button states), test note creation with Turkish text, verify API integration, check encoding and error handling."
 
 ## backend:
   - task: "PR#7.2 dev_seed.py backend seed script test"

@@ -361,6 +361,199 @@ async def find_duplicate_customers(db: Database, organization_id: str) -> List[D
     return clusters
 
 
+async def perform_customer_merge(
+    db: Database,
+    organization_id: str,
+    primary_id: str,
+    duplicate_ids: List[str],
+    *,
+    dry_run: bool,
+    merged_by_user_id: str,
+) -> Dict[str, Any]:
+    """Merge customers by rewiring references and soft-merging duplicates.
+
+    - dry_run=True: only counts, no writes
+    - dry_run=False: perform rewires + soft-merge
+    """
+    from pymongo import UpdateMany
+    from pymongo.errors import DuplicateKeyError
+
+    primary_id = (primary_id or "").strip()
+    if not primary_id:
+        raise ValueError("primary_id is required")
+
+    # Normalize duplicate_ids: strip, remove blanks, remove primary, dedupe
+    dup_ids_clean: List[str] = []
+    for raw in duplicate_ids or []:
+        v = (raw or "").strip()
+        if not v or v == primary_id:
+            continue
+        dup_ids_clean.append(v)
+    dup_set = set(dup_ids_clean)
+
+    if not dup_set:
+        return {
+            "organization_id": organization_id,
+            "primary_id": primary_id,
+            "merged_ids": [],
+            "skipped_ids": [],
+            "rewired": {
+                "bookings": {"matched": 0, "modified": 0},
+                "deals": {"matched": 0, "modified": 0},
+                "tasks": {"matched": 0, "modified": 0},
+                "activities": {"matched": 0, "modified": 0},
+            },
+            "dry_run": dry_run,
+        }
+
+    # Validate primary exists
+    primary = await db.customers.find_one(
+        {"organization_id": organization_id, "id": primary_id},
+        {"_id": 0, "id": 1},
+    )
+    if not primary:
+        raise ValueError("primary_customer_not_found")
+
+    # Load duplicates and detect conflicts / already merged
+    duplicates = await db.customers.find(
+        {"organization_id": organization_id, "id": {"$in": list(dup_set)}},
+        {"_id": 0, "id": 1, "is_merged": 1, "merged_into": 1},
+    ).to_list(length=len(dup_set))
+
+    found_ids = {d["id"] for d in duplicates}
+    skipped_ids: List[str] = []
+
+    # Any ids not found -> skip
+    for did in dup_set:
+        if did not in found_ids:
+            skipped_ids.append(did)
+
+    effective_dup_ids: List[str] = []
+    for doc in duplicates:
+        did = doc["id"]
+        if doc.get("is_merged"):
+            merged_into = doc.get("merged_into")
+            if merged_into == primary_id:
+                # already merged into this primary -> idempotent skip
+                skipped_ids.append(did)
+                continue
+            # merged into different customer -> conflict
+            raise ValueError("customer_merge_conflict")
+        effective_dup_ids.append(did)
+
+    if not effective_dup_ids:
+        return {
+            "organization_id": organization_id,
+            "primary_id": primary_id,
+            "merged_ids": [],
+            "skipped_ids": skipped_ids,
+            "rewired": {
+                "bookings": {"matched": 0, "modified": 0},
+                "deals": {"matched": 0, "modified": 0},
+                "tasks": {"matched": 0, "modified": 0},
+                "activities": {"matched": 0, "modified": 0},
+            },
+            "dry_run": dry_run,
+        }
+
+    dup_set_eff = set(effective_dup_ids)
+
+    rewired_counts = {
+        "bookings": {"matched": 0, "modified": 0},
+        "deals": {"matched": 0, "modified": 0},
+        "tasks": {"matched": 0, "modified": 0},
+        "activities": {"matched": 0, "modified": 0},
+    }
+
+    now = datetime.utcnow()
+
+    # 1) bookings.customer_id
+    bookings_filter = {
+        "organization_id": organization_id,
+        "customer_id": {"$in": list(dup_set_eff)},
+    }
+    rewired_counts["bookings"]["matched"] = await db.bookings.count_documents(bookings_filter)
+    if not dry_run:
+        res = await db.bookings.update_many(
+            bookings_filter,
+            {"$set": {"customer_id": primary_id, "updated_at": now}},
+        )
+        rewired_counts["bookings"]["modified"] = res.modified_count
+
+    # 2) crm_deals.customer_id
+    deals_filter = {
+        "organization_id": organization_id,
+        "customer_id": {"$in": list(dup_set_eff)},
+    }
+    rewired_counts["deals"]["matched"] = await db.crm_deals.count_documents(deals_filter)
+    if not dry_run:
+        res = await db.crm_deals.update_many(
+            deals_filter,
+            {"$set": {"customer_id": primary_id, "updated_at": now}},
+        )
+        rewired_counts["deals"]["modified"] = res.modified_count
+
+    # 3) crm_tasks related customer
+    tasks_filter = {
+        "organization_id": organization_id,
+        "related_type": "customer",
+        "related_id": {"$in": list(dup_set_eff)},
+    }
+    rewired_counts["tasks"]["matched"] = await db.crm_tasks.count_documents(tasks_filter)
+    if not dry_run:
+        res = await db.crm_tasks.update_many(
+            tasks_filter,
+            {"$set": {"related_id": primary_id, "updated_at": now}},
+        )
+        rewired_counts["tasks"]["modified"] = res.modified_count
+
+    # 4) crm_activities related customer
+    acts_filter = {
+        "organization_id": organization_id,
+        "related_type": "customer",
+        "related_id": {"$in": list(dup_set_eff)},
+    }
+    rewired_counts["activities"]["matched"] = await db.crm_activities.count_documents(acts_filter)
+    if not dry_run:
+        res = await db.crm_activities.update_many(
+            acts_filter,
+            {"$set": {"related_id": primary_id}},
+        )
+        rewired_counts["activities"]["modified"] = res.modified_count
+
+    # Soft-merge duplicate customers
+    if not dry_run:
+        soft_fields: Dict[str, Any] = {
+            "is_merged": True,
+            "merged_into": primary_id,
+            "merged_at": now,
+            "merged_by": merged_by_user_id,
+        }
+        await db.customers.update_many(
+            {
+                "organization_id": organization_id,
+                "id": {"$in": list(dup_set_eff)},
+                "id": {"$ne": primary_id},
+            },
+            {"$set": soft_fields},
+        )
+        # Touch primary updated_at for recency
+        await db.customers.update_one(
+            {"organization_id": organization_id, "id": primary_id},
+            {"$set": {"updated_at": now}},
+        )
+
+    return {
+        "organization_id": organization_id,
+        "primary_id": primary_id,
+        "merged_ids": list(dup_set_eff) if not dry_run else [],
+        "skipped_ids": skipped_ids,
+        "rewired": rewired_counts,
+        "dry_run": dry_run,
+    }
+
+
+
     cursor = (
         db.bookings.find(
             {"organization_id": organization_id, "customer_id": customer_id},

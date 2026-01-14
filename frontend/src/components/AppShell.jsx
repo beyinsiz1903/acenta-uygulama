@@ -23,6 +23,7 @@ import ThemeToggle from "./ThemeToggle";
 import { cn } from "../lib/utils";
 import { api, clearToken, getUser } from "../lib/api";
 import { getMenuForUser } from "../config/menuConfig";
+import { Inbox } from "lucide-react";
 
 const legacyNav = [
   { to: "/app", label: "Dashboard", icon: LayoutGrid, roles: ["admin", "sales", "ops", "accounting", "b2b_agent", "super_admin"] },

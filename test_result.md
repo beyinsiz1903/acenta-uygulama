@@ -244,6 +244,18 @@
         agent: "testing"
 
 ## frontend:
+  - task: "PR#7.6b CRM Events Timeline UI Test"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/crm/CrmEventsPage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "PR#7.6b CRM Events Timeline UI implemented with Turkish text, admin role guard, filters (entity_type, entity_id, action), quick date ranges (24h/7d/30d), manual date range inputs, pagination with 'Load more', and API integration for GET /api/crm/events. Need comprehensive testing of UI components, navigation, filtering, date ranges, pagination, role-based access control, and error handling."
+
   - task: "PR#7.5c CRM Duplicate Merge UI ve Merge Banner Test"
     implemented: true
     working: true

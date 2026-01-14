@@ -96,13 +96,13 @@ export default function BookCompletePage() {
     }
   };
 
-  if (!bookingCode) {
+  if (!bookingCode || !org) {
     return (
       <div className="min-h-screen bg-slate-50 px-4 py-6 flex justify-center">
         <Card className="w-full max-w-lg p-4 space-y-3">
           <EmptyState
-            title="Rezervasyon bilgisi bulunamadı"
-            description="Bu sayfaya doğrudan erişmek için geçerli bir rezervasyon kodu gerekir. Lütfen arama adımından tekrar başlayın."
+            title={"Rezervasyon bilgisi bulunamad\u0131"}
+            description={"Ba\u011flant\u0131 eksik veya hatal\u0131. L\u00fctfen rezervasyon sayfas\u0131n\u0131 yeniden a\u00e7\u0131n."}
             action={
               <div className="flex flex-col sm:flex-row gap-2 justify-center">
                 <Button
@@ -112,7 +112,7 @@ export default function BookCompletePage() {
                     navigate(qs ? `/book?${qs}` : "/book");
                   }}
                 >
-                  Aramaya dön
+                  {"Geri d\u00f6n"}
                 </Button>
               </div>
             }

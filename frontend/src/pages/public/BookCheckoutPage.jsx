@@ -199,24 +199,10 @@ export default function BookCheckoutPage() {
       <div className="min-h-screen bg-slate-50 px-4 py-6 flex justify-center">
         <Card className="w-full max-w-lg p-4 space-y-3">
           <EmptyState
-            title="Checkout için geçerli bir teklif bulunamadı"
-            description="Devam etmek için önce teklif adımında tarih ve kişi bilgilerini girerek yeni bir teklif oluşturun."
+            title={"Teklif bilgisi bulunamad\u0131"}
+            description={"Ba\u011flant\u0131 eksik veya hatal\u0131. L\u00fctfen teklif ba\u011flant\u0131s\u0131n\u0131 yeniden a\u00e7\u0131n."}
             action={
-              <div className="flex flex-col sm:flex-row gap-2 justify-center">
-                {productId && org && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => {
-                      const qp = new URLSearchParams();
-                      qp.set("org", org);
-                      const qs = qp.toString();
-                      navigate(qs ? `/book/${productId}?${qs}` : `/book/${productId}`);
-                    }}
-                  >
-                    Teklif adımına dön
-                  </Button>
-                )}
+              <div className="flex justify-center">
                 <Button
                   size="sm"
                   onClick={() => {
@@ -224,7 +210,7 @@ export default function BookCheckoutPage() {
                     navigate(qs ? `/book?${qs}` : "/book");
                   }}
                 >
-                  Aramaya dön
+                  {"Geri d\u00f6n"}
                 </Button>
               </div>
             }

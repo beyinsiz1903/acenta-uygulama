@@ -121,7 +121,12 @@ export default function CrmCustomerDetailPage() {
     try {
       const [cust, acts, inbox] = await Promise.all([
         getCustomer(customerId),
-        listActivities(customerId, { page: 1, pageSize: 50 }),
+        listActivities({
+          relatedType: "customer",
+          relatedId: customerId,
+          page: 1,
+          page_size: 50,
+        }),
         listCustomerInboxThreads(customerId, { page: 1, pageSize: 20 }),
       ]);
 

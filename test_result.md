@@ -90,7 +90,7 @@
 
 test_plan:
   current_focus:
-    - "PR#7.6c Duplicate Merge UI Polish Test"
+    - "PR#7.6d CRM Events Deep-Link + Entity Context Test"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"

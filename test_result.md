@@ -112,7 +112,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-## user_problem_statement: "Test PR#7.5a – Duplicate detection (dry-run) endpoint test. Setup duplicate test data with email and phone duplicates, test GET /api/crm/customers/duplicates endpoint, verify response structure and duplicate detection logic, ensure read-only operation."
+## user_problem_statement: "Test PR#7.5b – Real customer merge endpoint test. Setup duplicate test data with email and phone duplicates, test POST /api/crm/customers/merge endpoint with dry-run and real merge scenarios, verify response structure, conflict handling, and input validation."
 
 ## backend:
   - task: "PR#7.5a Duplicate Detection (Dry-Run) Endpoint Test"

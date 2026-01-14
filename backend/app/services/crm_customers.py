@@ -231,8 +231,24 @@ async def find_or_create_customer_for_booking(
         "name": name,
         "contacts": contacts,
     }
-    created = await create_customer(db, organization_id, created_by_user_id or "system", data)
-    return created.get("id")
+    try:
+        created = await create_customer(db, organization_id, created_by_user_id or "system", data)
+        return created.get("id")
+    except DuplicateKeyError:
+        # Another process created a customer with this contact concurrently.
+        # Retry by looking up by normalized email/phone.
+        q: Dict[str, Any] = {"organization_id": organization_id}
+        contact_match: Dict[str, Any] = {}
+        if email_raw:
+            contact_match = {"type": "email", "value": email_raw}
+        elif phone_norm:
+            contact_match = {"type": "phone", "value": phone_norm}
+        if contact_match:
+            q["contacts"] = {"$elemMatch": contact_match}
+            existing = await db.customers.find_one(q, {"_id": 0})
+            if existing:
+                return existing.get("id")
+        return None
 
 
 async def patch_customer(

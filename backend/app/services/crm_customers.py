@@ -213,9 +213,6 @@ async def find_or_create_customer_for_booking(
     created = await create_customer(db, organization_id, created_by_user_id or "system", data)
     return created.get("id")
 
-    doc = await db.customers.find_one({"organization_id": organization_id, "id": customer_id}, {"_id": 0})
-    return doc
-
 
 async def patch_customer(
     db: Database,

@@ -9,6 +9,21 @@ function formatDateTimeTr(dateIso) {
   return d.toLocaleString("tr-TR");
 }
 
+function getEntityLink(event) {
+  const id = event.entity_id;
+  if (!id) return null;
+  switch (event.entity_type) {
+    case "customer":
+      return `/app/crm/customers/${id}`;
+    case "booking":
+      return `/app/ops/bookings/${id}`;
+    case "customer_merge":
+      return `/app/crm/customers/${id}`;
+    default:
+      return null;
+  }
+}
+
 function EventRow({ event, onToggle }) {
   const [open, setOpen] = useState(false);
 
@@ -26,7 +41,7 @@ function EventRow({ event, onToggle }) {
       : event.actor_user_id
     : "Sistem";
 
-  const summary = `${event.entity_type} ${event.action} ${event.entity_id}`;
+  const entityLink = getEntityLink(event);
 
   return (
     <div

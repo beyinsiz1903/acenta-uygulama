@@ -16,6 +16,7 @@ function InboxPage() {
   const user = getUser();
   const query = useQuery();
   const initialBookingId = query.get("booking_id") || "";
+  const initialThreadId = query.get("thread") || "";
 
   const [threads, setThreads] = useState([]);
   const [threadsLoading, setThreadsLoading] = useState(false);

@@ -143,6 +143,66 @@ async def get_b2b_booking_detail_ops(
         "quote_id": booking.get("quote_id"),
         "risk_snapshot": booking.get("risk_snapshot") or {},
         "policy_snapshot": booking.get("policy_snapshot") or {},
+
+
+class OpsBookingCustomerLinkIn(BaseModel):
+    customer_id: Optional[str] = None
+
+
+@router.patch("/bookings/{booking_id}/customer")
+async def link_booking_customer_ops(
+    booking_id: str,
+    payload: OpsBookingCustomerLinkIn,
+    user: Dict[str, Any] = OpsUserDep,
+    db=Depends(get_db),
+) -> Dict[str, Any]:
+    """Link or unlink a booking to a CRM customer from ops.
+
+    - Auth: admin|ops|super_admin via OpsUserDep
+    - Org-scope: booking and customer must belong to user's organization
+    - If customer_id is null/empty -> unlink (unset booking.customer_id)
+    """
+
+    org_id = user.get("organization_id")
+    if not org_id:
+        raise AppError(400, "invalid_user_context", "User is missing organization_id")
+
+    try:
+        oid = ObjectId(booking_id)
+    except Exception:
+        raise AppError(400, "invalid_booking_id", "Booking id must be a valid ObjectId", {"booking_id": booking_id})
+
+    booking = await db.bookings.find_one({"_id": oid, "organization_id": org_id})
+    if not booking:
+        raise AppError(404, "booking_not_found", "Booking not found", {"booking_id": booking_id})
+
+    customer_id = (payload.customer_id or "").strip() if payload.customer_id is not None else None
+
+    if customer_id:
+        customer = await db.customers.find_one(
+            {"organization_id": org_id, "id": customer_id},
+            {"_id": 0},
+        )
+        if not customer:
+            raise AppError(
+                404,
+                "customer_not_found",
+                "Customer not found for this organization",
+                {"customer_id": customer_id},
+            )
+
+        await db.bookings.update_one(
+            {"_id": oid, "organization_id": org_id},
+            {"$set": {"customer_id": customer_id, "updated_at": now_utc()}},
+        )
+    else:
+        await db.bookings.update_one(
+            {"_id": oid, "organization_id": org_id},
+            {"$unset": {"customer_id": ""}, "$set": {"updated_at": now_utc()}},
+        )
+
+    return {"ok": True, "booking_id": booking_id, "customer_id": customer_id}
+
     }
 
 

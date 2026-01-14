@@ -207,8 +207,6 @@ async def link_booking_customer_ops(
 
     return {"ok": True, "booking_id": booking_id, "customer_id": customer_id}
 
-    }
-
 
 @router.get("/cases")
 async def list_b2b_cases_ops(

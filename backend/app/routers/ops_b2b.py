@@ -3,6 +3,9 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
+from pydantic import BaseModel
+from typing import Optional
+
 from bson import ObjectId
 from fastapi import APIRouter, Depends, Query
 

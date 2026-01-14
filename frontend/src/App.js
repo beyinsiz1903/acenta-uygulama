@@ -59,6 +59,7 @@ import CrmCustomersPage from "./pages/crm/CrmCustomersPage";
 import CrmCustomerDetailPage from "./pages/crm/CrmCustomerDetailPage";
 import CrmTasksPage from "./pages/crm/CrmTasksPage";
 import CrmPipelinePage from "./pages/crm/CrmPipelinePage";
+import CrmDuplicateCustomersPage from "./pages/crm/CrmDuplicateCustomersPage";
 
 import HotelBookingsPage from "./pages/HotelBookingsPage";
 import HotelStopSellPage from "./pages/HotelStopSellPage";

@@ -105,15 +105,18 @@
 
   - task: "PR#7.6e CRM Events Mini Polish Test"
     implemented: true
-    working: "NA"
+    working: false
     file: "/app/frontend/src/pages/crm/CrmEventsPage.jsx"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "PR#7.6e CRM Events Mini Polish implemented with ID copy functionality for deal/task/activity events (📋 button with navigator.clipboard.writeText + toast messages), and loading UX improvements (disabled filter button with 'Yükleniyor...' label, disabled 'Daha fazla yükle' button during loading, header loading indicator). Need comprehensive testing of ID copy functionality, loading states, double-submit prevention, and role guard regression."
+      - working: false
+        agent: "testing"
+        comment: "❌ PR#7.6e CRM EVENTS MINI POLISH TEST FAILED - Critical issues found (60% success rate). CRITICAL ISSUES IDENTIFIED: A) CLIPBOARD PERMISSION ERROR: ❌ navigator.clipboard.writeText() failing with 'Write permission denied' error, ❌ JavaScript error displayed in browser console: 'Failed to execute writeText on Clipboard', ❌ ID copy functionality blocked by browser security restrictions, ❌ Error toast 'ID kopyalanamadı.' should be triggered but clipboard API fails silently. B) LOADING UX NOT WORKING: ❌ Filter button does not show 'Yükleniyor...' text during loading, ❌ Filter button not disabled during loading operations, ❌ Header loading indicator not found or not working, ❌ Load more button loading state not tested due to no available data. PARTIAL SUCCESS: ✅ ID copy button logic correctly implemented (only shows for deal/task/activity events), ✅ Customer/booking/customer_merge events correctly have no ID copy buttons, ✅ Role guard regression working (agency user blocked), ✅ Double-submit prevention handled without errors, ✅ Turkish text encoding working, ✅ No critical page errors except clipboard issue. ROOT CAUSE: 1) Clipboard API requires HTTPS + user gesture + permissions in browser automation environment, 2) Loading state logic may not be implemented or working correctly, 3) Need to handle clipboard permission gracefully. ACCEPTANCE CRITERIA NOT MET: ❌ ID copy functionality blocked by clipboard permissions, ❌ Loading UX improvements not working as specified, ❌ Toast error handling needs improvement for clipboard failures. PR#7.6e requires fixes for clipboard permission handling and loading state implementation."
 
 test_plan:
   current_focus:

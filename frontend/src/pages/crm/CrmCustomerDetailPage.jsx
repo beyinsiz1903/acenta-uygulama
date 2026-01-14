@@ -117,7 +117,7 @@ export default function CrmCustomerDetailPage() {
 
   async function fetchAll() {
     setLoading(true);
-    setLoadErr("");
+    setErrMsg("");
     try {
       const [cust, acts, inbox] = await Promise.all([
         getCustomer(customerId),
@@ -132,7 +132,7 @@ export default function CrmCustomerDetailPage() {
       setInboxThreads(inbox?.items || []);
       setInboxTotal(inbox?.total || 0);
     } catch (e) {
-      setLoadErr(e.message || "Veriler yüklenemedi.");
+      setErrMsg(e.message || "Veriler yüklenemedi.");
     } finally {
       setLoading(false);
     }

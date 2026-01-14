@@ -102,6 +102,18 @@ class B2BBookingService:
             "updated_at": now,
             "created_by_email": user_email,
         }
+        # Auto-link CRM customer if not already linked
+        if not booking_doc.get("customer_id"):
+            customer_id = await find_or_create_customer_for_booking(
+                self.db,
+                organization_id,
+                booking=booking_doc,
+                created_by_user_id=str(user_id) if user_id else None,
+            )
+            if customer_id:
+                booking_doc["customer_id"] = customer_id
+
+
 
         res = await self.bookings.insert_one(booking_doc)
         booking_id = str(res.inserted_id)

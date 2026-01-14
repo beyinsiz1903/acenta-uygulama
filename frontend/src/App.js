@@ -142,6 +142,7 @@ function App() {
           <Route index element={<DashboardPage />} />
           <Route path="products" element={<ProductsPage />} />
           <Route path="crm/customers" element={<CrmCustomersPage />} />
+          <Route path="crm/duplicates" element={<CrmDuplicateCustomersPage />} />
           <Route path="crm/pipeline" element={<CrmPipelinePage />} />
           <Route path="crm/tasks" element={<CrmTasksPage />} />
           <Route path="crm/customers/:customerId" element={<CrmCustomerDetailPage />} />

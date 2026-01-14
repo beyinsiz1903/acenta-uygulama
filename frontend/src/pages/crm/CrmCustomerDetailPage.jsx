@@ -151,6 +151,9 @@ export default function CrmCustomerDetailPage() {
     if (activeTab === "activities") {
       loadActivities();
     }
+    if (activeTab === "overview") {
+      loadInboxThreads();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, customerId]);
 

@@ -134,4 +134,26 @@ async def http_create_message(
         source="api",
     )
 
+
+@router.patch("/threads/{thread_id}/status")
+async def http_update_thread_status(
+    thread_id: str,
+    status: InboxThreadStatus,
+    db=Depends(get_db),
+    current_user: dict = Depends(require_roles(["admin", "super_admin", "ops"])),
+):
+    org_id = current_user.get("organization_id")
+    actor = {"id": current_user.get("id"), "roles": current_user.get("roles") or []}
+
+    updated = await update_thread_status(
+        db,
+        org_id,
+        thread_id,
+        new_status=status.value,
+        actor=actor,
+    )
+
+    return updated
+
+
     return msg

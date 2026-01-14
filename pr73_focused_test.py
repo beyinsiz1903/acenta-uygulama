@@ -77,7 +77,7 @@ def test_auto_customer_match():
 
     # Test 1: Email match scenario
     print("\n2️⃣  Email match scenario...")
-    test_email = "test_auto_match@example.test"
+    test_email = "test_auto_match@gmail.com"
     existing_customer_id = create_test_customer_with_email(mongo_client, org_id, test_email)
 
     # Check current B2B booking implementation

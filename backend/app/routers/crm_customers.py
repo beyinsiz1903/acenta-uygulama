@@ -7,12 +7,19 @@ from pydantic import BaseModel
 
 from app.db import get_db
 from app.auth import require_roles
-from app.schemas_crm import CustomerCreate, CustomerPatch, CustomerOut, CustomerDetailOut
+from app.schemas_crm import (
+    CustomerCreate,
+    CustomerPatch,
+    CustomerOut,
+    CustomerDetailOut,
+    DuplicateCustomerClusterOut,
+)
 from app.services.crm_customers import (
     create_customer,
     list_customers,
     get_customer_detail,
     patch_customer,
+    find_duplicate_customers,
 )
 
 

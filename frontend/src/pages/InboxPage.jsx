@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { getUser } from "../lib/api";
-import { listInboxThreads, listInboxMessages, createInboxMessage } from "../lib/inbox";
+import { listInboxThreads, listInboxMessages, createInboxMessage, updateInboxThreadStatus } from "../lib/inbox";
 import { Button } from "../components/ui/button";
 import EmptyState from "../components/EmptyState";
 import ErrorState from "../components/ErrorState";

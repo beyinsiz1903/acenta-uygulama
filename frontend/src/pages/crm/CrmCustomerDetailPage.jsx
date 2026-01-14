@@ -619,13 +619,13 @@ export default function CrmCustomerDetailPage() {
         </div>
       ) : null}
 
-      {/* {activeTab === "activities" ? (
+      {activeTab === "activities" ? (
         <div style={{ marginTop: 12, border: "1px solid #eee", borderRadius: 12, padding: 12 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
             <div>
               <div style={{ fontWeight: 700 }}>Aktiviteler</div>
               <div style={{ marginTop: 4, fontSize: 13, color: "#666" }}>
-                {"Notlar / g\u00f6r\u00fc\u015fmeler / e-postalar"}
+                {"Notlar / görüşmeler / e-postalar"}
               </div>
             </div>
           </div>
@@ -635,7 +635,7 @@ export default function CrmCustomerDetailPage() {
             <textarea
               value={newBody}
               onChange={(e) => setNewBody(e.target.value)}
-              placeholder={"K\u0131sa bir not yaz\u0131n..."}
+              placeholder={"Kısa bir not yazın..."}
               rows={3}
               style={{
                 width: "100%",
@@ -648,7 +648,7 @@ export default function CrmCustomerDetailPage() {
             />
             <div style={{ marginTop: 8, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
               <div style={{ fontSize: 12, color: "#666" }}>
-                {activitiesTotal ? `${activitiesTotal} aktivite` : "Hen\u00fcz aktivite yok"}
+                {activitiesTotal ? `${activitiesTotal} aktivite` : "Henüz aktivite yok"}
               </div>
               <button
                 type="submit"
@@ -670,9 +670,10 @@ export default function CrmCustomerDetailPage() {
 
           {/* Activity list */}
           <div style={{ marginTop: 12 }}>
-            {activitiesLoading ? (
-              <div style={{ color: "#666", fontSize: 13 }}>Aktiviteler y\u00fckleniyor...</div>
-            ) : activitiesErr ? (
+            {activitiesLoading && (
+              <div style={{ color: "#666", fontSize: 13 }}>Aktiviteler yükleniyor...</div>
+            )}
+            {!activitiesLoading && activitiesErr && (
               <div
                 style={{
                   padding: 10,
@@ -685,9 +686,11 @@ export default function CrmCustomerDetailPage() {
               >
                 {activitiesErr}
               </div>
-            ) : !activities.length ? (
-              <div style={{ color: "#666", fontSize: 13 }}>Bu m\u00fc\u015fteri i\u00e7in hen\u00fcz aktivite kayd\u0131 yok.</div>
-            ) : (
+            )}
+            {!activitiesLoading && !activitiesErr && !activities.length && (
+              <div style={{ color: "#666", fontSize: 13 }}>Bu müşteri için henüz aktivite kaydı yok.</div>
+            )}
+            {!activitiesLoading && !activitiesErr && activities.length > 0 && (
               <ul style={{ listStyle: "none", margin: 0, padding: 0, marginTop: 8 }}>
                 {activities.map((act) => (
                   <li
@@ -727,7 +730,7 @@ export default function CrmCustomerDetailPage() {
             )}
           </div>
         </div>
-      ) : null} */}
+      ) : null}
     </div>
   );
 }

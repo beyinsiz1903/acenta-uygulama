@@ -90,6 +90,12 @@ export default function CrmCustomerDetailPage() {
   const [newBody, setNewBody] = useState("");
   const [creating, setCreating] = useState(false);
 
+  // Inbox threads state
+  const [inboxThreads, setInboxThreads] = useState([]);
+  const [inboxTotal, setInboxTotal] = useState(0);
+  const [inboxLoading, setInboxLoading] = useState(false);
+  const [inboxErr, setInboxErr] = useState("");
+
   const computedTagsText = useMemo(() => {
     const tags = customer?.tags || [];
     return tags.join(", ");

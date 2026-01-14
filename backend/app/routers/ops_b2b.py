@@ -118,7 +118,7 @@ async def get_b2b_booking_detail_ops(
     try:
         oid = ObjectId(booking_id)
     except Exception:
-        raise AppError(404, "not_found", "Booking not found", {"booking_id": booking_id})
+        raise AppError(400, "invalid_booking_id", "Booking id must be a valid ObjectId", {"booking_id": booking_id})
 
     booking = await db.bookings.find_one({"_id": oid, "organization_id": org_id})
     if not booking:
@@ -138,6 +138,7 @@ async def get_b2b_booking_detail_ops(
         "amounts": amounts,
         "items": booking.get("items") or [],
         "customer": booking.get("customer") or {},
+        "customer_id": booking.get("customer_id"),
         "travellers": booking.get("travellers") or [],
         "quote_id": booking.get("quote_id"),
         "risk_snapshot": booking.get("risk_snapshot") or {},

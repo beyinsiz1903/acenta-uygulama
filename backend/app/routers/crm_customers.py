@@ -160,6 +160,26 @@ async def http_merge_customers(
             dry_run=body.dry_run,
             merged_by_user_id=user_id,
         )
+
+        # Only log event for real merges (not dry-run)
+        if not body.dry_run:
+            from app.services.crm_events import log_crm_event
+
+            await log_crm_event(
+                db,
+                org_id,
+                entity_type="customer_merge",
+                entity_id=body.primary_id,
+                action="merged",
+                payload={
+                    "primary_id": result["primary_id"],
+                    "merged_ids": result.get("merged_ids", []),
+                    "skipped_ids": result.get("skipped_ids", []),
+                    "rewired": result.get("rewired", {}),
+                },
+                actor={"id": user_id, "roles": current_user.get("roles") or []},
+                source="api",
+            )
     except ValueError as exc:
         msg = str(exc)
         if msg == "primary_id is required":

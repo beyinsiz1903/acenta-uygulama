@@ -10,7 +10,7 @@ import uuid
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://b2b-hotel-suite.preview.emergentagent.com"
+BASE_URL = "https://crm-reservation-sys.preview.emergentagent.com"
 
 def login_agency():
     """Login as agency user and return token, org_id, agency_id, email"""

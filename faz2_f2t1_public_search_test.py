@@ -12,7 +12,7 @@ from pymongo import MongoClient
 import os
 
 # Configuration - Use production URL from frontend/.env
-BASE_URL = "https://b2b-hotel-suite.preview.emergentagent.com"
+BASE_URL = "https://crm-reservation-sys.preview.emergentagent.com"
 
 def get_mongo_client():
     """Get MongoDB client for direct database access"""

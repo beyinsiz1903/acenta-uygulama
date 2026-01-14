@@ -33,7 +33,7 @@ from bson import ObjectId
 import os
 
 # Configuration
-BASE_URL = "https://b2b-hotel-suite.preview.emergentagent.com"
+BASE_URL = "https://crm-reservation-sys.preview.emergentagent.com"
 
 # MongoDB connection (using same connection as backend)
 MONGO_URL = os.environ.get("MONGO_URL", "mongodb://localhost:27017/test_database")

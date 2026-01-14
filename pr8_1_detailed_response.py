@@ -7,7 +7,7 @@ Show detailed field examples to confirm proper serialization
 import requests
 import json
 
-BASE_URL = "https://b2b-hotel-suite.preview.emergentagent.com"
+BASE_URL = "https://crm-reservation-sys.preview.emergentagent.com"
 
 def login_admin():
     """Login as admin user and return token"""

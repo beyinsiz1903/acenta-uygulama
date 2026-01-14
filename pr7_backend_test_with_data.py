@@ -40,7 +40,7 @@ class TestRunner:
         print("🔐 Authenticating admin user...")
         
         auth_response = await self.client.post(
-            f"{API_BASE}/auth/login",
+            f"{BACKEND_URL}/api/auth/login",
             json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD}
         )
         

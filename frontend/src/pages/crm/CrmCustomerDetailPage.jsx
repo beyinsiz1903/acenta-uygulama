@@ -542,7 +542,7 @@ export default function CrmCustomerDetailPage() {
 
             {/* Recent bookings */}
             <div style={{ border: "1px solid #eee", borderRadius: 12, padding: 12 }}>
-            <div style={{ fontWeight: 700 }}>Son Rezervasyonlar</div>
+              <div style={{ fontWeight: 700 }}>Son Rezervasyonlar</div>
 
             <div style={{ marginTop: 8 }}>
               {recentBookings.length ? (

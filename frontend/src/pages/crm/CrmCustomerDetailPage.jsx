@@ -530,7 +530,7 @@ export default function CrmCustomerDetailPage() {
                           {t.subject || "(Konu yok)"}
                         </div>
                         <div style={{ marginTop: 2, fontSize: 12, color: "#666" }}>
-                          {t.channel || "internal"} • {t.last_message_at || ""}
+                          {t.channel || "internal"} • {formatDateTime(t.last_message_at)}
                         </div>
                       </div>
                       <button

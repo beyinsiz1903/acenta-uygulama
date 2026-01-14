@@ -72,3 +72,28 @@ async def ensure_inbox_indexes(db):
         [("organization_id", ASCENDING), ("thread_id", ASCENDING)],
         name="idx_inbox_messages_org_thread",
     )
+
+    # Rate limiting index: org + thread + actor_user + created_at
+    await _safe_create(
+        db.inbox_messages,
+        [
+            ("organization_id", ASCENDING),
+            ("thread_id", ASCENDING),
+            ("actor_user_id", ASCENDING),
+            ("created_at", DESCENDING),
+        ],
+        name="idx_inbox_messages_rate_limit",
+    )
+
+    # Dedup index: org + thread + actor_user + body_hash + created_at
+    await _safe_create(
+        db.inbox_messages,
+        [
+            ("organization_id", ASCENDING),
+            ("thread_id", ASCENDING),
+            ("actor_user_id", ASCENDING),
+            ("body_hash", ASCENDING),
+            ("created_at", DESCENDING),
+        ],
+        name="idx_inbox_messages_dedup",
+    )

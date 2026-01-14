@@ -97,7 +97,7 @@ def test_auto_customer_match():
     }
     
     print(f"   📋 Creating B2B quote...")
-    r = requests.post(f"{BASE_URL}/api/b2b/quotes", json=quote_payload, headers=agency_headers)
+    r = requests.post(f"{BASE_URL}/api/api/b2b/quotes", json=quote_payload, headers=agency_headers)
     print(f"   📋 Quote response: {r.status_code}")
     
     if r.status_code == 200:

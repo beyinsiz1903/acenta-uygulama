@@ -12,7 +12,7 @@ from pymongo import MongoClient
 import os
 
 # Configuration - Use production URL from frontend/.env
-BASE_URL = "https://crm-reservation-sys.preview.emergentagent.com"
+BASE_URL = "https://syroca-pro.preview.emergentagent.com"
 
 def login_admin():
     """Login as admin user and return token, org_id, email"""

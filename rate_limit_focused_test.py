@@ -20,7 +20,7 @@ import secrets
 import os
 
 # Test configuration
-BACKEND_URL = "https://crm-reservation-sys.preview.emergentagent.com/api"
+BACKEND_URL = "https://syroca-pro.preview.emergentagent.com/api"
 
 class RateLimitFocusedTester:
     def __init__(self):

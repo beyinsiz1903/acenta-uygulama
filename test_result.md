@@ -2770,3 +2770,11 @@ agent_communication:
     stuck_count: 0
     priority: "high"
     needs_retesting: true
+
+  - task: "PR#8.3b.2 Inbox Toast Flake Killer (Inline Banner)"
+    implemented: true
+    working: false
+    file: "/app/frontend/src/pages/InboxPage.jsx"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true

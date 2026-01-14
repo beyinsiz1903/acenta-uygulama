@@ -89,8 +89,19 @@ export default function CrmDuplicateCustomersPage() {
         duplicateIds: cluster.duplicates.map((d) => d.id),
         dryRun: false,
       });
-      toast.success("Merge i\u015flemi tamamland\u0131.");
-      // Reload clusters; merged cluster should disappear
+
+      const rw = (res && res.rewired) || {};
+      const b = (rw.bookings && rw.bookings.modified) || 0;
+      const d = (rw.deals && rw.deals.modified) || 0;
+      const t = (rw.tasks && rw.tasks.modified) || 0;
+      const a = (rw.activities && rw.activities.modified) || 0;
+      const msg = `Merge tamamland\u0131: ${b} rezervasyon, ${d} f\u0131rsat, ${t} g\u00f6rev, ${a} aktivite g\u00fcncellendi.`;
+      toast.success(msg);
+
+      // Optimistic remove: hide this cluster immediately
+      setClusters((prev) => prev.filter((c) => contactKey(c.contact) !== key));
+
+      // Reload clusters; merged cluster should zaten kaybolmu5f olacak
       await loadClusters();
       setPreviewByKey((prev) => {
         const next = { ...prev };
@@ -98,9 +109,14 @@ export default function CrmDuplicateCustomersPage() {
         return next;
       });
     } catch (e) {
-      const msg = e.message || (e.raw && e.raw.response && e.raw.response.data && e.raw.response.data.detail) || "Merge i\u015flemi ba\u015far\u0131s\u0131z oldu.";
+      const msg =
+        e.message ||
+        (e.raw && e.raw.response && e.raw.response.data && e.raw.response.data.detail) ||
+        "Merge i\u015flemi ba\u015far\u0131s\u0131z oldu.";
       if (msg === "customer_merge_conflict") {
-        toast.error("Bu kay\u0131t ba\u015fka bir primary'ye merge edilmi\u015f. \u00d6nce duplicate raporunu yenileyin.");
+        toast.error(
+          "Bu kay\u0131t ba\u015fka bir primary'ye merge edilmi\u015f. \u00d6nce duplicate raporunu yenileyin."
+        );
       } else {
         toast.error(msg);
       }

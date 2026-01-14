@@ -619,7 +619,7 @@ export default function CrmCustomerDetailPage() {
         </div>
       ) : null}
 
-      {activeTab === "activities" ? (
+      {/* {activeTab === "activities" ? (
         <div style={{ marginTop: 12, border: "1px solid #eee", borderRadius: 12, padding: 12 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
             <div>
@@ -727,7 +727,7 @@ export default function CrmCustomerDetailPage() {
             )}
           </div>
         </div>
-      ) : null}
+      ) : null} */}
     </div>
   );
 }

@@ -585,7 +585,7 @@ export default function CrmEventsPage() {
             justifyContent: "space-between",
           }}
         >
-          <span>{loading ? `Y1kleniyor...` : "Olaylar"}</span>
+          <span>{loading ? "Y\u00fckleniyor..." : "Olaylar"}</span>
           <span>
             Toplam: <b>{total}</b>
           </span>

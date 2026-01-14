@@ -141,6 +141,8 @@ async def http_patch_customer(
         source="api",
     )
 
+    return updated
+
 
 @router.post("/merge", response_model=CustomerMergeResultOut)
 async def http_merge_customers(

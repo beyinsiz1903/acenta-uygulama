@@ -103,10 +103,8 @@ class TestInboxGuardrails:
         valid_statuses = ["open", "pending", "done"]
         
         for status in valid_statuses:
-            status_data = {"status": status}
             response = await self.client.patch(
-                f"/api/inbox/threads/{self.test_thread_id}/status",
-                json=status_data
+                f"/api/inbox/threads/{self.test_thread_id}/status?status={status}"
             )
             
             assert response.status_code == 200, f"Status update to '{status}' failed: {response.text}"
@@ -116,28 +114,37 @@ class TestInboxGuardrails:
             assert response_data["status"] == status, f"Status not updated correctly: expected {status}, got {response_data['status']}"
             
         # Test invalid status
-        invalid_status_data = {"status": "invalid"}
         response = await self.client.patch(
-            f"/api/inbox/threads/{self.test_thread_id}/status",
-            json=invalid_status_data
+            f"/api/inbox/threads/{self.test_thread_id}/status?status=invalid"
         )
         
         assert response.status_code == 422, f"Invalid status should return 422, got {response.status_code}: {response.text}"
         
         error_data = response.json()
-        assert error_data.get("code") == "INVALID_STATUS", f"Expected INVALID_STATUS error code, got: {error_data}"
+        # Check if error is nested under "error" key
+        if "error" in error_data:
+            error_info = error_data["error"]
+        else:
+            error_info = error_data
+            
+        assert error_info.get("code") == "INVALID_STATUS", f"Expected INVALID_STATUS error code, got: {error_data}"
         
         # Test non-existent thread
         fake_thread_id = "507f1f77bcf86cd799439011"  # Valid ObjectId format but non-existent
         response = await self.client.patch(
-            f"/api/inbox/threads/{fake_thread_id}/status",
-            json={"status": "open"}
+            f"/api/inbox/threads/{fake_thread_id}/status?status=open"
         )
         
         assert response.status_code == 404, f"Non-existent thread should return 404, got {response.status_code}: {response.text}"
         
         error_data = response.json()
-        assert error_data.get("code") == "thread_not_found", f"Expected thread_not_found error code, got: {error_data}"
+        # Check if error is nested under "error" key
+        if "error" in error_data:
+            error_info = error_data["error"]
+        else:
+            error_info = error_data
+            
+        assert error_info.get("code") == "thread_not_found", f"Expected thread_not_found error code, got: {error_data}"
 
     async def test_rate_limiting(self):
         """

@@ -298,7 +298,7 @@ def test_pr75a_duplicate_detection_endpoint():
                 db = mongo_client.get_default_database()
                 
                 # Check that all test customers still exist unchanged
-                for test_customer in test_customers:
+                for test_customer in created_customers:
                     existing = db.customers.find_one({
                         "organization_id": admin_org_id,
                         "id": test_customer["id"]

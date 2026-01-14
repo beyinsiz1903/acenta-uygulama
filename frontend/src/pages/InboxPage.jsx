@@ -108,36 +108,40 @@ function InboxPage() {
   };
 
   useEffect(() => {
-    void loadThreads();
+    if (!isAllowed) return;
+    loadThreads({ reset: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [statusFilter, initialBookingId]);
+  }, [statusFilter, searchQ, isAllowed]);
 
   useEffect(() => {
+    if (!isAllowed) return;
     if (selectedThreadId) {
-      void loadThreadDetail(selectedThreadId);
+      loadMessages(selectedThreadId, { reset: true });
+    } else {
+      setMessages([]);
+      setMessagesTotal(0);
+      setMessagesPage(1);
     }
-  }, [selectedThreadId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedThreadId, isAllowed]);
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (!newMessage.trim() || !selectedThreadId) return;
+    if (!newMessage.trim() || !selectedThreadId || !isAllowed) return;
 
     setSendLoading(true);
     try {
-      const resp = await api.post(`/inbox/threads/${selectedThreadId}/messages`, {
+      await createInboxMessage(selectedThreadId, {
+        direction: "internal",
         body: newMessage.trim(),
+        attachments: [],
       });
       setNewMessage("");
-      // Optimistic update
-      setThreadDetail((prev) => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          messages: [...prev.messages, resp.data],
-        };
-      });
+      // Refresh messages and threads deterministically
+      await loadMessages(selectedThreadId, { reset: true });
+      await loadThreads({ reset: true });
     } catch (e) {
-      setDetailError(apiErrorMessage(e));
+      setErrMessages(e.message || "Mesaj g\u00f6nderilemedi.");
     } finally {
       setSendLoading(false);
     }

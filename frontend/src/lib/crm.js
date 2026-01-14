@@ -90,3 +90,21 @@ export async function patchDeal(id, body) {
     throw { message: apiErrorMessage(err), raw: err };
   }
 }
+
+export async function listActivities(params) {
+  try {
+    const res = await api.get("/crm/activities", { params });
+    return res.data; // { items, total, page, page_size }
+  } catch (err) {
+    throw { message: apiErrorMessage(err), raw: err };
+  }
+}
+
+export async function createActivity(body) {
+  try {
+    const res = await api.post("/crm/activities", body);
+    return res.data; // ActivityOut
+  } catch (err) {
+    throw { message: apiErrorMessage(err), raw: err };
+  }
+}

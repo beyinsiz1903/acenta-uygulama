@@ -307,7 +307,7 @@
 
 ## test_plan:
   current_focus:
-    - "CRM Pipeline Page Frontend Test"
+    - "PR#7.1 CRM Özeti UI Test"
   stuck_tasks:
     - "F2.FE.T3 Checkout & Complete polish"
   test_all: false

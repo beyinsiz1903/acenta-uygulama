@@ -138,6 +138,78 @@ async def list_customers(
 
 
 async def get_customer(db: Database, organization_id: str, customer_id: str) -> Optional[Dict[str, Any]]:
+
+
+def _normalize_phone(value: str) -> str:
+  digits = [ch for ch in str(value) if ch.isdigit()]
+  return "".join(digits)
+
+
+async def find_or_create_customer_for_booking(
+    db: Database,
+    organization_id: str,
+    *,
+    booking: Dict[str, Any],
+    created_by_user_id: Optional[str] = None,
+) -> Optional[str]:
+    guest = booking.get("guest") or {}
+    email_raw = (guest.get("email") or "").strip().lower()
+    phone_raw = (guest.get("phone") or "").strip()
+    phone_norm = _normalize_phone(phone_raw) if phone_raw else ""
+
+    if not email_raw and not phone_norm:
+        return None
+
+    # 1) Try match by email (case-insensitive)
+    if email_raw:
+        existing_by_email = await db.customers.find_one(
+            {
+                "organization_id": organization_id,
+                "contacts": {
+                    "$elemMatch": {
+                        "type": "email",
+                        "value": {"$regex": f"^{email_raw}$", "$options": "i"},
+                    }
+                },
+            },
+            {"_id": 0},
+        )
+        if existing_by_email:
+            return existing_by_email.get("id")
+
+    # 2) Try match by phone
+    if phone_norm:
+        existing_by_phone = await db.customers.find_one(
+            {
+                "organization_id": organization_id,
+                "contacts": {
+                    "$elemMatch": {
+                        "type": "phone",
+                        "value": phone_norm,
+                    }
+                },
+            },
+            {"_id": 0},
+        )
+        if existing_by_phone:
+            return existing_by_phone.get("id")
+
+    # 3) Create new customer
+    name = (guest.get("full_name") or "Misafir").strip() or "Misafir"
+    contacts: List[Dict[str, Any]] = []
+    if email_raw:
+        contacts.append({"type": "email", "value": email_raw, "is_primary": True})
+    if phone_norm:
+        contacts.append({"type": "phone", "value": phone_norm, "is_primary": not contacts})
+
+    data = {
+        "type": "individual",
+        "name": name,
+        "contacts": contacts,
+    }
+    created = await create_customer(db, organization_id, created_by_user_id or "system", data)
+    return created.get("id")
+
     doc = await db.customers.find_one({"organization_id": organization_id, "id": customer_id}, {"_id": 0})
     return doc
 

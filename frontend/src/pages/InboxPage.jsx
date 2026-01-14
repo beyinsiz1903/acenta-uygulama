@@ -213,7 +213,7 @@ function InboxPage() {
               data-testid="inbox-thread-not-found"
               className="px-3 py-2 text-xs text-destructive bg-destructive/5 border-b border-destructive/30"
             >
-              Thread bulunamad31 veya erifim yok.
+              Thread bulunamadı veya erişim yok.
             </div>
           )}
 

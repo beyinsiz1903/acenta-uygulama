@@ -123,9 +123,24 @@
         agent: "testing"
         comment: "✅ PR#7.6e CRM EVENTS MINI POLISH REGRESSION TEST COMPLETE - All core functionality verified successfully (90% success rate). COMPREHENSIVE FUNCTIONALITY VERIFIED: A) ID COPY FUNCTIONALITY: ✅ Found 45 ID copy buttons (📋) for deal/task/activity events, ✅ copyTextToClipboard function working with fallback logic (navigator.clipboard.writeText → execCommand fallback), ✅ Success toast 'ID kopyalandı.' appearing correctly when copy succeeds, ✅ Customer/booking/customer_merge events correctly use links instead of copy buttons, ✅ Copy button logic correctly implemented (only shows for deal/task/activity entity types). B) LOADING UX IMPROVEMENTS: ✅ Filter button shows 'Yükleniyor...' text during loading operations, ✅ Filter button correctly disabled during loading (prevents double-submit), ✅ Button returns to 'Filtrele' text and enabled state after loading completes, ✅ Minimum 300ms loading guarantee implemented in load() function, ✅ Loading state prevents multiple simultaneous filter operations. C) ROLE GUARD REGRESSION: ✅ Admin user (admin@acenta.test) can access /app/crm/events successfully, ✅ Page title 'CRM • Olaylar' displays correctly, ✅ All admin functionality working (filters, copy buttons, pagination), ✅ Role-based access control maintained. D) GENERAL STABILITY: ✅ Page loads successfully with 36 total events displayed, ✅ Turkish text encoding working throughout interface, ✅ Event filtering working correctly (entity type dropdown functional), ✅ Event detail panels ('Detay' buttons) working correctly. MINOR ISSUES: ⚠️ Header loading indicator not consistently detected (may be too fast), ⚠️ Console shows 8 resource 404 errors (likely static assets, not functionality-breaking), ⚠️ Agency user role guard test incomplete due to login flow complexity. ACCEPTANCE CRITERIA MET: ✅ ID copy functionality working with proper fallback mechanism, ✅ Success/error toast messages displaying correctly, ✅ Loading UX improvements implemented (disabled button + loading text), ✅ Minimum loading time guarantee working, ✅ Double-submit prevention functional, ✅ No critical JavaScript errors affecting functionality, ✅ Role guard regression maintained. PR#7.6e clipboard fallback + minimum loading functionality production-ready with comprehensive user experience improvements."
 
+  - task: "FAZ 2 / F2.FE.T2.1 Public Book Quote + Checkout Flow"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/public/BookProductPage.jsx, /app/frontend/src/pages/public/BookCheckoutPage.jsx"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "❌ FAZ 2 / F2.FE.T2.1 Public Book Quote + Checkout Flow Test FAILED - Critical form rendering issue discovered. BLOCKING ISSUE: React form components are not rendering on BookProductPage and BookCheckoutPage. Pages load with titles and navigation but NO input fields (date, guest count, name, email, phone) are rendered. This makes the entire booking flow non-functional. Backend APIs are working (return proper 422 validation errors), but frontend forms are completely broken. Root cause appears to be React component rendering pipeline issue specific to form elements. IMPACT: Users cannot complete bookings - no way to input dates, guest information, or submit forms. Requires immediate investigation of React component state management and form rendering logic."
+      - working: "NA"
+        agent: "main"
+        comment: "Re-implemented BookProductPage.jsx and BookCheckoutPage.jsx with proper data-testid hooks for form rendering test. BookProductPage now renders input fields with data-testids: product-date-from (date), product-date-to (date), product-adults (number), product-children (number), product-rooms (number). BookCheckoutPage now renders input fields with data-testids: checkout-name (text), checkout-email (email), checkout-phone (tel). Stripe publishable key missing but checkout form fields should still render (only CardElement is guarded). Need comprehensive re-testing of form rendering and booking flow functionality."
+
 test_plan:
   current_focus:
-    - "PR#7.6e CRM Events Mini Polish Test"
+    - "FAZ 2 / F2.FE.T2.1 Public Book Quote + Checkout Flow"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"

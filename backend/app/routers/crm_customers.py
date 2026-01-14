@@ -100,6 +100,17 @@ async def http_patch_customer(
         raise HTTPException(status_code=400, detail="No fields to update")
 
     updated = await patch_customer(db, org_id, customer_id, patch_dict)
+
+
+@router.get("/duplicates", response_model=List[DuplicateCustomerClusterOut])
+async def http_list_duplicate_customers(
+    db=Depends(get_db),
+    current_user: dict = Depends(require_roles(["admin", "super_admin"])),
+):
+    org_id = current_user.get("organization_id")
+    clusters = await find_duplicate_customers(db, org_id)
+    return clusters
+
     if not updated:
         raise HTTPException(status_code=404, detail="Customer not found")
 

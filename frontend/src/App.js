@@ -58,6 +58,7 @@ import OpsBookingDetailPage from "./pages/ops/OpsBookingDetailPage";
 import CrmCustomersPage from "./pages/crm/CrmCustomersPage";
 import CrmCustomerDetailPage from "./pages/crm/CrmCustomerDetailPage";
 import CrmTasksPage from "./pages/crm/CrmTasksPage";
+import CrmEventsPage from "./pages/crm/CrmEventsPage";
 import CrmPipelinePage from "./pages/crm/CrmPipelinePage";
 import CrmDuplicateCustomersPage from "./pages/crm/CrmDuplicateCustomersPage";
 

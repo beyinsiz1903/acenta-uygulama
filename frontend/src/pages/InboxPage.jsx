@@ -71,8 +71,23 @@ function InboxPage() {
       }
       setTotal(res.total || 0);
       setPage(res.page || effectivePage);
-      if (!selectedThreadId && items.length > 0) {
-        setSelectedThreadId(items[0].id);
+
+      if (items.length > 0) {
+        // Deep-link: if initialThreadId is present
+        if (initialThreadId && !selectedThreadId) {
+          const exists = items.some((t) => t.id === initialThreadId);
+          if (exists) {
+            setSelectedThreadId(initialThreadId);
+          } else if (!threadErrorShown) {
+            // Only show once
+            console.error("Thread bulunamadı veya erişim yok.");
+            setThreadErrorShown(true);
+            setSelectedThreadId(items[0].id);
+          }
+        } else if (!initialThreadId && !selectedThreadId) {
+          // Default behaviour: select first thread if nothing selected and no deep-link
+          setSelectedThreadId(items[0].id);
+        }
       }
     } catch (e) {
       setThreadsError(e.message || "Inbox y\u00fcklenemedi.");

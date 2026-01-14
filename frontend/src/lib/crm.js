@@ -108,3 +108,27 @@ export async function createActivity(body) {
     throw { message: apiErrorMessage(err), raw: err };
   }
 }
+
+
+export async function listCustomerDuplicates() {
+  try {
+    const res = await api.get("/crm/customers/duplicates");
+    return res.data; // DuplicateCustomerClusterOut[]
+  } catch (err) {
+    throw { message: apiErrorMessage(err), raw: err };
+  }
+}
+
+export async function mergeCustomers({ primaryId, duplicateIds, dryRun = false }) {
+  try {
+    const payload = {
+      primary_id: primaryId,
+      duplicate_ids: duplicateIds,
+      dry_run: dryRun,
+    };
+    const res = await api.post("/crm/customers/merge", payload);
+    return res.data; // CustomerMergeResultOut
+  } catch (err) {
+    throw { message: apiErrorMessage(err), raw: err };
+  }
+}

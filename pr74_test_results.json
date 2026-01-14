@@ -1,0 +1,101 @@
+{
+  "deterministic_email_test": {
+    "customer_m1_id": "cust_e5a3b251c10e425e8b53660ea3562d72",
+    "customer_m2_id": "cust_2f40687c30434c03a3e41889747123bd",
+    "customer_ids": [
+      "cust_e5a3b251c10e425e8b53660ea3562d72",
+      "cust_2f40687c30434c03a3e41889747123bd"
+    ],
+    "older_updated_at": "2026-01-14T08:27:36.051240",
+    "newer_updated_at": "2026-01-14T09:57:36.051240",
+    "selected_customer_id": "cust_2f40687c30434c03a3e41889747123bd",
+    "all_calls_consistent": true,
+    "selected_newer_customer": true,
+    "selected_ids": [
+      "cust_2f40687c30434c03a3e41889747123bd",
+      "cust_2f40687c30434c03a3e41889747123bd",
+      "cust_2f40687c30434c03a3e41889747123bd"
+    ],
+    "reversed_selected_customer_id": "cust_e5a3b251c10e425e8b53660ea3562d72",
+    "reversed_all_calls_consistent": true,
+    "reversed_selected_m1": true,
+    "reversed_selected_ids": [
+      "cust_e5a3b251c10e425e8b53660ea3562d72",
+      "cust_e5a3b251c10e425e8b53660ea3562d72",
+      "cust_e5a3b251c10e425e8b53660ea3562d72"
+    ]
+  },
+  "deterministic_phone_test": {
+    "customer_m3_id": "cust_e383e9bab1c64bbda68ab85c0cbcb7a5",
+    "customer_m4_id": "cust_62a9e22f1a1e45269d41949a919592d3",
+    "customer_ids": [
+      "cust_e383e9bab1c64bbda68ab85c0cbcb7a5",
+      "cust_62a9e22f1a1e45269d41949a919592d3"
+    ],
+    "input_phone": "+90 (555) 000 0003",
+    "normalized_phone": "905550000003",
+    "older_updated_at": "2026-01-14T09:27:36.059929",
+    "newer_updated_at": "2026-01-14T10:12:36.059929",
+    "selected_customer_id": "cust_62a9e22f1a1e45269d41949a919592d3",
+    "all_calls_consistent": true,
+    "selected_newer_customer": true,
+    "selected_ids": [
+      "cust_62a9e22f1a1e45269d41949a919592d3",
+      "cust_62a9e22f1a1e45269d41949a919592d3",
+      "cust_62a9e22f1a1e45269d41949a919592d3"
+    ]
+  },
+  "duplicate_key_retry_test": {},
+  "normalization_test": {
+    "customer_ids": [
+      "cust_6b2092c2848c4e2487da599c57eedd7d",
+      "cust_47a73eaf2a4e492089eff7fe1e62ac99"
+    ],
+    "normalization_results": [
+      {
+        "customer_id": "cust_6b2092c2848c4e2487da599c57eedd7d",
+        "input_email": "TEST@EXAMPLE.COM",
+        "stored_email": "test@example.com",
+        "expected_email": "test@example.com",
+        "email_normalized": true,
+        "input_phone": "+90 (555) 000 0004",
+        "stored_phone": "905550000004",
+        "expected_phone": "905550000004",
+        "phone_normalized": true
+      },
+      {
+        "customer_id": "cust_47a73eaf2a4e492089eff7fe1e62ac99",
+        "input_email": "MixedCase@Test.Example",
+        "stored_email": "mixedcase@test.example",
+        "expected_email": "mixedcase@test.example",
+        "email_normalized": true,
+        "input_phone": "0 (555) 123-4567",
+        "stored_phone": "05551234567",
+        "expected_phone": "05551234567",
+        "phone_normalized": true
+      }
+    ],
+    "search_tests": [
+      {
+        "customer_id": "cust_6b2092c2848c4e2487da599c57eedd7d",
+        "email_search_matches": 1,
+        "phone_search_matches": 1,
+        "email_exact_match": true,
+        "phone_exact_match": true
+      },
+      {
+        "customer_id": "cust_47a73eaf2a4e492089eff7fe1e62ac99",
+        "email_search_matches": 1,
+        "phone_search_matches": 1,
+        "email_exact_match": true,
+        "phone_exact_match": true
+      }
+    ],
+    "all_normalized": true,
+    "all_searchable": true
+  },
+  "unique_index_verification": {
+    "index_found": false,
+    "error": "crm_customers_by_org_contact_unique index not found"
+  }
+}

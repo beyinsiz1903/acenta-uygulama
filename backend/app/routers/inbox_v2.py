@@ -19,6 +19,7 @@ from app.services.inbox_v2 import (
     create_thread,
     list_messages,
     create_message,
+    update_thread_status,
     _clamp_pagination,
 )
 from app.errors import AppError

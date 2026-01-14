@@ -318,9 +318,15 @@ function InboxPage() {
                   rows={2}
                   placeholder="Mesaj yazın..."
                   value={newMessage}
+                  data-testid="inbox-compose-body"
                   onChange={(e) => setNewMessage(e.target.value)}
                 />
-                <Button type="submit" size="sm" disabled={sendLoading || !newMessage.trim()}>
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={sendLoading || !newMessage.trim()}
+                  data-testid="inbox-compose-send"
+                >
                   {sendLoading ? "Gönderiliyor..." : "Gönder"}
                 </Button>
               </form>

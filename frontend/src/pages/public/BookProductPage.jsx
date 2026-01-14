@@ -100,6 +100,7 @@ export default function BookProductPage() {
               <label className="font-medium">Giriş tarihi</label>
               <input
                 type="date"
+                data-testid="product-date-from"
                 className="w-full rounded-md border px-2 py-1"
                 value={dateFrom}
                 onChange={(e) => setDateFrom(e.target.value)}
@@ -110,6 +111,7 @@ export default function BookProductPage() {
               <label className="font-medium">Çıkış tarihi</label>
               <input
                 type="date"
+                data-testid="product-date-to"
                 className="w-full rounded-md border px-2 py-1"
                 value={dateTo}
                 onChange={(e) => setDateTo(e.target.value)}
@@ -131,6 +133,7 @@ export default function BookProductPage() {
                 type="number"
                 min={1}
                 max={10}
+                data-testid="product-adults"
                 className="w-full rounded-md border px-2 py-1"
                 value={adults}
                 onChange={(e) => setAdults(e.target.value)}

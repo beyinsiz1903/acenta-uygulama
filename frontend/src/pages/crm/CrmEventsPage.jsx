@@ -111,13 +111,15 @@ function EventRow({ event, onToggle }) {
                 event.entity_type === "activity" ? (
                   <button
                     type="button"
-                    onClick={() => {
+                    onClick={async () => {
                       if (!event.entity_id) return;
-                      try {
-                        navigator.clipboard.writeText(event.entity_id);
+                      const res = await copyTextToClipboard(event.entity_id);
+                      if (res.ok) {
                         toast.success("ID kopyaland\u0131.");
-                      } catch {
-                        toast.error("ID kopyalanamad\u0131.");
+                      } else {
+                        toast.error(
+                          "ID kopyalanamad\u0131. Kopyalamak i\u00e7in ID'yi se\u00e7ip Ctrl+C yap\u0131n."
+                        );
                       }
                     }}
                     style={{

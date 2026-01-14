@@ -35,6 +35,8 @@ function StatusPill({ status }) {
       {tone}
     </span>
   );
+}
+
 function CrmBookingSnapshot({ booking, bookingId, onCustomerLinked }) {
   const [detail, setDetail] = useState(null);
   const [loading, setLoading] = useState(false);

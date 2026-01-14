@@ -145,6 +145,7 @@ export default function BookProductPage() {
                 type="number"
                 min={0}
                 max={10}
+                data-testid="product-children"
                 className="w-full rounded-md border px-2 py-1"
                 value={children}
                 onChange={(e) => setChildren(e.target.value)}
@@ -156,6 +157,7 @@ export default function BookProductPage() {
                 type="number"
                 min={1}
                 max={10}
+                data-testid="product-rooms"
                 className="w-full rounded-md border px-2 py-1"
                 value={rooms}
                 onChange={(e) => setRooms(e.target.value)}

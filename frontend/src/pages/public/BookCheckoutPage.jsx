@@ -254,6 +254,7 @@ export default function BookCheckoutPage() {
             <label className="font-medium">Ad Soyad</label>
             <input
               type="text"
+              data-testid="checkout-name"
               className="w-full rounded-md border px-2 py-1"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}

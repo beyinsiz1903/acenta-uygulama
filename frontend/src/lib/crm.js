@@ -132,3 +132,13 @@ export async function mergeCustomers({ primaryId, duplicateIds, dryRun = false }
     throw { message: apiErrorMessage(err), raw: err };
   }
 }
+
+
+export async function listCrmEvents(params) {
+  try {
+    const res = await api.get("/crm/events", { params });
+    return res.data; // { items, total, page, page_size }
+  } catch (err) {
+    throw { message: apiErrorMessage(err), raw: err };
+  }
+}

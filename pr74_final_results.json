@@ -1,0 +1,91 @@
+{
+  "deterministic_email": {
+    "customer_m1_id": "cust_39ef089155044335ada4e854039c87f1",
+    "customer_m2_id": "cust_ff8764a7922e4ffab10e558fc7c8ffe1",
+    "test_email": "deterministic.email@test.example",
+    "initial_selection_consistent": true,
+    "initial_selected_newer": true,
+    "initial_selected_ids": [
+      "cust_ff8764a7922e4ffab10e558fc7c8ffe1",
+      "cust_ff8764a7922e4ffab10e558fc7c8ffe1",
+      "cust_ff8764a7922e4ffab10e558fc7c8ffe1",
+      "cust_ff8764a7922e4ffab10e558fc7c8ffe1",
+      "cust_ff8764a7922e4ffab10e558fc7c8ffe1"
+    ],
+    "reversed_selection_consistent": true,
+    "reversed_selected_older_as_newer": true,
+    "reversed_selected_ids": [
+      "cust_39ef089155044335ada4e854039c87f1",
+      "cust_39ef089155044335ada4e854039c87f1",
+      "cust_39ef089155044335ada4e854039c87f1",
+      "cust_39ef089155044335ada4e854039c87f1",
+      "cust_39ef089155044335ada4e854039c87f1"
+    ]
+  },
+  "deterministic_phone": {
+    "customer_m3_id": "cust_8ffbd0663063405697657b1d945e92b6",
+    "customer_m4_id": "cust_900851152b0f432e91eca32bc1859e84",
+    "test_phone_formatted": "+90 (555) 000 0005",
+    "test_phone_normalized": "905550000005",
+    "selection_consistent": true,
+    "selected_newer_normalized": true,
+    "selected_ids": [
+      "cust_900851152b0f432e91eca32bc1859e84",
+      "cust_900851152b0f432e91eca32bc1859e84",
+      "cust_900851152b0f432e91eca32bc1859e84",
+      "cust_900851152b0f432e91eca32bc1859e84",
+      "cust_900851152b0f432e91eca32bc1859e84"
+    ]
+  },
+  "contact_normalization": {
+    "customer_ids": [
+      "cust_17b3343ea74c4fd692c8792b6d0abb86",
+      "cust_b9ae9be336b442778d89943c88fb4df2"
+    ],
+    "test_cases": [
+      {
+        "customer_id": "cust_17b3343ea74c4fd692c8792b6d0abb86",
+        "input_email": "UPPERCASE@EXAMPLE.COM",
+        "stored_email": "uppercase@example.com",
+        "expected_email": "uppercase@example.com",
+        "email_normalized": true,
+        "input_phone": "+90 (555) 123-4567",
+        "stored_phone": "905551234567",
+        "expected_phone": "905551234567",
+        "phone_normalized": true
+      },
+      {
+        "customer_id": "cust_b9ae9be336b442778d89943c88fb4df2",
+        "input_email": "MixedCase@Test.Domain",
+        "stored_email": "mixedcase@test.domain",
+        "expected_email": "mixedcase@test.domain",
+        "email_normalized": true,
+        "input_phone": "0 555 999 8877",
+        "stored_phone": "05559998877",
+        "expected_phone": "05559998877",
+        "phone_normalized": true
+      }
+    ],
+    "all_normalized": true
+  },
+  "application_duplicate_handling": {
+    "original_customer_id": "cust_00de26d8d5084d4c8c8373eb29146e1c",
+    "test_email": "app.duplicate.test@example.com",
+    "found_ids": [
+      "cust_00de26d8d5084d4c8c8373eb29146e1c",
+      "cust_00de26d8d5084d4c8c8373eb29146e1c",
+      "cust_00de26d8d5084d4c8c8373eb29146e1c",
+      "cust_00de26d8d5084d4c8c8373eb29146e1c",
+      "cust_00de26d8d5084d4c8c8373eb29146e1c",
+      "cust_00de26d8d5084d4c8c8373eb29146e1c",
+      "cust_00de26d8d5084d4c8c8373eb29146e1c",
+      "cust_00de26d8d5084d4c8c8373eb29146e1c",
+      "cust_00de26d8d5084d4c8c8373eb29146e1c",
+      "cust_00de26d8d5084d4c8c8373eb29146e1c"
+    ],
+    "customers_count": 1,
+    "all_same_id": true,
+    "found_original": true,
+    "no_duplicates_created": true
+  }
+}

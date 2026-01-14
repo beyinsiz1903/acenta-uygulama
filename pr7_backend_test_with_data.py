@@ -307,7 +307,7 @@ class TestRunner:
         
         # Test booking detail before linking
         detail_response = await self.client.get(
-            f"{API_BASE}/ops/bookings/{booking_id}",
+            f"{API_BASE}/api/ops/bookings/{booking_id}",
             headers=self.get_headers()
         )
         

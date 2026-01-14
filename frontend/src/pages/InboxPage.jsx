@@ -147,6 +147,17 @@ function InboxPage() {
     }
   };
 
+  if (!isAllowed) {
+    return (
+      <div className="p-4">
+        <ErrorState
+          title="Erişim kısıtlı"
+          description="Bu sayfaya yalnızca admin/ops kullanıcılar erişebilir."
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="h-[calc(100vh-64px)] flex">
       {/* Thread list */}

@@ -153,7 +153,7 @@ def test_auto_customer_match():
 
     # Test 2: Auto-create scenario
     print("\n4️⃣  Auto-create scenario...")
-    new_email = f"new_customer_{uuid.uuid4().hex}@example.test"
+    new_email = f"new_customer_{uuid.uuid4().hex}@gmail.com"
     
     booking_payload_new = {
         "quote_id": quote_id,

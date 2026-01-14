@@ -33,13 +33,21 @@ def _normalize_contacts(contacts: Optional[List[Dict[str, Any]]]) -> List[Dict[s
     primary_seen = False
     for raw in contacts:
         c = dict(raw)
-        if c.get("type") not in {"phone", "email"}:
+        ctype = c.get("type")
+        if ctype not in {"phone", "email"}:
             continue
-        # Trim value
+        # Trim and normalize value by type
         value = str(c.get("value", "")).strip()
         if not value:
             continue
+        if ctype == "email":
+            value = value.lower()
+        if ctype == "phone":
+            value = _normalize_phone(value)
+            if not value:
+                continue
         c["value"] = value
+        c["type"] = ctype
         # Only one primary
         if c.get("is_primary") and not primary_seen:
             primary_seen = True
@@ -163,41 +171,54 @@ async def find_or_create_customer_for_booking(
     if not email_raw and not phone_norm:
         return None
 
-    # 1) Try match by email (case-insensitive)
+    # 1) Try match by email (deterministic, most recently updated)
+    from pymongo import DESCENDING
+    from pymongo.errors import DuplicateKeyError
+
     if email_raw:
-        existing_by_email = await db.customers.find_one(
-            {
-                "organization_id": organization_id,
-                "contacts": {
-                    "$elemMatch": {
-                        "type": "email",
-                        "value": {"$regex": f"^{email_raw}$", "$options": "i"},
-                    }
+        cursor = (
+            db.customers.find(
+                {
+                    "organization_id": organization_id,
+                    "contacts": {
+                        "$elemMatch": {
+                            "type": "email",
+                            "value": email_raw,
+                        }
+                    },
                 },
-            },
-            {"_id": 0},
+                {"_id": 0},
+            )
+            .sort([("updated_at", DESCENDING)])
+            .limit(1)
         )
-        if existing_by_email:
-            return existing_by_email.get("id")
+        items = await cursor.to_list(length=1)
+        if items:
+            return items[0].get("id")
 
-    # 2) Try match by phone
+    # 2) Try match by phone (deterministic)
     if phone_norm:
-        existing_by_phone = await db.customers.find_one(
-            {
-                "organization_id": organization_id,
-                "contacts": {
-                    "$elemMatch": {
-                        "type": "phone",
-                        "value": phone_norm,
-                    }
+        cursor = (
+            db.customers.find(
+                {
+                    "organization_id": organization_id,
+                    "contacts": {
+                        "$elemMatch": {
+                            "type": "phone",
+                            "value": phone_norm,
+                        }
+                    },
                 },
-            },
-            {"_id": 0},
+                {"_id": 0},
+            )
+            .sort([("updated_at", DESCENDING)])
+            .limit(1)
         )
-        if existing_by_phone:
-            return existing_by_phone.get("id")
+        items = await cursor.to_list(length=1)
+        if items:
+            return items[0].get("id")
 
-    # 3) Create new customer
+    # 3) Create new customer (duplicate-safe with retry)
     name = (customer_data.get("name") or customer_data.get("full_name") or "Misafir").strip() or "Misafir"
     contacts: List[Dict[str, Any]] = []
     if email_raw:

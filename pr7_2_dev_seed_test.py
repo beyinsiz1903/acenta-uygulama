@@ -335,7 +335,7 @@ class DevSeedTester:
             else:
                 print(f"❌ API call failed with status {response.status_code}: {response.text}")
                 self.test_results["api_tests"]["failed"] += 1
-                    self.test_results["api_tests"]["details"].append(f"❌ GET /api/api/ops/bookings failed: {response.status_code}")
+                self.test_results["api_tests"]["details"].append(f"❌ GET /api/api/ops/bookings failed: {response.status_code}")
 
             # Test 3: GET /api/crm/customers/cust_seed_linked
             print("\n📡 Testing GET /api/crm/customers/cust_seed_linked")

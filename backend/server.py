@@ -5,9 +5,11 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from app.config import API_PREFIX, APP_NAME, APP_VERSION, CORS_ORIGINS
 from app.db import close_mongo, connect_mongo, get_db
+from app.errors import AppError
 from app.routers.admin import router as admin_router
 from app.routers.admin_catalog import router as admin_catalog_router
 from app.routers.admin_metrics import router as admin_metrics_router

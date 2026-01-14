@@ -115,6 +115,28 @@ export default function CrmCustomerDetailPage() {
     }
   }
 
+  async function fetchAll() {
+    setLoading(true);
+    setLoadErr("");
+    try {
+      const [cust, acts, inbox] = await Promise.all([
+        getCustomer(customerId),
+        listActivities(customerId, { page: 1, pageSize: 50 }),
+        listCustomerInboxThreads(customerId, { page: 1, pageSize: 20 }),
+      ]);
+
+      setDetail(cust);
+      setTagsText((cust?.customer?.tags || []).join(", "));
+      setActivities(acts?.items || []);
+      setActivitiesTotal(acts?.total || 0);
+      setInboxThreads(inbox?.items || []);
+      setInboxTotal(inbox?.total || 0);
+    } catch (e) {
+      setLoadErr(e.message || "Veriler yüklenemedi.");
+    } finally {
+      setLoading(false);
+    }
+  }
   useEffect(() => {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps

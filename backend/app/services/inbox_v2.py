@@ -254,7 +254,7 @@ async def create_message(
 
     # Deduplication: same body within 10 seconds for same user/thread
     body_hash = hashlib.sha256(body_str.encode("utf-8")).hexdigest()
-    dedup_window_start = now_utc().replace(second=now.second - 10 if now.second >= 10 else 0)
+    dedup_window_start = now - timedelta(seconds=10)
     existing = await db.inbox_messages.find_one(
         {
             "organization_id": organization_id,

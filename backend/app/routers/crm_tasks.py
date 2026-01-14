@@ -92,6 +92,21 @@ async def http_create_task(
     user_id = current_user.get("id")
 
     task = await create_task(db, org_id, user_id, body.model_dump())
+
+    # Fire-and-forget CRM event (task created)
+    from app.services.crm_events import log_crm_event
+
+    await log_crm_event(
+        db,
+        org_id,
+        entity_type="task",
+        entity_id=task["id"],
+        action="created",
+        payload={"fields": list(body.model_fields_set)},
+        actor={"id": user_id, "roles": current_user.get("roles") or []},
+        source="api",
+    )
+
     return task
 
 
@@ -111,4 +126,19 @@ async def http_patch_task(
     updated = await patch_task(db, org_id, task_id, patch_dict)
     if not updated:
         raise HTTPException(status_code=404, detail="Task not found")
+
+    # Fire-and-forget CRM event (task updated)
+    from app.services.crm_events import log_crm_event
+
+    await log_crm_event(
+        db,
+        org_id,
+        entity_type="task",
+        entity_id=task_id,
+        action="updated",
+        payload={"changed_fields": list(patch_dict.keys())},
+        actor={"id": current_user.get("id"), "roles": current_user.get("roles") or []},
+        source="api",
+    )
+
     return updated

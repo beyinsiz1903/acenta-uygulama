@@ -241,7 +241,7 @@ class TestRunner:
         nonexistent_booking_id = "507f1f77bcf86cd799439011"
         
         response = await self.client.patch(
-            f"{API_BASE}/ops/bookings/{nonexistent_booking_id}/customer",
+            f"{API_BASE}/api/ops/bookings/{nonexistent_booking_id}/customer",
             json={"customer_id": "cust_test123"},
             headers=self.get_headers()
         )

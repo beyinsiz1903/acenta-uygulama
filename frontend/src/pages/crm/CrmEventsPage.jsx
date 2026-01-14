@@ -307,7 +307,7 @@ export default function CrmEventsPage() {
   }, [page, pageSize, entityType, entityId, action, range, fromOverride, toOverride]);
 
   async function load(reset) {
-    if (!isAdmin) return;
+    if (!isAdmin || loading) return;
     setLoading(true);
     setErrMsg("");
     try {

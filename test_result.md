@@ -337,7 +337,7 @@
 
 ## test_plan:
   current_focus:
-    - "PR#8.1 CRM Customer Detail ObjectId/datetime Normalization Fix"
+    - "PR#7.3 Auto Customer Match/Create for B2B bookings test"
   stuck_tasks:
     - "F2.FE.T3 Checkout & Complete polish"
   test_all: false

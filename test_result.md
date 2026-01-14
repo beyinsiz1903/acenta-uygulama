@@ -176,8 +176,7 @@
 
 test_plan:
   current_focus: []
-  stuck_tasks:
-    - "PR#8.3 CRM ↔ Inbox Integration Test"
+  stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 

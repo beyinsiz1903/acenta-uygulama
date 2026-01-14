@@ -118,7 +118,7 @@ def test_auto_customer_match():
     agency_headers["Idempotency-Key"] = f"test_email_{uuid.uuid4().hex}"
     
     print(f"   📋 Creating B2B booking with email: {test_email}")
-    r = requests.post(f"{BASE_URL}/api/b2b/bookings", json=booking_payload, headers=agency_headers)
+    r = requests.post(f"{BASE_URL}/api/api/b2b/bookings", json=booking_payload, headers=agency_headers)
     print(f"   📋 Booking response: {r.status_code}")
     
     if r.status_code == 200:

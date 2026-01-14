@@ -71,7 +71,38 @@ function EventRow({ event, onToggle }) {
                 {event.entity_id}
               </a>
             ) : (
-              <span>{event.entity_id}</span>
+              <>
+                <span>{event.entity_id}</span>
+                {event.entity_type === "deal" ||
+                event.entity_type === "task" ||
+                event.entity_type === "activity" ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!event.entity_id) return;
+                      try {
+                        navigator.clipboard.writeText(event.entity_id);
+                        toast.success("ID kopyaland\u0131.");
+                      } catch {
+                        toast.error("ID kopyalanamad\u0131.");
+                      }
+                    }}
+                    style={{
+                      marginLeft: 8,
+                      fontSize: 11,
+                      padding: "2px 6px",
+                      borderRadius: 999,
+                      border: "1px solid #e5e7eb",
+                      background: "#f9fafb",
+                      cursor: "pointer",
+                    }}
+                    aria-label="ID kopyala"
+                    title="ID kopyala"
+                  >
+                    📋
+                  </button>
+                ) : null}
+              </>
             )}
           </div>
           <div style={{ marginTop: 2, fontSize: 12, color: "#4b5563" }}>{createdAtLabel}</div>

@@ -418,6 +418,14 @@ export default function OpsBookingDetailPage() {
               </div>
             </div>
 
+            <CrmBookingSnapshot
+              booking={booking}
+              bookingId={bookingId}
+              onCustomerLinked={(nextCustomerId) => {
+                setBooking((prev) => (prev ? { ...prev, customer_id: nextCustomerId } : prev));
+              }}
+            />
+
             <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-2">
               <TabsList className="mb-3">
                 <TabsTrigger value="summary">Summary</TabsTrigger>

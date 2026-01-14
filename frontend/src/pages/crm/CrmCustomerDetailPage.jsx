@@ -62,6 +62,7 @@ function Tabs({ value, onChange, items }) {
       })}
     </div>
   );
+}
 
 function formatDateTime(value) {
   if (!value) return "";

@@ -334,7 +334,7 @@ class TestRunner:
                 if link_response.status_code == 200:
                     # Check booking detail after linking
                     detail_after_response = await self.client.get(
-                        f"{API_BASE}/ops/bookings/{booking_id}",
+                        f"{API_BASE}/api/ops/bookings/{booking_id}",
                         headers=self.get_headers()
                     )
                     

@@ -92,7 +92,7 @@ def test_auto_customer_match():
             "rate_plan_id": "flexible",
             "check_in": "2026-01-15",
             "check_out": "2026-01-17",
-            "occupancy": {"adults": 2, "children": 0}
+            "occupancy": 2
         }]
     }
     

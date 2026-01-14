@@ -327,7 +327,7 @@ class DevSeedTester:
                 if found_linked and found_unlinked:
                     print("✅ Found both BKG-SEED-LINKED and BKG-SEED-UNLINKED via API")
                     self.test_results["api_tests"]["passed"] += 1
-                    self.test_results["api_tests"]["details"].append("✅ GET /api/ops/bookings found both seed bookings")
+                    self.test_results["api_tests"]["details"].append("✅ GET /api/api/ops/bookings found both seed bookings")
                 else:
                     print(f"❌ Missing seed bookings - Linked: {found_linked}, Unlinked: {found_unlinked}")
                     self.test_results["api_tests"]["failed"] += 1

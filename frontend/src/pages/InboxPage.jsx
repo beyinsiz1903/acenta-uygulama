@@ -218,24 +218,31 @@ function InboxPage() {
               {threads.map((t) => (
                 <li
                   key={t.id}
+                  data-testid="inbox-thread-row"
                   className={`p-3 cursor-pointer text-sm hover:bg-muted/60 ${
                     selectedThreadId === t.id ? "bg-muted" : ""
                   }`}
                   onClick={() => setSelectedThreadId(t.id)}
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <span className="font-medium truncate max-w-[70%]">{t.subject}</span>
+                    <span
+                      className="font-medium truncate max-w-[70%]"
+                      data-testid="inbox-thread-subject"
+                    >
+                      {t.subject || "(Konu yok)"}
+                    </span>
                     <span className="text-[10px] uppercase text-muted-foreground">
-                      {t.type}
+                      {t.channel || t.type || "internal"}
                     </span>
                   </div>
-                  {t.booking_id && (
-                    <p className="text-[11px] text-muted-foreground mt-0.5">
-                      Booking: {t.booking_id}
-                    </p>
-                  )}
                   <p className="text-[11px] text-muted-foreground mt-0.5">
                     {t.last_message_at || ""}
+                  </p>
+                  <p
+                    className="text-[11px] text-muted-foreground mt-0.5"
+                    data-testid="inbox-thread-count"
+                  >
+                    {t.message_count ?? 0} mesaj
                   </p>
                 </li>
               ))}

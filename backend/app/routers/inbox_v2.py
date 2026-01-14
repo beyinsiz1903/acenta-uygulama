@@ -99,6 +99,8 @@ async def http_list_messages(
 ):
     org_id = current_user.get("organization_id")
 
+    page, page_size = _clamp_pagination(page, page_size)
+    
     items, total = await list_messages(
         db,
         org_id,
@@ -107,7 +109,7 @@ async def http_list_messages(
         page_size=page_size,
     )
 
-    return {"items": items, "total": total, "page": page, "page_size": min(max(page_size, 1), 200)}
+    return {"items": items, "total": total, "page": page, "page_size": page_size}
 
 
 @router.post("/threads/{thread_id}/messages")

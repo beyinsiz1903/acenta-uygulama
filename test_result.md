@@ -169,7 +169,8 @@
         comment: "PR#8.3 CRM ↔ Inbox integration implemented with: 1) Backend: New router crm_customer_inbox.py with GET /api/crm/customers/{customer_id}/inbox-threads endpoint (org-scoped, role guard: admin|super_admin|ops, returns 200 + empty items if no customer threads), server.py includes crm_customer_inbox_router. 2) Frontend: crm.js listCustomerInboxThreads(customerId, {page, pageSize}) function, CrmCustomerDetailPage.jsx adds inbox state (inboxThreads, inboxTotal, inboxLoading, inboxErr), loadInboxThreads() called on overview tab, Inbox card in left column shows thread list with 'Inbox'ta aç' buttons linking to /app/inbox?thread={id}. 3) InboxPage.jsx needs thread query parameter handling for deep-link (currently only handles booking_id). Need comprehensive testing of CRM→Inbox deep-link flow, backend endpoint role guard/org-scope, and integration functionality."
 
 test_plan:
-  current_focus: []
+  current_focus:
+    - "PR#8.3 CRM ↔ Inbox Integration Test"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"

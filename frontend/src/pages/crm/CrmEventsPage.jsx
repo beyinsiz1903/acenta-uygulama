@@ -60,7 +60,19 @@ function EventRow({ event, onToggle }) {
         }}
       >
         <div style={{ minWidth: 0, flex: "1 1 200px" }}>
-          <div style={{ fontSize: 13, color: "#111", fontWeight: 600 }}>{summary}</div>
+          <div style={{ fontSize: 13, color: "#111", fontWeight: 600 }}>
+            {event.entity_type} {event.action}{" "}
+            {entityLink ? (
+              <a
+                href={entityLink}
+                style={{ color: "#2563eb", textDecoration: "underline" }}
+              >
+                {event.entity_id}
+              </a>
+            ) : (
+              <span>{event.entity_id}</span>
+            )}
+          </div>
           <div style={{ marginTop: 2, fontSize: 12, color: "#4b5563" }}>{createdAtLabel}</div>
         </div>
 

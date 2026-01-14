@@ -591,3 +591,67 @@ async def perform_customer_merge(
             "open_tasks": open_tasks,
         }
     )
+
+
+
+async def get_customer_detail_v2(
+    db: Database,
+    organization_id: str,
+    customer_id: str,
+) -> Optional[Dict[str, Any]]:
+    """Return CRM customer detail with recent bookings, open deals & tasks.
+
+    This is a clean implementation used by the router; the older get_customer_detail
+    implementation above is left in place for backward-compatibility but not used.
+    """
+
+    customer = await get_customer(db, organization_id, customer_id)
+    if not customer:
+        return None
+
+    # Recent bookings for this customer
+    booking_sort_field = "created_at"
+    sample_booking = await db.bookings.find_one(
+        {"organization_id": organization_id, "customer_id": customer_id},
+        {"created_at": 1, "updated_at": 1},
+    )
+    if sample_booking and not sample_booking.get("created_at") and sample_booking.get("updated_at"):
+        booking_sort_field = "updated_at"
+
+    cursor = (
+        db.bookings.find(
+            {"organization_id": organization_id, "customer_id": customer_id},
+            {"_id": 0},
+        )
+        .sort([(booking_sort_field, -1)])
+        .limit(5)
+    )
+    recent_bookings = await cursor.to_list(length=5)
+
+    open_deals = await db.crm_deals.find(
+        {
+            "organization_id": organization_id,
+            "customer_id": customer_id,
+            "status": "open",
+        },
+        {"_id": 0},
+    ).sort([("updated_at", -1)]).limit(10).to_list(length=10)
+
+    open_tasks = await db.crm_tasks.find(
+        {
+            "organization_id": organization_id,
+            "related_type": "customer",
+            "related_id": customer_id,
+            "status": "open",
+        },
+        {"_id": 0},
+    ).sort([("due_date", 1), ("updated_at", -1)]).limit(10).to_list(length=10)
+
+    return _normalize_for_json(
+        {
+            "customer": customer,
+            "recent_bookings": recent_bookings,
+            "open_deals": open_deals,
+            "open_tasks": open_tasks,
+        }
+    )

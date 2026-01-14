@@ -19,7 +19,7 @@ from app.schemas_crm import (
 from app.services.crm_customers import (
     create_customer,
     list_customers,
-    get_customer_detail,
+    get_customer_detail_v2,
     patch_customer,
     find_duplicate_customers,
     perform_customer_merge,

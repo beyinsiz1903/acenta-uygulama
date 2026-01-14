@@ -4,7 +4,26 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 from uuid import uuid4
 
+from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorDatabase as Database
+
+
+def _normalize_for_json(obj: Any) -> Any:
+    """Recursively normalize values for JSON/Pydantic serialization.
+
+    - ObjectId -> str
+    - datetime -> isoformat() string
+    - dict/list -> walk recursively
+    """
+    if isinstance(obj, dict):
+        return {k: _normalize_for_json(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_normalize_for_json(v) for v in obj]
+    if isinstance(obj, ObjectId):
+        return str(obj)
+    if isinstance(obj, datetime):
+        return obj.isoformat()
+    return obj
 
 
 def _normalize_contacts(contacts: Optional[List[Dict[str, Any]]]) -> List[Dict[str, Any]]:
@@ -200,9 +219,11 @@ async def get_customer_detail(
         {"_id": 0},
     ).sort([("due_date", 1), ("updated_at", -1)]).limit(10).to_list(length=10)
 
-    return {
-        "customer": customer,
-        "recent_bookings": recent_bookings,
-        "open_deals": open_deals,
-        "open_tasks": open_tasks,
-    }
+    return _normalize_for_json(
+        {
+            "customer": customer,
+            "recent_bookings": recent_bookings,
+            "open_deals": open_deals,
+            "open_tasks": open_tasks,
+        }
+    )

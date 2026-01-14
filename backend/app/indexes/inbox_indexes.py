@@ -48,6 +48,18 @@ async def ensure_inbox_indexes(db):
         name="idx_inbox_threads_org_status_lastmsg",
     )
 
+    await _safe_create(
+        db.inbox_threads,
+        [("organization_id", ASCENDING), ("last_message_at", DESCENDING)],
+        name="idx_inbox_threads_org_lastmsg",
+    )
+
+    await _safe_create(
+        db.inbox_threads,
+        [("organization_id", ASCENDING), ("customer_id", ASCENDING), ("last_message_at", DESCENDING)],
+        name="idx_inbox_threads_org_customer_lastmsg",
+    )
+
     # Messages: by thread + created_at, and org+thread
     await _safe_create(
         db.inbox_messages,

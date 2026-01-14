@@ -211,7 +211,7 @@ class TestRunner:
         invalid_booking_id = "invalid-booking-id-123"
         
         response = await self.client.patch(
-            f"{API_BASE}/ops/bookings/{invalid_booking_id}/customer",
+            f"{API_BASE}/api/ops/bookings/{invalid_booking_id}/customer",
             json={"customer_id": "cust_test123"},
             headers=self.get_headers()
         )

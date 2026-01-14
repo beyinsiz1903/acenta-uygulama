@@ -181,6 +181,8 @@ async def link_booking_customer_ops(
 
     customer_id = (payload.customer_id or "").strip() if payload.customer_id is not None else None
 
+    previous_customer_id = booking.get("customer_id")
+
     if customer_id:
         customer = await db.customers.find_one(
             {"organization_id": org_id, "id": customer_id},
@@ -198,11 +200,35 @@ async def link_booking_customer_ops(
             {"_id": oid, "organization_id": org_id},
             {"$set": {"customer_id": customer_id, "updated_at": now_utc()}},
         )
+        action = "customer_linked"
     else:
         await db.bookings.update_one(
             {"_id": oid, "organization_id": org_id},
             {"$unset": {"customer_id": ""}, "$set": {"updated_at": now_utc()}},
         )
+        action = "customer_unlinked"
+
+    # Fire-and-forget CRM event for booking-customer link/unlink
+    try:
+        from app.services.crm_events import log_crm_event
+
+        await log_crm_event(
+            db,
+            org_id,
+            entity_type="booking",
+            entity_id=booking_id,
+            action=action,
+            payload={
+                "booking_id": booking_id,
+                "customer_id": customer_id,
+                "previous_customer_id": previous_customer_id,
+            },
+            actor={"id": user.get("id"), "roles": user.get("roles") or []},
+            source="api",
+        )
+    except Exception:
+        # Audit event best-effort, ops endpoint shouldn't fail because of logging.
+        pass
 
     return {"ok": True, "booking_id": booking_id, "customer_id": customer_id}
 

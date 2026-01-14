@@ -6,6 +6,7 @@ import { Button } from "../components/ui/button";
 import EmptyState from "../components/EmptyState";
 import ErrorState from "../components/ErrorState";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 function useQuery() {
   const { search } = useLocation();
@@ -80,7 +81,7 @@ function InboxPage() {
             setSelectedThreadId(initialThreadId);
           } else if (!threadErrorShown) {
             // Only show once
-            console.error("Thread bulunamadı veya erişim yok.");
+            toast.error("Thread bulunamadı veya erişim yok.");
             setThreadErrorShown(true);
             setSelectedThreadId(items[0].id);
           }

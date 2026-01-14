@@ -164,7 +164,7 @@ class TestRunner:
         
         # First link the customer
         await self.client.patch(
-            f"{API_BASE}/ops/bookings/{booking_id}/customer",
+            f"{API_BASE}/api/ops/bookings/{booking_id}/customer",
             json={"customer_id": customer_id},
             headers=self.get_headers()
         )
@@ -173,7 +173,7 @@ class TestRunner:
         
         # Test unlinking (customer_id = null)
         unlink_response = await self.client.patch(
-            f"{API_BASE}/ops/bookings/{booking_id}/customer",
+            f"{API_BASE}/api/ops/bookings/{booking_id}/customer",
             json={"customer_id": None},
             headers=self.get_headers()
         )

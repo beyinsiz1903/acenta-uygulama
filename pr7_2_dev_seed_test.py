@@ -21,7 +21,7 @@ class DevSeedTester:
     def __init__(self):
         self.backend_url = "https://b2b-hotel-suite.preview.emergentagent.com/api"
         self.db = None
-        self.org_id = "org_click_to_pay"  # From seed script output
+        self.org_id = "695e03c80b04ed31c4eaa899"  # Admin user's organization (moved seed data here)
         self.test_results = {
             "customers": {"passed": 0, "failed": 0, "details": []},
             "bookings": {"passed": 0, "failed": 0, "details": []},

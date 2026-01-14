@@ -191,6 +191,61 @@ export default function CrmCustomerDetailPage() {
   const openDeals = detail?.open_deals || [];
   const openTasks = detail?.open_tasks || [];
 
+  const [activities, setActivities] = useState([]);
+  const [activitiesTotal, setActivitiesTotal] = useState(0);
+  const [activitiesLoading, setActivitiesLoading] = useState(false);
+  const [activitiesErr, setActivitiesErr] = useState("");
+  const [newBody, setNewBody] = useState("");
+  const [creating, setCreating] = useState(false);
+
+  async function loadActivities() {
+    setActivitiesLoading(true);
+    setActivitiesErr("");
+    try {
+      const res = await listActivities({
+        relatedType: "customer",
+        relatedId: customerId,
+        page: 1,
+        page_size: 20,
+      });
+      setActivities(res?.items || []);
+      setActivitiesTotal(res?.total || 0);
+    } catch (e) {
+      setActivitiesErr(e.message || "Aktiviteler y\u00fcklenemedi.");
+      setActivities([]);
+    } finally {
+      setActivitiesLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    if (activeTab === "activities") {
+      loadActivities();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, customerId]);
+
+  async function handleCreateActivity(e) {
+    e.preventDefault();
+    if (!newBody.trim()) return;
+    setCreating(true);
+    setActivitiesErr("");
+    try {
+      await createActivity({
+        type: "note",
+        body: newBody.trim(),
+        related_type: "customer",
+        related_id: customerId,
+      });
+      setNewBody("");
+      await loadActivities();
+    } catch (e) {
+      setActivitiesErr(e.message || "Aktivite eklenemedi.");
+    } finally {
+      setCreating(false);
+    }
+  }
+
   return (
     <div style={{ padding: 16 }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>

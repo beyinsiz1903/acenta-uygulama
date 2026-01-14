@@ -405,7 +405,7 @@ class TestRunner:
                     
                     # Check customer detail after linking
                     detail_after_response = await self.client.get(
-                        f"{API_BASE}/crm/customers/{customer_id}",
+                        f"{crm_api_base}/crm/customers/{customer_id}",
                         headers=self.get_headers()
                     )
                     

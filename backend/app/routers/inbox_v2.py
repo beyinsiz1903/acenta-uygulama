@@ -107,7 +107,7 @@ async def http_list_messages(
     return {"items": items, "total": total, "page": page, "page_size": min(max(page_size, 1), 200)}
 
 
-@router.post("/threads/{thread_id}/messages", response_model=CreateMessageRequest.__fields__["body"].outer_type_)
+@router.post("/threads/{thread_id}/messages")
 async def http_create_message(
     thread_id: str,
     body: CreateMessageRequest,

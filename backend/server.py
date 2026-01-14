@@ -84,6 +84,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Exception handlers
+@app.exception_handler(AppError)
+async def app_error_handler(request, exc: AppError):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content=exc.to_dict()
+    )
+
 # Include routers
 app.include_router(auth_router, prefix=API_PREFIX)
 app.include_router(admin_router, prefix=API_PREFIX)

@@ -545,13 +545,13 @@ export default function CrmEventsPage() {
             padding: "10px 12px",
             borderRadius: 10,
             border: "1px solid #111827",
-            background: "#111827",
+            background: loading ? "#4b5563" : "#111827",
             color: "#ffffff",
-            cursor: "pointer",
+            cursor: loading ? "not-allowed" : "pointer",
             fontSize: 13,
           }}
         >
-          Filtrele
+          {loading ? "Y\u00fckleniyor..." : "Filtrele"}
         </button>
       </form>
 

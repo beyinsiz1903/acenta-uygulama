@@ -122,13 +122,20 @@ class TestInboxGuardrails:
         assert response.status_code == 422, f"Invalid status should return 422, got {response.status_code}: {response.text}"
         
         error_data = response.json()
-        # Check if error is nested under "error" key
-        if "error" in error_data:
-            error_info = error_data["error"]
+        # For invalid enum values, FastAPI returns Pydantic validation errors
+        # Check if it's a Pydantic validation error for the status field
+        if "detail" in error_data and isinstance(error_data["detail"], list):
+            # This is a Pydantic validation error
+            detail = error_data["detail"][0]
+            assert detail.get("loc") == ["query", "status"], f"Expected validation error for status field, got: {error_data}"
+            assert detail.get("type") == "enum", f"Expected enum validation error, got: {error_data}"
         else:
-            error_info = error_data
-            
-        assert error_info.get("code") == "INVALID_STATUS", f"Expected INVALID_STATUS error code, got: {error_data}"
+            # Check if error is nested under "error" key (custom AppError)
+            if "error" in error_data:
+                error_info = error_data["error"]
+            else:
+                error_info = error_data
+            assert error_info.get("code") == "INVALID_STATUS", f"Expected INVALID_STATUS error code, got: {error_data}"
         
         # Test non-existent thread
         fake_thread_id = "507f1f77bcf86cd799439011"  # Valid ObjectId format but non-existent

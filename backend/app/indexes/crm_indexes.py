@@ -92,3 +92,21 @@ async def ensure_crm_indexes(db):
         ],
         name="crm_activities_by_org_related_created",
     )
+
+    # crm_events collection for audit logging
+    await _safe_create(
+        db.crm_events,
+        [("organization_id", ASCENDING), ("created_at", DESCENDING)],
+        name="crm_events_by_org_created",
+    )
+
+    await _safe_create(
+        db.crm_events,
+        [
+            ("organization_id", ASCENDING),
+            ("entity_type", ASCENDING),
+            ("entity_id", ASCENDING),
+            ("created_at", DESCENDING),
+        ],
+        name="crm_events_by_org_entity_created",
+    )

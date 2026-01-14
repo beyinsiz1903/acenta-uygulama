@@ -70,8 +70,19 @@ async def http_create_customer(
 
     customer = await create_customer(db, org_id, user_id, body.model_dump())
 
-    # CRM events will be wired in a later PR (F3.CRM.Events)
-    # emit_crm_event(...)
+    # Fire-and-forget CRM event (customer created)
+    from app.services.crm_events import log_crm_event
+
+    await log_crm_event(
+        db,
+        org_id,
+        entity_type="customer",
+        entity_id=customer["id"],
+        action="created",
+        payload={"fields": list(body.model_fields_set)},
+        actor={"id": user_id, "roles": current_user.get("roles") or []},
+        source="api",
+    )
 
     return customer
 
@@ -116,7 +127,19 @@ async def http_patch_customer(
     if not updated:
         raise HTTPException(status_code=404, detail="Customer not found")
 
-    # CRM events will be wired in a later PR (F3.CRM.Events)
+    # Fire-and-forget CRM event (customer updated)
+    from app.services.crm_events import log_crm_event
+
+    await log_crm_event(
+        db,
+        org_id,
+        entity_type="customer",
+        entity_id=customer_id,
+        action="updated",
+        payload={"changed_fields": list(patch_dict.keys())},
+        actor={"id": current_user.get("id"), "roles": current_user.get("roles") or []},
+        source="api",
+    )
 
 
 @router.post("/merge", response_model=CustomerMergeResultOut)

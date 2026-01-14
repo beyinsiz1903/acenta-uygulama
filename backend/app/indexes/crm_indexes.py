@@ -33,10 +33,18 @@ async def ensure_crm_indexes(db):
         name="crm_customers_by_org_tags",
     )
 
+    # Unique-ish index for contact values per org and type (email/phone).
+    # This, combined with normalization, helps prevent duplicate customers.
     await _safe_create(
         db.customers,
-        [("organization_id", ASCENDING), ("contacts.value", ASCENDING)],
-        name="crm_customers_by_org_contact",
+        [
+            ("organization_id", ASCENDING),
+            ("contacts.type", ASCENDING),
+            ("contacts.value", ASCENDING),
+        ],
+        name="crm_customers_by_org_contact_unique",
+        unique=True,
+        partialFilterExpression={"contacts": {"$exists": True, "$ne": []}},
     )
 
     # future CRM collections (deals, tasks, activities) - prepared for next PRs

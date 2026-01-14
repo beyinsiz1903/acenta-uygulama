@@ -22,6 +22,7 @@ from app.routers.b2b_quotes import router as b2b_quotes_router
 from app.routers.bookings import router as bookings_router
 from app.routers.booking_outcomes import router as booking_outcomes_router
 from app.routers.inbox import router as inbox_router
+from app.routers.inbox_v2 import router as inbox_v2_router
 from app.routers.matches import router as matches_router
 from app.routers.ops_b2b import router as ops_b2b_router
 from app.routers.ops_booking_events import router as ops_booking_events_router

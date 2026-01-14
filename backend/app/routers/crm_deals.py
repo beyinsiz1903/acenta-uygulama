@@ -57,6 +57,20 @@ async def http_create_deal(
 
     deal = await create_deal(db, org_id, user_id, body.model_dump())
 
+    # Fire-and-forget CRM event (deal created)
+    from app.services.crm_events import log_crm_event
+
+    await log_crm_event(
+        db,
+        org_id,
+        entity_type="deal",
+        entity_id=deal["id"],
+        action="created",
+        payload={"fields": list(body.model_fields_set)},
+        actor={"id": user_id, "roles": current_user.get("roles") or []},
+        source="api",
+    )
+
     return deal
 
 
@@ -76,6 +90,20 @@ async def http_patch_deal(
     updated = await patch_deal(db, org_id, deal_id, patch_dict)
     if not updated:
         raise HTTPException(status_code=404, detail="Deal not found")
+
+    # Fire-and-forget CRM event (deal updated)
+    from app.services.crm_events import log_crm_event
+
+    await log_crm_event(
+        db,
+        org_id,
+        entity_type="deal",
+        entity_id=deal_id,
+        action="updated",
+        payload={"changed_fields": list(patch_dict.keys())},
+        actor={"id": current_user.get("id"), "roles": current_user.get("roles") or []},
+        source="api",
+    )
 
     return updated
 

@@ -299,6 +299,68 @@ async def get_customer_detail(
     if sample_booking and not sample_booking.get("created_at") and sample_booking.get("updated_at"):
         booking_sort_field = "updated_at"
 
+
+async def find_duplicate_customers(db: Database, organization_id: str) -> List[Dict[str, Any]]:
+    """Find duplicate customers for an organization based on contacts (email/phone).
+
+    Dry-run only: does NOT modify any data. Intended for admin tooling & reporting.
+    """
+    pipeline = [
+        {"$match": {"organization_id": organization_id, "contacts": {"$exists": True, "$ne": []}}},
+        {"$unwind": "$contacts"},
+        {"$match": {"contacts.type": {"$in": ["email", "phone"]}, "contacts.value": {"$ne": None}}},
+        {
+            "$group": {
+                "_id": {
+                    "type": "$contacts.type",
+                    "value": "$contacts.value",
+                },
+                "customers": {
+                    "$push": {
+                        "id": "$id",
+                        "name": "$name",
+                        "created_at": "$created_at",
+                        "updated_at": "$updated_at",
+                    }
+                },
+            }
+        },
+        {"$match": {"customers.1": {"$exists": True}}},  # only groups with at least 2 customers
+    ]
+
+    cursor = db.customers.aggregate(pipeline)
+    raw_groups = await cursor.to_list(length=1000)
+
+    clusters: List[Dict[str, Any]] = []
+    for grp in raw_groups:
+        contact_type = grp["_id"]["type"]
+        contact_value = grp["_id"]["value"]
+        customers = grp["customers"] or []
+
+        # deterministically sort: updated_at desc, created_at desc, id asc
+        def _sort_key(c: Dict[str, Any]):
+            return (
+                c.get("updated_at") or datetime.min,
+                c.get("created_at") or datetime.min,
+                c.get("id") or "",
+            )
+
+        customers_sorted = sorted(customers, key=_sort_key, reverse=True)
+        primary = customers_sorted[0]
+        duplicates = customers_sorted[1:]
+
+        clusters.append(
+            {
+                "organization_id": organization_id,
+                "contact": {"type": contact_type, "value": contact_value},
+                "primary": primary,
+                "duplicates": duplicates,
+            }
+        )
+
+    return clusters
+
+
     cursor = (
         db.bookings.find(
             {"organization_id": organization_id, "customer_id": customer_id},

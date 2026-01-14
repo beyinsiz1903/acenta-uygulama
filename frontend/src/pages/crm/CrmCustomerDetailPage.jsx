@@ -114,6 +114,13 @@ export default function CrmCustomerDetailPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [customerId]);
 
+  useEffect(() => {
+    if (activeTab === "activities") {
+      loadActivities();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, customerId]);
+
   async function saveTags() {
     setTagsErr("");
     setSavingTags(true);

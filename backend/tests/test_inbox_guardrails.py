@@ -299,8 +299,7 @@ class TestInboxGuardrails:
         
         # Set thread status to "done"
         response = await self.client.patch(
-            f"/api/inbox/threads/{self.test_thread_id}/status",
-            json={"status": "done"}
+            f"/api/inbox/threads/{self.test_thread_id}/status?status=done"
         )
         
         assert response.status_code == 200, f"Failed to set status to done: {response.text}"

@@ -84,6 +84,7 @@ function InboxPage() {
             // Only show once
             toast.error("Thread bulunamadı veya erişim yok.");
             setThreadErrorShown(true);
+            setThreadNotFound(true);
             setSelectedThreadId(items[0].id);
           }
         } else if (!initialThreadId && !selectedThreadId) {

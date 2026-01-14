@@ -358,7 +358,6 @@ function InboxPage() {
               <form onSubmit={handleSendMessage} className="border-t p-3 flex items-center gap-2">
                 <textarea
                   className="flex-1 resize-none text-sm border rounded-lg px-2 py-1 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
-
                   rows={2}
                   placeholder="Mesaj yazın..."
                   value={newMessage}

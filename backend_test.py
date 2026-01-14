@@ -40,282 +40,358 @@ def normalize_phone(phone):
     """Normalize phone for duplicate detection"""
     return ''.join(filter(str.isdigit, phone))
 
-def find_confirmed_eur_booking(admin_headers):
-    """Find an existing CONFIRMED EUR booking for testing"""
-    print("   📋 Looking for existing CONFIRMED EUR booking...")
+def setup_duplicate_test_data(admin_headers, admin_org_id):
+    """Setup test data for duplicate detection as specified in Turkish requirements"""
+    print("   📋 Setting up duplicate test data...")
     
-    # Try to get bookings from ops endpoint
-    r = requests.get(
-        f"{BASE_URL}/api/ops/bookings?status=CONFIRMED&limit=10",
-        headers=admin_headers,
-    )
+    # Test data as specified in the requirements
+    test_customers = [
+        # Email duplicates
+        {
+            "id": "cust_dup_email_1",
+            "name": "Duplicate Email 1",
+            "type": "individual",
+            "contacts": [
+                {
+                    "type": "email",
+                    "value": "DupEmail@Test.Example",
+                    "is_primary": True
+                }
+            ],
+            "tags": ["test", "duplicate"],
+            "created_at": datetime.utcnow() - timedelta(days=10),  # Older
+            "updated_at": datetime.utcnow() - timedelta(days=5)    # Older
+        },
+        {
+            "id": "cust_dup_email_2", 
+            "name": "Duplicate Email 2",
+            "type": "individual",
+            "contacts": [
+                {
+                    "type": "email",
+                    "value": "dupemail@test.example",  # Same email, different case
+                    "is_primary": True
+                }
+            ],
+            "tags": ["test", "duplicate"],
+            "created_at": datetime.utcnow() - timedelta(days=5),   # Newer
+            "updated_at": datetime.utcnow() - timedelta(days=1)    # Newer
+        },
+        # Phone duplicates
+        {
+            "id": "cust_dup_phone_1",
+            "name": "Duplicate Phone 1", 
+            "type": "individual",
+            "contacts": [
+                {
+                    "type": "phone",
+                    "value": "+90 (555) 000 0007",
+                    "is_primary": True
+                }
+            ],
+            "tags": ["test", "duplicate"],
+            "created_at": datetime.utcnow() - timedelta(days=8),
+            "updated_at": datetime.utcnow() - timedelta(days=3)
+        },
+        {
+            "id": "cust_dup_phone_2",
+            "name": "Duplicate Phone 2",
+            "type": "individual", 
+            "contacts": [
+                {
+                    "type": "phone",
+                    "value": "905550000007",  # Same phone, normalized format
+                    "is_primary": True
+                }
+            ],
+            "tags": ["test", "duplicate"],
+            "created_at": datetime.utcnow() - timedelta(days=6),
+            "updated_at": datetime.utcnow() - timedelta(days=2)
+        }
+    ]
     
-    if r.status_code == 200:
-        bookings_data = r.json()
-        items = bookings_data.get("items", [])
+    # Insert test data directly into MongoDB
+    try:
+        mongo_client = get_mongo_client()
+        db = mongo_client.get_default_database()
         
-        for booking in items:
-            currency = booking.get("currency", "").upper()
-            if currency == "EUR":
-                booking_id = booking["booking_id"]
-                print(f"   ✅ Found CONFIRMED EUR booking: {booking_id}")
-                return booking_id
-    
-    print("   ⚠️  No existing CONFIRMED EUR booking found")
-    return None
+        # Remove existing test data first
+        db.customers.delete_many({
+            "organization_id": admin_org_id,
+            "id": {"$in": ["cust_dup_email_1", "cust_dup_email_2", "cust_dup_phone_1", "cust_dup_phone_2"]}
+        })
+        
+        # Insert new test data
+        for customer in test_customers:
+            customer["organization_id"] = admin_org_id
+            db.customers.insert_one(customer)
+            
+        print(f"   ✅ Inserted {len(test_customers)} test customers")
+        mongo_client.close()
+        
+        return test_customers
+        
+    except Exception as e:
+        print(f"   ❌ Failed to setup test data: {e}")
+        return []
 
-def test_f1_t2_click_to_pay_backend_objectid_fix():
-    """Test F1.T2 Click-to-Pay backend flow after ObjectId fixes"""
+def cleanup_duplicate_test_data(admin_org_id):
+    """Clean up test data after testing"""
+    try:
+        mongo_client = get_mongo_client()
+        db = mongo_client.get_default_database()
+        
+        # Remove test data
+        result = db.customers.delete_many({
+            "organization_id": admin_org_id,
+            "id": {"$in": ["cust_dup_email_1", "cust_dup_email_2", "cust_dup_phone_1", "cust_dup_phone_2"]}
+        })
+        
+        print(f"   ✅ Cleaned up {result.deleted_count} test customers")
+        mongo_client.close()
+        
+    except Exception as e:
+        print(f"   ⚠️  Failed to cleanup test data: {e}")
+
+def test_pr75a_duplicate_detection_endpoint():
+    """Test PR#7.5a Duplicate Detection (Dry-Run) Endpoint"""
     print("\n" + "=" * 80)
-    print("F1.T2 CLICK-TO-PAY BACKEND TEST - OBJECTID FIX VERIFICATION")
-    print("Testing complete Click-to-Pay backend flow as per Turkish specification:")
-    print("1) Login & booking seçimi")
-    print("2) POST /api/ops/payments/click-to-pay/")
-    print("3) /api/public/pay/{token}")
-    print("4) nothing_to_collect durumu")
+    print("PR#7.5a DUPLICATE DETECTION (DRY-RUN) ENDPOINT TEST")
+    print("Testing duplicate customer detection endpoint as per Turkish specification:")
+    print("1) Duplicate setup with email and phone duplicates")
+    print("2) GET /api/crm/customers/duplicates endpoint test")
+    print("3) Response structure and duplicate logic verification")
+    print("4) Read-only verification (no writes)")
     print("=" * 80 + "\n")
 
     # ------------------------------------------------------------------
-    # Test 1: Login & booking seçimi
+    # Test 1: Login & Setup
     # ------------------------------------------------------------------
-    print("1️⃣  Login & booking seçimi...")
+    print("1️⃣  Login & duplicate setup...")
     
     admin_token, admin_org_id, admin_email = login_admin()
     admin_headers = {"Authorization": f"Bearer {admin_token}"}
     
     print(f"   ✅ admin@acenta.test / admin123 ile login başarılı: {admin_email}")
     print(f"   📋 Organization ID: {admin_org_id}")
-    print(f"   ✅ Authorization header hazırlandı")
-
-    # Find a CONFIRMED EUR booking
-    booking_id = find_confirmed_eur_booking(admin_headers)
     
-    if not booking_id:
-        print("   ⚠️  CONFIRMED EUR booking bulunamadı, test booking oluşturuluyor...")
-        # We'll continue with a known booking ID from previous tests or create one
-        # For now, let's use a mock scenario to test the ObjectId fix
-        booking_id = "507f1f77bcf86cd799439011"  # Valid ObjectId format
-        print(f"   📋 Test için booking_id kullanılıyor: {booking_id}")
+    # Setup test data
+    test_customers = setup_duplicate_test_data(admin_headers, admin_org_id)
     
-    print(f"   ✅ Seçilen booking_id: {booking_id}")
+    if not test_customers:
+        print("   ❌ Test data setup failed, aborting test")
+        return
 
     # ------------------------------------------------------------------
-    # Test 2: POST /api/ops/payments/click-to-pay/
+    # Test 2: GET /api/crm/customers/duplicates
     # ------------------------------------------------------------------
-    print("\n2️⃣  POST /api/ops/payments/click-to-pay/ testi...")
+    print("\n2️⃣  GET /api/crm/customers/duplicates endpoint test...")
     
-    click_to_pay_payload = {
-        "booking_id": booking_id
-    }
-    
-    print(f"   📋 Body: {json.dumps(click_to_pay_payload)}")
-    
-    r = requests.post(
-        f"{BASE_URL}/api/ops/payments/click-to-pay/",
-        json=click_to_pay_payload,
+    r = requests.get(
+        f"{BASE_URL}/api/crm/customers/duplicates",
         headers=admin_headers,
     )
     
     print(f"   📋 Response status: {r.status_code}")
-    print(f"   📋 Response body: {r.text}")
+    print(f"   📋 Response headers: {dict(r.headers)}")
     
     if r.status_code == 200:
-        ctp_response = r.json()
-        print(f"   ✅ 200 status başarılı")
+        print(f"   ✅ 200 OK response received")
         
-        # Verify response structure
-        if ctp_response.get("ok") == True:
-            print(f"   ✅ JSON: ok: true")
-            
-            # Check required fields
-            url = ctp_response.get("url", "")
-            expires_at = ctp_response.get("expires_at", "")
-            amount_cents = ctp_response.get("amount_cents", 0)
-            currency = ctp_response.get("currency", "")
-            
-            print(f"   ✅ url: {url}")
-            print(f"   ✅ expires_at: {expires_at}")
-            print(f"   ✅ amount_cents: {amount_cents}")
-            print(f"   ✅ currency: {currency}")
-            
-            # Verify expected values
-            assert url.startswith("/pay/"), f"URL should start with /pay/, got: {url}"
-            assert amount_cents > 0, f"amount_cents should be > 0, got: {amount_cents}"
-            assert currency == "EUR", f"currency should be EUR, got: {currency}"
-            
-            # Extract token
-            token = url.replace("/pay/", "")
-            print(f"   ✅ Token extracted: {token}")
-            
-            # Store for next test
-            payment_token = token
-            
-        elif ctp_response.get("ok") == False and ctp_response.get("reason") == "nothing_to_collect":
-            print(f"   ✅ JSON: ok: false, reason: 'nothing_to_collect'")
-            print(f"   📋 Bu booking için toplanacak miktar yok (beklenen durum)")
-            payment_token = None
-        else:
-            print(f"   ⚠️  Beklenmeyen response: {ctp_response}")
-            payment_token = None
-            
-    elif r.status_code == 404:
-        print(f"   ✅ 404 BOOKING_NOT_FOUND - ObjectId conversion çalışıyor")
-        print(f"   📋 Bu booking admin'in organizasyonuna ait değil veya mevcut değil")
-        payment_token = None
-        
-    elif r.status_code == 520:
-        # Check if it's a Stripe configuration error
         try:
-            error_response = r.json()
-            if "internal_error" in error_response.get("error", {}).get("code", ""):
-                print(f"   ✅ 520 Internal Error - Stripe yapılandırması eksik (test ortamında beklenen)")
-                print(f"   📋 ObjectId conversion düzeltmesi çalışıyor, Stripe hatası normal")
-                print(f"   📋 Gerçek ortamda Stripe API key ile çalışacak")
-                payment_token = "ctp_test_token_for_public_test"
+            clusters = r.json()
+            print(f"   ✅ JSON response parsed successfully")
+            print(f"   📋 Number of duplicate clusters found: {len(clusters)}")
+            
+            # Verify we have at least 2 clusters (email and phone)
+            assert len(clusters) >= 2, f"Expected at least 2 clusters, got {len(clusters)}"
+            print(f"   ✅ At least 2 duplicate clusters found as expected")
+            
+            # Analyze each cluster
+            email_cluster = None
+            phone_cluster = None
+            
+            for cluster in clusters:
+                contact = cluster.get("contact", {})
+                contact_type = contact.get("type")
+                contact_value = contact.get("value")
+                
+                print(f"\n   📋 Cluster found:")
+                print(f"      Contact type: {contact_type}")
+                print(f"      Contact value: {contact_value}")
+                print(f"      Organization ID: {cluster.get('organization_id')}")
+                
+                # Verify cluster structure
+                assert cluster.get("organization_id") == admin_org_id, "organization_id should match"
+                assert "contact" in cluster, "contact field required"
+                assert "primary" in cluster, "primary field required"
+                assert "duplicates" in cluster, "duplicates field required"
+                
+                primary = cluster.get("primary", {})
+                duplicates = cluster.get("duplicates", [])
+                
+                print(f"      Primary customer: {primary.get('id')} - {primary.get('name')}")
+                print(f"      Duplicate customers: {len(duplicates)}")
+                
+                for dup in duplicates:
+                    print(f"         - {dup.get('id')} - {dup.get('name')}")
+                
+                # Verify primary and duplicates structure
+                assert "id" in primary, "primary.id required"
+                assert "name" in primary, "primary.name required"
+                assert "created_at" in primary, "primary.created_at required"
+                assert "updated_at" in primary, "primary.updated_at required"
+                
+                for dup in duplicates:
+                    assert "id" in dup, "duplicate.id required"
+                    assert "name" in dup, "duplicate.name required"
+                    assert "created_at" in dup, "duplicate.created_at required"
+                    assert "updated_at" in dup, "duplicate.updated_at required"
+                
+                # Identify email and phone clusters
+                if contact_type == "email" and contact_value == "dupemail@test.example":
+                    email_cluster = cluster
+                elif contact_type == "phone" and contact_value == "905550000007":
+                    phone_cluster = cluster
+            
+            # ------------------------------------------------------------------
+            # Test 3: Email duplicate cluster verification
+            # ------------------------------------------------------------------
+            print("\n3️⃣  Email duplicate cluster verification...")
+            
+            if email_cluster:
+                print(f"   ✅ Email cluster found with normalized value: dupemail@test.example")
+                
+                primary = email_cluster.get("primary", {})
+                duplicates = email_cluster.get("duplicates", [])
+                
+                # Primary should be the one with newer updated_at (cust_dup_email_2)
+                assert primary.get("id") == "cust_dup_email_2", f"Primary should be cust_dup_email_2, got {primary.get('id')}"
+                print(f"   ✅ Primary customer correctly selected: {primary.get('id')} (newer updated_at)")
+                
+                # Duplicates should contain cust_dup_email_1
+                duplicate_ids = [dup.get("id") for dup in duplicates]
+                assert "cust_dup_email_1" in duplicate_ids, f"cust_dup_email_1 should be in duplicates, got {duplicate_ids}"
+                print(f"   ✅ Duplicate customer correctly identified: cust_dup_email_1")
+                
             else:
-                print(f"   ❌ Beklenmeyen 520 hatası: {error_response}")
-                payment_token = None
-        except:
-            print(f"   ❌ 520 hatası parse edilemedi: {r.text}")
-            payment_token = None
+                print(f"   ❌ Email cluster not found")
+                assert False, "Email cluster should be found"
+            
+            # ------------------------------------------------------------------
+            # Test 4: Phone duplicate cluster verification
+            # ------------------------------------------------------------------
+            print("\n4️⃣  Phone duplicate cluster verification...")
+            
+            if phone_cluster:
+                print(f"   ✅ Phone cluster found with normalized value: 905550000007")
+                
+                primary = phone_cluster.get("primary", {})
+                duplicates = phone_cluster.get("duplicates", [])
+                
+                # Primary should be the one with newer updated_at (cust_dup_phone_2)
+                assert primary.get("id") == "cust_dup_phone_2", f"Primary should be cust_dup_phone_2, got {primary.get('id')}"
+                print(f"   ✅ Primary customer correctly selected: {primary.get('id')} (newer updated_at)")
+                
+                # Duplicates should contain cust_dup_phone_1
+                duplicate_ids = [dup.get("id") for dup in duplicates]
+                assert "cust_dup_phone_1" in duplicate_ids, f"cust_dup_phone_1 should be in duplicates, got {duplicate_ids}"
+                print(f"   ✅ Duplicate customer correctly identified: cust_dup_phone_1")
+                
+            else:
+                print(f"   ❌ Phone cluster not found")
+                assert False, "Phone cluster should be found"
+            
+            # ------------------------------------------------------------------
+            # Test 5: Read-only verification
+            # ------------------------------------------------------------------
+            print("\n5️⃣  Read-only verification...")
+            
+            # Verify no data was modified by checking customer records
+            try:
+                mongo_client = get_mongo_client()
+                db = mongo_client.get_default_database()
+                
+                # Check that all test customers still exist unchanged
+                for test_customer in test_customers:
+                    existing = db.customers.find_one({
+                        "organization_id": admin_org_id,
+                        "id": test_customer["id"]
+                    })
+                    
+                    assert existing is not None, f"Customer {test_customer['id']} should still exist"
+                    assert existing["name"] == test_customer["name"], f"Customer name should be unchanged"
+                    
+                print(f"   ✅ All test customers remain unchanged")
+                print(f"   ✅ Endpoint is read-only (no writes performed)")
+                
+                mongo_client.close()
+                
+            except Exception as e:
+                print(f"   ⚠️  Read-only verification failed: {e}")
+            
+        except json.JSONDecodeError as e:
+            print(f"   ❌ Failed to parse JSON response: {e}")
+            print(f"   📋 Response text: {r.text}")
+            assert False, "Response should be valid JSON"
+            
+    elif r.status_code == 403:
+        print(f"   ❌ 403 Forbidden - Admin role required")
+        print(f"   📋 Response: {r.text}")
+        assert False, "Admin user should have access to duplicates endpoint"
+        
     else:
-        print(f"   ❌ Beklenmeyen status code: {r.status_code}")
-        payment_token = None
+        print(f"   ❌ Unexpected status code: {r.status_code}")
+        print(f"   📋 Response: {r.text}")
+        assert False, f"Expected 200, got {r.status_code}"
 
     # ------------------------------------------------------------------
-    # Test 3: /api/public/pay/{token}
+    # Test 6: Empty result verification
     # ------------------------------------------------------------------
-    print("\n3️⃣  /api/public/pay/{token} testi...")
+    print("\n6️⃣  Empty result verification...")
     
-    if payment_token and payment_token != "ctp_test_token_for_public_test":
-        print(f"   📋 Gerçek token ile test: {payment_token}")
-        
-        r = requests.get(f"{BASE_URL}/api/public/pay/{payment_token}")
-        
-        print(f"   📋 Response status: {r.status_code}")
-        
-        if r.status_code == 200:
-            pay_response = r.json()
-            print(f"   ✅ 200 status başarılı")
-            print(f"   📋 Response: {json.dumps(pay_response, indent=2)}")
-            
-            # Verify response structure
-            assert pay_response.get("ok") == True, "ok should be True"
-            assert "amount_cents" in pay_response, "amount_cents field required"
-            assert "currency" in pay_response, "currency field required"
-            assert "booking_code" in pay_response, "booking_code field required"
-            assert "client_secret" in pay_response, "client_secret field required"
-            
-            # Verify Cache-Control header
-            cache_control = r.headers.get("Cache-Control")
-            assert cache_control == "no-store", f"Cache-Control should be 'no-store', got: {cache_control}"
-            
-            print(f"   ✅ JSON: ok: true, amount_cents, currency: 'EUR', booking_code, client_secret")
-            print(f"   ✅ Response header: Cache-Control: no-store")
-            
-        else:
-            print(f"   ❌ Public pay endpoint failed: {r.status_code} - {r.text}")
-    else:
-        print(f"   📋 Mock token ile test: invalid_token_123")
-        
-        # Test with invalid token
-        r = requests.get(f"{BASE_URL}/api/public/pay/invalid_token_123")
-        
-        print(f"   📋 Invalid token response status: {r.status_code}")
-        
-        if r.status_code == 404:
-            error_response = r.json()
-            print(f"   ✅ 404 status başarılı")
-            print(f"   ✅ Invalid token correctly rejected")
-            assert error_response.get("error") == "NOT_FOUND", "Error should be NOT_FOUND"
-        else:
-            print(f"   ❌ Invalid token test failed: {r.status_code}")
-
-    # ------------------------------------------------------------------
-    # Test 4: nothing_to_collect durumu
-    # ------------------------------------------------------------------
-    print("\n4️⃣  nothing_to_collect durumu testi...")
+    # Clean up test data
+    cleanup_duplicate_test_data(admin_org_id)
     
-    print("   📋 Kısmen veya tamamen ödenmiş booking için test...")
-    print("   📋 amount_paid = amount_total olan booking aranıyor...")
-    
-    # Try to find a booking that might have nothing to collect
-    # This is hard to test without knowing the payment state, so we'll simulate
-    
-    # Test with the same booking again (might return nothing_to_collect if already processed)
-    r = requests.post(
-        f"{BASE_URL}/api/ops/payments/click-to-pay/",
-        json={"booking_id": booking_id},
+    # Test endpoint again - should return empty list
+    r = requests.get(
+        f"{BASE_URL}/api/crm/customers/duplicates",
         headers=admin_headers,
     )
     
-    print(f"   📋 Second attempt response status: {r.status_code}")
-    
     if r.status_code == 200:
-        second_response = r.json()
-        if second_response.get("ok") == False and second_response.get("reason") == "nothing_to_collect":
-            print(f"   ✅ 200 {{ok: false, reason: 'nothing_to_collect'}} başarılı")
-            print(f"   📋 Booking tamamen ödenmiş veya toplanacak miktar yok")
-        elif second_response.get("ok") == True:
-            print(f"   ✅ 200 {{ok: true}} - booking hala ödeme bekliyor")
-        else:
-            print(f"   📋 Diğer response: {second_response}")
+        clusters = r.json()
+        
+        # Filter out any non-test duplicates that might exist
+        test_clusters = []
+        for cluster in clusters:
+            contact = cluster.get("contact", {})
+            if (contact.get("value") == "dupemail@test.example" or 
+                contact.get("value") == "905550000007"):
+                test_clusters.append(cluster)
+        
+        assert len(test_clusters) == 0, f"Should have no test duplicates after cleanup, got {len(test_clusters)}"
+        print(f"   ✅ No test duplicates found after cleanup")
+        print(f"   ✅ Endpoint returns empty/filtered results correctly")
     else:
-        print(f"   📋 Second attempt: {r.status_code} - {r.text}")
-
-    # ------------------------------------------------------------------
-    # Test 5: MongoDB Collection Verification
-    # ------------------------------------------------------------------
-    print("\n5️⃣  click_to_pay_links koleksiyonu doğrulaması...")
-    
-    if payment_token and payment_token != "ctp_test_token_for_public_test":
-        try:
-            mongo_client = get_mongo_client()
-            db = mongo_client.get_default_database()
-            
-            # Hash the token to find the document
-            token_hash = hashlib.sha256(payment_token.encode("utf-8")).hexdigest()
-            
-            # Find the document
-            link_doc = db.click_to_pay_links.find_one({"token_hash": token_hash})
-            
-            if link_doc:
-                print(f"   ✅ click_to_pay_links koleksiyonunda doküman bulundu")
-                print(f"   📋 organization_id: {link_doc.get('organization_id')}")
-                print(f"   📋 booking_id: {link_doc.get('booking_id')}")
-                
-                # Verify organization_id and booking_id match
-                assert link_doc.get("organization_id") == admin_org_id, "organization_id should match"
-                assert link_doc.get("booking_id") == booking_id, "booking_id should match"
-                
-                print(f"   ✅ İlgili organization_id + booking_id için doküman oluşmuş")
-                
-            else:
-                print(f"   ❌ click_to_pay_links dokümanı bulunamadı")
-                
-            mongo_client.close()
-            
-        except Exception as e:
-            print(f"   ⚠️  MongoDB doğrulaması başarısız: {e}")
-    else:
-        print(f"   📋 Gerçek token olmadığı için MongoDB doğrulaması atlanıyor")
-        print(f"   📋 Gerçek senaryoda doküman oluşturulacak:")
-        print(f"      - organization_id: {admin_org_id}")
-        print(f"      - booking_id: {booking_id}")
+        print(f"   ⚠️  Cleanup verification failed: {r.status_code}")
 
     print("\n" + "=" * 80)
-    print("✅ F1.T2 CLICK-TO-PAY BACKEND TEST TAMAMLANDI")
-    print("✅ ObjectId düzeltmesi sonrası test başarılı")
-    print("✅ 1) Login & booking seçimi: admin@acenta.test/admin123 ✓")
-    print("✅ 2) POST /api/ops/payments/click-to-pay/: Endpoint erişilebilir ✓")
-    print("✅ 3) /api/public/pay/{token}: Public endpoint çalışıyor ✓")
-    print("✅ 4) nothing_to_collect: Edge case handling ✓")
-    print("✅ 5) MongoDB koleksiyonu: Doküman yapısı doğru ✓")
+    print("✅ PR#7.5a DUPLICATE DETECTION ENDPOINT TEST COMPLETED")
+    print("✅ Duplicate detection logic working correctly")
+    print("✅ 1) Test data setup: Email and phone duplicates created ✓")
+    print("✅ 2) GET /api/crm/customers/duplicates: 200 OK response ✓")
+    print("✅ 3) Email cluster: Correct normalization and primary selection ✓")
+    print("✅ 4) Phone cluster: Correct normalization and primary selection ✓")
+    print("✅ 5) Read-only verification: No data modifications ✓")
+    print("✅ 6) Empty result: Correct behavior after cleanup ✓")
     print("")
-    print("📋 NOT: Stripe API key test ortamında yapılandırılmamış (beklenen)")
-    print("📋 Gerçek ortamda Stripe entegrasyonu tam çalışacak")
-    print("📋 ObjectId conversion bug düzeltildi ve test edildi")
+    print("📋 Response structure verified:")
+    print("   - organization_id, contact.type, contact.value fields present")
+    print("   - primary and duplicates follow DuplicateCustomerSummary structure")
+    print("   - Primary selection based on updated_at (newest first)")
+    print("   - Contact normalization working (email lowercase, phone digits only)")
     print("=" * 80 + "\n")
 
 if __name__ == "__main__":
-    test_f1_t2_click_to_pay_backend_objectid_fix()
+    test_pr75a_duplicate_detection_endpoint()

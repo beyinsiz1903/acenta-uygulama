@@ -130,3 +130,18 @@ class CustomerDetailOut(BaseModel):
     recent_bookings: List[dict] = Field(default_factory=list)
     open_deals: List[dict] = Field(default_factory=list)
     open_tasks: List[dict] = Field(default_factory=list)
+
+
+
+class DuplicateCustomerSummary(BaseModel):
+    id: str
+    name: Optional[str]
+    created_at: Optional[datetime]
+    updated_at: Optional[datetime]
+
+
+class DuplicateCustomerClusterOut(BaseModel):
+    organization_id: str
+    contact: Dict[str, str]  # {"type": "email"|"phone", "value": "..."}
+    primary: DuplicateCustomerSummary
+    duplicates: List[DuplicateCustomerSummary]

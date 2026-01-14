@@ -1,4 +1,4 @@
-// TEST CHANGE - frontend/src/pages/crm/CrmEventsPage.jsx
+// frontend/src/pages/crm/CrmEventsPage.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import { listCrmEvents } from "../../lib/crm";
 import { getUser } from "../../lib/api";

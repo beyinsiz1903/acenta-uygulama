@@ -165,9 +165,10 @@ function InboxPage() {
         <div className="p-3 border-b flex items-center justify-between gap-2">
           <div className="flex gap-1 text-xs">
             {[
-              ["OPEN", "Açık"],
-              ["CLOSED", "Kapalı"],
-              ["ALL", "Hepsi"],
+              ["open", "Açık"],
+              ["pending", "Beklemede"],
+              ["done", "Tamamlandı"],
+              ["", "Hepsi"],
             ].map(([value, label]) => (
               <button
                 key={value}

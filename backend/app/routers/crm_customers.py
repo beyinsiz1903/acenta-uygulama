@@ -73,6 +73,16 @@ async def http_create_customer(
     return customer
 
 
+@router.get("/duplicates", response_model=List[DuplicateCustomerClusterOut])
+async def http_list_duplicate_customers(
+    db=Depends(get_db),
+    current_user: dict = Depends(require_roles(["admin", "super_admin"])),
+):
+    org_id = current_user.get("organization_id")
+    clusters = await find_duplicate_customers(db, org_id)
+    return clusters
+
+
 @router.get("/{customer_id}", response_model=CustomerDetailOut)
 async def http_get_customer_detail(
     customer_id: str,

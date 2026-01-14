@@ -280,36 +280,31 @@ function InboxPage() {
                 </div>
               )}
 
-              {!detailLoading && detailError && (
+              {!loadingMessages && errMessages && (
                 <ErrorState
-                  title="Thread yüklenemedi"
-                  description={detailError}
-                  onRetry={() => loadThreadDetail(selectedThreadId)}
+                  title="Mesajlar yüklenemedi"
+                  description={errMessages}
+                  onRetry={() => loadMessages(selectedThreadId, { reset: true })}
                 />
               )}
 
-              {!detailLoading && !detailError && threadDetail && (
+              {!loadingMessages && !errMessages && messages.length === 0 && (
+                <div className="flex-1 flex items-center justify-center text-xs text-muted-foreground">
+                  Bu thread için henüz mesaj yok.
+                </div>
+              )}
+
+              {!loadingMessages && !errMessages && messages.length > 0 && (
                 <div className="space-y-2 text-sm">
-                  {threadDetail.messages.map((m) => (
+                  {messages.map((m) => (
                     <div
                       key={m.id}
+                      data-testid="inbox-message-row"
                       className={`max-w-[80%] px-3 py-2 rounded-2xl border text-sm whitespace-pre-wrap ${
-                        m.sender_type === "SYSTEM"
-                          ? "bg-muted text-muted-foreground border-muted/60"
-                          : "bg-primary/5 text-foreground border-primary/20 ml-auto"
+                        m.direction === "internal" ? "bg-primary/5 ml-auto" : "bg-muted"
                       }`}
                     >
-                      {m.event_type && (
-                        <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-0.5">
-                          {m.event_type}
-                        </div>
-                      )}
                       <div>{m.body}</div>
-                      {m.sender_email && (
-                        <div className="mt-1 text-[10px] text-muted-foreground">
-                          {m.sender_email}
-                        </div>
-                      )}
                     </div>
                   ))}
                 </div>

@@ -11,6 +11,7 @@ import EmptyState from "../../components/EmptyState";
 import OpsGuestCaseDrawer from "../../components/OpsGuestCaseDrawer";
 import { listOpsGuestCasesForBooking } from "../../lib/opsCases";
 import { createClickToPayLink } from "../../lib/clickToPay";
+import { getCustomer, patchTask } from "../../lib/crm";
 import { toast } from "sonner";
 
 function formatDateTime(iso) {
@@ -34,6 +35,247 @@ function StatusPill({ status }) {
       {tone}
     </span>
   );
+function CrmBookingSnapshot({ booking, bookingId, onCustomerLinked }) {
+  const [detail, setDetail] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [linking, setLinking] = useState(false);
+  const [linkError, setLinkError] = useState("");
+  const [customerIdInput, setCustomerIdInput] = useState("");
+  const [completingId, setCompletingId] = useState("");
+
+  const hasCustomer = Boolean(booking && booking.customer_id);
+  const customerId = booking?.customer_id || "";
+
+  async function loadDetail(id) {
+    if (!id) return;
+    setLoading(true);
+    setError("");
+    try {
+      const res = await getCustomer(id);
+      setDetail(res || null);
+    } catch (e) {
+      setError(e.message || apiErrorMessage(e.raw || e));
+      setDetail(null);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    if (!hasCustomer) {
+      setDetail(null);
+      setError("");
+      return;
+    }
+    loadDetail(customerId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [customerId, hasCustomer]);
+
+  async function handleLink(e) {
+    e.preventDefault();
+    if (!bookingId) return;
+    setLinking(true);
+    setLinkError("");
+    try {
+      const payloadCustomerId = customerIdInput.trim() || null;
+      const res = await api.patch(`/ops/bookings/${bookingId}/customer`, {
+        customer_id: payloadCustomerId,
+      });
+      const nextId = res.data?.customer_id || null;
+      if (onCustomerLinked) {
+        onCustomerLinked(nextId);
+      }
+      if (nextId) {
+        setCustomerIdInput(nextId);
+        await loadDetail(nextId);
+        toast.success("M\u00fc\u015fteri ba\u011fland\u0131.");
+      } else {
+        setDetail(null);
+        toast.success("M\u00fc\u015fteri ba\u011f\u0131 kald\u0131r\u0131ld\u0131.");
+      }
+    } catch (e) {
+      const msg = apiErrorMessage(e);
+      setLinkError(msg);
+      toast.error(msg);
+    } finally {
+      setLinking(false);
+    }
+  }
+
+  async function handleCompleteTask(taskId) {
+    if (!taskId) return;
+    setCompletingId(taskId);
+    try {
+      await patchTask(taskId, { status: "done" });
+      if (customerId) {
+        await loadDetail(customerId);
+      }
+      toast.success("G\u00f6rev tamamland\u0131.");
+    } catch (e) {
+      const msg = e.message || apiErrorMessage(e.raw || e);
+      toast.error(msg);
+    } finally {
+      setCompletingId("");
+    }
+  }
+
+  return (
+    <div className="mt-4 border rounded-xl p-3 bg-muted/30">
+      <div className="flex items-center justify-between gap-2 mb-2">
+        <div>
+          <div className="text-xs font-semibold text-muted-foreground">CRM {"\u00d6zeti"}</div>
+          <div className="text-[11px] text-muted-foreground">
+            {"M\u00fc\u015fteri kart\u0131, a\u00e7\u0131k f\u0131rsatlar ve g\u00f6revleri tek bak\u0131\u015fta g\u00f6r\u00fcn."}
+          </div>
+        </div>
+      </div>
+
+      {!hasCustomer ? (
+        <div className="space-y-2 text-xs">
+          <div className="text-muted-foreground">
+            {"Bu rezervasyona hen\u00fcz bir m\u00fc\u015fteri ba\u011fl\u0131 de\u011fil."}
+          </div>
+          <form onSubmit={handleLink} className="flex flex-col sm:flex-row gap-2 items-start sm:items-center mt-1">
+            <input
+              type="text"
+              value={customerIdInput}
+              onChange={(e) => setCustomerIdInput(e.target.value)}
+              placeholder="cust_..."
+              className="w-full sm:w-48 rounded-md border px-2 py-1 text-xs"
+            />
+            <Button
+              type="submit"
+              size="xs"
+              disabled={linking || !bookingId}
+              className="text-xs"
+            >
+              {linking ? "Ba\u011flan\u0131yor..." : "M\u00fc\u015fteri ba\u011fla"}
+            </Button>
+          </form>
+          {linkError && <div className="text-[11px] text-red-600">{linkError}</div>}
+        </div>
+      ) : (
+        <div className="space-y-3 text-xs">
+          {loading ? (
+            <div className="text-muted-foreground">{"CRM bilgileri y\u00fckleniyor..."}</div>
+          ) : error ? (
+            <div className="text-red-600 text-[11px]">{error}</div>
+          ) : !detail ? (
+            <div className="text-muted-foreground">{"CRM kayd\u0131 bulunamad\u0131."}</div>
+          ) : (
+            <>
+              {/* Customer card */}
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                <div className="space-y-1">
+                  <div className="text-sm font-medium">{detail.customer?.name || "M\u00fc\u015fteri"}</div>
+                  <div className="flex flex-wrap gap-1">
+                    {(detail.customer?.tags || []).slice(0, 5).map((tag) => (
+                      <span
+                        key={tag}
+                        className="inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] text-muted-foreground"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="text-[11px] text-muted-foreground">
+                    {(() => {
+                      const contacts = detail.customer?.contacts || [];
+                      if (!contacts.length) return "Birincil ileti\u015fim bilgisi yok.";
+                      const primary = contacts.find((c) => c.is_primary) || contacts[0];
+                      const typeLabel = primary.type === "email" ? "E-posta" : "Telefon";
+                      return `${typeLabel}: ${primary.value}`;
+                    })()}
+                  </div>
+                </div>
+                <div className="flex flex-col items-end gap-1">
+                  <Button
+                    type="button"
+                    size="xs"
+                    variant="outline"
+                    className="text-[11px]"
+                    onClick={() => {
+                      window.open(`/app/crm/customers/${customerId}`, "_blank");
+                    }}
+                  >
+                    {"CRM'de a\u00e7"}
+                  </Button>
+                </div>
+              </div>
+
+              {/* Open deals & tasks */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="border rounded-lg p-2 bg-background">
+                  <div className="text-[11px] font-semibold mb-1">{"A\u00e7\u0131k F\u0131rsatlar"}</div>
+                  {(detail.open_deals || []).length === 0 ? (
+                    <div className="text-[11px] text-muted-foreground">
+                      {"Bu m\u00fc\u015fteri i\u00e7in a\u00e7\u0131k f\u0131rsat yok."}
+                    </div>
+                  ) : (
+                    <ul className="space-y-1">
+                      {detail.open_deals.slice(0, 3).map((deal) => (
+                        <li key={deal.id || deal.title} className="border rounded-md px-2 py-1">
+                          <div className="text-[11px] font-medium truncate">
+                            {deal.title || deal.id}
+                          </div>
+                          <div className="flex items-center justify-between gap-2 mt-0.5 text-[10px] text-muted-foreground">
+                            <span>{deal.stage || "stage"}</span>
+                            <span>
+                              {deal.amount != null ? `${deal.amount} ${deal.currency || ""}` : ""}
+                            </span>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
+                <div className="border rounded-lg p-2 bg-background">
+                  <div className="text-[11px] font-semibold mb-1">{"A\u00e7\u0131k G\u00f6revler"}</div>
+                  {(detail.open_tasks || []).length === 0 ? (
+                    <div className="text-[11px] text-muted-foreground">
+                      {"Bu m\u00fc\u015fteri i\u00e7in a\u00e7\u0131k g\u00f6rev yok."}
+                    </div>
+                  ) : (
+                    <ul className="space-y-1">
+                      {detail.open_tasks.slice(0, 3).map((task) => (
+                        <li key={task.id || task.title} className="border rounded-md px-2 py-1 flex items-center justify-between gap-2">
+                          <div className="min-w-0">
+                            <div className="text-[11px] font-medium truncate">{task.title}</div>
+                            <div className="text-[10px] text-muted-foreground flex flex-wrap gap-1 mt-0.5">
+                              <span>{task.priority || "normal"}</span>
+                              {task.due_date && (
+                                <span>
+                                  {new Date(task.due_date).toLocaleDateString("tr-TR")}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <Button
+                            type="button"
+                            size="xs"
+                            variant="outline"
+                            className="text-[10px] whitespace-nowrap"
+                            disabled={completingId === task.id}
+                            onClick={() => handleCompleteTask(task.id)}
+                          >
+                            {completingId === task.id ? "Tamamlan\u0131yor..." : "Tamamla"}
+                          </Button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 }
 
 export default function OpsBookingDetailPage() {

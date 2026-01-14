@@ -13,6 +13,8 @@ from app.schemas_crm import (
     CustomerOut,
     CustomerDetailOut,
     DuplicateCustomerClusterOut,
+    CustomerMergeRequest,
+    CustomerMergeResultOut,
 )
 from app.services.crm_customers import (
     create_customer,
@@ -20,6 +22,7 @@ from app.services.crm_customers import (
     get_customer_detail,
     patch_customer,
     find_duplicate_customers,
+    perform_customer_merge,
 )
 
 

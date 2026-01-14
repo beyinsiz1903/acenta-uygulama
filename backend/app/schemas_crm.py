@@ -145,3 +145,26 @@ class DuplicateCustomerClusterOut(BaseModel):
     contact: Dict[str, str]  # {"type": "email"|"phone", "value": "..."}
     primary: DuplicateCustomerSummary
     duplicates: List[DuplicateCustomerSummary]
+
+
+
+class CustomerMergeRequest(BaseModel):
+    primary_id: str
+    duplicate_ids: List[str]
+    dry_run: bool = False
+
+
+class CustomerMergeCounts(BaseModel):
+    bookings: Dict[str, int]
+    deals: Dict[str, int]
+    tasks: Dict[str, int]
+    activities: Dict[str, int]
+
+
+class CustomerMergeResultOut(BaseModel):
+    organization_id: str
+    primary_id: str
+    merged_ids: List[str]
+    skipped_ids: List[str]
+    rewired: CustomerMergeCounts
+    dry_run: bool

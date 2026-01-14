@@ -72,8 +72,6 @@ function formatDateTime(value) {
   return d.toLocaleString("tr-TR");
 }
 
-}
-
 export default function CrmCustomerDetailPage() {
   const navigate = useNavigate();
   const { customerId } = useParams();

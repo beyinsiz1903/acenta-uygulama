@@ -65,10 +65,10 @@ function Tabs({ value, onChange, items }) {
 }
 
 function formatDateTime(value) {
-  if (!value) return "";
+  if (!value) return "\u2014";
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) {
-    return "";
+    return "\u2014";
   }
   return d.toLocaleString("tr-TR");
 }

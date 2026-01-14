@@ -138,6 +138,8 @@ async def list_customers(
 
 
 async def get_customer(db: Database, organization_id: str, customer_id: str) -> Optional[Dict[str, Any]]:
+    doc = await db.customers.find_one({"organization_id": organization_id, "id": customer_id}, {"_id": 0})
+    return doc
 
 
 def _normalize_phone(value: str) -> str:

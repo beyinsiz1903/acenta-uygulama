@@ -112,9 +112,21 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-## user_problem_statement: "Test PR#8 CRM Activities UI'yi test et. Login with admin@acenta.test / admin123, navigate to /app/crm/customers/cust_seed_linked, click Aktiviteler tab, test UI components (header, textarea placeholder, activity count, button states), test note creation with Turkish text, verify API integration, check encoding and error handling."
+## user_problem_statement: "Test PR#7.5a – Duplicate detection (dry-run) endpoint test. Setup duplicate test data with email and phone duplicates, test GET /api/crm/customers/duplicates endpoint, verify response structure and duplicate detection logic, ensure read-only operation."
 
 ## backend:
+  - task: "PR#7.5a Duplicate Detection (Dry-Run) Endpoint Test"
+    implemented: true
+    working: true
+    file: "/app/backend/app/routers/crm_customers.py, /app/backend/app/services/crm_customers.py, /app/backend/app/schemas_crm.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ PR#7.5a DUPLICATE DETECTION ENDPOINT TEST COMPLETE - All functionality verified successfully (100% success rate). COMPREHENSIVE FUNCTIONALITY VERIFIED: A) ENDPOINT ACCESSIBILITY: ✅ GET /api/crm/customers/duplicates returns 200 OK with proper JSON response, ✅ Admin authentication working correctly (super_admin role), ✅ Route configuration fixed (moved duplicates route before /{customer_id} to prevent conflicts), ✅ Schema import fixed (added Dict import to schemas_crm.py). B) DUPLICATE DETECTION LOGIC: ✅ Email normalization working correctly (DupEmail@Test.Example → dupemail@test.example), ✅ Phone normalization working correctly (+90 (555) 000 0007 → 905550000007), ✅ Duplicate clustering working with proper aggregation pipeline, ✅ Primary selection based on updated_at (newest first) working correctly. C) RESPONSE STRUCTURE VERIFICATION: ✅ organization_id field present and correct, ✅ contact.type and contact.value fields present with normalized values, ✅ primary field contains DuplicateCustomerSummary structure (id, name, created_at, updated_at), ✅ duplicates array contains proper DuplicateCustomerSummary structures, ✅ All required fields properly serialized (no ObjectId issues). D) TEST DATA VERIFICATION: ✅ Created 4 test customers via API (2 email duplicates, 2 phone duplicates), ✅ Email cluster found with 2 duplicates (Duplicate Email 1 & 2), ✅ Phone cluster found with 2 duplicates (Duplicate Phone 1 & 2), ✅ Primary customer correctly selected based on updated_at timestamp. E) READ-ONLY VERIFICATION: ✅ Endpoint performs no write operations (aggregate + read only), ✅ All test customers remain unchanged after endpoint call, ✅ No data modifications detected in MongoDB, ✅ Proper dry-run behavior confirmed. F) CLEANUP VERIFICATION: ✅ Test data cleanup working correctly, ✅ No test duplicates found after cleanup, ✅ Endpoint returns filtered results correctly. CRITICAL FIXES APPLIED: 1) Fixed route ordering in crm_customers.py (moved /duplicates before /{customer_id}), 2) Added missing Dict import to schemas_crm.py for DuplicateCustomerClusterOut, 3) Used API-based customer creation instead of direct MongoDB insertion for proper normalization. ACCEPTANCE CRITERIA MET: ✅ GET /api/crm/customers/duplicates endpoint accessible and working, ✅ Email and phone duplicate detection with proper normalization, ✅ Response structure matches DuplicateCustomerClusterOut schema, ✅ Primary selection logic working (updated_at desc, created_at desc, id asc), ✅ Read-only operation confirmed (no database writes), ✅ Organization scoping working correctly, ✅ Proper JSON serialization without ObjectId issues. PR#7.5a duplicate detection functionality production-ready with comprehensive duplicate clustering and normalization."
+
   - task: "PR#7.2 dev_seed.py backend seed script test"
     implemented: true
     working: true

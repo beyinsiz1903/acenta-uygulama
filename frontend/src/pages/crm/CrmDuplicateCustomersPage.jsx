@@ -64,7 +64,14 @@ export default function CrmDuplicateCustomersPage() {
         dryRun: true,
       });
       setPreviewByKey((prev) => ({ ...prev, [key]: res }));
-      toast.success("Dry-run tamamland\u0131.");
+
+      const rw = (res && res.rewired) || {};
+      const b = (rw.bookings && rw.bookings.matched) || 0;
+      const d = (rw.deals && rw.deals.matched) || 0;
+      const t = (rw.tasks && rw.tasks.matched) || 0;
+      const a = (rw.activities && rw.activities.matched) || 0;
+      const msg = `Dry-run tamamland\u0131: ${b} rezervasyon, ${d} f\u0131rsat, ${t} g\u00f6rev, ${a} aktivite etkilenecek.`;
+      toast.success(msg);
     } catch (e) {
       toast.error(e.message || "Dry-run ba\u015far\u0131s\u0131z oldu.");
     } finally {

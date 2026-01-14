@@ -154,9 +154,10 @@ async def find_or_create_customer_for_booking(
     booking: Dict[str, Any],
     created_by_user_id: Optional[str] = None,
 ) -> Optional[str]:
-    guest = booking.get("guest") or {}
-    email_raw = (guest.get("email") or "").strip().lower()
-    phone_raw = (guest.get("phone") or "").strip()
+    # Try both 'customer' (B2B bookings) and 'guest' (other bookings) fields
+    customer_data = booking.get("customer") or booking.get("guest") or {}
+    email_raw = (customer_data.get("email") or "").strip().lower()
+    phone_raw = (customer_data.get("phone") or "").strip()
     phone_norm = _normalize_phone(phone_raw) if phone_raw else ""
 
     if not email_raw and not phone_norm:
@@ -197,7 +198,7 @@ async def find_or_create_customer_for_booking(
             return existing_by_phone.get("id")
 
     # 3) Create new customer
-    name = (guest.get("full_name") or "Misafir").strip() or "Misafir"
+    name = (customer_data.get("name") or customer_data.get("full_name") or "Misafir").strip() or "Misafir"
     contacts: List[Dict[str, Any]] = []
     if email_raw:
         contacts.append({"type": "email", "value": email_raw, "is_primary": True})

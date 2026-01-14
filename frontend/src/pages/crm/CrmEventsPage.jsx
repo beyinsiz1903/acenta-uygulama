@@ -1,0 +1,507 @@
+// frontend/src/pages/crm/CrmEventsPage.jsx
+import React, { useEffect, useMemo, useState } from "react";
+import { listCrmEvents } from "../../lib/crm";
+import { getUser } from "../../lib/api";
+
+function formatDateTimeTr(dateIso) {
+  if (!dateIso) return "-";
+  const d = new Date(dateIso);
+  return d.toLocaleString("tr-TR");
+}
+
+function EventRow({ event, onToggle }) {
+  const [open, setOpen] = useState(false);
+
+  function toggle() {
+    const next = !open;
+    setOpen(next);
+    onToggle?.(event, next);
+  }
+
+  const createdAtLabel = formatDateTimeTr(event.created_at);
+  const rolesLabel = (event.actor_roles || []).join(", ");
+  const actorLabel = event.actor_user_id
+    ? rolesLabel
+      ? `${event.actor_user_id} (${rolesLabel})`
+      : event.actor_user_id
+    : "Sistem";
+
+  const summary = `${event.entity_type} ${event.action} ${event.entity_id}`;
+
+  return (
+    <div
+      style={{
+        borderBottom: "1px solid #f3f3f3",
+        padding: "10px 12px",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 12,
+          flexWrap: "wrap",
+        }}
+      >
+        <div style={{ minWidth: 0, flex: "1 1 200px" }}>
+          <div style={{ fontSize: 13, color: "#111", fontWeight: 600 }}>{summary}</div>
+          <div style={{ marginTop: 2, fontSize: 12, color: "#4b5563" }}>{createdAtLabel}</div>
+        </div>
+
+        <div style={{ minWidth: 0, flex: "1 1 160px", fontSize: 12, color: "#4b5563" }}>{actorLabel}</div>
+
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <span
+            style={{
+              fontSize: 11,
+              padding: "2px 8px",
+              borderRadius: 999,
+              border: "1px solid #e5e7eb",
+              background: "#f9fafb",
+              color: "#4b5563",
+            }}
+          >
+            {event.source || "api"}
+          </span>
+
+          <button
+            type="button"
+            onClick={toggle}
+            style={{
+              padding: "6px 10px",
+              borderRadius: 999,
+              border: "1px solid #111827",
+              background: open ? "#111827" : "#ffffff",
+              color: open ? "#ffffff" : "#111827",
+              cursor: "pointer",
+              fontSize: 12,
+            }}
+          >
+            {open ? "Detay1 kapat" : "Detay"}
+          </button>
+        </div>
+      </div>
+
+      {open ? (
+        <div
+          style={{
+            marginTop: 8,
+            padding: 10,
+            borderRadius: 10,
+            border: "1px solid #e5e7eb",
+            background: "#f9fafb",
+            fontSize: 12,
+          }}
+        >
+          <pre
+            style={{
+              margin: 0,
+              whiteSpace: "pre-wrap",
+              wordBreak: "break-word",
+              fontSize: 12,
+              fontFamily: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
+            }}
+          >
+            {JSON.stringify(event.payload || {}, null, 2)}
+          </pre>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+export default function CrmEventsPage() {
+  const user = getUser();
+
+  const [entityType, setEntityType] = useState("");
+  const [entityId, setEntityId] = useState("");
+  const [action, setAction] = useState("");
+  const [range, setRange] = useState("7d"); // 24h | 7d | 30d
+  const [fromOverride, setFromOverride] = useState("");
+  const [toOverride, setToOverride] = useState("");
+
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(50);
+
+  const [items, setItems] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [errMsg, setErrMsg] = useState("");
+
+  const isAdmin = useMemo(() => {
+    const roles = (user && user.roles) || [];
+    return roles.includes("admin") || roles.includes("super_admin");
+  }, [user]);
+
+  const hasNext = total > items.length;
+
+  function computeRange() {
+    // If manual from/to provided, use them
+    if (fromOverride || toOverride) {
+      return {
+        from: fromOverride || undefined,
+        to: toOverride || undefined,
+      };
+    }
+
+    const now = new Date();
+    let from = null;
+    if (range === "24h") {
+      from = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    } else if (range === "7d") {
+      from = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    } else if (range === "30d") {
+      from = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    }
+
+    return {
+      from: from ? from.toISOString() : undefined,
+      to: now.toISOString(),
+    };
+  }
+
+  const queryParams = useMemo(() => {
+    const qp = {
+      page,
+      page_size: pageSize,
+    };
+    if (entityType) qp.entity_type = entityType;
+    if (entityId) qp.entity_id = entityId.trim();
+    if (action) qp.action = action.trim();
+
+    const r = computeRange();
+    if (r.from) qp.from = r.from;
+    if (r.to) qp.to = r.to;
+
+    return qp;
+  }, [page, pageSize, entityType, entityId, action, range, fromOverride, toOverride]);
+
+  async function load(reset) {
+    if (!isAdmin) return;
+    setLoading(true);
+    setErrMsg("");
+    try {
+      const nextPage = reset ? 1 : page;
+      const baseParams = { ...queryParams, page: nextPage };
+      const res = await listCrmEvents(baseParams);
+      if (reset) {
+        setItems(res.items || []);
+      } else {
+        setItems((prev) => [...prev, ...(res.items || [])]);
+      }
+      setTotal(res.total || 0);
+      setPage(res.page || nextPage);
+    } catch (e) {
+      setErrMsg(e.message || "Olaylar ycklenemedi.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    // initial load with default 7d range
+    load(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function applyFilters(e) {
+    e?.preventDefault?.();
+    setPage(1);
+    load(true);
+  }
+
+  function loadMore() {
+    if (loading || !hasNext) return;
+    const nextPage = page + 1;
+    setPage(nextPage);
+    load(false);
+  }
+
+  if (!isAdmin) {
+    return (
+      <div style={{ padding: 16 }}>
+        <div
+          style={{
+            padding: 16,
+            borderRadius: 12,
+            border: "1px solid #fee2e2",
+            background: "#fef2f2",
+            color: "#b91c1c",
+          }}
+        >
+          <h1 style={{ margin: 0, fontSize: 20 }}>Eri1im k1s1tl1</h1>
+          <p style={{ marginTop: 8, fontSize: 14 }}>
+            Bu sayfaya yaln1zca admin kullan1c1lar eri1ebilir.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ padding: 16 }}>
+      {/* Header */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "flex-start",
+          justifyContent: "space-between",
+          gap: 12,
+          flexWrap: "wrap",
+        }}
+      >
+        <div>
+          <h1 style={{ margin: 0, fontSize: 22 }}>CRM 1 Olaylar1</h1>
+          <div style={{ marginTop: 4, fontSize: 13, color: "#6b7280" }}>
+            Kritik CRM i1lemlerinin kim taraf1ndan, ne zaman yap1ld11n1 izleyin.
+          </div>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <form
+        onSubmit={applyFilters}
+        style={{
+          marginTop: 14,
+          padding: 12,
+          borderRadius: 12,
+          border: "1px solid #eee",
+          display: "flex",
+          flexWrap: "wrap",
+          gap: 10,
+          alignItems: "center",
+        }}
+      >
+        <select
+          value={entityType}
+          onChange={(e) => setEntityType(e.target.value)}
+          style={{ padding: 10, borderRadius: 10, border: "1px solid #ddd", minWidth: 180 }}
+        >
+          <option value="">T1m tipler</option>
+          <option value="customer">M11teri</option>
+          <option value="deal">F1rsat</option>
+          <option value="task">G1rev</option>
+          <option value="activity">Aktivite</option>
+          <option value="customer_merge">M11teri Birle1tirme</option>
+          <option value="booking">Rezervasyon</option>
+        </select>
+
+        <input
+          value={entityId}
+          onChange={(e) => setEntityId(e.target.value)}
+          placeholder="Entity ID (opsiyonel)"
+          style={{
+            padding: 10,
+            borderRadius: 10,
+            border: "1px solid #ddd",
+            minWidth: 220,
+            flex: "1 1 220px",
+          }}
+        />
+
+        <input
+          value={action}
+          onChange={(e) => setAction(e.target.value)}
+          placeholder="Aksiyon (created/updated/...)"
+          style={{
+            padding: 10,
+            borderRadius: 10,
+            border: "1px solid #ddd",
+            minWidth: 200,
+          }}
+        />
+
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          <button
+            type="button"
+            onClick={() => {
+              setRange("24h");
+              setFromOverride("");
+              setToOverride("");
+            }}
+            style={{
+              padding: "8px 10px",
+              borderRadius: 999,
+              border: range === "24h" ? "1px solid #111" : "1px solid #ddd",
+              background: range === "24h" ? "#111" : "#fff",
+              color: range === "24h" ? "#fff" : "#333",
+              cursor: "pointer",
+              fontSize: 12,
+            }}
+          >
+            Son 24 s
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setRange("7d");
+              setFromOverride("");
+              setToOverride("");
+            }}
+            style={{
+              padding: "8px 10px",
+              borderRadius: 999,
+              border: range === "7d" ? "1px solid #111" : "1px solid #ddd",
+              background: range === "7d" ? "#111" : "#fff",
+              color: range === "7d" ? "#fff" : "#333",
+              cursor: "pointer",
+              fontSize: 12,
+            }}
+          >
+            Son 7 g1n
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setRange("30d");
+              setFromOverride("");
+              setToOverride("");
+            }}
+            style={{
+              padding: "8px 10px",
+              borderRadius: 999,
+              border: range === "30d" ? "1px solid #111" : "1px solid #ddd",
+              background: range === "30d" ? "#111" : "#fff",
+              color: range === "30d" ? "#fff" : "#333",
+              cursor: "pointer",
+              fontSize: 12,
+            }}
+          >
+            Son 30 g1n
+          </button>
+        </div>
+
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 6,
+            minWidth: 220,
+          }}
+        >
+          <label style={{ fontSize: 11, color: "#6b7280" }}>Geli1mi1 tarih aral11 (opsiyonel)</label>
+          <div style={{ display: "flex", gap: 6 }}>
+            <input
+              type="datetime-local"
+              value={fromOverride}
+              onChange={(e) => setFromOverride(e.target.value)}
+              style={{
+                flex: 1,
+                padding: 8,
+                borderRadius: 10,
+                border: "1px solid #ddd",
+              }}
+            />
+            <input
+              type="datetime-local"
+              value={toOverride}
+              onChange={(e) => setToOverride(e.target.value)}
+              style={{
+                flex: 1,
+                padding: 8,
+                borderRadius: 10,
+                border: "1px solid #ddd",
+              }}
+            />
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          disabled={loading}
+          style={{
+            marginLeft: "auto",
+            padding: "10px 12px",
+            borderRadius: 10,
+            border: "1px solid #111827",
+            background: "#111827",
+            color: "#ffffff",
+            cursor: "pointer",
+            fontSize: 13,
+          }}
+        >
+          Filtrele
+        </button>
+      </form>
+
+      {/* Error */}
+      {errMsg ? (
+        <div
+          style={{
+            marginTop: 12,
+            padding: 12,
+            borderRadius: 12,
+            border: "1px solid #f2caca",
+            background: "#fff5f5",
+            color: "#8a1f1f",
+            fontSize: 13,
+          }}
+        >
+          {errMsg}
+        </div>
+      ) : null}
+
+      {/* List */}
+      <div style={{ marginTop: 12, borderRadius: 12, border: "1px solid #eee", overflow: "hidden" }}>
+        <div
+          style={{
+            padding: 10,
+            borderBottom: "1px solid #eee",
+            background: "#fafafa",
+            fontSize: 13,
+            color: "#666",
+            display: "flex",
+            justifyContent: "space-between",
+          }}
+        >
+          <span>{loading ? `Y1kleniyor...` : "Olaylar"}</span>
+          <span>
+            Toplam: <b>{total}</b>
+          </span>
+        </div>
+
+        {!loading && items.length === 0 ? (
+          <div style={{ padding: 18 }}>
+            <div style={{ fontSize: 16, fontWeight: 600 }}>Bu filtreler i1in kay1t yok.</div>
+            <div style={{ marginTop: 6, color: "#666" }}>
+              Farkl1 bir tarih aral11 veya entity filtresi deneyebilirsiniz.
+            </div>
+          </div>
+        ) : (
+          <div style={{ maxHeight: 520, overflowY: "auto" }}>
+            {items.map((ev) => (
+              <EventRow key={ev.id} event={ev} />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Load more */}
+      <div
+        style={{
+          marginTop: 12,
+          display: "flex",
+          justifyContent: "center",
+        }}
+      >
+        <button
+          type="button"
+          disabled={!hasNext || loading}
+          onClick={loadMore}
+          style={{
+            padding: "8px 12px",
+            borderRadius: 999,
+            border: "1px solid #ddd",
+            background: !hasNext ? "#f3f4f6" : "#ffffff",
+            color: "#111827",
+            cursor: !hasNext ? "not-allowed" : "pointer",
+            fontSize: 13,
+          }}
+        >
+          {hasNext ? "Daha fazla y1kle" : "Kay1t kalmad1"}
+        </button>
+      </div>
+    </div>
+  );
+}

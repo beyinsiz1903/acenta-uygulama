@@ -109,7 +109,7 @@ export default function AdminFunnelPage() {
       : (summary?.by_channel?.[summaryChannel] || { ...emptySummary, days: summary.days });
 
   return (
-    <div className="space-y-4" data-testid="funnel-alerts-panel">
+    <div className="space-y-4">
       <div>
         <h1 className="text-lg font-semibold">Funnel Events</h1>
         <p className="text-xs text-muted-foreground">

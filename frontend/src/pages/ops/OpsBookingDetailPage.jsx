@@ -9,7 +9,7 @@ import { Button } from "../../components/ui/button";
 import ErrorState from "../../components/ErrorState";
 import EmptyState from "../../components/EmptyState";
 import OpsGuestCaseDrawer from "../../components/OpsGuestCaseDrawer";
-import { listOpsGuestCasesForBooking } from "../../lib/opsCases";
+import { listOpsCasesForBooking, createOpsCase } from "../../lib/opsCases";
 import { createClickToPayLink } from "../../lib/clickToPay";
 import { getCustomer, patchTask } from "../../lib/crm";
 import { toast } from "sonner";

@@ -59,6 +59,20 @@ async def create_test_booking(db):
     
     await db.bookings.insert_one(booking_doc)
     print(f"✅ Created test booking: {booking_id}")
+    
+    # Create payment aggregate (required by BookingPaymentsOrchestrator)
+    from app.services.booking_payments import BookingPaymentsService
+    
+    payments_service = BookingPaymentsService(db)
+    payment_aggregate = await payments_service.get_or_create_aggregate(
+        organization_id=ORGANIZATION_ID,
+        agency_id=AGENCY_ID,
+        booking_id=booking_id,
+        currency="EUR",
+        total_cents=10000  # 100.00 EUR
+    )
+    print(f"✅ Created payment aggregate: {payment_aggregate['_id']}")
+    
     return booking_id
 
 def create_fake_stripe_event(booking_id):

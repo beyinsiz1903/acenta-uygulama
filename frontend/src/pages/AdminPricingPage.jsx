@@ -498,12 +498,8 @@ function SimpleRulesTab() {
     setLoading(true);
     setErr("");
     try {
-      const res = await api.get("/admin/pricing/rules", {
-        params: {},
-      });
-      // Simple rules are the ones with action.type === 'markup_percent' and a validity window
-      const simple = (res.data || []).filter((r) => r.action?.type === "markup_percent" && r.validity);
-      setItems(simple);
+      const res = await api.get("/admin/pricing/rules/simple");
+      setItems(res.data || []);
     } catch (e) {
       setErr(apiErrorMessage(e));
     } finally {

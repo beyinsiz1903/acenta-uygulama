@@ -373,7 +373,7 @@ def test_ops_cases_system():
     
     # Test invalid case update
     r = requests.patch(
-        f"{BASE_URL}/api/ops/cases/NONEXISTENT-CASE-ID",
+        f"{BASE_URL}/api/ops-cases/NONEXISTENT-CASE-ID",
         headers=admin_headers,
         json={"status": "waiting"}
     )

@@ -276,7 +276,7 @@ def test_admin_coupon_crud_apis():
     
     # Try to create another coupon with the same code
     duplicate_coupon_data = {
-        "code": "TEST10",  # Same code as before
+        "code": coupon_code,  # Same code as before
         "discount_type": "AMOUNT",
         "value": 50,
         "scope": "B2B",

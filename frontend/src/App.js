@@ -87,18 +87,40 @@ function App() {
   // Load theme on app mount
   useTheme();
 
-  // Global Organization JSON-LD (tekil)
+  // Global Organization + WebSite JSON-LD (tekil)
   if (typeof document !== "undefined") {
-    const existing = document.getElementById("org-schema-jsonld");
-    if (!existing) {
+    const origin = window.location.origin;
+    const brandName = getBrandNameFromThemeCache();
+
+    const existingOrg = document.getElementById("org-schema-jsonld");
+    if (!existingOrg) {
       const script = document.createElement("script");
       script.id = "org-schema-jsonld";
       script.type = "application/ld+json";
       script.text = JSON.stringify({
         "@context": "https://schema.org",
         "@type": "Organization",
-        name: "Syroce",
-        url: window.location.origin,
+        name: brandName,
+        url: origin,
+      });
+      document.head.appendChild(script);
+    }
+
+    const existingSite = document.getElementById("website-schema-jsonld");
+    if (!existingSite) {
+      const script = document.createElement("script");
+      script.id = "website-schema-jsonld";
+      script.type = "application/ld+json";
+      script.text = JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        name: brandName,
+        url: origin,
+        potentialAction: {
+          "@type": "SearchAction",
+          target: `${origin}/book?q={search_term_string}`,
+          "query-input": "required name=search_term_string",
+        },
       });
       document.head.appendChild(script);
     }

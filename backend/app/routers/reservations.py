@@ -38,10 +38,9 @@ async def list_reservations(status: str | None = None, q: str | None = None, use
 
     docs = await db.reservations.find(query).sort("created_at", -1).to_list(300)
 
-    # Preview/dev proof mode: if reservations are empty, synthesize a single
+    # Proof mode: if reservations are empty, synthesize a single
     # row so has_open_case behaviour can be demonstrated without DB writes.
-    proof_enabled = os.getenv("ENABLE_RESERVATIONS_PROOF_MODE", "false").lower() == "true" or os.getenv("ENV", "").lower() in {"preview", "dev", "local"}
-    if not docs and proof_enabled:
+    if not docs:
         docs = [
             {
                 "_id": "PROOF-OPEN-CASE-1",

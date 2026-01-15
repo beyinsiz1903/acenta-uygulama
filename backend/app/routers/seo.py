@@ -51,8 +51,8 @@ async def sitemap_xml(request: Request, db=Depends(get_db)) -> Response:
     for h in hotels:
         hid = str(h.get("_id"))
         lastmod = _format_date(h.get("updated_at")) or today
-        # Using agency hotel detail route as canonical detail surface
-        loc = f"{base_url}/app/agency/hotels/{hid}"
+        # Public product detail surface under /book/{id}
+        loc = f"{base_url}/book/{hid}"
         urls.append({"loc": loc, "lastmod": lastmod})
 
     # Build XML

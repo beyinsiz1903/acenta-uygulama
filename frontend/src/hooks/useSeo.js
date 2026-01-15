@@ -6,6 +6,20 @@ function getBrandNameFromThemeCache() {
   if (typeof window === "undefined") return DEFAULT_BRAND;
   try {
     const raw = window.localStorage.getItem("theme_v1_default");
+export function getBrandNameFromThemeCache() {
+  if (typeof window === "undefined") return DEFAULT_BRAND;
+  try {
+    const raw = window.localStorage.getItem("theme_v1_default");
+    if (!raw) return DEFAULT_BRAND;
+    const parsed = JSON.parse(raw);
+    const theme = parsed?.theme || parsed;
+    return theme?.brand?.company_name || DEFAULT_BRAND;
+  } catch {
+    return DEFAULT_BRAND;
+  }
+}
+
+
     if (!raw) return DEFAULT_BRAND;
     const parsed = JSON.parse(raw);
     const theme = parsed?.theme || parsed;

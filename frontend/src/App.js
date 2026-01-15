@@ -81,6 +81,7 @@ import HotelHelpPage from "./pages/HotelHelpPage";
 import NotFoundPage from "./pages/NotFoundPage";
 import { Toaster } from "./components/ui/sonner";
 import { useTheme } from "./theme/useTheme";
+import { getBrandNameFromThemeCache } from "./hooks/useSeo";
 
 function App() {
   // Load theme on app mount

@@ -162,23 +162,23 @@ export default function AdminFunnelPage() {
           </div>
           <div className="rounded-md border px-2 py-2" data-testid="funnel-kpi-checkout-started">
             <div className="text-[10px] text-muted-foreground">Checkout Started</div>
-            <div className="text-sm font-semibold">{summary.checkout_started_count}</div>
+            <div className="text-sm font-semibold">{currentSummary.checkout_started_count}</div>
           </div>
           <div className="rounded-md border px-2 py-2" data-testid="funnel-kpi-bookings">
             <div className="text-[10px] text-muted-foreground">Bookings</div>
-            <div className="text-sm font-semibold">{summary.booking_created_count}</div>
+            <div className="text-sm font-semibold">{currentSummary.booking_created_count}</div>
           </div>
           <div className="rounded-md border px-2 py-2" data-testid="funnel-kpi-pay-succeeded">
             <div className="text-[10px] text-muted-foreground">Payments Succeeded</div>
-            <div className="text-sm font-semibold">{summary.payment_succeeded_count}</div>
+            <div className="text-sm font-semibold">{currentSummary.payment_succeeded_count}</div>
           </div>
           <div className="rounded-md border px-2 py-2" data-testid="funnel-kpi-pay-failed">
             <div className="text-[10px] text-muted-foreground">Payments Failed</div>
-            <div className="text-sm font-semibold">{summary.payment_failed_count}</div>
+            <div className="text-sm font-semibold">{currentSummary.payment_failed_count}</div>
           </div>
           <div className="rounded-md border px-2 py-2" data-testid="funnel-kpi-conversion">
             <div className="text-[10px] text-muted-foreground">Conversion</div>
-            <div className="text-sm font-semibold">{formatPercent(summary.conversion)}</div>
+            <div className="text-sm font-semibold">{formatPercent(currentSummary.conversion)}</div>
           </div>
         </div>
       </Card>

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
 from bson import ObjectId
@@ -23,7 +23,21 @@ async def list_b2b_bookings_agency(
         default=None,
         description="Repeatable booking status filter, e.g. status=CONFIRMED&status=VOUCHERED",
     ),
-    limit: int = Query(50, ge=1, le=200),
+    from_: Optional[datetime] = Query(
+        default=None,
+        alias="from",
+        description="Created_at >= from (ISO datetime)",
+    ),
+    to: Optional[datetime] = Query(
+        default=None,
+        alias="to",
+        description="Created_at <= to (ISO datetime)",
+    ),
+    q: Optional[str] = Query(
+        default=None,
+        description="Search by booking id / guest name / product name",
+    ),
+    limit: int = Query(20, ge=1, le=100),
     user: Dict[str, Any] = AgencyUserDep,
     db=Depends(get_db),
 ) -> BookingListResponse:
@@ -31,8 +45,10 @@ async def list_b2b_bookings_agency(
 
     - Scope: current organization_id + agency_id
     - Default sort: created_at desc (newest first)
-    - Default limit: 50, min=1, max=200
+    - Default limit: 20, min=1, max=100
     - Status filter supports both single and repeated query params.
+    - Date range filter: defaults to last 30 days when not provided.
+    - q filter: best-effort search on booking id / guest name / product name.
     """
 
     org_id = user.get("organization_id")

@@ -363,7 +363,7 @@ def test_ops_cases_system():
     
     # Test non-existent case
     r = requests.get(
-        f"{BASE_URL}/api/ops/cases/NONEXISTENT-CASE-ID",
+        f"{BASE_URL}/api/ops-cases/NONEXISTENT-CASE-ID",
         headers=admin_headers,
     )
     assert r.status_code == 404, f"GET non-existent case should return 404"

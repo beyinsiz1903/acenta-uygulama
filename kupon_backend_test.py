@@ -51,12 +51,15 @@ def test_admin_coupon_crud_apis():
     # ------------------------------------------------------------------
     print("\n2️⃣  POST /api/admin/coupons ile yeni kupon oluşturma...")
     
-    # Prepare test coupon data as specified
+    # Prepare test coupon data as specified with unique code
+    unique_suffix = uuid.uuid4().hex[:6].upper()
+    coupon_code = f"TEST10_{unique_suffix}"
+    
     valid_from = datetime.utcnow()
     valid_to = valid_from + timedelta(days=1)
     
     coupon_data = {
-        "code": "TEST10",
+        "code": coupon_code,
         "discount_type": "PERCENT",
         "value": 10,
         "scope": "BOTH",

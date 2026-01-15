@@ -357,6 +357,29 @@ async def public_checkout(payload: PublicCheckoutRequest, request: Request, db=D
     ins = await bookings.insert_one(booking_doc)
     booking_id = str(ins.inserted_id)
 
+    # Funnel: public.booking.created
+    try:
+        await log_funnel_event(
+            db,
+            organization_id=org_id,
+            correlation_id=correlation_id,
+            event_name="public.booking.created",
+            entity_type="booking",
+            entity_id=booking_id,
+            channel="public",
+            user=None,
+            context={
+                "amounts": booking_doc.get("amounts") or {},
+                "applied_rules": booking_doc.get("applied_rules") or {},
+            },
+            trace={
+                "idempotency_key": payload.idempotency_key,
+                "ip": client_ip,
+            },
+        )
+    except Exception:
+        pass
+
     # Create Stripe PaymentIntent (automatic capture) for the quote amount
     metadata = {
         "source": "public_checkout",

@@ -28,6 +28,7 @@ from app.routers.crm_customer_inbox import router as crm_customer_inbox_router
 from app.routers.matches import router as matches_router
 from app.routers.ops_b2b import router as ops_b2b_router
 from app.routers.ops_booking_events import router as ops_booking_events_router
+from app.routers.ops_cases import router as ops_cases_router
 from app.routers.ops_click_to_pay import router as ops_click_to_pay_router
 from app.routers.ops_finance import router as ops_finance_router
 from app.routers.payments import router as payments_router

@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../components/ui/select";
-import { listOpsGuestCases, apiErrorMessage } from "../lib/opsCases";
+import { listOpsCases, apiErrorMessage } from "../lib/opsCases";
 import OpsGuestCaseDrawer from "../components/OpsGuestCaseDrawer";
 
 function OpsGuestCasesPage() {
@@ -48,7 +48,7 @@ function OpsGuestCasesPage() {
         page_size: pageSize,
         ...opts,
       };
-      const res = await listOpsGuestCases(params);
+      const res = await listOpsCases(params);
       setItems(res.items || []);
       setPage(res.page || 1);
       setPageSize(res.page_size || 20);
@@ -93,8 +93,8 @@ function OpsGuestCasesPage() {
   return (
     <div className="p-4 md:p-6 max-w-6xl mx-auto space-y-4">
       <PageHeader
-        title="Guest Cases"
-        subtitle="Misafir portal1ndan gelen iptal ve defifiklik taleplerini y1netin."
+        title="Case Yfnetimi"
+        subtitle="Tm kaynaklardan (guest_portal/ops_panel/system) gelen caseleri tek ekranda ynetin."
         icon={<Filter className="h-6 w-6 text-muted-foreground" />}
         actions={
           <Button

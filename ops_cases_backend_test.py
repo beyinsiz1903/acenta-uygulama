@@ -89,7 +89,7 @@ def test_ops_cases_system():
     print("\n3️⃣  Senaryo 1: Listeleme (GET /api/ops/cases)...")
     
     r = requests.get(
-        f"{BASE_URL}/api/ops/cases",
+        f"{BASE_URL}/api/ops-cases/",
         headers=admin_headers,
     )
     assert r.status_code == 200, f"GET /api/ops/cases failed: {r.text}"

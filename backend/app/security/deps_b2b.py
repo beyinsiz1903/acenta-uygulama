@@ -28,6 +28,11 @@ async def _get_current_user_dict(request: Request) -> dict:
 
     # Reuse existing auth dependency
     user = await get_current_user()  # type: ignore[arg-type]
+
+    # Ensure id field present for audit/logging
+    if "id" not in user and "_id" in user:
+        user["id"] = str(user["_id"])
+
     return user
 
 

@@ -139,7 +139,8 @@ def test_admin_coupon_crud_apis():
         test_coupon = None
         for coupon in coupons:
             if coupon["code"] == coupon_code:
-                test_coupon = break
+                test_coupon = coupon
+                break
         
         assert test_coupon is not None, f"{coupon_code} kuponu listede bulunmalı"
         print(f"   ✅ {coupon_code} kuponu listede bulundu")

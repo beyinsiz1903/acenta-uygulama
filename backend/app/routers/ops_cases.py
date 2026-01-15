@@ -149,6 +149,3 @@ async def patch_ops_case(
     )
 
     return OpsCaseOut(**updated)
-
-
-    return {"ok": True, "case_id": updated.get("case_id", case_id), "status": updated.get("status")}

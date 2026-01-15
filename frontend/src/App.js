@@ -106,7 +106,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         {/* Public Routes */}
-        <Route path="/" element={<LoginPage />} />
+        <Route path="/" element={<PublicHomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/b2b/login" element={<B2BLoginPage />} />
         <Route path="/test/booking" element={<AgencyBookingTestPage />} />

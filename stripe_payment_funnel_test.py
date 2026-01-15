@@ -136,7 +136,16 @@ async def check_booking_payment_status(db, booking_id):
     if payment_aggregate:
         agg_status = payment_aggregate.get("status")
         amount_paid = payment_aggregate.get("amount_paid", 0)
-        print(f"💰 Payment aggregate status: {agg_status}, amount_paid: {amount_paid}")
+        amount_total = payment_aggregate.get("amount_total", 0)
+        print(f"💰 Payment aggregate status: {agg_status}, amount_paid: {amount_paid}, amount_total: {amount_total}")
+        
+        # Check if there are any payment transactions
+        tx_count = await db.booking_payment_transactions.count_documents({
+            "organization_id": ORGANIZATION_ID,
+            "booking_id": booking_id
+        })
+        print(f"📝 Payment transactions count: {tx_count}")
+        
         return agg_status
     else:
         print("⚠️ Payment aggregate not found")

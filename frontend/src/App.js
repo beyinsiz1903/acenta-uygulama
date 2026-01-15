@@ -78,8 +78,12 @@ import HotelIntegrationsPage from "./pages/HotelIntegrationsPage";
 import HotelHelpPage from "./pages/HotelHelpPage";
 import NotFoundPage from "./pages/NotFoundPage";
 import { Toaster } from "./components/ui/sonner";
+import { useTheme } from "./theme/useTheme";
 
 function App() {
+  // Load theme on app mount
+  useTheme();
+
   // Global Organization JSON-LD (tekil)
   if (typeof document !== "undefined") {
     const existing = document.getElementById("org-schema-jsonld");
@@ -141,6 +145,7 @@ function App() {
             <Route path="catalog/hotels" element={<AdminCatalogHotelsPage />} />
             <Route path="pricing" element={<AdminPricingPage />} />
             <Route path="pricing/funnel" element={<AdminFunnelPage />} />
+            <Route path="theme" element={<AdminThemePage />} />
             <Route path="coupons" element={<AdminCouponsPage />} />
             <Route path="approvals" element={<AdminApprovalsPage />} />
             <Route path="exports" element={<AdminExportsPage />} />

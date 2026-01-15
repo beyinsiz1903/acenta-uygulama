@@ -352,10 +352,6 @@ function OpsGuestCaseDrawer({ caseId, open, onClose, onClosed }) {
                 )}
               </div>
 
-                  </div>
-                </div>
-              </div>
-
               <div className="space-y-1">
                 <div className="text-xs font-medium text-muted-foreground">Misafir Talebi</div>
                 <div className="rounded-xl border bg-muted/30 px-3 py-2 text-xs space-y-1">

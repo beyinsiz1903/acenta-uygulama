@@ -38,6 +38,8 @@ export default function DashboardPage() {
   const isAgency = (user?.roles || []).includes("agency_admin") || (user?.roles || []).includes("agency_agent");
 
 
+  const [caseCounters, setCaseCounters] = useState({ open: 0, waiting: 0, in_progress: 0 });
+
   const [resSummary, setResSummary] = useState([]);
   const [sales, setSales] = useState([]);
   const [error, setError] = useState("");

@@ -263,7 +263,7 @@ def test_ops_cases_system():
     
     # Verify case is actually closed by fetching it
     r = requests.get(
-        f"{BASE_URL}/api/ops/cases/{case_id}",
+        f"{BASE_URL}/api/ops-cases/{case_id}",
         headers=admin_headers,
     )
     assert r.status_code == 200, f"GET /api/ops/cases/{case_id} after close failed: {r.text}"

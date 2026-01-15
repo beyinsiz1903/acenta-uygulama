@@ -29,7 +29,12 @@ export async function createPublicQuote(body) {
 
 export async function createPublicCheckout(body) {
   try {
-    const res = await api.post("/public/checkout", body);
+    const { coupon, ...rest } = body || {};
+    const params = {};
+    if (coupon && typeof coupon === "string" && coupon.trim()) {
+      params.coupon = coupon.trim().toUpperCase();
+    }
+    const res = await api.post("/public/checkout", rest, { params });
     return res.data;
   } catch (e) {
     const status = e?.response?.status ?? null;

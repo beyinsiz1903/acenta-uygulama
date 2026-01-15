@@ -302,7 +302,7 @@ def test_ops_cases_system():
     
     filtered_items = filter_response["items"]
     print(f"   📋 Found {len(filtered_items)} cases with filters")
-    print(f"   📋 Filters: booking_id={booking_id}, source=ops_panel, type=missing_docs")
+    print(f"   📋 Filters: booking_id={booking_id}, source=ops_panel, type=missing_docs, status=closed")
     
     # Verify all returned cases match the filters
     for case in filtered_items:

@@ -150,7 +150,6 @@ async def public_checkout(payload: PublicCheckoutRequest, request: Request, db=D
 
     # Evaluate coupon (optional) before creating booking
     coupon_code = request.query_params.get("coupon") or None
-    coupon_result: Dict[str, Any] | None = None
     if coupon_code:
         coupons = CouponService(db)
         coupon_doc, coupon_eval = await coupons.evaluate_for_public_quote(

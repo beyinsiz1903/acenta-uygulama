@@ -40,6 +40,7 @@ import AdminCatalogPage from "./pages/AdminCatalogPage";
 import AdminCatalogHotelsPage from "./pages/AdminCatalogHotelsPage";
 import AdminPricingPage from "./pages/AdminPricingPage";
 import AdminFunnelPage from "./pages/AdminFunnelPage";
+import AdminThemePage from "./pages/AdminThemePage";
 import AdminCouponsPage from "./pages/AdminCouponsPage";
 import OpsB2BQueuesPage from "./pages/OpsB2BQueuesPage";
 import InboxPage from "./pages/InboxPage";

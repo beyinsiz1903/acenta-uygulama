@@ -1,4 +1,30 @@
 import React, { useEffect, useState } from "react";
+
+function buildHotelSeo(hotel) {
+  if (!hotel) {
+    return {
+      title: "Otel Detayı | Acenta Portal",
+      description: "Seçili otel için detaylar ve fiyatlar.",
+      schema: null,
+    };
+  }
+  const name = hotel.name || "Otel";
+  const city = hotel.city || "";
+  const title = city ? `${name} | ${city} Otel Fırsatları` : `${name} | Otel Fırsatları`;
+  const desc = city
+    ? `${name} için ${city} bölgesinde avantajlı fiyatlar, güvenli rezervasyon ve bayi özel kontenjanları.`
+    : `${name} için avantajlı fiyatlar, güvenli rezervasyon ve bayi özel kontenjanları.`;
+
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "Hotel",
+    name,
+    address: city ? { addressLocality: city } : undefined,
+    url: window.location.href,
+  };
+
+  return { title, description: desc, schema };
+}
 import { useParams, useNavigate } from "react-router-dom";
 import { Hotel, CalendarDays, Users, Loader2, AlertCircle, Search } from "lucide-react";
 import { api, apiErrorMessage, getUser } from "../lib/api";

@@ -190,6 +190,54 @@ async def public_checkout(payload: PublicCheckoutRequest, request: Request, db=D
     amount_cents = int(quote.get("amount_cents", 0))
     currency = (quote.get("currency") or "EUR").upper()
 
+    # P1-1 Faz 3: compute pricing breakdown via internal engine
+    base_price = amount_cents / 100.0
+    product_id = str(quote.get("product_id")) if quote.get("product_id") is not None else None
+    product_type = quote.get("product_type") or "hotel"
+    from datetime import date as _date
+
+    check_in: Optional[_date] = None
+    try:
+        if quote.get("date_from"):
+            check_in = _date.fromisoformat(str(quote.get("date_from"))[:10])
+    except Exception:
+        check_in = None
+
+    try:
+        q = await compute_quote_for_booking(
+            db,
+            organization_id=org_id,
+            base_price=base_price,
+            currency=currency,
+            agency_id=None,
+            product_id=product_id,
+            product_type=product_type,
+            check_in=check_in,
+        )
+    except Exception:
+        # Ultimate safety net: if engine import or call fails, fall back to
+        # existing behaviour without blocking checkout.
+        q = {
+            "currency": currency,
+            "base_price": base_price,
+            "markup_percent": 10.0,
+            "final_price": round(base_price * 1.10, 2),
+            "breakdown": {
+                "base": round(base_price, 2),
+                "markup_amount": round(base_price * 0.10, 2),
+                "discount_amount": 0.0,
+            },
+            "trace": {
+                "source": "simple_pricing_rules",
+                "resolution": "winner_takes_all",
+                "rule_id": None,
+                "rule_name": None,
+                "error": "quote_failed_fallback_10",
+            },
+        }
+
+    sell_amount = float(q.get("final_price") or base_price)
+
     bookings = db.bookings
     booking_doc: Dict[str, Any] = {
         "organization_id": org_id,
@@ -203,8 +251,13 @@ async def public_checkout(payload: PublicCheckoutRequest, request: Request, db=D
             "phone": guest.phone,
         },
         "amounts": {
-            # Canonical source-of-truth is quote.amount_cents
-            "sell": amount_cents / 100.0,
+            "sell": sell_amount,
+            "net": sell_amount,
+            "breakdown": q.get("breakdown") or {},
+        },
+        "applied_rules": {
+            "markup_percent": q.get("markup_percent"),
+            "trace": q.get("trace") or {},
         },
         "currency": currency,
         "quote_id": quote.get("quote_id"),

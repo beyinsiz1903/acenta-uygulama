@@ -1,168 +1,200 @@
 <analysis>**original_problem_statement:**
-The user's goal is to evolve the existing B2B Hotel Reservation Platform (Syroce) into a full-featured Commerce OS that is functionally equivalent to a competitor product called Agentis and Agentis Pro.
+The user's initial goal was to evolve the existing B2B Hotel Reservation Platform (Syroce) into a Commerce OS functionally equivalent to Agentis and Agentis Pro. After a collaborative strategic planning phase, a detailed Product Requirements Document (PRD) and a multi-phase roadmap (P0, P1, P2) were established.
 
-The work is structured by a phased roadmap, with the current focus being on FAZ 3 (CRM & Campaigns) and subsequent hardening to reach Pro level feature parity. The user provides detailed Pro-grade requirements and tracks progress with percentage scores after each major Pull Request (PR).
+The current directive is to execute this roadmap. The previous agent completed the P0 epics and was about to start on P1.
 
 **PRODUCT REQUIREMENTS:**
-A detailed, multi-milestone roadmap has been established to guide development from Agentis 100% to Agentis Pro 100%.
-- **Milestone 0 (Done):** Foundational work including CRM data integrity (deduplication, merge), audit logging (), and fixing critical E2E test blockers.
-- **Milestone 1 (In Progress):** Build and harden the internal Messaging/Inbox feature (PR#8.1 - PR#8.4). This includes the backend data model, the core UI, CRM integration, and operational guardrails.
-- **Milestone 2 (Upcoming):** Implement the Campaign/Coupon Engine.
-- **Milestone 3 (Future):** Implement the Pro Reliability Pack, focusing on observability, advanced permissions, and data maintenance tools.
+The project follows a detailed PRD generated from a competitive analysis against Agentis. The immediate focus has shifted from P0 (now complete) to the first epic of P1.
+1.  **EPIC P1-1: Fiyat/Aksiyon Motoru v1 (Otel):** Build a deterministic pricing engine to handle markups, discounts, and commissions based on a prioritized rule set. This includes a backend service, a quote API, and an admin UI for managing rules.
+2.  **EPIC P1-2: Villa Product Type + ICAL:** Add support for Villa rentals with calendar sync.
+3.  **EPIC P1-3: Tema / Website Surface MVP:** Create a basic theming system for the B2C frontend.
+4.  **EPIC P1-4: B2B Discount Groups & Pricing Rules UI:** Allow admins to create pricing rules for different B2B segments.
+5.  **EPIC P1-5: Funnel Tracking v1 + Remarketing Mapping:** Implement event tracking for the checkout funnel.
 
 **User's preferred language**: Türkçe
 
 **what currently exists?**
-The application is a full-stack Hotel Reservation Platform (React/FastAPI/MongoDB). FAZ 1 and FAZ 2 are complete. FAZ 3 is significantly advanced, and several Pro level hardening tasks have been completed.
-- **Backend:**
-    - A robust CRM backend is in place with features for customers, deals, tasks, activities, and a full duplicate customer merge system.
-    - A comprehensive audit log system () has been implemented, tracking all major data mutations across CRM and Ops modules.
-    - The backend for a new internal Inbox feature (PR#8.1) is complete, including data models (, ), org-scoped/role-guarded APIs, and integration with the  audit log. The ID strategy uses .
-    - A critical P0 bug causing  to return 404 has been fixed, unblocking the CRM customer detail page.
-    - A bug in the Click-to-Pay endpoint () has been resolved.
-- **Frontend:**
-    - The CRM section includes UI for Customers, Tasks, a Deal Pipeline, and an Events Timeline.
-    - A new  page (PR#8.2) provides the UI for the Inbox feature, allowing users to list threads, view messages, and add internal notes.
-    - The CRM Customer Detail page now includes an Inbox panel that lists threads related to that customer (PR#8.3).
-    - Public-facing quote and checkout forms, which were previously failing to render, have been fixed (PR#7.7a).
-    - Numerous UI polishes have been added, including improved toast messages, loading states, and a robust clipboard copy function with fallbacks.
+The application is a full-stack Hotel Reservation Platform (React/FastAPI/MongoDB) with a Case-first operational architecture and a completed coupon engine.
+
+In this session, the **entire P0 roadmap was completed**:
+-   **EPIC P0-1: B2B Portal v1:** A self-service portal for B2B agents is now live. It includes role-based login, a scoped booking list, booking details, the ability to create cases (with ), and a read-only account summary derived from booking data.
+-   **EPIC P0-2: Ops Command Center v1:** The main operations dashboard now features case-first visibility with counters for open, waiting, and in-progress cases. The main reservations list now includes an OPEN CASE badge for bookings with active cases.
+-   **EPIC P0-3: SEO Base v0:** Foundational SEO has been implemented, including a public-only , a corresponding , template-based meta titles/descriptions, and JSON-LD schema for Organization (global) and Hotel (product-level).
+
+A proof mode was introduced for testing in data-sparse environments, allowing the backend to return synthetic data when a collection is empty.
 
 **Last working item**:
--   **Last item agent was working**: The agent just received the kilit spec (locked spec) for **PR#8.3b.1 – Inbox Deep-link Feedback + CRM Inbox Timestamp Polish**. The goal is to apply two final Pro level polishes to the CRM-to-Inbox workflow.
--   **Status**: NOT STARTED
+-   **Last item agent was working**: The agent was about to begin **EPIC P1-1: Fiyat/Aksiyon Motoru v1 (Otel)**. The user provided a detailed, exec-ready prompt for **Faz 1: Pricing Engine Core + Quote API**, which involves creating the backend data model (), the deterministic  service, and the associated API endpoints (, ).
+-   **Status**: IN PROGRESS
 -   **Agent Testing Done**: N
--   **Which testing method agent to use?**: frontend testing agent
+-   **Which testing method agent to use?**: The plan includes backend testing. Use  to create and run unit tests for the  logic and  to test the new API endpoints (, ).
 -   **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
--   **Issue 1 (P0):** Implement PR#8.3b.1.
+-   **Issue 1 (P1):** User Verification for Coupon B2C Checkout.
+-   **Issue 2 (P2):** Micro-UX improvements for the Case Edit UI.
 
 **Issues Detail:**
--   **Issue 1:** PR#8.3b.1 – Inbox Deep-link Feedback + CRM Inbox Timestamp Polish
-    -   **Attempted fixes**: The initial implementation (PR#8.3b) did not include these specific polishes. The user reviewed it and created this mini-patch PR to address the gaps.
+-   **Issue 1:** User Verification for Coupon B2C Checkout
+    -   **Attempted fixes**: The feature was fully implemented and backend-tested in a previous session.
+    -   **Next debug checklist**: The user needs to manually test the B2C checkout flow by creating a coupon in the admin panel and applying it during a public booking.
+    -   **Why fix this issue?**: To formally close out the coupon feature development.
+    -   **Status**: USER VERIFICATION PENDING
+    -   **Is recurring issue?**: N
+    -   **Should Test frontend/backend/both after fix?**: none
+    -   **Blocked on other issue**: None
+
+-   **Issue 2:** Micro-UX improvements for the Case Edit UI
+    -   **Attempted fixes**: None. These were deferred by the user to a polish sprint after P0.
     -   **Next debug checklist**:
-        1.  **Implement Toast Feedback:** In , when the  URL parameter points to an invalid or unauthorized thread, replace the  with a user-visible .
-        2.  **Implement Timestamp Polish:** In , format the  date in the Inbox panel using  and provide a — fallback for null or invalid dates.
-        3.  **Improve Test Selector:** In , add  or a similar attribute to the currently selected thread row to make E2E tests more deterministic.
-        4.  Run the frontend testing agent, focusing on the scenarios for invalid deep-links and verifying the date format on the CRM page.
-    -   **Why fix this issue?**: This will complete the CRM-to-Inbox deep-link feature by providing clear user feedback on errors and improving data readability, which are key for a Pro level UX. It also helps stabilize automated tests.
+        1.  When case  changes from  to another status, automatically set  to  in the backend.
+        2.  Replace the  for closing a case with a shadcn .
+        3.  Add an unsaved changes warning if the user tries to close the drawer after making edits.
+        4.  Add a soft validation to warn if  is  but  is not selected.
+    -   **Why fix this issue?**: To improve the operational efficiency and data integrity of the case management system.
     -   **Status**: NOT STARTED
     -   **Is recurring issue?**: N
     -   **Should Test frontend/backend/both after fix?**: frontend
     -   **Blocked on other issue**: None
 
 **In progress Task List**:
--   **Task 1:** PR#8.3b.1 – Mini Polish for Inbox/CRM Integration
-    -   **Where to resume**: Start by editing  and  according to the spec provided by the user in the last message.
-    -   **What will be achieved?**: A more robust and user-friendly deep-linking experience between the CRM and Inbox modules.
+-   **Task 1 (P0): EPIC P1-1 Faz 1: Pricing Engine Core + Quote API**
+    -   **Where to resume**: Start by implementing the  data model (as a Pydantic schema and preparing for a new MongoDB collection). Then, create the  with the core  function, and finally, expose this via the  and admin  endpoints as detailed in the user's last prompt.
+    -   **What will be achieved with this?**: This will create the foundational backend for a deterministic pricing engine, enabling rule-based markups and discounts.
     -   **Status**: NOT STARTED
-    -   **Should Test frontend/backend/both after fix?**: frontend
+    -   **Should Test frontend/backend/both after fix?**: backend
     -   **Blocked on something**: None
 
 **Upcoming and Future Tasks**
-**Upcoming Tasks:**
--   **(P1) PR#8.4 - Inbox Guardrails:** Implement operational quality-of-life features for the Inbox, such as deduplication, rate limiting, and auto-reopening threads.
--   **(P2) PR#8.5 - Coupon Engine v1 (backend):** Begin work on Milestone 2 by building the backend data model and API for a campaign/coupon system.
+**Upcoming Tasks (P1):**
+-   **(P0) EPIC P1-1 Faz 2 & 3:** Admin UI for pricing rules and integration into the booking/checkout flow.
+-   **(P1) EPIC P1-3: Tema / Website Surface MVP:** Create a basic theming system for the public-facing website.
+-   **(P2) Polish Sprint:** Address the Micro-UX improvements for the Case Edit UI and other minor technical debt, such as moving sitemap URLs to the root if platform constraints ever allow it.
 
-**Future Tasks:**
--   **(Milestone 2) Campaign/Coupon Engine:** Complete the coupon engine with an admin UI (PR#8.6) and integrate it with CRM/Inbox (PR#8.7).
--   **(Milestone 3) Pro Reliability Pack:** Implement observability, advanced permissions, and data repair tools (PR#8.8 - PR#8.10).
+**Future Tasks (P1/P2):**
+-   **(P1) EPIC P1-2: Villa Product Type + ICAL:** Add support for Villa rentals with calendar sync.
+-   **(P1) EPIC P1-4: B2B Discount Groups & Pricing Rules UI:** Allow admins to create pricing rules for different B2B segments.
+-   **(P1) EPIC P1-5: Funnel Tracking v1 + Remarketing Mapping:** Implement event tracking for the checkout funnel.
 
 **Completed work in this session**
--   **PR#7.5c - CRM Duplicate Merge UI**: Implemented the frontend for viewing and merging duplicate customers.
--   **PR#7.6a - CRM Events Backend**: Created the backend service, router, and database indexes for a full audit log system.
--   **PR#7.6b - CRM Events UI**: Built the frontend timeline for viewing audit logs with filters.
--   **PR#7.6c/d/e - CRM Events & Merge UI Polish**: Added deep-linking to the events timeline and polished the duplicate merge UI with better feedback and a robust clipboard copy feature.
--   **PR#7.7a - E2E Green Sweep**: Fixed two critical, blocking E2E tests: a 404 error in the Click-to-Pay backend and a form rendering failure on the public booking pages.
--   **P0 Bug Fix - CRM Customer Detail**: Fixed a critical backend bug that caused  to return 404, unblocking the entire customer detail page.
--   **PR#8.1 - Inbox Data Model + API Backend**: Built the complete backend for the new internal Inbox feature, including data models, APIs, auth guards, and audit logging.
--   **PR#8.2 - Inbox UI v1**: Built the frontend for the Inbox, including a thread list, message timeline, and the ability to add internal notes.
--   **PR#8.3 & PR#8.3b - CRM ↔ Inbox Integration**: Connected the CRM and Inbox by adding an Inbox panel to the Customer Detail page and implementing the logic for deep-linking from CRM into a specific Inbox thread.
+-   **EPIC P0-1: B2B Portal v1 (DONE)**
+    -   Implemented B2B authentication and authorization (, ).
+    -   Created B2B-scoped booking list (, ).
+    -   Implemented B2B booking detail view and case creation (, ), ensuring  is hardcoded to .
+    -   Added a read-only account summary page (, ).
+-   **EPIC P0-2: Ops Command Center v1 (DONE)**
+    -   Created a case counters endpoint ().
+    -   Added case status counter widgets to the ops dashboard ().
+    -   Enhanced the main reservations list () to include a  boolean field.
+    -   Added an OPEN CASE badge to the  UI.
+-   **EPIC P0-3: SEO Base v0 (DONE)**
+    -   Created SEO endpoints (, ) that only include public-facing URLs.
+    -   Implemented dynamic meta title/description and JSON-LD schema on product detail pages ().
+    -   Added a global, singleton  JSON-LD schema to .
+-   **Tooling/Testing:**
+    -   Introduced and used a proof mode fallback to generate synthetic data for testing UI features when the underlying database collection is empty in the preview environment.
+    -   Created seed scripts (, ) for development testing.
 
 **Earlier issues found/mentioned but not fixed**
-None. The agent and user have been diligent in tracking and prioritizing all issues.
+-   **Issue 1: Sitemap/Robots.txt URLs under /api**
+    -   **Description**: Due to platform ingress rules, SEO files are served from  and  instead of the root.
+    -   **Status**: Acknowledged by the user as a platform constraint. The  correctly points to the sitemap's location, making it a low-priority issue.
+    -   **Next step**: No action required unless platform constraints change.
+-   **Issue 2: Sitemap includes semi-public B2B URLs**
+    -   **Description**: The sitemap includes  URLs, which are part of the B2B portal, not a fully public marketing surface.
+    -   **Status**: Acknowledged by the user as acceptable for P0, but noted for improvement in P1.
+    -   **Next step**: In P1, when a fully public product page is built (e.g., as part of EPIC P1-3), the sitemap generation logic should be updated to point to those URLs instead.
 
 **Known issue recurrence from previous fork**
--   **Issue**: UTF-8 Encoding Corruption in Frontend Files.
--   **Recurrence count**: This was a major issue in the previous fork but has been managed effectively in this session by using Unicode escapes () for Turkish characters in JSX files.
--   **Status**: RESOLVED (but requires ongoing vigilance).
+None.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Phased, Feature-Flagged Development:** The work is broken down into PRs (e.g., 7.6a, 7.6b, 7.6c) that build on each other.
--   **Kilit Spec (Locked Spec):** The user provides highly detailed, locked-in specifications before implementation begins, minimizing ambiguity.
--   **Progressive Hardening:** Moving from a basic working feature (Agentis) to a robust, polished one (Agentis Pro) through iterative polish and guardrail PRs.
--   **Inbox Data Model:** A new data model for  and  was created, using ObjectIDs as the primary key and  in API responses.
--   **Deep-Linking:** Using URL query parameters () to link directly to a specific state within a SPA page.
--   **Robust Clipboard API:** Implemented a clipboard copy helper with a modern  API and a fallback to the legacy  for broader compatibility.
+-   **PRD-Driven Development:** The project strictly follows the pre-defined P0/P1 roadmap.
+-   **Exec-Ready Prompts:** The user provides highly detailed, non-negotiable instructions, expecting the agent to implement without asking clarifying questions.
+-   **Proof-Based Completion:** Work is only considered DONE after the agent provides concrete proof (e.g.,  outputs, UI screenshots, JSON responses) that the implementation meets the requirements.
+-   **Proof Mode Fallback:** A testing pattern was established where endpoints can return synthetic, hardcoded data in non-production environments if the underlying database is empty. This unblocks UI development and testing.
 
 **key DB schema**
--   ****: 
--   ****: 
--   ****: 
--   ****: 
+-    / : Used interchangeably across the codebase.  appears to be the ops-facing collection, while  is used for B2B. Both were enhanced with a  flag (in the API response, not in the schema).
+-   : Now linked to both  and .
+-    (Planned): A new collection to store rules for the pricing engine, with fields for priority, type, matching criteria, and actions (, ).
 
 **changes in tech stack**
 None.
 
 **All files of reference**
--   : Needs editing for the  feedback and the test selector.
--   : Needs editing to format the  timestamp.
--   : Should be checked after testing to ensure no new regressions have been introduced.
+-   **New/Critical Files:**
+    -   : All API endpoints for the new B2B Portal.
+    -   : Endpoints for  and .
+    -   : Authorization dependency for B2B users.
+    -   : New directory containing all frontend components for the B2B Portal.
+-   **Modified/Enhanced Files:**
+    -   : Modified to include the  logic and a proof-mode fallback.
+    -   : Modified to add the case counter widgets.
+    -   : Modified to display the OPEN CASE badge.
+    -   : Modified to add routes for the B2B portal.
 
 **Areas that need refactoring**:
-- The existence of both  (legacy, booking-focused) and  (new, generic) in services and routers could be consolidated in the future, but the current approach of building  alongside  was a deliberate choice to minimize risk.
+-   The use of both  and  collections seems to indicate a potential for consolidation or clearer separation of concerns. The fallback logic added to  to read from  highlights this overlap.
 
 **key api endpoints**
--   : Lists inbox threads with filters.
--   : Creates a new inbox thread.
--   : Lists messages for a specific thread.
--   : Adds a message to a thread.
--   : (NEW) Lists inbox threads for a specific customer.
--   : (FIXED) Retrieves customer details.
--   : (FIXED) Generates a payment link for a booking.
+-   : Get current B2B user's identity and scope.
+-   : List bookings for the current B2B agent.
+-   : Get details for a specific B2B booking.
+-   : Create a new case for a booking from the B2B portal.
+-   : Get a read-only financial summary for the B2B agent.
+-   : Get counts of open/waiting/in_progress cases for the ops dashboard.
+-   : (Modified) Returns reservations list with  flag.
+-   : Provides a public-only XML sitemap.
 
 **Critical Info for New Agent**
--   **Test Environment Auth:** The frontend testing agent (Playwright) has shown instability with UI-based login. The user suggested a more robust approach: using an API call to get a token and then setting it in  () before running tests. If E2E tests fail on auth, this should be the first thing to investigate.
--   **ID Strategy:** The project standard for new collections like  is to use MongoDB's native  for the  field and expose it as a string in all API responses. Do not use custom string prefixes like  unless explicitly specified.
+-   **Follow the User's Exec-Ready Prompt Style**: The user provides extremely detailed, non-negotiable instructions. Your job is to implement them exactly as specified and avoid asking clarifying questions. Make reasonable assumptions based on existing code patterns.
+-   **Provide Proof Packs for DONE Work**: Do not declare work complete without providing concrete evidence. Follow the user's requested format:  outputs, JSON responses, and UI descriptions/screenshots to prove the feature works as requested.
+-   **Maintain the Parity Score**: At the end of each completed EPIC, update the Agentis Parite Skoru and Agentis Pro Parite Skoru as defined by the user.
+-   **Use Proof Mode for Testing**: If a feature depends on data that doesn't exist in the preview environment, implement a proof mode fallback (guarded by an environment variable) to return synthetic data, unblocking testing and proof generation.
 
 **documents and test reports created in this job**
--   
--   
+-   : A script to seed a booking for the B2B portal demo.
+-   : A script to seed a reservation for testing the ops command center.
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User:** Provides the kilit spec for PR#8.3b.1, a mini-patch to add toast feedback for invalid deep-links and format timestamps in the CRM Inbox panel.
-2.  **Agent:** Agrees to implement the mini-patch and asks the user to write the spec.
-3.  **User:** Confirms the agent's assessment of PR#8.3b, agrees a mini-patch (PR#8.3b.1) is needed, and offers to write the spec.
-4.  **Agent:** Summarizes the implementation of PR#8.3b, noting that E2E tests were blocked by an auth issue in the test environment but the code logic is correct.
-5.  **User:** Provides the kilit spec for PR#8.3b (Inbox Auto-Select + CRM Panel Polish).
-6.  **Agent:** Agrees to implement PR#8.3b and asks the user to write the spec.
-7.  **User:** Confirms PR#8.3 is merge-ready as the P0 blocker is fixed. Updates the Pro score to ~86% and proposes the remaining UX polish as PR#8.3b.
-8.  **Agent:** Reports that the P0 bug ( 404) is fixed, and the CRM-Inbox integration is now unblocked and partially implemented.
-9.  **User:** Approves the agent's plan to fix the P0 bug first, then complete the deep-link handling for PR#8.3.
-10. **Agent:** Reports finding a critical P0 blocker ( returns 404), which prevents the PR#8.3 frontend work from being tested. Proposes a plan to fix the P0 bug first.
+1.  **User (DONE):** Confirmed P0-3 is DONE and provided the next exec-ready prompt for **EPIC P1-1: Fiyat/Aksiyon Motoru v1**.
+2.  **User (DONE):** Provided a detailed proof pack template for the agent to fill out to close P0-3.
+3.  **User (DONE):** Acknowledged the agent's progress on P0-3 but pointed out two critical issues (Sitemap URL path, sitemap content) and provided a clear, exec-ready prompt to fix them.
+4.  **User (DONE):** Confirmed P0-2 is DONE and provided the next exec-ready prompt for **EPIC P0-3: SEO Base v0**.
+5.  **User (DONE):** Provided an exec-ready prompt to implement a no-write proof mode to unblock the final validation of P0-2.2.
+6.  **User (DONE):** Acknowledged the  implementation was code-complete but blocked by data availability, and provided the next exec-ready prompt to fix the  404 error.
+7.  **User (DONE):** Confirmed P0-2.1 was done and provided the next exec-ready prompt for **P0-2.2: has_open_case + Booking List Badge**.
+8.  **User (DONE):** Acknowledged the agent's report and provided the exec-ready prompt for the final part of **EPIC P0-1 (P0-1.4: Cari Özet)**.
+9.  **User (DONE):** Confirmed P0-1.2 was DONE and provided the exec-ready prompt for **P0-1.3: Booking Detail + Case Creation**.
+10. **User (DONE):** Confirmed P0-1.1 was DONE and provided the exec-ready prompt for **P0-1.2: B2B Bookings List**.
 
 **Project Health Check:**
--   **Working**: All core features from FAZ 1, 2, and most of FAZ 3. This includes CRM, Audit Logs, and the new Inbox v1.
--   **Broken**: Nothing is functionally broken.
--   **Mocked**: Nothing is mocked.
+-   **Working**: Core application and all P0 features are implemented and functionally working. The preview environment has some data availability/write permission issues, but the code includes fallbacks (proof mode) to handle this.
 
 **3rd Party Integrations**
--   **Stripe**: Payment processing.
--   **WeasyPrint**: PDF generation.
--   **AWS SES**: Email delivery.
+-   iyzico: Payment Processing.
+-   Hotelbeds: Hotel inventory XML provider.
+-   Stripe: Payment processing.
+-   WeasyPrint: PDF generation.
+-   AWS SES: Email delivery.
+-   NetGSM/İletiMerkezi (Planned): SMS provider.
 
 **Testing status**
--   **Testing agent used after significant changes**: YES. Both backend and frontend testing agents have been used extensively throughout this session.
--   **Troubleshoot agent used after agent stuck in loop**: NO.
--   **Test files created**: Test scenarios are managed in . Backend test files are generated on the fly by the testing agent.
--   **Known regressions**: None. A previous testing agent auth issue has been noted as a potential source of test flakiness.
+-   **Testing agent used after significant changes**: NO
+-   **Troubleshoot agent used after agent stuck in loop**: NO
+-   **Test files created**:
+    -   
+    -   
+    -   
+-   **Known regressions**: None.
 
 **Credentials to test flow:**
 -   **Ops/Admin**:  / 
 -   **Agency**:  / 
 
 **What agent forgot to execute**
-The agent has followed the user's kilit spec pattern very closely. Minor implementation details that missed the Pro bar (like using  instead of a user-facing ) were caught by the user and immediately scheduled for a follow-up mini-patch, so nothing has been truly forgotten or ignored.</analysis>
+The agent has been diligent in following the user's highly specific, exec-ready prompts. No tasks or requirements appear to have been forgotten. The agent successfully navigated environmental challenges (like lack of DB data) by proposing and implementing clever workarounds (like proof mode) that align with the user's directive to avoid asking questions.</analysis>

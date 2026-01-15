@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, BackgroundTasks, Request
 
 from app.db import get_db
 from app.security.deps_b2b import CurrentB2BUser, current_b2b_user
@@ -9,15 +9,11 @@ from app.services.crm_events import log_crm_event
 router = APIRouter(prefix="/b2b", tags=["b2b-portal"])
 
 
-@router.get("/me")
-async def b2b_me(user: CurrentB2BUser = Depends(current_b2b_user), db=Depends(get_db)):
-    """Return minimal identity + scope info for B2B users.
+async def _log_b2b_login_success(db, user: CurrentB2BUser):
+    """Best-effort logging for B2B login success.
 
-    - Only users with B2B-allowed roles can access (enforced by current_b2b_user)
-    - Used by frontend B2BAuthGuard and login flows
+    Any exception here must not break the main /me response.
     """
-
-    # Fire-and-forget style CRM event for successful B2B identity check
     try:
         if user.organization_id:
             await log_crm_event(
@@ -31,8 +27,25 @@ async def b2b_me(user: CurrentB2BUser = Depends(current_b2b_user), db=Depends(ge
                 source="b2b_portal",
             )
     except Exception:
-        # Logging should never break the main flow
+        # Swallow all errors – logging is best-effort only
         pass
+
+
+@router.get("/me")
+async def b2b_me(
+    request: Request,
+    background: BackgroundTasks,
+    user: CurrentB2BUser = Depends(current_b2b_user),
+    db=Depends(get_db),
+):
+    """Return minimal identity + scope info for B2B users.
+
+    - Only users with B2B-allowed roles can access (enforced by current_b2b_user)
+    - Used by frontend B2BAuthGuard and login flows
+    """
+
+    # Fire-and-forget: log event in background so main response is not blocked
+    background.add_task(_log_b2b_login_success, db, user)
 
     return {
         "user_id": user.id,

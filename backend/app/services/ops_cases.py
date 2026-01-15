@@ -6,6 +6,86 @@ from app.utils import now_utc
 from app.services.booking_events import emit_event
 
 
+async def create_case(
+    db,
+    organization_id: str,
+    *,
+    booking_id: str,
+    type: str,
+    source: str,
+    status: str = "open",
+    waiting_on: Optional[str] = None,
+    note: Optional[str] = None,
+    booking_code: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Create a new ops_case document.
+
+    This is used primarily by internal ops_panel flows. Guest portal flows may
+    still write directly for backwards-compatibility, but should converge to
+    this shape over time.
+    """
+
+    now = now_utc()
+
+    case_id = f"CASE-{booking_id}-{int(now.timestamp())}"
+
+    doc: Dict[str, Any] = {
+        "case_id": case_id,
+        "booking_id": booking_id,
+        "organization_id": organization_id,
+        "type": type,
+        "source": source,
+        "status": status,
+        "waiting_on": waiting_on,
+        "note": note,
+        "booking_code": booking_code,
+        "created_at": now,
+        "updated_at": now,
+    }
+
+    await db.ops_cases.insert_one(doc)
+
+    doc.pop("_id", None)
+    return doc
+
+
+async def update_case(
+    db,
+    organization_id: str,
+    case_id: str,
+    *,
+    status: Optional[str] = None,
+    waiting_on: Optional[str] = None,
+    note: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Partial update of an ops_case (status / waiting_on / note)."""
+
+    now = now_utc()
+
+    doc = await db.ops_cases.find_one({"organization_id": organization_id, "case_id": case_id})
+    if not doc:
+        from app.errors import AppError
+
+        raise AppError(404, "ops_case_not_found", "Ops case not found", {"case_id": case_id})
+
+    update: Dict[str, Any] = {"updated_at": now}
+    if status is not None:
+        update["status"] = status
+    if waiting_on is not None:
+        update["waiting_on"] = waiting_on
+    if note is not None:
+        update["note"] = note
+
+    await db.ops_cases.update_one({"_id": doc["_id"]}, {"$set": update})
+
+    updated = await db.ops_cases.find_one({"_id": doc["_id"]})
+    if not updated:
+        return {"case_id": case_id}
+
+    updated.pop("_id", None)
+    return updated
+
+
 async def list_cases(
     db,
     organization_id: str,

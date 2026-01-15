@@ -217,6 +217,14 @@ async def public_checkout(payload: PublicCheckoutRequest, request: Request, db=D
         },
     }
 
+    # Persist coupon metadata on booking if present
+    coupon_info = quote.get("coupon")
+    applied_coupon_id = quote.get("_applied_coupon_id")
+    if coupon_info:
+        booking_doc["coupon"] = coupon_info
+    if applied_coupon_id:
+        booking_doc["coupon_id"] = applied_coupon_id
+
     ins = await bookings.insert_one(booking_doc)
     booking_id = str(ins.inserted_id)
 

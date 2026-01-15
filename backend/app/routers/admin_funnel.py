@@ -56,23 +56,78 @@ async def funnel_summary(
 
     base_q = {"organization_id": org_id, "created_at": {"$gte": since}}
 
-    async def _count(event_name: str) -> int:
-        return await db.funnel_events.count_documents({**base_q, "event_name": event_name})
+    # Aggregate by channel + event_name in a single query for efficiency
+    pipeline = [
+        {"$match": base_q},
+        {
+            "$group": {
+                "_id": {"channel": "$channel", "event_name": "$event_name"},
+                "count": {"$sum": 1},
+            }
+        },
+    ]
 
-    quote_count = await _count("public.quote.created") + await _count("b2b.quote.created")
-    checkout_started_count = await _count("public.checkout.started") + await _count("b2b.checkout.started")
-    booking_created_count = await _count("public.booking.created") + await _count("b2b.booking.created")
-    payment_succeeded_count = await _count("public.payment.succeeded") + await _count("b2b.payment.succeeded")
-    payment_failed_count = await _count("public.payment.failed") + await _count("b2b.payment.failed")
+    cur = db.funnel_events.aggregate(pipeline)
+    rows = await cur.to_list(length=None)
 
-    conversion = (booking_created_count / quote_count) if quote_count > 0 else 0.0
+    def _empty_bucket() -> Dict[str, Any]:
+        return {
+            "quote_count": 0,
+            "checkout_started_count": 0,
+            "booking_created_count": 0,
+            "payment_succeeded_count": 0,
+            "payment_failed_count": 0,
+            "conversion": 0.0,
+        }
+
+    # Buckets: overall + per channel
+    total = _empty_bucket()
+    by_channel: Dict[str, Dict[str, Any]] = {
+        "public": _empty_bucket(),
+        "b2b": _empty_bucket(),
+    }
+
+    def _apply(bucket: Dict[str, Any], event_name: str, cnt: int) -> None:
+        if event_name.endswith("quote.created"):
+            bucket["quote_count"] += cnt
+        elif event_name.endswith("checkout.started"):
+            bucket["checkout_started_count"] += cnt
+        elif event_name.endswith("booking.created"):
+            bucket["booking_created_count"] += cnt
+        elif event_name.endswith("payment.succeeded"):
+            bucket["payment_succeeded_count"] += cnt
+        elif event_name.endswith("payment.failed"):
+            bucket["payment_failed_count"] += cnt
+
+    for row in rows:
+        ident = row.get("_id") or {}
+        channel = ident.get("channel") or "unknown"
+        event_name = ident.get("event_name") or ""
+        cnt = int(row.get("count") or 0)
+
+        # Apply to global totals
+        _apply(total, event_name, cnt)
+
+        # Apply to known channels
+        if channel in by_channel:
+            _apply(by_channel[channel], event_name, cnt)
+
+    def _compute_conversion(bucket: Dict[str, Any]) -> None:
+        qc = bucket["quote_count"]
+        bc = bucket["booking_created_count"]
+        bucket["conversion"] = (bc / qc) if qc > 0 else 0.0
+
+    _compute_conversion(total)
+    for ch in by_channel.values():
+        _compute_conversion(ch)
 
     return {
         "days": days,
-        "quote_count": quote_count,
-        "checkout_started_count": checkout_started_count,
-        "booking_created_count": booking_created_count,
-        "payment_succeeded_count": payment_succeeded_count,
-        "payment_failed_count": payment_failed_count,
-        "conversion": conversion,
+        "quote_count": total["quote_count"],
+        "checkout_started_count": total["checkout_started_count"],
+        "booking_created_count": total["booking_created_count"],
+        "payment_succeeded_count": total["payment_succeeded_count"],
+        "payment_failed_count": total["payment_failed_count"],
+        "conversion": total["conversion"],
+        "by_channel": by_channel,
     }

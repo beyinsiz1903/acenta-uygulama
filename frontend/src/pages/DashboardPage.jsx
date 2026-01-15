@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
-import { ArrowRight, CalendarDays, Ticket, Users, Layers } from "lucide-react";
+import { ArrowRight, CalendarDays, Ticket, Users, Layers, AlertCircle } from "lucide-react";
 
 import { api, apiErrorMessage, getUser } from "../lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";

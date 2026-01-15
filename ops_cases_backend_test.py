@@ -208,7 +208,7 @@ def test_ops_cases_system():
     }
     
     r = requests.patch(
-        f"{BASE_URL}/api/ops/cases/{case_id}",
+        f"{BASE_URL}/api/ops-cases/{case_id}",
         headers=admin_headers,
         json=progress_payload,
     )

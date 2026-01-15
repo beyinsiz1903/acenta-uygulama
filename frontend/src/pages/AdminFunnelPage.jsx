@@ -53,6 +53,10 @@ export default function AdminFunnelPage() {
     } catch (e) {
       setSummaryError(apiErrorMessage(e));
     } finally {
+      setSummaryLoading(false);
+    }
+  };
+
   const loadAlerts = async (nextDays) => {
     const d = nextDays ?? days;
     setAlertsLoading(true);
@@ -64,11 +68,6 @@ export default function AdminFunnelPage() {
       setAlertsError(apiErrorMessage(e));
     } finally {
       setAlertsLoading(false);
-    }
-  };
-
-
-      setSummaryLoading(false);
     }
   };
 

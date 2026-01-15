@@ -34,10 +34,10 @@ from app.utils import now_utc
 ORGANIZATION_ID = "695e03c80b04ed31c4eaa899"
 AGENCY_ID = "695e03c80b04ed31c4eaa89a"
 CORRELATION_ID = "fc_test_payment_succeeded_01"
-PAYMENT_INTENT_ID = "pi_test_123"
 
-# Generate unique event ID for each test run
+# Generate unique IDs for each test run
 import time
+PAYMENT_INTENT_ID = f"pi_test_{int(time.time())}"
 EVENT_ID = f"evt_test_{int(time.time())}"
 
 async def create_test_booking(db):

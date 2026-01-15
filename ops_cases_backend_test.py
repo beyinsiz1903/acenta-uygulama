@@ -86,7 +86,7 @@ def test_ops_cases_system():
     # ------------------------------------------------------------------
     # Test 3: Senaryo 1 - Listeleme (mevcut guest_portal caseleri ile birlikte)
     # ------------------------------------------------------------------
-    print("\n3️⃣  Senaryo 1: Listeleme (GET /api/ops/cases)...")
+    print("\n3️⃣  Senaryo 1: Listeleme (GET /api/ops-cases/)...")
     
     r = requests.get(
         f"{BASE_URL}/api/ops-cases/",

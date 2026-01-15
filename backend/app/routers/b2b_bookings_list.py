@@ -63,6 +63,19 @@ async def list_b2b_bookings_agency(
         "quote_id": {"$exists": True},
     }
 
+    # Date range: default last 30 days if not provided
+    if not from_ and not to:
+        to = datetime.utcnow()
+        from_ = to - timedelta(days=30)
+
+    if from_ or to:
+        created_range: Dict[str, Any] = {}
+        if from_:
+            created_range["$gte"] = from_
+        if to:
+            created_range["$lte"] = to
+        query["created_at"] = created_range
+
     if status:
         normalized = [s.upper() for s in status if s]
         if normalized:

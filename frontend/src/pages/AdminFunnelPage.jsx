@@ -70,8 +70,16 @@ export default function AdminFunnelPage() {
   };
 
   useEffect(() => {
+    void loadSummary(days);
     // Initial empty load (no filters) is noisy; wait for user input
-  }, []);
+  }, [days]);
+
+  const formatPercent = (v) => {
+    if (!v || Number.isNaN(v)) return "0.0%";
+    const num = Number(v) || 0;
+    const pct = Math.round(num * 1000) / 10; // 12.3%
+    return `${pct.toFixed(1)}%`;
+  };
 
   return (
     <div className="space-y-4">
@@ -81,6 +89,57 @@ export default function AdminFunnelPage() {
           quote → checkout → booking → payment zincirini correlation_id bazlı inceleyin.
         </p>
       </div>
+
+      <Card className="p-3 space-y-3 text-[11px]">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <Label htmlFor="funnel-days" className="text-[11px]">
+              Son
+            </Label>
+            <select
+              id="funnel-days"
+              data-testid="funnel-kpi-days-select"
+              className="h-7 rounded-md border bg-background px-2 text-xs"
+              value={days}
+              onChange={(e) => setDays(Number(e.target.value) || 7)}
+            >
+              <option value={7}>7 gn</option>
+              <option value={14}>14 gn</option>
+              <option value={30}>30 gn</option>
+            </select>
+          </div>
+          {summaryLoading && <div className="text-[11px] text-muted-foreground">Ykleniyor...</div>}
+        </div>
+
+        {summaryError && <FieldError text={summaryError} />}
+
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-2 mt-2">
+          <div className="rounded-md border px-2 py-2" data-testid="funnel-kpi-quotes">
+            <div className="text-[10px] text-muted-foreground">Quotes</div>
+            <div className="text-sm font-semibold">{summary.quote_count}</div>
+          </div>
+          <div className="rounded-md border px-2 py-2" data-testid="funnel-kpi-checkout-started">
+            <div className="text-[10px] text-muted-foreground">Checkout Started</div>
+            <div className="text-sm font-semibold">{summary.checkout_started_count}</div>
+          </div>
+          <div className="rounded-md border px-2 py-2" data-testid="funnel-kpi-bookings">
+            <div className="text-[10px] text-muted-foreground">Bookings</div>
+            <div className="text-sm font-semibold">{summary.booking_created_count}</div>
+          </div>
+          <div className="rounded-md border px-2 py-2" data-testid="funnel-kpi-pay-succeeded">
+            <div className="text-[10px] text-muted-foreground">Payments Succeeded</div>
+            <div className="text-sm font-semibold">{summary.payment_succeeded_count}</div>
+          </div>
+          <div className="rounded-md border px-2 py-2" data-testid="funnel-kpi-pay-failed">
+            <div className="text-[10px] text-muted-foreground">Payments Failed</div>
+            <div className="text-sm font-semibold">{summary.payment_failed_count}</div>
+          </div>
+          <div className="rounded-md border px-2 py-2" data-testid="funnel-kpi-conversion">
+            <div className="text-[10px] text-muted-foreground">Conversion</div>
+            <div className="text-sm font-semibold">{formatPercent(summary.conversion)}</div>
+          </div>
+        </div>
+      </Card>
 
       <Card className="p-3 space-y-3 text-[11px]">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-2">

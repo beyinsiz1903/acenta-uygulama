@@ -163,6 +163,40 @@ async def handle_stripe_webhook(raw_body: bytes, signature: str | None) -> Tuple
     if event_type == "payment_intent.succeeded":
         return await _handle_payment_intent_succeeded(event)
 
+    if event_type == "payment_intent.payment_failed":
+        # For v1 we record a simple failed event without side effects
+        obj = event.get("data", {}).get("object", {})
+        metadata = obj.get("metadata") or {}
+        booking_id = metadata.get("booking_id")
+        organization_id = metadata.get("organization_id")
+        agency_id = metadata.get("agency_id")
+        from app.db import get_db as _get_db
+        from app.services.funnel_events import log_funnel_event as _log_funnel_event
+
+        if organization_id:
+            db = await _get_db()
+            await _log_funnel_event(
+                db,
+                organization_id=organization_id,
+                correlation_id=metadata.get("correlation_id") or f"pi_{obj.get('id')}",
+                event_name="public.payment.failed",
+                entity_type="booking" if booking_id else "payment_intent",
+                entity_id=booking_id or obj.get("id"),
+                channel="public",
+                user={
+                    "agency_id": agency_id,
+                },
+                context={
+                    "amount_cents": obj.get("amount", 0),
+                    "currency": obj.get("currency"),
+                },
+                trace={
+                    "provider": "stripe",
+                    "event_id": event.get("id"),
+                },
+            )
+        return 200, {"ok": True}
+
     if event_type == "charge.refunded":
         return await _handle_charge_refunded(event)
 

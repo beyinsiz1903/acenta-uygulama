@@ -95,7 +95,7 @@ def test_ops_cases_system():
     assert r.status_code == 200, f"GET /api/ops-cases/ failed: {r.text}"
     
     list_response = r.json()
-    print(f"   ✅ GET /api/ops/cases successful: 200")
+    print(f"   ✅ GET /api/ops-cases/ successful: 200")
     print(f"   📋 Response structure: {list(list_response.keys())}")
     
     # Verify response structure

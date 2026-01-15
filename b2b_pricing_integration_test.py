@@ -276,7 +276,7 @@ def test_b2b_pricing_integration():
     print(f"   📋 Idempotency-Key: {idempotency_key}")
     
     r = requests.post(
-        f"{BASE_URL}/api/b2b/bookings",
+        f"{BASE_URL}/api/api/b2b/bookings",
         json=booking_payload,
         headers=booking_headers,
     )

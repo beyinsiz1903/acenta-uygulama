@@ -148,6 +148,43 @@ async def public_checkout(payload: PublicCheckoutRequest, request: Request, db=D
             raise HTTPException(status_code=404, detail="QUOTE_NOT_FOUND") from exc
         raise
 
+    # Evaluate coupon (optional) before creating booking
+    coupon_code = request.query_params.get("coupon") or None
+    coupon_result: Dict[str, Any] | None = None
+    if coupon_code:
+        coupons = CouponService(db)
+        coupon_doc, coupon_eval = await coupons.evaluate_for_public_quote(
+            organization_id=org_id,
+            quote=quote,
+            code=coupon_code,
+            customer_key=payload.guest.email,
+        )
+        coupon_result = coupon_eval
+        # Adjust quote amount if applied
+        if coupon_doc and coupon_eval.get("status") == "APPLIED":
+            discount_cents = int(coupon_eval.get("amount_cents", 0) or 0)
+            # Never go below zero
+            new_amount_cents = max(int(quote.get("amount_cents", 0)) - discount_cents, 0)
+            quote["amount_cents"] = new_amount_cents
+            quote["coupon"] = {
+                "code": coupon_code.strip().upper(),
+                "status": coupon_eval["status"],
+                "amount_cents": discount_cents,
+                "currency": coupon_eval["currency"],
+                "reason": coupon_eval.get("reason"),
+            }
+            # Persist coupon usage for analytics; actual increment will be done after successful PI
+            quote["_applied_coupon_id"] = str(coupon_doc.get("_id")) if coupon_doc.get("_id") else None
+        else:
+            # Non-applied / invalid kupon durumunda quote dokümanına sadece durum yazılabilir (zorunlu değil)
+            quote["coupon"] = {
+                "code": coupon_code.strip().upper(),
+                "status": coupon_eval["status"],
+                "amount_cents": int(coupon_eval.get("amount_cents", 0) or 0),
+                "currency": coupon_eval.get("currency") or quote.get("currency") or "EUR",
+                "reason": coupon_eval.get("reason"),
+            }
+
     # Create booking document in PENDING_PAYMENT status
     now = now_utc()
     guest = payload.guest

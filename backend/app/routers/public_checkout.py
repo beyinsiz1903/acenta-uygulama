@@ -158,7 +158,6 @@ async def public_checkout(payload: PublicCheckoutRequest, request: Request, db=D
             code=coupon_code,
             customer_key=payload.guest.email,
         )
-        coupon_result = coupon_eval
         # Adjust quote amount if applied
         if coupon_doc and coupon_eval.get("status") == "APPLIED":
             discount_cents = int(coupon_eval.get("amount_cents", 0) or 0)

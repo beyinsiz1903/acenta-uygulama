@@ -51,6 +51,8 @@ from app.routers.crm_activities import router as crm_activities_router
 from app.routers.crm_events import router as crm_events_router
 from app.routers.reservations import router as reservations_router
 from app.routers.pricing_quote import router as pricing_quote_router
+from app.routers.admin_funnel import router as admin_funnel_router
+
 
 from app.routers.seo import router as seo_router
 from app.email_worker import email_dispatch_loop
@@ -106,6 +108,8 @@ async def app_error_handler(request, exc: AppError):
 # Include routers
 app.include_router(auth_router, prefix=API_PREFIX)
 app.include_router(admin_router, prefix=API_PREFIX)
+app.include_router(admin_funnel_router)
+
 app.include_router(admin_catalog_router, prefix=API_PREFIX)
 app.include_router(admin_metrics_router, prefix=API_PREFIX)
 app.include_router(admin_pricing_router)

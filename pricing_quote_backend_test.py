@@ -54,7 +54,7 @@ def test_pricing_quote_api():
     # Generate unique notes for this test run
     test_id = str(uuid.uuid4())[:8]
     rule_payload = {
-        "priority": 150,
+        "priority": 999,  # Use very high priority to ensure our rule wins
         "scope": {"product_type": "hotel"},
         "validity": {"from": "2026-01-01", "to": "2027-01-01"},
         "action": {"type": "markup_percent", "value": 10.0},

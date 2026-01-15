@@ -318,6 +318,12 @@ function OpsGuestCaseDrawer({ caseId, open, onClose, onClosed }) {
                             <div className="text-[11px] text-muted-foreground break-words">{metaLine}</div>
                           )}
                         </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
+
               <div className="mt-4 flex items-center justify-end gap-2">
                 <Button
                   type="button"

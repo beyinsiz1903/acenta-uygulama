@@ -312,6 +312,8 @@ async def public_checkout(payload: PublicCheckoutRequest, request: Request, db=D
 
     sell_amount = float(q.get("final_price") or base_price)
 
+    # Funnel: booking.created (will be actually logged after insert when we know booking_id)
+
     bookings = db.bookings
     booking_doc: Dict[str, Any] = {
         "organization_id": org_id,

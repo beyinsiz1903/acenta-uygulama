@@ -775,6 +775,7 @@ export default function AdminPricingPage() {
       {activeTab === "contracts" && <ContractsTab />}
       {activeTab === "grids" && <RateGridsTab />}
       {activeTab === "rules" && <RulesTab />}
+      {activeTab === "simple_rules" && <SimpleRulesTab />}
     </div>
   );
 }

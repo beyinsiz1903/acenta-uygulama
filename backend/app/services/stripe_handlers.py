@@ -98,6 +98,41 @@ async def _handle_payment_intent_succeeded(event: Dict[str, Any]) -> Tuple[int, 
         raw=event,
     )
 
+    # Funnel: *.payment.succeeded
+    try:
+        from app.services.funnel_events import log_funnel_event as _log_funnel_event
+        from app.db import get_db as _get_db
+
+        db = await _get_db()
+        channel = metadata.get("channel") or "public"
+        event_name = f"{channel}.payment.succeeded"
+        correlation_id = metadata.get("correlation_id") or f"pi_{pi_id}"
+
+        await _log_funnel_event(
+            db,
+            organization_id=organization_id,
+            correlation_id=correlation_id,
+            event_name=event_name,
+            entity_type="booking",
+            entity_id=booking_id,
+            channel=channel,
+            user={
+                "agency_id": agency_id,
+            },
+            context={
+                "amount_cents": amount_received,
+                "currency": "EUR",
+                "payment_intent_id": pi_id,
+            },
+            trace={
+                "provider": "stripe",
+                "event_id": event.get("id"),
+                "payment_intent_id": pi_id,
+            },
+        )
+    except Exception:
+        pass
+
     return 200, {"ok": True}
 
 

@@ -386,6 +386,9 @@ async def public_checkout(payload: PublicCheckoutRequest, request: Request, db=D
         "organization_id": org_id,
         "booking_id": booking_id,
         "quote_id": quote.get("quote_id"),
+        "correlation_id": correlation_id,
+        "channel": "public",
+        "agency_id": None,
     }
 
     try:

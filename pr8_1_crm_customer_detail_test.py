@@ -10,7 +10,7 @@ from datetime import datetime
 from typing import Any, Dict
 
 # Configuration - Use production URL from frontend/.env
-BASE_URL = "https://syroce-acenta.preview.emergentagent.com"
+BASE_URL = "https://hotel-res-hub.preview.emergentagent.com"
 
 def login_admin():
     """Login as admin user and return token, org_id, email"""

@@ -89,8 +89,8 @@
     }
   ],
   "test_environment": {
-    "backend_url": "https://syroce-acenta.preview.emergentagent.com/api",
-    "frontend_url": "https://syroce-acenta.preview.emergentagent.com",
+    "backend_url": "https://hotel-res-hub.preview.emergentagent.com/api",
+    "frontend_url": "https://hotel-res-hub.preview.emergentagent.com",
     "test_credentials": {
       "admin": "admin@acenta.test / admin123"
     },

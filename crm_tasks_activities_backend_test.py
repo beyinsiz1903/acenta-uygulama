@@ -22,7 +22,7 @@ import aiohttp
 
 class CRMTasksActivitiesTest:
     def __init__(self):
-        self.base_url = "https://syroce-acenta.preview.emergentagent.com"
+        self.base_url = "https://hotel-res-hub.preview.emergentagent.com"
         self.session: Optional[aiohttp.ClientSession] = None
         self.admin_token: Optional[str] = None
         self.admin_org_id: Optional[str] = None

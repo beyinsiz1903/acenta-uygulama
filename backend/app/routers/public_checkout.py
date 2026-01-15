@@ -156,6 +156,7 @@ async def public_quote(payload: PublicQuoteRequest, request: Request, db=Depends
 async def public_checkout(payload: PublicCheckoutRequest, request: Request, db=Depends(get_db)):
     client_ip = request.client.host if request.client else None
     org_id = payload.org
+    correlation_id = get_or_create_correlation_id(request, None)
 
     # First, see if this idempotent key already produced a checkout
     existing = await db.public_checkouts.find_one(
@@ -166,6 +167,27 @@ async def public_checkout(payload: PublicCheckoutRequest, request: Request, db=D
         }
     )
     if existing:
+        # Funnel: idempotent replay still counts as checkout.started once; event is
+        # deduped by unique index on (org, correlation_id, event_name, entity_id).
+        try:
+            await log_funnel_event(
+                db,
+                organization_id=org_id,
+                correlation_id=correlation_id,
+                event_name="public.checkout.started",
+                entity_type="quote",
+                entity_id=payload.quote_id,
+                channel="public",
+                user=None,
+                context={},
+                trace={
+                    "idempotency_key": payload.idempotency_key,
+                    "ip": client_ip,
+                },
+            )
+        except Exception:
+            pass
+
         return PublicCheckoutResponse(
             ok=True,
             booking_id=existing.get("booking_id"),
@@ -173,6 +195,26 @@ async def public_checkout(payload: PublicCheckoutRequest, request: Request, db=D
             payment_intent_id=existing.get("payment_intent_id"),
             client_secret=existing.get("client_secret"),
         )
+
+    # Funnel: checkout.started
+    try:
+        await log_funnel_event(
+            db,
+            organization_id=org_id,
+            correlation_id=correlation_id,
+            event_name="public.checkout.started",
+            entity_type="quote",
+            entity_id=payload.quote_id,
+            channel="public",
+            user=None,
+            context={},
+            trace={
+                "idempotency_key": payload.idempotency_key,
+                "ip": client_ip,
+            },
+        )
+    except Exception:
+        pass
 
     try:
         quote = await get_valid_quote(db, organization_id=org_id, quote_id=payload.quote_id)
@@ -273,6 +315,7 @@ async def public_checkout(payload: PublicCheckoutRequest, request: Request, db=D
     bookings = db.bookings
     booking_doc: Dict[str, Any] = {
         "organization_id": org_id,
+        "correlation_id": correlation_id,
         "status": "PENDING_PAYMENT",
         "source": "public",
         "created_at": now,

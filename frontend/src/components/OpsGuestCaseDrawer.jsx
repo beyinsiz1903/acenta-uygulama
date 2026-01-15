@@ -67,7 +67,7 @@ function OpsGuestCaseDrawer({ caseId, open, onClose, onClosed }) {
       setLoading(true);
       setError("");
       try {
-        const doc = await getOpsGuestCase(caseId);
+        const doc = await getOpsCase(caseId);
         setData(doc);
         if (doc?.booking_id) {
           await loadTimeline(doc.booking_id);

@@ -356,6 +356,26 @@ export default function BookCheckoutPage() {
           </div>
         </form>
 
+        {couponResult && (
+          <div className="mt-4 border-t pt-3 space-y-1 text-xs">
+            <div className="flex items-center justify-between">
+              <div className="font-medium">Kupon</div>
+              <div className="text-[11px] text-muted-foreground">
+                Kod: <span className="font-mono">{couponResult.code}</span>
+              </div>
+            </div>
+            <div className="text-[11px]">
+              Durum: <span className="font-mono">{couponResult.status}</span>
+              {couponResult.reason && ` • ${couponResult.reason}`}
+            </div>
+            {couponResult.status === "APPLIED" && (
+              <div className="text-[11px]">
+                İndirim: {couponResult.amount_cents / 100} {couponResult.currency}
+              </div>
+            )}
+          </div>
+        )}
+
         {result && (
           <div className="mt-4 border-t pt-3 space-y-2 text-xs">
             {providerError && !error && (

@@ -393,7 +393,7 @@ def test_b2b_pricing_integration():
     
     # Test B2B bookings list
     r = requests.get(
-        f"{BASE_URL}/api/b2b/bookings",
+        f"{BASE_URL}/api/api/b2b/bookings",
         headers=agency_headers,
     )
     

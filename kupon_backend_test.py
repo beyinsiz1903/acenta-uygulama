@@ -212,9 +212,8 @@ def test_checkout_with_coupon(org, quote_id, coupon_code, guest_email, expected_
         
         # Let's manually check the coupon in the database
         coupon = db.coupons.find_one({
-            "organization_id": org,
             "code": coupon_code.strip().upper() if coupon_code else None
-        })
+        })  # Remove organization_id filter since coupon might be in admin org
         
         if coupon_code and not coupon:
             print(f"   ✅ Coupon not found in database (expected for NOT_FOUND test)")

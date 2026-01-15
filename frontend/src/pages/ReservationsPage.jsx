@@ -498,9 +498,23 @@ export default function ReservationsPage() {
                       <TableRow key={r.id}>
                         <TableCell className="font-medium text-foreground">{r.pnr}</TableCell>
                         <TableCell>
-                          <span className="rounded-full border bg-accent px-2 py-1 text-xs font-medium text-foreground/80">
-                            {b.label}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className="rounded-full border bg-accent px-2 py-1 text-xs font-medium text-foreground/80">
+                              {b.label}
+                            </span>
+                            {r.has_open_case ? (
+                              <button
+                                type="button"
+                                className="rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-800"
+                                onClick={() => {
+                                  window.location.href = `/ops/cases?booking_id=${r.id}&status=open,waiting,in_progress`;
+                                }}
+                                data-testid={`badge-open-case-${r.id}`}
+                              >
+                                OPEN CASE
+                              </button>
+                            ) : null}
+                          </div>
                         </TableCell>
                         <TableCell className="text-foreground/80">{formatMoney(r.total_price, r.currency)}</TableCell>
                         <TableCell className="text-foreground/80">{formatMoney(r.paid_amount, r.currency)}</TableCell>

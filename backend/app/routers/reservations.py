@@ -35,7 +35,29 @@ async def list_reservations(status: str | None = None, q: str | None = None, use
         query["pnr"] = {"$regex": q, "$options": "i"}
 
     docs = await db.reservations.find(query).sort("created_at", -1).to_list(300)
-    return [serialize_doc(d) for d in docs]
+
+    # P0-2.2: has_open_case flag via single IN query on ops_cases
+    booking_ids = [str(d.get("_id")) for d in docs]
+    open_case_ids: set[str] = set()
+    if booking_ids:
+        cursor = db.ops_cases.find(
+            {
+                "organization_id": user["organization_id"],
+                "booking_id": {"$in": booking_ids},
+                "status": {"$in": ["open", "waiting", "in_progress"]},
+            },
+            {"booking_id": 1, "_id": 0},
+        )
+        case_docs = await cursor.to_list(length=1000)
+        open_case_ids = {str(c.get("booking_id")) for c in case_docs if c.get("booking_id")}
+
+    rows: list[dict] = []
+    for d in docs:
+        out = serialize_doc(d)
+        out["has_open_case"] = str(d.get("_id")) in open_case_ids
+        rows.append(out)
+
+    return rows
 
 
 @router.get("/{reservation_id}", dependencies=[Depends(get_current_user)])

@@ -79,6 +79,7 @@ function App() {
         {/* Public Routes */}
         <Route path="/" element={<LoginPage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/b2b/login" element={<B2BLoginPage />} />
         <Route path="/test/booking" element={<AgencyBookingTestPage />} />
         <Route path="/test/simple" element={<SimpleBookingTest />} />
         <Route path="/booking" element={<WebBookingPage />} />

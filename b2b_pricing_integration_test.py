@@ -196,7 +196,7 @@ def test_b2b_pricing_integration():
     print(f"   📋 Quote request: {json.dumps(quote_payload, indent=2)}")
     
     r = requests.post(
-        f"{BASE_URL}/api/b2b/quotes",
+        f"{BASE_URL}/api/api/b2b/quotes",
         json=quote_payload,
         headers=agency_headers,
     )

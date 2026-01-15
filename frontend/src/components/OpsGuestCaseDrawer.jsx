@@ -182,6 +182,41 @@ function OpsGuestCaseDrawer({ caseId, open, onClose, onClosed }) {
             </span>
             <span className="text-sm font-semibold">
               {data?.case_id || caseId || "Case detayı"}
+              <div className="space-y-1">
+                <div className="text-xs font-medium text-muted-foreground">Bekleme durumu</div>
+                <div className="flex items-center gap-2 text-xs">
+                  <select
+                    className="rounded-md border px-2 py-1 text-[11px] bg-background"
+                    value={editStatus === "waiting" ? editWaitingOn : ""}
+                    onChange={(e) => setEditWaitingOn(e.target.value)}
+                    disabled={isClosed || editStatus !== "waiting"}
+                  >
+                    <option value="">Seçilmedi</option>
+                    <option value="customer">Müşteri</option>
+                    <option value="supplier">Tedarikçi</option>
+                    <option value="internal">İç ekip</option>
+                    <option value="payment_gateway">Ödeme altyapısı</option>
+                  </select>
+                  {editStatus !== "waiting" && (
+                    <span className="text-[11px] text-muted-foreground">
+                      Sadece "Beklemede" durumunda aktif olur.
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <div className="text-xs font-medium text-muted-foreground">İç Not</div>
+                <Textarea
+                  rows={3}
+                  className="text-sm"
+                  placeholder="Case ile ilgili kısa bir not yazın."
+                  value={editNote}
+                  onChange={(e) => setEditNote(e.target.value)}
+                  disabled={isClosed}
+                />
+              </div>
+
             </span>
           </div>
           <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8">

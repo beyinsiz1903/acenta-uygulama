@@ -6,6 +6,7 @@ from fastapi import Depends, HTTPException, Request, status
 from pydantic import BaseModel
 
 from app.auth import get_current_user
+from app.db import get_db
 
 
 ALLOWED_B2B_ROLES = {"agency", "b2b", "agency_admin", "agency_agent", "b2b_agent"}

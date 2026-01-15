@@ -92,7 +92,7 @@ def test_ops_cases_system():
         f"{BASE_URL}/api/ops-cases/",
         headers=admin_headers,
     )
-    assert r.status_code == 200, f"GET /api/ops/cases failed: {r.text}"
+    assert r.status_code == 200, f"GET /api/ops-cases/ failed: {r.text}"
     
     list_response = r.json()
     print(f"   ✅ GET /api/ops/cases successful: 200")

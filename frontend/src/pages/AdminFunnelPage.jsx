@@ -84,6 +84,11 @@ export default function AdminFunnelPage() {
     return `${pct.toFixed(1)}%`;
   };
 
+  const currentSummary =
+    summaryChannel === "all"
+      ? summary
+      : (summary?.by_channel?.[summaryChannel] || { ...emptySummary, days: summary.days });
+
   return (
     <div className="space-y-4">
       <div>
@@ -95,21 +100,55 @@ export default function AdminFunnelPage() {
 
       <Card className="p-3 space-y-3 text-[11px]">
         <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <Label htmlFor="funnel-days" className="text-[11px]">
-              Son
-            </Label>
-            <select
-              id="funnel-days"
-              data-testid="funnel-kpi-days-select"
-              className="h-7 rounded-md border bg-background px-2 text-xs"
-              value={days}
-              onChange={(e) => setDays(Number(e.target.value) || 7)}
-            >
-              <option value={7}>7 gn</option>
-              <option value={14}>14 gn</option>
-              <option value={30}>30 gn</option>
-            </select>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <Label htmlFor="funnel-days" className="text-[11px]">
+                Son
+              </Label>
+              <select
+                id="funnel-days"
+                data-testid="funnel-kpi-days-select"
+                className="h-7 rounded-md border bg-background px-2 text-xs"
+                value={days}
+                onChange={(e) => setDays(Number(e.target.value) || 7)}
+              >
+                <option value={7}>7 gn</option>
+                <option value={14}>14 gn</option>
+                <option value={30}>30 gn</option>
+              </select>
+            </div>
+            <div className="flex items-center gap-1 border rounded-md bg-background p-0.5 text-[10px]">
+              <button
+                type="button"
+                data-testid="funnel-kpi-channel-all"
+                onClick={() => setSummaryChannel("all")}
+                className={`px-2 py-1 rounded ${
+                  summaryChannel === "all" ? "bg-primary text-primary-foreground" : "text-muted-foreground"
+                }`}
+              >
+                All
+              </button>
+              <button
+                type="button"
+                data-testid="funnel-kpi-channel-public"
+                onClick={() => setSummaryChannel("public")}
+                className={`px-2 py-1 rounded ${
+                  summaryChannel === "public" ? "bg-primary text-primary-foreground" : "text-muted-foreground"
+                }`}
+              >
+                Public
+              </button>
+              <button
+                type="button"
+                data-testid="funnel-kpi-channel-b2b"
+                onClick={() => setSummaryChannel("b2b")}
+                className={`px-2 py-1 rounded ${
+                  summaryChannel === "b2b" ? "bg-primary text-primary-foreground" : "text-muted-foreground"
+                }`}
+              >
+                B2B
+              </button>
+            </div>
           </div>
           {summaryLoading && <div className="text-[11px] text-muted-foreground">Ykleniyor...</div>}
         </div>
@@ -119,7 +158,7 @@ export default function AdminFunnelPage() {
         <div className="grid grid-cols-2 md:grid-cols-6 gap-2 mt-2">
           <div className="rounded-md border px-2 py-2" data-testid="funnel-kpi-quotes">
             <div className="text-[10px] text-muted-foreground">Quotes</div>
-            <div className="text-sm font-semibold">{summary.quote_count}</div>
+            <div className="text-sm font-semibold">{currentSummary.quote_count}</div>
           </div>
           <div className="rounded-md border px-2 py-2" data-testid="funnel-kpi-checkout-started">
             <div className="text-[10px] text-muted-foreground">Checkout Started</div>

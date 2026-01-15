@@ -291,7 +291,7 @@ def test_ops_cases_system():
     query_string = "&".join([f"{k}={v}" for k, v in filter_params.items()])
     
     r = requests.get(
-        f"{BASE_URL}/api/ops/cases?{query_string}",
+        f"{BASE_URL}/api/ops-cases/?{query_string}",
         headers=admin_headers,
     )
     assert r.status_code == 200, f"GET /api/ops/cases with filters failed: {r.text}"

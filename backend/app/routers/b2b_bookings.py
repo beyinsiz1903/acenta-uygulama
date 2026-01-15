@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Header
+from fastapi import APIRouter, Depends, Header, Request
 from fastapi.responses import JSONResponse
 
 from app.auth import get_current_user, require_roles
@@ -12,6 +12,8 @@ from app.services.b2b_pricing import B2BPricingService
 from app.services.b2b_booking import B2BBookingService
 from app.services.booking_lifecycle import BookingLifecycleService
 from app.services.booking_financials import BookingFinancialsService
+from app.services.funnel_events import log_funnel_event
+from app.utils.correlation import get_or_create_correlation_id
 
 router = APIRouter(prefix="/api/b2b", tags=["b2b-bookings"])
 

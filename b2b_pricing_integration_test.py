@@ -184,15 +184,11 @@ def test_b2b_pricing_integration():
         "items": [
             {
                 "product_id": product_id,
-                "room_type_id": "standard_room",
-                "rate_plan_id": "flexible_rate",
+                "room_type_id": "default_room",
+                "rate_plan_id": "default_rate",
                 "check_in": check_in,
                 "check_out": check_out,
-                "occupancy": {
-                    "adults": 2,
-                    "children": 0,
-                    "rooms": 1
-                }
+                "occupancy": 2
             }
         ]
     }

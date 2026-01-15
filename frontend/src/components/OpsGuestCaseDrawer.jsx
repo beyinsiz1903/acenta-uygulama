@@ -253,7 +253,7 @@ function OpsGuestCaseDrawer({ caseId, open, onClose, onClosed }) {
                     </div>
                   </div>
                   <div className="text-[11px] text-muted-foreground">
-                    Kapama sadece aşağıdaki "Case&apos;i kapat" aksiyonundan yapılabilir.
+                    Kapama sadece aşağıdaki "Case'i kapat" aksiyonundan yapılabilir.
                   </div>
                 </div>
                 <div className="space-y-1 text-right text-xs text-muted-foreground">

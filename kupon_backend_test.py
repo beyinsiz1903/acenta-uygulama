@@ -100,7 +100,7 @@ def test_admin_coupon_crud_apis():
         print(f"   📋 Active: {created_coupon['active']}")
         
         # Verify response structure
-        assert created_coupon["code"] == "TEST10", "Code should match"
+        assert created_coupon["code"] == coupon_code, "Code should match"
         assert created_coupon["discount_type"] == "PERCENT", "Discount type should match"
         assert created_coupon["value"] == 10, "Value should match"
         assert created_coupon["scope"] == "BOTH", "Scope should match"

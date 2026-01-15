@@ -381,7 +381,7 @@ def test_ops_cases_system():
     
     # Test invalid case close
     r = requests.post(
-        f"{BASE_URL}/api/ops/cases/NONEXISTENT-CASE-ID/close",
+        f"{BASE_URL}/api/ops-cases/NONEXISTENT-CASE-ID/close",
         headers=admin_headers,
         json={"note": "test"}
     )

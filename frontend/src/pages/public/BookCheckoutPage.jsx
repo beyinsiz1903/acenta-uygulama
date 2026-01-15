@@ -260,6 +260,17 @@ export default function BookCheckoutPage() {
 
         <form onSubmit={handleSubmit} className="space-y-3 text-xs mt-2">
           <div className="space-y-1">
+            <label className="font-medium">Kupon Kodu (varsa)</label>
+            <input
+              type="text"
+              className="w-full rounded-md border px-2 py-1 uppercase"
+              value={couponCode}
+              onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+              placeholder="Örn: YAZ2025"
+            />
+          </div>
+
+          <div className="space-y-1">
             <label className="font-medium">Ad Soyad</label>
             <input
               type="text"

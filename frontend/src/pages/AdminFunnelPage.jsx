@@ -92,6 +92,7 @@ export default function AdminFunnelPage() {
 
   useEffect(() => {
     void loadSummary(days);
+    void loadAlerts(days);
     // Initial empty load (no filters) is noisy; wait for user input
   }, [days]);
 

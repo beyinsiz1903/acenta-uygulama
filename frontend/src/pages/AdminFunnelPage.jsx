@@ -202,6 +202,40 @@ export default function AdminFunnelPage() {
         </div>
       </Card>
 
+      {/* Alerts Panel */}
+      <Card className="p-3 space-y-3 text-[11px]" data-testid="funnel-alerts-panel">
+        <div className="flex items-center justify-between">
+          <div className="text-sm font-semibold">Funnel Alerts</div>
+          {alertsLoading && <div className="text-[11px] text-muted-foreground">Yükleniyor...</div>}
+        </div>
+
+        {alertsError && <FieldError text={alertsError} />}
+
+        {!alertsLoading && !alertsError && (
+          <div className="space-y-2">
+            {alerts.length === 0 ? (
+              <div className="text-[11px] text-muted-foreground p-2 bg-green-50 border border-green-200 rounded-md">
+                ✅ Sağlıklı - {days} günde alert bulunamadı
+              </div>
+            ) : (
+              <div className="space-y-1">
+                {alerts.map((alert, index) => (
+                  <div
+                    key={index}
+                    className="p-2 bg-red-50 border border-red-200 rounded-md text-[11px]"
+                    data-testid={`funnel-alert-item-${alert.code}-${alert.channel}`}
+                  >
+                    <div className="font-semibold text-red-700">{alert.code}</div>
+                    <div className="text-red-600">{alert.message}</div>
+                    <div className="text-red-500 text-[10px]">Channel: {alert.channel}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </Card>
+
       <Card className="p-3 space-y-3 text-[11px]">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
           <div className="space-y-1">

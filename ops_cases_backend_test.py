@@ -141,7 +141,7 @@ def test_ops_cases_system():
         headers=admin_headers,
         json=case_payload,
     )
-    assert r.status_code == 200, f"POST /api/ops/cases failed: {r.text}"
+    assert r.status_code == 200, f"POST /api/ops-cases/ failed: {r.text}"
     
     create_response = r.json()
     print(f"   ✅ POST /api/ops/cases successful: 200")

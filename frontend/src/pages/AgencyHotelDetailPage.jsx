@@ -30,6 +30,26 @@ export default function AgencyHotelDetailPage() {
     loadHotelDetail();
   }, [hotelId]);
 
+  // SEO: dynamic title & meta description based on hotel
+  useEffect(() => {
+    if (!hotel) return;
+    const name = hotel.name || "Otel";
+    const city = hotel.city || "";
+    const title = city ? `${name} | ${city} Otel Fırsatları` : `${name} | Otel Fırsatları`;
+    const desc = city
+      ? `${name} için ${city} bölgesinde avantajlı fiyatlar, güvenli rezervasyon ve bayi özel kontenjanları.`
+      : `${name} için avantajlı fiyatlar, güvenli rezervasyon ve bayi özel kontenjanları.`;
+
+    document.title = title;
+    let meta = document.querySelector('meta[name="description"]');
+    if (!meta) {
+      meta = document.createElement("meta");
+      meta.name = "description";
+      document.head.appendChild(meta);
+    }
+    meta.content = desc;
+  }, [hotel]);
+
   async function loadHotelDetail() {
     setLoading(true);
     setError("");

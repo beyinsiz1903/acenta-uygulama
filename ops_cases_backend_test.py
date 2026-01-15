@@ -137,7 +137,7 @@ def test_ops_cases_system():
     }
     
     r = requests.post(
-        f"{BASE_URL}/api/ops/cases",
+        f"{BASE_URL}/api/ops-cases/",
         headers=admin_headers,
         json=case_payload,
     )

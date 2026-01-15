@@ -21,6 +21,7 @@ from app.services.public_checkout import (
     get_or_create_public_checkout_record,
     get_valid_quote,
 )
+from app.services.coupons import CouponService
 from app.services.booking_events import emit_event
 from app.utils import now_utc
 

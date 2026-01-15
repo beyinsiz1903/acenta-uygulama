@@ -318,6 +318,28 @@ function OpsGuestCaseDrawer({ caseId, open, onClose, onClosed }) {
                             <div className="text-[11px] text-muted-foreground break-words">{metaLine}</div>
                           )}
                         </li>
+              <div className="mt-4 flex items-center justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={onClose}
+                  className="text-[11px]"
+                >
+                  Kapat
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  className="text-[11px]"
+                  onClick={handleSave}
+                  disabled={isClosed || saving}
+                >
+                  {saving ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : null}
+                  Kaydet
+                </Button>
+              </div>
+
                       );
                     })}
                   </ul>

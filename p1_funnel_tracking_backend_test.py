@@ -41,7 +41,7 @@ def test_p1_funnel_tracking_public_flow():
 
     # Test configuration
     org_id = "695e03c80b04ed31c4eaa899"
-    product_id = "test_hotel_faz3_69691ac5837a"  # Found from database query
+    product_id = "69691ae7b322db4dcbaf4bf9"  # Found from database query - this was used in previous tests
     
     # ------------------------------------------------------------------
     # Adım 1: Public quote oluştur

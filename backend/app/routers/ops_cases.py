@@ -8,7 +8,8 @@ from pydantic import BaseModel
 from app.auth import require_roles
 from app.db import get_db
 from app.errors import AppError
-from app.services.ops_cases import list_cases, get_case, close_case
+from app.services.ops_cases import list_cases, get_case, close_case, create_case, update_case
+from app.schemas_ops_cases import OpsCaseCreate, OpsCaseUpdate, OpsCaseOut
 
 
 router = APIRouter(prefix="/api/ops/guest-cases", tags=["ops_guest_cases"])

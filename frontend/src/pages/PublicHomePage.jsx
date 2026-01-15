@@ -1,8 +1,17 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { Button } from "../components/ui/button";
+import { useSeo } from "../hooks/useSeo";
 
 export default function PublicHomePage() {
+  useSeo({
+    title: null,
+    description:
+      "Syroce ile B2B acentalar ve oteller için modern rezervasyon, fiyatlama ve funnel izleme çözümleri.",
+    canonicalPath: "/",
+    type: "website",
+  });
+
   return (
     <div
       className="min-h-screen flex flex-col"

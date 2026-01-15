@@ -4,6 +4,8 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Card } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { createPublicQuote, apiErrorMessage } from "../../lib/publicBooking";
+import { useSeo } from "../../hooks/useSeo";
+
 
 function isoTodayOffset(days) {
   const d = new Date();

@@ -125,7 +125,7 @@ def test_ops_cases_system():
     # ------------------------------------------------------------------
     # Test 4: Senaryo 2 - Yeni ops_panel case oluşturma
     # ------------------------------------------------------------------
-    print("\n4️⃣  Senaryo 2: Yeni ops_panel case oluşturma (POST /api/ops/cases)...")
+    print("\n4️⃣  Senaryo 2: Yeni ops_panel case oluşturma (POST /api/ops-cases/)...")
     
     case_payload = {
         "booking_id": booking_id,

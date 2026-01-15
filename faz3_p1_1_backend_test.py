@@ -36,6 +36,27 @@ def find_active_product(admin_headers, org_id):
     """Find an active product for testing"""
     print("   📋 Searching for active products...")
     
+    # First try to find products directly in database
+    try:
+        mongo_client = get_mongo_client()
+        db = mongo_client.get_default_database()
+        
+        product = db.products.find_one({
+            "organization_id": org_id,
+            "status": {"$in": ["published", "active"]}
+        })
+        
+        if product:
+            product_id = product.get("id") or str(product.get("_id"))
+            print(f"   ✅ Found product in DB: {product_id} - {product.get('title', 'No title')}")
+            mongo_client.close()
+            return product_id
+            
+        mongo_client.close()
+        
+    except Exception as e:
+        print(f"   ⚠️  Database search failed: {e}")
+    
     # Try to get products from admin catalog
     r = requests.get(
         f"{BASE_URL}/api/admin/catalog/products",
@@ -48,30 +69,9 @@ def find_active_product(admin_headers, org_id):
         products = products_data.get("items", [])
         
         for product in products:
-            if product.get("status") == "published":
+            if product.get("status") in ["published", "active"]:
                 print(f"   ✅ Found active product: {product['id']} - {product.get('title', 'No title')}")
                 return product["id"]
-    
-    # Fallback: try to find products directly in database
-    try:
-        mongo_client = get_mongo_client()
-        db = mongo_client.get_default_database()
-        
-        product = db.products.find_one({
-            "organization_id": org_id,
-            "status": "published"
-        })
-        
-        if product:
-            product_id = product.get("id") or str(product.get("_id"))
-            print(f"   ✅ Found product in DB: {product_id}")
-            mongo_client.close()
-            return product_id
-            
-        mongo_client.close()
-        
-    except Exception as e:
-        print(f"   ⚠️  Database search failed: {e}")
     
     # If no products found, create a test product
     print("   📋 No active products found, creating test product...")

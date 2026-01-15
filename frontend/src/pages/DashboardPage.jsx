@@ -129,6 +129,31 @@ export default function DashboardPage() {
         />
       </div>
 
+      {/* Ops case-first summary */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+        <StatCard
+          title="Açık Case"
+          value={caseCounters.open}
+          icon={AlertCircle}
+          to="/ops/cases?status=open"
+          testId="stat-cases-open"
+        />
+        <StatCard
+          title="Beklemede Case"
+          value={caseCounters.waiting}
+          icon={AlertCircle}
+          to="/ops/cases?status=waiting"
+          testId="stat-cases-waiting"
+        />
+        <StatCard
+          title="İşlemde Case"
+          value={caseCounters.in_progress}
+          icon={AlertCircle}
+          to="/ops/cases?status=in_progress"
+          testId="stat-cases-inprogress"
+        />
+      </div>
+
       <Card className="rounded-2xl shadow-sm">
         <CardHeader>
           <CardTitle className="text-base">Son 14 Gün Satış Grafiği</CardTitle>

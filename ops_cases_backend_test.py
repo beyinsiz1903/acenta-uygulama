@@ -342,7 +342,7 @@ def test_ops_cases_system():
     
     # Test status=open filter (default)
     r = requests.get(
-        f"{BASE_URL}/api/ops/cases?status=open",
+        f"{BASE_URL}/api/ops-cases/?status=open",
         headers=admin_headers,
     )
     assert r.status_code == 200, f"GET /api/ops/cases?status=open failed: {r.text}"

@@ -306,6 +306,9 @@ def test_ops_cases_system():
     
     # Verify all returned cases match the filters
     for case in filtered_items:
+        assert case["booking_id"] == booking_id, f"Case booking_id should match filter"
+        assert case["source"] == "ops_panel", f"Case source should match filter"
+        assert case["type"] == "missing_docs", f"Case type should match filter"
         assert case["status"] == "closed", f"Case status should match filter"
     
     # Should find at least our created case

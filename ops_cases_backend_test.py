@@ -281,11 +281,12 @@ def test_ops_cases_system():
     # ------------------------------------------------------------------
     print("\n8️⃣  Senaryo 5: Filtre ile listeleme...")
     
-    # Test filtering by booking_id, source, and type
+    # Test filtering by booking_id, source, and type (without status filter since our case is closed)
     filter_params = {
         "booking_id": booking_id,
         "source": "ops_panel",
-        "type": "missing_docs"
+        "type": "missing_docs",
+        "status": "closed"  # Our case is closed, so we need to filter for closed cases
     }
     
     query_string = "&".join([f"{k}={v}" for k, v in filter_params.items()])

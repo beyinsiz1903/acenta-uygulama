@@ -249,22 +249,16 @@ def test_b2b_pricing_integration():
         "quote_id": quote_id,
         "customer": {
             "name": "Mehmet Özkan",
-            "email": "mehmet.ozkan@example.com",
-            "phone": "+90 555 987 6543",
-            "type": "individual"
+            "email": "mehmet.ozkan@example.com"
         },
         "travellers": [
             {
-                "name": "Mehmet Özkan",
-                "email": "mehmet.ozkan@example.com",
-                "phone": "+90 555 987 6543",
-                "is_primary": True
+                "first_name": "Mehmet",
+                "last_name": "Özkan"
             },
             {
-                "name": "Ayşe Özkan",
-                "email": "ayse.ozkan@example.com",
-                "phone": "+90 555 987 6544",
-                "is_primary": False
+                "first_name": "Ayşe",
+                "last_name": "Özkan"
             }
         ]
     }

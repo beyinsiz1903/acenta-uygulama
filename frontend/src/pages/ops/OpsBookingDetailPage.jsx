@@ -295,6 +295,42 @@ export default function OpsBookingDetailPage() {
   const [eventsError, setEventsError] = useState("");
 
   const [cases, setCases] = useState([]);
+  const [creatingCase, setCreatingCase] = useState(false);
+  const [createCaseError, setCreateCaseError] = useState("");
+  const [newCaseType, setNewCaseType] = useState("cancel");
+  const [newCaseNote, setNewCaseNote] = useState("");
+
+  const handleCreateCase = async (e) => {
+    e.preventDefault();
+    if (!bookingId) return;
+    setCreatingCase(true);
+    setCreateCaseError("");
+    try {
+      const payload = {
+        booking_id: bookingId,
+        type: newCaseType,
+        source: "ops_panel",
+        status: "open",
+        note: newCaseNote || undefined,
+      };
+      await createOpsCase(payload);
+      setNewCaseNote("");
+      setNewCaseType("cancel");
+      await (async () => {
+        try {
+          const res = await listOpsCasesForBooking(bookingId);
+          setCases(res.items || []);
+        } catch (err) {
+          setCasesError(apiErrorMessage(err));
+        }
+      })();
+    } catch (err) {
+      setCreateCaseError(apiErrorMessage(err));
+    } finally {
+      setCreatingCase(false);
+    }
+  };
+
   const [casesLoading, setCasesLoading] = useState(false);
   const [casesError, setCasesError] = useState("");
   const [selectedCaseId, setSelectedCaseId] = useState(null);

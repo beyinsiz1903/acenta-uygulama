@@ -479,52 +479,6 @@ function RulesTab() {
   );
 }
 
-export default function AdminPricingPage() {
-  const [activeTab, setActiveTab] = useState("contracts");
-
-  const tabs = [
-    { key: "contracts", label: "Contracts" },
-    { key: "grids", label: "Rate Grids" },
-    { key: "rules", label: "Rules (v2)" },
-    { key: "simple_rules", label: "Simple Rules" },
-  ];
-
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <div className="text-lg font-semibold">Pricing</div>
-          <div className="text-[11px] text-muted-foreground">
-            Contracts + rate grids + rules (v2 skeleton)
-          </div>
-        </div>
-      </div>
-
-      <div className="flex gap-2 border-b pb-2 text-[11px]">
-        {tabs.map((t) => (
-          <button
-            key={t.key}
-            type="button"
-            onClick={() => setActiveTab(t.key)}
-            className={`rounded-md px-2 py-1 border ${
-              activeTab === t.key
-                ? "border-primary text-primary"
-                : "border-muted text-muted-foreground"
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
-
-      {activeTab === "contracts" && <ContractsTab />}
-      {activeTab === "grids" && <RateGridsTab />}
-      {activeTab === "rules" && <RulesTab />}
-      {activeTab === "simple_rules" && <SimpleRulesTab />}
-    </div>
-  );
-}
-
 function SimpleRulesTab() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);

@@ -56,6 +56,7 @@ from app.routers.seo import router as seo_router
 from app.email_worker import email_dispatch_loop
 from app.indexes import finance_indexes, inbox_indexes, pricing_indexes, public_indexes, voucher_indexes
 from app.indexes import crm_indexes
+from app.indexes import funnel_indexes
 from app.integration_sync_worker import integration_sync_loop
 
 
@@ -71,6 +72,7 @@ async def lifespan(app: FastAPI):
     await voucher_indexes.ensure_voucher_indexes(db)
     await public_indexes.ensure_public_indexes(db)
     await crm_indexes.ensure_crm_indexes(db)
+    await funnel_indexes.ensure_funnel_indexes(db)
 
     yield
 

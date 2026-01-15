@@ -12,7 +12,7 @@ from app.services.ops_cases import list_cases, get_case, close_case, create_case
 from app.schemas_ops_cases import OpsCaseCreate, OpsCaseUpdate, OpsCaseOut
 
 
-router = APIRouter(prefix="/api/ops/guest-cases", tags=["ops_guest_cases"])
+router = APIRouter(prefix="/api/ops/cases", tags=["ops_cases"])
 
 
 OpsUserDep = Depends(require_roles(["admin", "ops", "super_admin"]))

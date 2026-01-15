@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { X, Loader2 } from "lucide-react";
 
-import { getOpsGuestCase, closeOpsGuestCase, apiErrorMessage } from "../lib/opsCases";
+import { getOpsCase, closeOpsCase, apiErrorMessage } from "../lib/opsCases";
 import { api } from "../lib/api";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";

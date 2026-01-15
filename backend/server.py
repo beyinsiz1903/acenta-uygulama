@@ -115,6 +115,7 @@ app.include_router(crm_customer_inbox_router)
 app.include_router(matches_router, prefix=API_PREFIX)
 app.include_router(ops_b2b_router)  # No prefix - router has its own
 app.include_router(ops_booking_events_router, prefix=API_PREFIX)
+app.include_router(ops_cases_router)  # No prefix - router has its own
 app.include_router(ops_click_to_pay_router)  # No prefix - router has its own
 app.include_router(ops_finance_router, prefix=API_PREFIX)
 app.include_router(payments_router, prefix=API_PREFIX)

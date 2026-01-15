@@ -338,6 +338,43 @@ async def create_simple_rule(
     )
 
 
+@router.get("/rules/simple", response_model=list[SimplePricingRuleResponse])
+async def list_simple_rules(
+    db=Depends(get_db),
+    user: dict[str, Any] = Depends(require_roles(["super_admin", "admin", "ops"])),
+):
+    """List simple markup_percent pricing rules (P1.2 MVP)."""
+    org_id = user["organization_id"]
+    
+    # Find rules with action.type = "markup_percent" and validity field
+    cur = db.pricing_rules.find({
+        "organization_id": org_id,
+        "action.type": "markup_percent",
+        "validity": {"$exists": True}
+    }).sort("priority", -1)
+    
+    docs = await cur.to_list(500)
+    
+    out: list[SimplePricingRuleResponse] = []
+    for d in docs:
+        out.append(
+            SimplePricingRuleResponse(
+                rule_id=_id(d["_id"]),
+                organization_id=org_id,
+                status=d.get("status", "active"),
+                priority=d.get("priority", 100),
+                scope=d.get("scope") or {},
+                validity=d.get("validity") or {},
+                action=d.get("action") or {},
+                notes=d.get("notes"),
+                created_at=d.get("created_at", datetime.utcnow()),
+                updated_at=d.get("updated_at", datetime.utcnow()),
+                created_by_email=d.get("created_by_email"),
+            )
+        )
+    return out
+
+
 @router.put("/rules/{rule_id}", response_model=SimplePricingRuleResponse)
 async def update_simple_rule(
     rule_id: str,

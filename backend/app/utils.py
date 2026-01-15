@@ -118,6 +118,37 @@ def require_env(name: str) -> str:
     return v
 
 
+from uuid import uuid4
+from fastapi import Request
+
+
+def get_or_create_correlation_id(request: Request | None, provided: str | None = None) -> str:
+    """Resolve correlation_id from header/body or generate a new one.
+
+    Precedence:
+    1) X-Correlation-Id header (if present and non-empty)
+    2) provided argument (e.g. body.correlation_id)
+    3) generated `fc_<uuid4hex>`
+    """
+
+    try:
+        if request is not None:
+            header_val = request.headers.get("X-Correlation-Id") or request.headers.get("x-correlation-id")
+            if header_val and isinstance(header_val, str):
+                header_val = header_val.strip()
+                if header_val:
+                    return header_val
+    except Exception:
+        pass
+
+    if provided:
+        val = str(provided).strip()
+        if val:
+            return val
+
+    return f"fc_{uuid4().hex}"
+
+
 
 BOOKING_STATUS_LABELS_TR = {
     "confirmed": "Onaylandı",

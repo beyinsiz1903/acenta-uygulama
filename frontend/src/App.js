@@ -160,6 +160,19 @@ function App() {
           <Route path="ops/bookings/:bookingId" element={<OpsBookingDetailPage />} />
         </Route>
 
+        {/* B2B Portal Routes (New, outside /app shell, dedicated layout) */}
+        <Route
+          path="/b2b/*"
+          element={
+            <B2BAuthGuard>
+              <B2BLayout />
+            </B2BAuthGuard>
+          }
+        >
+          <Route path="bookings" element={<B2BBookingsPage />} />
+          <Route path="account" element={<B2BAccountPage />} />
+        </Route>
+
         {/* Agency Routes (Core Flow) */}
         <Route path="/app/b2b/portal" element={<B2BPortalPage />} />
 

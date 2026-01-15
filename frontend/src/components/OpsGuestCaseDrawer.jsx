@@ -204,16 +204,54 @@ function OpsGuestCaseDrawer({ caseId, open, onClose, onClosed }) {
               <div className="flex items-center justify-between gap-2">
                 <div className="space-y-1">
                   <div className="text-xs text-muted-foreground">Durum</div>
-                  <div>
-                    {data.status === "open" ? (
-                      <span className="inline-flex items-center rounded-full bg-emerald-50 text-emerald-700 px-2 py-0.5 text-[11px]">
-                        Af1k
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center rounded-full bg-muted text-muted-foreground px-2 py-0.5 text-[11px]">
-                        Kapal1
-                      </span>
-                    )}
+                  <div className="flex items-center gap-2">
+                    <select
+                      className="rounded-md border px-2 py-1 text-[11px] bg-background"
+                      value={editStatus}
+                      onChange={(e) => setEditStatus(e.target.value)}
+                      disabled={isClosed}
+                    >
+                      <option value="open">Açık</option>
+                      <option value="waiting">Beklemede</option>
+                      <option value="in_progress">Devam ediyor</option>
+                      <option value="closed" disabled>
+                        Kapalı (sadece özel aksiyon ile)
+                      </option>
+                    </select>
+                    <div>
+                      {(() => {
+                        switch (data.status) {
+                          case "open":
+                            return (
+                              <span className="inline-flex items-center rounded-full bg-emerald-50 text-emerald-700 px-2 py-0.5 text-[11px]">
+                                Açık
+                              </span>
+                            );
+                          case "waiting":
+                            return (
+                              <span className="inline-flex items-center rounded-full bg-amber-50 text-amber-700 px-2 py-0.5 text-[11px]">
+                                Beklemede
+                              </span>
+                            );
+                          case "in_progress":
+                            return (
+                              <span className="inline-flex items-center rounded-full bg-blue-50 text-blue-700 px-2 py-0.5 text-[11px]">
+                                Devam ediyor
+                              </span>
+                            );
+                          case "closed":
+                          default:
+                            return (
+                              <span className="inline-flex items-center rounded-full bg-muted text-muted-foreground px-2 py-0.5 text-[11px]">
+                                Kapalı
+                              </span>
+                            );
+                        }
+                      })()}
+                    </div>
+                  </div>
+                  <div className="text-[11px] text-muted-foreground">
+                    Kapama sadece aşağıdaki "Case&apos;i kapat" aksiyonundan yapılabilir.
                   </div>
                 </div>
                 <div className="space-y-1 text-right text-xs text-muted-foreground">

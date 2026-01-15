@@ -292,6 +292,14 @@ async def main():
         print("\n💳 Step 4: Checking booking payment status...")
         payment_status = await check_booking_payment_status(db, booking_id)
         
+        # Check if there are any booking events
+        booking_events = []
+        async for event in db.booking_events.find({"booking_id": booking_id}):
+            booking_events.append(event)
+        print(f"📅 Booking events count: {len(booking_events)}")
+        for event in booking_events:
+            print(f"  - {event.get('event')}")
+        
         # If booking payment_status is still 'pending', update it manually
         # (This might be needed if the orchestrator only updates booking_payments collection)
         booking = await db.bookings.find_one({"_id": booking_id})

@@ -24,7 +24,9 @@ from app.services.public_checkout import (
 from app.services.coupons import CouponService
 from app.services.booking_events import emit_event
 from app.services.pricing_quote_engine import compute_quote_for_booking
+from app.services.funnel_events import log_funnel_event
 from app.utils import now_utc
+from app.utils.correlation import get_or_create_correlation_id
 
 
 router = APIRouter(prefix="/api/public", tags=["public-checkout"])
@@ -54,6 +56,7 @@ class PublicQuoteResponse(BaseModel):
     breakdown: Dict[str, int]
     line_items: list[Dict[str, Any]]
     product: Dict[str, Any]
+    correlation_id: str
 
 
 class PublicCheckoutGuest(BaseModel):
@@ -87,6 +90,7 @@ class PublicCheckoutResponse(BaseModel):
 @router.post("/quote", response_model=PublicQuoteResponse)
 async def public_quote(payload: PublicQuoteRequest, request: Request, db=Depends(get_db)):
     client_ip = request.client.host if request.client else None
+    correlation_id = get_or_create_correlation_id(request, None)
 
     try:
         quote, product_snapshot = await create_public_quote(
@@ -108,6 +112,33 @@ async def public_quote(payload: PublicQuoteRequest, request: Request, db=Depends
     doc = await db.public_quotes.find_one({"quote_id": quote.quote_id, "organization_id": payload.org})
     assert doc is not None
 
+    # Funnel: public.quote.created
+    try:
+        await log_funnel_event(
+            db,
+            organization_id=payload.org,
+            correlation_id=correlation_id,
+            event_name="public.quote.created",
+            entity_type="quote",
+            entity_id=quote.quote_id,
+            channel="public",
+            user=None,
+            context={
+                "product_id": payload.product_id,
+                "product_type": "hotel",
+                "date_from": str(payload.date_from),
+                "date_to": str(payload.date_to),
+                "currency": quote.currency,
+                "amount_cents": quote.amount_cents,
+            },
+            trace={
+                "ip": client_ip,
+                "request_id": request.headers.get("X-Request-Id"),
+            },
+        )
+    except Exception:
+        pass
+
     return {
         "ok": True,
         "quote_id": quote.quote_id,
@@ -117,6 +148,7 @@ async def public_quote(payload: PublicQuoteRequest, request: Request, db=Depends
         "breakdown": doc.get("breakdown") or {"base": 0, "taxes": 0},
         "line_items": doc.get("line_items") or [],
         "product": product_snapshot,
+        "correlation_id": correlation_id,
     }
 
 

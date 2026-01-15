@@ -111,6 +111,8 @@ async def call_payment_handler(fake_event):
         return status, body
     except Exception as e:
         print(f"❌ Handler failed: {e}")
+        import traceback
+        traceback.print_exc()
         raise
 
 async def check_booking_payment_status(db, booking_id):

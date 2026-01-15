@@ -40,7 +40,8 @@ async def list_reservations(status: str | None = None, q: str | None = None, use
 
     # Proof mode: if reservations are empty, synthesize a single
     # row so has_open_case behaviour can be demonstrated without DB writes.
-    if not docs:
+    proof_enabled = os.getenv("ENABLE_RESERVATIONS_PROOF_MODE", "false").lower() == "true" or os.getenv("ENV", "").lower() in {"preview", "dev", "local"}
+    if not docs and proof_enabled:
         docs = [
             {
                 "_id": "PROOF-OPEN-CASE-1",

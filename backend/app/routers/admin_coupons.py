@@ -17,9 +17,9 @@ router = APIRouter(prefix="/api/admin/coupons", tags=["admin_coupons"])
 
 class CouponBase(BaseModel):
     code: str = Field(..., min_length=1, max_length=64)
-    discount_type: str = Field("PERCENT", regex="^(PERCENT|AMOUNT)$")
+    discount_type: str = Field("PERCENT", pattern="^(PERCENT|AMOUNT)$")
     value: float = Field(..., gt=0)
-    scope: str = Field("B2B", regex="^(B2B|B2C|BOTH)$")
+    scope: str = Field("B2B", pattern="^(B2B|B2C|BOTH)$")
     min_total: float = Field(0, ge=0)
     usage_limit: Optional[int] = Field(None, ge=1)
     per_customer_limit: Optional[int] = Field(None, ge=1)

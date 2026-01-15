@@ -6,6 +6,7 @@ import B2BLoginPage from "./b2b/B2BLoginPage";
 import B2BAuthGuard from "./b2b/B2BAuthGuard";
 import B2BLayout from "./b2b/B2BLayout";
 import B2BBookingsPage from "./b2b/pages/B2BBookingsPage";
+import B2BBookingDetailPage from "./b2b/pages/B2BBookingDetailPage";
 import B2BAccountPage from "./b2b/pages/B2BAccountPage";
 import UnauthorizedPage from "./pages/UnauthorizedPage";
 import RequireAuth from "./components/RequireAuth";
@@ -170,6 +171,7 @@ function App() {
           }
         >
           <Route path="bookings" element={<B2BBookingsPage />} />
+          <Route path="bookings/:bookingId" element={<B2BBookingDetailPage />} />
           <Route path="account" element={<B2BAccountPage />} />
         </Route>
 

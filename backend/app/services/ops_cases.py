@@ -17,6 +17,8 @@ async def create_case(
     waiting_on: Optional[str] = None,
     note: Optional[str] = None,
     booking_code: Optional[str] = None,
+    agency_id: Optional[str] = None,
+    created_by: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """Create a new ops_case document.
 
@@ -42,6 +44,11 @@ async def create_case(
         "created_at": now,
         "updated_at": now,
     }
+
+    if agency_id:
+        doc["agency_id"] = agency_id
+    if created_by:
+        doc["created_by"] = created_by
 
     await db.ops_cases.insert_one(doc)
 

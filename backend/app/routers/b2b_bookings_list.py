@@ -158,3 +158,212 @@ async def list_b2b_bookings_agency(
         )
 
     return BookingListResponse(items=items)
+
+
+async def _get_scoped_booking(db, booking_id: str, org_id: str, agency_id: str) -> Dict[str, Any]:
+    """Load booking and enforce B2B ownership.
+
+    Returns booking doc or raises AppError 404 if not found or out of scope.
+    """
+    try:
+        oid = ObjectId(booking_id)
+    except Exception:
+        raise AppError(404, "booking_not_found", "Booking not found", {"booking_id": booking_id})
+
+    booking = await db.bookings.find_one({"_id": oid})
+    if not booking:
+        raise AppError(404, "booking_not_found", "Booking not found", {"booking_id": booking_id})
+
+    if str(booking.get("organization_id")) != str(org_id) or str(booking.get("agency_id")) != str(agency_id):
+        # Scope mismatch: hide existence behind 404
+        raise AppError(404, "booking_not_found", "Booking not found", {"booking_id": booking_id})
+
+    return booking
+
+
+@router.get("/bookings/{booking_id}")
+async def get_b2b_booking_detail(
+    booking_id: str,
+    user: Dict[str, Any] = AgencyUserDep,
+    db=Depends(get_db),
+) -> Dict[str, Any]:
+    """Return minimal booking detail for B2B portal.
+
+    Scope: current organization_id + agency_id; scope mismatch -> 404.
+    """
+    org_id = user.get("organization_id")
+    agency_id = user.get("agency_id")
+    if not org_id or not agency_id:
+        raise AppError(403, "forbidden", "Only agency users can view B2B booking details")
+
+    booking = await _get_scoped_booking(db, booking_id, org_id, agency_id)
+
+    amounts = booking.get("amounts") or {}
+    items_doc = booking.get("items") or []
+    first_item: Dict[str, Any] = items_doc[0] if items_doc else {}
+
+    customer = booking.get("customer") or {}
+    guest = {
+        "name": customer.get("name"),
+        "email": customer.get("email"),
+        "phone": customer.get("phone"),
+    }
+
+    product_name = first_item.get("product_name")
+    if not product_name:
+        pid = first_item.get("product_id")
+        product_name = str(pid) if pid else "B2B Booking"
+
+    product = {
+        "name": product_name,
+        "type": first_item.get("type"),
+    }
+
+    dates = {
+        "check_in": first_item.get("check_in"),
+        "check_out": first_item.get("check_out"),
+    }
+
+    amount = {
+        "total": amounts.get("sell"),
+        "currency": booking.get("currency"),
+    }
+
+    return {
+        "booking_id": str(booking.get("_id")),
+        "created_at": booking.get("created_at"),
+        "status": booking.get("status"),
+        "payment_status": booking.get("payment_status"),
+        "guest": guest,
+        "product": product,
+        "dates": dates,
+        "amount": amount,
+        "agency_id": str(booking.get("agency_id")),
+        "organization_id": str(booking.get("organization_id")),
+    }
+
+
+@router.get("/bookings/{booking_id}/cases")
+async def list_b2b_booking_cases(
+    booking_id: str,
+    user: Dict[str, Any] = AgencyUserDep,
+    db=Depends(get_db),
+) -> Dict[str, Any]:
+    """List ops_cases attached to a B2B booking for current agency user."""
+    org_id = user.get("organization_id")
+    agency_id = user.get("agency_id")
+    if not org_id or not agency_id:
+        raise AppError(403, "forbidden", "Only agency users can view B2B booking cases")
+
+    # Enforce booking ownership (404 on mismatch)
+    await _get_scoped_booking(db, booking_id, org_id, agency_id)
+
+    from app.services.ops_cases import list_cases
+
+    res = await list_cases(
+        db,
+        organization_id=str(org_id),
+        booking_id=booking_id,
+        page=1,
+        page_size=50,
+    )
+
+    items: List[Dict[str, Any]] = []
+    for c in res.get("items", []):
+        items.append(
+            {
+                "case_id": c.get("case_id"),
+                "type": c.get("type"),
+                "status": c.get("status"),
+                "waiting_on": c.get("waiting_on"),
+                "title": c.get("title"),
+                "note": c.get("note"),
+                "source": c.get("source"),
+                "created_at": c.get("created_at"),
+                "updated_at": c.get("updated_at"),
+            }
+        )
+
+    return {"items": items}
+
+
+from pydantic import BaseModel
+from fastapi import BackgroundTasks
+from app.services.crm_events import log_crm_event
+
+
+class B2BCaseCreateBody(BaseModel):
+    type: str
+    note: Optional[str] = None
+
+
+@router.post("/bookings/{booking_id}/cases", status_code=201)
+async def create_b2b_booking_case(
+    booking_id: str,
+    payload: B2BCaseCreateBody,
+    background: BackgroundTasks,
+    user: Dict[str, Any] = AgencyUserDep,
+    db=Depends(get_db),
+) -> Dict[str, Any]:
+    """Create a new ops_case for a B2B booking with source=b2b_portal.
+
+    - Scope: current organization_id + agency_id (404 on mismatch)
+    - source is hard-coded server-side to "b2b_portal" regardless of client body.
+    """
+    org_id = user.get("organization_id")
+    agency_id = user.get("agency_id")
+    if not org_id or not agency_id:
+        raise AppError(403, "forbidden", "Only agency users can create B2B cases")
+
+    # Ensure booking belongs to this agency/org
+    booking = await _get_scoped_booking(db, booking_id, org_id, agency_id)
+
+    booking_code = booking.get("booking_code") or booking.get("code")
+
+    from app.services.ops_cases import create_case
+
+    actor = {
+        "user_id": str(user.get("id") or user.get("_id")),
+        "email": user.get("email"),
+        "roles": user.get("roles") or [],
+    }
+
+    case_doc = await create_case(
+        db,
+        organization_id=str(org_id),
+        booking_id=booking_id,
+        type=payload.type,
+        source="b2b_portal",  # server-side hard override
+        status="open",
+        waiting_on=None,
+        note=payload.note,
+        booking_code=booking_code,
+        agency_id=str(agency_id),
+        created_by=actor,
+    )
+
+    # Best-effort CRM event in background
+    async def _log_event():
+        try:
+            await log_crm_event(
+                db,
+                str(org_id),
+                entity_type="booking_case",
+                entity_id=case_doc.get("case_id"),
+                action="b2b.case.created",
+                payload={
+                    "booking_id": booking_id,
+                    "type": payload.type,
+                    "source": "b2b_portal",
+                    "agency_id": str(agency_id),
+                },
+                actor=actor,
+                source="b2b_portal",
+            )
+        except Exception:
+            pass
+
+    background.add_task(_log_event)
+
+    return case_doc
+

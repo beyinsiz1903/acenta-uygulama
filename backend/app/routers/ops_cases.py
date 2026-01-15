@@ -99,6 +99,8 @@ async def close_ops_case(
         request_context=request_context,
     )
 
+    return {"ok": True, "case_id": updated.get("case_id", case_id), "status": updated.get("status")}
+
 
 @router.post("/", response_model=OpsCaseOut)
 async def create_ops_case(

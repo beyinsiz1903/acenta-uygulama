@@ -780,8 +780,6 @@ function SimpleRulesTab() {
   );
 }
 
-}
-
 export default function AdminPricingPage() {
   const [activeTab, setActiveTab] = useState("contracts");
 

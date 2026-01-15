@@ -20,6 +20,14 @@ export default function BookProductPage() {
 
   const org = searchParams.get("org") || "";
 
+  useSeo({
+    title: productId ? `${productId} | Syroce` : "Ürün Seçimi | Syroce",
+    description:
+      "Seçtiğiniz ürün için tarih ve misafir bilgilerini seçip fiyat teklifi oluşturun.",
+    canonicalPath: productId ? `/book/${productId}` : "/book",
+    type: "product",
+  });
+
   const [dateFrom, setDateFrom] = useState(isoTodayOffset(1));
   const [dateTo, setDateTo] = useState(isoTodayOffset(2));
   const [adults, setAdults] = useState(2);

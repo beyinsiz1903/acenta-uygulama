@@ -317,6 +317,28 @@ function OpsGuestCaseDrawer({ caseId, open, onClose, onClosed }) {
                 ) : timelineItems.length === 0 ? (
                   <div className="text-[11px] text-muted-foreground">Gösterilecek event yok.</div>
                 ) : (
+              <div className="mt-4 flex items-center justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={onClose}
+                  className="text-[11px]"
+                >
+                  Kapat
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  className="text-[11px]"
+                  onClick={handleSave}
+                  disabled={isClosed || saving}
+                >
+                  {saving ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : null}
+                  Kaydet
+                </Button>
+              </div>
+
                   <ul className="space-y-1 text-xs">
                     {timelineItems.map((ev) => {
                       const created = ev.created_at ? new Date(ev.created_at) : null;

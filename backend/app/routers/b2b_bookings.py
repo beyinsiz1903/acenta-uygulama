@@ -13,7 +13,7 @@ from app.services.b2b_booking import B2BBookingService
 from app.services.booking_lifecycle import BookingLifecycleService
 from app.services.booking_financials import BookingFinancialsService
 from app.services.funnel_events import log_funnel_event
-from app.utils.correlation import get_or_create_correlation_id
+from app.utils import get_or_create_correlation_id
 
 router = APIRouter(prefix="/api/b2b", tags=["b2b-bookings"])
 

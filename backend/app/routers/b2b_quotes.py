@@ -8,7 +8,7 @@ from app.errors import AppError
 from app.schemas_b2b_quotes import QuoteCreateRequest, QuoteCreateResponse
 from app.services.b2b_pricing import B2BPricingService
 from app.services.funnel_events import log_funnel_event
-from app.utils.correlation import get_or_create_correlation_id
+from app.utils import get_or_create_correlation_id
 
 router = APIRouter(prefix="/api/b2b", tags=["b2b-quotes"])
 

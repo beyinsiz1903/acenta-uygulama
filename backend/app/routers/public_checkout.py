@@ -26,7 +26,7 @@ from app.services.booking_events import emit_event
 from app.services.pricing_quote_engine import compute_quote_for_booking
 from app.services.funnel_events import log_funnel_event
 from app.utils import now_utc
-from app.utils.correlation import get_or_create_correlation_id
+from app.utils import get_or_create_correlation_id
 
 
 router = APIRouter(prefix="/api/public", tags=["public-checkout"])

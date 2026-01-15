@@ -485,7 +485,8 @@ export default function AdminPricingPage() {
   const tabs = [
     { key: "contracts", label: "Contracts" },
     { key: "grids", label: "Rate Grids" },
-    { key: "rules", label: "Rules" },
+    { key: "rules", label: "Rules (v2)" },
+    { key: "simple_rules", label: "Simple Rules" },
   ];
 
   return (

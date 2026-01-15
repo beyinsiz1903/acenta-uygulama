@@ -13,7 +13,7 @@ export default function B2BAccountPage() {
       setLoading(true);
       setError("");
       try {
-        const resp = await api.get("/api/b2b/account/summary");
+        const resp = await api.get("/b2b/account/summary");
         setData(resp.data);
       } catch (err) {
         setError(apiErrorMessage(err));

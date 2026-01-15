@@ -17,7 +17,11 @@ import hashlib
 from datetime import datetime, timedelta
 from pymongo import MongoClient
 import os
+import sys
 import time
+
+# Add backend path to Python path
+sys.path.insert(0, '/app/backend')
 
 # Configuration - Use production URL from frontend/.env
 BASE_URL = "https://syroce-acenta.preview.emergentagent.com"

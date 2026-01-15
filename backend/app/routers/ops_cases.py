@@ -57,6 +57,38 @@ async def list_ops_cases(
     )
 
 
+@router.get("/counters")
+async def ops_cases_counters(
+    user: Dict[str, Any] = OpsUserDep,
+    db=Depends(get_db),
+) -> Dict[str, Any]:
+    """Return simple counters for ops_cases by status for current organization.
+
+    - open
+    - waiting
+    - in_progress
+    """
+    org_id = user.get("organization_id")
+    if not org_id:
+        raise AppError(400, "invalid_user_context", "User is missing organization_id")
+
+    pipeline = [
+        {"$match": {"organization_id": str(org_id), "status": {"$in": ["open", "waiting", "in_progress"]}}},
+        {"$group": {"_id": "$status", "count": {"$sum": 1}}},
+    ]
+
+    results = await db.ops_cases.aggregate(pipeline).to_list(length=10)
+
+    counters = {"open": 0, "waiting": 0, "in_progress": 0}
+    for row in results:
+        status = row.get("_id")
+        if status in counters:
+            counters[status] = int(row.get("count") or 0)
+
+    return counters
+
+
+
 @router.get("/{case_id}")
 async def get_ops_case(
     case_id: str,

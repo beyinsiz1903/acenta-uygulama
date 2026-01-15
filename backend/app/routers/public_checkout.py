@@ -23,6 +23,7 @@ from app.services.public_checkout import (
 )
 from app.services.coupons import CouponService
 from app.services.booking_events import emit_event
+from app.services.pricing_quote_engine import compute_quote_for_booking
 from app.utils import now_utc
 
 

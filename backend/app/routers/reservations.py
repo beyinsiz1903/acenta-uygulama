@@ -9,7 +9,7 @@ from app.schemas import ReservationCreateIn
 from app.services.reservations import create_reservation, set_reservation_status
 from app.utils import serialize_doc, to_object_id
 
-router = APIRouter(prefix="/api/reservations", tags=["reservations"])
+router = APIRouter(prefix="/reservations", tags=["reservations"])
 
 
 def _oid_or_400(id_str: str) -> ObjectId:

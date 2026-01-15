@@ -37,6 +37,7 @@ def get_idem_repo(db=Depends(get_db)) -> IdempotencyRepo:
 )
 async def create_b2b_booking(
     payload: BookingCreateRequest,
+    request: Request,
     user=Depends(get_current_user),
     pricing: B2BPricingService = Depends(get_pricing_service),
     booking_svc: B2BBookingService = Depends(get_booking_service),
@@ -45,6 +46,7 @@ async def create_b2b_booking(
 ):
     org_id = user.get("organization_id")
     agency_id = user.get("agency_id")
+    correlation_id = get_or_create_correlation_id(request, None)
     if not agency_id:
         raise AppError(403, "forbidden", "User is not bound to an agency")
 

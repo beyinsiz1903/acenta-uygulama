@@ -143,6 +143,7 @@ export default function BookCheckoutPage() {
     setShowProviderDetails(false);
     setProviderError(null);
     setResult(null);
+    setCouponResult(null);
 
     try {
       const body = {

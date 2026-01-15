@@ -11,6 +11,7 @@ export const adminNav = [
       { label: "Katalog", path: "/app/admin/catalog" },
       { label: "Otel Kataloğu", path: "/app/admin/catalog/hotels" },
       { label: "Fiyatlandırma", path: "/app/admin/pricing" },
+      { label: "Kuponlar", path: "/app/admin/coupons" },
       { label: "Onay Görevleri", path: "/app/admin/approvals" },
       { label: "Finans / İadeler", path: "/app/admin/finance/refunds" },
       { label: "Ops / B2B", path: "/app/admin/ops/b2b" },

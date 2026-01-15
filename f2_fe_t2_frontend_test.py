@@ -9,7 +9,7 @@ import json
 from playwright.async_api import async_playwright
 
 # Configuration
-BASE_URL = "https://syroca-pro.preview.emergentagent.com"
+BASE_URL = "https://syroce-acenta.preview.emergentagent.com"
 PRODUCT_ID = "696564845776721d56136a1c"  # From our backend test
 ORG_ID = "org_public_checkout"
 

@@ -33,9 +33,9 @@ class CouponCreateIn(CouponBase):
 
 
 class CouponUpdateIn(BaseModel):
-    discount_type: Optional[str] = Field(None, regex="^(PERCENT|AMOUNT)$")
+    discount_type: Optional[str] = Field(None, pattern="^(PERCENT|AMOUNT)$")
     value: Optional[float] = Field(None, gt=0)
-    scope: Optional[str] = Field(None, regex="^(B2B|B2C|BOTH)$")
+    scope: Optional[str] = Field(None, pattern="^(B2B|B2C|BOTH)$")
     min_total: Optional[float] = Field(None, ge=0)
     usage_limit: Optional[int] = Field(None, ge=1)
     per_customer_limit: Optional[int] = Field(None, ge=1)

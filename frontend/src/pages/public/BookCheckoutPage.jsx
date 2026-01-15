@@ -122,6 +122,8 @@ export default function BookCheckoutPage() {
   const [clientSecret, setClientSecret] = useState("");
   const [providerError, setProviderError] = useState(null);
   const [showProviderDetails, setShowProviderDetails] = useState(false);
+  const [couponCode, setCouponCode] = useState("");
+  const [couponResult, setCouponResult] = useState(null);
 
   const getIdempotencyKey = () => {
     const keyName = `public_checkout_idem_${quoteId}`;

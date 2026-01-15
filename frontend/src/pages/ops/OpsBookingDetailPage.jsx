@@ -864,7 +864,7 @@ export default function OpsBookingDetailPage() {
                   onClosed={() => {
                     // Close sonrası listeyi tazele
                     if (!bookingId) return;
-                    listOpsGuestCasesForBooking(bookingId)
+                    listOpsCasesForBooking(bookingId)
                       .then((res) => setCases(res.items || []))
                       .catch(() => {});
                   }}

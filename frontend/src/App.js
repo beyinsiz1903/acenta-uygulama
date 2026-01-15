@@ -79,6 +79,23 @@ import NotFoundPage from "./pages/NotFoundPage";
 import { Toaster } from "./components/ui/sonner";
 
 function App() {
+  // Global Organization JSON-LD (tekil)
+  if (typeof document !== "undefined") {
+    const existing = document.getElementById("org-schema-jsonld");
+    if (!existing) {
+      const script = document.createElement("script");
+      script.id = "org-schema-jsonld";
+      script.type = "application/ld+json";
+      script.text = JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        name: "Syroce",
+        url: window.location.origin,
+      });
+      document.head.appendChild(script);
+    }
+  }
+
   return (
     <BrowserRouter>
       <Routes>

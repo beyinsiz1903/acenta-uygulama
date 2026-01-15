@@ -33,13 +33,10 @@ async def sitemap_xml(request: Request, db=Depends(get_db)) -> Response:
 
     urls: List[dict[str, str]] = []
 
-    # Static important URLs (app shell + key surfaces)
+    # Static important URLs – PUBLIC surfaces only
     static_paths = [
-        "/",  # home / landing
-        "/app/dashboard",
-        "/app/reservations",
-        "/app/agency/hotels",
-        "/b2b/login",
+        "/",       # home / landing (şu an login olsa da ileride marketing yüzeyi olacak)
+        "/book",   # public arama/listleme yüzeyi
     ]
     today = datetime.utcnow().date().isoformat()
     for path in static_paths:

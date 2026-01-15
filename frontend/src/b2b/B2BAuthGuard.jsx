@@ -27,8 +27,8 @@ export default function B2BAuthGuard({ children }) {
   }
 
   if (state === "nope") {
-    const next = location.pathname + location.search + location.hash;
-    return <Navigate to={`/login?reason=session_expired&b2b=1`} state={{ next }} replace />;
+    const next = encodeURIComponent(location.pathname + location.search + location.hash);
+    return <Navigate to={`/b2b/login?reason=session_expired&next=${next}`} replace />;
   }
 
   return children;

@@ -13,6 +13,7 @@ export default function B2BLoginPage() {
 
   const params = new URLSearchParams(location.search);
   const reason = params.get("reason");
+  const next = params.get("next") || "/b2b/bookings";
   const hasSessionExpired = reason === "session_expired";
 
   const reasonText = useMemo(() => {
@@ -34,7 +35,7 @@ export default function B2BLoginPage() {
       // Verify that this user has B2B access via /api/b2b/me
       await api.get("/b2b/me");
 
-      navigate("/b2b/bookings", { replace: true });
+      navigate(next, { replace: true });
     } catch (err) {
       setError(apiErrorMessage(err));
     } finally {

@@ -121,12 +121,18 @@ api.interceptors.response.use(
 
           // 3) Normalize login URL with reason parameter
           const current = new URL(window.location.href);
-          const isLogin = current.pathname.startsWith("/login");
+          const isLogin = current.pathname.startsWith("/login") || current.pathname.startsWith("/b2b/login");
           const hasReason = current.searchParams.get("reason") === "session_expired";
 
           if (!isLogin || !hasReason) {
-            const url = new URL("/login", origin);
+            const from = `${pathname}${search}${hash}`;
+            const loginPath = pathname.startsWith("/b2b") ? "/b2b/login" : "/login";
+            const url = new URL(loginPath, origin);
             url.searchParams.set("reason", "session_expired");
+            // For B2B we also pass explicit next parameter
+            if (loginPath === "/b2b/login") {
+              url.searchParams.set("next", from);
+            }
             window.location.replace(url.toString());
           }
         }

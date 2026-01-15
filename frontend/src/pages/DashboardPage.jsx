@@ -48,12 +48,14 @@ export default function DashboardPage() {
     (async () => {
       setError("");
       try {
-        const [a, b] = await Promise.all([
+        const [a, b, c] = await Promise.all([
           api.get("/reports/reservations-summary"),
           api.get("/reports/sales-summary"),
+          api.get("/ops-cases/counters"),
         ]);
         setResSummary(a.data || []);
         setSales(b.data || []);
+        setCaseCounters(c.data || { open: 0, waiting: 0, in_progress: 0 });
       } catch (e) {
         setError(apiErrorMessage(e));
       }

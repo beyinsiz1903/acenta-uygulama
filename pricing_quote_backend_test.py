@@ -387,7 +387,7 @@ def test_pricing_quote_api():
     print("")
     print("📋 Kullanılan test verileri:")
     print("   - Admin kullanıcı: admin@acenta.test / admin123")
-    print("   - Test rule: priority=150, product_type=hotel, markup_percent=10.0")
+    print("   - Test rule: priority=999, product_type=hotel, markup_percent=10.0")
     print("   - Test quote: base_price=1000.0, currency=TRY, check_in=2026-01-15")
     print("=" * 80 + "\n")
 

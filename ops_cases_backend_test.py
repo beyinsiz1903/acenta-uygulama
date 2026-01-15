@@ -144,7 +144,7 @@ def test_ops_cases_system():
     assert r.status_code == 200, f"POST /api/ops-cases/ failed: {r.text}"
     
     create_response = r.json()
-    print(f"   ✅ POST /api/ops/cases successful: 200")
+    print(f"   ✅ POST /api/ops-cases/ successful: 200")
     print(f"   📋 Created case structure: {list(create_response.keys())}")
     
     # Verify OpsCaseOut structure

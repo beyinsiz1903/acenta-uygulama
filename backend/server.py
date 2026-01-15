@@ -49,6 +49,7 @@ from app.routers.crm_deals import router as crm_deals_router
 from app.routers.crm_tasks import router as crm_tasks_router
 from app.routers.crm_activities import router as crm_activities_router
 from app.routers.crm_events import router as crm_events_router
+from app.routers.reservations import router as reservations_router
 from app.email_worker import email_dispatch_loop
 from app.indexes import finance_indexes, inbox_indexes, pricing_indexes, public_indexes, voucher_indexes
 from app.indexes import crm_indexes
@@ -137,6 +138,7 @@ app.include_router(crm_deals_router)
 app.include_router(crm_tasks_router)
 app.include_router(crm_activities_router)
 app.include_router(crm_events_router)
+app.include_router(reservations_router, prefix=API_PREFIX)
 
 app.include_router(auth_router)
 

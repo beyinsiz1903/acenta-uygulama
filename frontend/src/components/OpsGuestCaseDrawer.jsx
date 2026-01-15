@@ -116,39 +116,6 @@ function OpsGuestCaseDrawer({ caseId, open, onClose, onClosed }) {
       if (onClosed) onClosed();
       // Timeline'ı da tazele (yeni OPS_CASE_CLOSED event'ini görmek için)
       if (data?.booking_id) {
-  const handleSave = async () => {
-    if (!data || !caseId || isClosed) return;
-    setSaving(true);
-    try {
-      const payload = {};
-      if (editStatus && editStatus !== data.status) payload.status = editStatus;
-      if (editStatus === "waiting") {
-        if (editWaitingOn) payload.waiting_on = editWaitingOn;
-      }
-      if (editStatus !== "waiting") {
-        // waiting_on UI'da disabled ve null olarak gösteriliyor; backend'e göndermiyoruz
-      }
-      if (editNote !== (data.note || "")) {
-        payload.note = editNote;
-      }
-      if (Object.keys(payload).length === 0) {
-        setSaving(false);
-        return;
-      }
-      const res = await api.patch(`/ops-cases/${caseId}`, payload);
-      setData((prev) => (prev ? { ...prev, ...res } : prev));
-      toast.success("Case güncellendi.");
-      if (onClosed) {
-        // Genel listeyi tazelemek için opsiyonel callback; isim legacy ama yeniden kullanıyoruz
-        onClosed();
-      }
-    } catch (e) {
-      toast.error(apiErrorMessage(e));
-    } finally {
-      setSaving(false);
-    }
-  };
-
         await loadTimeline(data.booking_id);
       }
     } catch (e) {

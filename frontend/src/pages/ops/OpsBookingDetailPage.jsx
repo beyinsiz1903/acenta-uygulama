@@ -498,6 +498,173 @@ export default function OpsBookingDetailPage() {
                     <div className="space-y-0.5">
                       <div className="text-xs text-muted-foreground">Click-to-Pay</div>
                       <div className="text-[11px] text-muted-foreground">
+              <TabsContent value="cases" className="mt-0">
+                <div className="space-y-3 text-sm">
+                  <div className="flex flex-col sm:flex-row sm:items-end gap-3">
+                    <div className="flex-1 space-y-1">
+                      <div className="text-xs text-muted-foreground">Yeni Case Oluştur</div>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <div className="space-y-1">
+                          <div className="text-[11px] text-muted-foreground">Tip</div>
+                          <select
+                            className="w-full rounded-md border px-2 py-1 text-xs"
+                            value={newCaseType}
+                            onChange={(e) => setNewCaseType(e.target.value)}
+                          >
+                            <option value="cancel">İptal talebi</option>
+                            <option value="amend">Değişiklik talebi</option>
+                            <option value="refund">İade</option>
+                            <option value="payment_followup">Ödeme takibi</option>
+                            <option value="voucher_issue">Voucher sorunu</option>
+                            <option value="missing_docs">Eksik evrak</option>
+                            <option value="supplier_approval">Tedarikçi onayı</option>
+                            <option value="other">Diğer</option>
+                          </select>
+                        </div>
+                        <div className="sm:col-span-2 space-y-1">
+                          <div className="text-[11px] text-muted-foreground">Not</div>
+                          <form onSubmit={handleCreateCase} className="flex flex-col sm:flex-row gap-2 items-start">
+                            <textarea
+                              className="w-full rounded-md border px-2 py-1 text-xs min-h-[40px]"
+                              value={newCaseNote}
+                              onChange={(e) => setNewCaseNote(e.target.value)}
+                              placeholder="Kısa bir açıklama yazın (zorunlu değil ama önerilir)"
+                            />
+                            <Button
+                              type="submit"
+                              size="xs"
+                              disabled={creatingCase}
+                              className="whitespace-nowrap text-[11px] mt-1 sm:mt-0"
+                            >
+                              {creatingCase ? "Oluşturuluyor..." : "Case oluştur"}
+                            </Button>
+                          </form>
+                          {createCaseError && (
+                            <div className="text-[11px] text-red-600 mt-1">{createCaseError}</div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-3 border-t pt-3">
+                    {casesLoading && (
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <Loader2 className="h-3 w-3 animate-spin" /> Caseler yükleniyor...
+                      </div>
+                    )}
+                    {!casesLoading && casesError && <ErrorState description={casesError} />}
+                    {!casesLoading && !casesError && cases.length === 0 && (
+                      <EmptyState
+                        title="Bu booking için case yok"
+                        description="Guest portal veya ops panel üzerinden henüz bir case açılmamış."
+                      />
+                    )}
+                    {!casesLoading && !casesError && cases.length > 0 && (
+                      <div className="mt-2 rounded-lg border overflow-hidden text-xs">
+                        <table className="min-w-full">
+                          <thead className="bg-muted/40 text-[11px] text-muted-foreground">
+                            <tr>
+                              <th className="px-2 py-1 text-left">Case ID</th>
+                              <th className="px-2 py-1 text-left">Tip</th>
+                              <th className="px-2 py-1 text-left">Durum</th>
+                              <th className="px-2 py-1 text-left">Kaynak</th>
+                              <th className="px-2 py-1 text-left">Oluşturulma</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {cases.map((c) => {
+                              const created = c.created_at ? new Date(c.created_at) : null;
+                              return (
+                                <tr
+                                  key={c.case_id}
+                                  className="border-t hover:bg-muted/30 cursor-pointer"
+                                  onClick={() => setSelectedCaseId(c.case_id)}
+                                >
+                                  <td className="px-2 py-1 font-mono text-[11px]">{c.case_id}</td>
+                                  <td className="px-2 py-1">
+                                    {(() => {
+                                      switch (c.type) {
+                                        case "cancel":
+                                          return "İptal talebi";
+                                        case "amend":
+                                          return "Değişiklik talebi";
+                                        case "refund":
+                                          return "İade";
+                                        case "payment_followup":
+                                          return "Ödeme takibi";
+                                        case "voucher_issue":
+                                          return "Voucher sorunu";
+                                        case "missing_docs":
+                                          return "Eksik evrak";
+                                        case "supplier_approval":
+                                          return "Tedarikçi onayı";
+                                        case "other":
+                                          return "Diğer";
+                                        default:
+                                          return c.type || "-";
+                                      }
+                                    })()}
+                                  </td>
+                                  <td className="px-2 py-1">
+                                    {(() => {
+                                      switch (c.status) {
+                                        case "open":
+                                          return (
+                                            <span className="inline-flex items-center rounded-full bg-emerald-50 text-emerald-700 px-2 py-0.5 text-[10px]">
+                                              Açık
+                                            </span>
+                                          );
+                                        case "waiting":
+                                          return (
+                                            <span className="inline-flex items-center rounded-full bg-amber-50 text-amber-700 px-2 py-0.5 text-[10px]">
+                                              Beklemede
+                                            </span>
+                                          );
+                                        case "in_progress":
+                                          return (
+                                            <span className="inline-flex items-center rounded-full bg-blue-50 text-blue-700 px-2 py-0.5 text-[10px]">
+                                              Devam ediyor
+                                            </span>
+                                          );
+                                        case "closed":
+                                        default:
+                                          return (
+                                            <span className="inline-flex items-center rounded-full bg-muted text-muted-foreground px-2 py-0.5 text-[10px]">
+                                              Kapalı
+                                            </span>
+                                          );
+                                      }
+                                    })()}
+                                  </td>
+                                  <td className="px-2 py-1">
+                                    {(() => {
+                                      switch (c.source) {
+                                        case "guest_portal":
+                                          return "Guest portal";
+                                        case "ops_panel":
+                                          return "Ops panel";
+                                        case "system":
+                                          return "Sistem";
+                                        default:
+                                          return c.source || "-";
+                                      }
+                                    })()}
+                                  </td>
+                                  <td className="px-2 py-1 text-muted-foreground">
+                                    {created ? created.toLocaleString("tr-TR") : "-"}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </TabsContent>
+
                         Misafire ödeme linki göndererek kalan tahsilatı tek adımda tamamlayın.
                       </div>
                     </div>

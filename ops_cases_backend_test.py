@@ -394,7 +394,7 @@ def test_ops_cases_system():
     print("✅ All Turkish scenarios completed successfully:")
     print("   1️⃣  Admin authentication working (admin@acenta.test/admin123)")
     print("   2️⃣  Test booking created successfully")
-    print("   3️⃣  Senaryo 1: GET /api/ops/cases listeleme working")
+    print("   3️⃣  Senaryo 1: GET /api/ops-cases listeleme working")
     print("   4️⃣  Senaryo 2: POST /api/ops/cases case oluşturma working")
     print("   5️⃣  Senaryo 3: PATCH /api/ops/cases/{case_id} status güncelleme working")
     print("   6️⃣  Senaryo 4a: PATCH /api/ops/cases/{case_id} in_progress working")

@@ -39,6 +39,9 @@ export default function AdminFunnelPage() {
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [summaryError, setSummaryError] = useState("");
   const [summaryChannel, setSummaryChannel] = useState("all");
+  const [alerts, setAlerts] = useState([]);
+  const [alertsLoading, setAlertsLoading] = useState(false);
+  const [alertsError, setAlertsError] = useState("");
 
   const loadSummary = async (nextDays) => {
     const d = nextDays ?? days;
@@ -50,6 +53,21 @@ export default function AdminFunnelPage() {
     } catch (e) {
       setSummaryError(apiErrorMessage(e));
     } finally {
+  const loadAlerts = async (nextDays) => {
+    const d = nextDays ?? days;
+    setAlertsLoading(true);
+    setAlertsError("");
+    try {
+      const res = await api.get("/admin/funnel/alerts", { params: { days: d } });
+      setAlerts((res.data && res.data.alerts) || []);
+    } catch (e) {
+      setAlertsError(apiErrorMessage(e));
+    } finally {
+      setAlertsLoading(false);
+    }
+  };
+
+
       setSummaryLoading(false);
     }
   };

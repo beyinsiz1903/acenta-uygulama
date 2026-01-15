@@ -258,6 +258,16 @@ async def public_checkout(payload: PublicCheckoutRequest, request: Request, db=D
         await bookings.delete_one({"_id": ins.inserted_id})
         return PublicCheckoutResponse(ok=False, reason="provider_unavailable")
 
+    # If we successfully created a PaymentIntent, increment coupon usage counters
+    coupon_id = booking_doc.get("coupon_id")
+    if coupon_id:
+        coupons = CouponService(db)
+        try:
+            await coupons.increment_usage_for_customer(coupon_id, customer_key=guest.email)
+        except Exception:
+            # Coupon usage istatistikleri kritik değil, hata akışı bozmasın
+            pass
+
     # Generate a simple booking_code (for public confirmation pages)
     from uuid import uuid4
 

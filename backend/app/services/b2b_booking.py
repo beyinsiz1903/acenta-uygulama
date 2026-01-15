@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from bson import ObjectId
 
@@ -43,10 +43,36 @@ class B2BBookingService:
         # MVP: single item/offer
         offer = offers[0]
         item_in = items[0]
-        
-        currency = offer.get("currency", "EUR")
-        sell_amount = offer.get("sell", 0.0)
-        
+
+        # Normalize pricing fields from offer
+        net_amount = float(offer.get("net", 0.0) or 0.0)
+        sell_amount = float(offer.get("sell", 0.0) or 0.0)
+        currency = (offer.get("currency") or "EUR").upper()
+
+        # Derive simple breakdown + applied_rules from net/sell
+        if net_amount > 0:
+            markup_amount = round(sell_amount - net_amount, 2)
+            try:
+                markup_percent = round(((sell_amount / net_amount) - 1.0) * 100.0, 2)
+            except ZeroDivisionError:
+                markup_percent = 0.0
+        else:
+            net_amount = 0.0
+            markup_amount = 0.0
+            markup_percent = 0.0
+
+        breakdown = {
+            "base": round(net_amount, 2),
+            "markup_amount": markup_amount,
+            "discount_amount": 0.0,
+        }
+        trace = {
+            "source": "simple_pricing_rules",
+            "resolution": "winner_takes_all",
+            "rule_id": None,
+            "rule_name": None,
+        }
+
         # ===================================================================
         # PHASE 1.5: Credit Check (before booking creation)
         # ===================================================================
@@ -69,9 +95,14 @@ class B2BBookingService:
             "payment_status": "unpaid",
             "currency": currency,
             "amounts": {
-                "net": offer.get("net", 0.0),
+                "net": net_amount,
                 "sell": sell_amount,
+                "breakdown": breakdown,
                 # sell_eur will be set after FX snapshot for non-EUR bookings
+            },
+            "applied_rules": {
+                "markup_percent": markup_percent,
+                "trace": trace,
             },
             "items": [
                 {

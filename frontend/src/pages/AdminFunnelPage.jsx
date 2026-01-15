@@ -24,6 +24,33 @@ export default function AdminFunnelPage() {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
 
+  const [days, setDays] = useState(7);
+  const [summary, setSummary] = useState({
+    days: 7,
+    quote_count: 0,
+    checkout_started_count: 0,
+    booking_created_count: 0,
+    payment_succeeded_count: 0,
+    payment_failed_count: 0,
+    conversion: 0,
+  });
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [summaryError, setSummaryError] = useState("");
+
+  const loadSummary = async (nextDays) => {
+    const d = nextDays ?? days;
+    setSummaryLoading(true);
+    setSummaryError("");
+    try {
+      const res = await api.get("/admin/funnel/summary", { params: { days: d } });
+      setSummary(res.data || { ...summary, days: d });
+    } catch (e) {
+      setSummaryError(apiErrorMessage(e));
+    } finally {
+      setSummaryLoading(false);
+    }
+  };
+
   const load = async () => {
     setLoading(true);
     setErr("");

@@ -46,7 +46,7 @@ async def list_funnel_events(
 
 @router.get("/summary")
 async def funnel_summary(
-    days: int = Query(7, ge=1, le=60),
+    days: int = Query(7, ge=1, le=90),
     db=Depends(get_db),
     user: Dict[str, Any] = Depends(require_roles(["super_admin", "admin", "ops"])),
 ) -> Dict[str, Any]:

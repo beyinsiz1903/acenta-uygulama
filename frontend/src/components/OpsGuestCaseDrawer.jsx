@@ -69,6 +69,9 @@ function OpsGuestCaseDrawer({ caseId, open, onClose, onClosed }) {
       try {
         const doc = await getOpsCase(caseId);
         setData(doc);
+        setEditStatus(doc.status || "open");
+        setEditWaitingOn(doc.waiting_on || "");
+        setEditNote(doc.note || "");
         if (doc?.booking_id) {
           await loadTimeline(doc.booking_id);
         } else {
@@ -85,6 +88,11 @@ function OpsGuestCaseDrawer({ caseId, open, onClose, onClosed }) {
   }, [open, caseId, loadTimeline]);
 
   const isClosed = data?.status === "closed";
+  const [editStatus, setEditStatus] = useState("");
+  const [editWaitingOn, setEditWaitingOn] = useState("");
+  const [editNote, setEditNote] = useState("");
+  const [saving, setSaving] = useState(false);
+
 
   const handleClose = async () => {
     if (!caseId || isClosed) return;

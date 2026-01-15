@@ -350,7 +350,7 @@ export default function OpsBookingDetailPage() {
       setCasesLoading(true);
       setCasesError("");
       try {
-        const res = await listOpsGuestCasesForBooking(bookingId);
+        const res = await listOpsCasesForBooking(bookingId);
         setCases(res.items || []);
       } catch (e) {
         setCasesError(apiErrorMessage(e));

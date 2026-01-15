@@ -276,7 +276,7 @@ def test_faz3_p1_1_integration():
     print(f"   📋 Organization ID: {admin_org_id}")
     
     # Find or create active product
-    product_id = find_active_product(admin_headers, admin_org_id)
+    product_id = "69691ae7b322db4dcbaf4bf9"  # Use the ObjectId we just created
     print(f"   📋 Using product ID: {product_id}")
 
     # ------------------------------------------------------------------

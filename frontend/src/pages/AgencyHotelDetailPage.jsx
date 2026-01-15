@@ -38,6 +38,44 @@ export default function AgencyHotelDetailPage() {
   const { hotelId } = useParams();
   const navigate = useNavigate();
   const user = getUser();
+  useEffect(() => {
+    if (!hotel) return;
+    const { title, description } = buildHotelSeo(hotel);
+    document.title = title;
+    let meta = document.querySelector('meta[name="description"]');
+    if (!meta) {
+      meta = document.createElement("meta");
+      meta.name = "description";
+      document.head.appendChild(meta);
+    }
+    meta.content = description;
+  }, [hotel]);
+
+  useEffect(() => {
+    if (!hotel) return;
+    const { schema } = buildHotelSeo(hotel);
+    if (!schema) return;
+
+    const script = document.createElement("script");
+    script.type = "application/ld+json";
+    script.id = "hotel-schema-jsonld";
+    script.text = JSON.stringify(schema);
+
+    // Remove existing if any
+    const existing = document.getElementById("hotel-schema-jsonld");
+    if (existing && existing.parentNode) {
+      existing.parentNode.removeChild(existing);
+    }
+    document.head.appendChild(script);
+
+    return () => {
+      const el = document.getElementById("hotel-schema-jsonld");
+      if (el && el.parentNode) {
+        el.parentNode.removeChild(el);
+      }
+    };
+  }, [hotel]);
+
 
   const [hotel, setHotel] = useState(null);
   const [loading, setLoading] = useState(true);

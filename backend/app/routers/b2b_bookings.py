@@ -60,6 +60,30 @@ async def create_b2b_booking(
             agency_id=agency_id,
             quote_id=payload.quote_id,
         )
+
+        # Funnel: b2b.checkout.started
+        try:
+            await log_funnel_event(
+                await get_db(),
+                organization_id=org_id,
+                correlation_id=correlation_id,
+                event_name="b2b.checkout.started",
+                entity_type="quote",
+                entity_id=str(quote_doc.get("_id")) if quote_doc else None,
+                channel="b2b",
+                user={
+                    "user_id": user.get("id"),
+                    "email": user.get("email"),
+                    "roles": user.get("roles") or [],
+                },
+                context={},
+                trace={
+                    "idempotency_key": idempotency_key,
+                },
+            )
+        except Exception:
+            pass
+
         # Context mismatch check (agency already enforced via query, channel optional here)
         booking = await booking_svc.create_booking_from_quote(
             organization_id=org_id,
@@ -69,6 +93,30 @@ async def create_b2b_booking(
             booking_req=payload,
             request_id=idempotency_key,
         )
+
+        # Funnel: b2b.booking.created
+        try:
+            await log_funnel_event(
+                await get_db(),
+                organization_id=org_id,
+                correlation_id=correlation_id,
+                event_name="b2b.booking.created",
+                entity_type="booking",
+                entity_id=booking.booking_id,
+                channel="b2b",
+                user={
+                    "user_id": user.get("id"),
+                    "email": user.get("email"),
+                    "roles": user.get("roles") or [],
+                },
+                context={},
+                trace={
+                    "idempotency_key": idempotency_key,
+                },
+            )
+        except Exception:
+            pass
+
         return 200, booking.model_dump()
 
     status, body = await idem.store_or_replay(

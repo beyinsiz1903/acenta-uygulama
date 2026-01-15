@@ -84,6 +84,12 @@ async def list_b2b_bookings_agency(
             else:
                 query["status"] = {"$in": normalized}
 
+    # Text search (best-effort) on id / customer.name / items[0].product_name
+    if q:
+        # We'll apply this filter in Python after fetching up to `limit` records,
+        # because the existing schema does not have a dedicated text index.
+        pass
+
     cursor = (
         db.bookings.find(query)
         .sort("created_at", -1)

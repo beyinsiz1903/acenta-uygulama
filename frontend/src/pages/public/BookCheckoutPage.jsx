@@ -156,9 +156,15 @@ export default function BookCheckoutPage() {
         },
         payment: { method: "stripe" },
         idempotency_key: getIdempotencyKey(),
+        coupon: couponCode.trim() || undefined,
       };
 
       const res = await createPublicCheckout(body);
+      if (res.coupon) {
+        setCouponResult(res.coupon);
+      } else {
+        setCouponResult(null);
+      }
       if (!res.ok) {
         if (res.reason === "provider_unavailable") {
           setProviderError(res.provider_error || null);

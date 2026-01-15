@@ -91,7 +91,8 @@ def create_fake_stripe_event(booking_id):
                     "organization_id": ORGANIZATION_ID,
                     "agency_id": AGENCY_ID,
                     "correlation_id": CORRELATION_ID,
-                    "channel": "public"
+                    "channel": "public",
+                    "payment_id": PAYMENT_INTENT_ID  # Add explicit payment_id
                 }
             }
         }

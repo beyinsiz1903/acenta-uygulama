@@ -254,18 +254,3 @@ async def funnel_alerts(
         "generated_at": now_utc().isoformat(),
         "alerts": alerts,
     }
-
-    _compute_conversion(total)
-    for ch in by_channel.values():
-        _compute_conversion(ch)
-
-    return {
-        "days": days,
-        "quote_count": total["quote_count"],
-        "checkout_started_count": total["checkout_started_count"],
-        "booking_created_count": total["booking_created_count"],
-        "payment_succeeded_count": total["payment_succeeded_count"],
-        "payment_failed_count": total["payment_failed_count"],
-        "conversion": total["conversion"],
-        "by_channel": by_channel,
-    }

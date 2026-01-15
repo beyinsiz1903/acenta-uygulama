@@ -131,6 +131,18 @@ async def list_b2b_bookings_agency(
             else:
                 product_name = "B2B Booking"
 
+        # In-memory q filter (best-effort)
+        if q:
+            haystack = " ".join(
+                [
+                    str(doc.get("_id") or ""),
+                    primary_guest_name or "",
+                    product_name or "",
+                ]
+            ).lower()
+            if q.lower() not in haystack:
+                continue
+
         items.append(
             BookingListItem(
                 booking_id=str(doc.get("_id")),

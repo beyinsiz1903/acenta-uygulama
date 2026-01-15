@@ -96,6 +96,8 @@ function OpsGuestCaseDrawer({ caseId, open, onClose, onClosed }) {
 
   const handleClose = async () => {
     if (!caseId || isClosed) return;
+    const confirmed = window.confirm("Bu case'i kapatmak istediğinize emin misiniz?");
+    if (!confirmed) return;
     setClosing(true);
     try {
       const res = await closeOpsCase(caseId, closeNote || undefined);

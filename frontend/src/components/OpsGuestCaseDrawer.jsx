@@ -90,7 +90,7 @@ function OpsGuestCaseDrawer({ caseId, open, onClose, onClosed }) {
     if (!caseId || isClosed) return;
     setClosing(true);
     try {
-      const res = await closeOpsGuestCase(caseId, closeNote || undefined);
+      const res = await closeOpsCase(caseId, closeNote || undefined);
       toast.success("Case başarıyla kapatıldı.");
       setData((prev) =>
         prev

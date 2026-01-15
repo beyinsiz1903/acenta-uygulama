@@ -362,7 +362,7 @@ frontend:
 
 test_plan:
   current_focus:
-    - "Ops Case Yönetimi UI Test"
+    - "Admin Funnel UI Test"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"

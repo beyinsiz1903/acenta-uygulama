@@ -99,4 +99,54 @@ async def close_ops_case(
         request_context=request_context,
     )
 
+
+@router.post("/", response_model=OpsCaseOut)
+async def create_ops_case(
+    payload: OpsCaseCreate,
+    user: Dict[str, Any] = OpsUserDep,
+    db=Depends(get_db),
+) -> Dict[str, Any]:
+    org_id = user.get("organization_id")
+    if not org_id:
+        raise AppError(400, "invalid_user_context", "User is missing organization_id")
+
+    doc = await create_case(
+        db,
+        organization_id=str(org_id),
+        booking_id=payload.booking_id,
+        type=payload.type,
+        source=payload.source,
+        status=payload.status,
+        waiting_on=payload.waiting_on,
+        note=payload.note,
+    )
+
+    return OpsCaseOut(**doc)
+
+
+@router.patch("/{case_id}", response_model=OpsCaseOut)
+async def patch_ops_case(
+    case_id: str,
+    payload: OpsCaseUpdate,
+    user: Dict[str, Any] = OpsUserDep,
+    db=Depends(get_db),
+) -> Dict[str, Any]:
+    org_id = user.get("organization_id")
+    if not org_id:
+        raise AppError(400, "invalid_user_context", "User is missing organization_id")
+
+    data = payload.model_dump(exclude_unset=True)
+
+    updated = await update_case(
+        db,
+        organization_id=str(org_id),
+        case_id=case_id,
+        status=data.get("status"),
+        waiting_on=data.get("waiting_on"),
+        note=data.get("note"),
+    )
+
+    return OpsCaseOut(**updated)
+
+
     return {"ok": True, "case_id": updated.get("case_id", case_id), "status": updated.get("status")}

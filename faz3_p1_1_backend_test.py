@@ -123,7 +123,7 @@ def create_public_quote(org_id, product_id):
         "date_to": "2026-02-02",
         "pax": {"adults": 2, "children": 0},
         "rooms": 1,
-        "currency": "TRY"
+        "currency": "EUR"  # Use EUR as it's more commonly supported
     }
     
     print(f"   📋 Creating quote with data: {json.dumps(quote_data, indent=2)}")

@@ -53,12 +53,12 @@ class CouponOut(BaseModel):
     min_total: float
     usage_limit: Optional[int]
     usage_count: int
-    per_customer_limit: Optional[int]
+    per_customer_limit: Optional[int] = None  # Make optional for backward compatibility
     valid_from: datetime
     valid_to: datetime
     active: bool
     created_at: datetime
-    updated_at: datetime
+    updated_at: Optional[datetime] = None  # Make optional for backward compatibility
 
     class Config:
         orm_mode = True

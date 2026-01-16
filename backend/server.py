@@ -55,7 +55,7 @@ from app.routers.admin_funnel import router as admin_funnel_router
 
 from app.routers.theme import router as theme_router
 from app.routers.admin_reporting import router as admin_reporting_router
-
+from app.routers.admin_ical import router as admin_ical_router
 
 
 from app.routers.seo import router as seo_router

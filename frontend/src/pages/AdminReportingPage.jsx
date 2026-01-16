@@ -94,6 +94,7 @@ export default function AdminReportingPage() {
             <h1 className="text-lg font-semibold">Reporting</h1>
             <Badge
               variant="outline"
+              data-testid="payments-e2e-proof-pending-badge"
               className="border-amber-300 bg-amber-50 text-[10px] font-medium text-amber-800"
             >
               Payments e2e: proof pending (env)

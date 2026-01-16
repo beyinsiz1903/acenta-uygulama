@@ -113,9 +113,27 @@ async def ensure_public_indexes(db):
     # ------------------------------------------------------------------
     # public_checkouts: idempotency lookups
     # ------------------------------------------------------------------
+    # New semantics: idempotency is keyed by (organization_id, idempotency_key)
+    # so that the same key cannot be reused across different quotes.
+    info = await db.public_checkouts.index_information()
+    existing = info.get("uniq_public_checkout_idem")
+    if existing:
+        # If the existing index is on (organization_id, quote_id, idempotency_key)
+        # drop it so we can replace with (organization_id, idempotency_key).
+        keys = existing.get("key") or []
+        expected = [("organization_id", ASCENDING), ("idempotency_key", ASCENDING)]
+        if keys != expected:
+            try:
+                await db.public_checkouts.drop_index("uniq_public_checkout_idem")
+            except Exception as exc:  # pragma: no cover - best-effort cleanup
+                logger.warning(
+                    "Failed to drop legacy uniq_public_checkout_idem index: %s",
+                    exc,
+                )
+
     await _safe_create(
         db.public_checkouts,
-        [("organization_id", ASCENDING), ("quote_id", ASCENDING), ("idempotency_key", ASCENDING)],
+        [("organization_id", ASCENDING), ("idempotency_key", ASCENDING)],
         unique=True,
         name="uniq_public_checkout_idem",
     )

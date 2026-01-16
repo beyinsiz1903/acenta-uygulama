@@ -25,8 +25,8 @@ def login_admin():
     user = data["user"]
     return data["access_token"], user["organization_id"], user["email"]
 
-def create_test_org_and_cases(admin_headers, test_org_id="org_ops_bulk_test"):
-    """Create test organization and seed ops cases for bulk testing"""
+def create_test_cases_in_org(admin_headers, org_id):
+    """Create test ops cases in the specified organization"""
     client = MongoClient("mongodb://localhost:27017")
     db = client.acenta_db
     
@@ -41,7 +41,7 @@ def create_test_org_and_cases(admin_headers, test_org_id="org_ops_bulk_test"):
         # Create booking first
         booking_doc = {
             "booking_id": booking_id,
-            "organization_id": test_org_id,
+            "organization_id": org_id,
             "status": "CONFIRMED",
             "guest_name": f"Test Guest {i}",
             "guest_email": f"guest{i}@bulk.test",
@@ -61,7 +61,7 @@ def create_test_org_and_cases(admin_headers, test_org_id="org_ops_bulk_test"):
         case_doc = {
             "case_id": case_id,
             "booking_id": booking_id,
-            "organization_id": test_org_id,
+            "organization_id": org_id,
             "type": "missing_docs",
             "source": "ops_panel",
             "status": "open",

@@ -196,8 +196,15 @@ async def handle_stripe_webhook(raw_body: bytes, signature: str | None) -> Tuple
     event = await verify_and_parse_stripe_event(raw_body, signature)
     event_type = event.get("type")
 
-    if event_type == "payment_intent.succeeded":
-        return await _handle_payment_intent_succeeded_legacy(event)
+    # Use finalize guard as the single entrypoint for payment_intent.* events.
+    if event_type in {"payment_intent.succeeded", "payment_intent.payment_failed"}:
+        db = await get_db()
+        result = await apply_stripe_event_with_guard(db, event=event, now=now_utc(), logger=None)
+        # Always return 200 to avoid Stripe retry storms; decision is in body.
+        return 200, {"ok": True, **result}
+
+    # Legacy handler kept for backwards compatibility in case we want to
+    # inspect historical behaviour or run phased migrations.
 
     if event_type == "payment_intent.payment_failed":
         # For v1 we record a simple failed event without side effects

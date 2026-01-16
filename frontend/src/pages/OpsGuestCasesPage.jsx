@@ -761,7 +761,7 @@ function OpsGuestCasesPage() {
         <div className="rounded-2xl border bg-card p-4">
           <div className="flex items-center gap-4 mb-4">
             <CheckSquare className="h-5 w-5 text-primary" />
-            <span className="font-medium text-sm">
+            <span className="font-medium text-sm" data-testid="cases-selected-count">
               {selectedIds.length} case seçildi
             </span>
           </div>

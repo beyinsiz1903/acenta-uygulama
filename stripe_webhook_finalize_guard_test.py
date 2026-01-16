@@ -283,7 +283,7 @@ async def test_out_of_order_guard():
         cleanup_test_data(db, [booking_id], ["evt_success_1", "evt_failed_1", "evt_failed_2", "evt_success_2"])
         mongo_client.close()
 
-def test_already_finalized_guard():
+async def test_already_finalized_guard():
     """Test 3: Already finalized booking protection"""
     print("\n" + "=" * 80)
     print("TEST 3: ALREADY FINALIZED BOOKING PROTECTION")

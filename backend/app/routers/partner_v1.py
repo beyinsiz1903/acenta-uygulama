@@ -5,7 +5,6 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
-from app.auth import require_feature
 from app.db import get_db
 from app.routers.public_checkout import PublicCheckoutGuest, PublicCheckoutPayment
 from app.routers.public_search import public_search_catalog

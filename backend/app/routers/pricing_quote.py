@@ -103,7 +103,7 @@ async def compute_quote(payload: dict[str, Any], user=Depends(get_current_user))
     if ctx.check_in is not None:
         check_in_date = date.fromisoformat(ctx.check_in[:10])
 
-    markup_percent = await svc.resolve_markup_percent(
+    winner = await svc.resolve_winner_rule(
         organization_id=org_id,
         agency_id=ctx.agency_id,
         product_id=ctx.product_id,
@@ -111,18 +111,36 @@ async def compute_quote(payload: dict[str, Any], user=Depends(get_current_user))
         check_in=check_in_date,
     )
 
+    if winner is not None:
+        markup_percent = await svc.resolve_markup_percent(
+            organization_id=org_id,
+            agency_id=ctx.agency_id,
+            product_id=ctx.product_id,
+            product_type=ctx.product_type,
+            check_in=check_in_date,
+        )
+        fallback = False
+        rule_id = str(winner.get("_id"))
+        notes = (winner.get("notes") or "").strip() if isinstance(winner.get("notes"), str) else ""
+        priority = winner.get("priority")
+        rule_name = notes or (f"priority={priority}" if priority is not None else "simple_rule")
+    else:
+        # No matching rule -> default 10%
+        markup_percent = 10.0
+        fallback = True
+        rule_id = None
+        rule_name = "DEFAULT_10"
+
     # winner-takes-all semantics: single markup_percent applied on base_price
     final_price = round(base_price * (1.0 + (markup_percent or 0.0) / 100.0), 2)
     markup_amount = round(final_price - base_price, 2)
 
-    # NOTE: PricingRulesService currently only returns the percent; rule id /
-    # code are not exposed without a larger refactor. For P1-1 Faz 1 we keep
-    # trace minimal and deterministic.
     trace = {
-        "rule_id": None,
-        "rule_name": None,
+        "rule_id": rule_id,
+        "rule_name": rule_name,
         "source": "simple_pricing_rules",
         "resolution": "winner_takes_all",
+        "fallback": fallback,
     }
 
     breakdown = {

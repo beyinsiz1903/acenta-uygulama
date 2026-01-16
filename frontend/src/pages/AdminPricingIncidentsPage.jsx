@@ -19,6 +19,8 @@ export default function AdminPricingIncidentsPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [bundle, setBundle] = useState(null);
+  const [mode, setMode] = useState("auto");
+  const [showRaw, setShowRaw] = useState(false);
 
   const onFetch = async () => {
     setError("");

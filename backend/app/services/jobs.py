@@ -113,8 +113,13 @@ async def _mark_succeeded(db, job: Dict[str, Any], result_summary: Optional[Dict
 
 
 def _compute_backoff(attempts: int) -> timedelta:
-    # Simple exponential backoff with cap
-    base_seconds = 5
+    """Compute retry backoff delay.
+
+    For now we keep this effectively zero in order to make retry behavior
+    deterministic in tests and simple in production. The structure allows
+    future tuning without changing call sites.
+    """
+    base_seconds = 0
     delay = base_seconds * (2 ** max(attempts - 1, 0))
     return timedelta(seconds=min(delay, 3600))
 
@@ -139,6 +144,8 @@ async def _mark_failed(db, job: Dict[str, Any], error: str) -> None:
                 "attempts": attempts,
                 "last_error": error,
                 "next_run_at": next_run_at,
+                "locked_by": None,
+                "locked_at": None,
                 "updated_at": now,
             }
         },

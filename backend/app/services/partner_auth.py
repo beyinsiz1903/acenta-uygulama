@@ -17,7 +17,7 @@ def require_partner_key(scopes: List[str]):
 
     async def _dep(
         x_api_key: str = Header("", alias="X-API-Key"),
-        request: Request | None = None,
+        request: Request = None,
     ) -> Dict[str, Any]:
         api_key_doc = await resolve_api_key(x_api_key)
         if not api_key_doc:

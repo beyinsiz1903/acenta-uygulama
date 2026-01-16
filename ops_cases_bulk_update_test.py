@@ -256,12 +256,10 @@ def test_ops_cases_bulk_update():
     print(f"   📋 {test_case_ids[0]} (closed) result: {bulk1_result}")
     print(f"   📋 {test_case_ids[1]} (open) result: {bulk2_result}")
     
-    # Verify in database
-    client = MongoClient("mongodb://localhost:27017")
-    db = client.acenta_db
-    
-    closed_case = db.ops_cases.find_one({"case_id": test_case_ids[0], "organization_id": test_org_id})
-    open_case = db.ops_cases.find_one({"case_id": test_case_ids[1], "organization_id": test_org_id})
+    # Verify via API
+    r = requests.get(f"{BASE_URL}/api/ops-cases/{test_case_ids[0]}", headers=admin_headers)
+    assert r.status_code == 200, f"Should be able to get closed case {test_case_ids[0]}"
+    closed_case = r.json()
     
     assert closed_case["status"] == "closed", "Closed case should remain closed"
     assert closed_case["waiting_on"] == "supplier", "Closed case waiting_on should be updated"
@@ -269,8 +267,6 @@ def test_ops_cases_bulk_update():
     
     print(f"   📋 Verified closed case protection: status remains 'closed', other fields updated")
     print(f"   ✅ Closed case protection verified successfully")
-    
-    client.close()
 
     # ------------------------------------------------------------------
     # Test 6: Validation & Error Handling

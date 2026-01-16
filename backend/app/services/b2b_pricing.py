@@ -17,6 +17,7 @@ from app.services.coupons import CouponService
 from app.errors import AppError
 from app.utils import now_utc
 from app.services.pricing_rules import PricingRulesService
+from app.services.b2b_discounts import resolve_discount_group, apply_discount
 
 
 class B2BPricingService:

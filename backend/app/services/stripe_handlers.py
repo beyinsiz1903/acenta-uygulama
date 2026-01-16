@@ -167,7 +167,7 @@ async def _handle_charge_refunded(event: Dict[str, Any]) -> Tuple[int, Dict[str,
 
     occurred_at = now_utc()
 
-    # See note in _handle_payment_intent_succeeded: we keep webhook responses
+    # See note in _handle_payment_intent_succeeded_legacy: we keep webhook responses
     # minimal to avoid leaking internal representation details.
     await orchestrator.record_refund_succeeded(
         organization_id=organization_id,

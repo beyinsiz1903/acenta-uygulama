@@ -59,14 +59,25 @@ async def compute_quote_for_booking(
 
     markup_percent: float
     trace_error: Optional[str] = None
+    winner_rule: Optional[dict[str, Any]] = None
     try:
-        markup_percent = await svc.resolve_markup_percent(
+        winner_rule = await svc.resolve_winner_rule(
             organization_id=organization_id,
             agency_id=agency_id,
             product_id=product_id,
             product_type=product_type or "hotel",
             check_in=ci,
         )
+        if winner_rule is not None:
+            markup_percent = await svc.resolve_markup_percent(
+                organization_id=organization_id,
+                agency_id=agency_id,
+                product_id=product_id,
+                product_type=product_type or "hotel",
+                check_in=ci,
+            )
+        else:
+            markup_percent = 10.0
     except AppError:
         # Known application error from rules engine -> safe fallback
         markup_percent = 10.0

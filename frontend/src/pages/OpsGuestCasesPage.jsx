@@ -616,6 +616,7 @@ function OpsGuestCasesPage() {
                           className="h-3 w-3"
                           checked={selectedIds.includes(c.case_id)}
                           onChange={() => toggleSingle(c.case_id)}
+                          data-testid={`cases-select-one-${c.case_id}`}
                         />
                       </td>
                       <td className="px-3 py-2 font-mono text-xs text-primary-foreground/90 bg-primary/5">

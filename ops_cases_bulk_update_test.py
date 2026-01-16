@@ -250,22 +250,22 @@ def test_ops_cases_bulk_update():
     response = r.json()
     
     # Find results for each case
-    bulk1_result = next((r for r in response["results"] if r["case_id"] == "CASE-BULK-1"), None)
-    bulk2_result = next((r for r in response["results"] if r["case_id"] == "CASE-BULK-2"), None)
+    bulk1_result = next((r for r in response["results"] if r["case_id"] == test_case_ids[0]), None)
+    bulk2_result = next((r for r in response["results"] if r["case_id"] == test_case_ids[1]), None)
     
-    assert bulk1_result is not None, "Should have result for CASE-BULK-1"
-    assert bulk2_result is not None, "Should have result for CASE-BULK-2"
+    assert bulk1_result is not None, f"Should have result for {test_case_ids[0]}"
+    assert bulk2_result is not None, f"Should have result for {test_case_ids[1]}"
     
     # Check closed case behavior - it should update but keep status=closed
-    print(f"   📋 CASE-BULK-1 (closed) result: {bulk1_result}")
-    print(f"   📋 CASE-BULK-2 (open) result: {bulk2_result}")
+    print(f"   📋 {test_case_ids[0]} (closed) result: {bulk1_result}")
+    print(f"   📋 {test_case_ids[1]} (open) result: {bulk2_result}")
     
     # Verify in database
     client = MongoClient("mongodb://localhost:27017")
     db = client.acenta_db
     
-    closed_case = db.ops_cases.find_one({"case_id": "CASE-BULK-1", "organization_id": test_org_id})
-    open_case = db.ops_cases.find_one({"case_id": "CASE-BULK-2", "organization_id": test_org_id})
+    closed_case = db.ops_cases.find_one({"case_id": test_case_ids[0], "organization_id": test_org_id})
+    open_case = db.ops_cases.find_one({"case_id": test_case_ids[1], "organization_id": test_org_id})
     
     assert closed_case["status"] == "closed", "Closed case should remain closed"
     assert closed_case["waiting_on"] == "supplier", "Closed case waiting_on should be updated"

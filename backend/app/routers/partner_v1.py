@@ -59,7 +59,6 @@ async def partner_products_search(
 @router.get("/products/{product_id}")
 async def partner_get_product(
     product_id: str,
-    _feature=Depends(require_feature("partner_api")),  # noqa: B008
     partner=Depends(require_partner_key(["products:read"])),
     db=Depends(get_db),
 ) -> Dict[str, Any]:

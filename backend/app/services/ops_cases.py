@@ -56,6 +56,47 @@ async def create_case(
     return doc
 
 
+def _normalize_waiting_on(value: Optional[str]) -> Optional[str]:
+    if value is None:
+        return None
+    s = str(value).strip()
+    return s or None
+
+
+def _apply_waiting_auto(
+    *, existing_status: str, patch: Dict[str, Any]
+) -> Dict[str, Any]:
+    """Apply waiting_on → status auto-rules.
+
+    Rules:
+    - If existing status is 'closed', never auto-change status.
+    - If waiting_on is set (non-empty): status -> 'waiting'.
+    - If waiting_on is cleared (None/empty) and status == 'waiting': status -> 'open'.
+    """
+
+    status = (existing_status or "").lower()
+
+    if "waiting_on" not in patch:
+        return patch
+
+    # Normalize waiting_on
+    waiting_on = _normalize_waiting_on(patch.get("waiting_on"))
+    patch["waiting_on"] = waiting_on
+
+    # Closed: never touch status, only update waiting_on if present
+    if status == "closed":
+        return patch
+
+    if waiting_on:
+        patch["status"] = "waiting"
+    else:
+        # waiting_on cleared
+        if status == "waiting":
+            patch["status"] = "open"
+
+    return patch
+
+
 async def update_case(
     db,
     organization_id: str,
@@ -65,7 +106,12 @@ async def update_case(
     waiting_on: Optional[str] = None,
     note: Optional[str] = None,
 ) -> Dict[str, Any]:
-    """Partial update of an ops_case (status / waiting_on / note)."""
+    """Partial update of an ops_case (status / waiting_on / note).
+
+    This function centralizes 'waiting auto' behavior so that:
+    - Backend remains source-of-truth for status/waiting_on coupling.
+    - Frontend can send natural patches without reimplementing rules.
+    """
 
     now = now_utc()
 
@@ -75,15 +121,17 @@ async def update_case(
 
         raise AppError(404, "ops_case_not_found", "Ops case not found", {"case_id": case_id})
 
-    update: Dict[str, Any] = {"updated_at": now}
+    patch: Dict[str, Any] = {"updated_at": now}
     if status is not None:
-        update["status"] = status
+        patch["status"] = status
     if waiting_on is not None:
-        update["waiting_on"] = waiting_on
+        patch["waiting_on"] = waiting_on
     if note is not None:
-        update["note"] = note
+        patch["note"] = note
 
-    await db.ops_cases.update_one({"_id": doc["_id"]}, {"$set": update})
+    patch = _apply_waiting_auto(existing_status=str(doc.get("status")), patch=patch)
+
+    await db.ops_cases.update_one({"_id": doc["_id"]}, {"$set": patch})
 
     updated = await db.ops_cases.find_one({"_id": doc["_id"]})
     if not updated:

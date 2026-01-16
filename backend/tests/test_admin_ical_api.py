@@ -524,7 +524,7 @@ async def test_admin_ical_comprehensive_flow(
         assert parsed_date.year == current_year
         assert parsed_date.month == current_month
     
-    # Step 5: Verify availability_blocks in database
+    # Step 6: Verify availability_blocks in database
     blocks = await test_db.availability_blocks.find({
         "organization_id": org_id,
         "product_id": product_id,

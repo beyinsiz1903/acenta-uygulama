@@ -54,6 +54,8 @@ from app.routers.pricing_quote import router as pricing_quote_router
 from app.routers.admin_funnel import router as admin_funnel_router
 
 from app.routers.theme import router as theme_router
+from app.routers.admin_reporting import router as admin_reporting_router
+
 
 
 from app.routers.seo import router as seo_router
@@ -116,6 +118,8 @@ app.include_router(admin_catalog_router, prefix=API_PREFIX)
 app.include_router(admin_metrics_router, prefix=API_PREFIX)
 app.include_router(admin_pricing_router)
 app.include_router(admin_coupons_router)  # router already has /api prefix
+app.include_router(admin_reporting_router)
+
 app.include_router(theme_router)
 
 app.include_router(b2b_bookings_router, prefix=API_PREFIX)

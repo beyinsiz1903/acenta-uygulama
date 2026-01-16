@@ -21,6 +21,7 @@ from app.errors import AppError
 from app.utils import now_utc
 from app.services.booking_payments import BookingPaymentsOrchestrator
 from app.db import get_db
+from app.services.payments_finalize_guard import apply_stripe_event_with_guard
 
 
 async def verify_and_parse_stripe_event(raw_body: bytes, signature: str | None) -> Dict[str, Any]:

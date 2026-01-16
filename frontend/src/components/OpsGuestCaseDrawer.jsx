@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { X, Loader2 } from "lucide-react";
 
 import { getOpsCase, closeOpsCase, apiErrorMessage } from "../lib/opsCases";
@@ -112,6 +112,137 @@ function WaitingBadge({ waitingOn }) {
 
   return <span className={cls}>{label}</span>;
 }
+function parseDateTimeSafe(value) {
+  if (!value) return null;
+  try {
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return null;
+    return d;
+  } catch {
+    return null;
+  }
+}
+
+function formatTs(d) {
+  if (!d) return "—";
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mi = String(d.getMinutes()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd} ${hh}:${mi}`;
+}
+
+function normalizeTimelineEvents(caseData) {
+  const eventsRaw = Array.isArray(caseData?.timeline) ? caseData.timeline : null;
+
+  if (eventsRaw && eventsRaw.length) {
+    return eventsRaw
+      .map((e, idx) => {
+        const ts = parseDateTimeSafe(e.timestamp || e.ts || e.created_at || e.at);
+        const kind = String(e.kind || e.type || "event").toLowerCase();
+        const actor = e.actor || e.by || null;
+        const message = e.message || e.note || e.title || null;
+        const isSystem = Boolean(e.system === true || e.is_system === true);
+        const patch = e.patch || null;
+
+        return {
+          _key: e.id || e._id || `${kind}-${idx}`,
+          ts,
+          kind,
+          actor,
+          message,
+          isSystem,
+          patch,
+          raw: e,
+        };
+      })
+      .filter((x) => x.ts)
+      .sort((a, b) => b.ts.getTime() - a.ts.getTime());
+  }
+
+  const created = parseDateTimeSafe(caseData?.created_at);
+  const updated = parseDateTimeSafe(caseData?.updated_at);
+
+  const out = [];
+  if (created) {
+    out.push({
+      _key: "created",
+      ts: created,
+      kind: "created",
+      actor: caseData?.created_by?.email || null,
+      message: "Case created",
+      isSystem: false,
+      patch: { status: caseData?.status ?? null },
+      raw: null,
+    });
+  }
+  if (updated && (!created || updated.getTime() !== created.getTime())) {
+    out.push({
+      _key: "updated",
+      ts: updated,
+      kind: "updated",
+      actor: null,
+      message: "Case updated",
+      isSystem: true,
+      patch: {
+        status: caseData?.status ?? null,
+        waiting_on: caseData?.waiting_on ?? null,
+      },
+      raw: null,
+    });
+  }
+
+  return out.sort((a, b) => b.ts.getTime() - a.ts.getTime());
+}
+
+function dayBucket(ts) {
+  if (!ts) return "older";
+  const now = new Date();
+  const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startYesterday = new Date(startToday.getTime() - 24 * 60 * 60 * 1000);
+
+  if (ts >= startToday) return "today";
+  if (ts >= startYesterday) return "yesterday";
+  return "older";
+}
+
+function bucketLabel(bucket) {
+  if (bucket === "today") return "Today";
+  if (bucket === "yesterday") return "Yesterday";
+  return "Older";
+}
+
+function EventBadge({ kind, isSystem }) {
+  const k = String(kind || "event").toLowerCase();
+  let label = k.toUpperCase();
+  let cls = "border text-[9px] px-1.5 py-0.5 rounded-full inline-flex";
+
+  if (k.includes("status")) {
+    label = "STATUS";
+    cls += " bg-blue-100 text-blue-900 border-blue-200";
+  } else if (k.includes("waiting")) {
+    label = "WAITING";
+    cls += " bg-sky-100 text-sky-900 border-sky-200";
+  } else if (k.includes("note")) {
+    label = "NOTE";
+    cls += " bg-amber-100 text-amber-900 border-amber-200";
+  } else if (k.includes("created")) {
+    label = "CREATED";
+    cls += " bg-emerald-100 text-emerald-900 border-emerald-200";
+  } else {
+    label = "EVENT";
+    cls += " bg-slate-100 text-slate-800 border-slate-200";
+  }
+
+  if (isSystem) {
+    cls += " opacity-80";
+  }
+
+  return <span className={cls}>{label}</span>;
+}
+
+
 
 
 function OpsGuestCaseDrawer({ caseId, open, onClose, onClosed }) {

@@ -220,8 +220,7 @@ class B2BPricingService:
                     "discount_amount": trace_discount["discount_amount"],
                 }
             ]
-            trace.winner_discount_group_id = trace_discount["discount_group_id"]
-            trace.winner_discount_group_name = trace_discount["discount_group_name"]
+            # Only set fields that exist in PricingTrace model
             trace.discount_group_id = trace_discount["discount_group_id"]
             trace.discount_group_name = trace_discount["discount_group_name"]
             trace.discount_percent = trace_discount["discount_percent"]

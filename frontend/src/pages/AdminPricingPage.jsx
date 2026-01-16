@@ -805,6 +805,9 @@ function SimpleRulesTab() {
             const validityKind = classifyValidity(r.validity, today);
             const level = markupLevel(r.action);
 
+            const ruleName = (r.notes && String(r.notes).trim()) ||
+              (typeof r.priority !== "undefined" ? `priority=${r.priority}` : "");
+
             let rowBg = "";
             if (validityKind === "active_now") rowBg = "bg-emerald-50";
             else if (validityKind === "upcoming") rowBg = "bg-sky-50";

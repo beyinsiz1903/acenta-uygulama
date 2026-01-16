@@ -3,6 +3,7 @@ import { api, apiErrorMessage } from "../lib/api";
 import { Card } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Label } from "../components/ui/label";
+import { Badge } from "../components/ui/badge";
 
 function FieldError({ text }) {
   if (!text) return null;

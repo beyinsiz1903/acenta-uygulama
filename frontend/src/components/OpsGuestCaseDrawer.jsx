@@ -296,7 +296,7 @@ function OpsGuestCaseDrawer({ caseId, open, onClose, onClosed }) {
         </div>
 
         <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4">
-          {data && (
+          {data && !loading && !error && (
             (() => {
               const now = new Date();
               const riskKind = classifyRisk(data, now);
@@ -317,6 +317,9 @@ function OpsGuestCaseDrawer({ caseId, open, onClose, onClosed }) {
                     </span>
                     <span data-testid="drawer-waiting-badge">
                       <WaitingBadge waitingOn={data.waiting_on} />
+                    </span>
+                    <span className="ml-auto">
+                      <SlaTooltip slaDays={slaDays} testId="sla-tooltip-drawer" />
                     </span>
                   </div>
                   <div

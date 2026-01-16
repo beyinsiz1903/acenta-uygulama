@@ -777,8 +777,14 @@ function OpsGuestCasesPage() {
           <div className="flex gap-2">
             <Button
               onClick={applyBulk}
-              disabled={bulkLoading || ((!bulkStatus || bulkStatus === "no_change") && (!bulkWaitingOn || bulkWaitingOn === "no_change") && !bulkNote)}
+              disabled={
+                bulkLoading ||
+                ((!bulkStatus || bulkStatus === "no_change") &&
+                  (!bulkWaitingOn || bulkWaitingOn === "no_change") &&
+                  !bulkNote)
+              }
               size="sm"
+              data-testid="cases-bulk-apply"
             >
               {bulkLoading ? "Uygulanıyor..." : "Değişiklikleri Uygula"}
             </Button>

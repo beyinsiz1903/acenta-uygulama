@@ -512,19 +512,23 @@ async def public_checkout(payload: PublicCheckoutRequest, request: Request, db=D
     )
 
     # Persist idempotency record only after successful PI + booking
-    await db.public_checkouts.insert_one(
+    await db.public_checkouts.update_one(
         {
             "organization_id": org_id,
-            "quote_id": quote.get("quote_id"),
-            "idempotency_key": payload.idempotency_key,
-            "booking_id": booking_id,
-            "booking_code": booking_code,
-            "payment_intent_id": payment_intent_id,
-            "client_secret": client_secret,
-            "status": "created",
-            "created_at": now,
-            "created_ip": client_ip,
-        }
+            "idempotency_key": idem_key,
+        },
+        {
+            "$set": {
+                "quote_id": quote.get("quote_id"),
+                "booking_id": booking_id,
+                "booking_code": booking_code,
+                "payment_intent_id": payment_intent_id,
+                "client_secret": client_secret,
+                "status": "created",
+                "ok": True,
+            }
+        },
+        upsert=True,
     )
 
     # Emit minimal booking event for timeline

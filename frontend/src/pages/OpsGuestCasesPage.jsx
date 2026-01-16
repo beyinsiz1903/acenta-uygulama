@@ -792,6 +792,7 @@ function OpsGuestCasesPage() {
               variant="outline"
               onClick={() => setSelectedIds([])}
               size="sm"
+              data-testid="cases-bulk-clear"
             >
               Seçimi Temizle
             </Button>

@@ -44,6 +44,7 @@ import AdminFunnelPage from "./pages/AdminFunnelPage";
 import AdminThemePage from "./pages/AdminThemePage";
 import AdminReportingPage from "./pages/AdminReportingPage";
 import AdminVillaCalendarPage from "./pages/AdminVillaCalendarPage";
+import AdminPricingIncidentsPage from "./pages/AdminPricingIncidentsPage";
 import AdminCouponsPage from "./pages/AdminCouponsPage";
 import OpsB2BQueuesPage from "./pages/OpsB2BQueuesPage";
 import InboxPage from "./pages/InboxPage";

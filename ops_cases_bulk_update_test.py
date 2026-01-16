@@ -105,9 +105,6 @@ def test_ops_cases_bulk_update():
     # ------------------------------------------------------------------
     print("\n2️⃣  Setting up test cases in admin's organization...")
     
-    # Use admin's existing organization
-    test_org_id = original_org_id
-    
     # Create test cases in admin's organization
     test_case_ids = create_test_cases_in_org(admin_headers, test_org_id)
     

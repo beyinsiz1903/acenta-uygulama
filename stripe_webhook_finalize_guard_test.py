@@ -339,7 +339,7 @@ async def test_already_finalized_guard():
         cleanup_test_data(db, [booking_id], ["evt_test_final_1"])
         mongo_client.close()
 
-def test_webhook_router_integration():
+async def test_webhook_router_integration():
     """Test 4: Webhook router integration"""
     print("\n" + "=" * 80)
     print("TEST 4: WEBHOOK ROUTER INTEGRATION")

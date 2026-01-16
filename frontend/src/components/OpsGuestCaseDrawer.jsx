@@ -518,7 +518,7 @@ function OpsGuestCaseDrawer({ caseId, open, onClose, onClosed }) {
       {/* Backdrop */}
       <div
         className={`absolute inset-0 bg-black/30 transition-opacity ${open ? "opacity-100" : "opacity-0"}`}
-        onClick={onClose}
+        onClick={saving ? undefined : requestClose}
       />
 
       {/* Panel */}

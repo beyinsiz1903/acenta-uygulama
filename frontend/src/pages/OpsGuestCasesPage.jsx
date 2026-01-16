@@ -221,8 +221,8 @@ function OpsGuestCasesPage() {
   const applyBulk = async () => {
     if (!anySelected) return;
     const patch = {};
-    if (bulkStatus) patch.status = bulkStatus;
-    if (bulkWaitingOn) patch.waiting_on = bulkWaitingOn;
+    if (bulkStatus && bulkStatus !== "no_change") patch.status = bulkStatus;
+    if (bulkWaitingOn && bulkWaitingOn !== "no_change") patch.waiting_on = bulkWaitingOn;
     if (bulkNote) patch.note = bulkNote;
 
     if (!Object.keys(patch).length) {

@@ -89,8 +89,8 @@
     }
   ],
   "test_environment": {
-    "backend_url": "https://hospiman-1.preview.emergentagent.com/api",
-    "frontend_url": "https://hospiman-1.preview.emergentagent.com",
+    "backend_url": "https://syroce-commerce.preview.emergentagent.com/api",
+    "frontend_url": "https://syroce-commerce.preview.emergentagent.com",
     "test_credentials": {
       "admin": "admin@acenta.test / admin123"
     },

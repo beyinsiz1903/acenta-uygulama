@@ -1,83 +1,109 @@
 <analysis>**original_problem_statement:**
 The user's initial goal was to evolve the existing B2B Hotel Reservation Platform (Syroce) into a Commerce OS functionally equivalent to Agentis and Agentis Pro. A detailed Product Requirements Document (PRD) and a multi-phase roadmap (P0, P1, P2) were established to guide this evolution.
 
-The current directive is to execute the P1 roadmap, building upon the completed P0 epics.
+The project follows a Exec-Ready Prompt methodology, where the user provides highly detailed, non-negotiable implementation instructions for the agent to execute. The agent's primary role is to implement these instructions precisely and provide proof packs (e.g.,  outputs, UI descriptions, JSON responses) to validate completion. The user tracks progress via a parity score against competitors, which the agent is expected to help update.
 
 **PRODUCT REQUIREMENTS:**
-The project follows a detailed PRD. The immediate focus is on completing the P1 epics.
-1.  **EPIC P1-1: Fiyat/Aksiyon Motoru v1 (Otel):** Build a deterministic pricing engine. (Largely completed, including core API, checkout integration, and Admin UI for simple rules).
+The current directive is to execute tasks from the P1 roadmap and a series of user-directed polish sprints. The primary goal is to increase parity with Agentis and Agentis Pro.
+1.  **EPIC P1-1: Fiyat/Aksiyon Motoru v1 (Otel):** Build a deterministic pricing engine. (Completed).
 2.  **EPIC P1-2: Villa Product Type + ICAL:** Add support for Villa rentals with calendar sync. (Completed).
 3.  **EPIC P1-3: Tema / Website Surface MVP:** Create a basic theming system for the B2C frontend. (Completed).
-4.  **EPIC P1-4: B2B Discount Groups & Pricing Rules UI:** Allow admins to create pricing rules for different B2B segments. (Not Started).
-5.  **EPIC P1-5: Funnel Tracking v1 + Remarketing Mapping:** Implement event tracking for the checkout funnel. (Funnel Tracking v1 part is completed, including KPI dashboard and alerting. Remarketing Mapping is not started).
-6.  **Reporting v1:** Create an admin reporting dashboard for revenue, top products, and funnel KPIs. (In Progress).
-7.  **Payments e2e:** End-to-end testing and verification of the Stripe payment flow. (Implementation ready, blocked on proof generation).
+4.  **EPIC P1-4: B2B Discount Groups & Pricing Rules UI:** Allow admins to create pricing rules for different B2B segments. (Completed in this session).
+5.  **EPIC P1-5: Funnel Tracking v1 + Remarketing Mapping:** Implement event tracking. (Funnel Tracking v1 completed. Remarketing Mapping v1 & v2 are in progress).
+6.  **Reporting v1:** Create an admin reporting dashboard. (Completed).
+7.  **Payments e2e:** End-to-end testing of the Stripe payment flow. (Partially completed as Mod B due to environment block; full Mod A is pending).
+8.  **Ops/Pricing Polish Sprints:** A series of user-directed micro-features to improve UI/UX explainability and operational efficiency. (Largely completed).
 
 **User's preferred language**: Türkçe
 
 **what currently exists?**
-The application is a full-stack Hotel Reservation Platform (React/FastAPI/MongoDB) with a Case-first operational architecture. The P0 roadmap is complete.
+The application is a full-stack Hotel Reservation Platform (React/FastAPI/MongoDB). In this session, the agent completed a significant number of features driven by the user's exec-ready prompts, dramatically increasing operational efficiency and observability.
 
-In this session, several P1 epics were implemented:
--   **Pricing Engine (P1-1):** A deterministic pricing engine is now live. It includes a core Quote API (), integration into both public and B2B booking flows, and an Admin UI for managing simple markup rules.
--   **Funnel Tracking & Reporting (P1-5):** A comprehensive funnel tracking system ( collection) logs the entire customer journey ( ->  ->  -> ). An admin dashboard () displays this event chain, along with a KPI dashboard showing channel breakdowns and automated alerts for conversion drops or payment failures.
--   **Theming Engine (P1-3):** A dynamic theme management system is in place, allowing admins to control brand colors, fonts, and name via an API (). A new public home page () and other UI elements consume these theme settings via CSS variables.
--   **SEO & Theme Integration:** The sitemap is now restricted to public-facing URLs (, , ). A  hook manages meta tags, and structured data (JSON-LD) for Organization, WebSite, and Products has been implemented, dynamically using the theme's brand name.
--   **Villa & iCal Sync (P1-2):** The system can now import availability from external iCal feeds for villa-type products, storing them as . The public quote API uses these blocks to prevent bookings on unavailable dates. The backend CRUD and sync endpoints for managing feeds are complete.
+Completed work includes:
+-   **Ops Cases v2 & Polish:** A full-featured bulk-update system for Ops cases with an SLA-based filter queue, partial success handling, and a retry failed mechanism.
+-   **Case Edit UX Hardening:** Made the case editing drawer more robust with unsaved changes warnings, state-based button disabling, and optimistic UI updates aligned with backend logic.
+-   **Payments Hardening:**
+    -   **Payments Proof (Mod B):** Proved the payment initiation flow, even with the environment blocked from reaching Stripe live.
+    -   **Payments Idempotency:** Implemented a robust idempotency gate to prevent duplicate bookings/payments.
+    -   **Payments Finalize Guard:** Added a webhook handler guard to prevent duplicate or out-of-order event processing, making the finalization step deterministic.
+-   **Debug Bundle v2:** Enhanced the admin debug tool to provide deep visibility into the entire lifecycle of a booking, including pricing, payments, idempotency, and finalization steps.
+-   **B2B Discounts UI:** A full CRUD interface for creating and managing complex B2B discount rules, fully integrated into the pricing and booking engine with detailed tracing.
+-   **Remarketing Mapping v1:** The foundational framework for server-side event tracking to GA4 and Meta, including configuration management, event persistence, and a test-fire API. The blueprint for v2 has been established and approved by the user.
 
 **Last working item**:
--   **Last item agent was working**: The agent was implementing **Reporting v1**. It successfully created the backend endpoints (, ) and the frontend page (). The final step was to run the frontend testing agent to verify the UI behavior and then provide the final proof pack to the user.
--   **Status**: IN PROGRESS
--   **Agent Testing Done**: Y (Backend curl tests passed)
--   **Which testing method agent to use?**: Frontend testing agent
+-   **Last item agent was working**: The user and agent have agreed on and locked in the detailed exec-ready blueprint for **Remarketing v2**. This task will build upon the v1 foundation to add broader event coverage (, ), a more robust queue with retry/backoff logic, and a full-featured Admin UI to observe and manage the event stream. The agent's last action was to confirm the detailed acceptance criteria for this task.
+-   **Status**: NOT STARTED
+-   **Agent Testing Done**: N
+-   **Which testing method agent to use?**: both
 -   **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
--   **Issue 1 (P0): Reporting v1 Finalization.**
--   **Issue 2 (P1): Payments e2e Proof Generation.**
--   **Issue 3 (P2): User Verification for Coupon B2C Checkout.**
--   **Issue 4 (P2): Micro-UX improvements for the Case Edit UI.**
+-   **Issue 1 (P0): Test suite is broken.**
+-   **Issue 2 (P1): Remarketing v2 Implementation.**
+-   **Issue 3 (P2): Payments e2e Proof Generation (Mod A).**
+-   **Issue 4 (P3): User Verification for Coupon B2C Checkout.**
+-   **Issue 5 (P3): B2B Discounts UI Polish.**
+-   **Issue 6 (P4): Micro-UX improvements for the Case Edit UI.**
 
 **Issues Detail:**
--   **Issue 1:** Reporting v1 Finalization
-    -   **Attempted fixes**: Backend endpoints and frontend page are implemented. Backend  tests passed.
+-   **Issue 1:** Test suite is broken
+    -   **Attempted fixes**: The agent encountered a  while trying to run tests after implementing the B2B discounts feature. The agent tried to fix it by ensuring indexes are created in  but the error persisted. This indicates a fundamental issue with the test environment setup or python path.
     -   **Next debug checklist**:
-        1.  Run the frontend testing agent to validate .
-        2.  Assert that the KPI cards and Top Products table are rendered correctly.
-        3.  Assert that changing the Days filter (7/14/30) triggers new API calls and updates the UI.
-        4.  Provide the final proof pack (summary curl, top-products curl, UI test summary) to the user.
-    -   **Why fix this issue?**: To complete the Reporting v1 epic and provide key business metrics to admins.
-    -   **Status**: IN PROGRESS
-    -   **Is recurring issue?**: N
-    -   **Should Test frontend/backend/both after fix?**: frontend
+        1.  Examine  to understand its dependencies.
+        2.  Check the project structure to see where  should be located or if it's a misnamed module.
+        3.  Verify the  environment variable for the test execution environment.
+        4.  Ensure all necessary  files exist in the  subdirectories to make them importable packages.
+    -   **Why fix this issue?**: A working test suite is critical for maintaining code quality and preventing regressions, especially in a complex system. It is a blocker for verifying any new backend changes reliably.
+    -   **Status**: NOT STARTED
+    -   **Is recurring issue?**: Y
+    -   **Should Test frontend/backend/both after fix?**: backend
     -   **Blocked on other issue**: None
 
--   **Issue 2:** Payments e2e Proof Generation
-    -   **Attempted fixes**: The agent and user have collaboratively defined a proof pack template to verify the end-to-end payment flow using a real Stripe test environment and signed webhooks. The code is ready.
-    -   **Next debug checklist**: The user (or an agent with environment access to Stripe keys) needs to execute the test flow (public quote -> checkout -> Stripe test card payment) and provide the three JSON proofs (funnel events, booking document, consistency check) as per the agreed-upon template.
-    -   **Why fix this issue?**: To formally close the payments e2e verification and confirm the entire revenue flow is working correctly.
-    -   **Status**: BLOCKED (waiting on user/environment access)
+-   **Issue 2:** Remarketing v2 Implementation
+    -   **Attempted fixes**: None. This is the next task as per user's explicit instruction.
+    -   **Next debug checklist**: Follow the detailed exec-ready prompt for REMARKETING V2 (Chat Message 447), which includes:
+        1.  Expanding event coverage (, ).
+        2.  Hardening the queue with retry/backoff logic.
+        3.  Implementing a failed-only retry endpoint.
+        4.  Building the Admin UI Event Stream with filtering and drill-down details.
+        5.  Providing the 4-part proof pack as specified.
+    -   **Why fix this issue?**: To complete the remarketing epic, providing full funnel visibility and reliable data delivery to marketing platforms.
+    -   **Status**: NOT STARTED
     -   **Is recurring issue?**: N
-    -   **Should Test frontend/backend/both after fix?**: none
-    -   **Blocked on other issue**: None
+    -   **Should Test frontend/backend/both after fix?**: both
+    -   **Blocked on other issue**: Issue 1 (Test suite is broken) will make backend verification difficult.
 
--   **Issue 3:** User Verification for Coupon B2C Checkout
-    -   **Attempted fixes**: The feature was fully implemented and backend-tested in a previous session.
-    -   **Next debug checklist**: The user needs to manually test the B2C checkout flow by creating a coupon and applying it.
-    -   **Why fix this issue?**: To formally close out the coupon feature development.
+-   **Issue 3:** Payments e2e Proof Generation (Mod A)
+    -   **Attempted fixes**: The agent successfully implemented Mod B (proving initiation without webhook finalization). The proof pending badge was added previously.
+    -   **Next debug checklist**: Requires an environment with  to simulate and verify signed webhooks for the  event, which would complete the e2e flow.
+    -   **Why fix this issue?**: To formally verify the entire revenue flow and achieve a significant parity score increase. The user has repeatedly flagged this as high ROI.
+    -   **Status**: BLOCKED
+    -   **Is recurring issue?**: Y
+    -   **Should Test frontend/backend/both after fix?**: backend
+    -   **Blocked on other issue**: Environment variable dependency.
+
+-   **Issue 4:** User Verification for Coupon B2C Checkout
+    -   **Attempted fixes**: The feature was implemented and backend-tested in a previous session.
+    -   **Next debug checklist**: User needs to manually test the B2C checkout flow with a coupon.
+    -   **Why fix this issue?**: To formally close out the coupon feature.
     -   **Status**: USER VERIFICATION PENDING
     -   **Is recurring issue?**: N
     -   **Should Test frontend/backend/both after fix?**: none
     -   **Blocked on other issue**: None
 
--   **Issue 4:** Micro-UX improvements for the Case Edit UI
-    -   **Attempted fixes**: None. Deferred by the user to a polish sprint.
-    -   **Next debug checklist**:
-        1.  When case  changes, auto-set  to .
-        2.  Replace  with shadcn .
-        3.  Add an unsaved changes warning.
-        4.  Add soft validation for  status without .
-    -   **Why fix this issue?**: To improve the operational efficiency of the case management system.
+-   **Issue 5:** B2B Discounts UI Polish
+    -   **Attempted fixes**: None. User mentioned this as a potential follow-up.
+    -   **Next debug checklist**: Implement discount range highlight (active/upcoming/expired) and discount conflicts (priority tie-break explanation) in the Admin UI.
+    -   **Why fix this issue?**: To improve the usability and explainability of the newly created B2B discounts feature.
+    -   **Status**: NOT STARTED
+    -   **Is recurring issue?**: N
+    -   **Should Test frontend/backend/both after fix?**: frontend
+    -   **Blocked on other issue**: None
+
+-   **Issue 6:** Micro-UX improvements for the Case Edit UI
+    -   **Attempted fixes**: The unsaved changes dialog was implemented in this session. The  replacement was not.
+    -   **Next debug checklist**: Replace  with shadcn  where appropriate in the Case Edit UI.
+    -   **Why fix this issue?**: To improve the operational efficiency and UX consistency of the case management system.
     -   **Status**: NOT STARTED
     -   **Is recurring issue?**: N
     -   **Should Test frontend/backend/both after fix?**: frontend
@@ -88,36 +114,36 @@ None.
 
 **Upcoming and Future Tasks**
 **Upcoming Tasks:**
--   **(P1) EPIC P1-4: B2B Discount Groups & Pricing Rules UI:** Build a more advanced UI for creating pricing rules targeted at specific B2B agent groups.
--   **(P1) Villa Admin UI:** Create the frontend page () for managing iCal feeds, as the backend is already complete.
--   **(P2) Polish Sprint:**
-    -   Address Micro-UX improvements for the Case Edit UI.
-    -   Implement polish notes from the user, such as adding  to pricing traces and standardizing on  for monetary values.
+-   **(P1)  polish items:** The user mentioned potential follow-ups like , , and .
 
 **Future Tasks:**
--   **(P1) EPIC P1-5: Remarketing Mapping:** Connect the funnel tracking events to remarketing platforms.
--   **(P2) Other Epics:**
+-   **(P1) EPIC P1-5: Remarketing Mapping:** The full epic may contain more than just v1 and v2.
+-   **(P2) Other Epics (from original handoff):**
     -   : Deeper integration with Property Management Systems.
-    -   : Building more configurable public landing pages.
-    -   : More advanced inventory management features.
+    -   : Building configurable public landing pages.
+    -   : Advanced inventory management features.
+-   **(P2) Technical Polish Sprint:**
+    -   Standardize on  for all monetary values in the database and API.
+    -   Harden iCal timezone handling.
 
 **Completed work in this session**
--   **P1-1: Pricing Engine:** Implemented core quote API, integrated it into public/B2B checkout, and built an Admin UI for simple rules.
--   **P1-5: Funnel Tracking & Reporting:** Created a full event tracking system (), an Admin UI with a KPI dashboard, channel breakdown, and an alerting system.
--   **P1-3: Theming Engine:** Built a dynamic, API-driven theming system and a new public home page.
--   **SEO & Theme Integration (P1):** Aligned sitemap, meta tags, and JSON-LD with public routes and the theme's brand identity.
--   **P1-2: Villa + iCal Sync:** Implemented iCal feed import for availability blocking and the corresponding backend admin APIs.
+-   **Ops Cases v2 Implementation:** Added SLA Queue filter bar and a bulk update panel () to the Ops Cases page.
+-   **Case Edit UX Hardening:** Implemented unsaved changes confirmation dialog, saving-state locks, and frontend-backend alignment for the  rule in the .
+-   **Ops Cases v2 Polish:** Enhanced the bulk update panel with a results banner, Retry failed only functionality, and deterministic selection logic.
+-   **Payments Proof (Mod B):** Created a proof harness to demonstrate the payment initiation flow ( -> ) and confirm the system correctly handles a  state from Stripe.
+-   **Payments Idempotency Guard:** Implemented a robust idempotency gate for the checkout endpoint using a unique index on  in the  collection to prevent duplicate bookings.
+-   **Payments Finalize Guard:** Created a new service () and collection () to make webhook processing idempotent and handle duplicate or out-of-order events safely.
+-   **Debug Bundle v2:** Significantly enhanced the  endpoint to include detailed payment status, idempotency logs, and finalization guard decisions, providing a single source of truth for incident triage.
+-   **B2B Discounts UI & Engine:** Implemented a full-featured system for B2B discounts, including a new database collection (), admin CRUD endpoints (), a new admin page (), and integration into the B2B pricing engine with full tracing.
+-   **Remarketing Mapping v1 (Foundation):** Established the core framework for server-side remarketing, including schemas, config management, event persistence ( collection), and a  endpoint. The blueprint for v2 was also finalized.
 
 **Earlier issues found/mentioned but not fixed**
 -   **Issue 1: Sitemap/Robots.txt URLs under /api**
     -   **Description**: SEO files are served from  instead of the root due to platform ingress rules.
     -   **Status**: Acknowledged by the user as a platform constraint.
 -   **Issue 2: Technical Polish Items**
-    -   **Description**: The user has provided several polish notes throughout the session for future improvement, including:
-        -   **Pricing:** Adding  to traces, standardizing on  for amounts.
-        -   **Funnel/Stripe:** Hardening the correlation ID fallback chain, making webhook currency handling dynamic.
-        -   **iCal:** Better timezone handling and support for recurring events (RRULE).
-    -   **Status**: Not started. Logged for a future polish sprint.
+    -   **Description**: A backlog of polish notes from the user exists, including standardizing on  for money and hardening iCal timezone handling.
+    -   **Status**: Not started.
 
 **Known issue recurrence from previous fork**
 None.
@@ -126,73 +152,72 @@ None.
 
 
 **Key Technical Concepts**
--   **Exec-Ready Prompts:** User provides highly detailed, non-negotiable implementation instructions.
--   **Proof-Based Completion:** Work is only considered DONE after providing  outputs, UI descriptions, and other concrete proof.
--   **Parity Score Tracking:** A method for quantifying progress against competitor products (Agentis and Agentis Pro).
--   **Funnel Event Tracking:** A system for logging key user actions with a shared  to trace a full journey.
--   **Dynamic Theming:** Using a backend API to fetch theme settings (colors, fonts) and applying them globally via CSS variables.
--   **iCal Sync:** Pulling availability data from external  calendar feeds to block dates for specific products.
+-   **Exec-Ready Prompts:** User provides detailed, non-negotiable implementation instructions. The agent's role is to execute them precisely.
+-   **Proof-Based Completion:** Work is DONE only after providing proof packs ( outputs, UI descriptions, JSON responses).
+-   **Idempotency Gates:** Using database unique indexes (, ) and a claim-first pattern to prevent duplicate operations, especially for payments.
+-   **Finalize Guards:** A service layer that makes event processing (like webhooks) deterministic by handling duplicates, out-of-order events, and state mismatches using a dedicated audit collection.
+-   **Observability via Debug Bundles:** Consolidating all related data (booking, quote, pricing trace, payment status, idempotency logs, finalization logs) into a single API response for rapid incident triage.
+-   **Queue-First Delivery:** For non-critical operations like remarketing, persisting the event to a database queue first before attempting delivery, ensuring reliability and enabling retries.
 
 **key DB schema**
--   **funnel_events**: 
--   **themes**: 
--   **ical_feeds**: 
--   **availability_blocks**: 
--   **bookings**: Modified to include , , and .
+-   **ops_cases**: Modified to support bulk updates.
+-   **public_checkouts**: Now has a unique index on  to serve as an idempotency gate.
+-   **payment_finalizations (NEW)**:  - Audit log for webhook processing.
+-   **b2b_discount_groups (NEW)**:  - Stores discount rules.
+-   **remarketing_events (PLANNED for v2)**:  - Queue for remarketing events.
+-   **remarketing_configs (PLANNED for v2)**:  - Per-org config for remarketing.
 
 **changes in tech stack**
 None.
 
 **All files of reference**
--   **/app/backend/app/services/funnel_events.py**: Core service for logging all user journey events.
--   **/app/backend/app/routers/admin_funnel.py**: Endpoints for viewing funnel events, KPIs, and alerts.
--   **/app/frontend/src/pages/AdminFunnelPage.jsx**: UI for the funnel tracking dashboard.
--   **/app/backend/app/routers/theme.py**: Admin and public endpoints for the theming system.
--   **/app/frontend/src/theme/useTheme.js**: Frontend hook to apply theme settings.
--   **/app/backend/app/services/ical_sync.py**: The engine for parsing iCal feeds and creating availability blocks.
--   **/app/backend/app/routers/admin_ical.py**: Admin endpoints for managing iCal feeds.
--   **/app/backend/app/routers/admin_reporting.py**: New endpoints for revenue and product performance reports.
--   **/app/frontend/src/pages/AdminReportingPage.jsx**: New UI for the main reporting dashboard.
+-   **/app/backend/app/routers/public_checkout.py**: Contains the idempotency gate logic.
+-   **/app/backend/app/services/payments_finalize_guard.py**: Contains the new finalize guard for Stripe webhooks.
+-   **/app/backend/app/routers/payments_stripe.py**: Integrates the .
+-   **/app/backend/app/services/b2b_discounts.py**: New service for resolving and applying B2B discounts.
+-   **/app/backend/app/services/b2b_pricing.py**: Integrates the discount service into the B2B quote engine.
+-   **/app/backend/app/routers/admin_b2b_discounts.py**: New CRUD endpoints for managing discount groups.
+-   **/app/frontend/src/pages/AdminB2BDiscountsPage.jsx**: New UI for B2B discount management.
+-   **/app/frontend/src/pages/OpsGuestCasesPage.jsx**: Heavily modified to support bulk actions and advanced filtering.
+-   **/app/backend/tests/**: The test suite is currently broken and needs immediate attention.
 
 **Areas that need refactoring**:
--   The initial overlap between  and  collections was not addressed.
--   The user's polish notes provide a clear backlog for refactoring, including standardizing on  for money, improving pricing traces, and hardening webhook/correlation logic.
+-   The test environment needs to be fixed. The  for  suggests a  or project structure issue that prevents tests from running correctly.
 
 **key api endpoints**
--   : General-purpose pricing quote API.
--   : Retrieves a list of funnel events for a given correlation or entity.
--   : Provides aggregated funnel KPIs.
--   : Provides automated alerts based on funnel metrics.
--   : Public endpoint to fetch the active theme.
--   : Admin endpoint to update the active theme.
--    & : Endpoints to manage and sync iCal feeds.
--   : Provides aggregated revenue and booking metrics.
--   : Provides a list of top-performing products.
+-   : For bulk updating ops cases.
+-   : Now protected by an idempotency gate.
+-   : Now protected by a finalize guard.
+-   : Enhanced to include payment, idempotency, and finalization details.
+-   : CRUD operations for B2B discounts.
+-    (Planned for v2): To test and debug remarketing events.
+-    (Planned for v2): To list and observe queued remarketing events.
+-    (Planned for v2): To re-queue failed remarketing events.
 
 **Critical Info for New Agent**
--   **Exec-Ready Prompt Style**: The user provides extremely detailed instructions. Your job is to implement them exactly as specified and avoid asking clarifying questions.
--   **Provide Proof Packs**: Do not declare work complete without providing concrete evidence ( outputs, JSON responses, UI descriptions).
--   **Parity Score**: Update the Agentis Parite Skoru and Agentis Pro Parite Skoru at the end of each completed EPIC, as instructed by the user.
--   **Payments e2e is Blocked**: The final verification of the end-to-end payment flow is waiting for the user (or someone with environment access) to run the test and provide the resulting proof JSONs. Do not mark this as DONE until proof is received.
+-   **Exec-Ready Prompt Workflow**: This is the most critical rule. The user provides extremely detailed, non-negotiable instructions. Your job is to implement them *exactly* as specified and provide proof packs. Do not deviate, suggest alternatives, or ask for clarification unless you hit a fundamental contradiction or blocker (like the broken test suite).
+-   **Fix The Tests First**: The backend test suite is broken (). This is a **P0 blocker**. You must fix the tests before implementing any new backend functionality to ensure you don't introduce regressions.
+-   **Parity Score**: The user tracks progress against competitors (Agentis and Agentis Pro) via a percentage score. You are expected to report your completed work in a format that allows the user to update this score, often by suggesting the score increase yourself based on the exec-ready prompt's guidance.
+-   **Proof Packs are Non-Negotiable**: Every completed task must be accompanied by a detailed proof pack containing  commands, API JSON responses, and descriptions of UI behavior, as specified by the user.
 
 **documents and test reports created in this job**
-None. Test files were created in  but no persistent reports were saved.
+None.
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User (DONE):** Confirmed Funnel breakdown is done and requested to work on .
-2.  **Agent (DONE):** Proposed a plan for the  mini-phase.
-3.  **User (DONE):** Approved the plan for  with an exec-ready prompt.
-4.  **Agent (DONE):** Provided the proof pack for the completed  feature and updated parity scores.
-5.  **User (DONE):** Confirmed  is done and requested to work on .
-6.  **Agent (DONE):** Proposed a plan for the  (theme) epic.
-7.  **User (DONE):** Approved the plan for  with an exec-ready prompt.
-8.  **Agent (DONE):** Provided the proof pack for the completed  feature and updated parity scores.
-9.  **User (DONE):** Confirmed  is done and requested to work on .
-10. **Agent (IN PROGRESS):** Was in the process of finishing the  epic, having completed the backend and frontend implementation and running final tests.
+1.  **User**: Confirms the  proof pack and adjusts the parity score baseline for consistency. Asks the agent to select the next mini-packet.
+2.  **Agent**: Acknowledges the correction and selects .
+3.  **User**: Provides two template texts for the agent to use for future status updates (a short Slack-style one and a longer epic report). Asks if the agent wants the  exec-ready prompt.
+4.  **Agent**: Confirms the templates are useful and requests the  exec-ready prompt.
+5.  **User**: Provides the detailed, multi-part exec-ready prompt for .
+6.  **Agent**: Acknowledges receipt of the blueprint and confirms the plan to implement it, reiterating the key deliverables and the target parity score.
+7.  **User**: Confirms the agent's understanding is correct and highlights two critical acceptance criteria for the implementation: the precise semantics of  statuses and the exact behavior of the  feature.
+8.  **Agent**: Re-confirms understanding of the critical acceptance criteria, detailing exactly how the status semantics and retry logic will be implemented and proven.
+9.  **User**: Gives final approval of the plan and states they are waiting for the proof-pack message, confirming the agent has everything needed to proceed without further questions.
+10. **Agent**: Starts work by exploring the codebase to find relevant files for the  task. User provides devam (continue) to move forward. Agent confirms the plan again.
 
 **Project Health Check:**
--   **Working**: The core application is stable. All implemented features are working as demonstrated by the agent's proof packs.
--   **Mocked/Blocked**: The end-to-end payment flow () is blocked, awaiting proof generation from an environment with Stripe test credentials. The iCal sync relies on a  URL for testing.
+-   **Broken**: The backend test suite is non-functional, preventing reliable verification of new changes.
+-   **Blocked**: End-to-end payment testing () is blocked on the  environment variable.
 
 **3rd Party Integrations**
 -   iyzico: Payment Processing.
@@ -200,18 +225,19 @@ None. Test files were created in  but no persistent reports were saved.
 -   Stripe: Payment processing.
 -   WeasyPrint: PDF generation.
 -   AWS SES: Email delivery.
--   NetGSM/İletiMerkezi (Planned): SMS provider.
+-   : Python library for parsing iCal feeds.
+-   GA4 Measurement Protocol (Planned): For server-side analytics.
+-   Meta Conversions API (Planned): For server-side analytics.
 
 **Testing status**
--   **Testing agent used after significant changes**: YES
+-   **Testing agent used after significant changes**: YES, but the test suite started failing during the session.
 -   **Troubleshoot agent used after agent stuck in loop**: NO
--   **Test files created**:
-    -   
--   **Known regressions**: None reported.
+-   **Test files created**: None.
+-   **Known regressions**: The entire backend test suite is failing with a .
 
 **Credentials to test flow:**
 -   **Ops/Admin**:  / 
 -   **Agency**:  / 
 
 **What agent forgot to execute**
--   **Villa Admin UI**: The user's  prompt included specs for an AdminVillaCalendarPage frontend UI. The agent implemented the entire backend (iCal feed CRUD, sync engine, availability blocking) and proved it via API calls, but did not create the corresponding frontend page to manage the feeds from the UI.</analysis>
+-   The agent did not resolve the failing backend test suite. This is a critical oversight that blocks further reliable development.</analysis>

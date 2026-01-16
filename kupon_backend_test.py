@@ -19,7 +19,7 @@ import os
 import time
 
 # Configuration - Use production URL from frontend/.env
-BASE_URL = "https://hospiman-1.preview.emergentagent.com"
+BASE_URL = "https://syroce-commerce.preview.emergentagent.com"
 
 def login_admin():
     """Login as admin user and return token, org_id, email"""

@@ -289,6 +289,27 @@ export default function AdminPricingIncidentsPage() {
                 </div>
               </div>
             )}
+
+            {/* Raw JSON */}
+            {bundle && (
+              <div
+                className="space-y-1"
+                data-testid="incident-raw-json"
+              >
+                <button
+                  type="button"
+                  className="text-[11px] font-semibold underline"
+                  onClick={() => setShowRaw((v) => !v)}
+                >
+                  {showRaw ? "Hide raw JSON" : "Show raw JSON"}
+                </button>
+                {showRaw && (
+                  <pre className="bg-muted/40 rounded p-2 text-[10px] overflow-x-auto max-h-80">
+                    {JSON.stringify(bundle, null, 2)}
+                  </pre>
+                )}
+              </div>
+            )}
           </>
         )}
       </Card>

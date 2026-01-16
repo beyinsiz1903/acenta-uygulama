@@ -72,6 +72,7 @@ async def claim_job(
 
     query = {
         "status": {"$in": ["pending", "failed"]},
+        "next_run_at": {"$lte": now},
         "$or": [
             {"locked_at": {"$exists": False}},
             {"locked_at": {"$lt": lock_expiry}},

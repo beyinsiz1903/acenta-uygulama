@@ -822,7 +822,7 @@ function SimpleRulesTab() {
             return (
               <div
                 key={r.rule_id}
-                className={rowClass}
+                className={cls}
                 data-testid={`simple-rule-row-${r.rule_id}`}
               >
                 <div className={`font-mono truncate ${dimClass}`} title={r.rule_id}>

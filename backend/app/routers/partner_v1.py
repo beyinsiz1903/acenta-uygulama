@@ -105,7 +105,6 @@ async def partner_create_quote(
 @router.post("/bookings")
 async def partner_create_booking(
     payload: PartnerBookingIn,
-    _feature=Depends(require_feature("partner_api")),  # noqa: B008
     partner=Depends(require_partner_key(["bookings:write"])),
     db=Depends(get_db),
 ) -> Dict[str, Any]:

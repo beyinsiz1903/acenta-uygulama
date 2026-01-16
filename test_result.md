@@ -461,6 +461,9 @@ frontend:
       - working: "NA"
         agent: "main"
         comment: "AdminVillaCalendarPage implemented. Need UI test for: (1) iCal feed CRUD (add feed with mock:// URL and list), (2) Sync Now tetikleyip backend /api/admin/ical/sync ve /api/admin/ical/calendar ile entegrasyon, (3) blocked_dates takvim gridinde 10-12. gunler icin 'Bloklu' badge'leri, (4) data-testid selector'lari ile temel etkileşimler."
+      - working: "NA"
+        agent: "testing"
+        comment: "Starting comprehensive Admin Villa Calendar UI test based on review request. Will test: 1) Login & Navigation to /app/admin/villas/69691ae7b322db4dcbaf4bf9/calendar, 2) Initial states (page rendering, empty feed state, calendar grid), 3) Add iCal feed with mock URL (mock://villa-demo), 4) Sync Now behavior and last sync updates, 5) Calendar blocked days verification (days 10-12 with 'Bloklu' markers), 6) Navigation between months, 7) Error handling scenarios, 8) Console stability monitoring. Testing will focus on data-testid selectors, backend API integration, and comprehensive UI functionality verification."
 
     working: true
     file: "/app/frontend/src/pages/AdminCouponsPage.jsx"

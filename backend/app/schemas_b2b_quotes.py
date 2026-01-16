@@ -33,6 +33,9 @@ class PricingTrace(BaseModel):
     applied_rules: List[str] = []
     fx: Optional[Dict[str, Any]] = None
     rule_effects: Optional[List[Dict[str, Any]]] = None
+    winner_rule_id: Optional[str] = None
+    winner_rule_name: Optional[str] = None
+    fallback: Optional[bool] = None
 
 
 class QuoteOffer(BaseModel):
@@ -48,3 +51,6 @@ class QuoteCreateResponse(BaseModel):
     quote_id: str
     expires_at: datetime
     offers: List[QuoteOffer]
+    winner_rule_id: Optional[str] = None
+    winner_rule_name: Optional[str] = None
+    pricing_trace: Optional[Dict[str, Any]] = None

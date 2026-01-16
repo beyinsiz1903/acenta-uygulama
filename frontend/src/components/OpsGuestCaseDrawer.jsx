@@ -295,6 +295,55 @@ function OpsGuestCaseDrawer({ caseId, open, onClose, onClosed }) {
         </div>
 
         <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4">
+          {data && (
+            (() => {
+              const now = new Date();
+              const riskKind = classifyRisk(data, now);
+              const created = parseDateSafe(data.created_at);
+              const ageDays = created ? daysBetween(created, now) : null;
+              const slaDays = SLA_DAYS;
+              const remainingDays =
+                typeof ageDays === "number" ? Math.max(slaDays - ageDays, 0) : null;
+
+              return (
+                <div
+                  className="rounded-xl border bg-white p-3 flex flex-col gap-2"
+                  data-testid="case-drawer-range-summary"
+                >
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span data-testid="drawer-risk-badge">
+                      <RiskBadge kind={riskKind} />
+                    </span>
+                    <span data-testid="drawer-waiting-badge">
+                      <WaitingBadge waitingOn={data.waiting_on} />
+                    </span>
+                  </div>
+                  <div
+                    className="text-xs text-muted-foreground"
+                    data-testid="drawer-age-sla"
+                  >
+                    {ageDays === null ? (
+                      <span>
+                        Age: — · SLA: {slaDays}d
+                      </span>
+                    ) : (
+                      <span>
+                        Age: {ageDays}d · SLA: {slaDays}d · {" "}
+                        {ageDays >= slaDays ? (
+                          <span className="font-semibold text-red-700">Breached</span>
+                        ) : (
+                          <span className="font-semibold">
+                            Remaining: {remainingDays}d
+                          </span>
+                        )}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })()
+          )}
+
           {loading ? (
             <div className="flex items-center justify-center py-10 text-sm text-muted-foreground">
               <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Case y1kleniyor...

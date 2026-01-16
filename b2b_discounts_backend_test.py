@@ -328,7 +328,7 @@ def test_b2b_discounts_end_to_end():
     r = requests.post(
         f"{BASE_URL}/api/api/b2b/bookings",
         json=booking_payload,
-        headers=agency_headers,
+        headers=booking_headers,
     )
     
     print(f"   📋 Response status: {r.status_code}")

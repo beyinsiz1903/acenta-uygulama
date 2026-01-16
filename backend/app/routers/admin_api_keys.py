@@ -22,7 +22,7 @@ class ApiKeyCreateIn(BaseModel):
     scopes: List[str] = Field(default_factory=list)
 
 
-@router.get("/")
+@router.get("")
 async def get_api_keys(
     user=AdminDep,  # noqa: B008
     _feature=FeatureDep,  # noqa: B008
@@ -35,7 +35,7 @@ async def get_api_keys(
     return {"items": items}
 
 
-@router.post("/")
+@router.post("")
 async def create_key(
     payload: ApiKeyCreateIn,
     user=AdminDep,  # noqa: B008

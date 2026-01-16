@@ -209,6 +209,91 @@ async def core_db_routing(monkeypatch, test_db):
     yield
 
 
+@pytest.fixture(autouse=True)
+async def seed_default_org_and_users(test_db):
+    """Ensure default org + core users exist inside each isolated test_db.
+
+    This mirrors the minimal part of app.seed.ensure_seed_data that tests rely on
+    (default organization + admin + demo agencies) but runs against the
+    per-test database instead of the shared dev DB.
+    """
+    from app.seed import DEFAULT_ADMIN_EMAIL, DEFAULT_ADMIN_PASSWORD
+    from app.auth import hash_password
+    from app.utils import now_utc
+
+    now = now_utc()
+
+    # 1) Default organization
+    org = await test_db.organizations.find_one({"slug": "default"})
+    if not org:
+        res = await test_db.organizations.insert_one(
+            {
+                "name": "Varsayilan Acenta",
+                "slug": "default",
+                "created_at": now,
+                "updated_at": now,
+                "settings": {"currency": "TRY"},
+            }
+        )
+        org_id = str(res.inserted_id)
+    else:
+        org_id = str(org["_id"])
+
+    # 2) Admin user
+    admin = await test_db.users.find_one({"organization_id": org_id, "email": DEFAULT_ADMIN_EMAIL})
+    if not admin:
+        await test_db.users.insert_one(
+            {
+                "organization_id": org_id,
+                "email": DEFAULT_ADMIN_EMAIL,
+                "name": "Admin",
+                "password_hash": hash_password(DEFAULT_ADMIN_PASSWORD),
+                "roles": ["super_admin"],
+                "created_at": now,
+                "updated_at": now,
+                "is_active": True,
+            }
+        )
+
+    # 3) Demo agency + agency user (agency1@demo.test)
+    agency = await test_db.agencies.find_one({"organization_id": org_id, "name": "Demo Agency"})
+    if not agency:
+        from bson import ObjectId
+
+        agency_id = str(ObjectId())
+        await test_db.agencies.insert_one(
+            {
+                "_id": agency_id,
+                "organization_id": org_id,
+                "name": "Demo Agency",
+                "settings": {"selling_currency": "EUR"},
+                "created_at": now,
+                "updated_at": now,
+            }
+        )
+    else:
+        agency_id = str(agency["_id"])
+
+    agency_user = await test_db.users.find_one({"organization_id": org_id, "email": "agency1@demo.test"})
+    if not agency_user:
+        await test_db.users.insert_one(
+            {
+                "organization_id": org_id,
+                "agency_id": agency_id,
+                "email": "agency1@demo.test",
+                "name": "Demo Agency User",
+                "password_hash": hash_password("agency123"),
+                "roles": ["agency_admin"],
+                "created_at": now,
+                "updated_at": now,
+                "is_active": True,
+            }
+        )
+
+    yield
+
+
+
 @pytest.fixture(scope="function")
 async def app_with_overrides(test_db) -> AsyncGenerator[Any, None]:
     """FastAPI app instance whose get_db dependency points to test_db."""

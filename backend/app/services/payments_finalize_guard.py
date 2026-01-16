@@ -152,7 +152,6 @@ async def apply_stripe_event_with_guard(
     # 5) CAS update on booking.payment_status to protect against out-of-order events
     
     # Accept transitions only from pending/None -> final state
-    current_status = str(booking.get("payment_status") or "").lower() or None
     allowed_previous = {None, "", "pending"}
 
     filter_doc = {

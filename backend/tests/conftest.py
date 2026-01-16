@@ -29,22 +29,7 @@ from app.db import get_db, _mongo_url
 from app.utils import now_utc
 
 
-# Ensure MONGO_URL is populated from backend .env when not provided by the environment
-BACKEND_ENV = ROOT_DIR / ".env"
-if not os.environ.get("MONGO_URL"):
-    try:
-        for line in BACKEND_ENV.read_text().splitlines():
-            if line.startswith("MONGO_URL="):
-                value = line.split("=", 1)[1].strip()
-                if value:
-                    os.environ["MONGO_URL"] = value
-                break
-    except FileNotFoundError:
-        # If .env is missing, tests will fail fast when accessing MONGO_URL
-        pass
-
-
-MONGO_URL = os.environ["MONGO_URL"]
+MONGO_URL = _mongo_url()
 
 
 @pytest.fixture(autouse=True, scope="session")

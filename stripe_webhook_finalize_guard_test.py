@@ -149,7 +149,7 @@ async def test_duplicate_event_dedupe():
         cleanup_test_data(db, [booking_id], ["evt_test_dup_1"])
         mongo_client.close()
 
-def test_out_of_order_guard():
+async def test_out_of_order_guard():
     """Test 2: Out-of-order event protection"""
     print("\n" + "=" * 80)
     print("TEST 2: OUT-OF-ORDER EVENT PROTECTION")

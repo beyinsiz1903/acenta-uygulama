@@ -96,7 +96,7 @@ def test_ops_cases_bulk_update():
     print("\n3️⃣  Happy Path Bulk Update...")
     
     bulk_request = {
-        "case_ids": ["CASE-BULK-1", "CASE-BULK-2"],
+        "case_ids": [test_case_ids[0], test_case_ids[1]],  # Use first two cases
         "patch": {
             "waiting_on": "customer",
             "note": "Toplu test"

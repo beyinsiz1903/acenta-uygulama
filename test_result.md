@@ -450,6 +450,18 @@ frontend:
 
   - task: "Admin Kuponlar Sayfası ve Kupon Admin Akışı Test"
     implemented: true
+  - task: "Admin Villa Calendar UI Test"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/AdminVillaCalendarPage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "AdminVillaCalendarPage implemented. Need UI test for: (1) iCal feed CRUD (add feed with mock:// URL and list), (2) Sync Now tetikleyip backend /api/admin/ical/sync ve /api/admin/ical/calendar ile entegrasyon, (3) blocked_dates takvim gridinde 10-12. gunler icin 'Bloklu' badge'leri, (4) data-testid selector'lari ile temel etkileşimler."
+
     working: true
     file: "/app/frontend/src/pages/AdminCouponsPage.jsx"
     stuck_count: 0

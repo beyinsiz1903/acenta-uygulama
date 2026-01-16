@@ -55,7 +55,7 @@ async def verify_and_parse_stripe_event(raw_body: bytes, signature: str | None) 
     return json.loads(str(event))
 
 
-async def _handle_payment_intent_succeeded(event: Dict[str, Any]) -> Tuple[int, Dict[str, Any]]:
+async def _handle_payment_intent_succeeded_legacy(event: Dict[str, Any]) -> Tuple[int, Dict[str, Any]]:
     obj = event.get("data", {}).get("object", {})
     pi_id = obj.get("id")
     amount_received = int(obj.get("amount_received", 0))

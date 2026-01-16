@@ -660,7 +660,7 @@ function OpsGuestCasesPage() {
                   <SelectValue placeholder="Bekleme durumu seç" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Değiştirme</SelectItem>
+                  <SelectItem value="no_change">Değiştirme</SelectItem>
                   <SelectItem value="customer">Müşteri</SelectItem>
                   <SelectItem value="supplier">Tedarikçi</SelectItem>
                   <SelectItem value="ops">Ops</SelectItem>

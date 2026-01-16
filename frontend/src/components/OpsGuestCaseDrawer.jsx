@@ -361,9 +361,17 @@ function OpsGuestCaseDrawer({ caseId, open, onClose, onClosed }) {
       try {
         const doc = await getOpsCase(caseId);
         setData(doc);
-        setEditStatus(doc.status || "open");
-        setEditWaitingOn(doc.waiting_on || "");
-        setEditNote(doc.note || "");
+        const nextStatus = doc.status || "open";
+        const nextWaiting = doc.waiting_on || "";
+        const nextNote = doc.note || "";
+        setEditStatus(nextStatus);
+        setEditWaitingOn(nextWaiting);
+        setEditNote(nextNote);
+        setInitialSnapshot({
+          status: nextStatus,
+          waiting_on: nextWaiting,
+          note: nextNote,
+        });
         if (doc?.booking_id) {
           await loadTimeline(doc.booking_id);
         } else {

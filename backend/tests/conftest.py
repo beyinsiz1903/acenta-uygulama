@@ -233,6 +233,8 @@ async def seed_default_org_and_users(test_db):
                 "created_at": now,
                 "updated_at": now,
                 "settings": {"currency": "TRY"},
+                "plan": "core_small_hotel",
+                "features": {"partner_api": True},
             }
         )
         org_id = str(res.inserted_id)

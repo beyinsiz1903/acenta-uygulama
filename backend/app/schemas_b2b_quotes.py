@@ -36,6 +36,10 @@ class PricingTrace(BaseModel):
     winner_rule_id: Optional[str] = None
     winner_rule_name: Optional[str] = None
     fallback: Optional[bool] = None
+    discount_group_id: Optional[str] = None
+    discount_group_name: Optional[str] = None
+    discount_percent: Optional[float] = None
+    discount_amount: Optional[float] = None
 
 
 class QuoteOffer(BaseModel):

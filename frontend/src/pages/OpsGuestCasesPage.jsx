@@ -529,9 +529,9 @@ function OpsGuestCasesPage() {
                       type="checkbox"
                       className="h-3 w-3"
                       checked={
-                        hasAny &&
-                        items.every((c) => selectedIds.includes(c.case_id)) &&
-                        items.some((c) => selectedIds.includes(c.case_id))
+                        hasVisible &&
+                        visibleItems.every((c) => selectedIds.includes(c.case_id)) &&
+                        visibleItems.some((c) => selectedIds.includes(c.case_id))
                       }
                       onChange={toggleSelectAllVisible}
                     />

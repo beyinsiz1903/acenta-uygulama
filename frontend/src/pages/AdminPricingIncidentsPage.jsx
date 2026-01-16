@@ -35,10 +35,11 @@ export default function AdminPricingIncidentsPage() {
         params: {
           booking_id: bookingId || undefined,
           quote_id: quoteId || undefined,
-          mode: "auto",
+          mode,
         },
       });
       setBundle(res.data || null);
+      setShowRaw(false);
     } catch (e) {
       setError(apiErrorMessage(e));
     } finally {

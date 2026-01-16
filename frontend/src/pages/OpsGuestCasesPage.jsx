@@ -559,6 +559,7 @@ function OpsGuestCasesPage() {
                     <input
                       type="checkbox"
                       className="h-3 w-3"
+                      data-testid="cases-select-all"
                       checked={
                         hasVisible &&
                         visibleItems.every((c) => selectedIds.includes(c.case_id)) &&

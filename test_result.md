@@ -459,8 +459,7 @@ frontend:
         comment: "Reporting v1 AdminReportingPage implemented. Need UI test for: (1) KPI kartlari (Revenue Summary, Funnel Summary) render, (2) Top Products tablosu render, (3) Days (7/14/30) degisince /api/admin/reporting/summary, /api/admin/reporting/top-products ve /api/admin/funnel/summary endpointlerine cagri gidip UI’nin guncellenmesi."
 
 test_plan:
-  current_focus:
-    - "Admin Reporting UI Test"
+  current_focus: []
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"

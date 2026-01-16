@@ -446,6 +446,18 @@ frontend:
         agent: "testing"
         comment: "✅ ADMIN KUPONLAR SAYFASI VE KUPON ADMIN AKIŞI TEST COMPLETE - Backend functionality verified successfully, frontend UI partially tested (85% success rate). COMPREHENSIVE TEST RESULTS: A) LOGIN & NAVIGATION: ✅ Admin login (admin@acenta.test/admin123) successful, ✅ Navigation to /app/admin/coupons working correctly, ✅ URL verification confirmed, ✅ 'Kuponlar' menu item found and accessible in admin sidebar. B) BACKEND API VERIFICATION: ✅ GET /api/admin/coupons returns proper coupon list with 4 existing coupons, ✅ POST /api/admin/coupons successfully creates new coupon (UIKUPON123456) with all required fields (code, discount_type: PERCENT, value: 10, scope: BOTH, min_total: 0, usage_limit: 3, per_customer_limit: 1, valid dates), ✅ PATCH /api/admin/coupons/{id} toggle functionality working (active: true ↔ false), ✅ All API responses include proper structure with id, timestamps, usage_count: 0. C) FRONTEND UI STRUCTURE: ✅ Page title 'Kuponlar' displays correctly, ✅ Description text 'B2B ve B2C kanalları için kupon ve kampanya kodlarını yönetin.' shown, ✅ 'Yeni Kupon' form card visible, ✅ 'Mevcut Kuponlar' table card visible, ✅ Form fields structure present (inputs, selects, datetime fields). D) TABLE HEADERS & DATA: ✅ Expected table headers verified in code (Kod, Tip, Değer, Scope, Min. Tutar, Kullanım, Geçerlilik, Durum), ✅ Existing coupons display with proper format: TEST10_2EFBD3 (Pasif), TEST10_8A696E (Aktif), TEST10 (Aktif), UIKUPON123456 (Aktif - newly created). E) KUPON CREATION FLOW: ✅ Backend accepts coupon creation with proper validation, ✅ Form structure includes all required fields (kod, indirim tipi, değer, scope, min tutar, limitler, geçerlilik tarihleri), ✅ Created coupon appears in API response with correct values. F) ACTIVE/PASSIVE TOGGLE: ✅ PATCH API successfully toggles coupon status (active: true → false → true), ✅ Updated timestamps reflect changes, ✅ Toggle functionality working at backend level. G) UI STABILITY: ✅ Page loads without critical errors, ✅ Turkish text encoding working throughout, ✅ Admin role access control working correctly. MINOR LIMITATIONS: ⚠️ Frontend form interaction testing limited due to session management in automation environment, ⚠️ UI toggle button testing not completed in browser (backend API verified instead). ACCEPTANCE CRITERIA MET: ✅ Login & navigation to /app/admin/coupons successful, ✅ Page structure and content verified (titles, descriptions, form, table), ✅ Backend kupon creation API working with all required fields, ✅ Kupon listing API returns proper data structure, ✅ Active/passive toggle API functionality verified, ✅ Turkish text encoding and admin access control working. Admin Kuponlar functionality production-ready with comprehensive backend API support and proper frontend structure."
 
+  - task: "Admin Reporting UI Test"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/AdminReportingPage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Reporting v1 AdminReportingPage implemented. Need UI test for: (1) KPI kartlari (Revenue Summary, Funnel Summary) render, (2) Top Products tablosu render, (3) Days (7/14/30) degisince /api/admin/reporting/summary, /api/admin/reporting/top-products ve /api/admin/funnel/summary endpointlerine cagri gidip UI’nin guncellenmesi."
+
 test_plan:
   current_focus:
     - "Admin Reporting UI Test"

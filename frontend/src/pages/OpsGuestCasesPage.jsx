@@ -197,9 +197,35 @@ function OpsGuestCasesPage() {
 
   const hasAny = items.length > 0;
 
+  const visibleItems = items.filter((c) => {
+    if (!slaFilter || slaFilter === "all") return true;
+    const now = new Date();
+    const risk = classifyRisk(c, now);
+    const waiting = normalizeWaitingOn(c.waiting_on);
+
+    switch (slaFilter) {
+      case "sla_breach":
+        return risk === "sla_breach";
+      case "active_risk":
+        return risk === "active_risk";
+      case "fresh":
+        return risk === "fresh";
+      case "waiting_customer":
+        return waiting === "customer";
+      case "waiting_supplier":
+        return waiting === "supplier";
+      case "waiting_ops":
+        return waiting === "ops";
+      default:
+        return true;
+    }
+  });
+
+  const hasVisible = visibleItems.length > 0;
+
   const toggleSelectAllVisible = () => {
-    if (!hasAny) return;
-    const visibleIds = items.map((c) => c.case_id);
+    if (!hasVisible) return;
+    const visibleIds = visibleItems.map((c) => c.case_id);
     const allSelected = visibleIds.every((id) => selectedIds.includes(id));
     if (allSelected) {
       setSelectedIds((prev) => prev.filter((id) => !visibleIds.includes(id)));
@@ -415,9 +441,9 @@ function OpsGuestCasesPage() {
               }}
             />
           </div>
-        ) : loading && !hasAny ? (
+        ) : loading && !hasVisible ? (
           <div className="p-6 text-sm text-muted-foreground">Y1kleniyor...</div>
-        ) : !hasAny ? (
+        ) : !hasVisible ? (
           <EmptyState
             title="G1sterilecek case yok"
             description="Se15ftirdifiniz filtrelere uyan bir misafir talebi bulunamad1."

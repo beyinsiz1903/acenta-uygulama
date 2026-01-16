@@ -80,14 +80,14 @@ def test_ops_cases_bulk_update():
     test_org_id = original_org_id
 
     # ------------------------------------------------------------------
-    # Test 2: Setup test cases in admin's organization
+    # Test 2: Setup test cases via API
     # ------------------------------------------------------------------
-    print("\n2️⃣  Setting up test cases in admin's organization...")
+    print("\n2️⃣  Setting up test cases via API...")
     
-    # Create test cases in admin's organization
-    test_case_ids = create_test_cases_in_org(admin_headers, test_org_id)
+    # Create test cases via API
+    test_case_ids = create_test_cases_via_api(admin_headers)
     
-    print(f"   ✅ Created {len(test_case_ids)} test cases in org: {test_org_id}")
+    print(f"   ✅ Created {len(test_case_ids)} test cases")
     print(f"   📋 Test case IDs: {test_case_ids}")
 
     # ------------------------------------------------------------------

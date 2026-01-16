@@ -177,7 +177,12 @@ class B2BPricingService:
             stop_sell=False,
             allotment_available=int(inv_doc.get("capacity_available", 0)),
         )
-        trace = PricingTrace(applied_rules=[], winner_rule_id=None, winner_rule_name=None)
+        trace = PricingTrace(
+            applied_rules=[],
+            winner_rule_id=winner_rule_id,
+            winner_rule_name=winner_rule_name,
+            fallback=fallback,
+        )
 
         return QuoteOffer(
             item_key="0",  # caller will override with actual index

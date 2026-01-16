@@ -111,6 +111,14 @@ FEATURES_BY_PLAN: dict[str, dict[str, bool]] = {
         "future_automation_rules": False,
         "future_guest_portal": False,
         "future_mobile_app": False,
+        # PLATFORM FEATURES
+        "job_platform": False,
+        "integration_hub": False,
+        "ops_observability": False,
+        "partner_api": False,
+        "seo_plus": False,
+        "b2b_pro": False,
+
     },
 }
 

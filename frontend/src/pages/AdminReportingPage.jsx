@@ -88,9 +88,17 @@ export default function AdminReportingPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-lg font-semibold">Reporting</h1>
+      <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <h1 className="text-lg font-semibold">Reporting</h1>
+            <Badge
+              variant="outline"
+              className="border-amber-300 bg-amber-50 text-[10px] font-medium text-amber-800"
+            >
+              Payments e2e: proof pending (env)
+            </Badge>
+          </div>
           <p className="text-xs text-muted-foreground">
             Son X gün için ciro özeti, top ürünler ve funnel KPI&apos;larını görüntüleyin.
           </p>

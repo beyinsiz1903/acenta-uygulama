@@ -57,6 +57,7 @@ from app.routers.theme import router as theme_router
 from app.routers.admin_reporting import router as admin_reporting_router
 from app.routers.admin_ical import router as admin_ical_router
 from app.routers.admin_pricing_incidents import router as admin_pricing_incidents_router
+from app.routers.admin_b2b_discounts import router as admin_b2b_discounts_router
 
 
 from app.routers.seo import router as seo_router

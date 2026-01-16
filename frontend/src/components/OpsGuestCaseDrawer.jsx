@@ -591,52 +591,97 @@ function OpsGuestCaseDrawer({ caseId, open, onClose, onClosed }) {
                 </div>
               </div>
 
-              {/* Booking timeline */}
-              <div className="mt-4 pt-3 border-t space-y-2">
-                <div className="text-xs font-medium text-muted-foreground">İlgili Booking Timeline</div>
-                {timelineLoading ? (
-                  <div className="text-xs text-muted-foreground flex items-center gap-1">
-                    <Loader2 className="h-3 w-3 animate-spin" /> Yükleniyor...
+              {/* Case Timeline (normalized) */}
+              <div
+                className="rounded-xl border bg-white p-3 space-y-2"
+                data-testid="case-drawer-timeline"
+              >
+                <div className="flex items-center gap-2">
+                  <div className="font-semibold text-sm">Timeline</div>
+                  <div className="ml-auto flex items-center gap-2">
+                    <label className="text-[11px] text-muted-foreground flex items-center gap-1">
+                      <input
+                        type="checkbox"
+                        checked={hideSystem}
+                        onChange={(e) => setHideSystem(e.target.checked)}
+                        data-testid="timeline-filter-hide-system"
+                      />
+                      Hide system
+                    </label>
+                    <label className="text-[11px] text-muted-foreground flex items-center gap-1">
+                      <input
+                        type="checkbox"
+                        checked={onlyStatus}
+                        onChange={(e) => setOnlyStatus(e.target.checked)}
+                        data-testid="timeline-filter-only-status"
+                      />
+                      Only status
+                    </label>
                   </div>
-                ) : timelineError ? (
-                  <ErrorState description={timelineError} compact />
-                ) : timelineItems.length === 0 ? (
-                  <div className="text-[11px] text-muted-foreground">Gösterilecek event yok.</div>
-                ) : (
-                  <ul className="space-y-1 text-xs">
-                    {timelineItems.map((ev) => {
-                      const created = ev.created_at ? new Date(ev.created_at) : null;
-                      let label = ev.type || ev.event || "Event";
-                      let metaLine = "";
-                      if (ev.type === "OPS_CASE_CLOSED") {
-                        label = "Ops Case Kapatıldı";
-                        const m = ev.meta || {};
-                        const parts = [];
-                        if (m.case_id) parts.push(`Case ID: ${m.case_id}`);
-                        if (m.note) parts.push(`Not: ${m.note}`);
-                        if (m.actor_email) parts.push(`Kapatma: ${m.actor_email}`);
-                        metaLine = parts.join(" · ");
-                      } else if (ev.meta && ev.meta.note) {
-                        metaLine = ev.meta.note;
-                      }
-                      return (
-                        <li key={ev._id || `${ev.type}-${ev.created_at}`} className="border-l pl-2 ml-1">
-                          <div className="flex items-center justify-between gap-2">
-                            <span className="font-medium">{label}</span>
-                            {created && (
-                              <span className="text-[11px] text-muted-foreground">
-                                {created.toLocaleString("tr-TR")}
-                              </span>
-                            )}
+                </div>
+
+                <div className="text-[11px] text-muted-foreground">
+                  Newest first 0 grouped by day
+                </div>
+
+                <div className="space-y-3" data-testid="timeline-groups">
+                  {timelineGroups.map((g) => (
+                    <div
+                      key={g.bucket}
+                      data-testid={`timeline-group-${g.bucket}`}
+                    >
+                      <div className="text-[11px] font-semibold text-muted-foreground mb-1">
+                        {bucketLabel(g.bucket)}
+                      </div>
+                      <div className="space-y-2">
+                        {g.items.map((ev) => (
+                          <div
+                            key={ev._key}
+                            className="rounded-lg border px-2 py-2"
+                            data-testid={`timeline-item-${ev._key}`}
+                          >
+                            <div className="flex items-start gap-2">
+                              <EventBadge kind={ev.kind} isSystem={ev.isSystem} />
+                              <div className="flex-1 min-w-0">
+                                <div className="text-xs font-medium truncate">
+                                  {ev.message || "(no message)"}
+                                </div>
+                                <div className="text-[11px] text-muted-foreground">
+                                  {formatTs(ev.ts)}
+                                  {ev.actor ? ` 0 ${ev.actor}` : ""}
+                                </div>
+                                {ev.patch ? (
+                                  <pre className="mt-1 text-[10px] bg-muted/40 rounded p-2 overflow-x-auto">
+                                    {JSON.stringify(ev.patch, null, 2)}
+                                  </pre>
+                                ) : null}
+                              </div>
+                            </div>
                           </div>
-                          {metaLine && (
-                            <div className="text-[11px] text-muted-foreground break-words">{metaLine}</div>
-                          )}
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+
+                  {!timelineGroups.length && !timelineLoading && !timelineError && (
+                    <div
+                      className="text-[11px] text-muted-foreground"
+                      data-testid="timeline-empty"
+                    >
+                      No timeline events.
+                    </div>
+                  )}
+
+                  {timelineLoading && (
+                    <div className="text-xs text-muted-foreground flex items-center gap-1">
+                      <Loader2 className="h-3 w-3 animate-spin" /> Yckleniyor...
+                    </div>
+                  )}
+
+                  {timelineError && (
+                    <ErrorState description={timelineError} compact />
+                  )}
+                </div>
               </div>
 
               <div className="mt-4 flex items-center justify-end gap-2">

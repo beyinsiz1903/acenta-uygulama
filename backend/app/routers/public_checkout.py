@@ -158,15 +158,24 @@ async def public_checkout(payload: PublicCheckoutRequest, request: Request, db=D
     org_id = payload.org
     correlation_id = get_or_create_correlation_id(request, None)
 
+    if not payload.idempotency_key or not payload.idempotency_key.strip():
+        raise HTTPException(status_code=422, detail="IDEMPOTENCY_KEY_REQUIRED")
+
+    idem_key = payload.idempotency_key.strip()
+
     # First, see if this idempotent key already produced a checkout
     existing = await db.public_checkouts.find_one(
         {
             "organization_id": org_id,
-            "quote_id": payload.quote_id,
-            "idempotency_key": payload.idempotency_key,
+            "idempotency_key": idem_key,
         }
     )
     if existing:
+        # Guardrail: same idempotency key but different quote => conflict
+        existing_quote = existing.get("quote_id")
+        if existing_quote and existing_quote != payload.quote_id:
+            raise HTTPException(status_code=409, detail="IDEMPOTENCY_KEY_CONFLICT")
+
         # Funnel: idempotent replay still counts as checkout.started once; event is
         # deduped by unique index on (org, correlation_id, event_name, entity_id).
         try:
@@ -181,20 +190,82 @@ async def public_checkout(payload: PublicCheckoutRequest, request: Request, db=D
                 user=None,
                 context={},
                 trace={
-                    "idempotency_key": payload.idempotency_key,
+                    "idempotency_key": idem_key,
                     "ip": client_ip,
+                    "replay": True,
                 },
             )
         except Exception:
             pass
 
+        # Normalize response from registry
+        ok = bool(existing.get("ok", existing.get("status") == "created"))
+        reason = existing.get("reason")
+        if ok:
+            return PublicCheckoutResponse(
+                ok=True,
+                booking_id=existing.get("booking_id"),
+                booking_code=existing.get("booking_code"),
+                payment_intent_id=existing.get("payment_intent_id"),
+                client_secret=existing.get("client_secret"),
+                reason=None,
+            )
+
         return PublicCheckoutResponse(
-            ok=True,
-            booking_id=existing.get("booking_id"),
-            booking_code=existing.get("booking_code"),
-            payment_intent_id=existing.get("payment_intent_id"),
-            client_secret=existing.get("client_secret"),
+            ok=False,
+            booking_id=None,
+            booking_code=None,
+            payment_intent_id=None,
+            client_secret=None,
+            reason=reason or existing.get("status") or "provider_unavailable",
         )
+
+    # No existing record -> claim idempotency key up-front
+    now = now_utc()
+    try:
+        await db.public_checkouts.insert_one(
+            {
+                "organization_id": org_id,
+                "idempotency_key": idem_key,
+                "quote_id": payload.quote_id,
+                "status": "processing",
+                "created_at": now,
+                "created_ip": client_ip,
+            }
+        )
+    except Exception:
+        # Possible race: another request inserted concurrently; re-read and reuse
+        existing = await db.public_checkouts.find_one(
+            {
+                "organization_id": org_id,
+                "idempotency_key": idem_key,
+            }
+        )
+        if existing:
+            existing_quote = existing.get("quote_id")
+            if existing_quote and existing_quote != payload.quote_id:
+                raise HTTPException(status_code=409, detail="IDEMPOTENCY_KEY_CONFLICT")
+
+            ok = bool(existing.get("ok", existing.get("status") == "created"))
+            reason = existing.get("reason")
+            if ok:
+                return PublicCheckoutResponse(
+                    ok=True,
+                    booking_id=existing.get("booking_id"),
+                    booking_code=existing.get("booking_code"),
+                    payment_intent_id=existing.get("payment_intent_id"),
+                    client_secret=existing.get("client_secret"),
+                    reason=None,
+                )
+
+            return PublicCheckoutResponse(
+                ok=False,
+                booking_id=None,
+                booking_code=None,
+                payment_intent_id=None,
+                client_secret=None,
+                reason=reason or existing.get("status") or "provider_unavailable",
+            )
 
     # Funnel: checkout.started
     try:

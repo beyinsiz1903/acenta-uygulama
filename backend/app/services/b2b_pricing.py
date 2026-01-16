@@ -239,6 +239,16 @@ class B2BPricingService:
                 data["check_out"] = i.check_out.isoformat()
             items_serialized.append(data)
 
+        # Winner rule trace at quote level (from first offer, if any)
+        winner_rule_id = None
+        winner_rule_name = None
+        fallback = None
+        if offers:
+            first_trace = offers[0].trace
+            winner_rule_id = first_trace.winner_rule_id
+            winner_rule_name = first_trace.winner_rule_name
+            fallback = first_trace.fallback
+
         doc = {
             "organization_id": organization_id,
             "agency_id": agency_id,
@@ -249,6 +259,13 @@ class B2BPricingService:
             "created_at": now,
             "requested_by_email": requested_by_email,
             "client_context": payload.client_context or {},
+            "winner_rule_id": winner_rule_id,
+            "winner_rule_name": winner_rule_name,
+            "pricing_trace": {
+                "source": "simple_pricing_rules",
+                "resolution": "winner_takes_all",
+                "fallback": bool(fallback),
+            } if winner_rule_name is not None else None,
         }
         res = await self.price_quotes.insert_one(doc)
         quote_id = str(res.inserted_id)

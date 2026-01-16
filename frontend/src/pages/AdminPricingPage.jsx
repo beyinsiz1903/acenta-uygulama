@@ -478,6 +478,86 @@ function RulesTab() {
     </div>
   );
 }
+function parseDateSafe(value) {
+  if (!value) return null;
+  try {
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return null;
+    d.setHours(0, 0, 0, 0);
+    return d;
+  } catch {
+    return null;
+  }
+}
+
+function classifyValidity(validity, now) {
+  if (!validity || !validity.from || !validity.to) return "no_validity";
+  const from = parseDateSafe(validity.from);
+  const to = parseDateSafe(validity.to);
+  if (!from || !to) return "no_validity";
+
+  if (now < from) return "upcoming";
+  if (now >= from && now < to) return "active_now";
+  return "expired";
+}
+
+function markupLevel(action) {
+  if (!action || typeof action.value === "undefined" || action.value === null) {
+    return "na";
+  }
+  const v = Number(action.value);
+  if (!Number.isFinite(v)) return "na";
+  if (v >= 20) return "high";
+  if (v >= 10) return "medium";
+  if (v >= 0) return "low";
+  return "na";
+}
+
+function ValidityRangeBadge({ kind }) {
+  if (!kind) return null;
+  let label = "";
+  let cls = "border text-[9px] px-1.5 py-0.5 rounded-full";
+
+  if (kind === "active_now") {
+    label = "ACTIVE NOW";
+    cls += " bg-emerald-100 text-emerald-800 border-emerald-200";
+  } else if (kind === "upcoming") {
+    label = "UPCOMING";
+    cls += " bg-sky-100 text-sky-800 border-sky-200";
+  } else if (kind === "expired") {
+    label = "EXPIRED";
+    cls += " bg-slate-100 text-slate-700 border-slate-200";
+  } else {
+    label = "NO VALIDITY";
+    cls += " bg-amber-100 text-amber-800 border-amber-200";
+  }
+
+  return <span className={cls}>{label}</span>;
+}
+
+function MarkupLevelBadge({ level }) {
+  if (!level) return null;
+  let label = "";
+  let cls = "border text-[9px] px-1.5 py-0.5 rounded-full";
+
+  if (level === "high") {
+    label = "HIGH";
+    cls += " bg-amber-100 text-amber-900 border-amber-200";
+  } else if (level === "medium") {
+    label = "MEDIUM";
+    cls += " bg-blue-100 text-blue-900 border-blue-200";
+  } else if (level === "low") {
+    label = "LOW";
+    cls += " bg-emerald-100 text-emerald-900 border-emerald-200";
+  } else {
+    label = "N/A";
+    cls += " bg-slate-100 text-slate-700 border-slate-200";
+  }
+
+  return <span className={cls}>{label}</span>;
+}
+
+
 
 function SimpleRulesTab() {
   const [items, setItems] = useState([]);
@@ -685,42 +765,79 @@ function SimpleRulesTab() {
       </div>
 
       <div className="rounded-md border overflow-hidden text-[11px]">
-        <div className="grid grid-cols-6 bg-muted/40 px-2 py-2 font-semibold">
+        <div className="grid grid-cols-7 bg-muted/40 px-2 py-2 font-semibold">
           <div>ID</div>
           <div>Status</div>
           <div>Priority</div>
           <div>Scope</div>
           <div>Action</div>
           <div>Geçerlilik</div>
+          <div>Range</div>
         </div>
         <div className="max-h-64 overflow-y-auto">
-          {items.map((r) => (
-            <div key={r.rule_id} className="grid grid-cols-6 border-t px-2 py-2 items-center">
-              <div className="font-mono truncate" title={r.rule_id}>{r.rule_id}</div>
-              <div className="flex items-center gap-2">
-                <Badge variant={r.status === "active" ? "secondary" : "outline"}>{r.status}</Badge>
-                <Button
-                  size="xs"
-                  variant="outline"
-                  className="h-6 text-[10px]"
-                  onClick={() => toggleStatus(r)}
-                  disabled={saving}
-                >
-                  {r.status === "active" ? "Pasifleştir" : "Aktifleştir"}
-                </Button>
+          {items.map((r) => {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const validityKind = classifyValidity(r.validity, today);
+            const level = markupLevel(r.action);
+
+            let rowBg = "";
+            if (validityKind === "active_now") rowBg = "bg-emerald-50";
+            else if (validityKind === "upcoming") rowBg = "bg-sky-50";
+            else if (validityKind === "expired") rowBg = "bg-slate-50 opacity-80";
+            else rowBg = "bg-amber-50";
+
+            const rowClass = [
+              "grid grid-cols-7 border-t px-2 py-2 items-center",
+              rowBg,
+            ]
+              .filter(Boolean)
+              .join(" ");
+
+            const dimClass = r.status !== "active" ? "opacity-70" : "";
+
+            return (
+              <div
+                key={r.rule_id}
+                className={rowClass}
+                data-testid={`simple-rule-row-${r.rule_id}`}
+              >
+                <div className={`font-mono truncate ${dimClass}`} title={r.rule_id}>
+                  {r.rule_id}
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant={r.status === "active" ? "secondary" : "outline"}>{r.status}</Badge>
+                  <Button
+                    size="xs"
+                    variant="outline"
+                    className="h-6 text-[10px]"
+                    onClick={() => toggleStatus(r)}
+                    disabled={saving}
+                  >
+                    {r.status === "active" ? "Pasifleştir" : "Aktifleştir"}
+                  </Button>
+                </div>
+                <div className={dimClass}>{r.priority}</div>
+                <div className={`truncate ${dimClass}`} title={JSON.stringify(r.scope)}>
+                  {JSON.stringify(r.scope).slice(0, 40)}...
+                </div>
+                <div className={`truncate ${dimClass}`} title={JSON.stringify(r.action)}>
+                  {JSON.stringify(r.action).slice(0, 40)}...
+                </div>
+                <div className={`truncate ${dimClass}`} title={JSON.stringify(r.validity)}>
+                  {r.validity?.from} → {r.validity?.to}
+                </div>
+                <div className="flex flex-col gap-1 text-[10px]">
+                  <div data-testid={`validity-badge-${r.rule_id}`}>
+                    <ValidityRangeBadge kind={validityKind} />
+                  </div>
+                  <div data-testid={`markup-badge-${r.rule_id}`}>
+                    <MarkupLevelBadge level={level} />
+                  </div>
+                </div>
               </div>
-              <div>{r.priority}</div>
-              <div className="truncate" title={JSON.stringify(r.scope)}>
-                {JSON.stringify(r.scope).slice(0, 40)}...
-              </div>
-              <div className="truncate" title={JSON.stringify(r.action)}>
-                {JSON.stringify(r.action).slice(0, 40)}...
-              </div>
-              <div className="truncate" title={JSON.stringify(r.validity)}>
-                {r.validity?.from} → {r.validity?.to}
-              </div>
-            </div>
-          ))}
+            );
+          })}
           {!items.length && (
             <div className="px-2 py-3 text-[11px] text-muted-foreground">Henüz simple rule yok.</div>
           )}

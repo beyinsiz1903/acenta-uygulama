@@ -362,6 +362,8 @@ async def get_pricing_debug_bundle(
     if not quote_doc:
       raise AppError(404, "pricing_debug_not_found", "Quote not found", {"quote_id": quote_id})
 
+    bundle["found"]["quote"] = True
+
     offers = quote_doc.get("offers") or []
     first_offer = offers[0] if offers else {}
     qt = first_offer.get("trace") or {}
@@ -391,6 +393,8 @@ async def get_pricing_debug_bundle(
     rule_doc = None
     if trace_rule_id:
       rule_doc = await _find_rule(db, org_id, trace_rule_id)
+      if rule_doc:
+        bundle["found"]["rule"] = True
     bundle["rule"] = rule_doc
 
     explain: list[str] = []
@@ -399,11 +403,19 @@ async def get_pricing_debug_bundle(
     if fallback:
       explain.append("fallback=true (DEFAULT_10 kullanıldı veya rules match etmedi)")
 
+    # Minimal checks in quote-only mode
     bundle["explain"] = explain
     bundle["checks"] = {
+      "trace_present": bool(qt),
       "trace_rule_id_present": bool(trace_rule_id),
-      "amounts_match_breakdown": None,
-      "fallback_consistency": bool(fallback) == bool(trace_rule_name == "DEFAULT_10" or trace_rule_id is None),
+      "amounts_present": False,
+      "amounts_match_breakdown": False,
+      "fallback_consistency": bool(fallback) == bool(
+        trace_rule_name == "DEFAULT_10" or trace_rule_id is None
+      ),
+      "markup_percent_consistency": False,
+      "currency_consistency": True,
+      "payment_correlation_present": False,
     }
 
   return bundle

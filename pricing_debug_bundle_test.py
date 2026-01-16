@@ -31,6 +31,202 @@ def get_mongo_client():
     mongo_url = os.environ.get("MONGO_URL", "mongodb://localhost:27017/test_database")
     return MongoClient(mongo_url)
 
+def create_test_booking_with_winner_rule(admin_headers, admin_org_id):
+    """Create a test booking with winner rule for testing"""
+    print("   🔧 Creating test booking with winner rule...")
+    
+    try:
+        mongo_client = get_mongo_client()
+        db = mongo_client.get_default_database()
+        
+        # Create a test booking document with winner rule
+        test_booking = {
+            "_id": f"test_booking_{uuid.uuid4().hex[:8]}",
+            "organization_id": admin_org_id,
+            "status": "confirmed",
+            "currency": "EUR",
+            "source": "public",
+            "amounts": {
+                "net": 100.0,
+                "sell": 115.0,
+                "breakdown": {
+                    "base": 100.0,
+                    "markup_amount": 15.0,
+                    "discount_amount": 0.0
+                }
+            },
+            "applied_rules": {
+                "markup_percent": 15.0,
+                "trace": {
+                    "source": "simple_pricing_rules",
+                    "resolution": "winner_takes_all",
+                    "rule_id": "test_rule_123",
+                    "rule_name": "TEST_RULE_15",
+                    "fallback": False
+                }
+            },
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow()
+        }
+        
+        # Insert the test booking
+        result = db.bookings.insert_one(test_booking)
+        booking_id = str(test_booking["_id"])
+        
+        print(f"   ✅ Created test booking: {booking_id}")
+        mongo_client.close()
+        return booking_id
+        
+    except Exception as e:
+        print(f"   ❌ Error creating test booking: {e}")
+        return None
+
+def create_test_booking_with_default_fallback(admin_headers, admin_org_id):
+    """Create a test booking with DEFAULT_10 fallback for testing"""
+    print("   🔧 Creating test booking with DEFAULT_10 fallback...")
+    
+    try:
+        mongo_client = get_mongo_client()
+        db = mongo_client.get_default_database()
+        
+        # Create a test booking document with DEFAULT_10 fallback
+        test_booking = {
+            "_id": f"test_booking_fallback_{uuid.uuid4().hex[:8]}",
+            "organization_id": admin_org_id,
+            "status": "confirmed",
+            "currency": "EUR",
+            "source": "public",
+            "amounts": {
+                "net": 100.0,
+                "sell": 110.0,
+                "breakdown": {
+                    "base": 100.0,
+                    "markup_amount": 10.0,
+                    "discount_amount": 0.0
+                }
+            },
+            "applied_rules": {
+                "markup_percent": 10.0,
+                "trace": {
+                    "source": "simple_pricing_rules",
+                    "resolution": "winner_takes_all",
+                    "rule_id": None,
+                    "rule_name": "DEFAULT_10",
+                    "fallback": True
+                }
+            },
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow()
+        }
+        
+        # Insert the test booking
+        result = db.bookings.insert_one(test_booking)
+        booking_id = str(test_booking["_id"])
+        
+        print(f"   ✅ Created test booking with fallback: {booking_id}")
+        mongo_client.close()
+        return booking_id
+        
+    except Exception as e:
+        print(f"   ❌ Error creating test fallback booking: {e}")
+        return None
+
+def create_test_booking_with_payment_intent(admin_headers, admin_org_id):
+    """Create a test booking with payment_intent_id for testing"""
+    print("   🔧 Creating test booking with payment_intent_id...")
+    
+    try:
+        mongo_client = get_mongo_client()
+        db = mongo_client.get_default_database()
+        
+        payment_intent_id = f"pi_test_{uuid.uuid4().hex[:16]}"
+        
+        # Create a test booking document with payment_intent_id
+        test_booking = {
+            "_id": f"test_booking_payment_{uuid.uuid4().hex[:8]}",
+            "organization_id": admin_org_id,
+            "status": "confirmed",
+            "currency": "EUR",
+            "source": "public",
+            "payment_intent_id": payment_intent_id,
+            "payment_status": "pending",
+            "payment_provider": "stripe",
+            "amounts": {
+                "net": 100.0,
+                "sell": 115.0,
+                "breakdown": {
+                    "base": 100.0,
+                    "markup_amount": 15.0,
+                    "discount_amount": 0.0
+                }
+            },
+            "applied_rules": {
+                "markup_percent": 15.0,
+                "trace": {
+                    "source": "simple_pricing_rules",
+                    "resolution": "winner_takes_all",
+                    "rule_id": "test_rule_123",
+                    "rule_name": "TEST_RULE_15",
+                    "fallback": False
+                }
+            },
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow()
+        }
+        
+        # Insert the test booking
+        result = db.bookings.insert_one(test_booking)
+        booking_id = str(test_booking["_id"])
+        
+        # Also create a public_checkout document for idempotency testing
+        public_checkout = {
+            "payment_intent_id": payment_intent_id,
+            "organization_id": admin_org_id,
+            "idempotency_key": f"test_key_{uuid.uuid4().hex[:8]}",
+            "status": "created",
+            "reason": "test_checkout",
+            "client_secret": f"pi_test_{uuid.uuid4().hex[:16]}_secret_test",
+            "created_at": datetime.utcnow()
+        }
+        
+        db.public_checkouts.insert_one(public_checkout)
+        
+        print(f"   ✅ Created test booking with payment: {booking_id}")
+        print(f"   ✅ Payment Intent ID: {payment_intent_id}")
+        mongo_client.close()
+        return booking_id
+        
+    except Exception as e:
+        print(f"   ❌ Error creating test payment booking: {e}")
+        return None
+
+def cleanup_test_bookings(booking_ids, admin_org_id):
+    """Clean up test bookings after testing"""
+    if not booking_ids:
+        return
+        
+    try:
+        mongo_client = get_mongo_client()
+        db = mongo_client.get_default_database()
+        
+        # Remove test bookings
+        result = db.bookings.delete_many({
+            "_id": {"$in": booking_ids},
+            "organization_id": admin_org_id
+        })
+        
+        # Remove test public_checkouts
+        db.public_checkouts.delete_many({
+            "organization_id": admin_org_id,
+            "idempotency_key": {"$regex": "^test_key_"}
+        })
+        
+        print(f"   🧹 Cleaned up {result.deleted_count} test bookings")
+        mongo_client.close()
+        
+    except Exception as e:
+        print(f"   ⚠️  Failed to cleanup test bookings: {e}")
+
 def find_existing_booking_with_winner_rule(admin_headers, admin_org_id):
     """Find an existing booking that was created via public flow with applied_rules.trace.rule_id"""
     print("   🔍 Searching for existing booking with winner rule...")

@@ -78,16 +78,12 @@ def create_test_cases_in_org(admin_headers, org_id):
     client.close()
     return test_cases
 
-# Removed unused function
-
 def test_ops_cases_bulk_update():
     """Test Ops Cases v2 Bulk Update endpoint with comprehensive scenarios"""
     print("\n" + "=" * 80)
     print("OPS CASES V2 BULK UPDATE BACKEND TEST")
     print("Testing POST /api/ops-cases/bulk-update endpoint")
     print("=" * 80 + "\n")
-
-    test_org_id = original_org_id
 
     # ------------------------------------------------------------------
     # Test 1: Admin Authentication
@@ -98,7 +94,10 @@ def test_ops_cases_bulk_update():
     admin_headers = {"Authorization": f"Bearer {admin_token}"}
     
     print(f"   ✅ Admin login successful: {admin_email}")
-    print(f"   📋 Original Organization ID: {original_org_id}")
+    print(f"   📋 Organization ID: {original_org_id}")
+
+    # Use admin's existing organization for testing
+    test_org_id = original_org_id
 
     # ------------------------------------------------------------------
     # Test 2: Setup test cases in admin's organization
@@ -341,87 +340,15 @@ def test_ops_cases_bulk_update():
     print(f"   📋 Empty patch behavior: updated={response['updated']}, failed={response['failed']}")
     print(f"   ✅ Empty patch validation documented")
 
-    # ------------------------------------------------------------------
-    # Test 7: Sample curl commands and responses
-    # ------------------------------------------------------------------
-    print("\n7️⃣  Sample curl commands and responses...")
-    
-    print("   📋 Sample curl command for happy path:")
-    print(f"""
-   curl -X POST "{BASE_URL}/api/ops-cases/bulk-update" \\
-     -H "Authorization: Bearer YOUR_TOKEN" \\
-     -H "Content-Type: application/json" \\
-     -d '{{
-       "case_ids": ["CASE-BULK-1", "CASE-BULK-2"],
-       "patch": {{"waiting_on": "customer", "note": "Toplu test"}}
-     }}'
-    """)
-    
-    print("   📋 Sample response for happy path:")
-    print(f"""
-   {{
-     "ok": true,
-     "updated": 2,
-     "failed": 0,
-     "results": [
-       {{"case_id": "CASE-BULK-1", "ok": true, "status": "waiting", "waiting_on": "customer"}},
-       {{"case_id": "CASE-BULK-2", "ok": true, "status": "waiting", "waiting_on": "customer"}}
-     ]
-   }}
-    """)
-    
-    print("   📋 Sample curl command for partial success:")
-    print(f"""
-   curl -X POST "{BASE_URL}/api/ops-cases/bulk-update" \\
-     -H "Authorization: Bearer YOUR_TOKEN" \\
-     -H "Content-Type: application/json" \\
-     -d '{{
-       "case_ids": ["CASE-BULK-2", "CASE-BULK-404"],
-       "patch": {{"note": "Partial test"}}
-     }}'
-    """)
-    
-    print("   📋 Sample response for partial success:")
-    print(f"""
-   {{
-     "ok": false,
-     "updated": 1,
-     "failed": 1,
-     "results": [
-       {{"case_id": "CASE-BULK-2", "ok": true, "status": "waiting", "waiting_on": "customer"}},
-       {{"case_id": "CASE-BULK-404", "ok": false, "error": "Ops case not found"}}
-     ]
-   }}
-    """)
-
-    # ------------------------------------------------------------------
-    # Test 8: Waiting Auto Behavior Documentation
-    # ------------------------------------------------------------------
-    print("\n8️⃣  Waiting Auto Behavior Documentation...")
-    
-    print("   📋 Waiting Auto Rules Observed:")
-    print("   • When waiting_on is set to non-empty value → status automatically changes to 'waiting'")
-    print("   • When waiting_on is cleared (None/empty) and status='waiting' → status changes to 'open'")
-    print("   • When status='closed' → waiting_on can be updated but status remains 'closed'")
-    print("   • Bulk update reuses single-case update_case() function, so waiting_auto behavior is consistent")
-    
-    print("   📋 Edge Behaviors Observed:")
-    print("   • Closed cases: waiting_on and note can be updated, but status remains 'closed'")
-    print("   • Non-existent cases: return ok=false with error='Ops case not found'")
-    print("   • Empty patch: returns 200 with updated=0, failed=0 (no-op)")
-    print("   • Missing case_ids: returns 422 validation error")
-
     print("\n" + "=" * 80)
     print("✅ OPS CASES V2 BULK UPDATE TEST COMPLETE")
     print("✅ All test scenarios completed successfully:")
     print("   1️⃣  Admin authentication working")
-    print("   2️⃣  Test organization and cases setup successful")
+    print("   2️⃣  Test cases setup successful")
     print("   3️⃣  Happy path bulk update working (2 cases updated successfully)")
     print("   4️⃣  Partial success behavior working (2 success, 1 failure)")
     print("   5️⃣  Closed case protection working (status preserved, other fields updated)")
     print("   6️⃣  Validation & error handling working (422 for missing case_ids)")
-    print("   7️⃣  Sample curl commands and responses documented")
-    print("   8️⃣  Waiting auto behavior documented and verified")
     print("✅ POST /api/ops-cases/bulk-update endpoint production-ready")
     print("✅ Bulk update reuses update_case() with consistent waiting_auto behavior")
     print("✅ Response structure matches OpsCasesBulkUpdateResponse schema")

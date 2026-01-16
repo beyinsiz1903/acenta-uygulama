@@ -42,9 +42,13 @@ async def partner_products_search(
 ):
     # Delegate to public_search_catalog but force org from partner context
     org_id = partner["organization_id"]
-    # Reuse underlying logic: construct a fake request-like call
+    # Reuse underlying logic: construct a minimal request-like stub so that
+    # public_search_catalog can safely access request.client
+    class _DummyReq:
+        client = None
+
     return await public_search_catalog(
-        request=None,  # client_ip throttling disabled for partner
+        request=_DummyReq(),  # client_ip throttling disabled for partner
         org=org_id,
         q=q,
         page=page,

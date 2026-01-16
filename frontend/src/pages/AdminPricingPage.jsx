@@ -810,7 +810,7 @@ function SimpleRulesTab() {
             else if (validityKind === "expired") rowBg = "bg-slate-50 opacity-80";
             else rowBg = "bg-amber-50";
 
-            const rowClass = [
+            const cls = [
               "grid grid-cols-7 border-t px-2 py-2 items-center",
               rowBg,
             ]

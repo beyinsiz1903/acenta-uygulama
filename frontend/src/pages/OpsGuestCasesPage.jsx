@@ -136,10 +136,13 @@ function OpsGuestCasesPage() {
 
   const [selectedCaseId, setSelectedCaseId] = useState(null);
   const [selectedIds, setSelectedIds] = useState([]);
-  const [bulkStatus, setBulkStatus] = useState("");
-  const [bulkWaitingOn, setBulkWaitingOn] = useState("");
+  const [bulkStatus, setBulkStatus] = useState("no_change");
+  const [bulkWaitingOn, setBulkWaitingOn] = useState("no_change");
   const [bulkNote, setBulkNote] = useState("");
   const [bulkLoading, setBulkLoading] = useState(false);
+  const [bulkResult, setBulkResult] = useState(null);
+  const [bulkError, setBulkError] = useState(null);
+  const [bulkApplying, setBulkApplying] = useState(false);
   const [slaFilter, setSlaFilter] = useState("all");
 
   const loadCases = async (opts = {}) => {

@@ -815,7 +815,7 @@ function SimpleRulesTab() {
             else rowBg = "bg-amber-50";
 
             const cls = [
-              "grid grid-cols-7 border-t px-2 py-2 items-center",
+              "grid grid-cols-8 border-t px-2 py-2 items-center",
               rowBg,
             ]
               .filter(Boolean)

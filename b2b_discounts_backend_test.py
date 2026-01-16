@@ -481,7 +481,7 @@ def test_b2b_discounts_end_to_end():
     }
     
     r = requests.put(
-        f"{BASE_URL}/api/admin/b2b/discount-groups/{discount_group_id}",
+        f"{BASE_URL}/api/admin/b2b/discount-groups/{discount_group_id}/",
         json=allowed_update,
         headers=admin_headers,
     )

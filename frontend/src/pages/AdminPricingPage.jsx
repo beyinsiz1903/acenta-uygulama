@@ -832,6 +832,9 @@ function SimpleRulesTab() {
                 <div className={`font-mono truncate ${dimClass}`} title={r.rule_id}>
                   {r.rule_id}
                 </div>
+                <div className={`truncate text-[11px] ${dimClass}`} title={ruleName || ""}>
+                  {ruleName || <span className="text-muted-foreground">(no name)</span>}
+                </div>
                 <div className="flex items-center gap-2">
                   <Badge variant={r.status === "active" ? "secondary" : "outline"}>{r.status}</Badge>
                   <Button

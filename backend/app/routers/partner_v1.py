@@ -147,7 +147,6 @@ async def partner_get_booking(
 @router.get("/bookings/{booking_id}/documents")
 async def partner_get_booking_documents(
     booking_id: str,
-    _feature=Depends(require_feature("partner_api")),  # noqa: B008
     partner=Depends(require_partner_key(["documents:read"])),
 ) -> Dict[str, Any]:
     org_id = partner["organization_id"]

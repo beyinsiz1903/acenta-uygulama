@@ -185,11 +185,54 @@ class B2BPricingService:
             fallback=fallback,
         )
 
+        # Apply B2B discount group (markup_only v1)
+        from datetime import date as _date
+
+        check_in_date = item.check_in if isinstance(item.check_in, _date) else None
+        discount_group = await resolve_discount_group(
+            self.db,
+            organization_id=organization_id,
+            agency_id=agency_id,
+            product_id=item.product_id,
+            product_type="hotel",
+            check_in=check_in_date,
+        )
+
+        discount_result = apply_discount(
+            base_net=net,
+            base_sell=sell,
+            markup_percent=float(markup_percent or 0.0),
+            group=discount_group,
+        )
+
+        final_net = discount_result["final_net"]
+        final_sell = discount_result["final_sell"]
+        breakdown = discount_result["breakdown"]
+        trace_discount = discount_result["trace_discount"]
+
+        # Extend trace with discount info (trace field names aligned with booking)
+        if trace_discount:
+            trace.rule_effects = (trace.rule_effects or []) + [
+                {
+                    "type": "b2b_discount",
+                    "discount_group_id": trace_discount["discount_group_id"],
+                    "discount_group_name": trace_discount["discount_group_name"],
+                    "discount_percent": trace_discount["discount_percent"],
+                    "discount_amount": trace_discount["discount_amount"],
+                }
+            ]
+            trace.winner_discount_group_id = trace_discount["discount_group_id"]
+            trace.winner_discount_group_name = trace_discount["discount_group_name"]
+            trace.discount_group_id = trace_discount["discount_group_id"]
+            trace.discount_group_name = trace_discount["discount_group_name"]
+            trace.discount_percent = trace_discount["discount_percent"]
+            trace.discount_amount = trace_discount["discount_amount"]
+
         return QuoteOffer(
             item_key="0",  # caller will override with actual index
             currency=currency,
-            net=net,
-            sell=sell,
+            net=final_net,
+            sell=final_sell,
             restrictions=restrictions,
             trace=trace,
         )

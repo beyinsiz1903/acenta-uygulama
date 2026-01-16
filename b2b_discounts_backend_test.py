@@ -344,7 +344,7 @@ def test_b2b_discounts_end_to_end():
         try:
             # Try to get booking via API first
             r_detail = requests.get(
-                f"{BASE_URL}/api/b2b/bookings/{booking_id}",
+                f"{BASE_URL}/api/api/b2b/bookings/{booking_id}",
                 headers=agency_headers,
             )
             

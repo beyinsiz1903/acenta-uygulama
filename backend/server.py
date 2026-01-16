@@ -65,7 +65,9 @@ from app.email_worker import email_dispatch_loop
 from app.indexes import finance_indexes, inbox_indexes, pricing_indexes, public_indexes, voucher_indexes
 from app.indexes import crm_indexes
 from app.indexes import funnel_indexes
+from app.indexes.jobs_indexes import ensure_jobs_indexes
 from app.integration_sync_worker import integration_sync_loop
+from app.services.jobs import run_job_worker_loop
 
 
 @asynccontextmanager
@@ -81,6 +83,7 @@ async def lifespan(app: FastAPI):
     await public_indexes.ensure_public_indexes(db)
     await crm_indexes.ensure_crm_indexes(db)
     await funnel_indexes.ensure_funnel_indexes(db)
+    await ensure_jobs_indexes(db)
 
     yield
 
@@ -183,6 +186,11 @@ if os.environ.get("ENABLE_EMAIL_WORKER") == "1":
 
 if os.environ.get("ENABLE_INTEGRATION_SYNC_WORKER") == "1":
     integration_sync_loop()
+
+if os.environ.get("ENABLE_JOB_WORKER") == "1":
+    import asyncio
+
+    asyncio.create_task(run_job_worker_loop("job-worker-1"))
 
 if os.environ.get("ENABLE_JOB_WORKER") == "1":
     import asyncio

@@ -843,7 +843,14 @@ function OpsGuestCaseDrawer({ caseId, open, onClose, onClosed }) {
                   disabled={isClosed || saving || !isDirty}
                   data-testid="case-edit-apply"
                 >
-                  {saving ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : null}
+                  {saving ? (
+                    <span
+                      className="inline-flex items-center mr-1"
+                      data-testid="case-edit-saving"
+                    >
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    </span>
+                  ) : null}
                   Kaydet
                 </Button>
               </div>

@@ -145,6 +145,7 @@ export default function AdminPricingIncidentsPage() {
             >
               Copy Bundle
             </Button>
+            </div>
           </div>
         </div>
 

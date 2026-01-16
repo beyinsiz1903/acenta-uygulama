@@ -77,7 +77,7 @@ async def test_admin_ical_feeds_create(
     
     payload = {
         "product_id": product_id,
-        "url": "mock://villa-demo"
+        "url": "https://example.com/villa-demo.ics"
     }
     
     response = await async_client.post("/api/admin/ical/feeds", headers=headers, json=payload)

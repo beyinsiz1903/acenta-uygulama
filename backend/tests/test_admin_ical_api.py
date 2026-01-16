@@ -101,7 +101,7 @@ async def test_admin_ical_feeds_create(
     assert feed_doc is not None
     assert feed_doc["organization_id"] == org_id
     assert feed_doc["product_id"] == product_id
-    assert feed_doc["url"] == "mock://villa-demo"
+    assert feed_doc["url"] == "https://example.com/villa-demo.ics"
     assert feed_doc["status"] == "active"
     assert feed_doc["created_at"] is not None
     assert feed_doc["last_sync_at"] is None

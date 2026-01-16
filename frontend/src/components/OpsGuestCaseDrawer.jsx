@@ -388,11 +388,43 @@ function OpsGuestCaseDrawer({ caseId, open, onClose, onClosed }) {
   }, [open, caseId, loadTimeline]);
 
   const isClosed = data?.status === "closed";
-  const [editStatus, setEditStatus] = useState("");
-  const [editWaitingOn, setEditWaitingOn] = useState("");
-  const [editNote, setEditNote] = useState("");
-  const [saving, setSaving] = useState(false);
 
+  const normalizedInitialWaiting = normalizeWaitingOn(initialSnapshot.waiting_on);
+  const normalizedDraftWaiting = normalizeWaitingOn(editWaitingOn);
+
+  const isDirty =
+    Boolean(data) &&
+    (String(editStatus || "") !== String(initialSnapshot.status || "") ||
+      normalizedDraftWaiting !== normalizedInitialWaiting ||
+      String(editNote || "") !== String(initialSnapshot.note || ""));
+
+  const disableStatusSelect =
+    isClosed || (normalizedDraftWaiting !== "none" && normalizedDraftWaiting !== "other");
+
+  const effectiveStatusValue = disableStatusSelect ? "waiting" : editStatus || "open";
+
+  const requestClose = () => {
+    if (!isDirty) {
+      if (onClose) onClose();
+      return;
+    }
+    setPendingCloseIntent(true);
+    setShowUnsavedDialog(true);
+  };
+
+  const discardChangesAndClose = () => {
+    setEditStatus(initialSnapshot.status || "");
+    setEditWaitingOn(initialSnapshot.waiting_on || "");
+    setEditNote(initialSnapshot.note || "");
+    setShowUnsavedDialog(false);
+    setPendingCloseIntent(false);
+    if (onClose) onClose();
+  };
+
+  const cancelUnsavedDialog = () => {
+    setShowUnsavedDialog(false);
+    setPendingCloseIntent(false);
+  };
 
   const handleClose = async () => {
     if (!caseId || isClosed) return;

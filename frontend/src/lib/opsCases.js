@@ -5,6 +5,11 @@ export async function listOpsCases(params = {}) {
   return res.data;
 }
 
+export async function bulkUpdateOpsCases(body) {
+  const res = await api.post("/ops-cases/bulk-update", body);
+  return res.data;
+}
+
 export async function listOpsCasesForBooking(bookingId) {
   if (!bookingId) return { items: [], page: 1, page_size: 20, total: 0 };
   const res = await api.get("/ops-cases/", { params: { booking_id: bookingId } });

@@ -176,7 +176,7 @@ function App() {
             <Route path="pricing" element={<AdminPricingPage />} />
             <Route path="pricing/funnel" element={<AdminFunnelPage />} />
             <Route path="pricing/incidents" element={<AdminPricingIncidentsPage />} />
-            <Route path="admin/b2b/discounts" element={<AdminB2BDiscountsPage />} />
+            <Route path="b2b/discounts" element={<AdminB2BDiscountsPage />} />
             <Route path="reporting" element={<AdminReportingPage />} />
             <Route path="villas/:productId/calendar" element={<AdminVillaCalendarPage />} />
             <Route path="theme" element={<AdminThemePage />} />

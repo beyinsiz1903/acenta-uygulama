@@ -60,7 +60,9 @@ from app.routers.admin_pricing_incidents import router as admin_pricing_incident
 from app.routers.admin_b2b_discounts import router as admin_b2b_discounts_router
 from app.routers.admin_integrations import router as admin_integrations_router
 from app.routers.admin_jobs import router as admin_jobs_router
+from app.routers.admin_api_keys import router as admin_api_keys_router
 from app.routers.metrics import router as metrics_router
+from app.routers.partner_v1 import router as partner_v1_router
 
 from app.routers.seo import router as seo_router
 from app.email_worker import email_dispatch_loop
@@ -69,6 +71,8 @@ from app.indexes import crm_indexes
 from app.indexes import funnel_indexes
 from app.indexes.jobs_indexes import ensure_jobs_indexes
 from app.indexes.integration_hub_indexes import ensure_integration_hub_indexes
+from app.indexes.api_keys_indexes import ensure_api_keys_indexes
+from app.indexes.rate_limit_indexes import ensure_rate_limit_indexes
 from app.integration_sync_worker import integration_sync_loop
 from app.services.jobs import run_job_worker_loop
 
@@ -88,6 +92,8 @@ async def lifespan(app: FastAPI):
     await funnel_indexes.ensure_funnel_indexes(db)
     await ensure_jobs_indexes(db)
     await ensure_integration_hub_indexes(db)
+    await ensure_api_keys_indexes(db)
+    await ensure_rate_limit_indexes(db)
 
     yield
 
@@ -133,7 +139,9 @@ app.include_router(admin_pricing_incidents_router)
 app.include_router(admin_b2b_discounts_router)
 app.include_router(admin_integrations_router)
 app.include_router(admin_jobs_router)
+app.include_router(admin_api_keys_router)
 app.include_router(metrics_router)
+app.include_router(partner_v1_router)
 
 app.include_router(theme_router)
 

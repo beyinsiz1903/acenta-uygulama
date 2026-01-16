@@ -145,8 +145,39 @@ api.interceptors.response.use(
 );
 
 export function apiErrorMessage(err) {
+  const detail = err?.response?.data?.detail;
+
+  if (typeof detail === "string") {
+    return detail;
+  }
+
+  // Pydantic/FastAPI validation errors -> array of objects
+  if (Array.isArray(detail) && detail.length) {
+    const msg = detail
+      .map((d) => {
+        if (typeof d?.msg === "string") return d.msg;
+        if (typeof d === "string") return d;
+        try {
+          return JSON.stringify(d);
+        } catch {
+          return "";
+        }
+      })
+      .filter(Boolean)
+      .join("; ");
+    if (msg) return msg;
+  }
+
+  if (detail && typeof detail === "object") {
+    if (typeof detail.message === "string") return detail.message;
+    try {
+      return JSON.stringify(detail);
+    } catch {
+      // ignore
+    }
+  }
+
   return (
-    err?.response?.data?.detail ||
     err?.message ||
     "Beklenmeyen bir hata oluştu"
   );

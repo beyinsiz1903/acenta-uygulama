@@ -18,7 +18,7 @@ router = APIRouter(prefix="/api/admin/ical", tags=["admin_ical"])
 
 class IcalFeedCreate(BaseModel):
     product_id: str
-    url: HttpUrl
+    url: str
     status: str | None = "active"
 
 

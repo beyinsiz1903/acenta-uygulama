@@ -372,7 +372,7 @@ async def test_admin_ical_auth_required(
     # POST /feeds
     response = await async_client.post("/api/admin/ical/feeds", json={
         "product_id": "test",
-        "url": "mock://test"
+        "url": "https://example.com/test.ics"
     })
     assert response.status_code == 401
     

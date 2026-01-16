@@ -644,7 +644,7 @@ function OpsGuestCasesPage() {
                   <SelectValue placeholder="Durum seç" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Değiştirme</SelectItem>
+                  <SelectItem value="no_change">Değiştirme</SelectItem>
                   <SelectItem value="open">Açık</SelectItem>
                   <SelectItem value="waiting">Beklemede</SelectItem>
                   <SelectItem value="in_progress">Devam ediyor</SelectItem>

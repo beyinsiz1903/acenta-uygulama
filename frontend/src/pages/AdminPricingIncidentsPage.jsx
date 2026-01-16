@@ -56,9 +56,14 @@ export default function AdminPricingIncidentsPage() {
     }
   };
 
-  const trace = bundle?.booking?.applied_rules?.trace || bundle?.quote?.pricing_trace || {};
+  const trace = bundle?.pricing?.trace || bundle?.booking?.applied_rules?.trace || bundle?.quote?.pricing_trace || {};
   const rule = bundle?.rule || null;
-  const amounts = bundle?.booking?.amounts || null;
+  const amounts = bundle?.pricing?.amounts || bundle?.booking?.amounts || null;
+  const checks = bundle?.checks || {};
+
+  const checksEntries = Object.entries(checks || {});
+  const checksTotal = checksEntries.length;
+  const checksPass = checksEntries.filter(([, v]) => v === true).length;
 
   return (
     <div className="space-y-4">

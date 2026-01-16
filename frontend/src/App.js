@@ -181,6 +181,7 @@ function App() {
             <Route path="b2b/discounts" element={<AdminB2BDiscountsPage />} />
             <Route path="integrations" element={<AdminIntegrationsPage />} />
             <Route path="jobs" element={<AdminJobsPage />} />
+            <Route path="api-keys" element={<AdminApiKeysPage />} />
             <Route path="reporting" element={<AdminReportingPage />} />
             <Route path="villas/:productId/calendar" element={<AdminVillaCalendarPage />} />
             <Route path="theme" element={<AdminThemePage />} />

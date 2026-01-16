@@ -208,7 +208,7 @@ def test_b2b_discounts_end_to_end():
         "channel_id": "web",  # Required field
         "items": [
             {
-                "product_id": "69691ae7b322db4dcbaf4bf9",  # Use existing test product
+                "product_id": "696a6ba96fa65bf8218655b6",  # Use created test product
                 "room_type_id": "default_room",
                 "rate_plan_id": "default_rate",
                 "check_in": "2026-01-22",  # Within discount validity window

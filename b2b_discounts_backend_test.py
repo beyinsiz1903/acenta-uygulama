@@ -443,7 +443,7 @@ def test_b2b_discounts_end_to_end():
     }
     
     r = requests.post(
-        f"{BASE_URL}/api/admin/b2b/discount-groups",
+        f"{BASE_URL}/api/admin/b2b/discount-groups/",
         json=invalid_rule_payload,
         headers=admin_headers,
     )

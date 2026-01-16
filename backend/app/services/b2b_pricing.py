@@ -207,7 +207,6 @@ class B2BPricingService:
 
         final_net = discount_result["final_net"]
         final_sell = discount_result["final_sell"]
-        breakdown = discount_result["breakdown"]
         trace_discount = discount_result["trace_discount"]
 
         # Extend trace with discount info (trace field names aligned with booking)

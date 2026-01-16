@@ -300,7 +300,7 @@ def test_ops_cases_bulk_update():
     # Test empty patch
     print("   🔍 Testing empty patch...")
     empty_patch_request = {
-        "case_ids": ["CASE-BULK-2"],
+        "case_ids": [test_case_ids[1]],
         "patch": {}
     }
     

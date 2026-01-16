@@ -806,8 +806,12 @@ async def admin_headers(admin_token: str) -> Dict[str, str]:
 
 
 @pytest.fixture
-async def agency_token(async_client: httpx.AsyncClient) -> str:
-    """Login as agency user and return access token."""
+async def agency_token(async_client: httpx.AsyncClient, seed_default_org_and_users) -> str:
+    """Login as agency user and return access token.
+
+    Depends on seed_default_org_and_users to ensure the default organization
+    and demo agency user exist inside the isolated test_db before login.
+    """
 
     response = await async_client.post(
         "/api/auth/login",

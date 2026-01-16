@@ -448,11 +448,11 @@ frontend:
 
   - task: "Admin Reporting UI Test"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/frontend/src/pages/AdminReportingPage.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"

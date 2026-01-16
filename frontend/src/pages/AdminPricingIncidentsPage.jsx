@@ -129,7 +129,7 @@ export default function AdminPricingIncidentsPage() {
       <Card className="p-3 text-[11px] space-y-3" data-testid="pricing-incident-result">
         {!bundle ? (
           <div className="text-[11px] text-muted-foreground">
-            Henüz debug bundle yok. Üstten Booking ID/Quote ID girip "Fetch" ile yükleyin.
+            Henüz debug bundle yok. Üstten Booking ID/Quote ID girip &quot;Fetch&quot; ile yükleyin.
           </div>
         ) : (
           <>

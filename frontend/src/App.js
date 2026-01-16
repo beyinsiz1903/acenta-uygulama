@@ -49,6 +49,7 @@ import AdminB2BDiscountsPage from "./pages/AdminB2BDiscountsPage";
 import AdminCouponsPage from "./pages/AdminCouponsPage";
 import AdminIntegrationsPage from "./pages/AdminIntegrationsPage";
 import AdminJobsPage from "./pages/AdminJobsPage";
+import AdminApiKeysPage from "./pages/AdminApiKeysPage";
 import OpsB2BQueuesPage from "./pages/OpsB2BQueuesPage";
 import InboxPage from "./pages/InboxPage";
 import AdminFinanceRefundsPage from "./pages/AdminFinanceRefundsPage";

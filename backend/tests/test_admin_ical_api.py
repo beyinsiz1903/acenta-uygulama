@@ -308,7 +308,7 @@ async def test_admin_ical_feeds_list_with_data(
     our_feed = next((f for f in data if f["id"] == feed_data["id"]), None)
     assert our_feed is not None
     assert our_feed["product_id"] == product_id
-    assert our_feed["url"] == "mock://villa-demo"
+    assert our_feed["url"] == "https://example.com/villa-demo.ics"
     assert our_feed["status"] == "active"
     
     # Test list with product_id filter

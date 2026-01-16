@@ -256,6 +256,9 @@ function OpsGuestCaseDrawer({ caseId, open, onClose, onClosed }) {
   const [timelineError, setTimelineError] = useState("");
   const [timelineItems, setTimelineItems] = useState([]);
 
+  const [hideSystem, setHideSystem] = useState(true);
+  const [onlyStatus, setOnlyStatus] = useState(false);
+
   const loadTimeline = useCallback(
     async (bookingId) => {
       if (!bookingId) {

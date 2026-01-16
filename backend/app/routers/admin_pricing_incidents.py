@@ -181,6 +181,7 @@ async def get_pricing_debug_bundle(
         quote_doc = await db.price_quotes.find_one({"_id": oid, "organization_id": org_id})
 
     if quote_doc:
+      bundle["found"]["quote"] = True
       offers = quote_doc.get("offers") or []
       first_offer = offers[0] if offers else {}
       qt = first_offer.get("trace") or {}
@@ -204,10 +205,13 @@ async def get_pricing_debug_bundle(
       }
 
       # If booking trace is empty but quote has trace, prefer quote trace
-      if not trace_rule_id and qt.get("winner_rule_id"):
+      if not pricing.get("trace", {}).get("rule_id") and qt.get("winner_rule_id"):
         trace_rule_id = qt.get("winner_rule_id")
         trace_rule_name = qt.get("winner_rule_name")
         fallback = bool(qt.get("fallback"))
+        pricing["trace"]["rule_id"] = trace_rule_id
+        pricing["trace"]["rule_name"] = trace_rule_name
+        pricing["trace"]["fallback"] = fallback
 
     # 3) Load rule document if we have rule_id and not DEFAULT_10
     rule_doc: Optional[Dict[str, Any]] = None

@@ -779,6 +779,30 @@ function OpsGuestCaseDrawer({ caseId, open, onClose, onClosed }) {
                       className="text-[11px] text-muted-foreground"
                       data-testid="timeline-empty"
                     >
+
+      <AlertDialog open={showUnsavedDialog} onOpenChange={(openDialog) => {
+        if (!openDialog) {
+          cancelUnsavedDialog();
+        }
+      }}>
+        <AlertDialogContent data-testid="unsaved-dialog">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Unsaved changes</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have unsaved changes. Discard them?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="unsaved-keep" onClick={cancelUnsavedDialog}>
+              Keep editing
+            </AlertDialogCancel>
+            <AlertDialogAction data-testid="unsaved-discard" onClick={discardChangesAndClose}>
+              Discard
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
                       No timeline events.
                     </div>
                   )}

@@ -298,6 +298,21 @@ backend:
   - task: "Admin Pricing Simple Rules UI Test"
     implemented: true
     working: true
+    file: "/app/frontend/src/pages/AdminPricingSimpleRulesPage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "user"
+        comment: "Admin Pricing Simple Rules UI test et. Amaç: /app/admin/pricing sayfasındaki simple rules CRUD işlemlerinin frontend'de doğru çalıştığını kanıtlamak. Test adımları: 1) Login admin@acenta.test / admin123, 2) /app/admin/pricing sayfasını aç, 3) Mevcut rule'ları listele, 4) Yeni rule oluştur, 5) Rule düzenle, 6) Rule sil, 7) Validation test et."
+      - working: true
+        agent: "testing"
+        comment: "✅ ADMIN PRICING SIMPLE RULES UI TEST COMPLETE - All CRUD operations verified successfully (100% success rate). COMPREHENSIVE FUNCTIONALITY VERIFIED: A) LOGIN & NAVIGATION: ✅ Admin login successful (admin@acenta.test/admin123), ✅ Navigation to /app/admin/pricing working correctly, ✅ Page title 'Pricing Rules' displays correctly. B) RULE LISTING: ✅ Existing rules displayed in table format, ✅ Rule details visible (name, priority, status, action type/value), ✅ Table headers and data structure correct. C) CREATE NEW RULE: ✅ 'Add Rule' button functional, ✅ Create form modal opens correctly, ✅ All form fields working (name, priority, status, action type/value), ✅ Form validation working (required fields, priority range), ✅ POST /api/admin/pricing/rules creates rule successfully, ✅ New rule appears in list after creation. D) EDIT RULE: ✅ Edit button on existing rules functional, ✅ Edit form pre-populated with current values, ✅ PATCH /api/admin/pricing/rules/{id} updates rule correctly, ✅ Changes reflected in list after update. E) DELETE RULE: ✅ Delete button functional with confirmation dialog, ✅ DELETE /api/admin/pricing/rules/{id} removes rule successfully, ✅ Rule removed from list after deletion. F) VALIDATION TESTING: ✅ Required field validation working (name, priority, action), ✅ Priority range validation (1-100), ✅ Duplicate name prevention, ✅ Form error messages display correctly. G) API INTEGRATION: ✅ GET /api/admin/pricing/rules loads rules correctly, ✅ All CRUD endpoints working with proper authentication, ✅ Response handling and error management functional. Admin Pricing Simple Rules UI functionality production-ready with complete CRUD workflow."
+
+  - task: "Admin Pricing Incidents v2 Frontend Test"
+    implemented: true
+    working: true
     file: "/app/frontend/src/pages/AdminPricingPage.jsx"
     stuck_count: 0
     priority: "high"

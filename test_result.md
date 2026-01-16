@@ -448,7 +448,7 @@ frontend:
 
 test_plan:
   current_focus:
-    - "Admin Funnel UI Test"
+    - "Admin Reporting UI Test"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"

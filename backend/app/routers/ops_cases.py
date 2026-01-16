@@ -184,6 +184,36 @@ async def create_ops_case(
     return OpsCaseOut(**doc)
 
 
+@router.post("/bulk-update", response_model=OpsCasesBulkUpdateResponse)
+async def bulk_update_ops_cases(
+    payload: OpsCasesBulkUpdateRequest,
+    user: Dict[str, Any] = OpsUserDep,
+    db=Depends(get_db),
+) -> Dict[str, Any]:
+    """Bulk update endpoint for ops cases.
+
+    - Only allows updating waiting_on, status, note fields.
+    - Returns case-level result list so that UI can show partial success.
+    """
+    org_id = user.get("organization_id")
+    if not org_id:
+        raise AppError(400, "invalid_user_context", "User is missing organization_id")
+
+    data = payload.model_dump()
+    case_ids = data.get("case_ids") or []
+    patch = data.get("patch") or {}
+
+    result = await bulk_update_cases(
+        db,
+        organization_id=str(org_id),
+        case_ids=case_ids,
+        patch=patch,
+    )
+
+    return result
+
+
+
 @router.patch("/{case_id}", response_model=OpsCaseOut)
 async def patch_ops_case(
     case_id: str,

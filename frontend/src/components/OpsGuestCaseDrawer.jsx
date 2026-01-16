@@ -259,6 +259,30 @@ function OpsGuestCaseDrawer({ caseId, open, onClose, onClosed }) {
   const [hideSystem, setHideSystem] = useState(true);
   const [onlyStatus, setOnlyStatus] = useState(false);
 
+  const timelineEvents = useMemo(() => {
+    if (!data) return [];
+    const all = normalizeTimelineEvents(data);
+    return all.filter((ev) => {
+      if (hideSystem && ev.isSystem) return false;
+      if (onlyStatus) {
+        const k = String(ev.kind || "");
+        return k.includes("status");
+      }
+      return true;
+    });
+  }, [data, hideSystem, onlyStatus]);
+
+  const timelineGroups = useMemo(() => {
+    const buckets = { today: [], yesterday: [], older: [] };
+    for (const ev of timelineEvents) {
+      const b = dayBucket(ev.ts);
+      buckets[b].push(ev);
+    }
+    return ["today", "yesterday", "older"]
+      .map((bucket) => ({ bucket, items: buckets[bucket] }))
+      .filter((g) => g.items.length > 0);
+  }, [timelineEvents]);
+
   const loadTimeline = useCallback(
     async (bookingId) => {
       if (!bookingId) {

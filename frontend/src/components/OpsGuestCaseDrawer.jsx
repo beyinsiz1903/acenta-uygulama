@@ -9,6 +9,110 @@ import { Textarea } from "./ui/textarea";
 import ErrorState from "./ErrorState";
 import { toast } from "sonner";
 
+const SLA_DAYS = 7;
+
+function parseDateSafe(value) {
+  if (!value) return null;
+  try {
+    const s = String(value).slice(0, 10);
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+    let d;
+    if (m) {
+      const y = Number(m[1]);
+      const mo = Number(m[2]) - 1;
+      const da = Number(m[3]);
+      d = new Date(y, mo, da);
+    } else {
+      d = new Date(value);
+    }
+    if (Number.isNaN(d.getTime())) return null;
+    return d;
+  } catch {
+    return null;
+  }
+}
+
+function daysBetween(a, b) {
+  if (!a || !b) return null;
+  const ms = b.getTime() - a.getTime();
+  return Math.floor(ms / (1000 * 60 * 60 * 24));
+}
+
+function classifyRisk(caseItem, now) {
+  const status = String(caseItem?.status || "").toLowerCase();
+  if (!["open", "waiting", "in_progress"].includes(status)) return "na";
+
+  const created = parseDateSafe(caseItem?.created_at);
+  if (!created) return "no_date";
+
+  const ageDays = daysBetween(created, now);
+  if (ageDays === null) return "no_date";
+
+  if (ageDays <= 1) return "fresh";
+  if (ageDays <= 6) return "active_risk";
+  return "sla_breach";
+}
+
+function normalizeWaitingOn(v) {
+  const s = String(v || "").toLowerCase().trim();
+  if (!s) return "none";
+  if (s.includes("cust")) return "customer";
+  if (s.includes("sup")) return "supplier";
+  if (s.includes("ops")) return "ops";
+  return "other";
+}
+
+function RiskBadge({ kind }) {
+  if (!kind || kind === "na") return null;
+
+  let label = "";
+  let cls = "border text-[10px] px-2 py-0.5 rounded-full inline-flex font-semibold";
+
+  if (kind === "sla_breach") {
+    label = "SLA BREACH";
+    cls += " bg-red-100 text-red-900 border-red-200";
+  } else if (kind === "active_risk") {
+    label = "ACTIVE RISK";
+    cls += " bg-amber-100 text-amber-900 border-amber-200";
+  } else if (kind === "fresh") {
+    label = "FRESH";
+    cls += " bg-emerald-100 text-emerald-900 border-emerald-200";
+  } else if (kind === "no_date") {
+    label = "NO DATE";
+    cls += " bg-slate-100 text-slate-700 border-slate-200";
+  } else {
+    label = "N/A";
+    cls += " bg-slate-100 text-slate-700 border-slate-200";
+  }
+
+  return <span className={cls}>{label}</span>;
+}
+
+function WaitingBadge({ waitingOn }) {
+  const w = normalizeWaitingOn(waitingOn);
+  if (!w || w === "none") return null;
+
+  let label = "";
+  let cls = "border text-[10px] px-2 py-0.5 rounded-full inline-flex font-semibold";
+
+  if (w === "customer") {
+    label = "WAITING: CUSTOMER";
+    cls += " bg-sky-100 text-sky-900 border-sky-200";
+  } else if (w === "supplier") {
+    label = "WAITING: SUPPLIER";
+    cls += " bg-violet-100 text-violet-900 border-violet-200";
+  } else if (w === "ops") {
+    label = "WAITING: OPS";
+    cls += " bg-slate-100 text-slate-900 border-slate-200";
+  } else {
+    label = "WAITING: OTHER";
+    cls += " bg-slate-100 text-slate-900 border-slate-200";
+  }
+
+  return <span className={cls}>{label}</span>;
+}
+
+
 function OpsGuestCaseDrawer({ caseId, open, onClose, onClosed }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");

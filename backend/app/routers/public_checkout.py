@@ -473,8 +473,27 @@ async def public_checkout(payload: PublicCheckoutRequest, request: Request, db=D
     except Exception:
         # Provider unavailable or misconfigured; do not keep orphan booking
         await bookings.delete_one({"_id": ins.inserted_id})
+        await db.public_checkouts.update_one(
+            {
+                "organization_id": org_id,
+                "idempotency_key": idem_key,
+            },
+            {
+                "$set": {
+                    "quote_id": quote.get("quote_id"),
+                    "status": "failed",
+                    "ok": False,
+                    "reason": "provider_unavailable",
+                }
+            },
+            upsert=True,
+        )
         return PublicCheckoutResponse(
             ok=False,
+            booking_id=None,
+            booking_code=None,
+            payment_intent_id=None,
+            client_secret=None,
             reason="provider_unavailable",
         )
 

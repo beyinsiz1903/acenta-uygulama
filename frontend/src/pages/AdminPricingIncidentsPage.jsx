@@ -158,7 +158,10 @@ export default function AdminPricingIncidentsPage() {
           </div>
         ) : (
           <>
-            <div className="flex flex-wrap items-center gap-2">
+            <div
+              className="flex flex-wrap items-center gap-2"
+              data-testid="incident-summary"
+            >
               <div className="font-semibold text-xs">Summary</div>
               {trace?.rule_name && (
                 <span className="inline-flex items-center rounded-full border bg-muted px-2 py-0.5 text-[10px] font-semibold">
@@ -168,6 +171,16 @@ export default function AdminPricingIncidentsPage() {
               {trace?.fallback && (
                 <span className="inline-flex items-center rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-900">
                   FALLBACK (DEFAULT_10)
+                </span>
+              )}
+              {checksTotal > 0 && (
+                <span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-900 border border-emerald-200">
+                  {checksPass}/{checksTotal} checks OK
+                </span>
+              )}
+              {bundle?.payments && (
+                <span className="inline-flex items-center rounded-full bg-slate-50 px-2 py-0.5 text-[10px] font-semibold text-slate-900 border border-slate-200">
+                  Payment: {bundle.payments.status || "unknown"}
                 </span>
               )}
             </div>

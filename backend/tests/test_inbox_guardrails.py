@@ -18,7 +18,7 @@ import httpx
 
 
 # Test configuration
-BASE_URL = "https://hotel-pricing-engine.preview.emergentagent.com"
+BASE_URL = "https://syrocenext.preview.emergentagent.com"
 ADMIN_EMAIL = "admin@acenta.test"
 ADMIN_PASSWORD = "admin123"
 

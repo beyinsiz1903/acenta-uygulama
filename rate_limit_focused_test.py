@@ -20,7 +20,7 @@ import secrets
 import os
 
 # Test configuration
-BACKEND_URL = "https://hotel-pricing-engine.preview.emergentagent.com/api"
+BACKEND_URL = "https://syrocenext.preview.emergentagent.com/api"
 
 class RateLimitFocusedTester:
     def __init__(self):

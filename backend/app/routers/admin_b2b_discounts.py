@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field, conint, confloat, field_validator
 
 from app.db import get_db
 from app.errors import AppError
-from app.auth_utils import require_roles
+from app.auth import require_roles
 from app.utils import now_utc
 
 

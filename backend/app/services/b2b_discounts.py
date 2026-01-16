@@ -76,6 +76,7 @@ def apply_discount(
     """
 
     if not group or not group.get("rules"):
+        # No discount group -> no-op
         markup_amount = round(base_sell - base_net, 2)
         return {
             "discount_amount": 0.0,

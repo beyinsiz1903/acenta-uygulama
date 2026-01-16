@@ -78,7 +78,7 @@ async def partner_get_product(
 @router.post("/quotes")
 async def partner_create_quote(
     payload: PartnerQuoteIn,
-    _feature=PartnerDep,  # noqa: B008
+    _feature=Depends(require_feature("partner_api")),  # noqa: B008
     partner=Depends(require_partner_key(["quotes:write"])),
     db=Depends(get_db),
 ) -> Dict[str, Any]:

@@ -129,7 +129,7 @@ app.include_router(theme_router)
 
 app.include_router(b2b_bookings_router, prefix=API_PREFIX)
 app.include_router(b2b_bookings_list_router, prefix=API_PREFIX)
-app.include_router(b2b_hotels_search_router, prefix=API_PREFIX)
+app.include_router(b2b_hotels_search_router)
 app.include_router(b2b_quotes_router, prefix=API_PREFIX)
 app.include_router(b2b_portal_router, prefix=API_PREFIX)
 app.include_router(bookings_router, prefix=API_PREFIX)

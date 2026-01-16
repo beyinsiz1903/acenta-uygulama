@@ -25,57 +25,37 @@ def login_admin():
     user = data["user"]
     return data["access_token"], user["organization_id"], user["email"]
 
-def create_test_cases_in_org(admin_headers, org_id):
-    """Create test ops cases in the specified organization"""
-    client = MongoClient("mongodb://localhost:27017")
-    db = client.acenta_db
-    
-    now = datetime.utcnow()
-    
-    # Create 3 test cases for bulk operations
+def create_test_cases_via_api(admin_headers):
+    """Create test ops cases via the API"""
     test_cases = []
+    
     for i in range(1, 4):
-        case_id = f"CASE-BULK-{i}"
         booking_id = f"BK-BULK-{i}"
         
-        # Create booking first
-        booking_doc = {
+        # Create ops case via API
+        case_data = {
             "booking_id": booking_id,
-            "organization_id": org_id,
-            "status": "CONFIRMED",
-            "guest_name": f"Test Guest {i}",
-            "guest_email": f"guest{i}@bulk.test",
-            "guest_phone": f"+90 555 000 000{i}",
-            "product_type": "hotel",
-            "product_title": f"Test Hotel {i}",
-            "check_in": "2025-03-01",
-            "check_out": "2025-03-03",
-            "total_amount": 100.00 * i,
-            "currency": "EUR",
-            "created_at": now,
-            "updated_at": now,
-        }
-        db.bookings.insert_one(booking_doc)
-        
-        # Create ops case
-        case_doc = {
-            "case_id": case_id,
-            "booking_id": booking_id,
-            "organization_id": org_id,
             "type": "missing_docs",
             "source": "ops_panel",
             "status": "open",
             "waiting_on": None,
-            "note": None,
-            "created_at": now,
-            "updated_at": now,
+            "note": None
         }
-        db.ops_cases.insert_one(case_doc)
+        
+        r = requests.post(
+            f"{BASE_URL}/api/ops-cases/",
+            headers=admin_headers,
+            json=case_data,
+        )
+        
+        assert r.status_code == 200, f"Failed to create case {i}: {r.text}"
+        
+        case_response = r.json()
+        case_id = case_response["case_id"]
         test_cases.append(case_id)
         
-        print(f"   📋 Created test case: {case_id} (booking: {booking_id})")
+        print(f"   📋 Created test case via API: {case_id} (booking: {booking_id})")
     
-    client.close()
     return test_cases
 
 def test_ops_cases_bulk_update():

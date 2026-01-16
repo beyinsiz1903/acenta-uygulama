@@ -257,11 +257,33 @@ export default function AdminPricingIncidentsPage() {
             )}
 
             {bundle.checks && (
-              <div className="space-y-1">
+              <div
+                className="space-y-1"
+                data-testid="incident-checks"
+              >
                 <div className="font-semibold text-[11px]">Checks</div>
-                <pre className="bg-muted/40 rounded p-2 text-[10px] overflow-x-auto">
-                  {JSON.stringify(bundle.checks, null, 2)}
-                </pre>
+                <div className="grid gap-1 md:grid-cols-2">
+                  {Object.entries(bundle.checks).map(([key, value]) => (
+                    <div
+                      key={key}
+                      className="flex items-center justify-between rounded border bg-muted/40 px-2 py-1 text-[10px]"
+                      data-testid={`check-${key}`}
+                    >
+                      <span className="text-[10px] font-mono">{key}</span>
+                      <span
+                        className={
+                          value === true
+                            ? "text-emerald-700"
+                            : value === false
+                              ? "text-red-600"
+                              : "text-muted-foreground"
+                        }
+                      >
+                        {String(value)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </>

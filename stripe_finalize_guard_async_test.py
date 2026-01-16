@@ -212,7 +212,7 @@ async def test_out_of_order_guard():
         
         booking = await db.bookings.find_one({"_id": ObjectId(booking_id)})
         assert booking["payment_status"] == "paid", f"Payment status should remain 'paid'"
-        print(f"   ✅ Failed ignored: booking.payment_status remains paid")
+        print(f"   ✅ Failed ignored: booking.payment_status remains paid (already_finalized)")
         
         # Test Case B: Failed first, then success
         print("\n   📋 Case B: Failed first, then success")

@@ -10,6 +10,19 @@ import { useSeo } from "../../hooks/useSeo";
 function isoTodayOffset(days) {
   const d = new Date();
   d.setDate(d.getDate() + days);
+function upsertJsonLd(id, obj) {
+  if (typeof document === "undefined") return;
+  const existing = document.getElementById(id);
+  if (existing && existing.parentNode) existing.parentNode.removeChild(existing);
+
+  const script = document.createElement("script");
+  script.id = id;
+  script.type = "application/ld+json";
+  script.text = JSON.stringify(obj);
+  document.head.appendChild(script);
+}
+
+
   return d.toISOString().slice(0, 10);
 }
 

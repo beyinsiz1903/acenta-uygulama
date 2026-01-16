@@ -536,7 +536,13 @@ function OpsGuestCaseDrawer({ caseId, open, onClose, onClosed }) {
               {data?.case_id || caseId || "Case detayı"}
             </span>
           </div>
-          <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={requestClose}
+            className="h-8 w-8"
+            disabled={saving}
+          >
             <X className="h-4 w-4" />
           </Button>
         </div>

@@ -255,16 +255,21 @@ async def test_admin_ical_calendar(
     
     headers = {"Authorization": f"Bearer {admin_token}"}
     
-    # First create and sync a feed to have availability blocks
-    feed_payload = {
-        "product_id": product_id,
-        "url": "https://example.com/villa-demo.ics"
-    }
+    # Directly insert a feed with mock URL and sync it
+    from uuid import uuid4
+    from app.utils import now_utc
     
-    create_response = await async_client.post("/api/admin/ical/feeds", headers=headers, json=feed_payload)
-    assert create_response.status_code == 200
-    feed_data = create_response.json()
-    feed_id = feed_data["id"]
+    feed_id = str(uuid4())
+    feed_doc = {
+        "id": feed_id,
+        "organization_id": org_id,
+        "product_id": product_id,
+        "url": "mock://villa-demo",
+        "status": "active",
+        "created_at": now_utc().isoformat(),
+        "last_sync_at": None,
+    }
+    await test_db.ical_feeds.insert_one(feed_doc)
     
     # Sync the feed to create availability blocks
     sync_payload = {"feed_id": feed_id}

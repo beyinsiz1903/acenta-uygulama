@@ -236,8 +236,7 @@ function OpsGuestCasesPage() {
         patch,
       });
 
-      // Basit toast yerine alert ile zet g
-yoster
+      // Basit toast yerine alert ile göster
       if (typeof window !== "undefined") {
         const failed = res.failed || 0;
         const updated = res.updated || 0;

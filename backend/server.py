@@ -183,3 +183,8 @@ if os.environ.get("ENABLE_EMAIL_WORKER") == "1":
 
 if os.environ.get("ENABLE_INTEGRATION_SYNC_WORKER") == "1":
     integration_sync_loop()
+
+if os.environ.get("ENABLE_JOB_WORKER") == "1":
+    import asyncio
+
+    asyncio.create_task(run_job_worker_loop("job-worker-1"))

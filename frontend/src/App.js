@@ -178,6 +178,8 @@ function App() {
             <Route path="pricing/funnel" element={<AdminFunnelPage />} />
             <Route path="pricing/incidents" element={<AdminPricingIncidentsPage />} />
             <Route path="b2b/discounts" element={<AdminB2BDiscountsPage />} />
+            <Route path="integrations" element={<AdminIntegrationsPage />} />
+            <Route path="jobs" element={<AdminJobsPage />} />
             <Route path="reporting" element={<AdminReportingPage />} />
             <Route path="villas/:productId/calendar" element={<AdminVillaCalendarPage />} />
             <Route path="theme" element={<AdminThemePage />} />

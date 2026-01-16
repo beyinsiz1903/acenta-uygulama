@@ -405,8 +405,8 @@ async def test_admin_ical_sync_nonexistent_feed(
     assert response.status_code == 404
     
     data = response.json()
-    assert "code" in data
-    assert data["code"] == "ical_feed_not_found"
+    assert "error" in data
+    assert data["error"]["code"] == "ical_feed_not_found"
 
 
 @pytest.mark.anyio

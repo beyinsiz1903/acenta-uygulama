@@ -627,6 +627,79 @@ yoster
         )}
       </div>
 
+      {/* Bulk Actions */}
+      {anySelected && (
+        <div className="rounded-2xl border bg-card p-4">
+          <div className="flex items-center gap-4 mb-4">
+            <CheckSquare className="h-5 w-5 text-primary" />
+            <span className="font-medium text-sm">
+              {selectedIds.length} case seçildi
+            </span>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-muted-foreground">Durum Değiştir</label>
+              <Select value={bulkStatus} onValueChange={setBulkStatus}>
+                <SelectTrigger className="h-8 text-sm">
+                  <SelectValue placeholder="Durum seç" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Değiştirme</SelectItem>
+                  <SelectItem value="open">Açık</SelectItem>
+                  <SelectItem value="waiting">Beklemede</SelectItem>
+                  <SelectItem value="in_progress">Devam ediyor</SelectItem>
+                  <SelectItem value="closed">Kapalı</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-muted-foreground">Bekleme Durumu</label>
+              <Select value={bulkWaitingOn} onValueChange={setBulkWaitingOn}>
+                <SelectTrigger className="h-8 text-sm">
+                  <SelectValue placeholder="Bekleme durumu seç" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Değiştirme</SelectItem>
+                  <SelectItem value="customer">Müşteri</SelectItem>
+                  <SelectItem value="supplier">Tedarikçi</SelectItem>
+                  <SelectItem value="ops">Ops</SelectItem>
+                  <SelectItem value="other">Diğer</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-muted-foreground">Not Ekle</label>
+              <Input
+                className="h-8 text-sm"
+                placeholder="Toplu not ekle"
+                value={bulkNote}
+                onChange={(e) => setBulkNote(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="flex gap-2">
+            <Button
+              onClick={applyBulk}
+              disabled={bulkLoading || (!bulkStatus && !bulkWaitingOn && !bulkNote)}
+              size="sm"
+            >
+              {bulkLoading ? "Uygulanıyor..." : "Değişiklikleri Uygula"}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setSelectedIds([])}
+              size="sm"
+            >
+              Seçimi Temizle
+            </Button>
+          </div>
+        </div>
+      )}
+
       <OpsGuestCaseDrawer
         caseId={selectedCaseId}
         open={Boolean(selectedCaseId)}

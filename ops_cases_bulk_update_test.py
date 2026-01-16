@@ -121,6 +121,11 @@ def test_ops_cases_bulk_update():
     # Force admin to use test organization
     force_admin_organization(admin_token, test_org_id)
     
+    # Get fresh token with updated organization
+    admin_token, updated_org_id, admin_email = login_admin()
+    admin_headers = {"Authorization": f"Bearer {admin_token}"}
+    print(f"   🔧 Fresh token with organization: {updated_org_id}")
+    
     # Create test cases
     test_case_ids = create_test_org_and_cases(admin_headers, test_org_id)
     

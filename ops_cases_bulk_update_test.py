@@ -78,20 +78,7 @@ def create_test_cases_in_org(admin_headers, org_id):
     client.close()
     return test_cases
 
-def force_admin_organization(admin_token, test_org_id):
-    """Force admin user to have the test organization_id"""
-    client = MongoClient("mongodb://localhost:27017")
-    db = client.acenta_db
-    
-    # Update admin user's organization_id
-    result = db.users.update_one(
-        {"email": "admin@acenta.test"},
-        {"$set": {"organization_id": test_org_id}}
-    )
-    
-    client.close()
-    print(f"   🔧 Forced admin organization_id to: {test_org_id}")
-    return result.modified_count > 0
+# Removed unused function
 
 def test_ops_cases_bulk_update():
     """Test Ops Cases v2 Bulk Update endpoint with comprehensive scenarios"""

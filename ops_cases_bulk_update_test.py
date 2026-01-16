@@ -100,7 +100,7 @@ def test_ops_cases_bulk_update():
     print("Testing POST /api/ops-cases/bulk-update endpoint")
     print("=" * 80 + "\n")
 
-    test_org_id = "org_ops_bulk_test"
+    test_org_id = original_org_id
 
     # ------------------------------------------------------------------
     # Test 1: Admin Authentication

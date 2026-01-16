@@ -262,49 +262,65 @@ function OpsGuestCasesPage() {
       (bulkWaitingOn && bulkWaitingOn !== "no_change") ||
       String(bulkNote || "").trim().length > 0);
 
-  const applyBulk = async () => {
-    if (!anySelected) return;
+  const applyBulk = async (caseIdsOverride) => {
+    const targetIds = (caseIdsOverride && caseIdsOverride.length
+      ? caseIdsOverride
+      : effectiveSelectedIds);
+    if (!targetIds.length || !canApplyBulk) return;
+
     const patch = {};
     if (bulkStatus && bulkStatus !== "no_change") patch.status = bulkStatus;
-    if (bulkWaitingOn && bulkWaitingOn !== "no_change") patch.waiting_on = bulkWaitingOn;
-    if (bulkNote) patch.note = bulkNote;
+
+    if (bulkWaitingOn && bulkWaitingOn !== "no_change") {
+      if (normalizedBulkWaiting === "none") {
+        patch.waiting_on = null;
+      } else {
+        patch.waiting_on = bulkWaitingOn;
+      }
+    }
+
+    if (String(bulkNote || "").trim().length > 0) patch.note = bulkNote.trim();
 
     if (!Object.keys(patch).length) {
       return;
     }
 
     try {
-      setBulkLoading(true);
+      setBulkApplying(true);
+      setBulkError(null);
       const res = await bulkUpdateOpsCases({
-        case_ids: selectedIds,
+        case_ids: targetIds,
         patch,
       });
 
-      // Basit toast yerine alert ile göster
-      if (typeof window !== "undefined") {
-        const failed = res.failed || 0;
-        const updated = res.updated || 0;
-        const firstError =
-          Array.isArray(res.results) && res.results.find((r) => r && r.ok === false);
-        const msgParts = [
-          `Guncellenen: ${updated}`,
-          `Basarisiz: ${failed}`,
-          firstError && firstError.error ? `Ornek hata: ${firstError.error}` : null,
-        ].filter(Boolean);
-        window.alert(msgParts.join(" | "));
+      setBulkResult(res || null);
+
+      const failedIds = Array.isArray(res?.results)
+        ? res.results.filter((r) => r && r.ok === false).map((r) => r.case_id)
+        : [];
+
+      if (!failedIds.length) {
+        // Tam başarı: seçimi ve inputları sıfırla
+        setSelectedIds([]);
+        setBulkStatus("no_change");
+        setBulkWaitingOn("no_change");
+        setBulkNote("");
+        // Banner bir süre kalsın, sonra temizlenebilir (opsiyonel)
+        if (typeof window !== "undefined") {
+          window.setTimeout(() => {
+            setBulkResult(null);
+          }, 5000);
+        }
+      } else {
+        // Partial success: sadece failed case'ler seçili kalsın
+        setSelectedIds(failedIds);
       }
 
-      setBulkStatus("");
-      setBulkWaitingOn("");
-      setBulkNote("");
-      setSelectedIds([]);
       loadCases();
     } catch (e) {
-      if (typeof window !== "undefined") {
-        window.alert(apiErrorMessage(e));
-      }
+      setBulkError(apiErrorMessage(e));
     } finally {
-      setBulkLoading(false);
+      setBulkApplying(false);
     }
   };
 

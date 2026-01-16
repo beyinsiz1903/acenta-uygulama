@@ -119,13 +119,33 @@ class B2BPricingService:
         # P1.2: resolve markup from pricing rules
         rules_svc = PricingRulesService(self.db)
         # QuoteItemRequest.check_in is already a date; service normalises datetime/date
-        markup_percent = await rules_svc.resolve_markup_percent(
-            organization_id,
+        winner_rule = await rules_svc.resolve_winner_rule(
+            organization_id=organization_id,
             agency_id=agency_id,
             product_id=item.product_id,
             product_type="hotel",
             check_in=item.check_in,
         )
+        if winner_rule is not None:
+            markup_percent = await rules_svc.resolve_markup_percent(
+                organization_id,
+                agency_id=agency_id,
+                product_id=item.product_id,
+                product_type="hotel",
+                check_in=item.check_in,
+            )
+            winner_rule_id = str(winner_rule.get("_id"))
+            notes = winner_rule.get("notes")
+            if isinstance(notes, str):
+                notes = notes.strip()
+            priority = winner_rule.get("priority")
+            winner_rule_name = notes or (f"priority={priority}" if priority is not None else "simple_rule")
+            fallback = False
+        else:
+            markup_percent = 10.0
+            winner_rule_id = None
+            winner_rule_name = "DEFAULT_10"
+            fallback = True
 
         factor = Decimal("1") + (Decimal(str(markup_percent)) / Decimal("100"))
 

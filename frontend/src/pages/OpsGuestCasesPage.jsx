@@ -429,6 +429,74 @@ function OpsGuestCasesPage() {
         </div>
       </div>
 
+      {/* SLA Queue Filter Bar */}
+      <div className="rounded-2xl border bg-card p-3 mb-3 flex flex-wrap items-center gap-2">
+        <span className="text-xs font-medium text-muted-foreground mr-2">SLA Queue</span>
+        <Button
+          type="button"
+          size="xs"
+          variant={slaFilter === "all" ? "default" : "outline"}
+          data-testid="cases-filter-all"
+          onClick={() => setSlaFilter("all")}
+        >
+          All
+        </Button>
+        <Button
+          type="button"
+          size="xs"
+          variant={slaFilter === "sla_breach" ? "default" : "outline"}
+          data-testid="cases-filter-sla-breach"
+          onClick={() => setSlaFilter("sla_breach")}
+        >
+          SLA BREACH
+        </Button>
+        <Button
+          type="button"
+          size="xs"
+          variant={slaFilter === "active_risk" ? "default" : "outline"}
+          data-testid="cases-filter-active-risk"
+          onClick={() => setSlaFilter("active_risk")}
+        >
+          ACTIVE RISK
+        </Button>
+        <Button
+          type="button"
+          size="xs"
+          variant={slaFilter === "fresh" ? "default" : "outline"}
+          data-testid="cases-filter-fresh"
+          onClick={() => setSlaFilter("fresh")}
+        >
+          FRESH
+        </Button>
+        <Button
+          type="button"
+          size="xs"
+          variant={slaFilter === "waiting_customer" ? "default" : "outline"}
+          data-testid="cases-filter-waiting-customer"
+          onClick={() => setSlaFilter("waiting_customer")}
+        >
+          WAITING: CUSTOMER
+        </Button>
+        <Button
+          type="button"
+          size="xs"
+          variant={slaFilter === "waiting_supplier" ? "default" : "outline"}
+          data-testid="cases-filter-waiting-supplier"
+          onClick={() => setSlaFilter("waiting_supplier")}
+        >
+          WAITING: SUPPLIER
+        </Button>
+        <Button
+          type="button"
+          size="xs"
+          variant={slaFilter === "waiting_ops" ? "default" : "outline"}
+          data-testid="cases-filter-waiting-ops"
+          onClick={() => setSlaFilter("waiting_ops")}
+        >
+          WAITING: OPS
+        </Button>
+      </div>
+
       {/* Content */}
       <div className="rounded-2xl border bg-card">
         {error ? (

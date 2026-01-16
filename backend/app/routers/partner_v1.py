@@ -37,7 +37,6 @@ async def partner_products_search(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=50),
     type: Optional[str] = Query(None),
-    _feature=Depends(require_feature("partner_api")),  # noqa: B008
     partner=Depends(require_partner_key(["products:read"])),
     db=Depends(get_db),
 ):

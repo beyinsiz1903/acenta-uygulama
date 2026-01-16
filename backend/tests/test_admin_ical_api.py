@@ -88,7 +88,7 @@ async def test_admin_ical_feeds_create(
     # Verify response structure
     assert "id" in data
     assert data["product_id"] == product_id
-    assert data["url"] == "mock://villa-demo"
+    assert data["url"] == "https://example.com/villa-demo.ics"
     assert data["status"] == "active"
     assert data["last_sync_at"] is None
     

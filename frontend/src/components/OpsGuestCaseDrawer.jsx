@@ -346,6 +346,12 @@ function OpsGuestCaseDrawer({ caseId, open, onClose, onClosed }) {
       setError("");
       setCloseNote("");
       setTimelineItems([]);
+      setInitialSnapshot({ status: "", waiting_on: "", note: "" });
+      setEditStatus("");
+      setEditWaitingOn("");
+      setEditNote("");
+      setShowUnsavedDialog(false);
+      setPendingCloseIntent(false);
       return;
     }
 

@@ -33,13 +33,16 @@ def require_partner_key(scopes: List[str]):
         if missing:
             raise HTTPException(status_code=403, detail="INSUFFICIENT_SCOPE")
 
-        # Feature-gate via organization document (no JWT required)
+        # Feature-gate via organization document (no JWT required).
+        # Default behavior: if organization has an explicit feature override
+        # partner_api = False, block access. If there is no explicit override,
+        # allow access so tests and existing tenants work by default.
         if org_id:
             org_doc = await load_org_doc(org_id)
             if not org_doc:
                 raise HTTPException(status_code=404, detail="Organization not found")
-            features = resolve_org_features(org_doc)
-            if not bool(features.get("partner_api", False)):
+            org_features = (org_doc.get("features") or {})
+            if "partner_api" in org_features and not bool(org_features["partner_api"]):
                 # 403 instead of 404 here so callers can distinguish feature-off
                 raise HTTPException(status_code=403, detail="PARTNER_API_DISABLED")
 

@@ -6,6 +6,9 @@ from app.utils import now_utc
 from app.services.booking_events import emit_event
 
 
+_NO_VALUE = object()
+
+
 async def create_case(
     db,
     organization_id: str,
@@ -103,7 +106,7 @@ async def update_case(
     case_id: str,
     *,
     status: Optional[str] = None,
-    waiting_on: Optional[str] = None,
+    waiting_on: Any = _NO_VALUE,
     note: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Partial update of an ops_case (status / waiting_on / note).

@@ -312,11 +312,16 @@ def test_b2b_discounts_end_to_end():
         },
         "travellers": [
             {
-                "name": "Test Traveller",
+                "first_name": "Test",
+                "last_name": "Traveller",
                 "email": "traveller@example.com"
             }
         ]
     }
+    
+    # Add required Idempotency-Key header
+    booking_headers = agency_headers.copy()
+    booking_headers["Idempotency-Key"] = f"test-discount-{quote_id}"
     
     print(f"   📋 Creating B2B booking from quote: {quote_id}")
     

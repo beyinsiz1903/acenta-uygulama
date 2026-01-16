@@ -814,24 +814,81 @@ function OpsGuestCasesPage() {
                 placeholder="Toplu not ekle"
                 value={bulkNote}
                 onChange={(e) => setBulkNote(e.target.value)}
+                disabled={bulkApplying}
+                data-testid="cases-bulk-note"
               />
             </div>
           </div>
 
-          <div className="flex gap-2">
+          {/* Bulk result banner */}
+          {(bulkResult || bulkError) && (
+            <div
+              className="mt-2 rounded-md border bg-muted/40 p-2 text-xs text-muted-foreground space-y-1"
+              data-testid="cases-bulk-result"
+            >
+              {bulkResult && (
+                <div>
+                  <span data-testid="cases-bulk-result-updated">
+                    Updated: {bulkResult.updated || 0}
+                  </span>{" "}
+                  ·{" "}
+                  <span data-testid="cases-bulk-result-failed">
+                    Failed: {bulkResult.failed || 0}
+                  </span>
+                </div>
+              )}
+              {bulkError && <div className="text-red-700">{bulkError}</div>}
+              {Array.isArray(bulkResult?.results) && bulkResult.failed > 0 && (
+                <ul
+                  className="list-disc pl-4"
+                  data-testid="cases-bulk-result-errors"
+                >
+                  {bulkResult.results
+                    .filter((r) => r && r.ok === false)
+                    .slice(0, 3)
+                    .map((r) => (
+                      <li key={r.case_id}>
+                        {r.case_id} — {r.error || "Unknown error"}
+                      </li>
+                    ))}
+                </ul>
+              )}
+            </div>
+          )}
+
+          <div
+            className="mt-3 flex flex-wrap items-center gap-2"
+            aria-busy={bulkApplying ? "true" : "false"}
+          >
             <Button
-              onClick={applyBulk}
-              disabled={
-                bulkLoading ||
-                ((!bulkStatus || bulkStatus === "no_change") &&
-                  (!bulkWaitingOn || bulkWaitingOn === "no_change") &&
-                  !bulkNote)
-              }
+              onClick={() => applyBulk()}
+              disabled={!canApplyBulk}
               size="sm"
               data-testid="cases-bulk-apply"
             >
-              {bulkLoading ? "Uygulanıyor..." : "Değişiklikleri Uygula"}
+              {bulkApplying ? (
+                <span data-testid="cases-bulk-applying">Uygulanıyor...</span>
+              ) : (
+                "Değişiklikleri Uygula"
+              )}
             </Button>
+            {bulkResult?.failed > 0 && (
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  const failedIds = bulkResult.results
+                    .filter((r) => r && r.ok === false)
+                    .map((r) => r.case_id);
+                  applyBulk(failedIds);
+                }}
+                disabled={bulkApplying}
+                data-testid="cases-bulk-retry-failed"
+              >
+                Retry failed
+              </Button>
+            )}
             <Button
               variant="outline"
               onClick={() => setSelectedIds([])}
@@ -841,6 +898,15 @@ function OpsGuestCasesPage() {
               Seçimi Temizle
             </Button>
           </div>
+
+          {bulkResult && (
+            <div
+              className="mt-2 text-[11px] text-muted-foreground"
+              data-testid="cases-bulk-last-action"
+            >
+              Last bulk: updated {bulkResult.updated || 0}, failed {bulkResult.failed || 0}
+            </div>
+          )}
         </div>
       )}
 

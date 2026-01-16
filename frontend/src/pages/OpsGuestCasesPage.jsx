@@ -482,6 +482,14 @@ yoster
                       data-testid={`ops-case-row-${c.case_id}`}
                       onClick={() => setSelectedCaseId(c.case_id)}
                     >
+                      <td className="px-3 py-2 w-8" onClick={(e) => e.stopPropagation()}>
+                        <input
+                          type="checkbox"
+                          className="h-3 w-3"
+                          checked={selectedIds.includes(c.case_id)}
+                          onChange={() => toggleSingle(c.case_id)}
+                        />
+                      </td>
                       <td className="px-3 py-2 font-mono text-xs text-primary-foreground/90 bg-primary/5">
                         {c.case_id}
                       </td>

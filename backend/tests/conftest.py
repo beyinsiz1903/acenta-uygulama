@@ -186,6 +186,29 @@ async def test_db(motor_client: AsyncIOMotorClient) -> AsyncGenerator[Any, None]
         await motor_client.drop_database(db_name)
 
 
+
+@pytest.fixture(autouse=True)
+async def core_db_routing(monkeypatch, test_db):
+    """Route core app.db.get_db and global _db to the per-test database.
+
+    This ensures helpers that import get_db directly (without FastAPI
+    dependency overrides) share the same isolated Mongo database as HTTP
+    endpoints and other services.
+    """
+
+    from app import db as db_module  # type: ignore
+
+    # Point the module-level global to the test database so the original
+    # get_db() implementation returns this DB without creating a new client.
+    db_module._db = test_db
+
+    async def _fake_get_db() -> Any:  # pragma: no cover - thin shim
+        return test_db
+
+    monkeypatch.setattr(db_module, "get_db", _fake_get_db)
+    yield
+
+
 @pytest.fixture(scope="function")
 async def app_with_overrides(test_db) -> AsyncGenerator[Any, None]:
     """FastAPI app instance whose get_db dependency points to test_db."""

@@ -41,6 +41,27 @@ export default function BookProductPage() {
     type: "product",
   });
 
+  useEffect(() => {
+    if (!productId || typeof window === "undefined") return;
+    const origin = window.location.origin;
+    const url = `${origin}/book/${productId}`;
+
+    const schema = {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      name: `Product ${productId}`,
+      sku: productId,
+      url,
+    };
+
+    upsertJsonLd("product-schema-jsonld", schema);
+
+    return () => {
+      const el = document.getElementById("product-schema-jsonld");
+      if (el && el.parentNode) el.parentNode.removeChild(el);
+    };
+  }, [productId]);
+
   const [dateFrom, setDateFrom] = useState(isoTodayOffset(1));
   const [dateTo, setDateTo] = useState(isoTodayOffset(2));
   const [adults, setAdults] = useState(2);

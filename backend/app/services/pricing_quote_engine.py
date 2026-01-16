@@ -102,7 +102,20 @@ async def compute_quote_for_booking(
         "resolution": "winner_takes_all",
         "rule_id": None,
         "rule_name": None,
+        "fallback": False,
     }
+
+    if winner_rule is not None:
+        trace["rule_id"] = str(winner_rule.get("_id"))
+        notes = winner_rule.get("notes")
+        if isinstance(notes, str):
+          notes = notes.strip()
+        priority = winner_rule.get("priority")
+        trace["rule_name"] = notes or (f"priority={priority}" if priority is not None else "simple_rule")
+    else:
+        trace["fallback"] = True
+        trace["rule_name"] = "DEFAULT_10"
+
     if trace_error:
         trace["error"] = trace_error
 

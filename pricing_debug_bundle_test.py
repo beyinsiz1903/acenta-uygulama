@@ -436,6 +436,9 @@ def test_scenario_4_quote_only_mode():
     
     response_data = r.json()
     
+    # Debug: Print the actual response structure
+    print(f"   📋 Debug - Full response: {json.dumps(response_data, indent=2)}")
+    
     # Test response structure
     test_debug_bundle_response_structure(response_data, "Scenario 4")
     

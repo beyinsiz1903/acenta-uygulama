@@ -120,7 +120,6 @@ async def get_pricing_debug_bundle(
     discount_amount = breakdown.get("discount_amount") or 0.0
 
     # Derive markup_percent
-    markup_percent = applied_rules.get("markup_percent")
     computed_sell_from_breakdown = None
     if base is not None and markup_amount is not None:
       computed_sell_from_breakdown = float(base) + float(markup_amount) - float(discount_amount or 0.0)

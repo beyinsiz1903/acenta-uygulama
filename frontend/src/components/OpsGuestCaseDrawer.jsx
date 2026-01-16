@@ -457,29 +457,48 @@ function OpsGuestCaseDrawer({ caseId, open, onClose, onClosed }) {
     }
   };
   const handleSave = async () => {
-    if (!data || !caseId || isClosed) return;
+    if (!data || !caseId || isClosed || !isDirty) return;
     setSaving(true);
     try {
       const payload = {};
-      if (editStatus && editStatus !== data.status) payload.status = editStatus;
-      if (editStatus === "waiting") {
-        if (editWaitingOn) payload.waiting_on = editWaitingOn;
+      const baseStatus = initialSnapshot.status || "";
+
+      if (effectiveStatusValue && effectiveStatusValue !== baseStatus) {
+        payload.status = effectiveStatusValue;
       }
-      if (editStatus !== "waiting") {
-        // waiting_on UI'da disabled ve null olarak gösteriliyor; backend'e göndermiyoruz
+
+      if (normalizedDraftWaiting === "none") {
+        if (normalizedInitialWaiting !== "none") {
+          payload.waiting_on = null;
+        }
+      } else if (normalizedDraftWaiting !== normalizedInitialWaiting) {
+        payload.waiting_on = editWaitingOn || normalizedDraftWaiting;
       }
-      if (editNote !== (data.note || "")) {
+
+      if (String(editNote || "") !== String(initialSnapshot.note || "")) {
         payload.note = editNote;
       }
+
       if (Object.keys(payload).length === 0) {
         setSaving(false);
         return;
       }
+
       const res = await api.patch(`/ops-cases/${caseId}`, payload);
-      setData((prev) => (prev ? { ...prev, ...res } : prev));
+      const updated = res || {};
+      setData((prev) => (prev ? { ...prev, ...updated } : updated));
+
+      const nextStatus = updated.status || effectiveStatusValue;
+      const nextWaiting = updated.waiting_on || "";
+      const nextNote = updated.note || "";
+
+      setEditStatus(nextStatus);
+      setEditWaitingOn(nextWaiting);
+      setEditNote(nextNote);
+      setInitialSnapshot({ status: nextStatus, waiting_on: nextWaiting, note: nextNote });
+
       toast.success("Case güncellendi.");
       if (onClosed) {
-        // Genel listeyi tazelemek için opsiyonel callback; isim legacy ama yeniden kullanıyoruz
         onClosed();
       }
     } catch (e) {

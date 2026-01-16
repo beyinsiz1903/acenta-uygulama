@@ -134,7 +134,7 @@ def test_b2b_discounts_end_to_end():
     print("\n1️⃣b GET discount groups verification...")
     
     r = requests.get(
-        f"{BASE_URL}/api/admin/b2b/discount-groups",
+        f"{BASE_URL}/api/admin/b2b/discount-groups/",
         headers=admin_headers,
     )
     

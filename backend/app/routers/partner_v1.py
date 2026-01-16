@@ -136,7 +136,7 @@ async def partner_create_booking(
 @router.get("/bookings/{booking_id}")
 async def partner_get_booking(
     booking_id: str,
-    _feature=PartnerDep,  # noqa: B008
+    _feature=Depends(require_feature("partner_api")),  # noqa: B008
     partner=Depends(require_partner_key(["bookings:read"])),
     db=Depends(get_db),
 ) -> Dict[str, Any]:

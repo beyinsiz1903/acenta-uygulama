@@ -214,44 +214,142 @@ async def get_pricing_debug_bundle(
         pricing["trace"]["fallback"] = fallback
 
     # 3) Load rule document if we have rule_id and not DEFAULT_10
-    rule_doc: Optional[Dict[str, Any]] = None
     if trace_rule_id:
       rule_doc = await _find_rule(db, org_id, trace_rule_id)
+      if rule_doc:
+        bundle["found"]["rule"] = True
 
     bundle["rule"] = rule_doc
 
-    # 4) Build explain + checks
+    # 4) Payments + idempotency + finalize guard
+    payment_intent_id = booking_doc.get("payment_intent_id")
+    payment_status = booking_doc.get("payment_status") or "unknown"
+    payment_provider = booking_doc.get("payment_provider") or "none"
+
+    public_checkout = None
+    if payment_intent_id:
+      public_checkout = await db.public_checkouts.find_one(
+        {"payment_intent_id": payment_intent_id, "organization_id": org_id},
+        {"_id": 0},
+      )
+      if public_checkout:
+        bundle["found"]["public_checkout"] = True
+
+    idemp = {
+      "public_checkout_registry_found": bool(public_checkout),
+      "idempotency_key": public_checkout.get("idempotency_key") if public_checkout else None,
+      "registry_status": public_checkout.get("status") if public_checkout else None,
+      "reason": public_checkout.get("reason") if public_checkout else None,
+    }
+
+    # Finalize guard aggregation
+    finalizations_cursor = None
+    finalizations = []
+    if payment_intent_id:
+      finalizations_cursor = db.payment_finalizations.find(
+        {"provider": "stripe", "payment_intent_id": payment_intent_id}
+      ).sort("created_at", -1).limit(20)
+      async for doc in finalizations_cursor:
+        doc.pop("_id", None)
+        finalizations.append(doc)
+
+    last_decision = None
+    last_reason = None
+    if finalizations:
+      last = finalizations[0]
+      last_decision = last.get("decision")
+      last_reason = last.get("reason")
+
+    payments = {
+      "provider": payment_provider,
+      "status": payment_status,
+      "payment_intent_id": payment_intent_id,
+      "client_secret_present": bool(public_checkout and public_checkout.get("client_secret")),
+      "idempotency": idemp,
+      "finalize_guard": {
+        "finalizations_found": len(finalizations),
+        "last_decision": last_decision,
+        "last_reason": last_reason,
+      },
+    }
+
+    bundle["payments"] = payments
+
+    # 5) Build explain + checks
     explain: list[str] = []
 
     if trace_rule_name:
       explain.append(f"Winner rule: {trace_rule_name} ({trace_rule_id})")
     if not fallback:
-      amounts_bd = amounts.get("breakdown") or {}
-      base = amounts_bd.get("base")
-      markup_amount = amounts_bd.get("markup_amount")
-      sell = amounts.get("sell")
-      if base is not None and markup_amount is not None and sell is not None:
-        explain.append(f"Markup: base={base:.2f} + markup={markup_amount:.2f} -> sell={sell:.2f}")
+      if base is not None and markup_amount is not None and sell_val is not None:
+        try:
+          explain.append(
+            f"Markup: base={float(base):.2f} + markup={float(markup_amount):.2f}"
+            f" - discount={float(discount_amount or 0.0):.2f} -> sell={float(sell_val):.2f}"
+          )
+        except Exception:
+          pass
     else:
-      explain.append("fallback=true (DEFAULT_10 kullanıldı veya rules match etmedi)")
+      explain.append("fallback=true (DEFAULT_10 kullan1ldl veya rules match etmedi)")
 
     checks: Dict[str, Any] = {}
+    checks["trace_present"] = bool(pricing.get("trace"))
     checks["trace_rule_id_present"] = bool(trace_rule_id)
-    # amounts_match_breakdown: base + markup_amount == sell (within 0.01)
+
+    # amounts_match_breakdown: base + markup_amount - discount_amount == sell (within 0.01)
     try:
-      bd = amounts.get("breakdown") or {}
-      base = float(bd.get("base") or 0.0)
-      markup_amount = float(bd.get("markup_amount") or 0.0)
-      sell = float(amounts.get("sell") or 0.0)
-      checks["amounts_match_breakdown"] = abs((base + markup_amount) - sell) < 0.02
+      if base is not None and markup_amount is not None and sell_val is not None:
+        diff = (float(base) + float(markup_amount) - float(discount_amount or 0.0)) - float(sell_val)
+        checks["amounts_present"] = True
+        checks["amounts_match_breakdown"] = abs(diff) < 0.02
+      else:
+        checks["amounts_present"] = False
+        checks["amounts_match_breakdown"] = False
     except Exception:
+      checks["amounts_present"] = False
       checks["amounts_match_breakdown"] = False
 
     # fallback_consistency: DEFAULT_10 <-> fallback flag
-    checks["fallback_consistency"] = bool(fallback) == bool(trace_rule_name == "DEFAULT_10" or trace_rule_id is None)
+    checks["fallback_consistency"] = bool(fallback) == bool(
+      trace_rule_name == "DEFAULT_10" or trace_rule_id is None
+    )
 
-    bundle["explain"] = explain
+    # markup_percent_consistency
+    try:
+      if pricing["derived"]["computed_markup_percent_from_amounts"] is not None and pricing["derived"][
+        "markup_percent"
+      ] is not None:
+        mp1 = float(pricing["derived"]["computed_markup_percent_from_amounts"])
+        mp2 = float(pricing["derived"]["markup_percent"])
+        checks["markup_percent_consistency"] = abs(mp1 - mp2) < 0.02
+      else:
+        checks["markup_percent_consistency"] = False
+    except Exception:
+      checks["markup_percent_consistency"] = False
+
+    # currency_consistency: booking vs quote currency
+    booking_currency = booking_doc.get("currency")
+    quote_currency = None
+    if bundle["quote"] and bundle["quote"].get("offers_preview"):
+      quote_currency = bundle["quote"]["offers_preview"][0].get("currency")
+
+    if booking_currency and quote_currency:
+      checks["currency_consistency"] = booking_currency == quote_currency
+    else:
+      checks["currency_consistency"] = True  # best-effort
+
+    # payment_correlation_present
+    checks["payment_correlation_present"] = bool(payment_intent_id or idemp["public_checkout_registry_found"])
+
+    bundle["pricing"] = pricing
     bundle["checks"] = checks
+
+    # simple links for admin UI
+    bundle["links"] = {
+      "booking": f"/app/admin/bookings/{bundle['booking']['booking_id']}",
+      "ops_case_search": f"/app/ops/guest-cases?booking_id={bundle['booking']['booking_id']}",
+      "stripe_dashboard": None,
+    }
 
   else:
     # booking_id missing but quote_id provided: handle minimal mode (quote-only)

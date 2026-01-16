@@ -245,7 +245,22 @@ function OpsGuestCasesPage() {
     );
   };
 
+  const visibleIdSet = new Set(visibleItems.map((c) => c.case_id));
+
   const anySelected = selectedIds.length > 0;
+
+  const effectiveSelectedIds = selectedIds.filter((id) => visibleIdSet.has(id));
+
+  const normalizedBulkWaiting = normalizeWaitingOn(
+    bulkWaitingOn === "no_change" ? null : bulkWaitingOn,
+  );
+
+  const canApplyBulk =
+    !bulkApplying &&
+    anySelected &&
+    ((bulkStatus && bulkStatus !== "no_change") ||
+      (bulkWaitingOn && bulkWaitingOn !== "no_change") ||
+      String(bulkNote || "").trim().length > 0);
 
   const applyBulk = async () => {
     if (!anySelected) return;

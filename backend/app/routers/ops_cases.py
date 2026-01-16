@@ -54,27 +54,6 @@ class OpsCasesBulkUpdateResponse(BaseModel):
     results: List[OpsCasesBulkUpdateResult]
 
 
-
-from app.services.ops_cases import list_cases, get_case, close_case, create_case, update_case
-from app.schemas_ops_cases import OpsCaseCreate, OpsCaseUpdate, OpsCaseOut
-
-
-router = APIRouter(prefix="/api/ops-cases", tags=["ops_cases"])
-
-
-OpsUserDep = Depends(require_roles(["admin", "ops", "super_admin"]))
-
-
-class OpsCaseListResponse(BaseModel):
-  
-    class Config:
-        arbitrary_types_allowed = True
-
-
-class OpsCaseCloseBody(BaseModel):
-    note: Optional[str] = None
-
-
 @router.get("/")
 async def list_ops_cases(
     status: Optional[str] = Query("open"),

@@ -428,11 +428,14 @@ def test_scenario_1_booking_with_winner_rule():
     admin_token, admin_org_id, admin_email = login_admin()
     admin_headers = {"Authorization": f"Bearer {admin_token}"}
     
-    # Find existing booking with winner rule
+    # Try to find existing booking first, if not found create test data
     booking_id = find_existing_booking_with_winner_rule(admin_headers, admin_org_id)
     
     if not booking_id:
-        print("   ⚠️  No existing booking with winner rule found, skipping scenario 1")
+        booking_id = create_test_booking_with_winner_rule(admin_headers, admin_org_id)
+    
+    if not booking_id:
+        print("   ❌ Could not find or create booking with winner rule, skipping scenario 1")
         return False
     
     # Call debug-bundle endpoint
@@ -485,11 +488,14 @@ def test_scenario_2_booking_with_default_fallback():
     admin_token, admin_org_id, admin_email = login_admin()
     admin_headers = {"Authorization": f"Bearer {admin_token}"}
     
-    # Find existing booking with DEFAULT_10 fallback
+    # Try to find existing booking first, if not found create test data
     booking_id = find_existing_booking_with_default_fallback(admin_headers, admin_org_id)
     
     if not booking_id:
-        print("   ⚠️  No existing booking with DEFAULT_10 fallback found, skipping scenario 2")
+        booking_id = create_test_booking_with_default_fallback(admin_headers, admin_org_id)
+    
+    if not booking_id:
+        print("   ❌ Could not find or create booking with DEFAULT_10 fallback, skipping scenario 2")
         return False
     
     # Call debug-bundle endpoint
@@ -540,11 +546,14 @@ def test_scenario_3_payments_idempotency_finalize():
     admin_token, admin_org_id, admin_email = login_admin()
     admin_headers = {"Authorization": f"Bearer {admin_token}"}
     
-    # Find existing booking with payment_intent_id
+    # Try to find existing booking first, if not found create test data
     booking_id = find_existing_booking_with_payment_intent(admin_headers, admin_org_id)
     
     if not booking_id:
-        print("   ⚠️  No existing booking with payment_intent_id found, skipping scenario 3")
+        booking_id = create_test_booking_with_payment_intent(admin_headers, admin_org_id)
+    
+    if not booking_id:
+        print("   ❌ Could not find or create booking with payment_intent_id, skipping scenario 3")
         return False
     
     # Call debug-bundle endpoint

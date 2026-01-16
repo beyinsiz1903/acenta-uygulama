@@ -201,13 +201,14 @@ async def test_out_of_order_guard():
         assert booking["payment_status"] == "paid", f"Expected 'paid', got {booking['payment_status']}"
         print(f"   ✅ Success applied: booking.payment_status=paid")
         
-        # Apply failed second - should be ignored
+        # Apply failed second - should be ignored (already finalized)
         print(f"   🔄 Applying failed event second...")
         result2 = await apply_stripe_event_with_guard(db, event=failed_event)
         print(f"   📋 Failed result: {result2}")
         
-        assert result2["decision"] == "ignored_out_of_order", f"Expected 'ignored_out_of_order', got {result2['decision']}"
-        assert result2["reason"] == "status_mismatch", f"Expected 'status_mismatch', got {result2['reason']}"
+        # When booking is already paid, it's considered already_finalized, not out_of_order
+        assert result2["decision"] == "ignored_duplicate", f"Expected 'ignored_duplicate', got {result2['decision']}"
+        assert result2["reason"] == "already_finalized", f"Expected 'already_finalized', got {result2['reason']}"
         
         booking = await db.bookings.find_one({"_id": ObjectId(booking_id)})
         assert booking["payment_status"] == "paid", f"Payment status should remain 'paid'"

@@ -478,7 +478,7 @@ function OpsGuestCasesPage() {
                 </tr>
               </thead>
               <tbody>
-                {items.map((c) => {
+                {visibleItems.map((c) => {
                   const now = new Date();
                   const risk = classifyRisk(c, now);
 

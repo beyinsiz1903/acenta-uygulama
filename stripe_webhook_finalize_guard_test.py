@@ -71,7 +71,7 @@ def cleanup_test_data(db, booking_ids, event_ids):
     except Exception as e:
         print(f"   ⚠️  Failed to cleanup test data: {e}")
 
-def test_duplicate_event_dedupe():
+async def test_duplicate_event_dedupe():
     """Test 1: Duplicate event deduplication"""
     print("\n" + "=" * 80)
     print("TEST 1: DUPLICATE EVENT DEDUPLICATION")

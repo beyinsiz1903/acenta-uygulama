@@ -168,7 +168,7 @@ function ContractsTab() {
         </div>
         <div className="max-h-64 overflow-y-auto">
           {items.map((c) => (
-            <div key={c.contract_id} className="grid grid-cols-6 border-t px-2 py-2">
+            <div key={c.contract_id} className="grid grid-cols-7 border-t px-2 py-2">
               <div className="font-mono truncate" title={c.code}>{c.code}</div>
               <div className="truncate" title={c.agency_id || ""}>{c.agency_id || "-"}</div>
               <div className="truncate" title={c.channel_id || ""}>{c.channel_id || "-"}</div>

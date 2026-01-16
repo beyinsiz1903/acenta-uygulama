@@ -800,17 +800,24 @@ function OpsGuestCaseDrawer({ caseId, open, onClose, onClosed }) {
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={onClose}
+                  onClick={() => {
+                    setEditStatus(initialSnapshot.status || "");
+                    setEditWaitingOn(initialSnapshot.waiting_on || "");
+                    setEditNote(initialSnapshot.note || "");
+                  }}
                   className="text-[11px]"
+                  disabled={!isDirty || saving}
+                  data-testid="case-edit-reset"
                 >
-                  Kapat
+                  Reset
                 </Button>
                 <Button
                   type="button"
                   size="sm"
                   className="text-[11px]"
                   onClick={handleSave}
-                  disabled={isClosed || saving}
+                  disabled={isClosed || saving || !isDirty}
+                  data-testid="case-edit-apply"
                 >
                   {saving ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : null}
                   Kaydet

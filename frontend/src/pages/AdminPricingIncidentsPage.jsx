@@ -103,8 +103,25 @@ export default function AdminPricingIncidentsPage() {
               className="h-8 text-[11px]"
             />
           </div>
-          <div className="flex flex-row gap-2 md:flex-col md:w-[180px]">
-            <Button
+          <div className="flex flex-col gap-2 md:w-[220px]">
+            <div className="space-y-1">
+              <label className="text-[11px] font-medium" htmlFor="pricing-incident-mode">
+                Mode
+              </label>
+              <select
+                id="pricing-incident-mode"
+                data-testid="pricing-incident-mode"
+                className="h-8 w-full rounded-md border bg-background px-2 text-[11px]"
+                value={mode}
+                onChange={(e) => setMode(e.target.value)}
+              >
+                <option value="auto">auto</option>
+                <option value="booking">booking</option>
+                <option value="quote">quote</option>
+              </select>
+            </div>
+            <div className="flex flex-row gap-2 md:flex-col">
+              <Button
               size="sm"
               className="h-8 text-[11px] w-full"
               data-testid="pricing-incident-fetch"

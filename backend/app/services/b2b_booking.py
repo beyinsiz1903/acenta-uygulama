@@ -66,11 +66,20 @@ class B2BBookingService:
             "markup_amount": markup_amount,
             "discount_amount": 0.0,
         }
+
+        winner_rule_id = quote_doc.get("winner_rule_id")
+        winner_rule_name = quote_doc.get("winner_rule_name")
+        fallback = False
+        if not winner_rule_id and (not winner_rule_name or winner_rule_name == "DEFAULT_10"):
+            fallback = True
+            winner_rule_name = winner_rule_name or "DEFAULT_10"
+
         trace = {
             "source": "simple_pricing_rules",
             "resolution": "winner_takes_all",
-            "rule_id": None,
-            "rule_name": None,
+            "rule_id": winner_rule_id,
+            "rule_name": winner_rule_name,
+            "fallback": bool(fallback),
         }
 
         # ===================================================================

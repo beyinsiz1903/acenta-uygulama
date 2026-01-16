@@ -81,10 +81,15 @@ async def get_pricing_debug_bundle(
   rule_doc: Optional[Dict[str, Any]] = None
 
   # 1) Load booking if booking_id provided
+  pricing: Dict[str, Any] = {}
+  payments: Dict[str, Any] = {}
+
   if booking_id:
     booking_doc = await _find_booking(db, org_id, booking_id)
     if not booking_doc:
       raise AppError(404, "pricing_debug_not_found", "Booking not found", {"booking_id": booking_id})
+
+    bundle["found"]["booking"] = True
 
     amounts = booking_doc.get("amounts") or {}
     applied_rules = booking_doc.get("applied_rules") or {}
@@ -105,13 +110,60 @@ async def get_pricing_debug_bundle(
       },
     }
 
+    # Seed canonical pricing from booking
+    pricing_currency = booking_doc.get("currency") or amounts.get("currency") or "EUR"
+    breakdown = amounts.get("breakdown") or {}
+    net_val = amounts.get("net")
+    sell_val = amounts.get("sell")
+    base = breakdown.get("base")
+    markup_amount = breakdown.get("markup_amount")
+    discount_amount = breakdown.get("discount_amount") or 0.0
+
+    # Derive markup_percent
+    markup_percent = applied_rules.get("markup_percent")
+    computed_sell_from_breakdown = None
+    if base is not None and markup_amount is not None:
+      computed_sell_from_breakdown = float(base) + float(markup_amount) - float(discount_amount or 0.0)
+
+    computed_markup_percent_from_amounts = None
+    try:
+      if net_val not in (None, 0) and sell_val is not None:
+        computed_markup_percent_from_amounts = (float(sell_val) / float(net_val) - 1.0) * 100.0
+    except Exception:
+      computed_markup_percent_from_amounts = None
+
     trace_rule_id = trace.get("rule_id")
     trace_rule_name = trace.get("rule_name")
     fallback = bool(trace.get("fallback"))
 
+    pricing = {
+      "source": booking_doc.get("source") or "public",
+      "currency": pricing_currency,
+      "amounts": {
+        "net": net_val,
+        "sell": sell_val,
+        "breakdown": {
+          "base": base,
+          "markup_amount": markup_amount,
+          "discount_amount": discount_amount,
+        },
+      },
+      "trace": {
+        "source": trace.get("source") or "simple_pricing_rules",
+        "resolution": trace.get("resolution") or "winner_takes_all",
+        "rule_id": trace_rule_id,
+        "rule_name": trace_rule_name,
+        "fallback": fallback,
+      },
+      "derived": {
+        "markup_percent": applied_rules.get("markup_percent"),
+        "computed_sell_from_breakdown": computed_sell_from_breakdown,
+        "computed_markup_percent_from_amounts": computed_markup_percent_from_amounts,
+      },
+    }
+
     # 2) Try to resolve quote from booking.quote_id (if present)
     qid_from_booking = booking_doc.get("quote_id")
-    quote_doc: Optional[Dict[str, Any]] = None
     if quote_id:
       # explicit quote_id overrides booking.quote_id
       try:

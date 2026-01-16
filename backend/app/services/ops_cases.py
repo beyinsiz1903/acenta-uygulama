@@ -296,3 +296,77 @@ async def close_case(
 
     updated.pop("_id", None)
     return updated
+
+
+async def bulk_update_cases(
+    db,
+    organization_id: str,
+    *,
+    case_ids: List[str],
+    patch: Dict[str, Any],
+) -> Dict[str, Any]:
+    """Bulk update ops_cases using the single-case update_case helper.
+
+    Request-level patch may contain any subset of: status, waiting_on, note.
+    We intentionally reuse update_case so that 'waiting auto' rules remain the
+    single source of truth.
+    """
+
+    # Normalise waiting_on special values like "none" / "clear" if present
+    base_patch: Dict[str, Any] = dict(patch or {})
+    if "waiting_on" in base_patch and base_patch["waiting_on"] is not None:
+        s = str(base_patch["waiting_on"]).strip().lower()
+        if s in {"none", "clear"}:
+            # Empty string will be normalised to None by _normalize_waiting_on
+            base_patch["waiting_on"] = ""
+
+    results: List[Dict[str, Any]] = []
+    updated_count = 0
+    failed_count = 0
+
+    for case_id in case_ids or []:
+        # Build kwargs explicitly so we respect update_case defaults
+        kwargs: Dict[str, Any] = {}
+        if "status" in base_patch:
+            kwargs["status"] = base_patch["status"]
+        if "waiting_on" in base_patch:
+            kwargs["waiting_on"] = base_patch["waiting_on"]
+        if "note" in base_patch:
+            kwargs["note"] = base_patch["note"]
+
+        try:
+            updated = await update_case(
+                db,
+                organization_id=organization_id,
+                case_id=case_id,
+                **kwargs,
+            )
+            results.append(
+                {
+                    "case_id": case_id,
+                    "ok": True,
+                    "status": updated.get("status"),
+                    "waiting_on": updated.get("waiting_on"),
+                }
+            )
+            updated_count += 1
+        except Exception as exc:  # noqa: BLE001 - we want to capture any failure
+            failed_count += 1
+            message = getattr(exc, "message", None) or str(exc)
+            results.append(
+                {
+                    "case_id": case_id,
+                    "ok": False,
+                    "status": None,
+                    "waiting_on": None,
+                    "error": message,
+                }
+            )
+
+    return {
+        "ok": failed_count == 0,
+        "updated": updated_count,
+        "failed": failed_count,
+        "results": results,
+    }
+

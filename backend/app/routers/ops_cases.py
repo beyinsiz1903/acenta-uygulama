@@ -8,6 +8,53 @@ from pydantic import BaseModel
 from app.auth import require_roles
 from app.db import get_db
 from app.errors import AppError
+from app.services.ops_cases import list_cases, get_case, close_case, create_case, update_case, bulk_update_cases
+from app.schemas_ops_cases import OpsCaseCreate, OpsCaseUpdate, OpsCaseOut
+
+
+router = APIRouter(prefix="/api/ops-cases", tags=["ops_cases"])
+
+
+OpsUserDep = Depends(require_roles(["admin", "ops", "super_admin"]))
+
+
+class OpsCaseListResponse(BaseModel):
+  
+    class Config:
+        arbitrary_types_allowed = True
+
+
+class OpsCaseCloseBody(BaseModel):
+    note: Optional[str] = None
+
+
+class OpsCasesBulkUpdatePatch(BaseModel):
+    status: Optional[str] = None
+    waiting_on: Optional[str] = None
+    note: Optional[str] = None
+
+
+class OpsCasesBulkUpdateRequest(BaseModel):
+    case_ids: List[str]
+    patch: OpsCasesBulkUpdatePatch
+
+
+class OpsCasesBulkUpdateResult(BaseModel):
+    case_id: str
+    ok: bool
+    status: Optional[str] = None
+    waiting_on: Optional[str] = None
+    error: Optional[str] = None
+
+
+class OpsCasesBulkUpdateResponse(BaseModel):
+    ok: bool
+    updated: int
+    failed: int
+    results: List[OpsCasesBulkUpdateResult]
+
+
+
 from app.services.ops_cases import list_cases, get_case, close_case, create_case, update_case
 from app.schemas_ops_cases import OpsCaseCreate, OpsCaseUpdate, OpsCaseOut
 

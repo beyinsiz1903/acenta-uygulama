@@ -36,6 +36,63 @@ class PricingRulesService:
     # ------------------------------------------------------------------
     # Public API
     # ------------------------------------------------------------------
+    async def resolve_winner_rule(
+        self,
+        *,
+        organization_id: str,
+        agency_id: Optional[str],
+        product_id: Optional[str],
+        product_type: Optional[str],
+        check_in: date,
+    ) -> Optional[dict[str, Any]]:
+        """Return the winning simple pricing rule document or None.
+
+        Selection semantics mirror resolve_markup_percent:
+        - organization_id + status="active"
+        - validity.from <= check_in < validity.to (if validity present)
+        - scope match on agency_id / product_id / product_type when present
+        - winner-takes-all: priority DESC, updated_at DESC, id DESC
+        """
+
+        cursor = self.db.pricing_rules.find(
+            {
+                "organization_id": organization_id,
+                "status": "active",
+            }
+        )
+        docs = await cursor.to_list(length=1000)
+        if not docs:
+            return None
+
+        item_date = check_in
+        if isinstance(item_date, datetime):
+            item_date = item_date.date()
+
+        candidates: list[PricingRule] = []
+        for doc in docs:
+            rule = self._from_doc(doc)
+            if self._matches(
+                rule,
+                agency_id=agency_id,
+                product_id=product_id,
+                product_type=product_type,
+                check_in=item_date,
+            ):
+                candidates.append(rule)
+
+        if not candidates:
+            return None
+
+        selected = self._select_best(candidates)
+
+        # Return the original Mongo document for trace purposes, but remove _id
+        # only at call sites that need a pure JSON structure.
+        for doc in docs:
+            if doc.get("_id") == selected.id:
+                return doc
+
+        return None
+
     async def resolve_markup_percent(
         self,
         organization_id: str,

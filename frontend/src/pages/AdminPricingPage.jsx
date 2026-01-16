@@ -481,7 +481,17 @@ function RulesTab() {
 function parseDateSafe(value) {
   if (!value) return null;
   try {
-    const d = new Date(value);
+    const s = String(value).slice(0, 10);
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+    let d;
+    if (m) {
+      const y = Number(m[1]);
+      const mo = Number(m[2]) - 1;
+      const da = Number(m[3]);
+      d = new Date(y, mo, da);
+    } else {
+      d = new Date(value);
+    }
     if (Number.isNaN(d.getTime())) return null;
     d.setHours(0, 0, 0, 0);
     return d;
@@ -491,12 +501,13 @@ function parseDateSafe(value) {
 }
 
 function classifyValidity(validity, now) {
-  if (!validity || !validity.from || !validity.to) return "no_validity";
+  if (!validity || !validity.from) return "no_validity";
   const from = parseDateSafe(validity.from);
-  const to = parseDateSafe(validity.to);
-  if (!from || !to) return "no_validity";
+  const to = validity.to ? parseDateSafe(validity.to) : null;
+  if (!from) return "no_validity";
 
   if (now < from) return "upcoming";
+  if (!to) return "active_now";
   if (now >= from && now < to) return "active_now";
   return "expired";
 }
@@ -533,6 +544,16 @@ function ValidityRangeBadge({ kind }) {
   }
 
   return <span className={cls}>{label}</span>;
+function shortJson(obj, n = 40) {
+  try {
+    const s = JSON.stringify(obj ?? {});
+    return s.length > n ? `${s.slice(0, n)}...` : s;
+  } catch {
+    return "{}";
+  }
+}
+
+
 }
 
 function MarkupLevelBadge({ level }) {

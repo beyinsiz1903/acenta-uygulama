@@ -71,8 +71,7 @@ async def claim_job(
     lock_expiry = now - timedelta(seconds=lock_ttl_seconds)
 
     query = {
-        "status": "pending",
-        "next_run_at": {"$lte": now},
+        "status": {"$in": ["pending", "failed"]},
         "$or": [
             {"locked_at": {"$exists": False}},
             {"locked_at": {"$lt": lock_expiry}},

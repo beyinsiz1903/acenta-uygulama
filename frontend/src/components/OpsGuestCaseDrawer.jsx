@@ -617,9 +617,10 @@ function OpsGuestCaseDrawer({ caseId, open, onClose, onClosed }) {
                   <div className="flex items-center gap-2">
                     <select
                       className="rounded-md border px-2 py-1 text-[11px] bg-background"
-                      value={editStatus}
+                      value={effectiveStatusValue}
                       onChange={(e) => setEditStatus(e.target.value)}
-                      disabled={isClosed}
+                      disabled={disableStatusSelect}
+                      data-testid="case-edit-status"
                     >
                       <option value="open">Açık</option>
                       <option value="waiting">Beklemede</option>

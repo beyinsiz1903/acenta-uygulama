@@ -769,8 +769,12 @@ function OpsGuestCasesPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-muted-foreground">Durum Değiştir</label>
-              <Select value={bulkStatus} onValueChange={setBulkStatus}>
-                <SelectTrigger className="h-8 text-sm">
+              <Select
+                value={bulkStatus}
+                onValueChange={setBulkStatus}
+                disabled={bulkApplying}
+              >
+                <SelectTrigger className="h-8 text-sm" data-testid="cases-bulk-status">
                   <SelectValue placeholder="Durum seç" />
                 </SelectTrigger>
                 <SelectContent>

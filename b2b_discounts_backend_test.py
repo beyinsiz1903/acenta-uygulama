@@ -221,7 +221,7 @@ def test_b2b_discounts_end_to_end():
     print(f"   📋 Creating B2B quote with discount-eligible dates...")
     
     r = requests.post(
-        f"{BASE_URL}/api/b2b/quotes",
+        f"{BASE_URL}/api/api/b2b/quotes",
         json=quote_payload,
         headers=agency_headers,
     )

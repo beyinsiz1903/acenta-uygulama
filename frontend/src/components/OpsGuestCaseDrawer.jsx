@@ -674,6 +674,23 @@ function OpsGuestCaseDrawer({ caseId, open, onClose, onClosed }) {
               </div>
 
               <div className="space-y-1">
+                <div className="text-xs font-medium text-muted-foreground">Bekleme Durumu</div>
+                <select
+                  className="rounded-md border px-2 py-1 text-[11px] bg-background"
+                  value={normalizedDraftWaiting === "none" ? "" : editWaitingOn}
+                  onChange={(e) => setEditWaitingOn(e.target.value)}
+                  disabled={isClosed || saving}
+                  data-testid="case-edit-waiting-on"
+                >
+                  <option value="">Seçilmemiş</option>
+                  <option value="customer">Müşteri</option>
+                  <option value="supplier">Tedarikçi</option>
+                  <option value="ops">Ops</option>
+                  <option value="other">Diğer</option>
+                </select>
+              </div>
+
+              <div className="space-y-1">
                 <div className="text-xs font-medium text-muted-foreground">Rezervasyon</div>
                 <div className="flex flex-col gap-0.5 text-xs">
                   <div>

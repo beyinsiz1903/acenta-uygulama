@@ -842,10 +842,10 @@ function SimpleRulesTab() {
                 </div>
                 <div className={dimClass}>{r.priority}</div>
                 <div className={`truncate ${dimClass}`} title={JSON.stringify(r.scope)}>
-                  {JSON.stringify(r.scope).slice(0, 40)}...
+                  {shortJson(r.scope)}
                 </div>
                 <div className={`truncate ${dimClass}`} title={JSON.stringify(r.action)}>
-                  {JSON.stringify(r.action).slice(0, 40)}...
+                  {shortJson(r.action)}
                 </div>
                 <div className={`truncate ${dimClass}`} title={JSON.stringify(r.validity)}>
                   {r.validity?.from} → {r.validity?.to}

@@ -205,6 +205,7 @@ def test_b2b_discounts_end_to_end():
     
     # Create B2B quote request (using existing happy-path payload structure)
     quote_payload = {
+        "channel_id": "web",  # Required field
         "items": [
             {
                 "product_id": "69691ae7b322db4dcbaf4bf9",  # Use existing test product
@@ -212,7 +213,7 @@ def test_b2b_discounts_end_to_end():
                 "rate_plan_id": "default_rate",
                 "check_in": "2026-01-22",  # Within discount validity window
                 "check_out": "2026-01-23",
-                "occupancy": {"adults": 2, "children": 0}
+                "occupancy": 2  # Integer, not object
             }
         ],
         "client_context": {"test": "b2b_discount"}

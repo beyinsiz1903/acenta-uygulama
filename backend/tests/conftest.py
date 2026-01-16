@@ -25,7 +25,7 @@ if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
 from server import app
-from app.db import get_db
+from app.db import get_db, _mongo_url
 from app.utils import now_utc
 
 

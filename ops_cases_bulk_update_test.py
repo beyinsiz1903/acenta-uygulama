@@ -166,7 +166,7 @@ def test_ops_cases_bulk_update():
     print("\n4️⃣  Partial Success Behavior...")
     
     partial_request = {
-        "case_ids": ["CASE-BULK-2", "CASE-BULK-3", "CASE-BULK-404"],  # 404 doesn't exist
+        "case_ids": [test_case_ids[1], test_case_ids[2], "CASE-BULK-404"],  # Last one doesn't exist
         "patch": {
             "note": "Partial test update"
         }

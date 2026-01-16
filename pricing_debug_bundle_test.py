@@ -691,21 +691,30 @@ def test_pricing_debug_bundle_v2():
     print(f"   ✅ Admin login successful: {admin_email}")
     print(f"   📋 Organization ID: {admin_org_id}")
 
+    # Track created test bookings for cleanup
+    created_booking_ids = []
+
     # Run all scenarios
     scenarios_passed = 0
     total_scenarios = 4
     
-    if test_scenario_1_booking_with_winner_rule():
-        scenarios_passed += 1
-    
-    if test_scenario_2_booking_with_default_fallback():
-        scenarios_passed += 1
-    
-    if test_scenario_3_payments_idempotency_finalize():
-        scenarios_passed += 1
-    
-    if test_scenario_4_quote_only_mode():
-        scenarios_passed += 1
+    try:
+        if test_scenario_1_booking_with_winner_rule():
+            scenarios_passed += 1
+        
+        if test_scenario_2_booking_with_default_fallback():
+            scenarios_passed += 1
+        
+        if test_scenario_3_payments_idempotency_finalize():
+            scenarios_passed += 1
+        
+        if test_scenario_4_quote_only_mode():
+            scenarios_passed += 1
+
+    finally:
+        # Clean up any test data we created
+        print("\n🧹 Cleaning up test data...")
+        cleanup_test_bookings(created_booking_ids, admin_org_id)
 
     # Summary
     print("\n" + "=" * 80)

@@ -182,7 +182,27 @@ async def ensure_finance_indexes(db):
     )
 
     # ========================================================================
-    # 9) booking_payment_transactions (append-only payment ops log)
+    # 9) payment_finalizations (webhook-level dedupe + guard)
+    # ========================================================================
+    await _safe_create(
+        db.payment_finalizations,
+        [("provider", ASCENDING), ("event_id", ASCENDING)],
+        unique=True,
+        name="uniq_payment_finalization_per_event",
+    )
+    await _safe_create(
+        db.payment_finalizations,
+        [("provider", ASCENDING), ("payment_intent_id", ASCENDING)],
+        name="payment_finalizations_by_pi",
+    )
+    await _safe_create(
+        db.payment_finalizations,
+        [("organization_id", ASCENDING), ("booking_id", ASCENDING)],
+        name="payment_finalizations_by_booking",
+    )
+
+    # ========================================================================
+    # 10) booking_payment_transactions (append-only payment ops log)
     # ========================================================================
     await _safe_create(
         db.booking_payment_transactions,

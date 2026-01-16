@@ -56,14 +56,29 @@ async def get_pricing_debug_bundle(
 
   bundle: Dict[str, Any] = {
     "mode": mode or "auto",
+    "requested": {
+      "booking_id": booking_id,
+      "quote_id": quote_id,
+    },
+    "found": {
+      "booking": False,
+      "quote": False,
+      "rule": False,
+      "public_checkout": False,
+    },
     "booking": None,
     "quote": None,
     "rule": None,
+    "pricing": None,
+    "payments": None,
+    "links": {},
     "explain": [],
     "checks": {},
   }
 
   booking_doc: Optional[Dict[str, Any]] = None
+  quote_doc: Optional[Dict[str, Any]] = None
+  rule_doc: Optional[Dict[str, Any]] = None
 
   # 1) Load booking if booking_id provided
   if booking_id:

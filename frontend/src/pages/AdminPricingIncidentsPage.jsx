@@ -246,7 +246,10 @@ export default function AdminPricingIncidentsPage() {
             </div>
 
             {bundle.explain && bundle.explain.length > 0 && (
-              <div className="space-y-1">
+              <div
+                className="space-y-1"
+                data-testid="incident-explain"
+              >
                 <div className="font-semibold text-[11px]">Explain</div>
                 <ul className="list-disc pl-4 text-[11px] text-muted-foreground">
                   {bundle.explain.map((line, idx) => (

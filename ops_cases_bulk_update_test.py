@@ -214,20 +214,20 @@ def test_ops_cases_bulk_update():
     # ------------------------------------------------------------------
     print("\n5️⃣  Closed Case Protection...")
     
-    # First, close CASE-BULK-1
+    # First, close the first test case
     close_request = {"note": "Closing for protection test"}
     
     r = requests.post(
-        f"{BASE_URL}/api/ops-cases/CASE-BULK-1/close",
+        f"{BASE_URL}/api/ops-cases/{test_case_ids[0]}/close",
         headers=admin_headers,
         json=close_request,
     )
     assert r.status_code == 200, f"Close case failed: {r.text}"
-    print(f"   📋 Closed CASE-BULK-1 for protection test")
+    print(f"   📋 Closed {test_case_ids[0]} for protection test")
     
     # Now try to bulk update including the closed case
     protection_request = {
-        "case_ids": ["CASE-BULK-1", "CASE-BULK-2"],  # CASE-BULK-1 is now closed
+        "case_ids": [test_case_ids[0], test_case_ids[1]],  # First one is now closed
         "patch": {
             "waiting_on": "supplier",
             "note": "Protection test"

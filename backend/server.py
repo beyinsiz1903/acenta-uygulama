@@ -191,8 +191,3 @@ if os.environ.get("ENABLE_JOB_WORKER") == "1":
     import asyncio
 
     asyncio.create_task(run_job_worker_loop("job-worker-1"))
-
-if os.environ.get("ENABLE_JOB_WORKER") == "1":
-    import asyncio
-
-    asyncio.create_task(run_job_worker_loop("job-worker-1"))

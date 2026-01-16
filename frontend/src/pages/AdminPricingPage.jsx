@@ -546,6 +546,8 @@ function ValidityRangeBadge({ kind }) {
   }
 
   return <span className={cls}>{label}</span>;
+}
+
 function shortJson(obj, n = 40) {
   try {
     const s = JSON.stringify(obj ?? {});
@@ -555,8 +557,6 @@ function shortJson(obj, n = 40) {
   }
 }
 
-
-}
 
 function MarkupLevelBadge({ level }) {
   if (!level) return null;

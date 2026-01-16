@@ -127,7 +127,7 @@ async def update_case(
     patch: Dict[str, Any] = {"updated_at": now}
     if status is not None:
         patch["status"] = status
-    if waiting_on is not None:
+    if waiting_on is not _NO_VALUE:
         patch["waiting_on"] = waiting_on
     if note is not None:
         patch["note"] = note

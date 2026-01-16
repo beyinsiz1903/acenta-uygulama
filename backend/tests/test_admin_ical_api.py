@@ -483,7 +483,13 @@ async def test_admin_ical_comprehensive_flow(
     assert "organization_id" not in feed_data
     assert "_id" not in feed_data
     
-    # Step 3: Sync feed
+    # Step 3: Update feed to use mock URL for testing (direct database update)
+    await test_db.ical_feeds.update_one(
+        {"id": feed_id},
+        {"$set": {"url": "mock://villa-demo"}}
+    )
+    
+    # Step 4: Sync feed
     sync_payload = {"feed_id": feed_id}
     
     response = await async_client.post("/api/admin/ical/sync", headers=headers, json=sync_payload)
@@ -495,7 +501,7 @@ async def test_admin_ical_comprehensive_flow(
     assert sync_data["events"] >= 1
     assert sync_data["blocks_created"] >= 1
     
-    # Step 4: Check calendar
+    # Step 5: Check calendar
     today = now_utc().date()
     current_year = today.year
     current_month = today.month

@@ -269,6 +269,19 @@ function OpsGuestCaseDrawer({ caseId, open, onClose, onClosed }) {
   const [hideSystem, setHideSystem] = useState(true);
   const [onlyStatus, setOnlyStatus] = useState(false);
 
+  const [editStatus, setEditStatus] = useState("");
+  const [editWaitingOn, setEditWaitingOn] = useState("");
+  const [editNote, setEditNote] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const [initialSnapshot, setInitialSnapshot] = useState({
+    status: "",
+    waiting_on: "",
+    note: "",
+  });
+  const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
+  const [pendingCloseIntent, setPendingCloseIntent] = useState(false);
+
   const timelineEvents = useMemo(() => {
     if (!data) return [];
     const all = normalizeTimelineEvents(data);

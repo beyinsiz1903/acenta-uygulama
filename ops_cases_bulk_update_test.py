@@ -139,7 +139,7 @@ def test_ops_cases_bulk_update():
     # Verify individual results
     for result in response["results"]:
         assert result["ok"] == True, f"Individual result should be ok=true: {result}"
-        assert result["case_id"] in ["CASE-BULK-1", "CASE-BULK-2"], f"Case ID should match: {result}"
+        assert result["case_id"] in [test_case_ids[0], test_case_ids[1]], f"Case ID should match: {result}"
         assert result["status"] == "waiting", f"Status should be 'waiting' due to waiting_auto: {result}"
         assert result["waiting_on"] == "customer", f"waiting_on should be 'customer': {result}"
         assert result.get("error") is None, f"Should have no error: {result}"
@@ -150,7 +150,7 @@ def test_ops_cases_bulk_update():
     client = MongoClient("mongodb://localhost:27017")
     db = client.acenta_db
     
-    for case_id in ["CASE-BULK-1", "CASE-BULK-2"]:
+    for case_id in [test_case_ids[0], test_case_ids[1]]:
         case_doc = db.ops_cases.find_one({"case_id": case_id, "organization_id": test_org_id})
         assert case_doc is not None, f"Case {case_id} should exist in database"
         assert case_doc["waiting_on"] == "customer", f"Case {case_id} should have waiting_on='customer'"

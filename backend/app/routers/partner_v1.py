@@ -15,9 +15,6 @@ from app.services.partner_auth import require_partner_key
 router = APIRouter(prefix="/api/partner", tags=["partner_v1"])
 
 
-PartnerDep = Depends(lambda: require_feature("partner_api"))
-
-
 class PartnerQuoteIn(BaseModel):
     product_id: str = Field(..., min_length=1)
     date_from: str
@@ -41,7 +38,7 @@ async def partner_products_search(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=50),
     type: Optional[str] = Query(None),
-    _feature=PartnerDep,  # noqa: B008
+    _feature=Depends(require_feature("partner_api")),  # noqa: B008
     partner=Depends(require_partner_key(["products:read"])),
     db=Depends(get_db),
 ):
@@ -64,7 +61,7 @@ async def partner_products_search(
 @router.get("/products/{product_id}")
 async def partner_get_product(
     product_id: str,
-    _feature=PartnerDep,  # noqa: B008
+    _feature=Depends(require_feature("partner_api")),  # noqa: B008
     partner=Depends(require_partner_key(["products:read"])),
     db=Depends(get_db),
 ) -> Dict[str, Any]:

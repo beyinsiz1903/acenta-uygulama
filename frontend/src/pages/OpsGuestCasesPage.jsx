@@ -428,6 +428,18 @@ yoster
             <table className="min-w-full text-sm">
               <thead className="bg-muted/40 border-b">
                 <tr>
+                  <th className="px-3 py-2 text-left font-medium text-xs text-muted-foreground w-8">
+                    <input
+                      type="checkbox"
+                      className="h-3 w-3"
+                      checked={
+                        hasAny &&
+                        items.every((c) => selectedIds.includes(c.case_id)) &&
+                        items.some((c) => selectedIds.includes(c.case_id))
+                      }
+                      onChange={toggleSelectAllVisible}
+                    />
+                  </th>
                   <th className="px-3 py-2 text-left font-medium text-xs text-muted-foreground">Case ID</th>
                   <th className="px-3 py-2 text-left font-medium text-xs text-muted-foreground">
                     Rezervasyon Kodu

@@ -146,19 +146,15 @@ def test_ops_cases_bulk_update():
     
     print(f"   ✅ Happy path bulk update verified successfully")
     
-    # Verify in MongoDB that documents were actually updated
-    client = MongoClient("mongodb://localhost:27017")
-    db = client.acenta_db
-    
+    # Verify via API that documents were actually updated
     for case_id in [test_case_ids[0], test_case_ids[1]]:
-        case_doc = db.ops_cases.find_one({"case_id": case_id, "organization_id": test_org_id})
-        assert case_doc is not None, f"Case {case_id} should exist in database"
-        assert case_doc["waiting_on"] == "customer", f"Case {case_id} should have waiting_on='customer'"
-        assert case_doc["status"] == "waiting", f"Case {case_id} should have status='waiting' (waiting_auto)"
-        assert case_doc["note"] == "Toplu test", f"Case {case_id} should have note='Toplu test'"
-        print(f"   📋 Verified {case_id} in MongoDB: status={case_doc['status']}, waiting_on={case_doc['waiting_on']}")
-    
-    client.close()
+        r = requests.get(f"{BASE_URL}/api/ops-cases/{case_id}", headers=admin_headers)
+        assert r.status_code == 200, f"Should be able to get case {case_id}"
+        case_data = r.json()
+        assert case_data["waiting_on"] == "customer", f"Case {case_id} should have waiting_on='customer'"
+        assert case_data["status"] == "waiting", f"Case {case_id} should have status='waiting' (waiting_auto)"
+        assert case_data["note"] == "Toplu test", f"Case {case_id} should have note='Toplu test'"
+        print(f"   📋 Verified {case_id} via API: status={case_data['status']}, waiting_on={case_data['waiting_on']}")
 
     # ------------------------------------------------------------------
     # Test 4: Partial Success Behavior (non-existent case)

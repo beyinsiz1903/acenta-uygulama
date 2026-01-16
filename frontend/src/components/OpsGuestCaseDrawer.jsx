@@ -825,6 +825,19 @@ function OpsGuestCaseDrawer({ caseId, open, onClose, onClosed }) {
               </div>
 
               <div className="space-y-1">
+                <div className="text-xs font-medium text-muted-foreground">Ops Notu</div>
+                <Textarea
+                  rows={3}
+                  className="text-sm"
+                  placeholder="Case notu"
+                  value={editNote}
+                  onChange={(e) => setEditNote(e.target.value)}
+                  disabled={saving}
+                  data-testid="case-edit-note"
+                />
+              </div>
+
+              <div className="space-y-1">
                 <div className="text-xs font-medium text-muted-foreground">Misafir Talebi</div>
                 <div className="rounded-xl border bg-muted/30 px-3 py-2 text-xs space-y-1">
                   <div>

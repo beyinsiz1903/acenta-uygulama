@@ -77,7 +77,7 @@ def test_b2b_discounts_end_to_end():
     print(f"   📋 Creating discount group: {discount_group_payload['name']}")
     
     r = requests.post(
-        f"{BASE_URL}/api/admin/b2b/discount-groups",
+        f"{BASE_URL}/api/admin/b2b/discount-groups/",
         json=discount_group_payload,
         headers=admin_headers,
     )

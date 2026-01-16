@@ -160,6 +160,7 @@ function ContractsTab() {
       <div className="rounded-md border overflow-hidden text-[11px]">
         <div className="grid grid-cols-7 bg-muted/40 px-2 py-2 font-semibold">
           <div>Code</div>
+          <div>Supplier</div>
           <div>Agency</div>
           <div>Channel</div>
           <div>Markets</div>

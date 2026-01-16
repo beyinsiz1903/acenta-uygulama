@@ -290,7 +290,7 @@ async def test_admin_ical_feeds_list_with_data(
     # Create a feed
     feed_payload = {
         "product_id": product_id,
-        "url": "mock://villa-demo"
+        "url": "https://example.com/villa-demo.ics"
     }
     
     create_response = await async_client.post("/api/admin/ical/feeds", headers=headers, json=feed_payload)

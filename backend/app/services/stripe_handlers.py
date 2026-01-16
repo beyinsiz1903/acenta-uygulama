@@ -197,7 +197,7 @@ async def handle_stripe_webhook(raw_body: bytes, signature: str | None) -> Tuple
     event_type = event.get("type")
 
     if event_type == "payment_intent.succeeded":
-        return await _handle_payment_intent_succeeded(event)
+        return await _handle_payment_intent_succeeded_legacy(event)
 
     if event_type == "payment_intent.payment_failed":
         # For v1 we record a simple failed event without side effects

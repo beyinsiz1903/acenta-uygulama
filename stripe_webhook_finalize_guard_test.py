@@ -433,16 +433,16 @@ async def run_all_tests():
     
     try:
         # Test 1: Duplicate event deduplication
-        test_duplicate_event_dedupe()
+        await test_duplicate_event_dedupe()
         
         # Test 2: Out-of-order event protection  
-        test_out_of_order_guard()
+        await test_out_of_order_guard()
         
         # Test 3: Already finalized booking protection
-        test_already_finalized_guard()
+        await test_already_finalized_guard()
         
         # Test 4: Webhook router integration
-        test_webhook_router_integration()
+        await test_webhook_router_integration()
         
         print("\n" + "=" * 80)
         print("✅ ALL TESTS PASSED")

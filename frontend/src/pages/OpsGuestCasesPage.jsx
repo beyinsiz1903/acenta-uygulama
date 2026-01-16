@@ -789,8 +789,12 @@ function OpsGuestCasesPage() {
 
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-muted-foreground">Bekleme Durumu</label>
-              <Select value={bulkWaitingOn} onValueChange={setBulkWaitingOn}>
-                <SelectTrigger className="h-8 text-sm">
+              <Select
+                value={bulkWaitingOn}
+                onValueChange={setBulkWaitingOn}
+                disabled={bulkApplying}
+              >
+                <SelectTrigger className="h-8 text-sm" data-testid="cases-bulk-waiting-on">
                   <SelectValue placeholder="Bekleme durumu seç" />
                 </SelectTrigger>
                 <SelectContent>

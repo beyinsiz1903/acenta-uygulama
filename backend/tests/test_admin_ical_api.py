@@ -110,15 +110,15 @@ async def test_admin_ical_feeds_create(
 
 
 @pytest.mark.anyio
-async def test_admin_ical_sync(
+async def test_admin_ical_sync_mock_functionality(
     async_client: AsyncClient,
     admin_token: str,
     test_db: Any,
 ) -> None:
-    """Test POST /api/admin/ical/sync processes mock iCal data."""
+    """Test POST /api/admin/ical/sync with mock URL by directly inserting mock feed."""
     
     org_id = "695e03c80b04ed31c4eaa899"
-    product_id = "test_product_villa_sync"
+    product_id = "test_product_villa_sync_mock"
     
     # Ensure organization exists
     await test_db.organizations.insert_one({
@@ -129,16 +129,21 @@ async def test_admin_ical_sync(
     
     headers = {"Authorization": f"Bearer {admin_token}"}
     
-    # First create a feed
-    feed_payload = {
-        "product_id": product_id,
-        "url": "https://example.com/villa-demo.ics"
-    }
+    # Directly insert a feed with mock URL into database (bypassing Pydantic validation)
+    from uuid import uuid4
+    from app.utils import now_utc
     
-    create_response = await async_client.post("/api/admin/ical/feeds", headers=headers, json=feed_payload)
-    assert create_response.status_code == 200
-    feed_data = create_response.json()
-    feed_id = feed_data["id"]
+    feed_id = str(uuid4())
+    feed_doc = {
+        "id": feed_id,
+        "organization_id": org_id,
+        "product_id": product_id,
+        "url": "mock://villa-demo",
+        "status": "active",
+        "created_at": now_utc().isoformat(),
+        "last_sync_at": None,
+    }
+    await test_db.ical_feeds.insert_one(feed_doc)
     
     # Now sync the feed
     sync_payload = {"feed_id": feed_id}
@@ -185,6 +190,49 @@ async def test_admin_ical_sync(
     assert updated_feed["last_sync_at"] is not None
     
     return feed_id, product_id
+
+
+@pytest.mark.anyio
+async def test_admin_ical_sync(
+    async_client: AsyncClient,
+    admin_token: str,
+    test_db: Any,
+) -> None:
+    """Test POST /api/admin/ical/sync with real HTTP URL (expects failure in test environment)."""
+    
+    org_id = "695e03c80b04ed31c4eaa899"
+    product_id = "test_product_villa_sync"
+    
+    # Ensure organization exists
+    await test_db.organizations.insert_one({
+        "_id": org_id,
+        "slug": "test-org",
+        "name": "Test Organization"
+    })
+    
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    
+    # First create a feed
+    feed_payload = {
+        "product_id": product_id,
+        "url": "https://example.com/villa-demo.ics"
+    }
+    
+    create_response = await async_client.post("/api/admin/ical/feeds", headers=headers, json=feed_payload)
+    assert create_response.status_code == 200
+    feed_data = create_response.json()
+    feed_id = feed_data["id"]
+    
+    # Now sync the feed (this will fail because example.com doesn't have a real iCal file)
+    sync_payload = {"feed_id": feed_id}
+    
+    response = await async_client.post("/api/admin/ical/sync", headers=headers, json=sync_payload)
+    # In test environment, this should fail with 502 (ical_fetch_failed)
+    assert response.status_code == 502
+    
+    data = response.json()
+    assert "error" in data
+    assert data["error"]["code"] == "ical_fetch_failed"
 
 
 @pytest.mark.anyio

@@ -114,20 +114,15 @@ def test_ops_cases_bulk_update():
     print(f"   📋 Original Organization ID: {original_org_id}")
 
     # ------------------------------------------------------------------
-    # Test 2: Setup test organization and cases
+    # Test 2: Setup test cases in admin's organization
     # ------------------------------------------------------------------
-    print("\n2️⃣  Setting up test organization and cases...")
+    print("\n2️⃣  Setting up test cases in admin's organization...")
     
-    # Force admin to use test organization
-    force_admin_organization(admin_token, test_org_id)
+    # Use admin's existing organization
+    test_org_id = original_org_id
     
-    # Get fresh token with updated organization
-    admin_token, updated_org_id, admin_email = login_admin()
-    admin_headers = {"Authorization": f"Bearer {admin_token}"}
-    print(f"   🔧 Fresh token with organization: {updated_org_id}")
-    
-    # Create test cases
-    test_case_ids = create_test_org_and_cases(admin_headers, test_org_id)
+    # Create test cases in admin's organization
+    test_case_ids = create_test_cases_in_org(admin_headers, test_org_id)
     
     print(f"   ✅ Created {len(test_case_ids)} test cases in org: {test_org_id}")
     print(f"   📋 Test case IDs: {test_case_ids}")

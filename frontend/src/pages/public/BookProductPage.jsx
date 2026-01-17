@@ -55,12 +55,6 @@ export default function BookProductPage() {
         addressCountry: "",
         addressLocality: "",
       },
-      offers: {
-        "@type": "Offer",
-        priceCurrency: "EUR",
-        price: 0,
-        availability: "https://schema.org/InStock",
-      },
     };
 
     upsertJsonLd("hotel-schema-jsonld", schema);

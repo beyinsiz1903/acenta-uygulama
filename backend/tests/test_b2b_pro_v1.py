@@ -142,9 +142,8 @@ async def test_admin_agencies_org_isolation(async_client, test_db, anyio_backend
     await db.users.insert_one(user_b)
     token_b = create_access_token(subject=email_b, organization_id=org_b, roles=user_b["roles"])
 
-    async with AsyncClient(app=app, base_url="http://testserver") as client:
-        # Create agency in org A
-        resp_a = await client.post(
+    # Create agency in org A
+    resp_a = await async_client.post(
             "/api/admin/agencies/",
             headers={"Authorization": f"Bearer {token_a}"},
             json={"name": "Org A Agency"},

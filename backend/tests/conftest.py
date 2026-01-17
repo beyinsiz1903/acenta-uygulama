@@ -293,7 +293,7 @@ async def seed_default_org_and_users(test_db):
     if not agency_user:
         await test_db.users.insert_one(
             {
-                "organization_id": org_id,
+                "organization_id": default_org_id,
                 "agency_id": agency_id,
                 "email": "agency1@demo.test",
                 "name": "Demo Agency User",

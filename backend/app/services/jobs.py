@@ -155,6 +155,50 @@ async def _mark_failed(db, job: Dict[str, Any], error: str) -> None:
 JOB_HANDLERS: Dict[str, JobHandler] = {}
 
 
+async def handle_indexnow_submit(db, job: Dict[str, Any]) -> None:
+    """Job handler for IndexNow URL submissions.
+
+    Behaviour:
+    - If IndexNow is disabled or not configured, we treat the job as
+      successfully "skipped" and mark it succeeded (no retries).
+    - On transport errors, we let the normal job retry/backoff semantics
+      handle transient failures.
+    """
+
+    from app.services.indexnow_client import IndexNowClient, IndexNowSettings
+
+    settings = IndexNowSettings()
+    client = IndexNowClient(settings)
+
+    try:
+        payload = job.get("payload") or {}
+        urls = payload.get("urls") or []
+        if not urls:
+            await _mark_succeeded(db, job, result_summary={"ok": True, "status": "empty"})
+            return
+
+        # Single vs batch submission
+        if len(urls) == 1:
+            result = await client.submit_single_url(urls[0])
+        else:
+            result = await client.submit_batch(urls)
+
+        status = result.get("status")
+        if status in {"skipped", "success"}:
+            await _mark_succeeded(db, job, result_summary=result)
+            return
+
+        # For error statuses we raise to let the job system apply retry/backoff
+        raise RuntimeError(f"IndexNow submission failed: {result}")
+    finally:
+        await client.aclose()
+
+
+# Register built-in job handlers
+register_job_handler("indexnow_submit", handle_indexnow_submit)
+
+
+
 def register_job_handler(job_type: str, handler: JobHandler) -> None:
     if job_type in JOB_HANDLERS:
         logger.warning("Overwriting job handler for type %s", job_type)

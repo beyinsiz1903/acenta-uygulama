@@ -821,7 +821,30 @@ async def public_checkout_tr_pos(
     ins = await bookings.insert_one(booking_doc)
     booking_id = str(ins.inserted_id)
 
-    # Minimal audit / funnel event could be added here if desired
+    # Audit: PAYMENT_TR_INIT (mock provider)
+    try:
+        from app.services.audit import write_audit_log
+
+        await write_audit_log(
+            db,
+            organization_id=org_id,
+            actor={"actor_type": "guest", "email": guest.email, "roles": []},
+            request=request,
+            action="PAYMENT_TR_INIT",
+            target_type="booking",
+            target_id=booking_id,
+            before=None,
+            after={"status": "PENDING_PAYMENT", "payment_provider": "tr_pos_mock"},
+            meta={
+                "provider": "tr_pos_mock",
+                "external_id": result.external_id,
+                "ok": result.ok,
+                "reason": result.reason,
+            },
+        )
+    except Exception:
+        # Audit failures must not break checkout
+        pass
 
     # Payment provider init (mock TR POS)
     provider = MockTrPosProvider()

@@ -13,14 +13,14 @@ async def test_partner_key_cannot_access_other_org(async_client):
 
   await db.api_keys.delete_many({})
 
-  org_a = "org_a"
+  # Use default organization for the partner key and a secondary org for isolation
+  org_doc = await db.organizations.find_one({"slug": "default"})
+  assert org_doc is not None
+  org_a = str(org_doc["_id"])  # default org used by admin login
   org_b = "org_b"
 
-  # Seed orgs
-  await db.organizations.insert_many([
-    {"_id": org_a, "slug": "a", "name": "Org A"},
-    {"_id": org_b, "slug": "b", "name": "Org B"},
-  ])
+  # Seed secondary org
+  await db.organizations.insert_one({"_id": org_b, "slug": "b", "name": "Org B"})
 
   # Seed one product per org
   await db.products.insert_many([
@@ -73,8 +73,10 @@ async def test_partner_rate_limit_returns_429(async_client):
   await db.api_keys.delete_many({})
   await db.rate_limit_buckets.delete_many({})
 
-  org = "org_rate_limit"
-  await db.organizations.insert_one({"_id": org, "slug": "rl", "name": "RL Org"})
+  # Use default organization for rate limit testing
+  org_doc = await db.organizations.find_one({"slug": "default"})
+  assert org_doc is not None
+  org = str(org_doc["_id"])  # default org id
 
   # Single product for org
   await db.products.insert_one(
@@ -119,8 +121,10 @@ async def test_partner_happy_path_search_quote_booking_docs(async_client):
   db = await get_db()
   await db.api_keys.delete_many({})
 
-  org = "org_partner_flow"
-  await db.organizations.insert_one({"_id": org, "slug": "pf", "name": "Partner Flow Org"})
+  # Use default organization for the partner flow
+  org_doc = await db.organizations.find_one({"slug": "default"})
+  assert org_doc is not None
+  org = str(org_doc["_id"])  # default org id
 
   # Minimal product + rate_plan for search/quote/booking path
   from datetime import date, timedelta

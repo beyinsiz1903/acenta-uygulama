@@ -22,7 +22,8 @@ UserDep = Depends(require_roles(["super_admin", "admin", "agency_admin"]))
 FeatureDep = Depends(require_feature("b2b_pro"))
 
 
-ALLOWED_BOOKING_SOURCES = {"public", "b2b"}
+# TODO: Align with full allowed source set from Message 547 if expanded
+ALLOWED_BOOKING_SOURCES = {"public", "b2b", "b2b_portal"}
 
 
 def _parse_date_param(value: Optional[str]) -> Optional[datetime]:

@@ -68,43 +68,43 @@ async def test_admin_agencies_create_and_cycle_guards(async_client, test_db, any
     root = resp.json()
     root_id = root["id"]
 
-        # Create child agency with valid parent
-        resp2 = await async_client.post(
-            "/api/admin/agencies/",
-            headers={"Authorization": f"Bearer {admin_token}"},
-            json={"name": "Child Agency", "parent_agency_id": root_id},
-        )
-        assert resp2.status_code == 200
-        child = resp2.json()
-        child_id = child["id"]
+    # Create child agency with valid parent
+    resp2 = await async_client.post(
+        "/api/admin/agencies/",
+        headers={"Authorization": f"Bearer {admin_token}"},
+        json={"name": "Child Agency", "parent_agency_id": root_id},
+    )
+    assert resp2.status_code == 200
+    child = resp2.json()
+    child_id = child["id"]
 
-        # Self-parent on update -> 422
-        resp_self = await async_client.put(
-            f"/api/admin/agencies/{child_id}",
-            headers={"Authorization": f"Bearer {admin_token}"},
-            json={"parent_agency_id": child_id},
-        )
-        assert resp_self.status_code == 422
-        assert resp_self.json()["detail"] == "SELF_PARENT_NOT_ALLOWED"
+    # Self-parent on update -> 422
+    resp_self = await async_client.put(
+        f"/api/admin/agencies/{child_id}",
+        headers={"Authorization": f"Bearer {admin_token}"},
+        json={"parent_agency_id": child_id},
+    )
+    assert resp_self.status_code == 422
+    assert resp_self.json()["detail"] == "SELF_PARENT_NOT_ALLOWED"
 
-        # Create third agency C with parent B, then try to set A's parent to C to form A<-B<-C<-A
-        resp_c = await async_client.post(
-            "/api/admin/agencies/",
-            headers={"Authorization": f"Bearer {admin_token}"},
-            json={"name": "Third Agency", "parent_agency_id": child_id},
-        )
-        assert resp_c.status_code == 200
-        third = resp_c.json()
-        third_id = third["id"]
+    # Create third agency C with parent B, then try to set A's parent to C to form A<-B<-C<-A
+    resp_c = await async_client.post(
+        "/api/admin/agencies/",
+        headers={"Authorization": f"Bearer {admin_token}"},
+        json={"name": "Third Agency", "parent_agency_id": child_id},
+    )
+    assert resp_c.status_code == 200
+    third = resp_c.json()
+    third_id = third["id"]
 
-        # Now attempt to set root's parent to third -> cycle
-        resp_cycle = await async_client.put(
-            f"/api/admin/agencies/{root_id}",
-            headers={"Authorization": f"Bearer {admin_token}"},
-            json={"parent_agency_id": third_id},
-        )
-        assert resp_cycle.status_code == 422
-        assert resp_cycle.json()["detail"] == "PARENT_CYCLE_DETECTED"
+    # Now attempt to set root's parent to third -> cycle
+    resp_cycle = await async_client.put(
+        f"/api/admin/agencies/{root_id}",
+        headers={"Authorization": f"Bearer {admin_token}"},
+        json={"parent_agency_id": third_id},
+    )
+    assert resp_cycle.status_code == 422
+    assert resp_cycle.json()["detail"] == "PARENT_CYCLE_DETECTED"
 
 
 @pytest.mark.anyio
@@ -151,21 +151,21 @@ async def test_admin_agencies_org_isolation(async_client, test_db, anyio_backend
     agency_a = resp_a.json()
     agency_a_id = agency_a["id"]
 
-        # Org B listing should not see Org A agency
-        resp_list_b = await async_client.get(
-            "/api/admin/agencies/",
-            headers={"Authorization": f"Bearer {token_b}"},
-        )
-        assert resp_list_b.status_code == 200
-        items_b = resp_list_b.json()
-        # list_agencies returns a plain list
-        assert isinstance(items_b, list)
-        assert all(item["id"] != agency_a_id for item in items_b)
+    # Org B listing should not see Org A agency
+    resp_list_b = await async_client.get(
+        "/api/admin/agencies/",
+        headers={"Authorization": f"Bearer {token_b}"},
+    )
+    assert resp_list_b.status_code == 200
+    items_b = resp_list_b.json()
+    # list_agencies returns a plain list
+    assert isinstance(items_b, list)
+    assert all(item["id"] != agency_a_id for item in items_b)
 
-        # Org B trying to update Org A agency_id should get 404
-        resp_update_b = await async_client.put(
-            f"/api/admin/agencies/{agency_a_id}",
-            headers={"Authorization": f"Bearer {token_b}"},
-            json={"name": "Hacked"},
-        )
-        assert resp_update_b.status_code == 404
+    # Org B trying to update Org A agency_id should get 404
+    resp_update_b = await async_client.put(
+        f"/api/admin/agencies/{agency_a_id}",
+        headers={"Authorization": f"Bearer {token_b}"},
+        json={"name": "Hacked"},
+    )
+    assert resp_update_b.status_code == 404

@@ -160,6 +160,10 @@ async def list_statements(
     iso_from = start.isoformat()
     iso_to = end.isoformat()
 
+    accept = request.headers.get("accept", "").lower()
+    wants_csv = "text/csv" in accept or format.lower() == "csv"
+    out_format = "csv" if wants_csv else "json"
+
     # Audit log (STATEMENT_VIEWED)
     try:
         await write_audit_log(

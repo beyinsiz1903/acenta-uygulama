@@ -10,6 +10,9 @@ import { useSeo } from "../../hooks/useSeo";
 function isoTodayOffset(days) {
   const d = new Date();
   d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
 function upsertJsonLd(id, obj) {
   if (typeof document === "undefined") return;
   const existing = document.getElementById(id);
@@ -20,10 +23,6 @@ function upsertJsonLd(id, obj) {
   script.type = "application/ld+json";
   script.text = JSON.stringify(obj);
   document.head.appendChild(script);
-}
-
-
-  return d.toISOString().slice(0, 10);
 }
 
 export default function BookProductPage() {

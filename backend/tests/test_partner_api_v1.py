@@ -126,14 +126,18 @@ async def test_partner_happy_path_search_quote_booking_docs(async_client):
   assert org_doc is not None
   org = str(org_doc["_id"])  # default org id
 
-  # Minimal product + rate_plan for search/quote/booking path
+  # Minimal product + product_version + rate_plan for search/quote/booking path
   from datetime import date, timedelta
+  from bson import ObjectId
   from app.utils import now_utc
 
-  hotel_id = "hotel_pf"
+  # Product id must be a valid ObjectId string for create_public_quote
+  hotel_oid = ObjectId()
+  hotel_id = str(hotel_oid)
+
   await db.products.insert_one(
     {
-      "_id": hotel_id,
+      "_id": hotel_oid,
       "organization_id": org,
       "type": "hotel",
       "status": "active",
@@ -144,11 +148,22 @@ async def test_partner_happy_path_search_quote_booking_docs(async_client):
     }
   )
 
+  # Published version required by create_public_quote
+  await db.product_versions.insert_one(
+    {
+      "organization_id": org,
+      "product_id": hotel_oid,
+      "status": "published",
+      "version": 1,
+      "content": {},
+    }
+  )
+
   await db.rate_plans.insert_one(
     {
       "_id": "rp_pf",
       "organization_id": org,
-      "product_id": hotel_id,
+      "product_id": hotel_oid,
       "status": "active",
       "currency": "EUR",
       "board": "BB",

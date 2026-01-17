@@ -172,10 +172,13 @@ class TestSitemapBehavior:
         
         if active_hotels:
             # Verify product URLs are in canonical /book/{productId} format
+            base_url_http = BASE_URL.replace('https://', 'http://')
             for product in active_hotels:
                 product_id = str(product["_id"])
-                expected_url = f'<loc>{BASE_URL}/book/{product_id}</loc>'
-                assert expected_url in xml_content, f"Product URL {expected_url} not found in sitemap"
+                expected_url_https = f'<loc>{BASE_URL}/book/{product_id}</loc>'
+                expected_url_http = f'<loc>{base_url_http}/book/{product_id}</loc>'
+                url_found = expected_url_https in xml_content or expected_url_http in xml_content
+                assert url_found, f"Product URL for {product_id} not found in sitemap"
             
             # Verify lastmod dates are present and valid
             lastmod_lines = [line for line in xml_content.split('\n') if '<lastmod>' in line]

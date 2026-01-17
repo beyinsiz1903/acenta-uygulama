@@ -56,8 +56,6 @@ async def test_admin_agencies_feature_disabled_returns_404(async_client, test_db
 
 @pytest.mark.anyio
 async def test_admin_agencies_create_and_cycle_guards(async_client, test_db, anyio_backend, admin_token):  # type: ignore[override]
-    db = test_db
-
     # Create base agency (no parent)
     resp = await async_client.post(
         "/api/admin/agencies/",

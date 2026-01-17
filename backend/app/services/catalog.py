@@ -348,6 +348,63 @@ async def publish_product_version(db, actor: dict[str, Any], product_id: str, ve
         {"$set": {"status": "archived", "updated_at": now}},
     )
 
+    # SEO+ Pack: publish-time slug + meta defaults (non-destructive)
+    # Dokunma kuralı: mevcut slug/meta_* alanları doluysa asla overwrite etme.
+    name = (prod.get("name") or {})
+    title_tr = name.get("tr") or ""
+    title_en = name.get("en") or ""
+
+    update_product_fields: Dict[str, Any] = {}
+
+    # Slug: sadece boşsa üret ve org-scope içinde collision kontrolü yap
+    existing_slug = (prod.get("slug") or "").strip()
+    if not existing_slug:
+        base_title = title_tr or title_en or prod.get("code") or str(pid)
+        base_slug = _slugify(base_title)
+        slug = base_slug or str(pid)
+
+        # Org-scoped slug collision çözümü (-2, -3 ...)
+        suffix = 1
+        while True:
+            other = await db.products.find_one(
+                {
+                    "organization_id": org_id,
+                    "slug": slug,
+                    "_id": {"$ne": pid},
+                },
+                {"_id": 1},
+            )
+            if not other:
+                break
+            suffix += 1
+            slug = f"{base_slug}-{suffix}"
+
+        update_product_fields["slug"] = slug
+
+    # Meta title/description: sadece boşsa üret
+    existing_meta_title = (prod.get("meta_title") or "").strip()
+    existing_meta_desc = (prod.get("meta_description") or "").strip()
+
+    if not existing_meta_title:
+        base_title = title_tr or title_en or prod.get("code") or "Otel"
+        update_product_fields["meta_title"] = f"{base_title} | Syroce"
+
+    if not existing_meta_desc:
+        city = ((prod.get("location") or {}).get("city") or "").strip()
+        country = ((prod.get("location") or {}).get("country") or "").strip()
+        loc_part = ", ".join([x for x in [city, country] if x])
+        if loc_part:
+            update_product_fields["meta_description"] = f"{base_title} - {loc_part} i7in otel rezervasyonu."
+        else:
+            update_product_fields["meta_description"] = f"{base_title} i7in otel rezervasyonu."
+
+    if update_product_fields:
+        update_product_fields["updated_at"] = now
+        await db.products.update_one(
+            {"_id": pid, "organization_id": org_id},
+            {"$set": update_product_fields},
+        )
+
     await db.product_versions.update_one(
         {"_id": vid, "organization_id": org_id, "product_id": pid},
         {

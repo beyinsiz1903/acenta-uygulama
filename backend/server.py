@@ -66,6 +66,7 @@ from app.routers.admin_api_keys import router as admin_api_keys_router
 from app.routers.metrics import router as metrics_router
 from app.routers.partner_v1 import router as partner_v1_router
 from app.routers.admin_agencies import router as admin_agencies_router
+from app.routers.admin_statements import router as admin_statements_router
 
 from app.routers.seo import router as seo_router
 from app.email_worker import email_dispatch_loop
@@ -147,6 +148,7 @@ app.include_router(admin_api_keys_router)
 app.include_router(metrics_router)
 app.include_router(partner_v1_router)
 app.include_router(admin_agencies_router)
+app.include_router(admin_statements_router)
 
 app.include_router(theme_router)
 

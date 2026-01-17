@@ -270,8 +270,8 @@ async def seed_default_org_and_users(test_db):
             }
         )
 
-    # 3) Demo agency + agency user (agency1@demo.test)
-    agency = await test_db.agencies.find_one({"organization_id": org_id, "name": "Demo Agency"})
+    # 3) Demo agency + agency user (agency1@demo.test) always tied to default_org_id
+    agency = await test_db.agencies.find_one({"organization_id": default_org_id, "name": "Demo Agency"})
     if not agency:
         from bson import ObjectId
 
@@ -279,7 +279,7 @@ async def seed_default_org_and_users(test_db):
         await test_db.agencies.insert_one(
             {
                 "_id": agency_id,
-                "organization_id": org_id,
+                "organization_id": default_org_id,
                 "name": "Demo Agency",
                 "settings": {"selling_currency": "EUR"},
                 "created_at": now,

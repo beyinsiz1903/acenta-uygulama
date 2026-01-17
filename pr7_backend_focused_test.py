@@ -17,7 +17,7 @@ from bson import ObjectId
 import httpx
 
 # Backend URL from environment
-BACKEND_URL = os.getenv("REACT_APP_BACKEND_URL", "https://rezhub-commerce.preview.emergentagent.com")
+BACKEND_URL = os.getenv("REACT_APP_BACKEND_URL", "https://b2b-pro.preview.emergentagent.com")
 
 # Test credentials
 ADMIN_EMAIL = "admin@acenta.test"

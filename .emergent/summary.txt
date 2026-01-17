@@ -1,112 +1,534 @@
 <analysis>**original_problem_statement:**
-The user's initial goal was to evolve the existing B2B Hotel Reservation Platform (Syroce) into a Commerce OS functionally equivalent to Agentis and Agentis Pro. A detailed Product Requirements Document (PRD) and a multi-phase roadmap (P0, P1, P2) were established to guide this evolution.
+The user's initial goal was to evolve the existing B2B Hotel Reservation Platform (Syroce) into a Commerce OS functionally equivalent to Agentis and Agentis Pro. This was superseded by a new, more ambitious Mega Prompt where the agent, acting as a Product Architect, is tasked with performing a competitive teardown of Agentis/Agentis.Pro, producing a feature parity matrix, a full product/architectural design, and an implementation roadmap.
 
-The project follows a Exec-Ready Prompt methodology, where the user provides highly detailed, non-negotiable implementation instructions for the agent to execute. The agent's primary role is to implement these instructions precisely and provide proof packs (e.g.,  outputs, UI descriptions, JSON responses) to validate completion. The user tracks progress via a parity score against competitors, which the agent is expected to help update.
+Following this analysis, the user provided a series of large, exec-ready Mega Prompts to be implemented in a specific order to achieve parity with Agentis. The core workflow remains Exec-Ready Prompt based: the user provides non-negotiable instructions, and the agent must implement them and provide proof of completion.
 
 **PRODUCT REQUIREMENTS:**
-The current directive is to execute tasks from the P1 roadmap and a series of user-directed polish sprints. The primary goal is to increase parity with Agentis and Agentis Pro.
-1.  **EPIC P1-1: Fiyat/Aksiyon Motoru v1 (Otel):** Build a deterministic pricing engine. (Completed).
-2.  **EPIC P1-2: Villa Product Type + ICAL:** Add support for Villa rentals with calendar sync. (Completed).
-3.  **EPIC P1-3: Tema / Website Surface MVP:** Create a basic theming system for the B2C frontend. (Completed).
-4.  **EPIC P1-4: B2B Discount Groups & Pricing Rules UI:** Allow admins to create pricing rules for different B2B segments. (Completed in this session).
-5.  **EPIC P1-5: Funnel Tracking v1 + Remarketing Mapping:** Implement event tracking. (Funnel Tracking v1 completed. Remarketing Mapping v1 & v2 are in progress).
-6.  **Reporting v1:** Create an admin reporting dashboard. (Completed).
-7.  **Payments e2e:** End-to-end testing of the Stripe payment flow. (Partially completed as Mod B due to environment block; full Mod A is pending).
-8.  **Ops/Pricing Polish Sprints:** A series of user-directed micro-features to improve UI/UX explainability and operational efficiency. (Largely completed).
+The agent's mandate is to execute the user-defined Mega Prompts in a specific order.
+1.  **PROMPT 1: Job Platform + Integration Hub V1 + Observability:** Build a generic job queue, a foundational integration hub with a mock adapter, and minimal observability metrics. (DONE, backend tests fixed)
+2.  **PROMPT 2: Partner API V1 + Rate Limit + Audit + Docs:** Create a partner-facing API with API key authentication, rate limiting, and auditing. (DONE, backend tests fixed)
+3.  **PROMPT 3: SEO+ Pack:** Implement IndexNow integration, JSON-LD, automatic slug/meta generation, and sitemap improvements. (DONE)
+4.  **PROMPT 4: B2B PRO:** Add sub-agency user management, financial statements (cari/statement), and basic whitelabel theming. (NOT STARTED)
+5.  **PROMPT 5: Payments TR Pack + Accounting/e-Fatura V1:** Add a payment provider abstraction for the Turkish market, including mock bank POS adapters, installment logic, and a basic accounting export feature. (DONE)
 
 **User's preferred language**: Türkçe
 
 **what currently exists?**
-The application is a full-stack Hotel Reservation Platform (React/FastAPI/MongoDB). In this session, the agent completed a significant number of features driven by the user's exec-ready prompts, dramatically increasing operational efficiency and observability.
+The application is a full-stack Hotel Reservation Platform (React/FastAPI/MongoDB). The initial critical task of fixing the broken backend test suite for PROMPTs 1 & 2 has been completed. Following this, the agent successfully implemented PROMPT 3 (SEO+ Pack) and PROMPT 5 (Payments TR Pack + Accounting/e-Fatura V1).
 
-Completed work includes:
--   **Ops Cases v2 & Polish:** A full-featured bulk-update system for Ops cases with an SLA-based filter queue, partial success handling, and a retry failed mechanism.
--   **Case Edit UX Hardening:** Made the case editing drawer more robust with unsaved changes warnings, state-based button disabling, and optimistic UI updates aligned with backend logic.
--   **Payments Hardening:**
-    -   **Payments Proof (Mod B):** Proved the payment initiation flow, even with the environment blocked from reaching Stripe live.
-    -   **Payments Idempotency:** Implemented a robust idempotency gate to prevent duplicate bookings/payments.
-    -   **Payments Finalize Guard:** Added a webhook handler guard to prevent duplicate or out-of-order event processing, making the finalization step deterministic.
--   **Debug Bundle v2:** Enhanced the admin debug tool to provide deep visibility into the entire lifecycle of a booking, including pricing, payments, idempotency, and finalization steps.
--   **B2B Discounts UI:** A full CRUD interface for creating and managing complex B2B discount rules, fully integrated into the pricing and booking engine with detailed tracing.
--   **Remarketing Mapping v1:** The foundational framework for server-side event tracking to GA4 and Meta, including configuration management, event persistence, and a test-fire API. The blueprint for v2 has been established and approved by the user.
+- **Job Platform (PROMPT 1):** A tested, generic background job processing system is in place.
+- **Partner API (PROMPT 2):** A tested, API-key-gated partner API is functional.
+- **SEO+ Pack (PROMPT 3):** Features include an IndexNow integration (job-based, no-op without ENV vars), publish-time slug/meta generation, an org-aware sitemap, and minimal Hotel JSON-LD on product pages.
+- **Payments TR Pack (PROMPT 5):** A payment provider abstraction has been built. New B2C public endpoints ( and ) exist for a mock Turkish POS provider, complete with feature-gating and idempotency. The existing Stripe flow is untouched and functional.
+- **Accounting Export V1 (PROMPT 5):** A new admin endpoint () provides a generic JSON/CSV export of financial transactions, using  as the source of truth and filtering for public-channel bookings.
+
+The codebase is now significantly more feature-rich, with the backend tests for all newly implemented features passing. Legacy test failures unrelated to these prompts persist but are deferred.
 
 **Last working item**:
--   **Last item agent was working**: The user and agent have agreed on and locked in the detailed exec-ready blueprint for **Remarketing v2**. This task will build upon the v1 foundation to add broader event coverage (, ), a more robust queue with retry/backoff logic, and a full-featured Admin UI to observe and manage the event stream. The agent's last action was to confirm the detailed acceptance criteria for this task.
+-   **Last item agent was working**: The agent was in the final planning stages for **PROMPT 4 (B2B PRO)**. After extensive back-and-forth with the user to define repo-aware, exec-ready instructions, the user provided a final, consolidated mega-prompt (Message 547) for the agent to execute. However, the agent got stuck in a loop of re-analyzing the situation instead of starting the implementation. The next step is to execute this final prompt.
 -   **Status**: NOT STARTED
--   **Agent Testing Done**: N
--   **Which testing method agent to use?**: both
+-   **Agent Testing Done**: N/A
+-   **Which testing method agent to use?**: backend testing agent
 -   **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
--   **Issue 1 (P0): Test suite is broken.**
--   **Issue 2 (P1): Remarketing v2 Implementation.**
--   **Issue 3 (P2): Payments e2e Proof Generation (Mod A).**
--   **Issue 4 (P3): User Verification for Coupon B2C Checkout.**
--   **Issue 5 (P3): B2B Discounts UI Polish.**
--   **Issue 6 (P4): Micro-UX improvements for the Case Edit UI.**
+-   **Issue 1 (P0): Implement PROMPT 4 (B2B PRO).**
+-   **Issue 2 (P1): Fix minor tech debt from PROMPT 5.**
+-   **Issue 3 (P2): Fix legacy test suite failures.**
+-   **Issue 4 (P3): User Verification for all completed PROMPTs.**
 
 **Issues Detail:**
--   **Issue 1:** Test suite is broken
-    -   **Attempted fixes**: The agent encountered a  while trying to run tests after implementing the B2B discounts feature. The agent tried to fix it by ensuring indexes are created in  but the error persisted. This indicates a fundamental issue with the test environment setup or python path.
+-   **Issue 1: Implement PROMPT 4 (B2B PRO)**
+    -   **Attempted fixes**: None (not yet started). The agent completed an extensive planning phase, culminating in a final, user-approved mega-prompt in Message 547.
     -   **Next debug checklist**:
-        1.  Examine  to understand its dependencies.
-        2.  Check the project structure to see where  should be located or if it's a misnamed module.
-        3.  Verify the  environment variable for the test execution environment.
-        4.  Ensure all necessary  files exist in the  subdirectories to make them importable packages.
-    -   **Why fix this issue?**: A working test suite is critical for maintaining code quality and preventing regressions, especially in a complex system. It is a blocker for verifying any new backend changes reliably.
+        1.  Carefully read and execute the final **exec-ready mega prompt** for PROMPT 4 from user message 547.
+        2.  Do NOT re-plan or ask for clarification. The prompt contains all necessary directives.
+        3.  Implement the three new routers: , , .
+        4.  Implement the required utilities (, ).
+        5.  Ensure all hard rules (feature gating, org-scoping, cycle guards, etc.) are followed precisely.
+        6.  Write corresponding ============================= test session starts ==============================
+platform linux -- Python 3.11.14, pytest-9.0.2, pluggy-1.6.0
+rootdir: /app
+plugins: anyio-4.12.0
+collected 220 items / 4 errors
+
+==================================== ERRORS ====================================
+________________ ERROR collecting stripe_payment_funnel_test.py ________________
+ImportError while importing test module '/app/stripe_payment_funnel_test.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/usr/local/lib/python3.11/importlib/__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+stripe_payment_funnel_test.py:30: in <module>
+    from app.services.stripe_handlers import _handle_payment_intent_succeeded
+E   ImportError: cannot import name '_handle_payment_intent_succeeded' from 'app.services.stripe_handlers' (/app/backend/app/services/stripe_handlers.py)
+______________ ERROR collecting stripe_payment_no_channel_test.py ______________
+ImportError while importing test module '/app/stripe_payment_no_channel_test.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/usr/local/lib/python3.11/importlib/__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+stripe_payment_no_channel_test.py:20: in <module>
+    from app.services.stripe_handlers import _handle_payment_intent_succeeded
+E   ImportError: cannot import name '_handle_payment_intent_succeeded' from 'app.services.stripe_handlers' (/app/backend/app/services/stripe_handlers.py)
+_________________ ERROR collecting test_finance_phase_2a_2.py __________________
+/root/.venv/lib/python3.11/site-packages/_pytest/python.py:507: in importtestmodule
+    mod = import_path(
+/root/.venv/lib/python3.11/site-packages/_pytest/pathlib.py:587: in import_path
+    importlib.import_module(module_name)
+/usr/local/lib/python3.11/importlib/__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1204: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1176: in _find_and_load
+    ???
+<frozen importlib._bootstrap>:1147: in _find_and_load_unlocked
+    ???
+<frozen importlib._bootstrap>:690: in _load_unlocked
+    ???
+/root/.venv/lib/python3.11/site-packages/_pytest/assertion/rewrite.py:188: in exec_module
+    source_stat, co = _rewrite_test(fn, self.config)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/_pytest/assertion/rewrite.py:359: in _rewrite_test
+    co = compile(tree, strfn, "exec", dont_inherit=True)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E     File "/app/test_finance_phase_2a_2.py", line 231
+E       await accrual_svc.post_accrual_for_booking(
+E       ^
+E   SyntaxError: 'await' outside async function
+_____________________ ERROR collecting test_pilot_data.py ______________________
+test_pilot_data.py:14: in <module>
+    MONGO_URL = os.environ["MONGO_URL"]
+                ^^^^^^^^^^^^^^^^^^^^^^^
+<frozen os>:679: in __getitem__
+    ???
+E   KeyError: 'MONGO_URL'
+=============================== warnings summary ===============================
+../root/.venv/lib/python3.11/site-packages/starlette/formparsers.py:12
+  /root/.venv/lib/python3.11/site-packages/starlette/formparsers.py:12: PendingDeprecationWarning: Please use `import python_multipart` instead.
+    import multipart
+
+../root/.venv/lib/python3.11/site-packages/passlib/utils/__init__.py:854
+  /root/.venv/lib/python3.11/site-packages/passlib/utils/__init__.py:854: DeprecationWarning: 'crypt' is deprecated and slated for removal in Python 3.13
+    from crypt import crypt as _crypt
+
+backend/app/routers/admin_metrics.py:221
+  /app/backend/app/routers/admin_metrics.py:221: DeprecationWarning: `regex` has been deprecated, please use `pattern` instead
+    start: Optional[str] = Query(None, regex=r"^\d{4}-\d{2}-\d{2}$"),
+
+backend/app/routers/admin_metrics.py:222
+  /app/backend/app/routers/admin_metrics.py:222: DeprecationWarning: `regex` has been deprecated, please use `pattern` instead
+    end: Optional[str] = Query(None, regex=r"^\d{4}-\d{2}-\d{2}$"),
+
+backend/app/routers/admin_metrics.py:249
+  /app/backend/app/routers/admin_metrics.py:249: DeprecationWarning: `regex` has been deprecated, please use `pattern` instead
+    start: Optional[str] = Query(None, regex=r"^\d{4}-\d{2}-\d{2}$"),
+
+backend/app/routers/admin_metrics.py:250
+  /app/backend/app/routers/admin_metrics.py:250: DeprecationWarning: `regex` has been deprecated, please use `pattern` instead
+    end: Optional[str] = Query(None, regex=r"^\d{4}-\d{2}-\d{2}$"),
+
+backend/app/schemas_pricing.py:124
+  /app/backend/app/schemas_pricing.py:124: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class SimpleRuleValidity(BaseModel):
+
+../root/.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:383
+  /root/.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:383: UserWarning: Valid config keys have changed in V2:
+  * 'allow_population_by_field_name' has been renamed to 'validate_by_name'
+    warnings.warn(message, UserWarning)
+
+backend/app/routers/admin_coupons.py:47
+  /app/backend/app/routers/admin_coupons.py:47: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class CouponOut(BaseModel):
+
+../root/.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:383
+  /root/.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:383: UserWarning: Valid config keys have changed in V2:
+  * 'orm_mode' has been renamed to 'from_attributes'
+    warnings.warn(message, UserWarning)
+
+backend/app/schemas_ops_cases.py:47
+  /app/backend/app/schemas_ops_cases.py:47: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class OpsCaseOut(BaseModel):
+
+backend/app/routers/ops_cases.py:21
+  /app/backend/app/routers/ops_cases.py:21: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class OpsCaseListResponse(BaseModel):
+
+backend/app/schemas_finance.py:26
+  /app/backend/app/schemas_finance.py:26: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class FinanceAccount(BaseModel):
+
+backend/app/schemas_finance.py:66
+  /app/backend/app/schemas_finance.py:66: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class LedgerEntry(BaseModel):
+
+backend/app/schemas_finance.py:96
+  /app/backend/app/schemas_finance.py:96: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class LedgerPosting(BaseModel):
+
+backend/app/schemas_finance.py:124
+  /app/backend/app/schemas_finance.py:124: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class CreditProfile(BaseModel):
+
+backend/app/schemas_finance.py:150
+  /app/backend/app/schemas_finance.py:150: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class AccountBalance(BaseModel):
+
+backend/app/schemas_finance.py:178
+  /app/backend/app/schemas_finance.py:178: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class Payment(BaseModel):
+
+backend/app/routers/theme.py:31
+  /app/backend/app/routers/theme.py:31: PydanticDeprecatedSince20: Pydantic V1 style `@validator` validators are deprecated. You should migrate to Pydantic V2 style `@field_validator` validators, see the migration guide for more details. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    @validator("primary", "primary_foreground", "background", "foreground", "muted", "muted_foreground", "border", pre=True)
+
+backend/app/routers/admin_reporting.py:108
+  /app/backend/app/routers/admin_reporting.py:108: DeprecationWarning: `regex` has been deprecated, please use `pattern` instead
+    by: str = Query("sell", regex="^(sell|bookings)$"),
+
+backend/tests/test_inbox_guardrails.py:361
+  /app/backend/tests/test_inbox_guardrails.py:361: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+backend/tests/test_inbox_guardrails.py:372
+  /app/backend/tests/test_inbox_guardrails.py:372: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+backend/tests/test_inbox_guardrails.py:383
+  /app/backend/tests/test_inbox_guardrails.py:383: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+backend/tests/test_inbox_guardrails.py:394
+  /app/backend/tests/test_inbox_guardrails.py:394: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+backend/tests/test_inbox_guardrails.py:26
+  /app/backend/tests/test_inbox_guardrails.py:26: PytestCollectionWarning: cannot collect test class 'TestInboxGuardrails' because it has a __init__ constructor (from: backend/tests/test_inbox_guardrails.py)
+    class TestInboxGuardrails:
+
+backend/tests/test_integration_hub_mock_provider.py:14
+  /app/backend/tests/test_integration_hub_mock_provider.py:14: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+backend/tests/test_jobs_platform.py:16
+  /app/backend/tests/test_jobs_platform.py:16: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+backend/tests/test_jobs_platform.py:53
+  /app/backend/tests/test_jobs_platform.py:53: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+backend/tests/test_ops_cases_api.py:12
+  /app/backend/tests/test_ops_cases_api.py:12: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+backend/tests/test_ops_cases_api.py:90
+  /app/backend/tests/test_ops_cases_api.py:90: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+backend/tests/test_ops_cases_api.py:149
+  /app/backend/tests/test_ops_cases_api.py:149: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+backend/tests/test_ops_cases_api.py:192
+  /app/backend/tests/test_ops_cases_api.py:192: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+backend/tests/test_ops_cases_api.py:252
+  /app/backend/tests/test_ops_cases_api.py:252: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+backend/tests/test_public_my_booking_phase1.py:13
+  /app/backend/tests/test_public_my_booking_phase1.py:13: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+backend/tests/test_public_my_booking_phase1.py:38
+  /app/backend/tests/test_public_my_booking_phase1.py:38: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+backend/tests/test_public_my_booking_phase1.py:68
+  /app/backend/tests/test_public_my_booking_phase1.py:68: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+backend/tests/test_public_my_booking_phase1.py:102
+  /app/backend/tests/test_public_my_booking_phase1.py:102: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+pr7_backend_focused_test.py:26
+  /app/pr7_backend_focused_test.py:26: PytestCollectionWarning: cannot collect test class 'TestRunner' because it has a __init__ constructor (from: pr7_backend_focused_test.py)
+    class TestRunner:
+
+pr7_backend_test.py:29
+  /app/pr7_backend_test.py:29: PytestCollectionWarning: cannot collect test class 'TestRunner' because it has a __init__ constructor (from: pr7_backend_test.py)
+    class TestRunner:
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+ERROR stripe_payment_funnel_test.py
+ERROR stripe_payment_no_channel_test.py
+ERROR test_finance_phase_2a_2.py
+ERROR test_pilot_data.py - KeyError: 'MONGO_URL'
+!!!!!!!!!!!!!!!!!!! Interrupted: 4 errors during collection !!!!!!!!!!!!!!!!!!!!
+======================== 39 warnings, 4 errors in 3.53s ======================== tests and run them.
+        7.  Provide a completion report as per the user's requested template.
+    -   **Why fix this issue?**: This is the next major feature on the user's roadmap. Completing it will add sub-agency management, financial statements, and whitelabeling capabilities, significantly increasing B2B functionality.
+    -   **Status**: NOT STARTED
+    -   **Is recurring issue?**: N
+    -   **Should Test frontend/backend/both after fix?**: backend
+    -   **Blocked on other issue**: None
+
+-   **Issue 2: Fix minor tech debt from PROMPT 5**
+    -   **Attempted fixes**: None. This was noted by the user in Message 465.
+    -   **Next debug checklist**: In , during the creation of a booking in the  function, add the  field to the booking document, similar to how it's done in the Stripe checkout path. This ensures consistency.
+    -   **Why fix this issue?**: To ensure financial data consistency across different payment methods within the booking document.
+    -   **Status**: NOT STARTED
+    -   **Is recurring issue?**: N
+    -   **Should Test frontend/backend/both after fix?**: backend
+    -   **Blocked on other issue**: None
+
+-   **Issue 3: Fix legacy test suite failures**
+    -   **Attempted fixes**: None in this session. The user explicitly deferred this task (Message 258) to a future stabilizasyon sprinti to avoid blocking progress on new features.
+    -   **Next debug checklist**: Run the full ============================= test session starts ==============================
+platform linux -- Python 3.11.14, pytest-9.0.2, pluggy-1.6.0
+rootdir: /app
+plugins: anyio-4.12.0
+collected 220 items / 4 errors
+
+==================================== ERRORS ====================================
+________________ ERROR collecting stripe_payment_funnel_test.py ________________
+ImportError while importing test module '/app/stripe_payment_funnel_test.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/usr/local/lib/python3.11/importlib/__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+stripe_payment_funnel_test.py:30: in <module>
+    from app.services.stripe_handlers import _handle_payment_intent_succeeded
+E   ImportError: cannot import name '_handle_payment_intent_succeeded' from 'app.services.stripe_handlers' (/app/backend/app/services/stripe_handlers.py)
+______________ ERROR collecting stripe_payment_no_channel_test.py ______________
+ImportError while importing test module '/app/stripe_payment_no_channel_test.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/usr/local/lib/python3.11/importlib/__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+stripe_payment_no_channel_test.py:20: in <module>
+    from app.services.stripe_handlers import _handle_payment_intent_succeeded
+E   ImportError: cannot import name '_handle_payment_intent_succeeded' from 'app.services.stripe_handlers' (/app/backend/app/services/stripe_handlers.py)
+_________________ ERROR collecting test_finance_phase_2a_2.py __________________
+/root/.venv/lib/python3.11/site-packages/_pytest/python.py:507: in importtestmodule
+    mod = import_path(
+/root/.venv/lib/python3.11/site-packages/_pytest/pathlib.py:587: in import_path
+    importlib.import_module(module_name)
+/usr/local/lib/python3.11/importlib/__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1204: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1176: in _find_and_load
+    ???
+<frozen importlib._bootstrap>:1147: in _find_and_load_unlocked
+    ???
+<frozen importlib._bootstrap>:690: in _load_unlocked
+    ???
+/root/.venv/lib/python3.11/site-packages/_pytest/assertion/rewrite.py:188: in exec_module
+    source_stat, co = _rewrite_test(fn, self.config)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/_pytest/assertion/rewrite.py:359: in _rewrite_test
+    co = compile(tree, strfn, "exec", dont_inherit=True)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E     File "/app/test_finance_phase_2a_2.py", line 231
+E       await accrual_svc.post_accrual_for_booking(
+E       ^
+E   SyntaxError: 'await' outside async function
+_____________________ ERROR collecting test_pilot_data.py ______________________
+test_pilot_data.py:14: in <module>
+    MONGO_URL = os.environ["MONGO_URL"]
+                ^^^^^^^^^^^^^^^^^^^^^^^
+<frozen os>:679: in __getitem__
+    ???
+E   KeyError: 'MONGO_URL'
+=============================== warnings summary ===============================
+../root/.venv/lib/python3.11/site-packages/starlette/formparsers.py:12
+  /root/.venv/lib/python3.11/site-packages/starlette/formparsers.py:12: PendingDeprecationWarning: Please use `import python_multipart` instead.
+    import multipart
+
+../root/.venv/lib/python3.11/site-packages/passlib/utils/__init__.py:854
+  /root/.venv/lib/python3.11/site-packages/passlib/utils/__init__.py:854: DeprecationWarning: 'crypt' is deprecated and slated for removal in Python 3.13
+    from crypt import crypt as _crypt
+
+backend/app/routers/admin_metrics.py:221
+  /app/backend/app/routers/admin_metrics.py:221: DeprecationWarning: `regex` has been deprecated, please use `pattern` instead
+    start: Optional[str] = Query(None, regex=r"^\d{4}-\d{2}-\d{2}$"),
+
+backend/app/routers/admin_metrics.py:222
+  /app/backend/app/routers/admin_metrics.py:222: DeprecationWarning: `regex` has been deprecated, please use `pattern` instead
+    end: Optional[str] = Query(None, regex=r"^\d{4}-\d{2}-\d{2}$"),
+
+backend/app/routers/admin_metrics.py:249
+  /app/backend/app/routers/admin_metrics.py:249: DeprecationWarning: `regex` has been deprecated, please use `pattern` instead
+    start: Optional[str] = Query(None, regex=r"^\d{4}-\d{2}-\d{2}$"),
+
+backend/app/routers/admin_metrics.py:250
+  /app/backend/app/routers/admin_metrics.py:250: DeprecationWarning: `regex` has been deprecated, please use `pattern` instead
+    end: Optional[str] = Query(None, regex=r"^\d{4}-\d{2}-\d{2}$"),
+
+backend/app/schemas_pricing.py:124
+  /app/backend/app/schemas_pricing.py:124: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class SimpleRuleValidity(BaseModel):
+
+../root/.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:383
+  /root/.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:383: UserWarning: Valid config keys have changed in V2:
+  * 'allow_population_by_field_name' has been renamed to 'validate_by_name'
+    warnings.warn(message, UserWarning)
+
+backend/app/routers/admin_coupons.py:47
+  /app/backend/app/routers/admin_coupons.py:47: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class CouponOut(BaseModel):
+
+../root/.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:383
+  /root/.venv/lib/python3.11/site-packages/pydantic/_internal/_config.py:383: UserWarning: Valid config keys have changed in V2:
+  * 'orm_mode' has been renamed to 'from_attributes'
+    warnings.warn(message, UserWarning)
+
+backend/app/schemas_ops_cases.py:47
+  /app/backend/app/schemas_ops_cases.py:47: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class OpsCaseOut(BaseModel):
+
+backend/app/routers/ops_cases.py:21
+  /app/backend/app/routers/ops_cases.py:21: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class OpsCaseListResponse(BaseModel):
+
+backend/app/schemas_finance.py:26
+  /app/backend/app/schemas_finance.py:26: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class FinanceAccount(BaseModel):
+
+backend/app/schemas_finance.py:66
+  /app/backend/app/schemas_finance.py:66: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class LedgerEntry(BaseModel):
+
+backend/app/schemas_finance.py:96
+  /app/backend/app/schemas_finance.py:96: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class LedgerPosting(BaseModel):
+
+backend/app/schemas_finance.py:124
+  /app/backend/app/schemas_finance.py:124: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class CreditProfile(BaseModel):
+
+backend/app/schemas_finance.py:150
+  /app/backend/app/schemas_finance.py:150: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class AccountBalance(BaseModel):
+
+backend/app/schemas_finance.py:178
+  /app/backend/app/schemas_finance.py:178: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class Payment(BaseModel):
+
+backend/app/routers/theme.py:31
+  /app/backend/app/routers/theme.py:31: PydanticDeprecatedSince20: Pydantic V1 style `@validator` validators are deprecated. You should migrate to Pydantic V2 style `@field_validator` validators, see the migration guide for more details. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    @validator("primary", "primary_foreground", "background", "foreground", "muted", "muted_foreground", "border", pre=True)
+
+backend/app/routers/admin_reporting.py:108
+  /app/backend/app/routers/admin_reporting.py:108: DeprecationWarning: `regex` has been deprecated, please use `pattern` instead
+    by: str = Query("sell", regex="^(sell|bookings)$"),
+
+backend/tests/test_inbox_guardrails.py:361
+  /app/backend/tests/test_inbox_guardrails.py:361: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+backend/tests/test_inbox_guardrails.py:372
+  /app/backend/tests/test_inbox_guardrails.py:372: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+backend/tests/test_inbox_guardrails.py:383
+  /app/backend/tests/test_inbox_guardrails.py:383: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+backend/tests/test_inbox_guardrails.py:394
+  /app/backend/tests/test_inbox_guardrails.py:394: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+backend/tests/test_inbox_guardrails.py:26
+  /app/backend/tests/test_inbox_guardrails.py:26: PytestCollectionWarning: cannot collect test class 'TestInboxGuardrails' because it has a __init__ constructor (from: backend/tests/test_inbox_guardrails.py)
+    class TestInboxGuardrails:
+
+backend/tests/test_integration_hub_mock_provider.py:14
+  /app/backend/tests/test_integration_hub_mock_provider.py:14: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+backend/tests/test_jobs_platform.py:16
+  /app/backend/tests/test_jobs_platform.py:16: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+backend/tests/test_jobs_platform.py:53
+  /app/backend/tests/test_jobs_platform.py:53: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+backend/tests/test_ops_cases_api.py:12
+  /app/backend/tests/test_ops_cases_api.py:12: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+backend/tests/test_ops_cases_api.py:90
+  /app/backend/tests/test_ops_cases_api.py:90: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+backend/tests/test_ops_cases_api.py:149
+  /app/backend/tests/test_ops_cases_api.py:149: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+backend/tests/test_ops_cases_api.py:192
+  /app/backend/tests/test_ops_cases_api.py:192: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+backend/tests/test_ops_cases_api.py:252
+  /app/backend/tests/test_ops_cases_api.py:252: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+backend/tests/test_public_my_booking_phase1.py:13
+  /app/backend/tests/test_public_my_booking_phase1.py:13: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+backend/tests/test_public_my_booking_phase1.py:38
+  /app/backend/tests/test_public_my_booking_phase1.py:38: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+backend/tests/test_public_my_booking_phase1.py:68
+  /app/backend/tests/test_public_my_booking_phase1.py:68: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+backend/tests/test_public_my_booking_phase1.py:102
+  /app/backend/tests/test_public_my_booking_phase1.py:102: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+pr7_backend_focused_test.py:26
+  /app/pr7_backend_focused_test.py:26: PytestCollectionWarning: cannot collect test class 'TestRunner' because it has a __init__ constructor (from: pr7_backend_focused_test.py)
+    class TestRunner:
+
+pr7_backend_test.py:29
+  /app/pr7_backend_test.py:29: PytestCollectionWarning: cannot collect test class 'TestRunner' because it has a __init__ constructor (from: pr7_backend_test.py)
+    class TestRunner:
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+ERROR stripe_payment_funnel_test.py
+ERROR stripe_payment_no_channel_test.py
+ERROR test_finance_phase_2a_2.py
+ERROR test_pilot_data.py - KeyError: 'MONGO_URL'
+!!!!!!!!!!!!!!!!!!! Interrupted: 4 errors during collection !!!!!!!!!!!!!!!!!!!!
+======================== 39 warnings, 4 errors in 2.11s ======================== suite, identify the failing tests (likely in finance/FX/ledger areas), and debug them.
+    -   **Why fix this issue?**: To achieve a fully green test suite, increasing confidence in the entire application's stability.
     -   **Status**: NOT STARTED
     -   **Is recurring issue?**: Y
     -   **Should Test frontend/backend/both after fix?**: backend
     -   **Blocked on other issue**: None
 
--   **Issue 2:** Remarketing v2 Implementation
-    -   **Attempted fixes**: None. This is the next task as per user's explicit instruction.
-    -   **Next debug checklist**: Follow the detailed exec-ready prompt for REMARKETING V2 (Chat Message 447), which includes:
-        1.  Expanding event coverage (, ).
-        2.  Hardening the queue with retry/backoff logic.
-        3.  Implementing a failed-only retry endpoint.
-        4.  Building the Admin UI Event Stream with filtering and drill-down details.
-        5.  Providing the 4-part proof pack as specified.
-    -   **Why fix this issue?**: To complete the remarketing epic, providing full funnel visibility and reliable data delivery to marketing platforms.
-    -   **Status**: NOT STARTED
-    -   **Is recurring issue?**: N
-    -   **Should Test frontend/backend/both after fix?**: both
-    -   **Blocked on other issue**: Issue 1 (Test suite is broken) will make backend verification difficult.
-
--   **Issue 3:** Payments e2e Proof Generation (Mod A)
-    -   **Attempted fixes**: The agent successfully implemented Mod B (proving initiation without webhook finalization). The proof pending badge was added previously.
-    -   **Next debug checklist**: Requires an environment with  to simulate and verify signed webhooks for the  event, which would complete the e2e flow.
-    -   **Why fix this issue?**: To formally verify the entire revenue flow and achieve a significant parity score increase. The user has repeatedly flagged this as high ROI.
-    -   **Status**: BLOCKED
-    -   **Is recurring issue?**: Y
-    -   **Should Test frontend/backend/both after fix?**: backend
-    -   **Blocked on other issue**: Environment variable dependency.
-
--   **Issue 4:** User Verification for Coupon B2C Checkout
-    -   **Attempted fixes**: The feature was implemented and backend-tested in a previous session.
-    -   **Next debug checklist**: User needs to manually test the B2C checkout flow with a coupon.
-    -   **Why fix this issue?**: To formally close out the coupon feature.
+-   **Issue 4: User Verification for all completed PROMPTs**
+    -   **Attempted fixes**: N/A
+    -   **Why fix this issue?**: The user has not yet tested or verified any of the completed features (PROMPTs 1, 2, 3, 5).
     -   **Status**: USER VERIFICATION PENDING
     -   **Is recurring issue?**: N
-    -   **Should Test frontend/backend/both after fix?**: none
-    -   **Blocked on other issue**: None
-
--   **Issue 5:** B2B Discounts UI Polish
-    -   **Attempted fixes**: None. User mentioned this as a potential follow-up.
-    -   **Next debug checklist**: Implement discount range highlight (active/upcoming/expired) and discount conflicts (priority tie-break explanation) in the Admin UI.
-    -   **Why fix this issue?**: To improve the usability and explainability of the newly created B2B discounts feature.
-    -   **Status**: NOT STARTED
-    -   **Is recurring issue?**: N
-    -   **Should Test frontend/backend/both after fix?**: frontend
-    -   **Blocked on other issue**: None
-
--   **Issue 6:** Micro-UX improvements for the Case Edit UI
-    -   **Attempted fixes**: The unsaved changes dialog was implemented in this session. The  replacement was not.
-    -   **Next debug checklist**: Replace  with shadcn  where appropriate in the Case Edit UI.
-    -   **Why fix this issue?**: To improve the operational efficiency and UX consistency of the case management system.
-    -   **Status**: NOT STARTED
-    -   **Is recurring issue?**: N
-    -   **Should Test frontend/backend/both after fix?**: frontend
     -   **Blocked on other issue**: None
 
 **In progress Task List**:
@@ -114,130 +536,97 @@ None.
 
 **Upcoming and Future Tasks**
 **Upcoming Tasks:**
--   **(P1)  polish items:** The user mentioned potential follow-ups like , , and .
+-   **(P0) Implement PROMPT 4 (B2B PRO):** Implement sub-agency management, financial statements, and whitelabeling as per the exec-ready prompt in **Message 547**.
+-   **(P1) Fix PROMPT 5 tech debt:** Add  to the TR POS booking creation flow.
 
 **Future Tasks:**
--   **(P1) EPIC P1-5: Remarketing Mapping:** The full epic may contain more than just v1 and v2.
--   **(P2) Other Epics (from original handoff):**
-    -   : Deeper integration with Property Management Systems.
-    -   : Building configurable public landing pages.
-    -   : Advanced inventory management features.
--   **(P2) Technical Polish Sprint:**
-    -   Standardize on  for all monetary values in the database and API.
-    -   Harden iCal timezone handling.
+-   **(P2) Stabilization Sprint:** Fix the remaining legacy test failures (finance, FX, ledger).
+-   **(P2) Deepen Payments TR Pack:** Integrate real payment providers like iyzico or bank POS systems.
+-   **(P2) Deepen Accounting/e-Fatura:** Integrate with real accounting systems like Paraşüt.
+-   **(P3) Richer SEO:** Implement Breadcrumb/SearchAction JSON-LD and automate IndexNow submission on content publish.
+-   **(P3) Implement other Product Engines:** Add support for tours, activities, villas, cars, etc.
 
 **Completed work in this session**
--   **Ops Cases v2 Implementation:** Added SLA Queue filter bar and a bulk update panel () to the Ops Cases page.
--   **Case Edit UX Hardening:** Implemented unsaved changes confirmation dialog, saving-state locks, and frontend-backend alignment for the  rule in the .
--   **Ops Cases v2 Polish:** Enhanced the bulk update panel with a results banner, Retry failed only functionality, and deterministic selection logic.
--   **Payments Proof (Mod B):** Created a proof harness to demonstrate the payment initiation flow ( -> ) and confirm the system correctly handles a  state from Stripe.
--   **Payments Idempotency Guard:** Implemented a robust idempotency gate for the checkout endpoint using a unique index on  in the  collection to prevent duplicate bookings.
--   **Payments Finalize Guard:** Created a new service () and collection () to make webhook processing idempotent and handle duplicate or out-of-order events safely.
--   **Debug Bundle v2:** Significantly enhanced the  endpoint to include detailed payment status, idempotency logs, and finalization guard decisions, providing a single source of truth for incident triage.
--   **B2B Discounts UI & Engine:** Implemented a full-featured system for B2B discounts, including a new database collection (), admin CRUD endpoints (), a new admin page (), and integration into the B2B pricing engine with full tracing.
--   **Remarketing Mapping v1 (Foundation):** Established the core framework for server-side remarketing, including schemas, config management, event persistence ( collection), and a  endpoint. The blueprint for v2 was also finalized.
-
-**Earlier issues found/mentioned but not fixed**
--   **Issue 1: Sitemap/Robots.txt URLs under /api**
-    -   **Description**: SEO files are served from  instead of the root due to platform ingress rules.
-    -   **Status**: Acknowledged by the user as a platform constraint.
--   **Issue 2: Technical Polish Items**
-    -   **Description**: A backlog of polish notes from the user exists, including standardizing on  for money and hardening iCal timezone handling.
-    -   **Status**: Not started.
-
-**Known issue recurrence from previous fork**
-None.
+-   **Backend Test Suite Fix (PROMPTs 1 & 2):**
+    -   Resolved critical test failures in , , , and .
+    -   Fixed  atomic locking logic.
+    -   Aligned database fixtures to ensure test isolation ().
+    -   Corrected Partner API authentication flow to rely solely on API keys, moving feature gating into the auth dependency.
+-   **PROMPT 3 (SEO+ Pack):**
+    -   : Implemented a job-based, no-op (without env vars) IndexNow client.
+    -   : Created an admin endpoint to trigger re-indexing and improved  to be multi-tenant aware and use  dates.
+    -   : Added publish-time, non-destructive slug and meta-tag generation with TR character support and collision detection.
+    -   : Updated the page to inject minimal, correct  JSON-LD schema.
+-   **PROMPT 5 (Payments TR Pack + Accounting/e-Fatura V1):**
+    -   : Created a payment provider abstraction with a .
+    -   : Implemented a mock installment calculation service.
+    -   : Added new, feature-gated endpoints for TR payments (, ) without modifying the existing Stripe flow. Implemented robust idempotency replay.
+    -   : Created a new feature-gated endpoint for exporting financial transactions () in JSON and CSV formats, using  as the source of truth.
+    -   : Added new audit events  and .
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Exec-Ready Prompts:** User provides detailed, non-negotiable implementation instructions. The agent's role is to execute them precisely.
--   **Proof-Based Completion:** Work is DONE only after providing proof packs ( outputs, UI descriptions, JSON responses).
--   **Idempotency Gates:** Using database unique indexes (, ) and a claim-first pattern to prevent duplicate operations, especially for payments.
--   **Finalize Guards:** A service layer that makes event processing (like webhooks) deterministic by handling duplicates, out-of-order events, and state mismatches using a dedicated audit collection.
--   **Observability via Debug Bundles:** Consolidating all related data (booking, quote, pricing trace, payment status, idempotency logs, finalization logs) into a single API response for rapid incident triage.
--   **Queue-First Delivery:** For non-critical operations like remarketing, persisting the event to a database queue first before attempting delivery, ensuring reliability and enabling retries.
+-   **Exec-Ready Prompt:** User provides non-negotiable implementation instructions. Agent executes and provides proof.
+-   **Feature Gating:** Using  dependencies (for admin routes) and explicit organization-level feature checks (for public routes) to control access to new functionality.
+-   **Payment Provider Abstraction:** A pattern to support multiple payment gateways (Stripe, TR POS) behind a common interface.
+-   **Idempotency Replay:** Ensuring that duplicate requests with the same idempotency key return the previously generated result instead of creating new entities.
+-   **Non-destructive Data Enrichment:** Adding SEO metadata (slugs, titles) only if the fields are empty, preserving any manually entered data.
 
 **key DB schema**
--   **ops_cases**: Modified to support bulk updates.
--   **public_checkouts**: Now has a unique index on  to serve as an idempotency gate.
--   **payment_finalizations (NEW)**:  - Audit log for webhook processing.
--   **b2b_discount_groups (NEW)**:  - Stores discount rules.
--   **remarketing_events (PLANNED for v2)**:  - Queue for remarketing events.
--   **remarketing_configs (PLANNED for v2)**:  - Per-org config for remarketing.
-
-**changes in tech stack**
-None.
+-   **jobs:**  - Generic job queue.
+-   **api_keys:**  - For the Partner API.
+-   **public_checkouts:**  - Used for idempotency in public payment flows.
+-   **booking_payment_transactions:**  - The source of truth for the new accounting export.
+-   **agencies (PLANNED):** 
+-   **whitelabel_settings (PLANNED):** 
 
 **All files of reference**
--   **/app/backend/app/routers/public_checkout.py**: Contains the idempotency gate logic.
--   **/app/backend/app/services/payments_finalize_guard.py**: Contains the new finalize guard for Stripe webhooks.
--   **/app/backend/app/routers/payments_stripe.py**: Integrates the .
--   **/app/backend/app/services/b2b_discounts.py**: New service for resolving and applying B2B discounts.
--   **/app/backend/app/services/b2b_pricing.py**: Integrates the discount service into the B2B quote engine.
--   **/app/backend/app/routers/admin_b2b_discounts.py**: New CRUD endpoints for managing discount groups.
--   **/app/frontend/src/pages/AdminB2BDiscountsPage.jsx**: New UI for B2B discount management.
--   **/app/frontend/src/pages/OpsGuestCasesPage.jsx**: Heavily modified to support bulk actions and advanced filtering.
--   **/app/backend/tests/**: The test suite is currently broken and needs immediate attention.
-
-**Areas that need refactoring**:
--   The test environment needs to be fixed. The  for  suggests a  or project structure issue that prevents tests from running correctly.
-
-**key api endpoints**
--   : For bulk updating ops cases.
--   : Now protected by an idempotency gate.
--   : Now protected by a finalize guard.
--   : Enhanced to include payment, idempotency, and finalization details.
--   : CRUD operations for B2B discounts.
--    (Planned for v2): To test and debug remarketing events.
--    (Planned for v2): To list and observe queued remarketing events.
--    (Planned for v2): To re-queue failed remarketing events.
+-   **User Message 547**: Contains the final, consolidated exec-ready mega prompt for PROMPT 4. **THIS IS THE MOST CRITICAL FILE FOR THE NEXT AGENT.**
+-   : Contains the publish-time slug/meta generation logic.
+-   : Contains the improved sitemap logic.
+-   : Contains the new TR Pack payment endpoints.
+-   : Contains the new accounting export endpoint.
+-   : Directory for the payment abstraction.
 
 **Critical Info for New Agent**
--   **Exec-Ready Prompt Workflow**: This is the most critical rule. The user provides extremely detailed, non-negotiable instructions. Your job is to implement them *exactly* as specified and provide proof packs. Do not deviate, suggest alternatives, or ask for clarification unless you hit a fundamental contradiction or blocker (like the broken test suite).
--   **Fix The Tests First**: The backend test suite is broken (). This is a **P0 blocker**. You must fix the tests before implementing any new backend functionality to ensure you don't introduce regressions.
--   **Parity Score**: The user tracks progress against competitors (Agentis and Agentis Pro) via a percentage score. You are expected to report your completed work in a format that allows the user to update this score, often by suggesting the score increase yourself based on the exec-ready prompt's guidance.
--   **Proof Packs are Non-Negotiable**: Every completed task must be accompanied by a detailed proof pack containing  commands, API JSON responses, and descriptions of UI behavior, as specified by the user.
-
-**documents and test reports created in this job**
-None.
+-   **Your immediate and only task is to execute the PROMPT 4 mega-prompt from user message 547.** Do not re-plan, do not ask for clarification. All necessary instructions, guardrails, and acceptance criteria are in that prompt.
+-   The user's workflow is Exec-Ready Prompt. Implement precisely as instructed and provide proof. Do not deviate.
+-   The main backend test suite for PROMPTs 1, 2, 3, and 5 is now passing. Legacy failures in other areas (finance/FX) are known and have been deferred by the user. Do not try to fix them now.
+-   Follow the hard rules in the mega-prompt strictly, especially concerning feature gating (404 on disable), org-scoping, idempotency, and data truth sources.
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User**: Confirms the  proof pack and adjusts the parity score baseline for consistency. Asks the agent to select the next mini-packet.
-2.  **Agent**: Acknowledges the correction and selects .
-3.  **User**: Provides two template texts for the agent to use for future status updates (a short Slack-style one and a longer epic report). Asks if the agent wants the  exec-ready prompt.
-4.  **Agent**: Confirms the templates are useful and requests the  exec-ready prompt.
-5.  **User**: Provides the detailed, multi-part exec-ready prompt for .
-6.  **Agent**: Acknowledges receipt of the blueprint and confirms the plan to implement it, reiterating the key deliverables and the target parity score.
-7.  **User**: Confirms the agent's understanding is correct and highlights two critical acceptance criteria for the implementation: the precise semantics of  statuses and the exact behavior of the  feature.
-8.  **Agent**: Re-confirms understanding of the critical acceptance criteria, detailing exactly how the status semantics and retry logic will be implemented and proven.
-9.  **User**: Gives final approval of the plan and states they are waiting for the proof-pack message, confirming the agent has everything needed to proceed without further questions.
-10. **Agent**: Starts work by exploring the codebase to find relevant files for the  task. User provides devam (continue) to move forward. Agent confirms the plan again.
+10. **User (513):** Confirms the detailed plan for PROMPT 4, stating the agent now has a clear checklist.
+9. **Agent (514):** Acknowledges the plan and lists the final report structure.
+8. **User (515):** Provides one last set of sık düşülen tuzak (common pitfalls) for the agent to avoid during implementation, focusing on ID type normalization, CSV injection, and stable pagination.
+7. **Agent (521-527):** The agent and user finalize the last details of the PROMPT 4 implementation plan, locking in the acceptance criteria.
+6. **User (528):** Provides a final kapanış raporu iskeleti (completion report skeleton) for the agent to fill out once PROMPT 4 is done.
+5. **Agent (529-546):** The agent confirms the plan, but then gets stuck in a loop, re-analyzing the situation and incorrectly stating it has not started coding.
+4. **User (547):** Provides the final, consolidated **Exec-Ready Mega Prompt for PROMPT 4**, instructing the agent to paste it into Emergent and run it without further questions.
+3. **Agent (548):** Confirms the mega-prompt is ready to be executed.
+2. **User (Message 467):** Confirms the agent should start implementing PROMPT 4 (B2B PRO V1).
+1. **Agent (Message 466):** Confirms the sprint closure for PROMPTs 3 & 5 and readiness to start PROMPT 4.
 
 **Project Health Check:**
--   **Broken**: The backend test suite is non-functional, preventing reliable verification of new changes.
--   **Blocked**: End-to-end payment testing () is blocked on the  environment variable.
+-   **Working**: PROMPTs 1, 2, 3, 5 are implemented with passing backend tests.
+-   **Broken**: Legacy tests for finance/FX/ledger modules are still failing (deferred).
+-   **Mocked**: The TR Payments pack uses a . Real provider integration is a future task.
 
 **3rd Party Integrations**
--   iyzico: Payment Processing.
--   Hotelbeds: Hotel inventory XML provider.
 -   Stripe: Payment processing.
 -   WeasyPrint: PDF generation.
--   AWS SES: Email delivery.
--   : Python library for parsing iCal feeds.
--   GA4 Measurement Protocol (Planned): For server-side analytics.
--   Meta Conversions API (Planned): For server-side analytics.
+-   icalendar: Python library for parsing iCal feeds.
+-   IndexNow: Search engine indexing API (integrated via a no-op client).
 
 **Testing status**
--   **Testing agent used after significant changes**: YES, but the test suite started failing during the session.
--   **Troubleshoot agent used after agent stuck in loop**: NO
--   **Test files created**: None.
--   **Known regressions**: The entire backend test suite is failing with a .
+-   Testing agent used after significant changes: YES, for backend validation of PROMPTs 3 and 5.
+-   Test files created: New test files and fixtures were added to cover the new features.
+-   Known regressions: None related to the implemented prompts.
 
 **Credentials to test flow:**
 -   **Ops/Admin**:  / 
 -   **Agency**:  / 
 
 **What agent forgot to execute**
--   The agent did not resolve the failing backend test suite. This is a critical oversight that blocks further reliable development.</analysis>
+The agent failed to start the implementation of PROMPT 4 after an extensive and successful planning phase. The final user instruction (Message 547) was to execute a provided mega-prompt, but the agent got stuck and did not proceed.</analysis>

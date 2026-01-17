@@ -155,6 +155,40 @@ async def public_quote(payload: PublicQuoteRequest, request: Request, db=Depends
     }
 
 
+class PublicCheckoutTrPosResponse(BaseModel):
+    ok: bool
+    booking_id: Optional[str] = None
+    booking_code: Optional[str] = None
+    provider: Optional[str] = None
+    status: Optional[str] = None
+    reason: Optional[str] = None
+    correlation_id: Optional[str] = None
+
+
+@router.get("/installments", response_model=dict)
+async def public_installments(amount_cents: int, currency: str = "TRY") -> dict:
+    """Return mock installment plans for TR Pack.
+
+    Feature-flag protected via payments_tr_pack; kept extremely simple.
+    """
+
+    # This endpoint is intentionally lightweight and does not touch DB.
+    plans = compute_mock_installment_plans(amount_cents=amount_cents, currency=currency)
+    items = [
+        {
+            "installments": p.installments,
+            "monthly_amount_cents": p.monthly_amount_cents,
+            "total_amount_cents": p.total_amount_cents,
+            "total_interest_cents": p.total_interest_cents,
+        }
+        for p in plans
+    ]
+    return {"ok": True, "currency": currency.upper(), "items": items}
+
+
+
+
+
 @router.post("/checkout", response_model=PublicCheckoutResponse)
 async def public_checkout(payload: PublicCheckoutRequest, request: Request, db=Depends(get_db)):
     client_ip = request.client.host if request.client else None

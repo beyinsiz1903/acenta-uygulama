@@ -54,7 +54,7 @@ def create_test_quote(admin_headers, org_id):
     """Create a test public quote for testing"""
     quote_payload = {
         "org": org_id,
-        "product_id": "test_product_tr_pack",
+        "product_id": "696b4faf6a08833ec53dc8a0",  # Use the ObjectId we created
         "date_from": "2026-02-01",
         "date_to": "2026-02-02", 
         "pax": {"adults": 2, "children": 0},

@@ -40,24 +40,39 @@ async def partner_products_search(
     partner=Depends(require_partner_key(["products:read"])),
     db=Depends(get_db),
 ):
-    # Delegate to public_search_catalog but force org from partner context
+    # Delegate to a simplified tenant-scoped search over products.
     org_id = partner["organization_id"]
-    # Reuse underlying logic: construct a minimal request-like stub so that
-    # public_search_catalog can safely access request.client
-    class _DummyReq:
-        client = None
 
-    return await public_search_catalog(
-        request=_DummyReq(),  # client_ip throttling disabled for partner
-        org=org_id,
-        q=q,
-        page=page,
-        page_size=page_size,
-        sort="price_asc",
-        date_from=None,
-        date_to=None,
-        db=db,
-    )
+    from typing import Dict
+
+    # Minimal filter: active hotel products for this org, optionally by name
+    filt: Dict[str, Any] = {"organization_id": org_id, "status": "active"}
+    if q:
+        filt["name.tr"] = {"$regex": q}
+
+    skip = (page - 1) * page_size
+    cursor = db.products.find(
+        filt,
+        {"_id": 1, "type": 1, "name": 1, "default_currency": 1},
+    ).skip(skip).limit(page_size)
+    products = await cursor.to_list(length=page_size)
+
+    items: List[Dict[str, Any]] = []
+    for prod in products:
+        name = prod.get("name") or {}
+        title = name.get("tr") or name.get("en") or "Ürün"
+        item = {
+            "product_id": str(prod["_id"]),
+            "type": prod.get("type") or "hotel",
+            "title": title,
+            "price": {
+                "amount_cents": 0,
+                "currency": (prod.get("default_currency") or "EUR").upper(),
+            },
+        }
+        items.append(item)
+
+    return {"items": items, "page": page, "page_size": page_size, "total": len(items)}
 
 
 @router.get("/products/{product_id}")

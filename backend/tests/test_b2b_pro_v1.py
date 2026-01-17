@@ -56,14 +56,15 @@ async def test_admin_agencies_feature_disabled_returns_404(async_client, test_db
 
 
 @pytest.mark.anyio
-async def test_admin_agencies_create_and_cycle_guards(anyio_backend, admin_token):  # type: ignore[override]
-    async with AsyncClient(app=app, base_url="http://testserver") as client:
-        # Create base agency (no parent)
-        resp = await client.post(
-            "/api/admin/agencies/",
-            headers={"Authorization": f"Bearer {admin_token}"},
-            json={"name": "Root Agency"},
-        )
+async def test_admin_agencies_create_and_cycle_guards(async_client, test_db, anyio_backend, admin_token):  # type: ignore[override]
+    db = test_db
+
+    # Create base agency (no parent)
+    resp = await async_client.post(
+        "/api/admin/agencies/",
+        headers={"Authorization": f"Bearer {admin_token}"},
+        json={"name": "Root Agency"},
+    )
         assert resp.status_code == 200
         root = resp.json()
         root_id = root["id"]

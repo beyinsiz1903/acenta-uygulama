@@ -153,7 +153,7 @@ async def test_admin_agencies_org_isolation(async_client, test_db, anyio_backend
         agency_a_id = agency_a["id"]
 
         # Org B listing should not see Org A agency
-        resp_list_b = await client.get(
+        resp_list_b = await async_client.get(
             "/api/admin/agencies/",
             headers={"Authorization": f"Bearer {token_b}"},
         )

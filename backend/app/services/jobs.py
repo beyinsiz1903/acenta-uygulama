@@ -194,9 +194,6 @@ async def handle_indexnow_submit(db, job: Dict[str, Any]) -> None:
         await client.aclose()
 
 
-# Register built-in job handlers
-register_job_handler("seo.indexnow_submit", handle_indexnow_submit)
-
 
 
 def register_job_handler(job_type: str, handler: JobHandler) -> None:

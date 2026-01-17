@@ -80,7 +80,7 @@ async def test_admin_agencies_create_and_cycle_guards(async_client, test_db, any
         child_id = child["id"]
 
         # Self-parent on update -> 422
-        resp_self = await client.put(
+        resp_self = await async_client.put(
             f"/api/admin/agencies/{child_id}",
             headers={"Authorization": f"Bearer {admin_token}"},
             json={"parent_agency_id": child_id},

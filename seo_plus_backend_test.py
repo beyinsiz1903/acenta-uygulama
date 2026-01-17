@@ -218,31 +218,20 @@ class TestSitemapBehavior:
 class TestPublishProductVersionSEO:
     """Test publish_product_version SEO fields functionality"""
     
-    @pytest.fixture
-    def admin_auth(self):
-        """Get admin authentication"""
-        token, org_id, email = login_admin()
-        return {
-            "headers": {"Authorization": f"Bearer {token}"},
-            "org_id": org_id,
-            "email": email
-        }
-    
-    @pytest.fixture
-    def mongo_client(self):
-        """Get MongoDB client"""
-        return get_mongo_client()
-    
-    def test_seo_fields_no_change_when_populated(self, admin_auth, mongo_client):
+    def test_seo_fields_no_change_when_populated(self):
         """Test that slug/meta_* fields are not changed when already populated"""
         print("🔍 Testing SEO fields preservation when already populated...")
         
+        token, org_id, email = login_admin()
+        headers = {"Authorization": f"Bearer {token}"}
+        
         # Create a test product with existing SEO fields
+        mongo_client = get_mongo_client()
         db = mongo_client.get_default_database()
         
         # Create test product with pre-populated SEO fields
         test_product = {
-            "organization_id": admin_auth["org_id"],
+            "organization_id": org_id,
             "type": "hotel",
             "code": "TEST_SEO_PRESERVE",
             "name": {"tr": "Test Otel Preserve", "en": "Test Hotel Preserve"},
@@ -262,7 +251,7 @@ class TestPublishProductVersionSEO:
         try:
             # Create a rate plan for the product (required for hotel publishing)
             rate_plan = {
-                "organization_id": admin_auth["org_id"],
+                "organization_id": org_id,
                 "product_id": result.inserted_id,
                 "name": {"tr": "Standart Oda", "en": "Standard Room"},
                 "status": "active",
@@ -284,7 +273,7 @@ class TestPublishProductVersionSEO:
             
             r = requests.post(
                 f"{BASE_URL}/api/admin/catalog/products/{product_id}/versions",
-                headers=admin_auth["headers"],
+                headers=headers,
                 json=version_payload
             )
             assert r.status_code == 201, f"Version creation failed: {r.text}"
@@ -294,7 +283,7 @@ class TestPublishProductVersionSEO:
             # Publish the version
             r = requests.post(
                 f"{BASE_URL}/api/admin/catalog/products/{product_id}/versions/{version_id}/publish",
-                headers=admin_auth["headers"]
+                headers=headers
             )
             assert r.status_code == 200, f"Version publish failed: {r.text}"
             
@@ -315,15 +304,19 @@ class TestPublishProductVersionSEO:
         
         print("✅ SEO fields preservation test passed")
     
-    def test_slug_generation_with_turkish_transliteration(self, admin_auth, mongo_client):
+    def test_slug_generation_with_turkish_transliteration(self):
         """Test slug generation with Turkish transliteration (ı→i, ş→s, ğ→g, ö→o, ü→u, ç→c)"""
         print("🔍 Testing slug generation with Turkish transliteration...")
         
+        token, org_id, email = login_admin()
+        headers = {"Authorization": f"Bearer {token}"}
+        
+        mongo_client = get_mongo_client()
         db = mongo_client.get_default_database()
         
         # Test Turkish characters in product name
         test_product = {
-            "organization_id": admin_auth["org_id"],
+            "organization_id": org_id,
             "type": "hotel",
             "code": "TEST_TR_SLUG",
             "name": {"tr": "Şişli Güzel Otel İçin Ürün", "en": "Sisli Beautiful Hotel Product"},
@@ -341,7 +334,7 @@ class TestPublishProductVersionSEO:
         try:
             # Create rate plan
             rate_plan = {
-                "organization_id": admin_auth["org_id"],
+                "organization_id": org_id,
                 "product_id": result.inserted_id,
                 "name": {"tr": "Standart Oda", "en": "Standard Room"},
                 "status": "active",
@@ -361,7 +354,7 @@ class TestPublishProductVersionSEO:
             
             r = requests.post(
                 f"{BASE_URL}/api/admin/catalog/products/{product_id}/versions",
-                headers=admin_auth["headers"],
+                headers=headers,
                 json=version_payload
             )
             assert r.status_code == 201
@@ -370,7 +363,7 @@ class TestPublishProductVersionSEO:
             
             r = requests.post(
                 f"{BASE_URL}/api/admin/catalog/products/{product_id}/versions/{version_id}/publish",
-                headers=admin_auth["headers"]
+                headers=headers
             )
             assert r.status_code == 200
             
@@ -393,15 +386,19 @@ class TestPublishProductVersionSEO:
         
         print("✅ Turkish transliteration test passed")
     
-    def test_slug_collision_resolution(self, admin_auth, mongo_client):
+    def test_slug_collision_resolution(self):
         """Test org-scope slug collision resolution with -2, -3 suffix"""
         print("🔍 Testing slug collision resolution...")
         
+        token, org_id, email = login_admin()
+        headers = {"Authorization": f"Bearer {token}"}
+        
+        mongo_client = get_mongo_client()
         db = mongo_client.get_default_database()
         
         # Create first product with a specific name
         product1 = {
-            "organization_id": admin_auth["org_id"],
+            "organization_id": org_id,
             "type": "hotel",
             "code": "TEST_COLLISION_1",
             "name": {"tr": "Test Otel", "en": "Test Hotel"},
@@ -417,7 +414,7 @@ class TestPublishProductVersionSEO:
         
         # Create second product with same name (should get collision resolution)
         product2 = {
-            "organization_id": admin_auth["org_id"],
+            "organization_id": org_id,
             "type": "hotel",
             "code": "TEST_COLLISION_2",
             "name": {"tr": "Test Otel", "en": "Test Hotel"},  # Same name
@@ -436,7 +433,7 @@ class TestPublishProductVersionSEO:
             # Create rate plans for both products
             for product_oid in [result1.inserted_id, result2.inserted_id]:
                 rate_plan = {
-                    "organization_id": admin_auth["org_id"],
+                    "organization_id": org_id,
                     "product_id": product_oid,
                     "name": {"tr": "Standart Oda", "en": "Standard Room"},
                     "status": "active",
@@ -456,7 +453,7 @@ class TestPublishProductVersionSEO:
             
             r = requests.post(
                 f"{BASE_URL}/api/admin/catalog/products/{product2_id}/versions",
-                headers=admin_auth["headers"],
+                headers=headers,
                 json=version_payload
             )
             assert r.status_code == 201
@@ -465,7 +462,7 @@ class TestPublishProductVersionSEO:
             
             r = requests.post(
                 f"{BASE_URL}/api/admin/catalog/products/{product2_id}/versions/{version_id}/publish",
-                headers=admin_auth["headers"]
+                headers=headers
             )
             assert r.status_code == 200
             
@@ -487,15 +484,19 @@ class TestPublishProductVersionSEO:
         
         print("✅ Slug collision resolution test passed")
     
-    def test_meta_title_description_defaults(self, admin_auth, mongo_client):
+    def test_meta_title_description_defaults(self):
         """Test meta_title and meta_description default generation"""
         print("🔍 Testing meta_title and meta_description default generation...")
         
+        token, org_id, email = login_admin()
+        headers = {"Authorization": f"Bearer {token}"}
+        
+        mongo_client = get_mongo_client()
         db = mongo_client.get_default_database()
         
         # Test product without location
         test_product_no_loc = {
-            "organization_id": admin_auth["org_id"],
+            "organization_id": org_id,
             "type": "hotel",
             "code": "TEST_META_NO_LOC",
             "name": {"tr": "Güzel Test Oteli", "en": "Beautiful Test Hotel"},
@@ -511,7 +512,7 @@ class TestPublishProductVersionSEO:
         
         # Test product with location
         test_product_with_loc = {
-            "organization_id": admin_auth["org_id"],
+            "organization_id": org_id,
             "type": "hotel",
             "code": "TEST_META_WITH_LOC",
             "name": {"tr": "Şehir Merkezi Oteli", "en": "City Center Hotel"},
@@ -529,7 +530,7 @@ class TestPublishProductVersionSEO:
             # Create rate plans for both products
             for product_oid in [result_no_loc.inserted_id, result_with_loc.inserted_id]:
                 rate_plan = {
-                    "organization_id": admin_auth["org_id"],
+                    "organization_id": org_id,
                     "product_id": product_oid,
                     "name": {"tr": "Standart Oda", "en": "Standard Room"},
                     "status": "active",
@@ -550,7 +551,7 @@ class TestPublishProductVersionSEO:
             # Create and publish version for product without location
             r = requests.post(
                 f"{BASE_URL}/api/admin/catalog/products/{product_no_loc_id}/versions",
-                headers=admin_auth["headers"],
+                headers=headers,
                 json=version_payload
             )
             assert r.status_code == 201
@@ -559,7 +560,7 @@ class TestPublishProductVersionSEO:
             
             r = requests.post(
                 f"{BASE_URL}/api/admin/catalog/products/{product_no_loc_id}/versions/{version_id}/publish",
-                headers=admin_auth["headers"]
+                headers=headers
             )
             assert r.status_code == 200
             
@@ -578,7 +579,7 @@ class TestPublishProductVersionSEO:
             # Create and publish version for product with location
             r = requests.post(
                 f"{BASE_URL}/api/admin/catalog/products/{product_with_loc_id}/versions",
-                headers=admin_auth["headers"],
+                headers=headers,
                 json=version_payload
             )
             assert r.status_code == 201
@@ -587,7 +588,7 @@ class TestPublishProductVersionSEO:
             
             r = requests.post(
                 f"{BASE_URL}/api/admin/catalog/products/{product_with_loc_id}/versions/{version_id}/publish",
-                headers=admin_auth["headers"]
+                headers=headers
             )
             assert r.status_code == 200
             

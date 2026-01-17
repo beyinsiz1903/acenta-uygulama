@@ -205,6 +205,11 @@ def register_job_handler(job_type: str, handler: JobHandler) -> None:
 async def process_claimed_job(db, job: Dict[str, Any]) -> None:
     """Execute a claimed job using the registered handler.
 
+
+# Register built-in job handlers
+register_job_handler("seo.indexnow_submit", handle_indexnow_submit)
+
+
     Any exception from the handler is captured and translated into failed/dead
     status with backoff semantics.
     """

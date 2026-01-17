@@ -103,22 +103,7 @@ class TestIndexNowJobIntegration:
 class TestSitemapBehavior:
     """Test sitemap.xml endpoint behavior"""
     
-    @pytest.fixture
-    def admin_auth(self):
-        """Get admin authentication"""
-        token, org_id, email = login_admin()
-        return {
-            "headers": {"Authorization": f"Bearer {token}"},
-            "org_id": org_id,
-            "email": email
-        }
-    
-    @pytest.fixture
-    def mongo_client(self):
-        """Get MongoDB client"""
-        return get_mongo_client()
-    
-    def test_sitemap_without_org_param(self, admin_auth, mongo_client):
+    def test_sitemap_without_org_param(self):
         """Test /api/sitemap.xml without org param - should return static URLs + legacy hotels"""
         print("🔍 Testing sitemap without org parameter...")
         
@@ -139,6 +124,7 @@ class TestSitemapBehavior:
         assert f'<loc>{BASE_URL}/book</loc>' in xml_content  # Book page
         
         # Check for legacy hotels (if any exist)
+        mongo_client = get_mongo_client()
         db = mongo_client.get_default_database()
         hotels_count = db.hotels.count_documents({"active": True})
         
@@ -149,11 +135,11 @@ class TestSitemapBehavior:
         
         print("✅ Sitemap without org parameter test passed")
     
-    def test_sitemap_with_org_param(self, admin_auth, mongo_client):
+    def test_sitemap_with_org_param(self):
         """Test /api/sitemap.xml?org=<org_id> - should include products with type=hotel, status=active"""
         print("🔍 Testing sitemap with org parameter...")
         
-        org_id = admin_auth["org_id"]
+        token, org_id, email = login_admin()
         
         # Call sitemap endpoint with org parameter
         r = requests.get(f"{BASE_URL}/api/sitemap.xml?org={org_id}")
@@ -166,6 +152,7 @@ class TestSitemapBehavior:
         assert f'<loc>{BASE_URL}/book</loc>' in xml_content
         
         # Check for products with type=hotel, status=active
+        mongo_client = get_mongo_client()
         db = mongo_client.get_default_database()
         active_hotels = list(db.products.find({
             "type": "hotel",
@@ -196,11 +183,11 @@ class TestSitemapBehavior:
         
         print("✅ Sitemap with org parameter test passed")
     
-    def test_sitemap_canonical_urls(self, admin_auth, mongo_client):
+    def test_sitemap_canonical_urls(self):
         """Test that all dynamic URLs follow canonical pattern /book/{productId}"""
         print("🔍 Testing sitemap canonical URL patterns...")
         
-        org_id = admin_auth["org_id"]
+        token, org_id, email = login_admin()
         
         # Get sitemap with org parameter
         r = requests.get(f"{BASE_URL}/api/sitemap.xml?org={org_id}")

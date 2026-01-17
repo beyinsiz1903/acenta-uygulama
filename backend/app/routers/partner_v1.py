@@ -142,6 +142,7 @@ async def partner_create_booking(
     class _DummyReq:
         client = None
         headers: Dict[str, Any] = {}
+        query_params = {}
 
     resp = await public_checkout(req, _DummyReq(), db)  # type: ignore[arg-type]
     return resp.model_dump()

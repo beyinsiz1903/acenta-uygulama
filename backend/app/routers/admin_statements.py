@@ -35,7 +35,7 @@ def _parse_date_param(value: Optional[str]) -> Optional[datetime]:
         raise HTTPException(status_code=422, detail="INVALID_DATE")
 
 
-@router.get("/", dependencies=[FeatureDep])
+@router.get("", dependencies=[FeatureDep])
 async def list_statements(
     request: Request,
     date_from: Optional[str] = None,

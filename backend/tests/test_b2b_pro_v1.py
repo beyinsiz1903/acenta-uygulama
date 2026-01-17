@@ -89,7 +89,7 @@ async def test_admin_agencies_create_and_cycle_guards(async_client, test_db, any
         assert resp_self.json()["detail"] == "SELF_PARENT_NOT_ALLOWED"
 
         # Create third agency C with parent B, then try to set A's parent to C to form A<-B<-C<-A
-        resp_c = await client.post(
+        resp_c = await async_client.post(
             "/api/admin/agencies/",
             headers={"Authorization": f"Bearer {admin_token}"},
             json={"name": "Third Agency", "parent_agency_id": child_id},

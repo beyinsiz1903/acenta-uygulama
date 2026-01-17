@@ -593,6 +593,251 @@ async def public_checkout(payload: PublicCheckoutRequest, request: Request, db=D
     await db.public_checkouts.update_one(
         {
             "organization_id": org_id,
+
+
+@router.post("/checkout/tr-pos", response_model=PublicCheckoutTrPosResponse)
+async def public_checkout_tr_pos(
+    payload: PublicCheckoutRequest,
+    request: Request,
+    db=Depends(get_db),
+):
+    """Public B2C checkout using mock TR POS provider.
+
+    This endpoint mirrors the core booking+idempotency behaviour of
+    /checkout but uses a mock TR payment provider and a simplified
+    response contract.
+    """
+
+    from app.auth import require_feature
+
+    # Feature flag check (payments_tr_pack); super_admin bypasses this.
+    guard = await require_feature("payments_tr_pack")(user=None)  # type: ignore[arg-type]
+
+    client_ip = request.client.host if request.client else None
+    org_id = payload.org
+    correlation_id = get_or_create_correlation_id(request, None)
+
+    if not payload.idempotency_key or not payload.idempotency_key.strip():
+        raise HTTPException(status_code=422, detail="IDEMPOTENCY_KEY_REQUIRED")
+
+    idem_key = payload.idempotency_key.strip()
+
+    existing = await db.public_checkouts.find_one(
+        {
+            "organization_id": org_id,
+            "idempotency_key": idem_key,
+        }
+    )
+    if existing:
+        existing_quote = existing.get("quote_id")
+        if existing_quote and existing_quote != payload.quote_id:
+            raise HTTPException(status_code=409, detail="IDEMPOTENCY_KEY_CONFLICT")
+
+        ok = bool(existing.get("ok", existing.get("status") == "created"))
+        reason = existing.get("reason")
+        if ok:
+            return PublicCheckoutTrPosResponse(
+                ok=True,
+                booking_id=existing.get("booking_id"),
+                booking_code=existing.get("booking_code"),
+                provider=existing.get("payment_provider") or "tr_pos_mock",
+                status=existing.get("status") or "created",
+                reason=None,
+                correlation_id=existing.get("correlation_id"),
+            )
+
+        return PublicCheckoutTrPosResponse(
+            ok=False,
+            booking_id=None,
+            booking_code=None,
+            provider=existing.get("payment_provider") or "tr_pos_mock",
+            status=existing.get("status") or "failed",
+            reason=reason or "provider_unavailable",
+            correlation_id=existing.get("correlation_id"),
+        )
+
+    # No existing record -> claim idempotency key up-front
+    now = now_utc()
+    try:
+        await db.public_checkouts.insert_one(
+            {
+                "organization_id": org_id,
+                "idempotency_key": idem_key,
+                "quote_id": payload.quote_id,
+                "status": "processing",
+                "created_at": now,
+                "created_ip": client_ip,
+                "correlation_id": correlation_id,
+            }
+        )
+    except Exception:
+        existing = await db.public_checkouts.find_one(
+            {
+                "organization_id": org_id,
+                "idempotency_key": idem_key,
+            }
+        )
+        if existing:
+            existing_quote = existing.get("quote_id")
+            if existing_quote and existing_quote != payload.quote_id:
+                raise HTTPException(status_code=409, detail="IDEMPOTENCY_KEY_CONFLICT")
+
+            ok = bool(existing.get("ok", existing.get("status") == "created"))
+            reason = existing.get("reason")
+            if ok:
+                return PublicCheckoutTrPosResponse(
+                    ok=True,
+                    booking_id=existing.get("booking_id"),
+                    booking_code=existing.get("booking_code"),
+                    provider=existing.get("payment_provider") or "tr_pos_mock",
+                    status=existing.get("status") or "created",
+                    reason=None,
+                    correlation_id=existing.get("correlation_id"),
+                )
+
+            return PublicCheckoutTrPosResponse(
+                ok=False,
+                booking_id=None,
+                booking_code=None,
+                provider=existing.get("payment_provider") or "tr_pos_mock",
+                status=existing.get("status") or "failed",
+                reason=reason or "provider_unavailable",
+                correlation_id=existing.get("correlation_id"),
+            )
+
+    # Load and validate quote as in the Stripe checkout flow
+    try:
+        quote = await get_valid_quote(db, organization_id=org_id, quote_id=payload.quote_id)
+    except AppError as exc:
+        if exc.status_code == 404:
+            raise HTTPException(status_code=404, detail="QUOTE_NOT_FOUND") from exc
+        raise
+
+    # Create booking document in PENDING_PAYMENT status
+    guest = payload.guest
+    amount_cents = int(quote.get("amount_cents", 0))
+    currency = (quote.get("currency") or "TRY").upper()
+
+    now = now_utc()
+    bookings = db.bookings
+    booking_doc: Dict[str, Any] = {
+        "organization_id": org_id,
+        "correlation_id": correlation_id,
+        "status": "PENDING_PAYMENT",
+        "source": "public",
+        "created_at": now,
+        "updated_at": now,
+        "guest": {
+            "full_name": guest.full_name,
+            "email": guest.email,
+            "phone": guest.phone,
+        },
+        "amounts": {
+            "sell": float(amount_cents) / 100.0,
+            "net": float(amount_cents) / 100.0,
+            "breakdown": {},
+        },
+        "currency": currency,
+        "quote_id": quote.get("quote_id"),
+        "public_quote": {
+            "date_from": quote.get("date_from"),
+            "date_to": quote.get("date_to"),
+            "nights": quote.get("nights"),
+            "pax": quote.get("pax"),
+        },
+    }
+
+    ins = await bookings.insert_one(booking_doc)
+    booking_id = str(ins.inserted_id)
+
+    # Minimal audit / funnel event could be added here if desired
+
+    # Payment provider init (mock TR POS)
+    provider = MockTrPosProvider()
+    ctx = PaymentInitContext(
+        organization_id=org_id,
+        booking_id=booking_id,
+        amount_cents=amount_cents,
+        currency=currency,
+        idempotency_key=idem_key,
+        correlation_id=correlation_id,
+    )
+    result = await provider.init_payment(ctx)
+
+    if not result.ok:
+        # Provider unavailable or declined; do not keep orphan booking
+        await bookings.delete_one({"_id": ins.inserted_id})
+        await db.public_checkouts.update_one(
+            {
+                "organization_id": org_id,
+                "idempotency_key": idem_key,
+            },
+            {
+                "$set": {
+                    "quote_id": quote.get("quote_id"),
+                    "status": "failed",
+                    "ok": False,
+                    "reason": result.reason or "provider_unavailable",
+                    "payment_provider": result.provider,
+                }
+            },
+            upsert=True,
+        )
+        return PublicCheckoutTrPosResponse(
+            ok=False,
+            booking_id=None,
+            booking_code=None,
+            provider=result.provider,
+            status="failed",
+            reason=result.reason or "provider_unavailable",
+            correlation_id=correlation_id,
+        )
+
+    # Success path: generate simple booking_code and persist
+    from uuid import uuid4
+
+    booking_code = f"TR-{uuid4().hex[:8].upper()}"
+
+    await bookings.update_one(
+        {"_id": ins.inserted_id},
+        {
+            "$set": {
+                "booking_code": booking_code,
+                "payment_provider": result.provider,
+                "payment_status": "pending",
+            }
+        },
+    )
+
+    await db.public_checkouts.update_one(
+        {
+            "organization_id": org_id,
+            "idempotency_key": idem_key,
+        },
+        {
+            "$set": {
+                "quote_id": quote.get("quote_id"),
+                "booking_id": booking_id,
+                "booking_code": booking_code,
+                "payment_provider": result.provider,
+                "status": "created",
+                "ok": True,
+                "correlation_id": correlation_id,
+            }
+        },
+        upsert=True,
+    )
+
+    return PublicCheckoutTrPosResponse(
+        ok=True,
+        booking_id=booking_id,
+        booking_code=booking_code,
+        provider=result.provider,
+        status="created",
+        reason=None,
+        correlation_id=correlation_id,
+    )
+
             "idempotency_key": idem_key,
         },
         {

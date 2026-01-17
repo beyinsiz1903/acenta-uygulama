@@ -3,11 +3,10 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 
 import pytest
-from httpx import AsyncClient
-
 from app.auth import create_access_token
 from app.db import get_db
-from server import app  # FastAPI app from server.py
+
+# HTTP client comes from tests/conftest.py as `async_client` fixture
 
 
 @pytest.fixture

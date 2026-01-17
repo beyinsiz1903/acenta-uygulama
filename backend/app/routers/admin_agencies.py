@@ -10,7 +10,7 @@ from app.auth import get_current_user, require_feature, require_roles
 from app.db import get_db
 from app.services.audit import write_audit_log
 from app.utils import now_utc, serialize_doc
-from app.utils.ids import build_id_filter
+from app.utils_ids import build_id_filter
 
 
 router = APIRouter(prefix="/api/admin/agencies", tags=["admin_agencies"])

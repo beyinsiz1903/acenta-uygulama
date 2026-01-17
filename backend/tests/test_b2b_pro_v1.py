@@ -164,7 +164,7 @@ async def test_admin_agencies_org_isolation(async_client, test_db, anyio_backend
         assert all(item["id"] != agency_a_id for item in items_b)
 
         # Org B trying to update Org A agency_id should get 404
-        resp_update_b = await client.put(
+        resp_update_b = await async_client.put(
             f"/api/admin/agencies/{agency_a_id}",
             headers={"Authorization": f"Bearer {token_b}"},
             json={"name": "Hacked"},

@@ -242,6 +242,10 @@ async def run_job_worker_loop(worker_id: str, *, sleep_seconds: int = 5) -> None
 
 
 async def asyncio_sleep(seconds: int) -> None:
+    """Tiny indirection around asyncio.sleep for easier monkeypatching in tests."""
+    import asyncio
+
+    await asyncio.sleep(seconds)
 
 
 async def enqueue_indexnow_job(db, *, organization_id: str, urls: list[str]) -> Dict[str, Any]:
@@ -258,8 +262,3 @@ async def enqueue_indexnow_job(db, *, organization_id: str, urls: list[str]) -> 
         type="seo.indexnow_submit",
         payload=payload,
     )
-
-    # Isolated for easier monkeypatching in tests
-    import asyncio
-
-    await asyncio.sleep(seconds)

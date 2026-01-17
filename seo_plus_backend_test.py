@@ -623,31 +623,31 @@ def run_all_tests():
     indexnow_tests = TestIndexNowJobIntegration()
     
     # Get fixtures
-    admin_auth = {"headers": {"Authorization": f"Bearer {login_admin()[0]}"}, "org_id": login_admin()[1], "email": login_admin()[2]}
+    token, org_id, email = login_admin()
+    admin_auth = {"headers": {"Authorization": f"Bearer {token}"}, "org_id": org_id, "email": email}
     mongo_client = get_mongo_client()
     
-    indexnow_tests.test_indexnow_disabled_scenario(admin_auth, mongo_client)
-    indexnow_tests.test_indexnow_not_configured_scenario(admin_auth, mongo_client)
-    indexnow_tests.test_indexnow_http_responses(admin_auth, mongo_client)
+    indexnow_tests.test_indexnow_job_enqueue_and_processing(admin_auth, mongo_client)
+    indexnow_tests.test_indexnow_configuration_scenarios()
     
     # Test sitemap behavior
     print("\n📋 2. Sitemap Behavior Tests")
     print("-" * 40)
     sitemap_tests = TestSitemapBehavior()
     
-    sitemap_tests.test_sitemap_without_org_param(admin_auth, mongo_client)
-    sitemap_tests.test_sitemap_with_org_param(admin_auth, mongo_client)
-    sitemap_tests.test_sitemap_canonical_urls(admin_auth, mongo_client)
+    sitemap_tests.test_sitemap_without_org_param()
+    sitemap_tests.test_sitemap_with_org_param()
+    sitemap_tests.test_sitemap_canonical_urls()
     
     # Test publish_product_version SEO fields
     print("\n📋 3. Publish Product Version SEO Fields Tests")
     print("-" * 40)
     seo_tests = TestPublishProductVersionSEO()
     
-    seo_tests.test_seo_fields_no_change_when_populated(admin_auth, mongo_client)
-    seo_tests.test_slug_generation_with_turkish_transliteration(admin_auth, mongo_client)
-    seo_tests.test_slug_collision_resolution(admin_auth, mongo_client)
-    seo_tests.test_meta_title_description_defaults(admin_auth, mongo_client)
+    seo_tests.test_seo_fields_no_change_when_populated()
+    seo_tests.test_slug_generation_with_turkish_transliteration()
+    seo_tests.test_slug_collision_resolution()
+    seo_tests.test_meta_title_description_defaults()
     
     print("\n" + "=" * 60)
     print("🎉 SEO+ Pack Backend Test Suite Completed Successfully!")

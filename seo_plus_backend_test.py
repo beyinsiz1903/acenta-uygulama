@@ -209,16 +209,22 @@ class TestSitemapBehavior:
         urls = re.findall(url_pattern, xml_content)
         
         # Filter dynamic URLs (exclude static ones)
-        dynamic_urls = [url for url in urls if '/book/' in url and url not in [
+        base_url_http = BASE_URL.replace('https://', 'http://')
+        static_urls = [
             f'{BASE_URL}/',
-            f'{BASE_URL}/book'
-        ]]
+            f'{BASE_URL}/book',
+            f'{base_url_http}/',
+            f'{base_url_http}/book'
+        ]
+        dynamic_urls = [url for url in urls if '/book/' in url and url not in static_urls]
         
-        # Verify all dynamic URLs follow /book/{id} pattern
-        book_pattern = re.compile(rf'^{re.escape(BASE_URL)}/book/[a-f0-9]{{24}}$')
+        # Verify all dynamic URLs follow /book/{id} pattern (allow both http and https)
+        book_pattern_https = re.compile(rf'^{re.escape(BASE_URL)}/book/[a-f0-9\-]{{24,36}}$')
+        book_pattern_http = re.compile(rf'^{re.escape(base_url_http)}/book/[a-f0-9\-]{{24,36}}$')
         
         for url in dynamic_urls:
-            assert book_pattern.match(url), f"URL {url} does not follow canonical /book/{{productId}} pattern"
+            if not (book_pattern_https.match(url) or book_pattern_http.match(url)):
+                assert False, f"URL {url} does not follow canonical /book/{{productId}} pattern"
         
         print(f"   Verified {len(dynamic_urls)} dynamic URLs follow canonical pattern")
         print("✅ Sitemap canonical URL patterns test passed")

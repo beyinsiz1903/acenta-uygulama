@@ -146,6 +146,7 @@ app.include_router(admin_jobs_router)
 app.include_router(admin_api_keys_router)
 app.include_router(metrics_router)
 app.include_router(partner_v1_router)
+app.include_router(admin_agencies_router)
 
 app.include_router(theme_router)
 

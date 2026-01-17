@@ -14,19 +14,27 @@ router = APIRouter(prefix="/api/auth", tags=["auth"])
 async def login(payload: LoginRequest):
     db = await get_db()
 
-    org = await db.organizations.find_one({"slug": "default"})
-    if not org:
-        raise HTTPException(status_code=500, detail="Organizasyon bulunamadı")
-    org_id = str(org["_id"])
-
-    user = await db.users.find_one({"organization_id": org_id, "email": payload.email})
+    # Tenant-agnostic login: resolve user by email, then infer organization
+    user = await db.users.find_one({"email": payload.email})
     if not user or not user.get("is_active"):
         raise HTTPException(status_code=401, detail="Email veya şifre hatalı")
 
     if not verify_password(payload.password, user.get("password_hash") or ""):
         raise HTTPException(status_code=401, detail="Email veya şifre hatalı")
 
-    token = create_access_token(subject=user["email"], organization_id=org_id, roles=user.get("roles") or ["admin"])
+    org_id = user.get("organization_id")
+    if not org_id:
+        # Fallback to default organization if user has no explicit org
+        org = await db.organizations.find_one({"slug": "default"})
+        if not org:
+            raise HTTPException(status_code=500, detail="Organizasyon bulunamadı")
+        org_id = str(org["_id"])
+
+    token = create_access_token(
+        subject=user["email"],
+        organization_id=org_id,
+        roles=user.get("roles") or ["admin"],
+    )
     user_out = serialize_doc(user)
     
     # FAZ-1: Load organization with merged features

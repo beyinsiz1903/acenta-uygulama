@@ -166,13 +166,30 @@ class PublicCheckoutTrPosResponse(BaseModel):
 
 
 @router.get("/installments", response_model=dict)
-async def public_installments(amount_cents: int, currency: str = "TRY") -> dict:
+async def public_installments(org: str, amount_cents: int, currency: str = "TRY", db=Depends(get_db)) -> dict:
     """Return mock installment plans for TR Pack.
 
-    Feature-flag protected via payments_tr_pack; kept extremely simple.
+    - Org-scope feature gating via payments_tr_pack
+    - Only TRY supported for now
     """
 
-    # This endpoint is intentionally lightweight and does not touch DB.
+    from app.auth import load_org_doc, resolve_org_features
+
+    if amount_cents <= 0:
+        raise HTTPException(status_code=422, detail="INVALID_AMOUNT")
+
+    if currency.upper() != "TRY":
+        raise HTTPException(status_code=422, detail="UNSUPPORTED_CURRENCY")
+
+    org_doc = await load_org_doc(org)
+    if not org_doc:
+        raise HTTPException(status_code=404, detail="Not found")
+
+    features = resolve_org_features(org_doc)
+    if not bool(features.get("payments_tr_pack")):
+        # Hide feature from tenants that do not have TR Pack enabled
+        raise HTTPException(status_code=404, detail="Not found")
+
     plans = compute_mock_installment_plans(amount_cents=amount_cents, currency=currency)
     items = [
         {
@@ -595,9 +612,20 @@ async def public_checkout(payload: PublicCheckoutRequest, request: Request, db=D
             "organization_id": org_id,
 
 
+
+class PublicCheckoutTrPosRequest(BaseModel):
+    org: str = Field(..., min_length=1)
+    quote_id: str = Field(..., min_length=1)
+    guest: PublicCheckoutGuest
+    idempotency_key: str = Field(..., min_length=8, max_length=128)
+    currency: str = Field("TRY", min_length=3, max_length=3)
+    installments: Optional[int] = Field(None, ge=1, le=36)
+    card_bin: Optional[str] = Field(None, min_length=6, max_length=8)
+
+
 @router.post("/checkout/tr-pos", response_model=PublicCheckoutTrPosResponse)
 async def public_checkout_tr_pos(
-    payload: PublicCheckoutRequest,
+    payload: PublicCheckoutTrPosRequest,
     request: Request,
     db=Depends(get_db),
 ):

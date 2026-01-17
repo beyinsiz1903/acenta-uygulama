@@ -289,7 +289,7 @@ async def seed_default_org_and_users(test_db):
     else:
         agency_id = str(agency["_id"])
 
-    agency_user = await test_db.users.find_one({"organization_id": org_id, "email": "agency1@demo.test"})
+    agency_user = await test_db.users.find_one({"organization_id": default_org_id, "email": "agency1@demo.test"})
     if not agency_user:
         await test_db.users.insert_one(
             {

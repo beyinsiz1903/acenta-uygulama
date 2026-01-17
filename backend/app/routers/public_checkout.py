@@ -636,13 +636,18 @@ async def public_checkout_tr_pos(
     response contract.
     """
 
-    from app.auth import require_feature
-
-    # Feature flag check (payments_tr_pack); super_admin bypasses this.
-    guard = await require_feature("payments_tr_pack")(user=None)  # type: ignore[arg-type]
+    from app.auth import load_org_doc, resolve_org_features
 
     client_ip = request.client.host if request.client else None
     org_id = payload.org
+
+    org_doc = await load_org_doc(org_id)
+    if not org_doc:
+        raise HTTPException(status_code=404, detail="Not found")
+
+    features = resolve_org_features(org_doc)
+    if not bool(features.get("payments_tr_pack")):
+        raise HTTPException(status_code=404, detail="Not found")
     correlation_id = get_or_create_correlation_id(request, None)
 
     if not payload.idempotency_key or not payload.idempotency_key.strip():

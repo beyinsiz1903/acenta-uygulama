@@ -821,6 +821,18 @@ async def public_checkout_tr_pos(
     ins = await bookings.insert_one(booking_doc)
     booking_id = str(ins.inserted_id)
 
+    # Payment provider init (mock TR POS)
+    provider = MockTrPosProvider()
+    ctx = PaymentInitContext(
+        organization_id=org_id,
+        booking_id=booking_id,
+        amount_cents=amount_cents,
+        currency=currency,
+        idempotency_key=idem_key,
+        correlation_id=correlation_id,
+    )
+    result = await provider.init_payment(ctx)
+
     # Audit: PAYMENT_TR_INIT (mock provider)
     try:
         from app.services.audit import write_audit_log
@@ -845,18 +857,6 @@ async def public_checkout_tr_pos(
     except Exception:
         # Audit failures must not break checkout
         pass
-
-    # Payment provider init (mock TR POS)
-    provider = MockTrPosProvider()
-    ctx = PaymentInitContext(
-        organization_id=org_id,
-        booking_id=booking_id,
-        amount_cents=amount_cents,
-        currency=currency,
-        idempotency_key=idem_key,
-        correlation_id=correlation_id,
-    )
-    result = await provider.init_payment(ctx)
 
     if not result.ok:
         # Provider unavailable or declined; do not keep orphan booking

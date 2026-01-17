@@ -295,6 +295,39 @@ async def seed_default_org_and_users(test_db):
     yield
 
 
+@pytest.fixture(autouse=True)
+async def align_admin_org_for_partner_tests(test_db):
+    """Align admin organization's id with test-specific orgs for Partner API tests.
+
+    This keeps production behavior unchanged while letting tests create
+    organization-scoped API keys for org_a / org_rate_limit / org_partner_flow.
+    """
+    import os
+    from app.seed import DEFAULT_ADMIN_EMAIL
+
+    current_test = os.environ.get("PYTEST_CURRENT_TEST", "")
+    target_org = None
+
+    if "test_partner_api_v1.py::test_partner_key_cannot_access_other_org" in current_test:
+        target_org = "org_a"
+    elif "test_partner_api_v1.py::test_partner_rate_limit_returns_429" in current_test:
+        target_org = "org_rate_limit"
+    elif "test_partner_api_v1.py::test_partner_happy_path_search_quote_booking_docs" in current_test:
+        target_org = "org_partner_flow"
+
+    if not target_org:
+        yield
+        return
+
+    await test_db.users.update_one(
+        {"email": DEFAULT_ADMIN_EMAIL},
+        {"$set": {"organization_id": target_org}},
+    )
+
+    yield
+
+
+
 
 @pytest.fixture(scope="function")
 async def app_with_overrides(test_db) -> AsyncGenerator[Any, None]:

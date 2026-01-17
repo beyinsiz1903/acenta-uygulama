@@ -128,6 +128,7 @@ async def app_error_handler(request, exc: AppError):
 # Include routers
 app.include_router(auth_router, prefix=API_PREFIX)
 app.include_router(admin_router, prefix=API_PREFIX)
+app.include_router(admin_accounting_router)  # router already has /api prefix
 app.include_router(admin_funnel_router)
 
 app.include_router(admin_catalog_router, prefix=API_PREFIX)

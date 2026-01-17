@@ -7,12 +7,13 @@ Testing IndexNow job integration, sitemap behavior, and publish_product_version 
 import requests
 import json
 import os
+import sys
 import asyncio
-import pytest
-from unittest.mock import patch, AsyncMock, MagicMock
 from datetime import datetime, timezone
 from pymongo import MongoClient
-import httpx
+
+# Add backend path to sys.path for imports
+sys.path.append('/app/backend')
 
 # Configuration - Use production URL from frontend/.env
 BASE_URL = "https://rezhub-commerce.preview.emergentagent.com"

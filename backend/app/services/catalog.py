@@ -385,8 +385,10 @@ async def publish_product_version(db, actor: dict[str, Any], product_id: str, ve
     existing_meta_title = (prod.get("meta_title") or "").strip()
     existing_meta_desc = (prod.get("meta_description") or "").strip()
 
+    # Base title for SEO fallbacks
+    base_title = title_tr or title_en or prod.get("code") or "Otel"
+
     if not existing_meta_title:
-        base_title = title_tr or title_en or prod.get("code") or "Otel"
         update_product_fields["meta_title"] = f"{base_title} | Syroce"
 
     if not existing_meta_desc:
@@ -394,9 +396,9 @@ async def publish_product_version(db, actor: dict[str, Any], product_id: str, ve
         country = ((prod.get("location") or {}).get("country") or "").strip()
         loc_part = ", ".join([x for x in [city, country] if x])
         if loc_part:
-            update_product_fields["meta_description"] = f"{base_title} - {loc_part} i7in otel rezervasyonu."
+            update_product_fields["meta_description"] = f"{base_title} - {loc_part} için otel rezervasyonu."
         else:
-            update_product_fields["meta_description"] = f"{base_title} i7in otel rezervasyonu."
+            update_product_fields["meta_description"] = f"{base_title} için otel rezervasyonu."
 
     if update_product_fields:
         update_product_fields["updated_at"] = now

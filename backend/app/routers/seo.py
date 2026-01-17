@@ -90,8 +90,20 @@ async def robots_txt(request: Request) -> Response:
 
 
 
+from app.auth import require_feature, require_super_admin_only
+
+
+SeoAdminDep = Depends(require_super_admin_only())
+SeoFeatureDep = Depends(require_feature("seo_plus"))
+
+
 @router.post("/admin/seo/indexnow/reindex", include_in_schema=False)
-async def admin_indexnow_reindex(request: Request, db=Depends(get_db)) -> dict[str, Any]:
+async def admin_indexnow_reindex(
+    request: Request,
+    db=Depends(get_db),
+    user=SeoAdminDep,  # noqa: B008
+    _feature=SeoFeatureDep,  # noqa: B008
+) -> dict[str, Any]:
     """Admin-only helper to enqueue IndexNow submissions for key public URLs.
 
     Behaviour:

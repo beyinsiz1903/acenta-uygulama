@@ -195,7 +195,7 @@ async def handle_indexnow_submit(db, job: Dict[str, Any]) -> None:
 
 
 # Register built-in job handlers
-register_job_handler("indexnow_submit", handle_indexnow_submit)
+register_job_handler("seo.indexnow_submit", handle_indexnow_submit)
 
 
 
@@ -255,7 +255,7 @@ async def enqueue_indexnow_job(db, *, organization_id: str, urls: list[str]) -> 
     return await enqueue_job(
         db,
         organization_id=organization_id,
-        type="indexnow_submit",
+        type="seo.indexnow_submit",
         payload=payload,
     )
 

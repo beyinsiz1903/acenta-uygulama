@@ -198,6 +198,23 @@ async def run_job_worker_loop(worker_id: str, *, sleep_seconds: int = 5) -> None
 
 
 async def asyncio_sleep(seconds: int) -> None:
+
+
+async def enqueue_indexnow_job(db, *, organization_id: str, urls: list[str]) -> Dict[str, Any]:
+    """Convenience helper to enqueue an IndexNow submission job.
+
+    This is a thin wrapper around `enqueue_job` so higher-level services can
+    schedule URL submission without knowing job type internals.
+    """
+
+    payload = {"urls": urls}
+    return await enqueue_job(
+        db,
+        organization_id=organization_id,
+        type="indexnow_submit",
+        payload=payload,
+    )
+
     # Isolated for easier monkeypatching in tests
     import asyncio
 

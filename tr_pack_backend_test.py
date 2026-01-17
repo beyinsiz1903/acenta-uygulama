@@ -70,29 +70,33 @@ def setup_test_product(org_id):
     mongo_client = get_mongo_client()
     db = mongo_client.get_default_database()
     
-    # Create a test product
-    product_id = f"product_tr_pack_{uuid.uuid4().hex[:8]}"
+    # Create a test product with proper structure
+    from bson import ObjectId
+    product_oid = ObjectId()
+    product_id = str(product_oid)
+    
     product_doc = {
-        "_id": product_id,
+        "_id": product_oid,
         "organization_id": org_id,
-        "name": "TR Pack Test Hotel",
+        "name": {"tr": "TR Pack Test Hotel", "en": "TR Pack Test Hotel"},
         "type": "hotel",
         "status": "active",
         "created_at": datetime.utcnow(),
         "updated_at": datetime.utcnow()
     }
     
-    # Create product version
+    # Create product version with proper structure
+    version_oid = ObjectId()
     version_doc = {
-        "_id": f"version_{product_id}",
-        "product_id": product_id,
+        "_id": version_oid,
+        "product_id": product_oid,
         "organization_id": org_id,
         "version": 1,
         "status": "published",
         "rate_plans": [
             {
                 "id": "default_rate",
-                "name": "Standard Rate",
+                "name": {"tr": "Standart Tarife", "en": "Standard Rate"},
                 "base_price": 100.0,
                 "currency": "TRY"
             }
@@ -100,7 +104,7 @@ def setup_test_product(org_id):
         "room_types": [
             {
                 "id": "default_room",
-                "name": "Standard Room",
+                "name": {"tr": "Standart Oda", "en": "Standard Room"},
                 "capacity": 2
             }
         ],
@@ -109,8 +113,8 @@ def setup_test_product(org_id):
     }
     
     # Insert documents
-    db.products.replace_one({"_id": product_id}, product_doc, upsert=True)
-    db.product_versions.replace_one({"_id": f"version_{product_id}"}, version_doc, upsert=True)
+    db.products.replace_one({"_id": product_oid}, product_doc, upsert=True)
+    db.product_versions.replace_one({"_id": version_oid}, version_doc, upsert=True)
     
     mongo_client.close()
     print(f"   ✅ Test product created: {product_id}")

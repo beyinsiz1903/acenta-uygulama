@@ -105,7 +105,7 @@ async def test_admin_statements_json_and_csv_happy_path(async_client, test_db, a
 
     body = resp_csv.text
     # Header + at least one data row
-    lines = [l for l in body.split("\n") if l.strip()]
+    lines = [line for line in body.split("\n") if line.strip()]
     assert len(lines) >= 2
     header = lines[0].split(",")
     assert "booking_code" in header

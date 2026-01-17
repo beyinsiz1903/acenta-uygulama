@@ -385,10 +385,8 @@ def run_all_tests():
     print("-" * 40)
     seo_tests = TestPublishProductVersionSEO()
     
-    seo_tests.test_seo_fields_no_change_when_populated()
-    seo_tests.test_slug_generation_with_turkish_transliteration()
-    seo_tests.test_slug_collision_resolution()
-    seo_tests.test_meta_title_description_defaults()
+    seo_tests.test_seo_fields_via_direct_database_testing()
+    seo_tests.test_meta_generation_logic()
     
     print("\n" + "=" * 60)
     print("🎉 SEO+ Pack Backend Test Suite Completed Successfully!")

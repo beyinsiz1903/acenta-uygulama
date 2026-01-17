@@ -205,11 +205,6 @@ def register_job_handler(job_type: str, handler: JobHandler) -> None:
 async def process_claimed_job(db, job: Dict[str, Any]) -> None:
     """Execute a claimed job using the registered handler.
 
-
-# Register built-in job handlers
-register_job_handler("seo.indexnow_submit", handle_indexnow_submit)
-
-
     Any exception from the handler is captured and translated into failed/dead
     status with backoff semantics.
     """
@@ -226,6 +221,10 @@ register_job_handler("seo.indexnow_submit", handle_indexnow_submit)
     except Exception as exc:  # pragma: no cover - error branch
         logger.error("Job %s of type %s failed: %s", job.get("_id"), job_type, exc, exc_info=True)
         await _mark_failed(db, job, str(exc))
+
+
+# Register built-in job handlers
+register_job_handler("seo.indexnow_submit", handle_indexnow_submit)
 
 
 async def run_job_worker_loop(worker_id: str, *, sleep_seconds: int = 5) -> None:

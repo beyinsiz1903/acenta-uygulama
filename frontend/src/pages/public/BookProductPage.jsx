@@ -47,16 +47,26 @@ export default function BookProductPage() {
 
     const schema = {
       "@context": "https://schema.org",
-      "@type": "Product",
-      name: `Product ${productId}`,
-      sku: productId,
+      "@type": "Hotel",
+      name: `Hotel ${productId}`,
       url,
+      address: {
+        "@type": "PostalAddress",
+        addressCountry: "",
+        addressLocality: "",
+      },
+      offers: {
+        "@type": "Offer",
+        priceCurrency: "EUR",
+        price: 0,
+        availability: "https://schema.org/InStock",
+      },
     };
 
-    upsertJsonLd("product-schema-jsonld", schema);
+    upsertJsonLd("hotel-schema-jsonld", schema);
 
     return () => {
-      const el = document.getElementById("product-schema-jsonld");
+      const el = document.getElementById("hotel-schema-jsonld");
       if (el && el.parentNode) el.parentNode.removeChild(el);
     };
   }, [productId]);

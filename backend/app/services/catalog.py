@@ -22,15 +22,36 @@ def _oid(x: str) -> ObjectId:
 
 
 def _slugify(raw: str) -> str:
-    """Very small slug helper for SEO.
+    """Very small slug helper for SEO with basic TR transliteration.
 
+    - Normalizes common Turkish characters (ş,ğ,ı,ç,ö,ü)
     - Lowercases
     - Replaces whitespace with '-'
     - Strips characters outside [a-z0-9-]
     """
-    text = (raw or "").strip().lower()
+    text = (raw or "").strip()
     if not text:
         return ""
+
+    # Minimal Turkish character transliteration
+    translit_map = str.maketrans(
+        {
+            "ş": "s",
+            "Ş": "s",
+            "ğ": "g",
+            "Ğ": "g",
+            "ı": "i",
+            "İ": "i",
+            "ö": "o",
+            "Ö": "o",
+            "ü": "u",
+            "Ü": "u",
+            "ç": "c",
+            "Ç": "c",
+        }
+    )
+    text = text.translate(translit_map).lower()
+
     text = re.sub(r"\s+", "-", text)
     text = re.sub(r"[^a-z0-9-]", "", text)
     return text.strip("-")

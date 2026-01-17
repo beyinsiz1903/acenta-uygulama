@@ -31,6 +31,9 @@ async def sitemap_xml(request: Request, db=Depends(get_db)) -> Response:
 
     base_url = str(request.base_url).rstrip("/")
 
+    # Optional org scoping for multi-tenant safety.
+    org_id = request.query_params.get("org")
+
     # Use a dict keyed by loc to avoid duplicates when combining hotels/products
     url_map: dict[str, dict[str, str]] = {}
 
@@ -41,7 +44,11 @@ async def sitemap_xml(request: Request, db=Depends(get_db)) -> Response:
     ]
     today = datetime.utcnow().date().isoformat()
     for path in static_paths:
-        url_map[f"{base_url}{path}"] = {"loc": f"{base_url}{path}", "lastmod": today, "priority": "1.0" if path == "/" else "0.8"}
+        url_map[f"{base_url}{path}"] = {
+            "loc": f"{base_url}{path}",
+            "lastmod": today,
+            "priority": "1.0" if path == "/" else "0.8",
+        }
 
     # Dynamic hotel detail URLs from legacy hotels collection (if exists)
     try:
@@ -55,22 +62,24 @@ async def sitemap_xml(request: Request, db=Depends(get_db)) -> Response:
         loc = f"{base_url}/book/{hid}"  # canonical pattern: /book/{productId}
         url_map[loc] = {"loc": loc, "lastmod": lastmod, "priority": "0.6"}
 
-    # Dynamic hotel URLs from products collection (fallback / new source)
-    try:
-        products = await db.products.find(
-            {"type": "hotel", "status": "active"},
-            {"_id": 1, "updated_at": 1, "created_at": 1},
-        ).to_list(1000)
-    except Exception:
-        products = []
+    # Dynamic hotel URLs from products collection (fallback / new source).
+    # Multi-tenant güvenliği için org param'ı yoksa products üzerinden URL üretmeyiz.
+    if org_id:
+        try:
+            products = await db.products.find(
+                {"type": "hotel", "status": "active", "organization_id": org_id},
+                {"_id": 1, "updated_at": 1, "created_at": 1},
+            ).to_list(1000)
+        except Exception:
+            products = []
 
-    for p in products:
-        pid = str(p.get("_id"))
-        lastmod = _format_date(p.get("updated_at")) or _format_date(p.get("created_at")) or today
-        loc = f"{base_url}/book/{pid}"  # canonical pattern: /book/{productId}
-        # Do not downgrade existing lastmod/priority if already present
-        if loc not in url_map:
-            url_map[loc] = {"loc": loc, "lastmod": lastmod, "priority": "0.6"}
+        for p in products:
+            pid = str(p.get("_id"))
+            lastmod = _format_date(p.get("updated_at")) or _format_date(p.get("created_at")) or today
+            loc = f"{base_url}/book/{pid}"  # canonical pattern: /book/{productId}
+            # Do not downgrade existing lastmod/priority if already present
+            if loc not in url_map:
+                url_map[loc] = {"loc": loc, "lastmod": lastmod, "priority": "0.6"}
 
     urls: List[dict[str, str]] = list(url_map.values())
 

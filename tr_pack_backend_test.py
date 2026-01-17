@@ -128,8 +128,18 @@ def cleanup_test_data(org_id, product_id):
         
         # Clean up test data
         db.organizations.delete_one({"_id": org_id})
-        db.products.delete_one({"_id": product_id})
-        db.product_versions.delete_one({"_id": f"version_{product_id}"})
+        if product_id:
+            from bson import ObjectId
+            try:
+                # Try as ObjectId first
+                product_oid = ObjectId(product_id)
+                db.products.delete_one({"_id": product_oid})
+                db.product_versions.delete_one({"product_id": product_oid})
+            except:
+                # Fallback to string ID
+                db.products.delete_one({"_id": product_id})
+                db.product_versions.delete_one({"product_id": product_id})
+        
         db.public_quotes.delete_many({"organization_id": org_id})
         db.public_checkouts.delete_many({"organization_id": org_id})
         db.bookings.delete_many({"organization_id": org_id})

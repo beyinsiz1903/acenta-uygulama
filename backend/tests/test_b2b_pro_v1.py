@@ -50,8 +50,7 @@ async def test_admin_agencies_feature_disabled_returns_404(async_client, test_db
 
     token = create_access_token(subject=email, organization_id=org_id, roles=user_doc["roles"])
 
-    async with AsyncClient(app=app, base_url="http://testserver") as client:
-        resp = await client.get("/api/admin/agencies/", headers={"Authorization": f"Bearer {token}"})
+    resp = await async_client.get("/api/admin/agencies/", headers={"Authorization": f"Bearer {token}"})
     assert resp.status_code == 404
 
 
@@ -65,9 +64,9 @@ async def test_admin_agencies_create_and_cycle_guards(async_client, test_db, any
         headers={"Authorization": f"Bearer {admin_token}"},
         json={"name": "Root Agency"},
     )
-        assert resp.status_code == 200
-        root = resp.json()
-        root_id = root["id"]
+    assert resp.status_code == 200
+    root = resp.json()
+    root_id = root["id"]
 
         # Create child agency with valid parent
         resp2 = await async_client.post(
@@ -144,13 +143,13 @@ async def test_admin_agencies_org_isolation(async_client, test_db, anyio_backend
 
     # Create agency in org A
     resp_a = await async_client.post(
-            "/api/admin/agencies/",
-            headers={"Authorization": f"Bearer {token_a}"},
-            json={"name": "Org A Agency"},
-        )
-        assert resp_a.status_code == 200
-        agency_a = resp_a.json()
-        agency_a_id = agency_a["id"]
+        "/api/admin/agencies/",
+        headers={"Authorization": f"Bearer {token_a}"},
+        json={"name": "Org A Agency"},
+    )
+    assert resp_a.status_code == 200
+    agency_a = resp_a.json()
+    agency_a_id = agency_a["id"]
 
         # Org B listing should not see Org A agency
         resp_list_b = await async_client.get(

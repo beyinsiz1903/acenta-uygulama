@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import Any, Dict, List, Optional
+import re
 
 from bson import ObjectId
 from pymongo import DESCENDING
@@ -17,6 +18,22 @@ def _oid(x: str) -> ObjectId:
         return ObjectId(x)
     except Exception:
         raise AppError(404, "not_found", "Entity not found", {"id": x})
+
+
+
+def _slugify(raw: str) -> str:
+    """Very small slug helper for SEO.
+
+    - Lowercases
+    - Replaces whitespace with '-'
+    - Strips characters outside [a-z0-9-]
+    """
+    text = (raw or "").strip().lower()
+    if not text:
+        return ""
+    text = re.sub(r"\s+", "-", text)
+    text = re.sub(r"[^a-z0-9-]", "", text)
+    return text.strip("-")
 
 
 def _name_search(name: dict | None) -> str:

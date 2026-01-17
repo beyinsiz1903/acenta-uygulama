@@ -70,7 +70,7 @@ async def test_admin_agencies_create_and_cycle_guards(async_client, test_db, any
         root_id = root["id"]
 
         # Create child agency with valid parent
-        resp2 = await client.post(
+        resp2 = await async_client.post(
             "/api/admin/agencies/",
             headers={"Authorization": f"Bearer {admin_token}"},
             json={"name": "Child Agency", "parent_agency_id": root_id},

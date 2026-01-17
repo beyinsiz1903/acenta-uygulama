@@ -189,14 +189,12 @@ async def list_statements(
                 "total_tx": total,
                 "returned_count": returned_count,
                 "skipped_missing_booking_count": skipped_missing_booking_count,
+                "format": out_format,
             },
         )
     except Exception:
         # Must not break main flow
         pass
-
-    accept = request.headers.get("accept", "").lower()
-    wants_csv = "text/csv" in accept or format.lower() == "csv"
 
     if wants_csv:
         fieldnames = [

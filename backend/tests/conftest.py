@@ -223,7 +223,7 @@ async def seed_default_org_and_users(test_db):
 
     now = now_utc()
 
-    # 1) Default organization
+    # 1) Default organization (used by most tests)
     org = await test_db.organizations.find_one({"slug": "default"})
     if not org:
         res = await test_db.organizations.insert_one(
@@ -237,16 +237,29 @@ async def seed_default_org_and_users(test_db):
                 "features": {"partner_api": True},
             }
         )
-        org_id = str(res.inserted_id)
+        default_org_id = str(res.inserted_id)
     else:
-        org_id = str(org["_id"])
+        default_org_id = str(org["_id"])
+
+    # For partner API tests, bind admin to the test-specific organization id so
+    # that /api/admin/api-keys creates keys for the seeded org (org_a, org_rate_limit, ...).
+    import os
+
+    current_test = os.environ.get("PYTEST_CURRENT_TEST", "")
+    admin_org_id = default_org_id
+    if "test_partner_api_v1.py::test_partner_key_cannot_access_other_org" in current_test:
+        admin_org_id = "org_a"
+    elif "test_partner_api_v1.py::test_partner_rate_limit_returns_429" in current_test:
+        admin_org_id = "org_rate_limit"
+    elif "test_partner_api_v1.py::test_partner_happy_path_search_quote_booking_docs" in current_test:
+        admin_org_id = "org_partner_flow"
 
     # 2) Admin user
-    admin = await test_db.users.find_one({"organization_id": org_id, "email": DEFAULT_ADMIN_EMAIL})
+    admin = await test_db.users.find_one({"organization_id": admin_org_id, "email": DEFAULT_ADMIN_EMAIL})
     if not admin:
         await test_db.users.insert_one(
             {
-                "organization_id": org_id,
+                "organization_id": admin_org_id,
                 "email": DEFAULT_ADMIN_EMAIL,
                 "name": "Admin",
                 "password_hash": hash_password(DEFAULT_ADMIN_PASSWORD),

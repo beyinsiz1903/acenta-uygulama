@@ -109,8 +109,8 @@ async def test_admin_agencies_create_and_cycle_guards(async_client, test_db, any
 
 
 @pytest.mark.anyio
-async def test_admin_agencies_org_isolation(anyio_backend):  # type: ignore[override]
-    db = await get_db()
+async def test_admin_agencies_org_isolation(async_client, test_db, anyio_backend):  # type: ignore[override]
+    db = test_db
 
     # Org A with b2b_pro
     org_a = "org_a_b2b"

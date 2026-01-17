@@ -32,8 +32,8 @@ async def admin_token(anyio_backend):  # type: ignore[override]
 
 
 @pytest.mark.anyio
-async def test_admin_agencies_feature_disabled_returns_404(anyio_backend):  # type: ignore[override]
-    db = await get_db()
+async def test_admin_agencies_feature_disabled_returns_404(async_client, test_db, anyio_backend):  # type: ignore[override]
+    db = test_db
     org_id = "org_no_b2b_pro"
     await db.organizations.insert_one({"_id": org_id, "name": "No B2B PRO", "features": {"b2b_pro": False}})
 

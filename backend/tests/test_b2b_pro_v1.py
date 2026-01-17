@@ -99,7 +99,7 @@ async def test_admin_agencies_create_and_cycle_guards(async_client, test_db, any
         third_id = third["id"]
 
         # Now attempt to set root's parent to third -> cycle
-        resp_cycle = await client.put(
+        resp_cycle = await async_client.put(
             f"/api/admin/agencies/{root_id}",
             headers={"Authorization": f"Bearer {admin_token}"},
             json={"parent_agency_id": third_id},

@@ -7,7 +7,7 @@ from httpx import AsyncClient
 
 from app.auth import create_access_token
 from app.db import get_db
-from app.main import app  # server.py exposes FastAPI app as `app`
+from server import app  # FastAPI app from server.py
 
 
 @pytest.fixture

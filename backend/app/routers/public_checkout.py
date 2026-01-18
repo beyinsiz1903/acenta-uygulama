@@ -168,7 +168,7 @@ class PublicCheckoutTrPosResponse(BaseModel):
 
 
 @router.get("/installments", response_model=dict)
-async def public_installments(org: str, amount_cents: int, currency: str = "TRY", db=Depends(get_db)) -> dict:
+async def public_installments(org: str, amount_cents: int, currency: str = "TRY", request: Request = None, db=Depends(get_db)) -> dict:
     """Return mock installment plans for TR Pack.
 
     - Org-scope feature gating via payments_tr_pack

@@ -16,7 +16,6 @@ from pydantic import BaseModel, EmailStr, Field
 from app.db import get_db
 from app.errors import AppError
 from app.services import stripe_adapter
-from app.errors import AppError
 from app.errors.public_checkout_codes import PublicCheckoutErrorCode
 
 from app.services.public_checkout import (

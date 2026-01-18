@@ -357,8 +357,13 @@ async def public_checkout(payload: PublicCheckoutRequest, request: Request, db=D
     try:
         quote = await get_valid_quote(db, organization_id=org_id, quote_id=payload.quote_id)
     except AppError as exc:
-        if exc.status_code == 404:
-            raise HTTPException(status_code=404, detail="QUOTE_NOT_FOUND") from exc
+        # Normalise quote-related errors to canonical codes while preserving correlation_id in details
+        details = exc.details or {}
+        details.setdefault("correlation_id", correlation_id)
+        if exc.code == PublicCheckoutErrorCode.QUOTE_NOT_FOUND.value:
+            raise AppError(404, PublicCheckoutErrorCode.QUOTE_NOT_FOUND.value, exc.message, details=details)
+        if exc.code == PublicCheckoutErrorCode.QUOTE_EXPIRED.value:
+            raise AppError(404, PublicCheckoutErrorCode.QUOTE_EXPIRED.value, exc.message, details=details)
         raise
 
     # Evaluate coupon (optional) before creating booking

@@ -815,7 +815,12 @@ async def public_checkout_tr_pos(
         if existing:
             existing_quote = existing.get("quote_id")
             if existing_quote and existing_quote != payload.quote_id:
-                raise HTTPException(status_code=409, detail="IDEMPOTENCY_KEY_CONFLICT")
+                raise AppError(
+                    409,
+                    PublicCheckoutErrorCode.IDEMPOTENCY_KEY_CONFLICT.value,
+                    "Idempotency key already used for a different quote",
+                    details={"correlation_id": correlation_id, "idempotency_key": idem_key},
+                )
 
             ok = bool(existing.get("ok", existing.get("status") == "created"))
             reason = existing.get("reason")

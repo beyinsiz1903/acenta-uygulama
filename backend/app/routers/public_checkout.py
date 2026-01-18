@@ -177,7 +177,11 @@ async def public_installments(org: str, amount_cents: int, currency: str = "TRY"
     from app.auth import load_org_doc, resolve_org_features
 
     if amount_cents <= 0:
-        raise HTTPException(status_code=422, detail="INVALID_AMOUNT")
+        raise AppError(
+            422,
+            PublicCheckoutErrorCode.INVALID_AMOUNT.value,
+            "Invalid amount",
+        )
 
     if currency.upper() != "TRY":
         raise HTTPException(status_code=422, detail="UNSUPPORTED_CURRENCY")
@@ -393,7 +397,11 @@ async def public_checkout(payload: PublicCheckoutRequest, request: Request, db=D
     guest = payload.guest
     amount_cents = int(quote.get("amount_cents", 0))
     if amount_cents <= 0:
-        raise HTTPException(status_code=422, detail="INVALID_AMOUNT")
+        raise AppError(
+            422,
+            PublicCheckoutErrorCode.INVALID_AMOUNT.value,
+            "Invalid amount",
+        )
 
     currency = (quote.get("currency") or "EUR").upper()
 
@@ -819,7 +827,11 @@ async def public_checkout_tr_pos(
     guest = payload.guest
     amount_cents = int(quote.get("amount_cents", 0))
     if amount_cents <= 0:
-        raise HTTPException(status_code=422, detail="INVALID_AMOUNT")
+        raise AppError(
+            422,
+            PublicCheckoutErrorCode.INVALID_AMOUNT.value,
+            "Invalid amount",
+        )
 
     currency = (quote.get("currency") or "TRY").upper()
 

@@ -211,7 +211,11 @@ async def get_valid_quote(db, *, organization_id: str, quote_id: str) -> Dict[st
         }
     )
     if not doc:
-        raise AppError(404, "QUOTE_NOT_FOUND", "Quote not found")
+        raise AppError(
+            404,
+            PublicCheckoutErrorCode.QUOTE_NOT_FOUND.value,
+            "Quote not found",
+        )
 
     expires_at = doc.get("expires_at")
     status = doc.get("status")

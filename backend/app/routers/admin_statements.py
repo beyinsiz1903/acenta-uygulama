@@ -131,7 +131,7 @@ async def list_statements(
             continue
 
         source = booking.get("source") or "public"
-        if source not in ALLOWED_BOOKING_SOURCES:
+        if source not in allowed_sources:
             skipped_missing_booking_count += 1
             continue
 

@@ -221,7 +221,11 @@ async def get_valid_quote(db, *, organization_id: str, quote_id: str) -> Dict[st
     status = doc.get("status")
     if not expires_at:
         # Missing expiry is treated as expired/invalid for safety
-        raise AppError(404, "QUOTE_EXPIRED", "Quote expired or inactive")
+        raise AppError(
+            404,
+            PublicCheckoutErrorCode.QUOTE_EXPIRED.value,
+            "Quote expired or inactive",
+        )
 
     # Make sure expires_at is comparable with naive now
     if getattr(expires_at, "tzinfo", None) is not None:

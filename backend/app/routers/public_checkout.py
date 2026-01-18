@@ -464,7 +464,7 @@ async def public_checkout(payload: PublicCheckoutRequest, request: Request, db=D
             "trace": q.get("trace") or {},
         },
         # Cent-based total for downstream finance/accounting logic
-        "amount_total_cents": int(round(sell_amount * 100)),
+        "amount_total_cents": amount_total_cents,
         "currency": currency,
         "quote_id": quote.get("quote_id"),
         "public_quote": {

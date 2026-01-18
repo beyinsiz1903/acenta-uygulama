@@ -375,11 +375,26 @@ async def test_public_checkout_tr_pos_amount_total_cents(async_client, test_db):
 
 
 
-@pytest.mark.asyncio
-async def test_public_checkout_invalid_amount_code_and_correlation(async_client, db, org_factory, product_factory):
-    org = await org_factory()
+@pytest.mark.anyio
+async def test_public_checkout_invalid_amount_code_and_correlation(async_client, test_db):
+    db = test_db
+    org = "org_public_invalid_amount"
     # Create a product and quote with amount_cents=0 by directly inserting a bad quote
-    product = await product_factory(org)
+    now = now_utc()
+    prod = {
+        "organization_id": org,
+        "type": "hotel",
+        "code": "HTL-INVALID-AMOUNT",
+        "name": {"tr": "Invalid Amount Oteli"},
+        "name_search": "invalid amount oteli",
+        "status": "active",
+        "default_currency": "EUR",
+        "location": {"city": "Izmir", "country": "TR"},
+        "created_at": now,
+        "updated_at": now,
+    }
+    res = await db.products.insert_one(prod)
+    pid = res.inserted_id
     quote_doc = {
         "quote_id": "q-invalid-amount",
         "organization_id": org,

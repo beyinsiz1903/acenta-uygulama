@@ -411,7 +411,7 @@ async def test_public_checkout_invalid_amount_code_and_correlation(async_client,
             "product_id": pid,
             "code": "RP-INVALID-AMOUNT",
             "currency": "EUR",
-            "base_net_price": 0.0,
+            "base_net_price": 100.0,
             "status": "active",
         }
     )

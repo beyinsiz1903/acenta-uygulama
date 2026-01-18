@@ -215,29 +215,75 @@ async def test_public_checkout_happy_path_stubbed_stripe(monkeypatch, async_clie
 
 @pytest.mark.anyio
 async def test_public_checkout_expired_quote(async_client, test_db):
-    # Use test_db instead of get_db()
     db = test_db
-
     await db.public_quotes.delete_many({})
 
     org = "org_public_expired"
     now = now_utc()
 
-    await db.public_quotes.insert_one(
+    # 1) Create a normal quote via the public quote API
+    # Reuse the same pattern as other happy-path tests to avoid org wiring surprises
+    prod = {
+        "organization_id": org,
+        "type": "hotel",
+        "code": "HTL-EXPIRED-1",
+        "name": {"tr": "Expired Test Oteli"},
+        "name_search": "expired test oteli",
+        "status": "active",
+        "default_currency": "EUR",
+        "location": {"city": "Izmir", "country": "TR"},
+        "created_at": now,
+        "updated_at": now,
+    }
+    res = await db.products.insert_one(prod)
+    pid = res.inserted_id
+
+    await db.product_versions.insert_one(
         {
-            "quote_id": "qt_expired",
             "organization_id": org,
-            "amount_cents": 10000,
-            "currency": "EUR",
-            "status": "pending",
-            "expires_at": now - timedelta(minutes=1),
-            "created_at": now - timedelta(minutes=10),
+            "product_id": pid,
+            "version": 1,
+            "status": "published",
+            "content": {"description": {"tr": "Test"}},
         }
     )
 
+    await db.rate_plans.insert_one(
+        {
+            "organization_id": org,
+            "product_id": pid,
+            "code": "RP-EXPIRED-1",
+            "currency": "EUR",
+            "base_net_price": 100.0,
+            "status": "active",
+        }
+    )
+
+    quote_payload = {
+        "org": org,
+        "product_id": str(pid),
+        "date_from": date.today().isoformat(),
+        "date_to": (date.today() + timedelta(days=1)).isoformat(),
+        "pax": {"adults": 1, "children": 0},
+        "rooms": 1,
+        "currency": "EUR",
+    }
+
+    quote_resp = await async_client.post("/api/public/quote", json=quote_payload)
+    assert quote_resp.status_code == 200
+    quote_data = quote_resp.json()
+    qid = quote_data["quote_id"]
+
+    # 2) Patch the quote to be expired in the DB
+    await db.public_quotes.update_one(
+        {"quote_id": qid},
+        {"$set": {"expires_at": now - timedelta(minutes=1)}},
+    )
+
+    # 3) Checkout with the expired quote id
     payload = {
         "org": org,
-        "quote_id": "qt_expired",
+        "quote_id": qid,
         "guest": {
             "full_name": "Expired Guest",
             "email": "expired@example.com",
@@ -264,18 +310,57 @@ async def test_public_checkout_quote_not_found_code_and_correlation(async_client
     org = "org_public_not_found"
     now = now_utc()
 
-    # Org must exist so that we reach quote lookup and not org-not-found HTTPException
-    await db.organizations.insert_one(
+    # 1) Create a valid quote under this org so that org resolution & schema all pass
+    prod = {
+        "organization_id": org,
+        "type": "hotel",
+        "code": "HTL-NOTFOUND-1",
+        "name": {"tr": "NotFound Test Oteli"},
+        "name_search": "notfound test oteli",
+        "status": "active",
+        "default_currency": "EUR",
+        "location": {"city": "Izmir", "country": "TR"},
+        "created_at": now,
+        "updated_at": now,
+    }
+    res = await db.products.insert_one(prod)
+    pid = res.inserted_id
+
+    await db.product_versions.insert_one(
         {
-            "_id": org,
-            "name": "NF Org",
-            "slug": "nf-org",
-            "created_at": now,
-            "updated_at": now,
-            "features": {},
+            "organization_id": org,
+            "product_id": pid,
+            "version": 1,
+            "status": "published",
+            "content": {"description": {"tr": "Test"}},
         }
     )
 
+    await db.rate_plans.insert_one(
+        {
+            "organization_id": org,
+            "product_id": pid,
+            "code": "RP-NOTFOUND-1",
+            "currency": "EUR",
+            "base_net_price": 100.0,
+            "status": "active",
+        }
+    )
+
+    quote_payload = {
+        "org": org,
+        "product_id": str(pid),
+        "date_from": date.today().isoformat(),
+        "date_to": (date.today() + timedelta(days=1)).isoformat(),
+        "pax": {"adults": 1, "children": 0},
+        "rooms": 1,
+        "currency": "EUR",
+    }
+
+    quote_resp = await async_client.post("/api/public/quote", json=quote_payload)
+    assert quote_resp.status_code == 200
+
+    # 2) Now call checkout with a completely different, non-existent quote_id
     payload = {
         "org": org,
         "quote_id": "qt_nonexistent_123",

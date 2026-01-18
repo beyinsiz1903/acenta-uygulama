@@ -20,7 +20,7 @@ from typing import Any, Dict, Optional, Tuple
 
 from bson import ObjectId
 
-from app.errors import AppError
+from app.errors import AppError, PublicCheckoutErrorCode
 from app.utils import now_utc
 
 

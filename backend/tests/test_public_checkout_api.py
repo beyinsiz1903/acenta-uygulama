@@ -250,6 +250,39 @@ async def test_public_checkout_expired_quote(async_client, test_db):
     resp = await async_client.post("/api/public/checkout", json=payload)
     assert resp.status_code == 404
 
+    data = resp.json()
+    assert data["error"]["code"] == "QUOTE_EXPIRED"
+    details = data["error"].get("details") or {}
+    assert "correlation_id" in details
+
+
+@pytest.mark.anyio
+async def test_public_checkout_quote_not_found_code_and_correlation(async_client, test_db):
+    db = test_db
+    await db.public_quotes.delete_many({})
+
+    org = "org_public_not_found"
+
+    payload = {
+        "org": org,
+        "quote_id": "qt_nonexistent_123",
+        "guest": {
+            "full_name": "NF Guest",
+            "email": "nf@example.com",
+            "phone": "+905001112233",
+        },
+        "payment": {"method": "stripe"},
+        "idempotency_key": "idem-not-found-1",
+    }
+
+    resp = await async_client.post("/api/public/checkout", json=payload)
+    assert resp.status_code == 404
+    data = resp.json()
+    assert data["error"]["code"] == "QUOTE_NOT_FOUND"
+    details = data["error"].get("details") or {}
+    assert "correlation_id" in details
+
+
 
 
 @pytest.mark.anyio

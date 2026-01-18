@@ -4,9 +4,6 @@ from __future__ import annotations
 
 Endpoints:
 - POST /api/public/quote   -> create quote for a product
-from app.errors import AppError
-from app.errors.public_checkout_codes import PublicCheckoutErrorCode
-
 - POST /api/public/checkout -> create booking + Stripe PaymentIntent from quote
 """
 

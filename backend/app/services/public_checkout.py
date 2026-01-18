@@ -232,7 +232,11 @@ async def get_valid_quote(db, *, organization_id: str, quote_id: str) -> Dict[st
         expires_at = expires_at.replace(tzinfo=None)
 
     if expires_at <= now or status != "pending":
-        raise AppError(404, "QUOTE_EXPIRED", "Quote expired or inactive")
+        raise AppError(
+            404,
+            PublicCheckoutErrorCode.QUOTE_EXPIRED.value,
+            "Quote expired or inactive",
+        )
 
     return doc
 

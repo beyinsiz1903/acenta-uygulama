@@ -264,6 +264,7 @@ async def public_checkout(payload: PublicCheckoutRequest, request: Request, db=D
                 payment_intent_id=existing.get("payment_intent_id"),
                 client_secret=existing.get("client_secret"),
                 reason=None,
+                correlation_id=existing.get("correlation_id") or correlation_id,
             )
 
         return PublicCheckoutResponse(
@@ -273,6 +274,7 @@ async def public_checkout(payload: PublicCheckoutRequest, request: Request, db=D
             payment_intent_id=None,
             client_secret=None,
             reason=reason or existing.get("status") or "provider_unavailable",
+            correlation_id=existing.get("correlation_id") or correlation_id,
         )
 
     # No existing record -> claim idempotency key up-front

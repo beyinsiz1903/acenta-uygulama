@@ -177,6 +177,8 @@ async def public_installments(org: str, amount_cents: int, currency: str = "TRY"
 
     from app.auth import load_org_doc, resolve_org_features
 
+    correlation_id = get_or_create_correlation_id(request, None)
+
     if amount_cents <= 0:
         raise AppError(
             422,

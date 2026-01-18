@@ -60,6 +60,11 @@ async def list_statements(
 
     org_id = user["organization_id"]
 
+    # Resolve allowed booking sources from org features, with a safe default
+    org_doc = await db.organizations.find_one({"_id": org_id})
+    features = (org_doc or {}).get("features") or {}
+    allowed_sources = set(features.get("b2b_pro_allowed_booking_sources") or DEFAULT_ALLOWED_BOOKING_SOURCES)
+
     # Date range resolution (occurred_at)
     start = _parse_date_param(date_from)
     end = _parse_date_param(date_to)

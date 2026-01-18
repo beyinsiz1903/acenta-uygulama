@@ -395,20 +395,45 @@ async def test_public_checkout_invalid_amount_code_and_correlation(async_client,
     }
     res = await db.products.insert_one(prod)
     pid = res.inserted_id
-    quote_doc = {
-        "quote_id": "q-invalid-amount",
-        "organization_id": org,
-        "product_id": product["_id"],
-        "amount_cents": 0,
-        "currency": "EUR",
+    await db.product_versions.insert_one(
+        {
+            "organization_id": org,
+            "product_id": pid,
+            "version": 1,
+            "status": "published",
+            "content": {"description": {"tr": "Test"}},
+        }
+    )
+
+    await db.rate_plans.insert_one(
+        {
+            "organization_id": org,
+            "product_id": pid,
+            "code": "RP-INVALID-AMOUNT",
+            "currency": "EUR",
+            "base_net_price": 0.0,
+            "status": "active",
+        }
+    )
+
+    quote_payload = {
+        "org": org,
+        "product_id": str(pid),
         "date_from": date.today().isoformat(),
         "date_to": (date.today() + timedelta(days=1)).isoformat(),
-        "nights": 1,
         "pax": {"adults": 1, "children": 0},
-        "status": "pending",
-        "expires_at": (date.today() + timedelta(days=1)).isoformat(),
+        "rooms": 1,
+        "currency": "EUR",
     }
-    await db.public_quotes.insert_one(quote_doc)
+
+    quote_resp = await async_client.post("/api/public/quote", json=quote_payload)
+    assert quote_resp.status_code == 200
+    quote_data = quote_resp.json()
+    # Force amount_cents to zero by patching the quote in DB
+    await db.public_quotes.update_one(
+        {"quote_id": quote_data["quote_id"]},
+        {"$set": {"amount_cents": 0}},
+    )
 
     payload = {
         "org": org,

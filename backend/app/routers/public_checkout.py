@@ -518,11 +518,13 @@ async def public_checkout(payload: PublicCheckoutRequest, request: Request, db=D
             import logging
 
             logging.getLogger("public_checkout").warning(
-                "public_checkout amount mismatch: amount_total_cents=%s amount_cents=%s org=%s quote_id=%s",
+                "public_checkout amount mismatch: amount_total_cents=%s amount_cents=%s org=%s quote_id=%s idem_key=%s correlation_id=%s",
                 amount_total_cents,
                 amount_cents,
                 org_id,
                 quote.get("quote_id"),
+                idem_key,
+                correlation_id,
             )
         except Exception:
             # Logging failures must never break checkout
@@ -808,6 +810,9 @@ async def public_checkout_tr_pos(
     # Create booking document in PENDING_PAYMENT status
     guest = payload.guest
     amount_cents = int(quote.get("amount_cents", 0))
+    if amount_cents <= 0:
+        raise HTTPException(status_code=422, detail="INVALID_AMOUNT")
+
     currency = (quote.get("currency") or "TRY").upper()
 
     now = now_utc()

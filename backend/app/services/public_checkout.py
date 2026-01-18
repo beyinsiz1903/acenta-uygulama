@@ -212,7 +212,7 @@ async def get_valid_quote(db, *, organization_id: str, quote_id: str) -> Dict[st
         }
     )
     if not quote:
-        raise AppError(404, "QUOTE_NOT_FOUND", "Quote not found or expired")
+        raise AppError(404, "QUOTE_EXPIRED", "Quote not found or expired")
     return quote
 
 

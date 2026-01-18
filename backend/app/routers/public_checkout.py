@@ -88,6 +88,7 @@ class PublicCheckoutResponse(BaseModel):
     payment_intent_id: Optional[str] = None
     client_secret: Optional[str] = None
     reason: Optional[str] = None
+    correlation_id: Optional[str] = None
 
 
 @router.post("/quote", response_model=PublicQuoteResponse)

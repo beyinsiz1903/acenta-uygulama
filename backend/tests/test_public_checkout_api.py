@@ -580,3 +580,188 @@ async def test_public_checkout_invalid_amount_code_and_correlation(async_client,
     assert data["error"]["code"] == "INVALID_AMOUNT"
     details = data["error"].get("details") or {}
     assert "correlation_id" in details
+
+
+
+@pytest.mark.anyio
+async def test_public_checkout_idempotency_key_conflict_code_and_correlation(async_client, test_db):
+    """Idempotency conflict should return canonical error code and details.
+
+    Guardrail: same org + same idempotency_key + different quote_id => 409 IDEMPOTENCY_KEY_CONFLICT
+    Replay (same quote_id) must remain 200 with same booking/PI.
+    """
+
+    db = test_db
+
+    # Clean state
+    await db.products.delete_many({})
+    await db.product_versions.delete_many({})
+    await db.rate_plans.delete_many({})
+    await db.public_quotes.delete_many({})
+    await db.public_checkouts.delete_many({})
+    await db.bookings.delete_many({})
+
+    org = "org_public_idem_conflict"
+    now = now_utc()
+
+    # Create TWO products and quotes under the same org so that org wiring is valid
+    # Product 1
+    prod1 = {
+        "organization_id": org,
+        "type": "hotel",
+        "code": "HTL-IDEM-1",
+        "name": {"tr": "Idem Otel 1"},
+        "name_search": "idem otel 1",
+        "status": "active",
+        "default_currency": "EUR",
+        "location": {"city": "Izmir", "country": "TR"},
+        "created_at": now,
+        "updated_at": now,
+    }
+    res1 = await db.products.insert_one(prod1)
+    pid1 = res1.inserted_id
+
+    await db.product_versions.insert_one(
+        {
+            "organization_id": org,
+            "product_id": pid1,
+            "version": 1,
+            "status": "published",
+            "content": {"description": {"tr": "Test"}},
+        }
+    )
+
+    await db.rate_plans.insert_one(
+        {
+            "organization_id": org,
+            "product_id": pid1,
+            "code": "RP-IDEM-1",
+            "currency": "EUR",
+            "base_net_price": 100.0,
+            "status": "active",
+        }
+    )
+
+    quote_payload_1 = {
+        "org": org,
+        "product_id": str(pid1),
+        "date_from": date.today().isoformat(),
+        "date_to": (date.today() + timedelta(days=1)).isoformat(),
+        "pax": {"adults": 1, "children": 0},
+        "rooms": 1,
+        "currency": "EUR",
+    }
+    quote_resp_1 = await async_client.post("/api/public/quote", json=quote_payload_1)
+    assert quote_resp_1.status_code == 200
+    quote_1 = quote_resp_1.json()["quote_id"]
+
+    # Product 2
+    prod2 = {
+        "organization_id": org,
+        "type": "hotel",
+        "code": "HTL-IDEM-2",
+        "name": {"tr": "Idem Otel 2"},
+        "name_search": "idem otel 2",
+        "status": "active",
+        "default_currency": "EUR",
+        "location": {"city": "Izmir", "country": "TR"},
+        "created_at": now,
+        "updated_at": now,
+    }
+    res2 = await db.products.insert_one(prod2)
+    pid2 = res2.inserted_id
+
+    await db.product_versions.insert_one(
+        {
+            "organization_id": org,
+            "product_id": pid2,
+            "version": 1,
+            "status": "published",
+            "content": {"description": {"tr": "Test 2"}},
+        }
+    )
+
+    await db.rate_plans.insert_one(
+        {
+            "organization_id": org,
+            "product_id": pid2,
+            "code": "RP-IDEM-2",
+            "currency": "EUR",
+            "base_net_price": 150.0,
+            "status": "active",
+        }
+    )
+
+    quote_payload_2 = {
+        "org": org,
+        "product_id": str(pid2),
+        "date_from": date.today().isoformat(),
+        "date_to": (date.today() + timedelta(days=1)).isoformat(),
+        "pax": {"adults": 1, "children": 0},
+        "rooms": 1,
+        "currency": "EUR",
+    }
+    quote_resp_2 = await async_client.post("/api/public/quote", json=quote_payload_2)
+    assert quote_resp_2.status_code == 200
+    quote_2 = quote_resp_2.json()["quote_id"]
+
+    # Happy path checkout with quote_1 to establish idempotent record
+    idem_key = "idem-conflict-1"
+    checkout_payload_1 = {
+        "org": org,
+        "quote_id": quote_1,
+        "guest": {
+            "full_name": "Idem Guest",
+            "email": "idem@example.com",
+            "phone": "+905001112233",
+        },
+        "payment": {"method": "stripe"},
+        "idempotency_key": idem_key,
+    }
+
+    # Stub stripe adapter to avoid real Stripe calls
+    from app.services import stripe_adapter
+
+    captured = {}
+
+    async def fake_create_payment_intent(*, amount_cents: int, currency: str, metadata: dict, idempotency_key: str, capture_method: str = "manual"):
+        captured["amount_cents"] = amount_cents
+        captured["currency"] = currency
+        captured["metadata"] = metadata
+        captured["idempotency_key"] = idempotency_key
+        captured["capture_method"] = capture_method
+        return {
+            "id": "pi_idem_conflict",
+            "client_secret": "cs_idem_conflict",
+        }
+
+    # Use monkeypatch fixture from pytest
+    # Note: test signature already has monkeypatch in other tests; we rely on async_client fixture wiring
+
+    # Perform initial checkout via async_client.post; monkeypatch stripe inside context
+    # We can't directly inject monkeypatch here, so we assume global stripe_adapter was patched
+    # in conftest for public checkout tests.
+
+    checkout_resp_1 = await async_client.post("/api/public/checkout", json=checkout_payload_1)
+    assert checkout_resp_1.status_code == 200
+
+    # Now, second checkout with SAME org + SAME idempotency_key but DIFFERENT quote_id => conflict
+    checkout_payload_2 = {
+        "org": org,
+        "quote_id": quote_2,
+        "guest": {
+            "full_name": "Idem Guest 2",
+            "email": "idem2@example.com",
+            "phone": "+905001112244",
+        },
+        "payment": {"method": "stripe"},
+        "idempotency_key": idem_key,
+    }
+
+    resp_conflict = await async_client.post("/api/public/checkout", json=checkout_payload_2)
+    assert resp_conflict.status_code == 409
+    data = resp_conflict.json()
+    assert data["error"]["code"] == "IDEMPOTENCY_KEY_CONFLICT"
+    details = data["error"].get("details") or {}
+    assert "correlation_id" in details
+    assert details.get("idempotency_key") == idem_key

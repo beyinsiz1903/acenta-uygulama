@@ -437,7 +437,7 @@ async def test_public_checkout_invalid_amount_code_and_correlation(async_client,
 
     payload = {
         "org": org,
-        "quote_id": "q-invalid-amount",
+        "quote_id": quote_data["quote_id"],
         "guest": {"full_name": "X", "email": "x@example.com", "phone": "+900000000"},
         "idempotency_key": "idem-invalid-amount-1",
     }

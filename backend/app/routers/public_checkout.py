@@ -678,6 +678,7 @@ async def public_checkout(payload: PublicCheckoutRequest, request: Request, db=D
         booking_code=booking_code,
         payment_intent_id=payment_intent_id,
         client_secret=client_secret,
+        correlation_id=correlation_id,
     )
 
 

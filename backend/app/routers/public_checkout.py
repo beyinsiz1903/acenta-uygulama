@@ -435,7 +435,9 @@ async def public_checkout(payload: PublicCheckoutRequest, request: Request, db=D
             },
         }
 
-    sell_amount = float(q.get("final_price") or base_price)
+    # Canonical total in cents is the (possibly coupon-adjusted) quote amount.
+    amount_total_cents = int(amount_cents)
+    sell_amount = amount_total_cents / 100.0
 
     # Funnel: booking.created (will be actually logged after insert when we know booking_id)
 

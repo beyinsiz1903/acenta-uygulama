@@ -237,7 +237,12 @@ async def public_checkout(payload: PublicCheckoutRequest, request: Request, db=D
         # Guardrail: same idempotency key but different quote => conflict
         existing_quote = existing.get("quote_id")
         if existing_quote and existing_quote != payload.quote_id:
-            raise HTTPException(status_code=409, detail="IDEMPOTENCY_KEY_CONFLICT")
+            raise AppError(
+                409,
+                PublicCheckoutErrorCode.IDEMPOTENCY_KEY_CONFLICT.value,
+                "Idempotency key already used for a different quote",
+                details={"correlation_id": correlation_id, "idempotency_key": idem_key},
+            )
 
         # Funnel: idempotent replay still counts as checkout.started once; event is
         # deduped by unique index on (org, correlation_id, event_name, entity_id).

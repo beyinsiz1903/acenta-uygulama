@@ -199,21 +199,25 @@ async def create_public_quote(
 async def get_valid_quote(db, *, organization_id: str, quote_id: str) -> Dict[str, Any]:
     """Resolve a quote_id to a non-expired pending quote document.
 
-    Raises AppError 404 / 400 style errors suitable for public API mapping.
+    Distinguishes between not-found and expired quotes for clearer public API errors.
     """
 
     now = now_utc()
-    quote = await db.public_quotes.find_one(
+    doc = await db.public_quotes.find_one(
         {
             "quote_id": quote_id,
             "organization_id": organization_id,
-            "expires_at": {"$gt": now},
-            "status": "pending",
         }
     )
-    if not quote:
-        raise AppError(404, "QUOTE_EXPIRED", "Quote not found or expired")
-    return quote
+    if not doc:
+        raise AppError(404, "QUOTE_NOT_FOUND", "Quote not found")
+
+    expires_at = doc.get("expires_at")
+    status = doc.get("status")
+    if not expires_at or expires_at <= now or status != "pending":
+        raise AppError(404, "QUOTE_EXPIRED", "Quote expired or inactive")
+
+    return doc
 
 
 async def get_or_create_public_checkout_record(

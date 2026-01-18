@@ -22,7 +22,7 @@ import httpx
 from bson import ObjectId
 
 # Test configuration
-BACKEND_URL = "https://agency-analysis-1.preview.emergentagent.com/api"
+BACKEND_URL = "https://syroce-checkout.preview.emergentagent.com/api"
 ADMIN_EMAIL = "admin@acenta.test"
 ADMIN_PASSWORD = "admin123"
 

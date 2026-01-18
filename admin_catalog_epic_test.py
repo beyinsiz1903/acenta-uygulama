@@ -9,7 +9,7 @@ import uuid
 from datetime import datetime
 
 class AdminCatalogEpicTester:
-    def __init__(self, base_url="https://agency-analysis-1.preview.emergentagent.com"):
+    def __init__(self, base_url="https://syroce-checkout.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.tests_run = 0

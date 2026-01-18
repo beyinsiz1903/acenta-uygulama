@@ -182,6 +182,7 @@ async def public_installments(org: str, amount_cents: int, currency: str = "TRY"
             422,
             PublicCheckoutErrorCode.INVALID_AMOUNT.value,
             "Invalid amount",
+            details={"correlation_id": correlation_id},
         )
 
     if currency.upper() != "TRY":
@@ -402,6 +403,7 @@ async def public_checkout(payload: PublicCheckoutRequest, request: Request, db=D
             422,
             PublicCheckoutErrorCode.INVALID_AMOUNT.value,
             "Invalid amount",
+            details={"correlation_id": correlation_id},
         )
 
     currency = (quote.get("currency") or "EUR").upper()
@@ -832,6 +834,7 @@ async def public_checkout_tr_pos(
             422,
             PublicCheckoutErrorCode.INVALID_AMOUNT.value,
             "Invalid amount",
+            details={"correlation_id": correlation_id},
         )
 
     currency = (quote.get("currency") or "TRY").upper()

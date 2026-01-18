@@ -608,6 +608,7 @@ async def public_checkout(payload: PublicCheckoutRequest, request: Request, db=D
             payment_intent_id=None,
             client_secret=None,
             reason="provider_unavailable",
+            correlation_id=correlation_id,
         )
 
     # If we successfully created a PaymentIntent, increment coupon usage counters

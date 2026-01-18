@@ -1,17 +1,6 @@
 from __future__ import annotations
 
-from enum import Enum
-
-
-class PublicCheckoutErrorCode(str, Enum):
-    INVALID_AMOUNT = "INVALID_AMOUNT"
-    QUOTE_NOT_FOUND = "QUOTE_NOT_FOUND"
-    QUOTE_EXPIRED = "QUOTE_EXPIRED"
-    IDEMPOTENCY_KEY_CONFLICT = "IDEMPOTENCY_KEY_CONFLICT"
-    PAYMENT_PROVIDER_UNAVAILABLE = "PAYMENT_PROVIDER_UNAVAILABLE"
-    PAYMENT_FAILED = "PAYMENT_FAILED"
-    RATE_LIMITED = "RATE_LIMITED"
-    VALIDATION_ERROR = "VALIDATION_ERROR"
-
+# Re-export canonical public checkout error codes from app.errors to keep a single source of truth.
+from app.errors import PublicCheckoutErrorCode
 
 CANONICAL_PUBLIC_CHECKOUT_ERROR_CODES = {code.value for code in PublicCheckoutErrorCode}

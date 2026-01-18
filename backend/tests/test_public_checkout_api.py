@@ -447,4 +447,5 @@ async def test_public_checkout_invalid_amount_code_and_correlation(async_client,
     assert resp.status_code == 422
     data = resp.json()
     assert data["error"]["code"] == "INVALID_AMOUNT"
-    assert "correlation_id" in data["error"]["details"]
+    details = data["error"].get("details") or {}
+    assert "correlation_id" in details

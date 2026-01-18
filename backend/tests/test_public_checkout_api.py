@@ -372,3 +372,38 @@ async def test_public_checkout_tr_pos_amount_total_cents(async_client, test_db):
     amounts = booking.get("amounts") or {}
     assert float(amounts.get("sell", 0.0)) == pytest.approx(amount_cents / 100.0)
     assert float(amounts.get("net", 0.0)) == pytest.approx(amount_cents / 100.0)
+
+
+
+@pytest.mark.asyncio
+async def test_public_checkout_invalid_amount_code_and_correlation(async_client, db, org_factory, product_factory):
+    org = await org_factory()
+    # Create a product and quote with amount_cents=0 by directly inserting a bad quote
+    product = await product_factory(org)
+    quote_doc = {
+        "quote_id": "q-invalid-amount",
+        "organization_id": org,
+        "product_id": product["_id"],
+        "amount_cents": 0,
+        "currency": "EUR",
+        "date_from": date.today().isoformat(),
+        "date_to": (date.today() + timedelta(days=1)).isoformat(),
+        "nights": 1,
+        "pax": {"adults": 1, "children": 0},
+        "status": "pending",
+        "expires_at": (date.today() + timedelta(days=1)).isoformat(),
+    }
+    await db.public_quotes.insert_one(quote_doc)
+
+    payload = {
+        "org": org,
+        "quote_id": "q-invalid-amount",
+        "guest": {"full_name": "X", "email": "x@example.com", "phone": "+900000000"},
+        "idempotency_key": "idem-invalid-amount-1",
+    }
+
+    resp = await async_client.post("/api/public/checkout", json=payload)
+    assert resp.status_code == 422
+    data = resp.json()
+    assert data["error"]["code"] == "INVALID_AMOUNT"
+    assert "correlation_id" in data

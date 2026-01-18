@@ -202,7 +202,8 @@ async def get_valid_quote(db, *, organization_id: str, quote_id: str) -> Dict[st
     Distinguishes between not-found and expired quotes for clearer public API errors.
     """
 
-    now = now_utc()
+    # Normalise timestamps to naive datetimes for robust comparison with MongoDB values
+    now = now_utc().replace(tzinfo=None)
     doc = await db.public_quotes.find_one(
         {
             "quote_id": quote_id,
@@ -214,7 +215,15 @@ async def get_valid_quote(db, *, organization_id: str, quote_id: str) -> Dict[st
 
     expires_at = doc.get("expires_at")
     status = doc.get("status")
-    if not expires_at or expires_at <= now or status != "pending":
+    if not expires_at:
+        # Missing expiry is treated as expired/invalid for safety
+        raise AppError(404, "QUOTE_EXPIRED", "Quote expired or inactive")
+
+    # Make sure expires_at is comparable with naive now
+    if getattr(expires_at, "tzinfo", None) is not None:
+        expires_at = expires_at.replace(tzinfo=None)
+
+    if expires_at <= now or status != "pending":
         raise AppError(404, "QUOTE_EXPIRED", "Quote expired or inactive")
 
     return doc

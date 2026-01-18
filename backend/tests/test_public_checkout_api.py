@@ -262,6 +262,19 @@ async def test_public_checkout_quote_not_found_code_and_correlation(async_client
     await db.public_quotes.delete_many({})
 
     org = "org_public_not_found"
+    now = now_utc()
+
+    # Org must exist so that we reach quote lookup and not org-not-found HTTPException
+    await db.organizations.insert_one(
+        {
+            "_id": org,
+            "name": "NF Org",
+            "slug": "nf-org",
+            "created_at": now,
+            "updated_at": now,
+            "features": {},
+        }
+    )
 
     payload = {
         "org": org,

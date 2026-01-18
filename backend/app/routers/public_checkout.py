@@ -808,6 +808,8 @@ async def public_checkout_tr_pos(
             "net": float(amount_cents) / 100.0,
             "breakdown": {},
         },
+        # Cent-based total for downstream finance/accounting logic
+        "amount_total_cents": int(amount_cents),
         "currency": currency,
         "quote_id": quote.get("quote_id"),
         "public_quote": {

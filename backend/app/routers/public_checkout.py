@@ -387,6 +387,9 @@ async def public_checkout(payload: PublicCheckoutRequest, request: Request, db=D
     now = now_utc()
     guest = payload.guest
     amount_cents = int(quote.get("amount_cents", 0))
+    if amount_cents <= 0:
+        raise HTTPException(status_code=422, detail="INVALID_AMOUNT")
+
     currency = (quote.get("currency") or "EUR").upper()
 
     # P1-1 Faz 3: compute pricing breakdown via internal engine
@@ -508,6 +511,22 @@ async def public_checkout(payload: PublicCheckoutRequest, request: Request, db=D
         )
     except Exception:
         pass
+
+    # Soft invariant guard: booking total vs PI amount must stay aligned
+    if amount_total_cents != amount_cents:
+        try:
+            import logging
+
+            logging.getLogger("public_checkout").warning(
+                "public_checkout amount mismatch: amount_total_cents=%s amount_cents=%s org=%s quote_id=%s",
+                amount_total_cents,
+                amount_cents,
+                org_id,
+                quote.get("quote_id"),
+            )
+        except Exception:
+            # Logging failures must never break checkout
+            pass
 
     # Create Stripe PaymentIntent (automatic capture) for the quote amount
     metadata = {

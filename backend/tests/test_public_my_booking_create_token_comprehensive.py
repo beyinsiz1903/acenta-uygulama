@@ -257,15 +257,14 @@ async def test_create_token_validation_errors(async_client):
 
 
 
-@ pytest.mark.anyio
+@pytest.mark.anyio
 async def test_create_token_respects_mybooking_require_email_env(monkeypatch, async_client):
     """When MYBOOKING_REQUIRE_EMAIL is enabled, email must match guest.email.
 
     - Without email or with wrong email: ok=true but no token/expires_at.
     - With correct email: ok=true + token/expires_at.
     """
-    from app import config as app_config
-    from importlib import reload
+    from app.routers import public_my_booking
 
     db = await get_db()
 

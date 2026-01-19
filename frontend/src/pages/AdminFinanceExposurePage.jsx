@@ -173,6 +173,35 @@ function AdminFinanceExposurePageInner() {
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <div className="inline-flex rounded-lg bg-muted p-1 text-[11px] text-muted-foreground">
+              <button
+                type="button"
+                className={`px-2 py-1 rounded-md ${
+                  statusFilter === "all" ? "bg-background text-foreground shadow" : ""
+                }`}
+                onClick={() => setStatusFilter("all")}
+              >
+                Tümü
+              </button>
+              <button
+                type="button"
+                className={`px-2 py-1 rounded-md ${
+                  statusFilter === "near_limit" ? "bg-background text-foreground shadow" : ""
+                }`}
+                onClick={() => setStatusFilter("near_limit")}
+              >
+                Near limit
+              </button>
+              <button
+                type="button"
+                className={`px-2 py-1 rounded-md ${
+                  statusFilter === "over_limit" ? "bg-background text-foreground shadow" : ""
+                }`}
+                onClick={() => setStatusFilter("over_limit")}
+              >
+                Over limit
+              </button>
+            </div>
             <Input
               className="h-8 w-56 text-xs"
               placeholder="Agency adı veya ID filtrele"

@@ -6,7 +6,7 @@ from app.db import get_db
 from app.security.deps_b2b import CurrentB2BUser, current_b2b_user
 from app.services.crm_events import log_crm_event
 
-router = APIRouter(prefix="/b2b", tags=["b2b-portal"])
+router = APIRouter(prefix="/api/b2b", tags=["b2b-portal"])
 
 
 async def _log_b2b_login_success(db, user: CurrentB2BUser):

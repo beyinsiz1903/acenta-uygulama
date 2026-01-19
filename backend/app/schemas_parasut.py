@@ -6,6 +6,10 @@ from typing import Literal, Optional
 from pydantic import BaseModel, Field
 
 
+class ParasutPushInvoiceV1Request(BaseModel):
+    booking_id: str
+
+
 class ParasutPushStatusResponse(BaseModel):
     status: Literal["success", "skipped", "failed"]
     log_id: str

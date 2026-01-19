@@ -91,8 +91,6 @@ export default function B2BAccountPage() {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <KpiCard label="Toplam Borç" value={totalDebit} currency={currency} />
         <KpiCard label="Toplam Alacak" value={totalCredit} currency={currency} />
         <KpiCard label="Net Bakiye" value={net} currency={currency} emphasize />

@@ -605,7 +605,7 @@ async def public_checkout(payload: PublicCheckoutRequest, request: Request, db=D
             idempotency_key=payload.idempotency_key,
             capture_method="automatic",
         )
-    except Exception:
+    except Exception as exc:
         # Provider unavailable or misconfigured; do not keep orphan booking
         await bookings.delete_one({"_id": ins.inserted_id})
         await db.public_checkouts.update_one(
@@ -624,13 +624,14 @@ async def public_checkout(payload: PublicCheckoutRequest, request: Request, db=D
             },
         )
 
-        return PublicCheckoutResponse(
-            ok=False,
-            reason="provider_unavailable",
-            correlation_id=correlation_id,
-            booking_id=None,
-            booking_code=None,
-        )
+        # Normalize provider failures to canonical PAYMENT_FAILED error with correlation_id trace.
+        # We deliberately do not expose underlying provider exception details to the client.
+        raise AppError(
+            502,
+            PublicCheckoutErrorCode.PAYMENT_FAILED.value,
+            "Payment initialization failed",
+            details={"correlation_id": correlation_id},
+        ) from exc
 
     payment_intent_id = pi.get("id")
     client_secret = pi.get("client_secret")

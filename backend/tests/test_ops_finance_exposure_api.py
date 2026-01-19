@@ -18,6 +18,15 @@ async def test_exposure_dashboard_returns_aging_buckets(async_client, test_db):
     org_id = "default"
     agency_id = "agency_exposure_1"
 
+    # Ensure default organization exists (aligned with test seed)
+    # conftest creates or updates an organization with slug="default"; we
+    # reuse that as org_id here so admin@acenta.test belongs to this org.
+    await db.organizations.update_one(
+        {"slug": org_id},
+        {"$set": {"slug": org_id, "name": "Default Org", "settings": {"currency": "EUR"}}},
+        upsert=True,
+    )
+
     # Seed agency document
     await db.agencies.insert_one(
         {

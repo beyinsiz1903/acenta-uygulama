@@ -365,9 +365,14 @@ function ParasutPushPanel({ bookingId }) {
         <div className="space-y-0.5">
           <div className="text-xs font-semibold text-muted-foreground">Paraşüt Fatura Push</div>
           <div className="text-[11px] text-muted-foreground">
-            Bu booking&apos;i Paraşüt&apos;e fatura olarak göndermek için kullanılır. Sadece yetkili admin kullanıcılar
-            erişebilir.
+            Bu panel, bu booking'i Paraşüt'e fatura olarak göndermek için kullanılır. Sadece yetkili admin
+            kullanıcılar erişebilir.
           </div>
+          {idempotentHint && (
+            <div className="text-[11px] text-emerald-700 mt-1">
+              {idempotentHint}
+            </div>
+          )}
         </div>
         <Button
           size="sm"

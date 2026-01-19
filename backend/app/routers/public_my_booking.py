@@ -219,10 +219,20 @@ async def create_instant_token(body: MyBookingInstantTokenBody, request: Request
         # Enumeration-safe: still return ok=true without token
         return MyBookingInstantTokenResponse(ok=True)
 
-    # Find booking by organization + booking_code
-    booking = await db.bookings.find_one(
-        {"organization_id": body.org, "booking_code": body.booking_code}
-    )
+    # Security: when MYBOOKING_REQUIRE_EMAIL is enabled, require matching guest email
+    criteria: dict[str, Any] = {
+        "organization_id": body.org,
+        "booking_code": body.booking_code,
+    }
+    if MYBOOKING_REQUIRE_EMAIL:
+        email_value = (body.email or "").strip()
+        if not email_value:
+            # Enumeration-safe: booking treated as not found
+            return MyBookingInstantTokenResponse(ok=True)
+        criteria["guest.email"] = {"$regex": f"^{email_value}$", "$options": "i"}
+
+    # Find booking by organization + booking_code (+ optional email)
+    booking = await db.bookings.find_one(criteria)
     if not booking:
         return MyBookingInstantTokenResponse(ok=True)
 
@@ -230,7 +240,7 @@ async def create_instant_token(body: MyBookingInstantTokenBody, request: Request
     token = await create_public_token(
         db,
         booking=booking,
-        email=None,
+        email=(body.email or None),
         client_ip=client_ip,
         user_agent=request.headers.get("User-Agent", ""),
     )

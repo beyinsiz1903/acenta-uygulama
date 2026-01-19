@@ -510,6 +510,7 @@ async def minimal_finance_seed(test_db, async_client: httpx.AsyncClient, agency_
             "test_booking_financials_fx",
             "test_fx_snapshots",
             "test_booking_cancel_reverses_ledger_net0",
+            "test_non_eur_booking_fx_and_ledger",
             "test_refund_fx_ledger",
             "test_booking_amend_quote_and_confirm_zero_delta",
             "test_booking_amend_quote_and_confirm_increase_delta",

@@ -14,9 +14,8 @@ from bson import ObjectId
 
 from app.services.booking_lifecycle import BookingLifecycleService
 from app.services.voucher_pdf import issue_voucher_pdf
-from app.services.email_outbox import enqueue_booking_email
 from app.services.vouchers import generate_for_booking
-from app.utils.datetime import now_utc
+from app.utils import now_utc
 
 
 async def run_b2c_post_payment_side_effects(db, *, booking_id: str) -> None:

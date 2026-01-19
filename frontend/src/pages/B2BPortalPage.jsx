@@ -349,10 +349,23 @@ export default function B2BPortalPage() {
         status: data.status,
         voucher_status: data.voucher_status,
       });
+      setBookingError("");
     } catch (err) {
       console.error("[B2BPortal] Booking error:", err);
       const resp = err?.response?.data;
-      if (resp?.error?.code) {
+      if (resp?.error?.code === "credit_limit_exceeded") {
+        const d = resp.error.details || {};
+        const exposure = d.exposure;
+        const limit = d.limit;
+        const projected = d.projected;
+        let msg = "Kredi limiti aşıldı.";
+        if (typeof exposure === "number" && typeof limit === "number" && typeof projected === "number") {
+          msg = `Kredi limiti aşıldı: Mevcut exposure ${exposure.toFixed(2)}, bu rezervasyon ile ${projected.toFixed(
+            2,
+          )} olacak (limit ${limit.toFixed(2)}).`;
+        }
+        setBookingError(msg);
+      } else if (resp?.error?.code) {
         setBookingError(`${resp.error.code}: ${resp.error.message || "Hata oluştu"}`);
       } else {
         setBookingError(apiErrorMessage(err));

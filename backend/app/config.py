@@ -43,3 +43,4 @@ ENABLE_SELF_SERVICE_PORTAL: bool = _env_flag("ENABLE_SELF_SERVICE_PORTAL", defau
 ENABLE_PARTNER_API: bool = _env_flag("ENABLE_PARTNER_API", default=True)
 ENABLE_INBOX: bool = _env_flag("ENABLE_INBOX", default=True)
 ENABLE_COUPONS: bool = _env_flag("ENABLE_COUPONS", default=True)
+MYBOOKING_REQUIRE_EMAIL: bool = _env_flag("MYBOOKING_REQUIRE_EMAIL", default=False)

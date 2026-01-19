@@ -14,11 +14,14 @@ async def test_b2b_account_summary_uses_ledger_when_available(async_client, agen
     account summary logic.
     """
 
-    db = await get_db()
+    db = test_db
 
     # Ensure credit profile and finance account/balance are present (minimal_finance_seed
     # already creates them for default org + demo agency)
-    org_id = "default_org"
+    org = await db.organizations.find_one({"code": "default_org"})
+    assert org is not None
+    org_id = str(org["_id"])
+
     agency = await db.agencies.find_one({"organization_id": org_id, "name": "Demo Agency"})
     assert agency is not None
     agency_id = str(agency["_id"])

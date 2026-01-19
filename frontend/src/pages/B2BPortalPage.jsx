@@ -630,34 +630,50 @@ export default function B2BPortalPage() {
           )}
 
           {booking && (
-            <div className="mt-2 grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-1">
-                <div className="text-xs text-muted-foreground">Booking ID</div>
-                <div className="font-mono text-sm break-all">{booking.booking_id}</div>
-              </div>
-              <div className="space-y-1">
-                <div className="text-xs text-muted-foreground">Durum</div>
-                <Badge variant="secondary" className="text-xs">
-                  {booking.status}
-                </Badge>
-              </div>
-              <div className="space-y-1">
-                <div className="text-xs text-muted-foreground">Voucher Durumu</div>
-                <Badge variant="outline" className="text-xs">
-                  {booking.voucher_status}
-                </Badge>
-              </div>
-              {booking.status === "VOUCHERED" && (
+            <div className="mt-2 space-y-2">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-1">
-                  <div className="text-xs text-muted-foreground">Voucher</div>
-                  <a
-                    href={`${process.env.REACT_APP_BACKEND_URL}/api/b2b/bookings/${booking.booking_id}/voucher`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center text-xs text-primary hover:underline"
-                  >
-                    Voucher Görüntüle
-                  </a>
+                  <div className="text-xs text-muted-foreground">Booking ID</div>
+                  <div className="font-mono text-sm break-all">{booking.booking_id}</div>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-xs text-muted-foreground">Durum</div>
+                  <Badge variant="secondary" className="text-xs">
+                    {booking.status}
+                  </Badge>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-xs text-muted-foreground">Voucher Durumu</div>
+                  <Badge variant="outline" className="text-xs">
+                    {booking.voucher_status}
+                  </Badge>
+                </div>
+                {booking.status === "VOUCHERED" && (
+                  <div className="space-y-1">
+                    <div className="text-xs text-muted-foreground">Voucher</div>
+                    <a
+                      href={`${process.env.REACT_APP_BACKEND_URL}/api/b2b/bookings/${booking.booking_id}/voucher`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center text-xs text-primary hover:underline"
+                    >
+                      Voucher Görüntüle
+                    </a>
+                  </div>
+                )}
+              </div>
+
+              {booking.finance_flags?.near_limit && (
+                <div className="rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-[11px] text-amber-800 flex items-start gap-2">
+                  <span className="mt-0.5 text-sm">!</span>
+                  <div>
+                    <div className="font-semibold">Kredi limitinize yaklaştınız</div>
+                    <div className="mt-0.5">
+                      Kredi limitiniz EUR bazında hesaplanır. Hesap özetinizi kontrol ederek yeni rezervasyonlarda
+                      reddedilme riskini azaltmak için ödeme yapmayı veya limit artışı talep etmeyi
+                      değerlendirebilirsiniz.
+                    </div>
+                  </div>
                 </div>
               )}
             </div>

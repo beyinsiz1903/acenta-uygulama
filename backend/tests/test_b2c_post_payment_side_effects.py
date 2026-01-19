@@ -48,10 +48,10 @@ async def test_b2c_post_payment_side_effects_creates_voucher_and_email_once(test
     # First run: should confirm booking, create voucher PDF and enqueue email
     await run_b2c_post_payment_side_effects(db, booking_id=str(booking_id))
 
-    # Booking should be CONFIRMED
+    # Booking should be at least CONFIRMED; vouchers service upgrades to VOUCHERED
     updated = await db.bookings.find_one({"_id": booking_id})
     assert updated is not None
-    assert updated.get("status") == "CONFIRMED"
+    assert updated.get("status") in {"CONFIRMED", "VOUCHERED"}
 
     # There should be at least one active voucher record (HTML-level)
     voucher_docs = await db.vouchers.find({"organization_id": org_id, "booking_id": str(booking_id)}).to_list(10)

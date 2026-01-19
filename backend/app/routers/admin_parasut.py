@@ -22,13 +22,18 @@ AdminDep = Depends(require_roles(["super_admin", "admin"]))
 
 
 @router.post("/push-invoice-v1", response_model=ParasutPushStatusResponse, dependencies=[AdminDep])
-async def push_invoice_v1(booking_id: str, user=Depends(get_current_user), db=Depends(get_db)):
+async def push_invoice_v1(
+    payload: ParasutPushInvoiceV1Request,
+    user=Depends(get_current_user),
+    db=Depends(get_db),
+):
     """Trigger Paraşüt invoice push for a single booking.
 
     Uses current_user.organization_id; organization_id is NOT accepted from body.
     """
 
     org_id = user["organization_id"]
+    booking_id = payload.booking_id
 
     # Defensive: ensure booking belongs to this org (404 if not).
     try:

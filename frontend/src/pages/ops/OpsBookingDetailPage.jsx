@@ -330,7 +330,7 @@ function ParasutPushPanel({ bookingId }) {
           : "Paraşüt'e fatura push'u başarılı.";
         toast.success(msg);
         if (invoiceId) {
-          setIdempotentHint(`Bu booking için Paraşüt'te oluşturulan fatura: ${invoiceId}`);
+          setIdempotentHint(`Bu booking için Paraşüt&apos;te oluşturulan fatura: ${invoiceId}`);
         }
       } else if (status === "skipped") {
         const msg = invoiceId

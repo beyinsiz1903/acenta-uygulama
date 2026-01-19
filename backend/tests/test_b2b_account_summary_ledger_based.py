@@ -20,33 +20,70 @@ async def test_b2b_account_summary_uses_ledger_when_available(async_client, test
 
     db = test_db
 
-    # Ensure credit profile and finance account/balance are present (minimal_finance_seed
-    # already creates them for default org + demo agency)
-    org = await db.organizations.find_one({})
-    assert org is not None
-    org_id = str(org["_id"])
+    # Seed minimal org + agency + finance data in isolation for this test
+    org_doc = {"name": "Test Org", "created_at": datetime.utcnow(), "updated_at": datetime.utcnow()}
+    org_res = await db.organizations.insert_one(org_doc)
+    org_id = str(org_res.inserted_id)
 
-    agency = await db.agencies.find_one({"organization_id": org_id, "name": "Demo Agency"})
-    assert agency is not None
-    agency_id = str(agency["_id"])
+    agency_doc = {
+        "organization_id": org_id,
+        "name": "Ledger Test Agency",
+        "settings": {"selling_currency": "EUR"},
+        "created_at": datetime.utcnow(),
+        "updated_at": datetime.utcnow(),
+    }
+    agency_res = await db.agencies.insert_one(agency_doc)
+    agency_id = str(agency_res.inserted_id)
 
-    credit = await db.credit_profiles.find_one({"organization_id": org_id, "agency_id": agency_id})
-    assert credit is not None
+    account_doc = {
+        "organization_id": org_id,
+        "type": "agency",
+        "owner_id": agency_id,
+        "currency": "EUR",
+        "code": "AGENCY_AR_TEST",
+        "name": "Agency Receivable Test",
+        "status": "active",
+        "created_at": datetime.utcnow(),
+        "updated_at": datetime.utcnow(),
+    }
+    acc_res = await db.finance_accounts.insert_one(account_doc)
 
-    account = await db.finance_accounts.find_one(
-        {"organization_id": org_id, "type": "agency", "owner_id": agency_id}
+    await db.account_balances.insert_one(
+        {
+            "organization_id": org_id,
+            "account_id": acc_res.inserted_id,
+            "currency": "EUR",
+            "balance": 80.0,
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow(),
+        }
     )
-    assert account is not None
 
-    balance = await db.account_balances.find_one(
-        {"organization_id": org_id, "account_id": account["_id"], "currency": account["currency"]}
+    await db.credit_profiles.insert_one(
+        {
+            "organization_id": org_id,
+            "agency_id": agency_id,
+            "limit": 100.0,
+            "soft_limit": 70.0,
+            "payment_terms": "30d",
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow(),
+        }
     )
-    assert balance is not None
+
+    # Build JWT for this agency user (bypassing full auth flow)
+    payload = {
+        "sub": "test-b2b-user",
+        "org": org_id,
+        "agency_id": agency_id,
+        "roles": ["agency_admin"],
+    }
+    token = jwt.encode(payload, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
 
     # Call B2B account summary as agency user
     resp = await async_client.get(
         "/api/b2b/account/summary",
-        headers={"Authorization": f"Bearer {agency_token}"},
+        headers={"Authorization": f"Bearer {token}"},
     )
     assert resp.status_code == 200, resp.text
 

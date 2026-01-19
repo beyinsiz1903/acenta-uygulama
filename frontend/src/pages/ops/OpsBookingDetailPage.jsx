@@ -283,6 +283,7 @@ function ParasutPushPanel({ bookingId }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [pushing, setPushing] = useState(false);
+  const [idempotentHint, setIdempotentHint] = useState("");
 
   async function loadLogs() {
     if (!bookingId) {

@@ -59,11 +59,38 @@ export default function B2BAccountPage() {
   const softLimit = data?.soft_limit ?? null;
   const paymentTerms = data?.payment_terms ?? null;
   const status = data?.status || "ok";
-  const aging = data?.aging || { age_0_30: 0, age_31_60: 0, age_61_plus: 0 };
+  const aging = data?.aging || null;
+
+  const isNearLimit = status === "near_limit";
+  const isOverLimit = status === "over_limit";
 
   return (
     <div className="space-y-6">
       <h1 className="text-xl font-semibold">Cari Hesap</h1>
+
+      {(isNearLimit || isOverLimit) && (
+        <div
+          className={`rounded-2xl border p-3 text-xs flex items-start gap-2 ${
+            isOverLimit
+              ? "border-red-300 bg-red-50 text-red-800"
+              : "border-amber-300 bg-amber-50 text-amber-800"
+          }`}
+        >
+          <span className="mt-0.5 text-sm">!</span>
+          <div>
+            <div className="font-semibold text-[13px]">
+              {isOverLimit ? "Kredi limiti aşıldı" : "Kredi limitinize yaklaştınız"}
+            </div>
+            <div className="mt-0.5 text-[11px]">
+              Kredi limitiniz EUR bazında hesaplanır. Yeni rezervasyonlarda reddedilme
+              riskini azaltmak için ödeme yapmayı veya limit artışı talep etmeyi
+              değerlendirebilirsiniz.
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <KpiCard label="Toplam Borç" value={totalDebit} currency={currency} />

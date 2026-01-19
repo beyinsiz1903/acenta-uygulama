@@ -15,7 +15,7 @@ class ParasutPushStatusResponse(BaseModel):
 
 
 class ParasutPushLogItem(BaseModel):
-    id: str = Field(..., alias="_id")
+    id: str
     booking_id: str
     push_type: str
     status: Literal["pending", "success", "failed"]

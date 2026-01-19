@@ -133,6 +133,11 @@ async def apply_stripe_event_with_guard(
 
     org_id = booking.get("organization_id")
 
+    # Derive simple channel/source hints from booking metadata to distinguish
+    # public (B2C) checkouts from B2B / other flows.
+    source = str(booking.get("source") or "").lower()
+    channel = str(booking.get("channel") or "").lower()
+
     # 3) Final-state guard: already paid/refunded/voided or hard-confirmed bookings
     final_payment_statuses = {"paid", "refunded", "voided"}
     final_booking_statuses = {"CONFIRMED", "CANCELLED"}

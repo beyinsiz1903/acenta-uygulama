@@ -18,6 +18,7 @@ from app.services.public_my_booking import (
 )
 from app.services.email_outbox import enqueue_generic_email
 from app.services.booking_events import emit_event
+from app.config import MYBOOKING_REQUIRE_EMAIL
 
 router = APIRouter(prefix="/api/public/my-booking", tags=["public_my_booking"])
 

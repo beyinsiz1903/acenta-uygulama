@@ -278,6 +278,169 @@ function CrmBookingSnapshot({ booking, bookingId, onCustomerLinked }) {
   );
 }
 
+function ParasutPushPanel({ bookingId }) {
+  const [logs, setLogs] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [pushing, setPushing] = useState(false);
+
+  async function loadLogs() {
+    if (!bookingId) {
+      setLogs([]);
+      setError("");
+      return;
+    }
+    setLoading(true);
+    setError("");
+    try {
+      const res = await api.get("/admin/finance/parasut/pushes", {
+        params: { booking_id: bookingId, limit: 50 },
+      });
+      setLogs(res.data?.items || []);
+    } catch (e) {
+      setError(apiErrorMessage(e));
+      setLogs([]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadLogs();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bookingId]);
+
+  async function handlePush() {
+    if (!bookingId) return;
+    setPushing(true);
+    try {
+      const res = await api.post("/admin/finance/parasut/push-invoice-v1", {
+        booking_id: bookingId,
+      });
+      const data = res.data || {};
+      const status = data.status;
+      const reason = data.reason;
+
+      if (status === "success") {
+        toast.success("Paraşüt'e fatura push'u başarılı.");
+      } else if (status === "skipped") {
+        toast.info(reason ? `İşlem atlandı: ${reason}` : "İşlem atlandı.");
+      } else if (status === "failed") {
+        toast.error(reason ? `Paraşüt push'u başarısız: ${reason}` : "Paraşüt push'u başarısız oldu.");
+      } else {
+        toast.success("Paraşüt push isteği işlendi.");
+      }
+
+      await loadLogs();
+    } catch (e) {
+      toast.error(apiErrorMessage(e));
+    } finally {
+      setPushing(false);
+    }
+  }
+
+  return (
+    <div className="border rounded-xl p-3 bg-muted/30 space-y-2">
+      <div className="flex items-center justify-between gap-2">
+        <div className="space-y-0.5">
+          <div className="text-xs font-semibold text-muted-foreground">Paraşüt Fatura Push</div>
+          <div className="text-[11px] text-muted-foreground">
+            Bu booking'i Paraşüt'e fatura olarak göndermek için kullanılır. Sadece yetkili admin kullanıcılar
+            erişebilir.
+          </div>
+        </div>
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={!bookingId || pushing}
+          onClick={handlePush}
+        >
+          {pushing ? "Gönderiliyor..." : "Paraşüt'e gönder"}
+        </Button>
+      </div>
+
+      {loading && (
+        <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+          <Loader2 className="h-3 w-3 animate-spin" /> Paraşüt logları yükleniyor...
+        </div>
+      )}
+      {!loading && error && <ErrorState description={error} />}
+
+      {!loading && !error && logs.length === 0 && (
+        <div className="text-[11px] text-muted-foreground">
+          Bu booking için henüz Paraşüt push logu yok.
+        </div>
+      )}
+
+      {!loading && !error && logs.length > 0 && (
+        <div className="mt-1 rounded-lg border overflow-hidden text-[11px]">
+          <table className="min-w-full">
+            <thead className="bg-muted/40 text-[10px] text-muted-foreground">
+              <tr>
+                <th className="px-2 py-1 text-left">Durum</th>
+                <th className="px-2 py-1 text-left">Tip</th>
+                <th className="px-2 py-1 text-left">Deneme</th>
+                <th className="px-2 py-1 text-left">Son hata</th>
+                <th className="px-2 py-1 text-left">Güncellendi</th>
+                <th className="px-2 py-1 text-right">Aksiyon</th>
+              </tr>
+            </thead>
+            <tbody>
+              {logs.map((log) => {
+                const status = log.status;
+                let statusLabel = status;
+                let statusClass = "bg-muted text-muted-foreground";
+                if (status === "success") {
+                  statusLabel = "Başarılı";
+                  statusClass = "bg-emerald-50 text-emerald-700";
+                } else if (status === "failed") {
+                  statusLabel = "Hatalı";
+                  statusClass = "bg-red-50 text-red-700";
+                } else if (status === "pending") {
+                  statusLabel = "Beklemede";
+                  statusClass = "bg-amber-50 text-amber-700";
+                }
+
+                return (
+                  <tr key={log.id} className="border-t">
+                    <td className="px-2 py-1">
+                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] ${statusClass}`}>
+                        {statusLabel}
+                      </span>
+                    </td>
+                    <td className="px-2 py-1 font-mono">{log.push_type}</td>
+                    <td className="px-2 py-1 font-mono">{log.attempt_count}</td>
+                    <td className="px-2 py-1 max-w-xs truncate" title={log.last_error || "-"}>
+                      {log.last_error || "-"}
+                    </td>
+                    <td className="px-2 py-1 text-muted-foreground">
+                      {log.updated_at ? formatDateTime(log.updated_at) : "-"}
+                    </td>
+                    <td className="px-2 py-1 text-right">
+                      {log.status === "failed" && (
+                        <Button
+                          type="button"
+                          size="xs"
+                          variant="outline"
+                          disabled={pushing}
+                          onClick={handlePush}
+                        >
+                          Tekrar dene
+                        </Button>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
 export default function OpsBookingDetailPage() {
   const { bookingId } = useParams();
   const navigate = useNavigate();
@@ -493,213 +656,50 @@ export default function OpsBookingDetailPage() {
               </TabsContent>
 
               <TabsContent value="payments" className="mt-0">
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <div className="text-xs text-muted-foreground">Click-to-Pay</div>
-                      <div className="text-[11px] text-muted-foreground">
-              <TabsContent value="cases" className="mt-0">
-                <div className="space-y-3 text-sm">
-                  <div className="flex flex-col sm:flex-row sm:items-end gap-3">
-                    <div className="flex-1 space-y-1">
-                      <div className="text-xs text-muted-foreground">Yeni Case Oluştur</div>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                        <div className="space-y-1">
-                          <div className="text-[11px] text-muted-foreground">Tip</div>
-                          <select
-                            className="w-full rounded-md border px-2 py-1 text-xs"
-                            value={newCaseType}
-                            onChange={(e) => setNewCaseType(e.target.value)}
-                          >
-                            <option value="cancel">İptal talebi</option>
-                            <option value="amend">Değişiklik talebi</option>
-                            <option value="refund">İade</option>
-                            <option value="payment_followup">Ödeme takibi</option>
-                            <option value="voucher_issue">Voucher sorunu</option>
-                            <option value="missing_docs">Eksik evrak</option>
-                            <option value="supplier_approval">Tedarikçi onayı</option>
-                            <option value="other">Diğer</option>
-                          </select>
-                        </div>
-                        <div className="sm:col-span-2 space-y-1">
-                          <div className="text-[11px] text-muted-foreground">Not</div>
-                          <form onSubmit={handleCreateCase} className="flex flex-col sm:flex-row gap-2 items-start">
-                            <textarea
-                              className="w-full rounded-md border px-2 py-1 text-xs min-h-[40px]"
-                              value={newCaseNote}
-                              onChange={(e) => setNewCaseNote(e.target.value)}
-                              placeholder="Kısa bir açıklama yazın (zorunlu değil ama önerilir)"
-                            />
-                            <Button
-                              type="submit"
-                              size="xs"
-                              disabled={creatingCase}
-                              className="whitespace-nowrap text-[11px] mt-1 sm:mt-0"
-                            >
-                              {creatingCase ? "Oluşturuluyor..." : "Case oluştur"}
-                            </Button>
-                          </form>
-                          {createCaseError && (
-                            <div className="text-[11px] text-red-600 mt-1">{createCaseError}</div>
-                          )}
+                <div className="space-y-4 text-sm">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <div className="text-xs text-muted-foreground">Click-to-Pay</div>
+                        <div className="text-[11px] text-muted-foreground">
+                          Misafire ödeme linki göndererek kalan tahsilatı tek adımda tamamlayın.
                         </div>
                       </div>
-                    </div>
-                  </div>
-
-                  <div className="mt-3 border-t pt-3">
-                    {casesLoading && (
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <Loader2 className="h-3 w-3 animate-spin" /> Caseler yükleniyor...
-                      </div>
-                    )}
-                    {!casesLoading && casesError && <ErrorState description={casesError} />}
-                    {!casesLoading && !casesError && cases.length === 0 && (
-                      <EmptyState
-                        title="Bu booking için case yok"
-                        description="Guest portal veya ops panel üzerinden henüz bir case açılmamış."
-                      />
-                    )}
-                    {!casesLoading && !casesError && cases.length > 0 && (
-                      <div className="mt-2 rounded-lg border overflow-hidden text-xs">
-                        <table className="min-w-full">
-                          <thead className="bg-muted/40 text-[11px] text-muted-foreground">
-                            <tr>
-                              <th className="px-2 py-1 text-left">Case ID</th>
-                              <th className="px-2 py-1 text-left">Tip</th>
-                              <th className="px-2 py-1 text-left">Durum</th>
-                              <th className="px-2 py-1 text-left">Kaynak</th>
-                              <th className="px-2 py-1 text-left">Oluşturulma</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {cases.map((c) => {
-                              const created = c.created_at ? new Date(c.created_at) : null;
-                              return (
-                                <tr
-                                  key={c.case_id}
-                                  className="border-t hover:bg-muted/30 cursor-pointer"
-                                  onClick={() => setSelectedCaseId(c.case_id)}
-                                >
-                                  <td className="px-2 py-1 font-mono text-[11px]">{c.case_id}</td>
-                                  <td className="px-2 py-1">
-                                    {(() => {
-                                      switch (c.type) {
-                                        case "cancel":
-                                          return "İptal talebi";
-                                        case "amend":
-                                          return "Değişiklik talebi";
-                                        case "refund":
-                                          return "İade";
-                                        case "payment_followup":
-                                          return "Ödeme takibi";
-                                        case "voucher_issue":
-                                          return "Voucher sorunu";
-                                        case "missing_docs":
-                                          return "Eksik evrak";
-                                        case "supplier_approval":
-                                          return "Tedarikçi onayı";
-                                        case "other":
-                                          return "Diğer";
-                                        default:
-                                          return c.type || "-";
-                                      }
-                                    })()}
-                                  </td>
-                                  <td className="px-2 py-1">
-                                    {(() => {
-                                      switch (c.status) {
-                                        case "open":
-                                          return (
-                                            <span className="inline-flex items-center rounded-full bg-emerald-50 text-emerald-700 px-2 py-0.5 text-[10px]">
-                                              Açık
-                                            </span>
-                                          );
-                                        case "waiting":
-                                          return (
-                                            <span className="inline-flex items-center rounded-full bg-amber-50 text-amber-700 px-2 py-0.5 text-[10px]">
-                                              Beklemede
-                                            </span>
-                                          );
-                                        case "in_progress":
-                                          return (
-                                            <span className="inline-flex items-center rounded-full bg-blue-50 text-blue-700 px-2 py-0.5 text-[10px]">
-                                              Devam ediyor
-                                            </span>
-                                          );
-                                        case "closed":
-                                        default:
-                                          return (
-                                            <span className="inline-flex items-center rounded-full bg-muted text-muted-foreground px-2 py-0.5 text-[10px]">
-                                              Kapalı
-                                            </span>
-                                          );
-                                      }
-                                    })()}
-                                  </td>
-                                  <td className="px-2 py-1">
-                                    {(() => {
-                                      switch (c.source) {
-                                        case "guest_portal":
-                                          return "Guest portal";
-                                        case "ops_panel":
-                                          return "Ops panel";
-                                        case "system":
-                                          return "Sistem";
-                                        default:
-                                          return c.source || "-";
-                                      }
-                                    })()}
-                                  </td>
-                                  <td className="px-2 py-1 text-muted-foreground">
-                                    {created ? created.toLocaleString("tr-TR") : "-"}
-                                  </td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </TabsContent>
-
-                        Misafire ödeme linki göndererek kalan tahsilatı tek adımda tamamlayın.
-                      </div>
-                    </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={!booking}
-                      onClick={async () => {
-                        if (!booking) return;
-                        try {
-                          const res = await createClickToPayLink(booking.booking_id || bookingId);
-                          if (!res.ok) {
-                            if (res.reason === "nothing_to_collect") {
-                              toast.info("Kalan tahsilat yok.");
-                            } else {
-                              toast.error("Ödeme linki oluşturulamadı.");
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={!booking}
+                        onClick={async () => {
+                          if (!booking) return;
+                          try {
+                            const res = await createClickToPayLink(booking.booking_id || bookingId);
+                            if (!res.ok) {
+                              if (res.reason === "nothing_to_collect") {
+                                toast.info("Kalan tahsilat yok.");
+                              } else {
+                                toast.error("Ödeme linki oluşturulamadı.");
+                              }
+                              return;
                             }
-                            return;
+                            const origin = window.location.origin;
+                            const url = `${origin}${res.url}`;
+                            await navigator.clipboard.writeText(url).catch(() => {});
+                            toast.success("Ödeme linki oluşturuldu ve panoya kopyalandı.");
+                          } catch (e) {
+                            toast.error(apiErrorMessage(e));
                           }
-                          const origin = window.location.origin;
-                          const url = `${origin}${res.url}`;
-                          await navigator.clipboard.writeText(url).catch(() => {});
-                          toast.success("Ödeme linki oluşturuldu ve panoya kopyalandı.");
-                        } catch (e) {
-                          toast.error(apiErrorMessage(e));
-                        }
-                      }}
-                    >
-                      Ödeme linki oluştur
-                    </Button>
+                        }}
+                      >
+                        Ödeme linki oluştur
+                      </Button>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground">
+                      Link, 24 saat sonra otomatik olarak geçersiz hale gelir. Ödeme başarıyla tamamlandığında
+                      Stripe webhook ve ledger akışı mevcut payment-state görünümünü güncelleyecektir.
+                    </p>
                   </div>
-                  <p className="text-[11px] text-muted-foreground">
-                    Link, 24 saat sonra otomatik olarak geçersiz hale gelir. Ödeme başarıyla tamamlandığında
-                    Stripe webhook ve ledger akışı mevcut payment-state görünümünü güncelleyecektir.
-                  </p>
+
+                  <ParasutPushPanel bookingId={booking?.booking_id || bookingId} />
                 </div>
               </TabsContent>
 

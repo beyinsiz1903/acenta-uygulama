@@ -619,18 +619,17 @@ async def public_checkout(payload: PublicCheckoutRequest, request: Request, db=D
                     "status": "failed",
                     "ok": False,
                     "reason": "provider_unavailable",
+                    "correlation_id": correlation_id,
                 }
             },
-            upsert=True,
         )
+
         return PublicCheckoutResponse(
             ok=False,
-            booking_id=None,
-            booking_code=None,
-            payment_intent_id=None,
-            client_secret=None,
             reason="provider_unavailable",
             correlation_id=correlation_id,
+            booking_id=None,
+            booking_code=None,
         )
 
     payment_intent_id = pi.get("id")

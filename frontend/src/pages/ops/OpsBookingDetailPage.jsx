@@ -314,6 +314,7 @@ function ParasutPushPanel({ bookingId }) {
   async function handlePush() {
     if (!bookingId) return;
     setPushing(true);
+    setIdempotentHint("");
     try {
       const res = await api.post("/admin/finance/parasut/push-invoice-v1", {
         booking_id: bookingId,
@@ -321,13 +322,31 @@ function ParasutPushPanel({ bookingId }) {
       const data = res.data || {};
       const status = data.status;
       const reason = data.reason;
+      const invoiceId = data.parasut_invoice_id;
 
       if (status === "success") {
-        toast.success("Paraşüt'e fatura push'u başarılı.");
+        const msg = invoiceId
+          ? `Fatura oluşturuldu: ${invoiceId}`
+          : "Paraşüt'e fatura push'u başarılı.";
+        toast.success(msg);
+        if (invoiceId) {
+          setIdempotentHint(`Bu booking için Paraşüt'te oluşturulan fatura: ${invoiceId}`);
+        }
       } else if (status === "skipped") {
-        toast.info(reason ? `İşlem atlandı: ${reason}` : "İşlem atlandı.");
+        const msg = invoiceId
+          ? `Daha önce oluşturulmuş: ${invoiceId}`
+          : reason
+            ? `İşlem atlandı: ${reason}`
+            : "İşlem atlandı.";
+        toast.info(msg);
+        if (invoiceId) {
+          setIdempotentHint(`Idempotent: Bu booking için halihazırda bir Paraşüt faturası var (${invoiceId}).`);
+        }
       } else if (status === "failed") {
-        toast.error(reason ? `Paraşüt push'u başarısız: ${reason}` : "Paraşüt push'u başarısız oldu.");
+        const msg = reason
+          ? `Başarısız: ${reason}`
+          : "Paraşüt push'u başarısız oldu.";
+        toast.error(msg);
       } else {
         toast.success("Paraşüt push isteği işlendi.");
       }

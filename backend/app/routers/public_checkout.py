@@ -708,7 +708,7 @@ async def public_checkout(payload: PublicCheckoutRequest, request: Request, db=D
         upsert=True,
     )
 
-    # Emit minimal booking event for timeline
+    # Emit minimal booking event for timeline (public booking created)
     try:
         await emit_event(
             db,
@@ -721,6 +721,9 @@ async def public_checkout(payload: PublicCheckoutRequest, request: Request, db=D
     except Exception:
         # Timeline errors must not break checkout
         pass
+
+    # NOTE: Actual payment success (and thus booking confirmation + voucher/email)
+    # is handled asynchronously via Stripe webhooks and BookingPaymentsOrchestrator.
 
     return PublicCheckoutResponse(
         ok=True,

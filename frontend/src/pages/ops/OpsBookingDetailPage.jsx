@@ -37,6 +37,63 @@ function StatusPill({ status }) {
   );
 }
 
+function FinanceRiskSummary({ booking }) {
+  if (!booking) return null;
+
+  const flags = booking.finance_flags || {};
+  const creditStatus =
+    booking.credit_status || (flags.over_limit ? "over_limit" : flags.near_limit ? "near_limit" : "ok");
+
+  const hasFlags = flags && Object.keys(flags).length > 0;
+  if (!hasFlags && creditStatus === "ok") {
+    // Non-B2B booking or no credit context; hide the panel.
+    return null;
+  }
+
+  let badgeText = "Uygun";
+  let badgeClass = "bg-emerald-50 text-emerald-700";
+  let description = "Bu rezervasyon şu anda kredi limiti açısından riskli görünmüyor.";
+
+  if (creditStatus === "near_limit") {
+    badgeText = "Limite yakın";
+    badgeClass = "bg-amber-50 text-amber-700";
+    description =
+      "Bu rezervasyon sonrasında ajans kredi limitine yaklaştı. Yeni rezervasyonlarda reddedilme riski artabilir; erken tahsilat veya limit artışı önerilir.";
+  } else if (creditStatus === "over_limit") {
+    badgeText = "Limit aşıldı";
+    badgeClass = "bg-red-50 text-red-700";
+    description =
+      "Bu rezervasyon ajansın kredi limiti aşıldıktan sonra oluşturulmuş olabilir veya şu anda limit aşımı var. Yeni rezervasyonlar bloklanabilir; cari tahsilat veya limit artışı gerekebilir.";
+  }
+
+  return (
+    <div className="mt-3 border rounded-xl p-3 bg-muted/40 text-xs flex flex-col gap-2">
+      <div className="flex items-center justify-between gap-2">
+        <div className="space-y-0.5">
+          <div className="text-[11px] font-semibold text-muted-foreground">Finansal Risk Özeti</div>
+          <div className="text-[11px] text-muted-foreground">
+            Bu rezervasyonun ajans kredi limiti ile ilişkili durumunu gösterir.
+          </div>
+        </div>
+        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${badgeClass}`}>
+          {badgeText}
+        </span>
+      </div>
+      <div className="text-[11px] text-muted-foreground">{description}</div>
+      {hasFlags && (
+        <div className="mt-1 text-[10px] text-muted-foreground flex flex-wrap gap-2">
+          {Object.entries(flags).map(([key, value]) => (
+            <span key={key} className="inline-flex items-center rounded-full border px-2 py-0.5">
+              <span className="font-mono mr-1">{key}</span>
+              <span>{String(value)}</span>
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function CrmBookingSnapshot({ booking, bookingId, onCustomerLinked }) {
   const [detail, setDetail] = useState(null);
   const [loading, setLoading] = useState(false);

@@ -1163,6 +1163,7 @@ async def get_exposure_dashboard(
     }).to_list(length=limit)
     
     items = []
+    today = now_utc().date()
     
     for account in agency_accounts:
         account_id = account["_id"]
@@ -1191,6 +1192,42 @@ async def get_exposure_dashboard(
         soft_limit = credit_profile.get("soft_limit")
         payment_terms = credit_profile["payment_terms"]
         
+        # Simple aging buckets based on ledger entry posted_at dates.
+        # This is an approximation: we apply agency balance rules (debit - credit)
+        # per entry and bucket by age in days.
+        age_0_30 = 0.0
+        age_31_60 = 0.0
+        age_61_plus = 0.0
+        
+        entries = await db.ledger_entries.find({
+            "organization_id": org_id,
+            "account_id": account_id,
+            "currency": "EUR",
+        }).to_list(length=5000)
+        
+        account_type = account.get("type")  # should be "agency"
+        for entry in entries:
+            posted_at = entry.get("posted_at") or entry.get("occurred_at")
+            if not posted_at:
+                continue
+            days = (today - posted_at.date()).days
+            amount = float(entry.get("amount", 0.0) or 0.0)
+            direction = entry.get("direction")
+            
+            if account_type == "agency":
+                delta = amount if direction == "debit" else -amount
+            elif account_type == "platform":
+                delta = amount if direction == "credit" else -amount
+            else:
+                delta = amount if direction == "debit" else -amount
+            
+            if days <= 30:
+                age_0_30 += delta
+            elif days <= 60:
+                age_31_60 += delta
+            else:
+                age_61_plus += delta
+        
         # Calculate status
         if exposure >= credit_limit:
             status = "over_limit"
@@ -1209,6 +1246,9 @@ async def get_exposure_dashboard(
                 agency_name=agency_name,
                 currency="EUR",
                 exposure=exposure,
+                age_0_30=age_0_30,
+                age_31_60=age_31_60,
+                age_61_plus=age_61_plus,
                 credit_limit=credit_limit,
                 soft_limit=soft_limit,
                 payment_terms=payment_terms,

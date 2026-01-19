@@ -31,6 +31,8 @@ class MyBookingRequestLinkBody(BaseModel):
 class MyBookingInstantTokenBody(BaseModel):
     org: str = Field(..., min_length=1)
     booking_code: str = Field(..., min_length=1)
+    # Optional email for stricter security; enforced when MYBOOKING_REQUIRE_EMAIL is enabled.
+    email: Optional[EmailStr] = None
 
 
 class MyBookingInstantTokenResponse(BaseModel):

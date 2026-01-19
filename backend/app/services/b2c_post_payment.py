@@ -70,14 +70,22 @@ async def run_b2c_post_payment_side_effects(db, *, booking_id: str) -> None:
             booking_id=booking_id,
             created_by_email="system_b2c_post_payment",
         )
-        await issue_voucher_pdf(
-            db,
-            organization_id=org_id,
-            booking_id=booking_id,
-            issue_reason="INITIAL",  # type: ignore[arg-type]
-            locale="tr",
-            issued_by="system_b2c_post_payment",
-        )
+
+        # PDF rendering depends on WeasyPrint and may not be configured in all
+        # environments. Treat it as a best-effort side-effect and never block
+        # the rest of the pipeline (voucher + email).
+        try:
+            await issue_voucher_pdf(
+                db,
+                organization_id=org_id,
+                booking_id=booking_id,
+                issue_reason="INITIAL",  # type: ignore[arg-type]
+                locale="tr",
+                issued_by="system_b2c_post_payment",
+            )
+        except Exception:
+            # Ignore PDF failures here; voucher HTML + email links will still work.
+            pass
 
         # 3) Enqueue booking.confirmed email to guest (idempotent via simple dedupe)
         guest = booking.get("guest") or {}

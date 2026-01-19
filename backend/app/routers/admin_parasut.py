@@ -35,18 +35,14 @@ async def push_invoice_v1(
     org_id = user["organization_id"]
     booking_id = payload.booking_id
 
-    # Defensive: ensure booking belongs to this org (404 if not).
+    # Optionally validate booking_id format; actual lookup & logging is delegated
+    # to run_parasut_invoice_push, which will mark booking_not_found as failed.
     try:
-        oid = ObjectId(booking_id)
+        ObjectId(booking_id)
     except Exception:
         raise HTTPException(status_code=422, detail="INVALID_BOOKING_ID")
 
-    booking = await db.bookings.find_one({"_id": oid, "organization_id": org_id})
-    if not booking:
-        # Either booking does not exist or belongs to another org; do not leak info.
-        raise HTTPException(status_code=404, detail="BOOKING_NOT_FOUND")
-
-    result = await run_parasut_invoice_push(db, organization_id=org_id, booking_id=str(booking_id))
+    result = await run_parasut_invoice_push(db, organization_id=org_id, booking_id=booking_id)
 
     # Normalise to ParasutPushStatusResponse
     return ParasutPushStatusResponse(

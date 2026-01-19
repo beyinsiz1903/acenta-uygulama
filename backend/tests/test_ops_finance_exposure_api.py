@@ -6,7 +6,7 @@ from app.utils import now_utc
 
 
 @pytest.mark.anyio
-async def test_exposure_dashboard_returns_aging_buckets(async_client, test_db):
+async def test_exposure_dashboard_returns_aging_buckets(async_client, test_db, admin_token):
     """Exposure dashboard should include basic aging buckets for agency accounts.
 
     We seed a single agency finance account with a few ledger entries spread

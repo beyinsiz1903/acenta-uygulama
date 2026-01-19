@@ -6,7 +6,8 @@ from datetime import datetime
 
 import jwt
 
-from app.config import JWT_SECRET_KEY, JWT_ALGORITHM
+JWT_SECRET_KEY = "test-secret-key"
+JWT_ALGORITHM = "HS256"
 
 
 @pytest.mark.anyio

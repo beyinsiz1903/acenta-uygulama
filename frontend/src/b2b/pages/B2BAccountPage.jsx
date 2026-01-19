@@ -54,6 +54,13 @@ export default function B2BAccountPage() {
   const net = data?.net || 0;
   const recent = data?.recent || [];
 
+  const exposureEur = data?.exposure_eur ?? null;
+  const creditLimit = data?.credit_limit ?? null;
+  const softLimit = data?.soft_limit ?? null;
+  const paymentTerms = data?.payment_terms ?? null;
+  const status = data?.status || "ok";
+  const aging = data?.aging || { age_0_30: 0, age_31_60: 0, age_61_plus: 0 };
+
   return (
     <div className="space-y-6">
       <h1 className="text-xl font-semibold">Cari Hesap</h1>

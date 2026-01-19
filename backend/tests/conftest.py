@@ -647,7 +647,10 @@ def patch_cancel_test_get_db(monkeypatch, test_db):
     import os
 
     current_test = os.environ.get("PYTEST_CURRENT_TEST", "")
-    if "test_booking_cancel_reverses_ledger_net0.py" not in current_test:
+    if not any(key in current_test for key in [
+        "test_booking_cancel_reverses_ledger_net0.py",
+        "test_non_eur_booking_fx_and_ledger.py",
+    ]):
         return
 
     async def _get_test_db():
@@ -715,7 +718,10 @@ async def seed_confirmed_booking_for_cancel_net0(test_db, async_client: httpx.As
     import os
 
     current_test = os.environ.get("PYTEST_CURRENT_TEST", "")
-    if "test_booking_cancel_reverses_ledger_net0.py" not in current_test:
+    if not any(key in current_test for key in [
+        "test_booking_cancel_reverses_ledger_net0.py",
+        "test_non_eur_booking_fx_and_ledger.py",
+    ]):
         return
 
     headers = {"Authorization": f"Bearer {agency_token}"}

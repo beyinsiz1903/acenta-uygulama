@@ -190,7 +190,7 @@ function AdminFinanceExposurePageInner() {
                 }`}
                 onClick={() => setStatusFilter("near_limit")}
               >
-                Near limit
+                Limite yakın
               </button>
               <button
                 type="button"
@@ -199,7 +199,7 @@ function AdminFinanceExposurePageInner() {
                 }`}
                 onClick={() => setStatusFilter("over_limit")}
               >
-                Over limit
+                Limit aşıldı
               </button>
             </div>
             <Input

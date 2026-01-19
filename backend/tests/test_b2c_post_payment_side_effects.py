@@ -37,9 +37,10 @@ async def test_b2c_post_payment_side_effects_creates_voucher_and_email_once(test
     await db.voucher_templates.insert_one(
         {
             "organization_id": org_id,
-            "key": "b2c_booking_default",
+            "key": "b2b_booking_default",
             "name": "B2C Booking Template",
-            "html": "<html><body><h1>Voucher for {{booking_id}}</h1></body></html>",
+            "html": "<html><body><h1>Voucher for {booking_id}</h1></body></html>",
+            "status": "active",
             "created_at": now_utc(),
         }
     )

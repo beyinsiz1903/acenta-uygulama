@@ -216,7 +216,7 @@ function AdminFinanceExposurePageInner() {
           ) : error ? (
             <ErrorState title="Exposure yüklenemedi" description={error} />
           ) : (
-            <ExposureTable items={items} filter={filter} />
+            <ExposureTable items={items} filter={filter} statusFilter={statusFilter} />
           )}
         </CardContent>
       </Card>

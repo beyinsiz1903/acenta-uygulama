@@ -703,6 +703,8 @@ export default function OpsBookingDetailPage() {
               </div>
             </div>
 
+            <FinanceRiskSummary booking={booking} />
+
             <CrmBookingSnapshot
               booking={booking}
               bookingId={bookingId}

@@ -138,7 +138,7 @@ class B2BBookingService:
                 "sell_amount": sell_amount,
                 "posting": {},  # will be populated after posting
             },
-            "finance_flags": credit_check["flags"],
+            "finance_flags": flags,
             "created_at": now,
             "updated_at": now,
             "created_by_email": user_email,

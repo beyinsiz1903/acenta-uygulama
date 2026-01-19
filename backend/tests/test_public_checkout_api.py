@@ -497,11 +497,16 @@ async def test_public_checkout_payment_failed_error_standardization(monkeypatch,
 
     # 2) Stripe adapter'ı, create_payment_intent aşamasında patlayacak şekilde stubla
     from app.services import stripe_adapter
+    from app.errors import AppError, PublicCheckoutErrorCode
 
     async def failing_create_payment_intent(*args, **kwargs):  # noqa: ANN001, D401
-        """Her çağrıldığında hata fırlatır (provider failure simulasyonu)."""
+        """Her çağrıldığında PAYMENT_FAILED tipinde AppError fırlatır."""
 
-        raise RuntimeError("stripe down")
+        raise AppError(
+            502,
+            PublicCheckoutErrorCode.PAYMENT_FAILED.value,
+            "Payment failed during initialization",
+        )
 
     monkeypatch.setattr(stripe_adapter, "create_payment_intent", failing_create_payment_intent)
 

@@ -439,6 +439,9 @@ function ParasutPushPanel({ bookingId }) {
                     <td className="px-2 py-1 max-w-xs truncate" title={log.last_error || "-"}>
                       {log.last_error || "-"}
                     </td>
+                    <td className="px-2 py-1 font-mono truncate" title={log.parasut_invoice_id || "-"}>
+                      {log.parasut_invoice_id || "-"}
+                    </td>
                     <td className="px-2 py-1 text-muted-foreground">
                       {log.updated_at ? formatDateTime(log.updated_at) : "-"}
                     </td>

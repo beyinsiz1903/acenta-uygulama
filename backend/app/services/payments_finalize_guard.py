@@ -183,5 +183,57 @@ async def apply_stripe_event_with_guard(
         # Another event already moved this booking to a final state
         return await _finalise("ignored_out_of_order", "status_mismatch", booking)
 
-    # 6) Success path
+    # 6) Success path for payment_status
+    # For PUBLIC (B2C) bookings we also trigger booking confirmation +
+    # voucher/email side effects in a best-effort, idempotent way.
+    try:
+        if source == "public" or channel == "public":
+            from app.services.booking_lifecycle import BookingLifecycleService
+            from app.services.voucher_pdf import issue_voucher_pdf
+            from app.services.email_outbox import enqueue_booking_email
+
+            lifecycle = BookingLifecycleService(db)
+
+            # Only promote to CONFIRMED if not already final
+            current_status = booking.get("status")
+            if current_status not in {"CONFIRMED", "CANCELLED"}:
+                await lifecycle.append_event(
+                    organization_id=org_id,
+                    agency_id=str(booking.get("agency_id") or ""),
+                    booking_id=str(booking.get("_id")),
+                    event="BOOKING_CONFIRMED",
+                    occurred_at=now,
+                    request_id=None,
+                    before={"status": current_status},
+                    after={"status": "CONFIRMED"},
+                    meta={},
+                )
+
+            # Issue initial voucher PDF (idempotent per booking+reason)
+            await issue_voucher_pdf(
+                db,
+                organization_id=org_id,
+                booking_id=str(booking.get("_id")),
+                issue_reason="INITIAL",  # type: ignore[arg-type]
+                locale="tr",
+                issued_by="system_stripe_webhook",
+            )
+
+            # Enqueue booking.confirmed email to guest (if we have an email)
+            guest = booking.get("guest") or {}
+            guest_email = guest.get("email") or booking.get("guest_email")
+            if guest_email:
+                await enqueue_booking_email(
+                    db,
+                    organization_id=org_id,
+                    booking=booking,
+                    event_type="booking.confirmed",
+                    to_addresses=[guest_email],
+                )
+    except Exception:
+        # Side-effect failures must not break payment finalisation; they can be
+        # retried or inspected via logs.
+        if logger is not None:
+            logger.exception("b2c_confirm_side_effects_failed", extra={"booking_id": str(booking.get("_id"))})
+
     return await _finalise("applied", None, booking)

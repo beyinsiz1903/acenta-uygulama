@@ -16,6 +16,8 @@ from pydantic import BaseModel, EmailStr, Field
 from app.db import get_db
 from app.errors import AppError, PublicCheckoutErrorCode
 from app.services import stripe_adapter
+from app.services.rate_limit import enforce_rate_limit
+
 
 from app.services.public_checkout import (
     create_public_quote,

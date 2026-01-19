@@ -16,20 +16,17 @@ async def test_b2b_account_summary_uses_ledger_when_available(async_client, agen
 
     db = test_db
 
-    # Seed minimal org + agency + finance data in isolation for this test
-    org_doc = {"name": "Test Org", "created_at": datetime.utcnow(), "updated_at": datetime.utcnow()}
-    org_res = await db.organizations.insert_one(org_doc)
-    org_id = str(org_res.inserted_id)
+    # Decode agency_token to align seeded data with real B2B user context
+    import os
+    from jose import jwt
+    from app.utils_jwt import JWT_SECRET_KEY
 
-    agency_doc = {
-        "organization_id": org_id,
-        "name": "Ledger Test Agency",
-        "settings": {"selling_currency": "EUR"},
-        "created_at": datetime.utcnow(),
-        "updated_at": datetime.utcnow(),
-    }
-    agency_res = await db.agencies.insert_one(agency_doc)
-    agency_id = str(agency_res.inserted_id)
+    raw_token = agency_token
+    payload = jwt.decode(raw_token, JWT_SECRET_KEY, algorithms=["HS256"])
+    org_id = payload["org"]
+    agency_id = payload["agency_id"]
+
+    # Seed finance data for this org/agency
 
     account_doc = {
         "organization_id": org_id,

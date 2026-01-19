@@ -117,6 +117,52 @@ function KpiCard({ label, value, currency, emphasize }) {
   const formatted = (typeof value === "number" ? value.toFixed(2) : value) + (currency ? ` ${currency}` : "");
 
   return (
+
+function ExposureKpi({ exposure, creditLimit, status, currency }) {
+  if (exposure == null || creditLimit == null) {
+    return (
+      <div className="rounded-2xl border bg-card shadow-sm p-4 space-y-1">
+        <div className="text-xs text-muted-foreground">Kredi Limiti</div>
+        <div className="text-sm text-muted-foreground">Tanımlı kredi profili yok</div>
+      </div>
+    );
+  }
+
+  const usedPct = creditLimit > 0 ? Math.min(100, Math.max(0, (exposure / creditLimit) * 100)) : 0;
+  const label = `Exposure: ${exposure.toFixed(2)}${currency ? " " + currency : ""}`;
+  const limitLabel = `Limit: ${creditLimit.toFixed(2)}${currency ? " " + currency : ""}`;
+
+  let badgeText = "Uygun";
+  let badgeClass = "bg-emerald-50 text-emerald-700";
+
+  if (status === "near_limit") {
+    badgeText = "Near limit";
+    badgeClass = "bg-amber-50 text-amber-700";
+  } else if (status === "over_limit") {
+    badgeText = "Over limit";
+    badgeClass = "bg-red-50 text-red-700";
+  }
+
+  return (
+    <div className="rounded-2xl border bg-card shadow-sm p-4 space-y-2">
+      <div className="flex items-center justify-between gap-2">
+        <div className="text-xs text-muted-foreground">Kredi Limiti</div>
+        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${badgeClass}`}>
+          {badgeText}
+        </span>
+      </div>
+      <div className="text-xs text-muted-foreground">{label}</div>
+      <div className="text-xs text-muted-foreground">{limitLabel}</div>
+      <div className="mt-1 h-1.5 w-full rounded-full bg-muted overflow-hidden">
+        <div
+          className="h-full bg-primary transition-all"
+          style={{ width: `${usedPct}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
     <div className="rounded-2xl border bg-card shadow-sm p-4 space-y-1">
       <div className="text-xs text-muted-foreground">{label}</div>
       <div

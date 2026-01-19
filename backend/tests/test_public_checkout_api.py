@@ -584,6 +584,112 @@ async def test_public_checkout_invalid_amount_code_and_correlation(async_client,
 
 
 @pytest.mark.anyio
+async def test_public_checkout_provider_unavailable_sets_reason_and_correlation(async_client, test_db, monkeypatch):
+    """If Stripe provider is unavailable, checkout should respond with ok=False and provider_unavailable reason.
+
+    This test stubs stripe_adapter.create_payment_intent to raise an exception, forcing
+    the provider_unavailable branch while keeping the rest of the flow intact.
+    """
+
+    db = test_db
+
+    # Clean collections
+    await db.products.delete_many({})
+    await db.product_versions.delete_many({})
+    await db.rate_plans.delete_many({})
+    await db.public_quotes.delete_many({})
+    await db.public_checkouts.delete_many({})
+    await db.bookings.delete_many({})
+
+    org = "org_public_provider_unavailable"
+    now = now_utc()
+
+    # Minimal product + rate plan to create a valid quote
+    prod = {
+        "organization_id": org,
+        "type": "hotel",
+        "code": "HTL-PROV-UNAV",
+        "name": {"tr": "Provider Unavailable Oteli"},
+        "name_search": "provider unavailable oteli",
+        "status": "active",
+        "default_currency": "EUR",
+        "location": {"city": "Izmir", "country": "TR"},
+        "created_at": now,
+        "updated_at": now,
+    }
+    res = await db.products.insert_one(prod)
+    pid = res.inserted_id
+
+    await db.product_versions.insert_one(
+        {
+            "organization_id": org,
+            "product_id": pid,
+            "version": 1,
+            "status": "published",
+            "content": {"description": {"tr": "Test"}},
+        }
+    )
+
+    await db.rate_plans.insert_one(
+        {
+            "organization_id": org,
+            "product_id": pid,
+            "code": "RP-PROV-UNAV",
+            "currency": "EUR",
+            "base_net_price": 100.0,
+            "status": "active",
+        }
+    )
+
+    # 1) Create quote via API
+    quote_payload = {
+        "org": org,
+        "product_id": str(pid),
+        "date_from": date.today().isoformat(),
+        "date_to": (date.today() + timedelta(days=2)).isoformat(),
+        "pax": {"adults": 2, "children": 0},
+        "rooms": 1,
+        "currency": "EUR",
+    }
+
+    quote_resp = await async_client.post("/api/public/quote", json=quote_payload)
+    assert quote_resp.status_code == 200
+    quote_data = quote_resp.json()
+    quote_id = quote_data["quote_id"]
+
+    # 2) Stub stripe_adapter to simulate provider unavailability
+    from app.services import stripe_adapter
+
+    async def fake_create_payment_intent_unavailable(*args, **kwargs):  # type: ignore[unused-argument]
+        raise RuntimeError("Stripe unavailable in test")
+
+    monkeypatch.setattr(stripe_adapter, "create_payment_intent", fake_create_payment_intent_unavailable)
+
+    # 3) Attempt checkout
+    payload = {
+        "org": org,
+        "quote_id": quote_id,
+        "guest": {
+            "full_name": "Prov Unav Guest",
+            "email": "provunav@example.com",
+            "phone": "+905009998877",
+        },
+        "payment": {"method": "stripe"},
+        "idempotency_key": "idem-prov-unav-1",
+    }
+
+    resp = await async_client.post("/api/public/checkout", json=payload)
+    assert resp.status_code == 200
+    data = resp.json()
+
+    # Response should indicate provider_unavailable in reason and ok=False
+    assert data["ok"] is False
+    assert data["reason"] == "provider_unavailable"
+    assert data.get("correlation_id")
+
+
+
+@pytest.mark.anyio
 async def test_public_checkout_idempotency_key_conflict_code_and_correlation(async_client, test_db):
     """Idempotency conflict should return canonical error code and details.
 

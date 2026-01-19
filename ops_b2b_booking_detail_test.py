@@ -91,39 +91,50 @@ def find_existing_b2b_bookings_with_finance_flags():
     return near_limit_bookings, over_limit_bookings
 
 def create_test_b2b_booking_with_flags(flag_type: str = "near_limit") -> str:
-    """Create a test B2B booking with specific finance_flags via B2B flow"""
+    """Create a test B2B booking with specific finance_flags directly in MongoDB"""
     print(f"   🏗️  Creating test B2B booking with {flag_type} flag...")
     
-    # Login as agency to create B2B booking
-    agency_token, org_id, agency_id, agency_email = login_agency()
-    agency_headers = {"Authorization": f"Bearer {agency_token}"}
+    # Get admin org for creating test booking
+    admin_token, admin_org_id, admin_email = login_admin()
     
-    # Create B2B quote first
-    check_in = date.today() + timedelta(days=30)
-    check_out = check_in + timedelta(days=2)
+    mongo_client = get_mongo_client()
+    db = mongo_client.get_default_database()
     
-    quote_payload = {
-        "product_id": "69691ae7b322db4dcbaf4bf9",  # Use existing test product
-        "room_type_id": "default_room",
-        "rate_plan_id": "default_rate", 
-        "check_in": check_in.isoformat(),
-        "check_out": check_out.isoformat(),
-        "occupancy": {"adults": 2, "children": 0},
-    }
+    now = datetime.utcnow()
+    booking_id = ObjectId()
+    quote_id = f"qt_test_{flag_type}_{uuid.uuid4().hex[:8]}"
     
-    # Create quote
-    r = requests.post(f"{BASE_URL}/api/api/b2b/quotes", json=quote_payload, headers=agency_headers)
-    if r.status_code != 200:
-        print(f"   ❌ Quote creation failed: {r.status_code} - {r.text}")
-        return None
-        
-    quote_data = r.json()
-    quote_id = quote_data["quote_id"]
-    print(f"   ✅ Quote created: {quote_id}")
+    # Set finance_flags based on flag_type
+    flags = {}
+    if flag_type == "near_limit":
+        flags = {"near_limit": True, "over_limit": False}
+    elif flag_type == "over_limit":
+        flags = {"near_limit": False, "over_limit": True}
     
-    # Create booking from quote
-    booking_payload = {
-        "quote_id": quote_id,
+    # Create a B2B booking document with quote_id and finance_flags
+    b2b_booking = {
+        "_id": booking_id,
+        "organization_id": admin_org_id,
+        "agency_id": "test_agency_id",
+        "status": "CONFIRMED",
+        "payment_status": "unpaid",
+        "currency": "EUR",
+        "amounts": {
+            "net": 100.0,
+            "sell": 115.0,
+            "breakdown": {
+                "base": 100.0,
+                "markup_amount": 15.0,
+                "discount_amount": 0.0
+            }
+        },
+        "applied_rules": {
+            "markup_percent": 15.0,
+            "trace": {
+                "source": "simple_pricing_rules",
+                "resolution": "winner_takes_all"
+            }
+        },
         "customer": {
             "full_name": f"Test {flag_type.title()} Customer",
             "email": f"{flag_type}@test.com",
@@ -135,47 +146,26 @@ def create_test_b2b_booking_with_flags(flag_type: str = "near_limit") -> str:
                 "email": f"{flag_type}@test.com",
                 "phone": "+90 555 123 4567"
             }
-        ]
+        ],
+        "quote_id": quote_id,  # This makes it a B2B booking
+        "finance_flags": flags,  # The key field we're testing
+        "created_at": now,
+        "updated_at": now,
+        "created_by_email": admin_email,
     }
     
-    idempotency_key = f"test_{flag_type}_{uuid.uuid4().hex[:8]}"
-    booking_headers = {
-        **agency_headers,
-        "Idempotency-Key": idempotency_key
-    }
+    result = db.bookings.insert_one(b2b_booking)
     
-    r = requests.post(f"{BASE_URL}/api/api/b2b/bookings", json=booking_payload, headers=booking_headers)
-    if r.status_code != 200:
-        print(f"   ❌ Booking creation failed: {r.status_code} - {r.text}")
-        return None
-        
-    booking_data = r.json()
-    booking_id = booking_data["booking_id"]
-    print(f"   ✅ Booking created: {booking_id}")
-    
-    # Now manually set the finance_flags in MongoDB to simulate the desired scenario
-    mongo_client = get_mongo_client()
-    db = mongo_client.get_default_database()
-    
-    flags = {}
-    if flag_type == "near_limit":
-        flags = {"near_limit": True, "over_limit": False}
-    elif flag_type == "over_limit":
-        flags = {"near_limit": False, "over_limit": True}
-    
-    result = db.bookings.update_one(
-        {"_id": ObjectId(booking_id)},
-        {"$set": {"finance_flags": flags}}
-    )
-    
-    if result.modified_count == 1:
-        print(f"   ✅ Finance flags set: {flags}")
+    if result.inserted_id:
+        print(f"   ✅ B2B booking created: {booking_id}")
+        print(f"   📋 Quote ID: {quote_id}")
+        print(f"   📋 Finance flags: {flags}")
+        mongo_client.close()
+        return str(booking_id)
     else:
-        print(f"   ❌ Failed to set finance flags")
-        
-    mongo_client.close()
-    
-    return booking_id
+        print(f"   ❌ Failed to create B2B booking")
+        mongo_client.close()
+        return None
 
 def create_legacy_booking_without_flags() -> str:
     """Create a legacy booking without finance_flags for testing"""

@@ -64,7 +64,12 @@ async def run_b2c_post_payment_side_effects(db, *, booking_id: str) -> None:
         booking = await db.bookings.find_one({"_id": oid}) or booking
 
         # 2) Ensure there is an active voucher and persist a PDF rendition
-        await generate_for_booking(db, org_id, booking_id)
+        await generate_for_booking(
+            db,
+            organization_id=org_id,
+            booking_id=booking_id,
+            created_by_email="system_b2c_post_payment",
+        )
         await issue_voucher_pdf(
             db,
             organization_id=org_id,

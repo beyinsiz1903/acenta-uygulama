@@ -104,7 +104,11 @@ async def test_admin_push_invoice_v1_404_for_other_org(async_client, test_db):
     )
 
     # Should not leak that booking exists in another org
-    assert resp.status_code == 404
+    # run_parasut_invoice_push handles cross-org as booking_not_found (failed)
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["status"] == "failed"
+    assert body["reason"] == "booking_not_found"
 
 
 @pytest.mark.anyio

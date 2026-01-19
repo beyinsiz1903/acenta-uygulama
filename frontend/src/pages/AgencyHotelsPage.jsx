@@ -545,59 +545,75 @@ export default function AgencyHotelsPage() {
               </div>
 
               {booking && (
-                <div className="mt-2 rounded-xl border bg-muted/20 px-3 py-2 text-xs flex items-center justify-between">
-                  <div className="space-y-1">
-                    <div className="font-semibold text-foreground">
-                      Rezervasyon Oluşturuldu
+                <div className="mt-2 space-y-2">
+                  <div className="rounded-xl border bg-muted/20 px-3 py-2 text-xs flex items-center justify-between">
+                    <div className="space-y-1">
+                      <div className="font-semibold text-foreground">
+                        Rezervasyon Oluşturuldu
+                      </div>
+                      <div className="text-[11px] text-muted-foreground">
+                        Booking ID: <span className="font-mono">{booking.booking_id}</span>
+                      </div>
                     </div>
-                    <div className="text-[11px] text-muted-foreground">
-                      Booking ID: <span className="font-mono">{booking.booking_id}</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => navigate(`/app/agency/bookings?new=${booking.booking_id}`)}
-                    >
-                      Rezervasyonlarım
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={async () => {
-                        if (!booking?.booking_id) return;
-                        const pdfUrl = `/b2b/bookings/${booking.booking_id}/voucher.pdf`;
-                        const htmlUrl = `/b2b/bookings/${booking.booking_id}/voucher`;
-                        try {
-                          const res = await api.get(pdfUrl, { responseType: "blob" });
-                          const blob = new Blob([res.data], { type: "application/pdf" });
-                          const url = window.URL.createObjectURL(blob);
-                          window.open(url, "_blank");
-                        } catch (err) {
-                          const msg = apiErrorMessage(err) || "";
-                          if (
-                            msg.toLowerCase().includes("pdf_not_configured") ||
-                            msg.toLowerCase().includes("pdf_render_failed")
-                          ) {
-                            toast({
-                              title: "Voucher PDF kullanılamıyor",
-                              description: "PDF şimdilik kullanılamıyor, HTML voucher açıldı.",
-                            });
-                            window.open(htmlUrl, "_blank");
-                          } else {
-                            toast({
-                              title: "Voucher açılamadı",
-                              description: msg,
-                              variant: "destructive",
-                            });
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => navigate(`/app/agency/bookings?new=${booking.booking_id}`)}
+                      >
+                        Rezervasyonlarım
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={async () => {
+                          if (!booking?.booking_id) return;
+                          const pdfUrl = `/b2b/bookings/${booking.booking_id}/voucher.pdf`;
+                          const htmlUrl = `/b2b/bookings/${booking.booking_id}/voucher`;
+                          try {
+                            const res = await api.get(pdfUrl, { responseType: "blob" });
+                            const blob = new Blob([res.data], { type: "application/pdf" });
+                            const url = window.URL.createObjectURL(blob);
+                            window.open(url, "_blank");
+                          } catch (err) {
+                            const msg = apiErrorMessage(err) || "";
+                            if (
+                              msg.toLowerCase().includes("pdf_not_configured") ||
+                              msg.toLowerCase().includes("pdf_render_failed")
+                            ) {
+                              toast({
+                                title: "Voucher PDF kullanılamıyor",
+                                description: "PDF şimdilik kullanılamıyor, HTML voucher açıldı.",
+                              });
+                              window.open(htmlUrl, "_blank");
+                            } else {
+                              toast({
+                                title: "Voucher açılamadı",
+                                description: msg,
+                                variant: "destructive",
+                              });
+                            }
                           }
-                        }
-                      }}
-                    >
-                      Voucher
-                    </Button>
+                        }}
+                      >
+                        Voucher
+                      </Button>
+                    </div>
                   </div>
+
+                  {booking.finance_flags?.near_limit && (
+                    <div className="rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-[11px] text-amber-800 flex items-start gap-2">
+                      <span className="mt-0.5 text-sm">!</span>
+                      <div>
+                        <div className="font-semibold">Kredi limitinize yaklaştınız</div>
+                        <div className="mt-0.5">
+                          Kredi limitiniz EUR bazında hesaplanır. Hesap özetinizi kontrol ederek yeni rezervasyonlarda
+                          reddedilme riskini azaltmak için ödeme yapmayı veya limit artışı talep etmeyi
+                          değerlendirebilirsiniz.
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -988,59 +1004,75 @@ export default function AgencyHotelsPage() {
               </div>
 
               {booking && (
-                <div className="mt-2 rounded-xl border bg-muted/20 px-3 py-2 text-xs flex items-center justify-between">
-                  <div className="space-y-1">
-                    <div className="font-semibold text-foreground">
-                      Rezervasyon Oluşturuldu
+                <div className="mt-2 space-y-2">
+                  <div className="rounded-xl border bg-muted/20 px-3 py-2 text-xs flex items-center justify-between">
+                    <div className="space-y-1">
+                      <div className="font-semibold text-foreground">
+                        Rezervasyon Oluşturuldu
+                      </div>
+                      <div className="text-[11px] text-muted-foreground">
+                        Booking ID: <span className="font-mono">{booking.booking_id}</span>
+                      </div>
                     </div>
-                    <div className="text-[11px] text-muted-foreground">
-                      Booking ID: <span className="font-mono">{booking.booking_id}</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => navigate(`/app/agency/bookings?new=${booking.booking_id}`)}
-                    >
-                      Rezervasyonlarım
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={async () => {
-                        if (!booking?.booking_id) return;
-                        const pdfUrl = `/b2b/bookings/${booking.booking_id}/voucher.pdf`;
-                        const htmlUrl = `/b2b/bookings/${booking.booking_id}/voucher`;
-                        try {
-                          const res = await api.get(pdfUrl, { responseType: "blob" });
-                          const blob = new Blob([res.data], { type: "application/pdf" });
-                          const url = window.URL.createObjectURL(blob);
-                          window.open(url, "_blank");
-                        } catch (err) {
-                          const msg = apiErrorMessage(err) || "";
-                          if (
-                            msg.toLowerCase().includes("pdf_not_configured") ||
-                            msg.toLowerCase().includes("pdf_render_failed")
-                          ) {
-                            toast({
-                              title: "Voucher PDF kullanılamıyor",
-                              description: "PDF şimdilik kullanılamıyor, HTML voucher açıldı.",
-                            });
-                            window.open(htmlUrl, "_blank");
-                          } else {
-                            toast({
-                              title: "Voucher açılamadı",
-                              description: msg,
-                              variant: "destructive",
-                            });
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => navigate(`/app/agency/bookings?new=${booking.booking_id}`)}
+                      >
+                        Rezervasyonlarım
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={async () => {
+                          if (!booking?.booking_id) return;
+                          const pdfUrl = `/b2b/bookings/${booking.booking_id}/voucher.pdf`;
+                          const htmlUrl = `/b2b/bookings/${booking.booking_id}/voucher`;
+                          try {
+                            const res = await api.get(pdfUrl, { responseType: "blob" });
+                            const blob = new Blob([res.data], { type: "application/pdf" });
+                            const url = window.URL.createObjectURL(blob);
+                            window.open(url, "_blank");
+                          } catch (err) {
+                            const msg = apiErrorMessage(err) || "";
+                            if (
+                              msg.toLowerCase().includes("pdf_not_configured") ||
+                              msg.toLowerCase().includes("pdf_render_failed")
+                            ) {
+                              toast({
+                                title: "Voucher PDF kullanılamıyor",
+                                description: "PDF şimdilik kullanılamıyor, HTML voucher açıldı.",
+                              });
+                              window.open(htmlUrl, "_blank");
+                            } else {
+                              toast({
+                                title: "Voucher açılamadı",
+                                description: msg,
+                                variant: "destructive",
+                              });
+                            }
                           }
-                        }
-                      }}
-                    >
-                      Voucher
-                    </Button>
+                        }}
+                      >
+                        Voucher
+                      </Button>
+                    </div>
                   </div>
+
+                  {booking.finance_flags?.near_limit && (
+                    <div className="rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-[11px] text-amber-800 flex items-start gap-2">
+                      <span className="mt-0.5 text-sm">!</span>
+                      <div>
+                        <div className="font-semibold">Kredi limitinize yaklaştınız</div>
+                        <div className="mt-0.5">
+                          Kredi limitiniz EUR bazında hesaplanır. Hesap özetinizi kontrol ederek yeni rezervasyonlarda
+                          reddedilme riskini azaltmak için ödeme yapmayı veya limit artışı talep etmeyi
+                          değerlendirebilirsiniz.
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

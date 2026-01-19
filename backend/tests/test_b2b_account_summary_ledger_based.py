@@ -82,3 +82,5 @@ async def test_b2b_account_summary_uses_ledger_when_available(async_client, agen
     assert "exposure_eur" in data
     assert data["credit_limit"] == pytest.approx(100.0, rel=1e-6)
     assert data["status"] == "near_limit"
+    # Aging B2B summary'de hesaplanmıyor; contract olarak None bekliyoruz
+    assert data.get("aging") is None

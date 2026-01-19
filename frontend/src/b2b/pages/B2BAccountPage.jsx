@@ -117,6 +117,19 @@ function KpiCard({ label, value, currency, emphasize }) {
   const formatted = (typeof value === "number" ? value.toFixed(2) : value) + (currency ? ` ${currency}` : "");
 
   return (
+    <div className="rounded-2xl border bg-card shadow-sm p-4 space-y-1">
+      <div className="text-xs text-muted-foreground">{label}</div>
+      <div
+        className={
+          "text-lg font-semibold" +
+          (emphasize ? (isNegative ? " text-rose-600" : " text-emerald-600") : "")
+        }
+      >
+        {formatted}
+      </div>
+    </div>
+  );
+}
 
 function ExposureKpi({ exposure, creditLimit, status, currency }) {
   if (exposure == null || creditLimit == null) {

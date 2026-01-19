@@ -176,10 +176,10 @@ function ExposureKpi({ exposure, creditLimit, status, currency }) {
   let badgeClass = "bg-emerald-50 text-emerald-700";
 
   if (status === "near_limit") {
-    badgeText = "Near limit";
+    badgeText = "Limite yakın";
     badgeClass = "bg-amber-50 text-amber-700";
   } else if (status === "over_limit") {
-    badgeText = "Over limit";
+    badgeText = "Limit aşıldı";
     badgeClass = "bg-red-50 text-red-700";
   }
 

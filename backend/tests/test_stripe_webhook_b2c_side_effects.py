@@ -127,8 +127,6 @@ async def test_stripe_webhook_does_not_trigger_side_effects_for_non_public(async
         }
     )
 
-    monkeypatch.setenv("STRIPE_WEBHOOK_SECRET", "whsec_test")
-
     from app.services import stripe_handlers as handlers
 
     event_payload = {

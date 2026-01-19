@@ -213,7 +213,7 @@ export default function B2BPortalPage() {
   const [customerEmail, setCustomerEmail] = useState("test@example.com");
   const [travellerFirstName, setTravellerFirstName] = useState("Test");
   const [travellerLastName, setTravellerLastName] = useState("Traveller");
-  const [booking, setBooking] = useState(null); // { booking_id, status, voucher_status }
+  const [booking, setBooking] = useState(null); // { booking_id, status, voucher_status, finance_flags? }
   const [bookingError, setBookingError] = useState("");
   const [bookingLoading, setBookingLoading] = useState(false);
 
@@ -348,6 +348,7 @@ export default function B2BPortalPage() {
         booking_id: data.booking_id,
         status: data.status,
         voucher_status: data.voucher_status,
+        finance_flags: data.finance_flags || null,
       });
       setBookingError("");
     } catch (err) {

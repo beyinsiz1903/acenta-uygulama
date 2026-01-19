@@ -8,7 +8,7 @@ from app.utils import now_utc
 
 
 @pytest.mark.anyio
-async def test_b2c_post_payment_side_effects_creates_voucher_and_email_once(test_db):
+async def test_b2c_post_payment_side_effects_creates_voucher_and_email_once(test_db, monkeypatch):
     """Public (B2C) booking: helper should confirm, issue voucher PDF and enqueue email exactly once.
 
     This is a pure integration test against the helper + existing voucher/email services,

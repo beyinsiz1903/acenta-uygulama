@@ -52,10 +52,9 @@ async def test_b2c_post_payment_side_effects_creates_voucher_and_email_once(test
     assert updated is not None
     assert updated.get("status") == "CONFIRMED"
 
-    # There should be at least one voucher PDF record
-    pdf_docs = await db.files_vouchers.find({"organization_id": org_id, "booking_id": str(booking_id)}).to_list(10)
-    assert len(pdf_docs) == 1
-    assert isinstance(pdf_docs[0].get("content"), (bytes, bytearray))
+    # There should be at least one active voucher record (HTML-level)
+    voucher_docs = await db.vouchers.find({"organization_id": org_id, "booking_id": str(booking_id)}).to_list(10)
+    assert len(voucher_docs) == 1
 
     # There should be exactly one email_outbox job for booking.confirmed
     outbox_docs = await db.email_outbox.find(

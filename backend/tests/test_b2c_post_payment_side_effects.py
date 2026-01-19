@@ -62,11 +62,11 @@ async def test_b2c_post_payment_side_effects_creates_voucher_and_email_once(test
     ).to_list(10)
     assert len(outbox_docs) == 1
 
-    # Second run must be idempotent: no extra PDFs or emails
+    # Second run must be idempotent: no extra vouchers or emails
     await run_b2c_post_payment_side_effects(db, booking_id=str(booking_id))
 
-    pdf_docs2 = await db.files_vouchers.find({"organization_id": org_id, "booking_id": str(booking_id)}).to_list(10)
-    assert len(pdf_docs2) == 1
+    voucher_docs2 = await db.vouchers.find({"organization_id": org_id, "booking_id": str(booking_id)}).to_list(10)
+    assert len(voucher_docs2) == 1
 
     outbox_docs2 = await db.email_outbox.find(
         {"organization_id": org_id, "booking_id": booking_id, "event_type": "booking.confirmed"}

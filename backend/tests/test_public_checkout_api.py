@@ -418,6 +418,122 @@ async def test_public_checkout_tr_pos_amount_total_cents(async_client, test_db):
     )
 
     # Product and rate plan in TRY for TR POS
+
+
+@pytest.mark.anyio
+async def test_public_checkout_payment_failed_error_standardization(monkeypatch, async_client, test_db):
+    """Stripe create_payment_intent hatasında PAYMENT_FAILED AppError standardize edilmeli.
+
+    Beklenen davranış:
+    - HTTP 502
+    - JSON body: {"error": {"code": "PAYMENT_FAILED", "details": {"correlation_id": ...}}}
+    - correlation_id alanı boş olmamalı
+    """
+
+    db = test_db
+
+    await db.products.delete_many({})
+    await db.product_versions.delete_many({})
+    await db.rate_plans.delete_many({})
+    await db.public_quotes.delete_many({})
+    await db.public_checkouts.delete_many({})
+    await db.bookings.delete_many({})
+
+    org = "org_public_payment_failed"
+    now = now_utc()
+
+    # Basit bir ürün + rate plan kur
+    prod = {
+        "organization_id": org,
+        "type": "hotel",
+        "code": "HTL-PF-1",
+        "name": {"tr": "Payment Failed Oteli"},
+        "name_search": "payment failed oteli",
+        "status": "active",
+        "default_currency": "EUR",
+        "location": {"city": "Izmir", "country": "TR"},
+        "created_at": now,
+        "updated_at": now,
+    }
+    res = await db.products.insert_one(prod)
+    pid = res.inserted_id
+
+    await db.product_versions.insert_one(
+        {
+            "organization_id": org,
+            "product_id": pid,
+            "version": 1,
+            "status": "published",
+            "content": {"description": {"tr": "Test"}},
+        }
+    )
+
+    await db.rate_plans.insert_one(
+        {
+            "organization_id": org,
+            "product_id": pid,
+            "code": "RP-PF-1",
+            "currency": "EUR",
+            "base_net_price": 100.0,
+            "status": "active",
+        }
+    )
+
+    # 1) Quote oluştur
+    quote_payload = {
+        "org": org,
+        "product_id": str(pid),
+        "date_from": date.today().isoformat(),
+        "date_to": (date.today() + timedelta(days=1)).isoformat(),
+        "pax": {"adults": 1, "children": 0},
+        "rooms": 1,
+        "currency": "EUR",
+    }
+
+    quote_resp = await async_client.post("/api/public/quote", json=quote_payload)
+    assert quote_resp.status_code == 200
+    quote_data = quote_resp.json()
+    quote_id = quote_data["quote_id"]
+
+    # 2) Stripe adapter'ı, create_payment_intent aşamasında patlayacak şekilde stubla
+    from app.services import stripe_adapter
+
+    async def failing_create_payment_intent(*args, **kwargs):  # noqa: ANN001, D401
+        """Her çağrıldığında hata fırlatır (provider failure simulasyonu)."""
+
+        raise RuntimeError("stripe down")
+
+    monkeypatch.setattr(stripe_adapter, "create_payment_intent", failing_create_payment_intent)
+
+    # 3) Checkout çağrısı yap
+    checkout_payload = {
+        "org": org,
+        "quote_id": quote_id,
+        "guest": {
+            "full_name": "Payment Failed Guest",
+            "email": "pf@example.com",
+            "phone": "+905001112233",
+        },
+        "payment": {"method": "stripe"},
+        "idempotency_key": "idem-payment-failed-1",
+    }
+
+    resp = await async_client.post("/api/public/checkout", json=checkout_payload)
+    assert resp.status_code == 502
+    data = resp.json()
+
+    assert data["error"]["code"] == "PAYMENT_FAILED"
+    details = data["error"].get("details") or {}
+    assert "correlation_id" in details
+    assert isinstance(details["correlation_id"], str) and details["correlation_id"]
+
+    # Booking ve public_checkouts için temel guardrail: checkout sırasında oluşturulan kayıtlar kalıcı olmamalı
+    assert await db.bookings.count_documents({"organization_id": org}) == 0
+    doc = await db.public_checkouts.find_one({"organization_id": org, "idempotency_key": "idem-payment-failed-1"})
+    assert doc is not None
+    assert doc.get("ok") is False
+    assert doc.get("reason") == "provider_unavailable"
+
     prod = {
         "organization_id": org,
         "type": "hotel",

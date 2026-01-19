@@ -221,6 +221,10 @@ class ExposureItem(BaseModel):
     agency_name: str
     currency: str
     exposure: float = Field(..., description="Total debit - credit")
+    # Aging buckets (approximate, based on ledger entry posted_at dates)
+    age_0_30: float = Field(0.0, description="Exposure from last 0-30 days")
+    age_31_60: float = Field(0.0, description="Exposure from 31-60 days")
+    age_61_plus: float = Field(0.0, description="Exposure from 61+ days")
     credit_limit: float
     soft_limit: Optional[float] = None
     payment_terms: str

@@ -510,8 +510,28 @@ export default function AgencyHotelsPage() {
                       };
                       const res = await api.post("/b2b/bookings", payload, { headers });
                       setBooking(res.data);
+                      setBookingError("");
                     } catch (err) {
-                      setBookingError(apiErrorMessage(err));
+                      const resp = err?.response?.data;
+                      if (resp?.error?.code === "credit_limit_exceeded") {
+                        const d = resp.error.details || {};
+                        const exposure = d.exposure;
+                        const limit = d.limit;
+                        const projected = d.projected;
+                        let msg = "Kredi limiti aşıldı.";
+                        if (
+                          typeof exposure === "number" &&
+                          typeof limit === "number" &&
+                          typeof projected === "number"
+                        ) {
+                          msg = `Kredi limiti aşıldı: Mevcut exposure ${exposure.toFixed(
+                            2,
+                          )}, bu rezervasyon ile ${projected.toFixed(2)} olacak (limit ${limit.toFixed(2)}).`;
+                        }
+                        setBookingError(msg);
+                      } else {
+                        setBookingError(apiErrorMessage(err));
+                      }
                     } finally {
                       setBookingLoading(false);
                     }
@@ -933,8 +953,28 @@ export default function AgencyHotelsPage() {
                       };
                       const res = await api.post("/b2b/bookings", payload, { headers });
                       setBooking(res.data);
+                      setBookingError("");
                     } catch (err) {
-                      setBookingError(apiErrorMessage(err));
+                      const resp = err?.response?.data;
+                      if (resp?.error?.code === "credit_limit_exceeded") {
+                        const d = resp.error.details || {};
+                        const exposure = d.exposure;
+                        const limit = d.limit;
+                        const projected = d.projected;
+                        let msg = "Kredi limiti aşıldı.";
+                        if (
+                          typeof exposure === "number" &&
+                          typeof limit === "number" &&
+                          typeof projected === "number"
+                        ) {
+                          msg = `Kredi limiti aşıldı: Mevcut exposure ${exposure.toFixed(
+                            2,
+                          )}, bu rezervasyon ile ${projected.toFixed(2)} olacak (limit ${limit.toFixed(2)}).`;
+                        }
+                        setBookingError(msg);
+                      } else {
+                        setBookingError(apiErrorMessage(err));
+                      }
                     } finally {
                       setBookingLoading(false);
                     }

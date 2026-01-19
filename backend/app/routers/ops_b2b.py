@@ -127,6 +127,13 @@ async def get_b2b_booking_detail_ops(
         raise AppError(404, "not_found", "Booking not found", {"booking_id": booking_id})
 
     amounts = booking.get("amounts") or {}
+    flags = booking.get("finance_flags") or {}
+    if flags.get("over_limit"):
+        credit_status = "over_limit"
+    elif flags.get("near_limit"):
+        credit_status = "near_limit"
+    else:
+        credit_status = "ok"
 
     return {
         "booking_id": booking_id,
@@ -145,6 +152,8 @@ async def get_b2b_booking_detail_ops(
         "quote_id": booking.get("quote_id"),
         "risk_snapshot": booking.get("risk_snapshot") or {},
         "policy_snapshot": booking.get("policy_snapshot") or {},
+        "finance_flags": flags,
+        "credit_status": credit_status,
     }
 
 

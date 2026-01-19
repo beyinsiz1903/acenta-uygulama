@@ -169,7 +169,7 @@ function AdminFinanceExposurePageInner() {
             <CardTitle className="text-sm font-medium">Exposure summary</CardTitle>
             <p className="text-xs text-muted-foreground mt-1">
               Bu tablo, ledger bazlı hareketlerden hesaplanan exposure ve yaşlandırma
-              bucket'larını gösterir.
+              bucket&apos;larını gösterir.
             </p>
           </div>
           <div className="flex items-center gap-2">

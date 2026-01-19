@@ -223,6 +223,27 @@ async def public_checkout(payload: PublicCheckoutRequest, request: Request, db=D
     org_id = payload.org
     correlation_id = get_or_create_correlation_id(request, None)
 
+    # Simple rate limit per org + guest email to avoid abuse of public checkout.
+    # We intentionally keep this very generous; errors are normalized to RATE_LIMITED
+    # via the shared rate_limit service.
+    try:
+        await enforce_rate_limit(
+            organization_id=org_id,
+            key_id=f"public_checkout:{payload.guest.email}",
+            ip=client_ip or "",
+            limit_per_minute=30,
+        )
+    except HTTPException as exc:
+        if exc.status_code == 429:
+            # Normalize to canonical RATE_LIMITED error code with correlation_id
+            raise AppError(
+                429,
+                PublicCheckoutErrorCode.RATE_LIMITED.value,
+                "Too many requests",
+                details={"correlation_id": correlation_id},
+            )
+        raise
+
     if not payload.idempotency_key or not payload.idempotency_key.strip():
         raise HTTPException(status_code=422, detail="IDEMPOTENCY_KEY_REQUIRED")
 

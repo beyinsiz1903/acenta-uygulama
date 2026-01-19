@@ -92,6 +92,7 @@ class B2BBookingService:
             currency=currency,
         )
         # If credit check fails, AppError is raised (409 credit_limit_exceeded)
+        flags = credit_check.get("flags") or {}
 
         match_id = item_in.get("match_id") or f"{agency_id}__{item_in.get('product_id')}"
         snapshots = await self._load_snapshots_for_match(organization_id, match_id)

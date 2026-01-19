@@ -200,6 +200,21 @@ async def handle_stripe_webhook(raw_body: bytes, signature: str | None) -> Tuple
     if event_type in {"payment_intent.succeeded", "payment_intent.payment_failed"}:
         db = await get_db()
         result = await apply_stripe_event_with_guard(db, event=event, now=now_utc(), logger=None)
+
+        # Fire-and-forget B2C post-payment side effects for public bookings.
+        # We never let failures here affect the webhook response.
+        try:
+            if event_type == "payment_intent.succeeded" and result.get("ok"):
+                obj = event.get("data", {}).get("object", {})
+                metadata = obj.get("metadata") or {}
+                booking_id = metadata.get("booking_id")
+                if booking_id:
+                    from app.services.b2c_post_payment import run_b2c_post_payment_side_effects
+
+                    await run_b2c_post_payment_side_effects(db, booking_id=str(booking_id))
+        except Exception:
+            pass
+
         # Always return 200 to avoid Stripe retry storms; decision is in body.
         return 200, {"ok": True, **result}
 

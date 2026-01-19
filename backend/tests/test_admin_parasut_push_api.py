@@ -44,8 +44,9 @@ async def test_admin_push_invoice_v1_happy_and_idempotent(async_client, test_db)
 
     # First push
     resp1 = await async_client.post(
-        f"/api/admin/finance/parasut/push-invoice-v1?booking_id={booking_id}",
+        "/api/admin/finance/parasut/push-invoice-v1",
         headers=headers,
+        json={"booking_id": str(booking_id)},
     )
     assert resp1.status_code == 200
     data1 = resp1.json()

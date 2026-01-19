@@ -258,7 +258,13 @@ class B2BBookingService:
             "quote_id": str(quote_doc.get("_id")),
             "channel_id": booking_doc.get("channel_id"),
             "amount_sell": (booking_doc.get("amounts") or {}).get("sell"),
+            "near_limit": bool(flags.get("near_limit")),
         }
         await emit_event(self.db, organization_id, booking_id, "BOOKING_CREATED", actor=actor, meta=meta)
 
-        return BookingCreateResponse(booking_id=booking_id, status="CONFIRMED", voucher_status="pending")
+        return BookingCreateResponse(
+            booking_id=booking_id,
+            status="CONFIRMED",
+            voucher_status="pending",
+            finance_flags=flags,
+        )

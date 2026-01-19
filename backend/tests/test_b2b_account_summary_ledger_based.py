@@ -91,5 +91,5 @@ async def test_b2b_account_summary_uses_ledger_when_available(async_client, test
 
     assert data["data_source"] == "ledger_based"
     assert "exposure_eur" in data
-    assert data["credit_limit"] == pytest.approx(float(credit["limit"]), rel=1e-6)
-    assert data["status"] in {"ok", "near_limit", "over_limit"}
+    assert data["credit_limit"] == pytest.approx(100.0, rel=1e-6)
+    assert data["status"] == "near_limit"

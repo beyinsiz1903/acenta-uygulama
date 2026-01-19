@@ -94,7 +94,7 @@ async def b2b_account_summary(user: CurrentB2BUser = Depends(current_b2b_user), 
     soft_limit = None
     payment_terms = None
     status = "ok"
-    aging = {"age_0_30": 0.0, "age_31_60": 0.0, "age_61_plus": 0.0}
+    aging = None
 
     if account:
         currency = account.get("currency", currency)
@@ -118,37 +118,9 @@ async def b2b_account_summary(user: CurrentB2BUser = Depends(current_b2b_user), 
         elif soft_limit and exposure_eur >= soft_limit:
             status = "near_limit"
 
-    # Optional: basic aging approximation from ledger_entries (same pattern as exposure dashboard)
-    from datetime import datetime, timedelta
-
-    now = datetime.utcnow()
-    thirty_days_ago = now - timedelta(days=30)
-    sixty_days_ago = now - timedelta(days=60)
-
-    if account:
-        cursor_le = db.ledger_entries.find(
-            {
-                "organization_id": org_id,
-                "account_id": account["_id"],
-                "currency": currency,
-            }
-        )
-        entries = await cursor_le.to_list(length=1000)
-        for le in entries:
-            posted_at = le.get("posted_at")
-            if not isinstance(posted_at, datetime):
-                continue
-            amount = float(le.get("amount") or 0.0)
-            direction = (le.get("direction") or "").lower()
-            if direction == "credit":
-                amount = -amount
-
-            if posted_at >= thirty_days_ago:
-                aging["age_0_30"] += amount
-            elif posted_at >= sixty_days_ago:
-                aging["age_31_60"] += amount
-            else:
-                aging["age_61_plus"] += amount
+    # Aging şu anda B2B summary response'unda yalnızca placeholder olarak dönüyor.
+    # Ops tarafındaki exposure dashboard aging hesaplaması tek kaynak olarak
+    # kullanılacak; burada ek bir hesap yapılmıyor.
 
     # ------------------------------------------------------------------
     # Strategy B: fallback to bookings-derived summary when no ledger data

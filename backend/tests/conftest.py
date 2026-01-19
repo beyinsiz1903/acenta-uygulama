@@ -387,6 +387,7 @@ async def minimal_search_seed(test_db, async_client: httpx.AsyncClient, agency_t
             "test_booking_financials_fx",
             "test_fx_snapshots",
             "test_booking_cancel_reverses_ledger_net0",
+            "test_non_eur_booking_fx_and_ledger",
         ]
     )
 

@@ -98,8 +98,9 @@ async def test_admin_push_invoice_v1_404_for_other_org(async_client, test_db):
     headers = {"Authorization": f"Bearer {token}"}
 
     resp = await async_client.post(
-        f"/api/admin/finance/parasut/push-invoice-v1?booking_id={booking_id}",
+        "/api/admin/finance/parasut/push-invoice-v1",
         headers=headers,
+        json={"booking_id": str(booking_id)},
     )
 
     # Should not leak that booking exists in another org

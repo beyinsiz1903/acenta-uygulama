@@ -97,12 +97,20 @@ async def run_b2c_post_payment_side_effects(db, *, booking_id: str) -> None:
         if existing:
             return
 
-        await enqueue_booking_email(
-            db,
-            organization_id=org_id,
-            booking=booking,
-            event_type="booking.confirmed",
-            to_addresses=[guest_email],
+        now = now_utc()
+        await db.email_outbox.insert_one(
+            {
+                "organization_id": org_id,
+                "booking_id": booking["_id"],
+                "event_type": "booking.confirmed",
+                "to": [guest_email],
+                "status": "pending",
+                "attempt_count": 0,
+                "last_error": None,
+                "next_retry_at": now,
+                "created_at": now,
+                "sent_at": None,
+            }
         )
     except Exception:
         # Hard safety net: NEVER let side-effect failures bubble up to callers.

@@ -2,11 +2,15 @@ from __future__ import annotations
 
 import pytest
 
-from app.db import get_db
+from datetime import datetime
+
+import jwt
+
+from app.config import JWT_SECRET_KEY, JWT_ALGORITHM
 
 
 @pytest.mark.anyio
-async def test_b2b_account_summary_uses_ledger_when_available(async_client, agency_token, test_db):
+async def test_b2b_account_summary_uses_ledger_when_available(async_client, test_db):
     """When finance_accounts + credit_profiles exist, /b2b/account/summary
     should use ledger-based data and expose credit limit + exposure status.
 

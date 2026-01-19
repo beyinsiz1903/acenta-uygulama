@@ -824,6 +824,8 @@ async def patch_fx_tests_get_db(monkeypatch, test_db):
             "test_booking_financials_fx",
             "tests.test_fx_snapshots",
             "test_fx_snapshots",
+            "tests.test_non_eur_booking_fx_and_ledger",
+            "test_non_eur_booking_fx_and_ledger",
         ]:
             try:
                 m = __import__(modname, fromlist=["*"])

@@ -251,5 +251,19 @@ async def ensure_finance_indexes(db):
         name="ttl_click_to_pay_expires_at",
     )
 
+    # ========================================================================
+    # 11) parasut_push_log (idempotent Paraşüt pushes)
+    # ========================================================================
+    await _safe_create(
+        db.parasut_push_log,
+        [("organization_id", ASCENDING), ("dedupe_key", ASCENDING)],
+        unique=True,
+        name="uniq_parasut_push_per_booking_type",
+    )
+    await _safe_create(
+        db.parasut_push_log,
+        [("organization_id", ASCENDING), ("booking_id", ASCENDING), ("created_at", DESCENDING)],
+        name="parasut_push_by_booking",
+    )
 
     logger.info("✅ Finance indexes ensured successfully")

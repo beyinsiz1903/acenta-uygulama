@@ -607,7 +607,25 @@ async def public_checkout(payload: PublicCheckoutRequest, request: Request, db=D
         )
     except AppError as exc:
         # Upstream services may raise AppError (e.g. PAYMENT_FAILED) that is already
-        # canonicalised; we only need to ensure correlation_id taşınıyor.
+        # canonicalised; clean up orphan booking and record failure
+        await bookings.delete_one({"_id": ins.inserted_id})
+        await db.public_checkouts.update_one(
+            {
+                "organization_id": org_id,
+                "idempotency_key": idem_key,
+            },
+            {
+                "$set": {
+                    "quote_id": quote.get("quote_id"),
+                    "status": "failed",
+                    "ok": False,
+                    "reason": "provider_unavailable",
+                    "correlation_id": correlation_id,
+                }
+            },
+        )
+        
+        # Re-raise with correlation_id in details
         details = exc.details or {}
         details.setdefault("correlation_id", correlation_id)
         raise AppError(exc.status_code, exc.code, exc.message, details=details) from exc

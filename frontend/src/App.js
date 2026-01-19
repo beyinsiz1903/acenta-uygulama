@@ -189,6 +189,7 @@ function App() {
             <Route path="approvals" element={<AdminApprovalsPage />} />
             <Route path="exports" element={<AdminExportsPage />} />
             <Route path="finance/refunds" element={<AdminFinanceRefundsPage />} />
+            <Route path="finance/exposure" element={<AdminFinanceExposurePage />} />
             <Route path="ops/b2b" element={<OpsB2BQueuesPage />} />
           </Route>
         </Route>

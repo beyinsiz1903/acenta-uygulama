@@ -810,6 +810,7 @@ async def patch_fx_tests_get_db(monkeypatch, test_db):
         for key in [
             "test_booking_financials_fx.py",
             "test_fx_snapshots.py",
+            "test_non_eur_booking_fx_and_ledger.py",
         ]
     ):
         yield

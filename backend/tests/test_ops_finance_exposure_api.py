@@ -140,10 +140,9 @@ async def test_exposure_dashboard_returns_aging_buckets(async_client, test_db, a
 
     # Call exposure dashboard as admin user using real JWT auth
     headers = {"Authorization": f"Bearer {admin_token}"}
-    # NOTE: Router has its own "/api/ops/finance" prefix and is also mounted
-    # under API_PREFIX ("/api"), so the effective path in the FastAPI app is
-    # "/api/api/ops/finance/exposure".
-    resp = await async_client.get("/api/api/ops/finance/exposure", headers=headers)
+    # NOTE: Router has its own "/api/ops/finance" prefix and is mounted without
+    # extra API_PREFIX in server.py, bu yüzden efektif path "/api/ops/finance/exposure".
+    resp = await async_client.get("/api/ops/finance/exposure", headers=headers)
     assert resp.status_code == 200
     data = resp.json()
 

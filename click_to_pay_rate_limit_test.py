@@ -22,7 +22,7 @@ import httpx
 from bson import ObjectId
 
 # Test configuration
-BACKEND_URL = "https://parasut-push.preview.emergentagent.com/api"
+BACKEND_URL = "https://finspine.preview.emergentagent.com/api"
 ADMIN_EMAIL = "admin@acenta.test"
 ADMIN_PASSWORD = "admin123"
 

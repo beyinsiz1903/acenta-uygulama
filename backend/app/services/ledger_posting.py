@@ -10,6 +10,7 @@ import uuid
 from typing import Literal, Optional, Any
 from datetime import datetime
 from pydantic import BaseModel
+from pymongo.errors import DuplicateKeyError
 
 from app.db import get_db
 from app.errors import AppError

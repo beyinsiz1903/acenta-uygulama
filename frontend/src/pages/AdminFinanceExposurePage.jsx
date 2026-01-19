@@ -41,14 +41,20 @@ function AgingBar({ age0, age31, age61, exposure }) {
   );
 }
 
-function ExposureTable({ items, filter }) {
+function ExposureTable({ items, filter, statusFilter }) {
   const filtered = useMemo(() => {
-    if (!filter) return items;
+    let working = items;
+
+    if (statusFilter && statusFilter !== "all") {
+      working = working.filter((it) => it.status === statusFilter);
+    }
+
+    if (!filter) return working;
     const f = filter.toLowerCase();
-    return items.filter(
+    return working.filter(
       (it) => it.agency_name?.toLowerCase().includes(f) || it.agency_id?.toLowerCase().includes(f)
     );
-  }, [items, filter]);
+  }, [items, filter, statusFilter]);
 
   if (!filtered.length) {
     return (

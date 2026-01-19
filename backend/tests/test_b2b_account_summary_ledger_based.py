@@ -4,14 +4,9 @@ import pytest
 
 from datetime import datetime
 
-import jwt
-
-JWT_SECRET_KEY = "test-secret-key"
-JWT_ALGORITHM = "HS256"
-
 
 @pytest.mark.anyio
-async def test_b2b_account_summary_uses_ledger_when_available(async_client, test_db):
+async def test_b2b_account_summary_uses_ledger_when_available(async_client, agency_token, test_db):
     """When finance_accounts + credit_profiles exist, /b2b/account/summary
     should use ledger-based data and expose credit limit + exposure status.
 
@@ -72,19 +67,10 @@ async def test_b2b_account_summary_uses_ledger_when_available(async_client, test
         }
     )
 
-    # Build JWT for this agency user (bypassing full auth flow)
-    payload = {
-        "sub": "test-b2b-user",
-        "org": org_id,
-        "agency_id": agency_id,
-        "roles": ["agency_admin"],
-    }
-    token = jwt.encode(payload, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
-
-    # Call B2B account summary as agency user
+    # Call B2B account summary as agency user (via real auth token)
     resp = await async_client.get(
         "/api/b2b/account/summary",
-        headers={"Authorization": f"Bearer {token}"},
+        headers={"Authorization": f"Bearer {agency_token}"},
     )
     assert resp.status_code == 200, resp.text
 

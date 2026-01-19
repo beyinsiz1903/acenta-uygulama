@@ -14,7 +14,8 @@ async def test_exposure_dashboard_returns_aging_buckets(async_client, test_db):
     """
 
     db = test_db
-    org_id = "org_fin_exposure"
+    # Use default org from test seed so admin user can see this data
+    org_id = "default"
     agency_id = "agency_exposure_1"
 
     # Seed agency document

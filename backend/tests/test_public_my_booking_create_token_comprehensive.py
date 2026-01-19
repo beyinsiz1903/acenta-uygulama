@@ -287,9 +287,8 @@ async def test_create_token_respects_mybooking_require_email_env(monkeypatch, as
     }
     await db.bookings.insert_one(booking)
 
-    # Enable feature flag via env + reload config
-    monkeypatch.setenv("MYBOOKING_REQUIRE_EMAIL", "1")
-    reload(app_config)
+    # Enable feature flag via monkeypatch on module-level constant used by router
+    monkeypatch.setattr(public_my_booking, "MYBOOKING_REQUIRE_EMAIL", True)
 
     # 1) Call without email -> treated as not found
     resp1 = await async_client.post(

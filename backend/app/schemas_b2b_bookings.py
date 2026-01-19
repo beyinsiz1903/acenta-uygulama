@@ -29,6 +29,7 @@ class BookingCreateResponse(BaseModel):
     booking_id: str
     status: BookingStatus
     voucher_status: Literal["pending", "ready"] = "pending"
+    finance_flags: Optional[dict] = None
 
 
 class BookingListItem(BaseModel):

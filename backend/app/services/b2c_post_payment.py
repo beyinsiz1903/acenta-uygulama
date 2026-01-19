@@ -14,7 +14,7 @@ from bson import ObjectId
 
 from app.services.booking_lifecycle import BookingLifecycleService
 from app.services.voucher_pdf import issue_voucher_pdf
-from app.services.vouchers import generate_for_booking
+from app.services.vouchers import generate_for_booking, get_active_voucher
 from app.utils import now_utc
 
 
@@ -63,13 +63,17 @@ async def run_b2c_post_payment_side_effects(db, *, booking_id: str) -> None:
         # Reload booking to observe potential status change (optional, but safe)
         booking = await db.bookings.find_one({"_id": oid}) or booking
 
-        # 2) Ensure there is an active voucher and persist a PDF rendition
-        await generate_for_booking(
-            db,
-            organization_id=org_id,
-            booking_id=booking_id,
-            created_by_email="system_b2c_post_payment",
-        )
+        # 2) Ensure there is an active voucher and persist a PDF rendition.
+        # For B2C we keep this idempotent: if there is already an active voucher
+        # for this booking, we reuse it instead of generating a new version.
+        active_voucher = await get_active_voucher(db, organization_id=org_id, booking_id=booking_id)
+        if not active_voucher:
+            await generate_for_booking(
+                db,
+                organization_id=org_id,
+                booking_id=booking_id,
+                created_by_email="system_b2c_post_payment",
+            )
 
         # PDF rendering depends on WeasyPrint and may not be configured in all
         # environments. Treat it as a best-effort side-effect and never block

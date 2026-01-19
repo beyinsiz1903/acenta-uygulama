@@ -256,6 +256,76 @@ async def test_create_token_validation_errors(async_client):
     assert resp.status_code == 422
 
 
+
+@ pytest.mark.anyio
+async def test_create_token_respects_mybooking_require_email_env(monkeypatch, async_client):
+    """When MYBOOKING_REQUIRE_EMAIL is enabled, email must match guest.email.
+
+    - Without email or with wrong email: ok=true but no token/expires_at.
+    - With correct email: ok=true + token/expires_at.
+    """
+    from app import config as app_config
+    from importlib import reload
+
+    db = await get_db()
+
+    # Clean slate
+    await db.bookings.delete_many({})
+    await db.booking_public_tokens.delete_many({})
+    await db.booking_public_rate_limits.delete_many({})
+
+    org = "org_email_flag"
+    booking_code = "BK-EMAIL-FLAG-1"
+    now = now_utc()
+
+    booking = {
+        "_id": "booking-email-flag-1",
+        "organization_id": org,
+        "booking_code": booking_code,
+        "status": "CONFIRMED",
+        "created_at": now,
+        "guest": {"email": "guest.flag@example.com"},
+    }
+    await db.bookings.insert_one(booking)
+
+    # Enable feature flag via env + reload config
+    monkeypatch.setenv("MYBOOKING_REQUIRE_EMAIL", "1")
+    reload(app_config)
+
+    # 1) Call without email -> treated as not found
+    resp1 = await async_client.post(
+        "/api/public/my-booking/create-token",
+        json={"org": org, "booking_code": booking_code},
+    )
+    assert resp1.status_code == 200
+    data1 = resp1.json()
+    assert data1 == {"ok": True}
+
+    # 2) Call with wrong email -> still enumeration-safe
+    resp2 = await async_client.post(
+        "/api/public/my-booking/create-token",
+        json={"org": org, "booking_code": booking_code, "email": "wrong@example.com"},
+    )
+    assert resp2.status_code == 200
+    data2 = resp2.json()
+    assert data2 == {"ok": True}
+
+    # 3) Call with correct email -> token returned
+    resp3 = await async_client.post(
+        "/api/public/my-booking/create-token",
+        json={"org": org, "booking_code": booking_code, "email": "guest.flag@example.com"},
+    )
+    assert resp3.status_code == 200
+    data3 = resp3.json()
+    assert data3["ok"] is True
+    assert "token" in data3 and data3["token"].startswith("pub_")
+    assert "expires_at" in data3
+
+    # Ensure exactly one token doc exists
+    token_docs = await db.booking_public_tokens.count_documents({"booking_id": booking["_id"]})
+    assert token_docs == 1
+
+
 @pytest.mark.anyio
 async def test_create_token_ttl_and_expiry_format(async_client):
     """Test token TTL and expires_at format compliance."""

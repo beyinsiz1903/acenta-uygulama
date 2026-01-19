@@ -134,8 +134,16 @@ async def test_exposure_dashboard_returns_aging_buckets(async_client, test_db):
         }
     )
 
-    # Call exposure dashboard as admin/ops user
-    headers = {"x-user-email": "admin@acenta.test", "x-user-role": "admin", "x-org-id": org_id}
+    # Call exposure dashboard as admin user using real JWT auth
+    from app.auth import create_access_token
+
+    admin_token = create_access_token(
+        subject="admin@acenta.test",
+        organization_id=org_id,
+        roles=["super_admin"],
+    )
+
+    headers = {"Authorization": f"Bearer {admin_token}"}
     resp = await async_client.get("/api/ops/finance/exposure", headers=headers)
     assert resp.status_code == 200
     data = resp.json()

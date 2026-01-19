@@ -49,6 +49,7 @@ const iconMap = {
   "Link Yönetimi": LinkIcon,
   "Otellerim": Hotel,
   "Mutabakat": FileText,
+  "Exposure & Aging": BarChart3,
 };
 
 function userHasRole(user, allowed) {

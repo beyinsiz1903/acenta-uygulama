@@ -406,6 +406,7 @@ function ParasutPushPanel({ bookingId }) {
                 <th className="px-2 py-1 text-left">Tip</th>
                 <th className="px-2 py-1 text-left">Deneme</th>
                 <th className="px-2 py-1 text-left">Son hata</th>
+                <th className="px-2 py-1 text-left">Fatura ID</th>
                 <th className="px-2 py-1 text-left">Güncellendi</th>
                 <th className="px-2 py-1 text-right">Aksiyon</th>
               </tr>

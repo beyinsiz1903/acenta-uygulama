@@ -16,58 +16,63 @@ async def test_b2b_account_summary_uses_ledger_when_available(async_client, agen
 
     db = test_db
 
-    # Decode agency_token to align seeded data with real B2B user context
-    import os
-    from jose import jwt
-    from app.utils_jwt import JWT_SECRET_KEY
+    # Resolve org/agency from /api/auth/me using the real agency_token
+    headers = {"Authorization": f"Bearer {agency_token}"}
+    me_resp = await async_client.get("/api/auth/me", headers=headers)
+    assert me_resp.status_code == 200, f"/api/auth/me failed: {me_resp.text}"
+    me = me_resp.json()
+    org_id = me.get("organization_id")
+    agency_id = me.get("agency_id")
 
-    raw_token = agency_token
-    payload = jwt.decode(raw_token, JWT_SECRET_KEY, algorithms=["HS256"])
-    org_id = payload["org"]
-    agency_id = payload["agency_id"]
+    assert org_id, "organization_id must be present in /api/auth/me response"
+    assert agency_id, "agency_id must be present in /api/auth/me response"
 
-    # Seed finance data for this org/agency
-
-    account_doc = {
+    # Idempotent seed of minimal finance data for this org/agency
+    account_filter = {
         "organization_id": org_id,
         "type": "agency",
         "owner_id": agency_id,
         "currency": "EUR",
+    }
+    account_doc = {
+        **account_filter,
         "code": "AGENCY_AR_TEST",
         "name": "Agency Receivable Test",
         "status": "active",
-        "created_at": datetime.utcnow(),
         "updated_at": datetime.utcnow(),
     }
-    acc_res = await db.finance_accounts.insert_one(account_doc)
+    await db.finance_accounts.update_one(account_filter, {"$set": account_doc}, upsert=True)
+    account = await db.finance_accounts.find_one(account_filter)
+    assert account is not None
 
-    await db.account_balances.insert_one(
-        {
-            "organization_id": org_id,
-            "account_id": acc_res.inserted_id,
-            "currency": "EUR",
-            "balance": 80.0,
-            "created_at": datetime.utcnow(),
-            "updated_at": datetime.utcnow(),
-        }
-    )
+    balance_filter = {
+        "organization_id": org_id,
+        "account_id": account["_id"],
+        "currency": "EUR",
+    }
+    balance_doc = {
+        **balance_filter,
+        "balance": 80.0,
+        "updated_at": datetime.utcnow(),
+        "created_at": datetime.utcnow(),
+    }
+    await db.account_balances.update_one(balance_filter, {"$set": balance_doc}, upsert=True)
 
-    await db.credit_profiles.insert_one(
-        {
-            "organization_id": org_id,
-            "agency_id": agency_id,
-            "limit": 100.0,
-            "soft_limit": 70.0,
-            "payment_terms": "30d",
-            "created_at": datetime.utcnow(),
-            "updated_at": datetime.utcnow(),
-        }
-    )
+    credit_filter = {"organization_id": org_id, "agency_id": agency_id}
+    credit_doc = {
+        **credit_filter,
+        "limit": 100.0,
+        "soft_limit": 70.0,
+        "payment_terms": "30d",
+        "updated_at": datetime.utcnow(),
+        "created_at": datetime.utcnow(),
+    }
+    await db.credit_profiles.update_one(credit_filter, {"$set": credit_doc}, upsert=True)
 
     # Call B2B account summary as agency user (via real auth token)
     resp = await async_client.get(
         "/api/b2b/account/summary",
-        headers={"Authorization": f"Bearer {agency_token}"},
+        headers=headers,
     )
     assert resp.status_code == 200, resp.text
 

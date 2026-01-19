@@ -50,7 +50,7 @@ async def test_ledger_reversal_net_zero(async_client, admin_token):
 
     # 2) Refund approved event
     r2 = await client.post(
-        "/api/api/ops/finance/_test/posting",
+        "/api/ops/finance/_test/posting",
         headers=headers,
         json={**payload_base, "event": "REFUND_APPROVED"},
     )

@@ -363,7 +363,7 @@ export default function AdminExportsPage() {
 
                 <div className="space-y-1">
                   <label className="text-sm font-medium" htmlFor="min-matches">
-                    Min matches
+                    Minimum eşleşme sayısı
                   </label>
                   <Input
                     id="min-matches"
@@ -383,7 +383,7 @@ export default function AdminExportsPage() {
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Only high risk</span>
+                  <span className="text-sm font-medium">Sadece yüksek risk</span>
                   <Switch
                     checked={form.params.only_high_risk}
                     onCheckedChange={(val) =>
@@ -400,7 +400,7 @@ export default function AdminExportsPage() {
 
                 <div className="space-y-1">
                   <label className="text-sm font-medium" htmlFor="recipients">
-                    Recipients (optional)
+                    Alıcılar (opsiyonel)
                   </label>
                   <Input
                     id="recipients"

@@ -54,6 +54,7 @@ import OpsB2BQueuesPage from "./pages/OpsB2BQueuesPage";
 import InboxPage from "./pages/InboxPage";
 import AdminFinanceRefundsPage from "./pages/AdminFinanceRefundsPage";
 import AdminFinanceExposurePage from "./pages/AdminFinanceExposurePage";
+import AdminB2BAgenciesSummaryPage from "./pages/AdminB2BAgenciesSummaryPage";
 import AdminSettlementsPage from "./pages/AdminSettlementsPage";
 import AdminSettlementRunsPage from "./pages/AdminSettlementRunsPage";
 import AdminSettlementRunDetailPage from "./pages/AdminSettlementRunDetailPage";
@@ -196,6 +197,7 @@ function App() {
             <Route path="exports" element={<AdminExportsPage />} />
             <Route path="finance/refunds" element={<AdminFinanceRefundsPage />} />
             <Route path="finance/exposure" element={<AdminFinanceExposurePage />} />
+            <Route path="finance/b2b-agencies" element={<AdminB2BAgenciesSummaryPage />} />
             <Route path="finance/settlements" element={<AdminSettlementsPage />} />
             <Route path="finance/settlement-runs" element={<AdminSettlementRunsPage />} />
             <Route path="finance/settlement-runs/:settlementId" element={<AdminSettlementRunDetailPage />} />

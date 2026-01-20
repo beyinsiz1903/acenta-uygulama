@@ -499,7 +499,7 @@ export default function AdminCatalogPage() {
               ))}
               {!items.length && (
                 <div className="px-2 py-6 text-xs text-muted-foreground">
-                  No products.
+                  Ürün bulunamadı.
                 </div>
               )}
             </div>

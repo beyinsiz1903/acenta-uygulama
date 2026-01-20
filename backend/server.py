@@ -69,6 +69,7 @@ from app.routers.admin_statements import router as admin_statements_router
 from app.routers.admin_whitelabel import router as admin_whitelabel_router
 from app.routers.admin_settlements import router as admin_settlements_router
 from app.routers.admin_parasut import router as admin_parasut_router
+from app.routers.admin_b2b_agencies import router as admin_b2b_agencies_router
 
 from app.routers.seo import router as seo_router
 from app.email_worker import email_dispatch_loop

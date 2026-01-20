@@ -5,6 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
 import { Badge } from "../components/ui/badge";
 import { Input } from "../components/ui/input";
+import { Button } from "../components/ui/button";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from "../components/ui/sheet";
+import { Label } from "../components/ui/label";
 
 function RiskBadge({ status }) {
   if (status === "over_limit") {

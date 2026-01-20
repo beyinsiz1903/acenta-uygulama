@@ -182,7 +182,7 @@ function VersionsPanel({ productId, productStatus }) {
       <div className="flex items-center justify-between">
         <div className="font-semibold text-sm">Versiyonlar</div>
         <Button size="sm" variant="outline" onClick={load} disabled={loading}>
-          {loading ? "Loading..." : "Refresh"}
+          {loading ? "Yükleniyor..." : "Yenile"}
         </Button>
       </div>
 

@@ -152,14 +152,27 @@ export default function AdminAgenciesPage() {
           <h3 className="font-semibold mb-4">Yeni Acenta Oluştur</h3>
           <form onSubmit={handleCreate} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="agency-name">Acenta Adı *</Label>
+              <Label htmlFor="agency-name">Acenta Ad31 *</Label>
               <Input
                 id="agency-name"
                 value={formData.name}
-                onChange={(e) => setFormData({ name: e.target.value })}
-                placeholder="Örn: ABC Turizm"
+                onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
+                placeholder=" d6rn: ABC Turizm"
                 disabled={createLoading}
               />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="parent-agency-id"> dcst Acenta ID (opsiyonel)</Label>
+              <Input
+                id="parent-agency-id"
+                value={formData.parent_agency_id}
+                onChange={(e) => setFormData((prev) => ({ ...prev, parent_agency_id: e.target.value }))}
+                placeholder=" d6rn: 64f... (var olan bir acenta ID'si)"
+                disabled={createLoading}
+              />
+              <p className="text-[11px] text-muted-foreground">
+                Bo5f b1rak1rsan1z ana acenta olarak kal1r. Ge E7ersiz veya kendisine e F0it ID g F6nderildiginde backend hata d F6ner (SELF_PARENT_NOT_ALLOWED, PARENT_CYCLE_DETECTED).
+              </p>
             </div>
 
             {formError && (

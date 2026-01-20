@@ -285,7 +285,7 @@ def inspect_agency_data():
         
         # Find the agency user
         print("🔍 Looking for agency1@demo.test user...")
-        user = await db.users.find_one({"email": "agency1@demo.test"})
+        user = db.users.find_one({"email": "agency1@demo.test"})
         
         if not user:
             print("   ❌ User not found")
@@ -306,7 +306,7 @@ def inspect_agency_data():
         
         # Check for finance_accounts
         print(f"\n🔍 Looking for finance_accounts for agency {agency_id}...")
-        account = await db.finance_accounts.find_one({
+        account = db.finance_accounts.find_one({
             "organization_id": org_id,
             "type": "agency",
             "owner_id": agency_id
@@ -319,7 +319,7 @@ def inspect_agency_data():
             print(f"      - Created: {account.get('created_at')}")
             
             # Check account balance
-            balance = await db.account_balances.find_one({
+            balance = db.account_balances.find_one({
                 "organization_id": org_id,
                 "account_id": account["_id"],
                 "currency": account.get("currency", "EUR")
@@ -334,7 +334,7 @@ def inspect_agency_data():
         
         # Check for credit_profiles
         print(f"\n🔍 Looking for credit_profiles for agency {agency_id}...")
-        credit_profile = await db.credit_profiles.find_one({
+        credit_profile = db.credit_profiles.find_one({
             "organization_id": org_id,
             "agency_id": agency_id
         })
@@ -349,7 +349,7 @@ def inspect_agency_data():
         
         # Check for bookings
         print(f"\n🔍 Looking for bookings for agency {agency_id}...")
-        booking_count = await db.bookings.count_documents({
+        booking_count = db.bookings.count_documents({
             "organization_id": org_id,
             "agency_id": agency_id
         })
@@ -358,12 +358,10 @@ def inspect_agency_data():
         
         if booking_count > 0:
             # Get a few sample bookings
-            cursor = db.bookings.find({
+            bookings = list(db.bookings.find({
                 "organization_id": org_id,
                 "agency_id": agency_id
-            }).sort("created_at", -1).limit(3)
-            
-            bookings = await cursor.to_list(length=3)
+            }).sort("created_at", -1).limit(3))
             
             print(f"   📋 Sample bookings:")
             for i, booking in enumerate(bookings, 1):

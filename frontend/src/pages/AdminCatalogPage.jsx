@@ -414,7 +414,7 @@ export default function AdminCatalogPage() {
         <div>
           <div className="text-lg font-semibold">Katalog</div>
           <div className="text-xs text-muted-foreground">
-            Products + versioning + publish
+            Ürün listesi, versiyonlama ve yayınlama ekranı.
           </div>
         </div>
         <Button variant="outline" size="sm" onClick={createNew}>

@@ -56,6 +56,7 @@ import AdminFinanceRefundsPage from "./pages/AdminFinanceRefundsPage";
 import AdminFinanceExposurePage from "./pages/AdminFinanceExposurePage";
 import AdminSettlementsPage from "./pages/AdminSettlementsPage";
 import AdminSettlementRunsPage from "./pages/AdminSettlementRunsPage";
+import AdminSettlementRunDetailPage from "./pages/AdminSettlementRunDetailPage";
 import DashboardPage from "./pages/DashboardPage";
 import ProductsPage from "./pages/ProductsPage";
 import AgencyHotelsPage from "./pages/AgencyHotelsPage";

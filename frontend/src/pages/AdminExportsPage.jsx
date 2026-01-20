@@ -587,7 +587,7 @@ export default function AdminExportsPage() {
                                       document.execCommand("copy");
                                       document.body.removeChild(ta);
                                     }
-                                    alert(`Template copied to clipboard: ${text}`);
+                                    alert(`Deeplink şablonu panoya kopyalandı: ${text}`);
                                   }}
                                   data-testid="exports-run-copy-deeplink-template"
                                 >

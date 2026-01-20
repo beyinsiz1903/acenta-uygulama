@@ -223,15 +223,15 @@ export default function AdminExportsPage() {
 
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList>
-          <TabsTrigger value="policies">Policies</TabsTrigger>
-          <TabsTrigger value="archive">Archive</TabsTrigger>
+          <TabsTrigger value="policies">Policiler</TabsTrigger>
+          <TabsTrigger value="archive">Arşiv</TabsTrigger>
         </TabsList>
 
         <TabsContent value="policies" className="mt-4">
           <div className="grid md:grid-cols-3 gap-6">
             <Card className="md:col-span-2">
               <CardHeader>
-                <CardTitle className="text-sm font-medium">Policies</CardTitle>
+                <CardTitle className="text-sm font-medium">Policiler</CardTitle>
               </CardHeader>
               <CardContent>
                 {policies.length === 0 ? (
@@ -246,9 +246,9 @@ export default function AdminExportsPage() {
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b text-xs text-muted-foreground">
-                          <th className="py-1 pr-2 text-left">Key</th>
-                          <th className="py-1 pr-2 text-left">Enabled</th>
-                          <th className="py-1 pr-2 text-left">Schedule</th>
+                          <th className="py-1 pr-2 text-left">Anahtar</th>
+                          <th className="py-1 pr-2 text-left">Durum</th>
+                          <th className="py-1 pr-2 text-left">Çalışma takvimi</th>
                           <th className="py-1 pr-2 text-left">Cooldown</th>
                         </tr>
                       </thead>

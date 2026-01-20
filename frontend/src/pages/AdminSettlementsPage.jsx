@@ -286,7 +286,7 @@ tirilmi
                     {loading ? (
                       <TableRow>
                         <TableCell colSpan={9} className="py-10 text-center text-sm text-muted-foreground">
-                          Y 0kleniyor...
+                          Yükleniyor...
                         </TableCell>
                       </TableRow>
                     ) : items.length === 0 ? (

@@ -267,7 +267,7 @@ export default function OpsSupplierAccrualsPage() {
                   edilebilir.
                 </li>
                 <li>
-                  "In settlement" durumundaki accrual'lar, ilgili settlement run detayı ekranına bağlanarak incelenebilir.
+                  In settlement durumundaki accruallar, ilgili settlement run detayı ekranına bağlanarak incelenebilir.
                 </li>
               </ul>
             </CardContent>

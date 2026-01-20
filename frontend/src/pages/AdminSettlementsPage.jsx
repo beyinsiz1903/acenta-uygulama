@@ -233,7 +233,7 @@ export default function AdminSettlementsPage() {
 
       {error && !loading && (
         <ErrorState
-          title="Mutabakat listesi y 0cklenemedi"
+          title="Mutabakat listesi y0cklenemedi"
           description={error}
           onRetry={() => load("json")}
           className="max-w-xl"
@@ -342,39 +342,21 @@ tirilmi
             </CardHeader>
             <CardContent className="text-xs text-muted-foreground space-y-2">
               <p>
-                Bu ekran, Agentis seviyesinde b 1fr B2B tahsilat mutabakat
- salar: her bir 0deme ilemi i2in br 1ft
-                tutar
-, acenta payfi ve platform payfi g 0dr 0drs
-n
-.
+                Bu ekran, Agentis seviyesinde bir B2B tahsilat mutabakatı sağlar: her bir ödeme işlemi için brüt
+                tutar, acenta payı ve platform payı görünür.
               </p>
               <ul className="list-disc list-inside space-y-1">
                 <li>
-                  Muhasebe tak
-m
-: 0n muhasebe kay
-tlar
-m
-z
-mdan  0nce settlement matemati
-ini dora dora g 0rd 1fn
-z yer.
+                  Muhasebe takımı: Ön muhasebe kayıtlarınızdan önce settlement matematiğini doya doya gördüğünüz yer.
                 </li>
                 <li>
-                  Pilot KPI: Admin / pilot dashboard i2inde <strong>agenciesViewedSettlements</strong> ve
-                  <strong>hotelsViewedSettlements</strong> metrikleri bu sayfan
-n audit loglar
-na dayan
-r.
+                  Pilot KPI: Admin / pilot dashboard içinde <strong>agenciesViewedSettlements</strong> ve
+                  <strong>hotelsViewedSettlements</strong> metrikleri bu sayfanın audit loglarına dayanır.
                 </li>
                 <li>
-                  CSV 0 0kart
-m: Muhasebe ekibine Excel/ERP import i2in ayn
- veri setini d 1frmektir.
+                  CSV dışa aktarım: Muhasebe ekibine Excel/ERP import için aynı veri setini götürmek içindir.
                 </li>
-              </ul>
-            </CardContent>
+              </ul>            </CardContent>
           </Card>
         </div>
       </div>

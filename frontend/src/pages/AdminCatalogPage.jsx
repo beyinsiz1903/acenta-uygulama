@@ -467,11 +467,11 @@ export default function AdminCatalogPage() {
 
           <div className="rounded-md border overflow-hidden text-xs">
             <div className="grid grid-cols-6 bg-muted/40 px-2 py-2 font-semibold">
-              <div className="col-span-2">Name</div>
-              <div>Code</div>
-              <div>Type</div>
-              <div>Status</div>
-              <div>Pub</div>
+              <div className="col-span-2">Ad</div>
+              <div>Kod</div>
+              <div>Tür</div>
+              <div>Durum</div>
+              <div>Yay. ver.</div>
             </div>
             <div className="max-h-[60vh] overflow-y-auto">
               {items.map((p) => (

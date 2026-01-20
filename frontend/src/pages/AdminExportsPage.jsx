@@ -566,7 +566,7 @@ export default function AdminExportsPage() {
                             <td className="py-1 pr-2 text-xs">{r.filename}</td>
                             <td className="py-1 pr-2 text-xs font-mono">{shaShort}</td>
                             <td className="py-1 pr-2 text-xs">
-                              {r.emailed ? "Queued" : "—"}
+                              {r.emailed ? "Gönderim kuyruğunda" : "—"}
                             </td>
                             <td className="py-1 pr-2 text-xs">
                               {r.type === "match_risk_summary" && runsDeeplinkTemplate ? (

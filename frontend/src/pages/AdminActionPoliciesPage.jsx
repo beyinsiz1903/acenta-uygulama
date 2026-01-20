@@ -186,7 +186,7 @@ export default function AdminActionPoliciesPage() {
 
         <div className="flex items-center gap-2">
           <label className="text-xs text-muted-foreground" htmlFor="action-policies-enabled">
-            Policies enabled
+            Politikalar aktif
           </label>
           <input
             id="action-policies-enabled"

@@ -436,7 +436,7 @@ export default function AdminCatalogPage() {
               value={type}
               onChange={(e) => setType(e.target.value)}
             >
-              <option value="">All types</option>
+              <option value="">Tüm türler</option>
               <option value="hotel">hotel</option>
               <option value="tour">tour</option>
               <option value="transfer">transfer</option>
@@ -447,7 +447,7 @@ export default function AdminCatalogPage() {
               value={status}
               onChange={(e) => setStatus(e.target.value)}
             >
-              <option value="">All status</option>
+              <option value="">Tüm durumlar</option>
               <option value="active">active</option>
               <option value="inactive">inactive</option>
               <option value="archived">archived</option>

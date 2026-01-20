@@ -294,12 +294,7 @@ tirilmi
                         <TableCell colSpan={9} className="py-10">
                           <EmptyState
                             title="Kayıt yok"
-                            description="Se 0dilen tarih aral
-
-n
- ve filtrelere g 0dpen ilemler i2in settlement satr
- bulunamad
-i."
+                            description="Seçilen tarih aralığı ve filtrelere göre işlemler için settlement satırı bulunamadı."
                           />
                         </TableCell>
                       </TableRow>

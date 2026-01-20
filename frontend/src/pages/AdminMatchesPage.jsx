@@ -471,7 +471,7 @@ export default function AdminMatchesPage() {
               {selectedMatch?.action_status === "blocked" && (
                 <div className="flex items-center justify-between gap-3 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs">
                   <span>
-                    This match is <span className="font-semibold">blocked</span>. New bookings will be rejected (MATCH_BLOCKED).
+                    Bu eşleşme <span className="font-semibold">blokeli</span>. Yeni rezervasyonlar reddedilecek (MATCH_BLOCKED).
                   </span>
                   <div className="flex items-center gap-2">
                     {unblockRequest.alreadyPending && (

@@ -683,7 +683,7 @@ export default function AdminMatchesPage() {
                               <TableCell className="text-xs">
                                 {ev.cancel_tag === "behavioral" && (
                                   <Badge variant="outline" className="text-[10px] px-1 py-0">
-                                    behavioral
+                                    davranışsal
                                   </Badge>
                                 )}
                                 {ev.cancel_tag === "operational" && (

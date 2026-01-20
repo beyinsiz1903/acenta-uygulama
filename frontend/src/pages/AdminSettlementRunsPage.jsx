@@ -306,7 +306,11 @@ export default function AdminSettlementRunsPage() {
                       items.map((it) => {
                         const net = Number(it.totals?.total_net_payable || 0);
                         return (
-                          <TableRow key={it.settlement_id} className="hover:bg-accent/40">
+                          <TableRow
+                            key={it.settlement_id}
+                            className="hover:bg-accent/40 cursor-pointer"
+                            onClick={() => window.location.assign(`/app/admin/finance/settlement-runs/${it.settlement_id}`)}
+                          >
                             <TableCell className="text-[11px] font-mono truncate max-w-[160px]">
                               {it.supplier_id}
                             </TableCell>

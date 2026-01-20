@@ -60,7 +60,7 @@ function ProductForm({ value, onChange, onSave, saving, error }) {
           />
         </div>
         <div className="space-y-1">
-          <div className="text-xs text-muted-foreground">Currency</div>
+          <div className="text-xs text-muted-foreground">Para birimi</div>
           <Input
             value={v.default_currency || "EUR"}
             onChange={(e) =>
@@ -72,7 +72,7 @@ function ProductForm({ value, onChange, onSave, saving, error }) {
 
       <div className="grid grid-cols-2 gap-2">
         <div className="space-y-1">
-          <div className="text-xs text-muted-foreground">Name (TR)</div>
+          <div className="text-xs text-muted-foreground">Ad (TR)</div>
           <Input
             value={(v.name && v.name.tr) || ""}
             onChange={(e) =>
@@ -81,7 +81,7 @@ function ProductForm({ value, onChange, onSave, saving, error }) {
           />
         </div>
         <div className="space-y-1">
-          <div className="text-xs text-muted-foreground">Name (EN)</div>
+          <div className="text-xs text-muted-foreground">Ad (EN)</div>
           <Input
             value={(v.name && v.name.en) || ""}
             onChange={(e) =>
@@ -93,7 +93,7 @@ function ProductForm({ value, onChange, onSave, saving, error }) {
 
       <div className="flex justify-end gap-2">
         <Button disabled={saving} onClick={onSave} size="sm">
-          {saving ? "Saving..." : "Save"}
+          {saving ? "Kaydediliyor..." : "Kaydet"}
         </Button>
       </div>
     </div>
@@ -180,7 +180,7 @@ function VersionsPanel({ productId, productStatus }) {
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <div className="font-semibold text-sm">Versions</div>
+        <div className="font-semibold text-sm">Versiyonlar</div>
         <Button size="sm" variant="outline" onClick={load} disabled={loading}>
           {loading ? "Loading..." : "Refresh"}
         </Button>

@@ -267,10 +267,10 @@ function VersionsPanel({ productId, productStatus }) {
 
       <div className="rounded-md border overflow-hidden">
         <div className="grid grid-cols-5 bg-muted/40 px-2 py-2 text-xs font-semibold">
-          <div>Ver</div>
-          <div>Status</div>
-          <div>Created</div>
-          <div>Published</div>
+          <div>Sürüm</div>
+          <div>Durum</div>
+          <div>Oluşturulma</div>
+          <div>Yayınlanma</div>
           <div />
         </div>
         <div className="max-h-64 overflow-y-auto text-xs">

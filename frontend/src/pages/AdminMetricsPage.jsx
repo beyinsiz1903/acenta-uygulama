@@ -609,7 +609,7 @@ export default function AdminMetricsPage() {
               }).filtered.length || loading}
               data-testid="metrics-export-queues-filtered"
             >
-              Filtrelenmiş CSV'yi Dışa Aktar
+              Filtrelenmiş CSV&apos;yi Dışa Aktar
             </button>
 
             <button
@@ -661,7 +661,7 @@ export default function AdminMetricsPage() {
               }
               data-testid="metrics-export-queues-filtered"
             >
-              Filtrelenmiş CSV'yi Dışa Aktar
+              Filtrelenmiş CSV&apos;yi Dışa Aktar
             </button>
 
             <button

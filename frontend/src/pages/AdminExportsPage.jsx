@@ -450,7 +450,7 @@ export default function AdminExportsPage() {
                     disabled={runLoading}
                     data-testid="exports-policy-run-now"
                   >
-                    Run now
+                    Şimdi çalıştır
                   </Button>
                 </div>
 

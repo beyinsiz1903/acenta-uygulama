@@ -255,8 +255,7 @@ export default function AdminSettlementsPage() {
           <Card className="min-h-[320px]">
             <CardHeader className="flex flex-row items-center justify-between gap-3">
               <div className="space-y-1">
-                <CardTitle className="text-sm">İslem satrlar
-</CardTitle>
+                <CardTitle className="text-sm">İşlem satırları</CardTitle>
                 <p className="text-xs text-muted-foreground">
                   Booking payment transactions, acenta ve booking bilgileriyle zenginle
 tirilmi

@@ -88,6 +88,14 @@ async def list_b2b_bookings_ops(
         amounts = doc.get("amounts") or {}
         agency_id = doc.get("agency_id")
         channel_id = doc.get("channel_id")
+        flags = doc.get("finance_flags") or {}
+        if flags.get("over_limit"):
+            credit_status = "over_limit"
+        elif flags.get("near_limit"):
+            credit_status = "near_limit"
+        else:
+            credit_status = "ok"
+
         items.append(
             {
                 "booking_id": str(doc.get("_id")),
@@ -99,6 +107,8 @@ async def list_b2b_bookings_ops(
                 "sell_price": amounts.get("sell"),
                 "channel_id": channel_id,
                 "channel_name": channel_name_map.get(str(channel_id)),
+                "finance_flags": flags,
+                "credit_status": credit_status,
             }
         )
 

@@ -191,7 +191,7 @@ export default function AdminMatchesPage() {
                 data-testid="match-risk-sort"
               >
                 <option value="high_risk_first">Yüksek risk önce</option>
-                <option value="repeat_desc">Repeat (7d) desc</option>
+                <option value="repeat_desc">Tekrar (7g) azalan</option>
                 <option value="rate_desc">Not-arrived rate desc</option>
                 <option value="total_desc">Total bookings desc</option>
                 <option value="last_booking_desc">Last booking desc</option>

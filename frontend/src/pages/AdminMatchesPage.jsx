@@ -688,7 +688,7 @@ export default function AdminMatchesPage() {
                                 )}
                                 {ev.cancel_tag === "operational" && (
                                   <Badge variant="outline" className="text-[10px] px-1 py-0">
-                                    operational
+                                    operasyonel
                                   </Badge>
                                 )}
                                 {ev.cancel_tag === "none" && (

@@ -44,9 +44,9 @@ function ProductForm({ value, onChange, onSave, saving, error }) {
             value={v.status || "inactive"}
             onChange={(e) => onChange({ ...v, status: e.target.value })}
           >
-            <option value="active">active</option>
-            <option value="inactive">inactive</option>
-            <option value="archived">archived</option>
+            <option value="active">Aktif</option>
+            <option value="inactive">Pasif</option>
+            <option value="archived">Arşivlendi</option>
           </select>
         </div>
       </div>
@@ -212,7 +212,7 @@ function VersionsPanel({ productId, productStatus }) {
         </div>
       </div>
       <div className="rounded-md border p-3 space-y-3">
-        <div className="text-[11px] font-semibold">Bağlı Room Types</div>
+        <div className="text-[11px] font-semibold">Bağlı oda tipleri</div>
         <div className="text-[11px] text-muted-foreground">
           Aşağıdan seçtiğiniz room type ve rate plan ID&apos;leri, draft içeriğinde
           <code className="mx-1 rounded bg-muted px-1">room_type_ids</code> ve

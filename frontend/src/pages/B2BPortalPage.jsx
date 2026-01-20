@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { AlertCircle, CalendarDays, Loader2, User, CreditCard, Timer, XCircle, RefreshCw } from "lucide-react";
 import { api, apiErrorMessage } from "../lib/api";
+import { bookingStatusLabelTr } from "../utils/bookingStatusLabels";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
@@ -24,22 +25,23 @@ function formatRemaining(ms) {
 
 function StatusBadge({ status }) {
   if (!status) return <Badge variant="outline">-</Badge>;
-  const s = String(status).toUpperCase();
-  if (s === "CONFIRMED") return <Badge variant="secondary">CONFIRMED</Badge>;
-  if (s === "CANCELLED")
+  const raw = String(status).toLowerCase();
+  const label = bookingStatusLabelTr(raw);
+  if (raw === "confirmed") return <Badge variant="secondary">{label}</Badge>;
+  if (raw === "cancelled")
     return (
       <Badge variant="destructive" className="gap-1">
-        <XCircle className="h-3 w-3" /> CANCELLED
+        <XCircle className="h-3 w-3" /> {label}
       </Badge>
     );
-  if (s === "PENDING" || s === "PENDING_APPROVAL")
+  if (raw === "pending" || raw === "pending_approval")
     return (
       <Badge variant="outline" className="gap-1">
-        <Loader2 className="h-3 w-3 animate-spin" /> {s}
+        <Loader2 className="h-3 w-3 animate-spin" /> {label}
       </Badge>
     );
-  if (s === "VOUCHERED") return <Badge variant="outline">VOUCHERED</Badge>;
-  return <Badge variant="outline">{s}</Badge>;
+  if (raw === "voucher_issued" || raw === "vouchered") return <Badge variant="outline">{label}</Badge>;
+  return <Badge variant="outline">{status}</Badge>;
 }
 
 function BookingListTab() {

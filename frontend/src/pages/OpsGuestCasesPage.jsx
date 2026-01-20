@@ -390,7 +390,7 @@ function OpsGuestCasesPage() {
               <SelectItem value="voucher_issue">Voucher sorunu</SelectItem>
               <SelectItem value="missing_docs">Eksik evrak</SelectItem>
               <SelectItem value="supplier_approval">Tedarikçi onayı</SelectItem>
-              <SelectItem value="other">Di f0er</SelectItem>
+              <SelectItem value="other">Diğer</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -641,7 +641,7 @@ function OpsGuestCasesPage() {
                             case "supplier_approval":
                               return "Tedarikçi onayı";
                             case "other":
-                              return "Di f0er";
+                              return "Diğer";
                             default:
                               return c.type || "-";
                           }

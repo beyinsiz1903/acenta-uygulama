@@ -7,8 +7,9 @@ import { Textarea } from "../components/ui/textarea";
 
 const StatusBadge = ({ s }) => {
   if (!s) return <Badge variant="outline">-</Badge>;
-  if (s === "active") return <Badge variant="secondary">active</Badge>;
-  if (s === "archived") return <Badge variant="outline">archived</Badge>;
+  if (s === "active") return <Badge variant="secondary">aktif</Badge>;
+  if (s === "archived") return <Badge variant="outline">arşivlendi</Badge>;
+  if (s === "inactive") return <Badge variant="outline">pasif</Badge>;
   return <Badge>{s}</Badge>;
 };
 
@@ -23,7 +24,7 @@ function ProductForm({ value, onChange, onSave, saving, error }) {
       )}
       <div className="grid grid-cols-2 gap-2">
         <div className="space-y-1">
-          <div className="text-xs text-muted-foreground">Type</div>
+          <div className="text-xs text-muted-foreground">Tür</div>
           <select
             className="h-9 w-full rounded-md border bg-background px-2 text-sm"
             value={v.type || "hotel"}
@@ -37,7 +38,7 @@ function ProductForm({ value, onChange, onSave, saving, error }) {
         </div>
 
         <div className="space-y-1">
-          <div className="text-xs text-muted-foreground">Status</div>
+          <div className="text-xs text-muted-foreground">Durum</div>
           <select
             className="h-9 w-full rounded-md border bg-background px-2 text-sm"
             value={v.status || "inactive"}
@@ -52,7 +53,7 @@ function ProductForm({ value, onChange, onSave, saving, error }) {
 
       <div className="grid grid-cols-2 gap-2">
         <div className="space-y-1">
-          <div className="text-xs text-muted-foreground">Code</div>
+          <div className="text-xs text-muted-foreground">Kod</div>
           <Input
             value={v.code || ""}
             onChange={(e) => onChange({ ...v, code: e.target.value })}

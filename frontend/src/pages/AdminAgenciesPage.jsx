@@ -71,7 +71,7 @@ export default function AdminAgenciesPage() {
       await api.post("/admin/agencies", payload);
       console.log("[AdminAgencies] Created:", name);
       toast.success("Acenta oluşturuldu");
-      setFormData({ name: "" });
+      setFormData({ name: "", parent_agency_id: "" });
       setShowForm(false);
       // Refresh list
       await loadAgencies();

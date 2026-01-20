@@ -231,8 +231,8 @@ export default function AdminMatchesPage() {
                     <TableHead className="text-right">İptal</TableHead>
                     <TableHead className="text-right">İptal Oranı</TableHead>
                     <TableHead>Risk</TableHead>
-                    <TableHead>High risk</TableHead>
-                    <TableHead>Reasons</TableHead>
+                    <TableHead>Yüksek risk</TableHead>
+                    <TableHead>Nedenler</TableHead>
                     <TableHead>Aksiyon</TableHead>
                     <TableHead></TableHead>
                   </TableRow>

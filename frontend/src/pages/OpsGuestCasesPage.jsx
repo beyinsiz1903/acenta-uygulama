@@ -364,7 +364,7 @@ function OpsGuestCasesPage() {
               <SelectItem value="waiting">Beklemede</SelectItem>
               <SelectItem value="in_progress">Devam ediyor</SelectItem>
               <SelectItem value="closed">Kapal f</SelectItem>
-              <SelectItem value="all">T fm f</SelectItem>
+              <SelectItem value="all">Tümü</SelectItem>
             </SelectContent>
           </Select>
         </div>

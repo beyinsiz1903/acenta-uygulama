@@ -26,14 +26,16 @@ function formatDateTime(iso) {
 
 function StatusPill({ status }) {
   if (!status) return null;
-  const tone = String(status).toUpperCase();
+  const raw = String(status).toLowerCase();
+  const label = bookingStatusLabelTr(raw);
   let cls = "bg-muted text-muted-foreground";
-  if (tone === "CONFIRMED") cls = "bg-emerald-50 text-emerald-700";
-  if (tone === "CANCELLED") cls = "bg-red-50 text-red-700";
-  if (tone === "VOUCHERED") cls = "bg-blue-50 text-blue-700";
+  if (raw === "confirmed") cls = "bg-emerald-50 text-emerald-700";
+  if (raw === "cancelled") cls = "bg-red-50 text-red-700";
+  if (raw === "completed" || raw === "voucher_issued") cls = "bg-blue-50 text-blue-700";
+  if (raw === "pending") cls = "bg-amber-50 text-amber-700";
   return (
     <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${cls}`}>
-      {tone}
+      {label}
     </span>
   );
 }

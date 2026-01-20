@@ -220,7 +220,7 @@ function VersionsPanel({ productId, productStatus }) {
         </div>
         <div className="grid grid-cols-2 gap-3 text-[11px]">
           <div className="space-y-1">
-            <div className="font-medium">Room Types</div>
+            <div className="font-medium">Oda tipleri</div>
             <div className="max-h-32 overflow-y-auto space-y-1">
               {roomTypes.map((rt) => (
                 <label key={rt.room_type_id} className="flex items-center gap-2">
@@ -241,7 +241,7 @@ function VersionsPanel({ productId, productStatus }) {
             </div>
           </div>
           <div className="space-y-1">
-            <div className="font-medium">Rate Plans</div>
+            <div className="font-medium">Rate planlar</div>
             <div className="max-h-32 overflow-y-auto space-y-1">
               {ratePlans.map((rp) => (
                 <label key={rp.rate_plan_id} className="flex items-center gap-2">
@@ -412,7 +412,7 @@ export default function AdminCatalogPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <div className="text-lg font-semibold">Catalog</div>
+          <div className="text-lg font-semibold">Katalog</div>
           <div className="text-xs text-muted-foreground">
             Products + versioning + publish
           </div>

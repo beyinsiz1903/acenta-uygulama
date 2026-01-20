@@ -772,7 +772,7 @@ export default function AdminMetricsPage() {
           }}
           data-testid="metrics-export-overview"
         >
-          Genel Bakış CSV'yi Dışa Aktar
+          Genel Bakış CSV&apos;yi Dışa Aktar
         </button>
 
         <button
@@ -806,7 +806,7 @@ export default function AdminMetricsPage() {
           }}
           data-testid="metrics-export-trends"
         >
-          Trendler CSV'yi Dışa Aktar
+          Trendler CSV&apos;yi Dışa Aktar
         </button>
 
         <button
@@ -858,7 +858,7 @@ export default function AdminMetricsPage() {
           }}
           data-testid="metrics-export-queues"
         >
-          Kuyruklar CSV'yi Dışa Aktar
+          Kuyruklar CSV&apos;yi Dışa Aktar
         </button>
       </div>
 

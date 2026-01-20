@@ -236,7 +236,7 @@ export default function AdminExportsPage() {
               <CardContent>
                 {policies.length === 0 ? (
                   <p className="text-sm text-muted-foreground">
-                    Hen0169 policy bulunamad0161. Sa01163da yeni bir export policy olu11turabilirsiniz.
+                    Henüz policy bulunamadı. Sağda yeni bir export policy oluşturabilirsiniz.
                   </p>
                 ) : (
                   <div
@@ -265,7 +265,7 @@ export default function AdminExportsPage() {
                             }}
                           >
                             <td className="py-1 pr-2 font-mono text-xs">{p.key}</td>
-                            <td className="py-1 pr-2 text-xs">{p.enabled ? "Ae70131k" : "Kapal0113"}</td>
+                            <td className="py-1 pr-2 text-xs">{p.enabled ? "Aktif" : "Kapalı"}</td>
                             <td className="py-1 pr-2 text-xs">{p.schedule_hint || "-"}</td>
                             <td className="py-1 pr-2 text-xs">{p.cooldown_hours}h</td>
                           </tr>
@@ -297,7 +297,7 @@ export default function AdminExportsPage() {
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Enabled</span>
+                  <span className="text-sm font-medium">Aktif</span>
                   <Switch
                     checked={form.enabled}
                     onCheckedChange={(val) =>

@@ -448,9 +448,9 @@ export default function AdminCatalogPage() {
               onChange={(e) => setStatus(e.target.value)}
             >
               <option value="">Tüm durumlar</option>
-              <option value="active">active</option>
-              <option value="inactive">inactive</option>
-              <option value="archived">archived</option>
+              <option value="active">Aktif</option>
+              <option value="inactive">Pasif</option>
+              <option value="archived">Arşivlendi</option>
             </select>
           </div>
 

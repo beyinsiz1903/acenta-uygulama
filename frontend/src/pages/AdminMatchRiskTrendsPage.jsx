@@ -211,7 +211,7 @@ export default function AdminMatchRiskTrendsPage() {
       const msg = apiErrorMessage ? apiErrorMessage(e) : e?.message || "Bir hata oluştu";
       setError(msg);
       toast({
-        title: "Failed to load trends",
+        title: "Trendler yüklenemedi",
         description: msg,
         variant: "destructive",
       });
@@ -281,14 +281,14 @@ export default function AdminMatchRiskTrendsPage() {
               } catch (e) {
                 const msg = e?.message || "PDF indirilemiyor";
                 toast({
-                  title: "Failed to download executive report",
+                  title: "Executive rapor indirilemedi",
                   description: msg,
                   variant: "destructive",
                 });
               }
             }}
-          >
-            Download Executive PDF
+> 
+            Executive PDF indir
           </Button>
         </div>
       </div>

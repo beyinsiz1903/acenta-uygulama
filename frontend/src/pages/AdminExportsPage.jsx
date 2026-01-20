@@ -474,7 +474,7 @@ export default function AdminExportsPage() {
               <div className="flex flex-wrap items-end gap-3">
                 <div className="space-y-1">
                   <label className="text-xs font-medium" htmlFor="runs-policy-key">
-                    Policy
+                    Policy (anahtar)
                   </label>
                   <select
                     id="runs-policy-key"

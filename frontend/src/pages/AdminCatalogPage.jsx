@@ -510,7 +510,7 @@ export default function AdminCatalogPage() {
         <div className="col-span-12 lg:col-span-7 rounded-lg border p-3 space-y-4">
           <div className="flex items-center justify-between">
             <div className="font-semibold text-sm">
-              {selected ? "Product Detail" : "Create Product"}
+              {selected ? "Ürün detayı" : "Ürün oluştur"}
             </div>
             {selected && selected.status !== "active" && (
               <div className="ml-4 rounded-md border border-amber-400/60 bg-amber-50 px-2 py-1 text-[11px] text-amber-900">

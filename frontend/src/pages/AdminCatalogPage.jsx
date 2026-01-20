@@ -295,11 +295,11 @@ function VersionsPanel({ productId, productStatus }) {
                     disabled={productStatus !== "active"}
                     title={
                       productStatus !== "active"
-                        ? "Yayınlamak için ürün status=active olmalı."
+                        ? "Yayınlamak için ürün durumunun 'aktif' olması gerekir."
                         : undefined
                     }
                   >
-                    Publish
+                    Yayınla
                   </Button>
                 )}
               </div>

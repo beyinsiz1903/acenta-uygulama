@@ -203,6 +203,183 @@ export default function AdminB2BAgenciesSummaryPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
+
+      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+        <SheetContent side="right" className="w-full max-w-md">
+          <SheetHeader>
+            <SheetTitle>B2B Acenta Detayı</SheetTitle>
+            <SheetDescription>
+              Kredi profili ve embed edilebilir bayi iframe bilgisi.
+            </SheetDescription>
+          </SheetHeader>
+
+          {selected && (
+            <div className="mt-4 space-y-4">
+              <div className="space-y-1 text-sm">
+                <div className="font-medium">{selected.name}</div>
+                <div className="text-[11px] text-muted-foreground font-mono">{selected.id}</div>
+              </div>
+
+              <div className="inline-flex rounded-lg bg-muted p-1 text-[11px] text-muted-foreground">
+                <button
+                  type="button"
+                  className={`px-2 py-1 rounded-md ${
+                    sheetTab === "credit" ? "bg-background text-foreground shadow" : ""
+                  }`}
+                  onClick={() => setSheetTab("credit")}
+                >
+                  Kredi Profili
+                </button>
+                <button
+                  type="button"
+                  className={`px-2 py-1 rounded-md ${
+                    sheetTab === "embed" ? "bg-background text-foreground shadow" : ""
+                  }`}
+                  onClick={() => setSheetTab("embed")}
+                >
+                  Bayi iframe
+                </button>
+              </div>
+
+              {sheetTab === "credit" && (
+                <div className="space-y-4">
+                  <p className="text-xs text-muted-foreground">
+                    Limit ve ödeme şartı değişiklikleri doğrudan kredi profilini günceller. Soft limit, uyarı eşiği
+                    olarak kullanılır.
+                  </p>
+
+                  {creditError && (
+                    <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-2 text-xs text-destructive">
+                      <AlertCircle className="h-4 w-4 mt-0.5" />
+                      <div>{creditError}</div>
+                    </div>
+                  )}
+
+                  <div className="space-y-3">
+                    <div className="space-y-1">
+                      <Label htmlFor="limit">Kredi Limiti</Label>
+                      <Input
+                        id="limit"
+                        type="number"
+                        min={0}
+                        value={creditForm.limit}
+                        onChange={(e) =>
+                          setCreditForm((prev) => ({ ...prev, limit: e.target.value }))
+                        }
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label htmlFor="soft_limit">Soft Limit</Label>
+                      <Input
+                        id="soft_limit"
+                        type="number"
+                        min={0}
+                        value={creditForm.soft_limit}
+                        onChange={(e) =>
+                          setCreditForm((prev) => ({ ...prev, soft_limit: e.target.value }))
+                        }
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label htmlFor="payment_terms">Ödeme Şartı</Label>
+                      <select
+                        id="payment_terms"
+                        className="h-9 w-full rounded-md border bg-background px-2 text-sm"
+                        value={creditForm.payment_terms}
+                        onChange={(e) =>
+                          setCreditForm((prev) => ({ ...prev, payment_terms: e.target.value }))
+                        }
+                      >
+                        <option value="PREPAY">PREPAY</option>
+                        <option value="NET7">NET7</option>
+                        <option value="NET14">NET14</option>
+                        <option value="NET30">NET30</option>
+                      </select>
+                    </div>
+                    <div className="space-y-1">
+                      <Label htmlFor="status">Kredi Profili Durumu</Label>
+                      <select
+                        id="status"
+                        className="h-9 w-full rounded-md border bg-background px-2 text-sm"
+                        value={creditForm.status}
+                        onChange={(e) =>
+                          setCreditForm((prev) => ({ ...prev, status: e.target.value }))
+                        }
+                      >
+                        <option value="active">Aktif</option>
+                        <option value="suspended">Askıda</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <SheetFooter className="mt-4">
+                    <Button
+                      type="button"
+                      onClick={async () => {
+                        if (!selected) return;
+                        setCreditError("");
+                        const limitNum = Number(creditForm.limit || 0);
+                        const softNum = creditForm.soft_limit ? Number(creditForm.soft_limit) : null;
+                        if (Number.isNaN(limitNum) || limitNum < 0) {
+                          setCreditError("Limit 0 veya üzeri sayısal bir değer olmalıdır.");
+                          return;
+                        }
+                        if (softNum != null && (Number.isNaN(softNum) || softNum < 0)) {
+                          setCreditError("Soft limit 0 veya üzeri sayısal bir değer olmalıdır.");
+                          return;
+                        }
+                        setCreditSaving(true);
+                        try {
+                          await api.put(`/ops/finance/credit-profiles/${selected.id}`, {
+                            limit: limitNum,
+                            soft_limit: softNum,
+                            payment_terms: creditForm.payment_terms,
+                            status: creditForm.status,
+                          });
+                          // Listeyi tazele
+                          const resp = await api.get("/admin/b2b/agencies/summary");
+                          setItems(resp.data?.items || []);
+                          setSheetOpen(false);
+                        } catch (err) {
+                          setCreditError(apiErrorMessage(err));
+                        } finally {
+                          setCreditSaving(false);
+                        }
+                      }}
+                      disabled={creditSaving}
+                      className="gap-2"
+                    >
+                      {creditSaving ? "Kaydediliyor..." : "Kaydet"}
+                    </Button>
+                  </SheetFooter>
+                </div>
+              )}
+
+              {sheetTab === "embed" && (
+                <div className="space-y-3">
+                  <p className="text-xs text-muted-foreground">
+                    Bu snippet, ilgili acentenin embed edilebilir rezervasyon iframe&apos;ini kendi web sitenize
+                    yerleştirmeniz için bir örnektir. İlk fazda yalnızca temel partner parametresi taşır.
+                  </p>
+                  <div className="space-y-1 text-xs">
+                    <div className="font-medium">Iframe URL</div>
+                    <code className="block rounded-md bg-muted px-2 py-1 text-[11px] whitespace-pre-wrap break-all">
+                      {buildEmbedUrl(selected)}
+                    </code>
+                  </div>
+                  <div className="space-y-1 text-xs">
+                    <div className="font-medium">Örnek iframe kodu</div>
+                    <code className="block rounded-md bg-muted px-2 py-2 text-[11px] whitespace-pre overflow-x-auto">
+                      {`<iframe\n  src="${buildEmbedUrl(selected)}"\n  width="100%"\n  height="800"\n  style="border:0;"\n  loading="lazy"\n></iframe>`}
+                    </code>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
+
                   {filtered.map((it) => (
                     <TableRow
                       key={it.id}

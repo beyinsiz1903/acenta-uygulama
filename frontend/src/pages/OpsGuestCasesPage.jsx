@@ -627,7 +627,7 @@ function OpsGuestCasesPage() {
                         {(() => {
                           switch (c.type) {
                             case "cancel":
-                              return "30ptal talebi";
+                              return "İptal talebi";
                             case "amend":
                               return "Değişiklik talebi";
                             case "refund":

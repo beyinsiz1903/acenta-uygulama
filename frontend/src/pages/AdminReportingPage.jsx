@@ -198,7 +198,7 @@ export default function AdminReportingPage() {
 
       <Card className="p-3 text-[11px] space-y-2">
         <div className="flex items-center justify-between">
-          <div className="text-sm font-semibold">Funnel Summary</div>
+          <div className="text-sm font-semibold">Funnel Özeti</div>
           {funnelLoading && <div className="text-[11px] text-muted-foreground">Yükleniyor...</div>}
         </div>
         <FieldError text={funnelError} />

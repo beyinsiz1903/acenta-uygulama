@@ -44,6 +44,180 @@ function StatusBadge({ status }) {
   return <Badge variant="outline">{status}</Badge>;
 }
 
+function AccountStatusBadge({ status }) {
+  const value = (status || "").toLowerCase();
+  if (value === "over_limit") {
+    return (
+      <Badge variant="destructive" className="text-[11px]">
+        Limit aşıldı
+      </Badge>
+    );
+  }
+  if (value === "near_limit") {
+    return (
+      <Badge variant="secondary" className="text-[11px]">
+        Limite yakın
+      </Badge>
+    );
+  }
+  return (
+    <Badge variant="outline" className="text-[11px]">
+      Normal
+    </Badge>
+  );
+}
+
+function AccountSummaryCard() {
+  const [summary, setSummary] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let isMounted = true;
+
+    (async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const res = await api.get("/b2b/account/summary");
+        if (isMounted) {
+          setSummary(res.data || null);
+        }
+      } catch (err) {
+        if (isMounted) {
+          setError(apiErrorMessage(err));
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    })();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const currency = summary?.currency || "EUR";
+  const creditLimit =
+    typeof summary?.credit_limit === "number" && !Number.isNaN(summary.credit_limit)
+      ? summary.credit_limit
+      : null;
+  const exposure =
+    typeof summary?.exposure_eur === "number" && !Number.isNaN(summary.exposure_eur)
+      ? summary.exposure_eur
+      : null;
+  const remainingLimit =
+    creditLimit != null && exposure != null ? creditLimit - exposure : null;
+  const net = typeof summary?.net === "number" && !Number.isNaN(summary.net) ? summary.net : null;
+
+  const dataSourceLabel =
+    summary?.data_source === "ledger_based"
+      ? "Veri kaynağı: Finans hesaplarından türetilmiş"
+      : summary?.data_source === "derived_from_bookings"
+      ? "Veri kaynağı: Rezervasyonlardan türetilmiş"
+      : null;
+
+  return (
+    <Card className="rounded-2xl border bg-card shadow-sm">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0">
+        <div>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <CreditCard className="h-4 w-4" />
+            Hesap Özeti
+          </CardTitle>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Güncel kredi durumu ve ajans risk özetiniz.
+          </p>
+        </div>
+        {summary && <AccountStatusBadge status={summary.status} />}
+      </CardHeader>
+      <CardContent className="space-y-3 text-xs">
+        {loading && (
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span>Hesap özeti yükleniyor...</span>
+          </div>
+        )}
+
+        {error && (
+          <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-[11px] text-destructive">
+            <AlertCircle className="h-4 w-4 mt-0.5" />
+            <div>{error}</div>
+          </div>
+        )}
+
+        {!loading && !error && summary && (
+          <>
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+              <div>
+                <div className="text-[11px] text-muted-foreground">Toplam Limit</div>
+                <div className="mt-0.5 text-sm font-semibold">
+                  {creditLimit != null ? (
+                    <>
+                      {creditLimit.toFixed(2)} {currency}
+                    </>
+                  ) : (
+                    "-"
+                  )}
+                </div>
+              </div>
+              <div>
+                <div className="text-[11px] text-muted-foreground">Kullanılan Limit</div>
+                <div className="mt-0.5 text-sm font-semibold">
+                  {exposure != null ? (
+                    <>
+                      {exposure.toFixed(2)} {currency}
+                    </>
+                  ) : (
+                    "-"
+                  )}
+                </div>
+              </div>
+              <div>
+                <div className="text-[11px] text-muted-foreground">Kalan Limit</div>
+                <div className="mt-0.5 text-sm font-semibold">
+                  {remainingLimit != null ? (
+                    <>
+                      {remainingLimit.toFixed(2)} {currency}
+                    </>
+                  ) : (
+                    "-"
+                  )}
+                </div>
+              </div>
+              <div>
+                <div className="text-[11px] text-muted-foreground">Toplam Risk (net)</div>
+                <div className="mt-0.5 text-sm font-semibold">
+                  {net != null ? (
+                    <>
+                      {net.toFixed(2)} {currency}
+                    </>
+                  ) : (
+                    "-"
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {dataSourceLabel && (
+              <p className="text-[11px] text-muted-foreground">{dataSourceLabel}</p>
+            )}
+          </>
+        )}
+
+        {!loading && !error && !summary && (
+          <p className="text-[11px] text-muted-foreground">
+            Hesap özetiniz şu anda gösterilemiyor.
+          </p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+
 function BookingListTab() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -434,6 +608,8 @@ export default function B2BPortalPage() {
           Agentis sınıfı demo akışı: Quote → Book → Cancel. Tüm istekler agency token&apos;ı ile B2B backend&apos;e gider.
         </p>
       </div>
+
+      <AccountSummaryCard />
 
       <div className="flex gap-2 border-b pb-1 text-sm">
         <button

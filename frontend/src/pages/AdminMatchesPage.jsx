@@ -598,7 +598,7 @@ export default function AdminMatchesPage() {
                             onChange={(e) => setEventsSort(e.target.value)}
                             data-testid="match-risk-events-sort"
                           >
-                            <option value="created_desc">Created (new → old)</option>
+                            <option value="created_desc">Oluşturulma (yeni → eski)</option>
                             <option value="created_asc">Created (old → new)</option>
                           </select>
                         </div>

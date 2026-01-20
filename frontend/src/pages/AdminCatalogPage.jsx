@@ -427,7 +427,7 @@ export default function AdminCatalogPage() {
         <div className="col-span-12 lg:col-span-5 rounded-lg border p-3 space-y-3">
           <div className="grid grid-cols-3 gap-2 text-xs">
             <Input
-              placeholder="Search..."
+              placeholder="Ara..."
               value={q}
               onChange={(e) => setQ(e.target.value)}
             />

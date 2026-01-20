@@ -44,7 +44,7 @@ export default function AdminApprovalsPage() {
     } catch (e) {
       const msg = apiErrorMessage(e);
       setError(msg);
-      toast({ title: "Failed to load approvals", description: msg, variant: "destructive" });
+      toast({ title: "Onay listesi yüklenemedi", description: msg, variant: "destructive" });
     } finally {
       setLoading(false);
     }

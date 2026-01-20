@@ -599,7 +599,7 @@ export default function AdminMatchesPage() {
                             data-testid="match-risk-events-sort"
                           >
                             <option value="created_desc">Oluşturulma (yeni → eski)</option>
-                            <option value="created_asc">Created (old → new)</option>
+                            <option value="created_asc">Oluşturulma (eski → yeni)</option>
                           </select>
                         </div>
                         <Button

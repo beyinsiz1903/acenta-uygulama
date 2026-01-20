@@ -233,7 +233,7 @@ export default function AdminSettlementsPage() {
 
       {error && !loading && (
         <ErrorState
-          title="Mutabakat listesi y0cklenemedi"
+          title="Mutabakat listesi yüklenemedi"
           description={error}
           onRetry={() => load("json")}
           className="max-w-xl"

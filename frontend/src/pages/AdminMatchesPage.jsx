@@ -512,7 +512,7 @@ export default function AdminMatchesPage() {
                         }
                       }}
                     >
-                      {unblockRequest.loading ? "Requesting..." : "Request Unblock"}
+                      {unblockRequest.loading ? "Gönderiliyor..." : "Blokenin kaldırılmasını iste"}
                     </Button>
                   </div>
                 </div>

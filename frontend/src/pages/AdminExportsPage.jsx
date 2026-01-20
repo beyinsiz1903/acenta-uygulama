@@ -98,7 +98,7 @@ export default function AdminExportsPage() {
   const handleSave = async () => {
     try {
       if (!form.key) {
-        alert("Policy key zorunludur");
+        alert("Policy anahtarı (key) zorunludur");
         return;
       }
       setSaving(true);
@@ -164,7 +164,7 @@ export default function AdminExportsPage() {
       const msg = apiErrorMessage(e);
       setError(msg);
       if (!dry && msg.includes("EXPORT_COOLDOWN_ACTIVE")) {
-        alert("Cooldown aktif; bu policy i016n tekrar e7al01310197r01d15");
+        alert("Cooldown aktif; bu policy için bir süre tekrar çalıştırılamaz.");
       }
     } finally {
       setRunLoading(false);
@@ -208,7 +208,7 @@ export default function AdminExportsPage() {
   return (
     <div className="space-y-6" data-testid="admin-exports-page">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Exports</h1>
+        <h1 className="text-2xl font-bold text-foreground">Dışa Aktarımlar</h1>
         <p className="text-sm text-muted-foreground mt-1">
           Match risk eşleşmeleriniz için planlı CSV export politikalarını yönetin ve geçmiş export arşivini buradan görüntüleyin.
         </p>

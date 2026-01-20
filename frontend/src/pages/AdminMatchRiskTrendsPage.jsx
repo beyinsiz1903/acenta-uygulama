@@ -240,9 +240,9 @@ export default function AdminMatchRiskTrendsPage() {
     <div className="p-4 md:p-6" data-testid="match-risk-trends-page">
       <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-4">
         <div>
-          <div className="text-xl font-semibold">Match Risk Trends</div>
+          <div className="text-xl font-semibold">Match Risk Trendleri</div>
           <div className="text-sm text-muted-foreground">
-            Günlük snapshot&apos;lar üzerinden high-risk rate ve verified share trendi
+            Günlük snapshot&apos;lar üzerinden yüksek risk oranı (high-risk rate) ve verified share trendini izleyin.
           </div>
         </div>
 

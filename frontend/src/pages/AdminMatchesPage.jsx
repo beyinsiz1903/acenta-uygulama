@@ -325,9 +325,9 @@ export default function AdminMatchesPage() {
                                     : "match-action-status-badge"
                                 }
                               >
-                                {item.action_status === "blocked" && "Blocked"}
-                                {item.action_status === "manual_review" && "Manual review"}
-                                {item.action_status === "watchlist" && "Watchlist"}
+                                {item.action_status === "blocked" && "Blokeli"}
+                                {item.action_status === "manual_review" && "Manuel inceleme"}
+                                {item.action_status === "watchlist" && "İzleme listesi"}
                                 {!["blocked", "manual_review", "watchlist"].includes(item.action_status) &&
                                   item.action_status}
                               </Badge>

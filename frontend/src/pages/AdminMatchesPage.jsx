@@ -193,7 +193,7 @@ export default function AdminMatchesPage() {
                 <option value="high_risk_first">Yüksek risk önce</option>
                 <option value="repeat_desc">Tekrar (7g) azalan</option>
                 <option value="rate_desc">Gelmedi oranı azalan</option>
-                <option value="total_desc">Toplam rezervasyon azalan</option>
+                <option value="total_desc">Toplam rezervasyon (azalan)</option>
                 <option value="last_booking_desc">Son rezervasyon tarihi azalan</option>
               </select>
             </div>

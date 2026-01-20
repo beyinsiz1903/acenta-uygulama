@@ -106,8 +106,8 @@ export default function AdminMatchesPage() {
     const found = items.find((m) => m.id === deeplinkMatchId);
     if (!found) {
       toast({
-        title: "Match not found in current view",
-        description: "Try increasing days or lowering min_total.",
+        title: "Bu eşleşme mevcut görünümde bulunamadı",
+        description: "Gün sayısını artırmayı veya min_total değerini düşürmeyi deneyin.",
         duration: 3000,
       });
       return;

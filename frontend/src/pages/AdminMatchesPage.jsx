@@ -434,7 +434,7 @@ export default function AdminMatchesPage() {
                       Bu eşleşme şu anda politika tarafından blokeli. Yeni rezervasyonlar reddedilecek (MATCH_BLOCKED).
                     </span>
                     <span className="text-[11px] text-muted-foreground">
-                      To unblock, submit a request below. An admin must approve it in the Approvals queue.
+                      Blokenin kaldırılması için aşağıdan talep oluşturun. Onaylanması için bir adminin Approvals kuyruğunda aksiyon alması gerekir.
                     </span>
                   </div>
                 )}

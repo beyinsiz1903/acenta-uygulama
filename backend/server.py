@@ -155,6 +155,7 @@ app.include_router(admin_statements_router)
 app.include_router(admin_whitelabel_router)
 app.include_router(admin_settlements_router)
 app.include_router(admin_parasut_router)
+app.include_router(admin_b2b_agencies_router)
 
 app.include_router(theme_router)
 

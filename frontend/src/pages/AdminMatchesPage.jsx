@@ -457,7 +457,7 @@ export default function AdminMatchesPage() {
                   Showing:{" "}
                   {eventsOnlyCancelled ? "sadece iptaller" : "all statuses"}
                   {", "}
-                  {eventsShowBehavioral ? "behavioral" : "no behavioral"}
+                  {eventsShowBehavioral ? "davranışsal" : "davranışsal yok"}
                   {" / "}
                   {eventsShowOperational ? "operational" : "no operational"}
                   {eventsReasonFilter

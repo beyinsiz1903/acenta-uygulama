@@ -455,7 +455,7 @@ export default function AdminMatchesPage() {
               {eventsData && (
                 <p className="px-4 pb-1 text-[11px] text-muted-foreground">
                   Showing:{" "}
-                  {eventsOnlyCancelled ? "sadece iptaller" : "all statuses"}
+                  {eventsOnlyCancelled ? "Sadece iptaller" : "all statuses"}
                   {", "}
                   {eventsShowBehavioral ? "davranışsal" : "davranışsal yok"}
                   {" / "}

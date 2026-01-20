@@ -91,7 +91,7 @@ export default function AdminReportingPage() {
       <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <h1 className="text-lg font-semibold">Reporting</h1>
+            <h1 className="text-lg font-semibold">Raporlama</h1>
             <Badge
               variant="outline"
               data-testid="payments-e2e-proof-pending-badge"
@@ -123,7 +123,7 @@ export default function AdminReportingPage() {
 
       <Card className="p-3 text-[11px] space-y-2">
         <div className="flex items-center justify-between">
-          <div className="text-sm font-semibold">Revenue Summary</div>
+          <div className="text-sm font-semibold">Ciro Özeti</div>
           {summaryLoading && <div className="text-[11px] text-muted-foreground">Yükleniyor...</div>}
         </div>
         <FieldError text={summaryError} />

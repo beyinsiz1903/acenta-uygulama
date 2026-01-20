@@ -58,6 +58,7 @@ import AdminSettlementsPage from "./pages/AdminSettlementsPage";
 import AdminSettlementRunsPage from "./pages/AdminSettlementRunsPage";
 import AdminSettlementRunDetailPage from "./pages/AdminSettlementRunDetailPage";
 import OpsSupplierAccrualsPage from "./pages/OpsSupplierAccrualsPage";
+import AdminSupplierSettlementBridgePage from "./pages/AdminSupplierSettlementBridgePage";
 import DashboardPage from "./pages/DashboardPage";
 import ProductsPage from "./pages/ProductsPage";
 import AgencyHotelsPage from "./pages/AgencyHotelsPage";

@@ -459,7 +459,7 @@ export default function AdminMatchesPage() {
                   {", "}
                   {eventsShowBehavioral ? "davranışsal" : "davranışsal yok"}
                   {" / "}
-                  {eventsShowOperational ? "operational" : "no operational"}
+                  {eventsShowOperational ? "operasyonel" : "operasyonel yok"}
                   {eventsReasonFilter
                     ? `, reason contains "${eventsReasonFilter}"`
                     : ""}

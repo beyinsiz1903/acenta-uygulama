@@ -308,7 +308,7 @@ export default function AdminExportsPage() {
 
                 <div className="space-y-1">
                   <label className="text-sm font-medium" htmlFor="schedule-hint">
-                    Schedule hint
+                    Çalışma açıklaması (schedule hint)
                   </label>
                   <Input
                     id="schedule-hint"
@@ -322,7 +322,7 @@ export default function AdminExportsPage() {
 
                 <div className="space-y-1">
                   <label className="text-sm font-medium" htmlFor="cooldown-hours">
-                    Cooldown (hours)
+                    Cooldown (saat)
                   </label>
                   <Input
                     id="cooldown-hours"
@@ -341,7 +341,7 @@ export default function AdminExportsPage() {
 
                 <div className="space-y-1">
                   <label className="text-sm font-medium" htmlFor="days">
-                    Days
+                    Gün sayısı
                   </label>
                   <Input
                     id="days"

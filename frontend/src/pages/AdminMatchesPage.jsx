@@ -190,7 +190,7 @@ export default function AdminMatchesPage() {
                 onChange={(e) => setSort(e.target.value)}
                 data-testid="match-risk-sort"
               >
-                <option value="high_risk_first">High risk first</option>
+                <option value="high_risk_first">Yüksek risk önce</option>
                 <option value="repeat_desc">Repeat (7d) desc</option>
                 <option value="rate_desc">Not-arrived rate desc</option>
                 <option value="total_desc">Total bookings desc</option>

@@ -461,7 +461,7 @@ export default function AdminCatalogPage() {
               onClick={load}
               disabled={loading}
             >
-              {loading ? "Loading..." : "Apply"}
+              {loading ? "Yükleniyor..." : "Uygula"}
             </Button>
           </div>
 

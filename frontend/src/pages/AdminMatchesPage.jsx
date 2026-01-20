@@ -181,7 +181,7 @@ export default function AdminMatchesPage() {
             </div>
             <div className="space-y-1">
               <label className="text-xs font-medium" htmlFor="match-risk-sort">
-                Sort by
+                Sıralama
               </label>
               <select
                 id="match-risk-sort"
@@ -589,7 +589,7 @@ export default function AdminMatchesPage() {
                       <div className="flex items-center gap-2">
                         <div className="space-y-1">
                           <label className="text-xs font-medium" htmlFor="match-risk-events-sort">
-                            Sort by
+                            Sıralama
                           </label>
                           <select
                             id="match-risk-events-sort"

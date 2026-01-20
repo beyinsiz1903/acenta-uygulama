@@ -497,7 +497,7 @@ export default function AdminMatchesPage() {
                           const taskId = resp.data?.task_id || null;
                           setUnblockRequest({ loading: false, alreadyPending: already, taskId });
                           toast({
-                            title: already ? "Unblock request already pending" : "Unblock request created",
+                            title: already ? "Bloke kaldırma talebi zaten mevcut" : "Bloke kaldırma talebi oluşturuldu",
                             description: already
                               ? "There is already a pending approval task for this match."
                               : "A new approval task was created in the Approvals queue.",

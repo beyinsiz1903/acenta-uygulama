@@ -11,7 +11,7 @@ from datetime import datetime
 from typing import Dict, Any, Optional
 
 # Configuration - Use production URL from frontend/.env
-BASE_URL = "https://resflow-polish.preview.emergentagent.com"
+BASE_URL = "https://hotel-localization.preview.emergentagent.com"
 
 def login_admin():
     """Login as admin user and return token, org_id, email"""

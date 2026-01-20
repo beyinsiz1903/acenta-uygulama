@@ -23,7 +23,7 @@ from typing import Dict, Any, List
 from bson import ObjectId
 
 # Configuration - Use production URL from frontend/.env
-BASE_URL = "https://resflow-polish.preview.emergentagent.com"
+BASE_URL = "https://hotel-localization.preview.emergentagent.com"
 
 def get_mongo_client():
     """Get MongoDB client for direct database access"""

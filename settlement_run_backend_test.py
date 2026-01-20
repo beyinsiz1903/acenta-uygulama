@@ -20,7 +20,7 @@ import sys
 from datetime import datetime
 
 # Backend URL from frontend/.env
-BACKEND_URL = "https://resflow-polish.preview.emergentagent.com"
+BACKEND_URL = "https://hotel-localization.preview.emergentagent.com"
 
 def login_admin():
     """Login as admin and return JWT token"""

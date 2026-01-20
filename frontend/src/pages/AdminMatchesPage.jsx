@@ -393,7 +393,7 @@ export default function AdminMatchesPage() {
                         navigate(`/app/admin/matches/${id}`);
                       }}
                     >
-                      Open Match Detail
+                      Match detayını aç
                     </Button>
                   </div>
                 )}

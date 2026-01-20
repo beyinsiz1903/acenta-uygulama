@@ -65,6 +65,7 @@ export default function AdminSettlementRunDetailPage() {
 
   const [cancelReason, setCancelReason] = useState("");
   const [paymentRef, setPaymentRef] = useState("");
+  const [accrualToAdd, setAccrualToAdd] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
 
   const totals = useMemo(() => {
@@ -180,6 +181,7 @@ export default function AdminSettlementRunDetailPage() {
   const canApprove = run.status === "draft";
   const canCancel = run.status === "draft" || run.status === "approved";
   const canMarkPaid = run.status === "approved";
+  const canEditItems = run.status === "draft";
 
   return (
     <div className="space-y-6">

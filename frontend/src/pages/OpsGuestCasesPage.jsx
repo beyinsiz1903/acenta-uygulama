@@ -633,7 +633,7 @@ function OpsGuestCasesPage() {
                             case "refund":
                               return "İade";
                             case "payment_followup":
-Ödeme takibi";
+                              return "Ödeme takibi";
                             case "voucher_issue":
                               return "Voucher sorunu";
                             case "missing_docs":

@@ -162,7 +162,7 @@ export default function AdminMatchesPage() {
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-2">
-              <span className="text-xs">Only high risk</span>
+              <span className="text-xs">Sadece yüksek risk</span>
               <input
                 type="checkbox"
                 checked={onlyHighRisk}
@@ -171,7 +171,7 @@ export default function AdminMatchesPage() {
               />
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-xs">Hide blocked</span>
+              <span className="text-xs">Blokelileri gizle</span>
               <input
                 type="checkbox"
                 checked={hideBlocked}

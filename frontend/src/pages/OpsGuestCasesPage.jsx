@@ -655,7 +655,7 @@ function OpsGuestCasesPage() {
                                 case "open":
                                   return (
                                     <span className="inline-flex items-center rounded-full bg-emerald-50 text-emerald-700 px-2 py-0.5 text-[11px]">
-                                      Af3k
+                                      Açık
                                     </span>
                                   );
                                 case "waiting":

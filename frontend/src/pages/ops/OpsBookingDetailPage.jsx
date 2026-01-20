@@ -13,6 +13,7 @@ import { listOpsCasesForBooking, createOpsCase } from "../../lib/opsCases";
 import { createClickToPayLink } from "../../lib/clickToPay";
 import { getCustomer, patchTask } from "../../lib/crm";
 import { toast } from "sonner";
+import { bookingStatusLabelTr } from "../../utils/bookingStatusLabels";
 
 function formatDateTime(iso) {
   if (!iso) return "-";

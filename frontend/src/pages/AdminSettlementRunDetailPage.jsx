@@ -110,6 +110,25 @@ export default function AdminSettlementRunDetailPage() {
     }
   }
 
+  async function handleAddAccrual() {
+    if (!run) return;
+    const id = accrualToAdd.trim();
+    if (!id) {
+      alert("Lütfen eklenecek accrual_id girin.");
+      return;
+    }
+    setActionLoading(true);
+    try {
+      await api.post(`/ops/finance/settlements/${run.settlement_id}/items:add`, [id]);
+      setAccrualToAdd("");
+      await load();
+    } catch (e) {
+      alert(apiErrorMessage(e));
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
   async function handleCancel() {
     if (!run) return;
     if (!cancelReason.trim()) {

@@ -59,15 +59,15 @@ export default function AdminApprovalsPage() {
     try {
       if (action === "approve") {
         await approveApprovalTask(id, {});
-        toast({ title: "Task approved" });
+        toast({ title: "Görev onaylandı" });
       } else {
         await rejectApprovalTask(id, {});
-        toast({ title: "Task rejected" });
+        toast({ title: "Görev reddedildi" });
       }
       setItems((prev) => prev.filter((x) => x.id !== id));
     } catch (e) {
       const msg = apiErrorMessage(e);
-      toast({ title: `Failed to ${action} task`, description: msg, variant: "destructive" });
+      toast({ title: `Görev ${action === "approve" ? "onaylanamadı" : "reddedilemedi"}`, description: msg, variant: "destructive" });
     } finally {
       setRowLoading((prev) => ({ ...prev, [id]: false }));
     }
@@ -87,7 +87,7 @@ export default function AdminApprovalsPage() {
       await load();
     } catch (e) {
       toast({
-        title: "Failed to run SCALE proof",
+        title: "SCALE proof çalıştırılamadı",
         description: apiErrorMessage(e),
         variant: "destructive",
       });

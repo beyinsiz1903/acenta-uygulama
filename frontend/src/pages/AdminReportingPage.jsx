@@ -209,7 +209,7 @@ export default function AdminReportingPage() {
               <div className="text-sm font-semibold">{funnel.quote_count}</div>
             </div>
             <div className="rounded-md border px-2 py-2">
-              <div className="text-[10px] text-muted-foreground">Checkout Started</div>
+              <div className="text-[10px] text-muted-foreground">Checkout Başlatıldı</div>
               <div className="text-sm font-semibold">{funnel.checkout_started_count}</div>
             </div>
             <div className="rounded-md border px-2 py-2">

@@ -93,10 +93,10 @@ function BookingListTab() {
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
           >
-            <option value="">Tüm statüler</option>
-            <option value="CONFIRMED">CONFIRMED</option>
-            <option value="VOUCHERED">VOUCHERED</option>
-            <option value="CANCELLED">CANCELLED</option>
+            <option value="">Tüm durumlar</option>
+            <option value="CONFIRMED">Onaylandı</option>
+            <option value="VOUCHERED">Voucher kesildi</option>
+            <option value="CANCELLED">İptal edildi</option>
           </select>
           <Button size="sm" variant="outline" className="gap-1" onClick={load} disabled={loading}>
             {loading && <Loader2 className="h-3 w-3 animate-spin" />}

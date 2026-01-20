@@ -514,7 +514,7 @@ export default function AdminCatalogPage() {
             </div>
             {selected && selected.status !== "active" && (
               <div className="ml-4 rounded-md border border-amber-400/60 bg-amber-50 px-2 py-1 text-[11px] text-amber-900">
-                Product inactive c bb publish disabled
+                Ürün pasif, yayınlama devre dışı.
               </div>
             )}
             {selected?.product_id && (

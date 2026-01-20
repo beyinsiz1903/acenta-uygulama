@@ -333,7 +333,7 @@ export default function AdminMatchesPage() {
                               </Badge>
                               {item.action_status === "blocked" && (
                                 <p className="mt-1 text-[10px] text-muted-foreground max-w-[220px]">
-                                  Blocked: Uyarı/Export gönderimi yapılmaz. Delivery suppressed (blocked).
+                                  Blokeli: Uyarı/Export gönderimi yapılmaz. Teslimatlar engellenir (blocked).
                                 </p>
                               )}
                             </>

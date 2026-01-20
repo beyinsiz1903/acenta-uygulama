@@ -135,7 +135,7 @@ export default function AdminMatchesPage() {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Match Risk</CardTitle>
+          <CardTitle>Match Riski</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-2 text-destructive text-sm">

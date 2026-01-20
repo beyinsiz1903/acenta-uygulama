@@ -674,7 +674,7 @@ function OpsGuestCasesPage() {
                                 default:
                                   return (
                                     <span className="inline-flex items-center rounded-full bg-muted text-muted-foreground px-2 py-0.5 text-[11px]">
-                                      Kapalf
+                                      Kapalı
                                     </span>
                                   );
                               }

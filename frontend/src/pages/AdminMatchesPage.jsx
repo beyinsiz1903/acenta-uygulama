@@ -411,7 +411,7 @@ export default function AdminMatchesPage() {
                 {eventsData && (
                   <div className="mt-2 flex flex-wrap gap-4 text-xs text-muted-foreground">
                     <span>
-                      Behavioral cancels (7d):{" "}
+                      Davranışsal iptaller (7g):{" "}
                       <span className="font-semibold">
                         {eventsData.summary.behavioral_cancel_count}
                       </span>
@@ -423,7 +423,7 @@ export default function AdminMatchesPage() {
                       </span>
                     </span>
                     <span>
-                      Total in window: <span className="font-semibold">{eventsData.summary.total_bookings_in_window}</span>
+                      Pencere içindeki toplam: <span className="font-semibold">{eventsData.summary.total_bookings_in_window}</span>
                     </span>
                   </div>
                 )}

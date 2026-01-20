@@ -154,7 +154,7 @@ export default function AdminMatchesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Match Risk</h1>
+        <h1 className="text-2xl font-bold text-foreground">Match Riski</h1>
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>

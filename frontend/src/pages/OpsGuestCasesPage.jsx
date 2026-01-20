@@ -384,7 +384,7 @@ function OpsGuestCasesPage() {
             <SelectContent>
               <SelectItem value="all">Tümü</SelectItem>
               <SelectItem value="cancel"> İptal talebi</SelectItem>
-              <SelectItem value="amend">De fi5fiklik talebi</SelectItem>
+              <SelectItem value="amend">Değişiklik talebi</SelectItem>
               <SelectItem value="refund">İade</SelectItem>
               <SelectItem value="payment_followup">30 dleme takibi</SelectItem>
               <SelectItem value="voucher_issue">Voucher sorunu</SelectItem>
@@ -629,7 +629,7 @@ function OpsGuestCasesPage() {
                             case "cancel":
                               return "30ptal talebi";
                             case "amend":
-                              return "De1fi5fiklik talebi";
+                              return "Değişiklik talebi";
                             case "refund":
                               return "İade";
                             case "payment_followup":

@@ -418,7 +418,7 @@ export default function AdminCatalogPage() {
           </div>
         </div>
         <Button variant="outline" size="sm" onClick={createNew}>
-          New Product
+          Yeni ürün
         </Button>
       </div>
 

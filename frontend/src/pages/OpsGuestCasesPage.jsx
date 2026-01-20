@@ -383,7 +383,7 @@ function OpsGuestCasesPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tümü</SelectItem>
-              <SelectItem value="cancel"> dptal talebi</SelectItem>
+              <SelectItem value="cancel"> İptal talebi</SelectItem>
               <SelectItem value="amend">De fi5fiklik talebi</SelectItem>
               <SelectItem value="refund">30ade</SelectItem>
               <SelectItem value="payment_followup">30 dleme takibi</SelectItem>

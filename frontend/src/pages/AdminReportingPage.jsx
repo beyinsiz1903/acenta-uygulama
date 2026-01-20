@@ -205,7 +205,7 @@ export default function AdminReportingPage() {
         {funnel && (
           <div className="grid grid-cols-2 md:grid-cols-6 gap-2 mt-2">
             <div className="rounded-md border px-2 py-2">
-              <div className="text-[10px] text-muted-foreground">Quotes</div>
+              <div className="text-[10px] text-muted-foreground">Teklifler</div>
               <div className="text-sm font-semibold">{funnel.quote_count}</div>
             </div>
             <div className="rounded-md border px-2 py-2">

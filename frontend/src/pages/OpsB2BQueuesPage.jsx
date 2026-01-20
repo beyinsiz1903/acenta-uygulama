@@ -460,8 +460,22 @@ export default function OpsB2BQueuesPage() {
                         >
                           {b.agency_name || b.agency_id || "-"}
                         </div>
-                        <div>
+                        <div className="flex flex-col gap-1">
                           <StatusBadge status={b.status} />
+                          {b.credit_status && b.credit_status !== "ok" && (
+                            <div className="text-[10px]">
+                              {b.credit_status === "near_limit" && (
+                                <span className="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-700">
+                                  Limite yakın
+                                </span>
+                              )}
+                              {b.credit_status === "over_limit" && (
+                                <span className="inline-flex items-center rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-medium text-red-700">
+                                  Limit aşıldı
+                                </span>
+                              )}
+                            </div>
+                          )}
                         </div>
                         <div className="truncate" title={String(b.created_at || "-")}> 
                           {formatDate(b.created_at)}

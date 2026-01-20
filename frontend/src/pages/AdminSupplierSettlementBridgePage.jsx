@@ -244,7 +244,7 @@ export default function AdminSupplierSettlementBridgePage() {
                   Açık settlement toplamı (taslak + onaylı), henüz ödemesi yapılmamış settlement run tutarlarını özetler.
                 </li>
                 <li>
-                  Ödenmiş settlement toplamı, SETTLEMENT_PAID event'leri üzerinden kapatılmış tutarları gösterir.
+                  Ödenmiş settlement toplamı, SETTLEMENT_PAID eventleri üzerinden kapatılmış tutarları gösterir.
                 </li>
               </ul>
             </CardContent>

@@ -306,7 +306,7 @@ function VersionsPanel({ productId, productStatus }) {
             </div>
           ))}
           {!items.length && (
-            <div className="px-2 py-6 text-xs text-muted-foreground">Hen fcz versiyon yok.</div>
+            <div className="px-2 py-6 text-xs text-muted-foreground">Henüz versiyon yok.</div>
           )}
         </div>
       </div>

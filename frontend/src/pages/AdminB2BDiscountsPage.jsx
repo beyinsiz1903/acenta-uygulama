@@ -350,7 +350,7 @@ function AdminB2BDiscountsPage() {
                       <div className="space-y-1">
                         {rules.length === 0 ? (
                           <div className="text-[11px] text-muted-foreground">
-                            No rules yet.
+                            Henüz kural yok.
                           </div>
                         ) : (
                           rules.map((r, idx) => (
@@ -369,7 +369,7 @@ function AdminB2BDiscountsPage() {
                                 onClick={() => onDeleteRule(g, idx)}
                                 disabled={loading}
                               >
-                                Delete
+                                Sil
                               </Button>
                             </div>
                           ))
@@ -382,7 +382,7 @@ function AdminB2BDiscountsPage() {
                           min={0}
                           max={100}
                           step={0.1}
-                          placeholder="New rule %"
+                          placeholder="Yeni kural %"
                           className="h-8 w-24 text-[11px]"
                           onKeyDown={(e) => {
                             if (e.key === "Enter") {

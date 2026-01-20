@@ -609,7 +609,7 @@ export default function AdminMetricsPage() {
               }).filtered.length || loading}
               data-testid="metrics-export-queues-filtered"
             >
-              Export Filtered CSV
+              Filtrelenmiş CSV'yi Dışa Aktar
             </button>
 
             <button
@@ -661,7 +661,7 @@ export default function AdminMetricsPage() {
               }
               data-testid="metrics-export-queues-filtered"
             >
-              Export Filtered CSV
+              Filtrelenmiş CSV'yi Dışa Aktar
             </button>
 
             <button
@@ -772,7 +772,7 @@ export default function AdminMetricsPage() {
           }}
           data-testid="metrics-export-overview"
         >
-          Export Overview CSV
+          Genel Bakış CSV'yi Dışa Aktar
         </button>
 
         <button
@@ -806,7 +806,7 @@ export default function AdminMetricsPage() {
           }}
           data-testid="metrics-export-trends"
         >
-          Export Trends CSV
+          Trendler CSV'yi Dışa Aktar
         </button>
 
         <button
@@ -858,7 +858,7 @@ export default function AdminMetricsPage() {
           }}
           data-testid="metrics-export-queues"
         >
-          Export Queues CSV
+          Kuyruklar CSV'yi Dışa Aktar
         </button>
       </div>
 

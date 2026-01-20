@@ -635,11 +635,11 @@ export default function AdminMatchesPage() {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Created at</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Cancel tag</TableHead>
-                          <TableHead>Cancel reason</TableHead>
-                          <TableHead>Booking ID</TableHead>
+                          <TableHead>Oluşturulma</TableHead>
+                          <TableHead>Durum</TableHead>
+                          <TableHead>İptal etiketi</TableHead>
+                          <TableHead>İptal nedeni</TableHead>
+                          <TableHead>Rezervasyon ID</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -721,7 +721,7 @@ export default function AdminMatchesPage() {
                                   <Copy className="h-3 w-3" />
                                   <span>
                                     {copiedBookingId === ev.booking_id
-                                      ? "Copied"
+                                      ? "Kopyalandı"
                                       : ev.booking_id || "-"}
                                   </span>
                                 </button>

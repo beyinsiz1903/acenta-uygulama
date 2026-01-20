@@ -417,7 +417,7 @@ export default function AdminMatchesPage() {
                       </span>
                     </span>
                     <span>
-                      Operational cancels (7d):{" "}
+                      Operasyonel iptaller (7g):{" "}
                       <span className="font-semibold">
                         {eventsData.summary.operational_cancel_count}
                       </span>

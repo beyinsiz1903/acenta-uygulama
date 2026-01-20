@@ -499,8 +499,8 @@ export default function AdminMatchesPage() {
                           toast({
                             title: already ? "Bloke kaldırma talebi zaten mevcut" : "Bloke kaldırma talebi oluşturuldu",
                             description: already
-                              ? "There is already a pending approval task for this match."
-                              : "A new approval task was created in the Approvals queue.",
+                              ? "Bu eşleşme için zaten onay bekleyen bir görev var."
+                              : "Approvals kuyruğunda yeni bir onay görevi oluşturuldu.",
                           });
                         } catch (e) {
                           setUnblockRequest((prev) => ({ ...prev, loading: false }));

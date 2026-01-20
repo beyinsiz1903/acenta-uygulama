@@ -408,7 +408,7 @@ function OpsGuestCasesPage() {
               <SelectValue placeholder="T1m1" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">T fm f</SelectItem>
+              <SelectItem value="all">Tümü</SelectItem>
               <SelectItem value="guest_portal">Guest portal</SelectItem>
               <SelectItem value="ops_panel">Ops panel</SelectItem>
               <SelectItem value="system">Sistem</SelectItem>

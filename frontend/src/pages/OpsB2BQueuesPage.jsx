@@ -94,21 +94,22 @@ function eventSubline(ev) {
 
 function StatusBadge({ status }) {
   if (!status) return <Badge variant="outline">-</Badge>;
-  const s = String(status).toUpperCase();
-  if (s === "CONFIRMED") return <Badge variant="secondary">CONFIRMED</Badge>;
-  if (s === "CANCELLED")
+  const raw = String(status).toLowerCase();
+  const label = raw === "confirmed" ? "Onaylandı" : raw === "cancelled" ? "İptal edildi" : raw === "pending" || raw === "pending_approval" ? "Beklemede" : status;
+  if (raw === "confirmed") return <Badge variant="secondary">{label}</Badge>;
+  if (raw === "cancelled")
     return (
       <Badge variant="destructive" className="gap-1">
-        <XCircle className="h-3 w-3" /> CANCELLED
+        <XCircle className="h-3 w-3" /> {label}
       </Badge>
     );
-  if (s === "PENDING" || s === "PENDING_APPROVAL")
+  if (raw === "pending" || raw === "pending_approval")
     return (
       <Badge variant="outline" className="gap-1">
-        <Loader2 className="h-3 w-3 animate-spin" /> {s}
+        <Loader2 className="h-3 w-3 animate-spin" /> {label}
       </Badge>
     );
-  return <Badge variant="outline">{s}</Badge>;
+  return <Badge variant="outline">{status}</Badge>;
 }
 
 export default function OpsB2BQueuesPage() {

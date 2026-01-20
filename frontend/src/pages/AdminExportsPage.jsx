@@ -435,7 +435,7 @@ export default function AdminExportsPage() {
                     disabled={runLoading}
                     data-testid="exports-policy-run-dry"
                   >
-                    Dry run
+                    Dry run (deneme)
                   </Button>
 
                   <Button

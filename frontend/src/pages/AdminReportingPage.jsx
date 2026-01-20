@@ -217,7 +217,7 @@ export default function AdminReportingPage() {
               <div className="text-sm font-semibold">{funnel.booking_created_count}</div>
             </div>
             <div className="rounded-md border px-2 py-2">
-              <div className="text-[10px] text-muted-foreground">Payments Succeeded</div>
+              <div className="text-[10px] text-muted-foreground">Başarılı Ödemeler</div>
               <div className="text-sm font-semibold">{funnel.payment_succeeded_count}</div>
             </div>
             <div className="rounded-md border px-2 py-2">

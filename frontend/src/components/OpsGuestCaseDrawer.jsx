@@ -218,9 +218,9 @@ function dayBucket(ts) {
 }
 
 function bucketLabel(bucket) {
-  if (bucket === "today") return "Today";
-  if (bucket === "yesterday") return "Yesterday";
-  return "Older";
+  if (bucket === "today") return "Bugün";
+  if (bucket === "yesterday") return "Dün";
+  return "Önceki";
 }
 
 function EventBadge({ kind, isSystem }) {

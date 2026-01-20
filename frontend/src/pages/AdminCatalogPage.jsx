@@ -194,7 +194,7 @@ function VersionsPanel({ productId, productStatus }) {
 
       <div className="rounded-md border p-3 space-y-2">
         <div className="text-xs text-muted-foreground">
-          Create draft version (content JSON). 
+          Taslak versiyon oluştur (JSON içerik).
           <span className="font-medium">Not:</span> JSON içindeki
           <code className="mx-1 rounded bg-muted px-1">room_type_ids</code> ve
           <code className="mx-1 rounded bg-muted px-1">rate_plan_ids</code> alanları, aşağıdaki seçimlerinizle
@@ -231,7 +231,7 @@ function VersionsPanel({ productId, productStatus }) {
                     onChange={() => toggleRoomType(rt.room_type_id)}
                   />
                   <span className="truncate">
-                    {rt.code} – {(rt.name && (rt.name.tr || rt.name.en)) || "(no name)"}
+                    {rt.code} – {(rt.name && (rt.name.tr || rt.name.en)) || "(isim yok)"}
                   </span>
                 </label>
               ))}
@@ -252,7 +252,7 @@ function VersionsPanel({ productId, productStatus }) {
                     onChange={() => toggleRatePlan(rp.rate_plan_id)}
                   />
                   <span className="truncate">
-                    {rp.code} – {(rp.name && (rp.name.tr || rp.name.en)) || "(no name)"}
+                    {rp.code} – {(rp.name && (rp.name.tr || rp.name.en)) || "(isim yok)"}
                   </span>
                 </label>
               ))}
@@ -306,7 +306,7 @@ function VersionsPanel({ productId, productStatus }) {
             </div>
           ))}
           {!items.length && (
-            <div className="px-2 py-6 text-xs text-muted-foreground">No versions yet.</div>
+            <div className="px-2 py-6 text-xs text-muted-foreground">Hen fcz versiyon yok.</div>
           )}
         </div>
       </div>

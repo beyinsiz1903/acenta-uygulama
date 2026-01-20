@@ -175,10 +175,10 @@ export default function AdminReportingPage() {
         <FieldError text={topError} />
         <div className="mt-2 rounded-md border overflow-hidden">
           <div className="grid grid-cols-4 bg-muted/40 px-2 py-2 font-semibold">
-            <div>Product ID</div>
-            <div>Bookings</div>
-            <div>Sell Total</div>
-            <div>Net Total</div>
+            <div>Ürün ID</div>
+            <div>Rezervasyon</div>
+            <div>Ciro</div>
+            <div>Net</div>
           </div>
           <div className="max-h-72 overflow-y-auto">
             {topProducts.map((p) => (

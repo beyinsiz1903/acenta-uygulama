@@ -87,6 +87,33 @@ export default function AdminB2BAgenciesSummaryPage() {
     return data;
   }, [items, filter, riskFilter]);
 
+  function openSheetForAgency(agency, tab = "credit") {
+    setSelected(agency);
+    setSheetTab(tab);
+    setCreditError("");
+    // Kredi formunu mevcut özet değerlerle doldur
+    setCreditForm({
+      limit: agency.credit_limit != null ? String(agency.credit_limit) : "",
+      soft_limit: agency.soft_limit != null ? String(agency.soft_limit) : "",
+      payment_terms: agency.payment_terms || "NET14",
+      status: agency.status === "disabled" ? "suspended" : "active",
+    });
+    setSheetOpen(true);
+  }
+
+  const backendBase =
+    (typeof window !== "undefined" &&
+      (window.__ACENTA_BACKEND_URL__ || window.importMetaEnvBackendUrl || process.env.REACT_APP_BACKEND_URL)) ||
+    "";
+
+  function buildEmbedUrl(agency) {
+    // Faz 1: basit partner parametresi ile book sayfas31
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const base = origin || backendBase || "";
+    const url = `${base.replace(/\/$/, "")}/book?partner=${encodeURIComponent(agency.id)}`;
+    return url;
+  }
+
   return (
     <div className="space-y-4">
       <div>

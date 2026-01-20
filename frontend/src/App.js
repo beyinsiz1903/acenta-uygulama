@@ -54,6 +54,7 @@ import OpsB2BQueuesPage from "./pages/OpsB2BQueuesPage";
 import InboxPage from "./pages/InboxPage";
 import AdminFinanceRefundsPage from "./pages/AdminFinanceRefundsPage";
 import AdminFinanceExposurePage from "./pages/AdminFinanceExposurePage";
+import AdminSettlementsPage from "./pages/AdminSettlementsPage";
 import DashboardPage from "./pages/DashboardPage";
 import ProductsPage from "./pages/ProductsPage";
 import AgencyHotelsPage from "./pages/AgencyHotelsPage";

@@ -389,7 +389,7 @@ function OpsGuestCasesPage() {
 Ödeme takibi</SelectItem>
               <SelectItem value="voucher_issue">Voucher sorunu</SelectItem>
               <SelectItem value="missing_docs">Eksik evrak</SelectItem>
-              <SelectItem value="supplier_approval">Tedarik e7i onay b1</SelectItem>
+              <SelectItem value="supplier_approval">Tedarikçi onayı</SelectItem>
               <SelectItem value="other">Di f0er</SelectItem>
             </SelectContent>
           </Select>
@@ -639,7 +639,7 @@ function OpsGuestCasesPage() {
                             case "missing_docs":
                               return "Eksik evrak";
                             case "supplier_approval":
-                              return "Tedarik e7i onay b1";
+                              return "Tedarikçi onayı";
                             case "other":
                               return "Di f0er";
                             default:

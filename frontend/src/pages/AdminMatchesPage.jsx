@@ -399,7 +399,7 @@ export default function AdminMatchesPage() {
                 )}
                 <div className="mt-2 flex flex-wrap items-center gap-2">
                   {selectedMatch?.high_risk && (
-                    <Badge variant="destructive">HIGH</Badge>
+                    <Badge variant="destructive">YÜKSEK</Badge>
                   )}
                   {Array.isArray(selectedMatch?.high_risk_reasons) &&
                     selectedMatch.high_risk_reasons.map((r) => (

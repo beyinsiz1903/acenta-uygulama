@@ -692,7 +692,7 @@ export default function AdminMatchesPage() {
                                   </Badge>
                                 )}
                                 {ev.cancel_tag === "none" && (
-                                  <span className="text-[10px] text-muted-foreground">none</span>
+                                  <span className="text-[10px] text-muted-foreground">yok</span>
                                 )}
                               </TableCell>
                               <TableCell className="text-xs font-mono max-w-[260px] truncate">

@@ -229,19 +229,19 @@ function EventBadge({ kind, isSystem }) {
   let cls = "border text-[9px] px-1.5 py-0.5 rounded-full inline-flex";
 
   if (k.includes("status")) {
-    label = "STATUS";
+    label = "DURUM";
     cls += " bg-blue-100 text-blue-900 border-blue-200";
   } else if (k.includes("waiting")) {
-    label = "WAITING";
+    label = "BEKLEME";
     cls += " bg-sky-100 text-sky-900 border-sky-200";
   } else if (k.includes("note")) {
-    label = "NOTE";
+    label = "NOT";
     cls += " bg-amber-100 text-amber-900 border-amber-200";
   } else if (k.includes("created")) {
-    label = "CREATED";
+    label = "OLUŞTURULDU";
     cls += " bg-emerald-100 text-emerald-900 border-emerald-200";
   } else {
-    label = "EVENT";
+    label = "OLAY";
     cls += " bg-slate-100 text-slate-800 border-slate-200";
   }
 

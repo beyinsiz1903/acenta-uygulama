@@ -42,7 +42,10 @@ function PublicCheckoutPaymentForm({ clientSecret, bookingCode, onSuccess }) {
       });
 
       if (error) {
-        setStripeError(error.message || "Ödeme başarısız oldu. Lütfen tekrar deneyin.");
+        setStripeError(
+          error.message ||
+            "Ödeme başarısız oldu. Kart bilgilerinizi kontrol edip tekrar deneyin; sorun devam ederse bankanızla görüşün.",
+        );
         setPaying(false);
         return;
       }

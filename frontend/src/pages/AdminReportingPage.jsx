@@ -101,7 +101,7 @@ export default function AdminReportingPage() {
             </Badge>
           </div>
           <p className="text-xs text-muted-foreground">
-            Son X gün için ciro özeti, top ürünler ve funnel KPI&apos;larını görüntüleyin.
+            Son X gün için ciro özeti, en çok satan ürünler ve funnel KPI&apos;larını görüntüleyin.
           </p>
         </div>
         <div className="flex items-center gap-2 text-[11px]">
@@ -130,7 +130,7 @@ export default function AdminReportingPage() {
         {summary && (
           <div className="grid grid-cols-2 md:grid-cols-6 gap-2 mt-2">
             <div className="rounded-md border px-2 py-2">
-              <div className="text-[10px] text-muted-foreground">Bookings</div>
+              <div className="text-[10px] text-muted-foreground">Rezervasyonlar</div>
               <div className="text-sm font-semibold">{summary.bookings.count}</div>
             </div>
             <div className="rounded-md border px-2 py-2">
@@ -169,7 +169,7 @@ export default function AdminReportingPage() {
 
       <Card className="p-3 text-[11px] space-y-2">
         <div className="flex items-center justify-between">
-          <div className="text-sm font-semibold">Top Products (by sell)</div>
+          <div className="text-sm font-semibold">En Çok Satan Ürünler (ciroya göre)</div>
           {topLoading && <div className="text-[11px] text-muted-foreground">Yükleniyor...</div>}
         </div>
         <FieldError text={topError} />
@@ -213,7 +213,7 @@ export default function AdminReportingPage() {
               <div className="text-sm font-semibold">{funnel.checkout_started_count}</div>
             </div>
             <div className="rounded-md border px-2 py-2">
-              <div className="text-[10px] text-muted-foreground">Bookings</div>
+              <div className="text-[10px] text-muted-foreground">Rezervasyonlar</div>
               <div className="text-sm font-semibold">{funnel.booking_created_count}</div>
             </div>
             <div className="rounded-md border px-2 py-2">

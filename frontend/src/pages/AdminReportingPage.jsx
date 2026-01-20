@@ -225,7 +225,7 @@ export default function AdminReportingPage() {
               <div className="text-sm font-semibold">{funnel.payment_failed_count}</div>
             </div>
             <div className="rounded-md border px-2 py-2">
-              <div className="text-[10px] text-muted-foreground">Conversion</div>
+              <div className="text-[10px] text-muted-foreground">Dönüşüm</div>
               <div className="text-sm font-semibold">{(Number(funnel.conversion || 0) * 100).toFixed(1)}%</div>
             </div>
           </div>

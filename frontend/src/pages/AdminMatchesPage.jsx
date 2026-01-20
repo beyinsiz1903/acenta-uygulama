@@ -542,7 +542,7 @@ export default function AdminMatchesPage() {
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <div className="flex items-center gap-3 flex-wrap">
                         <div className="flex items-center gap-2">
-                          <span className="text-xs">Only cancelled</span>
+                          <span className="text-xs">Sadece iptaller</span>
                           <input
                             type="checkbox"
                             checked={eventsOnlyCancelled}
@@ -559,7 +559,7 @@ export default function AdminMatchesPage() {
                               onChange={(e) => setEventsShowBehavioral(e.target.checked)}
                               data-testid="match-risk-events-tag-behavioral"
                             />
-                            <span>behavioral</span>
+                            <span>davranışsal</span>
                           </label>
                           <label className="flex items-center gap-1 text-xs">
                             <input
@@ -568,12 +568,12 @@ export default function AdminMatchesPage() {
                               onChange={(e) => setEventsShowOperational(e.target.checked)}
                               data-testid="match-risk-events-tag-operational"
                             />
-                            <span>operational</span>
+                            <span>operasyonel</span>
                           </label>
                         </div>
                         <div className="flex items-center gap-2">
                           <label className="text-xs" htmlFor="match-risk-events-reason-filter">
-                            Reason filter
+                            Sebep filtresi
                           </label>
                           <input
                             id="match-risk-events-reason-filter"

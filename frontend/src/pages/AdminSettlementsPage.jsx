@@ -227,8 +227,7 @@ export default function AdminSettlementsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="B2B Tahsilat Mutabakat
-"
+        title="B2B Tahsilat Mutabakatı"
         subtitle="Booking payment transactions zerinden hesaplanan br 1ft / acenta payfi / platform payfi listesi."
       />
 

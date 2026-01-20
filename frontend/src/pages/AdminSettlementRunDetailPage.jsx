@@ -346,6 +346,31 @@ export default function AdminSettlementRunDetailPage() {
               </div>
 
               <div className="space-y-2 pt-3 border-t">
+                <div className="font-semibold text-[11px]">Taslak durumunda satır ekleme</div>
+                <p>
+                  Demo ortamında accrual listesi için ayrı bir ekran yok, ancak teknik ekip belirli accrual_id değerlerini
+                  bildiğinde bu alandan ilgili taslak run’a ekleyebilir.
+                </p>
+                <div className="flex items-center gap-2">
+                  <Input
+                    value={accrualToAdd}
+                    onChange={(e) => setAccrualToAdd(e.target.value)}
+                    placeholder="accrual_id"
+                    className="text-xs"
+                    disabled={!canEditItems}
+                  />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={!canEditItems || actionLoading}
+                    onClick={handleAddAccrual}
+                  >
+                    Satır ekle
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-2 pt-3 border-t">
                 <div className="font-semibold text-[11px]">Taslak / Onaylı → İptal</div>
                 <p>
                   İptal edilen run, kilitlediği accrual’ları eski durumuna geri döndürür. Lütfen iptal sebebini ayrıntılı

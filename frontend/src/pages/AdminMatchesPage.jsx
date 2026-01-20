@@ -625,7 +625,7 @@ export default function AdminMatchesPage() {
                           }}
                           data-testid="match-risk-events-copy-json"
                         >
-                          Copy JSON
+                          JSON'u kopyala
                         </Button>
                       </div>
                     </div>

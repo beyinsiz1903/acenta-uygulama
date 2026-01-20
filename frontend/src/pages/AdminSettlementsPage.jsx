@@ -275,7 +275,7 @@ tirilmi
                       <TableHead className="text-xs">Booking</TableHead>
                       <TableHead className="text-xs">Acenta</TableHead>
                       <TableHead className="text-xs">Para Birimi</TableHead>
-                      <TableHead className="text-xs text-right">Br 1ft</TableHead>
+                      <TableHead className="text-xs text-right">Brüt</TableHead>
                       <TableHead className="text-xs text-right">Acenta Payfi</TableHead>
                       <TableHead className="text-xs text-right">Platform Payfi</TableHead>
                       <TableHead className="text-xs">0deme Kanal

@@ -468,7 +468,7 @@ export default function AdminExportsPage() {
         <TabsContent value="archive" className="mt-4">
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm font-medium">Archive</CardTitle>
+              <CardTitle className="text-sm font-medium">Arşiv</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex flex-wrap items-end gap-3">

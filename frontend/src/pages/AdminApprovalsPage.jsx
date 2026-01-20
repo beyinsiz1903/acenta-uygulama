@@ -103,7 +103,7 @@ export default function AdminApprovalsPage() {
       const data = await approveScaleUIProof(proof.request_unblock.task_id, "SCALE UI proof approve");
       setProof((prev) => ({ ...(prev || {}), approve_result: data }));
       toast({
-        title: "SCALE proof task approved",
+        title: "SCALE proof görevi onaylandı",
         description: "Match unblocked and audit events written.",
       });
       await load();

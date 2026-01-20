@@ -479,7 +479,7 @@ export default function AdminMatchesPage() {
                         className="text-[11px] text-muted-foreground"
                         data-testid="match-drawer-request-unblock-pending"
                       >
-                        Unblock request already pending approval.
+                        Bloke kaldırma talebi zaten onay bekliyor.
                       </span>
                     )}
                     <Button

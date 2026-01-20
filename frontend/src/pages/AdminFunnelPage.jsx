@@ -130,9 +130,9 @@ export default function AdminFunnelPage() {
                 value={days}
                 onChange={(e) => setDays(Number(e.target.value) || 7)}
               >
-                <option value={7}>7 gn</option>
-                <option value={14}>14 gn</option>
-                <option value={30}>30 gn</option>
+                <option value={7}>7 gün</option>
+                <option value={14}>14 gün</option>
+                <option value={30}>30 gün</option>
               </select>
             </div>
             <div className="flex items-center gap-1 border rounded-md bg-background p-0.5 text-[10px]">
@@ -175,11 +175,11 @@ export default function AdminFunnelPage() {
 
         <div className="grid grid-cols-2 md:grid-cols-6 gap-2 mt-2">
           <div className="rounded-md border px-2 py-2" data-testid="funnel-kpi-quotes">
-            <div className="text-[10px] text-muted-foreground">Quotes</div>
+            <div className="text-[10px] text-muted-foreground">Teklifler</div>
             <div className="text-sm font-semibold">{currentSummary.quote_count}</div>
           </div>
           <div className="rounded-md border px-2 py-2" data-testid="funnel-kpi-checkout-started">
-            <div className="text-[10px] text-muted-foreground">Checkout Started</div>
+            <div className="text-[10px] text-muted-foreground">Checkout Başlatıldı</div>
             <div className="text-sm font-semibold">{currentSummary.checkout_started_count}</div>
           </div>
           <div className="rounded-md border px-2 py-2" data-testid="funnel-kpi-bookings">

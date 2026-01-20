@@ -424,7 +424,7 @@ export default function AdminMatchRiskTrendsPage() {
           </div>
         ) : (
           <div className="py-8 text-sm text-muted-foreground">
-            No snapshots yet. Run a snapshot to start tracking trends.
+            Henüz snapshot yok. Trendleri takip etmek için bir snapshot çalıştırın.
           </div>
         )}
       </div>

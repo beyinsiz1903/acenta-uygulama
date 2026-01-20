@@ -207,7 +207,7 @@ function VersionsPanel({ productId, productStatus }) {
         />
         <div className="flex justify-end">
           <Button size="sm" onClick={createDraft}>
-            Create Draft
+            Taslak oluştur
           </Button>
         </div>
       </div>

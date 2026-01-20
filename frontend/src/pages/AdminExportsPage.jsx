@@ -523,14 +523,14 @@ export default function AdminExportsPage() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b text-xs text-muted-foreground">
-                        <th className="py-1 pr-2 text-left">Generated at</th>
-                        <th className="py-1 pr-2 text-left">Status</th>
-                        <th className="py-1 pr-2 text-right">Rows (est)</th>
-                        <th className="py-1 pr-2 text-right">Size</th>
-                        <th className="py-1 pr-2 text-left">Filename</th>
+                        <th className="py-1 pr-2 text-left">Oluşturulma</th>
+                        <th className="py-1 pr-2 text-left">Durum</th>
+                        <th className="py-1 pr-2 text-right">Satır (tahmini)</th>
+                        <th className="py-1 pr-2 text-right">Boyut</th>
+                        <th className="py-1 pr-2 text-left">Dosya adı</th>
                         <th className="py-1 pr-2 text-left">SHA</th>
-                        <th className="py-1 pr-2 text-left">Emailed</th>
-                        <th className="py-1 pr-2 text-left">Deeplink</th>
+                        <th className="py-1 pr-2 text-left">E-posta gönderimi</th>
+                        <th className="py-1 pr-2 text-left">Derin link</th>
                         <th className="py-1 pr-2"></th>
                       </tr>
                     </thead>

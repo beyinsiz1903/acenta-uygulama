@@ -200,6 +200,7 @@ function App() {
             <Route path="finance/settlement-runs" element={<AdminSettlementRunsPage />} />
             <Route path="finance/settlement-runs/:settlementId" element={<AdminSettlementRunDetailPage />} />
             <Route path="ops/finance/supplier-accruals" element={<OpsSupplierAccrualsPage />} />
+            <Route path="finance/supplier-settlement-bridge" element={<AdminSupplierSettlementBridgePage />} />
             <Route path="ops/b2b" element={<OpsB2BQueuesPage />} />
           </Route>
         </Route>

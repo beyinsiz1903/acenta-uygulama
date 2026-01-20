@@ -377,7 +377,7 @@ export default function AdminMatchesPage() {
                         variant="destructive"
                         data-testid="match-drawer-blocked-badge"
                       >
-                        Blocked by policy
+                        Politika gereği blokeli
                       </Badge>
                     )}
                     <Button

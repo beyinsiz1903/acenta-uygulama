@@ -15,6 +15,7 @@ export const adminNav = [
       { label: "Onay Görevleri", path: "/app/admin/approvals" },
       { label: "Finans / İadeler", path: "/app/admin/finance/refunds" },
       { label: "Exposure & Aging", path: "/app/admin/finance/exposure" },
+      { label: "Finans / Mutabakat", path: "/app/admin/finance/settlements" },
       { label: "Ops / B2B", path: "/app/admin/ops/b2b" },
     ],
   },

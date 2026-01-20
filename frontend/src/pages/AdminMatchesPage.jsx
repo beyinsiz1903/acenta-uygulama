@@ -579,7 +579,7 @@ export default function AdminMatchesPage() {
                             id="match-risk-events-reason-filter"
                             type="text"
                             className="border rounded px-2 py-1 text-xs bg-background min-w-[160px]"
-                            placeholder="Reason içinde ara..."
+                            placeholder="Sebep içinde ara..."
                             value={eventsReasonFilter}
                             onChange={(e) => setEventsReasonFilter(e.target.value)}
                             data-testid="match-risk-events-reason-filter"

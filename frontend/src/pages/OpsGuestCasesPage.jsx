@@ -382,7 +382,7 @@ function OpsGuestCasesPage() {
               <SelectValue placeholder="T1m1" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">T fm f</SelectItem>
+              <SelectItem value="all">Tümü</SelectItem>
               <SelectItem value="cancel"> dptal talebi</SelectItem>
               <SelectItem value="amend">De fi5fiklik talebi</SelectItem>
               <SelectItem value="refund">30ade</SelectItem>

@@ -107,16 +107,16 @@ function WaitingBadge({ waitingOn }) {
   let cls = "border text-[10px] px-2 py-0.5 rounded-full inline-flex font-semibold";
 
   if (w === "customer") {
-    label = "WAITING: CUSTOMER";
+    label = "MÜŞTERİ BEKLENİYOR";
     cls += " bg-sky-100 text-sky-900 border-sky-200";
   } else if (w === "supplier") {
-    label = "WAITING: SUPPLIER";
+    label = "TEDARİKÇİ BEKLENİYOR";
     cls += " bg-violet-100 text-violet-900 border-violet-200";
   } else if (w === "ops") {
-    label = "WAITING: OPS";
+    label = "OPS BEKLENİYOR";
     cls += " bg-slate-100 text-slate-900 border-slate-200";
   } else {
-    label = "WAITING: OTHER";
+    label = "DİĞER BEKLENİYOR";
     cls += " bg-slate-100 text-slate-900 border-slate-200";
   }
 

@@ -120,7 +120,7 @@ export default function AdminActionPoliciesPage() {
     } catch (e) {
       const msg = apiErrorMessage(e);
       setError(msg);
-      toast({ title: "Failed to load action policies", description: msg, variant: "destructive" });
+      toast({ title: "Aksiyon politikaları yüklenemedi", description: msg, variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -168,7 +168,7 @@ export default function AdminActionPoliciesPage() {
     } catch (e) {
       const msg = apiErrorMessage(e);
       setError(msg);
-      toast({ title: "Failed to save policies", description: msg, variant: "destructive" });
+      toast({ title: "Politikalar kaydedilemedi", description: msg, variant: "destructive" });
     } finally {
       setSaving(false);
     }
@@ -224,7 +224,7 @@ export default function AdminActionPoliciesPage() {
             ))}
           </select>
           <p className="mt-1 text-xs text-muted-foreground">
-            Default behavior when no specific rule matches a high-risk match.
+            Yüksek riskli bir match için hiçbir kural eşleşmediğinde uygulanacak varsayılan davranış.
           </p>
         </CardContent>
       </Card>
@@ -252,7 +252,7 @@ export default function AdminActionPoliciesPage() {
                   {rules.length === 0 ? (
                     <tr>
                       <td colSpan={4} className="px-2 py-6 text-center text-xs text-muted-foreground">
-                        No rules yet. Add your first rule.
+                        Henüz kural yok. İlk kuralınızı ekleyin.
                       </td>
                     </tr>
                   ) : (

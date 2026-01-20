@@ -736,7 +736,7 @@ function OpsGuestCasesPage() {
                   setPage((p) => Math.max(1, p - 1));
                 }}
               >
-                0nceki
+                Önceki
               </Button>
               <span>
                 Sayfa {page}

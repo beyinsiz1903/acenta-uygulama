@@ -386,7 +386,7 @@ function OpsGuestCasesPage() {
               <SelectItem value="cancel"> İptal talebi</SelectItem>
               <SelectItem value="amend">Değişiklik talebi</SelectItem>
               <SelectItem value="refund">İade</SelectItem>
-Ödeme takibi</SelectItem>
+              <SelectItem value="payment_followup">Ödeme takibi</SelectItem>
               <SelectItem value="voucher_issue">Voucher sorunu</SelectItem>
               <SelectItem value="missing_docs">Eksik evrak</SelectItem>
               <SelectItem value="supplier_approval">Tedarikçi onayı</SelectItem>

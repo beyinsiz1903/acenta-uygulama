@@ -551,7 +551,7 @@ export default function AdminMatchesPage() {
                           />
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-xs">Tag filtre</span>
+                          <span className="text-xs">Etiket filtresi</span>
                           <label className="flex items-center gap-1 text-xs">
                             <input
                               type="checkbox"

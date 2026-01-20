@@ -337,8 +337,7 @@ tirilmi
           <Card className="border-dashed bg-muted/20">
             <CardHeader>
               <CardTitle className="text-sm flex items-center gap-2">
-                <Save className="h-4 w-4" /> Kullan
-m  0dpucular
+                <Save className="h-4 w-4" /> Kullanım notları
               </CardTitle>
             </CardHeader>
             <CardContent className="text-xs text-muted-foreground space-y-2">

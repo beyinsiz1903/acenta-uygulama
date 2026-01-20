@@ -9,7 +9,7 @@ import json
 import uuid
 
 # Configuration - Use production URL from frontend/.env
-BASE_URL = "https://finspine.preview.emergentagent.com"
+BASE_URL = "https://resflow-polish.preview.emergentagent.com"
 
 def login_admin():
     """Login as admin user and return token, org_id, email"""

@@ -89,8 +89,8 @@
     }
   ],
   "test_environment": {
-    "backend_url": "https://finspine.preview.emergentagent.com/api",
-    "frontend_url": "https://finspine.preview.emergentagent.com",
+    "backend_url": "https://resflow-polish.preview.emergentagent.com/api",
+    "frontend_url": "https://resflow-polish.preview.emergentagent.com",
     "test_credentials": {
       "admin": "admin@acenta.test / admin123"
     },

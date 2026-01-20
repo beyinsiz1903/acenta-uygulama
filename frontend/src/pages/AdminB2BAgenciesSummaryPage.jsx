@@ -40,6 +40,13 @@ export default function AdminB2BAgenciesSummaryPage() {
   const [filter, setFilter] = useState("");
   const [riskFilter, setRiskFilter] = useState("all");
 
+  const [selected, setSelected] = useState(null); // { id, name, ... }
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [sheetTab, setSheetTab] = useState("credit"); // "credit" | "embed"
+  const [creditForm, setCreditForm] = useState({ limit: "", soft_limit: "", payment_terms: "NET14", status: "active" });
+  const [creditSaving, setCreditSaving] = useState(false);
+  const [creditError, setCreditError] = useState("");
+
   useEffect(() => {
     let cancelled = false;
 

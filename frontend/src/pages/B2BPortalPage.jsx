@@ -125,8 +125,8 @@ function BookingListTab() {
                   <th className="px-2 py-2">Booking ID</th>
                   <th className="px-2 py-2">Misafir</th>
                   <th className="px-2 py-2">Ürün / Otel</th>
-                  <th className="px-2 py-2">Check-in</th>
-                  <th className="px-2 py-2">Check-out</th>
+                  <th className="px-2 py-2">Giriş</th>
+                  <th className="px-2 py-2">Çıkış</th>
                   <th className="px-2 py-2">Durum</th>
                   <th className="px-2 py-2 text-right">Tutar</th>
                   <th className="px-2 py-2 text-right">Aksiyonlar</th>

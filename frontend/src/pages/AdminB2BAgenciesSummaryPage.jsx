@@ -204,7 +204,11 @@ export default function AdminB2BAgenciesSummaryPage() {
                 </TableHeader>
                 <TableBody>
                   {filtered.map((it) => (
-                    <TableRow key={it.id}>
+                    <TableRow
+                      key={it.id}
+                      className="cursor-pointer hover:bg-muted/50"
+                      onClick={() => openSheetForAgency(it, "credit")}
+                    >
                       <TableCell className="text-xs">
                         <div className="flex flex-col">
                           <span className="font-medium truncate max-w-[220px]">{it.name}</span>

@@ -22,7 +22,7 @@ export default function AdminAgenciesPage() {
   const [error, setError] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [createLoading, setCreateLoading] = useState(false);
-  const [formData, setFormData] = useState({ name: "" });
+  const [formData, setFormData] = useState({ name: "", parent_agency_id: "" });
   const [formError, setFormError] = useState("");
 
   useEffect(() => {

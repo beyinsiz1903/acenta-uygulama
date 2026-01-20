@@ -278,8 +278,7 @@ tirilmi
                       <TableHead className="text-xs text-right">Brüt</TableHead>
                       <TableHead className="text-xs text-right">Acenta payı</TableHead>
                       <TableHead className="text-xs text-right">Platform payı</TableHead>
-                      <TableHead className="text-xs">Ödeme kanalı
-</TableHead>
+                      <TableHead className="text-xs">Ödeme kanalı</TableHead>
                       <TableHead className="text-xs">Kaynak</TableHead>
                     </TableRow>
                   </TableHeader>

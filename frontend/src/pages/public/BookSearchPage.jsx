@@ -234,7 +234,7 @@ export default function BookSearchPage() {
                         </p>
                       </div>
                       <div className="mt-3 flex justify-end">
-                        <Button size="sm" onClick={() => handleSelect(item.product_id)}>
+                        <Button size="sm" onClick={() => handleSelect(item)}>
                           Seç
                         </Button>
                       </div>

@@ -353,7 +353,7 @@ async def verify_booking_in_mongo(booking_id: str, quote_id: str, results: TestR
         results.assert_equal(public_quote.get("date_from"), today, f"date_from should be {today}")
         results.assert_equal(public_quote.get("date_to"), today, f"date_to should be {today}")
         
-        await client.close()
+        client.close()
         
     except Exception as e:
         results.assert_true(False, f"MongoDB verification failed: {e}")

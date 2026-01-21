@@ -130,7 +130,7 @@ def test_partner_funnel_flow():
         "partner": "TEST_PARTNER_123"
     }
     
-    r2 = requests.post(f"{BASE_URL}/api/public/checkout/quote", json=quote_payload_with_partner)
+    r2 = requests.post(f"{BASE_URL}/api/public/quote", json=quote_payload_with_partner)
     print(f"   📋 Quote with partner response status: {r2.status_code}")
     
     if r2.status_code != 200:

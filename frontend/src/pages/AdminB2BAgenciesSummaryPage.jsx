@@ -408,41 +408,52 @@ export default function AdminB2BAgenciesSummaryPage() {
         </SheetContent>
       </Sheet>
 
-                  {filtered.map((it) => (
-                    <TableRow
-                      key={it.id}
-                      className="cursor-pointer hover:bg-muted/50"
-                      onClick={() => openSheetForAgency(it, "credit")}
-                    >
-                      <TableCell className="text-xs">
-                        <div className="flex flex-col">
-                          <span className="font-medium truncate max-w-[220px]">{it.name}</span>
-                          <span className="text-[10px] text-muted-foreground font-mono">{it.id}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-xs">
-                        <StatusBadge status={it.status} />
-                      </TableCell>
-                      <TableCell className="text-xs text-right font-mono">
-                        {formatAmount(it.exposure, it.currency)}
-                      </TableCell>
-                      <TableCell className="text-xs text-right font-mono">
-                        {formatAmount(it.credit_limit, it.currency)}
-                      </TableCell>
-                      <TableCell className="text-xs text-right font-mono">
-                        {formatAmount(it.soft_limit, it.currency)}
-                      </TableCell>
-                      <TableCell className="text-xs">
-                        <RiskBadge status={it.risk_status} />
-                      </TableCell>
-                      <TableCell className="text-[11px] text-muted-foreground">
-                        {it.payment_terms || "-"}
-                      </TableCell>
-                      <TableCell className="text-[11px] text-muted-foreground font-mono">
-                        {it.parent_agency_id || "-"}
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {filtered.map((it) => {
+                    const funnelRow = funnelByPartner[it.id] || null;
+                    return (
+                      <TableRow
+                        key={it.id}
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() => openSheetForAgency(it, "credit")}
+                      >
+                        <TableCell className="text-xs">
+                          <div className="flex flex-col">
+                            <span className="font-medium truncate max-w-[220px]">{it.name}</span>
+                            <span className="text-[10px] text-muted-foreground font-mono">{it.id}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-xs">
+                          <StatusBadge status={it.status} />
+                        </TableCell>
+                        <TableCell className="text-xs text-right font-mono">
+                          {formatAmount(it.exposure, it.currency)}
+                        </TableCell>
+                        <TableCell className="text-xs text-right font-mono">
+                          {formatAmount(it.credit_limit, it.currency)}
+                        </TableCell>
+                        <TableCell className="text-xs text-right font-mono">
+                          {formatAmount(it.soft_limit, it.currency)}
+                        </TableCell>
+                        <TableCell className="text-xs">
+                          <RiskBadge status={it.risk_status} />
+                        </TableCell>
+                        <TableCell className="text-[11px] text-muted-foreground">
+                          {it.payment_terms || "-"}
+                        </TableCell>
+                        <TableCell className="text-[11px] text-muted-foreground font-mono">
+                          {it.parent_agency_id || "-"}
+                        </TableCell>
+                        <TableCell className="text-xs text-right font-mono">
+                          {funnelRow ? funnelRow.total_quotes : "-"}
+                        </TableCell>
+                        <TableCell className="text-xs text-right font-mono">
+                          {funnelRow
+                            ? formatAmount((funnelRow.total_amount_cents || 0) / 100, "EUR")
+                            : "-"}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>

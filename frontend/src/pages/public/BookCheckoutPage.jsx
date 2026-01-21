@@ -110,6 +110,7 @@ export default function BookCheckoutPage() {
   };
 
   const org = normalizeParam(searchParams.get("org"));
+  const partner = normalizeParam(searchParams.get("partner"));
   const quoteId = normalizeParam(searchParams.get("quote_id"));
 
   const isE2E =

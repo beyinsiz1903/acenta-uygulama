@@ -101,7 +101,7 @@ def test_partner_funnel_flow():
         # No partner field
     }
     
-    r1 = requests.post(f"{BASE_URL}/api/public/checkout/quote", json=quote_payload_no_partner)
+    r1 = requests.post(f"{BASE_URL}/api/public/quote", json=quote_payload_no_partner)
     print(f"   📋 Quote without partner response status: {r1.status_code}")
     
     if r1.status_code != 200:

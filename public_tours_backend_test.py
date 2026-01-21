@@ -329,7 +329,7 @@ def test_individual_tour_details(tour_items: List[Dict], org_id: str):
     fake_tour_id = f"nonexistent_{uuid.uuid4().hex[:8]}"
     print(f"   📋 Testing fake tour ID: {fake_tour_id}")
     
-    r = requests.get(f"{BASE_URL}/public/tours/{fake_tour_id}?org={org_id}")
+    r = requests.get(f"{BASE_URL}/api/public/tours/{fake_tour_id}?org={org_id}")
     
     print(f"   📋 Response status: {r.status_code}")
     print(f"   📋 Response body: {r.text}")

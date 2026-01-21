@@ -351,7 +351,7 @@ def test_individual_tour_details(tour_items: List[Dict], org_id: str):
     print("3️⃣  Testing with wrong organization...")
     
     fake_org = f"fake_org_{uuid.uuid4().hex[:8]}"
-    r = requests.get(f"{BASE_URL}/public/tours/{tour_id}?org={fake_org}")
+    r = requests.get(f"{BASE_URL}/api/public/tours/{tour_id}?org={fake_org}")
     
     print(f"   📋 Response status: {r.status_code}")
     assert r.status_code == 404, f"Expected 404 for wrong org, got {r.status_code}"

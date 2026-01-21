@@ -162,6 +162,7 @@ app.include_router(admin_parasut_router)
 app.include_router(admin_b2b_agencies_router)
 app.include_router(admin_b2b_funnel_router)
 app.include_router(admin_b2b_announcements_router)
+app.include_router(admin_tours_router)
 
 app.include_router(theme_router)
 

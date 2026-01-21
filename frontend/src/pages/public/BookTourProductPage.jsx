@@ -52,6 +52,12 @@ export default function BookTourProductPage() {
       }
     }
 
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [org, tourId]);
+
   const handleQuote = async (e) => {
     e.preventDefault();
     if (!org || !tourId || !date) {

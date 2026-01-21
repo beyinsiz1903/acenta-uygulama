@@ -10,6 +10,9 @@ from pymongo import DESCENDING
 from app.db import get_db
 
 router = APIRouter(prefix="/api/public", tags=["public-search"])
+from bson import ObjectId
+
+
 
 
 def _parse_date(raw: Optional[str]) -> Optional[date]:
@@ -17,6 +20,30 @@ def _parse_date(raw: Optional[str]) -> Optional[date]:
     return None
   try:
     return date.fromisoformat(raw)
+
+
+async def _resolve_partner_agency(db, organization_id: str, partner: str):
+  """Resolve agency document for given partner id (used by iframe/public flows).
+
+  Accepts either string _id or ObjectId-compatible hex string. Returns the
+  agency document or None when not found.
+  """
+
+  if not partner:
+    return None
+
+  agency = await db.agencies.find_one({"_id": partner, "organization_id": organization_id})
+  if agency:
+    return agency
+
+  try:
+    oid = ObjectId(partner)
+  except Exception:
+    return None
+
+  agency = await db.agencies.find_one({"_id": oid, "organization_id": organization_id})
+  return agency
+
   except Exception:
     return None
 
@@ -32,6 +59,7 @@ async def public_search_catalog(
   date_from: Optional[str] = Query(None),
   date_to: Optional[str] = Query(None),
   product_type: Optional[str] = Query(None, alias="type", description="Optional product type filter (e.g. hotel, tour)"),
+  partner: Optional[str] = Query(None, description="Optional partner/agency id for B2B iframe pricing"),
   db=Depends(get_db),
 ) -> JSONResponse:
   """Public product search for booking engine v1.

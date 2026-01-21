@@ -205,6 +205,9 @@ export default function AdminB2BAgenciesSummaryPage() {
               <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center">
                 <Building2 className="h-8 w-8 text-muted-foreground" />
               </div>
+                    <TableHead className="text-xs text-right">B2B Funnel (Teklif Sayısı)</TableHead>
+                    <TableHead className="text-xs text-right">B2B Funnel (Toplam Tutar)</TableHead>
+
               <div className="text-center max-w-md">
                 <p className="font-semibold text-foreground">Görüntülenecek acente bulunamadı</p>
                 <p className="text-sm text-muted-foreground mt-2">

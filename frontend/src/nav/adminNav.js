@@ -8,6 +8,7 @@ export const adminNav = [
       { label: "B2B Dashboard", path: "/app/admin/b2b/dashboard" },
       { label: "Acentalar", path: "/app/admin/agencies" },
       { label: "Oteller", path: "/app/admin/hotels" },
+      { label: "Turlar", path: "/app/admin/tours" },
       { label: "Link Yönetimi", path: "/app/admin/links" },
       { label: "Katalog", path: "/app/admin/catalog" },
       { label: "Otel Kataloğu", path: "/app/admin/catalog/hotels" },

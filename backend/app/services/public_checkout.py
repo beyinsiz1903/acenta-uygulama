@@ -175,6 +175,8 @@ async def create_public_quote(
         "expires_at": expires_at,
         "created_at": now,
         "created_ip": client_ip,
+        "channel": "partner" if partner else "web",
+        "partner": partner,
     }
 
     await db.public_quotes.insert_one(doc)

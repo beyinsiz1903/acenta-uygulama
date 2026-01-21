@@ -25,3 +25,23 @@ async def get_cms_page(slug: str, org: str = Query(..., min_length=1), db=Depend
         "seo_description": doc.get("seo_description") or "",
     }
     return JSONResponse(status_code=200, content=payload)
+
+
+@router.get("", summary="List published CMS pages for navigation")
+async def list_cms_pages_for_nav(org: str = Query(..., min_length=1), db=Depends(get_db)) -> JSONResponse:
+    """Return a simple list of published CMS pages for navigation menus.
+
+    This keeps payload minimal and avoids exposing body content.
+    """
+
+    cursor = db.cms_pages.find({"organization_id": org, "published": True}, {"_id": 1, "slug": 1, "title": 1}).sort(
+        "created_at", -1
+    )
+    docs = await cursor.to_list(length=200)
+
+    items = [
+        {"id": str(doc.get("_id")), "slug": doc.get("slug") or "", "title": doc.get("title") or ""}
+        for doc in docs
+    ]
+    return JSONResponse(status_code=200, content={"items": items})
+

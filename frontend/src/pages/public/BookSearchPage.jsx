@@ -223,7 +223,7 @@ export default function BookSearchPage() {
               <div className="space-y-3">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {items.map((item) => (
-                    <Card key={item.product_id} className="p-3 flex flex-col justify-between">
+                    <Card key={item.product_id || item.id} className="p-3 flex flex-col justify-between">
                       <div className="space-y-1">
                         <h2 className="text-sm font-semibold line-clamp-1">{item.title}</h2>
                         {item.summary && (

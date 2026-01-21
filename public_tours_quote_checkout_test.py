@@ -111,7 +111,7 @@ async def setup_test_data() -> Optional[str]:
         tour_id = str(result.inserted_id)
         print(f"✅ Created new tour: {tour_id}")
         
-        await client.close()
+        client.close()
         return tour_id
         
     except Exception as e:

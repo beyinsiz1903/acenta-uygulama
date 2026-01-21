@@ -127,7 +127,7 @@ export default function BookTourProductPage() {
         )}
 
         {tour && (
-          <div className="space-y-3 text-xs">
+          <div className="space-y-4 text-xs">
             <div className="space-y-1">
               <div className="font-semibold text-sm">{tour.name}</div>
               {tour.destination && (
@@ -146,14 +146,65 @@ export default function BookTourProductPage() {
                 {tour.base_price?.toFixed ? tour.base_price.toFixed(2) : tour.base_price} {tour.currency}
               </div>
             </div>
+
+            <form onSubmit={handleQuote} className="mt-4 space-y-3 border-t pt-3">
+              <div className="font-medium text-xs">Rezervasyon için tarih ve kişi sayısını seçin</div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <label className="font-medium">Tarih</label>
+                  <input
+                    type="date"
+                    className="w-full rounded-md border px-2 py-1"
+                    value={date}
+                    onChange={(e) => setDate(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-1 grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="font-medium">Yetişkin</label>
+                    <input
+                      type="number"
+                      min={1}
+                      max={50}
+                      className="w-full rounded-md border px-2 py-1"
+                      value={adults}
+                      onChange={(e) => setAdults(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="font-medium">Çocuk</label>
+                    <input
+                      type="number"
+                      min={0}
+                      max={50}
+                      className="w-full rounded-md border px-2 py-1"
+                      value={children}
+                      onChange={(e) => setChildren(e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {quoteError && <p className="text-xs text-red-600">{quoteError}</p>}
+
+              <div className="flex justify-end gap-2 pt-2">
+                <Button type="button" variant="outline" size="sm" onClick={() => navigate(-1)}>
+                  Geri
+                </Button>
+                <Button type="submit" size="sm" disabled={!org || quoting}>
+                  {quoting ? "Teklif alınıyor..." : "Teklif al ve devam et"}
+                </Button>
+              </div>
+            </form>
           </div>
         )}
 
-        <div className="flex justify-end gap-2 pt-4">
-          <Button type="button" variant="outline" size="sm" onClick={() => navigate(-1)}>
-            Geri
-          </Button>
-        </div>
+        {!tour && !loading && !error && (
+          <p className="text-xs text-muted-foreground">
+            Tur bilgileri bulunamadı. Lütfen daha sonra tekrar deneyin.
+          </p>
+        )}
       </Card>
     </div>
   );

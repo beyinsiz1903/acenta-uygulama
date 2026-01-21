@@ -222,7 +222,12 @@ async def public_tour_checkout(payload: TourCheckoutRequest, db=Depends(get_db))
         return JSONResponse(status_code=404, content={"code": "QUOTE_NOT_FOUND", "message": "Teklif bulunamadı"})
 
     expires_at = quote.get("expires_at")
-    if expires_at and expires_at < now:
+    if expires_at:
+        # Handle timezone-naive datetime from MongoDB
+        if expires_at.tzinfo is None:
+            from datetime import timezone
+            expires_at = expires_at.replace(tzinfo=timezone.utc)
+        if expires_at < now:
         return JSONResponse(
             status_code=404,
             content={"code": "QUOTE_EXPIRED", "message": "Teklif süresi doldu"},

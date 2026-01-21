@@ -20,6 +20,7 @@ import BookSearchPage from "./pages/public/BookSearchPage";
 import BookProductPage from "./pages/public/BookProductPage";
 import BookCheckoutPage from "./pages/public/BookCheckoutPage";
 import BookCompletePage from "./pages/public/BookCompletePage";
+import BookTourProductPage from "./pages/public/BookTourProductPage";
 import PublicHomePage from "./pages/PublicHomePage";
 
 import HotelLayout from "./layouts/HotelLayout";

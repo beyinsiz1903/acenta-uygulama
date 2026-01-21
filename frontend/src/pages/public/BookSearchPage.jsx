@@ -136,6 +136,17 @@ export default function BookSearchPage() {
                   onChange={handleSearchChange}
                 />
               </div>
+              <div className="flex items-center gap-2">
+                <label className="text-xs text-muted-foreground">Ürün tipi</label>
+                <select
+                  className="h-7 rounded-md border bg-background px-2 text-xs"
+                  value={productType}
+                  onChange={(e) => setProductType(e.target.value)}
+                >
+                  <option value="hotel">Oteller</option>
+                  <option value="tour">Turlar</option>
+                </select>
+              </div>
               <div className="text-[11px] text-muted-foreground">
                 Org: <span className="font-mono">{org}</span>
               </div>

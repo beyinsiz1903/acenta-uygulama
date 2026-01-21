@@ -22,6 +22,7 @@ from bson import ObjectId
 
 from app.errors import AppError, PublicCheckoutErrorCode
 from app.utils import now_utc
+from app.services.b2b_discounts import resolve_discount_group, apply_discount
 
 
 PUBLIC_QUOTE_TTL_MINUTES = 30
@@ -149,9 +150,50 @@ async def create_public_quote(
     taxes = round(base_total * 0.1, 2)
     grand_total = base_total + taxes
 
+    # Partner bazlı B2B indirimleri (varsa) uygula
+    agency_id: Optional[str] = None
+    if partner:
+        agency_doc = await _resolve_partner_agency(db, organization_id, partner)
+        if agency_doc is None:
+            # Geçersiz partner parametresini yok say (güvenlik): indirim ve partner kanalı uygulanmaz
+            partner = None
+        else:
+            agency_id = str(agency_doc.get("_id"))
+
+    if agency_id:
+        try:
+            group = await resolve_discount_group(
+                db,
+                organization_id=organization_id,
+                agency_id=agency_id,
+                product_id=str(pid),
+                product_type=product.get("type") or "hotel",
+                check_in=date_from,
+            )
+            if group:
+                discount_result = apply_discount(
+                    base_net=base_total,
+                    base_sell=grand_total,
+                    markup_percent=10.0,
+                    group=group,
+                )
+                breakdown = discount_result["breakdown"]
+                base_total = breakdown["base"]
+                grand_total = discount_result["final_sell"]
+                taxes = breakdown["markup_amount"]
+                discount_amount = breakdown["discount_amount"]
+            else:
+                discount_amount = 0.0
+        except Exception:
+            # İndirim hesaplanamazsa sessizce devam et (fiyatı bozma)
+            discount_amount = 0.0
+    else:
+        discount_amount = 0.0
+
     amount_cents = int(round(grand_total * 100))
     base_cents = int(round(base_total * 100))
     taxes_cents = int(round(taxes * 100))
+    discount_cents = int(round(discount_amount * 100)) if discount_amount else 0
 
     # Determine currency: rate_plan currency or product default
     rp_currency = (nightly_best.get("currency") or product.get("default_currency") or "EUR").upper()

@@ -240,7 +240,7 @@ def test_public_tour_search(org_id: str):
     
     # 3. Test search with query parameter
     print("3️⃣  Testing search with query parameter...")
-    r = requests.get(f"{BASE_URL}/public/tours/search?org={org_id}&q=Kapadokya")
+    r = requests.get(f"{BASE_URL}/api/public/tours/search?org={org_id}&q=Kapadokya")
     
     assert r.status_code == 200, f"Search with query failed: {r.status_code} - {r.text}"
     

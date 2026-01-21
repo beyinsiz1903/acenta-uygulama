@@ -14,7 +14,6 @@ from bson import ObjectId
 
 
 
-
 def _parse_date(raw: Optional[str]) -> Optional[date]:
   if not raw:
     return None

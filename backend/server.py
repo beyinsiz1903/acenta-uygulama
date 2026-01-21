@@ -74,6 +74,7 @@ from app.routers.admin_b2b_agencies import router as admin_b2b_agencies_router
 from app.routers.admin_b2b_funnel import router as admin_b2b_funnel_router
 from app.routers.admin_b2b_announcements import router as admin_b2b_announcements_router
 from app.routers.admin_tours import router as admin_tours_router
+from app.routers.admin_cms_pages import router as admin_cms_pages_router
 
 from app.routers.seo import router as seo_router
 from app.email_worker import email_dispatch_loop

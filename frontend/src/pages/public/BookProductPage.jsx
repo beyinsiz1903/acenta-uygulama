@@ -31,6 +31,7 @@ export default function BookProductPage() {
   const navigate = useNavigate();
 
   const org = searchParams.get("org") || "";
+  const partner = searchParams.get("partner") || "";
 
   useSeo({
     title: productId ? `${productId} | Syroce` : "Ürün Seçimi | Syroce",

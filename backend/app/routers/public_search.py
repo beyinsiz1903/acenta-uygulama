@@ -31,6 +31,7 @@ async def public_search_catalog(
   sort: Optional[str] = Query("price_asc"),
   date_from: Optional[str] = Query(None),
   date_to: Optional[str] = Query(None),
+  product_type: Optional[str] = Query(None, alias="type", description="Optional product type filter (e.g. hotel, tour)"),
   db=Depends(get_db),
 ) -> JSONResponse:
   """Public product search for booking engine v1.
@@ -67,6 +68,8 @@ async def public_search_catalog(
   filt: Dict[str, Any] = {"organization_id": org, "status": "active"}
   if q:
     filt["name_search"] = {"$regex": q.strip().lower()}
+  if product_type:
+    filt["type"] = product_type
 
   total = await db.products.count_documents(filt)
 

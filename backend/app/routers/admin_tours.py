@@ -55,6 +55,7 @@ async def create_tour(payload: Dict[str, Any], user=Depends(get_current_user), d
     "organization_id": org_id,
     "type": "tour",  # Add type field for public search filtering
     "name": name,
+    "name_search": name.lower(),  # Add name_search field for public search
     "destination": destination,
     "base_price": base_price,
     "currency": currency,

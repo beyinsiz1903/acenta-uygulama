@@ -51,6 +51,7 @@ class PublicQuoteRequest(BaseModel):
     pax: PaxIn
     rooms: int = Field(1, ge=1, le=10)
     currency: str = Field("EUR", min_length=3, max_length=3)
+    partner: Optional[str] = Field(default=None, max_length=200)
 
 
 class PublicQuoteResponse(BaseModel):
@@ -110,6 +111,7 @@ async def public_quote(payload: PublicQuoteRequest, request: Request, db=Depends
             children=payload.pax.children,
             rooms=payload.rooms,
             currency=payload.currency,
+            partner=payload.partner,
             client_ip=client_ip,
         )
     except AppError as exc:

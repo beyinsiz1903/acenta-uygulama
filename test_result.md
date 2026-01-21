@@ -128,7 +128,8 @@ metadata:
 
 test_plan:
   current_focus:
-    - "B2B Announcements Backend Flow Test"
+    - "Public Search Type Filter Test"
+    - "Admin Tours Management Test"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"

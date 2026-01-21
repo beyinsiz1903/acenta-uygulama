@@ -21,6 +21,7 @@ import BookProductPage from "./pages/public/BookProductPage";
 import BookCheckoutPage from "./pages/public/BookCheckoutPage";
 import BookCompletePage from "./pages/public/BookCompletePage";
 import BookTourProductPage from "./pages/public/BookTourProductPage";
+import PublicCMSPage from "./pages/public/PublicCMSPage";
 import PublicHomePage from "./pages/PublicHomePage";
 
 import HotelLayout from "./layouts/HotelLayout";

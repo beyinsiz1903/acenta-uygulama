@@ -82,7 +82,7 @@ async def setup_test_data() -> Optional[str]:
     
     try:
         client = AsyncIOMotorClient(MONGO_URL)
-        db = client.get_default_database()
+        db = client[DB_NAME]
         
         # Check if tour already exists
         existing_tour = await db.tours.find_one({

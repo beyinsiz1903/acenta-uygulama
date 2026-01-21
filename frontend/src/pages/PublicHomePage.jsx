@@ -1,9 +1,20 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { useSeo } from "../hooks/useSeo";
+import { apiErrorMessage } from "../lib/publicBooking";
+import { api } from "../lib/api";
 
 export default function PublicHomePage() {
+  const [searchParams] = useSearchParams();
+  const org = searchParams.get("org") || "";
+
+  const [navPages, setNavPages] = useState([]);
+  const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [featuredTours, setFeaturedTours] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
   useSeo({
     title: null,
     description:
@@ -11,6 +22,68 @@ export default function PublicHomePage() {
     canonicalPath: "/",
     type: "website",
   });
+
+  useEffect(() => {
+    if (!org) return;
+
+    let cancelled = false;
+
+    async function load() {
+      setLoading(true);
+      setError("");
+      try {
+        // CMS nav pages
+        const cmsRes = await api.get("/public/cms/pages", { params: { org } });
+        if (!cancelled) {
+          setNavPages(cmsRes.data?.items || []);
+        }
+
+        // Featured products (hotels etc.)
+        const prodRes = await api.get("/public/search", {
+          params: { org, page: 1, page_size: 4, sort: "price_asc" },
+        });
+        if (!cancelled) {
+          setFeaturedProducts(prodRes.data?.items || []);
+        }
+
+        // Featured tours (from tours collection)
+        const tourRes = await api.get("/public/tours/search", {
+          params: { org, page: 1, page_size: 4 },
+        });
+        if (!cancelled) {
+          setFeaturedTours(tourRes.data?.items || []);
+        }
+      } catch (e) {
+        if (cancelled) return;
+        setError(apiErrorMessage(e));
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [org]);
+
+  const buildCmsUrl = (slug) => {
+    if (!slug) return "/";
+    const qp = new URLSearchParams();
+    if (org) qp.set("org", org);
+    const qs = qp.toString();
+    return qs ? `/p/${slug}?${qs}` : `/p/${slug}`;
+  };
+
+  const buildBookUrl = () => {
+    const qp = new URLSearchParams();
+    if (org) qp.set("org", org);
+    const qs = qp.toString();
+    return qs ? `/book?${qs}` : "/book";
+  };
+
+  const buildB2BUrl = () => "/b2b/login";
+  const buildAdminUrl = () => "/login";
 
   return (
     <div

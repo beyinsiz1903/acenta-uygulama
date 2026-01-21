@@ -14,6 +14,7 @@ import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "../components/ui/dialog";
 import { toast } from "sonner";
 
 export default function AdminAgenciesPage() {
@@ -24,6 +25,12 @@ export default function AdminAgenciesPage() {
   const [createLoading, setCreateLoading] = useState(false);
   const [formData, setFormData] = useState({ name: "", parent_agency_id: "" });
   const [formError, setFormError] = useState("");
+
+  const [editOpen, setEditOpen] = useState(false);
+  const [editingAgency, setEditingAgency] = useState(null);
+  const [editForm, setEditForm] = useState({ parent_agency_id: "", status: "" });
+  const [editError, setEditError] = useState("");
+  const [editLoading, setEditLoading] = useState(false);
 
   useEffect(() => {
     loadAgencies();

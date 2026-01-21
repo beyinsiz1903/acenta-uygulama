@@ -237,7 +237,7 @@ export default function BookSearchPage() {
                       disabled={page <= 1}
                       onClick={() => handlePageChange(page - 1)}
                     >
-                       d6nceki
+                      Önceki
                     </Button>
                     <Button
                       size="sm"

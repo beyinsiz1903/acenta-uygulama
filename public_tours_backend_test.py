@@ -186,7 +186,7 @@ def test_public_tour_search(org_id: str):
     
     # 1. Test public tour search
     print("1️⃣  Testing public tour search...")
-    r = requests.get(f"{BASE_URL}/public/tours/search?org={org_id}")
+    r = requests.get(f"{BASE_URL}/api/public/tours/search?org={org_id}")
     
     print(f"   📋 Response status: {r.status_code}")
     assert r.status_code == 200, f"Public tour search failed: {r.status_code} - {r.text}"

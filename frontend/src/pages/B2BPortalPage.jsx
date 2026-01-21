@@ -626,6 +626,7 @@ export default function B2BPortalPage() {
         finance_flags: data.finance_flags || null,
       });
       setBookingError("");
+      setSessionBookings((prev) => prev + 1);
     } catch (err) {
       console.error("[B2BPortal] Booking error:", err);
       const resp = err?.response?.data;

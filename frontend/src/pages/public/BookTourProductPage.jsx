@@ -90,7 +90,7 @@ export default function BookTourProductPage() {
         state: { quote: res, tour },
       });
     } catch (e2) {
-      const msg = e2?.message || apiErrorMessage(e2.raw || e2) || "Teklif alınamadı.";
+      const msg = (e2 && e2.message) || apiErrorMessage(e2.raw || e2) || "Teklif alınamadı.";
       setQuoteError(msg);
     } finally {
       setQuoting(false);

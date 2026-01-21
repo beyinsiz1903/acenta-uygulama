@@ -559,6 +559,7 @@ export default function B2BPortalPage() {
         expires_at: data.expires_at,
         offer: firstOffer,
       });
+      setSessionQuotes((prev) => prev + 1);
     } catch (err) {
       console.error("[B2BPortal] Quote error:", err);
       // Backend standard error body: { error: { code, message, details } }

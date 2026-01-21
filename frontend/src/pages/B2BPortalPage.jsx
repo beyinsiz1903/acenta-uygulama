@@ -218,6 +218,99 @@ function AccountSummaryCard() {
   );
 }
 
+function B2BDashboardKpiRow({ sessionQuotes, sessionBookings }) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [stats, setStats] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
+      setLoading(true);
+      setError("");
+      try {
+        const params = new URLSearchParams();
+        params.append("limit", "100");
+        const res = await api.get(`/b2b/bookings?${params.toString()}`);
+        if (cancelled) return;
+        const items = res.data?.items || [];
+        const total = items.length;
+        const confirmed = items.filter((b) => String(b.status || "").toUpperCase() === "CONFIRMED").length;
+        const cancelledCount = items.filter((b) => String(b.status || "").toUpperCase() === "CANCELLED").length;
+        const totalSell = items.reduce((acc, b) => {
+          const val = typeof b.amount_sell === "number" ? b.amount_sell : 0;
+          return acc + val;
+        }, 0);
+        const currency = (items[0]?.currency) || "EUR";
+        setStats({ total, confirmed, cancelled: cancelledCount, totalSell, currency });
+      } catch (e) {
+        if (!cancelled) setError(apiErrorMessage(e));
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return (
+    <Card className="rounded-2xl border bg-card shadow-sm">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm font-semibold flex items-center gap-2">
+          <CalendarDays className="h-4 w-4" />
+          Son B2B Aktivite Özeti
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+        {error && (
+          <div className="col-span-2 md:col-span-4 text-[11px] text-destructive flex items-start gap-2">
+            <AlertCircle className="h-3 w-3 mt-0.5" />
+            <span>{error}</span>
+          </div>
+        )}
+        {!error && (
+          <>
+            <div className="space-y-1">
+              <div className="text-[11px] text-muted-foreground">Son 30 günde booking</div>
+              <div className="text-sm font-semibold">
+                {loading && !stats ? "..." : stats ? stats.total : "-"}
+              </div>
+            </div>
+            <div className="space-y-1">
+              <div className="text-[11px] text-muted-foreground">Onaylanan</div>
+              <div className="text-sm font-semibold">
+                {loading && !stats ? "..." : stats ? stats.confirmed : "-"}
+              </div>
+            </div>
+            <div className="space-y-1">
+              <div className="text-[11px] text-muted-foreground">Toplam ciro (son N)</div>
+              <div className="text-sm font-semibold">
+                {loading && !stats
+                  ? "..."
+                  : stats
+                  ? `${stats.totalSell.toFixed(2)} ${stats.currency}`
+                  : "-"}
+              </div>
+            </div>
+            <div className="space-y-1">
+              <div className="text-[11px] text-muted-foreground">Bu oturumda</div>
+              <div className="text-[11px]">
+                <span className="font-semibold">{sessionQuotes}</span> quote, {" "}
+                <span className="font-semibold">{sessionBookings}</span> booking
+              </div>
+            </div>
+          </>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+
 
 function BookingListTab() {
   const [items, setItems] = useState([]);

@@ -319,7 +319,7 @@ async def verify_booking_in_mongo(booking_id: str, quote_id: str, results: TestR
         from bson import ObjectId
         
         client = AsyncIOMotorClient(MONGO_URL)
-        db = client.get_default_database()
+        db = client[DB_NAME]
         
         # Find the booking
         booking = await db.bookings.find_one({"_id": ObjectId(booking_id)})

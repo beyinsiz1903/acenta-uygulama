@@ -41,6 +41,7 @@ import AdminCatalogPage from "./pages/AdminCatalogPage";
 import AdminCatalogHotelsPage from "./pages/AdminCatalogHotelsPage";
 import AdminPricingPage from "./pages/AdminPricingPage";
 import AdminFunnelPage from "./pages/AdminFunnelPage";
+import AdminB2BFunnelPage from "./pages/AdminB2BFunnelPage";
 import AdminThemePage from "./pages/AdminThemePage";
 import AdminReportingPage from "./pages/AdminReportingPage";
 import AdminVillaCalendarPage from "./pages/AdminVillaCalendarPage";
@@ -184,6 +185,7 @@ function App() {
             <Route path="catalog/hotels" element={<AdminCatalogHotelsPage />} />
             <Route path="pricing" element={<AdminPricingPage />} />
             <Route path="pricing/funnel" element={<AdminFunnelPage />} />
+            <Route path="b2b/funnel" element={<AdminB2BFunnelPage />} />
             <Route path="pricing/incidents" element={<AdminPricingIncidentsPage />} />
             <Route path="b2b/discounts" element={<AdminB2BDiscountsPage />} />
             <Route path="integrations" element={<AdminIntegrationsPage />} />

@@ -50,7 +50,7 @@ def get_agencies_list(admin_headers: Dict[str, str]) -> List[Dict[str, Any]]:
     """Get existing agency list"""
     print("\n📋 Getting existing agency list...")
     
-    r = requests.get(f"{BASE_URL}/api/admin/agencies", headers=admin_headers)
+    r = requests.get(f"{BASE_URL}/api/admin/agencies/", headers=admin_headers)
     assert r.status_code == 200, f"Failed to get agencies: {r.status_code} - {r.text}"
     
     agencies = r.json()

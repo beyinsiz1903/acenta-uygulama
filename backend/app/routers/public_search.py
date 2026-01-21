@@ -99,6 +99,18 @@ async def public_search_catalog(
   if product_type:
     filt["type"] = product_type
 
+  # Optional partner/agency-based visibility filter
+  agency_id = None
+  if partner:
+    agency = await _resolve_partner_agency(db, org, partner)
+    if agency:
+      agency_id = str(agency.get("_id"))
+
+  if agency_id:
+    # Simple v1: only show products that do NOT explicitly opt-out from this agency.
+    # Future extension: explicit allow-list via b2b_contracts collection.
+    filt["b2b_visibility"] = {"$nin": [agency_id]}
+
   total = await db.products.count_documents(filt)
 
   skip = (page - 1) * page_size

@@ -289,7 +289,7 @@ def test_individual_tour_details(tour_items: List[Dict], org_id: str):
     
     print(f"   📋 Testing tour ID: {tour_id}")
     
-    r = requests.get(f"{BASE_URL}/public/tours/{tour_id}?org={org_id}")
+    r = requests.get(f"{BASE_URL}/api/public/tours/{tour_id}?org={org_id}")
     
     print(f"   📋 Response status: {r.status_code}")
     assert r.status_code == 200, f"Tour details request failed: {r.status_code} - {r.text}"

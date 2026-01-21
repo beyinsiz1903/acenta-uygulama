@@ -81,6 +81,7 @@ async def _list_agency_summaries(db, org_id: str, limit: int = 200) -> List[Dict
         items.append(
             {
                 "id": str(aid),
+                "organization_id": org_id,
                 "name": agency.get("name"),
                 "status": agency.get("status", "active"),
                 "parent_agency_id": str(parent_id) if parent_id else None,

@@ -107,10 +107,15 @@ export default function AdminB2BAgenciesSummaryPage() {
     "";
 
   function buildEmbedUrl(agency) {
-    // Faz 1: basit partner parametresi ile book sayfas31
+    // Faz 1: basit partner + org parametresi ile public book sayfas31
     const origin = typeof window !== "undefined" ? window.location.origin : "";
     const base = origin || backendBase || "";
-    const url = `${base.replace(/\/$/, "")}/book?partner=${encodeURIComponent(agency.id)}`;
+    const qs = new URLSearchParams();
+    if (agency.organization_id) {
+      qs.set("org", agency.organization_id);
+    }
+    qs.set("partner", agency.id);
+    const url = `${base.replace(/\/$/, "")}/book?${qs.toString()}`;
     return url;
   }
 

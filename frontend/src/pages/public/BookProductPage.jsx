@@ -103,6 +103,7 @@ export default function BookProductPage() {
         pax: { adults: Number(adults) || 1, children: Number(children) || 0 },
         rooms: Number(rooms) || 1,
         currency: "EUR",
+        partner: partner || undefined,
       };
       const res = await createPublicQuote(body);
       setQuote(res);

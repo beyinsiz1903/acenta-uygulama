@@ -187,10 +187,10 @@ def test_frontend_missing_org_parameter():
         raise
 
 def test_frontend_404_handling(org_id: str):
-    """Test 4: Frontend 404 page handling"""
+    """Test 4: Frontend 404 page accessibility"""
     print("\n" + "=" * 80)
-    print("TEST 4: FRONTEND 404 PAGE HANDLING")
-    print("Testing frontend behavior for non-existent page")
+    print("TEST 4: FRONTEND 404 PAGE ACCESSIBILITY")
+    print("Testing frontend accessibility for non-existent page")
     print("=" * 80 + "\n")
     
     try:
@@ -205,11 +205,10 @@ def test_frontend_404_handling(org_id: str):
         
         html_content = r.text
         
-        # The page should load but the React component should handle the 404
-        # Based on the PublicCMSPage.jsx code, it should make an API call and handle the error
-        
+        # The page should load (React SPA) but the component should handle the 404
         print(f"   ✅ Frontend page loads without crashing (200)")
-        print(f"   ✅ React component should handle 404 from API gracefully")
+        print(f"   📋 React component should make API call and handle 404 gracefully")
+        print(f"   📋 Expected behavior: Red error text showing 'Sayfa bulunamadı'")
         print(f"   ✅ 404 handling test completed")
         
     except Exception as e:

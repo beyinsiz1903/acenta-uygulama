@@ -49,6 +49,8 @@ export default function BookTourProductPage() {
         setError(apiErrorMessage(e));
       } finally {
         if (!cancelled) setLoading(false);
+      }
+    }
 
   const handleQuote = async (e) => {
     e.preventDefault();

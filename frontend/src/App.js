@@ -212,6 +212,8 @@ function App() {
             <Route path="ops/finance/supplier-accruals" element={<OpsSupplierAccrualsPage />} />
             <Route path="finance/supplier-settlement-bridge" element={<AdminSupplierSettlementBridgePage />} />
             <Route path="ops/b2b" element={<OpsB2BQueuesPage />} />
+            <Route path="b2b/dashboard" element={<AdminB2BDashboardPage />} />
+            <Route path="tours" element={<AdminToursPage />} />
           </Route>
         </Route>
 

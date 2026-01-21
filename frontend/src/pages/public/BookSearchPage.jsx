@@ -219,7 +219,7 @@ export default function BookSearchPage() {
                       </div>
                       <div className="mt-3 flex justify-end">
                         <Button size="sm" onClick={() => handleSelect(item.product_id)}>
-                          Se e7
+                          Seç
                         </Button>
                       </div>
                     </Card>

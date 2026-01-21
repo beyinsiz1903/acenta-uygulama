@@ -53,7 +53,16 @@ async def public_get_tour(
     org: str = Query(..., min_length=1, description="Organization id (tenant)"),
     db=Depends(get_db),
 ) -> JSONResponse:
-    doc = await db.tours.find_one({"_id": tour_id, "organization_id": org})
+    from bson import ObjectId
+    from bson.errors import InvalidId
+    
+    try:
+        # Convert string ID to ObjectId
+        object_id = ObjectId(tour_id)
+    except InvalidId:
+        return JSONResponse(status_code=404, content={"code": "TOUR_NOT_FOUND", "message": "Tur bulunamadı"})
+    
+    doc = await db.tours.find_one({"_id": object_id, "organization_id": org})
     if not doc:
         return JSONResponse(status_code=404, content={"code": "TOUR_NOT_FOUND", "message": "Tur bulunamadı"})
 

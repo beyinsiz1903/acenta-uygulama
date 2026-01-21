@@ -17,6 +17,7 @@ export const adminNav = [
       { label: "Exposure & Aging (Acenta)", path: "/app/admin/finance/exposure" },
       { label: "B2B Acenteler", path: "/app/admin/finance/b2b-agencies" },
       { label: "B2B Funnel", path: "/app/admin/b2b/funnel" },
+      { label: "B2B Duyuruları", path: "/app/admin/b2b/announcements" },
       { label: "Finans / Mutabakat", path: "/app/admin/finance/settlements" },
       { label: "Ops / B2B", path: "/app/admin/ops/b2b" },
     ],

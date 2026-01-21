@@ -96,13 +96,18 @@ export default function BookSearchPage() {
     setSearchParams(next);
   };
 
-  const handleSelect = (productId) => {
+  const handleSelect = (item) => {
     if (!org) return;
     const qp = new URLSearchParams();
     qp.set("org", org);
     if (partner) qp.set("partner", partner);
     const qs = qp.toString();
-    navigate(qs ? `/book/${productId}?${qs}` : `/book/${productId}`);
+
+    if (productType === "tour") {
+      navigate(qs ? `/book/tour/${item.product_id || item.id}?${qs}` : `/book/tour/${item.product_id || item.id}`);
+    } else {
+      navigate(qs ? `/book/${item.product_id}?${qs}` : `/book/${item.product_id}`);
+    }
   };
 
   return (

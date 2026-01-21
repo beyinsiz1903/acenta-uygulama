@@ -113,7 +113,7 @@ export default function PublicHomePage() {
       </header>
 
       <main className="flex-1 flex items-center justify-center">
-        <div className="mx-auto max-w-4xl px-4 py-8 space-y-8">
+        <div className="text-center space-y-4">
           <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight">
             Syroce ile Akıllı Rezervasyon Yönetimi
           </h1>
@@ -129,13 +129,93 @@ export default function PublicHomePage() {
                 color: "var(--color-primary-foreground)",
               }}
             >
-              <Link to="/book">Hemen Ara</Link>
+              <Link to={buildBookUrl()}>Hemen Ara</Link>
             </Button>
             <Button asChild variant="outline" className="px-6 text-xs sm:text-sm">
-              <Link to="/b2b/login">B2B Portala Giriş</Link>
+              <Link to={buildB2BUrl()}>B2B Portala Giriş</Link>
             </Button>
           </div>
         </div>
+
+        {error && (
+          <p className="text-xs text-red-600 text-center mt-4">{error}</p>
+        )}
+
+        {!error && org && (
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <section className="space-y-3">
+              <h2 className="text-sm font-semibold tracking-tight">Öne Çıkan Ürünler</h2>
+              {loading && featuredProducts.length === 0 ? (
+                <p className="text-xs text-muted-foreground">Ürünler yükleniyor...</p>
+              ) : featuredProducts.length === 0 ? (
+                <p className="text-xs text-muted-foreground">Henüz öne çıkan ürün bulunmuyor.</p>
+              ) : (
+                <ul className="space-y-2 text-xs">
+                  {featuredProducts.map((item) => {
+                    const qp = new URLSearchParams();
+                    if (org) qp.set("org", org);
+                    const qs = qp.toString();
+                    const url = qs
+                      ? `/book/${item.product_id || item.id}?${qs}`
+                      : `/book/${item.product_id || item.id}`;
+                    return (
+                      <li
+                        key={item.product_id || item.id}
+                        className="flex items-center justify-between rounded-md border px-3 py-2 bg-card/50"
+                      >
+                        <div className="space-y-0.5">
+                          <div className="text-sm font-medium line-clamp-1">{item.title}</div>
+                          {item.summary && (
+                            <div className="text-[11px] text-muted-foreground line-clamp-2">{item.summary}</div>
+                          )}
+                        </div>
+                        <Button asChild size="sm" variant="outline" className="ml-3 text-[11px] px-3 py-1">
+                          <Link to={url}>İncele</Link>
+                        </Button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </section>
+
+            <section className="space-y-3">
+              <h2 className="text-sm font-semibold tracking-tight">Öne Çıkan Turlar</h2>
+              {loading && featuredTours.length === 0 ? (
+                <p className="text-xs text-muted-foreground">Turlar yükleniyor...</p>
+              ) : featuredTours.length === 0 ? (
+                <p className="text-xs text-muted-foreground">Henüz öne çıkan tur bulunmuyor.</p>
+              ) : (
+                <ul className="space-y-2 text-xs">
+                  {featuredTours.map((tour) => {
+                    const qp = new URLSearchParams();
+                    if (org) qp.set("org", org);
+                    const qs = qp.toString();
+                    const url = qs ? `/book/tour/${tour.id}?${qs}` : `/book/tour/${tour.id}`;
+                    return (
+                      <li
+                        key={tour.id}
+                        className="flex items-center justify-between rounded-md border px-3 py-2 bg-card/50"
+                      >
+                        <div className="space-y-0.5">
+                          <div className="text-sm font-medium line-clamp-1">{tour.name}</div>
+                          {tour.destination && (
+                            <div className="text-[11px] text-muted-foreground line-clamp-1">
+                              {tour.destination}
+                            </div>
+                          )}
+                        </div>
+                        <Button asChild size="sm" variant="outline" className="ml-3 text-[11px] px-3 py-1">
+                          <Link to={url}>Detay</Link>
+                        </Button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </section>
+          </div>
+        )}
       </main>
 
       <footer

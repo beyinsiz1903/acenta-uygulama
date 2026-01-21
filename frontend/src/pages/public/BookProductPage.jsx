@@ -110,6 +110,7 @@ export default function BookProductPage() {
 
       const qp = new URLSearchParams();
       qp.set("org", org);
+      if (partner) qp.set("partner", partner);
       qp.set("quote_id", res.quote_id);
       const qs = qp.toString();
       navigate(qs ? `/book/${productId}/checkout?${qs}` : `/book/${productId}/checkout`);

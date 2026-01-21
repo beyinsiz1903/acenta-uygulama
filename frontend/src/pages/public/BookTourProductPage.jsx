@@ -97,12 +97,6 @@ export default function BookTourProductPage() {
     }
   };
 
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, [org, tourId]);
-
   return (
     <div className="min-h-screen bg-slate-50 px-4 py-6 flex justify-center">
       <Card className="w-full max-w-lg p-4 space-y-3">

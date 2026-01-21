@@ -26,6 +26,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 BACKEND_URL = "https://b2bportal-3.preview.emergentagent.com"
 ORG_ID = "695e03c80b04ed31c4eaa899"
 MONGO_URL = os.environ.get("MONGO_URL", "mongodb://localhost:27017")
+DB_NAME = os.environ.get("DB_NAME", "test_database")
 
 
 class TestResults:

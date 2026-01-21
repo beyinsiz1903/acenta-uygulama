@@ -26,6 +26,7 @@ import PublicHomePage from "./pages/PublicHomePage";
 import HotelLayout from "./layouts/HotelLayout";
 import AdminAgenciesPage from "./pages/AdminAgenciesPage";
 import AdminHotelsPage from "./pages/AdminHotelsPage";
+import AdminToursPage from "./pages/AdminToursPage";
 import AdminLinksPage from "./pages/AdminLinksPage";
 import AdminAuditLogsPage from "./pages/AdminAuditLogsPage";
 import AdminEmailLogsPage from "./pages/AdminEmailLogsPage";

@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 
 from app.db import get_db
 
-router = APIRouter(prefix="/public/tours", tags=["public-tours"])
+router = APIRouter(prefix="/api/public/tours", tags=["public-tours"])
 
 
 @router.get("/search")

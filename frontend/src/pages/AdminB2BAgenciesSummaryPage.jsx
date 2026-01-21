@@ -47,6 +47,8 @@ export default function AdminB2BAgenciesSummaryPage() {
   const [creditSaving, setCreditSaving] = useState(false);
   const [creditError, setCreditError] = useState("");
 
+  const [funnelByPartner, setFunnelByPartner] = useState({}); // { [partnerId]: { total_quotes, total_amount_cents, ... } }
+
   useEffect(() => {
     let cancelled = false;
 
@@ -57,6 +59,24 @@ export default function AdminB2BAgenciesSummaryPage() {
         const resp = await api.get("/admin/b2b/agencies/summary");
         if (cancelled) return;
         setItems(resp.data?.items || []);
+
+        // Partner funnel özetini de oku (opsiyonel, hata durumda sessizce geç)
+        try {
+          const funnelResp = await api.get("/admin/b2b/funnel/summary");
+          if (!cancelled) {
+            const byPartner = {};
+            (funnelResp.data?.items || []).forEach((row) => {
+              if (row && row.partner) {
+                byPartner[row.partner] = row;
+              }
+            });
+            setFunnelByPartner(byPartner);
+          }
+        } catch (_funnelErr) {
+          if (!cancelled) {
+            setFunnelByPartner({});
+          }
+        }
       } catch (err) {
         if (cancelled) return;
         setError(apiErrorMessage(err));

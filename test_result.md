@@ -3725,6 +3725,14 @@ agent_communication:
   - task: "CRM Tasks ve Activities Backend API Smoke Test"
     implemented: true
     working: true
+
+  - task: "Public Tour Quote & Checkout API Smoke Test"
+    implemented: true
+    working: false
+    file: "/app/backend/app/routers/public_tours.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
     file: "/app/backend/app/routers/crm_tasks.py, /app/backend/app/routers/crm_activities.py, /app/backend/app/services/crm_tasks.py, /app/backend/app/services/crm_activities.py"
     stuck_count: 0
     priority: "high"

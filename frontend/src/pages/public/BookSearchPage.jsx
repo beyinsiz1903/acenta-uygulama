@@ -75,7 +75,7 @@ export default function BookSearchPage() {
     }
 
     load();
-  }, [org, q, page, sort, partner, reloadSeq]);
+  }, [org, q, page, sort, partner, reloadSeq, productType]);
 
   const handleSearchChange = (e) => {
     const value = e.target.value;

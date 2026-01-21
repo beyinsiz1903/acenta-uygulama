@@ -18,7 +18,7 @@ from datetime import datetime, timedelta
 from bson import ObjectId
 
 class FinancePhase2A3RegressionTester:
-    def __init__(self, base_url="https://b2bagency.preview.emergentagent.com"):
+    def __init__(self, base_url="https://b2bportal-3.preview.emergentagent.com"):
         self.base_url = base_url
         self.admin_token = None
         self.agency_token = None
@@ -1038,7 +1038,7 @@ def main():
     if len(sys.argv) > 1:
         base_url = sys.argv[1]
     else:
-        base_url = "https://b2bagency.preview.emergentagent.com"
+        base_url = "https://b2bportal-3.preview.emergentagent.com"
     
     tester = FinancePhase2A3RegressionTester(base_url)
     return tester.run_finance_phase_2a3_regression_tests()

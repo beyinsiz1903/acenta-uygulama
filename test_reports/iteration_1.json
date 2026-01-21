@@ -89,8 +89,8 @@
     }
   ],
   "test_environment": {
-    "backend_url": "https://b2bagency.preview.emergentagent.com/api",
-    "frontend_url": "https://b2bagency.preview.emergentagent.com",
+    "backend_url": "https://b2bportal-3.preview.emergentagent.com/api",
+    "frontend_url": "https://b2bportal-3.preview.emergentagent.com",
     "test_credentials": {
       "admin": "admin@acenta.test / admin123"
     },

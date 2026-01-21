@@ -28,6 +28,32 @@ export async function searchPublicTours(params = {}) {
   }
 }
 
+export async function createTourPublicQuote(body) {
+  try {
+    const res = await api.post("/public/tours/quote", body);
+    return res.data;
+  } catch (e) {
+    const status = e?.response?.status ?? null;
+    const data = e?.response?.data || {};
+    const code = data.code || data.error || data.detail || data?.error?.code || null;
+    const message = apiErrorMessage(e);
+    throw { status, code, message, raw: e };
+  }
+}
+
+export async function createTourPublicCheckout(body) {
+  try {
+    const res = await api.post("/public/tours/checkout", body);
+    return res.data;
+  } catch (e) {
+    const status = e?.response?.status ?? null;
+    const data = e?.response?.data || {};
+    const code = data.code || data.error || data.detail || data?.error?.code || null;
+    const message = apiErrorMessage(e);
+    throw { status, code, message, raw: e };
+  }
+}
+
 export async function createPublicQuote(body) {
   try {
     const res = await api.post("/public/quote", body);

@@ -4,6 +4,7 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Card } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { api, apiErrorMessage } from "../../lib/api";
+import { createTourPublicQuote } from "../../lib/publicBooking";
 import { useSeo } from "../../hooks/useSeo";
 
 export default function BookTourProductPage() {
@@ -12,10 +13,17 @@ export default function BookTourProductPage() {
   const navigate = useNavigate();
 
   const org = searchParams.get("org") || "";
+  const partner = searchParams.get("partner") || "";
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [tour, setTour] = useState(null);
+
+  const [date, setDate] = useState("");
+  const [adults, setAdults] = useState(2);
+  const [children, setChildren] = useState(0);
+  const [quoting, setQuoting] = useState(false);
+  const [quoteError, setQuoteError] = useState("");
 
   useSeo({
     title: tour ? `${tour.name} | Tur` : "Tur Detayı | Syroce",
@@ -41,6 +49,46 @@ export default function BookTourProductPage() {
         setError(apiErrorMessage(e));
       } finally {
         if (!cancelled) setLoading(false);
+
+  const handleQuote = async (e) => {
+    e.preventDefault();
+    if (!org || !tourId || !date) {
+      setQuoteError("Tarih ve organizasyon bilgisi zorunludur.");
+      return;
+    }
+    setQuoting(true);
+    setQuoteError("");
+
+    try {
+      const body = {
+        org,
+        tour_id: tourId,
+        date,
+        pax: {
+          adults: Number(adults) || 1,
+          children: Number(children) || 0,
+        },
+        currency: tour?.currency || "EUR",
+      };
+      const res = await createTourPublicQuote(body);
+
+      const qp = new URLSearchParams();
+      qp.set("org", org);
+      if (partner) qp.set("partner", partner);
+      qp.set("quote_id", res.quote_id);
+      const qs = qp.toString();
+
+      navigate(qs ? `/book/tour/${tourId}/checkout?${qs}` : `/book/tour/${tourId}/checkout`, {
+        state: { quote: res, tour },
+      });
+    } catch (e2) {
+      const msg = e2?.message || apiErrorMessage(e2.raw || e2) || "Teklif alınamadı.";
+      setQuoteError(msg);
+    } finally {
+      setQuoting(false);
+    }
+  };
+
       }
     }
 

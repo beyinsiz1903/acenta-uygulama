@@ -93,6 +93,7 @@ async def setup_test_data() -> Optional[str]:
         if existing_tour:
             tour_id = str(existing_tour["_id"])
             print(f"✅ Using existing tour: {tour_id}")
+            client.close()
             return tour_id
         
         # Insert new tour

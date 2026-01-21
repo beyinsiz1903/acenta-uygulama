@@ -239,7 +239,7 @@ async def create_public_quote(
         "pax": {"adults": adults, "children": children, "rooms": rooms},
         "currency": currency,
         "amount_cents": amount_cents,
-        "breakdown": {"base": base_cents, "taxes": taxes_cents},
+        "breakdown": {"base": base_cents, "taxes": taxes_cents, "discount": discount_cents},
         "line_items": [],
         "status": "pending",
         "expires_at": expires_at,
@@ -247,6 +247,11 @@ async def create_public_quote(
         "created_ip": client_ip,
         "channel": "partner" if partner else "web",
         "partner": partner,
+        "b2b_context": {
+            "agency_id": agency_id,
+        }
+        if agency_id
+        else None,
     }
 
     await db.public_quotes.insert_one(doc)

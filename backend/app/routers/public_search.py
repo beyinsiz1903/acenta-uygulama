@@ -19,6 +19,8 @@ def _parse_date(raw: Optional[str]) -> Optional[date]:
     return None
   try:
     return date.fromisoformat(raw)
+  except Exception:
+    return None
 
 
 async def _resolve_partner_agency(db, organization_id: str, partner: str):

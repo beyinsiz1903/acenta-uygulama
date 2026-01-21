@@ -27,6 +27,34 @@ from app.utils import now_utc
 PUBLIC_QUOTE_TTL_MINUTES = 30
 
 
+async def _resolve_partner_agency(db, organization_id: str, partner: str) -> Optional[Dict[str, Any]]:
+    """Resolve partner (agency) document for public/partner flows.
+
+    Accepts either string _id or ObjectId-compatible hex string. Returns the
+    agency document or None when not found.
+    """
+
+    if not partner:
+        return None
+
+    # First, try direct string _id match (some schemas store _id as string)
+    agency = await db.agencies.find_one({"_id": partner, "organization_id": organization_id})
+    if agency:
+        return agency
+
+    # Fallback: attempt ObjectId
+    try:
+        from bson import ObjectId
+
+        oid = ObjectId(partner)
+    except Exception:
+        return None
+
+    agency = await db.agencies.find_one({"_id": oid, "organization_id": organization_id})
+    return agency
+
+
+
 @dataclass
 class PublicQuote:
     quote_id: str

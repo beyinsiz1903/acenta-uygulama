@@ -57,7 +57,12 @@ export default function BookSearchPage() {
       setLoading(true);
       setError("");
       try {
-        const data = await searchPublic({ org, q, page, page_size: 10, sort, partner: partner || undefined, type: productType });
+        let data;
+        if (productType === "tour") {
+          data = await searchPublicTours({ org, q, page, page_size: 10 });
+        } else {
+          data = await searchPublic({ org, q, page, page_size: 10, sort, partner: partner || undefined, type: productType });
+        }
         setItems(data.items || []);
         setTotal(data.total || 0);
       } catch (e) {

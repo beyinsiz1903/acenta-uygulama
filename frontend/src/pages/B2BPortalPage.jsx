@@ -465,6 +465,10 @@ function BookingListTab() {
 export default function B2BPortalPage() {
   const [activeTab, setActiveTab] = useState("flow"); // "flow" | "list"
 
+  // Session KPIs
+  const [sessionQuotes, setSessionQuotes] = useState(0);
+  const [sessionBookings, setSessionBookings] = useState(0);
+
   // Quote form state
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");

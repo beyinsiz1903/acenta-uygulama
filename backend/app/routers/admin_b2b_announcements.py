@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
+from bson import ObjectId
 from fastapi import APIRouter, Depends
 
 from app.auth import get_current_user, require_roles

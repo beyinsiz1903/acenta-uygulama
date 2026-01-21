@@ -713,6 +713,8 @@ export default function B2BPortalPage() {
 
       <B2BAnnouncementsCard />
 
+      <B2BDashboardKpiRow sessionQuotes={sessionQuotes} sessionBookings={sessionBookings} />
+
       <div className="flex gap-2 border-b pb-1 text-sm">
         <button
           type="button"

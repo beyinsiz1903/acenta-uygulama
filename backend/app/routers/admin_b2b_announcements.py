@@ -18,6 +18,15 @@ def _now_utc() -> datetime:
   return datetime.now(timezone.utc)
 
 
+def _to_oid(id_str: str) -> ObjectId:
+    """Convert string ID to ObjectId, raise 404 if invalid"""
+    try:
+        return ObjectId(id_str)
+    except Exception:
+        from app.errors import AppError
+        raise AppError(404, "not_found", "Duyuru bulunamadı")
+
+
 @router.get("", dependencies=[AdminDep])
 async def list_announcements(user=Depends(get_current_user), db=Depends(get_db)) -> Dict[str, Any]:
     """List B2B announcements for current org (admin view).

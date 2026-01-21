@@ -257,7 +257,7 @@ def test_public_tour_search(org_id: str):
     
     # 4. Test pagination
     print("4️⃣  Testing pagination...")
-    r = requests.get(f"{BASE_URL}/public/tours/search?org={org_id}&page=1&page_size=5")
+    r = requests.get(f"{BASE_URL}/api/public/tours/search?org={org_id}&page=1&page_size=5")
     
     assert r.status_code == 200, f"Pagination test failed: {r.status_code} - {r.text}"
     

@@ -45,9 +45,6 @@ async def _resolve_partner_agency(db, organization_id: str, partner: str):
   agency = await db.agencies.find_one({"_id": oid, "organization_id": organization_id})
   return agency
 
-  except Exception:
-    return None
-
 
 @router.get("/search")
 async def public_search_catalog(

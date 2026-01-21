@@ -227,7 +227,19 @@ export default function AdminAgenciesPage() {
             </TableHeader>
             <TableBody>
               {agencies.map((agency) => (
-                <TableRow key={agency.id}>
+                <TableRow
+                  key={agency.id}
+                  className="cursor-pointer hover:bg-muted/50"
+                  onClick={() => {
+                    setEditingAgency(agency);
+                    setEditForm({
+                      parent_agency_id: agency.parent_agency_id || "",
+                      status: agency.status || "active",
+                    });
+                    setEditError("");
+                    setEditOpen(true);
+                  }}
+                >
                   <TableCell className="font-medium">{agency.name}</TableCell>
                   <TableCell>
                     {getActiveStatus(agency) ? (

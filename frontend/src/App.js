@@ -163,6 +163,7 @@ function App() {
         <Route path="/book/:productId/checkout" element={<BookCheckoutPage />} />
         <Route path="/book/complete" element={<BookCompletePage />} />
         <Route path="/book/tour/:tourId" element={<BookTourProductPage />} />
+        <Route path="/book/tour/:tourId/checkout" element={<BookTourCheckoutPage />} />
         <Route path="/p/:slug" element={<PublicCMSPage />} />
 
         {/* Admin Routes */}

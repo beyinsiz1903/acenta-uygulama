@@ -54,6 +54,7 @@ async def create_public_quote(
     children: int,
     rooms: int,
     currency: str,
+    partner: Optional[str] = None,
     client_ip: Optional[str] = None,
 ) -> Tuple[PublicQuote, Dict[str, Any]]:
     """Create a public quote from catalog + rate_plans.

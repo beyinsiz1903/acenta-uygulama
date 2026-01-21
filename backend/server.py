@@ -191,6 +191,8 @@ app.include_router(public_my_booking_router)    # No prefix - router has its own
 app.include_router(public_search_router)        # No prefix - router has its own
 app.include_router(public_checkout_router)      # No prefix - router has its own
 app.include_router(public_bookings_router)      # No prefix - router has its own
+from app.routers.public_tours import router as public_tours_router
+app.include_router(public_tours_router)         # No prefix - router has its own
 app.include_router(search_router, prefix=API_PREFIX)
 app.include_router(vouchers_router, prefix=API_PREFIX)
 app.include_router(web_booking_router, prefix=API_PREFIX)

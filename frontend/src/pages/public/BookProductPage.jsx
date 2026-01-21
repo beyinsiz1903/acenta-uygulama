@@ -111,10 +111,6 @@ export default function BookProductPage() {
       qp.set("quote_id", res.quote_id);
       const qs = qp.toString();
       navigate(qs ? `/book/${productId}/checkout?${qs}` : `/book/${productId}/checkout`);
-  const origin = typeof window !== "undefined" ? window.location.origin : "";
-  const productUrl = origin && productId ? `${origin}/book/${productId}` : "";
-
-
     } catch (e2) {
       if (e2 && typeof e2 === "object" && (e2.status || e2.message)) {
         setError(e2);

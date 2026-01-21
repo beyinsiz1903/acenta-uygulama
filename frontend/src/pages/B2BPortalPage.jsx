@@ -611,6 +611,8 @@ export default function B2BPortalPage() {
 
       <AccountSummaryCard />
 
+      <B2BAnnouncementsCard />
+
       <div className="flex gap-2 border-b pb-1 text-sm">
         <button
           type="button"

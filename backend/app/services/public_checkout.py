@@ -111,6 +111,14 @@ async def create_public_quote(
     if not product:
         raise AppError(404, "product_not_found", "Product not found")
 
+    # If called with partner, enforce simple visibility blacklist on product
+    if partner:
+        visibility = product.get("b2b_visibility") or []
+        if isinstance(visibility, list) and visibility:
+            from_banned = str(partner) in [str(v) for v in visibility]
+            if from_banned:
+                raise AppError(403, "product_not_available_for_partner", "Product not available for this partner")
+
     # Ensure there is at least one published version
     pv = await db.product_versions.find_one(
         {"organization_id": organization_id, "product_id": pid, "status": "published"}

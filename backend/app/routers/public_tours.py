@@ -228,10 +228,10 @@ async def public_tour_checkout(payload: TourCheckoutRequest, db=Depends(get_db))
             from datetime import timezone
             expires_at = expires_at.replace(tzinfo=timezone.utc)
         if expires_at < now:
-        return JSONResponse(
-            status_code=404,
-            content={"code": "QUOTE_EXPIRED", "message": "Teklif süresi doldu"},
-        )
+            return JSONResponse(
+                status_code=404,
+                content={"code": "QUOTE_EXPIRED", "message": "Teklif süresi doldu"},
+            )
 
     from bson import ObjectId
 

@@ -238,6 +238,107 @@ export default function AdminAgenciesPage() {
                       <Badge variant="secondary">Pasif</Badge>
                     )}
                   </TableCell>
+
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Acenta Hiyerarşi / Durum Düzenle</DialogTitle>
+            <DialogDescription>
+              Üst acentayı belirleyebilir veya acentayı aktif/pasif duruma alabilirsiniz.
+            </DialogDescription>
+          </DialogHeader>
+
+          {editingAgency && (
+            <div className="space-y-4 text-sm">
+              <div className="space-y-1">
+                <div className="font-medium">{editingAgency.name}</div>
+                <div className="text-[11px] text-muted-foreground font-mono">{editingAgency.id}</div>
+              </div>
+
+              {editError && <p className="text-xs text-red-600">{editError}</p>}
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-parent">Üst Acenta ID</Label>
+                <Input
+                  id="edit-parent"
+                  value={editForm.parent_agency_id}
+                  onChange={(e) =>
+                    setEditForm((prev) => ({ ...prev, parent_agency_id: e.target.value }))
+                  }
+                  placeholder="Örn: 64f... (boş bırakmak için tamamını silin)"
+                  disabled={editLoading}
+                />
+                <p className="text-[11px] text-muted-foreground">
+                  Boş bırakırsanız ana acenta olur. Geçersiz veya kendisine eşit ID gönderildiğinde backend
+                  SELF_PARENT_NOT_ALLOWED / PARENT_CYCLE_DETECTED hatası döner.
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-status">Durum</Label>
+                <select
+                  id="edit-status"
+                  className="h-9 w-full rounded-md border bg-background px-2 text-sm"
+                  value={editForm.status}
+                  onChange={(e) => setEditForm((prev) => ({ ...prev, status: e.target.value }))}
+                  disabled={editLoading}
+                >
+                  <option value="active">Aktif</option>
+                  <option value="disabled">Pasif</option>
+                </select>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setEditOpen(false)}
+                  disabled={editLoading}
+                >
+                  İptal
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  disabled={editLoading}
+                  onClick={async () => {
+                    if (!editingAgency) return;
+                    setEditError("");
+                    setEditLoading(true);
+                    try {
+                      const payload = {};
+                      const trimmed = (editForm.parent_agency_id || "").trim();
+                      if (trimmed || editingAgency.parent_agency_id) {
+                        // Eğer input boş ama önce parent varsa, bunu temizlemek için explicit null gönderiyoruz
+                        payload.parent_agency_id = trimmed || null;
+                      }
+                      if (editForm.status && editForm.status !== editingAgency.status) {
+                        payload.status = editForm.status;
+                      }
+                      if (Object.keys(payload).length === 0) {
+                        setEditOpen(false);
+                        return;
+                      }
+                      await api.put(`/admin/agencies/${editingAgency.id}`, payload);
+                      toast.success("Acenta güncellendi");
+                      await loadAgencies();
+                      setEditOpen(false);
+                    } catch (err) {
+                      setEditError(apiErrorMessage(err));
+                    } finally {
+                      setEditLoading(false);
+                    }
+                  }}
+                >
+                  {editLoading ? "Kaydediliyor..." : "Kaydet"}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
                   <TableCell className="text-sm text-muted-foreground">
                     {formatDateTime(agency.created_at)}
                   </TableCell>

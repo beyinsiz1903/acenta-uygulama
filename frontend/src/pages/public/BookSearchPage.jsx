@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
-import { searchPublic, apiErrorMessage } from "../../lib/publicBooking";
+import { searchPublic, searchPublicTours, apiErrorMessage } from "../../lib/publicBooking";
 import { Card } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import EmptyState from "../../components/EmptyState";

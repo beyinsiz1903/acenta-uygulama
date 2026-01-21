@@ -88,6 +88,8 @@ export default function BookTourProductPage() {
       setQuoteError(msg);
     } finally {
       setQuoting(false);
+  };
+
     }
   };
 

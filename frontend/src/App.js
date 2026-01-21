@@ -43,6 +43,7 @@ import AdminPricingPage from "./pages/AdminPricingPage";
 import AdminFunnelPage from "./pages/AdminFunnelPage";
 import AdminB2BFunnelPage from "./pages/AdminB2BFunnelPage";
 import AdminB2BAnnouncementsPage from "./pages/AdminB2BAnnouncementsPage";
+import AdminB2BDashboardPage from "./pages/AdminB2BDashboardPage";
 import AdminThemePage from "./pages/AdminThemePage";
 import AdminReportingPage from "./pages/AdminReportingPage";
 import AdminVillaCalendarPage from "./pages/AdminVillaCalendarPage";
@@ -170,6 +171,7 @@ function App() {
         >
           <Route element={<AdminLayout />}>
             <Route path="agencies" element={<AdminAgenciesPage />} />
+            <Route path="b2b/dashboard" element={<AdminB2BDashboardPage />} />
             <Route path="hotels" element={<AdminHotelsPage />} />
             <Route path="links" element={<AdminLinksPage />} />
             <Route path="audit" element={<AdminAuditLogsPage />} />

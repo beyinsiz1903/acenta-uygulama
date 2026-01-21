@@ -5,6 +5,7 @@ export const adminNav = [
   {
     label: "Admin",
     children: [
+      { label: "B2B Dashboard", path: "/app/admin/b2b/dashboard" },
       { label: "Acentalar", path: "/app/admin/agencies" },
       { label: "Oteller", path: "/app/admin/hotels" },
       { label: "Link Yönetimi", path: "/app/admin/links" },

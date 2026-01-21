@@ -179,7 +179,7 @@ export default function BookSearchPage() {
                       id="debug-product-id-input"
                       type="text"
                       className="flex-1 rounded-md border px-2 py-1 text-xs font-mono"
-                      placeholder="d6rn: 65f... (productId)"
+                      placeholder="örn: 65f... (productId)"
                       onKeyDown={(e) => {
                         if (e.key === "Enter" && e.currentTarget.value && org) {
                           navigate(`/book/${e.currentTarget.value}?org=${encodeURIComponent(org)}`);

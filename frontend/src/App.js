@@ -160,6 +160,7 @@ function App() {
         <Route path="/book/:productId" element={<BookProductPage />} />
         <Route path="/book/:productId/checkout" element={<BookCheckoutPage />} />
         <Route path="/book/complete" element={<BookCompletePage />} />
+        <Route path="/book/tour/:tourId" element={<BookTourProductPage />} />
 
         {/* Admin Routes */}
         <Route

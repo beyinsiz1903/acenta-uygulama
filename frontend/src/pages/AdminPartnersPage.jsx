@@ -43,6 +43,11 @@ export default function AdminPartnersPage() {
   const [notes, setNotes] = useState("");
   const [creating, setCreating] = useState(false);
 
+  const [statusFilter, setStatusFilter] = useState("");
+  const [summaryPartner, setSummaryPartner] = useState(null);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [summaryError, setSummaryError] = useState("");
+
   const load = async () => {
     setLoading(true);
     setError("");

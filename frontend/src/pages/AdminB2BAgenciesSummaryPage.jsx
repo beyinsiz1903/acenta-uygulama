@@ -80,9 +80,10 @@ export default function AdminB2BAgenciesSummaryPage() {
       } catch (err) {
         if (cancelled) return;
         const msg = apiErrorMessage(err);
-        // "Not Found" durumunda, b2b acenteler özetini boş kabul ediyoruz; kırmızı hata göstermiyoruz.
-        if (typeof msg === "string" && msg.toLowerCase().includes("not found")) {
+        // 404 (Not Found) durumunda, b2b acenteler özetini boş kabul ediyoruz; kırmızı hata göstermiyoruz.
+        if (err?.response?.status === 404) {
           setItems([]);
+          setError("");
         } else {
           setError(msg);
         }

@@ -103,6 +103,7 @@ async def create_partner(
         "status": payload.status,
         "api_key_name": (payload.api_key_name or "").strip() or None,
         "default_markup_percent": float(payload.default_markup_percent or 0.0),
+        "linked_agency_id": (payload.linked_agency_id or "").strip() or None,
         "notes": (payload.notes or "").strip() or None,
         "created_at": now,
         "updated_at": now,

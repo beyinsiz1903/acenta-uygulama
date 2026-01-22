@@ -187,7 +187,7 @@ function RefundApproveDialog({ open, onOpenChange, caseData, onApproved }) {
       onApproved();
       onOpenChange(false);
     } catch (e) {
-      toast({ title: "Approve failed", description: apiErrorMessage(e), variant: "destructive" });
+      toast({ title: "Onaylama başarısız", description: apiErrorMessage(e), variant: "destructive" });
     } finally {
       setSubmitting(false);
     }

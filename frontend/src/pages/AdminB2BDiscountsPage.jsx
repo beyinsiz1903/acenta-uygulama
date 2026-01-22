@@ -272,7 +272,7 @@ function AdminB2BDiscountsPage() {
         <div className="flex items-center justify-between mb-2">
           <div className="font-semibold text-sm">Existing Groups</div>
           <Button variant="outline" size="xs" onClick={loadGroups} disabled={loading}>
-            Refresh
+            Yenile
           </Button>
         </div>
 

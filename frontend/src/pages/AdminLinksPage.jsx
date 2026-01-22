@@ -177,7 +177,7 @@ export default function AdminLinksPage() {
               Henüz acenta-otel linki yok
             </p>
             <p className="text-sm text-muted-foreground mt-2">
-              Link oluşturma özelliği yakında eklenecek.
+              Bu sürümde doğrudan link oluşturma devre dışı. Acenta-otel bağlantıları operasyon ekibi tarafından yönetilmektedir.
             </p>
           </div>
         </div>

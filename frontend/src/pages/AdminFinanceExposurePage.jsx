@@ -104,10 +104,10 @@ function ExposureTable({ items, filter, statusFilter }) {
               </TableCell>
               <TableCell className="align-top">
                 <AgingBar
-                  age0={it.age_0_30}
-                  age31={it.age_31_60}
-                  age61={it.age_61_plus}
-                  exposure={it.exposure}
+                  age0={it.age_0_30 || 0}
+                  age31={it.age_31_60 || 0}
+                  age61={it.age_61_plus || 0}
+                  exposure={it.exposure || 0}
                 />
               </TableCell>
               <TableCell className="text-xs text-right font-mono">

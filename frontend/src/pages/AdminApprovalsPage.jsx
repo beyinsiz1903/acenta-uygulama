@@ -169,9 +169,9 @@ export default function AdminApprovalsPage() {
           </div>
         </div>
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <span>Status: pending</span>
+          <span>Durum: bekleyen</span>
           <Button type="button" size="sm" variant="outline" onClick={() => load()} disabled={loading}>
-            {loading ? "Refreshing..." : "Refresh"}
+            {loading ? "Yenileniyor..." : "Yenile"}
           </Button>
         </div>
       </div>

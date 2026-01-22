@@ -204,7 +204,7 @@ function RefundApproveDialog({ open, onOpenChange, caseData, onApproved }) {
             Refundable (computed): <strong>{refundable.toFixed(2)}</strong>
           </div>
           <div className="space-y-1">
-            <div className="text-xs text-muted-foreground">Approved amount</div>
+            <div className="text-xs text-muted-foreground">Onaylanan tutar</div>
             <Input
               type="number"
               min={0}
@@ -214,7 +214,7 @@ function RefundApproveDialog({ open, onOpenChange, caseData, onApproved }) {
             />
           </div>
           <div className="space-y-1">
-            <div className="text-xs text-muted-foreground">Payment reference (optional)</div>
+            <div className="text-xs text-muted-foreground">Ödeme referansı (opsiyonel)</div>
             <Input
               type="text"
               value={paymentRef}
@@ -228,11 +228,11 @@ function RefundApproveDialog({ open, onOpenChange, caseData, onApproved }) {
             onClick={() => onOpenChange(false)}
             disabled={submitting}
           >
-            Cancel
+            İptal
           </Button>
           <Button onClick={onSubmit} disabled={submitting}>
             {submitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-            Approve
+            Onayla
           </Button>
         </DialogFooter>
       </DialogContent>

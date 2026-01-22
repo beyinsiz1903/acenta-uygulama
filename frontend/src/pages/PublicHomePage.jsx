@@ -119,8 +119,8 @@ export default function PublicHomePage() {
         </div>
       </header>
 
-      <main className="flex-1 flex items-center justify-center">
-        <div className="text-center space-y-4">
+      <main className="flex-1 flex flex-col items-center">
+        <div className="text-center space-y-4 mt-8">
           <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight">
             Syroce ile Akıllı Rezervasyon Yönetimi
           </h1>
@@ -149,7 +149,40 @@ export default function PublicHomePage() {
         )}
 
         {!error && org && (
-          <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="w-full max-w-4xl px-4 mt-10 space-y-8">
+            {campaigns.length > 0 && (
+              <section className="space-y-3">
+                <h2 className="text-sm font-semibold tracking-tight">Öne Çıkan Kampanyalar</h2>
+                <ul className="space-y-2 text-xs">
+                  {campaigns.map((c) => {
+                    const qp = new URLSearchParams();
+                    if (org) qp.set("org", org);
+                    const qs = qp.toString();
+                    const url = qs ? `/campaigns/${c.slug}?${qs}` : `/campaigns/${c.slug}`;
+                    return (
+                      <li
+                        key={c.id}
+                        className="flex items-center justify-between rounded-md border px-3 py-2 bg-card/50"
+                      >
+                        <div className="space-y-0.5">
+                          <div className="text-sm font-medium line-clamp-1">{c.name}</div>
+                          {c.description && (
+                            <div className="text-[11px] text-muted-foreground line-clamp-2">
+                              {c.description}
+                            </div>
+                          )}
+                        </div>
+                        <Button asChild size="sm" variant="outline" className="ml-3 text-[11px] px-3 py-1">
+                          <Link to={url}>İncele</Link>
+                        </Button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </section>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <section className="space-y-3">
               <h2 className="text-sm font-semibold tracking-tight">Öne Çıkan Ürünler</h2>
               {loading && featuredProducts.length === 0 ? (

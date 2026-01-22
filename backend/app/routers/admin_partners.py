@@ -164,6 +164,137 @@ async def update_partner(
                 value = value.strip()
             update[field] = value
 
+
+class PartnerActivitySummaryOut(BaseModel):
+    partner_id: str
+    partner_name: str
+    linked_agency_id: Optional[str] = None
+    linked_agency_name: Optional[str] = None
+    total_bookings: int
+    total_amount_cents: int
+    currency: str
+    by_channel: Dict[str, int]
+    by_product_type: Dict[str, int]
+    first_booking_at: Optional[str] = None
+    last_booking_at: Optional[str] = None
+
+
+@router.get("/{partner_id}/summary", response_model=PartnerActivitySummaryOut, dependencies=[AdminDep])
+async def get_partner_summary(
+    partner_id: str,
+    db=Depends(get_db),
+    user: Dict[str, Any] = Depends(get_current_user),
+) -> PartnerActivitySummaryOut:
+    """Partner bazlı basit aktivite özeti.
+
+    Şu alanları döner:
+    - toplam rezervasyon sayısı
+    - toplam ciro (amount_total_cents üzerinden)
+    - kanal kırılımı (public/partner/public_tour/b2b vs.)
+    - ürün tipi kırılımı (hotel/tour/diğer)
+    """
+
+    org_id = user["organization_id"]
+
+    try:
+        oid = ObjectId(partner_id)
+    except Exception:
+        oid = partner_id
+
+    partner_doc = await db.partner_profiles.find_one({"_id": oid, "organization_id": org_id})
+    if not partner_doc:
+        raise HTTPException(status_code=404, detail="PARTNER_NOT_FOUND")
+
+    partner_id_str = str(partner_doc.get("_id"))
+    partner_name = partner_doc.get("name") or ""
+    linked_agency_id = partner_doc.get("linked_agency_id") or None
+
+    # Aggregate bookings that reference this partner via public_quote or channel
+    match: Dict[str, Any] = {"organization_id": org_id}
+    partner_or: list[Dict[str, Any]] = [
+        {"public_quote.partner": partner_id_str},
+        {"public_quote.partner": partner_id},
+    ]
+
+    # Also consider bookings created via partner channel in future
+    partner_or.append({"channel": "partner", "partner": partner_id_str})
+
+    match["$or"] = partner_or
+
+    pipeline: List[Dict[str, Any]] = [
+        {"$match": match},
+        {
+            "$group": {
+                "_id": None,
+                "count": {"$sum": 1},
+                "amount_total_cents": {"$sum": {"$ifNull": ["$amount_total_cents", 0]}},
+                "first_booking_at": {"$min": "$created_at"},
+                "last_booking_at": {"$max": "$created_at"},
+            }
+        },
+    ]
+
+    agg = await db.bookings.aggregate(pipeline).to_list(length=1)
+    if agg:
+        row = agg[0]
+        total_bookings = int(row.get("count") or 0)
+        total_amount_cents = int(row.get("amount_total_cents") or 0)
+        first_booking_at = row.get("first_booking_at")
+        last_booking_at = row.get("last_booking_at")
+    else:
+        total_bookings = 0
+        total_amount_cents = 0
+        first_booking_at = None
+        last_booking_at = None
+
+    # Channel breakdown
+    pipeline_channel: List[Dict[str, Any]] = [
+        {"$match": match},
+        {"$group": {"_id": "$source", "count": {"$sum": 1}}},
+    ]
+    rows_ch = await db.bookings.aggregate(pipeline_channel).to_list(length=None)
+    by_channel: Dict[str, int] = {}
+    for r in rows_ch:
+        key = (r.get("_id") or "unknown").lower()
+        by_channel[key] = int(r.get("count") or 0)
+
+    # Product type breakdown
+    pipeline_type: List[Dict[str, Any]] = [
+        {"$match": match},
+        {"$group": {"_id": "$product_type", "count": {"$sum": 1}}},
+    ]
+    rows_t = await db.bookings.aggregate(pipeline_type).to_list(length=None)
+    by_product_type: Dict[str, int] = {}
+    for r in rows_t:
+        key = (r.get("_id") or "unknown").lower()
+        by_product_type[key] = int(r.get("count") or 0)
+
+    # Currency heuristic: first non-empty booking currency
+    currency_doc = await db.bookings.find_one(match, {"currency": 1})
+    currency = (currency_doc or {}).get("currency") or "EUR"
+
+    linked_agency_name: Optional[str] = None
+    if linked_agency_id:
+        agency_doc = await _load_agency_min(db, org_id, str(linked_agency_id))
+        if agency_doc:
+            linked_agency_id = str(agency_doc.get("_id"))
+            linked_agency_name = agency_doc.get("name") or None
+
+    return PartnerActivitySummaryOut(
+        partner_id=partner_id_str,
+        partner_name=partner_name,
+        linked_agency_id=str(linked_agency_id) if linked_agency_id else None,
+        linked_agency_name=linked_agency_name,
+        total_bookings=total_bookings,
+        total_amount_cents=total_amount_cents,
+        currency=currency,
+        by_channel=by_channel,
+        by_product_type=by_product_type,
+        first_booking_at=first_booking_at.isoformat() if first_booking_at else None,
+        last_booking_at=last_booking_at.isoformat() if last_booking_at else None,
+    )
+
+
     if not update:
         doc = await db.partner_profiles.find_one({"_id": oid, "organization_id": org_id})
         if not doc:

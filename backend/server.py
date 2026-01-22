@@ -153,6 +153,7 @@ app.include_router(admin_catalog_router, prefix=API_PREFIX)
 app.include_router(admin_metrics_router, prefix=API_PREFIX)
 app.include_router(admin_pricing_router)
 app.include_router(admin_coupons_router)  # router already has /api prefix
+app.include_router(admin_hotels_router)
 app.include_router(admin_reporting_router)
 app.include_router(admin_ical_router)
 app.include_router(admin_pricing_incidents_router)

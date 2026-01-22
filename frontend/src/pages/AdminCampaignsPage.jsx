@@ -250,7 +250,7 @@ export default function AdminCampaignsPage() {
             <div>Kanallar</div>
             <div>Kuponlar</div>
             <div>Başlangıç</div>
-            <div>Biti5f</div>
+            <div>Bitiş</div>
             <div>Durum</div>
           </div>
           <div className="max-h-72 overflow-y-auto">

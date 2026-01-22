@@ -31,6 +31,8 @@ async def list_cms_pages(user=Depends(get_current_user), db=Depends(get_db)) -> 
                 "slug": doc.get("slug") or "",
                 "title": doc.get("title") or "",
                 "published": bool(doc.get("published", True)),
+                "kind": doc.get("kind") or "page",
+                "linked_campaign_slug": doc.get("linked_campaign_slug") or "",
                 "created_at": doc.get("created_at"),
                 "updated_at": doc.get("updated_at"),
             }
@@ -49,6 +51,8 @@ async def create_cms_page(payload: Dict[str, Any], user=Depends(get_current_user
     seo_title = (payload.get("seo_title") or title).strip()
     seo_description = (payload.get("seo_description") or "").strip()
     published = bool(payload.get("published", True))
+    kind = (payload.get("kind") or "page").strip() or "page"
+    linked_campaign_slug = (payload.get("linked_campaign_slug") or "").strip()
 
     if not slug or not title:
         from app.errors import AppError
@@ -63,6 +67,8 @@ async def create_cms_page(payload: Dict[str, Any], user=Depends(get_current_user
         "seo_title": seo_title,
         "seo_description": seo_description,
         "published": published,
+        "kind": kind,
+        "linked_campaign_slug": linked_campaign_slug,
         "created_at": now,
         "updated_at": now,
     }

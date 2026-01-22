@@ -45,4 +45,28 @@ async def get_campaign(slug: str, org: str = Query(..., min_length=1), db=Depend
         "valid_from": doc.get("valid_from"),
         "valid_to": doc.get("valid_to"),
     }
+
+
+@router.get("")
+async def list_campaigns(org: str = Query(..., min_length=1), db=Depends(get_db)) -> JSONResponse:
+    """List active campaigns for a given organization.
+
+    Used on public home/vitrin to show featured campaigns.
+    """
+
+    cursor = db.campaigns.find({"organization_id": org, "active": True}).sort("created_at", -1)
+    docs = await cursor.to_list(length=50)
+
+    items = [
+        {
+            "id": str(doc.get("_id")),
+            "slug": doc.get("slug") or "",
+            "name": doc.get("name") or "",
+            "description": doc.get("description") or "",
+            "channels": doc.get("channels") or [],
+        }
+        for doc in docs
+    ]
+    return JSONResponse(status_code=200, content={"items": items})
+
     return JSONResponse(status_code=200, content=payload)

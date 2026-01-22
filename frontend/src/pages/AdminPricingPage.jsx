@@ -247,7 +247,7 @@ function RateGridsTab() {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <div className="text-sm font-semibold">Rate tablolar1</div>
+        <div className="text-sm font-semibold">Rate tabloları</div>
         <Button size="sm" variant="outline" onClick={load} disabled={loading}>
           {loading && <Loader2 className="h-3 w-3 animate-spin" />}
           Refresh

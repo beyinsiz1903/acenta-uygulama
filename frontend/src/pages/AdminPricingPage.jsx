@@ -318,7 +318,7 @@ function RateGridsTab() {
             </div>
           ))}
           {!items.length && (
-            <div className="px-2 py-3 text-[11px] text-muted-foreground">No grids.</div>
+            <div className="px-2 py-3 text-[11px] text-muted-foreground">Henüz grid tanımlı değil.</div>
           )}
         </div>
       </div>

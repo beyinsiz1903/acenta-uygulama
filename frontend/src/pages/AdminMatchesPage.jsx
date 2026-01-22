@@ -209,6 +209,7 @@ export default function AdminMatchesPage() {
         </CardHeader>
       </Card>
 
+      <div>
         <p className="text-sm text-muted-foreground">
           Acenta–otel eşleşmelerini (agency–hotel pairs) son 30 güne göre özetler. Yüksek iptal oranına sahip
           eşleşmeleri buradan inceleyebilirsiniz.

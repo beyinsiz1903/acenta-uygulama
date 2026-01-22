@@ -3760,14 +3760,6 @@ agent_communication:
   - task: "CRM Tasks ve Activities Backend API Smoke Test"
     implemented: true
     working: true
-
-  - task: "Public Tour Quote & Checkout API Smoke Test"
-    implemented: true
-    working: false
-    file: "/app/backend/app/routers/public_tours.py"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: true
     file: "/app/backend/app/routers/crm_tasks.py, /app/backend/app/routers/crm_activities.py, /app/backend/app/services/crm_tasks.py, /app/backend/app/services/crm_activities.py"
     stuck_count: 0
     priority: "high"
@@ -3776,6 +3768,22 @@ agent_communication:
       - working: true
         agent: "testing"
         comment: "✅ CRM TASKS VE ACTIVITIES BACKEND API SMOKE TEST COMPLETE - All 6 test scenarios passed (100% success rate). COMPREHENSIVE TURKISH SPECIFICATION VERIFICATION: 1) AUTH & ERİŞİM (TASKS): Anonymous GET /api/crm/tasks correctly returns 401 Unauthorized, admin login successful (admin@acenta.test/admin123) with proper JWT token and organization_id extraction (695e03c80b04ed31c4eaa899), authenticated GET /api/crm/tasks returns proper format {items: [], total: 0, page: 1, page_size: 50}. 2) TASK CREATE + LIST (CUSTOMER İLE İLİŞKİ): Created test customer (cust_a3a71d2f27394ccbbca92e72b436e9a2), POST /api/crm/tasks creates task with proper structure: id starts with 'task_' prefix (task_9626205b3c4e49548e6e7d63ac13fcd8), organization_id populated correctly, status='open' (default), priority='high' (as requested), owner_user_id defaults to current user, no '_id' field leaked in response, GET /api/crm/tasks?relatedType=customer&relatedId=cust_... finds created task in filtered list. 3) TASK DUE FİLTRESİ VE STATUS: PATCH /api/crm/tasks/{id} with {status: 'done'} working correctly (status updated to 'done'), GET /api/crm/tasks?status=open&relatedType=customer&relatedId=cust_... returns empty list (correct), GET /api/crm/tasks?status=done&relatedType=customer&relatedId=cust_... finds task in done list, empty patch PATCH /api/crm/tasks/{id} {} correctly returns 400 with detail='No fields to update'. 4) ACTIVITIES CREATE + LIST: POST /api/crm/activities creates activity with proper structure: id starts with 'act_' prefix (act_974444b714cb40ecaa4f5fa5bd2501a4), created_by_user_id populated with current user, no '_id' field leaked in response, GET /api/crm/activities?relatedType=customer&relatedId=cust_... finds created activity, results sorted by created_at desc (verified). 5) CUSTOMER DETAIL COMPUTE: OPEN_TASKS: Created additional open task (task_7587cc3afaeb44f58182a15311396d88), GET /api/crm/customers/{id} returns proper structure with customer, open_deals (0 deals), open_tasks (1 task including created task), after marking task as done, open_tasks correctly becomes empty (0 remaining). 6) VALIDATION & ORG SCOPE: Empty task title correctly rejected with 422, empty activity body correctly rejected with 422, all created tasks/activities have correct organization_id matching admin org (695e03c80b04ed31c4eaa899), no MongoDB '_id' field leakage in any responses, organization scoping working correctly. CRITICAL FINDINGS: ✅ Task/Activity ID prefixes working (task_, act_), ✅ Customer relationship linking working, ✅ Status filtering and updates working, ✅ Customer detail compute open_tasks field working correctly, ✅ Empty patch guard implemented correctly, ✅ Organization scoping enforced on all endpoints, ✅ No PII leakage or 500 errors. ACCEPTANCE CRITERIA MET: ✅ Anonymous access returns 401, ✅ Admin token works with proper response format, ✅ Task create with customer relationship working, ✅ Task status updates and filtering working, ✅ Activities create and list with proper sorting, ✅ Customer detail open_tasks computation working, ✅ Validation errors for empty fields (422), ✅ Organization scoping and no _id leakage. CRM Tasks ve Activities backend API production-ready with complete functionality as per Turkish specification requirements."
+
+  - task: "Public Tour Quote & Checkout API Smoke Test"
+    implemented: true
+    working: false
+    file: "/app/backend/app/routers/public_tours.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+
+  - task: "Campaigns, Executive Dashboard, Partners & Public Apply API Smoke Test"
+    implemented: true
+    working: false
+    file: "/app/backend/app/routers/admin_campaigns.py, /app/backend/app/routers/public_campaigns.py, /app/backend/app/routers/admin_reporting.py, /app/backend/app/routers/admin_metrics.py, /app/backend/app/routers/admin_partners.py, /app/backend/app/routers/public_partners.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
 
 ## backend:
   - task: "PR#7.4 Deterministic & Duplicate-safe Customer Match/Create Test"

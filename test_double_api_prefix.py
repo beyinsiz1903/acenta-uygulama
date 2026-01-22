@@ -11,7 +11,7 @@ def test_double_api_prefix():
     try:
         # Login
         login_data = {"email": "admin@acenta.test", "password": "admin123"}
-        response = requests.post("https://acenta-network.preview.emergentagent.com/api/auth/login", json=login_data, timeout=10)
+        response = requests.post("https://b2b-acentelik.preview.emergentagent.com/api/auth/login", json=login_data, timeout=10)
         
         if response.status_code != 200:
             print(f"Login failed: {response.status_code} - {response.text}")
@@ -29,7 +29,7 @@ def test_double_api_prefix():
         
         for endpoint in endpoints:
             print(f"\nTesting {endpoint}...")
-            full_url = f"https://acenta-network.preview.emergentagent.com{endpoint}"
+            full_url = f"https://b2b-acentelik.preview.emergentagent.com{endpoint}"
             response = requests.get(full_url, headers=headers, timeout=10)
             print(f"Status: {response.status_code}")
             if response.status_code == 200:

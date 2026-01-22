@@ -10,7 +10,7 @@ async def test_mybooking_behavior():
     """Test MyBooking create-token and request-link behavior"""
     
     # Get backend URL from environment
-    backend_url = "https://acenta-network.preview.emergentagent.com"
+    backend_url = "https://b2b-acentelik.preview.emergentagent.com"
     
     db = await get_db()
     

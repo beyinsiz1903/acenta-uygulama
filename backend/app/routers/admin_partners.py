@@ -24,6 +24,11 @@ class PartnerBase(BaseModel):
     status: str = Field("pending", pattern="^(pending|approved|blocked)$")
     api_key_name: Optional[str] = Field(None, max_length=200)
     default_markup_percent: float = Field(0.0, ge=-100.0, le=500.0)
+    linked_agency_id: Optional[str] = Field(
+        None,
+        max_length=64,
+        description="Optional agency id from agencies collection linked to this partner",
+    )
     notes: Optional[str] = Field(None, max_length=2000)
 
 
@@ -37,6 +42,11 @@ class PartnerUpdateIn(BaseModel):
     status: Optional[str] = Field(None, pattern="^(pending|approved|blocked)$")
     api_key_name: Optional[str] = Field(None, max_length=200)
     default_markup_percent: Optional[float] = Field(None, ge=-100.0, le=500.0)
+    linked_agency_id: Optional[str] = Field(
+        None,
+        max_length=64,
+        description="Optional agency id from agencies collection linked to this partner",
+    )
     notes: Optional[str] = Field(None, max_length=2000)
 
 
@@ -47,6 +57,7 @@ class PartnerOut(BaseModel):
     status: str
     api_key_name: Optional[str] = None
     default_markup_percent: float
+    linked_agency_id: Optional[str] = None
     notes: Optional[str] = None
     created_at: Optional[str] = None
     updated_at: Optional[str] = None

@@ -81,7 +81,7 @@ export default function AdminB2BAgenciesSummaryPage() {
         if (cancelled) return;
         const msg = apiErrorMessage(err);
         // "Not Found" durumunda, b2b acenteler özetini boş kabul ediyoruz; kırmızı hata göstermiyoruz.
-        if (msg === "Not Found") {
+        if (typeof msg === "string" && msg.toLowerCase().includes("not found")) {
           setItems([]);
         } else {
           setError(msg);

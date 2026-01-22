@@ -249,6 +249,7 @@ export default function AppShell() {
                       <NavLink
                         key={`rb-${item.path}`}
                         to={item.path}
+                        end
                         onClick={() => setMobileNavOpen(false)}
                         className={({ isActive }) =>
                           cn(
@@ -405,6 +406,7 @@ export default function AppShell() {
                         <NavLink
                           key={`d-${item.path}`}
                           to={item.path}
+                          end
                           className={({ isActive }) =>
                             cn(
                               "flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition hover:shadow-sm",

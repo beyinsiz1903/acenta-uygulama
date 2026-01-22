@@ -52,7 +52,9 @@ export default function AdminPartnersPage() {
     setLoading(true);
     setError("");
     try {
-      const res = await api.get("/admin/partners");
+      const params = {};
+      if (statusFilter) params.status = statusFilter;
+      const res = await api.get("/admin/partners", { params });
       setItems(res.data || []);
     } catch (e) {
       setError(apiErrorMessage(e));

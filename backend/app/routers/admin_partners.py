@@ -12,6 +12,29 @@ from app.db import get_db
 from app.utils import serialize_doc
 
 
+async def _load_agency_min(db, org_id: str, agency_id: str) -> Optional[Dict[str, Any]]:
+    """Load minimal agency info for linking/summary.
+
+    Accepts string or ObjectId-compatible id and scopes by organization.
+    Returns a dict with _id and name or None when not found.
+    """
+
+    if not agency_id:
+        return None
+
+    # First try direct string _id
+    doc = await db.agencies.find_one({"_id": agency_id, "organization_id": org_id}, {"name": 1})
+    if doc:
+        return doc
+
+    try:
+        oid = ObjectId(agency_id)
+    except Exception:
+        return None
+
+    return await db.agencies.find_one({"_id": oid, "organization_id": org_id}, {"name": 1})
+
+
 router = APIRouter(prefix="/api/admin/partners", tags=["admin_partners"])
 
 

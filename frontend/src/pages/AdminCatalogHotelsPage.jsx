@@ -48,7 +48,7 @@ function HotelForm({ value, onChange, onSave, saving, error }) {
 
       <div className="grid grid-cols-2 gap-2">
         <div className="space-y-1">
-          <div className="text-xs text-muted-foreground">Code</div>
+          <div className="text-xs text-muted-foreground">Kod</div>
           <Input
             value={v.code || ""}
             onChange={(e) => onChange({ ...v, code: e.target.value })}

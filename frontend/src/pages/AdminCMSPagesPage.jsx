@@ -134,6 +134,18 @@ export default function AdminCMSPagesPage() {
                 placeholder="Örn: Hakkımızda"
               />
             </div>
+            <div className="space-y-1">
+              <Label htmlFor="linked_campaign_slug">Bağlı Kampanya Slug</Label>
+              <Input
+                id="linked_campaign_slug"
+                value={linkedCampaignSlug}
+                onChange={(e) => setLinkedCampaignSlug(e.target.value)}
+                placeholder="opsiyonel: yaz-firsatlari-2026"
+              />
+              <p className="text-[11px] text-muted-foreground">
+                Bu sayfa kampanya landing olacaksa, ilgili kampanya slug girin.
+              </p>
+            </div>
           </div>
           <div className="space-y-1">
             <Label htmlFor="body">İçerik</Label>

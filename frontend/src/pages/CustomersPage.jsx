@@ -14,6 +14,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "../components/ui/dialog";
+import EmptyState from "../components/EmptyState";
 
 function CustomerForm({ open, onOpenChange, initial, onSaved }) {
   const [name, setName] = useState("");

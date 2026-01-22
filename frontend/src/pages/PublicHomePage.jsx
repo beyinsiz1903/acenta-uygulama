@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+
 import { Button } from "../components/ui/button";
 import { useSeo } from "../hooks/useSeo";
 import { apiErrorMessage } from "../lib/publicBooking";
@@ -39,7 +40,7 @@ export default function PublicHomePage() {
           setNavPages(cmsRes.data?.items || []);
         }
 
-        // Featured products (hotels etc.)
+        // Featured products (multi-product search)
         const prodRes = await api.get("/public/search", {
           params: { org, page: 1, page_size: 4, sort: "price_asc" },
         });
@@ -47,7 +48,7 @@ export default function PublicHomePage() {
           setFeaturedProducts(prodRes.data?.items || []);
         }
 
-        // Featured tours (from tours collection)
+        // Featured tours
         const tourRes = await api.get("/public/tours/search", {
           params: { org, page: 1, page_size: 4 },
         });
@@ -61,8 +62,7 @@ export default function PublicHomePage() {
           setCampaigns(campRes.data?.items || []);
         }
       } catch (e) {
-        if (cancelled) return;
-        setError(apiErrorMessage(e));
+        if (!cancelled) setError(apiErrorMessage(e));
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -144,9 +144,7 @@ export default function PublicHomePage() {
           </div>
         </div>
 
-        {error && (
-          <p className="text-xs text-red-600 text-center mt-4">{error}</p>
-        )}
+        {error && <p className="text-xs text-red-600 text-center mt-4">{error}</p>}
 
         {!error && org && (
           <div className="w-full max-w-4xl px-4 mt-10 space-y-8">
@@ -186,74 +184,85 @@ export default function PublicHomePage() {
               <section className="space-y-3">
                 <h2 className="text-sm font-semibold tracking-tight">Öne Çıkan Ürünler</h2>
                 {loading && featuredProducts.length === 0 ? (
-                <p className="text-xs text-muted-foreground">Ürünler yükleniyor...</p>
-              ) : featuredProducts.length === 0 ? (
-                <p className="text-xs text-muted-foreground">Henüz öne çıkan ürün bulunmuyor.</p>
-              ) : (
-                <ul className="space-y-2 text-xs">
-                  {featuredProducts.map((item) => {
-                    const qp = new URLSearchParams();
-                    if (org) qp.set("org", org);
-                    const qs = qp.toString();
-                    const url = qs
-                      ? `/book/${item.product_id || item.id}?${qs}`
-                      : `/book/${item.product_id || item.id}`;
-                    return (
-                      <li
-                        key={item.product_id || item.id}
-                        className="flex items-center justify-between rounded-md border px-3 py-2 bg-card/50"
-                      >
-                        <div className="space-y-0.5">
-                          <div className="text-sm font-medium line-clamp-1">{item.title}</div>
-                          {item.summary && (
-                            <div className="text-[11px] text-muted-foreground line-clamp-2">{item.summary}</div>
-                          )}
-                        </div>
-                        <Button asChild size="sm" variant="outline" className="ml-3 text-[11px] px-3 py-1">
-                          <Link to={url}>İncele</Link>
-                        </Button>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </section>
+                  <p className="text-xs text-muted-foreground">Ürünler yükleniyor...</p>
+                ) : featuredProducts.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">Henüz öne çıkan ürün bulunmuyor.</p>
+                ) : (
+                  <ul className="space-y-2 text-xs">
+                    {featuredProducts.map((item) => {
+                      const qp = new URLSearchParams();
+                      if (org) qp.set("org", org);
+                      const qs = qp.toString();
+                      const url = qs
+                        ? `/book/${item.product_id || item.id}?${qs}`
+                        : `/book/${item.product_id || item.id}`;
+                      return (
+                        <li
+                          key={item.product_id || item.id}
+                          className="flex items-center justify-between rounded-md border px-3 py-2 bg-card/50"
+                        >
+                          <div className="space-y-0.5">
+                            <div className="text-sm font-medium line-clamp-1">{item.title}</div>
+                            {item.summary && (
+                              <div className="text-[11px] text-muted-foreground line-clamp-2">{item.summary}</div>
+                            )}
+                          </div>
+                          <Button
+                            asChild
+                            size="sm"
+                            variant="outline"
+                            className="ml-3 text-[11px] px-3 py-1"
+                          >
+                            <Link to={url}>İncele</Link>
+                          </Button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </section>
 
-            <section className="space-y-3">
-              <h2 className="text-sm font-semibold tracking-tight">Öne Çıkan Turlar</h2>
-              {loading && featuredTours.length === 0 ? (
-                <p className="text-xs text-muted-foreground">Turlar yükleniyor...</p>
-              ) : featuredTours.length === 0 ? (
-                <p className="text-xs text-muted-foreground">Henüz öne çıkan tur bulunmuyor.</p>
-              ) : (
-                <ul className="space-y-2 text-xs">
-                  {featuredTours.map((tour) => {
-                    const qp = new URLSearchParams();
-                    if (org) qp.set("org", org);
-                    const qs = qp.toString();
-                    const url = qs ? `/book/tour/${tour.id}?${qs}` : `/book/tour/${tour.id}`;
-                    return (
-                      <li
-                        key={tour.id}
-                        className="flex items-center justify-between rounded-md border px-3 py-2 bg-card/50"
-                      >
-                        <div className="space-y-0.5">
-                          <div className="text-sm font-medium line-clamp-1">{tour.name}</div>
-                          {tour.destination && (
-                            <div className="text-[11px] text-muted-foreground line-clamp-1">
-                              {tour.destination}
-                            </div>
-                          )}
-                        </div>
-                        <Button asChild size="sm" variant="outline" className="ml-3 text-[11px] px-3 py-1">
-                          <Link to={url}>Detay</Link>
-                        </Button>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </section>
+              <section className="space-y-3">
+                <h2 className="text-sm font-semibold tracking-tight">Öne Çıkan Turlar</h2>
+                {loading && featuredTours.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">Turlar yükleniyor...</p>
+                ) : featuredTours.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">Henüz öne çıkan tur bulunmuyor.</p>
+                ) : (
+                  <ul className="space-y-2 text-xs">
+                    {featuredTours.map((tour) => {
+                      const qp = new URLSearchParams();
+                      if (org) qp.set("org", org);
+                      const qs = qp.toString();
+                      const url = qs ? `/book/tour/${tour.id}?${qs}` : `/book/tour/${tour.id}`;
+                      return (
+                        <li
+                          key={tour.id}
+                          className="flex items-center justify-between rounded-md border px-3 py-2 bg-card/50"
+                        >
+                          <div className="space-y-0.5">
+                            <div className="text-sm font-medium line-clamp-1">{tour.name}</div>
+                            {tour.destination && (
+                              <div className="text-[11px] text-muted-foreground line-clamp-1">
+                                {tour.destination}
+                              </div>
+                            )}
+                          </div>
+                          <Button
+                            asChild
+                            size="sm"
+                            variant="outline"
+                            className="ml-3 text-[11px] px-3 py-1"
+                          >
+                            <Link to={url}>Detay</Link>
+                          </Button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </section>
+            </div>
           </div>
         )}
       </main>

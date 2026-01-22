@@ -11,6 +11,7 @@ export const adminNav = [
       { label: "Turlar", path: "/app/admin/tours" },
       { label: "Link Yönetimi", path: "/app/admin/links" },
       { label: "CMS Sayfaları", path: "/app/admin/cms/pages" },
+      { label: "Kampanyalar", path: "/app/admin/campaigns" },
       { label: "Katalog", path: "/app/admin/catalog" },
       { label: "Otel Kataloğu", path: "/app/admin/catalog/hotels" },
       { label: "Fiyatlandırma", path: "/app/admin/pricing" },

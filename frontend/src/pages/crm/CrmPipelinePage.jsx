@@ -607,7 +607,7 @@ export default function CrmPipelinePage() {
                       textAlign: "center",
                     }}
                   >
-                    {"Kay\u0131t yok"}
+                    {"Kayıt yok"}
                   </div>
                 ) : (
                   items.map((deal) => (

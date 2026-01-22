@@ -69,5 +69,3 @@ async def list_campaigns(org: str = Query(..., min_length=1), db=Depends(get_db)
         for doc in docs
     ]
     return JSONResponse(status_code=200, content={"items": items})
-
-    return JSONResponse(status_code=200, content=payload)

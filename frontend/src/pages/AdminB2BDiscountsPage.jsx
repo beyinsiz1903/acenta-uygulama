@@ -410,7 +410,7 @@ function AdminB2BDiscountsPage() {
                           }}
                           disabled={loading}
                         >
-                          Add rule
+                          Kural ekle
                         </Button>
                       </div>
                     </div>

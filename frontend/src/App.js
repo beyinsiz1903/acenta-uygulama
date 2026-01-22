@@ -212,6 +212,7 @@ function App() {
             <Route path="villas/:productId/calendar" element={<AdminVillaCalendarPage />} />
             <Route path="theme" element={<AdminThemePage />} />
             <Route path="coupons" element={<AdminCouponsPage />} />
+            <Route path="campaigns" element={<AdminCampaignsPage />} />
             <Route path="approvals" element={<AdminApprovalsPage />} />
             <Route path="exports" element={<AdminExportsPage />} />
             <Route path="finance/refunds" element={<AdminFinanceRefundsPage />} />

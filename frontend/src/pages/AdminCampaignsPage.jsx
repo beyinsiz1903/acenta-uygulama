@@ -216,7 +216,7 @@ export default function AdminCampaignsPage() {
             />
           </div>
           <div className="space-y-1">
-            <Label className="text-[11px]">Biti5f</Label>
+            <Label className="text-[11px]">Bitiş</Label>
             <Input
               type="datetime-local"
               className="h-8 text-xs"

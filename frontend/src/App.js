@@ -32,6 +32,7 @@ import AdminAgenciesPage from "./pages/AdminAgenciesPage";
 import AdminHotelsPage from "./pages/AdminHotelsPage";
 import AdminToursPage from "./pages/AdminToursPage";
 import AdminLinksPage from "./pages/AdminLinksPage";
+import AdminCMSPagesPage from "./pages/AdminCMSPagesPage";
 import AdminAuditLogsPage from "./pages/AdminAuditLogsPage";
 import AdminEmailLogsPage from "./pages/AdminEmailLogsPage";
 import AdminPilotDashboardPage from "./pages/AdminPilotDashboardPage";

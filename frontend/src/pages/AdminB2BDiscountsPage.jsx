@@ -277,7 +277,7 @@ function AdminB2BDiscountsPage() {
         </div>
 
         {groups.length === 0 ? (
-          <div className="text-xs text-muted-foreground">No discount groups yet.</div>
+          <div className="text-xs text-muted-foreground">Henüz indirim grubu tanımlı değil.</div>
         ) : (
           <div className="space-y-2">
             {groups.map((g) => {

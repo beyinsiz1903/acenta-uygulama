@@ -138,9 +138,9 @@ export default function CrmDuplicateCustomersPage() {
             cursor: "pointer",
           }}
         >
-          {"\u2190"} Geri
+          ← Geri
         </button>
-        <h1 style={{ margin: 0, fontSize: 22 }}>CRM Duplicate M\u00fc\u015fteriler</h1>
+        <h1 style={{ margin: 0, fontSize: 22 }}>CRM Duplicate Müşteriler</h1>
       </div>
 
       {errMsg ? (

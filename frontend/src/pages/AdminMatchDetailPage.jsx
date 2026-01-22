@@ -160,7 +160,7 @@ export default function AdminMatchDetailPage() {
 
             <div className="flex flex-col gap-1">
               <label htmlFor="match-action-reason" className="text-sm font-medium">
-                Reason code (opsiyonel)
+                Sebep kodu (opsiyonel)
               </label>
               <input
                 id="match-action-reason"

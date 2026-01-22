@@ -157,9 +157,9 @@ export default function CrmTasksPage() {
         }}
       >
         <div>
-          <h1 style={{ margin: 0, fontSize: 22 }}>CRM \u2022 G\u00f6revler</h1>
+          <h1 style={{ margin: 0, fontSize: 22 }}>CRM • Görevler</h1>
           <div style={{ color: "#666", marginTop: 4, fontSize: 13 }}>
-            Bug\u00fcn, geciken ve bu hafta i\u00e7indeki a\u00e7\u0131k g\u00f6revlerinizi izleyin.
+            Bugün, geciken ve bu hafta içindeki açık görevlerinizi izleyin.
           </div>
         </div>
       </div>

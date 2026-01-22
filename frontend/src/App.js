@@ -56,6 +56,7 @@ import AdminVillaCalendarPage from "./pages/AdminVillaCalendarPage";
 import AdminPricingIncidentsPage from "./pages/AdminPricingIncidentsPage";
 import AdminB2BDiscountsPage from "./pages/AdminB2BDiscountsPage";
 import AdminCouponsPage from "./pages/AdminCouponsPage";
+import AdminCampaignsPage from "./pages/AdminCampaignsPage";
 import AdminIntegrationsPage from "./pages/AdminIntegrationsPage";
 import AdminJobsPage from "./pages/AdminJobsPage";
 import AdminApiKeysPage from "./pages/AdminApiKeysPage";

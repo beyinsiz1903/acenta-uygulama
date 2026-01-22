@@ -195,7 +195,7 @@ export default function AdminApprovalsPage() {
               className="py-8 text-sm text-muted-foreground text-center"
               data-testid="approvals-empty"
             >
-              No pending approvals.
+              Bekleyen onay görevi yok.
             </div>
           ) : (
             <div className="overflow-x-auto">

@@ -392,6 +392,55 @@ export default function AdminExecutiveDashboardPage() {
                   <Tooltip formatter={(value) => formatMoney(value, "EUR")} />
                   <Bar dataKey="sell_total" fill="#0f766e" name="Ciro" />
                 </BarChart>
+              </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="h-[280px]">
+          <CardHeader className="pb-1">
+            <CardTitle className="flex items-center gap-2 text-sm font-medium">
+              <BarChart2 className="h-4 w-4" /> Kanal Kırılımı (B2B / B2C)
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="h-[220px] pt-2">
+            {!channelStats ? (
+              <p className="text-xs text-muted-foreground">Kanal istatistikleri yükleniyor...</p>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={[
+                    {
+                      channel: "B2B",
+                      count: channelStats.channels?.b2b?.count || 0,
+                      sell_total: channelStats.channels?.b2b?.sell_total || 0,
+                    },
+                    {
+                      channel: "B2C",
+                      count: channelStats.channels?.b2c?.count || 0,
+                      sell_total: channelStats.channels?.b2c?.sell_total || 0,
+                    },
+                  ]}
+                  margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="channel" tick={{ fontSize: 11 }} />
+                  <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
+                  <Tooltip
+                    formatter={(value, key) =>
+                      key === "sell_total" ? formatMoney(value, "EUR") : value
+                    }
+                    labelFormatter={(label) => `Kanal: ${label}`}
+                  />
+                  <Bar dataKey="count" fill="#0f766e" name="Rezervasyon" />
+                  <Bar dataKey="sell_total" fill="#f97316" name="Ciro" />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Top B2B acentalar */}
       <Card>
         <CardHeader>
@@ -441,11 +490,6 @@ export default function AdminExecutiveDashboardPage() {
           )}
         </CardContent>
       </Card>
-
-              </ResponsiveContainer>
-            )}
-          </CardContent>
-        </Card>
       </div>
 
       {/* Kampanya performansı (kupon kullanımı) */}

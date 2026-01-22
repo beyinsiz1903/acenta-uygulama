@@ -249,7 +249,7 @@ export default function AdminCampaignsPage() {
             <div>Slug</div>
             <div>Kanallar</div>
             <div>Kuponlar</div>
-            <div>Ba31lang31 e7</div>
+            <div>Başlangıç</div>
             <div>Biti5f</div>
             <div>Durum</div>
           </div>

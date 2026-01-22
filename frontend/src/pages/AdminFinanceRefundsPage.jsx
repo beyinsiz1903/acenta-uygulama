@@ -21,12 +21,12 @@ import { Loader2, AlertCircle, Clipboard } from "lucide-react";
 
 function StatusBadge({ status }) {
   if (status === "closed") {
-    return <Badge variant="secondary">Closed</Badge>;
+    return <Badge variant="secondary">Kapalı</Badge>;
   }
   if (status === "pending_approval") {
-    return <Badge variant="outline">Pending</Badge>;
+    return <Badge variant="outline">Beklemede</Badge>;
   }
-  return <Badge variant="default">Open</Badge>;
+  return <Badge variant="default">Açık</Badge>;
 }
 
 function RefundQueueList({
@@ -50,15 +50,15 @@ function RefundQueueList({
           </div>
           <div className="flex items-center gap-3">
             <div className="space-y-1">
-              <div className="text-xs text-muted-foreground">Status</div>
+              <div className="text-xs text-muted-foreground">Durum</div>
               <select
                 className="h-8 rounded-md border bg-background px-2 text-xs"
                 value={statusFilter}
                 onChange={(e) => onChangeStatus(e.target.value)}
               >
-                <option value="all">All</option>
-                <option value="open">Open / Pending</option>
-                <option value="closed">Closed</option>
+                <option value="all">Tümü</option>
+                <option value="open">Açık / Beklemede</option>
+                <option value="closed">Kapalı</option>
               </select>
             </div>
             <div className="space-y-1">

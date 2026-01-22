@@ -45,6 +45,7 @@ async def get_campaign(slug: str, org: str = Query(..., min_length=1), db=Depend
         "valid_from": doc.get("valid_from"),
         "valid_to": doc.get("valid_to"),
     }
+    return JSONResponse(status_code=200, content=payload)
 
 
 @router.get("")

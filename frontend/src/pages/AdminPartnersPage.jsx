@@ -267,7 +267,7 @@ export default function AdminPartnersPage() {
                 </TableHeader>
                 <TableBody>
                   {items.map((p) => (
-                    <TableRow key={p.id}>
+                    <TableRow key={p.id} className="cursor-pointer hover:bg-muted/40" onClick={() => openSummary(p)}>
                       <TableCell className="text-xs">
                         <div className="flex flex-col">
                           <span className="font-medium truncate max-w-[220px]">{p.name}</span>

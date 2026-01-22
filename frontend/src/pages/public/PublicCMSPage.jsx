@@ -68,7 +68,32 @@ export default function PublicCMSPage() {
             <div className="space-y-1">
               <h1 className="text-xl font-semibold text-foreground">{page.title}</h1>
             </div>
-            <div className="text-sm text-muted-foreground whitespace-pre-line">{page.body}</div>
+            <div className="text-sm text-muted-foreground whitespace-pre-line mb-4">{page.body}</div>
+
+            {page.kind === "landing" && page.linked_campaign_slug && (
+              <div className="mt-2 border-t pt-3 space-y-2 text-xs">
+                <p className="font-medium">Bu sayfaya bağlı kampanya</p>
+                <p className="text-muted-foreground">
+                  Aşağıdaki buton ile kampanya detayına gidebilir, kampanyaya ait kupon kodlarını
+                  görüntüleyebilirsiniz.
+                </p>
+                <button
+                  type="button"
+                  className="inline-flex items-center rounded-md bg-primary px-3 py-1.5 text-[11px] font-medium text-primary-foreground hover:bg-primary/90"
+                  onClick={() => {
+                    const qp = new URLSearchParams();
+                    if (org) qp.set("org", org);
+                    const qs = qp.toString();
+                    const url = qs
+                      ? `/campaigns/${page.linked_campaign_slug}?${qs}`
+                      : `/campaigns/${page.linked_campaign_slug}`;
+                    window.location.href = url;
+                  }}
+                >
+                  Kampanya sayfasına git
+                </button>
+              </div>
+            )}
           </>
         )}
       </Card>

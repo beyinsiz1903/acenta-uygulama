@@ -424,9 +424,9 @@ export default function CrmEventsPage() {
         }}
       >
         <div>
-          <h1 style={{ margin: 0, fontSize: 22 }}>CRM 1 Olaylar1</h1>
+          <h1 style={{ margin: 0, fontSize: 22 }}>CRM Olaylar</h1>
           <div style={{ marginTop: 4, fontSize: 13, color: "#6b7280" }}>
-            Kritik CRM i1lemlerinin kim taraf1ndan, ne zaman yap1ld11n1 izleyin.
+            Kritik CRM işlemlerinin kim tarafından, ne zaman yapıldığını izleyin.
           </div>
         </div>
       </div>
@@ -450,12 +450,12 @@ export default function CrmEventsPage() {
           onChange={(e) => setEntityType(e.target.value)}
           style={{ padding: 10, borderRadius: 10, border: "1px solid #ddd", minWidth: 180 }}
         >
-          <option value="">T1m tipler</option>
-          <option value="customer">M11teri</option>
-          <option value="deal">F1rsat</option>
-          <option value="task">G1rev</option>
+          <option value="">Tüm tipler</option>
+          <option value="customer">Müşteri</option>
+          <option value="deal">Fırsat</option>
+          <option value="task">Görev</option>
           <option value="activity">Aktivite</option>
-          <option value="customer_merge">M11teri Birle1tirme</option>
+          <option value="customer_merge">Müşteri Birleştirme</option>
           <option value="booking">Rezervasyon</option>
         </select>
 

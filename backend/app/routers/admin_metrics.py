@@ -259,3 +259,65 @@ async def metrics_trends(
 
     series = await aggregate_daily_trends(db, org_id, cutoff_date)
     return MetricsTrendsOut(period=DateRangePeriod(**period), daily_trends=series)
+
+
+
+@router.get("/channels", dependencies=[Depends(require_roles(["super_admin", "admin"]))])
+async def metrics_channels(
+    days: Optional[int] = Query(30, ge=1, le=365),
+    db=Depends(get_db),
+    user=Depends(get_current_user),
+):
+    """Return simple B2B/B2C channel breakdown for bookings.
+
+    Heuristic v1:
+    - B2B: bookings with a non-null agency_id
+    - B2C: all other bookings
+    """
+
+    org_id = user.get("organization_id")
+    from datetime import timedelta
+
+    d = parse_days(days, default=30, max_days=365)
+    cutoff = now_utc() - timedelta(days=d)
+
+    pipeline = [
+        {"$match": {"organization_id": org_id, "created_at": {"$gte": cutoff}}},
+        {
+            "$project": {
+                "agency_id": 1,
+                "amounts": 1,
+                "_channel": {
+                    "$cond": [
+                        {"$ifNull": ["$agency_id", False]},
+                        "b2b",
+                        "b2c",
+                    ]
+                },
+                "_sell": {"$ifNull": ["$amounts.sell", 0.0]},
+            }
+        },
+        {
+            "$group": {
+                "_id": "$_channel",
+                "count": {"$sum": 1},
+                "sell_total": {"$sum": "$_sell"},
+            }
+        },
+    ]
+
+    rows = await db.bookings.aggregate(pipeline).to_list(length=None)
+    channels: Dict[str, Any] = {
+        "b2b": {"count": 0, "sell_total": 0.0},
+        "b2c": {"count": 0, "sell_total": 0.0},
+    }
+    for r in rows:
+        key = (r.get("_id") or "").lower()
+        if key not in channels:
+            continue
+        channels[key] = {
+            "count": int(r.get("count") or 0),
+            "sell_total": round(float(r.get("sell_total") or 0.0), 2),
+        }
+
+    return {"days": d, "channels": channels}

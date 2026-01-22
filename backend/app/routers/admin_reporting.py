@@ -180,6 +180,74 @@ async def reporting_campaigns_usage(
 
 
 
+@router.get("/top-b2b-agencies")
+async def reporting_top_b2b_agencies(
+    days: int = Query(7, ge=1, le=90),
+    limit: int = Query(10, ge=1, le=50),
+    db=Depends(get_db),
+    user: Dict[str, Any] = Depends(require_roles(["super_admin", "admin", "ops"])),
+) -> Dict[str, Any]:
+    """Top B2B agencies by sell_total (and bookings count) within given days.
+
+    B2B is defined as bookings with a non-null agency_id.
+    """
+
+    org_id = user["organization_id"]
+    since = datetime.now(timezone.utc) - timedelta(days=days)
+
+    match: Dict[str, Any] = {
+        "organization_id": org_id,
+        "created_at": {"$gte": since},
+        "agency_id": {"$ne": None},
+    }
+
+    pipeline: List[Dict[str, Any]] = [
+        {"$match": match},
+        {
+            "$group": {
+                "_id": "$agency_id",
+                "bookings": {"$sum": 1},
+                "sell_total": {"$sum": {"$ifNull": ["$amounts.sell", 0.0]}},
+                "net_total": {"$sum": {"$ifNull": ["$amounts.net", 0.0]}},
+            }
+        },
+        {"$sort": {"sell_total": -1}},
+        {"$limit": limit},
+    ]
+
+    rows = await db.bookings.aggregate(pipeline).to_list(length=limit)
+    if not rows:
+        return {"days": days, "items": []}
+
+    agency_ids = [r.get("_id") for r in rows if r.get("_id")]
+    agencies = await db.agencies.find(
+        {"organization_id": org_id, "_id": {"$in": agency_ids}},
+        {"_id": 1, "name": 1},
+    ).to_list(length=len(agency_ids))
+    name_by_id = {a.get("_id"): a.get("name") for a in agencies}
+
+    items: List[Dict[str, Any]] = []
+    for r in rows:
+        aid = r.get("_id")
+        if not aid:
+            continue
+        sell_total = float(r.get("sell_total") or 0.0)
+        net_total = float(r.get("net_total") or 0.0)
+        items.append(
+            {
+                "agency_id": str(aid),
+                "agency_name": name_by_id.get(aid) or "",
+                "bookings": int(r.get("bookings") or 0),
+                "sell_total": round(sell_total, 2),
+                "net_total": round(net_total, 2),
+                "markup_total": round(sell_total - net_total, 2),
+            }
+        )
+
+    return {"days": days, "items": items}
+
+
+
 @router.get("/top-products")
 async def reporting_top_products(
     days: int = Query(7, ge=1, le=90),

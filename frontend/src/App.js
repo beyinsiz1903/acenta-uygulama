@@ -62,6 +62,7 @@ import InboxPage from "./pages/InboxPage";
 import AdminFinanceRefundsPage from "./pages/AdminFinanceRefundsPage";
 import AdminFinanceExposurePage from "./pages/AdminFinanceExposurePage";
 import AdminB2BAgenciesSummaryPage from "./pages/AdminB2BAgenciesSummaryPage";
+import AdminB2BAgencyProductsPage from "./pages/AdminB2BAgencyProductsPage";
 import AdminSettlementsPage from "./pages/AdminSettlementsPage";
 import AdminSettlementRunsPage from "./pages/AdminSettlementRunsPage";
 import AdminSettlementRunDetailPage from "./pages/AdminSettlementRunDetailPage";

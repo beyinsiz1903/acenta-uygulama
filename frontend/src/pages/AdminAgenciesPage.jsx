@@ -40,7 +40,7 @@ export default function AdminAgenciesPage() {
     setLoading(true);
     setError("");
     try {
-      const resp = await api.get("/admin/agencies");
+      const resp = await api.get("/admin/agencies/");
       console.log("[AdminAgencies] Loaded:", resp.data?.length || 0);
       const sorted = (resp.data || []).sort(
         (a, b) => new Date(b.created_at) - new Date(a.created_at)

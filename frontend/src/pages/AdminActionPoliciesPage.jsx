@@ -5,10 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Button } from "../components/ui/button";
 
 const ACTION_OPTIONS = [
-  { value: "none", label: "No automatic action" },
-  { value: "watchlist", label: "Watchlist" },
-  { value: "manual_review", label: "Manual review" },
-  { value: "block", label: "Auto-block" },
+  { value: "none", label: "Otomatik aksiyon yok" },
+  { value: "watchlist", label: "İzleme listesi" },
+  { value: "manual_review", label: "Manuel inceleme" },
+  { value: "block", label: "Otomatik bloke" },
 ];
 
 const REASON_OPTIONS = [

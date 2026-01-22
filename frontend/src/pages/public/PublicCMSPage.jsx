@@ -70,7 +70,7 @@ export default function PublicCMSPage() {
             </div>
             <div className="text-sm text-muted-foreground whitespace-pre-line mb-4">{page.body}</div>
 
-            {page.kind === "landing" && page.linked_campaign_slug && (
+            {page.linked_campaign_slug && (
               <div className="mt-2 border-t pt-3 space-y-2 text-xs">
                 <p className="font-medium">Bu sayfaya bağlı kampanya</p>
                 <p className="text-muted-foreground">

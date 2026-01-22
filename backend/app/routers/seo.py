@@ -81,6 +81,24 @@ async def sitemap_xml(request: Request, db=Depends(get_db)) -> Response:
             if loc not in url_map:
                 url_map[loc] = {"loc": loc, "lastmod": lastmod, "priority": "0.6"}
 
+        # Dynamic campaign URLs for this tenant
+        try:
+            campaigns = await db.campaigns.find(
+                {"organization_id": org_id, "active": True},
+                {"slug": 1, "updated_at": 1, "created_at": 1},
+            ).to_list(500)
+        except Exception:
+            campaigns = []
+
+        for c in campaigns:
+            slug = c.get("slug") or ""
+            if not slug:
+                continue
+            lastmod = _format_date(c.get("updated_at")) or _format_date(c.get("created_at")) or today
+            loc = f"{base_url}/campaigns/{slug}"
+            if loc not in url_map:
+                url_map[loc] = {"loc": loc, "lastmod": lastmod, "priority": "0.5"}
+
     urls: List[dict[str, str]] = list(url_map.values())
 
     # Build XML

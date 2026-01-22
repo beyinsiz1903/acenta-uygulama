@@ -226,7 +226,12 @@ export default function AdminMatchesPage() {
         </CardHeader>
         <CardContent>
           {displayedItems.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Bu dönem için eşleşme bulunamadı.</p>
+            <EmptyState
+              title="Bu dönem için eşleşme yok"
+              description="Seçili dönem ve filtrelere göre match riski üreten bir acenta–otel eşleşmesi bulunamadı. Gün sayısını artırarak veya filtreleri gevşeterek tekrar deneyebilirsiniz."
+              icon={<AlertCircle className="h-8 w-8 text-muted-foreground" />}
+              className="py-8"
+            />
           ) : (
             <div className="overflow-x-auto">
               <Table>

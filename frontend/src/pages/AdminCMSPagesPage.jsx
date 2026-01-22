@@ -52,6 +52,7 @@ export default function AdminCMSPagesPage() {
         slug: slug.trim(),
         title: title.trim(),
         body,
+        linked_campaign_slug: linkedCampaignSlug.trim() || null,
       });
       setSlug("");
       setTitle("");

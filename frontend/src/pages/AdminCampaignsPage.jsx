@@ -134,7 +134,7 @@ export default function AdminCampaignsPage() {
           <div className="text-sm font-semibold">Yeni Kampanya</div>
           <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
             <span>Alanlar:</span>
-            <span>Ad, Slug, Kanal, Tarih, Kupon Kodlar31</span>
+            <span>Ad, Slug, Kanal, Tarih, Kupon Kodları</span>
           </div>
         </div>
 
@@ -147,7 +147,7 @@ export default function AdminCampaignsPage() {
               className="h-8 text-xs"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="6rn: Yaz F31rsatlar31 2025"
+              placeholder="Örn: Yaz Fırsatları 2025"
             />
           </div>
           <div className="space-y-1">
@@ -229,7 +229,7 @@ export default function AdminCampaignsPage() {
         <div className="flex justify-end">
           <Button size="sm" className="h-8 text-xs" onClick={create} disabled={creating}>
             {creating && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
-            Kampanya Olu5ftur
+            Kampanya Oluştur
           </Button>
         </div>
       </Card>
@@ -286,13 +286,13 @@ export default function AdminCampaignsPage() {
                     className="h-6 px-2 text-[10px]"
                     onClick={() => toggleActive(c)}
                   >
-                    {c.active ? "Pasifle5ftir" : "Aktifle5ftir"}
+                    {c.active ? "Pasifleştir" : "Aktifleştir"}
                   </Button>
                 </div>
               </div>
             ))}
             {!items.length && !loading && (
-              <div className="px-2 py-3 text-[11px] text-muted-foreground">Hen31z kampanya yok.</div>
+              <div className="px-2 py-3 text-[11px] text-muted-foreground">Henüz kampanya yok.</div>
             )}
           </div>
         </div>

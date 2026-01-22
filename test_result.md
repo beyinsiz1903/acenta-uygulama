@@ -105,7 +105,7 @@
 
 # main_agent: Admin sol menü tüm sekmeler için UI smoke test planlandı (super_admin ile giriş).
 
-user_problem_statement: "Aşağıdaki üç admin sayfasında yaptığımız empty state standardizasyonunu test edin: 1) AdminB2BFunnelPage.jsx – /app/admin/b2b/funnel, 2) AdminMatchesPage.jsx – /app/admin/matches, 3) AdminReportingPage.jsx – /app/admin/reporting"
+user_problem_statement: "1) CRM Pipeline (/app/crm/pipeline) - admin@acenta.test / admin123 ile giriş yap. CRM • Pipeline sayfasına git. Test: - Eğer hiç fırsat yoksa, her sütun içinde boş durumda şunlar görünmeli: Başlık: 'Henüz fırsat yok', Açıklama: 'İlk fırsatı oluşturarak pipeline akışını başlatabilirsiniz.', CTA: 'İlk fırsatı oluştur' butonu (tıklanınca Yeni Fırsat modal'ı açılmalı). - En az bir fırsat varsa: Eski kartlar normal görünmeli, boş state görünmemeli. 2) Match Risk Trendleri (/app/admin/reports/match-risk-trends) - Aynı admin ile giriş yap. Sayfaya git. Test: - Üst kısımda mevcut başlık ve limit seçici çalışır durumda olmalı. - 'Trend' kartının header'ında sağ tarafta yeni bir buton olmalı: Etiket: 'Snapshot çalıştır', disabled state'i loading ile uyumlu olmalı. - Eğer hiç snapshot yoksa (points boş): Trend kartının gövdesinde EmptyState görmeli: Başlık: 'Henüz snapshot yok', Açıklama: 'Trendleri takip edebilmek için önce match risk snapshot'ı çalıştırmalısınız.' - Eğer snapshot points varsa: TrendLineChart normal render olmalı, EmptyState görünmemeli. - 'Snapshot çalıştır' butonuna basıldığında load(limit) çağrıldığı için veriler yeniden yüklenecek; bu esnada loading/devre dışı durumu doğal."
 
 frontend:
   - task: "EmptyState + CTA Behavior Testing (Products, Reservations, Customers)"

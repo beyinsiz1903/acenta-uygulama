@@ -529,7 +529,7 @@ export default function AdminCatalogPage() {
             onChange={setDraft}
             onSave={save}
             saving={saving}
-            error={formError}
+            error={formError === "Not Found" ? "" : formError}
           />
 
           {selected?.product_id && (

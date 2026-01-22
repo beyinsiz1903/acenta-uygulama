@@ -5,6 +5,7 @@ import { api, apiErrorMessage } from "../lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
 import { Badge } from "../components/ui/badge";
+import EmptyState from "../components/EmptyState";
 
 function formatAmountCents(amountCents, currency = "EUR") {
   const amount = (amountCents || 0) / 100;

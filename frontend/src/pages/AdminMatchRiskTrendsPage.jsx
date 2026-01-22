@@ -380,7 +380,7 @@ export default function AdminMatchRiskTrendsPage() {
         </div>
       ) : (
         <div className="mb-4 text-sm text-muted-foreground">
-          Not enough snapshots to compute change.
+          Değişimi hesaplamak için yeterli snapshot yok.
         </div>
       )}
 

@@ -267,8 +267,11 @@ export default function AdminPartnersPage() {
                 </TableHeader>
                 <TableBody>
                   {items.map((p) => (
-                    <TableRow key={p.id} className="cursor-pointer hover:bg-muted/40" onClick={() => openSummary(p)}>
-                      <TableCell className="text-xs">
+                    <TableRow key={p.id} className="hover:bg-muted/40">
+                      <TableCell
+                        className="text-xs cursor-pointer"
+                        onClick={() => openSummary(p)}
+                      >
                         <div className="flex flex-col">
                           <span className="font-medium truncate max-w-[220px]">{p.name}</span>
                           {p.notes && (
@@ -284,6 +287,53 @@ export default function AdminPartnersPage() {
                       <TableCell className="text-xs">
                         <StatusBadge status={p.status} />
                       </TableCell>
+                      <TableCell className="text-xs font-mono">
+                        {p.api_key_name || <span className="text-muted-foreground">-</span>}
+                      </TableCell>
+                      <TableCell className="text-xs text-right">
+                        {typeof p.default_markup_percent === "number"
+                          ? p.default_markup_percent.toFixed(1)
+                          : "0.0"}
+                      </TableCell>
+                      <TableCell className="text-xs text-right">
+                        <div className="inline-flex gap-1">
+                          <Button
+                            type="button"
+                            size="xs"
+                            variant="outline"
+                            className="h-6 px-2 text-[10px]"
+                            onClick={() => updateStatus(p.id, "approved")}
+                          >
+                            Onayla
+                          </Button>
+                          <Button
+                            type="button"
+                            size="xs"
+                            variant="outline"
+                            className="h-6 px-2 text-[10px]"
+                            onClick={() => updateStatus(p.id, "blocked")}
+                          >
+                            Engelle
+                          </Button>
+                          <Button
+                            type="button"
+                            size="xs"
+                            variant="outline"
+                            className="h-6 px-2 text-[10px]"
+                            onClick={() => updateStatus(p.id, "pending")}
+                          >
+                            Beklemeye al
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <Dialog open={!!summaryPartner} onOpenChange={(open) => !open && setSummaryPartner(null)}>
         <DialogContent className="max-w-lg">

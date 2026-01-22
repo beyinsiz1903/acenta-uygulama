@@ -389,11 +389,30 @@ export default function AdminMatchRiskTrendsPage() {
 
       {/* Chart */}
       <Card>
-        <CardHeader className="pb-2">
+        <CardHeader className="pb-2 flex items-center justify-between">
           <CardTitle className="text-sm">Trend</CardTitle>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            disabled={loading}
+            data-testid="match-risk-trends-run-snapshot"
+            onClick={() => {
+              void load(limit);
+            }}
+          >
+            Snapshot çalıştır
+          </Button>
         </CardHeader>
         <CardContent className="pt-0">
-          <TrendLineChart points={points} />
+          {isEmpty ? (
+            <EmptyState
+              title="Henüz snapshot yok"
+              description="Trendleri takip edebilmek için önce match risk snapshot'ı çalıştırmalısınız."
+            />
+          ) : (
+            <TrendLineChart points={points} />
+          )}
         </CardContent>
       </Card>
 

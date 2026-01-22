@@ -223,9 +223,9 @@ export default function CrmTasksPage() {
 
         {!loading && !items.length ? (
           <div style={{ padding: 18 }}>
-            <div style={{ fontSize: 16, fontWeight: 600 }}>Bu filtrede g\u00f6rev yok.</div>
+            <div style={{ fontSize: 16, fontWeight: 600 }}>Bu filtrede görev yok.</div>
             <div style={{ marginTop: 6, color: "#666" }}>
-              Farkl\u0131 bir sekme deneyebilir veya yeni g\u00f6revler olu\u015fturabilirsiniz.
+              Farklı bir sekme deneyebilir veya yeni görevler oluşturabilirsiniz.
             </div>
           </div>
         ) : (

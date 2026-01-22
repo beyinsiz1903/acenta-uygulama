@@ -32,7 +32,7 @@ export default function PublicPartnerApplyPage() {
     setSuccess(false);
 
     if (!org) {
-      setError("Kuruluş (org) parametresi eksik. Lütfen URL'ye ?org=<organization_id> ekleyin.");
+      setError("Kuruluş (org) parametresi eksik. Lütfen URL'ye ?org=&lt;organization_id&gt; ekleyin.");
       return;
     }
     if (!name.trim() || !email.trim()) {

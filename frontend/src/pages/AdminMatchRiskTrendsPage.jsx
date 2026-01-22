@@ -308,7 +308,7 @@ export default function AdminMatchRiskTrendsPage() {
         <div className="mb-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Card data-testid="match-risk-trends-kpi-high-risk-rate">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm">High risk rate</CardTitle>
+              <CardTitle className="text-sm">Yüksek risk oranı</CardTitle>
             </CardHeader>
             <CardContent className="pt-0 text-sm">
               <div className="flex items-baseline gap-2">
@@ -335,7 +335,7 @@ export default function AdminMatchRiskTrendsPage() {
                       : `Değişim: ${kpiHighRisk.changeLabel}`}
                   </span>
                 ) : (
-                  <span className="text-muted-foreground">Not enough snapshots to compute change.</span>
+                  <span className="text-muted-foreground">Değişimi hesaplamak için yeterli snapshot yok.</span>
                 )}
               </div>
             </CardContent>
@@ -343,7 +343,7 @@ export default function AdminMatchRiskTrendsPage() {
 
           <Card data-testid="match-risk-trends-kpi-verified-share">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm">Verified share avg</CardTitle>
+              <CardTitle className="text-sm">Doğrulanmış pay ortalaması</CardTitle>
             </CardHeader>
             <CardContent className="pt-0 text-sm">
               <div className="flex items-baseline gap-2">
@@ -372,7 +372,7 @@ export default function AdminMatchRiskTrendsPage() {
                       : `Değişim: ${kpiVerifiedShare.changeLabel}`}
                   </span>
                 ) : (
-                  <span className="text-muted-foreground">Not enough snapshots to compute change.</span>
+                  <span className="text-muted-foreground">Değişimi hesaplamak için yeterli snapshot yok.</span>
                 )}
               </div>
             </CardContent>

@@ -267,6 +267,15 @@ export default function AdminB2BAgenciesSummaryPage() {
                 >
                   Bayi iframe
                 </button>
+                <button
+                  type="button"
+                  className={`px-2 py-1 rounded-md ${
+                    sheetTab === "visibility" ? "bg-background text-foreground shadow" : ""
+                  }`}
+                  onClick={() => setSheetTab("visibility")}
+                >
+                  Ürün erişimi
+                </button>
               </div>
 
               {sheetTab === "credit" && (

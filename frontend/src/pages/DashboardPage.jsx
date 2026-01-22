@@ -103,6 +103,12 @@ export default function DashboardPage() {
         </div>
       ) : null}
 
+      {totals.total === 0 && !error && (
+        <div className="rounded-2xl border border-muted px-4 py-3 text-xs text-muted-foreground">
+          Son 30 günde rezervasyon verisi bulunamadı. Veriler geldikçe özet kartlar otomatik güncellenecektir.
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           title="Toplam Rezervasyon"

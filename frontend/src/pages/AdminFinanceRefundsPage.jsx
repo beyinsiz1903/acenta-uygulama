@@ -171,8 +171,8 @@ function RefundApproveDialog({ open, onOpenChange, caseData, onApproved }) {
     const parsed = parseFloat(amount);
     if (!parsed || parsed <= 0 || parsed > refundable + 1e-6) {
       toast({
-        title: "Approved amount invalid",
-        description: `Amount must be > 0 and <= refundable (${refundable.toFixed(2)})`,
+        title: "Onaylanan tutar geçersiz",
+        description: `Tutar 0'dan büyük ve iade edilebilir tutardan ( ${refundable.toFixed(2)} ) küçük veya eşit olmalıdır.`,
         variant: "destructive",
       });
       return;

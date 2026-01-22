@@ -112,6 +112,20 @@ export default function AdminPartnersPage() {
     }
   };
 
+  const openSummary = async (partner) => {
+    setSummaryPartner({ ...partner, summary: null });
+    setSummaryError("");
+    setSummaryLoading(true);
+    try {
+      const res = await api.get(`/admin/partners/${partner.id}/summary`);
+      setSummaryPartner({ ...partner, summary: res.data || null });
+    } catch (e) {
+      setSummaryError(apiErrorMessage(e));
+    } finally {
+      setSummaryLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2">

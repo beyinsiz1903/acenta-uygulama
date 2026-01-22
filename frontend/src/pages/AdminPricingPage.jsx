@@ -180,7 +180,7 @@ function ContractsTab() {
             </div>
           ))}
           {!items.length && (
-            <div className="px-2 py-3 text-[11px] text-muted-foreground">No contracts.</div>
+            <div className="px-2 py-3 text-[11px] text-muted-foreground">Henüz sözleşme yok.</div>
           )}
         </div>
       </div>

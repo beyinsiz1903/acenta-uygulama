@@ -473,7 +473,7 @@ function RulesTab() {
             </div>
           ))}
           {!items.length && (
-            <div className="px-2 py-3 text-[11px] text-muted-foreground">No rules.</div>
+            <div className="px-2 py-3 text-[11px] text-muted-foreground">Henüz kural tanımlı değil.</div>
           )}
         </div>
       </div>

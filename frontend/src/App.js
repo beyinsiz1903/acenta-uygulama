@@ -59,6 +59,7 @@ import AdminB2BDiscountsPage from "./pages/AdminB2BDiscountsPage";
 import AdminCouponsPage from "./pages/AdminCouponsPage";
 import AdminCampaignsPage from "./pages/AdminCampaignsPage";
 import AdminIntegrationsPage from "./pages/AdminIntegrationsPage";
+import AdminPartnersPage from "./pages/AdminPartnersPage";
 import AdminJobsPage from "./pages/AdminJobsPage";
 import AdminApiKeysPage from "./pages/AdminApiKeysPage";
 import OpsB2BQueuesPage from "./pages/OpsB2BQueuesPage";
@@ -208,6 +209,7 @@ function App() {
             <Route path="pricing/incidents" element={<AdminPricingIncidentsPage />} />
             <Route path="b2b/discounts" element={<AdminB2BDiscountsPage />} />
             <Route path="dashboard" element={<AdminExecutiveDashboardPage />} />
+            <Route path="partners" element={<AdminPartnersPage />} />
             <Route path="integrations" element={<AdminIntegrationsPage />} />
             <Route path="jobs" element={<AdminJobsPage />} />
             <Route path="api-keys" element={<AdminApiKeysPage />} />

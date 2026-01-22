@@ -383,7 +383,7 @@ export default function AppShell() {
 
               <div className="rounded-xl border bg-background/50 p-2 opacity-70 cursor-default">
                 <div className="flex items-baseline justify-between gap-1">
-                  <div className="text-[11px] text-muted-foreground">Ciro 7G</div>
+                  <div className="text-[11px] text-muted-foreground">Ciro (7G)</div>
                   <div className="text-[10px] text-muted-foreground/80">₺</div>
                 </div>
                 <div

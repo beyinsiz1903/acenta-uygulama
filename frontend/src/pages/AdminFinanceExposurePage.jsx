@@ -91,16 +91,16 @@ function ExposureTable({ items, filter, statusFilter }) {
                 </div>
               </TableCell>
               <TableCell className="text-xs text-right font-mono">
-                {it.exposure.toFixed(2)} {it.currency}
+                {(it.exposure || 0).toFixed(2)} {it.currency}
               </TableCell>
               <TableCell className="text-xs text-right font-mono text-emerald-600">
-                {it.age_0_30.toFixed(2)}
+                {(it.age_0_30 || 0).toFixed(2)}
               </TableCell>
               <TableCell className="text-xs text-right font-mono text-amber-600">
-                {it.age_31_60.toFixed(2)}
+                {(it.age_31_60 || 0).toFixed(2)}
               </TableCell>
               <TableCell className="text-xs text-right font-mono text-red-600">
-                {it.age_61_plus.toFixed(2)}
+                {(it.age_61_plus || 0).toFixed(2)}
               </TableCell>
               <TableCell className="align-top">
                 <AgingBar

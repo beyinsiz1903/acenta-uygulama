@@ -23,6 +23,8 @@ async def get_cms_page(slug: str, org: str = Query(..., min_length=1), db=Depend
         "body": doc.get("body") or "",
         "seo_title": doc.get("seo_title") or "",
         "seo_description": doc.get("seo_description") or "",
+        "kind": doc.get("kind") or "page",
+        "linked_campaign_slug": doc.get("linked_campaign_slug") or "",
     }
     return JSONResponse(status_code=200, content=payload)
 

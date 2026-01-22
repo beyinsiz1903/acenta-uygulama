@@ -54,6 +54,12 @@ export default function PublicHomePage() {
         if (!cancelled) {
           setFeaturedTours(tourRes.data?.items || []);
         }
+
+        // Campaigns
+        const campRes = await api.get("/public/campaigns", { params: { org } });
+        if (!cancelled) {
+          setCampaigns(campRes.data?.items || []);
+        }
       } catch (e) {
         if (cancelled) return;
         setError(apiErrorMessage(e));

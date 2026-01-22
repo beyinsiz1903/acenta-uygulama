@@ -330,7 +330,7 @@ export default function AppShell() {
 
       <div className="mx-auto grid max-w-7xl grid-cols-12 gap-4 px-4 py-6">
         <aside className="col-span-12 md:col-span-3 lg:col-span-2 md:sticky md:top-[84px] md:h-[calc(100vh-104px)]">
-          <div className="rounded-2xl border bg-card/60 p-3 shadow-sm">
+          <div className="rounded-2xl border bg-card/60 p-3 shadow-sm select-none">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="h-9 w-9 rounded-xl bg-primary text-primary-foreground grid place-items-center font-semibold">

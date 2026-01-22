@@ -184,7 +184,7 @@ export default function PublicHomePage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <section className="space-y-3">
-              <h2 className="text-sm font-semibold tracking-tight">Öne Çıkan Ürünler</h2>
+                <h2 className="text-sm font-semibold tracking-tight">Öne Çıkan Ürünler</h2>
               {loading && featuredProducts.length === 0 ? (
                 <p className="text-xs text-muted-foreground">Ürünler yükleniyor...</p>
               ) : featuredProducts.length === 0 ? (

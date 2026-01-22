@@ -99,7 +99,7 @@ export default function AdminB2BAgencyProductsPage() {
             <div>
               <CardTitle className="text-sm font-medium">Ürün listesi</CardTitle>
               <p className="text-xs text-muted-foreground mt-1">
-                Aktif ürünler listelenir. "Engelli" durumuna aldığınız ürünler, ilgili bayi için
+                Aktif ürünler listelenir. Engelli durumuna aldığınız ürünler, ilgili bayi için
                 public arama sonuçlarında görünmez.
               </p>
             </div>

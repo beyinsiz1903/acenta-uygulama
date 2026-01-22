@@ -202,7 +202,7 @@ export default function AdminActionPoliciesPage() {
         </div>
       </div>
 
-      {error ? (
+      {error && error !== "Not Found" ? (
         <div className="mb-3 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
           {error}
         </div>

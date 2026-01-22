@@ -208,7 +208,7 @@ function AdminB2BDiscountsPage() {
             />
           </div>
           <div className="space-y-1">
-            <label className="text-[11px] font-medium">Product ID</label>
+            <label className="text-[11px] font-medium">Ürün ID</label>
             <Input
               data-testid="b2b-discount-product-id"
               value={productId}
@@ -216,7 +216,7 @@ function AdminB2BDiscountsPage() {
             />
           </div>
           <div className="space-y-1">
-            <label className="text-[11px] font-medium">Product Type</label>
+            <label className="text-[11px] font-medium">Ürün Tipi</label>
             <select
               className="h-9 w-full rounded-md border bg-background px-2 text-sm"
               data-testid="b2b-discount-product-type"
@@ -230,7 +230,7 @@ function AdminB2BDiscountsPage() {
 
         <div className="grid gap-3 md:grid-cols-3">
           <div className="space-y-1">
-            <label className="text-[11px] font-medium">Valid From</label>
+            <label className="text-[11px] font-medium">Geçerlilik Başlangıcı</label>
             <Input
               type="date"
               data-testid="b2b-discount-valid-from"
@@ -239,7 +239,7 @@ function AdminB2BDiscountsPage() {
             />
           </div>
           <div className="space-y-1">
-            <label className="text-[11px] font-medium">Valid To</label>
+            <label className="text-[11px] font-medium">Geçerlilik Bitişi</label>
             <Input
               type="date"
               data-testid="b2b-discount-valid-to"
@@ -248,7 +248,7 @@ function AdminB2BDiscountsPage() {
             />
           </div>
           <div className="space-y-1">
-            <label className="text-[11px] font-medium">Notes</label>
+            <label className="text-[11px] font-medium">Notlar</label>
             <Textarea
               rows={2}
               data-testid="b2b-discount-notes"
@@ -348,7 +348,7 @@ function AdminB2BDiscountsPage() {
 
                   {expandedId === g.id && (
                     <div className="mt-2 space-y-2">
-                      <div className="text-[11px] font-semibold">Rules</div>
+                      <div className="text-[11px] font-semibold">Kurallar</div>
                       <div className="space-y-1">
                         {rules.length === 0 ? (
                           <div className="text-[11px] text-muted-foreground">

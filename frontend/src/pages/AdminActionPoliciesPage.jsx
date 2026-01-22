@@ -119,8 +119,11 @@ export default function AdminActionPoliciesPage() {
       setRules(policy.rules || []);
     } catch (e) {
       const msg = apiErrorMessage(e);
-      setError(msg);
-      toast({ title: "Aksiyon politikaları yüklenemedi", description: msg, variant: "destructive" });
+      // "Not Found" durumunda politikalar hen tanmlanmam sayyoruz ve bof state gfsteriyoruz.
+      if (msg !== "Not Found") {
+        setError(msg);
+        toast({ title: "Aksiyon politikaları yüklenemedi", description: msg, variant: "destructive" });
+      }
     } finally {
       setLoading(false);
     }

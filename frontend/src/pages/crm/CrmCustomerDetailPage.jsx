@@ -546,8 +546,8 @@ export default function CrmCustomerDetailPage() {
                           fontSize: 12,
                           whiteSpace: "nowrap",
                         }}
-                      >
-                        Inbox'ta aç
+> 
+                        Inbox’ta aç
                       </button>
                     </div>
                   ))}

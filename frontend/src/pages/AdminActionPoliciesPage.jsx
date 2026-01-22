@@ -12,8 +12,8 @@ const ACTION_OPTIONS = [
 ];
 
 const REASON_OPTIONS = [
-  { value: "rate", label: "High no-show rate" },
-  { value: "repeat", label: "Repeat no-shows (7g)" },
+  { value: "rate", label: "Yüksek no-show oranı" },
+  { value: "repeat", label: "Tekrarlayan no-show (7g)" },
 ];
 
 function RuleRow({ rule, index, onChange, onRemove }) {

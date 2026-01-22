@@ -402,6 +402,32 @@ export default function AdminB2BAgenciesSummaryPage() {
                     <div className="font-medium">Iframe URL</div>
                     <code className="block rounded-md bg-muted px-2 py-1 text-[11px] whitespace-pre-wrap break-all">
                       {buildEmbedUrl(selected)}
+
+              {sheetTab === "visibility" && (
+                <div className="space-y-3 text-xs">
+                  <p className="text-xs text-muted-foreground">
+                    Bu acenteye hangi ürünlerin gösterileceğini detaylı yönetmek için aşağıdaki
+                    bağlantıyı kullanın. Ürün erişimi sayfası, partner parametresi ile gelen
+                    public aramalarda hangi ürünlerin listeden düşeceğini kontrol eder.
+                  </p>
+                  <Button
+                    type="button"
+                    size="sm"
+                    className="text-xs"
+                    onClick={() => {
+                      if (!selected) return;
+                      const params = new URLSearchParams();
+                      params.set("agency_id", selected.id);
+                      if (selected.name) params.set("agency_name", selected.name);
+                      const qs = params.toString();
+                      window.open(`/admin/b2b/agency-products?${qs}`, "_blank", "noopener,noreferrer");
+                    }}
+                  >
+                    Ürün erişimini yönet
+                  </Button>
+                </div>
+              )}
+
                     </code>
                   </div>
                   <div className="space-y-1 text-xs">

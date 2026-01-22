@@ -169,6 +169,7 @@ app.include_router(admin_b2b_funnel_router)
 app.include_router(admin_b2b_announcements_router)
 app.include_router(admin_tours_router)
 app.include_router(admin_cms_pages_router)
+app.include_router(admin_campaigns_router)
 
 app.include_router(theme_router)
 
@@ -214,6 +215,7 @@ app.include_router(pricing_quote_router)
 app.include_router(crm_events_router)
 app.include_router(reservations_router, prefix=API_PREFIX)
 app.include_router(seo_router)
+app.include_router(public_campaigns_router)
 
 app.include_router(auth_router)
 

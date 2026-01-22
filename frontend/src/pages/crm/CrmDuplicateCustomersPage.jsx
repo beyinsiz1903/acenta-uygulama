@@ -315,7 +315,8 @@ export default function CrmDuplicateCustomersPage() {
               ) : null}
             </div>
           );
-        })}
+        })
+        )}
       </div>
     </div>
   );

@@ -106,12 +106,18 @@ export default function ReportsPage() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3" data-testid="res-summary">
-            {resSummary.map((r) => (
-              <div key={r.status} className="rounded-2xl border bg-card p-3">
-                <div className="text-xs text-muted-foreground">{r.status}</div>
-                <div className="text-2xl font-semibold text-foreground">{r.count}</div>
-              </div>
-            ))}
+            {resSummary.length === 0 ? (
+              <p className="col-span-2 md:col-span-4 text-xs text-muted-foreground">
+                Henüz rezervasyon durum verisi oluşmamış. Rezervasyon oluştukça bu dağılım burada görünecektir.
+              </p>
+            ) : (
+              resSummary.map((r) => (
+                <div key={r.status} className="rounded-2xl border bg-card p-3">
+                  <div className="text-xs text-muted-foreground">{r.status}</div>
+                  <div className="text-2xl font-semibold text-foreground">{r.count}</div>
+                </div>
+              ))
+            )}
           </div>
         </CardContent>
       </Card>

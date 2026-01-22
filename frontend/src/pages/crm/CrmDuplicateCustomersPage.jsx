@@ -168,7 +168,26 @@ export default function CrmDuplicateCustomersPage() {
       </div>
 
       <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 12 }}>
-        {clusters.map((cluster) => {
+        {!loading && clusters.length === 0 ? (
+          <div
+            style={{
+              padding: 24,
+              borderRadius: 16,
+              border: "1px solid #e5e7eb",
+              background: "#f9fafb",
+              textAlign: "center",
+              maxWidth: 420,
+              margin: "24px auto 0",
+            }}
+          >
+            <div style={{ fontSize: 32, marginBottom: 8 }}>👥</div>
+            <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 4 }}>Duplicate müşteri bulunamadı.</div>
+            <div style={{ fontSize: 12, color: "#6b7280" }}>
+              CRM verinizde aynı iletişim anahtarına sahip birden fazla müşteri kaydı tespit edilmedi.
+            </div>
+          </div>
+        ) : (
+          clusters.map((cluster) => {
           const key = contactKey(cluster.contact);
           const preview = previewByKey[key];
           const isLoading = loadingKey === key;

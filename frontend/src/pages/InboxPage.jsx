@@ -347,6 +347,10 @@ function InboxPage() {
                         m.direction === "internal" ? "bg-primary/5 ml-auto" : "bg-muted"
                       }`}
                     >
+                      <div className="mb-1 flex items-center justify-between gap-2 text-[10px] text-muted-foreground">
+                        <span>{m.direction === "internal" ? "İç not" : "Dış mesaj"}</span>
+                        <span>{m.created_at || ""}</span>
+                      </div>
                       <div>{m.body}</div>
                     </div>
                   ))}

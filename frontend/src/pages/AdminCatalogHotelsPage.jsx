@@ -193,7 +193,7 @@ function RatePlansPanel({ productId }) {
       </div>
       {error && (
         <div className="rounded-md border border-destructive/40 bg-destructive/5 p-2 text-xs text-destructive">
-          {error}
+          {error === "Not Found" ? "Otel kataloğu verileri alınırken bir hata oluştu. Lütfen daha sonra tekrar deneyin." : error}
         </div>
       )}
       <div className="rounded-md border overflow-hidden text-xs">

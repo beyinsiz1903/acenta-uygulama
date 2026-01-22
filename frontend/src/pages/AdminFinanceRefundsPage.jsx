@@ -183,7 +183,7 @@ function RefundApproveDialog({ open, onOpenChange, caseData, onApproved }) {
         approved_amount: parsed,
         payment_reference: paymentRef || null,
       });
-      toast({ title: "Refund approved" });
+      toast({ title: "İade onaylandı" });
       onApproved();
       onOpenChange(false);
     } catch (e) {

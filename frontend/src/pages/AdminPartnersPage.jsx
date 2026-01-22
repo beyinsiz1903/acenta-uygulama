@@ -440,54 +440,6 @@ export default function AdminPartnersPage() {
           )}
         </DialogContent>
       </Dialog>
-
-                      <TableCell className="text-xs font-mono">
-                        {p.api_key_name || <span className="text-muted-foreground">-</span>}
-                      </TableCell>
-                      <TableCell className="text-xs text-right">
-                        {typeof p.default_markup_percent === "number"
-                          ? p.default_markup_percent.toFixed(1)
-                          : "0.0"}
-                      </TableCell>
-                      <TableCell className="text-xs text-right">
-                        <div className="inline-flex gap-1">
-                          <Button
-                            type="button"
-                            size="xs"
-                            variant="outline"
-                            className="h-6 px-2 text-[10px]"
-                            onClick={() => updateStatus(p.id, "approved")}
-                          >
-                            Onayla
-                          </Button>
-                          <Button
-                            type="button"
-                            size="xs"
-                            variant="outline"
-                            className="h-6 px-2 text-[10px]"
-                            onClick={() => updateStatus(p.id, "blocked")}
-                          >
-                            Engelle
-                          </Button>
-                          <Button
-                            type="button"
-                            size="xs"
-                            variant="outline"
-                            className="h-6 px-2 text-[10px]"
-                            onClick={() => updateStatus(p.id, "pending")}
-                          >
-                            Beklemeye al
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
     </div>
   );
 }

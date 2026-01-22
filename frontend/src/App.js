@@ -23,6 +23,7 @@ import BookCompletePage from "./pages/public/BookCompletePage";
 import BookTourProductPage from "./pages/public/BookTourProductPage";
 import BookTourCheckoutPage from "./pages/public/BookTourCheckoutPage";
 import PublicCMSPage from "./pages/public/PublicCMSPage";
+import PublicCampaignPage from "./pages/public/PublicCampaignPage";
 import PublicHomePage from "./pages/PublicHomePage";
 
 import HotelLayout from "./layouts/HotelLayout";

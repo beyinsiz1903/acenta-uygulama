@@ -231,7 +231,7 @@ export default function AppShell() {
                     )
                   }
                 >
-                  <div className="text-[11px] text-muted-foreground">Ciro 7G</div>
+                  <div className="text-[11px] text-muted-foreground">Ciro (7G)</div>
                   <div className="text-sm font-semibold text-foreground">{formatMoneyCompact(sidebarStats.revenue7d, "TRY")}</div>
                 </NavLink>
               )}

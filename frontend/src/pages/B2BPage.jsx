@@ -200,7 +200,13 @@ export default function B2BPage() {
       const resp = await api.get("/b2b/agencies");
       setAgencies(resp.data || []);
     } catch (e) {
-      setError(apiErrorMessage(e));
+      const msg = apiErrorMessage(e);
+      // 404 / "Not Found" durumunda, liste boşmuş gibi davran; kırmızı hata göstermeyelim.
+      if (e?.response?.status === 404 || (typeof msg === "string" && msg.toLowerCase().includes("not found"))) {
+        setAgencies([]);
+      } else {
+        setError(msg);
+      }
     }
   }, []);
 

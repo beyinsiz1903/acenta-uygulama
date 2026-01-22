@@ -217,7 +217,7 @@ export default function AppShell() {
 
               {isAgency ? (
                 <div className="rounded-xl border bg-background/50 p-2 opacity-70 cursor-default">
-                  <div className="text-[11px] text-muted-foreground">Ciro 7G</div>
+                  <div className="text-[11px] text-muted-foreground">Ciro (7G)</div>
                   <div className="text-sm font-semibold text-foreground">{formatMoneyCompact(sidebarStats.revenue7d, "TRY")}</div>
                 </div>
               ) : (

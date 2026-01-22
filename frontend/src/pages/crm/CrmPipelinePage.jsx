@@ -607,7 +607,25 @@ export default function CrmPipelinePage() {
                       textAlign: "center",
                     }}
                   >
-                    {"Kayıt yok"}
+                    <div style={{ fontWeight: 600, marginBottom: 4 }}>Henüz fırsat yok</div>
+                    <div style={{ marginBottom: 8 }}>
+                      İlk fırsatı oluşturarak pipeline akışını başlatabilirsiniz.
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setNewDealOpen(true)}
+                      style={{
+                        padding: "6px 10px",
+                        borderRadius: 999,
+                        border: "1px solid #111827",
+                        background: "#111827",
+                        color: "#ffffff",
+                        fontSize: 11,
+                        cursor: "pointer",
+                      }}
+                    >
+                      İlk fırsatı oluştur
+                    </button>
                   </div>
                 ) : (
                   items.map((deal) => (

@@ -3,6 +3,7 @@ import { api, apiErrorMessage } from "../lib/api";
 import { useToast } from "../hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
+import EmptyState from "../components/EmptyState";
 
 function formatPercent(value) {
   if (value == null || Number.isNaN(Number(value))) return "—";
@@ -239,6 +240,8 @@ export default function AdminMatchRiskTrendsPage() {
   );
 
   const hasDelta = Boolean(delta && points && points.length >= 2);
+
+  const isEmpty = !loading && (!points || points.length === 0);
 
   return (
     <div className="p-4 md:p-6" data-testid="match-risk-trends-page">

@@ -209,12 +209,16 @@ export default function AdminMatchRiskTrendsPage() {
       setDelta(res.data?.delta || null);
     } catch (e) {
       const msg = apiErrorMessage ? apiErrorMessage(e) : e?.message || "Bir hata oluştu";
-      setError(msg);
-      toast({
-        title: "Trendler yüklenemedi",
-        description: msg,
-        variant: "destructive",
-      });
+      // 404/"Not Found" durumunda veri yok olarak kabul ediyoruz; bu durumda kırmızı hata göstermek yerine
+      // aşağıdaki boş state mesajlarına güveniyoruz.
+      if (msg !== "Not Found") {
+        setError(msg);
+        toast({
+          title: "Trendler yüklenemedi",
+          description: msg,
+          variant: "destructive",
+        });
+      }
     } finally {
       setLoading(false);
     }

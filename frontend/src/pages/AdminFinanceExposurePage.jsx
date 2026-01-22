@@ -111,7 +111,7 @@ function ExposureTable({ items, filter, statusFilter }) {
                 />
               </TableCell>
               <TableCell className="text-xs text-right font-mono">
-                {it.credit_limit.toFixed(2)} {it.currency}
+                {(it.credit_limit || 0).toFixed(2)} {it.currency}
               </TableCell>
               <TableCell className="text-xs">
                 <StatusBadge status={it.status} />

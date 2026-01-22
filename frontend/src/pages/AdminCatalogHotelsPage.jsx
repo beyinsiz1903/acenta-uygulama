@@ -7,8 +7,8 @@ import { Textarea } from "../components/ui/textarea";
 
 const StatusBadge = ({ s }) => {
   if (!s) return <Badge variant="outline">-</Badge>;
-  if (s === "active") return <Badge variant="secondary">active</Badge>;
-  if (s === "archived") return <Badge variant="outline">archived</Badge>;
+  if (s === "active") return <Badge variant="secondary">Aktif</Badge>;
+  if (s === "archived") return <Badge variant="outline">Arşivlendi</Badge>;
   return <Badge>{s}</Badge>;
 };
 
@@ -24,7 +24,7 @@ function HotelForm({ value, onChange, onSave, saving, error }) {
       )}
       <div className="grid grid-cols-2 gap-2">
         <div className="space-y-1">
-          <div className="text-xs text-muted-foreground">Status</div>
+          <div className="text-xs text-muted-foreground">Durum</div>
           <select
             className="h-9 w-full rounded-md border bg-background px-2 text-sm"
             value={v.status || "inactive"}
@@ -36,7 +36,7 @@ function HotelForm({ value, onChange, onSave, saving, error }) {
           </select>
         </div>
         <div className="space-y-1">
-          <div className="text-xs text-muted-foreground">Default Currency</div>
+          <div className="text-xs text-muted-foreground">Varsayılan para birimi</div>
           <Input
             value={v.default_currency || "EUR"}
             onChange={(e) =>

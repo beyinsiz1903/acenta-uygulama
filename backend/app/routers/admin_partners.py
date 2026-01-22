@@ -164,6 +164,28 @@ async def update_partner(
                 value = value.strip()
             update[field] = value
 
+    if not update:
+        doc = await db.partner_profiles.find_one({"_id": oid, "organization_id": org_id})
+        if not doc:
+            raise HTTPException(status_code=404, detail="PARTNER_NOT_FOUND")
+        data = serialize_doc(doc)
+        data["id"] = data.pop("_id")
+        return PartnerOut(**data)
+
+    update["updated_at"] = datetime.now(timezone.utc).isoformat()
+
+    res = await db.partner_profiles.update_one({"_id": oid, "organization_id": org_id}, {"$set": update})
+    if res.matched_count == 0:
+        raise HTTPException(status_code=404, detail="PARTNER_NOT_FOUND")
+
+    doc = await db.partner_profiles.find_one({"_id": oid, "organization_id": org_id})
+    if not doc:
+        raise HTTPException(status_code=404, detail="PARTNER_NOT_FOUND")
+
+    data = serialize_doc(doc)
+    data["id"] = data.pop("_id")
+    return PartnerOut(**data)
+
 
 class PartnerActivitySummaryOut(BaseModel):
     partner_id: str

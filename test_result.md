@@ -95,7 +95,7 @@
 
 # main_agent: Admin sol menü tüm sekmeler için UI smoke test planlandı (super_admin ile giriş).
 
-user_problem_statement: "B2B Portal page KPI cards regression + mini-dashboard verification."
+user_problem_statement: "Lütfen aşağıdaki iki küçük frontend değişikliğini test edin: 1) InboxPage.jsx – tarih formatı, 2) AdminB2BDiscountsPage.jsx – boş durum ve başlık metni"
 
 frontend:
   - task: "Turkish Admin Interface Comprehensive Smoke Test"

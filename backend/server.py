@@ -16,6 +16,7 @@ from app.routers.admin_catalog import router as admin_catalog_router
 from app.routers.admin_metrics import router as admin_metrics_router
 from app.routers.admin_pricing import router as admin_pricing_router
 from app.routers.admin_coupons import router as admin_coupons_router
+from app.routers.admin_hotels import router as admin_hotels_router
 from app.routers.auth import router as auth_router
 from app.routers.b2b_bookings import router as b2b_bookings_router
 from app.routers.b2b_bookings_list import router as b2b_bookings_list_router

@@ -343,9 +343,9 @@ export default function CrmCustomerDetailPage() {
             fontSize: 13,
           }}
         >
-          <div style={{ fontWeight: 600, marginBottom: 4 }}>Bu m\u00fc\u015fteri kayd\u0131 birle\u015ftirildi.</div>
+          <div style={{ fontWeight: 600, marginBottom: 4 }}>Bu müşteri kaydı birleştirildi.</div>
           <div>
-            T\u00fcm i\u015flemler <code>{mergedIntoId}</code> ID'li ana kay\u0131t \u00fczerinden y\u00fcr\u00fct\u00fcl\u00fcyor.
+            Tüm işlemler <code>{mergedIntoId}</code> ID'li ana kayıt üzerinden yürütülüyor.
             {" "}
             <button
               type="button"

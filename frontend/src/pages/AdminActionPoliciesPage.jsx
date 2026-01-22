@@ -210,7 +210,7 @@ export default function AdminActionPoliciesPage() {
 
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm">Default action</CardTitle>
+          <CardTitle className="text-sm">Varsayılan aksiyon</CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
           <select

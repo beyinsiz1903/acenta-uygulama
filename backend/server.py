@@ -177,6 +177,7 @@ app.include_router(admin_b2b_announcements_router)
 app.include_router(admin_tours_router)
 app.include_router(admin_cms_pages_router)
 app.include_router(admin_campaigns_router)
+app.include_router(admin_links_router)
 
 app.include_router(theme_router)
 

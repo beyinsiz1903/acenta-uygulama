@@ -78,6 +78,10 @@ import ProductsPage from "./pages/ProductsPage";
 import InventoryPage from "./pages/InventoryPage";
 import ReservationsPage from "./pages/ReservationsPage";
 import CustomersPage from "./pages/CustomersPage";
+import B2BPage from "./pages/B2BPage";
+import B2BBookingPage from "./pages/B2BBookingPage";
+import ReportsPage from "./pages/ReportsPage";
+import SettingsPage from "./pages/SettingsPage";
 import AgencyHotelsPage from "./pages/AgencyHotelsPage";
 import AgencyHotelDetailPage from "./pages/AgencyHotelDetailPage";
 import AgencyHotelSearchPage from "./pages/AgencyHotelSearchPage";
@@ -263,6 +267,10 @@ function App() {
           <Route path="inventory" element={<InventoryPage />} />
           <Route path="reservations" element={<ReservationsPage />} />
           <Route path="customers" element={<CustomersPage />} />
+          <Route path="b2b" element={<B2BPage />} />
+          <Route path="b2b-book" element={<B2BBookingPage />} />
+          <Route path="reports" element={<ReportsPage />} />
+          <Route path="settings" element={<SettingsPage />} />
           <Route path="crm/customers" element={<CrmCustomersPage />} />
           <Route path="crm/duplicates" element={<CrmDuplicateCustomersPage />} />
           <Route path="crm/pipeline" element={<CrmPipelinePage />} />

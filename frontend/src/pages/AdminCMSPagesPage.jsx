@@ -112,7 +112,7 @@ export default function AdminCMSPagesPage() {
       <div className="rounded-2xl border bg-card shadow-sm p-6">
         <h3 className="font-semibold mb-4">Yeni Sayfa Oluştur</h3>
         <form onSubmit={handleCreate} className="space-y-3">
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
             <div className="space-y-1">
               <Label htmlFor="slug">Slug</Label>
               <Input

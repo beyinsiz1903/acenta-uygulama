@@ -95,7 +95,7 @@
 
 # main_agent: Admin sol menü tüm sekmeler için UI smoke test planlandı (super_admin ile giriş).
 
-user_problem_statement: "Lütfen aşağıdaki iki küçük frontend değişikliğini test edin: 1) InboxPage.jsx – tarih formatı, 2) AdminB2BDiscountsPage.jsx – boş durum ve başlık metni"
+user_problem_statement: "Aşağıdaki üç admin sayfasında yaptığımız empty state standardizasyonunu test edin: 1) AdminB2BFunnelPage.jsx – /app/admin/b2b/funnel, 2) AdminMatchesPage.jsx – /app/admin/matches, 3) AdminReportingPage.jsx – /app/admin/reporting"
 
 frontend:
   - task: "InboxPage Date Formatting Implementation"

@@ -208,8 +208,22 @@ export default function CustomersPage() {
                   </TableRow>
                 ) : rows.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={4} className="py-6 text-muted-foreground">
-                      Kayıt yok.
+                    <TableCell colSpan={4} className="py-6">
+                      <EmptyState
+                        title="Henüz müşteri yok"
+                        description="İlk müşteri kaydını ekleyerek CRM akışını başlatabilirsiniz."
+                        action={
+                          <Button
+                            onClick={() => {
+                              setEditing(null);
+                              setOpenForm(true);
+                            }}
+                            size="sm"
+                          >
+                            İlk müşteriyi ekle
+                          </Button>
+                        }
+                      />
                     </TableCell>
                   </TableRow>
                 ) : (

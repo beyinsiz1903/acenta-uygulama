@@ -490,7 +490,17 @@ export default function ReservationsPage() {
                   </TableRow>
                 ) : rows.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="py-6 text-muted-foreground">Kayıt yok.</TableCell>
+                    <TableCell colSpan={6} className="py-6">
+                      <EmptyState
+                        title="Henüz rezervasyon yok"
+                        description="İlk manuel rezervasyonu oluşturarak satış akışını uçtan uca test edebilirsiniz."
+                        action={
+                          <Button onClick={() => setOpenForm(true)} size="sm">
+                            İlk rezervasyonu oluştur
+                          </Button>
+                        }
+                      />
+                    </TableCell>
                   </TableRow>
                 ) : (
                   rows.map((r) => {

@@ -231,7 +231,23 @@ export default function ProductsPage() {
                   </TableRow>
                 ) : filtered.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={4} className="py-6 text-muted-foreground">Kayıt yok.</TableCell>
+                    <TableCell colSpan={4} className="py-6">
+                      <EmptyState
+                        title="Henüz ürün yok"
+                        description="Katalogunuza ilk ürünü ekleyerek rezervasyon akışını test etmeye başlayın."
+                        action={
+                          <Button
+                            onClick={() => {
+                              setEditing(null);
+                              setOpenForm(true);
+                            }}
+                            size="sm"
+                          >
+                            İlk ürünü oluştur
+                          </Button>
+                        }
+                      />
+                    </TableCell>
                   </TableRow>
                 ) : (
                   filtered.map((r) => (

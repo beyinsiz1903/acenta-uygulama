@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useState } from "react";
-import AdminLayout from "../layouts/AdminLayout";
 import PageHeader from "../components/PageHeader";
 import EmptyState from "../components/EmptyState";
 import ErrorState from "../components/ErrorState";

@@ -344,7 +344,7 @@ export default function AdminExecutiveDashboardPage() {
       </div>
 
       {/* Grafikler satırı */}
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
         <Card className="h-[280px]">
           <CardHeader className="pb-1">
             <CardTitle className="flex items-center gap-2 text-sm font-medium">

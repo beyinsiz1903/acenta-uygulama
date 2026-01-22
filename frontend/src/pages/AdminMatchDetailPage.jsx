@@ -152,9 +152,9 @@ export default function AdminMatchDetailPage() {
                 onChange={(e) => setAction((prev) => ({ ...prev, status: e.target.value }))}
               >
                 <option value="none">Seçilmemiş</option>
-                <option value="watchlist">Watchlist</option>
-                <option value="manual_review">Manual review</option>
-                <option value="blocked">Blocked</option>
+                <option value="watchlist">İzleme listesi</option>
+                <option value="manual_review">Manuel inceleme</option>
+                <option value="blocked">Bloke</option>
               </select>
             </div>
 

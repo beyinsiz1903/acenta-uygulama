@@ -62,6 +62,7 @@ export default function AdminExecutiveDashboardPage() {
   const [metricsTrends, setMetricsTrends] = useState([]);
   const [suppliersSummary, setSuppliersSummary] = useState(null);
   const [b2bExposure, setB2bExposure] = useState(null);
+  const [campaignUsage, setCampaignUsage] = useState([]);
 
   const days = useMemo(() => {
     const diff = differenceInCalendarDays(endDate, startDate) + 1;
@@ -82,13 +83,14 @@ export default function AdminExecutiveDashboardPage() {
       const startStr = formatDate(startDate, "yyyy-MM-dd");
       const endStr = formatDate(endDate, "yyyy-MM-dd");
 
-      const [repRes, topRes, ovRes, trendRes, suppRes, b2bRes] = await Promise.all([
+      const [repRes, topRes, ovRes, trendRes, suppRes, b2bRes, campRes] = await Promise.all([
         api.get("/admin/reporting/summary", { params: { days: qsDays } }),
         api.get("/admin/reporting/top-products", { params: { days: qsDays, limit: 5, by: "sell" } }),
         api.get("/admin/metrics/overview", { params: { start: startStr, end: endStr } }),
         api.get("/admin/metrics/trends", { params: { start: startStr, end: endStr } }),
         api.get("/ops/finance/suppliers/payable-summary", { params: { currency: "EUR" } }),
         api.get("/admin/b2b/agencies/summary"),
+        api.get("/admin/reporting/campaigns-usage", { params: { limit: 5 } }),
       ]);
 
       setReportingSummary(repRes.data || null);
@@ -97,6 +99,7 @@ export default function AdminExecutiveDashboardPage() {
       setMetricsTrends(trendRes.data?.daily_trends || []);
       setSuppliersSummary(suppRes.data || null);
       setB2bExposure(b2bRes.data?.items || []);
+      setCampaignUsage(campRes.data?.items || []);
     } catch (err) {
       setError(apiErrorMessage(err));
     } finally {
@@ -379,17 +382,57 @@ export default function AdminExecutiveDashboardPage() {
         </Card>
       </div>
 
-      {/* Alt tablo: tedarikçi veya B2B özetini genişletmek için yer bırakıyoruz */}
+      {/* Kampanya performansı (kupon kullanımı) */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm font-medium">Notlar</CardTitle>
+          <CardTitle className="text-sm font-medium">Kampanya Performansı (Kupon Kullanımı)</CardTitle>
         </CardHeader>
-        <CardContent>
-          <p className="text-xs text-muted-foreground">
-            Bu dashboard ilk versiyonunda toplam ciro, rezervasyon adedi, iptal oranı, B2B kredi riski ve
-            tedarikçi bakiyesini özetler. İlerleyen aşamalarda acenta bazlı top-5 listeleri ve daha detaylı
-            grafikler eklenebilir.
-          </p>
+        <CardContent className="space-y-2 text-xs">
+          {campaignUsage.length === 0 ? (
+            <p className="text-xs text-muted-foreground">
+              Bu dönemde kampanya ile ilişkilendirilmiş kupon kullanımı verisi bulunamadı.
+            </p>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="text-xs">Kampanya</TableHead>
+                    <TableHead className="text-xs">Slug</TableHead>
+                    <TableHead className="text-xs">Kuponlar</TableHead>
+                    <TableHead className="text-xs text-right">Toplam kullanım</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {campaignUsage.map((row) => (
+                    <TableRow key={row.id}>
+                      <TableCell className="text-xs">
+                        <div className="flex flex-col">
+                          <span className="font-medium truncate max-w-[220px]">{row.name}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-xs font-mono truncate max-w-[160px]">{row.slug}</TableCell>
+                      <TableCell className="text-xs">
+                        <div className="flex flex-wrap gap-1">
+                          {(row.coupon_codes || []).map((code) => (
+                            <span
+                              key={code}
+                              className="inline-flex items-center rounded-md border bg-muted px-1.5 py-0.5 font-mono text-[10px]"
+                            >
+                              {code}
+                            </span>
+                          ))}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-xs text-right font-semibold">
+                        {row.total_usage}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

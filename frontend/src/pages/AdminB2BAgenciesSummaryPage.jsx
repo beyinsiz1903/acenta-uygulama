@@ -79,7 +79,13 @@ export default function AdminB2BAgenciesSummaryPage() {
         }
       } catch (err) {
         if (cancelled) return;
-        setError(apiErrorMessage(err));
+        const msg = apiErrorMessage(err);
+        // "Not Found" durumunda, b2b acenteler özetini boş kabul ediyoruz; kırmızı hata göstermiyoruz.
+        if (msg === "Not Found") {
+          setItems([]);
+        } else {
+          setError(msg);
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }

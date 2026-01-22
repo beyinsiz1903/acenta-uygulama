@@ -21,7 +21,14 @@ export default function ReportsPage() {
       setResSummary(a.data || []);
       setSales(b.data || []);
     } catch (e) {
-      setError(apiErrorMessage(e));
+      const msg = apiErrorMessage(e);
+      // "Not Found" durumunda rapor verisi yok kabul ediyoruz; kırmızı hata göstermiyoruz.
+      if (msg === "Not Found") {
+        setResSummary([]);
+        setSales([]);
+      } else {
+        setError(msg);
+      }
     }
   }, []);
 

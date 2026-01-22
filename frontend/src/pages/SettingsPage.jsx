@@ -110,7 +110,13 @@ export default function SettingsPage() {
       const resp = await api.get("/settings/users");
       setUsers(resp.data || []);
     } catch (e) {
-      setError(apiErrorMessage(e));
+      const msg = apiErrorMessage(e);
+      // "Not Found" durumunda henüz kullanıcı yokmuş gibi davranıyoruz; kırmızı hata göstermiyoruz.
+      if (msg === "Not Found") {
+        setUsers([]);
+      } else {
+        setError(msg);
+      }
     }
   }, []);
 

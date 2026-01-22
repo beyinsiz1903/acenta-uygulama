@@ -552,7 +552,7 @@ export default function CrmEventsPage() {
             minWidth: 220,
           }}
         >
-          <label style={{ fontSize: 11, color: "#6b7280" }}>Geli1mi1 tarih aral11 (opsiyonel)</label>
+          <label style={{ fontSize: 11, color: "#6b7280" }}>Gelişmiş tarih aralığı (opsiyonel)</label>
           <div style={{ display: "flex", gap: 6 }}>
             <input
               type="datetime-local"

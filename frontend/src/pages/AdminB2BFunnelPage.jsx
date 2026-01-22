@@ -90,10 +90,12 @@ export default function AdminB2BFunnelPage() {
           )}
 
           {!loading && !error && !hasData && (
-            <p className="text-xs text-muted-foreground">
-              Son 30 gün içinde partner kanalından gelen public quote kaydı bulunamadı. Bayi iframe entegrasyonu ile ilk
-              trafiğinizi oluşturduktan sonra buradaki tablo dolacaktır.
-            </p>
+            <EmptyState
+              title="Henüz funnel verisi yok"
+              description="Son 30 gün içinde partner kanalından gelen public quote kaydı bulunamadı. Bayi iframe entegrasyonu ile ilk trafiğinizi oluşturduktan sonra buradaki tablo dolacaktır."
+              icon={<ActivityIcon className="h-8 w-8 text-muted-foreground" />}
+              className="py-8"
+            />
           )}
 
           {!loading && !error && hasData && (

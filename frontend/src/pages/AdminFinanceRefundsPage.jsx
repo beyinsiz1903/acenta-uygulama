@@ -43,9 +43,9 @@ function RefundQueueList({
       <CardHeader className="space-y-3">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <CardTitle className="text-sm font-medium">Refund Queue</CardTitle>
+            <CardTitle className="text-sm font-medium">İade Kuyruğu</CardTitle>
             <p className="text-xs text-muted-foreground mt-1">
-              Ops ekibi için açık refund case listesi.
+              Ops ekibi için açık iade case listesi.
             </p>
           </div>
           <div className="flex items-center gap-3">

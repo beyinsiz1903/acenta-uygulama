@@ -509,9 +509,9 @@ export default function CrmPipelinePage() {
         }}
       >
         <div>
-          <h1 style={{ margin: 0, fontSize: 22 }}>CRM {"\u2022"} Pipeline</h1>
+          <h1 style={{ margin: 0, fontSize: 22 }}>CRM • Pipeline</h1>
           <div style={{ marginTop: 4, fontSize: 13, color: "#6b7280" }}>
-            {"Sat\u0131\u015f f\u0131rsatlar\u0131n\u0131z\u0131 a\u015famalara g\u00f6re izleyin, kazan\u0131lan ve kaybedilenleri ayr\u0131 g\u00f6r\u00fcn."}
+            Satış fırsatlarınızı aşamalara göre izleyin, kazanılan ve kaybedilenleri ayrı görün.
           </div>
         </div>
 

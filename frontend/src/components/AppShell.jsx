@@ -35,7 +35,7 @@ const legacyNav = [
   { to: "/app/crm/duplicates", label: "CRM Duplicate Müşteriler", icon: Users, roles: ["admin", "super_admin"] },
   { to: "/app/crm/pipeline", label: "CRM Pipeline", icon: FileText, roles: ["admin", "sales", "ops", "super_admin"] },
   { to: "/app/crm/tasks", label: "CRM Görevler", icon: CalendarDays, roles: ["admin", "sales", "ops", "super_admin"] },
-  { to: "/app/crm/events", label: "CRM Olaylar1", icon: FileText, roles: ["admin", "super_admin"] },
+  { to: "/app/crm/events", label: "CRM Olaylar", icon: FileText, roles: ["admin", "super_admin"] },
   { to: "/app/inbox", label: "Inbox", icon: Inbox, roles: ["admin", "super_admin", "ops"] },
   { to: "/app/b2b", label: "B2B / Acenteler", icon: Building2, roles: ["admin", "super_admin"] },
   { to: "/app/b2b-book", label: "B2B Rezervasyon", icon: Ticket, roles: ["b2b_agent"] },

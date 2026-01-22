@@ -74,7 +74,7 @@ export default function AdminHotelsPage() {
     setLoading(true);
     setError("");
     try {
-      const resp = await api.get("/admin/hotels");
+      const resp = await api.get("/admin/hotels/");
       console.log("[AdminHotels] Loaded:", resp.data?.length || 0);
       const sorted = (resp.data || []).sort(
         (a, b) => new Date(b.created_at) - new Date(a.created_at)

@@ -26,9 +26,9 @@ function useAdminLinksData() {
     setError("");
     try {
       const [linksResp, agenciesResp, hotelsResp] = await Promise.all([
-        api.get("/admin/agency-hotel-links"),
-        api.get("/admin/agencies"),
-        api.get("/admin/hotels"),
+        api.get("/admin/agency-hotel-links/"),
+        api.get("/admin/agencies/"),
+        api.get("/admin/hotels/"),
       ]);
 
       console.log("[AdminLinks] Loaded data:", {

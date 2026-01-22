@@ -186,9 +186,9 @@ function RatePlansPanel({ productId }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <div className="text-sm font-semibold">Rate Plans</div>
+        <div className="text-sm font-semibold">Rate planlar</div>
         <Button size="sm" variant="outline" onClick={load} disabled={loading}>
-          {loading ? "Loading..." : "Refresh"}
+          {loading ? "Yükleniyor..." : "Yenile"}
         </Button>
       </div>
       {error && (

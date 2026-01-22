@@ -152,7 +152,7 @@ function ContractsTab() {
 
         <div className="flex justify-end">
           <Button size="sm" className="h-8 text-xs" onClick={create} disabled={loading}>
-            Create Contract
+            Sözleşme Oluştur
           </Button>
         </div>
       </div>

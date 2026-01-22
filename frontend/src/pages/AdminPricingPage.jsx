@@ -294,7 +294,7 @@ function RateGridsTab() {
 
         <div className="flex justify-end">
           <Button size="sm" className="h-8 text-xs" onClick={create} disabled={loading}>
-            Create Grid
+            Grid Oluştur
           </Button>
         </div>
       </div>

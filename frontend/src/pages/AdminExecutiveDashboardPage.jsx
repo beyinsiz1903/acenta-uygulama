@@ -63,6 +63,8 @@ export default function AdminExecutiveDashboardPage() {
   const [suppliersSummary, setSuppliersSummary] = useState(null);
   const [b2bExposure, setB2bExposure] = useState(null);
   const [campaignUsage, setCampaignUsage] = useState([]);
+  const [channelStats, setChannelStats] = useState(null);
+  const [topB2BAgencies, setTopB2BAgencies] = useState([]);
 
   const days = useMemo(() => {
     const diff = differenceInCalendarDays(endDate, startDate) + 1;
@@ -83,7 +85,17 @@ export default function AdminExecutiveDashboardPage() {
       const startStr = formatDate(startDate, "yyyy-MM-dd");
       const endStr = formatDate(endDate, "yyyy-MM-dd");
 
-      const [repRes, topRes, ovRes, trendRes, suppRes, b2bRes, campRes] = await Promise.all([
+      const [
+        repRes,
+        topRes,
+        ovRes,
+        trendRes,
+        suppRes,
+        b2bRes,
+        campRes,
+        channelRes,
+        topB2BRes,
+      ] = await Promise.all([
         api.get("/admin/reporting/summary", { params: { days: qsDays } }),
         api.get("/admin/reporting/top-products", { params: { days: qsDays, limit: 5, by: "sell" } }),
         api.get("/admin/metrics/overview", { params: { start: startStr, end: endStr } }),
@@ -91,6 +103,8 @@ export default function AdminExecutiveDashboardPage() {
         api.get("/ops/finance/suppliers/payable-summary", { params: { currency: "EUR" } }),
         api.get("/admin/b2b/agencies/summary"),
         api.get("/admin/reporting/campaigns-usage", { params: { limit: 5 } }),
+        api.get("/admin/metrics/channels", { params: { days: qsDays } }),
+        api.get("/admin/reporting/top-b2b-agencies", { params: { days: qsDays, limit: 5 } }),
       ]);
 
       setReportingSummary(repRes.data || null);
@@ -100,6 +114,8 @@ export default function AdminExecutiveDashboardPage() {
       setSuppliersSummary(suppRes.data || null);
       setB2bExposure(b2bRes.data?.items || []);
       setCampaignUsage(campRes.data?.items || []);
+      setChannelStats(channelRes.data || null);
+      setTopB2BAgencies(topB2BRes.data?.items || []);
     } catch (err) {
       setError(apiErrorMessage(err));
     } finally {

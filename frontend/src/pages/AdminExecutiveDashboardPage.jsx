@@ -490,7 +490,6 @@ export default function AdminExecutiveDashboardPage() {
           )}
         </CardContent>
       </Card>
-      </div>
 
       {/* Kampanya performansı (kupon kullanımı) */}
       <Card>

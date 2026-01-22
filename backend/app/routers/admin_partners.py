@@ -134,7 +134,7 @@ async def update_partner(
     data = payload.model_dump(exclude_unset=True)
     update: Dict[str, Any] = {}
 
-    for field in ["name", "contact_email", "status", "api_key_name", "default_markup_percent", "notes"]:
+    for field in ["name", "contact_email", "status", "api_key_name", "default_markup_percent", "linked_agency_id", "notes"]:
         if field in data:
             value = data[field]
             if isinstance(value, str):

@@ -276,7 +276,6 @@ async def metrics_channels(
     """
 
     org_id = user.get("organization_id")
-    from datetime import timedelta
 
     d = parse_days(days, default=30, max_days=365)
     cutoff = now_utc() - timedelta(days=d)

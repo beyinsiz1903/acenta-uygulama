@@ -198,6 +198,7 @@ function App() {
             <Route path="tours" element={<AdminToursPage />} />
             <Route path="b2b/dashboard" element={<AdminB2BDashboardPage />} />
             <Route path="links" element={<AdminLinksPage />} />
+            <Route path="cms/pages" element={<AdminCMSPagesPage />} />
             <Route path="audit" element={<AdminAuditLogsPage />} />
             <Route path="email-logs" element={<AdminEmailLogsPage />} />
             <Route path="pilot-dashboard" element={<AdminPilotDashboardPage />} />

@@ -235,7 +235,7 @@ export default function AdminActionPoliciesPage() {
       <form onSubmit={handleSave} className="mt-4 space-y-3">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Rules</CardTitle>
+            <CardTitle className="text-sm">Kurallar</CardTitle>
           </CardHeader>
           <CardContent className="pt-0">
             <div className="overflow-x-auto">

@@ -91,7 +91,12 @@ export default function ReportsPage() {
               <TableBody>
                 {sales.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={3} className="py-6 text-muted-foreground">Kayıt yok.</TableCell>
+                    <TableCell colSpan={3} className="py-6">
+                      <EmptyState
+                        title="Henüz satış özeti yok"
+                        description="Satış raporu oluşturmak için önce rezervasyon ve tahsilat akışını kullanın."
+                      />
+                    </TableCell>
                   </TableRow>
                 ) : (
                   sales.map((r) => (

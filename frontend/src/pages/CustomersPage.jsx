@@ -113,7 +113,13 @@ export default function CustomersPage() {
       const resp = await api.get("/customers", { params: { q: q || undefined } });
       setRows(resp.data || []);
     } catch (e) {
-      setError(apiErrorMessage(e));
+      const msg = apiErrorMessage(e);
+      // "Not Found" durumunda liste boşmuş gibi davran, kırmızı hata gösterme.
+      if (msg === "Not Found") {
+        setRows([]);
+      } else {
+        setError(msg);
+      }
     } finally {
       setLoading(false);
     }

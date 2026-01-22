@@ -274,10 +274,10 @@ export default function AdminActionPoliciesPage() {
             </div>
             <div className="mt-3 flex justify-between items-center">
               <Button type="button" variant="outline" size="sm" onClick={handleAddRule}>
-                Add rule
+                Kural ekle
               </Button>
               <Button type="submit" size="sm" disabled={saving || loading} data-testid="action-policies-save">
-                {saving ? "Saving..." : "Save policies"}
+                {saving ? "Kaydediliyor..." : "Politikaları kaydet"}
               </Button>
             </div>
           </CardContent>

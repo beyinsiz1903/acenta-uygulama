@@ -114,7 +114,7 @@ function HotelForm({ value, onChange, onSave, saving, error }) {
 
       <div className="flex justify-end gap-2">
         <Button disabled={saving} onClick={onSave} size="sm">
-          {saving ? "Saving..." : "Save"}
+          {saving ? "Kaydediliyor..." : "Kaydet"}
         </Button>
       </div>
     </div>

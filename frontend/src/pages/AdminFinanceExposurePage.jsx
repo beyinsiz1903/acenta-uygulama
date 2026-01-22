@@ -11,12 +11,12 @@ import { Input } from "../components/ui/input";
 
 function StatusBadge({ status }) {
   if (status === "over_limit") {
-    return <Badge variant="destructive">Over limit</Badge>;
+    return <Badge variant="destructive">Limit aşıldı</Badge>;
   }
   if (status === "near_limit") {
-    return <Badge variant="outline">Near limit</Badge>;
+    return <Badge variant="outline">Limite yakın</Badge>;
   }
-  return <Badge variant="secondary">OK</Badge>;
+  return <Badge variant="secondary">Uygun</Badge>;
 }
 
 function AgingBar({ age0, age31, age61, exposure }) {

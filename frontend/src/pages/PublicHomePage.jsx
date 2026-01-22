@@ -104,6 +104,9 @@ export default function PublicHomePage() {
             <Link to={buildBookUrl()} className="hover:underline">
               Rezervasyon
             </Link>
+            <Link to={org ? `/partners/apply?org=${org}` : "/partners/apply"} className="hover:underline">
+              Partner Başvurusu
+            </Link>
             {navPages.map((p) => (
               <Link key={p.id} to={buildCmsUrl(p.slug)} className="hover:underline">
                 {p.title || p.slug}

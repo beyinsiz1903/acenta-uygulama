@@ -445,7 +445,7 @@ function RulesTab() {
 
         <div className="flex justify-end">
           <Button size="sm" className="h-8 text-xs" onClick={create} disabled={loading}>
-            Create Rule
+            Kural Oluştur
           </Button>
         </div>
       </div>

@@ -217,7 +217,7 @@ export default function CrmTasksPage() {
           }}
         >
           <span>
-            {loading ? `Y\u00fckleniyor${"\\u2026"}` : "G\u00f6revler"} ({data.total || 0})
+            {loading ? "Yükleniyor…" : "Görevler"} ({data.total || 0})
           </span>
         </div>
 

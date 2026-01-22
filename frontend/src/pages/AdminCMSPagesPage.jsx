@@ -16,6 +16,7 @@ export default function AdminCMSPagesPage() {
   const [slug, setSlug] = useState("");
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
+  const [linkedCampaignSlug, setLinkedCampaignSlug] = useState("");
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
 

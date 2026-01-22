@@ -501,8 +501,8 @@ export default function CrmEventsPage() {
               cursor: "pointer",
               fontSize: 12,
             }}
-          >
-            Son 24 s
+>
+            Son 24 saat
           </button>
           <button
             type="button"
@@ -520,8 +520,8 @@ export default function CrmEventsPage() {
               cursor: "pointer",
               fontSize: 12,
             }}
-          >
-            Son 7 g1n
+>
+            Son 7 gün
           </button>
           <button
             type="button"
@@ -539,8 +539,8 @@ export default function CrmEventsPage() {
               cursor: "pointer",
               fontSize: 12,
             }}
-          >
-            Son 30 g1n
+>
+            Son 30 gün
           </button>
         </div>
 

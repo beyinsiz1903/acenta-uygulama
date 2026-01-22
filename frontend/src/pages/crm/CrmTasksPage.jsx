@@ -177,7 +177,7 @@ export default function CrmTasksPage() {
         }}
       >
         <TabButton active={activeTab === "today"} onClick={() => setActiveTab("today")}>
-          Bug\u00fcn
+          Bugün
         </TabButton>
         <TabButton active={activeTab === "overdue"} onClick={() => setActiveTab("overdue")}>
           Gecikenler

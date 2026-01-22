@@ -43,8 +43,13 @@ export default function AdminApprovalsPage() {
       setItems(data?.items || []);
     } catch (e) {
       const msg = apiErrorMessage(e);
-      setError(msg);
-      toast({ title: "Onay listesi yüklenemedi", description: msg, variant: "destructive" });
+      // "Not Found" durumunda bekleyen onay görevi yok gibi davran; kırmızı hata göstermeyelim.
+      if (msg === "Not Found") {
+        setItems([]);
+      } else {
+        setError(msg);
+        toast({ title: "Onay listesi yüklenemedi", description: msg, variant: "destructive" });
+      }
     } finally {
       setLoading(false);
     }

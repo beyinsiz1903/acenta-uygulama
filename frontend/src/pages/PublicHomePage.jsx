@@ -12,6 +12,7 @@ export default function PublicHomePage() {
   const [navPages, setNavPages] = useState([]);
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [featuredTours, setFeaturedTours] = useState([]);
+  const [campaigns, setCampaigns] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 

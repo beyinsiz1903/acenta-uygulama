@@ -83,7 +83,7 @@ function ContractsTab() {
         <div className="text-sm font-semibold">Contracts</div>
         <Button size="sm" variant="outline" onClick={load} disabled={loading}>
           {loading && <Loader2 className="h-3 w-3 animate-spin" />}
-          Refresh
+          Yenile
         </Button>
       </div>
 
@@ -250,7 +250,7 @@ function RateGridsTab() {
         <div className="text-sm font-semibold">Rate tabloları</div>
         <Button size="sm" variant="outline" onClick={load} disabled={loading}>
           {loading && <Loader2 className="h-3 w-3 animate-spin" />}
-          Refresh
+          Yenile
         </Button>
       </div>
 
@@ -384,7 +384,7 @@ function RulesTab() {
         <div className="text-sm font-semibold">Rules</div>
         <Button size="sm" variant="outline" onClick={load} disabled={loading}>
           {loading && <Loader2 className="h-3 w-3 animate-spin" />}
-          Refresh
+          Yenile
         </Button>
       </div>
 
@@ -691,7 +691,7 @@ function SimpleRulesTab() {
         <div className="text-sm font-semibold">Simple Rules (markup %)</div>
         <Button size="sm" variant="outline" onClick={load} disabled={loading}>
           {loading && <Loader2 className="h-3 w-3 animate-spin" />}
-          Refresh
+          Yenile
         </Button>
       </div>
 

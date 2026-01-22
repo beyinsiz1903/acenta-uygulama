@@ -263,7 +263,7 @@ function AdminB2BDiscountsPage() {
             data-testid="b2b-discount-create"
             disabled={loading}
           >
-            Create
+            Oluştur
           </Button>
         </div>
       </form>

@@ -725,7 +725,7 @@ export default function B2BPortalPage() {
           }`}
           onClick={() => setActiveTab("flow")}
         >
-          Quote / Book / Cancel
+          Quote / Book / Cancel akışı
         </button>
         <button
           type="button"

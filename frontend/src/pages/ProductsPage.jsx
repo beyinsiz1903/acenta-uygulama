@@ -178,8 +178,8 @@ export default function ProductsPage() {
             <Layers className="h-4 w-4 text-muted-foreground" />
             Katalog
           </CardTitle>
-          <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div className="relative">
+          <div className="mt-3 grid grid-cols-1 md:grid-cols-4 gap-3">
+            <div className="relative md:col-span-2">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Ara (başlık)"

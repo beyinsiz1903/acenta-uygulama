@@ -225,9 +225,5 @@ function AdminFinanceExposurePageInner() {
 }
 
 export default function AdminFinanceExposurePage() {
-  return (
-    <AdminLayout>
-      <AdminFinanceExposurePageInner />
-    </AdminLayout>
-  );
+  return <AdminFinanceExposurePageInner />;
 }

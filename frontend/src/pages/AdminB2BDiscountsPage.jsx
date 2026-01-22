@@ -270,14 +270,14 @@ function AdminB2BDiscountsPage() {
 
       <div className="rounded-2xl border bg-card p-4 space-y-2">
         <div className="flex items-center justify-between mb-2">
-          <div className="font-semibold text-sm">Existing Groups</div>
+          <div className="font-semibold text-sm">İndirim Grupları</div>
           <Button variant="outline" size="xs" onClick={loadGroups} disabled={loading}>
             Yenile
           </Button>
         </div>
 
         {groups.length === 0 ? (
-          <div className="text-xs text-muted-foreground">Henüz indirim grubu tanımlı değil.</div>
+          <div className="text-xs text-muted-foreground">Şu anda tanımlı indirim grubu bulunmuyor.</div>
         ) : (
           <div className="space-y-2">
             {groups.map((g) => {

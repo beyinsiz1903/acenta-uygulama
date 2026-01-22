@@ -13,6 +13,16 @@ function useQuery() {
   return React.useMemo(() => new URLSearchParams(search), [search]);
 }
 
+function formatDate(value) {
+  if (!value) return "";
+  try {
+    return new Date(value).toLocaleString();
+  } catch (e) {
+    return String(value);
+  }
+}
+
+
 function InboxPage() {
   const user = getUser();
   const query = useQuery();
@@ -267,7 +277,7 @@ function InboxPage() {
                     </span>
                   </div>
                   <p className="text-[11px] text-muted-foreground mt-0.5">
-                    {t.last_message_at || ""}
+                    {formatDate(t.last_message_at)}
                   </p>
                   <p
                     className="text-[11px] text-muted-foreground mt-0.5"
@@ -349,7 +359,7 @@ function InboxPage() {
                     >
                       <div className="mb-1 flex items-center justify-between gap-2 text-[10px] text-muted-foreground">
                         <span>{m.direction === "internal" ? "İç not" : "Dış mesaj"}</span>
-                        <span>{m.created_at || ""}</span>
+                        <span>{formatDate(m.created_at)}</span>
                       </div>
                       <div>{m.body}</div>
                     </div>

@@ -70,7 +70,7 @@ export default function PublicPartnerApplyPage() {
           </p>
           {!org && (
             <p className="text-[11px] text-red-600">
-              Kuruluş (org) parametresi eksik. Lütfen URL'ye ?org=&lt;organization_id&gt; parametresi
+              Kuruluş (org) parametresi eksik. Lütfen URL&apos;ye ?org=&lt;organization_id&gt; parametresi
               ekleyin.
             </p>
           )}

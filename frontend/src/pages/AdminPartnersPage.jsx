@@ -335,6 +335,8 @@ export default function AdminPartnersPage() {
         </CardContent>
       </Card>
 
+      </Card>
+
       <Dialog open={!!summaryPartner} onOpenChange={(open) => !open && setSummaryPartner(null)}>
         <DialogContent className="max-w-lg">
           <DialogHeader>

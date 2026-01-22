@@ -148,8 +148,10 @@ function AdminB2BDiscountsPage() {
   return (
     <div className="p-4 md:p-6 max-w-5xl mx-auto space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold">B2B Discount Groups</h1>
-        <Button variant="ghost" size="sm" onClick={() => navigate("/app/admin")}>Back</Button>
+        <h1 className="text-lg font-semibold">B2B İndirim Grupları</h1>
+        <Button variant="ghost" size="sm" onClick={() => navigate("/app/admin")}>
+          Geri dön
+        </Button>
       </div>
 
       {error && (
@@ -162,10 +164,10 @@ function AdminB2BDiscountsPage() {
         onSubmit={onCreate}
         className="rounded-2xl border bg-card p-4 space-y-3"
       >
-        <div className="font-semibold text-sm mb-1">Create Discount Group</div>
+        <div className="font-semibold text-sm mb-1">İndirim Grubu Oluştur</div>
         <div className="grid gap-3 md:grid-cols-3">
           <div className="space-y-1">
-            <label className="text-[11px] font-medium">Name</label>
+            <label className="text-[11px] font-medium">Ad</label>
             <Input
               data-testid="b2b-discount-name"
               value={name}
@@ -174,7 +176,7 @@ function AdminB2BDiscountsPage() {
             />
           </div>
           <div className="space-y-1">
-            <label className="text-[11px] font-medium">Priority</label>
+            <label className="text-[11px] font-medium">Öncelik</label>
             <Input
               type="number"
               data-testid="b2b-discount-priority"
@@ -183,7 +185,7 @@ function AdminB2BDiscountsPage() {
             />
           </div>
           <div className="space-y-1">
-            <label className="text-[11px] font-medium">Discount %</label>
+            <label className="text-[11px] font-medium">İndirim %</label>
             <Input
               type="number"
               min={0}
@@ -198,7 +200,7 @@ function AdminB2BDiscountsPage() {
 
         <div className="grid gap-3 md:grid-cols-3">
           <div className="space-y-1">
-            <label className="text-[11px] font-medium">Agency ID</label>
+            <label className="text-[11px] font-medium">Acenta ID</label>
             <Input
               data-testid="b2b-discount-agency-id"
               value={agencyId}

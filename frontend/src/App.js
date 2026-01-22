@@ -214,6 +214,7 @@ function App() {
             <Route path="finance/refunds" element={<AdminFinanceRefundsPage />} />
             <Route path="finance/exposure" element={<AdminFinanceExposurePage />} />
             <Route path="finance/b2b-agencies" element={<AdminB2BAgenciesSummaryPage />} />
+            <Route path="admin/b2b/agency-products" element={<AdminB2BAgencyProductsPage />} />
             <Route path="finance/settlements" element={<AdminSettlementsPage />} />
             <Route path="finance/settlement-runs" element={<AdminSettlementRunsPage />} />
             <Route path="finance/settlement-runs/:settlementId" element={<AdminSettlementRunDetailPage />} />

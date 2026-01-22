@@ -435,6 +435,56 @@ export default function AdminExecutiveDashboardPage() {
                   <Tooltip formatter={(value) => formatMoney(value, "EUR")} />
                   <Bar dataKey="sell_total" fill="#0f766e" name="Ciro" />
                 </BarChart>
+      {/* Top B2B acentalar */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm font-medium">En Çok Ciro Yapan B2B Acentalar</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2 text-xs">
+          {topB2BAgencies.length === 0 ? (
+            <p className="text-xs text-muted-foreground">
+              Bu dönemde B2B acenta bazlı ciro verisi bulunamadı veya hiç B2B rezervasyon yok.
+            </p>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="text-xs">Acenta</TableHead>
+                    <TableHead className="text-xs text-right">Rezervasyon</TableHead>
+                    <TableHead className="text-xs text-right">Ciro</TableHead>
+                    <TableHead className="text-xs text-right">Marj</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {topB2BAgencies.map((row) => (
+                    <TableRow key={row.agency_id}>
+                      <TableCell className="text-xs">
+                        <div className="flex flex-col">
+                          <span className="font-medium truncate max-w-[220px]">
+                            {row.agency_name || row.agency_id}
+                          </span>
+                          <span className="text-[10px] font-mono text-muted-foreground">
+                            {row.agency_id}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-xs text-right">{row.bookings}</TableCell>
+                      <TableCell className="text-xs text-right">
+                        {formatMoney(row.sell_total, "EUR")}
+                      </TableCell>
+                      <TableCell className="text-xs text-right">
+                        {formatMoney(row.markup_total, "EUR")}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
               </ResponsiveContainer>
             )}
           </CardContent>

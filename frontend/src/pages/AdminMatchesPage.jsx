@@ -74,7 +74,12 @@ export default function AdminMatchesPage() {
       setRange(resp.data?.range || null);
     } catch (e) {
       console.error("Admin matches fetch failed", e);
-      setError(apiErrorMessage(e));
+      const msg = apiErrorMessage(e);
+      // "Not Found" durumunu veri yok / endpoint devre df olarak yorumlayalm;
+      // bu durumda krmz hata kart yerine bof state kullanlsn.
+      if (msg !== "Not Found") {
+        setError(msg);
+      }
     } finally {
       setLoading(false);
     }

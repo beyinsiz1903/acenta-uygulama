@@ -57,7 +57,12 @@ export default function DashboardPage() {
         setSales(b.data || []);
         setCaseCounters(c.data || { open: 0, waiting: 0, in_progress: 0 });
       } catch (e) {
-        setError(apiErrorMessage(e));
+        const msg = apiErrorMessage(e);
+        // "Not Found" durumunu veri yok / rapor devre df olarak yorumlayp
+        // dashboard'da krmz hata gstermek yerine sessizce bofa dryoruz.
+        if (msg !== "Not Found") {
+          setError(msg);
+        }
       }
     })();
   }, []);

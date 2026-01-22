@@ -345,7 +345,7 @@ export default function CrmCustomerDetailPage() {
         >
           <div style={{ fontWeight: 600, marginBottom: 4 }}>Bu müşteri kaydı birleştirildi.</div>
           <div>
-            Tüm işlemler <code>{mergedIntoId}</code> ID'li ana kayıt üzerinden yürütülüyor.
+            Tüm işlemler <code>{mergedIntoId}</code> IDli ana kayıt üzerinden yürütülüyor.
             {" "}
             <button
               type="button"

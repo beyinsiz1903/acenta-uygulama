@@ -19,7 +19,7 @@ import os
 import time
 
 # Configuration - Use production URL from frontend/.env
-BASE_URL = "https://b2bportal-3.preview.emergentagent.com"
+BASE_URL = "https://acenta-network.preview.emergentagent.com"
 
 def login_admin():
     """Login as admin user and return token, org_id, email"""

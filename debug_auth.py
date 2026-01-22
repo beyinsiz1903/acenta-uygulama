@@ -32,7 +32,7 @@ def test_auth_debug():
     try:
         # Login
         login_data = {"email": "admin@acenta.test", "password": "admin123"}
-        response = requests.post("https://b2bportal-3.preview.emergentagent.com/api/auth/login", json=login_data, timeout=10)
+        response = requests.post("https://acenta-network.preview.emergentagent.com/api/auth/login", json=login_data, timeout=10)
         
         print(f"Login status: {response.status_code}")
         if response.status_code != 200:
@@ -52,7 +52,7 @@ def test_auth_debug():
         
         # Test a simple endpoint first
         print("\nTesting /api/auth/me...")
-        response = requests.get("https://b2bportal-3.preview.emergentagent.com/api/auth/me", headers=headers, timeout=10)
+        response = requests.get("https://acenta-network.preview.emergentagent.com/api/auth/me", headers=headers, timeout=10)
         print(f"Status: {response.status_code}")
         if response.status_code == 200:
             me_data = response.json()
@@ -62,7 +62,7 @@ def test_auth_debug():
         
         # Test customers API with full URL
         print("\nTesting full customers API URL...")
-        full_url = "https://b2bportal-3.preview.emergentagent.com/api/crm/customers"
+        full_url = "https://acenta-network.preview.emergentagent.com/api/crm/customers"
         print(f"URL: {full_url}")
         response = requests.get(full_url, headers=headers, timeout=10)
         print(f"Status: {response.status_code}")

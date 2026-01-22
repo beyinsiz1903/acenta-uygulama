@@ -188,7 +188,7 @@ function VersionsPanel({ productId, productStatus }) {
 
       {error && (
         <div className="rounded-md border border-destructive/40 bg-destructive/5 p-2 text-xs text-destructive">
-          {error}
+          {error === "Not Found" ? "Versiyon verisi alınırken bir hata oluştu. Lütfen daha sonra tekrar deneyin." : error}
         </div>
       )}
 

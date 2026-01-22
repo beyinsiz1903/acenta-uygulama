@@ -56,6 +56,7 @@ export default function AdminCMSPagesPage() {
       setSlug("");
       setTitle("");
       setBody("");
+      setLinkedCampaignSlug("");
       await loadPages();
     } catch (e) {
       setFormError(apiErrorMessage(e));

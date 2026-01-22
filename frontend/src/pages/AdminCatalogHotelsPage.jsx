@@ -219,7 +219,7 @@ function RatePlansPanel({ productId }) {
             </div>
           ))}
           {!items.length && (
-            <div className="px-2 py-4 text-xs text-muted-foreground">No rate plans.</div>
+            <div className="px-2 py-4 text-xs text-muted-foreground">Henüz rate plan tanımlı değil.</div>
           )}
         </div>
       </div>
@@ -467,7 +467,7 @@ export default function AdminCatalogHotelsPage() {
               ))}
               {!items.length && (
                 <div className="px-2 py-6 text-xs text-muted-foreground">
-                  No hotels.
+                  Henüz otel kaydı yok.
                 </div>
               )}
             </div>

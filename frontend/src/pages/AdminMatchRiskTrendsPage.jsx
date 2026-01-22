@@ -40,7 +40,7 @@ function TrendLineChart({ points }) {
         className="flex h-48 items-center justify-center text-sm text-muted-foreground"
         data-testid="match-risk-trends-chart"
       >
-        No snapshots yet. Run a snapshot to start tracking trends.
+        Henüz snapshot yok. Trendleri takip etmeye başlamak için bir snapshot çalıştırın.
       </div>
     );
   }

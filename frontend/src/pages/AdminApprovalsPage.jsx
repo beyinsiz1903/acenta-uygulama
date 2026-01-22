@@ -163,9 +163,9 @@ export default function AdminApprovalsPage() {
 
       <div className="mb-4 flex flex-col gap-1 md:flex-row md:items-end md:justify-between">
         <div>
-          <div className="text-xl font-semibold">Approvals</div>
+          <div className="text-xl font-semibold">Onay Görevleri</div>
           <div className="text-sm text-muted-foreground">
-            Pending unblock and other critical approval tasks for matches.
+            Bloke kaldırma ve benzeri kritik match onay görevlerini buradan yönetebilirsiniz.
           </div>
         </div>
         <div className="flex items-center gap-2 text-xs text-muted-foreground">

@@ -101,6 +101,85 @@ async def reporting_summary(
     }
 
 
+@router.get("/campaigns-usage")
+async def reporting_campaigns_usage(
+    limit: int = Query(10, ge=1, le=50),
+    db=Depends(get_db),
+    user: Dict[str, Any] = Depends(require_roles(["super_admin", "admin", "ops"])),
+) -> Dict[str, Any]:
+    """Aggregate simple campaign usage stats based on coupon usage_count.
+
+    This is a v1 heuristic report:
+    - For each campaign, we sum usage_count of related coupons.
+    - Does not yet break down by date; meant for high-level monitoring.
+    """
+
+    org_id = user["organization_id"]
+
+    campaigns = await db.campaigns.find({"organization_id": org_id}).sort("created_at", -1).to_list(500)
+    if not campaigns:
+        return {"items": []}
+
+    # Collect all coupon codes referenced by campaigns
+    all_codes: List[str] = []
+    for c in campaigns:
+        codes = c.get("coupon_codes") or []
+        for code in codes:
+            code_s = str(code).strip().upper()
+            if code_s:
+                all_codes.append(code_s)
+
+    if not all_codes:
+        # No coupons linked to campaigns yet
+        items: List[Dict[str, Any]] = []
+        for c in campaigns[:limit]:
+            items.append(
+                {
+                    "id": str(c.get("_id")),
+                    "name": c.get("name") or "",
+                    "slug": c.get("slug") or "",
+                    "total_usage": 0,
+                    "coupon_codes": c.get("coupon_codes") or [],
+                }
+            )
+        return {"items": items}
+
+    # Load coupon usage counts
+    coupons = await db.coupons.find(
+        {"organization_id": org_id, "code": {"$in": list(set(all_codes))}},
+        {"code": 1, "usage_count": 1},
+    ).to_list(1000)
+
+    usage_by_code: Dict[str, int] = {}
+    for cp in coupons:
+        code = str(cp.get("code") or "").upper()
+        if not code:
+            continue
+        usage_by_code[code] = int(cp.get("usage_count") or 0)
+
+    # Build campaign usage list
+    rows: List[Dict[str, Any]] = []
+    for c in campaigns:
+        codes = [str(code).strip().upper() for code in (c.get("coupon_codes") or []) if str(code).strip()]
+        total = sum(usage_by_code.get(code, 0) for code in codes)
+        rows.append(
+            {
+                "id": str(c.get("_id")),
+                "name": c.get("name") or "",
+                "slug": c.get("slug") or "",
+                "total_usage": total,
+                "coupon_codes": codes,
+            }
+        )
+
+    # Sort by total_usage desc and limit
+    rows.sort(key=lambda r: r["total_usage"], reverse=True)
+    items = rows[:limit]
+
+    return {"items": items}
+
+
+
 @router.get("/top-products")
 async def reporting_top_products(
     days: int = Query(7, ge=1, le=90),

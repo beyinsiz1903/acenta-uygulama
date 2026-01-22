@@ -8,19 +8,19 @@ import { Textarea } from "../components/ui/textarea";
 
 function validityBadge(validity) {
   if (!validity || (!validity.from && !validity.to)) {
-    return { label: "NO VALIDITY", color: "bg-slate-100 text-slate-700" };
+    return { label: "Geçerlilik yok", color: "bg-slate-100 text-slate-700" };
   }
   const now = new Date();
   const from = validity.from ? new Date(validity.from) : null;
   const to = validity.to ? new Date(validity.to) : null;
 
   if (from && now < from) {
-    return { label: "UPCOMING", color: "bg-blue-100 text-blue-800" };
+    return { label: "Yakında başlayacak", color: "bg-blue-100 text-blue-800" };
   }
   if (to && now > to) {
-    return { label: "EXPIRED", color: "bg-red-100 text-red-800" };
+    return { label: "Süresi doldu", color: "bg-red-100 text-red-800" };
   }
-  return { label: "ACTIVE NOW", color: "bg-emerald-100 text-emerald-800" };
+  return { label: "Şu anda aktif", color: "bg-emerald-100 text-emerald-800" };
 }
 
 function AdminB2BDiscountsPage() {
@@ -303,7 +303,7 @@ function AdminB2BDiscountsPage() {
                         ID: {g.id} · Priority: {g.priority}
                       </div>
                       <div className="text-[11px] text-muted-foreground">
-                        Scope: agency={g.scope?.agency_id || "*"}, product={g.scope?.product_id || "*"}, type={
+                        Kapsam: agency={g.scope?.agency_id || "*"}, product={g.scope?.product_id || "*"}, type={
                           g.scope?.product_type || "*"
                         }
                       </div>
@@ -324,11 +324,11 @@ function AdminB2BDiscountsPage() {
                           onClick={() => toggleStatus(g)}
                           disabled={loading}
                         >
-                          {g.status === "active" ? "Active" : "Inactive"}
+                          {g.status === "active" ? "Aktif" : "Pasif"}
                         </Button>
                       </div>
                       <div className="text-[11px] text-muted-foreground">
-                        Rules: {ruleSummary}
+                        Kurallar: {ruleSummary}
                       </div>
                     </div>
                   </div>
@@ -342,7 +342,7 @@ function AdminB2BDiscountsPage() {
                         setExpandedId((prev) => (prev === g.id ? null : g.id))
                       }
                     >
-                      {expandedId === g.id ? "Hide details" : "Show details"}
+                      {expandedId === g.id ? "Detayları gizle" : "Detayları göster"}
                     </button>
                   </div>
 

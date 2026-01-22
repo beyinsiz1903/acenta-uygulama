@@ -243,16 +243,7 @@ function App() {
           </Route>
         </Route>
 
-        {/* Inbox Route */}
-        <Route
-          path="/app/inbox"
-          element={
-            <RequireAuth roles={["admin", "super_admin", "ops"]}>
-              <InboxPage />
-            </RequireAuth>
-          }
-        />
-
+        {/* Inbox Route moved under /app/* so that it renders inside AppShell */}
         {/* Core App Routes (Dashboard, Products, CRM, etc.) */}
         <Route
           path="/app/*"

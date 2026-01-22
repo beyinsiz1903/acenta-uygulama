@@ -284,6 +284,113 @@ export default function AdminPartnersPage() {
                       <TableCell className="text-xs">
                         <StatusBadge status={p.status} />
                       </TableCell>
+
+      <Dialog open={!!summaryPartner} onOpenChange={(open) => !open && setSummaryPartner(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Partner aktivite özeti</DialogTitle>
+            <DialogDescription className="text-xs">
+              Son rezervasyon aktivitesine göre hızlı bir özet. Satıra tıklayarak açtınız.
+            </DialogDescription>
+          </DialogHeader>
+
+          {summaryPartner && (
+            <div className="space-y-3 text-xs">
+              <div className="space-y-1">
+                <div className="font-medium">{summaryPartner.name}</div>
+                {summaryPartner.api_key_name && (
+                  <div className="text-muted-foreground">API key: {summaryPartner.api_key_name}</div>
+                )}
+              </div>
+
+              {summaryError && (
+                <div className="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/5 p-2 text-[11px] text-destructive">
+                  <AlertCircle className="h-3 w-3 mt-0.5" />
+                  <span>{summaryError}</span>
+                </div>
+              )}
+
+              {summaryLoading ? (
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  <span>Özet yükleniyor...</span>
+                </div>
+              ) : summaryPartner.summary ? (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="rounded-md border bg-muted/40 p-2">
+                      <div className="text-[11px] text-muted-foreground">Toplam rezervasyon</div>
+                      <div className="text-sm font-semibold">
+                        {summaryPartner.summary.total_bookings}
+                      </div>
+                    </div>
+                    <div className="rounded-md border bg-muted/40 p-2">
+                      <div className="text-[11px] text-muted-foreground">Toplam ciro</div>
+                      <div className="text-sm font-semibold">
+                        {(summaryPartner.summary.total_amount_cents / 100).toFixed(2)} {summaryPartner.summary.currency}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <div className="text-[11px] font-medium text-muted-foreground">Kanal kırılımı</div>
+                      {Object.keys(summaryPartner.summary.by_channel || {}).length === 0 ? (
+                        <div className="text-[11px] text-muted-foreground">Kayıt yok</div>
+                      ) : (
+                        <ul className="space-y-0.5">
+                          {Object.entries(summaryPartner.summary.by_channel).map(([ch, cnt]) => (
+                            <li key={ch} className="flex justify-between">
+                              <span className="capitalize text-[11px] text-muted-foreground">{ch}</span>
+                              <span className="text-[11px] font-medium">{cnt}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                    <div className="space-y-1">
+                      <div className="text-[11px] font-medium text-muted-foreground">Ürün tipi kırılımı</div>
+                      {Object.keys(summaryPartner.summary.by_product_type || {}).length === 0 ? (
+                        <div className="text-[11px] text-muted-foreground">Kayıt yok</div>
+                      ) : (
+                        <ul className="space-y-0.5">
+                          {Object.entries(summaryPartner.summary.by_product_type).map(([pt, cnt]) => (
+                            <li key={pt} className="flex justify-between">
+                              <span className="capitalize text-[11px] text-muted-foreground">{pt}</span>
+                              <span className="text-[11px] font-medium">{cnt}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-[11px] text-muted-foreground">
+                    <div>
+                      <span className="block font-medium text-foreground">İlk rezervasyon</span>
+                      <span>{summaryPartner.summary.first_booking_at || "-"}</span>
+                    </div>
+                    <div>
+                      <span className="block font-medium text-foreground">Son rezervasyon</span>
+                      <span>{summaryPartner.summary.last_booking_at || "-"}</span>
+                    </div>
+                  </div>
+
+                  {summaryPartner.summary.linked_agency_name && (
+                    <div className="rounded-md border bg-muted/40 p-2 text-[11px]">
+                      <div className="text-muted-foreground">Bağlı acenta</div>
+                      <div className="font-medium">{summaryPartner.summary.linked_agency_name}</div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-xs text-muted-foreground">Bu partner için henüz rezervasyon bulunamadı.</div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
                       <TableCell className="text-xs font-mono">
                         {p.api_key_name || <span className="text-muted-foreground">-</span>}
                       </TableCell>

@@ -289,11 +289,13 @@ def test_b2b_portal_complete_flow():
         # Extract required fields from first hotel
         product_id = first_hotel.get("product_id")
         rate_plan_id = first_hotel.get("rate_plan_id")
+        room_type_id = first_hotel.get("room_type_id")  # May be None
         
         if not product_id or not rate_plan_id:
             print(f"   ❌ Missing required fields in hotel data:")
             print(f"   📋 product_id: {product_id}")
             print(f"   📋 rate_plan_id: {rate_plan_id}")
+            print(f"   📋 room_type_id: {room_type_id}")
             raise Exception("Hotel search result missing required fields")
         
         # Use same dates as search
@@ -307,6 +309,7 @@ def test_b2b_portal_complete_flow():
             check_in=check_in,
             check_out=check_out,
             adults=2,
+            room_type_id=room_type_id,
             channel_id="ch_b2b_portal"
         )
         

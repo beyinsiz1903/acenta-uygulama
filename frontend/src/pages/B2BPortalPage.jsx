@@ -538,7 +538,7 @@ export default function B2BPortalPage() {
         channel_id: "ch_b2b_portal",
         items: [
           {
-            product_id: "demo_product_1",
+            product_id: quoteProductId || "demo_product_1",
             room_type_id: "standard",
             rate_plan_id: "base",
             check_in: checkIn,

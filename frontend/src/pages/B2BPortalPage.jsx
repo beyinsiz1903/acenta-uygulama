@@ -516,6 +516,14 @@ export default function B2BPortalPage() {
     return () => clearInterval(id);
   }, []);
 
+  // Countdown timer effect
+  useEffect(() => {
+    const id = setInterval(() => {
+      setNowMs(Date.now());
+    }, 1000);
+    return () => clearInterval(id);
+  }, []);
+
   // B2B Marketplace: bu acenteye açık ürünleri yükle
   useEffect(() => {
     let cancelled = false;

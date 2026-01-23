@@ -89,6 +89,39 @@ async def search_b2b_hotels(
 
     product_ids = [p["_id"] for p in products]
 
+    # Optional B2B Marketplace gating: if this agency is linked to an approved partner
+    # (via partner_profiles.linked_agency_id), and that partner has explicit product
+    # authorizations, only include products with is_enabled=True. If no linked partner
+    # or no enabled products are found, we gracefully fall back to empty results.
+    partner = await db.partner_profiles.find_one(
+        {
+            "organization_id": org_id,
+            "linked_agency_id": {"$in": [str(agency_id), agency_id]},
+            "status": "approved",
+        },
+        {"_id": 1},
+    )
+
+    if partner:
+        partner_id_str = str(partner["_id"])
+        auth_cursor = db.b2b_product_authorizations.find(
+            {
+                "organization_id": org_id,
+                "partner_id": partner_id_str,
+                "product_id": {"$in": product_ids},
+                "is_enabled": True,
+            },
+            {"product_id": 1, "_id": 0},
+        )
+        auth_docs = await auth_cursor.to_list(length=None)
+        enabled_ids = {doc["product_id"] for doc in auth_docs if doc.get("product_id")}
+        if not enabled_ids:
+            return HotelSearchResponse(items=[])
+        # Narrow product_ids to enabled ones only
+        product_ids = [pid for pid in product_ids if pid in enabled_ids]
+        if not product_ids:
+            return HotelSearchResponse(items=[])
+
     rp_cursor = db.rate_plans.find(
         {
             "organization_id": org_id,

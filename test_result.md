@@ -96,6 +96,18 @@ frontend:
           agent: "testing"
           comment: "Error handling UI properly implemented in B2BPortalPage.jsx lines 825-830. Error display uses .text-destructive styling with AlertCircle icon. Backend error parsing correctly extracts error.code and error.message from response (lines 568-569). Error message format matches specification: 'product_not_available: Product is not enabled for this partner'. Fallback to apiErrorMessage for non-standard errors (line 571). Error state properly cleared on new quote attempts (line 524)."
 
+  - task: "B2B Portal Quote Error UX Improvement"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/B2BPortalPage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "UX improvement successfully implemented and verified. Lines 571-572: When product_not_available error occurs, displays user-friendly Turkish message 'Bu ürün sizin için kapalı görünüyor. Lütfen B2B Marketplace'te bu acente için yetkilendirilmiş bir ürün ID'si kullanın veya farklı bir ürün deneyin.' instead of raw error format. Backend API testing confirmed: product ID '696b4faf6a08833ec53dc8a0' returns HTTP 409 product_not_available error. Other error codes still show 'code: message' format as expected. No JavaScript errors or form lockup issues. Error display UI properly styled with AlertCircle icon and destructive styling."
+
 metadata:
   created_by: "testing_agent"
   version: "1.1"

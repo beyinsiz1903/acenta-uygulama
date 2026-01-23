@@ -94,3 +94,90 @@ async def b2b_book(payload: dict, user=Depends(get_current_user)):
 
     res_doc = await create_reservation(org_id=user["organization_id"], user_email=user.get("email"), payload=reservation_payload)
     return serialize_doc(res_doc)
+
+
+@router.get("/marketplace/products", dependencies=[Depends(require_roles(["agency_agent", "agency_admin"]))])
+async def list_b2b_marketplace_products(user=Depends(get_current_user)):
+    """List products visible for the current B2B agency based on marketplace authorizations.
+
+    Semantics V1:
+    - If agency is linked to an approved partner (partner_profiles.linked_agency_id),
+      return only products with an authorization document where is_enabled=True.
+    - If no linked partner is found, fall back to all active products for the organization
+      (backwards compatible behaviour).
+    """
+    db = await get_db()
+    org_id = user["organization_id"]
+    agency_id = user.get("agency_id")
+    if not agency_id:
+        raise HTTPException(status_code=400, detail="Bu kullanıcı bir acenteye bağlı değil")
+
+    # Try resolve linked partner by linked_agency_id (supports string or ObjectId-like values)
+    linked_agency_str = str(agency_id)
+    partner = await db.partner_profiles.find_one(
+        {
+            "organization_id": org_id,
+            "linked_agency_id": {"$in": [linked_agency_str, agency_id]},
+            "status": "approved",
+        },
+        {"_id": 1},
+    )
+
+    items: list[dict] = []
+
+    if partner:
+        partner_id_str = str(partner["_id"])
+        # Find all enabled authorizations for this partner
+        auth_cursor = db.b2b_product_authorizations.find(
+            {
+                "organization_id": org_id,
+                "partner_id": partner_id_str,
+                "is_enabled": True,
+            },
+            {"product_id": 1, "commission_rate": 1, "_id": 0},
+        )
+        auth_docs = await auth_cursor.to_list(length=None)
+        product_ids = [d.get("product_id") for d in auth_docs if d.get("product_id")]
+        if not product_ids:
+            return {"items": []}
+
+        prod_cursor = db.products.find(
+            {"organization_id": org_id, "_id": {"$in": product_ids}, "status": "active"},
+            {"_id": 1, "title": 1, "type": 1, "status": 1},
+        ).sort("created_at", -1)
+        prods = await prod_cursor.to_list(length=500)
+        # Map commission rates by product_id string
+        commission_index = {str(d["product_id"]): d.get("commission_rate") for d in auth_docs}
+
+        for p in prods:
+            pid_str = str(p["_id"])
+            items.append(
+                {
+                    "product_id": pid_str,
+                    "title": p.get("title") or "Ürün",
+                    "type": p.get("type") or "hotel",
+                    "status": p.get("status") or "active",
+                    "commission_rate": commission_index.get(pid_str),
+                }
+            )
+    else:
+        # Fallback: no linked partner → show all active products for organization
+        cursor = db.products.find(
+            {"organization_id": org_id, "status": "active"},
+            {"_id": 1, "title": 1, "type": 1, "status": 1},
+        ).sort("created_at", -1)
+        prods = await cursor.to_list(length=500)
+        for p in prods:
+            items.append(
+                {
+                    "product_id": str(p["_id"]),
+                    "title": p.get("title") or "Ürün",
+                    "type": p.get("type") or "hotel",
+                    "status": p.get("status") or "active",
+                    "commission_rate": None,
+                }
+            )
+
+    # Ensure Mongo ids are not leaked and everything is JSON serializable
+    return {"items": items}
+

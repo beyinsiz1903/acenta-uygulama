@@ -475,6 +475,8 @@ export default function B2BPortalPage() {
   const [checkOut, setCheckOut] = useState("");
   const [adults, setAdults] = useState(2);
   const [children, setChildren] = useState(0);
+  const [quoteProductId, setQuoteProductId] = useState("demo_product_1");
+  const [occupancy, setOccupancy] = useState(1);
 
   // Search results & selection
   const [searchResults, setSearchResults] = useState([]); // HotelSearchResponseItem[]

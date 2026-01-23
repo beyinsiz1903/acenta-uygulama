@@ -116,7 +116,9 @@ metadata:
 
 test_plan:
   current_focus:
-    - "B2B Hotels Search + Marketplace Integration"
+    - "B2B Portal Not Found Cleanup - Agency Hotels Page"
+    - "B2B Portal Not Found Cleanup - Agency Bookings Page"
+    - "B2B Portal Not Found Cleanup - Agency Settlements Page"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"

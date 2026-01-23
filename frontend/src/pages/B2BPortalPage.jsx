@@ -581,10 +581,26 @@ export default function B2BPortalPage() {
     setBooking(null);
     setCancelResult(null);
 
-    if (!checkIn || !checkOut) {
-      setQuoteError("Giriş ve çıkış tarihleri gerekli");
-      return;
+    // Basit form validasyonu
+    setCityError("");
+    setDateError("");
+    setSearchError("");
+
+    const cityTrimmed = (city || "").trim();
+    let hasError = false;
+    if (!cityTrimmed) {
+      setCityError("Şehir boş bırakılamaz.");
+      hasError = true;
     }
+    if (!checkIn || !checkOut) {
+      setDateError("Giriş ve çıkış tarihleri zorunludur.");
+      hasError = true;
+    }
+    if (!selectedOffer) {
+      setSearchError("Lütfen listeden bir otel / fiyat seçin.");
+      hasError = true;
+    }
+    if (hasError) return;
 
     setQuoteLoading(true);
     try {
@@ -592,12 +608,12 @@ export default function B2BPortalPage() {
         channel_id: "ch_b2b_portal",
         items: [
           {
-            product_id: quoteProductId || "demo_product_1",
+            product_id: selectedOffer.product_id,
             room_type_id: "standard",
-            rate_plan_id: "base",
+            rate_plan_id: selectedOffer.rate_plan_id,
             check_in: checkIn,
             check_out: checkOut,
-            occupancy: occupancy ? Number(occupancy) : 1,
+            occupancy: selectedOffer.occupancy?.adults || adults || 1,
           },
         ],
       };
@@ -617,13 +633,16 @@ export default function B2BPortalPage() {
       setSessionQuotes((prev) => prev + 1);
     } catch (err) {
       console.error("[B2BPortal] Quote error:", err);
-      // Backend standard error body: { error: { code, message, details } }
       const resp = err?.response?.data;
       if (resp?.error?.code) {
         const code = resp.error.code;
         const backendMsg = resp.error.message || "Hata oluştu";
         if (code === "product_not_available") {
-          setQuoteError("Bu ürün sizin için kapalı görünüyor. Lütfen B2B Marketplace'te bu acente için yetkilendirilmiş bir ürün ID'si kullanın veya farklı bir ürün deneyin.");
+          setQuoteError(
+            "Bu ürün sizin için kapalı görünüyor. Lütfen B2B Marketplace yetkilendirmelerinizi kontrol edin veya farklı bir otel seçin."
+          );
+        } else if (code === "invalid_date_range") {
+          setDateError("Çıkış tarihi, giriş tarihinden sonra olmalı.");
         } else {
           setQuoteError(`${code}: ${backendMsg}`);
         }

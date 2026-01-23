@@ -82,6 +82,7 @@ from app.routers.admin_tours import router as admin_tours_router
 from app.routers.admin_cms_pages import router as admin_cms_pages_router
 from app.routers.admin_campaigns import router as admin_campaigns_router
 from app.routers.admin_links import router as admin_links_router
+from app.routers.settings import router as settings_router
 
 from app.routers.seo import router as seo_router
 from app.routers.public_campaigns import router as public_campaigns_router
@@ -181,6 +182,7 @@ app.include_router(admin_tours_router)
 app.include_router(admin_cms_pages_router)
 app.include_router(admin_campaigns_router)
 app.include_router(admin_links_router)
+app.include_router(settings_router)
 
 app.include_router(theme_router)
 

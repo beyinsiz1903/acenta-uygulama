@@ -34,7 +34,29 @@ class B2BPricingService:
         self.price_quotes = db.price_quotes
         self.coupons = CouponService(db)
 
-    async def _ensure_product_sellable(self, organization_id: str, product_id: str) -> dict:
+    async def _resolve_partner_for_agency(self, organization_id: str, agency_id: str | None) -> str | None:
+        """Resolve linked partner for a given agency, if any.
+
+        V1 semantics:
+        - Uses partner_profiles.linked_agency_id to link an agency to a partner
+        - Returns partner _id as string or None if no link is configured
+        """
+
+        if not agency_id:
+            return None
+
+        # linked_agency_id may store string or ObjectId-like; compare as string
+        q: dict[str, Any] = {
+            "organization_id": organization_id,
+            "linked_agency_id": {"$in": [str(agency_id), agency_id]},
+            "status": "approved",
+        }
+        doc = await self.db.partner_profiles.find_one(q, {"_id": 1})
+        if not doc:
+            return None
+        return str(doc.get("_id"))
+
+    async def _ensure_product_sellable(self, organization_id: str, product_id: str, agency_id: str | None) -> dict:
         # Convert string product_id to ObjectId for MongoDB lookup
         try:
             product_oid = ObjectId(product_id)
@@ -45,7 +67,7 @@ class B2BPricingService:
                 "Invalid product ID format",
                 {"product_id": str(product_id)},
             )
-            
+
         doc = await self.products.find_one(
             {"organization_id": organization_id, "_id": product_oid, "status": "active"},
             {"_id": 1},
@@ -57,6 +79,27 @@ class B2BPricingService:
                 "Product is not available for sale",
                 {"product_id": str(product_id)},
             )
+
+        # Optional B2B Marketplace gating: if agency is linked to a partner and
+        # there is an authorization document for this product, require it to be enabled.
+        partner_id = await self._resolve_partner_for_agency(organization_id, agency_id)
+        if partner_id:
+            auth = await self.db.b2b_product_authorizations.find_one(
+                {
+                    "organization_id": organization_id,
+                    "partner_id": partner_id,
+                    "product_id": product_oid,
+                }
+            )
+            is_enabled = bool(auth and auth.get("is_enabled"))
+            if not is_enabled:
+                raise AppError(
+                    409,
+                    "product_not_available",
+                    "Product is not enabled for this partner",
+                    {"product_id": str(product_id), "partner_id": partner_id},
+                )
+
         return doc
 
     async def _price_item(
@@ -68,7 +111,7 @@ class B2BPricingService:
         target_currency: str = "EUR",
     ) -> QuoteOffer:
         # TODO: integrate real inventory + contract + rules pricing.
-        await self._ensure_product_sellable(organization_id, item.product_id)
+        await self._ensure_product_sellable(organization_id, item.product_id, agency_id)
 
         # Convert string product_id to ObjectId for inventory lookup
         try:

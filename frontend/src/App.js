@@ -52,6 +52,7 @@ import AdminB2BFunnelPage from "./pages/AdminB2BFunnelPage";
 import AdminB2BAnnouncementsPage from "./pages/AdminB2BAnnouncementsPage";
 import AdminB2BDashboardPage from "./pages/AdminB2BDashboardPage";
 import AdminExecutiveDashboardPage from "./pages/AdminExecutiveDashboardPage";
+import AdminB2BMarketplacePage from "./pages/AdminB2BMarketplacePage";
 import AdminThemePage from "./pages/AdminThemePage";
 import AdminReportingPage from "./pages/AdminReportingPage";
 import AdminVillaCalendarPage from "./pages/AdminVillaCalendarPage";

@@ -477,6 +477,7 @@ export default function B2BPortalPage() {
   // Quote result
   const [quote, setQuote] = useState(null); // { quote_id, expires_at, offer }
   const [quoteError, setQuoteError] = useState("");
+  const [quoteProductId, setQuoteProductId] = useState("demo_product_1");
   const [quoteLoading, setQuoteLoading] = useState(false);
 
   // Countdown

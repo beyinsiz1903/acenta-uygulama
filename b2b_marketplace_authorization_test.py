@@ -99,10 +99,10 @@ def setup_test_data(org_id: str):
     db.partner_profiles.replace_one({"_id": partner_id}, partner_doc, upsert=True)
     print(f"   ✅ Created partner: {partner_id} linked to agency: {agency_id}")
     
-    # 3. Create or find a test product
-    product_doc = db.products.find_one({"organization_id": org_id, "status": "active"})
+    # 3. Use existing ObjectId-based product
+    product_doc = db.products.find_one({"organization_id": org_id, "status": "active", "_id": {"$type": "objectId"}})
     if not product_doc:
-        # Create a test product
+        # Create a test product with ObjectId
         product_id = ObjectId()
         product_doc = {
             "_id": product_id,

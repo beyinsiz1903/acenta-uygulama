@@ -14,12 +14,22 @@ import {
   DialogTitle,
   DialogFooter,
 } from "../components/ui/dialog";
+import { Checkbox } from "../components/ui/checkbox";
+
+const AVAILABLE_ROLES = [
+  { id: "super_admin", label: "Süper Admin" },
+  { id: "admin", label: "Admin (legacy)" },
+  { id: "sales", label: "Satış" },
+  { id: "ops", label: "Operasyon" },
+  { id: "accounting", label: "Muhasebe" },
+  { id: "b2b_agent", label: "B2B Acenta Kullanıcısı" },
+];
 
 function UserForm({ open, onOpenChange, onSaved }) {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [password, setPassword] = useState("pass123");
-  const [roles, setRoles] = useState("sales");
+  const [selectedRoles, setSelectedRoles] = useState(["sales"]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 

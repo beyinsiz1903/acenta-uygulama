@@ -184,6 +184,7 @@ app.include_router(admin_links_router)
 
 app.include_router(theme_router)
 
+app.include_router(b2b_router)
 app.include_router(b2b_bookings_router)
 app.include_router(b2b_bookings_list_router)
 app.include_router(b2b_hotels_search_router)

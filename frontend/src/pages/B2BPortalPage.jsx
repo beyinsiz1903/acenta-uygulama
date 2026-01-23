@@ -917,6 +917,59 @@ export default function B2BPortalPage() {
                     </div>
                   )}
                 </div>
+          {/* Adım 1.5: Arama Sonuçları (otel kartları) */}
+          {searchResults.length > 0 && (
+            <div className="mt-4 space-y-3">
+              <p className="text-xs font-medium text-muted-foreground">
+                Bulunan oteller ({searchResults.length})
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {searchResults.map((item, idx) => {
+                  const isSelected =
+                    selectedOffer &&
+                    selectedOffer.product_id === item.product_id &&
+                    selectedOffer.rate_plan_id === item.rate_plan_id;
+
+                  return (
+                    <Card
+                      key={`${item.product_id}-${item.rate_plan_id}-${idx}`}
+                      className={`rounded-2xl border shadow-sm cursor-pointer transition ${
+                        isSelected ? "border-primary ring-1 ring-primary/40" : "hover:border-primary/40"
+                      }`}
+                      onClick={() => setSelectedOffer({ ...item })}
+                    >
+                      <CardContent className="p-4 space-y-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <div>
+                            <div className="text-sm font-semibold">{item.hotel_name}</div>
+                            <div className="text-xs text-muted-foreground">
+                              {item.city}, {item.country}
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-lg font-semibold">
+                              {item.selling_total} {item.selling_currency}
+                            </div>
+                            <div className="text-[11px] text-muted-foreground">
+                              {item.nights} gece · {item.occupancy?.adults || adults || 0} yetişkin
+                            </div>
+                            <div className="text-[11px] text-muted-foreground">
+                              Net: {item.base_net} {item.base_currency}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                          <span>Plan: {item.board}</span>
+                          {isSelected && <span className="text-primary font-medium">Seçili</span>}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
 
                 <div className="space-y-1">
                   <Label htmlFor="check_in" className="flex items-center gap-2">

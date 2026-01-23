@@ -116,8 +116,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "B2B Portal Product ID Input Field Implementation"
-    - "B2B Portal Quote Error Handling UI"
+    - "B2B Portal Quote Error UX Improvement"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"

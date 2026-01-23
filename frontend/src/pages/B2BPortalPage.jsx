@@ -480,6 +480,11 @@ export default function B2BPortalPage() {
   const [quoteProductId, setQuoteProductId] = useState("demo_product_1");
   const [quoteLoading, setQuoteLoading] = useState(false);
 
+  // B2B Marketplace ürün listesi (bu acenteye açık ürünler)
+  const [marketplaceProducts, setMarketplaceProducts] = useState([]);
+  const [marketplaceLoading, setMarketplaceLoading] = useState(false);
+  const [marketplaceError, setMarketplaceError] = useState("");
+
   // Countdown
   const [nowMs, setNowMs] = useState(Date.now());
 
@@ -505,6 +510,37 @@ export default function B2BPortalPage() {
 
   // Countdown timer effect
   useEffect(() => {
+
+  // B2B Marketplace: bu acenteye açık ürünleri yükle
+  useEffect(() => {
+    let cancelled = false;
+    async function run() {
+      setMarketplaceLoading(true);
+      setMarketplaceError("");
+      try {
+        const res = await api.get("/b2b/marketplace/products");
+        if (cancelled) return;
+        setMarketplaceProducts(res.data?.items || []);
+      } catch (err) {
+        if (cancelled) return;
+        const msg = apiErrorMessage(err);
+        // 404 / Not Found durumunda boş liste gibi davran, kırmızı hata göstermeyelim
+        if (String(msg).toLowerCase().includes("not found")) {
+          setMarketplaceProducts([]);
+          setMarketplaceError("");
+        } else {
+          setMarketplaceError(msg);
+        }
+      } finally {
+        if (!cancelled) setMarketplaceLoading(false);
+      }
+    }
+    run();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
     const id = setInterval(() => {
       setNowMs(Date.now());
     }, 1000);

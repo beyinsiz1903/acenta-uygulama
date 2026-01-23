@@ -38,7 +38,7 @@ function UserForm({ open, onOpenChange, onSaved }) {
       setEmail("");
       setName("");
       setPassword("pass123");
-      setRoles("sales");
+      setSelectedRoles(["sales"]);
       setError("");
     }
   }, [open]);
@@ -46,12 +46,15 @@ function UserForm({ open, onOpenChange, onSaved }) {
   async function save() {
     setLoading(true);
     setError("");
+
+    const roles = selectedRoles.filter(Boolean);
+
     try {
       await api.post("/settings/users", {
         email,
         name,
         password,
-        roles: roles.split(",").map((s) => s.trim()).filter(Boolean),
+        roles,
         agency_id: null,
       });
       onSaved?.();

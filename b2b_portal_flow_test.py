@@ -573,6 +573,7 @@ def run_all_tests():
     test_functions = [
         test_b2b_portal_complete_flow,
         test_error_scenarios,
+        test_b2b_portal_with_different_dates,
     ]
     
     passed_tests = 0

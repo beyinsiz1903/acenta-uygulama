@@ -87,9 +87,35 @@ function UserForm({ open, onOpenChange, onSaved }) {
             <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} data-testid="user-password" />
           </div>
           <div className="space-y-2">
-            <Label>Roller (virgülle)</Label>
-            <Input value={roles} onChange={(e) => setRoles(e.target.value)} data-testid="user-roles" />
-            <div className="text-xs text-muted-foreground">Örn: admin,sales,ops,accounting</div>
+            <Label>Roller</Label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1" data-testid="user-roles">
+              {AVAILABLE_ROLES.map((role) => {
+                const checked = selectedRoles.includes(role.id);
+                return (
+                  <label
+                    key={role.id}
+                    className="flex items-center gap-2 rounded-md border border-border/60 bg-muted/40 px-2 py-1.5 text-xs cursor-pointer hover:bg-muted/70"
+                  >
+                    <Checkbox
+                      checked={checked}
+                      onCheckedChange={(val) => {
+                        setSelectedRoles((prev) => {
+                          const set = new Set(prev);
+                          if (val) set.add(role.id);
+                          else set.delete(role.id);
+                          return Array.from(set);
+                        });
+                      }}
+                    />
+                    <span>{role.label}</span>
+                    <span className="ml-auto font-mono text-[10px] text-muted-foreground">{role.id}</span>
+                  </label>
+                );
+              })}
+            </div>
+            <div className="text-[11px] text-muted-foreground">
+              En az bir rol seçilmeli. Sadece deneysel kullanıcılar için admin/sales/ops/accounting/b2b_agent.
+            </div>
           </div>
 
           {error ? (

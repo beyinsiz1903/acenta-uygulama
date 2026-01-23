@@ -170,11 +170,17 @@ def cleanup_test_data(org_id: str, agency_id: str, partner_id: str, product_id: 
         # Only delete test-created data
         if "test_" in agency_id:
             db.agencies.delete_one({"_id": agency_id})
-        if "HTL-TEST-" in str(product_id):
+        
+        # Check if product is test-created by looking at its code
+        try:
             product_oid = ObjectId(product_id)
-            db.products.delete_one({"_id": product_oid})
-            db.rate_plans.delete_many({"organization_id": org_id, "product_id": product_oid})
-            db.inventory.delete_many({"organization_id": org_id, "product_id": product_oid})
+            product_doc = db.products.find_one({"_id": product_oid})
+            if product_doc and product_doc.get("code", "").startswith("HTL-TEST-"):
+                db.products.delete_one({"_id": product_oid})
+                db.rate_plans.delete_many({"organization_id": org_id, "product_id": product_oid})
+                db.inventory.delete_many({"organization_id": org_id, "product_id": product_oid})
+        except:
+            pass
         
         mongo_client.close()
         print(f"   🧹 Cleanup completed")

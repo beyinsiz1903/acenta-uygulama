@@ -106,17 +106,26 @@ def search_hotels(token: str, city: str = "Istanbul", adults: int = 2, children:
     
     return data
 
-def create_quote(token: str, product_id: str, rate_plan_id: str, check_in: str, check_out: str, adults: int, channel_id: str = "ch_b2b_portal") -> Dict[str, Any]:
+def create_quote(token: str, product_id: str, rate_plan_id: str, check_in: str, check_out: str, adults: int, room_type_id: str = None, channel_id: str = "ch_b2b_portal") -> Dict[str, Any]:
     """Create a quote using B2B quotes endpoint"""
     print(f"💰 Creating quote for product {product_id}...")
     
+    # Use a default room_type_id if not provided
+    if not room_type_id:
+        room_type_id = "default_room"
+    
     payload = {
-        "product_id": product_id,
-        "rate_plan_id": rate_plan_id,
-        "check_in": check_in,
-        "check_out": check_out,
-        "occupancy": {"adults": adults},
-        "channel_id": channel_id
+        "channel_id": channel_id,
+        "items": [
+            {
+                "product_id": product_id,
+                "room_type_id": room_type_id,
+                "rate_plan_id": rate_plan_id,
+                "check_in": check_in,
+                "check_out": check_out,
+                "occupancy": adults
+            }
+        ]
     }
     
     headers = {"Authorization": f"Bearer {token}"}

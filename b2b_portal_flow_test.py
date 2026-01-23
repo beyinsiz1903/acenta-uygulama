@@ -313,7 +313,7 @@ def test_b2b_portal_complete_flow():
             channel_id="ch_b2b_portal"
         )
         
-        # Step 4: Create Booking
+        # Step 4: Create Booking (only if quote was successful)
         print("\n4️⃣  STEP 4: Booking Creation")
         quote_id = quote_result["quote_id"]
         

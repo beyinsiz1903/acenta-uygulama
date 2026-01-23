@@ -551,10 +551,33 @@ export default function ReservationsPage() {
             </Table>
           </div>
 
-          <div className="mt-3 text-xs text-muted-foreground">
-            Durum sayaçları: {Object.entries(badges)
-              .map(([k, v]) => `${k}:${v}`)
-              .join("  ")}
+          <div className="mt-3 text-xs text-muted-foreground space-y-1">
+            <div className="font-medium text-[11px] text-foreground/80">Durum sayaçları</div>
+            <div className="flex flex-wrap gap-2">
+              {Object.entries(badges).length === 0 ? (
+                <span className="text-muted-foreground">Henüz rezervasyon yok.</span>
+              ) : (
+                Object.entries(badges).map(([k, v]) => (
+                  <span
+                    key={k}
+                    className="inline-flex items-center gap-1 rounded-full border bg-accent px-2 py-0.5 text-[11px] font-medium text-foreground/80"
+                  >
+                    <span>
+                      {k === "pending"
+                        ? "Beklemede"
+                        : k === "confirmed"
+                        ? "Onaylı"
+                        : k === "paid"
+                        ? "Ödendi"
+                        : k === "cancelled"
+                        ? "İptal"
+                        : k}
+                    </span>
+                    <span className="text-foreground">{v}</span>
+                  </span>
+                ))
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>

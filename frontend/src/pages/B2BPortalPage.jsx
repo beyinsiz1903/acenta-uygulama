@@ -546,12 +546,6 @@ export default function B2BPortalPage() {
     };
   }, []);
 
-    const id = setInterval(() => {
-      setNowMs(Date.now());
-    }, 1000);
-    return () => clearInterval(id);
-  }, []);
-
   const expiresAtDate = useMemo(() => parseIso(quote?.expires_at), [quote]);
   const remainingMs = useMemo(() => {
     if (!expiresAtDate) return 0;

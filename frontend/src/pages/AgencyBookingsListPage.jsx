@@ -69,7 +69,14 @@ export default function AgencyBookingsListPage() {
       setBookings(sorted);
     } catch (err) {
       console.error("[AgencyBookings] Load error:", err);
-      setError(apiErrorMessage(err));
+      const msg = apiErrorMessage(err) || "";
+      // 404 / Not Found durumunda bof liste gibi davran, kdrmdz hata gstermeyelim
+      if (msg.toLowerCase().includes("not found")) {
+        setBookings([]);
+        setError("");
+      } else {
+        setError(msg);
+      }
     } finally {
       setLoading(false);
     }

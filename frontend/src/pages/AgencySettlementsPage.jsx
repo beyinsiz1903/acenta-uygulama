@@ -64,7 +64,14 @@ export default function AgencySettlementsPage() {
       const resp = await api.get("/agency/settlements", { params });
       setData(resp.data);
     } catch (e) {
-      setError(apiErrorMessage(e));
+      const msg = apiErrorMessage(e) || "";
+      // 404 / Not Found durumunda bof veri gibi davran, kdrmdz hata gstermeyelim
+      if (msg.toLowerCase().includes("not found")) {
+        setData({ totals: [], entries: [] });
+        setError("");
+      } else {
+        setError(msg);
+      }
     } finally {
       setLoading(false);
     }

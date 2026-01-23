@@ -842,17 +842,39 @@ export default function B2BPortalPage() {
                 <div className="space-y-1 md:col-span-2">
                   <Label className="flex items-center gap-2 text-xs">
                     <Store className="h-4 w-4" />
-                    Ürün (demo)
+                    Otel Arama
                   </Label>
-                  <Input
-                    type="text"
-                    value={quoteProductId}
-                    onChange={(e) => setQuoteProductId(e.target.value)}
-                    className="text-xs font-mono"
-                    placeholder="product_id (örneğin: demo_product_1)"
-                  />
-                  
-                  {/* Marketplace ürün listesi */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    <div>
+                      <Label className="text-[11px] text-muted-foreground">Şehir</Label>
+                      <Input value={city} onChange={(e) => setCity(e.target.value)} />
+                      {cityError && <div className="text-[11px] text-destructive mt-1">{cityError}</div>}
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <Label className="text-[11px] text-muted-foreground">Yetişkin</Label>
+                        <Input
+                          type="number"
+                          min={1}
+                          max={8}
+                          value={adults}
+                          onChange={(e) => setAdults(Number(e.target.value) || 1)}
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-[11px] text-muted-foreground">Çocuk</Label>
+                        <Input
+                          type="number"
+                          min={0}
+                          max={8}
+                          value={children}
+                          onChange={(e) => setChildren(Number(e.target.value) || 0)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Marketplace ürün listesi: referans amaçlı */}
                   {marketplaceLoading && (
                     <p className="mt-1 text-[11px] text-muted-foreground">Yetkili ürünler yükleniyor...</p>
                   )}
@@ -872,11 +894,7 @@ export default function B2BPortalPage() {
                         </thead>
                         <tbody>
                           {marketplaceProducts.map((p) => (
-                            <tr
-                              key={p.product_id}
-                              className="cursor-pointer hover:bg-background"
-                              onClick={() => setQuoteProductId(p.product_id)}
-                            >
+                            <tr key={p.product_id} className="hover:bg-background">
                               <td className="px-2 py-1">
                                 <div className="flex flex-col">
                                   <span className="font-medium truncate max-w-[160px]">{p.title}</span>
@@ -911,41 +929,30 @@ export default function B2BPortalPage() {
                     value={checkIn}
                     onChange={(e) => setCheckIn(e.target.value)}
                   />
+                  {dateError && (
+                    <div className="text-[11px] text-destructive mt-1">{dateError}</div>
+                  )}
                 </div>
 
-            <div className="space-y-1">
-              <Label htmlFor="check_out" className="flex items-center gap-2">
-                <CalendarDays className="h-4 w-4" />
-                Çıkış
-              </Label>
-              <Input
-                id="check_out"
-                type="date"
-                value={checkOut}
-                onChange={(e) => setCheckOut(e.target.value)}
-              />
-            </div>
+                <div className="space-y-1">
+                  <Label htmlFor="check_out" className="flex items-center gap-2">
+                    <CalendarDays className="h-4 w-4" />
+                    Çıkış
+                  </Label>
+                  <Input
+                    id="check_out"
+                    type="date"
+                    value={checkOut}
+                    onChange={(e) => setCheckOut(e.target.value)}
+                  />
+                </div>
 
-            <div className="space-y-1">
-              <Label htmlFor="occupancy" className="flex items-center gap-2">
-                <User className="h-4 w-4" />
-                Kişi Sayısı
-              </Label>
-              <Input
-                id="occupancy"
-                type="number"
-                min={1}
-                value={occupancy}
-                onChange={(e) => setOccupancy(e.target.value)}
-              />
-            </div>
-
-            <div className="flex justify-end md:col-span-1">
-              <Button type="submit" disabled={quoteLoading} className="w-full md:w-auto gap-2">
-                {quoteLoading && <Loader2 className="h-4 w-4 animate-spin" />}
-                {quoteLoading ? "Hesaplanıyor..." : "Quote Oluştur"}
-              </Button>
-            </div>
+                <div className="flex justify-end md:col-span-1">
+                  <Button type="submit" disabled={quoteLoading} className="w-full md:w-auto gap-2">
+                    {quoteLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+                    {quoteLoading ? "Hesaplanıyor..." : "Quote Oluştur"}
+                  </Button>
+                </div>
           </form>
 
           {quoteError && (

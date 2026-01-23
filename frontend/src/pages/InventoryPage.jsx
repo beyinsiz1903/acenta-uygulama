@@ -204,7 +204,20 @@ export default function InventoryPage() {
   }
 
   async function applyBulk() {
-    if (!bulkStart || !bulkEnd) return;
+    if (!bulkStart || !bulkEnd || !productId) return;
+
+    const summaryLines = [
+      `Tarih aralığı: ${bulkStart} → ${bulkEnd}`,
+      `Kapasite / Müsait: ${bulkCapTotal} / ${bulkCapAvail}`,
+      `Fiyat: ${bulkPrice === "" || bulkPrice === null ? "(değişmeyecek / null)" : bulkPrice}`,
+      `Günleri kapat: ${bulkClosed ? "Evet" : "Hayır"}`,
+    ];
+
+    const ok = window.confirm(
+      "Aşağıdaki ayarlarla toplu işlem uygulamak üzeresiniz:\n\n" + summaryLines.join("\n") + "\n\nDevam etmek istiyor musunuz?"
+    );
+    if (!ok) return;
+
     setBulkLoading(true);
     try {
       await api.post("/inventory/bulk_upsert", {
@@ -510,8 +523,11 @@ export default function InventoryPage() {
                 </Button>
               </div>
 
-              <div className="mt-3 text-xs text-muted-foreground">
-                Not: Bu işlem her gün için upsert yapar.
+              <div className="mt-3 text-xs text-muted-foreground space-y-1">
+                <div>
+                  Özet: {bulkStart} → {bulkEnd}, Kapasite/Müsait: {bulkCapTotal}/{bulkCapAvail}, Günleri kapat: {bulkClosed ? "Evet" : "Hayır"}
+                </div>
+                <div>Not: Bu işlem her gün için upsert yapar.</div>
               </div>
             </CardContent>
           </Card>

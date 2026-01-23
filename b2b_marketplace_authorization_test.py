@@ -117,6 +117,21 @@ def setup_test_data(org_id: str):
         }
         db.products.replace_one({"_id": product_id}, product_doc, upsert=True)
         
+        # Create rate plan for the product
+        rate_plan_id = ObjectId()
+        rate_plan_doc = {
+            "_id": rate_plan_id,
+            "organization_id": org_id,
+            "product_id": product_id,
+            "code": f"RP-TEST-{test_suffix}",
+            "currency": "EUR",
+            "base_net_price": 100.0,
+            "status": "active",
+            "created_at": now,
+            "updated_at": now,
+        }
+        db.rate_plans.replace_one({"_id": rate_plan_id}, rate_plan_doc, upsert=True)
+        
         # Create inventory for the product
         check_in_date = date.today() + timedelta(days=30)
         inventory_doc = {

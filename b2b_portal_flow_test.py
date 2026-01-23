@@ -155,10 +155,15 @@ def create_quote(token: str, product_id: str, rate_plan_id: str, check_in: str, 
                 
                 if error_code == "product_not_available":
                     print(f"   ⚠️  Product not available - this may be expected")
+                    return error_data  # Return error data for analysis
+                elif error_code == "unavailable":
+                    print(f"   ⚠️  No availability for requested dates - this may be expected")
+                    return error_data  # Return error data for analysis
                 elif error_code == "invalid_date_range":
                     print(f"   ❌ CRITICAL: Got invalid_date_range error in quote creation!")
                 
                 print(f"   📋 Full error response: {json.dumps(error_data, indent=2)}")
+                return error_data  # Return error data for analysis
         except:
             pass
         raise Exception(f"Quote creation failed: {r.status_code} - {r.text}")

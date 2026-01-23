@@ -469,15 +469,24 @@ export default function B2BPortalPage() {
   const [sessionQuotes, setSessionQuotes] = useState(0);
   const [sessionBookings, setSessionBookings] = useState(0);
 
-  // Quote form state
+  // Search + quote form state (P0.2: otel arama)
+  const [city, setCity] = useState("Istanbul");
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
-  const [occupancy, setOccupancy] = useState(2);
+  const [adults, setAdults] = useState(2);
+  const [children, setChildren] = useState(0);
+
+  // Search results & selection
+  const [searchResults, setSearchResults] = useState([]); // HotelSearchResponseItem[]
+  const [selectedOffer, setSelectedOffer] = useState(null); // Seçili hotel + rate plan
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchError, setSearchError] = useState("");
+  const [cityError, setCityError] = useState("");
+  const [dateError, setDateError] = useState("");
 
   // Quote result
   const [quote, setQuote] = useState(null); // { quote_id, expires_at, offer }
   const [quoteError, setQuoteError] = useState("");
-  const [quoteProductId, setQuoteProductId] = useState("demo_product_1");
   const [quoteLoading, setQuoteLoading] = useState(false);
 
   // B2B Marketplace ürün listesi (bu acenteye açık ürünler)

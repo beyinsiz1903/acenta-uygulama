@@ -150,6 +150,21 @@ def setup_test_data(org_id: str):
         print(f"   ✅ Created test product: {product_id}")
     else:
         product_id = product_doc["_id"]
+        # Create inventory for the product to ensure availability
+        check_in_date = date.today() + timedelta(days=30)
+        inventory_doc = {
+            "organization_id": org_id,
+            "product_id": product_id,
+            "date": check_in_date.isoformat(),
+            "capacity_available": 10,
+            "price": 100.0,
+            "restrictions": {"closed": False},
+        }
+        db.inventory.replace_one(
+            {"organization_id": org_id, "product_id": product_id, "date": check_in_date.isoformat()},
+            inventory_doc,
+            upsert=True
+        )
         print(f"   ✅ Using existing product: {product_id}")
     
     mongo_client.close()

@@ -276,15 +276,25 @@ function InboxPage() {
                       {t.channel || t.type || "internal"}
                     </span>
                   </div>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">
-                    {formatDate(t.last_message_at)}
-                  </p>
-                  <p
-                    className="text-[11px] text-muted-foreground mt-0.5"
-                    data-testid="inbox-thread-count"
-                  >
-                    {t.message_count ?? 0} mesaj
-                  </p>
+                  <div className="mt-0.5 flex items-center justify-between gap-2">
+                    <p className="text-[11px] text-muted-foreground">
+                      {formatDate(t.last_message_at)}
+                    </p>
+                    <span className="inline-flex items-center gap-1 rounded-full border bg-accent px-2 py-0.5 text-[10px] font-medium text-foreground/80">
+                      <span>
+                        {t.status === "open"
+                          ? "Açık"
+                          : t.status === "pending"
+                          ? "Beklemede"
+                          : t.status === "done"
+                          ? "Tamamlandı"
+                          : t.status || "Durum"}
+                      </span>
+                      <span className="text-foreground text-[10px]" data-testid="inbox-thread-count">
+                        {t.message_count ?? 0} mesaj
+                      </span>
+                    </span>
+                  </div>
                 </li>
               ))}
             </ul>

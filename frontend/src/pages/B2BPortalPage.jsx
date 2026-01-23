@@ -752,26 +752,40 @@ export default function B2BPortalPage() {
         <>
           {/* 1) Search / Quote */}
           <Card className="rounded-2xl border bg-card shadow-sm">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <CalendarDays className="h-4 w-4" />
-            1. Adım – Quote Oluştur
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <form onSubmit={handleCreateQuote} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-            <div className="space-y-1">
-              <Label htmlFor="check_in" className="flex items-center gap-2">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
                 <CalendarDays className="h-4 w-4" />
-                Giriş
-              </Label>
-              <Input
-                id="check_in"
-                type="date"
-                value={checkIn}
-                onChange={(e) => setCheckIn(e.target.value)}
-              />
-            </div>
+                1. Adım – Quote Oluştur
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <form onSubmit={handleCreateQuote} className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+                <div className="space-y-1 md:col-span-2">
+                  <Label className="flex items-center gap-2 text-xs">
+                    <Store className="h-4 w-4" />
+                    Ürün (demo)
+                  </Label>
+                  <Input
+                    type="text"
+                    value={quoteProductId}
+                    onChange={(e) => setQuoteProductId(e.target.value)}
+                    className="text-xs font-mono"
+                    placeholder="product_id (örneğin: demo_product_1)"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="check_in" className="flex items-center gap-2">
+                    <CalendarDays className="h-4 w-4" />
+                    Giriş
+                  </Label>
+                  <Input
+                    id="check_in"
+                    type="date"
+                    value={checkIn}
+                    onChange={(e) => setCheckIn(e.target.value)}
+                  />
+                </div>
 
             <div className="space-y-1">
               <Label htmlFor="check_out" className="flex items-center gap-2">

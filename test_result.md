@@ -128,7 +128,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "B2B Portal Marketplace Product List Component"
+    - "B2B Hotels Search + Marketplace Integration"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"

@@ -23,7 +23,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 
 
 # Configuration
-BACKEND_URL = "https://b2b-acentelik.preview.emergentagent.com"
+BACKEND_URL = "https://agencyportal-6.preview.emergentagent.com"
 ORG_ID = "695e03c80b04ed31c4eaa899"
 MONGO_URL = os.environ.get("MONGO_URL", "mongodb://localhost:27017")
 DB_NAME = os.environ.get("DB_NAME", "test_database")

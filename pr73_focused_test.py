@@ -12,7 +12,7 @@ from pymongo import MongoClient
 import os
 
 # Configuration
-BASE_URL = "https://b2b-acentelik.preview.emergentagent.com"
+BASE_URL = "https://agencyportal-6.preview.emergentagent.com"
 
 def get_mongo_client():
     """Get MongoDB client for direct database access"""

@@ -566,7 +566,13 @@ export default function B2BPortalPage() {
       // Backend standard error body: { error: { code, message, details } }
       const resp = err?.response?.data;
       if (resp?.error?.code) {
-        setQuoteError(`${resp.error.code}: ${resp.error.message || "Hata oluştu"}`);
+        const code = resp.error.code;
+        const backendMsg = resp.error.message || "Hata oluştu";
+        if (code === "product_not_available") {
+          setQuoteError("Bu ürün sizin için kapalı görünüyor. Lütfen B2B Marketplace'te bu acente için yetkilendirilmiş bir ürün ID'si kullanın veya farklı bir ürün deneyin.");
+        } else {
+          setQuoteError(`${code}: ${backendMsg}`);
+        }
       } else {
         setQuoteError(apiErrorMessage(err));
       }

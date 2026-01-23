@@ -185,7 +185,7 @@ def set_product_authorization(admin_token: str, partner_id: str, product_id: str
     print(f"   ✅ Product authorization set: is_enabled={is_enabled}")
     return data
 
-def create_b2b_quote(agency_token: str, product_id: str):
+def create_b2b_quote(agency_token: str, product_id: str, rate_plan_id: str = None):
     """Create B2B quote and return response"""
     headers = {"Authorization": f"Bearer {agency_token}"}
     
@@ -193,17 +193,35 @@ def create_b2b_quote(agency_token: str, product_id: str):
     check_in = date.today() + timedelta(days=30)
     check_out = check_in + timedelta(days=2)
     
+    # If no rate_plan_id provided, try to find one for the product
+    if not rate_plan_id:
+        mongo_client = get_mongo_client()
+        db = mongo_client.get_default_database()
+        
+        # Convert product_id to ObjectId if needed
+        try:
+            product_oid = ObjectId(product_id)
+        except:
+            product_oid = product_id
+            
+        rate_plan = db.rate_plans.find_one({"product_id": product_oid})
+        if rate_plan:
+            rate_plan_id = str(rate_plan["_id"])
+        else:
+            rate_plan_id = "default_rate_plan"
+        
+        mongo_client.close()
+    
     payload = {
         "channel_id": "web",
         "items": [
             {
                 "product_id": product_id,
                 "room_type_id": "standard",
+                "rate_plan_id": rate_plan_id,
                 "check_in": check_in.isoformat(),
                 "check_out": check_out.isoformat(),
-                "adults": 2,
-                "children": 0,
-                "rooms": 1
+                "occupancy": 2
             }
         ],
         "client_context": {"test": True}

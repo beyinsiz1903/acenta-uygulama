@@ -563,7 +563,8 @@ def test_b2b_portal_with_different_dates():
     except Exception as e:
         print(f"\n❌ AVAILABILITY SEARCH FAILED: {e}")
         return False
-    """Run all B2B Portal flow tests"""
+
+def run_all_tests():
     print("\n" + "🚀" * 80)
     print("B2B PORTAL HOTEL SEARCH + QUOTE CREATION FLOW BACKEND TEST")
     print("Testing complete B2B Portal flow with error handling verification")

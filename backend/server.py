@@ -86,6 +86,7 @@ from app.routers.settings import router as settings_router
 
 from app.routers.seo import router as seo_router
 from app.routers.public_campaigns import router as public_campaigns_router
+from app.routers.public_tours import router as public_tours_router
 from app.routers.public_cms_pages import router as public_cms_pages_router
 from app.routers.public_partners import router as public_partners_router
 from app.email_worker import email_dispatch_loop

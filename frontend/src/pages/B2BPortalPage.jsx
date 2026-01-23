@@ -821,6 +821,53 @@ export default function B2BPortalPage() {
                     className="text-xs font-mono"
                     placeholder="product_id (örneğin: demo_product_1)"
                   />
+                  
+                  {/* Marketplace ürün listesi */}
+                  {marketplaceLoading && (
+                    <p className="mt-1 text-[11px] text-muted-foreground">Yetkili ürünler yükleniyor...</p>
+                  )}
+                  {!marketplaceLoading && marketplaceError && (
+                    <p className="mt-1 text-[11px] text-destructive">{marketplaceError}</p>
+                  )}
+                  {!marketplaceLoading && !marketplaceError && marketplaceProducts.length > 0 && (
+                    <div className="mt-2 max-h-32 overflow-y-auto rounded-md border bg-muted/40">
+                      <table className="w-full text-[11px]">
+                        <thead>
+                          <tr className="text-muted-foreground">
+                            <th className="px-2 py-1 text-left font-medium">Ürün</th>
+                            <th className="px-2 py-1 text-left font-medium">Tür</th>
+                            <th className="px-2 py-1 text-left font-medium">Durum</th>
+                            <th className="px-2 py-1 text-right font-medium">Komisyon</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {marketplaceProducts.map((p) => (
+                            <tr
+                              key={p.product_id}
+                              className="cursor-pointer hover:bg-background"
+                              onClick={() => setQuoteProductId(p.product_id)}
+                            >
+                              <td className="px-2 py-1">
+                                <div className="flex flex-col">
+                                  <span className="font-medium truncate max-w-[160px]">{p.title}</span>
+                                  <span className="font-mono text-[10px] text-muted-foreground truncate max-w-[200px]">
+                                    {p.product_id}
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="px-2 py-1 text-[10px] capitalize">{p.type || "-"}</td>
+                              <td className="px-2 py-1 text-[10px]">
+                                {p.status === "active" ? "Aktif" : "Pasif"}
+                              </td>
+                              <td className="px-2 py-1 text-[10px] text-right">
+                                {typeof p.commission_rate === "number" ? `${p.commission_rate}%` : "-"}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-1">

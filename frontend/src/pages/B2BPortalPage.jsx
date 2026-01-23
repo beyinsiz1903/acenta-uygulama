@@ -916,6 +916,66 @@ export default function B2BPortalPage() {
                       </table>
                     </div>
                   )}
+          <div className="flex items-center gap-2 mt-2">
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              disabled={searchLoading}
+              onClick={async () => {
+                setSearchError("");
+                setCityError("");
+                setDateError("");
+                setSearchResults([]);
+                setSelectedOffer(null);
+                setQuote(null);
+                setBooking(null);
+
+                const cityTrimmed = (city || "").trim();
+                let hasErrorLocal = false;
+                if (!cityTrimmed) {
+                  setCityError("Şehir boş bırakılamaz.");
+                  hasErrorLocal = true;
+                }
+                if (!checkIn || !checkOut) {
+                  setDateError("Giriş ve çıkış tarihleri zorunludur.");
+                  hasErrorLocal = true;
+                }
+                if (hasErrorLocal) return;
+
+                setSearchLoading(true);
+                try {
+                  const params = new URLSearchParams({
+                    city: cityTrimmed,
+                    check_in: checkIn,
+                    check_out: checkOut,
+                    adults: String(adults || 1),
+                    children: String(children || 0),
+                  });
+                  const res = await api.get(`/b2b/hotels/search?${params.toString()}`);
+                  const items = res.data?.items || [];
+                  setSearchResults(items);
+                  if (!items.length) {
+                    setSearchError("Bu kriterlerle uygun sonuç bulunamadı.");
+                  }
+                } catch (err) {
+                  const msg = apiErrorMessage(err);
+                  if (msg.toLowerCase().includes("invalid_date_range")) {
+                    setDateError("Çıkış tarihi, giriş tarihinden sonra olmalı.");
+                  } else {
+                    setSearchError(msg);
+                  }
+                } finally {
+                  setSearchLoading(false);
+                }
+              }}
+            >
+              {searchLoading && <Loader2 className="h-3 w-3 animate-spin" />}
+              Otel Ara
+            </Button>
+            {searchError && <div className="text-xs text-destructive">{searchError}</div>}
+          </div>
+
                 </div>
           {/* Adım 1.5: Arama Sonuçları (otel kartları) */}
           {searchResults.length > 0 && (

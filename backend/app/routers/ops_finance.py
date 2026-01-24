@@ -1359,7 +1359,6 @@ async def get_exposure_entries(
         "currency": currency,
         "items": items,
     }
-
         
         # Simple aging buckets based on ledger entry posted_at dates.
         # This is an approximation: we apply agency balance rules (debit - credit)
@@ -1528,7 +1527,6 @@ async def get_exposure_entries(
         "currency": currency,
         "items": items,
     }
-
 
 @router.post("/payments", response_model=Payment, status_code=201)
 async def create_manual_payment(

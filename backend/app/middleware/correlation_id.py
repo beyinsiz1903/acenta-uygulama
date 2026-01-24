@@ -22,7 +22,7 @@ class CorrelationIdMiddleware(BaseHTTPMiddleware):
         # 3) Process request
         try:
             response: Response = await call_next(request)
-        except Exception as exc:  # pragma: no cover - generic safety net
+        except Exception:  # pragma: no cover - generic safety net
             # Let global exception handlers format the body, but still ensure header is set
             from fastapi.responses import JSONResponse
             from app.errors import error_response

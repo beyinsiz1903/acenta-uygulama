@@ -133,6 +133,9 @@ app = FastAPI(
     openapi_url=f"{API_PREFIX}/openapi.json",
 )
 
+# Correlation-Id middleware (request/response scoped) - should be early in the chain
+app.add_middleware(CorrelationIdMiddleware)
+
 # CORS configuration
 app.add_middleware(
     CORSMiddleware,
@@ -141,9 +144,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Correlation-Id middleware (request/response scoped)
-app.add_middleware(CorrelationIdMiddleware)
 
 # Structured exception handlers (AppError, validation, 404, 500, ...)
 register_exception_handlers(app)

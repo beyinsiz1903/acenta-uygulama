@@ -65,3 +65,8 @@ class QuoteCreateResponse(BaseModel):
     winner_rule_id: Optional[str] = None
     winner_rule_name: Optional[str] = None
     pricing_trace: Optional[Dict[str, Any]] = None
+    # Aggregate money model summary for the quote
+    supplier_total: Optional[float] = None
+    margin_total: Optional[float] = None
+    commission_total: Optional[float] = None
+    our_margin_before_coupon_total: Optional[float] = None

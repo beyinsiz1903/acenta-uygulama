@@ -124,7 +124,7 @@ async def list_partner_product_authorizations(
         }
         items.append(serialize_doc(item))
 
-    return {"items": items}
+    return {"items": items, "has_more": has_more}
 
 
 @router.put("", dependencies=[AdminDep])

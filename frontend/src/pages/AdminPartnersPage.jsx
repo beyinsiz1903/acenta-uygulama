@@ -160,18 +160,50 @@ export default function AdminPartnersPage() {
           <div>
             <CardTitle className="text-sm font-medium">Yeni Partner</CardTitle>
           </div>
-          <div className="flex items-center gap-2 text-xs">
-            <span className="text-muted-foreground">Durum filtresi:</span>
-            <select
-              className="h-8 rounded-md border bg-background px-2 text-xs"
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-            >
-              <option value="">Tümü</option>
-              <option value="pending">Beklemede</option>
-              <option value="approved">Onaylı</option>
-              <option value="blocked">Engelli</option>
-            </select>
+          <div className="flex flex-wrap items-center gap-2 text-xs justify-end">
+            <div className="flex items-center gap-1">
+              <span className="text-muted-foreground">Ara:</span>
+              <Input
+                className="h-8 w-40 text-xs"
+                placeholder="Ad / e-posta"
+                value={search}
+                onChange={(e) => {
+                  setPage(1);
+                  setSearch(e.target.value);
+                }}
+              />
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="text-muted-foreground">Durum:</span>
+              <select
+                className="h-8 rounded-md border bg-background px-2 text-xs"
+                value={statusFilter}
+                onChange={(e) => {
+                  setPage(1);
+                  setStatusFilter(e.target.value);
+                }}
+              >
+                <option value="">Tümü</option>
+                <option value="pending">Beklemede</option>
+                <option value="approved">Onaylı</option>
+                <option value="blocked">Engelli</option>
+              </select>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="text-muted-foreground">Sayfa boyutu:</span>
+              <select
+                className="h-8 rounded-md border bg-background px-2 text-xs"
+                value={limit}
+                onChange={(e) => {
+                  setPage(1);
+                  setLimit(Number(e.target.value) || 20);
+                }}
+              >
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+            </div>
             <Button type="button" size="xs" variant="outline" onClick={load} disabled={loading}>
               {loading && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
               Yenile

@@ -87,6 +87,14 @@ api.interceptors.request.use((config) => {
     delete config.headers.Authorization;
   }
 
+  // Correlation-Id: her istete client-side bir id ret ve hem header'a hem de config'e yaz
+  const cid = generateCorrelationId();
+  if (!config.headers) config.headers = {};
+  config.headers["X-Correlation-Id"] = cid;
+  // axios < v1 iler iin meta alann kendimiz tar
+  config.meta = config.meta || {};
+  config.meta.correlationId = cid;
+
   // FAZ-7: app version for audit origin
   try {
     // lazy import to avoid circular deps issues

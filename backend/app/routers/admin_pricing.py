@@ -214,6 +214,7 @@ async def list_rate_grids(
 @router.post("/rules", response_model=PricingRuleResponse)
 async def create_rule(
     payload: PricingRuleCreateRequest,
+    request: Request,
     db=Depends(get_db),
     user: dict[str, Any] = Depends(require_roles(["super_admin", "admin"])),
 ):

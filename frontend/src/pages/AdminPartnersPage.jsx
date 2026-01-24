@@ -55,6 +55,12 @@ export default function AdminPartnersPage() {
   const [summaryPartner, setSummaryPartner] = useState(null);
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [summaryError, setSummaryError] = useState("");
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(searchInput), 300);
+    return () => clearTimeout(t);
+  }, [searchInput]);
+
+
 
   const seqRef = useRef(0);
 

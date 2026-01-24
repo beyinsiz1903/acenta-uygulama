@@ -47,6 +47,7 @@ export default function AdminB2BMarketplacePage() {
   const [productsLoading, setProductsLoading] = useState(false);
   const [productsError, setProductsError] = useState("");
   const [productsErrorDetails, setProductsErrorDetails] = useState(null);
+  const [productsErrorDetails, setProductsErrorDetails] = useState(null);
   const [productSearch, setProductSearch] = useState("");
   const [productTypeFilter, setProductTypeFilter] = useState("");
   const [productStatusFilter, setProductStatusFilter] = useState("");

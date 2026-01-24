@@ -479,6 +479,7 @@ async def get_refund_case(
 async def approve_refund_case(
     case_id: str,
     payload: dict,
+    request: Request,
     current_user=Depends(require_roles(["admin", "ops", "super_admin"])),
     db=Depends(get_db),
 ):

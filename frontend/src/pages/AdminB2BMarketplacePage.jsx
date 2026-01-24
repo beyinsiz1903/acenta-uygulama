@@ -93,13 +93,15 @@ export default function AdminB2BMarketplacePage() {
     setProductsLoading(true);
     setProductsError("");
     try {
-      const params = {};
+      const params = { page: productPage, limit: productLimit };
       params.partner_id = selectedPartnerId;
       if (productTypeFilter) params.type = productTypeFilter;
       if (productStatusFilter) params.status = productStatusFilter;
       if (productSearch) params.q = productSearch;
       const res = await api.get("/admin/b2b/marketplace", { params });
-      setProducts((res.data && res.data.items) || []);
+      const data = res.data || {};
+      setProducts(data.items || []);
+      setProductHasMore(Boolean(data.has_more));
     } catch (e) {
       const msg = apiErrorMessage(e);
       // 404 ya da "Not Found" durumunda boş veri gibi davran, kırmızı hata göstermeyelim

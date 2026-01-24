@@ -72,7 +72,7 @@ export default function AdminPartnersPage() {
     try {
       const params = { page, limit };
       if (statusFilter) params.status = statusFilter;
-      if (search) params.q = search;
+      if (debouncedSearch) params.q = debouncedSearch;
       const res = await api.get("/admin/partners", { params });
       if (seq !== seqRef.current) return;
       const data = res.data || {};

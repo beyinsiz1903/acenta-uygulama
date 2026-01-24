@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { AlertCircle, Loader2, Search, Store, Users } from "lucide-react";
 
 import { api, apiErrorMessage, parseErrorDetails } from "../lib/api";

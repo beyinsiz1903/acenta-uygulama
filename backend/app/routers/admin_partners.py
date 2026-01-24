@@ -89,27 +89,41 @@ class PartnerOut(BaseModel):
         orm_mode = True
 
 
-@router.get("", response_model=List[PartnerOut], dependencies=[AdminDep])
+@router.get("", dependencies=[AdminDep])
 async def list_partners(
     status: Optional[str] = Query(None, pattern="^(pending|approved|blocked)$"),
+    q: Optional[str] = Query(None, max_length=200),
+    page: int = Query(1, ge=1),
+    limit: int = Query(20, ge=1, le=100),
     db=Depends(get_db),
     user: Dict[str, Any] = Depends(get_current_user),
-) -> List[PartnerOut]:
+) -> Dict[str, Any]:
     org_id = user["organization_id"]
-    q: Dict[str, Any] = {"organization_id": org_id}
+    query: Dict[str, Any] = {"organization_id": org_id}
     if status:
-        q["status"] = status
+        query["status"] = status
+    if q:
+        regex = {"$regex": q, "$options": "i"}
+        query["$or"] = [
+            {"name": regex},
+            {"contact_email": regex},
+        ]
 
-    cursor = db.partner_profiles.find(q).sort("created_at", -1)
-    docs = await cursor.to_list(length=500)
+    skip = (page - 1) * limit
+    cursor = db.partner_profiles.find(query).sort("created_at", -1).skip(skip).limit(limit + 1)
+    docs = await cursor.to_list(length=limit + 1)
+
+    has_more = len(docs) > limit
+    docs = docs[:limit]
+
     items: List[PartnerOut] = []
     for d in docs:
         data = serialize_doc(d)
-        # serialize_doc zaten _id alanını id'ye map ediyor; ekstra pop işleminde KeyError olmaması için
         if "id" not in data and "_id" in d:
             data["id"] = str(d["_id"])
         items.append(PartnerOut(**data))
-    return items
+
+    return {"items": items, "has_more": has_more}
 
 
 @router.post("", response_model=PartnerOut, dependencies=[AdminDep])

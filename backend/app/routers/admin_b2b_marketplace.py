@@ -27,9 +27,11 @@ class ProductAuthorizationUpsertIn(BaseModel):
 @router.get("", dependencies=[AdminDep])
 async def list_partner_product_authorizations(
     partner_id: str = Query(..., description="Partner id (partner_profiles._id)"),
-    q: Optional[str] = Query(None, description="Optional free-text filter on product title"),
+    q: Optional[str] = Query(None, description="Optional free-text filter on product title/code/city"),
     type: Optional[str] = Query(None, description="Optional product type filter"),
     status: Optional[str] = Query(None, description="Optional product status filter (active/passive)"),
+    page: int = Query(1, ge=1),
+    limit: int = Query(50, ge=1, le=200),
     db=Depends(get_db),
     user=Depends(get_current_user),
 ) -> Dict[str, Any]:

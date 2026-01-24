@@ -191,13 +191,15 @@ class B2BPricingService:
             winner_rule_name = "DEFAULT_10"
             fallback = True
 
+        # Phase 1 money model: supplier_cost and list_sell before discounts/commissions
+        supplier_cost_eur = net_eur_internal
         factor = Decimal("1") + (Decimal(str(markup_percent)) / Decimal("100"))
 
         if target_currency == "EUR":
             # EUR selling: apply markup on EUR net
-            sell_eur_internal = (net_eur_internal * factor).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)
-            net = float(net_eur_internal.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
-            sell = float(sell_eur_internal.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
+            sell_eur_internal = (supplier_cost_eur * factor).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)
+            net = float(supplier_cost_eur.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
+            list_sell = float(sell_eur_internal.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
             currency = "EUR"
         else:
             # SELLING IN TRY: convert EUR base to TRY using FXService, then apply markup in TRY
@@ -207,14 +209,14 @@ class B2BPricingService:
             fx = await fx_svc.get_rate(organization_id, quote="TRY")
 
             rate = Decimal(str(fx.rate))
-            net_try_internal = (net_eur_internal * rate).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)
-            sell_try_internal = (net_try_internal * factor).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)
+            supplier_cost_try = (supplier_cost_eur * rate).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)
+            list_sell_try = (supplier_cost_try * factor).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)
 
-            net = float(net_try_internal.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
-            sell = float(sell_try_internal.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
+            net = float(supplier_cost_try.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
+            list_sell = float(list_sell_try.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
             currency = "TRY"
 
-        # NOTE: net/sell/currency are now computed above based on target_currency and rules
+        # NOTE: net/list_sell/currency are now computed above based on target_currency and rules
 
         restrictions = PriceRestriction(
             min_stay=1,

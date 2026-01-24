@@ -74,3 +74,4 @@ class QuoteCreateResponse(BaseModel):
     margin_total: Optional[float] = None
     commission_total: Optional[float] = None
     our_margin_before_coupon_total: Optional[float] = None
+    margin_after_discount_total: Optional[float] = None

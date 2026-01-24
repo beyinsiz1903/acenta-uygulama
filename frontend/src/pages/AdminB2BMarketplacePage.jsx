@@ -433,42 +433,6 @@ export default function AdminB2BMarketplacePage() {
                               }
                               onBlur={(e) => handleCommissionBlur(p, e.target.value)}
                               placeholder="-"
-                  <div className="flex items-center justify-between mt-3 text-[11px] text-muted-foreground">
-                    <span>Sayfa {productPage}</span>
-                    <div className="flex items-center gap-2">
-                      <select
-                        className="h-7 rounded-md border bg-background px-2 text-[11px]"
-                        value={productLimit}
-                        onChange={(e) => {
-                          setProductPage(1);
-                          setProductLimit(Number(e.target.value) || 50);
-                        }}
-                      >
-                        <option value={50}>50</option>
-                        <option value={100}>100</option>
-                        <option value={200}>200</option>
-                      </select>
-                      <Button
-                        type="button"
-                        size="xs"
-                        variant="outline"
-                        disabled={productPage === 1 || productsLoading}
-                        onClick={() => setProductPage((p) => Math.max(1, p - 1))}
-                      >
-                        Önceki
-                      </Button>
-                      <Button
-                        type="button"
-                        size="xs"
-                        variant="outline"
-                        disabled={!productHasMore || productsLoading}
-                        onClick={() => setProductPage((p) => p + 1)}
-                      >
-                        Sonraki
-                      </Button>
-                    </div>
-                  </div>
-
                               disabled={savingKey === p.product_id + "-commission"}
                             />
                           </TableCell>

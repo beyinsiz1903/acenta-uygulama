@@ -271,6 +271,8 @@ class B2BPricingService:
             trace.discount_percent = trace_discount["discount_percent"]
             trace.discount_amount = trace_discount["discount_amount"]
 
+        # Commission rate resolution will be applied at aggregate level in create_quote
+
         return QuoteOffer(
             item_key="0",  # caller will override with actual index
             currency=currency,
@@ -278,6 +280,9 @@ class B2BPricingService:
             sell=final_sell,
             restrictions=restrictions,
             trace=trace,
+            supplier_cost=float(round(net, 2)),
+            base_markup_percent=float(markup_percent or 0.0),
+            list_sell=float(round(list_sell, 2)),
         )
 
     async def create_quote(

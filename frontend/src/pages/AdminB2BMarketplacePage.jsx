@@ -216,7 +216,8 @@ export default function AdminB2BMarketplacePage() {
     : "B2B Marketplace";
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+    <TooltipProvider>
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
       {/* Sol panel: Partner listesi */}
       <div className="md:col-span-4 lg:col-span-3 space-y-3">
         <Card>

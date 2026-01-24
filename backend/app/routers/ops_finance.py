@@ -490,13 +490,47 @@ async def approve_refund_case(
     payment_reference = payload.get("payment_reference")
 
     svc = RefundCaseService(db)
-    return await svc.approve(
+
+    # Load existing case for before snapshot
+    existing = await svc.get_case(org_id, case_id)
+
+    result = await svc.approve(
         organization_id=org_id,
         case_id=case_id,
         approved_amount=approved_amount,
         decided_by=current_user["email"],
         payment_reference=payment_reference,
     )
+
+    # Reload case for after snapshot
+    saved = await svc.get_case(org_id, case_id)
+
+    try:
+        await write_audit_log(
+            db,
+            organization_id=org_id,
+            actor={
+                "actor_type": "user",
+                "actor_id": current_user.get("id") or current_user.get("email"),
+                "email": current_user.get("email"),
+                "roles": current_user.get("roles") or [],
+            },
+            request=request,
+            action="refund_approve",
+            target_type="refund_case",
+            target_id=case_id,
+            before=audit_snapshot("refund_case", existing),
+            after=audit_snapshot("refund_case", saved),
+            meta={
+                "approved_amount": approved_amount,
+                "payment_reference": payment_reference,
+            },
+        )
+    except Exception:
+        # best-effort
+        pass
+
+    return result
 
 
 @router.get("/bookings/{booking_id}/financials")

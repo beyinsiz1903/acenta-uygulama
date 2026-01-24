@@ -379,13 +379,45 @@ async def upsert_credit_profile(
     - soft_limit must be >= limit (422 validation_error)
     - upsert semantics (creates if not exists)
     """
+    org_id = current_user["organization_id"]
+
+    # Load existing profile for before snapshot
+    existing = await db.credit_profiles.find_one({"organization_id": org_id, "agency_id": agency_id})
+
     profile = await _upsert_credit_profile(
         db,
-        current_user["organization_id"],
+        org_id,
         agency_id,
         payload,
     )
-    
+
+    # Reload for after snapshot (ensure latest doc)
+    saved = await db.credit_profiles.find_one({"organization_id": org_id, "agency_id": agency_id})
+
+    try:
+        await write_audit_log(
+            db,
+            organization_id=org_id,
+            actor={
+                "actor_type": "user",
+                "actor_id": current_user.get("id") or current_user.get("email"),
+                "email": current_user.get("email"),
+                "roles": current_user.get("roles") or [],
+            },
+            request=request,
+            action="credit_profile_upsert",
+            target_type="credit_profile",
+            target_id=agency_id,
+            before=audit_snapshot("credit_profile", existing),
+            after=audit_snapshot("credit_profile", saved),
+            meta={
+                "payload": payload.model_dump(),
+            },
+        )
+    except Exception:
+        # best-effort audit; do not block main flow
+        pass
+
     return profile
 
 # ============================================================================

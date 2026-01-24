@@ -10,6 +10,7 @@ from fastapi.responses import JSONResponse
 from app.config import API_PREFIX, APP_NAME, APP_VERSION, CORS_ORIGINS
 from app.db import close_mongo, connect_mongo, get_db
 from app.errors import AppError
+from app.exception_handlers import register_exception_handlers
 from app.routers.admin import router as admin_router
 from app.routers.admin_accounting import router as admin_accounting_router
 from app.routers.admin_catalog import router as admin_catalog_router

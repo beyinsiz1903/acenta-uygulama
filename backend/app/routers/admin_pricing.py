@@ -501,6 +501,28 @@ async def update_simple_rule(
     await db.pricing_rules.update_one({"_id": rid, "organization_id": org_id}, {"$set": update})
     doc = await db.pricing_rules.find_one({"_id": rid, "organization_id": org_id})
 
+    # Audit: pricing_rule_update (simple)
+    try:
+        await write_audit_log(
+            db,
+            organization_id=org_id,
+            actor={
+                "actor_type": "user",
+                "actor_id": user.get("id") or user.get("email"),
+                "email": user.get("email"),
+                "roles": user.get("roles") or [],
+            },
+            request=request,
+            action="pricing_rule_update",
+            target_type="pricing_rule",
+            target_id=_id(doc["_id"]),
+            before=audit_snapshot("pricing_rule", existing),
+            after=audit_snapshot("pricing_rule", doc),
+            meta={"payload": payload.model_dump(exclude_unset=True)},
+        )
+    except Exception:
+        pass
+
     return SimplePricingRuleResponse(
         rule_id=_id(doc["_id"]),
         organization_id=org_id,

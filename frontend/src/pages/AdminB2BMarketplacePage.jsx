@@ -95,6 +95,7 @@ export default function AdminB2BMarketplacePage() {
     if (!selectedPartnerId) return;
     setProductsLoading(true);
     setProductsError("");
+    setProductsErrorDetails(null);
     try {
       const params = { page: productPage, limit: productLimit };
       params.partner_id = selectedPartnerId;

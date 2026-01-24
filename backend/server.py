@@ -151,13 +151,13 @@ app.add_middleware(
 register_exception_handlers(app)
 
 # Include routers
-app.include_router(auth_router, prefix=API_PREFIX)
-app.include_router(admin_router, prefix=API_PREFIX)
+app.include_router(auth_router)
+app.include_router(admin_router)
 app.include_router(admin_accounting_router)  # router already has /api prefix
 app.include_router(admin_funnel_router)
 
 app.include_router(admin_catalog_router)
-app.include_router(admin_metrics_router, prefix=API_PREFIX)
+app.include_router(admin_metrics_router)
 app.include_router(admin_pricing_router)
 app.include_router(admin_coupons_router)  # router already has /api prefix
 app.include_router(admin_hotels_router)

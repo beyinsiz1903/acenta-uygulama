@@ -200,6 +200,28 @@ async def update_partner(
     if not doc:
         raise HTTPException(status_code=404, detail="PARTNER_NOT_FOUND")
 
+    # Audit: partner status / profile update (including approve/block via status field)
+    try:
+        await write_audit_log(
+            db,
+            organization_id=org_id,
+            actor={
+                "actor_type": "user",
+                "actor_id": user.get("id") or user.get("email"),
+                "email": user.get("email"),
+                "roles": user.get("roles") or [],
+            },
+            request=request,
+            action="partner_update",
+            target_type="partner",
+            target_id=str(oid),
+            before=audit_snapshot("partner", None),  # existing snapshot could be added if needed
+            after=audit_snapshot("partner", doc),
+            meta={"payload": payload.model_dump(exclude_unset=True)},
+        )
+    except Exception:
+        pass
+
     data = serialize_doc(doc)
     data["id"] = data.pop("_id")
     return PartnerOut(**data)

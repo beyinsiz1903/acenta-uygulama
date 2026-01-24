@@ -76,7 +76,8 @@ export default function AdminB2BMarketplacePage() {
       const params = {};
       if (statusFilter) params.status = statusFilter;
       const res = await api.get("/admin/partners", { params });
-      const items = res.data || [];
+      const data = res.data || {};
+      const items = Array.isArray(data.items) ? data.items : Array.isArray(data) ? data : [];
       setPartners(items);
       // Seçili partner yoksa ilkini otomatik seç
       if (!selectedPartnerId && items.length > 0) {

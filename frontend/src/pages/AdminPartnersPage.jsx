@@ -294,8 +294,9 @@ export default function AdminPartnersPage() {
               Henüz partner tanımlı değil. Yukarıdaki formdan ilk partnerinizi oluşturabilirsiniz.
             </p>
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
+            <>
+              <div className="overflow-x-auto">
+                <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead className="text-xs">Partner</TableHead>

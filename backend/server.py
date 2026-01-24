@@ -87,6 +87,9 @@ from app.routers.admin_links import router as admin_links_router
 from app.routers.settings import router as settings_router
 from app.routers.approval_tasks import router as approval_tasks_router
 from app.routers.demo_scale_ui_proof import router as demo_scale_ui_proof_router
+from app.routers.risk_snapshots import router as risk_snapshots_router
+from app.routers.exports import router as exports_router, public_router as public_exports_router
+from app.routers.action_policies import router as action_policies_router
 
 from app.routers.seo import router as seo_router
 from app.routers.public_campaigns import router as public_campaigns_router

@@ -152,7 +152,7 @@ export default function AdminPartnersPage() {
         </div>
       </div>
 
-      {errorDetails ? (
+      {errorDetails?.isRetryable ? (
         <div className="mb-2">
           <ErrorCard details={errorDetails} onRetry={load} />
         </div>

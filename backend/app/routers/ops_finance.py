@@ -4,7 +4,7 @@ Ops/Admin endpoints for account and credit profile management
 """
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from typing import Literal, Optional, Any
 from datetime import datetime
 from bson import ObjectId

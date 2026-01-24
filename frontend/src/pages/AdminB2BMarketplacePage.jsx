@@ -342,9 +342,12 @@ export default function AdminB2BMarketplacePage() {
                   <Search className="absolute left-2 top-2.5 h-3 w-3 text-muted-foreground" />
                   <Input
                     className="pl-7 h-8 text-[11px] w-48"
-                    placeholder="Ürün adı / kodu filtrele"
+                    placeholder="Ad / Kod / Şehir filtrele"
                     value={productSearch}
-                    onChange={(e) => setProductSearch(e.target.value)}
+                    onChange={(e) => {
+                      setProductPage(1);
+                      setProductSearch(e.target.value);
+                    }}
                   />
                 </div>
               </div>

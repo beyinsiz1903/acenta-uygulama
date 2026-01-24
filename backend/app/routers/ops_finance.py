@@ -13,6 +13,7 @@ from app.db import get_db
 from app.auth import require_roles, get_current_user
 from app.errors import AppError
 from app.utils import now_utc
+from app.services.audit import write_audit_log, audit_snapshot
 from app.schemas_finance import (
     FinanceAccount,
     FinanceAccountCreate,

@@ -49,6 +49,13 @@ class QuoteOffer(BaseModel):
     sell: float
     restrictions: PriceRestriction
     trace: PricingTrace
+    # Money model breakdown (optional, for B2B pricing transparency)
+    supplier_cost: Optional[float] = None
+    base_markup_percent: Optional[float] = None
+    list_sell: Optional[float] = None
+    commission_rate: Optional[float] = None
+    commission_amount: Optional[float] = None
+    our_margin_before_coupon: Optional[float] = None
 
 
 class QuoteCreateResponse(BaseModel):

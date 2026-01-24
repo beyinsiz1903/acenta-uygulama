@@ -426,6 +426,7 @@ async def list_simple_rules(
 async def update_simple_rule(
     rule_id: str,
     payload: SimplePricingRuleUpdate,
+    request: Request,
     db=Depends(get_db),
     user: dict[str, Any] = Depends(require_roles(["super_admin", "admin"])),
 ):

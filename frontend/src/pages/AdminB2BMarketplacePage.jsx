@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 import { Badge } from "../components/ui/badge";
 import EmptyState from "../components/EmptyState";
 import { ErrorCard } from "../components/ErrorCard";
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "../components/ui/tooltip";
 
 function StatusBadge({ status }) {
   const s = (status || "").toLowerCase();

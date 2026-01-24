@@ -404,7 +404,27 @@ export default function AdminB2BMarketplacePage() {
                         <TableHead className="text-xs">Tür</TableHead>
                         <TableHead className="text-xs">Durum</TableHead>
                         <TableHead className="text-xs text-center">Açık mı?</TableHead>
-                        <TableHead className="text-xs text-right">Komisyon %</TableHead>
+                        <TableHead className="text-xs text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            <span>Komisyon %</span>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  type="button"
+                                  className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-muted-foreground/40 text-[10px] text-muted-foreground hover:bg-muted/40"
+                                  aria-label="Komisyon hesaplama açıklaması"
+                                >
+                                  <Info className="h-3 w-3" />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent side="top" className="max-w-[260px] text-[11px] leading-snug">
+                                <div className="font-semibold mb-1">Komisyon Hesabı</div>
+                                <p>Komisyon, liste marjdan hesaplanır (Liste Satış − Net).</p>
+                                <p>İndirimler komisyonu etkilemez; bizim marjımızdan düşer.</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </div>
+                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>

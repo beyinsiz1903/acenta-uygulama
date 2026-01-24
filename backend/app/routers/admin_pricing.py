@@ -4,11 +4,12 @@ from datetime import datetime
 from typing import Any, Optional
 
 from bson import ObjectId
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request
 
 from app.auth import require_roles
 from app.db import get_db
 from app.errors import AppError
+from app.services.audit import write_audit_log, audit_snapshot
 from app.schemas_pricing import (
     PricingContractCreateRequest,
     PricingContractResponse,

@@ -353,6 +353,39 @@ class B2BPricingService:
             "offers": [o.model_dump() for o in offers],
             "expires_at": expires_at,
             "created_at": now,
+        # Aggregate money model summary (margin + commission, coupon handled separately)
+        supplier_total = sum(float(o.supplier_cost or o.net) for o in offers)
+        margin_total = sum(float(o.sell - (o.supplier_cost or o.net)) for o in offers)
+
+        # Resolve commission_rate per product using marketplace + partner defaults
+        commission_total = 0.0
+        if partner_id:
+            # Lazy import to avoid circular deps
+            from app.services.b2b_commission import resolve_commission_rate_for_product
+
+            for off, item in zip(offers, payload.items):
+                rate = await resolve_commission_rate_for_product(
+                    self.db,
+                    organization_id=organization_id,
+                    partner_id=partner_id,
+                    product_id=item.product_id,
+                    check_in=item.check_in,
+                )
+                # margin share: commission from (sell - supplier_cost) after discount, before coupon
+                supplier = float(off.supplier_cost or off.net)
+                margin = float(off.sell - supplier)
+                if margin < 0:
+                    margin = 0.0
+                commission_amount = float(round(margin * (rate / 100.0), 2)) if rate else 0.0
+                commission_total += commission_amount
+                off.commission_rate = float(rate)
+                off.commission_amount = commission_amount
+                off.our_margin_before_coupon = float(round(margin - commission_amount, 2))
+
+        our_margin_before_coupon_total = float(round(margin_total - commission_total, 2))
+
+        # Winner rule trace at quote level (from first offer, if any)
+
             "requested_by_email": requested_by_email,
             "client_context": payload.client_context or {},
             "winner_rule_id": winner_rule_id,

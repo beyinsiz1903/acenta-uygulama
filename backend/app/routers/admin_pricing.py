@@ -303,6 +303,7 @@ async def list_rules(
 @router.post("/rules/simple", response_model=SimplePricingRuleResponse)
 async def create_simple_rule(
     payload: SimplePricingRuleCreate,
+    request: Request,
     db=Depends(get_db),
     user: dict[str, Any] = Depends(require_roles(["super_admin", "admin"])),
 ):

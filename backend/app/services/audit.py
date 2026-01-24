@@ -9,6 +9,110 @@ from fastapi import Request
 from app.utils import now_utc
 
 
+def audit_snapshot(entity_type: str, doc: dict | None) -> dict | None:
+    """PII-safe, entity-type based snapshot for audit before/after.
+
+    Keeps only business-critical fields per entity_type; avoids leaking full docs.
+    """
+    if doc is None:
+        return None
+
+    # Helper to extract selected fields safely
+    def pick(fields: list[str]) -> dict:
+        out: dict[str, Any] = {}
+        for f in fields:
+            if f in doc and doc[f] is not None:
+                out[f] = doc[f]
+        return out
+
+    et = (entity_type or "").lower()
+
+    if et == "credit_profile":
+        # credit profile snapshot
+        return pick([
+            "agency_id",
+            "currency",
+            "limit",
+            "soft_limit",
+            "payment_terms",
+            "status",
+            "updated_at",
+            "updated_by",
+        ])
+
+    if et == "refund_case":
+        # refund case snapshot
+        snap: dict[str, Any] = {}
+        snap.update(pick([
+            "booking_id",
+            "agency_id",
+            "status",
+            "currency",
+            "reason",
+            "decision",
+            "decision_by_email",
+            "decision_at",
+            "updated_at",
+        ]))
+        requested = doc.get("requested") or {}
+        computed = doc.get("computed") or {}
+        approved = doc.get("approved") or {}
+        snap["requested"] = {
+            "amount": requested.get("amount"),
+        }
+        snap["computed"] = {
+            "gross_sell": computed.get("gross_sell"),
+            "penalty": computed.get("penalty"),
+            "refundable": computed.get("refundable"),
+            "basis": computed.get("basis"),
+            "policy_ref": computed.get("policy_ref"),
+        }
+        snap["approved"] = {
+            "amount": approved.get("amount"),
+            "payment_reference": approved.get("payment_reference"),
+        }
+        return snap
+
+    if et == "pricing_rule":
+        return pick([
+            "code",
+            "status",
+            "priority",
+            "scope",
+            "action",
+            "created_at",
+            "updated_at",
+            "created_by_email",
+            "published_at",
+            "published_by_email",
+        ])
+
+    if et == "partner":
+        return pick([
+            "name",
+            "contact_email",
+            "status",
+            "default_markup_percent",
+            "api_key_name",
+            "linked_agency_id",
+            "updated_at",
+        ])
+
+    if et == "b2b_marketplace_product":
+        snap: dict[str, Any] = {}
+        snap.update(pick([
+            "partner_id",
+            "product_id",
+            "is_enabled",
+            "commission_rate",
+            "updated_at",
+        ]))
+        return snap
+
+    # Fallback: keep nothing for unknown types
+    return None
+
+
 def _safe_json(v: Any, max_len: int = 2000) -> Any:
     """Make sure audit payload stays light; truncate long strings."""
     if v is None:

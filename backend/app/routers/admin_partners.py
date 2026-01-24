@@ -4,12 +4,13 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from bson import ObjectId
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel, Field
 
 from app.auth import get_current_user, require_roles
 from app.db import get_db
 from app.utils import serialize_doc
+from app.services.audit import write_audit_log, audit_snapshot
 
 
 async def _load_agency_min(db, org_id: str, agency_id: str) -> Optional[Dict[str, Any]]:

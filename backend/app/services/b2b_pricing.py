@@ -413,6 +413,7 @@ class B2BPricingService:
             "margin_total": margin_total,
             "commission_total": commission_total,
             "our_margin_before_coupon_total": our_margin_before_coupon_total,
+            "margin_after_discount_total": margin_after_discount_total,
         }
         res = await self.price_quotes.insert_one(doc)
         quote_id = str(res.inserted_id)
@@ -427,6 +428,7 @@ class B2BPricingService:
             margin_total=margin_total,
             commission_total=commission_total,
             our_margin_before_coupon_total=our_margin_before_coupon_total,
+            margin_after_discount_total=margin_after_discount_total,
         )
 
     async def apply_coupon_to_quote(

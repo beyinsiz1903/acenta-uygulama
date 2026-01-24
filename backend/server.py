@@ -211,6 +211,8 @@ app.include_router(inbox_router, prefix=API_PREFIX)
 app.include_router(inbox_v2_router)
 app.include_router(crm_customer_inbox_router)
 app.include_router(matches_router)
+app.include_router(match_alerts_router)
+app.include_router(admin_reports_router)
 app.include_router(ops_b2b_router)  # No prefix - router has its own
 app.include_router(ops_booking_events_router, prefix=API_PREFIX)
 app.include_router(ops_cases_router)  # No prefix - router has its own

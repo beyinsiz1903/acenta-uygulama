@@ -36,6 +36,11 @@ export default function AdminPartnersPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
+  const [hasMore, setHasMore] = useState(false);
+  const [search, setSearch] = useState("");
+
   const [name, setName] = useState("");
   const [contactEmail, setContactEmail] = useState("");
   const [apiKeyName, setApiKeyName] = useState("");

@@ -30,12 +30,22 @@ async def login(payload: LoginRequest):
             raise HTTPException(status_code=500, detail="Organizasyon bulunamadı")
         org_id = str(org["_id"])
 
+    # Legacy rol dönüştürmesi: "admin" => "super_admin"
+    raw_roles = user.get("roles") or ["admin"]
+    roles_set = set(raw_roles)
+    if "admin" in roles_set and "super_admin" not in roles_set:
+        roles_set.discard("admin")
+        roles_set.add("super_admin")
+    roles_list = list(roles_set) or ["super_admin"]
+
     token = create_access_token(
         subject=user["email"],
         organization_id=org_id,
-        roles=user.get("roles") or ["admin"],
+        roles=roles_list,
     )
+
     user_out = serialize_doc(user)
+    user_out["roles"] = roles_list
     
     # FAZ-1: Load organization with merged features
     from app.auth import load_org_doc, resolve_org_features
@@ -50,7 +60,7 @@ async def login(payload: LoginRequest):
             id=user_out["id"],
             email=user_out["email"],
             name=user_out.get("name"),
-            roles=user_out.get("roles") or [],
+            roles=roles_list,
             organization_id=user_out.get("organization_id"),
             agency_id=user_out.get("agency_id"),
             hotel_id=user_out.get("hotel_id"),

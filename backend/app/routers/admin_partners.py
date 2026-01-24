@@ -160,6 +160,7 @@ async def create_partner(
 async def update_partner(
     partner_id: str,
     payload: PartnerUpdateIn,
+    request: Request,
     db=Depends(get_db),
     user: Dict[str, Any] = Depends(get_current_user),
 ) -> PartnerOut:

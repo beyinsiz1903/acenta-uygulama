@@ -495,6 +495,12 @@ export default function AdminB2BMarketplacePage() {
           </Card>
         )}
       </div>
+
+      {productsErrorDetails && !productsLoading && (
+        <div className="mt-3">
+          <ErrorCard details={productsErrorDetails} onRetry={loadProducts} />
+        </div>
+      )}
     </div>
   );
 }

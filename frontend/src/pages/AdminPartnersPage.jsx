@@ -92,7 +92,7 @@ export default function AdminPartnersPage() {
   useEffect(() => {
     void load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, limit, statusFilter, search]);
+  }, [page, limit, statusFilter, debouncedSearch]);
 
   const resetForm = () => {
     setName("");

@@ -186,6 +186,8 @@ app.include_router(admin_cms_pages_router)
 app.include_router(admin_campaigns_router)
 app.include_router(admin_links_router)
 app.include_router(settings_router)
+app.include_router(approval_tasks_router)
+app.include_router(demo_scale_ui_proof_router)
 
 app.include_router(theme_router)
 

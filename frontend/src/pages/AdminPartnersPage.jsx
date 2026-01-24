@@ -57,10 +57,13 @@ export default function AdminPartnersPage() {
     setLoading(true);
     setError("");
     try {
-      const params = {};
+      const params = { page, limit };
       if (statusFilter) params.status = statusFilter;
+      if (search) params.q = search;
       const res = await api.get("/admin/partners", { params });
-      setItems(res.data || []);
+      const data = res.data || {};
+      setItems(data.items || []);
+      setHasMore(Boolean(data.has_more));
     } catch (e) {
       setError(apiErrorMessage(e));
     } finally {

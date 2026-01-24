@@ -157,12 +157,16 @@ export default function AdminPartnersPage() {
         </div>
       </div>
 
-      {error && (
+      {errorDetails ? (
+        <div className="mb-2">
+          <ErrorCard details={errorDetails} onRetry={load} />
+        </div>
+      ) : error ? (
         <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive">
           <AlertCircle className="h-4 w-4 mt-0.5" />
           <div>{error}</div>
         </div>
-      )}
+      ) : null}
 
       <Card>
         <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">

@@ -55,7 +55,10 @@ export default function AdminPartnersPage() {
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [summaryError, setSummaryError] = useState("");
 
+  const seqRef = useRef(0);
+
   const load = async () => {
+    const seq = ++seqRef.current;
     setLoading(true);
     setError("");
     setErrorDetails(null);
@@ -64,14 +67,18 @@ export default function AdminPartnersPage() {
       if (statusFilter) params.status = statusFilter;
       if (search) params.q = search;
       const res = await api.get("/admin/partners", { params });
+      if (seq !== seqRef.current) return;
       const data = res.data || {};
       setItems(data.items || []);
       setHasMore(Boolean(data.has_more));
     } catch (e) {
+      if (seq !== seqRef.current) return;
       setError(apiErrorMessage(e));
       setErrorDetails(parseErrorDetails(e));
     } finally {
-      setLoading(false);
+      if (seq === seqRef.current) {
+        setLoading(false);
+      }
     }
   };
 

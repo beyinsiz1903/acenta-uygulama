@@ -245,7 +245,7 @@ class B2BPricingService:
 
         discount_result = apply_discount(
             base_net=net,
-            base_sell=sell,
+            base_sell=list_sell,
             markup_percent=float(markup_percent or 0.0),
             group=discount_group,
         )

@@ -298,14 +298,6 @@ function ExposureDrilldownDrawer({ open, onOpenChange, agency }) {
   );
 }
 
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
-  );
-}
-
 function AdminFinanceExposurePageInner() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);

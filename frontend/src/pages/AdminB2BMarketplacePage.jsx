@@ -362,10 +362,10 @@ export default function AdminB2BMarketplacePage() {
                   <Input
                     className="pl-7 h-8 text-[11px] w-48"
                     placeholder="Ad / Kod / Şehir filtrele"
-                    value={productSearch}
+                    value={productSearchInput}
                     onChange={(e) => {
                       setProductPage(1);
-                      setProductSearch(e.target.value);
+                      setProductSearchInput(e.target.value);
                     }}
                   />
                 </div>

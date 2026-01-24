@@ -154,7 +154,7 @@ app.include_router(admin_router, prefix=API_PREFIX)
 app.include_router(admin_accounting_router)  # router already has /api prefix
 app.include_router(admin_funnel_router)
 
-app.include_router(admin_catalog_router, prefix=API_PREFIX)
+app.include_router(admin_catalog_router)
 app.include_router(admin_metrics_router, prefix=API_PREFIX)
 app.include_router(admin_pricing_router)
 app.include_router(admin_coupons_router)  # router already has /api prefix
@@ -199,7 +199,7 @@ app.include_router(booking_outcomes_router, prefix=API_PREFIX)
 app.include_router(inbox_router, prefix=API_PREFIX)
 app.include_router(inbox_v2_router)
 app.include_router(crm_customer_inbox_router)
-app.include_router(matches_router, prefix=API_PREFIX)
+app.include_router(matches_router)
 app.include_router(ops_b2b_router)  # No prefix - router has its own
 app.include_router(ops_booking_events_router, prefix=API_PREFIX)
 app.include_router(ops_cases_router)  # No prefix - router has its own

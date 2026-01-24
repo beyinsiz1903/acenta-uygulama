@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { AlertCircle, Loader2, Search, Store, Users } from "lucide-react";
+import { AlertCircle, Info, Loader2, Search, Store, Users } from "lucide-react";
 
 import { api, apiErrorMessage, parseErrorDetails } from "../lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";

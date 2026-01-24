@@ -107,6 +107,38 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+export function parseErrorDetails(err) {
+  const status = err?.response?.status ?? 0;
+  const data = err?.response?.data;
+  const headers = err?.response?.headers || {};
+  const message = apiErrorMessage(err);
+
+  let code = null;
+  if (data?.error?.code) code = data.error.code;
+
+  // Correlation id resolution priority
+  let correlationId = null;
+  if (data?.error?.details?.correlation_id) {
+    correlationId = data.error.details.correlation_id;
+  } else if (headers["x-correlation-id"]) {
+    correlationId = headers["x-correlation-id"];
+  } else if (headers["cf-ray"]) {
+    correlationId = headers["cf-ray"];
+  } else if (err?.config?.meta?.correlationId) {
+    correlationId = err.config.meta.correlationId;
+  }
+
+  const isRetryable = status === 0 || status >= 500;
+
+  return {
+    status,
+    code,
+    message,
+    correlationId,
+    isRetryable,
+  };
+}
+
 api.interceptors.response.use(
   (resp) => resp,
   (err) => {

@@ -82,7 +82,11 @@ function ExposureTable({ items, filter, statusFilter, onRowClick }) {
         </TableHeader>
         <TableBody>
           {filtered.map((it) => (
-            <TableRow key={it.agency_id}>
+            <TableRow
+              key={it.agency_id}
+              className="cursor-pointer hover:bg-muted/50"
+              onClick={() => onRowClick && onRowClick(it)}
+            >
               <TableCell className="text-xs">
                 <div className="flex flex-col">
                   <span className="font-medium truncate max-w-[200px]">{it.agency_name}</span>

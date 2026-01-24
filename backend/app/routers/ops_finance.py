@@ -1260,6 +1260,11 @@ async def get_exposure_dashboard(
         credit_limit = credit_profile["limit"]
         soft_limit = credit_profile.get("soft_limit")
         payment_terms = credit_profile["payment_terms"]
+        
+        # For now, return empty items list since the aging logic was removed
+        # This function needs to be properly implemented based on requirements
+        
+    return ExposureResponse(items=[])
 
 
 @router.get("/exposure/{agency_id}/entries")

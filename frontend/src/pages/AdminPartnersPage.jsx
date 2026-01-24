@@ -36,6 +36,7 @@ export default function AdminPartnersPage() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [errorDetails, setErrorDetails] = useState(null);
 
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(20);

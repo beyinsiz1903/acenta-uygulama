@@ -344,14 +344,6 @@ class B2BPricingService:
             winner_rule_name = first_trace.winner_rule_name
             fallback = first_trace.fallback
 
-        doc = {
-            "organization_id": organization_id,
-            "agency_id": agency_id,
-            "channel_id": channel_id,
-            "items": items_serialized,
-            "offers": [o.model_dump() for o in offers],
-            "expires_at": expires_at,
-            "created_at": now,
         # Aggregate money model summary (margin + commission, coupon handled separately)
         supplier_total = sum(float(o.supplier_cost or o.net) for o in offers)
         margin_total = sum(float(o.sell - (o.supplier_cost or o.net)) for o in offers)
@@ -383,8 +375,14 @@ class B2BPricingService:
 
         our_margin_before_coupon_total = float(round(margin_total - commission_total, 2))
 
-        # Winner rule trace at quote level (from first offer, if any)
-
+        doc = {
+            "organization_id": organization_id,
+            "agency_id": agency_id,
+            "channel_id": channel_id,
+            "items": items_serialized,
+            "offers": [o.model_dump() for o in offers],
+            "expires_at": expires_at,
+            "created_at": now,
             "requested_by_email": requested_by_email,
             "client_context": payload.client_context or {},
             "winner_rule_id": winner_rule_id,
@@ -394,10 +392,26 @@ class B2BPricingService:
                 "resolution": "winner_takes_all",
                 "fallback": bool(fallback),
             } if winner_rule_name is not None else None,
+            # Money model aggregates
+            "supplier_total": supplier_total,
+            "margin_total": margin_total,
+            "commission_total": commission_total,
+            "our_margin_before_coupon_total": our_margin_before_coupon_total,
         }
         res = await self.price_quotes.insert_one(doc)
         quote_id = str(res.inserted_id)
-        return QuoteCreateResponse(quote_id=quote_id, expires_at=expires_at, offers=offers)
+        return QuoteCreateResponse(
+            quote_id=quote_id,
+            expires_at=expires_at,
+            offers=offers,
+            winner_rule_id=winner_rule_id,
+            winner_rule_name=winner_rule_name,
+            pricing_trace=doc.get("pricing_trace"),
+            supplier_total=supplier_total,
+            margin_total=margin_total,
+            commission_total=commission_total,
+            our_margin_before_coupon_total=our_margin_before_coupon_total,
+        )
 
     async def apply_coupon_to_quote(
         self,

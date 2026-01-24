@@ -236,6 +236,28 @@ async def create_rule(
     res = await db.pricing_rules.insert_one(doc)
     doc["_id"] = res.inserted_id
 
+    # Audit: pricing_rule_create
+    try:
+        await write_audit_log(
+            db,
+            organization_id=org_id,
+            actor={
+                "actor_type": "user",
+                "actor_id": user.get("id") or user.get("email"),
+                "email": user.get("email"),
+                "roles": user.get("roles") or [],
+            },
+            request=request,
+            action="pricing_rule_create",
+            target_type="pricing_rule",
+            target_id=_id(doc["_id"]),
+            before=audit_snapshot("pricing_rule", None),
+            after=audit_snapshot("pricing_rule", doc),
+            meta={"payload": payload.model_dump()},
+        )
+    except Exception:
+        pass
+
     return PricingRuleResponse(
         rule_id=_id(doc["_id"]),
         organization_id=org_id,

@@ -290,6 +290,10 @@ class B2BPricingService:
         *,
         organization_id: str,
         agency_id: str,
+        # Resolve partner for commission purposes (if any)
+        partner_id: str | None = await self._resolve_partner_for_agency(organization_id, agency_id)
+
+
         channel_id: str,
         payload: QuoteCreateRequest,
         requested_by_email: str | None,

@@ -367,6 +367,7 @@ async def list_credit_profiles(
 async def upsert_credit_profile(
     agency_id: str,
     payload: CreditProfileUpdate,
+    request: Request,
     current_user=Depends(require_roles(["admin", "ops", "super_admin"])),
     db=Depends(get_db),
 ):

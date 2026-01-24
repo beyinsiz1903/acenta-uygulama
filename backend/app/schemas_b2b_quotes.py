@@ -55,6 +55,10 @@ class QuoteOffer(BaseModel):
     list_sell: Optional[float] = None
     commission_rate: Optional[float] = None
     commission_amount: Optional[float] = None
+    # Margin breakdown
+    margin_list: Optional[float] = None
+    margin_after_discount: Optional[float] = None
+    commission_basis: Optional[str] = None  # "list_margin" or "net_margin"
     our_margin_before_coupon: Optional[float] = None
 
 

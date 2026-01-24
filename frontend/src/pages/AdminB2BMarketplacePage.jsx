@@ -512,6 +512,6 @@ export default function AdminB2BMarketplacePage() {
           <ErrorCard details={productsErrorDetails} onRetry={loadProducts} />
         </div>
       )}
-    </div>
+    </TooltipProvider>
   );
 }

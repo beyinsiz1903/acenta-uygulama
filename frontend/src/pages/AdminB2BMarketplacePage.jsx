@@ -113,12 +113,7 @@ export default function AdminB2BMarketplacePage() {
         setProductsError("");
       } else {
         setProductsError(msg);
-        try {
-          const { parseErrorDetails } = require("../lib/api");
-          setProductsErrorDetails(parseErrorDetails(e));
-        } catch {
-          // ignore
-        }
+        setProductsErrorDetails(parseErrorDetails(e));
       }
     } finally {
       setProductsLoading(false);

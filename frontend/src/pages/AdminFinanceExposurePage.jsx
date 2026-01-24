@@ -391,10 +391,27 @@ function AdminFinanceExposurePageInner() {
           ) : error ? (
             <ErrorState title="Exposure yüklenemedi" description={error} />
           ) : (
-            <ExposureTable items={items} filter={filter} statusFilter={statusFilter} />
+            <ExposureTable
+              items={items}
+              filter={filter}
+              statusFilter={statusFilter}
+              onRowClick={(agency) => {
+                setSelectedAgency(agency);
+                setDrawerOpen(true);
+              }}
+            />
           )}
         </CardContent>
       </Card>
+
+      <ExposureDrilldownDrawer
+        open={drawerOpen}
+        onOpenChange={(open) => {
+          setDrawerOpen(open);
+          if (!open) setSelectedAgency(null);
+        }}
+        agency={selectedAgency}
+      />
     </div>
   );
 }

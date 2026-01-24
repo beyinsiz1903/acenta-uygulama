@@ -139,6 +139,11 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
+from starlette.responses import Response
+import uuid
+
 
 # Register structured exception handlers (AppError, validation, etc.)
 register_exception_handlers(app)

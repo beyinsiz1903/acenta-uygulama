@@ -370,6 +370,32 @@ export default function AdminPartnersPage() {
                       </TableCell>
                     </TableRow>
                   ))}
+              <div className="flex items-center justify-between mt-3 text-[11px] text-muted-foreground">
+                <span>
+                  Sayfa {page}
+                </span>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    size="xs"
+                    variant="outline"
+                    disabled={page === 1 || loading}
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  >
+                    Önceki
+                  </Button>
+                  <Button
+                    type="button"
+                    size="xs"
+                    variant="outline"
+                    disabled={!hasMore || loading}
+                    onClick={() => setPage((p) => p + 1)}
+                  >
+                    Sonraki
+                  </Button>
+                </div>
+              </div>
+
                 </TableBody>
               </Table>
               </div>

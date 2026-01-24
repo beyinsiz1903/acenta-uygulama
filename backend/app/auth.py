@@ -62,6 +62,13 @@ async def get_current_user(credentials: Optional[HTTPAuthorizationCredentials] =
     if not user:
         raise HTTPException(status_code=401, detail="Kullanıcı bulunamadı")
 
+    # Legacy rol düzeltmesi: "admin" rolü her yerde "super_admin" olarak davransın
+    roles = set(user.get("roles") or [])
+    if "admin" in roles and "super_admin" not in roles:
+        roles.discard("admin")
+        roles.add("super_admin")
+        user["roles"] = list(roles)
+
     return serialize_doc(user)
 
 

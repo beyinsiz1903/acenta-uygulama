@@ -105,7 +105,9 @@ async def list_partners(
     items: List[PartnerOut] = []
     for d in docs:
         data = serialize_doc(d)
-        data["id"] = data.pop("_id")
+        # serialize_doc zaten _id alanını id'ye map ediyor; ekstra pop işleminde KeyError olmaması için
+        if "id" not in data and "_id" in d:
+            data["id"] = str(d["_id"])
         items.append(PartnerOut(**data))
     return items
 

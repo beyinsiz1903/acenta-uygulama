@@ -191,6 +191,10 @@ app.include_router(admin_links_router)
 app.include_router(settings_router)
 app.include_router(approval_tasks_router)
 app.include_router(demo_scale_ui_proof_router)
+app.include_router(risk_snapshots_router)
+app.include_router(exports_router)
+app.include_router(public_exports_router)
+app.include_router(action_policies_router)
 
 app.include_router(theme_router)
 

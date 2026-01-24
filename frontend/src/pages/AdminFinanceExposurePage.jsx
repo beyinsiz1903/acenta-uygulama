@@ -306,6 +306,8 @@ function AdminFinanceExposurePageInner() {
   const [error, setError] = useState("");
   const [filter, setFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [selectedAgency, setSelectedAgency] = useState(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;

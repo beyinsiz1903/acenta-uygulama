@@ -188,10 +188,10 @@ export default function AdminPartnersPage() {
               <Input
                 className="h-8 w-40 text-xs"
                 placeholder="Ad / e-posta"
-                value={search}
+                value={searchInput}
                 onChange={(e) => {
                   setPage(1);
-                  setSearch(e.target.value);
+                  setSearchInput(e.target.value);
                 }}
               />
             </div>

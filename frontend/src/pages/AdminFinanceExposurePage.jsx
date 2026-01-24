@@ -125,6 +125,173 @@ function ExposureTable({ items, filter, statusFilter, onRowClick }) {
               <TableCell className="text-[10px] text-muted-foreground">
                 {it.payment_terms}
               </TableCell>
+
+function ExposureDrilldownDrawer({ open, onOpenChange, agency }) {
+  const [bucket, setBucket] = useState("all");
+  const [entries, setEntries] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    if (!open || !agency) return;
+    let cancelled = false;
+    const run = async () => {
+      try {
+        setLoading(true);
+        setError("");
+        setEntries([]);
+        const params = new URLSearchParams();
+        if (bucket) params.set("bucket", bucket);
+        params.set("limit", "200");
+        const res = await api.get(`/ops/finance/exposure/${agency.agency_id}/entries?${params.toString()}`);
+        if (cancelled) return;
+        setEntries(res.data?.items || []);
+      } catch (e) {
+        if (cancelled) return;
+        setError(apiErrorMessage(e));
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+    run();
+    return () => {
+      cancelled = true;
+    };
+  }, [open, agency?.agency_id, bucket]);
+
+  const filteredEntries = useMemo(() => {
+    if (!search) return entries;
+    const f = search.toLowerCase();
+    return entries.filter((e) => {
+      const fields = [e.booking_id, e.source_id, e.note].filter(Boolean).join(" ").toLowerCase();
+      return fields.includes(f);
+    });
+  }, [entries, search]);
+
+  const currency = agency?.currency || "";
+
+  return (
+    <Drawer open={open} onOpenChange={onOpenChange}>
+      <DrawerContent>
+        <DrawerHeader className="border-b pb-3">
+          <DrawerTitle className="flex flex-col gap-1">
+            <span className="text-sm font-semibold">
+              {agency?.agency_name || "Seçili acente"}
+            </span>
+            <span className="text-[11px] text-muted-foreground font-mono">{agency?.agency_id}</span>
+          </DrawerTitle>
+          <DrawerDescription className="text-xs">
+            Ledger bazlı hareketleri ve aging bucket&apos;lar[D[D[D[D[D[Dını acente seviyesinde inceleyin.
+          </DrawerDescription>
+        </DrawerHeader>
+        <div className="p-4 space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="inline-flex rounded-lg bg-muted p-1 text-[11px] text-muted-foreground">
+              {["all", "0_30", "31_60", "61_plus"].map((b) => (
+                <button
+                  key={b}
+                  type="button"
+                  className={`px-2 py-1 rounded-md ${bucket === b ? "bg-background text-foreground shadow" : ""}`}
+                  onClick={() => setBucket(b)}
+                >
+                  {b === "all" && "Tümü"}
+                  {b === "0_30" && "0-30"}
+                  {b === "31_60" && "31-60"}
+                  {b === "61_plus" && "61+"}
+                </button>
+              ))}
+            </div>
+            <Input
+              className="h-8 w-full sm:w-64 text-xs"
+              placeholder="Booking ID / kaynak / not ara"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+
+          {loading && entries.length === 0 ? (
+            <div className="py-8 text-center text-xs text-muted-foreground">Yükleniyor...</div>
+          ) : error ? (
+            <div className="space-y-2">
+              <div className="text-xs text-destructive">{error}</div>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="text-xs"
+                onClick={() => {
+                  // trigger refetch by toggling bucket
+                  setBucket((prev) => (prev === "all" ? "0_30" : "all"));
+                }}
+              >
+                Tekrar dene
+              </Button>
+            </div>
+          ) : filteredEntries.length === 0 ? (
+            <div className="py-8 text-center text-xs text-muted-foreground">
+              Bu bucket için ledger kaydı bulunamadı.
+            </div>
+          ) : (
+            <div className="overflow-x-auto max-h-[420px]">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="text-[11px]">Posted At</TableHead>
+                    <TableHead className="text-[11px] text-right">Age (gün)</TableHead>
+                    <TableHead className="text-[11px] text-right">Tutar</TableHead>
+                    <TableHead className="text-[11px]">Yön</TableHead>
+                    <TableHead className="text-[11px]">Kaynak</TableHead>
+                    <TableHead className="text-[11px]">Booking</TableHead>
+                    <TableHead className="text-[11px]">Not</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredEntries.map((e) => (
+                    <TableRow key={e.ledger_entry_id} className="text-xs align-top">
+                      <TableCell>{new Date(e.posted_at).toLocaleString()}</TableCell>
+                      <TableCell className="text-right font-mono">{e.age_days}</TableCell>
+                      <TableCell className="text-right font-mono">
+                        {e.direction === "credit" ? "-" : "+"}
+                        {e.amount.toFixed(2)} {currency}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="text-[10px]">
+                          {e.direction} · {e.source_type}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="font-mono text-[11px]">
+                        {e.source_id || "-"}
+                      </TableCell>
+                      <TableCell className="font-mono text-[11px]">
+                        {e.booking_id ? (
+                          <a
+                            href={`/ops/bookings/${e.booking_id}`}
+                            className="text-primary hover:underline"
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            {e.booking_id}
+                          </a>
+                        ) : (
+                          "-"
+                        )}
+                      </TableCell>
+                      <TableCell className="max-w-[180px] truncate" title={e.note}>
+                        {e.note || "-"}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </div>
+      </DrawerContent>
+    </Drawer>
+  );
+}
+
             </TableRow>
           ))}
         </TableBody>

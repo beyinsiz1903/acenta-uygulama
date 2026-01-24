@@ -273,6 +273,12 @@ class B2BPricingService:
 
         # Commission rate resolution will be applied at aggregate level in create_quote
 
+        # Compute margin_list and margin_after_discount in quote currency
+        supplier_cost = float(round(net, 2))
+        list_sell_rounded = float(round(list_sell, 2))
+        margin_list = max(0.0, list_sell_rounded - supplier_cost)
+        margin_after_discount = max(0.0, float(round(final_sell - supplier_cost, 2)))
+
         return QuoteOffer(
             item_key="0",  # caller will override with actual index
             currency=currency,
@@ -280,9 +286,11 @@ class B2BPricingService:
             sell=final_sell,
             restrictions=restrictions,
             trace=trace,
-            supplier_cost=float(round(net, 2)),
+            supplier_cost=supplier_cost,
             base_markup_percent=float(markup_percent or 0.0),
-            list_sell=float(round(list_sell, 2)),
+            list_sell=list_sell_rounded,
+            margin_list=margin_list,
+            margin_after_discount=margin_after_discount,
         )
 
     async def create_quote(

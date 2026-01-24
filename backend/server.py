@@ -85,6 +85,8 @@ from app.routers.admin_cms_pages import router as admin_cms_pages_router
 from app.routers.admin_campaigns import router as admin_campaigns_router
 from app.routers.admin_links import router as admin_links_router
 from app.routers.settings import router as settings_router
+from app.routers.approval_tasks import router as approval_tasks_router
+from app.routers.demo_scale_ui_proof import router as demo_scale_ui_proof_router
 
 from app.routers.seo import router as seo_router
 from app.routers.public_campaigns import router as public_campaigns_router

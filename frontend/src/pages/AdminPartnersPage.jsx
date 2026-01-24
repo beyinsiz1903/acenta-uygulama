@@ -41,7 +41,8 @@ export default function AdminPartnersPage() {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(20);
   const [hasMore, setHasMore] = useState(false);
-  const [search, setSearch] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
 
   const [name, setName] = useState("");
   const [contactEmail, setContactEmail] = useState("");

@@ -192,6 +192,11 @@ async def update_partner(
 
     update["updated_at"] = datetime.now(timezone.utc).isoformat()
 
+    # Load existing before update for audit snapshot
+    existing = await db.partner_profiles.find_one({"_id": oid, "organization_id": org_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="PARTNER_NOT_FOUND")
+
     res = await db.partner_profiles.update_one({"_id": oid, "organization_id": org_id}, {"$set": update})
     if res.matched_count == 0:
         raise HTTPException(status_code=404, detail="PARTNER_NOT_FOUND")
@@ -199,6 +204,22 @@ async def update_partner(
     doc = await db.partner_profiles.find_one({"_id": oid, "organization_id": org_id})
     if not doc:
         raise HTTPException(status_code=404, detail="PARTNER_NOT_FOUND")
+
+    # Determine action based on real status transition
+    payload_data = payload.model_dump(exclude_unset=True)
+    new_status = payload_data.get("status")
+    prev_status = existing.get("status") if existing else None
+
+    action = "partner_update"
+    if new_status is not None and new_status != prev_status:
+        if new_status == "approved":
+            action = "partner_approve"
+        elif new_status == "blocked":
+            action = "partner_block"
+
+    meta = {"payload": payload_data}
+    if new_status is not None:
+        meta.update({"prev_status": prev_status, "new_status": new_status})
 
     # Audit: partner status / profile update (including approve/block via status field)
     try:
@@ -212,12 +233,12 @@ async def update_partner(
                 "roles": user.get("roles") or [],
             },
             request=request,
-            action="partner_update",
+            action=action,
             target_type="partner",
             target_id=str(oid),
-            before=audit_snapshot("partner", None),  # existing snapshot could be added if needed
+            before=audit_snapshot("partner", existing),
             after=audit_snapshot("partner", doc),
-            meta={"payload": payload.model_dump(exclude_unset=True)},
+            meta=meta,
         )
     except Exception:
         pass

@@ -1360,54 +1360,6 @@ async def get_exposure_entries(
         "items": items,
     }
         
-        # Simple aging buckets based on ledger entry posted_at dates.
-        # This is an approximation: we apply agency balance rules (debit - credit)
-        # per entry and bucket by age in days.
-        age_0_30 = 0.0
-        age_31_60 = 0.0
-        age_61_plus = 0.0
-        
-        entries = await db.ledger_entries.find({
-            "organization_id": org_id,
-            "account_id": account_id,
-            "currency": "EUR",
-        }).to_list(length=5000)
-        
-        account_type = account.get("type")  # should be "agency"
-        for entry in entries:
-            posted_at = entry.get("posted_at") or entry.get("occurred_at")
-            if not posted_at:
-                continue
-            days = (today - posted_at.date()).days
-            amount = float(entry.get("amount", 0.0) or 0.0)
-            direction = entry.get("direction")
-            
-            if account_type == "agency":
-                delta = amount if direction == "debit" else -amount
-            elif account_type == "platform":
-                delta = amount if direction == "credit" else -amount
-            else:
-                delta = amount if direction == "debit" else -amount
-            
-            if days <= 30:
-                age_0_30 += delta
-            elif days <= 60:
-                age_31_60 += delta
-            else:
-                age_61_plus += delta
-        
-        # Calculate status
-        if exposure >= credit_limit:
-            status = "over_limit"
-        elif soft_limit and exposure >= soft_limit:
-            status = "near_limit"
-        else:
-            status = "ok"
-        
-        # Get agency name
-        agency = await db.agencies.find_one({"_id": agency_id})
-        agency_name = agency["name"] if agency else f"Agency {agency_id[:8]}"
-        
         items.append(
             ExposureItem(
                 agency_id=agency_id,

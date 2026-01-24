@@ -8,7 +8,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 import { Badge } from "../components/ui/badge";
 import { Input } from "../components/ui/input";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from "../components/ui/drawer";
-import { TableBody, TableCell, TableHead, TableHeader, TableRow, Table } from "../components/ui/table";
 import { Button } from "../components/ui/button";
 
 function StatusBadge({ status }) {

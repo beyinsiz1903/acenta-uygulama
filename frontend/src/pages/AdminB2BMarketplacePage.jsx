@@ -526,6 +526,7 @@ export default function AdminB2BMarketplacePage() {
             </CardContent>
           </Card>
         )}
+        </div>
       </div>
 
       {productsErrorDetails?.isRetryable && !productsLoading && (

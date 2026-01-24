@@ -130,6 +130,7 @@ async def list_partner_product_authorizations(
 @router.put("", dependencies=[AdminDep])
 async def upsert_partner_product_authorization(
     payload: ProductAuthorizationUpsertIn,
+    request: Request,
     db=Depends(get_db),
     user=Depends(get_current_user),
 ) -> Dict[str, Any]:

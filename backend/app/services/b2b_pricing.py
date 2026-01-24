@@ -354,7 +354,8 @@ class B2BPricingService:
 
         # Aggregate money model summary (margin + commission, coupon handled separately)
         supplier_total = sum(float(o.supplier_cost or o.net) for o in offers)
-        margin_total = sum(float(o.sell - (o.supplier_cost or o.net)) for o in offers)
+        margin_total = sum(float(o.margin_list or 0.0) for o in offers)
+        margin_after_discount_total = sum(float(o.margin_after_discount or 0.0) for o in offers)
 
         # Resolve commission_rate per product using marketplace + partner defaults
         commission_total = 0.0
@@ -370,18 +371,25 @@ class B2BPricingService:
                     product_id=item.product_id,
                     check_in=item.check_in,
                 )
-                # margin share: commission from (sell - supplier_cost) after discount, before coupon
-                supplier = float(off.supplier_cost or off.net)
-                margin = float(off.sell - supplier)
-                if margin < 0:
-                    margin = 0.0
-                commission_amount = float(round(margin * (rate / 100.0), 2)) if rate else 0.0
-                commission_total += commission_amount
-                off.commission_rate = float(rate)
-                off.commission_amount = commission_amount
-                off.our_margin_before_coupon = float(round(margin - commission_amount, 2))
+                rate = float(rate or 0.0)
 
-        our_margin_before_coupon_total = float(round(margin_total - commission_total, 2))
+                # Commission basis: list margin (list_sell - supplier_cost)
+                supplier = float(off.supplier_cost or off.net)
+                list_sell = float(off.list_sell or off.sell)
+                margin_list = max(0.0, list_sell - supplier)
+
+                commission_amount = float(round(margin_list * (rate / 100.0), 2)) if rate else 0.0
+                commission_total += commission_amount
+
+                off.commission_rate = rate
+                off.commission_amount = commission_amount
+                off.commission_basis = "list_margin"
+
+                # Our margin after discount but before coupon: (sell - supplier) - commission
+                margin_after_discount = max(0.0, float(off.margin_after_discount or (off.sell - supplier)))
+                off.our_margin_before_coupon = float(round(margin_after_discount - commission_amount, 2))
+
+        our_margin_before_coupon_total = float(round(margin_after_discount_total - commission_total, 2))
 
         doc = {
             "organization_id": organization_id,

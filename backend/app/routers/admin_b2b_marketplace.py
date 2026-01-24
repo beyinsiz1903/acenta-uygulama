@@ -63,13 +63,22 @@ async def list_partner_product_authorizations(
     if status:
         prod_filter["status"] = status
     if q:
-        prod_filter["title"] = {"$regex": q, "$options": "i"}
+        regex = {"$regex": q, "$options": "i"}
+        prod_filter["$or"] = [
+            {"title": regex},
+            {"product_id": regex},
+            {"location.city": regex},
+        ]
 
-    cursor = db.products.find(prod_filter).sort("created_at", -1)
-    products: List[Dict[str, Any]] = await cursor.to_list(length=500)
+    skip = (page - 1) * limit
+    cursor = db.products.find(prod_filter).sort("created_at", -1).skip(skip).limit(limit + 1)
+    products: List[Dict[str, Any]] = await cursor.to_list(length=limit + 1)
+
+    has_more = len(products) > limit
+    products = products[:limit]
 
     if not products:
-        return {"items": []}
+        return {"items": [], "has_more": False}
 
     product_ids: List[ObjectId] = []
     for p in products:

@@ -48,6 +48,9 @@ export default function AdminB2BMarketplacePage() {
   const [productSearch, setProductSearch] = useState("");
   const [productTypeFilter, setProductTypeFilter] = useState("");
   const [productStatusFilter, setProductStatusFilter] = useState("");
+  const [productPage, setProductPage] = useState(1);
+  const [productLimit, setProductLimit] = useState(50);
+  const [productHasMore, setProductHasMore] = useState(false);
   const [savingKey, setSavingKey] = useState("");
 
   useEffect(() => {

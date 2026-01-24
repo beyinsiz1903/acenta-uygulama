@@ -1222,48 +1222,11 @@ async def get_exposure_dashboard(
     Auth: admin|ops|super_admin
     Shows: agency exposure vs credit limit
     Status: ok | near_limit | over_limit
+    
+    Note: Implementation simplified - aging logic removed
     """
-    org_id = current_user["organization_id"]
-    
-    # Get all agency accounts
-    agency_accounts = await db.finance_accounts.find({
-        "organization_id": org_id,
-        "type": "agency",
-    }).to_list(length=limit)
-    
-    items = []
-    today = now_utc().date()
-    
-    for account in agency_accounts:
-        account_id = account["_id"]
-        agency_id = account["owner_id"]
-        
-        # Get balance
-        balance = await db.account_balances.find_one({
-            "organization_id": org_id,
-            "account_id": account_id,
-            "currency": "EUR",
-        })
-        
-        exposure = balance["balance"] if balance else 0.0
-        
-        # Get credit profile
-        credit_profile = await db.credit_profiles.find_one({
-            "organization_id": org_id,
-            "agency_id": agency_id,
-        })
-        
-        if not credit_profile:
-            # No credit profile, skip
-            continue
-        
-        credit_limit = credit_profile["limit"]
-        soft_limit = credit_profile.get("soft_limit")
-        payment_terms = credit_profile["payment_terms"]
-        
-        # For now, return empty items list since the aging logic was removed
-        # This function needs to be properly implemented based on requirements
-        
+    # Return empty response since aging logic was removed
+    # This function needs to be properly implemented based on requirements
     return ExposureResponse(items=[])
 
 

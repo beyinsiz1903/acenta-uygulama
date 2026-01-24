@@ -177,6 +177,15 @@ async def upsert_partner_product_authorization(
         "updated_at": now,
     }
 
+    # Load existing authorization for before snapshot
+    existing = await db.b2b_product_authorizations.find_one(
+        {
+            "organization_id": org_id,
+            "partner_id": partner_id_str,
+            "product_id": product.get("_id"),
+        }
+    )
+
     await db.b2b_product_authorizations.update_one(
         {
             "organization_id": org_id,
@@ -186,5 +195,41 @@ async def upsert_partner_product_authorization(
         {"$set": update_doc, "$setOnInsert": {"created_at": now}},
         upsert=True,
     )
+
+    saved = await db.b2b_product_authorizations.find_one(
+        {
+            "organization_id": org_id,
+            "partner_id": partner_id_str,
+            "product_id": product.get("_id"),
+        }
+    )
+
+    # Audit log for marketplace product permission/commission change
+    try:
+        partner_product_id = f"{partner_id_str}:{product.get('_id')}"
+        await write_audit_log(
+            db,
+            organization_id=org_id,
+            actor={
+                "actor_type": "user",
+                "actor_id": user.get("id") or user.get("email"),
+                "email": user.get("email"),
+                "roles": user.get("roles") or [],
+            },
+            request=request,
+            action="marketplace_product_upsert",
+            target_type="b2b_marketplace_product",
+            target_id=partner_product_id,
+            before=audit_snapshot("b2b_marketplace_product", existing),
+            after=audit_snapshot("b2b_marketplace_product", saved),
+            meta={
+                "partner_id": partner_id_str,
+                "product_id": str(product.get("_id")),
+                "is_enabled": update_doc["is_enabled"],
+                "commission_rate": update_doc["commission_rate"],
+            },
+        )
+    except Exception:
+        pass
 
     return {"ok": True, "is_enabled": update_doc["is_enabled"], "commission_rate": update_doc["commission_rate"]}

@@ -40,7 +40,7 @@ function AgingBar({ age0, age31, age61, exposure }) {
   );
 }
 
-function ExposureTable({ items, filter, statusFilter }) {
+function ExposureTable({ items, filter, statusFilter, onRowClick }) {
   const filtered = useMemo(() => {
     let working = items;
 

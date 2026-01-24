@@ -58,6 +58,7 @@ export default function AdminPartnersPage() {
   const load = async () => {
     setLoading(true);
     setError("");
+    setErrorDetails(null);
     try {
       const params = { page, limit };
       if (statusFilter) params.status = statusFilter;

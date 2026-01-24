@@ -69,12 +69,7 @@ export default function AdminPartnersPage() {
       setHasMore(Boolean(data.has_more));
     } catch (e) {
       setError(apiErrorMessage(e));
-      try {
-        const { parseErrorDetails } = require("../lib/api");
-        setErrorDetails(parseErrorDetails(e));
-      } catch {
-        // ignore
-      }
+      setErrorDetails(parseErrorDetails(e));
     } finally {
       setLoading(false);
     }

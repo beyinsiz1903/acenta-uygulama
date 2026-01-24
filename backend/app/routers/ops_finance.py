@@ -1359,27 +1359,6 @@ async def get_exposure_entries(
         "currency": currency,
         "items": items,
     }
-        
-        items.append(
-            ExposureItem(
-                agency_id=agency_id,
-                agency_name=agency_name,
-                currency="EUR",
-                exposure=exposure,
-                age_0_30=age_0_30,
-                age_31_60=age_31_60,
-                age_61_plus=age_61_plus,
-                credit_limit=credit_limit,
-                soft_limit=soft_limit,
-                payment_terms=payment_terms,
-                status=status,
-            )
-        )
-    
-    # Sort by exposure desc (highest risk first)
-    items.sort(key=lambda x: x.exposure, reverse=True)
-    
-    return ExposureResponse(items=items)
 
 
 @router.get("/exposure/{agency_id}/entries")

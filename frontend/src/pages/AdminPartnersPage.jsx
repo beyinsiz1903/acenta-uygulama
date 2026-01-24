@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { AlertCircle, Loader2, Users } from "lucide-react";
 
-import { api, apiErrorMessage } from "../lib/api";
+import { api, apiErrorMessage, parseErrorDetails } from "../lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
 import { Input } from "../components/ui/input";

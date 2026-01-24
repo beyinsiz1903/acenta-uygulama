@@ -139,6 +139,10 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+
+# Register structured exception handlers (AppError, validation, etc.)
+register_exception_handlers(app)
+
 )
 
 # Exception handlers

@@ -124,6 +124,13 @@ function ExposureTable({ items, filter, statusFilter, onRowClick }) {
               <TableCell className="text-[10px] text-muted-foreground">
                 {it.payment_terms}
               </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
+}
 
 function ExposureDrilldownDrawer({ open, onOpenChange, agency }) {
   const [bucket, setBucket] = useState("all");

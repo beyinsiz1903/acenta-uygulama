@@ -372,7 +372,8 @@ export default function AdminPartnersPage() {
                   ))}
                 </TableBody>
               </Table>
-            </div>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>

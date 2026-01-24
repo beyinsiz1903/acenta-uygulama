@@ -302,6 +302,9 @@ class B2BPricingService:
         settings = (agency or {}).get("settings") or {}
         target_currency = (settings.get("selling_currency") or "EUR").upper()
 
+        # Resolve partner for commission purposes (if any)
+        partner_id = await self._resolve_partner_for_agency(organization_id, agency_id)
+
         for idx, item in enumerate(payload.items):
             offer = await self._price_item(
                 organization_id=organization_id,

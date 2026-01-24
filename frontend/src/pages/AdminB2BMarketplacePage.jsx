@@ -101,6 +101,7 @@ export default function AdminB2BMarketplacePage() {
 
   async function loadProducts() {
     if (!selectedPartnerId) return;
+    const seq = ++productsSeqRef.current;
     setProductsLoading(true);
     setProductsError("");
     setProductsErrorDetails(null);
@@ -109,23 +110,28 @@ export default function AdminB2BMarketplacePage() {
       params.partner_id = selectedPartnerId;
       if (productTypeFilter) params.type = productTypeFilter;
       if (productStatusFilter) params.status = productStatusFilter;
-      if (productSearch) params.q = productSearch;
+      if (debouncedProductSearch) params.q = debouncedProductSearch;
       const res = await api.get("/admin/b2b/marketplace", { params });
+      if (seq !== productsSeqRef.current) return;
       const data = res.data || {};
       setProducts(data.items || []);
       setProductHasMore(Boolean(data.has_more));
     } catch (e) {
+      if (seq !== productsSeqRef.current) return;
       const msg = apiErrorMessage(e);
       // 404 ya da "Not Found" durumunda boş veri gibi davran, kırmızı hata göstermeyelim
       if (String(msg).toLowerCase().includes("not found") || msg === "Not Found") {
         setProducts([]);
         setProductsError("");
+        setProductsErrorDetails(null);
       } else {
         setProductsError(msg);
         setProductsErrorDetails(parseErrorDetails(e));
       }
     } finally {
-      setProductsLoading(false);
+      if (seq === productsSeqRef.current) {
+        setProductsLoading(false);
+      }
     }
   }
 

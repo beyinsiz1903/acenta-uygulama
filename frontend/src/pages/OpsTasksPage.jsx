@@ -343,17 +343,6 @@ function NewTaskForm({ onCreated }) {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2 text-xs">
-
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm flex items-center gap-2">
-            Görevler
-            {loading && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2 text-xs">
           {error && (
             <div className="flex items-center gap-2 text-destructive text-xs">
               <AlertCircle className="h-3 w-3" />

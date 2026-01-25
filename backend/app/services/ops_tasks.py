@@ -160,6 +160,8 @@ class OpsTaskService:
         updated["task_id"] = str(updated.pop("_id"))
         updated["_status_from"] = status_from
         updated["_status_to"] = status_to
+        # Remove sensitive fields from response
+        updated.pop("organization_id", None)
         return updated
 
     async def mark_done_if_exists(

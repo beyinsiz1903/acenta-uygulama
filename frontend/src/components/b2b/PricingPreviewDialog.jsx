@@ -397,16 +397,6 @@ export default function PricingPreviewDialog({ open, onOpenChange, initialContex
                 Payload&apos;ı Kopyala
               </Button>
               <Button
-
-                {normalized.nightsMismatch && (
-                  <div className="border border-amber-200 bg-amber-50 rounded-md p-2 text-xs">
-                    <div className="font-semibold">Gece sayısı uyuşmazlığı</div>
-                    <div className="text-muted-foreground">
-                      Check-in/Check-out: <span className="font-mono">{normalized.derivedNights}</span> gece, engine: <span className="font-mono">{normalized.engineNights}</span> gece. Hesaplamada engine değeri baz alınmıştır.
-                    </div>
-                  </div>
-                )}
-
                 variant="outline"
                 size="sm"
                 onClick={async () => {

@@ -418,6 +418,199 @@ function MiniRefundHistory({ bookingId }) {
       ))}
     </div>
   );
+
+function RefundDocumentsSection({ caseData }) {
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [file, setFile] = useState(null);
+  const [tag, setTag] = useState("refund_proof");
+  const [note, setNote] = useState("");
+
+  const hasCase = !!caseData?.case_id;
+
+  const load = async () => {
+    if (!hasCase) return;
+    try {
+      setLoading(true);
+      setError("");
+      const resp = await api.get("/ops/documents", {
+        params: { entity_type: "refund_case", entity_id: caseData.case_id },
+      });
+      setItems(resp.data?.items || []);
+    } catch (e) {
+      setError(apiErrorMessage(e));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (hasCase) {
+      load();
+    } else {
+      setItems([]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [caseData?.case_id]);
+
+  const onUpload = async () => {
+    if (!file) {
+      toast({
+        title: "Dosya seçilmedi",
+        description: "Lütfen yüklenecek bir dosya seçin.",
+        variant: "destructive",
+      });
+      return;
+    }
+    try {
+      setUploading(true);
+      const formData = new FormData();
+      formData.append("entity_type", "refund_case");
+      formData.append("entity_id", caseData.case_id);
+      formData.append("tag", tag);
+      if (note) formData.append("note", note);
+      formData.append("file", file);
+      await api.post("/ops/documents/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      toast({ title: "Doküman yüklendi" });
+      setFile(null);
+      setNote("");
+      await load();
+    } catch (e) {
+      toast({ title: "Doküman yüklenemedi", description: apiErrorMessage(e), variant: "destructive" });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const onDelete = async (doc) => {
+    try {
+      await api.delete(`/ops/documents/${doc.document_id}`, { data: {} });
+      toast({ title: "Doküman silindi" });
+      await load();
+    } catch (e) {
+      toast({ title: "Doküman silinemedi", description: apiErrorMessage(e), variant: "destructive" });
+    }
+  };
+
+  const onDownload = async (doc) => {
+    try {
+      const resp = await api.get(`/ops/documents/${doc.document_id}/download`, {
+        responseType: "blob",
+      });
+      const blob = new Blob([resp.data], { type: doc.content_type || "application/octet-stream" });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = doc.filename || "document";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (e) {
+      toast({ title: "İndirme başarısız", description: apiErrorMessage(e), variant: "destructive" });
+    }
+  };
+
+  if (!hasCase) return null;
+
+  return (
+    <div className="rounded-lg border bg-muted/20 p-3 space-y-3">
+      <div className="flex items-center justify-between gap-2">
+        <div className="text-xs font-semibold text-muted-foreground">Dokümanlar</div>
+      </div>
+
+      {/* Upload form */}
+      <div className="flex flex-wrap items-end gap-2 text-xs">
+        <div className="flex flex-col gap-1">
+          <span className="text-[11px] text-muted-foreground">Etiket</span>
+          <select
+            className="border rounded px-2 py-1 text-xs bg-background"
+            value={tag}
+            onChange={(e) => setTag(e.target.value)}
+          >
+            <option value="refund_proof">Refund kanıtı</option>
+            <option value="invoice">Fatura</option>
+            <option value="correspondence">Yazışma</option>
+            <option value="other">Diğer</option>
+          </select>
+        </div>
+        <div className="flex flex-col gap-1 min-w-[160px] flex-1">
+          <span className="text-[11px] text-muted-foreground">Not (opsiyonel)</span>
+          <Input
+            type="text"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="Kısa açıklama"
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <span className="text-[11px] text-muted-foreground">Dosya</span>
+          <Input
+            type="file"
+            onChange={(e) => setFile(e.target.files?.[0] || null)}
+          />
+        </div>
+        <Button size="sm" onClick={onUpload} disabled={uploading || !file} className="mt-4">
+          {uploading && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
+          Yükle
+        </Button>
+      </div>
+
+      {loading ? (
+        <div className="text-xs text-muted-foreground">Dokümanlar yükleniyor...</div>
+      ) : error ? (
+        <div className="text-xs text-destructive">{error}</div>
+      ) : !items.length ? (
+        <div className="text-xs text-muted-foreground">Bu refund için doküman yok.</div>
+      ) : (
+        <div className="mt-2 space-y-1 text-xs">
+          {items.map((doc) => (
+            <div
+              key={doc.document_id}
+              className="flex items-center justify-between gap-2 rounded border bg-background px-2 py-1"
+            >
+              <div className="flex items-center gap-2 min-w-0">
+                <Badge variant="outline" className="text-[10px] uppercase">
+                  {doc.tag || "other"}
+                </Badge>
+                <button
+                  type="button"
+                  className="text-xs text-blue-600 hover:underline truncate max-w-[220px] text-left"
+                  onClick={() => onDownload(doc)}
+                  title={doc.filename}
+                >
+                  {doc.filename}
+                </button>
+                <span className="text-[11px] text-muted-foreground">
+                  {doc.size_bytes != null ? `${Math.round(doc.size_bytes / 1024)} KB` : ""}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                <span>{doc.created_by_email}</span>
+                <span>
+                  {doc.created_at ? new Date(doc.created_at).toLocaleString() : ""}
+                </span>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-6 w-6 text-destructive"
+                  onClick={() => onDelete(doc)}
+                >
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 }
 
 function RefundMarkPaidDialog({ open, onOpenChange, caseData, onMarked }) {

@@ -1182,6 +1182,15 @@ async def reject_refund_case(
                     "by_actor_id": current_user.get("id"),
                 },
             )
+        # Ops playbook: cancel review tasks and open close task
+        engine = OpsPlaybookEngine(db)
+        await engine.on_refund_rejected(
+            org_id,
+            case_id=case_id,
+            booking_id=booking_id,
+            actor_email=current_user.get("email"),
+            actor_id=current_user.get("id"),
+        )
     except Exception as e:
         logger.warning("audit_write_failed refund_reject case_id=%s err=%s", case_id, str(e))
 

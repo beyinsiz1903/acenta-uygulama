@@ -301,7 +301,35 @@ export default function AppShell() {
                 </div>
               ))}
 
-              {visibleLegacyNav.length > 0 && roleBasedMenu.length > 0 && (
+              {/* Ops Tasks Section */}
+              <div className="mb-3">
+                <div className="px-3 py-1 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  Ops Queues
+                </div>
+                <NavLink
+                  to="/app/ops/tasks"
+                  end
+                  onClick={() => setMobileNavOpen(false)}
+                  className={({ isActive }) =>
+                    cn(
+                      "relative flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition hover:shadow-sm",
+                      "border-l-4",
+                      isActive
+                        ? "bg-primary text-primary-foreground shadow border-primary"
+                        : "border-transparent text-muted-foreground hover:bg-accent hover:text-foreground"
+                    )
+                  }
+                >
+                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    <CalendarDays className="h-4 w-4" />
+                  </div>
+                  <div className="flex-1 overflow-hidden">
+                    <div className="truncate">Ops Tasks</div>
+                  </div>
+                </NavLink>
+              </div>
+
+              {visibleLegacyNav.length > 0 && (roleBasedMenu.length > 0 || true) && (
                 <div className="my-2 border-t" />
               )}
 

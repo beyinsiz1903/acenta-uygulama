@@ -237,6 +237,7 @@ export default function PricingPreviewDialog({ open, onOpenChange, initialContex
       agency_id: initialContext.agency_id ?? null,
       channel_id: initialContext.channel_id ?? null,
     });
+    setSelectedPreset("2+0");
     setResult(null);
     setErr("");
     setShowRaw(false);

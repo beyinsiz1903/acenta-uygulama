@@ -758,6 +758,161 @@ function RefundTasksSection({ caseData }) {
             );
           })}
         </div>
+
+function RefundTaskCreateDialogButton({ caseData, onCreated }) {
+  const [open, setOpen] = useState(false);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [priority, setPriority] = useState("normal");
+  const [dueAt, setDueAt] = useState("");
+  const [slaHours, setSlaHours] = useState("");
+  const [assigneeEmail, setAssigneeEmail] = useState("");
+  const [tags, setTags] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const canSubmit = !!caseData?.case_id && title && !submitting;
+
+  const onSubmit = async () => {
+    if (!canSubmit) return;
+    try {
+      setSubmitting(true);
+      const body = {
+        entity_type: "refund_case",
+        entity_id: caseData.case_id,
+        task_type: "custom",
+        title,
+        description: description || null,
+        priority,
+        due_at: dueAt || null,
+        sla_hours: slaHours ? Number(slaHours) : null,
+        assignee_email: assigneeEmail || null,
+        tags: tags
+          ? tags
+              .split(",")
+              .map((t) => t.trim())
+              .filter(Boolean)
+          : [],
+        meta: { source: "refund_detail", case_id: caseData.case_id },
+      };
+      await api.post("/ops/tasks", body);
+      toast({ title: "Görev oluşturuldu" });
+      setTitle("");
+      setDescription("");
+      setDueAt("");
+      setSlaHours("");
+      setAssigneeEmail("");
+      setTags("");
+      setOpen(false);
+      if (onCreated) onCreated();
+    } catch (e) {
+      toast({ title: "Görev oluşturulamadı", description: apiErrorMessage(e), variant: "destructive" });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <Button size="xs" variant="outline" onClick={() => setOpen(true)}>
+        Yeni görev
+      </Button>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Yeni görev oluştur</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3 mt-2 text-sm">
+          <div className="text-xs text-muted-foreground">
+            case: <span className="font-mono text-[11px]">{caseData?.case_id}</span>
+          </div>
+          <div className="space-y-1">
+            <div className="text-xs text-muted-foreground">Başlık *</div>
+            <Input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Görev başlığı"
+            />
+          </div>
+          <div className="space-y-1">
+            <div className="text-xs text-muted-foreground">Açıklama</div>
+            <Input
+              type="text"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Ops notu (opsiyonel)"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            <div className="space-y-1">
+              <div className="text-[11px] text-muted-foreground">Öncelik</div>
+              <select
+                className="h-8 rounded-md border bg-background px-2 text-xs"
+                value={priority}
+                onChange={(e) => setPriority(e.target.value)}
+              >
+                <option value="low">Düşük</option>
+                <option value="normal">Normal</option>
+                <option value="high">Yüksek</option>
+                <option value="urgent">Acil</option>
+              </select>
+            </div>
+            <div className="space-y-1">
+              <div className="text-[11px] text-muted-foreground">Atanan e-posta</div>
+              <Input
+                type="email"
+                value={assigneeEmail}
+                onChange={(e) => setAssigneeEmail(e.target.value)}
+                placeholder="ops@acenta.test"
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            <div className="space-y-1">
+              <div className="text-[11px] text-muted-foreground">Son tarih (due_at)</div>
+              <Input
+                type="datetime-local"
+                value={dueAt}
+                onChange={(e) => setDueAt(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1">
+              <div className="text-[11px] text-muted-foreground">SLA (saat)</div>
+              <Input
+                type="number"
+                min={0}
+                value={slaHours}
+                onChange={(e) => setSlaHours(e.target.value)}
+              />
+            </div>
+          </div>
+          <div className="space-y-1 text-xs">
+            <div className="text-[11px] text-muted-foreground">Etiketler (virgülle ayırın)</div>
+            <Input
+              type="text"
+              value={tags}
+              onChange={(e) => setTags(e.target.value)}
+              placeholder="refund, followup"
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={() => setOpen(false)}
+            disabled={submitting}
+          >
+            İptal
+          </Button>
+          <Button onClick={onSubmit} disabled={!canSubmit}>
+            {submitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+            Oluştur
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
       )}
     </div>
   );

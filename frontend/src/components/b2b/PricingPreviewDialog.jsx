@@ -276,31 +276,41 @@ export default function PricingPreviewDialog({ open, onOpenChange, initialContex
   useEffect(() => {
     if (!open) return;
     // Open olduğunda context’i initialize et
+    let baseCtx;
     if (!initialContext) {
-      setCtx({
+      baseCtx = {
         check_in: toYmd(new Date()),
         nights: 1,
         rooms: 1,
         adults: 2,
         children: 0,
         currency: "EUR",
-      });
-      setResult(null);
-      setErr("");
-      return;
+      };
+    } else {
+      baseCtx = {
+        check_in: initialContext.check_in ?? toYmd(new Date()),
+        nights: initialContext.nights ?? 1,
+        rooms: initialContext.rooms ?? 1,
+        adults: initialContext.adults ?? 2,
+        children: initialContext.children ?? 0,
+        currency: initialContext.currency ?? "EUR",
+        product_id: initialContext.product_id,
+        partner_id: initialContext.partner_id ?? null,
+        agency_id: initialContext.agency_id ?? null,
+        channel_id: initialContext.channel_id ?? null,
+      };
     }
-    setCtx({
-      check_in: initialContext.check_in ?? toYmd(new Date()),
-      nights: initialContext.nights ?? 1,
-      rooms: initialContext.rooms ?? 1,
-      adults: initialContext.adults ?? 2,
-      children: initialContext.children ?? 0,
-      currency: initialContext.currency ?? "EUR",
-      product_id: initialContext.product_id,
-      partner_id: initialContext.partner_id ?? null,
-      agency_id: initialContext.agency_id ?? null,
-      channel_id: initialContext.channel_id ?? null,
-    });
+
+    // Varsayılan senaryoyu uygula (varsa, ve manuel seçim yoksa)
+    const defaultSc = loaded.find((s) => s.is_default);
+    if (defaultSc) {
+      baseCtx = mergeContext(baseCtx, defaultSc.context);
+      setSelectedScenarioId(defaultSc.id);
+    } else {
+      setSelectedScenarioId("");
+    }
+
+    setCtx(baseCtx);
     setSelectedPreset("2+0");
     setResult(null);
     setErr("");

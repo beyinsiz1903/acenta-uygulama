@@ -658,6 +658,12 @@ async def approve_refund_step1(
     org_id = current_user["organization_id"]
     approved_amount = float(payload.get("approved_amount") or 0.0)
 
+    actor = {
+        "actor_type": "user",
+        "actor_id": current_user.get("id") or current_user.get("email"),
+        "email": current_user.get("email"),
+        "roles": current_user.get("roles") or [],
+    }
     svc = RefundCaseService(db)
 
     # Load existing for audit before

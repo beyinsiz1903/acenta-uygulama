@@ -143,6 +143,24 @@ function eventSubline(ev) {
     return parts.join(" · ");
   }
 
+  if (t === "DOCUMENT_UPLOADED") {
+    const parts = [];
+    if (m.entity_id) parts.push(`case: ${m.entity_id}`);
+    if (m.filename) parts.push(`dosya: ${m.filename}`);
+    if (m.tag) parts.push(`etiket: ${m.tag}`);
+    if (m.by_email) parts.push(`by: ${m.by_email}`);
+    return parts.join(" · ");
+  }
+
+  if (t === "DOCUMENT_DELETED") {
+    const parts = [];
+    if (m.entity_id) parts.push(`case: ${m.entity_id}`);
+    if (m.filename) parts.push(`dosya: ${m.filename}`);
+    if (m.tag) parts.push(`etiket: ${m.tag}`);
+    if (m.by_email) parts.push(`by: ${m.by_email}`);
+    return parts.join(" · ");
+  }
+
   return "";
 }
 

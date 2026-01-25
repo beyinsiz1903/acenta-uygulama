@@ -153,7 +153,7 @@ def upload_document(admin_headers: Dict[str, str], case_id: str) -> Dict[str, An
     }
     
     r = requests.post(
-        f"{BASE_URL}/api/ops/documents/upload",
+        f"{BASE_URL}/api/ops/finance/documents/upload",
         headers=admin_headers,
         files=files,
         data=data

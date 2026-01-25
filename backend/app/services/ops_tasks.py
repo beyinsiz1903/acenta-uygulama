@@ -76,7 +76,9 @@ class OpsTaskService:
             return None
         doc["task_id"] = str(doc.pop("_id"))
         # Remove sensitive fields from response
-        doc.pop("organization_id", None)
+        sensitive_fields = ["organization_id", "created_by_actor_id", "updated_by_actor_id", "assignee_actor_id"]
+        for field in sensitive_fields:
+            doc.pop(field, None)
         return doc
 
     async def list_tasks(

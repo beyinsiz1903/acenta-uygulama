@@ -575,8 +575,11 @@ function RefundDetailPanel({
   bookingFinancials,
   loading,
   onRefresh,
-  onOpenApprove,
+  onOpenApproveStep1,
+  onOpenApproveStep2,
   onOpenReject,
+  onOpenMarkPaid,
+  onCloseCase,
 }) {
   if (loading) {
     return (

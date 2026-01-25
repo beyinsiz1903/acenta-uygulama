@@ -358,6 +358,21 @@ function PricingPreviewDialog({
     } finally {
       setLoading(false);
     }
+      <PricingPreviewDialog
+        open={pricingOpen}
+        onOpenChange={setPricingOpen}
+        partnerId={selectedPartnerId}
+        product={pricingProduct}
+        requestState={pricingRequest}
+        setRequestState={setPricingRequest}
+        loading={pricingLoading}
+        error={pricingError}
+        result={pricingResult}
+        setResult={setPricingResult}
+        setLoading={setPricingLoading}
+        setError={setPricingError}
+      />
+
   };
 
   const nights = result?.breakdown?.nights;

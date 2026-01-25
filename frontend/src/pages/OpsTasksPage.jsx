@@ -175,7 +175,6 @@ export default function OpsTasksPage() {
             <Loader2 className="h-3 w-3 mr-1" /> Yenile
           </Button>
         </CardContent>
-        </CardContent>
       </Card>
 
       <Card>

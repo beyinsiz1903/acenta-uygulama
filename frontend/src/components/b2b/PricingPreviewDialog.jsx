@@ -432,7 +432,7 @@ export default function PricingPreviewDialog({ open, onOpenChange, initialContex
               </div>
             ) : (
               <div className="text-xs text-muted-foreground">
-                Henüz sonuç yok. Parametreleri ayarlayıp \"Önizleme Hesapla\"ya basın.
+                Henüz sonuç yok. Parametreleri ayarlayıp &quot;Önizleme Hesapla&quot;ya basın.
               </div>
             )}
           </div>

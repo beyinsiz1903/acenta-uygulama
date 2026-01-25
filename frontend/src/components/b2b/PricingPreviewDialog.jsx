@@ -268,6 +268,10 @@ export default function PricingPreviewDialog({ open, onOpenChange, initialContex
   const [showDebug, setShowDebug] = useState(false);
   const [copyMsg, setCopyMsg] = useState("");
   const [selectedPreset, setSelectedPreset] = useState("2+0");
+  const [scenarios, setScenarios] = useState([]);
+  const [selectedScenarioId, setSelectedScenarioId] = useState("");
+  const [scenarioName, setScenarioName] = useState("");
+  const [showNameInput, setShowNameInput] = useState(false);
 
   useEffect(() => {
     if (!open) return;

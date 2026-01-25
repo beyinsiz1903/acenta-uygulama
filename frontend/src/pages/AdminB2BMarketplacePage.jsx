@@ -11,6 +11,9 @@ import EmptyState from "../components/EmptyState";
 import { ErrorCard } from "../components/ErrorCard";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "../components/ui/tooltip";
 
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/ui/dialog";
+import { Label } from "../components/ui/label";
+
 function StatusBadge({ status }) {
   const s = (status || "").toLowerCase();
   if (s === "approved") {

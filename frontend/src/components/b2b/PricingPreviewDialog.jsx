@@ -41,6 +41,23 @@ function fmtInt(v) {
   return String(Math.trunc(n));
 }
 
+function safeNum(x) {
+  const n = Number(x);
+  return Number.isFinite(n) ? n : null;
+}
+
+function diffNights(checkin, checkout) {
+  try {
+    if (!checkin || !checkout) return null;
+    const a = new Date(`${checkin}T00:00:00Z`).getTime();
+    const b = new Date(`${checkout}T00:00:00Z`).getTime();
+    const d = Math.round((b - a) / (1000 * 60 * 60 * 24));
+    return d > 0 ? d : null;
+  } catch {
+    return null;
+  }
+}
+
 async function copyToClipboard(text) {
   try {
     if (navigator?.clipboard?.writeText) {

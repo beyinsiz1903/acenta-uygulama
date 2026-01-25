@@ -88,6 +88,23 @@ def audit_snapshot(entity_type: str, doc: dict | None) -> dict | None:
             "provider": storage.get("provider"),
             "has_path": bool(storage.get("path")),
         }
+    if et == "ops_task":
+        snap: dict[str, Any] = {}
+        snap.update(pick([
+            "task_type",
+            "title",
+            "status",
+            "priority",
+            "due_at",
+            "assignee_email",
+            "entity_type",
+            "entity_id",
+            "booking_id",
+            "updated_at",
+        ]))
+        return snap
+
+
         return snap
 
 

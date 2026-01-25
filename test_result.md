@@ -203,6 +203,7 @@ metadata:
 
 test_plan:
   current_focus:
+    - "Document Vault UI in AdminFinanceRefundsPage (Sprint 2.2)"
     - "Refund Workflow 2.1 Multi-Step State Transitions"
     - "Refund Workflow 2.1 Reject Lifecycle"
     - "Refund Workflow 2.1 4-Eyes Enforcement"

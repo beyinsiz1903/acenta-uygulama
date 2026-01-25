@@ -303,21 +303,6 @@ export default function AdminB2BMarketplacePage() {
                   type="button"
                   size="xs"
                   variant="outline"
-
-function PricingPreviewDialog({
-  open,
-  onOpenChange,
-  partnerId,
-  product,
-  requestState,
-  setRequestState,
-  loading,
-  setLoading,
-  error,
-  setError,
-  result,
-  setResult,
-}) {
   const handleChange = (field, value) => {
     setRequestState((prev) => ({ ...prev, [field]: value }));
   };

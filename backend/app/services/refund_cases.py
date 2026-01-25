@@ -555,8 +555,13 @@ class RefundCaseService:
         decided_by: str,
         reason: Optional[str] = None,
     ) -> dict:
+        """Reject a refund case without posting any ledger.
+
+        Allowed only while the case is still in an open / pending approval state.
+        After rejection, ops must explicitly close the case via close_case().
+        """
         case = await self._load_case(organization_id, case_id)
-        if case["status"] not in {"open", "pending_approval"}:
+        if case["status"] not in {"open", "pending_approval", "pending_approval_1", "pending_approval_2"}:
             raise AppError(
                 status_code=409,
                 code="invalid_case_state",
@@ -568,7 +573,7 @@ class RefundCaseService:
             {"_id": case["_id"], "organization_id": organization_id},
             {
                 "$set": {
-                    "status": "closed",
+                    "status": "rejected",
                     "decision": "rejected",
                     "decision_by_email": decided_by,
                     "decision_at": now,

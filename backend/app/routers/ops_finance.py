@@ -488,22 +488,160 @@ async def approve_refund_case(
     """Compat endpoint: map to step1/step2 based on current status.
 
     New callers should prefer approve-step1/approve-step2/mark-paid.
+    This wrapper reproduces the same audit + booking timeline events as the
+    explicit step1/step2 endpoints but marks them with meta.via="compat".
     """
     org_id = current_user["organization_id"]
     approved_amount = float(payload.get("approved_amount") or 0.0)
 
     svc = RefundCaseService(db)
 
-    # Delegates to new multi-step approve under the hood
-    result = await svc.approve(
+    # Load current case once for status + booking_id
+    existing = await svc.get_case(org_id, case_id)
+    if not existing:
+        raise AppError(404, "refund_case_not_found", "Refund case not found")
+
+    status = existing.get("status")
+    booking_id = existing.get("booking_id")
+
+    if status not in {"open", "pending_approval", "pending_approval_1", "pending_approval_2"}:
+        raise AppError(
+            status_code=409,
+            code="invalid_case_state",
+            message="Refund case is not open for approval",
+        )
+
+    actor = {
+        "actor_type": "user",
+        "actor_id": current_user.get("id") or current_user.get("email"),
+        "email": current_user.get("email"),
+        "roles": current_user.get("roles") or [],
+    }
+
+    result_step1 = None
+    # 1) If case is open or in first pending state, run step1 first
+    if status in {"open", "pending_approval", "pending_approval_1"}:
+        status_from = status
+        result_step1 = await svc.approve_step1(
+            organization_id=org_id,
+            case_id=case_id,
+            approved_amount=approved_amount,
+            actor_email=current_user["email"],
+            actor_id=current_user.get("id"),
+        )
+
+        status_to = result_step1.get("status")
+        # Audit for step1 (compat)
+        try:
+            await write_audit_log(
+                db,
+                organization_id=org_id,
+                actor=actor,
+                request=request,
+                action="refund_approve_step1",
+                target_type="refund_case",
+                target_id=case_id,
+                before=audit_snapshot("refund_case", existing),
+                after=audit_snapshot("refund_case", result_step1),
+                meta={
+                    "approved_amount": approved_amount,
+                    "status_from": status_from,
+                    "status_to": status_to,
+                    "case_id": case_id,
+                    "by_email": current_user.get("email"),
+                    "by_actor_id": current_user.get("id"),
+                    "via": "compat",
+                },
+            )
+
+            if booking_id:
+                await emit_event(
+                    db,
+                    organization_id=org_id,
+                    booking_id=booking_id,
+                    type="REFUND_APPROVED_STEP1",
+                    actor={
+                        "email": current_user.get("email"),
+                        "actor_id": current_user.get("id"),
+                        "roles": current_user.get("roles") or [],
+                    },
+                    meta={
+                        "case_id": case_id,
+                        "approved_amount": approved_amount,
+                        "status_from": status_from,
+                        "status_to": status_to,
+                        "by_email": current_user.get("email"),
+                        "by_actor_id": current_user.get("id"),
+                        "via": "compat",
+                    },
+                )
+        except Exception:
+            # compat audit/timeline is best-effort
+            pass
+
+        # Refresh existing snapshot for step2
+        existing = result_step1
+        status = result_step1.get("status")
+
+    # 2) Then run step2 (this will perform ledger + financials and set status=approved)
+    status_from_2 = status
+    result = await svc.approve_step2(
         organization_id=org_id,
         case_id=case_id,
-        approved_amount=approved_amount,
-        decided_by=current_user["email"],
-        payment_reference=payload.get("payment_reference"),
+        actor_email=current_user["email"],
+        actor_id=current_user.get("id"),
+        note=payload.get("note"),
     )
 
-    # No extra audit here: approve_step1/2 will already have written audit+events
+    try:
+        status_to_2 = result.get("status")
+        await write_audit_log(
+            db,
+            organization_id=org_id,
+            actor=actor,
+            request=request,
+            action="refund_approve_step2",
+            target_type="refund_case",
+            target_id=case_id,
+            before=audit_snapshot("refund_case", existing),
+            after=audit_snapshot("refund_case", result),
+            meta={
+                "note": payload.get("note"),
+                "status_from": status_from_2,
+                "status_to": status_to_2,
+                "approved_amount": (result.get("approved") or {}).get("amount"),
+                "case_id": case_id,
+                "by_email": current_user.get("email"),
+                "by_actor_id": current_user.get("id"),
+                "via": "compat",
+            },
+        )
+
+        if booking_id:
+            await emit_event(
+                db,
+                organization_id=org_id,
+                booking_id=booking_id,
+                type="REFUND_APPROVED_STEP2",
+                actor={
+                    "email": current_user.get("email"),
+                    "actor_id": current_user.get("id"),
+                    "roles": current_user.get("roles") or [],
+                },
+                meta={
+                    "case_id": case_id,
+                    "note": payload.get("note"),
+                    "status_from": status_from_2,
+                    "status_to": status_to_2,
+                    "approved_amount": (result.get("approved") or {}).get("amount"),
+                    "by_email": current_user.get("email"),
+                    "by_actor_id": current_user.get("id"),
+                    "via": "compat",
+                },
+            )
+    except Exception:
+        pass
+
     return result
 
 

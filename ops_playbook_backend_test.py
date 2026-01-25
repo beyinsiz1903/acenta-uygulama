@@ -497,7 +497,7 @@ def test_reject_lifecycle():
         
         r = requests.post(
             f"{BASE_URL}/api/ops/finance/refunds/{case_id}/approve-step1",
-            json={"approved_amount": 450.0},
+            json={"approved_amount": 50.0},
             headers=admin_headers
         )
         

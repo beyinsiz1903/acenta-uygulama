@@ -85,6 +85,13 @@ async def preview_pricing(
 
     # Validate partner
     print(f"DEBUG: Looking for partner_id={payload.partner_id} in org_id={org_id}")
+    print(f"DEBUG: db object: {db}")
+    print(f"DEBUG: db.partner_profiles: {db.partner_profiles}")
+    
+    # Try to count all partners first
+    total_partners = await db.partner_profiles.count_documents({})
+    print(f"DEBUG: Total partners in collection: {total_partners}")
+    
     partner = await db.partner_profiles.find_one({"_id": payload.partner_id, "organization_id": org_id})
     print(f"DEBUG: String lookup result: {partner}")
     if not partner:

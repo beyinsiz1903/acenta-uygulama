@@ -152,7 +152,25 @@ class RefundCaseService:
                 )
             raise
 
-        return await self.get_case(organization_id, str(case_id))
+        created = await self.get_case(organization_id, str(case_id))
+
+        # Fire-and-forget ops playbook hook
+        try:
+            from app.services.ops_playbook import OpsPlaybookEngine
+
+            engine = OpsPlaybookEngine(self.db)
+            await engine.on_refund_created(
+                organization_id,
+                case_id=str(case_id),
+                booking_id=booking_id,
+                actor_email=created_by,
+                actor_id=None,
+            )
+        except Exception:
+            # best-effort
+            pass
+
+        return created
 
     async def list_refunds(
         self,

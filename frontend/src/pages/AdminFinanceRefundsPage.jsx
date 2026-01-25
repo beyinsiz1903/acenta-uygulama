@@ -702,7 +702,8 @@ function RefundDocumentsSection({ caseData }) {
                   </Button>
                 </div>
               </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

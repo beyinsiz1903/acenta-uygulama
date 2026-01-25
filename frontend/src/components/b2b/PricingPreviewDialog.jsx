@@ -41,6 +41,32 @@ function fmtInt(v) {
   return String(Math.trunc(n));
 }
 
+async function copyToClipboard(text) {
+  try {
+    if (navigator?.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch (e) {
+    // ignore, fallback below
+  }
+
+  try {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    const ok = document.execCommand("copy");
+    document.body.removeChild(ta);
+    return !!ok;
+  } catch (e) {
+    return false;
+  }
+}
+
 function normalizeResult(data) {
   const cur = data?.currency ?? "EUR";
   const bd = data?.breakdown ?? null;
@@ -126,6 +152,7 @@ export default function PricingPreviewDialog({ open, onOpenChange, initialContex
   const [result, setResult] = useState(null);
   const [showRaw, setShowRaw] = useState(false);
   const [showDebug, setShowDebug] = useState(false);
+  const [copyMsg, setCopyMsg] = useState("");
 
   useEffect(() => {
     if (!open) return;

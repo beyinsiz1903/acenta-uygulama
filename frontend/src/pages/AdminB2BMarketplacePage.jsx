@@ -479,7 +479,6 @@ export default function AdminB2BMarketplacePage() {
                                   const productId = p.product_id ?? p._id ?? p.id;
                                   if (!productId) {
                                     // Ürün id yoksa buton pasif kalmalı; yine de defensive log bırakalım
-                                    // eslint-disable-next-line no-console
                                     console.warn("Fiyat Önizleme: product id bulunamadı", p);
                                     return;
                                   }

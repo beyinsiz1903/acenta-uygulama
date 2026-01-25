@@ -282,8 +282,38 @@ export default function PricingPreviewDialog({ open, onOpenChange, initialContex
         ) : (
           <div className="flex flex-col gap-4">
             {/* Context form */}
-            <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
-              <Field
+            <div className="flex flex-col gap-2">
+              {/* Occupancy presets */}
+              <div className="flex flex-wrap gap-2 text-[11px] text-muted-foreground">
+                <span>Hızlı occupancy:</span>
+                {OCC_PRESETS.map((p) => (
+                  <Button
+                    key={p.key}
+                    type="button"
+                    size="xs"
+                    variant={selectedPreset === p.key ? "secondary" : "outline"}
+                    className="h-6 px-2 text-[11px]"
+                    onClick={() => {
+                      setCtx((s) =>
+                        s
+                          ? {
+                              ...s,
+                              adults: p.adults,
+                              children: p.children,
+                              rooms: p.rooms,
+                            }
+                          : s,
+                      );
+                      setSelectedPreset(p.key);
+                    }}
+                  >
+                    {p.key}
+                  </Button>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
+                <Field
                 label="Check-in"
                 type="date"
                 value={ctx.check_in}

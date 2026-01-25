@@ -258,21 +258,6 @@ export default function AdminB2BMarketplacePage() {
 
   const currentPartnerLabel = selectedPartnerName
     ? `${selectedPartnerName} — Ürün Yetkilendirme`
-      <PricingPreviewDialog
-        open={pricingOpen}
-        onOpenChange={setPricingOpen}
-        partnerId={selectedPartnerId}
-        product={pricingProduct}
-        requestState={pricingRequest}
-        setRequestState={setPricingRequest}
-        loading={pricingLoading}
-        error={pricingError}
-        result={pricingResult}
-        setResult={setPricingResult}
-        setLoading={setPricingLoading}
-        setError={setPricingError}
-      />
-
     : "B2B Marketplace";
 
   return (

@@ -207,6 +207,7 @@ export default function PricingPreviewDialog({ open, onOpenChange, initialContex
   const [showRaw, setShowRaw] = useState(false);
   const [showDebug, setShowDebug] = useState(false);
   const [copyMsg, setCopyMsg] = useState("");
+  const [selectedPreset, setSelectedPreset] = useState("2+0");
 
   useEffect(() => {
     if (!open) return;

@@ -686,22 +686,22 @@ function RefundDocumentsSection({ caseData }) {
                     Önizle
                   </Button>
                 )}
+                </div>
+                <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                  <span>{doc.created_by_email}</span>
+                  <span>
+                    {doc.created_at ? new Date(doc.created_at).toLocaleString() : ""}
+                  </span>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-6 w-6 text-destructive"
+                    onClick={() => onDelete(doc)}
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </div>
               </div>
-              <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-                <span>{doc.created_by_email}</span>
-                <span>
-                  {doc.created_at ? new Date(doc.created_at).toLocaleString() : ""}
-                </span>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="h-6 w-6 text-destructive"
-                  onClick={() => onDelete(doc)}
-                >
-                  <Trash2 className="h-3 w-3" />
-                </Button>
-              </div>
-            </div>
           ))}
         </div>
       )}

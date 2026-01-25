@@ -69,6 +69,7 @@ from app.routers.admin_partners import router as admin_partners_router
 from app.routers.admin_b2b_discounts import router as admin_b2b_discounts_router
 from app.routers.admin_b2b_visibility import router as admin_b2b_visibility_router
 from app.routers.admin_b2b_marketplace import router as admin_b2b_marketplace_router
+from app.routers.admin_b2b_pricing import router as admin_b2b_pricing_router
 from app.routers.admin_integrations import router as admin_integrations_router
 from app.routers.admin_jobs import router as admin_jobs_router
 from app.routers.admin_api_keys import router as admin_api_keys_router

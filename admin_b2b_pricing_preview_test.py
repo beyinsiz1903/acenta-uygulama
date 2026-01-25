@@ -65,7 +65,10 @@ async def setup_test_data() -> Dict[str, Any]:
     """Create test product and partner if they don't exist"""
     mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
     client = AsyncIOMotorClient(mongo_url)
-    db = client.acenta_db
+    
+    # Use the same database name as the API
+    db_name = os.environ.get("DB_NAME", "test_database")
+    db = client[db_name]
     
     # Use admin's organization
     org_id = "org_ops_close_idem"

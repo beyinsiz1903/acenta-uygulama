@@ -684,12 +684,7 @@ async def approve_refund_step1(
         await write_audit_log(
             db,
             organization_id=org_id,
-            actor={
-                "actor_type": "user",
-                "actor_id": current_user.get("id") or current_user.get("email"),
-                "email": current_user.get("email"),
-                "roles": current_user.get("roles") or [],
-            },
+            actor=actor,
             request=request,
             action="refund_approve_step1",
             target_type="refund_case",

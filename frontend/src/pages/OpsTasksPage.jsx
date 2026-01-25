@@ -105,6 +105,17 @@ export default function OpsTasksPage() {
   };
 
   const rows = useMemo(() => tasks || [], [tasks]);
+  const [newEntityId, setNewEntityId] = useState("");
+  const [newTitle, setNewTitle] = useState("");
+  const [newDescription, setNewDescription] = useState("");
+  const [newPriority, setNewPriority] = useState("normal");
+  const [newDueAt, setNewDueAt] = useState("");
+  const [newSlaHours, setNewSlaHours] = useState("");
+  const [newAssigneeEmail, setNewAssigneeEmail] = useState("");
+  const [newTags, setNewTags] = useState("");
+  const [creating, setCreating] = useState(false);
+
+
 
   return (
     <div className="p-4 space-y-4">

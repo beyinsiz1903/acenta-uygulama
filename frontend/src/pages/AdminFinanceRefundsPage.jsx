@@ -421,6 +421,74 @@ function MiniRefundHistory({ bookingId }) {
                   </span>
                 );
               })()}
+
+function RefundMarkPaidDialog({ open, onOpenChange, caseData, onMarked }) {
+  const [paymentRef, setPaymentRef] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (open) setPaymentRef("");
+  }, [open]);
+
+  const onSubmit = async () => {
+    if (!paymentRef.trim()) {
+      toast({
+        title: "Ödeme referansı gerekli",
+        description: "Lütfen bir ödeme referansı girin.",
+        variant: "destructive",
+      });
+      return;
+    }
+    try {
+      setSubmitting(true);
+      await api.post(`/ops/finance/refunds/${caseData.case_id}/mark-paid`, {
+        payment_reference: paymentRef.trim(),
+      });
+      toast({ title: "Refund ödendi olarak işaretlendi" });
+      onMarked();
+      onOpenChange(false);
+    } catch (e) {
+      toast({ title: "İşlem başarısız", description: apiErrorMessage(e), variant: "destructive" });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Ödendi olarak işaretle</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3 mt-2 text-sm">
+          <div className="space-y-1">
+            <div className="text-xs text-muted-foreground">Ödeme referansı</div>
+            <Input
+              type="text"
+              value={paymentRef}
+              onChange={(e) => setPaymentRef(e.target.value)}
+              placeholder="Ödeme dekont/ref no"
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={submitting}
+          >
+            İptal
+          </Button>
+          <Button onClick={onSubmit} disabled={submitting}>
+            {submitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+            Ödendi
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
             </div>
           </div>
           <button

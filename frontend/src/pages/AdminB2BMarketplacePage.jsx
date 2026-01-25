@@ -229,6 +229,33 @@ export default function AdminB2BMarketplacePage() {
     }
   }
 
+  async function handlePricingRequest() {
+    if (!pricingProduct || !selectedPartnerId) return;
+    
+    setPricingLoading(true);
+    setPricingError("");
+    setPricingResult(null);
+    
+    try {
+      const response = await api.post("/admin/b2b/pricing", {
+        partner_id: selectedPartnerId,
+        product_id: pricingProduct.product_id,
+        checkin: pricingRequest.checkin,
+        checkout: pricingRequest.checkout,
+        adults: pricingRequest.adults,
+        children: pricingRequest.children,
+        rooms: pricingRequest.rooms,
+        currency: pricingRequest.currency,
+      });
+      
+      setPricingResult(response.data);
+    } catch (e) {
+      setPricingError(apiErrorMessage(e));
+    } finally {
+      setPricingLoading(false);
+    }
+  }
+
   const currentPartnerLabel = selectedPartnerName
     ? `${selectedPartnerName} — Ürün Yetkilendirme`
     : "B2B Marketplace";

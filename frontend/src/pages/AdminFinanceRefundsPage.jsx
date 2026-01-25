@@ -631,24 +631,53 @@ function RefundDetailPanel({
               variant="outline"
               onClick={onRefresh}
             >
-              Refresh
+              Yenile
             </Button>
           </div>
-          <div className="flex items-center gap-2 mt-2">
+          <div className="flex flex-wrap items-center gap-2 mt-2 text-xs">
+            {/* Step 1 approve */}
             <Button
               size="sm"
-              onClick={onOpenApprove}
-              disabled={!isOpen}
+              onClick={onOpenApproveStep1}
+              disabled={!isOpen || isClosed}
             >
-              Approve
+              1. Onay
             </Button>
+            {/* Step 2 approve */}
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={onOpenApproveStep2}
+              disabled={!isPendingStep2 || isClosed}
+            >
+              2. Onay
+            </Button>
+            {/* Mark paid */}
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={onOpenMarkPaid}
+              disabled={!isApproved || isClosed}
+            >
+              Ödendi
+            </Button>
+            {/* Reject */}
             <Button
               size="sm"
               variant="outline"
               onClick={onOpenReject}
-              disabled={!isOpen}
+              disabled={isClosed}
             >
-              Reject
+              Reddet
+            </Button>
+            {/* Close */}
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={onCloseCase}
+              disabled={!(isPaid || isRejected) || isClosed}
+            >
+              Kapat
             </Button>
           </div>
         </div>

@@ -878,13 +878,28 @@ function PricingPreviewDialog({
                                 variant="secondary"
                                 className="h-7 text-[11px] px-3"
                                 onClick={() => {
-                                  setPricingProduct(p);
-                                  setPricingResult(null);
-                                  setPricingError("");
-                                  setPricingOpen(true);
+                                  const productId = p.product_id ?? p._id ?? p.id;
+                                  if (!productId) {
+                                    // Ürün id yoksa buton pasif kalmalı; yine de defensive log bırakalım
+                                    // eslint-disable-next-line no-console
+                                    console.warn("Fiyat Önizleme: product id bulunamadı", p);
+                                    return;
+                                  }
+                                  setPreviewContext({
+                                    product_id: productId,
+                                    partner_id: selectedPartnerId || null,
+                                    check_in: new Date().toISOString().slice(0, 10),
+                                    nights: 1,
+                                    rooms: 1,
+                                    adults: 2,
+                                    children: 0,
+                                    currency: "EUR",
+                                  });
+                                  setPreviewOpen(true);
                                 }}
+                                disabled={! (p.product_id ?? p._id ?? p.id)}
                               >
-                                Fiyat Hesapla
+                                Fiyat Önizleme
                               </Button>
                             </div>
                           </TableCell>

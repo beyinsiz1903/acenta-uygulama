@@ -485,39 +485,26 @@ async def approve_refund_case(
     current_user=Depends(require_roles(["admin", "ops", "super_admin"])),
     db=Depends(get_db),
 ):
-    org_id = current_user["organization_id"]
-    from app.services.refund_cases import RefundCaseService
+    """Compat endpoint: map to step1/step2 based on current status.
 
-    approved_amount = float(payload.get("approved_amount"))
-    payment_reference = payload.get("payment_reference")
+    New callers should prefer approve-step1/approve-step2/mark-paid.
+    """
+    org_id = current_user["organization_id"]
+    approved_amount = float(payload.get("approved_amount") or 0.0)
 
     svc = RefundCaseService(db)
 
-    # Load existing case for before snapshot
-    existing = await svc.get_case(org_id, case_id)
-
+    # Delegates to new multi-step approve under the hood
     result = await svc.approve(
         organization_id=org_id,
         case_id=case_id,
         approved_amount=approved_amount,
         decided_by=current_user["email"],
-        payment_reference=payment_reference,
+        payment_reference=payload.get("payment_reference"),
     )
 
-    # Reload case for after snapshot
-    saved = await svc.get_case(org_id, case_id)
-
-    try:
-        await write_audit_log(
-            db,
-            organization_id=org_id,
-            actor={
-                "actor_type": "user",
-                "actor_id": current_user.get("id") or current_user.get("email"),
-                "email": current_user.get("email"),
-                "roles": current_user.get("roles") or [],
-            },
-            request=request,
+    # No extra audit here: approve_step1/2 will already have written audit+events
+    return result
 
 
 @router.post("/refunds/{case_id}/approve-step1")

@@ -409,7 +409,6 @@ export default function AdminB2BMarketplacePage() {
                 <span>{error}</span>
               </div>
             )}
-          </form>
 
           <div className="space-y-2">
             {!result && !error && (
@@ -527,7 +526,6 @@ export default function AdminB2BMarketplacePage() {
                 <span>{error}</span>
               </div>
             )}
-          </form>
 
           <div className="space-y-2">
             {!result && !error && (

@@ -499,11 +499,21 @@ function RefundDocumentsSection({ caseData }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [caseData?.case_id]);
 
+  const TAG_OPTIONS = ["dekont", "iptal_yazisi", "musteri_yazismasi", "kimlik", "diger"];
+
   const onUpload = async () => {
     if (!file) {
       toast({
         title: "Dosya seçilmedi",
         description: "Lütfen yüklenecek bir dosya seçin.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!TAG_OPTIONS.includes(tag)) {
+      toast({
+        title: "Geçersiz etiket",
+        description: "Lütfen geçerli bir etiket seçin.",
         variant: "destructive",
       });
       return;

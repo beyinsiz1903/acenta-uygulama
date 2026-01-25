@@ -1092,7 +1092,7 @@ async def reject_refund_case(
     existing = await svc.get_case(org_id, case_id)
     status_from = existing.get("status") if existing else None
 
-    result = await svc.reject(
+    await svc.reject(
         organization_id=org_id,
         case_id=case_id,
         decided_by=current_user["email"],

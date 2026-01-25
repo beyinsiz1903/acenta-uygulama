@@ -194,9 +194,10 @@ def test_reject_audit_timeline():
         mongo_client = get_mongo_client()
         db = mongo_client.get_default_database()
         
+        # Look for audit log by action and case_id in meta (since target_id might be None)
         audit_log = db.audit_logs.find_one({
             "action": "refund_reject",
-            "target_id": case_id
+            "meta.case_id": case_id
         })
         
         if audit_log:
@@ -214,7 +215,12 @@ def test_reject_audit_timeline():
             
             print(f"   ✅ Audit log meta fields verified")
         else:
-            print(f"   ❌ No audit log found with action=refund_reject")
+            print(f"   ❌ No audit log found with action=refund_reject and case_id={case_id}")
+            # Check if any audit logs exist at all
+            all_audits = list(db.audit_logs.find({"action": "refund_reject"}).sort("created_at", -1).limit(3))
+            print(f"   📋 Recent refund_reject audit logs: {len(all_audits)}")
+            for audit in all_audits:
+                print(f"     - Meta case_id: {audit.get('meta', {}).get('case_id')}, Target ID: {audit.get('target_id')}")
             assert False, "Audit log not found"
         
         # 4. Check booking events

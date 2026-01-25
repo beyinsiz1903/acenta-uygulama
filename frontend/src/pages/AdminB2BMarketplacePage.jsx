@@ -355,7 +355,6 @@ export default function AdminB2BMarketplacePage() {
                 />
               </div>
               <div className="space-y-1">
-              <div className="space-y-1">
                 <Label className="text-[11px] text-muted-foreground">Çocuk</Label>
                 <Input
                   type="number"

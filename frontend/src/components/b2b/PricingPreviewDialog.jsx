@@ -288,6 +288,32 @@ export default function PricingPreviewDialog({ open, onOpenChange, initialContex
               <Button
                 variant="outline"
                 size="sm"
+                onClick={async () => {
+                  const payload = cleanPayload(ctx);
+                  const ok = await copyToClipboard(JSON.stringify(payload, null, 2));
+                  setCopyMsg(ok ? "Payload kopyalandı" : "Kopyalama başarısız");
+                  window.setTimeout(() => setCopyMsg(""), 2000);
+                }}
+                disabled={!ctx?.product_id}
+              >
+                Payload'ı Kopyala
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={async () => {
+                  if (!normalized?.raw) return;
+                  const ok = await copyToClipboard(JSON.stringify(normalized.raw, null, 2));
+                  setCopyMsg(ok ? "Sonuç kopyalandı" : "Kopyalama başarısız");
+                  window.setTimeout(() => setCopyMsg(""), 2000);
+                }}
+                disabled={!normalized?.raw}
+              >
+                Sonucu Kopyala
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => setShowDebug((s) => !s)}
                 disabled={!normalized?.debug}
               >
@@ -302,6 +328,9 @@ export default function PricingPreviewDialog({ open, onOpenChange, initialContex
                 {showRaw ? "JSON Gizle" : "JSON Göster"}
               </Button>
               {err ? <div className="text-xs text-red-600">{err}</div> : null}
+              {copyMsg ? (
+                <div className="text-xs text-muted-foreground">{copyMsg}</div>
+              ) : null}
             </div>
 
             {/* Result */}

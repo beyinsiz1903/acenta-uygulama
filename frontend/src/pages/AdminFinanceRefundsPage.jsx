@@ -586,10 +586,11 @@ function RefundDocumentsSection({ caseData }) {
             value={tag}
             onChange={(e) => setTag(e.target.value)}
           >
-            <option value="refund_proof">Refund kanıtı</option>
-            <option value="invoice">Fatura</option>
-            <option value="correspondence">Yazışma</option>
-            <option value="other">Diğer</option>
+            <option value="dekont">Dekont</option>
+            <option value="iptal_yazisi">İptal yazısı</option>
+            <option value="musteri_yazismasi">Müşteri yazışması</option>
+            <option value="kimlik">Kimlik</option>
+            <option value="diger">Diğer</option>
           </select>
         </div>
         <div className="flex flex-col gap-1 min-w-[160px] flex-1">

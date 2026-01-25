@@ -753,6 +753,9 @@ function RefundDetailPanel({
             </div>
           </div>
         )}
+        {/* Documents section */}
+        <RefundDocumentsSection caseData={caseData} />
+
 
         {/* Last 5 closed refunds for this booking */}
         <div className="rounded-lg border bg-muted/10 p-3 space-y-2">

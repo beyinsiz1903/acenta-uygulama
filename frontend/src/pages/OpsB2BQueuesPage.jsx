@@ -58,6 +58,10 @@ function eventLabel(ev) {
       return "Refund reddedildi";
     case "REFUND_CLOSED":
       return "Refund kapatıldı";
+    case "DOCUMENT_UPLOADED":
+      return "Doküman yüklendi";
+    case "DOCUMENT_DELETED":
+      return "Doküman silindi";
     default:
       return t || "EVENT";
   }

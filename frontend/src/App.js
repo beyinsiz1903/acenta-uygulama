@@ -276,6 +276,7 @@ function App() {
           <Route path="crm/customers/:customerId" element={<CrmCustomerDetailPage />} />
           <Route path="ops/guest-cases" element={<OpsGuestCasesPage />} />
           <Route path="ops/bookings/:bookingId" element={<OpsBookingDetailPage />} />
+          <Route path="ops/tasks" element={<OpsTasksPage />} />
         </Route>
 
         {/* B2B Portal Routes (New, outside /app shell, dedicated layout) */}

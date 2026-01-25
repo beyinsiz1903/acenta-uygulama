@@ -324,7 +324,10 @@ export default function PricingPreviewDialog({ open, onOpenChange, initialContex
                 type="number"
                 min={1}
                 value={ctx.nights}
-                onChange={(v) => setCtx((s) => ({ ...s, nights: v }))}
+                onChange={(v) => {
+                  setCtx((s) => ({ ...s, nights: v }));
+                  setSelectedPreset(null);
+                }}
               />
               <Field
                 label="Oda"

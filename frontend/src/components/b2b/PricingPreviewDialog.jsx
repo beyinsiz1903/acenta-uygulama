@@ -633,6 +633,7 @@ export default function PricingPreviewDialog({ open, onOpenChange, initialContex
               </div>
             )}
           </div>
+          </div>
         )}
       </DialogContent>
     </Dialog>

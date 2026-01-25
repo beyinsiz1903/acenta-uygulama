@@ -933,8 +933,19 @@ export default function AdminFinanceRefundsPage() {
             onRefresh={() => {
               if (selectedCaseId) loadDetail(selectedCaseId);
             }}
-            onOpenApprove={() => setApproveOpen(true)}
+            onOpenApproveStep1={() => setApproveStep1Open(true)}
+            onOpenApproveStep2={() => setApproveStep2Open(true)}
             onOpenReject={() => setRejectOpen(true)}
+            onOpenMarkPaid={() => setMarkPaidOpen(true)}
+            onCloseCase={async () => {
+              try {
+                await api.post(`/ops/finance/refunds/${selectedCaseId}/close`);
+                toast({ title: "Case kapatıldı" });
+                onAfterDecision();
+              } catch (e) {
+                toast({ title: "Case kapatma başarısız", description: apiErrorMessage(e), variant: "destructive" });
+              }
+            }}
           />
         </div>
       </div>

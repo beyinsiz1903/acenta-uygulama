@@ -18,7 +18,7 @@ import httpx
 
 
 # Test configuration
-BASE_URL = "https://hotel-marketplace-1.preview.emergentagent.com"
+BASE_URL = "https://bayi-platform.preview.emergentagent.com"
 ADMIN_EMAIL = "admin@acenta.test"
 ADMIN_PASSWORD = "admin123"
 

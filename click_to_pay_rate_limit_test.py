@@ -22,7 +22,7 @@ import httpx
 from bson import ObjectId
 
 # Test configuration
-BACKEND_URL = "https://hotel-marketplace-1.preview.emergentagent.com/api"
+BACKEND_URL = "https://bayi-platform.preview.emergentagent.com/api"
 ADMIN_EMAIL = "admin@acenta.test"
 ADMIN_PASSWORD = "admin123"
 

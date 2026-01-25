@@ -82,15 +82,21 @@ async def preview_pricing(
     nights = (payload.checkout - payload.checkin).days
 
     # Validate partner
+    print(f"DEBUG: Looking for partner_id={payload.partner_id} in org_id={org_id}")
     partner = await db.partner_profiles.find_one({"_id": payload.partner_id, "organization_id": org_id})
+    print(f"DEBUG: String lookup result: {partner}")
     if not partner:
         try:
             oid = ObjectId(payload.partner_id)
-        except Exception:
+            print(f"DEBUG: Converted to ObjectId: {oid}")
+        except Exception as e:
+            print(f"DEBUG: ObjectId conversion failed: {e}")
             oid = None
         if oid is not None:
             partner = await db.partner_profiles.find_one({"_id": oid, "organization_id": org_id})
+            print(f"DEBUG: ObjectId lookup result: {partner}")
     if not partner:
+        print(f"DEBUG: Partner not found, raising error")
         raise AppError(404, "partner_not_found", "Partner not found")
 
     # Validate product

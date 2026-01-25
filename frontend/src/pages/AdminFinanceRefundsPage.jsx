@@ -618,6 +618,9 @@ function RefundDetailPanel({
               disabled={!isOpen || isClosed}
             >
               1. Onay
+  const [approveStep2Open, setApproveStep2Open] = useState(false);
+  const [markPaidOpen, setMarkPaidOpen] = useState(false);
+
             </Button>
             {/* Step 2 approve */}
             <Button

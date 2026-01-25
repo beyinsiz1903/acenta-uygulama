@@ -47,6 +47,38 @@ function StatusBadge({ status }) {
   }
 }
 
+function statusBadge(status) {
+  if (!status) return <Badge variant="outline">-</Badge>;
+
+  switch (status) {
+    case "open":
+      return <Badge variant="outline" className="text-[10px] px-1 py-0">Açık</Badge>;
+    case "in_progress":
+      return <Badge variant="default" className="text-[10px] px-1 py-0">Devam ediyor</Badge>;
+    case "done":
+      return <Badge variant="secondary" className="text-[10px] px-1 py-0">Tamamlandı</Badge>;
+    case "cancelled":
+      return <Badge variant="destructive" className="text-[10px] px-1 py-0">İptal</Badge>;
+    default:
+      return <Badge variant="outline" className="text-[10px] px-1 py-0">{status}</Badge>;
+  }
+}
+
+function priorityBadge(priority) {
+  if (!priority) return null;
+
+  switch (priority) {
+    case "high":
+      return <Badge variant="destructive" className="text-[10px] px-1 py-0">Yüksek</Badge>;
+    case "medium":
+      return <Badge variant="default" className="text-[10px] px-1 py-0">Orta</Badge>;
+    case "low":
+      return <Badge variant="outline" className="text-[10px] px-1 py-0">Düşük</Badge>;
+    default:
+      return <Badge variant="outline" className="text-[10px] px-1 py-0">{priority}</Badge>;
+  }
+}
+
 function RefundQueueList({
   items,
   statusFilter,

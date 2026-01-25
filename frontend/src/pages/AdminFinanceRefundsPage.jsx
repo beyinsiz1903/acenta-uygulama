@@ -20,13 +20,31 @@ import {
 import { Loader2, AlertCircle, Clipboard } from "lucide-react";
 
 function StatusBadge({ status }) {
-  if (status === "closed") {
-    return <Badge variant="secondary">Kapalı</Badge>;
+  if (!status) return <Badge variant="outline">-</Badge>;
+
+  switch (status) {
+    case "open":
+      return <Badge variant="outline">Açık</Badge>;
+    case "pending_approval_1":
+    case "pending_approval":
+      return <Badge variant="outline">1. onay bekliyor</Badge>;
+    case "pending_approval_2":
+      return <Badge variant="outline">2. onay bekliyor</Badge>;
+    case "approved":
+      return <Badge variant="secondary">Onaylandı</Badge>;
+    case "paid":
+      return <Badge variant="secondary">Ödendi</Badge>;
+    case "rejected":
+      return (
+        <Badge variant="destructive" className="gap-1">
+          Reddedildi
+        </Badge>
+      );
+    case "closed":
+      return <Badge variant="secondary">Kapalı</Badge>;
+    default:
+      return <Badge variant="outline">{status}</Badge>;
   }
-  if (status === "pending_approval") {
-    return <Badge variant="outline">Beklemede</Badge>;
-  }
-  return <Badge variant="default">Açık</Badge>;
 }
 
 function RefundQueueList({

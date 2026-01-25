@@ -118,6 +118,8 @@ class OpsTaskService:
         items: list[dict] = []
         for d in docs:
             d["task_id"] = str(d.pop("_id"))
+            # Remove sensitive fields from response
+            d.pop("organization_id", None)
             items.append(d)
         return items
 

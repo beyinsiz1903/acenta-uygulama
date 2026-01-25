@@ -712,10 +712,12 @@ async def approve_refund_step1(
                     "roles": current_user.get("roles") or [],
                 },
                 meta={
-                    "refund_case_id": case_id,
+                    "case_id": case_id,
                     "approved_amount": approved_amount,
                     "status_from": status_from,
                     "status_to": status_to,
+                    "by_email": current_user.get("email"),
+                    "by_actor_id": current_user.get("id"),
                 },
             )
     except Exception:
@@ -786,11 +788,13 @@ async def approve_refund_step2(
                     "roles": current_user.get("roles") or [],
                 },
                 meta={
-                    "refund_case_id": case_id,
+                    "case_id": case_id,
                     "note": note,
                     "status_from": status_from,
                     "status_to": status_to,
                     "approved_amount": (result.get("approved") or {}).get("amount"),
+                    "by_email": current_user.get("email"),
+                    "by_actor_id": current_user.get("id"),
                 },
             )
     except Exception:

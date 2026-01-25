@@ -164,6 +164,27 @@ export default function OpsTasksPage() {
             <Loader2 className="h-3 w-3 mr-1" /> Yenile
           </Button>
         </CardContent>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm">Yeni Görev</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2 text-xs">
+          <NewTaskForm onCreated={load} />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm flex items-center gap-2">
+            Görevler
+            {loading && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2 text-xs">
+
       </Card>
 
       <Card>

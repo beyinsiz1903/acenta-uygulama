@@ -452,14 +452,25 @@ function MiniRefundHistory({ bookingId }) {
   );
 }
 
+function isPdfDoc(doc) {
+  const ct = (doc?.content_type || "").toLowerCase();
+  const fn = (doc?.filename || "").toLowerCase();
+  return ct === "application/pdf" || fn.endsWith(".pdf");
+}
+
 function RefundDocumentsSection({ caseData }) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [uploading, setUploading] = useState(false);
   const [file, setFile] = useState(null);
-  const [tag, setTag] = useState("refund_proof");
+  const [tag, setTag] = useState("dekont");
   const [note, setNote] = useState("");
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState("");
+  const [previewTitle, setPreviewTitle] = useState("");
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewError, setPreviewError] = useState("");
 
   const hasCase = !!caseData?.case_id;
 

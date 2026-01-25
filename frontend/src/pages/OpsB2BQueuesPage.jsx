@@ -48,6 +48,16 @@ function eventLabel(ev) {
       return `Case kararı: ${m.decision || "-"}`;
     case "BOOKING_STATUS_CHANGED":
       return `Durum değişti: ${m.status_from || "-"} → ${m.status_to || "-"}`;
+    case "REFUND_APPROVED_STEP1":
+      return "Refund 1. onay verildi";
+    case "REFUND_APPROVED_STEP2":
+      return "Refund 2. onay verildi";
+    case "REFUND_MARKED_PAID":
+      return "Refund ödendi";
+    case "REFUND_REJECTED":
+      return "Refund reddedildi";
+    case "REFUND_CLOSED":
+      return "Refund kapatıldı";
     default:
       return t || "EVENT";
   }

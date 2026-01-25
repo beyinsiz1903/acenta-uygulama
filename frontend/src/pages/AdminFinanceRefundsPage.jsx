@@ -310,25 +310,6 @@ function RefundApproveStep2Dialog({ open, onOpenChange, caseData, onApproved }) 
   );
 }
 
-        </div>
-        <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={submitting}
-          >
-            İptal
-          </Button>
-          <Button onClick={onSubmit} disabled={submitting}>
-            {submitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-            Onayla
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
 function MiniRefundHistory({ bookingId }) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);

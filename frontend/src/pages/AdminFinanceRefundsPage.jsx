@@ -1064,6 +1064,9 @@ function RefundDetailPanel({
         <RefundDocumentsSection caseData={caseData} />
 
 
+        {/* Tasks for this refund */}
+        <RefundTasksSection caseData={caseData} />
+
         {/* Last 5 closed refunds for this booking */}
         <div className="rounded-lg border bg-muted/10 p-3 space-y-2">
           <div className="text-xs font-semibold text-muted-foreground">

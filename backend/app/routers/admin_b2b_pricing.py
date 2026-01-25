@@ -75,8 +75,6 @@ async def preview_pricing(
     db=Depends(get_db),
 ):
     org_id = current_user["organization_id"]
-    print(f"DEBUG: current_user = {current_user}")
-    print(f"DEBUG: org_id = {org_id}")
 
     if payload.checkout <= payload.checkin:
         raise AppError(400, "invalid_dates", "Checkout must be after checkin")

@@ -599,7 +599,13 @@ function RefundDetailPanel({
     );
   }
 
-  const isOpen = caseData.status === "open" || caseData.status === "pending_approval";
+  const status = caseData.status;
+  const isOpen = status === "open" || status === "pending_approval" || status === "pending_approval_1";
+  const isPendingStep2 = status === "pending_approval_2";
+  const isApproved = status === "approved";
+  const isPaid = status === "paid";
+  const isRejected = status === "rejected";
+  const isClosed = status === "closed";
   const computed = caseData.computed || {};
   const requested = caseData.requested || {};
 

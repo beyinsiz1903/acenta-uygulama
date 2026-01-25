@@ -334,21 +334,30 @@ export default function PricingPreviewDialog({ open, onOpenChange, initialContex
                 type="number"
                 min={1}
                 value={ctx.rooms}
-                onChange={(v) => setCtx((s) => ({ ...s, rooms: v }))}
+                onChange={(v) => {
+                  setCtx((s) => ({ ...s, rooms: v }));
+                  setSelectedPreset(null);
+                }}
               />
               <Field
                 label="Yetişkin"
                 type="number"
                 min={1}
                 value={ctx.adults}
-                onChange={(v) => setCtx((s) => ({ ...s, adults: v }))}
+                onChange={(v) => {
+                  setCtx((s) => ({ ...s, adults: v }));
+                  setSelectedPreset(null);
+                }}
               />
               <Field
                 label="Çocuk"
                 type="number"
                 min={0}
                 value={ctx.children}
-                onChange={(v) => setCtx((s) => ({ ...s, children: v }))}
+                onChange={(v) => {
+                  setCtx((s) => ({ ...s, children: v }));
+                  setSelectedPreset(null);
+                }}
               />
               <Field
                 label="Para birimi"

@@ -1709,7 +1709,7 @@ async def delete_document(
         "roles": current_user.get("roles") or [],
     }
 
-    # Audit + timeline (best-effort)
+    # Audit (best-effort)
     try:
         await write_audit_log(
             db,
@@ -1738,14 +1738,22 @@ async def delete_document(
                 "tag": tag,
             },
         )
+    except Exception:
+        logger.exception(
+            "audit_write_failed action=document_delete org=%s case=%s doc=%s",
+            org_id,
+            entity_id,
+            document_id,
+        )
 
-        # Emit timeline event only once (when transitioning to deleted)
-        if not already_deleted and entity_type == "refund_case" and entity_id:
-            # Load refund case to find booking
-            svc = RefundCaseService(db)
-            case = await svc.get_case(org_id, entity_id)
-            booking_id = case.get("booking_id") if case else None
-            if booking_id:
+    # Emit timeline event only once (when transitioning to deleted)
+    if not already_deleted and entity_type == "refund_case" and entity_id:
+        # Load refund case to find booking
+        svc = RefundCaseService(db)
+        case = await svc.get_case(org_id, entity_id)
+        booking_id = case.get("booking_id") if case else None
+        if booking_id:
+            try:
                 await emit_event(
                     db,
                     organization_id=org_id,
@@ -1767,8 +1775,14 @@ async def delete_document(
                         "by_actor_id": current_user.get("id"),
                     },
                 )
-    except Exception as e:
-        logger.warning("document_delete_audit_failed doc_id=%s err=%s", document_id, str(e))
+            except Exception:
+                logger.exception(
+                    "event_emit_failed type=DOCUMENT_DELETED org=%s booking=%s case=%s doc=%s",
+                    org_id,
+                    booking_id,
+                    entity_id,
+                    document_id,
+                )
 
     return {"ok": True}
 

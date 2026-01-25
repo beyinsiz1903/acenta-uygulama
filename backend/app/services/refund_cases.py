@@ -377,7 +377,7 @@ class RefundCaseService:
             raise AppError(
                 status_code=409,
                 code="four_eyes_violation",
-                message="Second approval must be performed by a different user",
+                message="İkinci onay farklı bir kullanıcı tarafından verilmelidir.",
             )
 
         computed = case.get("computed") or {}
@@ -530,7 +530,7 @@ class RefundCaseService:
             raise AppError(
                 status_code=409,
                 code="invalid_case_state",
-                message="Only paid or rejected cases can be closed",
+                message="Bu refund case bu aksiyon için uygun durumda değil.",
             )
 
         now = now_utc()

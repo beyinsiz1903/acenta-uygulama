@@ -79,6 +79,10 @@ async def create_task(
     if due_at is not None:
         # accept ISO string; let Mongo driver handle or parse if needed later
         pass
+    elif sla_hours is not None:
+        # Calculate due_at from sla_hours
+        from datetime import timedelta
+        due_at = now_utc() + timedelta(hours=sla_hours)
 
     assignee_email = payload.get("assignee_email")
     assignee_actor_id = None

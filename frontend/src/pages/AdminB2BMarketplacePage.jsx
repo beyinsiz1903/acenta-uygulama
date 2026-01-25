@@ -308,20 +308,8 @@ export default function AdminB2BMarketplacePage() {
                 >
                   {partnersLoading && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}Yenile
                 </Button>
-      <PricingPreviewDialog
-        open={pricingOpen}
-        onOpenChange={setPricingOpen}
-        partnerId={selectedPartnerId}
-        product={pricingProduct}
-        requestState={pricingRequest}
-        setRequestState={setPricingRequest}
-        loading={pricingLoading}
-        error={pricingError}
-        result={pricingResult}
-        setResult={setPricingResult}
-        setLoading={setPricingLoading}
-        setError={setPricingError}
-      />
+              </div>
+              <div className="mt-2 max-h-[420px] overflow-y-auto border rounded-xl divide-y">
 
   };
 

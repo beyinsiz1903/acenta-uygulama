@@ -640,44 +640,6 @@ function RefundDocumentsSection({ caseData }) {
                 key={doc.document_id}
                 className="flex items-center justify-between gap-2 rounded border bg-background px-2 py-1"
               >
-      {/* PDF Preview Dialog */}
-      <Dialog
-        open={previewOpen}
-        onOpenChange={(v) => {
-          if (!v && previewUrl) {
-            window.URL.revokeObjectURL(previewUrl);
-          }
-          if (!v) {
-            setPreviewUrl("");
-            setPreviewTitle("");
-            setPreviewError("");
-          }
-          setPreviewOpen(v);
-        }}
-      >
-        <DialogContent className="max-w-4xl">
-          <DialogHeader>
-            <DialogTitle className="text-sm">{previewTitle || "PDF Önizleme"}</DialogTitle>
-          </DialogHeader>
-          {previewLoading ? (
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Loader2 className="h-3 w-3 animate-spin" />
-              <span>Yükleniyor...</span>
-            </div>
-          ) : previewError ? (
-            <div className="text-xs text-destructive">{previewError}</div>
-          ) : previewUrl ? (
-            <iframe
-              src={previewUrl}
-              title="PDF Preview"
-              className="w-full h-[70vh] rounded border"
-            />
-          ) : (
-            <div className="text-xs text-muted-foreground">Önizleme için bir PDF seçin.</div>
-          )}
-        </DialogContent>
-      </Dialog>
-
                 <div className="flex items-center gap-2 min-w-0">
                   <Badge variant="outline" className="text-[10px] uppercase">
                     {badgeText}

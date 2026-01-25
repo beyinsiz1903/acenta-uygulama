@@ -311,7 +311,7 @@ export default function AdminB2BMarketplacePage() {
               </div>
               <div className="mt-2 max-h-[420px] overflow-y-auto border rounded-xl divide-y">
 
-  };
+                {partnersError && (
 
   const nights = result?.breakdown?.nights;
   const breakdown = result?.breakdown;

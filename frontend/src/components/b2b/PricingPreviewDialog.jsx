@@ -5,6 +5,13 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Badge } from "../ui/badge";
 
+const OCC_PRESETS = [
+  { key: "1+0", adults: 1, children: 0, rooms: 1 },
+  { key: "2+0", adults: 2, children: 0, rooms: 1 },
+  { key: "2+1", adults: 2, children: 1, rooms: 1 },
+  { key: "3+0", adults: 3, children: 0, rooms: 1 },
+];
+
 function toYmd(date) {
   // YYYY-MM-DD
   const d = date instanceof Date ? date : new Date();

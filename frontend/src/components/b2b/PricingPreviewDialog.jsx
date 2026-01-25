@@ -253,11 +253,24 @@ export default function PricingPreviewDialog({ open, onOpenChange, initialContex
             </div>
 
             {/* Actions */}
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <Button onClick={runPreview} disabled={loading}>
                 {loading ? "Hesaplanıyor…" : "Önizleme Hesapla"}
               </Button>
-              <Button variant="outline" onClick={() => setShowRaw((s) => !s)} disabled={!result}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowDebug((s) => !s)}
+                disabled={!normalized?.debug}
+              >
+                {showDebug ? "Debug Gizle" : "Debug Göster"}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowRaw((s) => !s)}
+                disabled={!normalized?.raw}
+              >
                 {showRaw ? "JSON Gizle" : "JSON Göster"}
               </Button>
               {err ? <div className="text-xs text-red-600">{err}</div> : null}
@@ -266,64 +279,160 @@ export default function PricingPreviewDialog({ open, onOpenChange, initialContex
             {/* Result */}
             {normalized ? (
               <div className="flex flex-col gap-3">
-                <div className="flex items-center gap-2">
-                  <div className="text-sm font-medium">Toplam:</div>
-                  <div className="font-mono text-sm">
-                    {normalized.total != null ? normalized.total : "-"} {normalized.currency}
-                  </div>
+                {/* Request summary badges */}
+                <div className="flex flex-wrap gap-2 text-[11px] text-muted-foreground">
+                  <Badge variant="outline">
+                    Check-in: {ctx.check_in}
+                  </Badge>
+                  <Badge variant="outline">
+                    Check-out: {addDaysYmd(ctx.check_in, Number(ctx.nights) || 1)}
+                  </Badge>
+                  <Badge variant="outline">
+                    {fmtInt(ctx.rooms)} oda · {fmtInt(ctx.adults)} yetişkin · {fmtInt(ctx.children)} çocuk
+                  </Badge>
                 </div>
 
-                {normalized.breakdown.length ? (
+                {/* Özet kartı */}
+                <div className="border rounded-md p-3 space-y-1">
+                  <div className="text-xs font-semibold mb-1">Özet</div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground">Toplam Satış</span>
+                    <span className="font-mono font-medium">
+                      {fmtMoney(normalized.total, normalized.currency)}
+                    </span>
+                  </div>
+                  {normalized.breakdown && (
+                    <>
+                      <div className="flex justify-between text-xs">
+                        <span className="text-muted-foreground">Gece</span>
+                        <span className="font-mono">{fmtInt(normalized.breakdown.nights)}</span>
+                      </div>
+                      <div className="flex justify-between text-xs">
+                        <span className="text-muted-foreground">Baz Fiyat</span>
+                        <span className="font-mono">
+                          {fmtMoney(normalized.breakdown.base_price, normalized.currency)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-xs">
+                        <span className="text-muted-foreground">Markup</span>
+                        <span className="font-mono">
+                          {fmtPct(normalized.breakdown.markup_percent)} · {fmtMoney(
+                            normalized.breakdown.markup_amount,
+                            normalized.currency,
+                          )}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-xs">
+                        <span className="text-muted-foreground">Komisyon</span>
+                        <span className="font-mono">
+                          {fmtPct(normalized.breakdown.commission_rate)} · {fmtMoney(
+                            normalized.breakdown.commission_amount,
+                            normalized.currency,
+                          )}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-xs font-semibold pt-1 border-t mt-1">
+                        <span className="text-muted-foreground">Final Satış</span>
+                        <span className="font-mono">
+                          {fmtMoney(normalized.breakdown.final_sell_price, normalized.currency)}
+                        </span>
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {/* Breakdown detayları */}
+                {normalized.breakdown && (
                   <div className="border rounded-md p-2">
-                    <div className="text-xs font-medium mb-2">Breakdown</div>
-                    <div className="grid grid-cols-1 gap-1">
-                      {normalized.breakdown.map((b, i) => (
-                        <div key={i} className="text-xs flex justify-between gap-2">
-                          <div className="truncate">{b.label ?? b.key ?? `item_${i}`}</div>
-                          <div className="font-mono">
-                            {b.amount ?? b.value ?? "-"} {b.currency ?? normalized.currency}
+                    <div className="text-xs font-medium mb-2">Detay</div>
+                    <div className="space-y-1 text-xs">
+                      {[
+                        { k: "nights", label: "Gece", type: "int" },
+                        { k: "base_price", label: "Baz Fiyat", type: "money" },
+                        { k: "markup_percent", label: "Markup (%)", type: "pct" },
+                        { k: "markup_amount", label: "Markup Tutarı", type: "money" },
+                        { k: "commission_rate", label: "Komisyon Oranı (%)", type: "pct" },
+                        { k: "commission_amount", label: "Komisyon Tutarı", type: "money" },
+                        { k: "final_sell_price", label: "Final Satış", type: "money" },
+                      ].map((row) => {
+                        const v = normalized.breakdown[row.k];
+                        let formatted = "-";
+                        if (row.type === "int") formatted = fmtInt(v);
+                        if (row.type === "money") formatted = fmtMoney(v, normalized.currency);
+                        if (row.type === "pct") formatted = fmtPct(v);
+                        return (
+                          <div key={row.k} className="flex justify-between">
+                            <span className="text-muted-foreground">{row.label}</span>
+                            <span className="font-mono">{formatted}</span>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
-                ) : null}
+                )}
 
-                {normalized.ruleHits.length ? (
-                  <div className="border rounded-md p-2">
-                    <div className="text-xs font-medium mb-2">Rule Hits</div>
-                    <ul className="list-disc pl-5">
-                      {normalized.ruleHits.map((r, i) => (
-                        <li key={i} className="text-xs">
-                          {typeof r === "string" ? r : r.code ?? r.name ?? JSON.stringify(r)}
-                        </li>
-                      ))}
+                {/* Uygulanan kurallar */}
+                <div className="border rounded-md p-2">
+                  <div className="text-xs font-medium mb-1">Uygulanan Kurallar</div>
+                  {normalized.ruleHits.length === 0 ? (
+                    <div className="text-[11px] text-muted-foreground">Kural uygulanmadı.</div>
+                  ) : (
+                    <ul className="space-y-1 text-[11px] text-muted-foreground">
+                      {normalized.ruleHits.map((r, i) => {
+                        const code = r.code || r.rule_id || "-";
+                        return (
+                          <li key={i} className="border rounded px-2 py-1">
+                            <div className="font-mono text-[11px]">{code}</div>
+                            {r.effect ? <div>{r.effect}</div> : null}
+                            {r.priority != null ? (
+                              <div className="text-[10px]">Öncelik: {fmtInt(r.priority)}</div>
+                            ) : null}
+                            {r.scope ? (
+                              <div className="text-[10px] mt-1">
+                                scope: {JSON.stringify(r.scope)}
+                              </div>
+                            ) : null}
+                            {r.action ? (
+                              <div className="text-[10px] mt-1">
+                                action: {JSON.stringify(r.action)}
+                              </div>
+                            ) : null}
+                          </li>
+                        );
+                      })}
                     </ul>
-                  </div>
-                ) : null}
+                  )}
+                </div>
 
-                {normalized.notes.length ? (
-                  <div className="border rounded-md p-2">
-                    <div className="text-xs font-medium mb-2">Notlar</div>
-                    <ul className="list-disc pl-5">
+                {/* Notlar */}
+                <div className="border rounded-md p-2">
+                  <div className="text-xs font-medium mb-1">Notlar</div>
+                  {normalized.notes.length === 0 ? (
+                    <div className="text-[11px] text-muted-foreground">Not bulunmuyor.</div>
+                  ) : (
+                    <ul className="list-disc pl-5 space-y-1 text-[11px] text-muted-foreground">
                       {normalized.notes.map((n, i) => (
-                        <li key={i} className="text-xs">
-                          {typeof n === "string" ? n : n.text ?? JSON.stringify(n)}
-                        </li>
+                        <li key={i}>{typeof n === "string" ? n : n.text ?? JSON.stringify(n)}</li>
                       ))}
                     </ul>
-                  </div>
-                ) : null}
+                  )}
+                </div>
 
-                {showRaw ? (
-                  <pre className="text-xs bg-muted p-2 rounded-md overflow-auto max-h-72">
+                {/* Debug & Raw JSON */}
+                {showDebug && normalized.debug ? (
+                  <pre className="text-xs bg-muted p-2 rounded-md overflow-auto max-h-64">
+                    {JSON.stringify(normalized.debug, null, 2)}
+                  </pre>
+                ) : null}
+                {showRaw && normalized.raw ? (
+                  <pre className="text-xs bg-muted p-2 rounded-md overflow-auto max-h-64">
                     {JSON.stringify(normalized.raw, null, 2)}
                   </pre>
                 ) : null}
               </div>
             ) : (
               <div className="text-xs text-muted-foreground">
-                Henüz sonuç yok. Parametreleri ayarlayıp “Önizleme Hesapla”ya basın.
+                Henüz sonuç yok. Parametreleri ayarlayıp "Önizleme Hesapla"ya basın.
               </div>
             )}
           </div>

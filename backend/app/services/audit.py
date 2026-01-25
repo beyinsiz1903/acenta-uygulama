@@ -72,6 +72,25 @@ def audit_snapshot(entity_type: str, doc: dict | None) -> dict | None:
             "payment_reference": approved.get("payment_reference"),
         }
         return snap
+    if et == "document":
+        # document snapshot (no raw storage path to avoid leaking internals)
+        snap: dict[str, Any] = {}
+        snap.update(pick([
+            "filename",
+            "content_type",
+            "size_bytes",
+            "status",
+            "created_at",
+            "created_by_email",
+        ]))
+        storage = doc.get("storage") or {}
+        snap["storage"] = {
+            "provider": storage.get("provider"),
+            "has_path": bool(storage.get("path")),
+        }
+        return snap
+
+
 
     if et == "pricing_rule":
         return pick([

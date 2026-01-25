@@ -101,7 +101,7 @@ async def setup_test_data() -> Dict[str, Any]:
     client.close()
     
     return {
-        "organization_id": str(org_id),
+        "organization_id": org_id,
         "product_id": str(product["_id"]),
         "partner_id": str(partner["_id"])
     }

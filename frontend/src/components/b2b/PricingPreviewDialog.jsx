@@ -296,7 +296,7 @@ export default function PricingPreviewDialog({ open, onOpenChange, initialContex
                 }}
                 disabled={!ctx?.product_id}
               >
-                Payload'ı Kopyala
+                Payload&apos;ı Kopyala
               </Button>
               <Button
                 variant="outline"

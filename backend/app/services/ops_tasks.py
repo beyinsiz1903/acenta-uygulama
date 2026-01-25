@@ -121,7 +121,9 @@ class OpsTaskService:
         for d in docs:
             d["task_id"] = str(d.pop("_id"))
             # Remove sensitive fields from response
-            d.pop("organization_id", None)
+            sensitive_fields = ["organization_id", "created_by_actor_id", "updated_by_actor_id", "assignee_actor_id"]
+            for field in sensitive_fields:
+                d.pop(field, None)
             items.append(d)
         return items
 

@@ -237,6 +237,69 @@ function RefundApproveDialog({ open, onOpenChange, caseData, onApproved }) {
               onChange={(e) => setPaymentRef(e.target.value)}
             />
           </div>
+
+function RefundApproveStep2Dialog({ open, onOpenChange, caseData, onApproved }) {
+  const [note, setNote] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (open) setNote("");
+  }, [open]);
+
+  const onSubmit = async () => {
+    try {
+      setSubmitting(true);
+      await api.post(`/ops/finance/refunds/${caseData.case_id}/approve-step2`, {
+        note: note || null,
+      });
+      toast({ title: "2. onay verildi" });
+      onApproved();
+      onOpenChange(false);
+    } catch (e) {
+      toast({ title: "Onaylama başarısız", description: apiErrorMessage(e), variant: "destructive" });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>2. Onay</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3 mt-2 text-sm">
+          <div className="text-xs text-muted-foreground">
+            Bu adımda ledger kayıtları oluşturulur ve refund case "approved" durumuna alınır.
+          </div>
+          <div className="space-y-1">
+            <div className="text-xs text-muted-foreground">Not (opsiyonel)</div>
+            <Input
+              type="text"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="Ops notu (opsiyonel)"
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={submitting}
+          >
+            İptal
+          </Button>
+          <Button onClick={onSubmit} disabled={submitting}>
+            {submitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+            2. Onayı Ver
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
         </div>
         <DialogFooter>
           <Button

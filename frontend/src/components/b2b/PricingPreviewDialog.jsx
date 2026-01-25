@@ -158,6 +158,7 @@ export default function PricingPreviewDialog({ open, onOpenChange, initialContex
     setResult(null);
     setErr("");
     setShowRaw(false);
+    setShowDebug(false);
   }, [open, initialContext]);
 
   const normalized = useMemo(() => (result ? normalizeResult(result) : null), [result]);

@@ -268,6 +268,205 @@ export default function PricingPreviewDialog({ open, onOpenChange, initialContex
   const [showDebug, setShowDebug] = useState(false);
   const [copyMsg, setCopyMsg] = useState("");
   const [selectedPreset, setSelectedPreset] = useState("2+0");
+            {/* Senaryolar */}
+            <div className="flex flex-wrap items-end gap-2 text-xs">
+              <div className="flex flex-col gap-1 min-w-[160px]">
+                <span className="text-[11px] text-muted-foreground">Senaryo</span>
+                <select
+                  className="h-8 rounded-md border bg-background px-2 text-xs"
+                  value={selectedScenarioId}
+                  onChange={(e) => {
+                    const id = e.target.value;
+                    setSelectedScenarioId(id);
+                    const sc = scenarios.find((s) => s.id === id);
+                    if (sc) {
+                      setCtx((cur) => mergeContext(cur, sc.context));
+                    }
+                  }}
+                >
+                  <option value="">Senaryo seç…</option>
+                  {scenarios.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name || "(adsız)"}
+                      {s.is_default ? " (varsayılan)" : ""}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {showNameInput && (
+                <div className="flex items-center gap-2">
+                  <Input
+                    className="h-8 text-xs w-40"
+                    placeholder="Senaryo adı"
+                    value={scenarioName}
+                    onChange={(e) => setScenarioName(e.target.value)}
+                  />
+                  <Button
+                    type="button"
+                    size="xs"
+                    onClick={() => {
+                      const name = scenarioName.trim();
+                      if (!name) {
+                        toast({
+                          title: "Senaryo adı gerekli",
+                          description: "Lütfen bir isim girin.",
+                          variant: "destructive",
+                        });
+                        return;
+                      }
+                      const nowIso = new Date().toISOString();
+                      const snapshot = cleanPayload(ctx || {});
+                      const nights = safeNum(ctx?.nights);
+                      const context = {
+                        product_id: snapshot.product_id ?? null,
+                        partner_id: snapshot.partner_id ?? null,
+                        agency_id: snapshot.agency_id ?? null,
+                        channel_id: snapshot.channel_id ?? null,
+                        checkin: snapshot.checkin,
+                        checkout: snapshot.checkout,
+                        nights: nights,
+                        rooms: snapshot.occupancy?.rooms ?? 1,
+                        adults: snapshot.occupancy?.adults ?? 2,
+                        children: snapshot.occupancy?.children ?? 0,
+                        currency: snapshot.currency ?? "EUR",
+                        include_rules: !!snapshot.include_rules,
+                        include_breakdown: !!snapshot.include_breakdown,
+                      };
+                      const id = makeId();
+                      let next = [
+                        ...scenarios,
+                        {
+                          id,
+                          name,
+                          created_at: nowIso,
+                          updated_at: nowIso,
+                          is_default: false,
+                          context,
+                        },
+                      ];
+                      next = pruneScenarios(next);
+                      setScenarios(next);
+                      saveScenarios(next);
+                      setSelectedScenarioId(id);
+                      setScenarioName("");
+                      setShowNameInput(false);
+                      toast({ title: "Senaryo kaydedildi" });
+                    }}
+                  >
+                    Onayla
+                  </Button>
+                  <Button
+                    type="button"
+                    size="xs"
+                    variant="ghost"
+                    onClick={() => {
+                      setShowNameInput(false);
+                      setScenarioName("");
+                    }}
+                  >
+                    İptal
+                  </Button>
+                </div>
+              )}
+
+              {!showNameInput && (
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    size="xs"
+                    variant="outline"
+                    onClick={() => setShowNameInput(true)}
+                  >
+                    Kaydet
+                  </Button>
+                  <Button
+                    type="button"
+                    size="xs"
+                    variant="outline"
+                    disabled={!selectedScenarioId}
+                    onClick={() => {
+                      const id = selectedScenarioId;
+                      if (!id) return;
+                      const idx = scenarios.findIndex((s) => s.id === id);
+                      if (idx === -1) return;
+                      const nowIso = new Date().toISOString();
+                      const snapshot = cleanPayload(ctx || {});
+                      const nights = safeNum(ctx?.nights);
+                      const context = {
+                        product_id: snapshot.product_id ?? null,
+                        partner_id: snapshot.partner_id ?? null,
+                        agency_id: snapshot.agency_id ?? null,
+                        channel_id: snapshot.channel_id ?? null,
+                        checkin: snapshot.checkin,
+                        checkout: snapshot.checkout,
+                        nights: nights,
+                        rooms: snapshot.occupancy?.rooms ?? 1,
+                        adults: snapshot.occupancy?.adults ?? 2,
+                        children: snapshot.occupancy?.children ?? 0,
+                        currency: snapshot.currency ?? "EUR",
+                        include_rules: !!snapshot.include_rules,
+                        include_breakdown: !!snapshot.include_breakdown,
+                      };
+                      const next = [...scenarios];
+                      next[idx] = {
+                        ...next[idx],
+                        context,
+                        updated_at: nowIso,
+                      };
+                      setScenarios(next);
+                      saveScenarios(next);
+                      toast({ title: "Senaryo güncellendi" });
+                    }}
+                  >
+                    Güncelle
+                  </Button>
+                  <Button
+                    type="button"
+                    size="xs"
+                    variant="outline"
+                    disabled={!selectedScenarioId}
+                    onClick={() => {
+                      const id = selectedScenarioId;
+                      if (!id) return;
+                      const next = scenarios.map((s) =>
+                        s.id === id ? { ...s, is_default: !s.is_default } : { ...s, is_default: false },
+                      );
+                      setScenarios(next);
+                      saveScenarios(next);
+                      const sc = next.find((s) => s.id === id);
+                      toast({
+                        title: sc?.is_default
+                          ? "Varsayılan senaryo ayarlandı"
+                          : "Varsayılan senaryo kaldırıldı",
+                      });
+                    }}
+                  >
+                    Varsayılan yap/kaldır
+                  </Button>
+                  <Button
+                    type="button"
+                    size="xs"
+                    variant="ghost"
+                    className="text-destructive"
+                    disabled={!selectedScenarioId}
+                    onClick={() => {
+                      const id = selectedScenarioId;
+                      if (!id) return;
+                      if (!window.confirm("Bu senaryoyu silmek istiyor musunuz?")) return;
+                      const next = scenarios.filter((s) => s.id !== id);
+                      setScenarios(next);
+                      saveScenarios(next);
+                      setSelectedScenarioId("");
+                      toast({ title: "Senaryo silindi" });
+                    }}
+                  >
+                    Sil
+                  </Button>
+                </div>
+              )}
+            </div>
+
   const [scenarios, setScenarios] = useState([]);
   const [selectedScenarioId, setSelectedScenarioId] = useState("");
   const [scenarioName, setScenarioName] = useState("");

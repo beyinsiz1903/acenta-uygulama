@@ -769,20 +769,6 @@ function RefundDetailPanel({
       />
 
         {/* Last 5 closed refunds for this booking */}
-      <RefundApproveStep2Dialog
-        open={approveStep2Open}
-        onOpenChange={setApproveStep2Open}
-        caseData={caseData}
-        onApproved={onAfterDecision}
-      />
-
-      <RefundMarkPaidDialog
-        open={markPaidOpen}
-        onOpenChange={setMarkPaidOpen}
-        caseData={caseData}
-        onMarked={onAfterDecision}
-      />
-
         <div className="rounded-lg border bg-muted/10 p-3 space-y-2">
           <div className="text-xs font-semibold text-muted-foreground">
             Bu booking için son 5 kapalı refund

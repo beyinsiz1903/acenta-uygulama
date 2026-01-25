@@ -974,6 +974,15 @@ async def close_refund_case(
                     "status_to": status_to,
                 },
             )
+        # Ops playbook: mark all remaining tasks done
+        engine = OpsPlaybookEngine(db)
+        await engine.on_refund_closed(
+            org_id,
+            case_id=case_id,
+            booking_id=booking_id,
+            actor_email=current_user.get("email"),
+            actor_id=current_user.get("id"),
+        )
     except Exception:
         pass
 

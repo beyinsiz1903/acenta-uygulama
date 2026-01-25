@@ -1587,7 +1587,7 @@ async def list_documents(
     if not links:
         return {"entity_type": entity_type, "entity_id": entity_id, "items": []}
 
-    doc_ids = [l["document_id"] for l in links]
+    doc_ids = [link["document_id"] for link in links]
     doc_query: dict[str, Any] = {"_id": {"$in": doc_ids}, "organization_id": org_id}
     if not include_deleted:
         doc_query["status"] = {"$ne": "deleted"}

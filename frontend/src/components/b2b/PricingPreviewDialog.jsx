@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { api, apiErrorMessage } from "../../lib/api";
+import { toast } from "../ui/sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -67,6 +68,65 @@ function diffNights(checkin, checkout) {
 
 async function copyToClipboard(text) {
   try {
+const STORAGE_KEY = "b2b_pricing_preview_scenarios_v1";
+
+function loadScenarios() {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveScenarios(list) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+  } catch {
+    // ignore
+  }
+}
+
+function pruneScenarios(list) {
+  if (!Array.isArray(list)) return [];
+  if (list.length <= 20) return list;
+  const sorted = [...list].sort((a, b) => {
+    const ad = new Date(a.created_at || 0).getTime();
+    const bd = new Date(b.created_at || 0).getTime();
+    return ad - bd;
+  });
+  return sorted.slice(-20);
+}
+
+function makeId() {
+  return `${Date.now()}_${Math.random().toString(16).slice(2)}`;
+}
+
+function mergeContext(currentCtx, scenarioCtx) {
+  if (!scenarioCtx) return currentCtx;
+  if (!currentCtx) return scenarioCtx;
+  const next = { ...currentCtx };
+
+  // IDs: sadece mevcut yoksa senaryodan al
+  if (!next.product_id && scenarioCtx.product_id) next.product_id = scenarioCtx.product_id;
+  if (!next.partner_id && scenarioCtx.partner_id) next.partner_id = scenarioCtx.partner_id;
+  if (!next.agency_id && scenarioCtx.agency_id) next.agency_id = scenarioCtx.agency_id;
+  if (!next.channel_id && scenarioCtx.channel_id) next.channel_id = scenarioCtx.channel_id;
+
+  if (scenarioCtx.checkin) next.check_in = scenarioCtx.checkin;
+  if (typeof scenarioCtx.nights === "number") next.nights = String(scenarioCtx.nights);
+  if (typeof scenarioCtx.rooms === "number") next.rooms = String(scenarioCtx.rooms);
+  if (typeof scenarioCtx.adults === "number") next.adults = String(scenarioCtx.adults);
+  if (typeof scenarioCtx.children === "number") next.children = String(scenarioCtx.children);
+  if (scenarioCtx.currency) next.currency = scenarioCtx.currency;
+
+  return next;
+}
+
     if (navigator?.clipboard?.writeText) {
       await navigator.clipboard.writeText(text);
       return true;

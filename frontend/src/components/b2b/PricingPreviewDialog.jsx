@@ -107,10 +107,12 @@ function normalizeResult(data) {
     safeNum(data?.sell_amount) ??
     safeNum(data?.amount);
 
-  const nights =
-    safeNum(breakdownObj?.nights) ??
-    safeNum(data?.nights) ??
-    diffNights(data?.checkin, data?.checkout);
+  const derivedNights = diffNights(data?.checkin, data?.checkout);
+  const engineNights = safeNum(breakdownObj?.nights) ?? safeNum(data?.nights);
+
+  const nights = engineNights ?? derivedNights;
+  const nightsMismatch =
+    derivedNights != null && engineNights != null && derivedNights !== engineNights;
 
   const basePrice = safeNum(breakdownObj?.base_price);
   const markupPercent = safeNum(breakdownObj?.markup_percent);

@@ -1071,6 +1071,7 @@ async def get_booking_ledger_summary(
 async def reject_refund_case(
     case_id: str,
     payload: dict,
+    request: Request,
     current_user=Depends(require_roles(["admin", "ops", "super_admin"])),
     db=Depends(get_db),
 ):
@@ -1080,12 +1081,70 @@ async def reject_refund_case(
     reason = payload.get("reason")
 
     svc = RefundCaseService(db)
-    return await svc.reject(
+
+    existing = await svc.get_case(org_id, case_id)
+    status_from = existing.get("status") if existing else None
+
+    result = await svc.reject(
         organization_id=org_id,
         case_id=case_id,
         decided_by=current_user["email"],
         reason=reason,
     )
+
+    # Audit + booking event (best-effort)
+    try:
+        status_to = result.get("status")
+        await write_audit_log(
+            db,
+            organization_id=org_id,
+            actor={
+                "actor_type": "user",
+                "actor_id": current_user.get("id") or current_user.get("email"),
+                "email": current_user.get("email"),
+                "roles": current_user.get("roles") or [],
+            },
+            request=request,
+            action="refund_reject",
+            target_type="refund_case",
+            target_id=case_id,
+            before=audit_snapshot("refund_case", existing),
+            after=audit_snapshot("refund_case", result),
+            meta={
+                "reason": reason,
+                "status_from": status_from,
+                "status_to": status_to,
+                "case_id": case_id,
+                "by_email": current_user.get("email"),
+                "by_actor_id": current_user.get("id"),
+            },
+        )
+
+        booking_id = result.get("booking_id")
+        if booking_id:
+            await emit_event(
+                db,
+                organization_id=org_id,
+                booking_id=booking_id,
+                type="REFUND_REJECTED",
+                actor={
+                    "email": current_user.get("email"),
+                    "actor_id": current_user.get("id"),
+                    "roles": current_user.get("roles") or [],
+                },
+                meta={
+                    "case_id": case_id,
+                    "reason": reason,
+                    "status_from": status_from,
+                    "status_to": status_to,
+                    "by_email": current_user.get("email"),
+                    "by_actor_id": current_user.get("id"),
+                },
+            )
+    except Exception:
+        pass
+
+    return result
 
 
 @router.get("/settlements", response_model=SettlementRunListResponse)

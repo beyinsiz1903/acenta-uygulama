@@ -169,6 +169,20 @@ function eventSubline(ev) {
     return parts.join(" · ");
   }
 
+  if (
+    t === "OPS_TASK_CREATED" ||
+    t === "OPS_TASK_UPDATED" ||
+    t === "OPS_TASK_DONE" ||
+    t === "OPS_TASK_CANCELLED"
+  ) {
+    const parts = [];
+    if (m.task_type) parts.push(`task: ${m.task_type}`);
+    if (m.title) parts.push(`başlık: ${m.title}`);
+    if (m.status_to) parts.push(`durum: ${m.status_to}`);
+    if (m.by_email) parts.push(`by: ${m.by_email}`);
+    return parts.join(" · ");
+  }
+
   return "";
 }
 

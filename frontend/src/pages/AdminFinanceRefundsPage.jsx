@@ -774,7 +774,7 @@ function RefundDetailPanel({
 
         <div className="rounded-lg border bg-muted/10 p-3 space-y-2">
           <div className="text-xs font-semibold text-muted-foreground">
-            Bu booking i e7in son 5 kapal31 refund
+            Bu booking için son 5 kapalı refund
           </div>
           <MiniRefundHistory bookingId={caseData.booking_id} />
         </div>

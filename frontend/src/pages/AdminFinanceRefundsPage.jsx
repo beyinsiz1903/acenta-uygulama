@@ -612,8 +612,6 @@ function RefundDocumentsSection({ caseData }) {
   );
 }
 
-}
-
 function RefundMarkPaidDialog({ open, onOpenChange, caseData, onMarked }) {
   const [paymentRef, setPaymentRef] = useState("");
   const [submitting, setSubmitting] = useState(false);

@@ -1596,16 +1596,16 @@ async def list_documents(
     docs_by_id = {d["_id"]: d for d in docs}
 
     items = []
-    for l in links:
-        d = docs_by_id.get(l["document_id"])
+    for link in links:
+        d = docs_by_id.get(link["document_id"])
         if not d:
             continue
         items.append(
             {
                 "document_id": str(d["_id"]),
-                "link_id": str(l["_id"]),
-                "tag": l.get("tag"),
-                "note": l.get("note"),
+                "link_id": str(link["_id"]),
+                "tag": link.get("tag"),
+                "note": link.get("note"),
                 "filename": d.get("filename"),
                 "content_type": d.get("content_type"),
                 "size_bytes": d.get("size_bytes"),

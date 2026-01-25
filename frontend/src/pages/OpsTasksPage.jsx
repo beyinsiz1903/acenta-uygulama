@@ -333,6 +333,8 @@ export default function OpsTasksPage() {
         </Button>
       </div>
     </form>
+      </CardContent>
+    </Card>
   );
 }
 

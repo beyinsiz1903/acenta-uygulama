@@ -548,21 +548,6 @@ class RefundCaseService:
 
         return await self.get_case(organization_id, case_id)
 
-            {
-                "$set": {
-                    "status": "closed",
-                    "decision": decision,
-                    "approved": {"amount": approved_amount, "amount_eur": approved_amount_eur},
-                    "ledger_posting_id": posting_id,
-                    "decision_by_email": decided_by,
-                    "decision_at": now,
-                    "updated_at": now,
-                }
-            },
-        )
-
-        return await self.get_case(organization_id, case_id)
-
     async def reject(
         self,
         organization_id: str,

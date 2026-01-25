@@ -487,28 +487,6 @@ function RefundMarkPaidDialog({ open, onOpenChange, caseData, onMarked }) {
   );
 }
 
-            </div>
-          </div>
-          <button
-            type="button"
-            className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground"
-            onClick={async () => {
-              try {
-                await navigator.clipboard.writeText(it.case_id);
-              } catch (e) {
-                console.error("copy case_id failed", e);
-              }
-            }}
-          >
-            <Clipboard className="h-3 w-3" />
-            <span className="font-mono truncate max-w-[120px]">{it.case_id}</span>
-          </button>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 function RefundRejectDialog({ open, onOpenChange, caseData, onRejected }) {
   const [reason, setReason] = useState("");
   const [submitting, setSubmitting] = useState(false);

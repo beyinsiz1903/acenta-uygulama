@@ -697,18 +697,25 @@ function RefundDocumentsSection({ caseData }) {
                   <Button
                     size="xs"
                     variant="outline"
+                    disabled={previewLoading}
                     onClick={async () => {
                       try {
                         setPreviewError("");
-                        setPreviewLoading(true);
                         setPreviewTitle(doc.filename || "PDF Önizleme");
+                        // Dialog hemen açılsın ve önceki URL temizlensin
+                        setPreviewOpen(true);
+                        if (previewUrl) {
+                          window.URL.revokeObjectURL(previewUrl);
+                        }
+                        setPreviewUrl("");
+                        setPreviewLoading(true);
+
                         const resp = await api.get(`/ops/documents/${doc.document_id}/download`, {
                           responseType: "blob",
                         });
                         const blob = new Blob([resp.data], { type: "application/pdf" });
                         const url = window.URL.createObjectURL(blob);
                         setPreviewUrl(url);
-                        setPreviewOpen(true);
                       } catch (e) {
                         setPreviewError(apiErrorMessage(e));
                         toast({

@@ -688,6 +688,11 @@ function RefundTasksSection({ caseData }) {
   return (
     <div className="rounded-lg border bg-muted/20 p-3 space-y-2">
       <div className="flex items-center justify-between gap-2">
+      <div className="flex items-center justify-between gap-2">
+        <div className="text-xs font-semibold text-muted-foreground">Görevler</div>
+        <RefundTaskCreateDialogButton caseData={caseData} onCreated={load} />
+      </div>
+
         <div className="text-xs font-semibold text-muted-foreground">Görevler</div>
       </div>
       {loading ? (

@@ -951,10 +951,24 @@ export default function AdminFinanceRefundsPage() {
       </div>
 
       <RefundApproveDialog
-        open={approveOpen}
-        onOpenChange={setApproveOpen}
+        open={approveStep1Open}
+        onOpenChange={setApproveStep1Open}
         caseData={caseData}
         onApproved={onAfterDecision}
+      />
+
+      <RefundApproveStep2Dialog
+        open={approveStep2Open}
+        onOpenChange={setApproveStep2Open}
+        caseData={caseData}
+        onApproved={onAfterDecision}
+      />
+
+      <RefundMarkPaidDialog
+        open={markPaidOpen}
+        onOpenChange={setMarkPaidOpen}
+        caseData={caseData}
+        onMarked={onAfterDecision}
       />
 
       <RefundRejectDialog

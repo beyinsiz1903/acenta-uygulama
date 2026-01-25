@@ -45,7 +45,7 @@ def login_admin():
     return data["access_token"], user["organization_id"], user["email"]
 
 def find_existing_refund_case(admin_headers: Dict[str, str], org_id: str) -> Optional[Dict[str, Any]]:
-    """Find an existing refund case or create one if none exists"""
+    """Find an existing refund case"""
     print("   🔍 Looking for existing refund case...")
     
     # Try to get existing refund cases
@@ -59,15 +59,17 @@ def find_existing_refund_case(admin_headers: Dict[str, str], org_id: str) -> Opt
         data = r.json()
         cases = data.get("items", [])
         
-        # Look for a case in 'open' status
+        # Look for any case with a booking_id (we'll use any available case)
         for case in cases:
-            if case.get("status") == "open" and case.get("booking_id"):
+            if case.get("booking_id"):
+                # Convert case_id to id for consistency
+                case["id"] = case["case_id"]
                 print(f"   ✅ Found existing refund case: {case['id']} (booking: {case['booking_id']})")
+                print(f"   📋 Status: {case['status']}")
                 return case
     
-    # If no suitable case found, create one
-    print("   📝 No suitable refund case found, creating one...")
-    return create_refund_case(admin_headers, org_id)
+    # If no case found, raise error
+    raise Exception("No refund cases found for testing")
 
 def create_refund_case(admin_headers: Dict[str, str], org_id: str) -> Dict[str, Any]:
     """Create a refund case for testing"""

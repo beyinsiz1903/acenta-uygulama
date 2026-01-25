@@ -355,6 +355,11 @@ export default function PricingPreviewDialog({ open, onOpenChange, initialContex
                     <div className="text-muted-foreground">
                       Check-in/Check-out: <span className="font-mono">{normalized.derivedNights}</span> gece, engine:{
               />
+ <span className="font-mono">{normalized.engineNights}</span> gece. Hesaplamada engine değeri baz alınmıştır.
+                    </div>
+                  </div>
+                )}
+
               <Field
                 label="Çocuk"
                 type="number"

@@ -468,20 +468,35 @@ export default function AdminB2BMarketplacePage() {
                             )}
                           </TableCell>
                           <TableCell className="text-xs text-center">
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant={p.is_enabled ? "outline" : "secondary"}
-                              className="h-7 text-[11px] px-3"
-                              disabled={savingKey === p.product_id}
-                              onClick={() => handleToggle(p)}
-                            >
-                              {savingKey === p.product_id
-                                ? "Kaydediliyor..."
-                                : p.is_enabled
-                                ? "Açık (kapat)"
-                                : "Kapalı (aç)"}
-                            </Button>
+                            <div className="flex items-center justify-center gap-2">
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant={p.is_enabled ? "outline" : "secondary"}
+                                className="h-7 text-[11px] px-3"
+                                disabled={savingKey === p.product_id}
+                                onClick={() => handleToggle(p)}
+                              >
+                                {savingKey === p.product_id
+                                  ? "Kaydediliyor..."
+                                  : p.is_enabled
+                                  ? "Açık (kapat)"
+                                  : "Kapalı (aç)"}
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="secondary"
+                                className="h-7 text-[11px] px-3"
+                                onClick={() => {
+                                  setPricingProduct(p);
+                                  setPricingResult(null);
+                                  setPricingError("");
+                                  setPricingOpen(true);
+                                }}
+                              >
+                                Fiyat Hesapla
+                              </Button>
+                            </div>
                           </TableCell>
                           <TableCell className="text-xs text-right align-middle">
                             <input

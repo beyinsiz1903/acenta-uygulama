@@ -178,7 +178,7 @@ def delete_document(admin_headers: Dict[str, str], document_id: str) -> Dict[str
     }
     
     r = requests.delete(
-        f"{BASE_URL}/api/ops/documents/{document_id}",
+        f"{BASE_URL}/api/ops/finance/documents/{document_id}",
         headers=admin_headers,
         json=payload
     )

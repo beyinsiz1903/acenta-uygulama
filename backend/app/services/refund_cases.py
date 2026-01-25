@@ -21,6 +21,12 @@ from app.utils import now_utc
 
 
 class RefundCaseService:
+    """Manage refund_cases lifecycle and related side effects.
+
+    NOTE: In Phase 2.1 we introduce multi-step workflow (step1/step2/paid/close).
+    The older single-step approve/reject methods are kept for compatibility but
+    new callers should prefer the step1/step2/mark_paid/close methods.
+    """
     def __init__(self, db):
         self.db = db
         self.calculator = RefundCalculatorService(currency="EUR")

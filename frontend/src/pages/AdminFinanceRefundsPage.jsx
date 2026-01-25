@@ -175,7 +175,6 @@ function RefundQueueList({
 
 function RefundApproveDialog({ open, onOpenChange, caseData, onApproved }) {
   const [amount, setAmount] = useState("");
-  const [paymentRef, setPaymentRef] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const refundable = caseData?.computed?.refundable ?? 0;
 
@@ -197,11 +196,10 @@ function RefundApproveDialog({ open, onOpenChange, caseData, onApproved }) {
     }
     try {
       setSubmitting(true);
-      await api.post(`/ops/finance/refunds/${caseData.case_id}/approve`, {
+      await api.post(`/ops/finance/refunds/${caseData.case_id}/approve-step1`, {
         approved_amount: parsed,
-        payment_reference: paymentRef || null,
       });
-      toast({ title: "İade onaylandı" });
+      toast({ title: "1. onay verildi" });
       onApproved();
       onOpenChange(false);
     } catch (e) {

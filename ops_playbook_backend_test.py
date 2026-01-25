@@ -293,9 +293,23 @@ def test_auto_created_tasks_from_refund_lifecycle():
         # 2c. Approve step 1
         print("2️⃣  Approving refund step 1...")
         
+        # First get the refund case to check refundable amount
+        r_case = requests.get(
+            f"{BASE_URL}/api/ops/finance/refunds/{case_id}",
+            headers=admin_headers
+        )
+        
+        if r_case.status_code == 200:
+            case_data = r_case.json()
+            refundable_amount = case_data.get("refundable_amount", 100.0)
+            # Use a smaller amount to ensure it's valid
+            approved_amount = min(refundable_amount, 50.0) if refundable_amount else 50.0
+        else:
+            approved_amount = 50.0  # Default small amount
+        
         r = requests.post(
             f"{BASE_URL}/api/ops/finance/refunds/{case_id}/approve-step1",
-            json={"approved_amount": 450.0},
+            json={"approved_amount": approved_amount},
             headers=admin_headers
         )
         

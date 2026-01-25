@@ -973,121 +973,14 @@ function PricingPreviewDialog({
         </div>
       )}
 
-      {/* Pricing Dialog */}
-      <Dialog open={pricingOpen} onOpenChange={setPricingOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-sm">Fiyat Hesaplama</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            {pricingProduct && (
-              <div className="text-xs text-muted-foreground">
-                <div className="font-medium">{pricingProduct.title}</div>
-                <div className="font-mono">{pricingProduct.product_id}</div>
-              </div>
-            )}
-            
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label className="text-xs">Check-in</Label>
-                <Input
-                  type="date"
-                  className="h-8 text-xs"
-                  value={pricingRequest.checkin}
-                  onChange={(e) => setPricingRequest(prev => ({ ...prev, checkin: e.target.value }))}
-                />
-              </div>
-              <div>
-                <Label className="text-xs">Check-out</Label>
-                <Input
-                  type="date"
-                  className="h-8 text-xs"
-                  value={pricingRequest.checkout}
-                  onChange={(e) => setPricingRequest(prev => ({ ...prev, checkout: e.target.value }))}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-3 gap-3">
-              <div>
-                <Label className="text-xs">Yetişkin</Label>
-                <Input
-                  type="number"
-                  min="1"
-                  className="h-8 text-xs"
-                  value={pricingRequest.adults}
-                  onChange={(e) => setPricingRequest(prev => ({ ...prev, adults: parseInt(e.target.value) || 1 }))}
-                />
-              </div>
-              <div>
-                <Label className="text-xs">Çocuk</Label>
-                <Input
-                  type="number"
-                  min="0"
-                  className="h-8 text-xs"
-                  value={pricingRequest.children}
-                  onChange={(e) => setPricingRequest(prev => ({ ...prev, children: parseInt(e.target.value) || 0 }))}
-                />
-              </div>
-              <div>
-                <Label className="text-xs">Oda</Label>
-                <Input
-                  type="number"
-                  min="1"
-                  className="h-8 text-xs"
-                  value={pricingRequest.rooms}
-                  onChange={(e) => setPricingRequest(prev => ({ ...prev, rooms: parseInt(e.target.value) || 1 }))}
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label className="text-xs">Para Birimi</Label>
-              <select
-                className="w-full h-8 rounded-md border bg-background px-2 text-xs"
-                value={pricingRequest.currency}
-                onChange={(e) => setPricingRequest(prev => ({ ...prev, currency: e.target.value }))}
-              >
-                <option value="EUR">EUR</option>
-                <option value="USD">USD</option>
-                <option value="TRY">TRY</option>
-              </select>
-            </div>
-
-            {pricingError && (
-              <div className="text-xs text-destructive bg-destructive/10 p-2 rounded">
-                {pricingError}
-              </div>
-            )}
-
-            {pricingResult && (
-              <div className="text-xs bg-muted p-3 rounded space-y-1">
-                <div className="font-medium">Fiyat Bilgisi:</div>
-                <div>Net Fiyat: {pricingResult.net_price} {pricingResult.currency}</div>
-                <div>Liste Fiyatı: {pricingResult.list_price} {pricingResult.currency}</div>
-                <div>Komisyon: {pricingResult.commission} {pricingResult.currency}</div>
-              </div>
-            )}
-
-            <div className="flex gap-2 justify-end">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setPricingOpen(false)}
-              >
-                İptal
-              </Button>
-              <Button
-                size="sm"
-                disabled={pricingLoading || !pricingRequest.checkin || !pricingRequest.checkout}
-                onClick={handlePricingRequest}
-              >
-                {pricingLoading ? "Hesaplanıyor..." : "Fiyat Hesapla"}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <PricingPreviewDialog
+        open={previewOpen}
+        onOpenChange={(v) => {
+          setPreviewOpen(v);
+          if (!v) setPreviewContext(null);
+        }}
+        initialContext={previewContext}
+      />
     </TooltipProvider>
   );
 }

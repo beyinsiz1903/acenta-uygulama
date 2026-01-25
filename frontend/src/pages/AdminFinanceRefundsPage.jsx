@@ -655,6 +655,37 @@ function RefundDocumentsSection({ caseData }) {
                 <span className="text-[11px] text-muted-foreground">
                   {doc.size_bytes != null ? `${Math.round(doc.size_bytes / 1024)} KB` : ""}
                 </span>
+                {isPdfDoc(doc) && (
+                  <Button
+                    size="xs"
+                    variant="outline"
+                    onClick={async () => {
+                      try {
+                        setPreviewError("");
+                        setPreviewLoading(true);
+                        setPreviewTitle(doc.filename || "PDF Önizleme");
+                        const resp = await api.get(`/ops/documents/${doc.document_id}/download`, {
+                          responseType: "blob",
+                        });
+                        const blob = new Blob([resp.data], { type: "application/pdf" });
+                        const url = window.URL.createObjectURL(blob);
+                        setPreviewUrl(url);
+                        setPreviewOpen(true);
+                      } catch (e) {
+                        setPreviewError(apiErrorMessage(e));
+                        toast({
+                          title: "Önizleme açılamadı",
+                          description: apiErrorMessage(e),
+                          variant: "destructive",
+                        });
+                      } finally {
+                        setPreviewLoading(false);
+                      }
+                    }}
+                  >
+                    Önizle
+                  </Button>
+                )}
               </div>
               <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
                 <span>{doc.created_by_email}</span>

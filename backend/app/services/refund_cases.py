@@ -359,7 +359,7 @@ class RefundCaseService:
             raise AppError(
                 status_code=409,
                 code="invalid_case_state",
-                message="Refund case is not ready for second approval",
+                message="Bu refund case bu aksiyon için uygun durumda değil.",
             )
 
         # Enforce 4-eyes: step2 actor must differ from step1 actor
@@ -490,7 +490,7 @@ class RefundCaseService:
             raise AppError(
                 status_code=409,
                 code="invalid_case_state",
-                message="Only approved cases can be marked as paid",
+                message="Bu refund case bu aksiyon için uygun durumda değil.",
             )
 
         if not payment_reference:

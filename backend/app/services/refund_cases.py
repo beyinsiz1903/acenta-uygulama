@@ -253,6 +253,11 @@ class RefundCaseService:
         decided_by: str,
         payment_reference: Optional[str] = None,
     ) -> dict:
+        """Compat: legacy single-step approve.
+
+        Internally maps to step1 + step2 in the new workflow where possible.
+        New callers should use approve_step1/approve_step2 directly.
+        """
         case = await self._load_case(organization_id, case_id)
         if case["status"] not in {"open", "pending_approval"}:
             raise AppError(

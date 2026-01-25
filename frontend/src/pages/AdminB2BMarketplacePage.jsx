@@ -351,8 +351,74 @@ export default function AdminB2BMarketplacePage() {
 
         {/* Sağ panel: Ürün yetkilendirme */}
         <div className="md:col-span-8 lg:col-span-9 space-y-3">
-              <div className="text-[11px] font-mono bg-muted rounded px-2 py-1">
-                {partnerId || "-"}
+          <div className="flex items-center gap-2">
+            <Store className="h-5 w-5" />
+            <div>
+              <h1 className="text-lg font-semibold text-foreground">B2B Marketplace</h1>
+              <p className="text-xs text-muted-foreground">
+                Seçili partner için hangi ürünlerin satılabilir/görünür olduğunu ve ürün bazlı komisyon oranlarını
+                yönetin.
+              </p>
+            </div>
+          </div>
+
+          {!selectedPartnerId && (
+            <Card>
+              <CardContent className="py-10 flex flex-col items-center gap-3 text-center">
+                <Store className="h-8 w-8 text-muted-foreground" />
+                <p className="font-semibold text-foreground">Partner seçilmedi</p>
+                <p className="text-sm text-muted-foreground max-w-sm">
+                  Soldaki listeden bir partner seçerek ürün yetkilendirme detaylarını görüntüleyebilirsiniz.
+                </p>
+              </CardContent>
+            </Card>
+          )}
+
+          {selectedPartnerId && (
+            <Card>
+              <CardHeader className="pb-3 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <CardTitle className="text-sm font-medium">{currentPartnerLabel}</CardTitle>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Varsayılan kural: Kayıt yoksa ürün kapalı kabul edilir. Yalnızca açtığınız ürünler ilgili
+                    partner için listelenir ve satılabilir olur.
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap gap-2 items-center text-[11px]">
+                  <select
+                    className="h-8 rounded-md border bg-background px-2 text-[11px]"
+                    value={productTypeFilter}
+                    onChange={(e) => setProductTypeFilter(e.target.value)}
+                  >
+                    <option value="">Tüm türler</option>
+                    <option value="hotel">Otel</option>
+                    <option value="tour">Tur</option>
+                  </select>
+                  <select
+                    className="h-8 rounded-md border bg-background px-2 text-[11px]"
+                    value={productStatusFilter}
+                    onChange={(e) => setProductStatusFilter(e.target.value)}
+                  >
+                    <option value="">Tüm durumlar</option>
+                    <option value="active">Aktif</option>
+                    <option value="passive">Pasif</option>
+                  </select>
+                  <div className="relative">
+                    <Search className="absolute left-2 top-2.5 h-3 w-3 text-muted-foreground" />
+                    <Input
+                      className="pl-7 h-8 text-[11px] w-48"
+                      placeholder="Ad / Kod / Şehir filtrele"
+                      value={productSearchInput}
+                      onChange={(e) => {
+                        setProductPage(1);
+                        setProductSearchInput(e.target.value);
+                      }}
+                    />
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
               </div>
             </div>
             <div className="space-y-1">

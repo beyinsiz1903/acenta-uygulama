@@ -412,6 +412,13 @@ function MiniRefundHistory({ bookingId }) {
                   </span>
                 );
               })()}
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 function RefundMarkPaidDialog({ open, onOpenChange, caseData, onMarked }) {
   const [paymentRef, setPaymentRef] = useState("");

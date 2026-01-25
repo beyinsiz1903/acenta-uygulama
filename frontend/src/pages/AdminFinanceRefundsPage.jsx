@@ -518,6 +518,121 @@ function RefundDocumentsSection({ caseData }) {
 
   if (!hasCase) return null;
 
+
+function RefundTasksSection({ caseData }) {
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const hasCase = !!caseData?.case_id;
+
+  const load = async () => {
+    if (!hasCase) return;
+    try {
+      setLoading(true);
+      setError("");
+      const resp = await api.get(`/ops/refunds/${caseData.case_id}/tasks`);
+      setItems(resp.data?.items || []);
+    } catch (e) {
+      setError(apiErrorMessage(e));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (hasCase) {
+      load();
+    } else {
+      setItems([]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [caseData?.case_id]);
+
+  const onQuickStatus = async (task, status) => {
+    try {
+      await api.patch(`/ops/tasks/${task.task_id}`, { status });
+      await load();
+    } catch (e) {
+      toast({ title: "Görev güncellenemedi", description: apiErrorMessage(e), variant: "destructive" });
+    }
+  };
+
+  if (!hasCase) return null;
+
+  return (
+    <div className="rounded-lg border bg-muted/20 p-3 space-y-2">
+      <div className="flex items-center justify-between gap-2">
+        <div className="text-xs font-semibold text-muted-foreground">Görevler</div>
+      </div>
+      {loading ? (
+        <div className="text-xs text-muted-foreground">Görevler yükleniyor...</div>
+      ) : error ? (
+        <div className="text-xs text-destructive">{error}</div>
+      ) : !items.length ? (
+        <div className="text-xs text-muted-foreground">Bu refund için görev yok.</div>
+      ) : (
+        <div className="space-y-1 text-xs">
+          {items.map((t) => {
+            const overdue = t.is_overdue && ["open", "in_progress"].includes(t.status);
+            return (
+              <div
+                key={t.task_id}
+                className="flex items-center justify-between gap-2 rounded border bg-background px-2 py-1"
+              >
+                <div className="flex flex-col gap-0.5 min-w-0">
+                  <div className="flex items-center gap-2">
+                    {statusBadge(t.status)}
+                    {priorityBadge(t.priority)}
+                    {overdue && (
+                      <span className="text-[10px] text-destructive flex items-center gap-1">
+                        <Clock className="h-3 w-3" /> SLA aşıldı
+                      </span>
+                    )}
+                  </div>
+                  <div className="truncate font-medium" title={t.title}>
+                    {t.title}
+                  </div>
+                  <div className="text-[11px] text-muted-foreground flex flex-wrap gap-2">
+                    <span>Tip: {t.task_type}</span>
+                    {t.due_at && <span>Due: {new Date(t.due_at).toLocaleString()}</span>}
+                    {t.assignee_email && <span>Atanan: {t.assignee_email}</span>}
+                  </div>
+                </div>
+                <div className="flex items-center gap-1">
+                  {t.status === "open" && (
+                    <Button
+                      size="xs"
+                      variant="outline"
+                      onClick={() => onQuickStatus(t, "in_progress")}
+                    >
+                      Başlat
+                    </Button>
+                  )}
+                  {t.status === "in_progress" && (
+                    <Button size="xs" onClick={() => onQuickStatus(t, "done")}>
+                      Tamamla
+                    </Button>
+                  )}
+                  {t.status !== "done" && t.status !== "cancelled" && (
+                    <Button
+                      size="xs"
+                      variant="ghost"
+                      onClick={() => onQuickStatus(t, "cancelled")}
+                    >
+                      İptal
+                    </Button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
   return (
     <div className="rounded-lg border bg-muted/20 p-3 space-y-3">
       <div className="flex items-center justify-between gap-2">

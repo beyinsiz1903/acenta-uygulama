@@ -259,85 +259,35 @@ class RefundCaseService:
         New callers should use approve_step1/approve_step2 directly.
         """
         case = await self._load_case(organization_id, case_id)
-        if case["status"] not in {"open", "pending_approval"}:
+        # Legacy behaviour: allow open/pending_approval and run a full approve+ledger+close.
+        if case["status"] not in {"open", "pending_approval", "pending_approval_1", "pending_approval_2"}:
             raise AppError(
                 status_code=409,
                 code="invalid_case_state",
                 message="Refund case is not open for approval",
             )
 
-        computed = case.get("computed") or {}
-        refundable = float(computed.get("refundable", 0.0))
-
-        if approved_amount <= 0 or approved_amount > refundable + 0.01:
-            raise AppError(
-                status_code=422,
-                code="approved_amount_invalid",
-                message="Approved amount must be > 0 and <= refundable",
+        # Map legacy single-step into new multi-step where possible
+        # 1) If case is open/pending_approval_1 -> run step1 first
+        if case["status"] in {"open", "pending_approval", "pending_approval_1"}:
+            await self.approve_step1(
+                organization_id=organization_id,
+                case_id=case_id,
+                approved_amount=approved_amount,
+                actor_email=decided_by,
+                actor_id=None,
             )
 
-        # Load booking to ensure currency and context
-        booking_id = case["booking_id"]
-        booking = await self.db.bookings.find_one(
-            {"_id": ObjectId(booking_id), "organization_id": organization_id}
-        )
-        if not booking:
-            raise AppError(
-                status_code=404,
-                code="booking_not_found",
-                message="Booking not found for refund case",
-            )
-
-        currency = booking.get("currency")
-        fx = booking.get("fx") or {}
-
-        # Compute approved amount in EUR (Phase 2C)
-        if currency == "EUR":
-            approved_amount_eur = approved_amount
-        else:
-            rate_basis = fx.get("rate_basis")
-            rate = fx.get("rate")
-            if rate_basis != "QUOTE_PER_EUR" or not rate or float(rate) <= 0:
-                raise AppError(
-                    500,
-                    "fx_snapshot_missing",
-                    "FX rate or rate_basis missing/invalid for non-EUR refund",
-                )
-            approved_amount_eur = round(float(approved_amount) / float(rate), 2)
-
-        agency_id = case["agency_id"]
-
-        # Post REFUND_APPROVED via booking finance service (AR-only correction)
-        posting_id = await self.booking_finance.post_refund_approved(
+        # 2) Then run step2 (this will perform ledger + financials and set status=approved)
+        result = await self.approve_step2(
             organization_id=organization_id,
-            booking_id=booking_id,
             case_id=case_id,
-            agency_id=agency_id,
-            refund_amount=approved_amount_eur,
-            currency="EUR",
-            occurred_at=now_utc(),
+            actor_email=decided_by,
+            actor_id=None,
+            note=None,
         )
 
-        # Update booking_financials snapshot (Phase 2B.4)
-        from app.services.booking_financials import BookingFinancialsService
-
-        bfs = BookingFinancialsService(self.db)
-        await bfs.ensure_financials(organization_id, booking)
-        await bfs.apply_refund_approved(
-            organization_id=organization_id,
-            booking_id=booking_id,
-            refund_case_id=str(case["_id"]),
-            ledger_posting_id=posting_id,
-            approved_amount=approved_amount,
-            applied_at=now_utc(),
-        )
-
-        # Update case to closed
-        now = now_utc()
-        decision = "approved" if abs(approved_amount - refundable) < 0.01 else "partial"
-
-        await self.db.refund_cases.update_one(
-            {"_id": case["_id"], "organization_id": organization_id},
+        return result
 
     # ------------------------------------------------------------------
     # New multi-step workflow (Phase 2.1)

@@ -892,6 +892,15 @@ async def mark_refund_paid(
                     "status_to": status_to,
                 },
             )
+        # Ops playbook: transition to close task
+        engine = OpsPlaybookEngine(db)
+        await engine.on_refund_marked_paid(
+            org_id,
+            case_id=case_id,
+            booking_id=booking_id,
+            actor_email=current_user.get("email"),
+            actor_id=current_user.get("id"),
+        )
     except Exception:
         pass
 

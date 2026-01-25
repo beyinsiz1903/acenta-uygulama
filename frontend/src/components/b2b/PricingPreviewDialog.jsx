@@ -453,7 +453,7 @@ export default function PricingPreviewDialog({ open, onOpenChange, initialContex
                   </div>
                 </div>
 
-                {/* Breakdown detayları */}
+                {/* Breakdown detayları (object) */}
                 {normalized.breakdownObj && (
                   <div className="border rounded-md p-2">
                     <div className="text-xs font-medium mb-2">Detay</div>
@@ -467,7 +467,7 @@ export default function PricingPreviewDialog({ open, onOpenChange, initialContex
                         { k: "commission_amount", label: "Komisyon Tutarı", type: "money" },
                         { k: "final_sell_price", label: "Final Satış", type: "money" },
                       ].map((row) => {
-                        const v = normalized.breakdown[row.k];
+                        const v = normalized.breakdownObj[row.k];
                         let formatted = "-";
                         if (row.type === "int") formatted = fmtInt(v);
                         if (row.type === "money") formatted = fmtMoney(v, normalized.currency);
@@ -479,6 +479,23 @@ export default function PricingPreviewDialog({ open, onOpenChange, initialContex
                           </div>
                         );
                       })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Legacy breakdown array */}
+                {normalized.breakdownArr && normalized.breakdownArr.length > 0 && (
+                  <div className="border rounded-md p-2">
+                    <div className="text-xs font-medium mb-2">Breakdown (legacy)</div>
+                    <div className="grid grid-cols-1 gap-1">
+                      {normalized.breakdownArr.map((b, i) => (
+                        <div key={i} className="text-xs flex justify-between gap-2">
+                          <div className="truncate">{b.label ?? b.key ?? `item_${i}`}</div>
+                          <div className="font-mono">
+                            {b.amount ?? b.value ?? "-"} {b.currency ?? normalized.currency}
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 )}

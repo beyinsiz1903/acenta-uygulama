@@ -99,6 +99,46 @@ function eventSubline(ev) {
     return parts.join(" · ");
   }
 
+  if (t === "REFUND_APPROVED_STEP1") {
+    const parts = [];
+    if (m.case_id) parts.push(`case: ${m.case_id}`);
+    if (m.approved_amount != null && m.currency) {
+      parts.push(`tutar: ${m.approved_amount} ${m.currency}`);
+    }
+    if (m.by_email) parts.push(`by: ${m.by_email}`);
+    return parts.join(" · ");
+  }
+
+  if (t === "REFUND_APPROVED_STEP2") {
+    const parts = [];
+    if (m.case_id) parts.push(`case: ${m.case_id}`);
+    if (m.by_email) parts.push(`by: ${m.by_email}`);
+    return parts.join(" · ");
+  }
+
+  if (t === "REFUND_MARKED_PAID") {
+    const parts = [];
+    if (m.case_id) parts.push(`case: ${m.case_id}`);
+    if (m.payment_reference) parts.push(`ref: ${m.payment_reference}`);
+    if (m.by_email) parts.push(`by: ${m.by_email}`);
+    return parts.join(" · ");
+  }
+
+  if (t === "REFUND_REJECTED") {
+    const parts = [];
+    if (m.case_id) parts.push(`case: ${m.case_id}`);
+    if (m.reason) parts.push(`sebep: ${m.reason}`);
+    if (m.by_email) parts.push(`by: ${m.by_email}`);
+    return parts.join(" · ");
+  }
+
+  if (t === "REFUND_CLOSED") {
+    const parts = [];
+    if (m.case_id) parts.push(`case: ${m.case_id}`);
+    if (m.by_email) parts.push(`by: ${m.by_email}`);
+    return parts.join(" · ");
+  }
+
   return "";
 }
 

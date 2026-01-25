@@ -20,6 +20,7 @@ from app.utils import now_utc
 from app.services.audit import write_audit_log, audit_snapshot
 from app.services.refund_cases import RefundCaseService
 from app.services.booking_events import emit_event
+from app.services.ops_playbook import OpsPlaybookEngine
 from app.schemas_finance import (
     FinanceAccount,
     FinanceAccountCreate,

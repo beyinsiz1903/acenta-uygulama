@@ -171,7 +171,8 @@ async def test_auth_and_basic_contract(token: str, test_data: Dict[str, Any], re
                     
                     # Check no MongoDB _id leakage
                     response_str = json.dumps(data)
-                    if "_id" not in response_str:
+                    # Look for actual MongoDB _id fields (not just "_id" substring)
+                    if '"_id"' not in response_str:
                         result.success("✅ No MongoDB _id leakage detected")
                     else:
                         result.failure("❌ MongoDB _id found in response")

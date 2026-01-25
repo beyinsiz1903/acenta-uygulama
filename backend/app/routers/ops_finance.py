@@ -1498,7 +1498,7 @@ async def upload_document(
         "roles": current_user.get("roles") or [],
     }
 
-    # Audit (best-effort)
+    # Audit + timeline (best-effort)
     try:
         await write_audit_log(
             db,
@@ -1525,8 +1525,16 @@ async def upload_document(
                 "content_type": file.content_type,
             },
         )
+    except Exception:
+        logger.exception(
+            "audit_write_failed action=document_upload org=%s case=%s doc=%s",
+            org_id,
+            entity_id,
+            str(doc_id),
+        )
 
-        if booking_id:
+    if booking_id:
+        try:
             await emit_event(
                 db,
                 organization_id=org_id,
@@ -1547,8 +1555,14 @@ async def upload_document(
                     "by_actor_id": current_user.get("id"),
                 },
             )
-    except Exception as e:
-        logger.warning("document_upload_audit_failed doc_id=%s err=%s", str(doc_id), str(e))
+        except Exception:
+            logger.exception(
+                "event_emit_failed type=DOCUMENT_UPLOADED org=%s booking=%s case=%s doc=%s",
+                org_id,
+                booking_id,
+                entity_id,
+                str(doc_id),
+            )
 
     return {
         "document_id": str(doc_id),

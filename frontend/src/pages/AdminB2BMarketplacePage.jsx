@@ -303,46 +303,11 @@ export default function AdminB2BMarketplacePage() {
                   type="button"
                   size="xs"
                   variant="outline"
-  const handleChange = (field, value) => {
-    setRequestState((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const canSubmit =
-    !!partnerId &&
-    !!product?.product_id &&
-    requestState.checkin &&
-    requestState.checkout &&
-    !loading;
-
-  const onSubmit = async (e) => {
-    e.preventDefault();
-    if (!canSubmit) return;
-    try {
-      setLoading(true);
-      setError("");
-      setResult(null);
-      const body = {
-        partner_id: partnerId,
-        product_id: product.product_id,
-        checkin: requestState.checkin,
-        checkout: requestState.checkout,
-        occupancy: {
-          adults: Number(requestState.adults) || 1,
-          children: Number(requestState.children) || 0,
-          rooms: Number(requestState.rooms) || 1,
-        },
-        currency: requestState.currency || null,
-        channel_id: null,
-        include_rules: true,
-        include_breakdown: true,
-      };
-      const res = await api.post("/admin/b2b/pricing/preview", body);
-      setResult(res.data);
-    } catch (err) {
-      setError(apiErrorMessage(err));
-    } finally {
-      setLoading(false);
-    }
+                  onClick={loadPartners}
+                  disabled={partnersLoading}
+                >
+                  {partnersLoading && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}Yenile
+                </Button>
       <PricingPreviewDialog
         open={pricingOpen}
         onOpenChange={setPricingOpen}

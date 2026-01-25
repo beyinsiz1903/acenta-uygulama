@@ -470,6 +470,57 @@ async def list_refunds(
     return await svc.list_refunds(org_id, status, limit, booking_id)
 
 
+@router.post("/refunds")
+async def create_refund_case(
+    payload: dict,
+    request: Request,
+    current_user=Depends(require_roles(["admin", "ops", "super_admin"])),
+    db=Depends(get_db),
+):
+    """Create a new refund case"""
+    org_id = current_user["organization_id"]
+    from app.services.refund_cases import RefundCaseService
+    
+    booking_id = payload.get("booking_id")
+    if not booking_id:
+        raise AppError(422, "validation_error", "booking_id is required")
+    
+    # Get booking to extract agency_id
+    booking = await db.bookings.find_one({"_id": ObjectId(booking_id), "organization_id": org_id})
+    if not booking:
+        raise AppError(404, "booking_not_found", "Booking not found")
+    
+    agency_id = booking.get("agency_id", "default_agency")
+    
+    svc = RefundCaseService(db)
+    result = await svc.create_refund_request(
+        organization_id=org_id,
+        booking_id=booking_id,
+        agency_id=agency_id,
+        requested_amount=payload.get("requested_amount"),
+        requested_message=payload.get("customer_note"),
+        reason=payload.get("reason", "Customer request"),
+        created_by=current_user.get("email", "admin"),
+    )
+    
+    # Trigger ops playbook for initial task creation
+    try:
+        engine = OpsPlaybookEngine(db)
+        await engine.on_refund_created(
+            org_id,
+            case_id=result["case_id"],
+            booking_id=booking_id,
+            actor_email=current_user.get("email"),
+            actor_id=current_user.get("id"),
+        )
+    except Exception:
+        # Best effort - don't fail refund creation if playbook fails
+        import logging
+        logging.getLogger(__name__).exception("ops_playbook_refund_created_failed")
+    
+    return result
+
+
 @router.get("/refunds/{case_id}")
 async def get_refund_case(
     case_id: str,

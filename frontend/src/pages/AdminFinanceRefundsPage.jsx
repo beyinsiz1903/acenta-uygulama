@@ -757,6 +757,20 @@ function RefundDetailPanel({
           </div>
         )}
 
+      <RefundApproveStep2Dialog
+        open={approveStep2Open}
+        onOpenChange={setApproveStep2Open}
+        caseData={caseData}
+        onApproved={onAfterDecision}
+      />
+
+      <RefundMarkPaidDialog
+        open={markPaidOpen}
+        onOpenChange={setMarkPaidOpen}
+        caseData={caseData}
+        onMarked={onAfterDecision}
+      />
+
         {/* Last 5 closed refunds for this booking */}
       <RefundApproveStep2Dialog
         open={approveStep2Open}

@@ -186,7 +186,8 @@ export default function OpsTasksPage() {
         </CardContent>
       </Card>
 
-      <Card>
+
+function NewTaskForm({ onCreated }) {
   const [entityId, setEntityId] = useState("");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");

@@ -623,16 +623,28 @@ function RefundDocumentsSection({ caseData }) {
         <div className="text-xs text-muted-foreground">Bu refund için doküman yok.</div>
       ) : (
         <div className="mt-2 space-y-1 text-xs">
-          {items.map((doc) => (
-            <div
-              key={doc.document_id}
-              className="flex items-center justify-between gap-2 rounded border bg-background px-2 py-1"
-            >
-              <div className="flex items-center gap-2 min-w-0">
-                <Badge variant="outline" className="text-[10px] uppercase">
-                  {doc.tag || "other"}
-                </Badge>
-                <button
+          {items.map((doc) => {
+            const tagValue = doc.tag || "diger";
+            const tagLabelMap = {
+              dekont: "Dekont",
+              iptal_yazisi: "İptal yazısı",
+              musteri_yazismasi: "Müşteri yazışması",
+              kimlik: "Kimlik",
+              diger: "Diğer",
+            };
+            const isKnownTag = TAG_OPTIONS.includes(tagValue);
+            const badgeText = isKnownTag ? tagLabelMap[tagValue] : `Diğer (${tagValue})`;
+
+            return (
+              <div
+                key={doc.document_id}
+                className="flex items-center justify-between gap-2 rounded border bg-background px-2 py-1"
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <Badge variant="outline" className="text-[10px] uppercase">
+                    {badgeText}
+                  </Badge>
+                  <button
                   type="button"
                   className="text-xs text-blue-600 hover:underline truncate max-w-[220px] text-left"
                   onClick={() => onDownload(doc)}

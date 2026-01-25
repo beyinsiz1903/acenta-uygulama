@@ -275,6 +275,8 @@ export default function PricingPreviewDialog({ open, onOpenChange, initialContex
 
   useEffect(() => {
     if (!open) return;
+    const loaded = loadScenarios();
+    setScenarios(loaded);
     // Open olduğunda context’i initialize et
     let baseCtx;
     if (!initialContext) {

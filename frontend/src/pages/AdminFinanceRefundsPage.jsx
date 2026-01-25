@@ -418,6 +418,7 @@ function MiniRefundHistory({ bookingId }) {
       ))}
     </div>
   );
+}
 
 function RefundDocumentsSection({ caseData }) {
   const [items, setItems] = useState([]);

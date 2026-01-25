@@ -518,6 +518,304 @@ async def approve_refund_case(
                 "roles": current_user.get("roles") or [],
             },
             request=request,
+
+
+@router.post("/refunds/{case_id}/approve-step1")
+async def approve_refund_step1(
+    case_id: str,
+    payload: dict,
+    request: Request,
+    current_user=Depends(require_roles(["admin", "ops", "super_admin"])),
+    db=Depends(get_db),
+):
+    org_id = current_user["organization_id"]
+    approved_amount = float(payload.get("approved_amount") or 0.0)
+
+    svc = RefundCaseService(db)
+
+    # Load existing for audit before
+    existing = await svc.get_case(org_id, case_id)
+    status_from = existing.get("status") if existing else None
+
+    result = await svc.approve_step1(
+        organization_id=org_id,
+        case_id=case_id,
+        approved_amount=approved_amount,
+        actor_email=current_user["email"],
+        actor_id=current_user.get("id"),
+    )
+
+    # Audit + booking event (best-effort)
+    try:
+        status_to = result.get("status")
+        await write_audit_log(
+            db,
+            organization_id=org_id,
+            actor={
+                "actor_type": "user",
+                "actor_id": current_user.get("id") or current_user.get("email"),
+                "email": current_user.get("email"),
+                "roles": current_user.get("roles") or [],
+            },
+            request=request,
+            action="refund_approve_step1",
+            target_type="refund_case",
+            target_id=case_id,
+            before=audit_snapshot("refund_case", existing),
+            after=audit_snapshot("refund_case", result),
+            meta={
+                "approved_amount": approved_amount,
+                "status_from": status_from,
+                "status_to": status_to,
+            },
+        )
+
+        # Booking timeline event
+        booking_id = result.get("booking_id")
+        if booking_id:
+            await emit_event(
+                db,
+                organization_id=org_id,
+                booking_id=booking_id,
+                type="REFUND_APPROVED_STEP1",
+                actor={
+                    "email": current_user.get("email"),
+                    "actor_id": current_user.get("id"),
+                    "roles": current_user.get("roles") or [],
+                },
+                meta={
+                    "refund_case_id": case_id,
+                    "approved_amount": approved_amount,
+                    "status_from": status_from,
+                    "status_to": status_to,
+                },
+            )
+    except Exception:
+        pass
+
+    return result
+
+
+@router.post("/refunds/{case_id}/approve-step2")
+async def approve_refund_step2(
+    case_id: str,
+    payload: dict,
+    request: Request,
+    current_user=Depends(require_roles(["admin", "ops", "super_admin"])),
+    db=Depends(get_db),
+):
+    org_id = current_user["organization_id"]
+    note = payload.get("note")
+
+    svc = RefundCaseService(db)
+
+    existing = await svc.get_case(org_id, case_id)
+    status_from = existing.get("status") if existing else None
+
+    result = await svc.approve_step2(
+        organization_id=org_id,
+        case_id=case_id,
+        actor_email=current_user["email"],
+        actor_id=current_user.get("id"),
+        note=note,
+    )
+
+    try:
+        status_to = result.get("status")
+        await write_audit_log(
+            db,
+            organization_id=org_id,
+            actor={
+                "actor_type": "user",
+                "actor_id": current_user.get("id") or current_user.get("email"),
+                "email": current_user.get("email"),
+                "roles": current_user.get("roles") or [],
+            },
+            request=request,
+            action="refund_approve_step2",
+            target_type="refund_case",
+            target_id=case_id,
+            before=audit_snapshot("refund_case", existing),
+            after=audit_snapshot("refund_case", result),
+            meta={
+                "note": note,
+                "status_from": status_from,
+                "status_to": status_to,
+                "approved_amount": (result.get("approved") or {}).get("amount"),
+            },
+        )
+
+        booking_id = result.get("booking_id")
+        if booking_id:
+            await emit_event(
+                db,
+                organization_id=org_id,
+                booking_id=booking_id,
+                type="REFUND_APPROVED_STEP2",
+                actor={
+                    "email": current_user.get("email"),
+                    "actor_id": current_user.get("id"),
+                    "roles": current_user.get("roles") or [],
+                },
+                meta={
+                    "refund_case_id": case_id,
+                    "note": note,
+                    "status_from": status_from,
+                    "status_to": status_to,
+                    "approved_amount": (result.get("approved") or {}).get("amount"),
+                },
+            )
+    except Exception:
+        pass
+
+    return result
+
+
+@router.post("/refunds/{case_id}/mark-paid")
+async def mark_refund_paid(
+    case_id: str,
+    payload: dict,
+    request: Request,
+    current_user=Depends(require_roles(["admin", "ops", "super_admin"])),
+    db=Depends(get_db),
+):
+    org_id = current_user["organization_id"]
+    payment_reference = (payload.get("payment_reference") or "").strip()
+
+    svc = RefundCaseService(db)
+
+    existing = await svc.get_case(org_id, case_id)
+    status_from = existing.get("status") if existing else None
+
+    result = await svc.mark_paid(
+        organization_id=org_id,
+        case_id=case_id,
+        payment_reference=payment_reference,
+        actor_email=current_user["email"],
+        actor_id=current_user.get("id"),
+    )
+
+    try:
+        status_to = result.get("status")
+        await write_audit_log(
+            db,
+            organization_id=org_id,
+            actor={
+                "actor_type": "user",
+                "actor_id": current_user.get("id") or current_user.get("email"),
+                "email": current_user.get("email"),
+                "roles": current_user.get("roles") or [],
+            },
+            request=request,
+            action="refund_mark_paid",
+            target_type="refund_case",
+            target_id=case_id,
+            before=audit_snapshot("refund_case", existing),
+            after=audit_snapshot("refund_case", result),
+            meta={
+                "payment_reference": payment_reference,
+                "status_from": status_from,
+                "status_to": status_to,
+            },
+        )
+
+        booking_id = result.get("booking_id")
+        if booking_id:
+            await emit_event(
+                db,
+                organization_id=org_id,
+                booking_id=booking_id,
+                type="REFUND_MARKED_PAID",
+                actor={
+                    "email": current_user.get("email"),
+                    "actor_id": current_user.get("id"),
+                    "roles": current_user.get("roles") or [],
+                },
+                meta={
+                    "refund_case_id": case_id,
+                    "payment_reference": payment_reference,
+                    "status_from": status_from,
+                    "status_to": status_to,
+                },
+            )
+    except Exception:
+        pass
+
+    return result
+
+
+@router.post("/refunds/{case_id}/close")
+async def close_refund_case(
+    case_id: str,
+    payload: dict,
+    request: Request,
+    current_user=Depends(require_roles(["admin", "ops", "super_admin"])),
+    db=Depends(get_db),
+):
+    org_id = current_user["organization_id"]
+    note = payload.get("note")
+
+    svc = RefundCaseService(db)
+
+    existing = await svc.get_case(org_id, case_id)
+    status_from = existing.get("status") if existing else None
+
+    result = await svc.close_case(
+        organization_id=org_id,
+        case_id=case_id,
+        actor_email=current_user["email"],
+        actor_id=current_user.get("id"),
+        note=note,
+    )
+
+    try:
+        status_to = result.get("status")
+        await write_audit_log(
+            db,
+            organization_id=org_id,
+            actor={
+                "actor_type": "user",
+                "actor_id": current_user.get("id") or current_user.get("email"),
+                "email": current_user.get("email"),
+                "roles": current_user.get("roles") or [],
+            },
+            request=request,
+            action="refund_close",
+            target_type="refund_case",
+            target_id=case_id,
+            before=audit_snapshot("refund_case", existing),
+            after=audit_snapshot("refund_case", result),
+            meta={
+                "note": note,
+                "status_from": status_from,
+                "status_to": status_to,
+            },
+        )
+
+        booking_id = result.get("booking_id")
+        if booking_id:
+            await emit_event(
+                db,
+                organization_id=org_id,
+                booking_id=booking_id,
+                type="REFUND_CLOSED",
+                actor={
+                    "email": current_user.get("email"),
+                    "actor_id": current_user.get("id"),
+                    "roles": current_user.get("roles") or [],
+                },
+                meta={
+                    "refund_case_id": case_id,
+                    "note": note,
+                    "status_from": status_from,
+                    "status_to": status_to,
+                },
+            )
+    except Exception:
+        pass
+
+    return result
+
             action="refund_approve",
             target_type="refund_case",
             target_id=case_id,

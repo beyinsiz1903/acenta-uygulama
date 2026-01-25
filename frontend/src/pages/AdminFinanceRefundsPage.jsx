@@ -713,6 +713,15 @@ function RefundDocumentsSection({ caseData }) {
           })}
         </div>
       )}
+      <PDFPreviewDialog 
+        previewOpen={previewOpen}
+        setPreviewOpen={setPreviewOpen}
+        previewUrl={previewUrl}
+        setPreviewUrl={setPreviewUrl}
+        previewTitle={previewTitle}
+        previewLoading={previewLoading}
+        previewError={previewError}
+      />
     </div>
   );
 }

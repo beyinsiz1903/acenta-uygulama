@@ -318,6 +318,239 @@ export default function AdminB2BMarketplacePage() {
                   type="button"
                   size="xs"
                   variant="outline"
+
+function PricingPreviewDialog({
+  open,
+  onOpenChange,
+  partnerId,
+  product,
+  requestState,
+  setRequestState,
+  loading,
+  setLoading,
+  error,
+  setError,
+  result,
+  setResult,
+}) {
+  const handleChange = (field, value) => {
+    setRequestState((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const canSubmit =
+    !!partnerId &&
+    !!product?.product_id &&
+    requestState.checkin &&
+    requestState.checkout &&
+    !loading;
+
+  const onSubmit = async (e) => {
+    e.preventDefault();
+    if (!canSubmit) return;
+    try {
+      setLoading(true);
+      setError("");
+      setResult(null);
+      const body = {
+        partner_id: partnerId,
+        product_id: product.product_id,
+        checkin: requestState.checkin,
+        checkout: requestState.checkout,
+        occupancy: {
+          adults: Number(requestState.adults) || 1,
+          children: Number(requestState.children) || 0,
+          rooms: Number(requestState.rooms) || 1,
+        },
+        currency: requestState.currency || null,
+        channel_id: null,
+        include_rules: true,
+        include_breakdown: true,
+      };
+      const res = await api.post("/admin/b2b/pricing/preview", body);
+      setResult(res.data);
+    } catch (err) {
+      setError(apiErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const nights = result?.breakdown?.nights;
+  const breakdown = result?.breakdown;
+  const ruleHits = result?.rule_hits || [];
+  const notes = result?.notes || [];
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Fiyat Hesaplayıcı</DialogTitle>
+        </DialogHeader>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs mt-2">
+          <form onSubmit={onSubmit} className="space-y-2">
+            <div className="space-y-1">
+              <Label className="text-[11px] text-muted-foreground">Partner</Label>
+              <div className="text-[11px] font-mono bg-muted rounded px-2 py-1">
+                {partnerId || "-"}
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-[11px] text-muted-foreground">Ürün</Label>
+              <div className="text-[11px] font-mono bg-muted rounded px-2 py-1">
+                {product?.product_id}  b7 {product?.title}
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <Label className="text-[11px] text-muted-foreground">Check-in</Label>
+                <Input
+                  type="date"
+                  className="h-8"
+                  value={requestState.checkin}
+                  onChange={(e) => handleChange("checkin", e.target.value)}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[11px] text-muted-foreground">Check-out</Label>
+                <Input
+                  type="date"
+                  className="h-8"
+                  value={requestState.checkout}
+                  onChange={(e) => handleChange("checkout", e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              <div className="space-y-1">
+                <Label className="text-[11px] text-muted-foreground">Yetişkin</Label>
+                <Input
+                  type="number"
+                  min={1}
+                  max={10}
+                  className="h-8"
+                  value={requestState.adults}
+                  onChange={(e) => handleChange("adults", e.target.value)}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[11px] text-muted-foreground">Çocuk</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  max={10}
+                  className="h-8"
+                  value={requestState.children}
+                  onChange={(e) => handleChange("children", e.target.value)}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[11px] text-muted-foreground">Oda</Label>
+                <Input
+                  type="number"
+                  min={1}
+                  max={5}
+                  className="h-8"
+                  value={requestState.rooms}
+                  onChange={(e) => handleChange("rooms", e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-[11px] text-muted-foreground">Para birimi</Label>
+              <Input
+                type="text"
+                className="h-8"
+                value={requestState.currency}
+                onChange={(e) => handleChange("currency", e.target.value.toUpperCase())}
+              />
+            </div>
+            <div className="flex items-center justify-between pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setResult(null);
+                  setError("");
+                }}
+              >
+                Temizle
+              </Button>
+              <Button type="submit" size="sm" disabled={!canSubmit}>
+                {loading && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
+                Hesapla
+              </Button>
+            </div>
+            {error && (
+              <div className="mt-2 text-[11px] text-destructive flex items-center gap-1">
+                <AlertCircle className="h-3 w-3" />
+                <span>{error}</span>
+              </div>
+            )}
+          </form>
+
+          <div className="space-y-2">
+            {!result && !error && (
+              <p className="text-[11px] text-muted-foreground">
+                Parametreleri doldurup "Hesapla" ile bu partner/ürün için fiyat önizlemesi alabilirsiniz.
+              </p>
+            )}
+            {result && (
+              <div className="space-y-2">
+                <div className="rounded border bg-muted/40 p-2 space-y-1">
+                  <div className="text-[11px] font-semibold">Özet</div>
+                  <div className="text-[11px] text-muted-foreground">
+                    Gece sayısı: <span className="font-mono">{nights}</span>
+                  </div>
+                  <div className="text-[11px] text-muted-foreground">
+                    Base price: <span className="font-mono">{breakdown.base_price} {result.currency}</span>
+                  </div>
+                  <div className="text-[11px] text-muted-foreground">
+                    Markup: <span className="font-mono">{breakdown.markup_percent}%</span> (
+                    <span className="font-mono">{breakdown.markup_amount} {result.currency}</span>)
+                  </div>
+                  <div className="text-[11px] text-muted-foreground">
+                    Komisyon: <span className="font-mono">{breakdown.commission_rate}%</span> (
+                    <span className="font-mono">{breakdown.commission_amount} {result.currency}</span>)
+                  </div>
+                  <div className="text-[11px] text-muted-foreground font-semibold">
+                    Final satış: <span className="font-mono">{breakdown.final_sell_price} {result.currency}</span>
+                  </div>
+                </div>
+
+                {ruleHits.length > 0 && (
+                  <div className="rounded border bg-muted/40 p-2 space-y-1">
+                    <div className="text-[11px] font-semibold">Uygulanan kurallar</div>
+                    <ul className="list-disc list-inside space-y-1 text-[11px] text-muted-foreground">
+                      {ruleHits.map((r) => (
+                        <li key={r.rule_id}>
+                          <span className="font-mono mr-1">{r.rule_id}</span>
+                          <span>{r.effect}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {notes.length > 0 && (
+                  <div className="rounded border bg-muted/40 p-2 space-y-1">
+                    <div className="text-[11px] font-semibold">Notlar</div>
+                    <ul className="list-disc list-inside space-y-1 text-[11px] text-muted-foreground">
+                      {notes.map((n, idx) => (
+                        <li key={idx}>{n}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
                   className="h-7 text-[11px]"
                   onClick={loadPartners}
                   disabled={partnersLoading}

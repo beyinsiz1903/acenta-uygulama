@@ -754,6 +754,10 @@ function RefundTasksSection({ caseData }) {
             );
           })}
         </div>
+      )}
+    </div>
+  );
+}
 
 function RefundTaskCreateDialogButton({ caseData, onCreated }) {
   const [open, setOpen] = useState(false);

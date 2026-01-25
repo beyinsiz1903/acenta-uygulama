@@ -371,7 +371,7 @@ function MiniRefundHistory({ bookingId }) {
   if (!items.length) {
     return (
       <div className="text-xs text-muted-foreground">
-        Bu booking icin kapal refund yok.
+        Bu booking için kapalı refund yok.
       </div>
     );
   }

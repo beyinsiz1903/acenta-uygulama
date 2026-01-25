@@ -803,8 +803,10 @@ export default function AdminFinanceRefundsPage() {
   const [bookingFinancials, setBookingFinancials] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
 
-  const [approveOpen, setApproveOpen] = useState(false);
+  const [approveStep1Open, setApproveStep1Open] = useState(false);
+  const [approveStep2Open, setApproveStep2Open] = useState(false);
   const [rejectOpen, setRejectOpen] = useState(false);
+  const [markPaidOpen, setMarkPaidOpen] = useState(false);
 
   const loadList = React.useCallback(async () => {
     try {

@@ -239,6 +239,7 @@ metadata:
 
 test_plan:
   current_focus:
+    - "Ops Tasks UI (2.3) – OpsTasksPage + Refund detail Görevler paneli"
     - "Document Vault UI in AdminFinanceRefundsPage (Sprint 2.2)"
     - "Refund Workflow 2.1 Multi-Step State Transitions"
     - "Refund Workflow 2.1 Reject Lifecycle"
@@ -249,7 +250,6 @@ test_plan:
     - "Ops Playbook (2.3) – Refund-driven Task Engine + Ops Tasks API"
   stuck_tasks:
     - "Refund Workflow 2.1 Legacy Approve Compatibility"
-    - "Refund Workflow 2.1 Reject Audit Timeline"
   test_all: false
   test_priority: "high_first"
 

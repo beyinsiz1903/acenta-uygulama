@@ -107,6 +107,7 @@ import CrmTasksPage from "./pages/crm/CrmTasksPage";
 import CrmEventsPage from "./pages/crm/CrmEventsPage";
 import CrmPipelinePage from "./pages/crm/CrmPipelinePage";
 import CrmDuplicateCustomersPage from "./pages/crm/CrmDuplicateCustomersPage";
+import OpsTasksPage from "./pages/OpsTasksPage";
 
 import HotelBookingsPage from "./pages/HotelBookingsPage";
 import HotelStopSellPage from "./pages/HotelStopSellPage";

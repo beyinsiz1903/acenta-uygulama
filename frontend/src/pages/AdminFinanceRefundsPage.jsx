@@ -280,7 +280,7 @@ function RefundApproveStep2Dialog({ open, onOpenChange, caseData, onApproved }) 
         </DialogHeader>
         <div className="space-y-3 mt-2 text-sm">
           <div className="text-xs text-muted-foreground">
-            Bu adımda ledger kayıtları oluşturulur ve refund case "approved" durumuna alınır.
+            Bu adımda ledger kayıtları oluşturulur ve refund case &quot;approved&quot; durumuna alınır.
           </div>
           <div className="space-y-1">
             <div className="text-xs text-muted-foreground">Not (opsiyonel)</div>

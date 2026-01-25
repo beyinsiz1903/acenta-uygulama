@@ -55,6 +55,20 @@ export default function AdminB2BMarketplacePage() {
   const [debouncedProductSearch, setDebouncedProductSearch] = useState("");
   const [productTypeFilter, setProductTypeFilter] = useState("");
   const [productStatusFilter, setProductStatusFilter] = useState("");
+  const [pricingOpen, setPricingOpen] = useState(false);
+  const [pricingProduct, setPricingProduct] = useState(null);
+  const [pricingLoading, setPricingLoading] = useState(false);
+  const [pricingError, setPricingError] = useState("");
+  const [pricingRequest, setPricingRequest] = useState({
+    checkin: "",
+    checkout: "",
+    adults: 2,
+    children: 0,
+    rooms: 1,
+    currency: "EUR",
+  });
+  const [pricingResult, setPricingResult] = useState(null);
+
   const [productPage, setProductPage] = useState(1);
   const [productLimit, setProductLimit] = useState(50);
   const [productHasMore, setProductHasMore] = useState(false);

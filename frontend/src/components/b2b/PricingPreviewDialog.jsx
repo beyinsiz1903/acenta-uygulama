@@ -125,19 +125,6 @@ export default function PricingPreviewDialog({ open, onOpenChange, initialContex
     }
   };
 
-  const Field = ({ label, value, onChange, type = "text", min }) => (
-    <label className="flex flex-col gap-1">
-      <div className="text-xs text-muted-foreground">{label}</div>
-      <Input
-        className="h-8 text-xs"
-        type={type}
-        min={min}
-        value={value ?? ""}
-        onChange={(e) => onChange(e.target.value)}
-      />
-    </label>
-  );
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl">

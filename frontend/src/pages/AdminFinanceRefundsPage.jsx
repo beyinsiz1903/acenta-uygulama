@@ -501,11 +501,11 @@ function RefundRejectDialog({ open, onOpenChange, caseData, onRejected }) {
       await api.post(`/ops/finance/refunds/${caseData.case_id}/reject`, {
         reason: reason || null,
       });
-      toast({ title: "Refund rejected" });
+      toast({ title: "Refund reddedildi" });
       onRejected();
       onOpenChange(false);
     } catch (e) {
-      toast({ title: "Reject failed", description: apiErrorMessage(e), variant: "destructive" });
+      toast({ title: "Red başarısız", description: apiErrorMessage(e), variant: "destructive" });
     } finally {
       setSubmitting(false);
     }
@@ -515,16 +515,16 @@ function RefundRejectDialog({ open, onOpenChange, caseData, onRejected }) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Reject refund</DialogTitle>
+          <DialogTitle>Refund Reddet</DialogTitle>
         </DialogHeader>
         <div className="space-y-3 mt-2 text-sm">
           <div className="space-y-1">
-            <div className="text-xs text-muted-foreground">Reason</div>
+            <div className="text-xs text-muted-foreground">Red sebebi</div>
             <Input
               type="text"
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              placeholder="Ops reason (optional)"
+              placeholder="Ops notu (opsiyonel)"
             />
           </div>
         </div>
@@ -534,11 +534,11 @@ function RefundRejectDialog({ open, onOpenChange, caseData, onRejected }) {
             onClick={() => onOpenChange(false)}
             disabled={submitting}
           >
-            Cancel
+            İptal
           </Button>
           <Button onClick={onSubmit} disabled={submitting}>
             {submitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-            Reject
+            Reddet
           </Button>
         </DialogFooter>
       </DialogContent>

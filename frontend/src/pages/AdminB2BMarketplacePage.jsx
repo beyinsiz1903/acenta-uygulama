@@ -312,22 +312,45 @@ export default function AdminB2BMarketplacePage() {
               <div className="mt-2 max-h-[420px] overflow-y-auto border rounded-xl divide-y">
 
                 {partnersError && (
+                  <div className="p-3 text-[11px] text-destructive flex items-start gap-2">
+                    <AlertCircle className="h-3 w-3 mt-0.5" />
+                    <span>{partnersError}</span>
+                  </div>
+                )}
 
-  const nights = result?.breakdown?.nights;
-  const breakdown = result?.breakdown;
-  const ruleHits = result?.rule_hits || [];
-  const notes = result?.notes || [];
+                {!partnersError && filteredPartners.length === 0 && !partnersLoading && (
+                  <div className="p-4 text-center text-[11px] text-muted-foreground">
+                    Henüz partner yok. Önce Partnerler ekranından bir partner oluşturun.
+                  </div>
+                )}
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>Fiyat Hesaplayıcı</DialogTitle>
-        </DialogHeader>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs mt-2">
-          <form onSubmit={onSubmit} className="space-y-2">
-            <div className="space-y-1">
-              <Label className="text-[11px] text-muted-foreground">Partner</Label>
+                {filteredPartners.map((p) => (
+                  <div
+                    key={p.id}
+                    className={`px-3 py-2 text-xs cursor-pointer flex items-center justify-between gap-2 hover:bg-muted/60 ${
+                      selectedPartnerId === p.id ? "bg-muted" : ""
+                    }`}
+                    onClick={() => {
+                      setSelectedPartnerId(p.id);
+                      setSelectedPartnerName(p.name);
+                    }}
+                  >
+                    <div className="flex flex-col">
+                      <span className="font-medium truncate max-w-[160px]">{p.name}</span>
+                      <span className="text-[10px] text-muted-foreground truncate max-w-[180px]">
+                        {p.contact_email || "-"}
+                      </span>
+                    </div>
+                    <StatusBadge status={p.status} />
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Sağ panel: Ürün yetkilendirme */}
+        <div className="md:col-span-8 lg:col-span-9 space-y-3">
               <div className="text-[11px] font-mono bg-muted rounded px-2 py-1">
                 {partnerId || "-"}
               </div>

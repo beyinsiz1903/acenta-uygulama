@@ -295,11 +295,6 @@ export default function AppShell() {
                   </div>
                 </NavLink>
               </div>
-                      </NavLink>
-                    );
-                  })}
-                </div>
-              ))}
 
               {/* Ops Tasks Section */}
               <div className="mb-3">

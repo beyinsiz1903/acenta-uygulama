@@ -242,6 +242,11 @@ export default function OpsTasksPage() {
   };
 
   return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-sm">Yeni Görev</CardTitle>
+      </CardHeader>
+      <CardContent>
     <form onSubmit={onSubmit} className="grid gap-2 md:grid-cols-3 text-xs">
       <div className="space-y-1 md:col-span-1">
         <div className="text-[11px] text-muted-foreground">Refund Case ID *</div>

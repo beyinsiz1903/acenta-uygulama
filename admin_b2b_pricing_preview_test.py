@@ -67,22 +67,8 @@ async def setup_test_data() -> Dict[str, Any]:
     client = AsyncIOMotorClient(mongo_url)
     db = client.acenta_db
     
-    # Find or create a test organization
-    org = await db.organizations.find_one({"name": {"$regex": "test", "$options": "i"}})
-    if not org:
-        org = await db.organizations.find_one({})
-    
-    if not org:
-        # Create test organization
-        org_id = ObjectId()
-        await db.organizations.insert_one({
-            "_id": org_id,
-            "name": "Test Organization",
-            "created_at": "2025-01-01T00:00:00Z"
-        })
-        org = {"_id": org_id}
-    
-    org_id = org["_id"]
+    # Use admin's organization
+    org_id = "org_ops_close_idem"
     
     # Find or create test product
     product = await db.products.find_one({"organization_id": org_id})

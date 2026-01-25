@@ -85,28 +85,53 @@ async function copyToClipboard(text) {
 }
 
 function normalizeResult(data) {
-  const cur = data?.currency ?? "EUR";
-  const bd = data?.breakdown ?? null;
+  const cur = data?.currency ?? data?.cur ?? "EUR";
+
+  const breakdown = data?.breakdown ?? null;
+  const breakdownObj =
+    breakdown && !Array.isArray(breakdown) && typeof breakdown === "object" ? breakdown : null;
+  const breakdownArr = Array.isArray(breakdown) ? breakdown : [];
 
   const total =
-    (bd && typeof bd.final_sell_price === "number" ? bd.final_sell_price : null) ??
-    data?.total ??
-    data?.final_price ??
-    data?.sell_amount ??
-    data?.amount ??
-    null;
+    safeNum(breakdownObj?.final_sell_price) ??
+    safeNum(data?.final_sell_price) ??
+    safeNum(data?.total) ??
+    safeNum(data?.final_price) ??
+    safeNum(data?.sell_amount) ??
+    safeNum(data?.amount);
+
+  const nights =
+    safeNum(breakdownObj?.nights) ??
+    safeNum(data?.nights) ??
+    diffNights(data?.checkin, data?.checkout);
+
+  const basePrice = safeNum(breakdownObj?.base_price);
+  const markupPercent = safeNum(breakdownObj?.markup_percent);
+  const markupAmount = safeNum(breakdownObj?.markup_amount);
+  const commissionRate = safeNum(breakdownObj?.commission_rate);
+  const commissionAmount = safeNum(breakdownObj?.commission_amount);
+
+  const perNight = total != null && nights != null && nights > 0 ? total / nights : null;
 
   return {
     currency: cur,
     total,
-    checkin: data?.checkin ?? null,
-    checkout: data?.checkout ?? null,
-    occupancy: data?.occupancy ?? null,
-    breakdown: bd && typeof bd === "object" && !Array.isArray(bd) ? bd : null,
+    nights,
+    perNight,
+    breakdownObj,
+    breakdownArr,
     ruleHits: Array.isArray(data?.rule_hits) ? data.rule_hits : [],
     notes: Array.isArray(data?.notes) ? data.notes : [],
-    debug: data?.debug && typeof data.debug === "object" ? data.debug : null,
+    debug: data?.debug ?? null,
     raw: data ?? null,
+    summary: {
+      basePrice,
+      markupPercent,
+      markupAmount,
+      commissionRate,
+      commissionAmount,
+      finalSellPrice: safeNum(breakdownObj?.final_sell_price) ?? total,
+    },
   };
 }
 

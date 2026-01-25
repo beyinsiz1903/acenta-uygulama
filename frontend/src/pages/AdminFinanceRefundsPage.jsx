@@ -917,12 +917,13 @@ export default function AdminFinanceRefundsPage() {
             onOpenReject={() => setRejectOpen(true)}
             onOpenMarkPaid={() => setMarkPaidOpen(true)}
             onCloseCase={async () => {
+              if (!caseData) return;
               try {
-                await api.post(`/ops/finance/refunds/${selectedCaseId}/close`);
-                toast({ title: "Case kapatıldı" });
-                onAfterDecision();
+                await api.post(`/ops/finance/refunds/${caseData.case_id}/close`, { note: null });
+                toast({ title: "Refund case kapatıldı" });
+                await onAfterDecision();
               } catch (e) {
-                toast({ title: "Case kapatma başarısız", description: apiErrorMessage(e), variant: "destructive" });
+                toast({ title: "Kapatma başarısız", description: apiErrorMessage(e), variant: "destructive" });
               }
             }}
           />

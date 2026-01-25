@@ -165,7 +165,9 @@ class OpsTaskService:
         updated["_status_from"] = status_from
         updated["_status_to"] = status_to
         # Remove sensitive fields from response
-        updated.pop("organization_id", None)
+        sensitive_fields = ["organization_id", "created_by_actor_id", "updated_by_actor_id", "assignee_actor_id"]
+        for field in sensitive_fields:
+            updated.pop(field, None)
         return updated
 
     async def mark_done_if_exists(

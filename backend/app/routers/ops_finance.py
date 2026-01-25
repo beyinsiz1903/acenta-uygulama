@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from typing import Literal, Optional, Any
 from datetime import datetime
 from bson import ObjectId
+import logging
 
 from app.db import get_db
 from app.auth import require_roles, get_current_user
@@ -37,6 +38,7 @@ from app.services.settlement_runs import SettlementRunService
 from app.services.booking_financials import BookingFinancialsService
 
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/ops/finance", tags=["ops_finance"])
 
 
@@ -1092,9 +1094,12 @@ async def reject_refund_case(
         reason=reason,
     )
 
+    # Reload after update for reliable snapshot
+    saved = await svc.get_case(org_id, case_id)
+
     # Audit + booking event (best-effort)
     try:
-        status_to = result.get("status")
+        status_to = saved.get("status") if saved else None
         await write_audit_log(
             db,
             organization_id=org_id,
@@ -1109,7 +1114,7 @@ async def reject_refund_case(
             target_type="refund_case",
             target_id=case_id,
             before=audit_snapshot("refund_case", existing),
-            after=audit_snapshot("refund_case", result),
+            after=audit_snapshot("refund_case", saved),
             meta={
                 "reason": reason,
                 "status_from": status_from,
@@ -1120,7 +1125,7 @@ async def reject_refund_case(
             },
         )
 
-        booking_id = result.get("booking_id")
+        booking_id = saved.get("booking_id") if saved else None
         if booking_id:
             await emit_event(
                 db,
@@ -1141,10 +1146,10 @@ async def reject_refund_case(
                     "by_actor_id": current_user.get("id"),
                 },
             )
-    except Exception:
-        pass
+    except Exception as e:
+        logger.warning("audit_write_failed refund_reject case_id=%s err=%s", case_id, str(e))
 
-    return result
+    return saved
 
 
 @router.get("/settlements", response_model=SettlementRunListResponse)

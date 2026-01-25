@@ -803,22 +803,6 @@ async def close_refund_case(
 
     return result
 
-            action="refund_approve",
-            target_type="refund_case",
-            target_id=case_id,
-            before=audit_snapshot("refund_case", existing),
-            after=audit_snapshot("refund_case", saved),
-            meta={
-                "approved_amount": approved_amount,
-                "payment_reference": payment_reference,
-            },
-        )
-    except Exception:
-        # best-effort
-        pass
-
-    return result
-
 
 @router.get("/bookings/{booking_id}/financials")
 async def get_booking_financials(

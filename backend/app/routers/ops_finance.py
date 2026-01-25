@@ -702,7 +702,7 @@ async def approve_refund_step1(
             },
         )
 
-        # Booking timeline event
+        # Booking timeline event + Ops Playbook
         booking_id = result.get("booking_id")
         if booking_id:
             await emit_event(
@@ -724,6 +724,15 @@ async def approve_refund_step1(
                     "by_actor_id": current_user.get("id"),
                 },
             )
+        # Ops playbook: transition to step2 review task
+        engine = OpsPlaybookEngine(db)
+        await engine.on_refund_step1(
+            org_id,
+            case_id=case_id,
+            booking_id=booking_id,
+            actor_email=current_user.get("email"),
+            actor_id=current_user.get("id"),
+        )
     except Exception:
         pass
 

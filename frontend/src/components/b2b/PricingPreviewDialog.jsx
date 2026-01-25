@@ -394,54 +394,67 @@ export default function PricingPreviewDialog({ open, onOpenChange, initialContex
                 {/* Özet kartı */}
                 <div className="border rounded-md p-3 space-y-1">
                   <div className="text-xs font-semibold mb-1">Özet</div>
-                  <div className="flex justify-between text-xs">
-                    <span className="text-muted-foreground">Toplam Satış</span>
-                    <span className="font-mono font-medium">
-                      {fmtMoney(normalized.total, normalized.currency)}
-                    </span>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs">
+                    <div className="flex justify-between gap-2">
+                      <span className="text-muted-foreground">Toplam satış</span>
+                      <span className="font-mono font-medium">
+                        {normalized.summary.finalSellPrice != null
+                          ? `${fmtInt(normalized.summary.finalSellPrice)} ${normalized.currency}`
+                          : "-"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between gap-2">
+                      <span className="text-muted-foreground">Gece</span>
+                      <span className="font-mono">
+                        {normalized.nights != null ? fmtInt(normalized.nights) : "-"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between gap-2">
+                      <span className="text-muted-foreground">Gece başı</span>
+                      <span className="font-mono">
+                        {normalized.perNight != null
+                          ? `${fmtInt(normalized.perNight)} ${normalized.currency}`
+                          : "-"}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between gap-2">
+                      <span className="text-muted-foreground">Base</span>
+                      <span className="font-mono">
+                        {normalized.summary.basePrice != null
+                          ? `${fmtInt(normalized.summary.basePrice)} ${normalized.currency}`
+                          : "-"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between gap-2">
+                      <span className="text-muted-foreground">Markup</span>
+                      <span className="font-mono">
+                        {normalized.summary.markupPercent != null
+                          ? `${fmtInt(normalized.summary.markupPercent)}%`
+                          : "-"}
+                        {" "}·{" "}
+                        {normalized.summary.markupAmount != null
+                          ? `${fmtInt(normalized.summary.markupAmount)} ${normalized.currency}`
+                          : "-"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between gap-2">
+                      <span className="text-muted-foreground">Komisyon</span>
+                      <span className="font-mono">
+                        {normalized.summary.commissionRate != null
+                          ? `${fmtInt(normalized.summary.commissionRate)}%`
+                          : "-"}
+                        {" "}·{" "}
+                        {normalized.summary.commissionAmount != null
+                          ? `${fmtInt(normalized.summary.commissionAmount)} ${normalized.currency}`
+                          : "-"}
+                      </span>
+                    </div>
                   </div>
-                  {normalized.breakdown && (
-                    <>
-                      <div className="flex justify-between text-xs">
-                        <span className="text-muted-foreground">Gece</span>
-                        <span className="font-mono">{fmtInt(normalized.breakdown.nights)}</span>
-                      </div>
-                      <div className="flex justify-between text-xs">
-                        <span className="text-muted-foreground">Baz Fiyat</span>
-                        <span className="font-mono">
-                          {fmtMoney(normalized.breakdown.base_price, normalized.currency)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between text-xs">
-                        <span className="text-muted-foreground">Markup</span>
-                        <span className="font-mono">
-                          {fmtPct(normalized.breakdown.markup_percent)} · {fmtMoney(
-                            normalized.breakdown.markup_amount,
-                            normalized.currency,
-                          )}
-                        </span>
-                      </div>
-                      <div className="flex justify-between text-xs">
-                        <span className="text-muted-foreground">Komisyon</span>
-                        <span className="font-mono">
-                          {fmtPct(normalized.breakdown.commission_rate)} · {fmtMoney(
-                            normalized.breakdown.commission_amount,
-                            normalized.currency,
-                          )}
-                        </span>
-                      </div>
-                      <div className="flex justify-between text-xs font-semibold pt-1 border-t mt-1">
-                        <span className="text-muted-foreground">Final Satış</span>
-                        <span className="font-mono">
-                          {fmtMoney(normalized.breakdown.final_sell_price, normalized.currency)}
-                        </span>
-                      </div>
-                    </>
-                  )}
                 </div>
 
                 {/* Breakdown detayları */}
-                {normalized.breakdown && (
+                {normalized.breakdownObj && (
                   <div className="border rounded-md p-2">
                     <div className="text-xs font-medium mb-2">Detay</div>
                     <div className="space-y-1 text-xs">

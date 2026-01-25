@@ -186,6 +186,151 @@ export default function OpsTasksPage() {
           <NewTaskForm onCreated={load} />
         </CardContent>
       </Card>
+function NewTaskForm({ onCreated }) {
+  const [entityId, setEntityId] = useState("");
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [priority, setPriority] = useState("normal");
+  const [dueAt, setDueAt] = useState("");
+  const [slaHours, setSlaHours] = useState("");
+  const [assigneeEmail, setAssigneeEmail] = useState("");
+  const [tags, setTags] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const canSubmit = entityId && title && !submitting;
+
+  const onSubmit = async (e) => {
+    e.preventDefault();
+    if (!canSubmit) return;
+    try {
+      setSubmitting(true);
+      const body = {
+        entity_type: "refund_case",
+        entity_id: entityId,
+        task_type: "custom",
+        title,
+        description: description || null,
+        priority,
+        due_at: dueAt || null,
+        sla_hours: slaHours ? Number(slaHours) : null,
+        assignee_email: assigneeEmail || null,
+        tags: tags
+          ? tags
+              .split(",")
+              .map((t) => t.trim())
+              .filter(Boolean)
+          : [],
+        meta: { source: "ops_tasks_page" },
+      };
+      await api.post("/ops/tasks", body);
+      if (onCreated) onCreated();
+      setTitle("");
+      setDescription("");
+      setDueAt("");
+      setSlaHours("");
+      setAssigneeEmail("");
+      setTags("");
+      // entityId is left as is for convenience
+      // eslint-disable-next-line no-alert
+      alert("Görev oluşturuldu");
+    } catch (e) {
+      // eslint-disable-next-line no-alert
+      alert("Görev oluşturulamadı: " + apiErrorMessage(e));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <form onSubmit={onSubmit} className="grid gap-2 md:grid-cols-3 text-xs">
+      <div className="space-y-1 md:col-span-1">
+        <div className="text-[11px] text-muted-foreground">Refund Case ID *</div>
+        <Input
+          className="h-8"
+          value={entityId}
+          onChange={(e) => setEntityId(e.target.value)}
+          placeholder="case_..."
+        />
+      </div>
+      <div className="space-y-1 md:col-span-2">
+        <div className="text-[11px] text-muted-foreground">Başlık *</div>
+        <Input
+          className="h-8"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="Görev başlığı"
+        />
+      </div>
+      <div className="space-y-1 md:col-span-3">
+        <div className="text-[11px] text-muted-foreground">Açıklama</div>
+        <Input
+          className="h-8"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="Ops notu (opsiyonel)"
+        />
+      </div>
+      <div className="space-y-1">
+        <div className="text-[11px] text-muted-foreground">Öncelik</div>
+        <Select value={priority} onValueChange={setPriority}>
+          <SelectTrigger className="h-8 text-xs">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="low">Düşük</SelectItem>
+            <SelectItem value="normal">Normal</SelectItem>
+            <SelectItem value="high">Yüksek</SelectItem>
+            <SelectItem value="urgent">Acil</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-1">
+        <div className="text-[11px] text-muted-foreground">Son tarih (due_at)</div>
+        <Input
+          className="h-8"
+          type="datetime-local"
+          value={dueAt}
+          onChange={(e) => setDueAt(e.target.value)}
+        />
+      </div>
+      <div className="space-y-1">
+        <div className="text-[11px] text-muted-foreground">SLA (saat)</div>
+        <Input
+          className="h-8"
+          type="number"
+          min={0}
+          value={slaHours}
+          onChange={(e) => setSlaHours(e.target.value)}
+        />
+      </div>
+      <div className="space-y-1">
+        <div className="text-[11px] text-muted-foreground">Atanan e-posta</div>
+        <Input
+          className="h-8"
+          value={assigneeEmail}
+          onChange={(e) => setAssigneeEmail(e.target.value)}
+          placeholder="ops@acenta.test"
+        />
+      </div>
+      <div className="space-y-1 md:col-span-2">
+        <div className="text-[11px] text-muted-foreground">Etiketler (virgülle ayırın)</div>
+        <Input
+          className="h-8"
+          value={tags}
+          onChange={(e) => setTags(e.target.value)}
+          placeholder="refund, followup"
+        />
+      </div>
+      <div className="flex items-end justify-end md:col-span-3 mt-1">
+        <Button type="submit" size="sm" disabled={!canSubmit}>
+          {submitting && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
+          Oluştur
+        </Button>
+      </div>
+    </form>
+  );
+}
+
 
       <Card>
         <CardHeader>

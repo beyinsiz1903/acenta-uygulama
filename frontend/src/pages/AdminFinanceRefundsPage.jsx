@@ -213,7 +213,7 @@ function RefundApproveDialog({ open, onOpenChange, caseData, onApproved }) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Approve refund</DialogTitle>
+          <DialogTitle>1. Onay</DialogTitle>
         </DialogHeader>
         <div className="space-y-3 mt-2 text-sm">
           <div className="text-xs text-muted-foreground">
@@ -229,14 +229,24 @@ function RefundApproveDialog({ open, onOpenChange, caseData, onApproved }) {
               onChange={(e) => setAmount(e.target.value)}
             />
           </div>
-          <div className="space-y-1">
-            <div className="text-xs text-muted-foreground">Ödeme referansı (opsiyonel)</div>
-            <Input
-              type="text"
-              value={paymentRef}
-              onChange={(e) => setPaymentRef(e.target.value)}
-            />
-          </div>
+        </div>
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={submitting}
+          >
+            İptal
+          </Button>
+          <Button onClick={onSubmit} disabled={submitting}>
+            {submitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+            1. Onayı Ver
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 function RefundApproveStep2Dialog({ open, onOpenChange, caseData, onApproved }) {
   const [note, setNote] = useState("");

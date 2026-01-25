@@ -338,6 +338,266 @@ class RefundCaseService:
 
         await self.db.refund_cases.update_one(
             {"_id": case["_id"], "organization_id": organization_id},
+
+    # ------------------------------------------------------------------
+    # New multi-step workflow (Phase 2.1)
+    # ------------------------------------------------------------------
+
+    async def approve_step1(
+        self,
+        organization_id: str,
+        case_id: str,
+        approved_amount: float,
+        actor_email: str,
+        actor_id: Optional[str] = None,
+    ) -> dict:
+        """First approval step: record approved amount and move to pending_approval_2.
+
+        No ledger postings are created in this step.
+        """
+        case = await self._load_case(organization_id, case_id)
+        status = case.get("status")
+        if status not in {"open", "pending_approval_1", "pending_approval"}:
+            raise AppError(
+                status_code=409,
+                code="invalid_case_state",
+                message="Refund case is not open for first approval",
+            )
+
+        computed = case.get("computed") or {}
+        refundable = float(computed.get("refundable", 0.0))
+        if approved_amount <= 0 or approved_amount > refundable + 0.01:
+            raise AppError(
+                status_code=422,
+                code="approved_amount_invalid",
+                message="Approved amount must be > 0 and <= refundable",
+            )
+
+        now = now_utc()
+        # Update only approval info and status
+        await self.db.refund_cases.update_one(
+            {"_id": case["_id"], "organization_id": organization_id},
+            {
+                "$set": {
+                    "status": "pending_approval_2",
+                    "approved.amount": approved_amount,
+                    "approval.step1.by_email": actor_email,
+                    "approval.step1.by_actor_id": actor_id,
+                    "approval.step1.at": now,
+                    "updated_at": now,
+                }
+            },
+        )
+
+        return await self.get_case(organization_id, case_id)
+
+    async def approve_step2(
+        self,
+        organization_id: str,
+        case_id: str,
+        actor_email: str,
+        actor_id: Optional[str] = None,
+        note: Optional[str] = None,
+    ) -> dict:
+        """Second approval step (4-eyes) + ledger posting + booking_financials.
+
+        This is the step that actually posts REFUND_APPROVED to the ledger.
+        """
+        case = await self._load_case(organization_id, case_id)
+        status = case.get("status")
+        if status != "pending_approval_2":
+            raise AppError(
+                status_code=409,
+                code="invalid_case_state",
+                message="Refund case is not ready for second approval",
+            )
+
+        # Enforce 4-eyes: step2 actor must differ from step1 actor
+        step1 = (case.get("approval") or {}).get("step1") or {}
+        step1_actor_id = step1.get("by_actor_id")
+        step1_email = step1.get("by_email")
+
+        same_actor = False
+        if step1_actor_id and actor_id:
+            same_actor = step1_actor_id == actor_id
+        elif step1_email and actor_email:
+            same_actor = step1_email == actor_email
+
+        if same_actor:
+            raise AppError(
+                status_code=409,
+                code="four_eyes_violation",
+                message="Second approval must be performed by a different user",
+            )
+
+        computed = case.get("computed") or {}
+        refundable = float(computed.get("refundable", 0.0))
+        approved_struct = case.get("approved") or {}
+        approved_amount = float(approved_struct.get("amount") or 0.0)
+        if approved_amount <= 0 or approved_amount > refundable + 0.01:
+            raise AppError(
+                status_code=422,
+                code="approved_amount_invalid",
+                message="Approved amount must be > 0 and <= refundable",
+            )
+
+        # Load booking to ensure currency and context
+        booking_id = case["booking_id"]
+        booking = await self.db.bookings.find_one(
+            {"_id": ObjectId(booking_id), "organization_id": organization_id}
+        )
+        if not booking:
+            raise AppError(
+                status_code=404,
+                code="booking_not_found",
+                message="Booking not found for refund case",
+            )
+
+        currency = booking.get("currency")
+        fx = booking.get("fx") or {}
+
+        # Compute approved amount in EUR (Phase 2C)
+        if currency == "EUR":
+            approved_amount_eur = approved_amount
+        else:
+            rate_basis = fx.get("rate_basis")
+            rate = fx.get("rate")
+            if rate_basis != "QUOTE_PER_EUR" or not rate or float(rate) <= 0:
+                raise AppError(
+                    500,
+                    "fx_snapshot_missing",
+                    "FX rate or rate_basis missing/invalid for non-EUR refund",
+                )
+            approved_amount_eur = round(float(approved_amount) / float(rate), 2)
+
+        agency_id = case["agency_id"]
+
+        # Post REFUND_APPROVED via booking finance service (AR-only correction)
+        posting_id = await self.booking_finance.post_refund_approved(
+            organization_id=organization_id,
+            booking_id=booking_id,
+            case_id=case_id,
+            agency_id=agency_id,
+            refund_amount=approved_amount_eur,
+            currency="EUR",
+            occurred_at=now_utc(),
+        )
+
+        # Update booking_financials snapshot (Phase 2B.4)
+        from app.services.booking_financials import BookingFinancialsService
+
+        bfs = BookingFinancialsService(self.db)
+        await bfs.ensure_financials(organization_id, booking)
+        await bfs.apply_refund_approved(
+            organization_id=organization_id,
+            booking_id=booking_id,
+            refund_case_id=case_id,
+            ledger_posting_id=posting_id,
+            approved_amount=approved_amount,
+            applied_at=now_utc(),
+        )
+
+        # Update case to approved (do NOT mark paid/closed here)
+        now = now_utc()
+        decision = "approved" if abs(approved_amount - refundable) < 0.01 else "partial"
+
+        await self.db.refund_cases.update_one(
+            {"_id": case["_id"], "organization_id": organization_id},
+            {
+                "$set": {
+                    "status": "approved",
+                    "decision": decision,
+                    "approved.amount": approved_amount,
+                    "approved.amount_eur": approved_amount_eur,
+                    "ledger_posting_id": posting_id,
+                    "decision_by_email": actor_email,
+                    "decision_at": now,
+                    "approval.step2.by_email": actor_email,
+                    "approval.step2.by_actor_id": actor_id,
+                    "approval.step2.at": now,
+                    "updated_at": now,
+                }
+            },
+        )
+
+        return await self.get_case(organization_id, case_id)
+
+    async def mark_paid(
+        self,
+        organization_id: str,
+        case_id: str,
+        payment_reference: str,
+        actor_email: str,
+        actor_id: Optional[str] = None,
+    ) -> dict:
+        """Mark an approved refund case as paid.
+
+        Does NOT create additional ledger postings; this is an ops/payment marker.
+        """
+        case = await self._load_case(organization_id, case_id)
+        status = case.get("status")
+        if status != "approved":
+            raise AppError(
+                status_code=409,
+                code="invalid_case_state",
+                message="Only approved cases can be marked as paid",
+            )
+
+        if not payment_reference:
+            raise AppError(
+                status_code=422,
+                code="payment_reference_required",
+                message="Payment reference is required to mark refund as paid",
+            )
+
+        now = now_utc()
+        await self.db.refund_cases.update_one(
+            {"_id": case["_id"], "organization_id": organization_id},
+            {
+                "$set": {
+                    "status": "paid",
+                    "paid_reference": payment_reference,
+                    "paid_at": now,
+                    "updated_at": now,
+                }
+            },
+        )
+
+        return await self.get_case(organization_id, case_id)
+
+    async def close_case(
+        self,
+        organization_id: str,
+        case_id: str,
+        actor_email: str,
+        actor_id: Optional[str] = None,
+        note: Optional[str] = None,
+    ) -> dict:
+        """Close a refund case after it is paid or rejected."""
+        case = await self._load_case(organization_id, case_id)
+        status = case.get("status")
+        if status not in {"paid", "rejected"}:
+            raise AppError(
+                status_code=409,
+                code="invalid_case_state",
+                message="Only paid or rejected cases can be closed",
+            )
+
+        now = now_utc()
+        update: dict[str, Any] = {
+            "status": "closed",
+            "updated_at": now,
+        }
+        if note:
+            update["close_note"] = note
+
+        await self.db.refund_cases.update_one(
+            {"_id": case["_id"], "organization_id": organization_id},
+            {"$set": update},
+        )
+
+        return await self.get_case(organization_id, case_id)
+
             {
                 "$set": {
                     "status": "closed",

@@ -125,6 +125,7 @@ export default function PricingPreviewDialog({ open, onOpenChange, initialContex
   const [err, setErr] = useState("");
   const [result, setResult] = useState(null);
   const [showRaw, setShowRaw] = useState(false);
+  const [showDebug, setShowDebug] = useState(false);
 
   useEffect(() => {
     if (!open) return;

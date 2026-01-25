@@ -62,6 +62,14 @@ function eventLabel(ev) {
       return "Doküman yüklendi";
     case "DOCUMENT_DELETED":
       return "Doküman silindi";
+    case "OPS_TASK_CREATED":
+      return "Görev oluşturuldu";
+    case "OPS_TASK_UPDATED":
+      return "Görev güncellendi";
+    case "OPS_TASK_DONE":
+      return "Görev tamamlandı";
+    case "OPS_TASK_CANCELLED":
+      return "Görev iptal edildi";
     default:
       return t || "EVENT";
   }

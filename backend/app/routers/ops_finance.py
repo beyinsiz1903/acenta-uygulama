@@ -810,6 +810,15 @@ async def approve_refund_step2(
                     "by_actor_id": current_user.get("id"),
                 },
             )
+        # Ops playbook: transition to payment task
+        engine = OpsPlaybookEngine(db)
+        await engine.on_refund_step2(
+            org_id,
+            case_id=case_id,
+            booking_id=booking_id,
+            actor_email=current_user.get("email"),
+            actor_id=current_user.get("id"),
+        )
     except Exception:
         pass
 

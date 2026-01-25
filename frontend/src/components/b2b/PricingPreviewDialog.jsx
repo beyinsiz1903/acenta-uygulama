@@ -14,35 +14,94 @@ function toYmd(date) {
   return `${y}-${m}-${day}`;
 }
 
+function addDaysYmd(ymd, days) {
+  if (!ymd) return ymd;
+  const parts = String(ymd).split("-");
+  if (parts.length !== 3) return ymd;
+  const [y, m, d] = parts.map((x) => Number(x));
+  if (!Number.isFinite(y) || !Number.isFinite(m) || !Number.isFinite(d)) return ymd;
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  dt.setUTCDate(dt.getUTCDate() + (Number.isFinite(days) ? days : 0));
+  return toYmd(new Date(dt));
+}
+
+function fmtMoney(v, cur) {
+  if (typeof v !== "number" || !Number.isFinite(v)) return "-";
+  return `${v.toFixed(2)} ${cur}`;
+}
+
+function fmtPct(v) {
+  if (typeof v !== "number" || !Number.isFinite(v)) return "-";
+  return `%${v.toFixed(2)}`;
+}
+
+function fmtInt(v) {
+  const n = Number(v);
+  if (!Number.isFinite(n)) return "-";
+  return String(Math.trunc(n));
+}
+
 function normalizeResult(data) {
-  const cur = data?.currency ?? data?.cur ?? "EUR";
-  const total = data?.total ?? data?.final_price ?? data?.sell_amount ?? data?.amount ?? null;
+  const cur = data?.currency ?? "EUR";
+  const bd = data?.breakdown ?? null;
+
+  const total =
+    (bd && typeof bd.final_sell_price === "number" ? bd.final_sell_price : null) ??
+    data?.total ??
+    data?.final_price ??
+    data?.sell_amount ??
+    data?.amount ??
+    null;
 
   return {
     currency: cur,
     total,
-    breakdown: Array.isArray(data?.breakdown) ? data.breakdown : [],
+    checkin: data?.checkin ?? null,
+    checkout: data?.checkout ?? null,
+    occupancy: data?.occupancy ?? null,
+    breakdown: bd && typeof bd === "object" && !Array.isArray(bd) ? bd : null,
     ruleHits: Array.isArray(data?.rule_hits) ? data.rule_hits : [],
     notes: Array.isArray(data?.notes) ? data.notes : [],
+    debug: data?.debug && typeof data.debug === "object" ? data.debug : null,
     raw: data ?? null,
   };
 }
 
 function cleanPayload(ctx) {
-  const p = { ...ctx };
-  // Convert numerics
-  ["nights", "rooms", "adults", "children"].forEach((k) => {
-    if (p[k] === "" || p[k] == null) return;
-    const n = Number(p[k]);
-    p[k] = Number.isFinite(n) ? n : p[k];
-  });
+  const product_id = ctx?.product_id ?? null;
+  const partner_id = ctx?.partner_id ?? null;
 
-  // Remove null/undefined
-  Object.keys(p).forEach((k) => {
-    if (p[k] === undefined || p[k] === null || p[k] === "") delete p[k];
-  });
+  const checkin = ctx?.check_in ?? toYmd(new Date());
+  const nightsRaw = Number(ctx?.nights);
+  const nights = Number.isFinite(nightsRaw) && nightsRaw > 0 ? Math.trunc(nightsRaw) : 1;
+  const checkout = addDaysYmd(checkin, nights);
 
-  return p;
+  const adultsRaw = Number(ctx?.adults);
+  const childrenRaw = Number(ctx?.children);
+  const roomsRaw = Number(ctx?.rooms);
+
+  const occupancy = {
+    adults: Number.isFinite(adultsRaw) && adultsRaw > 0 ? Math.trunc(adultsRaw) : 2,
+    children: Number.isFinite(childrenRaw) && childrenRaw >= 0 ? Math.trunc(childrenRaw) : 0,
+    rooms: Number.isFinite(roomsRaw) && roomsRaw > 0 ? Math.trunc(roomsRaw) : 1,
+  };
+
+  const currency = ctx?.currency ?? "EUR";
+
+  const payload = {
+    product_id,
+    partner_id,
+    checkin,
+    checkout,
+    occupancy,
+    currency,
+    include_rules: true,
+    include_breakdown: true,
+  };
+
+  if (!payload.partner_id) delete payload.partner_id;
+
+  return payload;
 }
 
 function Field({ label, value, onChange, type = "text", min }) {

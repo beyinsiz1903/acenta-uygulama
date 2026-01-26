@@ -813,20 +813,19 @@ export default function B2BPortalPage() {
     } catch (err) {
       console.error("[B2BPortal] Quote error:", err);
       const resp = err?.response?.data;
-      if (resp?.error?.code) {
-        const code = resp.error.code;
-        const backendMsg = resp.error.message || "Hata oluştu";
-        if (code === "product_not_available") {
-          setQuoteError(
-            "Bu ürün sizin için kapalı görünüyor. Lütfen B2B Marketplace yetkilendirmelerinizi kontrol edin veya farklı bir otel seçin."
-          );
-        } else if (code === "invalid_date_range") {
-          setDateError("Çıkış tarihi, giriş tarihinden sonra olmalı.");
-        } else {
-          setQuoteError(`${code}: ${backendMsg}`);
-        }
+      const fe = friendlyError(err);
+      const code = resp?.error?.code;
+
+      if (code === "product_not_available") {
+        setQuoteError(
+          "Bu ürün sizin için kapalı görünüyor. Lütfen B2B Marketplace yetkilendirmelerinizi kontrol edin veya farklı bir otel seçin."
+        );
+      } else if (code === "invalid_date_range") {
+        setDateError("Çıkış tarihi, giriş tarihinden sonra olmalı.");
       } else {
-        setQuoteError(apiErrorMessage(err));
+        const detail = fe.detail || "";
+        const suffix = fe.code ? ` (${fe.code})` : "";
+        setQuoteError(detail ? `${fe.title} ${suffix} - ${detail}` : `${fe.title}${suffix}`);
       }
     } finally {
       setQuoteLoading(false);

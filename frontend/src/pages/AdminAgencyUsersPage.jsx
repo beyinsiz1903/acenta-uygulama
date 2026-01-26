@@ -45,6 +45,7 @@ export default function AdminAgencyUsersPage() {
   useEffect(() => {
     if (!agencyId) return;
     loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [agencyId]);
 
   async function loadData() {

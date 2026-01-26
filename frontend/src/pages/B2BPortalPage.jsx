@@ -836,6 +836,7 @@ export default function B2BPortalPage() {
     e.preventDefault();
     setBookingError("");
     setCancelResult(null);
+    setGlobalError("");
 
     if (!quote?.quote_id) {
       setBookingError("Önce bir teklif (quote) oluşturmanız gerekiyor");

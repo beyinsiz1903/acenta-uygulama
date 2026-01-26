@@ -458,12 +458,37 @@ function BookingListTab() {
             Son 50 B2B rezervasyonunuzu listeler. Varsayılan sıralama: en yeni üstte.
           </p>
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex flex-wrap items-center gap-2 justify-end">
+          <div className="flex items-center gap-1">
+            <input
+              className="h-8 rounded-md border bg-background px-2 text-xs"
+              placeholder="Ara: Booking ID / Misafir / Otel"
+              value={listQuery}
+              onChange={(e) => setListQuery(e.target.value)}
+            />
+            {listQuery && (
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                className="h-8 w-8 text-muted-foreground"
+                onClick={() => setListQuery("")}
+              >
+                ×
+              </Button>
+            )}
+          </div>
           <input
+            type="date"
             className="h-8 rounded-md border bg-background px-2 text-xs"
-            placeholder="Ara: Booking ID / Misafir / Otel"
-            value={listQuery}
-            onChange={(e) => setListQuery(e.target.value)}
+            value={checkInFilter}
+            onChange={(e) => setCheckInFilter(e.target.value)}
+          />
+          <input
+            type="date"
+            className="h-8 rounded-md border bg-background px-2 text-xs"
+            value={checkOutFilter}
+            onChange={(e) => setCheckOutFilter(e.target.value)}
           />
           <select
             className="h-8 rounded-md border bg-background px-2 text-xs"

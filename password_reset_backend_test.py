@@ -71,9 +71,8 @@ def create_test_token(user_id: str, org_id: str, agency_id: str = None,
     mongo_client = get_mongo_client()
     db = mongo_client.get_default_database()
     
-    # Use timezone-aware datetime
-    from datetime import timezone
-    now = datetime.now(timezone.utc)
+    # Use naive datetime to match existing database format
+    now = datetime.utcnow()
     token_id = token_id or f"pr_test_{uuid.uuid4().hex[:8]}"
     
     # Convert user_id to ObjectId if it's a string

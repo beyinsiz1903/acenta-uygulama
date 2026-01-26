@@ -196,6 +196,7 @@ function App() {
         >
           <Route element={<AdminLayout />}>
             <Route path="agencies" element={<AdminAgenciesPage />} />
+            <Route path="agencies/:agencyId/users" element={<AdminAgencyUsersPage />} />
             <Route path="b2b/dashboard" element={<AdminB2BDashboardPage />} />
             <Route path="b2b/marketplace" element={<AdminB2BMarketplacePage />} />
             <Route path="hotels" element={<AdminHotelsPage />} />

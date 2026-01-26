@@ -889,7 +889,10 @@ export default function B2BPortalPage() {
     } catch (err) {
       console.error("[B2BPortal] Booking error:", err);
       const resp = err?.response?.data;
-      if (resp?.error?.code === "credit_limit_exceeded") {
+      const code = resp?.error?.code;
+      const fe = friendlyError(err);
+
+      if (code === "credit_limit_exceeded") {
         const d = resp.error.details || {};
         const exposure = d.exposure;
         const limit = d.limit;
@@ -901,10 +904,10 @@ export default function B2BPortalPage() {
           )} olacak (limit ${limit.toFixed(2)}).`;
         }
         setBookingError(msg);
-      } else if (resp?.error?.code) {
-        setBookingError(`${resp.error.code}: ${resp.error.message || "Hata oluştu"}`);
       } else {
-        setBookingError(apiErrorMessage(err));
+        const detail = fe.detail || "";
+        const suffix = fe.code ? ` (${fe.code})` : "";
+        setBookingError(detail ? `${fe.title} ${suffix} - ${detail}` : `${fe.title}${suffix}`);
       }
     } finally {
       setBookingLoading(false);

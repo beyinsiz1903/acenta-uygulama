@@ -572,6 +572,7 @@ export default function B2BPortalPage() {
   const [city, setCity] = useState("Istanbul");
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
+  const [nights, setNights] = useState(2);
   const [adults, setAdults] = useState(2);
   const [children, setChildren] = useState(0);
   const [quoteProductId, setQuoteProductId] = useState("demo_product_1");

@@ -1514,7 +1514,7 @@ export default function B2BPortalPage() {
         checkIn={checkIn}
         checkOut={checkOut}
         adults={adults}
-        children={children}
+        childrenCount={children}
         selectedOffer={selectedOffer}
         quoteOffer={quote?.offer || null}
       />

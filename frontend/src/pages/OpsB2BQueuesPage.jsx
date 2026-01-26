@@ -180,6 +180,13 @@ function eventSubline(ev) {
     if (m.title) parts.push(`başlık: ${m.title}`);
     if (m.status_to) parts.push(`durum: ${m.status_to}`);
     if (m.by_email) parts.push(`by: ${m.by_email}`);
+    if (m.assignee_email) parts.push(`assignee: ${m.assignee_email}`);
+    if (m.due_at) {
+      const d = new Date(m.due_at);
+      if (!Number.isNaN(d.getTime())) {
+        parts.push(`due: ${d.toLocaleString()}`);
+      }
+    }
     return parts.join(" · ");
   }
 

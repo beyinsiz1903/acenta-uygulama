@@ -408,11 +408,6 @@ function PricePreviewDialog({ open, onOpenChange, checkIn, checkOut, adults, chi
   );
 }
 
-  );
-}
-
-
-
 function BookingListTab() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);

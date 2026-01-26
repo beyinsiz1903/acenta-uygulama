@@ -1479,19 +1479,6 @@ export default function B2BPortalPage() {
             </div>
           )}
 
-
-      {/* Hızlı fiyat önizleme dialog'u (UI-only) */}
-      <PricePreviewDialog
-        open={pricePreviewOpen}
-        onOpenChange={setPricePreviewOpen}
-        checkIn={checkIn}
-        checkOut={checkOut}
-        adults={adults}
-        children={children}
-        selectedOffer={selectedOffer}
-        quoteOffer={quote?.offer || null}
-      />
-
           {cancelError && (
             <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
               <AlertCircle className="h-4 w-4 mt-0.5" />

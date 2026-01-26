@@ -951,12 +951,10 @@ export default function B2BPortalPage() {
       });
     } catch (err) {
       console.error("[B2BPortal] Cancel error:", err);
-      const resp = err?.response?.data;
-      if (resp?.error?.code) {
-        setCancelError(`${resp.error.code}: ${resp.error.message || "Hata oluştu"}`);
-      } else {
-        setCancelError(apiErrorMessage(err));
-      }
+      const fe = friendlyError(err);
+      const detail = fe.detail || "";
+      const suffix = fe.code ? ` (${fe.code})` : "";
+      setCancelError(detail ? `${fe.title} ${suffix} - ${detail}` : `${fe.title}${suffix}`);
     } finally {
       setCancelLoading(false);
     }

@@ -309,6 +309,103 @@ function B2BDashboardKpiRow({ sessionQuotes, sessionBookings }) {
         )}
       </CardContent>
     </Card>
+
+function PricePreviewDialog({ open, onOpenChange, checkIn, checkOut, adults, children, selectedOffer, quoteOffer }) {
+  const offer = quoteOffer || selectedOffer || null;
+  const total =
+    (typeof offer?.sell === "number" && offer.sell) ||
+    (typeof offer?.selling_total === "number" && offer.selling_total) ||
+    (typeof offer?.selling_total === "string" && Number(offer.selling_total)) ||
+    null;
+  const currency = offer?.currency || offer?.selling_currency || "EUR";
+
+  const nightsFromOffer =
+    (typeof offer?.nights === "number" && offer.nights) ||
+    (offer?.stay && typeof offer.stay.nights === "number" && offer.stay.nights) ||
+    null;
+
+  let nights = nightsFromOffer;
+  if (!nights && checkIn && checkOut) {
+    try {
+      const a = new Date(`${checkIn}T00:00:00`);
+      const b = new Date(`${checkOut}T00:00:00`);
+      const diff = Math.round((b - a) / (1000 * 60 * 60 * 24));
+      if (Number.isFinite(diff) && diff > 0) nights = diff;
+    } catch {
+      // ignore
+    }
+  }
+
+  const perNight = nights && total ? total / nights : null;
+
+  const occLabel = `${adults || 0} yetişkin${children ? `, ${children} çocuk` : ""}`;
+  const dateLabel = checkIn && checkOut ? `${checkIn} → ${checkOut}` : checkIn || "-";
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Hızlı Fiyat Önizleme</DialogTitle>
+          <DialogDescription>
+            Bu dialog, mevcut arama veya quote sonuçlarından gelen fiyat bilgisi ile hazırlanır. Backend&apos;e
+            ek istek göndermez.
+          </DialogDescription>
+        </DialogHeader>
+
+        {!offer ? (
+          <p className="text-sm text-muted-foreground">
+            Gösterilecek bir fiyat bulunamadı. Lütfen önce arama yapıp bir sonuç seçin veya quote oluşturun.
+          </p>
+        ) : (
+          <div className="space-y-4 text-sm">
+            <div className="space-y-1">
+              <div className="text-xs text-muted-foreground">Tarih ve konaklama</div>
+              <div className="font-medium">{dateLabel}</div>
+              <div className="text-xs text-muted-foreground">{occLabel}</div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-3">
+              <div className="space-y-1">
+                <div className="text-xs text-muted-foreground">Toplam satış</div>
+                <div className="text-base font-semibold">
+                  {total != null ? (
+                    <>
+                      {total.toFixed(2)} {currency}
+                    </>
+                  ) : (
+                    "-"
+                  )}
+                </div>
+              </div>
+              <div className="space-y-1">
+                <div className="text-xs text-muted-foreground">Gece</div>
+                <div className="text-base font-semibold">{nights || "-"}</div>
+              </div>
+              <div className="space-y-1">
+                <div className="text-xs text-muted-foreground">Gece başı</div>
+                <div className="text-base font-semibold">
+                  {perNight != null ? (
+                    <>
+                      {perNight.toFixed(2)} {currency}
+                    </>
+                  ) : (
+                    "-"
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-md border bg-muted/40 px-3 py-2 text-[11px] text-muted-foreground">
+              Bu özet, seçili sonuca ait verilerden türetilmiştir. Kesin tutar için rezervasyon akışındaki detay
+              ekranını kullanın.
+            </div>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
   );
 }
 

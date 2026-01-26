@@ -1505,6 +1505,19 @@ export default function B2BPortalPage() {
         </>
       )}
 
+
+      {/* Hızlı fiyat önizleme dialog'u (UI-only) */}
+      <PricePreviewDialog
+        open={pricePreviewOpen}
+        onOpenChange={setPricePreviewOpen}
+        checkIn={checkIn}
+        checkOut={checkOut}
+        adults={adults}
+        children={children}
+        selectedOffer={selectedOffer}
+        quoteOffer={quote?.offer || null}
+      />
+
       {activeTab === "list" && <BookingListTab />}
     </div>
   );

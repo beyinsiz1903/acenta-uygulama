@@ -284,6 +284,7 @@ test_plan:
     - "Refund Workflow 2.1 Reject Audit Timeline"
     - "Refund Workflow 2.1 Error Cases Validation"
     - "Ops Playbook (2.3) – Refund-driven Task Engine + Ops Tasks API"
+    - "Admin Agency User Management Backend Endpoints (Sprint 4.1)"
   stuck_tasks:
     - "Refund Workflow 2.1 Legacy Approve Compatibility"
   test_all: false

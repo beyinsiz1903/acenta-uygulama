@@ -1101,6 +1101,82 @@ export default function B2BPortalPage() {
           </div>
 
                 </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="check_in" className="flex items-center gap-2">
+                    <CalendarDays className="h-4 w-4" />
+                    Giriş
+                  </Label>
+                  <Input
+                    id="check_in"
+                    type="date"
+                    value={checkIn}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setCheckIn(value);
+                      // check-out otomatik: nights varsayılan 2
+                      if (value && nights) {
+                        try {
+                          const d = new Date(value);
+                          if (!Number.isNaN(d.getTime())) {
+                            const dt = new Date(d.getTime());
+                            dt.setDate(dt.getDate() + Number(nights) || 0);
+                            const y = dt.getFullYear();
+                            const m = String(dt.getMonth() + 1).padStart(2, "0");
+                            const day = String(dt.getDate()).padStart(2, "0");
+                            setCheckOut(`${y}-${m}-${day}`);
+                          }
+                        } catch {
+                          // ignore
+                        }
+                      }
+                    }}
+                  />
+                  {dateError && (
+                    <div className="text-[11px] text-destructive mt-1">{dateError}</div>
+                  )}
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="nights" className="flex items-center gap-2">
+                    <CalendarDays className="h-4 w-4" />
+                    Gece
+                  </Label>
+                  <Input
+                    id="nights"
+                    type="number"
+                    min={1}
+                    value={nights}
+                    onChange={(e) => {
+                      const val = Number(e.target.value) || 1;
+                      setNights(val);
+                      if (checkIn) {
+                        try {
+                          const d = new Date(checkIn);
+                          if (!Number.isNaN(d.getTime())) {
+                            const dt = new Date(d.getTime());
+                            dt.setDate(dt.getDate() + val);
+                            const y = dt.getFullYear();
+                            const m = String(dt.getMonth() + 1).padStart(2, "0");
+                            const day = String(dt.getDate()).padStart(2, "0");
+                            setCheckOut(`${y}-${m}-${day}`);
+                          }
+                        } catch {
+                          // ignore
+                        }
+                      }
+                    }}
+                  />
+                </div>
+
+                <div className="flex justify-end md:col-span-1">
+                  <Button type="submit" disabled={quoteLoading} className="w-full md:w-auto gap-2">
+                    {quoteLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+                    {quoteLoading ? "Hesaplanıyor..." : "Quote Oluştur"}
+                  </Button>
+                </div>
+              </form>
+
           {/* Adım 1.5: Arama Sonuçları (otel kartları) */}
           {searchResults.length > 0 && (
             <div className="mt-4 space-y-3">

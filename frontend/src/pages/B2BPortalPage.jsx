@@ -309,6 +309,8 @@ function B2BDashboardKpiRow({ sessionQuotes, sessionBookings }) {
         )}
       </CardContent>
     </Card>
+  );
+}
 
 function PricePreviewDialog({ open, onOpenChange, checkIn, checkOut, adults, children, selectedOffer, quoteOffer }) {
   const offer = quoteOffer || selectedOffer || null;

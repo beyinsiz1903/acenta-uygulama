@@ -656,8 +656,12 @@ def test_confirm_invalid_missing_token():
     print(f"   📋 Missing token response status: {r1.status_code}")
     print(f"   📋 Missing token response body: {r1.text}")
     
-    # Should be 422 validation error or 400
-    assert r1.status_code in [400, 422], f"Expected 400 or 422, got {r1.status_code}"
+    # Should be 422 validation error
+    assert r1.status_code == 422, f"Expected 422, got {r1.status_code}"
+    
+    data1 = r1.json()
+    assert data1["error"]["code"] == "validation_error", "Missing token should return validation_error"
+    print(f"   ✅ Missing token rejected with validation_error")
     
     # Test with blank token
     print("2️⃣  Testing with blank token...")
@@ -672,19 +676,12 @@ def test_confirm_invalid_missing_token():
     print(f"   📋 Blank token response status: {r2.status_code}")
     print(f"   📋 Blank token response body: {r2.text}")
     
-    # Should be 400 or 404
-    assert r2.status_code in [400, 404], f"Expected 400 or 404, got {r2.status_code}"
+    # Should be 422 validation error
+    assert r2.status_code == 422, f"Expected 422, got {r2.status_code}"
     
-    if r2.status_code == 400:
-        data2 = r2.json()
-        error = data2.get("error", {})
-        assert error.get("code") == "invalid_token", f"Expected invalid_token, got {error.get('code')}"
-        print(f"   ✅ Blank token rejected with invalid_token error")
-    elif r2.status_code == 404:
-        data2 = r2.json()
-        error = data2.get("error", {})
-        assert error.get("code") == "token_not_found", f"Expected token_not_found, got {error.get('code')}"
-        print(f"   ✅ Blank token rejected with token_not_found error")
+    data2 = r2.json()
+    assert data2["error"]["code"] == "validation_error", "Blank token should return validation_error"
+    print(f"   ✅ Blank token rejected with validation_error")
     
     # Test with non-existent token
     print("3️⃣  Testing with non-existent token...")

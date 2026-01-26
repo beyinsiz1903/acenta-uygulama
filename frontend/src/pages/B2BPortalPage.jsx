@@ -573,7 +573,8 @@ function BookingListTab() {
               </tbody>
             </table>
           </div>
-        )}
+          );
+        })()}
       </CardContent>
     </Card>
   );

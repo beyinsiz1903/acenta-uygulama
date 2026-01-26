@@ -91,8 +91,13 @@ export default function AdminAgencyUsersPage() {
       setInviteOpen(false);
       await loadData();
     } catch (err) {
-      const msg = apiErrorMessage(err);
-      setInviteError(msg);
+      const resp = err?.response?.data;
+      if (resp?.error?.code === "user_linked_to_other_agency") {
+        setInviteError("Bu kullan c ba ka bir acenteye bal olduu i bu acenteye eklenemez.");
+      } else {
+        const msg = apiErrorMessage(err);
+        setInviteError(msg);
+      }
     } finally {
       setInviteLoading(false);
     }

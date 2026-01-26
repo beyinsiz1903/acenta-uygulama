@@ -1117,6 +1117,32 @@ export default function B2BPortalPage() {
                 if (!cityTrimmed) {
                   setCityError("Şehir boş bırakılamaz.");
                   hasErrorLocal = true;
+          {searchError && (
+            <div className="mt-2 flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive">
+              <AlertCircle className="h-4 w-4 mt-0.5" />
+              <div className="flex-1 flex flex-col gap-1">
+                <div className="font-medium">Arama başarısız.</div>
+                <div className="text-[11px] text-destructive/90">{searchError}</div>
+                <div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="xs"
+                    className="text-[11px]"
+                    disabled={searchLoading}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      // Otel Ara butonundaki mantığı yeniden kullan
+                      document.querySelector("button:contains('Otel Ara')")?.click?.();
+                    }}
+                  >
+                    Tekrar dene
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
                 }
                 if (!checkIn || !checkOut) {
                   setDateError("Giriş ve çıkış tarihleri zorunludur.");

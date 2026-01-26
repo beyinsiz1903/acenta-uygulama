@@ -104,7 +104,17 @@ def audit_snapshot(entity_type: str, doc: dict | None) -> dict | None:
         ]))
         return snap
 
-
+    if et == "agency_user":
+        snap: dict[str, Any] = {}
+        snap.update(pick([
+            "email",
+            "name",
+            "roles",
+            "agency_id",
+            "is_active",
+            "created_at",
+            "updated_at",
+        ]))
         return snap
 
 

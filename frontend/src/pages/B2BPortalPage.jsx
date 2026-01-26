@@ -1223,6 +1223,24 @@ export default function B2BPortalPage() {
                             <div className="flex items-center justify-between text-[11px] text-muted-foreground">
                               <span>Plan: {item.board}</span>
                               {isSelected && <span className="text-primary font-medium">Seçili</span>}
+                            {isSelected && (
+                              <div className="mt-2 flex justify-end">
+                                <Button
+                                  type="button"
+                                  size="xs"
+                                  variant="ghost"
+                                  className="text-[11px] text-muted-foreground hover:text-destructive"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedOffer(null);
+                                    toast.success("Seçim kaldırıldı");
+                                  }}
+                                >
+                                  Seçimi kaldır
+                                </Button>
+                              </div>
+                            )}
+
                             </div>
                           </CardContent>
                         </Card>

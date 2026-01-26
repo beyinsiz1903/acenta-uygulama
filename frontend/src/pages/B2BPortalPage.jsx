@@ -581,6 +581,28 @@ function BookingListTab() {
                         {b.booking_id}
                       </td>
                       <td className="px-2 py-2 text-xs">{b.primary_guest_name || "-"}</td>
+        {!loading && !error && items.length > 0 && (
+          <div className="text-[11px] text-muted-foreground flex items-center justify-between mt-2">
+            <span>
+              {filteredItems.length}/{items.length} sonuç
+            </span>
+            {(checkInFilter || checkOutFilter) && (
+              <Button
+                type="button"
+                size="xs"
+                variant="ghost"
+                className="text-[11px]"
+                onClick={() => {
+                  setCheckInFilter("");
+                  setCheckOutFilter("");
+                }}
+              >
+                Tarih filtresini temizle
+              </Button>
+            )}
+          </div>
+        )}
+
                       <td className="px-2 py-2 text-xs">{b.product_name || "-"}</td>
                       <td className="px-2 py-2 text-xs">{b.check_in || "-"}</td>
                       <td className="px-2 py-2 text-xs">{b.check_out || "-"}</td>

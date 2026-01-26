@@ -104,6 +104,7 @@ def create_test_user_via_settings(admin_headers: Dict[str, str], org_id: str, em
     payload = {
         "email": email,
         "name": f"Test User {email.split('@')[0]}",
+        "password": "temp123",  # Required field for UserCreateIn
         "roles": roles
     }
     

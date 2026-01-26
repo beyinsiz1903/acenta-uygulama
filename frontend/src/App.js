@@ -326,6 +326,7 @@ function App() {
         {/* Public self-service my-booking routes */}
         <Route path="/my-booking" element={<PublicMyBookingRequestPage />} />
         <Route path="/my-booking/:token" element={<PublicMyBookingDetailPage />} />
+        <Route path="/app/reset-password" element={<ResetPasswordPage />} />
 
         {/* Hotel Routes */}
         <Route

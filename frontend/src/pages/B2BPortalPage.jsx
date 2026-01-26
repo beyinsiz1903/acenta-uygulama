@@ -1175,12 +1175,7 @@ export default function B2BPortalPage() {
               Fiyatı Gör
             </Button>
           </div>
-
-                })}
-              </div>
-            </div>
-          )}
-
+        )}
 
                 <div className="space-y-1">
                   <Label htmlFor="check_in" className="flex items-center gap-2">

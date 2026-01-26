@@ -1182,7 +1182,26 @@ export default function B2BPortalPage() {
                     id="check_in"
                     type="date"
                     value={checkIn}
-                    onChange={(e) => setCheckIn(e.target.value)}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setCheckIn(value);
+                      // check-out otomatik: nights varsayılan 2
+                      if (value && nights) {
+                        try {
+                          const d = new Date(value);
+                          if (!Number.isNaN(d.getTime())) {
+                            const dt = new Date(d.getTime());
+                            dt.setDate(dt.getDate() + Number(nights) || 0);
+                            const y = dt.getFullYear();
+                            const m = String(dt.getMonth() + 1).padStart(2, "0");
+                            const day = String(dt.getDate()).padStart(2, "0");
+                            setCheckOut(`${y}-${m}-${day}`);
+                          }
+                        } catch {
+                          // ignore
+                        }
+                      }
+                    }}
                   />
                   {dateError && (
                     <div className="text-[11px] text-destructive mt-1">{dateError}</div>
@@ -1190,15 +1209,34 @@ export default function B2BPortalPage() {
                 </div>
 
                 <div className="space-y-1">
-                  <Label htmlFor="check_out" className="flex items-center gap-2">
+                  <Label htmlFor="nights" className="flex items-center gap-2">
                     <CalendarDays className="h-4 w-4" />
-                    Çıkış
+                    Gece
                   </Label>
                   <Input
-                    id="check_out"
-                    type="date"
-                    value={checkOut}
-                    onChange={(e) => setCheckOut(e.target.value)}
+                    id="nights"
+                    type="number"
+                    min={1}
+                    value={nights}
+                    onChange={(e) => {
+                      const val = Number(e.target.value) || 1;
+                      setNights(val);
+                      if (checkIn) {
+                        try {
+                          const d = new Date(checkIn);
+                          if (!Number.isNaN(d.getTime())) {
+                            const dt = new Date(d.getTime());
+                            dt.setDate(dt.getDate() + val);
+                            const y = dt.getFullYear();
+                            const m = String(dt.getMonth() + 1).padStart(2, "0");
+                            const day = String(dt.getDate()).padStart(2, "0");
+                            setCheckOut(`${y}-${m}-${day}`);
+                          }
+                        } catch {
+                          // ignore
+                        }
+                      }
+                    }}
                   />
                 </div>
 

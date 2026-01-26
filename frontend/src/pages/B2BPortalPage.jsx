@@ -752,6 +752,7 @@ export default function B2BPortalPage() {
     setQuoteError("");
     setGlobalError("");
     setQuote(null);
+    setBookingError("");
     setBooking(null);
     setCancelResult(null);
 

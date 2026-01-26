@@ -301,6 +301,20 @@ export default function AdminAgenciesPage() {
               </div>
 
               <div className="flex justify-end gap-2 pt-2">
+                {editingAgency && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setEditOpen(false);
+                      window.location.href = `/app/admin/agencies/${editingAgency.id}/users`;
+                    }}
+                    disabled={editLoading}
+                  >
+                    Kullanıcılar
+                  </Button>
+                )}
                 <Button
                   type="button"
                   variant="outline"

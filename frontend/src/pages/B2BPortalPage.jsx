@@ -1177,120 +1177,120 @@ export default function B2BPortalPage() {
                 </div>
               </form>
 
-          {/* Adım 1.5: Arama Sonuçları (otel kartları) */}
-          {searchResults.length > 0 && (
-            <div className="mt-4 space-y-3">
-              <p className="text-xs font-medium text-muted-foreground">
-                Bulunan oteller ({searchResults.length})
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {searchResults.map((item, idx) => {
-                  const isSelected =
-                    selectedOffer &&
-                    selectedOffer.product_id === item.product_id &&
-                    selectedOffer.rate_plan_id === item.rate_plan_id;
+              {/* Adım 1.5: Arama Sonuçları (otel kartları) */}
+              {searchResults.length > 0 && (
+                <div className="mt-4 space-y-3">
+                  <p className="text-xs font-medium text-muted-foreground">
+                    Bulunan oteller ({searchResults.length})
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {searchResults.map((item, idx) => {
+                      const isSelected =
+                        selectedOffer &&
+                        selectedOffer.product_id === item.product_id &&
+                        selectedOffer.rate_plan_id === item.rate_plan_id;
 
-                  return (
-                    <Card
-                      key={`${item.product_id}-${item.rate_plan_id}-${idx}`}
-                      className={`rounded-2xl border shadow-sm cursor-pointer transition ${
-                        isSelected ? "border-primary ring-1 ring-primary/40" : "hover:border-primary/40"
-                      }`}
-                      onClick={() => setSelectedOffer({ ...item })}
+                      return (
+                        <Card
+                          key={`${item.product_id}-${item.rate_plan_id}-${idx}`}
+                          className={`rounded-2xl border shadow-sm cursor-pointer transition ${
+                            isSelected ? "border-primary ring-1 ring-primary/40" : "hover:border-primary/40"
+                          }`}
+                          onClick={() => setSelectedOffer({ ...item })}
+                        >
+                          <CardContent className="p-4 space-y-2">
+                            <div className="flex items-center justify-between gap-2">
+                              <div>
+                                <div className="text-sm font-semibold">{item.hotel_name}</div>
+                                <div className="text-xs text-muted-foreground">
+                                  {item.city}, {item.country}
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <div className="text-lg font-semibold">
+                                  {item.selling_total} {item.selling_currency}
+                                </div>
+                                <div className="text-[11px] text-muted-foreground">
+                                  {item.nights} gece · {item.occupancy?.adults || adults || 0} yetişkin
+                                </div>
+                                <div className="text-[11px] text-muted-foreground">
+                                  Net: {item.base_net} {item.base_currency}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                              <span>Plan: {item.board}</span>
+                              {isSelected && <span className="text-primary font-medium">Seçili</span>}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+
+                  {/* Hızlı fiyat önizleme butonu */}
+                  <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
+                    <p className="text-[11px] text-muted-foreground">
+                      Seçili otel ve tarihler için hızlı fiyat özetini görüntüleyebilirsiniz.
+                    </p>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="gap-1 text-xs"
+                      onClick={() => {
+                        if (!selectedOffer && !quote?.offer) {
+                          toast.error("Lütfen önce bir otel/fiyat seçin veya bir quote oluşturun.");
+                          return;
+                        }
+                        setPricePreviewOpen(true);
+                      }}
                     >
-                      <CardContent className="p-4 space-y-2">
-                        <div className="flex items-center justify-between gap-2">
-                          <div>
-                            <div className="text-sm font-semibold">{item.hotel_name}</div>
-                            <div className="text-xs text-muted-foreground">
-                              {item.city}, {item.country}
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <div className="text-lg font-semibold">
-                              {item.selling_total} {item.selling_currency}
-                            </div>
-                            <div className="text-[11px] text-muted-foreground">
-                              {item.nights} gece · {item.occupancy?.adults || adults || 0} yetişkin
-                            </div>
-                            <div className="text-[11px] text-muted-foreground">
-                              Net: {item.base_net} {item.base_currency}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-                          <span>Plan: {item.board}</span>
-                          {isSelected && <span className="text-primary font-medium">Seçili</span>}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-            </div>
+                      <Eye className="h-3 w-3" />
+                      Fiyatı Gör
+                    </Button>
+                  </div>
+                </div>
+              )}
 
-          {/* Hızlı fiyat önizleme butonu */}
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
-            <p className="text-[11px] text-muted-foreground">
-              Seçili otel ve tarihler için hızlı fiyat özetini görüntüleyebilirsiniz.
-            </p>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              className="gap-1 text-xs"
-              onClick={() => {
-                if (!selectedOffer && !quote?.offer) {
-                  toast.error("Lütfen önce bir otel/fiyat seçin veya bir quote oluşturun.");
-                  return;
-                }
-                setPricePreviewOpen(true);
-              }}
-            >
-              <Eye className="h-3 w-3" />
-              Fiyatı Gör
-            </Button>
-          </div>
-        )}
+              {/* Quote error and results section */}
+              {quoteError && (
+                <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
+                  <AlertCircle className="h-4 w-4 mt-0.5" />
+                  <div>{quoteError}</div>
+                </div>
+              )}
 
-        {/* Quote error and results section */}
-        {quoteError && (
-            <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
-              <AlertCircle className="h-4 w-4 mt-0.5" />
-              <div>{quoteError}</div>
-            </div>
-          )}
-
-          {quote && (
-            <div className="mt-2 grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-1">
-                <div className="text-xs text-muted-foreground">Quote ID</div>
-                <div className="font-mono text-sm break-all">{quote.quote_id}</div>
-              </div>
-              <div className="space-y-1">
-                <div className="text-xs text-muted-foreground">Fiyat (sell)</div>
-                <div className="text-lg font-semibold text-primary">
-                  {quote.offer?.sell} {quote.offer?.currency || "EUR"}
+              {quote && (
+                <div className="mt-2 grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-1">
+                    <div className="text-xs text-muted-foreground">Quote ID</div>
+                    <div className="font-mono text-sm break-all">{quote.quote_id}</div>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-xs text-muted-foreground">Fiyat (sell)</div>
+                    <div className="text-lg font-semibold text-primary">
+                      {quote.offer?.sell} {quote.offer?.currency || "EUR"}
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Timer className="h-3 w-3" />
+                      <span>Son kullanma</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={isExpired ? "destructive" : "secondary"} className="text-xs">
+                        {isExpired ? "Süresi doldu" : `Kalan: ${formatRemaining(remainingMs)}`}
+                      </Badge>
+                    </div>
+                    <div className="text-[11px] text-muted-foreground mt-1">
+                      expires_at (UTC): {quote.expires_at}
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <div className="space-y-1">
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <Timer className="h-3 w-3" />
-                  <span>Son kullanma</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Badge variant={isExpired ? "destructive" : "secondary"} className="text-xs">
-                    {isExpired ? "Süresi doldu" : `Kalan: ${formatRemaining(remainingMs)}`}
-                  </Badge>
-                </div>
-                <div className="text-[11px] text-muted-foreground mt-1">
-                  expires_at (UTC): {quote.expires_at}
-                </div>
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+              )}
+            </CardContent>
+          </Card>
 
       {/* 2) Checkout / Book */}
       <Card className="rounded-2xl border bg-card shadow-sm">

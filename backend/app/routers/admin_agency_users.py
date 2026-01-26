@@ -400,11 +400,12 @@ async def reset_agency_user_password(
             request=request,
             action="agency_user_password_reset",
             target_type="agency_user",
-            target_id=str(user_doc["_id"]),
+            target_id=f"{agency['_id']}:{user_doc['_id']}",
             before=None,
             after=None,
             meta={
                 "agency_id": str(agency["_id"]),
+                "user_id": str(user_doc["_id"]),
                 "agency_name": agency.get("name"),
                 "email": user_doc.get("email"),
                 "reset_token": token,

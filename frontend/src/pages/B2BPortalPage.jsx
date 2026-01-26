@@ -499,6 +499,17 @@ function BookingListTab() {
                   <th className="px-2 py-2 text-right">Aksiyonlar</th>
                 </tr>
               </thead>
+  const filteredItems = items.filter((b) => {
+    if (!listQuery.trim()) return true;
+    const q = listQuery.trim().toLowerCase();
+    const id = String(b.booking_id || b.id || "").toLowerCase();
+    const guest = String(b.primary_guest_name || b.guest_name || "").toLowerCase();
+    const product = String(b.product_name || b.hotel_name || "").toLowerCase();
+    const ref = String(b.reference || b.voucher_code || "").toLowerCase();
+    const haystack = `${id} ${guest} ${product} ${ref}`;
+    return haystack.includes(q);
+  });
+
               <tbody>
                 {items.map((b) => {
                   const s = String(b.status || "").toUpperCase();

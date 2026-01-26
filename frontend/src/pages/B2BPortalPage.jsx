@@ -455,6 +455,12 @@ function BookingListTab() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <input
+            className="h-8 rounded-md border bg-background px-2 text-xs"
+            placeholder="Ara: Booking ID / Misafir / Otel"
+            value={listQuery}
+            onChange={(e) => setListQuery(e.target.value)}
+          />
           <select
             className="h-8 rounded-md border bg-background px-2 text-xs"
             value={statusFilter}

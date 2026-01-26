@@ -1149,6 +1149,10 @@ export default function B2BPortalPage() {
                       </CardContent>
                     </Card>
                   );
+                })}
+              </div>
+            </div>
+
           {/* Hızlı fiyat önizleme butonu */}
           <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
             <p className="text-[11px] text-muted-foreground">

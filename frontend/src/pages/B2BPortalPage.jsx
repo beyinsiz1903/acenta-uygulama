@@ -1029,6 +1029,22 @@ export default function B2BPortalPage() {
                 setSearchError("");
                 setCityError("");
                 setDateError("");
+
+          {/* Tarih özet satırı */}
+          <div className="mt-2 text-[11px] text-muted-foreground">
+            {checkIn && checkOut && nights ? (
+              <span>
+                Çıkış: {checkOut} ({nights} gece)
+              </span>
+            ) : checkIn && nights ? (
+              <span>
+                {nights} gece için çıkış tarihi otomatik hesaplanacaktır.
+              </span>
+            ) : (
+              <span>Tarih ve gece sayısını seçtiğinizde burada özet göreceksiniz.</span>
+            )}
+          </div>
+
                 setSearchResults([]);
                 setSelectedOffer(null);
                 setQuote(null);

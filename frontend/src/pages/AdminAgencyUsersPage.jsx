@@ -93,7 +93,7 @@ export default function AdminAgencyUsersPage() {
     } catch (err) {
       const resp = err?.response?.data;
       if (resp?.error?.code === "user_linked_to_other_agency") {
-        setInviteError("Bu kullan c ba ka bir acenteye bal olduu i bu acenteye eklenemez.");
+        setInviteError("Bu kullanıcı başka bir acenteye bağlı olduğu için bu acenteye eklenemez.");
       } else {
         const msg = apiErrorMessage(err);
         setInviteError(msg);

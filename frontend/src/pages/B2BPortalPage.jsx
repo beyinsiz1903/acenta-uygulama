@@ -500,22 +500,6 @@ function BookingListTab() {
             <option value="VOUCHERED">Voucher kesildi</option>
             <option value="CANCELLED">İptal edildi</option>
           </select>
-          <input
-            type="date"
-            className="h-8 rounded-md border bg-background px-2 text-xs"
-            placeholder="Başlangıç tarihi"
-            value={checkInFilter}
-            onChange={(e) => setCheckInFilter(e.target.value)}
-            title="Giriş tarihi filtresi"
-          />
-          <input
-            type="date"
-            className="h-8 rounded-md border bg-background px-2 text-xs"
-            placeholder="Bitiş tarihi"
-            value={checkOutFilter}
-            onChange={(e) => setCheckOutFilter(e.target.value)}
-            title="Çıkış tarihi filtresi"
-          />
           <Button size="sm" variant="outline" className="gap-1" onClick={load} disabled={loading}>
             {loading && <Loader2 className="h-3 w-3 animate-spin" />}
             <RefreshCw className="h-3 w-3" />

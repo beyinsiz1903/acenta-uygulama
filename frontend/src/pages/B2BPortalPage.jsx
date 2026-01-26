@@ -488,6 +488,9 @@ export default function B2BPortalPage() {
   const [cityError, setCityError] = useState("");
   const [dateError, setDateError] = useState("");
 
+  // Quick fiyat önizleme (UI-only)
+  const [pricePreviewOpen, setPricePreviewOpen] = useState(false);
+
   // Quote result
   const [quote, setQuote] = useState(null); // { quote_id, expires_at, offer }
   const [quoteError, setQuoteError] = useState("");

@@ -699,6 +699,10 @@ export default function B2BPortalPage() {
       setDateError("Giriş ve çıkış tarihleri zorunludur.");
       hasError = true;
     }
+    if (!checkIn || !nights || nights <= 0) {
+      setDateError("Gece sayısı en az 1 olmalıdır.");
+      hasError = true;
+    }
     if (!selectedOffer) {
       setSearchError("Lütfen listeden bir otel / fiyat seçin.");
       hasError = true;

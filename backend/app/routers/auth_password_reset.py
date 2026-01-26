@@ -119,8 +119,25 @@ async def confirm_password_reset(payload: PasswordResetConfirmIn, request: Reque
         raise AppError(409, "token_used", "Reset bağlantısı daha önce kullanılmış.")
 
     expires_at = token_doc.get("expires_at")
-    if expires_at and expires_at < now:
-        raise AppError(409, "token_expired", "Reset bağlantısının süresi dolmuş.")
+    if expires_at:
+        try:
+            # Ensure compatible timezone awareness for comparison
+            expires_cmp = expires_at
+            if getattr(expires_cmp, "tzinfo", None) is None:
+                # Assume stored as UTC naive
+                from datetime import timezone
+
+                expires_cmp = expires_cmp.replace(tzinfo=timezone.utc)
+            now_cmp = now
+            if getattr(now_cmp, "tzinfo", None) is None:
+                from datetime import timezone
+
+                now_cmp = now_cmp.replace(tzinfo=timezone.utc)
+            if expires_cmp < now_cmp:
+                raise AppError(409, "token_expired", "Reset bağlantısının süresi dolmuş.")
+        except TypeError:
+            # Fallback: if comparison fails for any reason, treat as expired
+            raise AppError(409, "token_expired", "Reset bağlantısının süresi dolmuş.")
 
     # Reload user with org guard
     user = await db.users.find_one({"_id": user_id, "organization_id": org_id})

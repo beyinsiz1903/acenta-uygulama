@@ -312,7 +312,7 @@ function B2BDashboardKpiRow({ sessionQuotes, sessionBookings }) {
   );
 }
 
-function PricePreviewDialog({ open, onOpenChange, checkIn, checkOut, adults, children, selectedOffer, quoteOffer }) {
+function PricePreviewDialog({ open, onOpenChange, checkIn, checkOut, adults, childrenCount, selectedOffer, quoteOffer }) {
   const offer = quoteOffer || selectedOffer || null;
   const total =
     (typeof offer?.sell === "number" && offer.sell) ||

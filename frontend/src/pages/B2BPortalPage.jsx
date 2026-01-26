@@ -361,6 +361,7 @@ function PricePreviewDialog({ open, onOpenChange, checkIn, checkOut, adults, chi
           </p>
         ) : (
           <div className="space-y-4 text-sm">
+            <div className="text-xs text-muted-foreground">Kaynak: {sourceLabel}</div>
             <div className="space-y-1">
               <div className="text-xs text-muted-foreground">Tarih ve konaklama</div>
               <div className="font-medium">{dateLabel}</div>

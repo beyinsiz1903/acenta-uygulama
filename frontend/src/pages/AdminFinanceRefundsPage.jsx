@@ -872,6 +872,28 @@ function RefundTasksSection({ caseData }) {
                   </div>
                 </div>
                 <div className="flex items-center gap-1">
+                  {/* Üstlen / Bırak */}
+                  {!t.assignee_email && myEmail && (
+                    <Button
+                      size="xs"
+                      variant="outline"
+                      disabled={busyTaskId === t.task_id}
+                      onClick={() => onAssign(t, myEmail)}
+                    >
+                      Üstlen
+                    </Button>
+                  )}
+                  {t.assignee_email && t.assignee_email === myEmail && (
+                    <Button
+                      size="xs"
+                      variant="ghost"
+                      disabled={busyTaskId === t.task_id}
+                      onClick={() => onAssign(t, null)}
+                    >
+                      Bırak
+                    </Button>
+                  )}
+
                   {t.status === "open" && (
                     <Button
                       size="xs"

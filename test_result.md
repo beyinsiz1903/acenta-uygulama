@@ -310,6 +310,7 @@ metadata:
 
 test_plan:
   current_focus:
+    - "Reset Password Page E2E Frontend Testing (Sprint 4.4)"
     - "B2B Portal Daily Usage Polish (UI-only) Sprint 4.3"
     - "Ops Tasks UI (2.3) – OpsTasksPage + Refund detail Görevler paneli"
     - "Document Vault UI in AdminFinanceRefundsPage (Sprint 2.2)"

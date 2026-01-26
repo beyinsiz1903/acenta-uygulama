@@ -1030,6 +1030,29 @@ export default function B2BPortalPage() {
                       </CardContent>
                     </Card>
                   );
+          {/* Hızlı fiyat önizleme butonu */}
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
+            <p className="text-[11px] text-muted-foreground">
+              Seçili otel ve tarihler için hızlı fiyat özetini görüntüleyebilirsiniz.
+            </p>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="gap-1 text-xs"
+              onClick={() => {
+                if (!selectedOffer && !quote?.offer) {
+                  toast.error("Lütfen önce bir otel/fiyat seçin veya bir quote oluşturun.");
+                  return;
+                }
+                setPricePreviewOpen(true);
+              }}
+            >
+              <Eye className="h-3 w-3" />
+              Fiyatı Gör
+            </Button>
+          </div>
+
                 })}
               </div>
             </div>

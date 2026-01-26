@@ -1251,7 +1251,7 @@ export default function B2BPortalPage() {
               Fiyatı Gör
             </Button>
           </div>
-        )}
+          )}
 
         {/* Quote error and results section */}
         {quoteError && (

@@ -653,6 +653,47 @@ export default function B2BPortalPage() {
   const [globalError, setGlobalError] = useState("");
 
   // Countdown timer effect
+  function friendlyError(err) {
+    const resp = err?.response?.data;
+    const code = resp?.error?.code;
+    const hasDomain = !!(resp?.error || err?.response?.status);
+    const raw = apiErrorMessage(err);
+
+    // Network / timeout tespiti
+    const msg = String(err?.message || raw || "");
+    const isNetwork =
+      err?.code === "ECONNABORTED" ||
+      msg.toLowerCase().includes("network error") ||
+      msg.toLowerCase().includes("timeout") ||
+      msg.toLowerCase().includes("failed to fetch");
+
+    if (isNetwork) {
+      return {
+        title: "Bağlantı hatası. Lütfen tekrar deneyin.",
+        detail: raw || undefined,
+        code: code || err?.code,
+        kind: "network",
+      };
+    }
+
+    if (hasDomain) {
+      const backendMsg = resp?.error?.message || raw || "İşlem başarısız.";
+      return {
+        title: "İşlem başarısız.",
+        detail: backendMsg,
+        code: code,
+        kind: "domain",
+      };
+    }
+
+    return {
+      title: "Bir hata oluştu.",
+      detail: raw || undefined,
+      code: code || err?.code,
+      kind: "unknown",
+    };
+  }
+
   useEffect(() => {
     const id = setInterval(() => {
       setNowMs(Date.now());

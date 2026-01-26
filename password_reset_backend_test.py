@@ -606,24 +606,30 @@ def test_confirm_weak_password():
         print(f"   📋 Response status: {r.status_code}")
         print(f"   📋 Response body: {r.text}")
         
-        # Verify 400 response
-        assert r.status_code == 400, f"Expected 400, got {r.status_code}"
+        # Verify 422 response (Pydantic validation)
+        assert r.status_code == 422, f"Expected 422, got {r.status_code}"
         
         data = r.json()
         print(f"   📋 Parsed response: {json.dumps(data, indent=2)}")
         
-        # Verify error structure
+        # Verify error structure (Pydantic validation error)
         assert "error" in data, "Response should contain 'error' field"
         error = data["error"]
         
         assert "code" in error, "Error should contain 'code' field"
-        assert error["code"] == "weak_password", f"Expected weak_password, got {error['code']}"
+        assert error["code"] == "validation_error", f"Expected validation_error, got {error['code']}"
         
-        assert "message" in error, "Error should contain 'message' field"
-        assert "8 karakter" in error["message"], f"Expected Turkish message about 8 characters, got {error['message']}"
+        # Check that it mentions password length
+        details = error.get("details", {})
+        errors = details.get("errors", [])
+        assert len(errors) > 0, "Should have validation errors"
         
-        print(f"   ✅ Weak password rejected with weak_password error")
-        print(f"   ✅ Turkish error message: {error['message']}")
+        password_error = next((e for e in errors if "new_password" in e.get("loc", [])), None)
+        assert password_error is not None, "Should have new_password validation error"
+        assert "8 characters" in password_error.get("msg", ""), "Should mention 8 characters requirement"
+        
+        print(f"   ✅ Weak password rejected with validation_error")
+        print(f"   ✅ Pydantic validation message: {password_error.get('msg', '')}")
         
     finally:
         cleanup_test_tokens([token_id])

@@ -358,6 +358,19 @@ export default function AdminAgenciesPage() {
                   <TableCell className="text-xs text-muted-foreground">
                     {agency.created_by || "-"}
                   </TableCell>
+                  <TableCell className="text-xs text-right">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="xs"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        window.location.href = `/app/admin/agencies/${agency.id}/users`;
+                      }}
+                    >
+                      Kullanıcılar
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

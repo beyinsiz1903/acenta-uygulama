@@ -600,7 +600,12 @@ metadata:
 
 test_plan:
   current_focus:
-    - "B2B Portal KPI Cards and Mini-Dashboard"
+    - "B2B Portal FriendlyError Pack (UI-only) - Portal Load and Tab Switching"
+    - "B2B Portal FriendlyError Pack (UI-only) - Search Error Area"
+    - "B2B Portal FriendlyError Pack (UI-only) - Quote Error Area"
+    - "B2B Portal FriendlyError Pack (UI-only) - Booking Error Area"
+    - "B2B Portal FriendlyError Pack (UI-only) - Cancel Error Area"
+    - "B2B Portal FriendlyError Pack (UI-only) - Retry UX and Regression Check"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"

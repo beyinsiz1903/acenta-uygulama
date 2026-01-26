@@ -117,6 +117,13 @@ def get_user_password_info(user_id: str, org_id: str) -> Dict[str, Any]:
     mongo_client = get_mongo_client()
     db = mongo_client.get_default_database()
     
+    # Convert user_id to ObjectId if it's a string
+    if isinstance(user_id, str):
+        try:
+            user_id = ObjectId(user_id)
+        except:
+            pass  # Keep as string if not valid ObjectId
+    
     user = db.users.find_one(
         {"_id": user_id, "organization_id": org_id},
         {"password_hash": 1, "updated_at": 1}

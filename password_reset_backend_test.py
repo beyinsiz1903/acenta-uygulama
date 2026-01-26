@@ -316,7 +316,8 @@ def test_validate_token_used():
     org_id = user["organization_id"]
     
     # Create used token (used_at is not null)
-    used_at = datetime.utcnow() - timedelta(minutes=30)
+    from datetime import timezone
+    used_at = datetime.now(timezone.utc) - timedelta(minutes=30)
     token_id = create_test_token(user_id, org_id, used_at=used_at)
     
     try:

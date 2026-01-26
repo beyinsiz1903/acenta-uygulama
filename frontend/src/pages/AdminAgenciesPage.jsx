@@ -223,7 +223,6 @@ export default function AdminAgenciesPage() {
                 <TableHead className="font-semibold">Durum</TableHead>
                 <TableHead className="font-semibold">Oluşturma</TableHead>
                 <TableHead className="font-semibold text-xs">Oluşturan</TableHead>
-                <TableHead className="font-semibold text-xs text-right">Kullanıcılar</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -357,19 +356,6 @@ export default function AdminAgenciesPage() {
                   </TableCell>
                   <TableCell className="text-xs text-muted-foreground">
                     {agency.created_by || "-"}
-                  </TableCell>
-                  <TableCell className="text-xs text-right">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="xs"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        window.location.href = `/app/admin/agencies/${agency.id}/users`;
-                      }}
-                    >
-                      Kullanıcılar
-                    </Button>
                   </TableCell>
                 </TableRow>
               ))}

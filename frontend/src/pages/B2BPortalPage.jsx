@@ -1085,6 +1085,21 @@ export default function B2BPortalPage() {
             {searchError && <div className="text-xs text-destructive">{searchError}</div>}
           </div>
 
+          {/* Tarih özet satırı */}
+          <div className="mt-2 text-[11px] text-muted-foreground">
+            {checkIn && checkOut && nights ? (
+              <span>
+                Çıkış: {checkOut} ({nights} gece)
+              </span>
+            ) : checkIn && nights ? (
+              <span>
+                {nights} gece için çıkış tarihi otomatik hesaplanacaktır.
+              </span>
+            ) : (
+              <span>Tarih ve gece sayısını seçtiğinizde burada özet göreceksiniz.</span>
+            )}
+          </div>
+
                 </div>
           {/* Adım 1.5: Arama Sonuçları (otel kartları) */}
           {searchResults.length > 0 && (

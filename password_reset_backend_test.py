@@ -712,31 +712,26 @@ def test_confirm_invalid_missing_token():
 def run_all_tests():
     """Run all password reset API tests"""
     print("\n" + "🔐" * 80)
-    print("SPRINT 4.4 – PASSWORD RESET E2E BACKEND TESTING")
+    print("SPRINT 4.4 – PASSWORD RESET E2E BACKEND TESTING (POST-TIMEZONE FIX)")
     print("Testing /api/auth/password-reset/validate and /api/auth/password-reset/confirm")
+    print("Re-running all tests after timezone fix in auth_password_reset.py")
     print("🔐" * 80)
     
-    # Note: There appears to be a backend issue causing 520 errors for valid tokens
-    # This might be related to datetime timezone handling in the auth_password_reset router
-    print("\n⚠️  BACKEND ISSUE DETECTED:")
-    print("   Valid password reset tokens are causing 520 Internal Server Error")
-    print("   This appears to be a bug in the auth_password_reset router")
-    print("   Testing will focus on error scenarios that work correctly\n")
+    print("\n✅ TIMEZONE FIX APPLIED:")
+    print("   Fixed datetime comparison in auth_password_reset.py lines 68-85 and 123-140")
+    print("   Now handling timezone-aware vs naive datetime comparisons properly")
+    print("   Expected: Happy path should now return 200 instead of 520\n")
     
     test_functions = [
-        test_validate_token_not_found,  # This works
-        test_confirm_weak_password,     # This works (validation error)
-        test_confirm_invalid_missing_token,  # This works (validation error)
-    ]
-    
-    # These tests fail due to backend 520 error:
-    failed_due_to_backend_issue = [
-        "test_validate_happy_path",
-        "test_validate_token_expired", 
-        "test_validate_token_used",
-        "test_confirm_happy_path",
-        "test_confirm_replay_token_used",
-        "test_confirm_expired",
+        test_validate_happy_path,           # Should work now after timezone fix
+        test_validate_token_not_found,      # This already worked
+        test_validate_token_expired,        # Should work now after timezone fix
+        test_validate_token_used,           # Should work now after timezone fix
+        test_confirm_happy_path,            # Should work now after timezone fix
+        test_confirm_replay_token_used,     # Should work now after timezone fix
+        test_confirm_expired,               # Should work now after timezone fix
+        test_confirm_weak_password,         # This already worked (validation error)
+        test_confirm_invalid_missing_token, # This already worked (validation error)
     ]
     
     passed_tests = 0

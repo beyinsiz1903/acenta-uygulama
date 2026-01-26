@@ -74,6 +74,13 @@ def create_test_token(user_id: str, org_id: str, agency_id: str = None,
     now = datetime.utcnow()
     token_id = token_id or f"pr_test_{uuid.uuid4().hex[:8]}"
     
+    # Convert user_id to ObjectId if it's a string
+    if isinstance(user_id, str):
+        try:
+            user_id = ObjectId(user_id)
+        except:
+            pass  # Keep as string if not valid ObjectId
+    
     token_doc = {
         "_id": token_id,
         "organization_id": org_id,

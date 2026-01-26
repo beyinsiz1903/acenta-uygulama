@@ -71,7 +71,9 @@ def create_test_token(user_id: str, org_id: str, agency_id: str = None,
     mongo_client = get_mongo_client()
     db = mongo_client.get_default_database()
     
-    now = datetime.utcnow()
+    # Use timezone-aware datetime
+    from datetime import timezone
+    now = datetime.now(timezone.utc)
     token_id = token_id or f"pr_test_{uuid.uuid4().hex[:8]}"
     
     # Convert user_id to ObjectId if it's a string
@@ -81,13 +83,15 @@ def create_test_token(user_id: str, org_id: str, agency_id: str = None,
         except:
             pass  # Keep as string if not valid ObjectId
     
+    expires_at = now + timedelta(hours=expires_in_hours)
+    
     token_doc = {
         "_id": token_id,
         "organization_id": org_id,
         "user_id": user_id,
         "agency_id": agency_id,
         "created_at": now,
-        "expires_at": now + timedelta(hours=expires_in_hours),
+        "expires_at": expires_at,
         "used_at": used_at,
         "context": {"via": "test", "requested_by": "tests"}
     }

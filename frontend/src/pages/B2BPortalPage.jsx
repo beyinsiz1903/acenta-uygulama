@@ -1064,6 +1064,10 @@ export default function B2BPortalPage() {
                   setDateError("Giriş ve çıkış tarihleri zorunludur.");
                   hasErrorLocal = true;
                 }
+                if (!checkIn || !nights || nights <= 0) {
+                  setDateError("Gece sayısı en az 1 olmalıdır.");
+                  hasErrorLocal = true;
+                }
                 if (hasErrorLocal) return;
 
                 setSearchLoading(true);

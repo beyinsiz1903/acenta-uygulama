@@ -581,7 +581,9 @@ function BookingListTab() {
                 })}
               </tbody>
             </table>
-          </div>
+                </div>
+              )}
+            </>
           );
         })()}
       </CardContent>

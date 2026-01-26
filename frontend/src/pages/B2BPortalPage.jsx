@@ -418,8 +418,6 @@ function BookingListTab() {
   const [listQuery, setListQuery] = useState("");
   const [checkInFilter, setCheckInFilter] = useState("");
   const [checkOutFilter, setCheckOutFilter] = useState("");
-  const [checkInFilter, setCheckInFilter] = useState("");
-  const [checkOutFilter, setCheckOutFilter] = useState("");
 
   async function load() {
     setLoading(true);

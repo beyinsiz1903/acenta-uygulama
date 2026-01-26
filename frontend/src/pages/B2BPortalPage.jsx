@@ -490,34 +490,35 @@ function BookingListTab() {
           <div className="text-sm text-muted-foreground">Henüz B2B rezervasyonunuz yok.</div>
         )}
 
-        {items.length > 0 && (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="border-b bg-muted/50 text-[11px] uppercase tracking-wide text-muted-foreground">
-                <tr>
-                  <th className="px-2 py-2">Booking ID</th>
-                  <th className="px-2 py-2">Misafir</th>
-                  <th className="px-2 py-2">Ürün / Otel</th>
-                  <th className="px-2 py-2">Giriş</th>
-                  <th className="px-2 py-2">Çıkış</th>
-                  <th className="px-2 py-2">Durum</th>
-                  <th className="px-2 py-2 text-right">Tutar</th>
-                  <th className="px-2 py-2 text-right">Aksiyonlar</th>
-                </tr>
-              </thead>
-  const filteredItems = items.filter((b) => {
-    if (!listQuery.trim()) return true;
-    const q = listQuery.trim().toLowerCase();
-    const id = String(b.booking_id || b.id || "").toLowerCase();
-    const guest = String(b.primary_guest_name || b.guest_name || "").toLowerCase();
-    const product = String(b.product_name || b.hotel_name || "").toLowerCase();
-    const ref = String(b.reference || b.voucher_code || "").toLowerCase();
-    const haystack = `${id} ${guest} ${product} ${ref}`;
-    return haystack.includes(q);
-  });
+        {items.length > 0 && (() => {
+          const filteredItems = items.filter((b) => {
+            if (!listQuery.trim()) return true;
+            const q = listQuery.trim().toLowerCase();
+            const id = String(b.booking_id || b.id || "").toLowerCase();
+            const guest = String(b.primary_guest_name || b.guest_name || "").toLowerCase();
+            const product = String(b.product_name || b.hotel_name || "").toLowerCase();
+            const ref = String(b.reference || b.voucher_code || "").toLowerCase();
+            const haystack = `${id} ${guest} ${product} ${ref}`;
+            return haystack.includes(q);
+          });
 
-              <tbody>
-                {items.map((b) => {
+          return (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="border-b bg-muted/50 text-[11px] uppercase tracking-wide text-muted-foreground">
+                  <tr>
+                    <th className="px-2 py-2">Booking ID</th>
+                    <th className="px-2 py-2">Misafir</th>
+                    <th className="px-2 py-2">Ürün / Otel</th>
+                    <th className="px-2 py-2">Giriş</th>
+                    <th className="px-2 py-2">Çıkış</th>
+                    <th className="px-2 py-2">Durum</th>
+                    <th className="px-2 py-2 text-right">Tutar</th>
+                    <th className="px-2 py-2 text-right">Aksiyonlar</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredItems.map((b) => {
                   const s = String(b.status || "").toUpperCase();
                   const canCancel = canCancelStatuses.has(s);
                   const voucherUrl = s === "VOUCHERED" ? `${process.env.REACT_APP_BACKEND_URL}/api/b2b/bookings/${b.booking_id}/voucher` : null;

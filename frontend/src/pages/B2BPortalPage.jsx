@@ -415,6 +415,7 @@ function BookingListTab() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [listQuery, setListQuery] = useState("");
 
   async function load() {
     setLoading(true);

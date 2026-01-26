@@ -340,7 +340,7 @@ function PricePreviewDialog({ open, onOpenChange, checkIn, checkOut, adults, chi
 
   const perNight = nights && total ? total / nights : null;
 
-  const occLabel = `${adults || 0} yetişkin${children ? `, ${children} çocuk` : ""}`;
+  const occLabel = `${adults || 0} yetişkin${childrenCount ? `, ${childrenCount} çocuk` : ""}`;
   const dateLabel = checkIn && checkOut ? `${checkIn} → ${checkOut}` : checkIn || "-";
 
   return (

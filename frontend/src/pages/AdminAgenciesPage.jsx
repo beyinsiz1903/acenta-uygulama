@@ -223,6 +223,7 @@ export default function AdminAgenciesPage() {
                 <TableHead className="font-semibold">Durum</TableHead>
                 <TableHead className="font-semibold">Oluşturma</TableHead>
                 <TableHead className="font-semibold text-xs">Oluşturan</TableHead>
+                <TableHead className="font-semibold text-xs text-right">Kullanıcılar</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

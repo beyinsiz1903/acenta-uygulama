@@ -314,11 +314,12 @@ async def update_agency_user(
                 request=request,
                 action="agency_user_status_changed",
                 target_type="agency_user",
-                target_id=str(user_doc["_id"]),
+                target_id=f"{agency['_id']}:{user_doc['_id']}",
                 before=before_snapshot,
                 after=after_snapshot,
                 meta={
                     "agency_id": str(agency["_id"]),
+                    "user_id": str(user_doc["_id"]),
                     "agency_name": agency.get("name"),
                     "email": user_doc.get("email"),
                     "status_from": before_status,

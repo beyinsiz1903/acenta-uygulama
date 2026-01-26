@@ -76,6 +76,7 @@ from app.routers.admin_api_keys import router as admin_api_keys_router
 from app.routers.metrics import router as metrics_router
 from app.routers.partner_v1 import router as partner_v1_router
 from app.routers.admin_agencies import router as admin_agencies_router
+from app.routers.admin_agency_users import router as admin_agency_users_router
 from app.routers.admin_statements import router as admin_statements_router
 from app.routers.admin_whitelabel import router as admin_whitelabel_router
 from app.routers.admin_settlements import router as admin_settlements_router

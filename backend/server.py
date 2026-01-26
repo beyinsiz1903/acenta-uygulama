@@ -20,6 +20,7 @@ from app.routers.admin_pricing import router as admin_pricing_router
 from app.routers.admin_coupons import router as admin_coupons_router
 from app.routers.admin_hotels import router as admin_hotels_router
 from app.routers.auth import router as auth_router
+from app.routers.auth_password_reset import router as auth_password_reset_router
 from app.routers.b2b import router as b2b_router
 from app.routers.b2b_bookings import router as b2b_bookings_router
 from app.routers.b2b_bookings_list import router as b2b_bookings_list_router
@@ -161,6 +162,7 @@ register_exception_handlers(app)
 
 # Include routers
 app.include_router(auth_router)
+app.include_router(auth_password_reset_router)
 app.include_router(admin_router)
 app.include_router(admin_accounting_router)  # router already has /api prefix
 app.include_router(admin_funnel_router)

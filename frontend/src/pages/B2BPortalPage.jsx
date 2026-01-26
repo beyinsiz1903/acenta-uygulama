@@ -503,8 +503,17 @@ function BookingListTab() {
           });
 
           return (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
+            <>
+              {!loading && !error && items.length > 0 && filteredItems.length === 0 && (
+                <div className="text-sm text-muted-foreground">
+                  Sonuç bulunamadı.
+                  <div className="text-[11px] text-muted-foreground">Arama terimini kısaltmayı deneyin.</div>
+                </div>
+              )}
+
+              {filteredItems.length > 0 && (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
                 <thead className="border-b bg-muted/50 text-[11px] uppercase tracking-wide text-muted-foreground">
                   <tr>
                     <th className="px-2 py-2">Booking ID</th>

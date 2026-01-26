@@ -20,7 +20,7 @@ import secrets
 import os
 
 # Test configuration
-BACKEND_URL = "https://bayiportal-2.preview.emergentagent.com/api"
+BACKEND_URL = "https://agentisplus.preview.emergentagent.com/api"
 
 class RateLimitFocusedTester:
     def __init__(self):

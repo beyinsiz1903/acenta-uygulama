@@ -23,7 +23,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 # Backend URL from frontend .env
-BACKEND_URL = "https://bayiportal-2.preview.emergentagent.com"
+BACKEND_URL = "https://agentisplus.preview.emergentagent.com"
 
 class InboxV2Tester:
     def __init__(self):

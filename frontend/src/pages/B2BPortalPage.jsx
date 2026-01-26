@@ -494,14 +494,30 @@ function BookingListTab() {
 
         {items.length > 0 && (() => {
           const filteredItems = items.filter((b) => {
-            if (!listQuery.trim()) return true;
             const q = listQuery.trim().toLowerCase();
+            const hasQuery = !!q;
+
             const id = String(b.booking_id || b.id || "").toLowerCase();
             const guest = String(b.primary_guest_name || b.guest_name || "").toLowerCase();
             const product = String(b.product_name || b.hotel_name || "").toLowerCase();
             const ref = String(b.reference || b.voucher_code || "").toLowerCase();
             const haystack = `${id} ${guest} ${product} ${ref}`;
-            return haystack.includes(q);
+
+            if (hasQuery && !haystack.includes(q)) return false;
+
+            // Tarih filtresi (check_in date string üzerinden)
+            const from = checkInFilter ? new Date(checkInFilter) : null;
+            const to = checkOutFilter ? new Date(checkOutFilter) : null;
+            const rawDate = b.check_in || b.checkin || b.start_date || "";
+            let d = null;
+            if (rawDate) {
+              const parsed = new Date(rawDate);
+              if (!Number.isNaN(parsed.getTime())) d = parsed;
+            }
+            if (from && d && d < from) return false;
+            if (to && d && d > to) return false;
+
+            return true;
           });
 
           return (

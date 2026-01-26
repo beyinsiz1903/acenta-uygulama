@@ -809,6 +809,26 @@ function RefundTasksSection({ caseData }) {
     }
   };
 
+  const onAssign = async (task, assigneeEmail) => {
+    if (!task?.task_id) return;
+    try {
+      setBusyTaskId(task.task_id);
+      await api.patch(`/ops/tasks/${task.task_id}`, { assignee_email: assigneeEmail || null });
+      await load();
+      toast({
+        title: assigneeEmail ? "Görev üstlenildi" : "Görev bırakıldı",
+      });
+    } catch (e) {
+      toast({
+        title: "İşlem başarısız",
+        description: apiErrorMessage(e),
+        variant: "destructive",
+      });
+    } finally {
+      setBusyTaskId("");
+    }
+  };
+
   if (!hasCase) return null;
 
   return (

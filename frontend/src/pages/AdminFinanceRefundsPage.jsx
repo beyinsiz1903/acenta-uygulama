@@ -1446,6 +1446,7 @@ function RefundDetailPanel({
   const [bulkProcessed, setBulkProcessed] = useState(0);
   const [bulkTotal, setBulkTotal] = useState(0);
   const [bulkErrorSummary, setBulkErrorSummary] = useState("");
+  const [bulkCancelRequested, setBulkCancelRequested] = useState(false);
 
 
         {/* Documents section */}

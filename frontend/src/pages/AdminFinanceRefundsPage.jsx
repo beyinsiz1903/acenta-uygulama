@@ -97,6 +97,9 @@ function RefundQueueList({
         <div className="flex items-center justify-between gap-3">
           <div>
             <CardTitle className="text-sm font-medium">İade Kuyruğu</CardTitle>
+            <p className="text-[10px] text-muted-foreground mt-0.5">
+              Seç kutusu: bu sayfadaki kayıtları seçer (tüm filtrelenmiş kayıtları değil).
+            </p>
             <p className="text-xs text-muted-foreground mt-1">
               Ops ekibi için açık iade case listesi.
             </p>

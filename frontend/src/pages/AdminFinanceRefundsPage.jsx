@@ -1620,6 +1620,9 @@ export default function AdminFinanceRefundsPage() {
               onChangeLimit={setLimit}
               selectedCaseId={selectedCaseId}
               onSelectCase={onSelectCase}
+              selectedCaseIds={selectedCaseIds}
+              onToggleCase={onToggleCase}
+              onToggleAllOnPage={onToggleAllOnPage}
             />
           )}
         </div>

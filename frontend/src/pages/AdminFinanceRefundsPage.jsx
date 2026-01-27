@@ -1493,6 +1493,8 @@ export default function AdminFinanceRefundsPage() {
     ? `refunds.filter_presets.v1.${orgId}.${myEmail}`
     : null;
 
+  const cancelRef = React.useRef(false);
+
   const hasSelection = selectedCaseIds.length > 0;
 
   const BULK_ACTIONS = [
@@ -1661,6 +1663,7 @@ export default function AdminFinanceRefundsPage() {
     setBulkTotal(ids.length);
     setBulkErrorSummary("");
     setBulkCancelRequested(false);
+    cancelRef.current = false;
     const errors = [];
 
     const concurrency = 3;

@@ -284,6 +284,18 @@ test_plan:
   test_priority: "high_first"
 
 frontend:
+  - task: "B2B Portal Micro Polish (UI-only) Sprint 4.6.x - Search Error + FriendlyError + tr-TR Date Formatting"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/B2BPortalPage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "testing"
+          comment: "Initial task setup for testing B2B Portal Sprint 4.6.x micro-polish features. Need to verify: 1) Search error + friendlyError alignment with red panel and 'Tekrar dene' button, 2) Deterministic retry functionality, 3) tr-TR date formatting in booking list (Giriş/Çıkış columns), 4) tr-TR date formatting in PricePreviewDialog, 5) tr-TR date formatting for Quote expires_at, 6) Regression testing and console error checks."
+
   - task: "B2B Portal Agency günlük akış derinleşme (UI-only) Sprint 4.6"
     implemented: true
     working: true

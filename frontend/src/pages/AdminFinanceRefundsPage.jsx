@@ -1689,6 +1689,10 @@ export default function AdminFinanceRefundsPage() {
 
     await Promise.all(starters);
 
+    if (bulkCancelRequested) {
+      setBulkErrorSummary((prev) => prev || "İptal istendi, devam eden istekler tamamlandı.");
+    }
+
     if (errors.length) {
       const firstFive = errors.slice(0, 5)
         .map((e) => `${e.caseId}: ${e.message}`)

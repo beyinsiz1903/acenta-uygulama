@@ -1518,6 +1518,73 @@ export default function AdminFinanceRefundsPage() {
       try {
         await runner(caseId);
       } catch (e) {
+  const user = getUser();
+  const orgId = user?.organization_id || "";
+  const myEmail = user?.email || "";
+
+  const PRESET_STORAGE_KEY = orgId && myEmail
+    ? `refunds.filter_presets.v1.${orgId}.${myEmail}`
+    : null;
+
+  const [presets, setPresets] = useState([]);
+  const [selectedPresetId, setSelectedPresetId] = useState("");
+
+  useEffect(() => {
+    if (!PRESET_STORAGE_KEY) return;
+    try {
+      const raw = localStorage.getItem(PRESET_STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          setPresets(parsed);
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }, [PRESET_STORAGE_KEY]);
+
+  const savePresetsToStorage = (next) => {
+    setPresets(next);
+    if (!PRESET_STORAGE_KEY) return;
+    try {
+      localStorage.setItem(PRESET_STORAGE_KEY, JSON.stringify(next));
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleSavePreset = () => {
+    const name = window.prompt("Preset adı:");
+    if (!name) return;
+    const id = `preset_${Date.now()}`;
+    const values = {
+      statusFilter,
+      limit,
+    };
+    const next = [...presets, { id, name, values }];
+    savePresetsToStorage(next);
+    setSelectedPresetId(id);
+  };
+
+  const handleApplyPreset = (presetId) => {
+    setSelectedPresetId(presetId);
+    const p = presets.find((x) => x.id === presetId);
+    if (!p) return;
+    const v = p.values || {};
+    if (v.statusFilter) setStatusFilter(v.statusFilter);
+    if (typeof v.limit === "number") setLimit(v.limit);
+  };
+
+  const handleDeletePreset = () => {
+    if (!selectedPresetId) return;
+    if (!window.confirm("Seçili preset silinecek. Emin misiniz?")) return;
+    const next = presets.filter((p) => p.id !== selectedPresetId);
+    savePresetsToStorage(next);
+    setSelectedPresetId("");
+  };
+
+
   const buildCsvRows = (rows) => {
     return rows.map((it) => {
       const approvedAmount = it.approved?.amount;

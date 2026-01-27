@@ -328,7 +328,7 @@ function PricePreviewDialog({ open, onOpenChange, checkIn, checkOut, adults, chi
     null;
 
   let nights = nightsFromOffer;
-  let nightsByDates: number | null = null;
+  let nightsByDates = null;
   if (checkIn && checkOut) {
     try {
       const a = new Date(`${checkIn}T00:00:00`);

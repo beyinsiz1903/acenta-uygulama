@@ -1534,6 +1534,8 @@ export default function AdminFinanceRefundsPage() {
       setCaseData(null);
       setBookingFinancials(null);
       const resp = await api.get(`/ops/finance/refunds/${caseId}`);
+      // Seçim persist etsin ama en azından seçili satır her zaman detayla uyumlu olsun
+      setSelectedCaseIds((prev) => (prev.includes(caseId) ? prev : prev));
       const data = resp.data;
       setCaseData(data);
 

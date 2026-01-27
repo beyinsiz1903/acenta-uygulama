@@ -1571,10 +1571,14 @@ export default function AdminFinanceRefundsPage() {
       const first = list[0];
       setSelectedCaseId(first.case_id);
       loadDetail(first.case_id);
+      // Sayfa yenilendiğinde, listede olmayan caseId'leri temizle
+      const validIds = new Set(list.map((it) => it.case_id));
+      setSelectedCaseIds((prev) => prev.filter((id) => validIds.has(id)));
     } else {
       setSelectedCaseId(null);
       setCaseData(null);
       setBookingFinancials(null);
+      setSelectedCaseIds([]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [list]);

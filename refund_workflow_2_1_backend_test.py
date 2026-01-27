@@ -23,7 +23,7 @@ import os
 from typing import Dict, Any, Optional
 
 # Configuration - Use production URL from frontend/.env
-BASE_URL = "https://agentisplus.preview.emergentagent.com"
+BASE_URL = "https://b2bhotelsuite.preview.emergentagent.com"
 
 def get_mongo_client():
     """Get MongoDB client for direct database access"""

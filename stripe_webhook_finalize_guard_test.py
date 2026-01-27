@@ -13,7 +13,7 @@ import os
 from bson import ObjectId
 
 # Configuration - Use production URL from frontend/.env
-BASE_URL = "https://agentisplus.preview.emergentagent.com"
+BASE_URL = "https://b2bhotelsuite.preview.emergentagent.com"
 
 def login_admin():
     """Login as admin user and return token, org_id, email"""

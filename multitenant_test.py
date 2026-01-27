@@ -8,7 +8,7 @@ import sys
 from datetime import datetime
 
 class MultiTenantTester:
-    def __init__(self, base_url="https://agentisplus.preview.emergentagent.com"):
+    def __init__(self, base_url="https://b2bhotelsuite.preview.emergentagent.com"):
         self.base_url = base_url
         self.super_admin_token = None
         self.agency1_token = None

@@ -7,7 +7,7 @@ import requests
 import json
 
 # Backend URL from frontend/.env
-BACKEND_URL = "https://agentisplus.preview.emergentagent.com"
+BACKEND_URL = "https://b2bhotelsuite.preview.emergentagent.com"
 
 def login_admin():
     """Login as admin and return JWT token and user info"""

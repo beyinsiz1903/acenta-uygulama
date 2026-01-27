@@ -190,39 +190,39 @@ function RefundQueueList({
                       <TableCell className="text-xs truncate max-w-[140px]">
                         {it.agency_name || it.agency_id}
                       </TableCell>
-                    <TableCell className="text-xs font-mono truncate max-w-[120px]">
-                      {it.booking_id}
-                    </TableCell>
-                    <TableCell className="text-xs">
-                      {it.booking_status ? (
-                        <Badge variant="outline">{it.booking_status}</Badge>
-                      ) : (
-                        <span className="text-muted-foreground">-</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-xs text-right">
-                      {it.requested_amount != null ? it.requested_amount.toFixed(2) : "-"}
-                    </TableCell>
-                    <TableCell className="text-xs text-right">
-                      {it.computed_refundable != null ? it.computed_refundable.toFixed(2) : "-"}
-                    </TableCell>
-                    <TableCell className="text-xs text-right">
-                      {it.computed_penalty != null ? it.computed_penalty.toFixed(2) : "-"}
-                    </TableCell>
-                    <TableCell className="text-xs">
-                      <StatusBadge status={it.status} />
-                    </TableCell>
-                    <TableCell className="text-xs">
-                      {it.decision || "-"}
-                    </TableCell>
-                    <TableCell className="text-xs">
-                      {it.updated_at
-                        ? new Date(it.updated_at).toLocaleString()
-                        : "-"}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
+                      <TableCell className="text-xs font-mono truncate max-w-[120px]">
+                        {it.booking_id}
+                      </TableCell>
+                      <TableCell className="text-xs">
+                        {it.booking_status ? (
+                          <Badge variant="outline">{it.booking_status}</Badge>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-xs text-right">
+                        {it.requested_amount != null ? it.requested_amount.toFixed(2) : "-"}
+                      </TableCell>
+                      <TableCell className="text-xs text-right">
+                        {it.computed_refundable != null ? it.computed_refundable.toFixed(2) : "-"}
+                      </TableCell>
+                      <TableCell className="text-xs text-right">
+                        {it.computed_penalty != null ? it.computed_penalty.toFixed(2) : "-"}
+                      </TableCell>
+                      <TableCell className="text-xs">
+                        <StatusBadge status={it.status} />
+                      </TableCell>
+                      <TableCell className="text-xs">
+                        {it.decision || "-"}
+                      </TableCell>
+                      <TableCell className="text-xs">
+                        {it.updated_at
+                          ? new Date(it.updated_at).toLocaleString()
+                          : "-"}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
             </Table>
           </div>
         )}

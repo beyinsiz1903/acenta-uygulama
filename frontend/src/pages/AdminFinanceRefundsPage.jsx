@@ -1473,7 +1473,6 @@ export default function AdminFinanceRefundsPage() {
   const [bulkErrorSummary, setBulkErrorSummary] = useState("");
   const [bulkCancelRequested, setBulkCancelRequested] = useState(false);
 
-  // Additional state declarations
   const [statusFilter, setStatusFilter] = useState("open");
   const [limit, setLimit] = useState(50);
   const [selectedCaseIds, setSelectedCaseIds] = useState([]);

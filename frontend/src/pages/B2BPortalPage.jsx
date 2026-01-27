@@ -1486,7 +1486,7 @@ export default function B2BPortalPage() {
                       </Badge>
                     </div>
                     <div className="text-[11px] text-muted-foreground mt-1">
-                      expires_at (UTC): {quote.expires_at}
+                      Son geçerlilik: {expiresAtDate ? expiresAtDate.toLocaleString("tr-TR") : quote.expires_at}
                     </div>
                   </div>
                 </div>

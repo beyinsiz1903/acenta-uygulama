@@ -1780,7 +1780,6 @@ export default function AdminFinanceRefundsPage() {
   const [listError, setListError] = useState("");
 
   const [selectedCaseId, setSelectedCaseId] = useState(null);
-  const [selectedCaseIds, setSelectedCaseIds] = useState([]);
   const [caseData, setCaseData] = useState(null);
   const [bookingFinancials, setBookingFinancials] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);

@@ -1911,33 +1911,6 @@ export default function AdminFinanceRefundsPage() {
         </Card>
       )}
 
-      // Seçim persist etsin ama en azından seçili satır her zaman detayla uyumlu olsun
-      setSelectedCaseIds((prev) => (prev.includes(caseId) ? prev : prev));
-      const data = resp.data;
-      setCaseData(data);
-
-      if (data.booking_id) {
-        try {
-          const finResp = await api.get(
-            `/ops/finance/bookings/${data.booking_id}/financials`
-          );
-          setBookingFinancials(finResp.data || null);
-        } catch (e) {
-          console.error("booking_financials fetch failed", e);
-          setBookingFinancials(null);
-        }
-      }
-    } catch (e) {
-      toast({
-        title: "Refund case load failed",
-        description: apiErrorMessage(e),
-        variant: "destructive",
-      });
-    } finally {
-      setDetailLoading(false);
-    }
-  }, []);
-
   useEffect(() => {
     // load list when filters change
     loadList();

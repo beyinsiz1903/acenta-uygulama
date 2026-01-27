@@ -350,6 +350,8 @@ function PricePreviewDialog({ open, onOpenChange, checkIn, checkOut, adults, chi
     ? `${new Date(checkIn).toLocaleDateString("tr-TR")} → ${new Date(checkOut).toLocaleDateString("tr-TR")}`
     : checkIn || "-";
 
+  const nightsMismatch = nightsFromOffer && nightsByDates && nightsFromOffer !== nightsByDates;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">

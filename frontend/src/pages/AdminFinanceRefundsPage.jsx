@@ -1464,6 +1464,7 @@ export default function AdminFinanceRefundsPage() {
   const [list, setList] = useState([]);
   const [statusFilter, setStatusFilter] = useState("open");
   const [limit, setLimit] = useState(50);
+  const [selectedCaseIds, setSelectedCaseIds] = useState([]);
 
   const [loadingList, setLoadingList] = useState(true);
   const [listError, setListError] = useState("");

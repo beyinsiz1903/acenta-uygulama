@@ -1978,6 +1978,102 @@ export default function AdminFinanceRefundsPage() {
         caseData={caseData}
         onRejected={onAfterDecision}
       />
+
+      {/* Bulk Operations Section */}
+      {hasSelection && (
+        <Card className="border-dashed">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium">Bulk Operations</CardTitle>
+            <p className="text-xs text-muted-foreground">
+              {selectedCaseIds.length} case seçili
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex flex-wrap items-center gap-3 text-xs">
+              <span className="font-medium">Aksiyon:</span>
+              <select
+                className="h-8 rounded-md border bg-background px-2 text-xs"
+                value={bulkAction}
+                onChange={(e) => setBulkAction(e.target.value)}
+              >
+                <option value="">Seçin</option>
+                {BULK_ACTIONS.map((action) => (
+                  <option key={action.value} value={action.value}>
+                    {action.label}
+                  </option>
+                ))}
+              </select>
+              <Button
+                size="sm"
+                onClick={onRunBulk}
+                disabled={!bulkAction || bulkRunning}
+              >
+                {bulkRunning && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                Çalıştır
+              </Button>
+              {bulkRunning && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    cancelRef.current = true;
+                    setBulkCancelRequested(true);
+                  }}
+                >
+                  İptal et
+                </Button>
+              )}
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3 text-xs">
+              <span className="font-medium">CSV Export:</span>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => exportCsv("filtered")}
+              >
+                Filtrelenmiş liste (CSV)
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={!selectedCaseIds.length}
+                onClick={() => exportCsv("selected")}
+              >
+                Seçili kayıtlar (CSV)
+              </Button>
+            </div>
+
+            {bulkRunning && (
+              <div className="space-y-2 text-xs">
+                <div className="flex items-center gap-2">
+                  <div className="text-muted-foreground">İlerleme:</div>
+                  <div>
+                    {bulkProcessed} / {bulkTotal}
+                  </div>
+                  <div className="flex-1 bg-muted rounded-full h-2">
+                    <div
+                      className="bg-primary h-2 rounded-full transition-all"
+                      style={{
+                        width: `${bulkTotal > 0 ? (bulkProcessed / bulkTotal) * 100 : 0}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+                {bulkCancelRequested && (
+                  <div className="text-orange-600">İptal istendi, devam eden istekler tamamlanıyor...</div>
+                )}
+              </div>
+            )}
+
+            {bulkErrorSummary && (
+              <div className="text-xs text-destructive bg-destructive/10 p-2 rounded">
+                {bulkErrorSummary}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

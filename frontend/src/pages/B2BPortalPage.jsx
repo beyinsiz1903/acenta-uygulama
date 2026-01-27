@@ -1188,8 +1188,7 @@ export default function B2BPortalPage() {
                     disabled={searchLoading}
                     onClick={(e) => {
                       e.preventDefault();
-                      // Otel Ara butonundaki mantığı yeniden kullan
-                      document.querySelector("button:contains('Otel Ara')")?.click?.();
+                      handleSearch();
                     }}
                   >
                     Tekrar dene

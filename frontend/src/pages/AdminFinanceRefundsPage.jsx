@@ -1564,6 +1564,25 @@ export default function AdminFinanceRefundsPage() {
         const resp = await api.get(`/ops/finance/refunds/${caseId}`);
         const data = resp.data;
         const refundable = data?.computed?.refundable;
+            <div className="flex flex-wrap items-center gap-3 text-xs">
+              <span className="font-medium">CSV Export:</span>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => exportCsv("filtered")}
+              >
+                Filtrelenmiş liste (CSV)
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={!selectedCaseIds.length}
+                onClick={() => exportCsv("selected")}
+              >
+                Seçili kayıtlar (CSV)
+              </Button>
+            </div>
+
         if (typeof refundable !== "number") {
           throw new Error("Refundable amount bulunamadı");
         }

@@ -223,6 +223,7 @@ function RefundQueueList({
                     </TableRow>
                   );
                 })}
+              </TableBody>
             </Table>
           </div>
         )}

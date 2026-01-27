@@ -1833,9 +1833,16 @@ export default function AdminFinanceRefundsPage() {
             </div>
             <div className="flex items-center gap-3 text-xs text-muted-foreground">
               {bulkRunning ? (
-                <span>
-                  İşlem devam ediyor... {bulkProcessed}/{bulkTotal} case işlendi
-                </span>
+                <>
+                  <span>
+                    İşlem devam ediyor... {bulkProcessed}/{bulkTotal} case işlendi
+                  </span>
+                  {bulkCancelRequested && (
+                    <span className="text-amber-700">
+                      İptal istendi, devam eden istekler tamamlanıyor…
+                    </span>
+                  )}
+                </>
               ) : (
                 <span>Seçili case sayısı: {selectedCaseIds.length}</span>
               )}

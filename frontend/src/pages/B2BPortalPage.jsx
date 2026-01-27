@@ -585,6 +585,12 @@ function BookingListTab() {
                 <tbody>
                   {filteredItems.map((b) => {
                   const s = String(b.status || "").toUpperCase();
+        {!loading && !error && items.length > 0 && (
+          <p className="text-[11px] text-muted-foreground mt-1">
+            Bazı rezervasyonlarda tarih bilgisi okunamadığı için tarih filtresi bu kayıtlara uygulanmayabilir.
+          </p>
+        )}
+
                   const canCancel = canCancelStatuses.has(s);
                   const voucherUrl = s === "VOUCHERED" ? `${process.env.REACT_APP_BACKEND_URL}/api/b2b/bookings/${b.booking_id}/voucher` : null;
 

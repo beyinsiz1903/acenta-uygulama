@@ -1958,6 +1958,167 @@ export default function AdminFinanceRefundsPage() {
       } else {
         return prev.filter(id => id !== caseId);
       }
+  const user = getUser();
+  const orgId = user?.organization_id || "";
+  const myEmail = user?.email || "";
+
+  const PRESET_STORAGE_KEY = orgId && myEmail
+    ? `refunds.filter_presets.v1.${orgId}.${myEmail}`
+    : null;
+
+  const [presets, setPresets] = useState([]);
+  const [selectedPresetId, setSelectedPresetId] = useState("");
+
+  useEffect(() => {
+    if (!PRESET_STORAGE_KEY) return;
+    try {
+      const raw = localStorage.getItem(PRESET_STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          setPresets(parsed);
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }, [PRESET_STORAGE_KEY]);
+
+  const savePresetsToStorage = (next) => {
+    setPresets(next);
+    if (!PRESET_STORAGE_KEY) return;
+    try {
+      localStorage.setItem(PRESET_STORAGE_KEY, JSON.stringify(next));
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleSavePreset = () => {
+    const name = window.prompt("Preset adı:");
+    if (!name) return;
+    const id = `preset_${Date.now()}`;
+    const values = {
+      statusFilter,
+      limit,
+    };
+    const next = [...presets, { id, name, values }];
+    savePresetsToStorage(next);
+    setSelectedPresetId(id);
+  };
+
+  const handleApplyPreset = (presetId) => {
+    setSelectedPresetId(presetId);
+    const p = presets.find((x) => x.id === presetId);
+    if (!p) return;
+    const v = p.values || {};
+    if (v.statusFilter) setStatusFilter(v.statusFilter);
+    if (typeof v.limit === "number") setLimit(v.limit);
+  };
+
+  const handleDeletePreset = () => {
+    if (!selectedPresetId) return;
+    if (!window.confirm("Seçili preset silinecek. Emin misiniz?")) return;
+    const next = presets.filter((p) => p.id !== selectedPresetId);
+    savePresetsToStorage(next);
+    setSelectedPresetId("");
+  };
+
+  const buildCsvRows = (rows) => {
+    return rows.map((it) => {
+      const approvedAmount = it.approved?.amount;
+      const amount =
+        typeof approvedAmount === "number"
+          ? approvedAmount
+          : typeof it.computed_refundable === "number"
+          ? it.computed_refundable
+          : typeof it.requested_amount === "number"
+          ? it.requested_amount
+          : null;
+
+      return {
+        refund_case_id: it.case_id,
+        booking_id: it.booking_id,
+        status: it.status,
+        amount,
+        currency: it.currency,
+        created_at: it.created_at || "",
+        updated_at: it.updated_at || "",
+        agency_name: it.agency_name || "",
+        agency_id: it.agency_id || "",
+        reason: it.reason || "",
+      };
+    });
+  };
+
+  const exportCsv = (mode) => {
+    let rows = [];
+    if (mode === "selected") {
+      const set = new Set(selectedCaseIds);
+      rows = list.filter((it) => set.has(it.case_id));
+    } else {
+      rows = list;
+    }
+
+    if (!rows.length) {
+      toast({ title: "Export edilecek kayıt yok", variant: "destructive" });
+      return;
+    }
+
+    const mapped = buildCsvRows(rows);
+    const headers = [
+      "refund_case_id",
+      "booking_id",
+      "status",
+      "amount",
+      "currency",
+      "created_at",
+      "updated_at",
+      "agency_name",
+      "agency_id",
+      "reason",
+    ];
+
+    const csvLines = [];
+    csvLines.push(headers.join(","));
+    for (const row of mapped) {
+      const line = headers
+        .map((h) => {
+          const v = row[h];
+          if (v == null) return "";
+          const s = String(v);
+          if (s.includes(",") || s.includes("\"") || s.includes("\n")) {
+            return `"${s.replace(/"/g, '""')}"`;
+          }
+          return s;
+        })
+        .join(",");
+      csvLines.push(line);
+    }
+
+    const blob = new Blob([csvLines.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    const ts = new Date().toISOString().replace(/[:.]/g, "-");
+    const suffix = mode === "selected" ? "selected" : "filtered";
+    a.download = `refunds_${suffix}_${ts}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+  };
+
+  const hasSelection = selectedCaseIds.length > 0;
+
+  const BULK_ACTIONS = [
+    { value: "approve_step1", label: "1. Onay (approve_step1)" },
+    { value: "approve_step2", label: "2. Onay (approve_step2)" },
+    { value: "reject", label: "Reddet" },
+    { value: "close", label: "Kapat" },
+  ];
+
+
     });
   };
 

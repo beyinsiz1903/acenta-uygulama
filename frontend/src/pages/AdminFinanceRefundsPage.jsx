@@ -1551,6 +1551,19 @@ export default function AdminFinanceRefundsPage() {
             <div className="text-muted-foreground">
               Toplu aksiyonlar için bir seçenek belirleyin.
             </div>
+            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+              {bulkRunning ? (
+                <span>
+                  İşlem devam ediyor... {bulkProcessed}/{bulkTotal} case işlendi
+                </span>
+              ) : (
+                <span>Seçili case sayısı: {selectedCaseIds.length}</span>
+              )}
+              {bulkErrorSummary && !bulkRunning && (
+                <span className="text-destructive">{bulkErrorSummary}</span>
+              )}
+            </div>
+
             <div className="flex flex-wrap items-center gap-2 text-xs">
               <span className="font-medium">Toplu Aksiyon:</span>
               <select

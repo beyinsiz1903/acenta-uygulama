@@ -1717,9 +1717,13 @@ export default function AdminFinanceRefundsPage() {
 
     if (bulkAction === "approve_step1") {
       await runBulk(async (caseId) => {
-        // Her case için önce detay çekip refundable bul
+        // Her case için önce detay çekip refundable ve status kontrolü yap
         const resp = await api.get(`/ops/finance/refunds/${caseId}`);
         const data = resp.data;
+        const status = data?.status;
+        if (status && !["open", "pending_approval", "pending_approval_1"].includes(status)) {
+          throw new Error(`Bu status için 1. onay uygun değil: ${status}`);
+        }
         const refundable = data?.computed?.refundable;
             <div className="flex flex-wrap items-center gap-3 text-xs">
               <span className="font-medium">CSV Export:</span>

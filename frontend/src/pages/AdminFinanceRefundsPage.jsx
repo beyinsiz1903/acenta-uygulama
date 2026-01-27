@@ -1929,24 +1929,6 @@ export default function AdminFinanceRefundsPage() {
     }
   };
 
-
-  const [statusFilter, setStatusFilter] = useState("open");
-  const [limit, setLimit] = useState(50);
-  const [selectedCaseIds, setSelectedCaseIds] = useState([]);
-
-  const [loadingList, setLoadingList] = useState(true);
-  const [listError, setListError] = useState("");
-
-  const [selectedCaseId, setSelectedCaseId] = useState(null);
-  const [caseData, setCaseData] = useState(null);
-  const [bookingFinancials, setBookingFinancials] = useState(null);
-  const [detailLoading, setDetailLoading] = useState(false);
-
-  const [approveStep1Open, setApproveStep1Open] = useState(false);
-  const [approveStep2Open, setApproveStep2Open] = useState(false);
-  const [rejectOpen, setRejectOpen] = useState(false);
-  const [markPaidOpen, setMarkPaidOpen] = useState(false);
-
   const loadList = React.useCallback(async () => {
     try {
       setLoadingList(true);

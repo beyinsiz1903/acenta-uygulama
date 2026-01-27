@@ -1534,6 +1534,16 @@ export default function AdminFinanceRefundsPage() {
       setCaseData(null);
       setBookingFinancials(null);
       const resp = await api.get(`/ops/finance/refunds/${caseId}`);
+  const hasSelection = selectedCaseIds.length > 0;
+
+  const BULK_ACTIONS = [
+    { value: "approve_step1", label: "1. Onay (approve_step1)" },
+    { value: "approve_step2", label: "2. Onay (approve_step2)" },
+    { value: "reject", label: "Reddet" },
+    { value: "close", label: "Kapat" },
+  ];
+
+
       // Seçim persist etsin ama en azından seçili satır her zaman detayla uyumlu olsun
       setSelectedCaseIds((prev) => (prev.includes(caseId) ? prev : prev));
       const data = resp.data;

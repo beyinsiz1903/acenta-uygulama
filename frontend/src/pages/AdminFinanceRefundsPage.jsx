@@ -1495,6 +1495,100 @@ function RefundDetailPanel({
 
 export default function AdminFinanceRefundsPage() {
   const [list, setList] = useState([]);
+  const runBulk = async (runner) => {
+    const ids = selectedCaseIds;
+    if (!ids.length) return;
+    setBulkRunning(true);
+    setBulkProcessed(0);
+    setBulkTotal(ids.length);
+    setBulkErrorSummary("");
+    const errors = [];
+
+    const concurrency = 3;
+    let idx = 0;
+    let active = 0;
+
+    const runNext = async () => {
+      if (idx >= ids.length) return;
+      const caseId = ids[idx++];
+      active += 1;
+      try {
+        await runner(caseId);
+      } catch (e) {
+        const msg = apiErrorMessage(e) || "Bilinmeyen hata";
+        errors.push({ caseId, message: msg });
+      } finally {
+        setBulkProcessed((prev) => prev + 1);
+        active -= 1;
+        if (idx < ids.length) {
+          await runNext();
+        }
+      }
+    };
+
+    const starters = [];
+    for (let i = 0; i < concurrency && i < ids.length; i += 1) {
+      starters.push(runNext());
+    }
+
+    await Promise.all(starters);
+
+    if (errors.length) {
+      const firstFive = errors.slice(0, 5)
+        .map((e) => `${e.caseId}: ${e.message}`)
+        .join("; ");
+      setBulkErrorSummary(`Hatalı: ${errors.length} case. İlk hatalar: ${firstFive}`);
+      // Detay için console
+      // eslint-disable-next-line no-console
+      console.error("Bulk refund action errors", errors);
+    } else {
+      setBulkErrorSummary("");
+    }
+
+    setBulkRunning(false);
+  };
+
+  const onRunBulk = async () => {
+    if (!bulkAction || !selectedCaseIds.length) return;
+
+    if (!window.confirm(`Seçili ${selectedCaseIds.length} case için '${bulkAction}' aksiyonu çalıştırılacak. Emin misiniz?`)) {
+      return;
+    }
+
+    if (bulkAction === "approve_step1") {
+      await runBulk(async (caseId) => {
+        // Her case için önce detay çekip refundable bul
+        const resp = await api.get(`/ops/finance/refunds/${caseId}`);
+        const data = resp.data;
+        const refundable = data?.computed?.refundable;
+        if (typeof refundable !== "number") {
+          throw new Error("Refundable amount bulunamadı");
+        }
+        await api.post(`/ops/finance/refunds/${caseId}/approve-step1`, {
+          approved_amount: refundable,
+        });
+      });
+    } else if (bulkAction === "approve_step2") {
+      await runBulk(async (caseId) => {
+        await api.post(`/ops/finance/refunds/${caseId}/approve-step2`, { note: null });
+      });
+    } else if (bulkAction === "reject") {
+      await runBulk(async (caseId) => {
+        await api.post(`/ops/finance/refunds/${caseId}/reject`, { reason: null });
+      });
+    } else if (bulkAction === "close") {
+      await runBulk(async (caseId) => {
+        await api.post(`/ops/finance/refunds/${caseId}/close`, { note: null });
+      });
+    }
+
+    await loadList();
+    if (selectedCaseId) {
+      await loadDetail(selectedCaseId);
+    }
+  };
+
+
   const [statusFilter, setStatusFilter] = useState("open");
   const [limit, setLimit] = useState(50);
   const [selectedCaseIds, setSelectedCaseIds] = useState([]);

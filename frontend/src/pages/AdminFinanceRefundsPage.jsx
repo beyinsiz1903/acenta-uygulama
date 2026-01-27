@@ -139,6 +139,15 @@ function RefundQueueList({
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-8 text-xs">
+                    <input
+                      type="checkbox"
+                      className="h-3 w-3 cursor-pointer"
+                      aria-label="Sayfadaki tüm case'leri seç"
+                      checked={items.length > 0 && items.every((it) => selectedCaseIds.includes(it.case_id))}
+                      onChange={(e) => onToggleAllOnPage(e.target.checked)}
+                    />
+                  </TableHead>
                   <TableHead className="text-xs">Case</TableHead>
                   <TableHead className="text-xs">Agency</TableHead>
                   <TableHead className="text-xs">Booking</TableHead>

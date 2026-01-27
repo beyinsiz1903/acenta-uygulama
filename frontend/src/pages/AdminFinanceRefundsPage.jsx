@@ -1446,6 +1446,32 @@ function RefundDetailPanel({
 
 
         {/* Tasks for this refund */}
+  const handleToggleCase = (caseId, checked) => {
+    setSelectedCaseIds((prev) => {
+      if (checked) {
+        if (prev.includes(caseId)) return prev;
+        return [...prev, caseId];
+      }
+      return prev.filter((id) => id !== caseId);
+    });
+  };
+
+  const handleToggleAllOnPage = (checked) => {
+    if (!list.length) return;
+    if (checked) {
+      const idsOnPage = list.map((it) => it.case_id);
+      setSelectedCaseIds((prev) => {
+        const set = new Set(prev);
+        idsOnPage.forEach((id) => set.add(id));
+        return Array.from(set);
+      });
+    } else {
+      const idsOnPage = new Set(list.map((it) => it.case_id));
+      setSelectedCaseIds((prev) => prev.filter((id) => !idsOnPage.has(id)));
+    }
+  };
+
+
         <RefundTasksSection caseData={caseData} />
 
         {/* Last 5 closed refunds for this booking */}

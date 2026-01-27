@@ -1511,6 +1511,7 @@ export default function AdminFinanceRefundsPage() {
     let active = 0;
 
     const runNext = async () => {
+      if (bulkCancelRequested) return;
       if (idx >= ids.length) return;
       const caseId = ids[idx++];
       active += 1;

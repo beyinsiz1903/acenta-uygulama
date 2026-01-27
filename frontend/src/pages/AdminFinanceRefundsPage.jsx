@@ -161,18 +161,32 @@ function RefundQueueList({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {items.map((it) => (
-                  <TableRow
-                    key={it.case_id}
-                    className={
-                      "cursor-pointer hover:bg-muted/40 " +
-                      (selectedCaseId === it.case_id ? "bg-muted" : "")
-                    }
-                    onClick={() => onSelectCase(it.case_id)}
-                  >
-                    <TableCell className="text-xs font-mono truncate max-w-[120px]">
-                      {it.case_id}
-                    </TableCell>
+                {items.map((it) => {
+                  const isSelected = selectedCaseIds.includes(it.case_id);
+                  return (
+                    <TableRow
+                      key={it.case_id}
+                      className={
+                        "cursor-pointer hover:bg-muted/40 " +
+                        (selectedCaseId === it.case_id ? "bg-muted" : "")
+                      }
+                      onClick={() => onSelectCase(it.case_id)}
+                    >
+                      <TableCell className="w-8 align-middle">
+                        <input
+                          type="checkbox"
+                          className="h-3 w-3 cursor-pointer"
+                          checked={isSelected}
+                          onChange={(e) => {
+                            e.stopPropagation();
+                            onToggleCase(it.case_id, e.target.checked);
+                          }}
+                          aria-label="Case seç"
+                        />
+                      </TableCell>
+                      <TableCell className="text-xs font-mono truncate max-w-[120px]">
+                        {it.case_id}
+                      </TableCell>
                     <TableCell className="text-xs truncate max-w-[140px]">
                       {it.agency_name || it.agency_id}
                     </TableCell>

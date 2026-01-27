@@ -1462,6 +1462,38 @@ function RefundDetailPanel({
 
 export default function AdminFinanceRefundsPage() {
   const [list, setList] = useState([]);
+  const [bulkAction, setBulkAction] = useState("");
+  const [bulkRunning, setBulkRunning] = useState(false);
+  const [bulkProcessed, setBulkProcessed] = useState(0);
+  const [bulkTotal, setBulkTotal] = useState(0);
+  const [bulkErrorSummary, setBulkErrorSummary] = useState("");
+  const [bulkCancelRequested, setBulkCancelRequested] = useState(false);
+
+  const handleToggleCase = (caseId, checked) => {
+    setSelectedCaseIds((prev) => {
+      if (checked) {
+        if (prev.includes(caseId)) return prev;
+        return [...prev, caseId];
+      }
+      return prev.filter((id) => id !== caseId);
+    });
+  };
+
+  const handleToggleAllOnPage = (checked) => {
+    if (!list.length) return;
+    if (checked) {
+      const idsOnPage = list.map((it) => it.case_id);
+      setSelectedCaseIds((prev) => {
+        const set = new Set(prev);
+        idsOnPage.forEach((id) => set.add(id));
+        return Array.from(set);
+      });
+    } else {
+      const idsOnPage = new Set(list.map((it) => it.case_id));
+      setSelectedCaseIds((prev) => prev.filter((id) => !idsOnPage.has(id)));
+    }
+  };
+
   const runBulk = async (runner) => {
     const ids = selectedCaseIds;
     if (!ids.length) return;

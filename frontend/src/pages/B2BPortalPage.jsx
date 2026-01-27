@@ -604,8 +604,12 @@ function BookingListTab() {
         )}
 
                       <td className="px-2 py-2 text-xs">{b.product_name || "-"}</td>
-                      <td className="px-2 py-2 text-xs">{b.check_in || "-"}</td>
-                      <td className="px-2 py-2 text-xs">{b.check_out || "-"}</td>
+                      <td className="px-2 py-2 text-xs">
+                        {b.check_in ? new Date(b.check_in).toLocaleDateString("tr-TR") : "-"}
+                      </td>
+                      <td className="px-2 py-2 text-xs">
+                        {b.check_out ? new Date(b.check_out).toLocaleDateString("tr-TR") : "-"}
+                      </td>
                       <td className="px-2 py-2 text-xs">
                         <StatusBadge status={b.status} />
                       </td>

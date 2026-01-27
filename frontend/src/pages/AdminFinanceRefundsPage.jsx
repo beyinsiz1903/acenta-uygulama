@@ -1824,12 +1824,7 @@ export default function AdminFinanceRefundsPage() {
     }
   }, []);
 
-  const BULK_ACTIONS = [
-    { value: "approve_step1", label: "1. Onay (approve_step1)" },
-    { value: "approve_step2", label: "2. Onay (approve_step2)" },
-    { value: "reject", label: "Reddet" },
-    { value: "close", label: "Kapat" },
-  ];
+  useEffect(() => {
       {hasSelection && (
         <Card className="border-amber-200 bg-amber-50 mb-2">
           <CardContent className="py-2 flex flex-wrap items-center gap-3 text-xs">

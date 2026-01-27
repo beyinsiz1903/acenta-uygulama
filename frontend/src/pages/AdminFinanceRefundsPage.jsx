@@ -1824,8 +1824,6 @@ export default function AdminFinanceRefundsPage() {
     }
   }, []);
 
-  const hasSelection = selectedCaseIds.length > 0;
-
   const BULK_ACTIONS = [
     { value: "approve_step1", label: "1. Onay (approve_step1)" },
     { value: "approve_step2", label: "2. Onay (approve_step2)" },

@@ -1167,21 +1167,12 @@ export default function B2BPortalPage() {
               size="sm"
               variant="secondary"
               disabled={searchLoading}
-              onClick={async () => {
-                setSearchError("");
-                setCityError("");
-                setDateError("");
-
-                setSearchResults([]);
-                setSelectedOffer(null);
-                setQuote(null);
-                setBooking(null);
-
-                const cityTrimmed = (city || "").trim();
-                let hasErrorLocal = false;
-                if (!cityTrimmed) {
-                  setCityError("Şehir boş bırakılamaz.");
-                  hasErrorLocal = true;
+              onClick={handleSearch}
+            >
+              {searchLoading && <Loader2 className="h-3 w-3 animate-spin" />}
+              Otel Ara
+            </Button>
+          </div>
           {searchError && (
             <div className="mt-2 flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive">
               <AlertCircle className="h-4 w-4 mt-0.5" />

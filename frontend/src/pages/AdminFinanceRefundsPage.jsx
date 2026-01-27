@@ -1551,6 +1551,31 @@ export default function AdminFinanceRefundsPage() {
             <div className="text-muted-foreground">
               Toplu aksiyonlar için bir seçenek belirleyin.
             </div>
+            <div className="flex flex-wrap items-center gap-2 text-xs">
+              <span className="font-medium">Toplu Aksiyon:</span>
+              <select
+                className="h-8 rounded-md border bg-background px-2 text-xs"
+                value={bulkAction}
+                onChange={(e) => setBulkAction(e.target.value)}
+              >
+                <option value="">Seçiniz</option>
+                {BULK_ACTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+              <Button
+                size="sm"
+                variant="default"
+                disabled={!bulkAction || bulkRunning}
+                onClick={onRunBulk}
+              >
+                {bulkRunning && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
+                Uygula
+              </Button>
+            </div>
+
           </CardContent>
         </Card>
       )}

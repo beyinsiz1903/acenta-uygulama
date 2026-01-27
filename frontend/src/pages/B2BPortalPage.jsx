@@ -1226,6 +1226,8 @@ export default function B2BPortalPage() {
               Otel Ara
             </Button>
           </div>
+          </div>
+
           {searchError && (
             <div className="mt-2 flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive">
               <AlertCircle className="h-4 w-4 mt-0.5" />
@@ -1250,50 +1252,6 @@ export default function B2BPortalPage() {
               </div>
             </div>
           )}
-
-                }
-                if (!checkIn || !checkOut) {
-                  setDateError("Giriş ve çıkış tarihleri zorunludur.");
-                  hasErrorLocal = true;
-                }
-                if (!checkIn || !nights || nights <= 0) {
-                  setDateError("Gece sayısı en az 1 olmalıdır.");
-                  hasErrorLocal = true;
-                }
-                if (hasErrorLocal) return;
-
-                setSearchLoading(true);
-                try {
-                  const params = new URLSearchParams({
-                    city: cityTrimmed,
-                    check_in: checkIn,
-                    check_out: checkOut,
-                    adults: String(adults || 1),
-                    children: String(children || 0),
-                  });
-                  const res = await api.get(`/b2b/hotels/search?${params.toString()}`);
-                  const items = res.data?.items || [];
-                  setSearchResults(items);
-                  if (!items.length) {
-                    setSearchError("Bu kriterlerle uygun sonuç bulunamadı.");
-                  }
-                } catch (err) {
-                  const msg = apiErrorMessage(err);
-                  if (msg.toLowerCase().includes("invalid_date_range")) {
-                    setDateError("Çıkış tarihi, giriş tarihinden sonra olmalı.");
-                  } else {
-                    setSearchError(msg);
-                  }
-                } finally {
-                  setSearchLoading(false);
-                }
-              }}
-            >
-              {searchLoading && <Loader2 className="h-3 w-3 animate-spin" />}
-              Otel Ara
-            </Button>
-            {searchError && <div className="text-xs text-destructive">{searchError}</div>}
-          </div>
 
           {/* Tarih özet satırı */}
           <div className="mt-2 text-[11px] text-muted-foreground">

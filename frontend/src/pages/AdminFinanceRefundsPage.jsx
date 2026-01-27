@@ -1825,12 +1825,9 @@ export default function AdminFinanceRefundsPage() {
   }, []);
 
   useEffect(() => {
-      {hasSelection && (
-        <Card className="border-amber-200 bg-amber-50 mb-2">
-          <CardContent className="py-2 flex flex-wrap items-center gap-3 text-xs">
-            <div className="font-medium">
-              Seçili case sayısı: {selectedCaseIds.length}
-            </div>
+    // load list when filters change
+    loadList();
+  }, [statusFilter, limit, loadList]);
             {/* Bulk aksiyon ve CSV export kontrolleri buraya eklenecek */}
             <div className="text-muted-foreground">
               Toplu aksiyonlar için bir seçenek belirleyin.

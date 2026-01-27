@@ -1441,6 +1441,13 @@ function RefundDetailPanel({
             </div>
           </div>
         )}
+  const [bulkAction, setBulkAction] = useState("");
+  const [bulkRunning, setBulkRunning] = useState(false);
+  const [bulkProcessed, setBulkProcessed] = useState(0);
+  const [bulkTotal, setBulkTotal] = useState(0);
+  const [bulkErrorSummary, setBulkErrorSummary] = useState("");
+
+
         {/* Documents section */}
         <RefundDocumentsSection caseData={caseData} />
 

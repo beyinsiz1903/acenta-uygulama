@@ -374,6 +374,11 @@ function PricePreviewDialog({ open, onOpenChange, checkIn, checkOut, adults, chi
               <div className="text-xs text-muted-foreground">Tarih ve konaklama</div>
               <div className="font-medium">{dateLabel}</div>
               <div className="text-xs text-muted-foreground">{occLabel}</div>
+              {nightsMismatch && (
+                <div className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1 mt-1">
+                  Tarih aralığı ile teklifin gece sayısı tam olarak uyuşmuyor; bu sadece hızlı bir özet bilgisidir.
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-3 gap-3">

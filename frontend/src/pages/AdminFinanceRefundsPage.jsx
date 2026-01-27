@@ -796,9 +796,6 @@ function PDFPreviewDialog({ previewOpen, setPreviewOpen, previewUrl, setPreviewU
   );
 }
 
-  const user = getUser();
-  const myEmail = user?.email || "";
-
 function RefundTasksSection({ caseData }) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);

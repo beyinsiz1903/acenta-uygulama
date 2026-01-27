@@ -1911,10 +1911,6 @@ export default function AdminFinanceRefundsPage() {
         </Card>
       )}
 
-
-  ];
-
-
       // Seçim persist etsin ama en azından seçili satır her zaman detayla uyumlu olsun
       setSelectedCaseIds((prev) => (prev.includes(caseId) ? prev : prev));
       const data = resp.data;

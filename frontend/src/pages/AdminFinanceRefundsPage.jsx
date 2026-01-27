@@ -1815,6 +1815,26 @@ export default function AdminFinanceRefundsPage() {
       setCaseData(null);
       setBookingFinancials(null);
       const resp = await api.get(`/ops/finance/refunds/${caseId}`);
+      setCaseData(resp.data);
+      
+      // Load booking financials if booking_id exists
+      if (resp.data?.booking_id) {
+        try {
+          const finResp = await api.get(`/ops/bookings/${resp.data.booking_id}/financials`);
+          setBookingFinancials(finResp.data);
+        } catch (e) {
+          // Ignore financials error
+          setBookingFinancials(null);
+        }
+      }
+    } catch (e) {
+      setCaseData(null);
+      setBookingFinancials(null);
+    } finally {
+      setDetailLoading(false);
+    }
+  }, []);
+
   const hasSelection = selectedCaseIds.length > 0;
 
   const BULK_ACTIONS = [
@@ -1822,6 +1842,7 @@ export default function AdminFinanceRefundsPage() {
     { value: "approve_step2", label: "2. Onay (approve_step2)" },
     { value: "reject", label: "Reddet" },
     { value: "close", label: "Kapat" },
+  ];
       {hasSelection && (
         <Card className="border-amber-200 bg-amber-50 mb-2">
           <CardContent className="py-2 flex flex-wrap items-center gap-3 text-xs">

@@ -1865,6 +1865,10 @@ export default function AdminFinanceRefundsPage() {
                 <option value="">Seçiniz</option>
                 {BULK_ACTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
               {bulkRunning && (
                 <Button
                   size="sm"
@@ -1874,11 +1878,6 @@ export default function AdminFinanceRefundsPage() {
                   İptal et
                 </Button>
               )}
-
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
               <Button
                 size="sm"
                 variant="default"

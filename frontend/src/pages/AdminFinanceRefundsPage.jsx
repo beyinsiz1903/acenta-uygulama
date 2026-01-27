@@ -1503,6 +1503,7 @@ export default function AdminFinanceRefundsPage() {
     setBulkProcessed(0);
     setBulkTotal(ids.length);
     setBulkErrorSummary("");
+    setBulkCancelRequested(false);
     const errors = [];
 
     const concurrency = 3;

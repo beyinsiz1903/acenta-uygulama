@@ -1541,6 +1541,21 @@ export default function AdminFinanceRefundsPage() {
     { value: "approve_step2", label: "2. Onay (approve_step2)" },
     { value: "reject", label: "Reddet" },
     { value: "close", label: "Kapat" },
+      {hasSelection && (
+        <Card className="border-amber-200 bg-amber-50 mb-2">
+          <CardContent className="py-2 flex flex-wrap items-center gap-3 text-xs">
+            <div className="font-medium">
+              Seçili case sayısı: {selectedCaseIds.length}
+            </div>
+            {/* Bulk aksiyon ve CSV export kontrolleri buraya eklenecek */}
+            <div className="text-muted-foreground">
+              Toplu aksiyonlar için bir seçenek belirleyin.
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+
   ];
 
 

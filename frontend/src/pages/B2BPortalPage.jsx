@@ -812,6 +812,59 @@ export default function B2BPortalPage() {
 
   const isExpired = !!expiresAtDate && remainingMs <= 0;
 
+  async function handleSearch() {
+    if (searchLoading) return;
+
+    setSearchError("");
+    setCityError("");
+    setDateError("");
+
+    setSearchResults([]);
+    setSelectedOffer(null);
+    setQuote(null);
+    setBooking(null);
+
+    const cityTrimmed = (city || "").trim();
+    let hasErrorLocal = false;
+    if (!cityTrimmed) {
+      setCityError("Şehir boş bırakılamaz.");
+      hasErrorLocal = true;
+    }
+    if (!checkIn || !checkOut) {
+      setDateError("Giriş ve çıkış tarihleri zorunludur.");
+      hasErrorLocal = true;
+    }
+    if (!checkIn || !nights || nights <= 0) {
+      setDateError("Gece sayısı en az 1 olmalıdır.");
+      hasErrorLocal = true;
+    }
+    if (hasErrorLocal) return;
+
+    setSearchLoading(true);
+    try {
+      const params = new URLSearchParams({
+        city: cityTrimmed,
+        check_in: checkIn,
+        check_out: checkOut,
+        adults: String(adults || 1),
+        children: String(children || 0),
+      });
+      const res = await api.get(`/b2b/hotels/search?${params.toString()}`);
+      const items = res.data?.items || [];
+      setSearchResults(items);
+      if (!items.length) {
+        setSearchError("Bu kriterlerle uygun sonuç bulunamadı.");
+      }
+    } catch (err) {
+      const fe = friendlyError(err);
+      const detail = fe.detail || "";
+      const suffix = fe.code ? ` (${fe.code})` : "";
+      setSearchError(detail ? `${fe.title} ${suffix} - ${detail}` : `${fe.title}${suffix}`);
+    } finally {
+      setSearchLoading(false);
+    }
+  }
+
   async function handleCreateQuote(e) {
     e.preventDefault();
     setQuoteError("");

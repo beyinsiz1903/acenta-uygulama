@@ -1226,7 +1226,6 @@ export default function B2BPortalPage() {
               Otel Ara
             </Button>
           </div>
-          </div>
 
           {searchError && (
             <div className="mt-2 flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive">

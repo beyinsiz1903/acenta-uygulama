@@ -187,9 +187,9 @@ function RefundQueueList({
                       <TableCell className="text-xs font-mono truncate max-w-[120px]">
                         {it.case_id}
                       </TableCell>
-                    <TableCell className="text-xs truncate max-w-[140px]">
-                      {it.agency_name || it.agency_id}
-                    </TableCell>
+                      <TableCell className="text-xs truncate max-w-[140px]">
+                        {it.agency_name || it.agency_id}
+                      </TableCell>
                     <TableCell className="text-xs font-mono truncate max-w-[120px]">
                       {it.booking_id}
                     </TableCell>

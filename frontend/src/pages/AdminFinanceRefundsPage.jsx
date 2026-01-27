@@ -1461,6 +1461,10 @@ function RefundDetailPanel({
 }
 
 export default function AdminFinanceRefundsPage() {
+  const user = getUser();
+  const orgId = user?.organization_id || "";
+  const myEmail = user?.email || "";
+
   const [list, setList] = useState([]);
   const [bulkAction, setBulkAction] = useState("");
   const [bulkRunning, setBulkRunning] = useState(false);

@@ -1473,6 +1473,162 @@ export default function AdminFinanceRefundsPage() {
   const [bulkErrorSummary, setBulkErrorSummary] = useState("");
   const [bulkCancelRequested, setBulkCancelRequested] = useState(false);
 
+  // Additional state declarations
+  const [statusFilter, setStatusFilter] = useState("open");
+  const [limit, setLimit] = useState(50);
+  const [selectedCaseIds, setSelectedCaseIds] = useState([]);
+  const [loadingList, setLoadingList] = useState(true);
+  const [listError, setListError] = useState("");
+  const [selectedCaseId, setSelectedCaseId] = useState(null);
+  const [caseData, setCaseData] = useState(null);
+  const [bookingFinancials, setBookingFinancials] = useState(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [approveStep1Open, setApproveStep1Open] = useState(false);
+  const [approveStep2Open, setApproveStep2Open] = useState(false);
+  const [rejectOpen, setRejectOpen] = useState(false);
+  const [markPaidOpen, setMarkPaidOpen] = useState(false);
+  const [presets, setPresets] = useState([]);
+  const [selectedPresetId, setSelectedPresetId] = useState("");
+
+  const PRESET_STORAGE_KEY = orgId && myEmail
+    ? `refunds.filter_presets.v1.${orgId}.${myEmail}`
+    : null;
+
+  const hasSelection = selectedCaseIds.length > 0;
+
+  const BULK_ACTIONS = [
+    { value: "approve_step1", label: "1. Onay (approve_step1)" },
+    { value: "approve_step2", label: "2. Onay (approve_step2)" },
+    { value: "reject", label: "Reddet" },
+    { value: "close", label: "Kapat" },
+  ];
+
+  // Helper functions
+  const buildCsvRows = (rows) => {
+    return rows.map((it) => {
+      const approvedAmount = it.approved?.amount;
+      const amount =
+        typeof approvedAmount === "number"
+          ? approvedAmount
+          : typeof it.computed_refundable === "number"
+          ? it.computed_refundable
+          : typeof it.requested_amount === "number"
+          ? it.requested_amount
+          : null;
+
+      return {
+        refund_case_id: it.case_id,
+        booking_id: it.booking_id,
+        status: it.status,
+        amount,
+        currency: it.currency,
+        created_at: it.created_at || "",
+        updated_at: it.updated_at || "",
+        agency_name: it.agency_name || "",
+        agency_id: it.agency_id || "",
+        reason: it.reason || "",
+      };
+    });
+  };
+
+  const exportCsv = (mode) => {
+    let rows = [];
+    if (mode === "selected") {
+      const set = new Set(selectedCaseIds);
+      rows = list.filter((it) => set.has(it.case_id));
+    } else {
+      rows = list;
+    }
+
+    if (!rows.length) {
+      toast({ title: "Export edilecek kayıt yok", variant: "destructive" });
+      return;
+    }
+
+    const mapped = buildCsvRows(rows);
+    const headers = [
+      "refund_case_id",
+      "booking_id",
+      "status",
+      "amount",
+      "currency",
+      "created_at",
+      "updated_at",
+      "agency_name",
+      "agency_id",
+      "reason",
+    ];
+
+    const csvLines = [];
+    csvLines.push(headers.join(","));
+    for (const row of mapped) {
+      const line = headers
+        .map((h) => {
+          const v = row[h];
+          if (v == null) return "";
+          const s = String(v);
+          if (s.includes(",") || s.includes("\"") || s.includes("\n")) {
+            return `"${s.replace(/"/g, '""')}"`;
+          }
+          return s;
+        })
+        .join(",");
+      csvLines.push(line);
+    }
+
+    const blob = new Blob([csvLines.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    const ts = new Date().toISOString().replace(/[:.]/g, "-");
+    const suffix = mode === "selected" ? "selected" : "filtered";
+    a.download = `refunds_${suffix}_${ts}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+  };
+
+  const onToggleCase = (caseId, checked) => {
+    setSelectedCaseIds((prev) => {
+      if (checked) {
+        if (prev.includes(caseId)) return prev;
+        return [...prev, caseId];
+      }
+      return prev.filter((id) => id !== caseId);
+    });
+  };
+
+  const onToggleAllOnPage = (checked) => {
+    if (checked) {
+      const allCaseIds = list.map(item => item.case_id);
+      setSelectedCaseIds(prev => {
+        const newIds = [...prev];
+        allCaseIds.forEach(id => {
+          if (!newIds.includes(id)) {
+            newIds.push(id);
+          }
+        });
+        return newIds;
+      });
+    } else {
+      const pageCaseIds = list.map(item => item.case_id);
+      setSelectedCaseIds(prev => prev.filter(id => !pageCaseIds.includes(id)));
+    }
+  };
+
+  const onSelectCase = (caseId) => {
+    setSelectedCaseId(caseId);
+    loadDetail(caseId);
+  };
+
+  const onAfterDecision = async () => {
+    await loadList();
+    if (selectedCaseId) {
+      await loadDetail(selectedCaseId);
+    }
+  };
+
   const handleToggleCase = (caseId, checked) => {
     setSelectedCaseIds((prev) => {
       if (checked) {

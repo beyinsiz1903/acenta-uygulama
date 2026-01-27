@@ -1828,7 +1828,6 @@ export default function AdminFinanceRefundsPage() {
     // load list when filters change
     loadList();
   }, [statusFilter, limit, loadList]);
-            {/* Bulk aksiyon ve CSV export kontrolleri buraya eklenecek */}
             <div className="text-muted-foreground">
               Toplu aksiyonlar için bir seçenek belirleyin.
             </div>

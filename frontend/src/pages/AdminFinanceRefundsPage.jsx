@@ -87,6 +87,9 @@ function RefundQueueList({
   onChangeLimit,
   selectedCaseId,
   onSelectCase,
+  selectedCaseIds,
+  onToggleCase,
+  onToggleAllOnPage,
 }) {
   return (
     <Card className="h-full flex flex-col">

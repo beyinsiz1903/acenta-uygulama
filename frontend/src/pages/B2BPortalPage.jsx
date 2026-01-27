@@ -328,21 +328,27 @@ function PricePreviewDialog({ open, onOpenChange, checkIn, checkOut, adults, chi
     null;
 
   let nights = nightsFromOffer;
-  if (!nights && checkIn && checkOut) {
+  let nightsByDates: number | null = null;
+  if (checkIn && checkOut) {
     try {
       const a = new Date(`${checkIn}T00:00:00`);
       const b = new Date(`${checkOut}T00:00:00`);
       const diff = Math.round((b - a) / (1000 * 60 * 60 * 24));
-      if (Number.isFinite(diff) && diff > 0) nights = diff;
+      if (Number.isFinite(diff) && diff > 0) nightsByDates = diff;
     } catch {
       // ignore
     }
+  }
+  if (!nights && nightsByDates) {
+    nights = nightsByDates;
   }
 
   const perNight = nights && total ? total / nights : null;
 
   const occLabel = `${adults || 0} yetişkin${childrenCount ? `, ${childrenCount} çocuk` : ""}`;
-  const dateLabel = checkIn && checkOut ? `${checkIn} → ${checkOut}` : checkIn || "-";
+  const dateLabel = checkIn && checkOut
+    ? `${new Date(checkIn).toLocaleDateString("tr-TR")} → ${new Date(checkOut).toLocaleDateString("tr-TR")}`
+    : checkIn || "-";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

@@ -117,13 +117,6 @@ function RefundQueueList({
               Ops ekibi için açık iade case listesi.
             </p>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="space-y-1">
-              <div className="text-xs text-muted-foreground">Durum</div>
-              <select
-                className="h-8 rounded-md border bg-background px-2 text-xs"
-                value={statusFilter}
-                onChange={(e) => onChangeStatus(e.target.value)}
           <div className="flex flex-col gap-1 items-end">
             <div className="space-y-1 flex items-center gap-2">
               <div className="space-y-1">

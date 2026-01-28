@@ -91,6 +91,17 @@ function RefundQueueList({
   onToggleCase,
   onToggleAllOnPage,
 }) {
+  const selectAllRef = React.useRef(null);
+  const idsOnPage = React.useMemo(() => items.map((it) => it.case_id), [items]);
+  const selectedSet = React.useMemo(() => new Set(selectedCaseIds), [selectedCaseIds]);
+  const selectedOnPage = idsOnPage.filter((id) => selectedSet.has(id)).length;
+
+  useEffect(() => {
+    if (!selectAllRef.current) return;
+    selectAllRef.current.indeterminate =
+      selectedOnPage > 0 && selectedOnPage < items.length;
+  }, [selectedOnPage, items.length]);
+
   return (
     <Card className="h-full flex flex-col">
       <CardHeader className="space-y-3">

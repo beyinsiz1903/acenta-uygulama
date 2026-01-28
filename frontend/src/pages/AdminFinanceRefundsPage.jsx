@@ -1514,6 +1514,63 @@ export default function AdminFinanceRefundsPage() {
 
   const cancelRef = React.useRef(false);
 
+  useEffect(() => {
+    if (!PRESET_STORAGE_KEY) return;
+    try {
+      const raw = localStorage.getItem(PRESET_STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          setPresets(parsed);
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }, [PRESET_STORAGE_KEY]);
+
+  const savePresetsToStorage = (next) => {
+    setPresets(next);
+    if (!PRESET_STORAGE_KEY) return;
+    try {
+      localStorage.setItem(PRESET_STORAGE_KEY, JSON.stringify(next));
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleSavePreset = (name) => {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    const id = `preset_${Date.now()}`;
+    const values = {
+      statusFilter,
+      limit,
+    };
+    const next = [...presets, { id, name: trimmed, values }];
+    savePresetsToStorage(next);
+    setSelectedPresetId(id);
+  };
+
+  const handleApplyPreset = (presetId) => {
+    setSelectedPresetId(presetId);
+    const p = presets.find((x) => x.id === presetId);
+    if (!p) return;
+    const v = p.values || {};
+    if (typeof v.statusFilter === "string") setStatusFilter(v.statusFilter);
+    if (typeof v.limit === "number") setLimit(v.limit);
+  };
+
+  const handleDeletePreset = (presetId) => {
+    if (!presetId) return;
+    const next = presets.filter((p) => p.id !== presetId);
+    savePresetsToStorage(next);
+    if (selectedPresetId === presetId) {
+      setSelectedPresetId("");
+    }
+  };
+
+
   const hasSelection = selectedCaseIds.length > 0;
 
   const BULK_ACTIONS = [

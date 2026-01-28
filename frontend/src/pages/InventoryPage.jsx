@@ -146,7 +146,16 @@ export default function InventoryPage() {
 
   useEffect(() => {
     const t = setTimeout(() => {
-      loadProducts().catch((e) => setError(apiErrorMessage(e)));
+      loadProducts().catch((e) => {
+        const msg = apiErrorMessage(e);
+        if (msg === "Not Found" || msg === "Request failed with status code 404") {
+          setProducts([]);
+          setProductId("");
+          setError("");
+        } else {
+          setError(msg);
+        }
+      });
     }, 0);
     return () => clearTimeout(t);
   }, [loadProducts]);

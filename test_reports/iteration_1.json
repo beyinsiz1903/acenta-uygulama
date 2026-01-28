@@ -89,8 +89,8 @@
     }
   ],
   "test_environment": {
-    "backend_url": "https://b2bhotelsuite.preview.emergentagent.com/api",
-    "frontend_url": "https://b2bhotelsuite.preview.emergentagent.com",
+    "backend_url": "https://b2b-dashboard-3.preview.emergentagent.com/api",
+    "frontend_url": "https://b2b-dashboard-3.preview.emergentagent.com",
     "test_credentials": {
       "admin": "admin@acenta.test / admin123"
     },

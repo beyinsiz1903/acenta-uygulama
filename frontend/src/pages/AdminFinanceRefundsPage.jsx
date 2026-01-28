@@ -1280,7 +1280,7 @@ function RefundDetailPanel({
     return (
       <Card className="h-full flex items-center justify-center">
         <p className="text-sm text-muted-foreground">
-          Soldan bir refund case se1n.
+          Soldan bir refund case seçin.
         </p>
       </Card>
     );
@@ -1428,7 +1428,7 @@ function RefundDetailPanel({
           ) : (
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <AlertCircle className="h-3 w-3" />
-              <span>Financials bulunamad1.</span>
+              <span>Booking için finansal özet bulunamadı.</span>
             </div>
           )}
         </div>

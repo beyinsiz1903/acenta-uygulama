@@ -30,6 +30,10 @@ function StatusBadge({ status }) {
       return <Badge variant="outline">1. onay bekliyor</Badge>;
     case "pending_approval_2":
       return <Badge variant="outline">2. onay bekliyor</Badge>;
+const currentUser = getUser();
+const myEmail = currentUser?.email || "";
+
+
     case "approved":
       return <Badge variant="secondary">Onaylandı</Badge>;
     case "paid":

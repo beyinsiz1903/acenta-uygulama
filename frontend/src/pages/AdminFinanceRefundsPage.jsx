@@ -144,10 +144,12 @@ function RefundQueueList({
                 <TableRow>
                   <TableHead className="w-8 text-xs">
                     <input
+                      ref={selectAllRef}
                       type="checkbox"
                       className="h-3 w-3 cursor-pointer"
                       aria-label="Sayfadaki tüm case'leri seç"
-                      checked={items.length > 0 && items.every((it) => selectedCaseIds.includes(it.case_id))}
+                      disabled={items.length === 0}
+                      checked={items.length > 0 && selectedOnPage === items.length}
                       onChange={(e) => onToggleAllOnPage(e.target.checked)}
                     />
                   </TableHead>

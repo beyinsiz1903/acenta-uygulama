@@ -194,24 +194,6 @@ function RefundQueueList({
             )}
           </div>
 
-              >
-                <option value="all">Tümü</option>
-                <option value="open">Açık / Beklemede</option>
-                <option value="closed">Kapalı</option>
-              </select>
-            </div>
-            <div className="space-y-1">
-              <div className="text-xs text-muted-foreground">Limit</div>
-              <Input
-                className="h-8 w-20 text-xs"
-                type="number"
-                min={1}
-                max={200}
-                value={limit}
-                onChange={(e) => onChangeLimit(Number(e.target.value) || 50)}
-              />
-            </div>
-          </div>
         </div>
       </CardHeader>
       <CardContent className="flex-1 overflow-y-auto">

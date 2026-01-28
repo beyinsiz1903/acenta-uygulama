@@ -268,6 +268,10 @@ export default function PricingPreviewDialog({ open, onOpenChange, initialContex
   const [showDebug, setShowDebug] = useState(false);
   const [copyMsg, setCopyMsg] = useState("");
   const [selectedPreset, setSelectedPreset] = useState("2+0");
+  const [scenarios, setScenarios] = useState([]);
+  const [selectedScenarioId, setSelectedScenarioId] = useState("");
+  const [scenarioName, setScenarioName] = useState("");
+  const [showNameInput, setShowNameInput] = useState(false);
             {/* Senaryolar */}
             <div className="flex flex-wrap items-end gap-2 text-xs">
               <div className="flex flex-col gap-1 min-w-[160px]">
@@ -466,11 +470,6 @@ export default function PricingPreviewDialog({ open, onOpenChange, initialContex
                 </div>
               )}
             </div>
-
-  const [scenarios, setScenarios] = useState([]);
-  const [selectedScenarioId, setSelectedScenarioId] = useState("");
-  const [scenarioName, setScenarioName] = useState("");
-  const [showNameInput, setShowNameInput] = useState(false);
 
   useEffect(() => {
     if (!open) return;

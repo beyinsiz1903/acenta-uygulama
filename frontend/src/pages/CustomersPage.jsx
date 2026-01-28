@@ -115,8 +115,8 @@ export default function CustomersPage() {
       setRows(resp.data || []);
     } catch (e) {
       const msg = apiErrorMessage(e);
-      // "Not Found" durumunda liste boşmuş gibi davran, kırmızı hata gösterme.
-      if (msg === "Not Found") {
+      // "Not Found" veya 404 durumunda liste boşmuş gibi davran, kırmızı hata gösterme.
+      if (msg === "Not Found" || msg === "Request failed with status code 404") {
         setRows([]);
       } else {
         setError(msg);

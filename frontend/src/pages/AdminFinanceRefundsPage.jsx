@@ -1719,13 +1719,6 @@ export default function AdminFinanceRefundsPage() {
     loadDetail(caseId);
   };
 
-  const onAfterDecision = async () => {
-    await loadList();
-    if (selectedCaseId) {
-      await loadDetail(selectedCaseId);
-    }
-  };
-
   const handleToggleCase = (caseId, checked) => {
     setSelectedCaseIds((prev) => {
       if (checked) {

@@ -1944,39 +1944,6 @@ export default function AdminFinanceRefundsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [list]);
 
-  const onSelectCase = (caseId) => {
-    setSelectedCaseId(caseId);
-    loadDetail(caseId);
-  };
-
-  const onToggleCase = (caseId, checked) => {
-    setSelectedCaseIds(prev => {
-      if (checked) {
-        return prev.includes(caseId) ? prev : [...prev, caseId];
-      } else {
-        return prev.filter(id => id !== caseId);
-      }
-    });
-  };
-
-  const onToggleAllOnPage = (checked) => {
-    if (checked) {
-      const allCaseIds = list.map(item => item.case_id);
-      setSelectedCaseIds(prev => {
-        const newIds = [...prev];
-        allCaseIds.forEach(id => {
-          if (!newIds.includes(id)) {
-            newIds.push(id);
-          }
-        });
-        return newIds;
-      });
-    } else {
-      const pageCaseIds = list.map(item => item.case_id);
-      setSelectedCaseIds(prev => prev.filter(id => !pageCaseIds.includes(id)));
-    }
-  };  };
-
   const onAfterDecision = async () => {
     await loadList();
     if (selectedCaseId) {

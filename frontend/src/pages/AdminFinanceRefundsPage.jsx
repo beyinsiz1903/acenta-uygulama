@@ -120,18 +120,6 @@ function RefundQueueList({
             <div className="space-y-1">
               <div className="text-xs text-muted-foreground">Limit</div>
               <Input
-  const selectAllRef = React.useRef(null);
-  const idsOnPage = React.useMemo(() => items.map((it) => it.case_id), [items]);
-  const selectedSet = React.useMemo(() => new Set(selectedCaseIds), [selectedCaseIds]);
-  const selectedOnPage = idsOnPage.filter((id) => selectedSet.has(id)).length;
-
-  useEffect(() => {
-    if (!selectAllRef.current) return;
-    selectAllRef.current.indeterminate =
-      selectedOnPage > 0 && selectedOnPage < items.length;
-  }, [selectedOnPage, items.length]);
-
-
                 className="h-8 w-20 text-xs"
                 type="number"
                 min={1}

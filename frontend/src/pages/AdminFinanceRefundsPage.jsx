@@ -816,6 +816,10 @@ function RefundTasksSection({ caseData }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [busyTaskId, setBusyTaskId] = useState("");
+  const user = getUser();
+  const myEmail = user?.email || "";
+
+
 
   const hasCase = !!caseData?.case_id;
 

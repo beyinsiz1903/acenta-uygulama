@@ -124,6 +124,83 @@ function RefundQueueList({
                 className="h-8 rounded-md border bg-background px-2 text-xs"
                 value={statusFilter}
                 onChange={(e) => onChangeStatus(e.target.value)}
+          <div className="flex flex-col gap-1 items-end">
+            <div className="space-y-1 flex items-center gap-2">
+              <div className="space-y-1">
+                <div className="text-xs text-muted-foreground">Durum</div>
+                <select
+                  className="h-8 rounded-md border bg-background px-2 text-xs"
+                  value={statusFilter}
+                  onChange={(e) => onChangeStatus(e.target.value)}
+                >
+                  <option value="all">Tümü</option>
+                  <option value="open">Açık / Beklemede</option>
+                  <option value="closed">Kapalı</option>
+                </select>
+              </div>
+              <div className="space-y-1">
+                <div className="text-xs text-muted-foreground">Limit</div>
+                <Input
+                  className="h-8 w-20 text-xs"
+                  type="number"
+                  min={1}
+                  max={200}
+                  value={limit}
+                  onChange={(e) => onChangeLimit(Number(e.target.value) || 50)}
+                />
+              </div>
+            </div>
+            <div className="flex items-center gap-2 mt-1">
+              <select
+                className="h-8 rounded-md border bg-background px-2 text-xs"
+                value={selectedPresetId || ""}
+                onChange={(e) => {
+                  const id = e.target.value;
+                  setSelectedPresetId(id);
+                  if (id) handleApplyPreset(id);
+                }}
+              >
+                <option value="">Preset seç…</option>
+                {presets.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  const name = window.prompt("Preset adı");
+                  if (!name || !name.trim()) return;
+                  handleSavePreset(name.trim());
+                }}
+              >
+                Preset Kaydet
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                disabled={!selectedPresetId}
+                onClick={() => {
+                  if (!selectedPresetId) return;
+                  const ok = window.confirm("Bu preset silinsin mi?");
+                  if (!ok) return;
+                  handleDeletePreset(selectedPresetId);
+                }}
+              >
+                Preset Sil
+              </Button>
+            </div>
+            {presets.length === 0 && (
+              <span className="text-[11px] text-muted-foreground mt-0.5">
+                Filtreleri ayarlayıp Preset Kaydet ile tekrar kullanabilirsiniz.
+              </span>
+            )}
+          </div>
+
               >
                 <option value="all">Tümü</option>
                 <option value="open">Açık / Beklemede</option>

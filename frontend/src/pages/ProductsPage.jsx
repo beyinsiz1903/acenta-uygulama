@@ -128,7 +128,12 @@ export default function ProductsPage() {
       });
       setRows(resp.data || []);
     } catch (e) {
-      setError(apiErrorMessage(e));
+      const msg = apiErrorMessage(e);
+      if (msg === "Not Found" || msg === "Request failed with status code 404") {
+        setRows([]);
+      } else {
+        setError(msg);
+      }
     } finally {
       setLoading(false);
     }

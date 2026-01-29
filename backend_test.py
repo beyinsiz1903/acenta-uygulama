@@ -24,7 +24,6 @@ from datetime import datetime, timedelta, date
 from pymongo import MongoClient
 import os
 from typing import Dict, Any
-import jwt
 
 # Configuration - Use production URL from frontend/.env
 BASE_URL = "https://tourism-ops.preview.emergentagent.com"

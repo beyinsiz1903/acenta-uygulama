@@ -10,11 +10,15 @@ from app.repositories.task_queue_repository import TaskQueueRepository
 from app.repositories.task_repository import TaskRepository
 
 
-async def _get_credit_limit(db: AsyncIOMotorDatabase, organization_id: str) -> float:
+async def _get_credit_limit(db: AsyncIOMotorDatabase, organization_id: str) -> float | None:
+    """Return Standard credit limit for org, or None if no profile is configured.
+
+    Sprint 1 behavior: if no profile exists, we should not enforce any limit.
+    """
     repo = CreditProfileRepository(db)
     profile = await repo.get_standard_for_org(organization_id)
     if not profile:
-        return 0.0
+        return None
     return float(profile.get("credit_limit", 0.0))
 
 
@@ -30,7 +34,15 @@ async def _calculate_exposure(db: AsyncIOMotorDatabase, organization_id: str) ->
 
 
 async def has_available_credit(db: AsyncIOMotorDatabase, organization_id: str, amount: float) -> bool:
+    """Return True if booking amount can be accepted under current credit settings.
+
+    If no Standard credit profile exists for the org, we treat credit as unlimited
+    (to preserve pre-Sprint2 behavior for orgs without an explicit profile).
+    """
     limit = await _get_credit_limit(db, organization_id)
+    if limit is None:
+        return True
+
     exposure = await _calculate_exposure(db, organization_id)
     return (limit - exposure) >= amount
 

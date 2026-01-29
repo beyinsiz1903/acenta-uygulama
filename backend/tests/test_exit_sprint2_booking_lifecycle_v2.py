@@ -157,6 +157,12 @@ async def test_booking_lifecycle_v2_invalid_http_transitions(test_db: Any) -> No
     )
     org_id = str(org.inserted_id)
 
+    # Create OrgB for isolation testing
+    org_b = await test_db.organizations.insert_one(
+        {"name": "OrgB_Invalid", "slug": "orgb_invalid", "created_at": now, "updated_at": now, "settings": {"currency": "TRY"}}
+    )
+    org_b_id = str(org_b.inserted_id)
+
     email = "s2_invalid@example.com"
     await test_db.users.insert_one(
         {
@@ -167,7 +173,19 @@ async def test_booking_lifecycle_v2_invalid_http_transitions(test_db: Any) -> No
         }
     )
 
+    # User for OrgB
+    email_b = "s2_invalid_b@example.com"
+    await test_db.users.insert_one(
+        {
+            "email": email_b,
+            "roles": ["agency_admin"],
+            "organization_id": org_b_id,
+            "is_active": True,
+        }
+    )
+
     token = jwt.encode({"sub": email, "org": org_id}, _jwt_secret(), algorithm="HS256")
+    token_b = jwt.encode({"sub": email_b, "org": org_b_id}, _jwt_secret(), algorithm="HS256")
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:

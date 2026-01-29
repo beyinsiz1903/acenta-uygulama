@@ -27,7 +27,7 @@ function ColumnHeader({ title, count, tone }) {
         >
           {title}
         </div>
-        <div style={{ fontSize: 11, color: "#6b7280" }}>{count} kayt</div>
+        <div style={{ fontSize: 11, color: "#6b7280" }}>{count} kayıt</div>
       </div>
       <div
         style={{

@@ -402,9 +402,9 @@ export default function CrmEventsPage() {
             color: "#b91c1c",
           }}
         >
-          <h1 style={{ margin: 0, fontSize: 20 }}>Eri1im k1s1tl1</h1>
+          <h1 style={{ margin: 0, fontSize: 20 }}>Erişim kısıtlı</h1>
           <p style={{ marginTop: 8, fontSize: 14 }}>
-            Bu sayfaya yaln1zca admin kullan1c1lar eri1ebilir.
+            Bu sayfaya yalnızca admin kullanıcılar erişebilir.
           </p>
         </div>
       </div>

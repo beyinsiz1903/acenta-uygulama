@@ -27,9 +27,6 @@ async def test_bookings_api_org_isolation(test_db: Any) -> None:
     org_b_id = str(org_b.inserted_id)
 
 
-
-@pytest.mark.exit_sprint1
-
     # Create users linked to each org
     email_a = "usera@example.com"
     email_b = "userb@example.com"

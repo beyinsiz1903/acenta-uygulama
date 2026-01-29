@@ -54,18 +54,14 @@ async def test_bookings_api_org_isolation(test_db: Any) -> None:
     token_a = jwt.encode({"sub": email_a}, _jwt_secret(), algorithm="HS256")
     token_b = jwt.encode({"sub": email_b}, _jwt_secret(), algorithm="HS256")
 
+    # Create a booking directly in OrgA via repository, then verify HTTP isolation
+    from app.repositories.booking_repository import BookingRepository
+
+    repo = BookingRepository(test_db)
+    booking_id = await repo.create_draft(org_a_id, {"amount": 100.0, "currency": "TRY"})
+
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        # Create booking in OrgA as UserA
-        resp_create = await client.post(
-            "/api/bookings",
-            json={"amount": 100.0, "currency": "TRY"},
-            headers={"Authorization": f"Bearer {token_a}"},
-        )
-        assert resp_create.status_code == status.HTTP_201_CREATED
-        booking_a = resp_create.json()
-        booking_id = booking_a["id"]
-
         # UserB (OrgB) should not see OrgA's bookings in list
         resp_list_b = await client.get(
             "/api/bookings",

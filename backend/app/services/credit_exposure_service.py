@@ -11,10 +11,8 @@ from app.repositories.task_repository import TaskRepository
 
 
 async def _get_credit_limit(db: AsyncIOMotorDatabase, organization_id: str) -> float:
-    col = CreditProfileRepository(db)
-    # Existing repository does not expose a get_for_org helper; query directly via collection helper.
-    credit_col = get_collection(db, "credit_profiles")
-    profile = await credit_col.find_one({"organization_id": organization_id, "name": "Standard"})
+    repo = CreditProfileRepository(db)
+    profile = await repo.get_standard_for_org(organization_id)
     if not profile:
         return 0.0
     return float(profile.get("credit_limit", 0.0))

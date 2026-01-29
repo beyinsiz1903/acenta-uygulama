@@ -12,6 +12,10 @@ class CreditProfileRepository:
     def __init__(self, db: AsyncIOMotorDatabase) -> None:
         self._db = db
 
+    async def get_standard_for_org(self, organization_id: str) -> Dict[str, Any] | None:
+        col = get_collection(self._db, "credit_profiles")
+        return await col.find_one(with_org_filter({"name": "Standard"}, organization_id))
+
     async def ensure_standard_profile(self, organization_id: str, actor_email: str | None) -> None:
         col = get_collection(self._db, "credit_profiles")
         existing = await col.find_one(with_org_filter({"name": "Standard"}, organization_id))

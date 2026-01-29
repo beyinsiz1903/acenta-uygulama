@@ -62,6 +62,31 @@ async def initialize_org_defaults(db: AsyncIOMotorDatabase, org_id: str, actor_u
     await _ensure_risk_rules(db, org_id, actor_user)
     await _ensure_task_queues(db, org_id, actor_user)
 
+    # Audit: ORG_INITIALIZED + DEFAULTS_CREATED
+    await _write_audit_system_event(
+        db,
+        organization_id=org_id,
+        actor_user=actor_user,
+        action="ORG_INITIALIZED",
+        target_type="org",
+        target_id=org_id,
+        meta={},
+    )
+    await _write_audit_system_event(
+        db,
+        organization_id=org_id,
+        actor_user=actor_user,
+        action="DEFAULTS_CREATED",
+        target_type="org_defaults",
+        target_id=org_id,
+        meta={
+            "credit_profile": "Standard",
+            "refund_policy": True,
+            "risk_rules": ["high_amount", "burst_bookings", "high_refund_ratio"],
+            "task_queues": ["Ops", "Finance"],
+        },
+    )
+
 
 async def _rollback_org_creation(db: AsyncIOMotorDatabase, org_id: str) -> None:
     """Best-effort rollback of org and its default-mode records.

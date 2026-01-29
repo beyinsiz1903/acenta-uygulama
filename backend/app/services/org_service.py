@@ -4,8 +4,6 @@ from typing import Any, Dict
 
 from typing import Any, Dict
 
-from motor.motor_asyncio import AsyncIOMotorDatabase
-
 from app.repositories.org_repository import OrgRepository
 from app.repositories.credit_profile_repository import CreditProfileRepository
 from app.repositories.refund_policy_repository import RefundPolicyRepository

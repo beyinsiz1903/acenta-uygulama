@@ -4,6 +4,7 @@ from typing import Any
 
 import jwt
 import pytest
+from bson import ObjectId
 from fastapi import status
 from httpx import AsyncClient
 

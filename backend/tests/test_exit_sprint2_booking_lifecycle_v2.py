@@ -215,7 +215,8 @@ async def test_booking_lifecycle_v2_invalid_http_transitions(test_db: Any) -> No
             headers={"Authorization": f"Bearer {token}"},
         )
         assert resp_invalid_book.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
-        assert resp_invalid_book.json().get("detail") == "INVALID_STATE_TRANSITION"
+        body2 = resp_invalid_book.json()
+        assert body2.get("error", {}).get("message") == "INVALID_STATE_TRANSITION"
 
         # Happy path 2: draft -> quoted -> booked -> refund-request -> refund-approve -> refunded
         # Create another booking for refund flow

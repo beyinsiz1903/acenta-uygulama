@@ -131,20 +131,8 @@ async def _ensure_risk_rules(db: AsyncIOMotorDatabase, org_id: str, actor_user: 
 
 
 async def _ensure_task_queues(db: AsyncIOMotorDatabase, org_id: str, actor_user: Dict[str, Any]) -> None:
-    now = now_utc()
-    for name in ("Ops", "Finance"):
-        existing = await db.task_queues.find_one({"organization_id": org_id, "name": name})
-        if existing:
-            continue
-        doc = {
-            "organization_id": org_id,
-            "name": name,
-            "created_at": now,
-            "updated_at": now,
-            "created_by": actor_user.get("email"),
-            "updated_by": actor_user.get("email"),
-        }
-        await db.task_queues.insert_one(doc)
+    repo = TaskQueueRepository(db)
+    await repo.ensure_default_queues(org_id, actor_user.get("email"))
 
 
 async def _write_audit_system_event(

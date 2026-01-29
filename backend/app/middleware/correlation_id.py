@@ -20,17 +20,9 @@ class CorrelationIdMiddleware(BaseHTTPMiddleware):
         request.state.correlation_id = cid
 
         # 3) Process request
-        try:
-            response: Response = await call_next(request)
-        except Exception:  # pragma: no cover - generic safety net
-            # Let global exception handlers format the body, but still ensure header is set
-            from fastapi.responses import JSONResponse
-            from app.errors import error_response
-
-            response = JSONResponse(
-                status_code=500,
-                content=error_response("internal_error", "Unexpected server error"),
-            )
+        # Let global exception handlers (registered via register_exception_handlers)
+        # deal with any exceptions so that tests can see real tracebacks.
+        response: Response = await call_next(request)
 
         # 4) Always set response header
         response.headers["X-Correlation-Id"] = cid

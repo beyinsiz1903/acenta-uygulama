@@ -148,10 +148,10 @@ def test_post_bookings_end_to_end():
     org_id = setup_test_org("e2e")
     
     try:
-        # 1. Create agency_admin user and get JWT token
-        print("1️⃣  Creating agency_admin user and JWT token...")
+        # 1. Create agency_admin user and get JWT token via login
+        print("1️⃣  Creating agency_admin user and logging in...")
         email = f"agency_admin_{uuid.uuid4().hex[:8]}@test.com"
-        token = create_agency_admin_user(org_id, email)
+        token = create_agency_admin_user_and_login(org_id, email)
         
         print(f"   ✅ Created agency_admin user: {email}")
         print(f"   ✅ Generated JWT token")

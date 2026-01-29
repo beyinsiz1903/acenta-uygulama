@@ -31,6 +31,33 @@ async def find_audit_for_booking(
     org_variants = _id_variants(organization_id)
     booking_variants = _id_variants(booking_id)
 
+
+async def _find_state_change(
+    audit_col,
+    *,
+    org_id: str,
+    booking_id: str,
+    from_state: str,
+    to_state: str,
+) -> Optional[Dict[str, Any]]:
+    org_variants = _id_variants(org_id)
+    booking_variants = _id_variants(booking_id)
+
+    return await audit_col.find_one(
+        {
+            "action": "BOOKING_STATE_CHANGED",
+            "organization_id": {"$in": org_variants},
+            "$or": [
+                {"target_type": "booking", "target_id": {"$in": booking_variants}},
+                {"target.type": "booking", "target.id": {"$in": booking_variants}},
+            ],
+            "meta.from": from_state,
+            "meta.to": to_state,
+        }
+    )
+
+
+
     return await audit_col.find_one(
         {
             "action": action,
@@ -147,16 +174,23 @@ async def test_refund_workflow_v1_contract(test_db: Any, async_client: AsyncClie
     )
     assert refund_approved is not None
 
-    state_changes = await test_db.audit_logs.find(
-        {
-            "organization_id": org_a_id,
-            "action": "BOOKING_STATE_CHANGED",
-            "target_type": "booking",
-            "target_id": booking_id,
-        }
-    ).to_list(10)
-    assert any(sc.get("meta", {}).get("from") == "booked" and sc.get("meta", {}).get("to") == "refund_in_progress" for sc in state_changes)
-    assert any(sc.get("meta", {}).get("from") == "refund_in_progress" and sc.get("meta", {}).get("to") == "refunded" for sc in state_changes)
+    sc = await _find_state_change(
+        test_db.audit_logs,
+        org_id=org_a_id,
+        booking_id=booking_id,
+        from_state="booked",
+        to_state="refund_in_progress",
+    )
+    assert sc is not None
+
+    sc2 = await _find_state_change(
+        test_db.audit_logs,
+        org_id=org_a_id,
+        booking_id=booking_id,
+        from_state="refund_in_progress",
+        to_state="refunded",
+    )
+    assert sc2 is not None
 
     # Reject path: new booking
     resp_create2 = await client.post(

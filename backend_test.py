@@ -154,7 +154,7 @@ def test_post_bookings_end_to_end():
         token = create_agency_admin_user_and_login(org_id, email)
         
         print(f"   ✅ Created agency_admin user: {email}")
-        print(f"   ✅ Generated JWT token")
+        print(f"   ✅ Logged in and got JWT token")
         
         # 2. Call POST /api/bookings with Sprint 1 contract payload
         print("2️⃣  Calling POST /api/bookings...")

@@ -249,7 +249,11 @@ async def transition_to_refunded(
     actor: Dict[str, Any],
     request: Any,
 ) -> Dict[str, Any]:
-    # State change audit is handled inside _transition_booking_state
+    """Approve refund: refund_in_progress -> refunded.
+
+    Keeps BOOKING_STATE_CHANGED audit via _transition_booking_state and emits
+    an additional REFUND_APPROVED audit event.
+    """
     booking = await _transition_booking_state(
         db,
         organization_id,
@@ -257,6 +261,22 @@ async def transition_to_refunded(
         target_state="refunded",
         actor=actor,
         request=request,
+    )
+
+    await write_audit_log(
+        db,
+        organization_id=organization_id,
+        actor=actor,
+        request=request,
+        action="REFUND_APPROVED",
+        target_type="booking",
+        target_id=booking_id,
+        before=None,
+        after=None,
+        meta={"state": "refunded"},
+    )
+
+    return booking
 
 
 async def transition_to_refund_rejected(
@@ -291,24 +311,6 @@ async def transition_to_refund_rejected(
         before=None,
         after=None,
         meta={"state": "booked"},
-    )
-
-    return booking
-
-    )
-
-    # Additional refund-specific audit event
-    await write_audit_log(
-        db,
-        organization_id=organization_id,
-        actor=actor,
-        request=request,
-        action="REFUND_APPROVED",
-        target_type="booking",
-        target_id=booking_id,
-        before=None,
-        after=None,
-        meta={"state": "refunded"},
     )
 
     return booking

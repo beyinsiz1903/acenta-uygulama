@@ -1,0 +1,54 @@
+name: Backend Sprint 1 Exit Gate
+
+on:
+  pull_request:
+    branches: [main, "release/*"]
+  push:
+    branches: [main, "release/*"]
+
+jobs:
+  ci_test_exit_sprint1:
+    name: ci:test:exit-sprint1
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    services:
+      mongodb:
+        image: mongo:7
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd="mongosh --quiet --eval 'db.runCommand({ ping: 1 }).ok' || exit 1"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=12
+
+    env:
+      # Uygulamanın config’ine göre gerekiyorsa uyarlayın:
+      MONGODB_URL: mongodb://localhost:27017
+      # Eğer test config başka isim bekliyorsa (MONGO_URL vb.) onu da ekleyin:
+      MONGO_URL: mongodb://localhost:27017
+      # JWT secret testlerde gerekiyorsa:
+      JWT_SECRET: test-secret
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Sprint 1 exit gate
+        working-directory: backend
+        run: |
+          pytest -m exit_sprint1 -q

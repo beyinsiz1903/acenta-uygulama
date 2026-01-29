@@ -30,6 +30,17 @@ async def create_org(db: AsyncIOMotorDatabase, payload: Dict[str, Any], actor_us
     res = await db.organizations.insert_one(org_doc)
     org_id = str(res.inserted_id)
 
+    # Audit: ORG_CREATED
+    await _write_audit_system_event(
+        db,
+        organization_id=org_id,
+        actor_user=actor_user,
+        action="ORG_CREATED",
+        target_type="org",
+        target_id=org_id,
+        meta={"name": org_doc["name"], "slug": org_doc.get("slug")},
+    )
+
     try:
         await initialize_org_defaults(db, org_id, actor_user)
     except Exception:

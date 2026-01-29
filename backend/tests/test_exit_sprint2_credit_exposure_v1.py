@@ -5,6 +5,7 @@ from typing import Any
 import jwt
 import pytest
 from fastapi import status
+from httpx import AsyncClient
 
 from app.auth import _jwt_secret
 from app.utils import now_utc
@@ -13,7 +14,7 @@ from app.services.org_service import initialize_org_defaults
 
 @pytest.mark.exit_sprint2
 @pytest.mark.anyio
-async def test_credit_exposure_v1_allow_and_hold_behaviour(test_db: Any, async_client) -> None:
+async def test_credit_exposure_v1_allow_and_hold_behaviour(test_db: Any, async_client: AsyncClient) -> None:
     """Sprint 2 Credit & Exposure v1 contract.
 
     Case A (allow):
@@ -42,9 +43,8 @@ async def test_credit_exposure_v1_allow_and_hold_behaviour(test_db: Any, async_c
     # Users
     email_a = "s2_credit_a@example.com"
     email_b = "s2_credit_b@example.com"
-    
+
     # Seed org defaults (Standard credit profile, Finance & Ops task queues, etc.)
-    from app.services.org_service import initialize_org_defaults
     await initialize_org_defaults(test_db, org_a_id, {"email": email_a})
     await initialize_org_defaults(test_db, org_b_id, {"email": email_b})
 
@@ -73,13 +73,13 @@ async def test_credit_exposure_v1_allow_and_hold_behaviour(test_db: Any, async_c
 
     # Case A: within limit, should book successfully
     resp_create_a = await client.post(
-            "/api/bookings",
-            json={"amount": 1000.0, "currency": "TRY"},
-            headers={"Authorization": f"Bearer {token_a}"},
-        )
-        assert resp_create_a.status_code == status.HTTP_201_CREATED
-        booking_a = resp_create_a.json()
-        booking_a_id = booking_a["id"]
+        "/api/bookings",
+        json={"amount": 1000.0, "currency": "TRY"},
+        headers={"Authorization": f"Bearer {token_a}"},
+    )
+    assert resp_create_a.status_code == status.HTTP_201_CREATED
+    booking_a = resp_create_a.json()
+    booking_a_id = booking_a["id"]
 
     await client.post(
         f"/api/bookings/{booking_a_id}/quote",
@@ -93,10 +93,10 @@ async def test_credit_exposure_v1_allow_and_hold_behaviour(test_db: Any, async_c
     booked_a = resp_book_a.json()
     assert booked_a["state"] == "booked"
 
-        # Case B: create high exposure so that next booking exceeds limit
-        # Assuming STANDARD_CREDIT_LIMIT = 100000, we use an amount just below
-        # the limit when added to the initial 1000. First booking is 1000,
-        # this exposure booking is 99000 => exposure 1000, then 99000 <= 100000.
+    # Case B: create high exposure so that next booking exceeds limit
+    # Assuming STANDARD_CREDIT_LIMIT = 100000, we use an amount just below
+    # the limit when added to the initial 1000. First booking is 1000,
+    # this exposure booking is 99000 => exposure 1000, then 99000 <= 100000.
     resp_create_exposure = await client.post(
         "/api/bookings",
         json={"amount": 99000.0, "currency": "TRY"},

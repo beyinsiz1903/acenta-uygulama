@@ -13,7 +13,7 @@ from app.services.events import write_booking_event
 from app.utils import now_utc, serialize_doc
 from app.services.email_outbox import enqueue_booking_email
 
-router = APIRouter(prefix="/api/bookings", tags=["bookings"])
+router = APIRouter(prefix=f"{API_PREFIX}/bookings", tags=["bookings"])
 from datetime import datetime
 
 from fastapi import Query

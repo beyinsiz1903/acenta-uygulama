@@ -637,7 +637,7 @@ export default function CrmEventsPage() {
           <div style={{ padding: 18 }}>
             <div style={{ fontSize: 16, fontWeight: 600 }}>Bu filtreler için kayıt yok.</div>
             <div style={{ marginTop: 6, color: "#666" }}>
-              Farkl1 bir tarih aral11 veya entity filtresi deneyebilirsiniz.
+              Farklı bir tarih aralığı veya entity filtresi deneyebilirsiniz.
             </div>
           </div>
         ) : (

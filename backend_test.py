@@ -243,8 +243,8 @@ def test_org_isolation_behavior():
         email_a = f"user_a_{uuid.uuid4().hex[:8]}@test.com"
         email_b = f"user_b_{uuid.uuid4().hex[:8]}@test.com"
         
-        token_a = create_agency_admin_user(org_a_id, email_a)
-        token_b = create_agency_admin_user(org_b_id, email_b)
+        token_a = create_agency_admin_user_and_login(org_a_id, email_a)
+        token_b = create_agency_admin_user_and_login(org_b_id, email_b)
         
         print(f"   ✅ Created OrgA user: {email_a}")
         print(f"   ✅ Created OrgB user: {email_b}")

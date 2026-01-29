@@ -125,6 +125,56 @@ async def transition_to_booked(
     actor: Dict[str, Any],
     request: Any,
 ) -> Dict[str, Any]:
+    """Transition booking to booked, applying Credit & Exposure v1 rules.
+
+    If available credit is insufficient, move booking to 'hold' instead and
+    create a Finance task for manual review.
+    """
+    from app.services.credit_exposure_service import (
+        has_available_credit,
+        create_finance_hold_task_for_booking,
+    )
+
+    # Load current booking to know amount and state
+    repo = BookingRepository(db)
+    doc = await repo.get_by_id(organization_id, booking_id)
+    if not doc:
+        from fastapi import HTTPException, status
+
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="BOOKING_NOT_FOUND")
+
+    amount = float(doc.get("amount", 0.0))
+
+    # Check credit availability
+    if not await has_available_credit(db, organization_id, amount):
+        # Move to hold instead of booked
+        before, after = await repo.update_state(organization_id, booking_id, "hold")
+        assert after is not None
+
+        # Audit: BOOKING_STATE_CHANGED (quoted -> hold or current -> hold)
+        current_state = str(doc.get("state") or "")
+        await write_audit_log(
+            db,
+            organization_id=organization_id,
+            actor=actor,
+            request=request,
+            action="BOOKING_STATE_CHANGED",
+            target_type="booking",
+            target_id=booking_id,
+            before=before,
+            after=after,
+            meta={"from": current_state, "to": "hold"},
+        )
+
+        # Create Finance task for this held booking
+        await create_finance_hold_task_for_booking(db, organization_id, booking_id)
+
+        # Return sanitized doc
+        doc_out = dict(after)
+        doc_out["id"] = str(doc_out.pop("_id"))
+        return doc_out
+
+    # If credit is sufficient, proceed with normal booked transition
     return await _transition_booking_state(
         db,
         organization_id,

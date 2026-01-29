@@ -24,6 +24,7 @@ async def create_org(db: AsyncIOMotorDatabase, payload: Dict[str, Any], actor_us
     """
 
     now = now_utc()
+    org_repo = OrgRepository(db)
     org_doc: Dict[str, Any] = {
         "name": payload.get("name") or "New Organization",
         "slug": payload.get("slug") or payload.get("name", "").lower().replace(" ", "-") or None,
@@ -32,8 +33,7 @@ async def create_org(db: AsyncIOMotorDatabase, payload: Dict[str, Any], actor_us
         "settings": payload.get("settings") or {"currency": "TRY"},
     }
 
-    res = await db.organizations.insert_one(org_doc)
-    org_id = str(res.inserted_id)
+    org_id = await org_repo.create_org(org_doc)
 
     # Audit: ORG_CREATED
     await _write_audit_system_event(

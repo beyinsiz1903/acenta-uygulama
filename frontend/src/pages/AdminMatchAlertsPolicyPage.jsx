@@ -265,8 +265,8 @@ export default function AdminMatchAlertsPolicyPage() {
                 <div>
                   <div className="text-sm font-medium">Prefer verified outcomes only</div>
                   <p className="text-xs text-muted-foreground">
-                    Yeterli sayıda verified booking varsa, risk hesaplamasında yaln31zca verified
-                    outcomes kullan31l31r.
+                    Yeterli sayıda doğrulanmış (verified) rezervasyon varsa, risk hesaplamasında yalnızca bu doğrulanmış
+                    kayıtlar kullanılır.
                   </p>
                 </div>
                 <Switch

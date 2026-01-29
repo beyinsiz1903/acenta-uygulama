@@ -70,8 +70,9 @@ async def test_credit_exposure_v1_allow_and_hold_behaviour(test_db: Any, async_c
     token_b = jwt.encode({"sub": email_b, "org": org_b_id}, _jwt_secret(), algorithm="HS256")
 
     client = async_client
-        # Case A: within limit, should book successfully
-        resp_create_a = await client.post(
+
+    # Case A: within limit, should book successfully
+    resp_create_a = await client.post(
             "/api/bookings",
             json={"amount": 1000.0, "currency": "TRY"},
             headers={"Authorization": f"Bearer {token_a}"},

@@ -217,7 +217,7 @@ async def transition_to_refund_in_progress(
     actor: Dict[str, Any],
     request: Any,
 ) -> Dict[str, Any]:
-    return await _transition_booking_state(
+    booking = await _transition_booking_state(
         db,
         organization_id,
         booking_id,
@@ -225,6 +225,21 @@ async def transition_to_refund_in_progress(
         actor=actor,
         request=request,
     )
+
+    await write_audit_log(
+        db,
+        organization_id=organization_id,
+        actor=actor,
+        request=request,
+        action="REFUND_REQUESTED",
+        target_type="booking",
+        target_id=booking_id,
+        before=None,
+        after=None,
+        meta={"state": "refund_in_progress"},
+    )
+
+    return booking
 
 
 async def transition_to_refunded(

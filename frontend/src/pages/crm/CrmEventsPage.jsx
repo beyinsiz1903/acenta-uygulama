@@ -212,7 +212,7 @@ function EventRow({ event, onToggle }) {
             if (Array.isArray(p.merged_ids)) {
               p.merged_ids.forEach((id) => {
                 chips.push({
-                  label: `Birlefen: ${id}`,
+                  label: `Birleşen: ${id}`,
                   href: `/app/crm/customers/${id}`,
                 });
               });

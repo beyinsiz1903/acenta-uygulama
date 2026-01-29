@@ -11,6 +11,8 @@ from app.services.commission import create_financial_entry, month_from_check_in
 from app.services.audit import write_audit_log
 from app.services.events import write_booking_event
 from app.utils import now_utc, serialize_doc
+from app.config import API_PREFIX
+
 from app.services.email_outbox import enqueue_booking_email
 
 router = APIRouter(prefix=f"{API_PREFIX}/bookings", tags=["bookings"])

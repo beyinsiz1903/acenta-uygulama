@@ -144,6 +144,77 @@ async def test_booking_lifecycle_v2_api_flow_with_org_isolation(test_db: Any) ->
         requoted = resp_requote.json()
         assert requoted["state"] == "quoted"
 
+
+
+@ pytest.mark.exit_sprint2
+@ pytest.mark.anyio
+async def test_booking_lifecycle_v2_invalid_http_transitions(test_db: Any) -> None:
+    """Invalid HTTP-level transitions must return 422 + INVALID_STATE_TRANSITION."""
+    now = now_utc()
+
+    org = await test_db.organizations.insert_one(
+        {"name": "OrgInvalid", "slug": "orginvalid", "created_at": now, "updated_at": now, "settings": {"currency": "TRY"}}
+    )
+    org_id = str(org.inserted_id)
+
+    email = "s2_invalid@example.com"
+    await test_db.users.insert_one(
+        {
+            "email": email,
+            "roles": ["agency_admin"],
+            "organization_id": org_id,
+            "is_active": True,
+        }
+    )
+
+    token = jwt.encode({"sub": email, "org": org_id}, _jwt_secret(), algorithm="HS256")
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        # Create a draft booking and immediately try refund-approve -> invalid
+        resp_create = await client.post(
+            "/api/bookings",
+            json={"amount": 100.0, "currency": "TRY"},
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert resp_create.status_code == status.HTTP_201_CREATED
+        booking = resp_create.json()
+        booking_id = booking["id"]
+
+        resp_invalid_refund_approve = await client.post(
+            f"/api/bookings/{booking_id}/refund-approve",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert resp_invalid_refund_approve.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert resp_invalid_refund_approve.json().get("detail") == "INVALID_STATE_TRANSITION"
+
+        # Create a refunded booking via happy path then try to book again -> invalid
+        resp_create2 = await client.post(
+            "/api/bookings",
+            json={"amount": 150.0, "currency": "TRY"},
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert resp_create2.status_code == status.HTTP_201_CREATED
+        booking2_id = resp_create2.json()["id"]
+
+        await client.post(f"/api/bookings/{booking2_id}/quote", headers={"Authorization": f"Bearer {token}"})
+        await client.post(f"/api/bookings/{booking2_id}/book", headers={"Authorization": f"Bearer {token}"})
+        await client.post(
+            f"/api/bookings/{booking2_id}/refund-request",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        await client.post(
+            f"/api/bookings/{booking2_id}/refund-approve",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+
+        resp_invalid_book = await client.post(
+            f"/api/bookings/{booking2_id}/book",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert resp_invalid_book.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert resp_invalid_book.json().get("detail") == "INVALID_STATE_TRANSITION"
+
         # Happy path 2: draft -> quoted -> booked -> refund-request -> refund-approve -> refunded
         # Create another booking for refund flow
         resp_create2 = await client.post(

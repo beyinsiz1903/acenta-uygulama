@@ -13,6 +13,19 @@ from app.services.booking_service import (
 )
 
 
+class _FakeRequest:
+    def __init__(self) -> None:
+        self.headers = {}
+        self.client = None
+        self.method = "TEST"
+
+        class _URL:
+            def __init__(self) -> None:
+                self.path = "/test/bookings"
+
+        self.url = _URL()
+
+
 @pytest.mark.anyio
 async def test_booking_audit_entries_created(test_db: Any) -> None:
     org = await test_db.organizations.find_one({"slug": "default"})

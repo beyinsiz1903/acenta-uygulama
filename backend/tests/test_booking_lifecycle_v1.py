@@ -15,6 +15,19 @@ from app.services.booking_service import (
 from app.utils import now_utc
 
 
+class _FakeRequest:
+    def __init__(self) -> None:
+        self.headers = {}
+        self.client = None
+        self.method = "TEST"
+
+        class _URL:
+            def __init__(self) -> None:
+                self.path = "/test/bookings"
+
+        self.url = _URL()
+
+
 @pytest.mark.anyio
 async def test_booking_lifecycle_draft_to_cancel_requested(test_db: Any) -> None:
     """Unit-level test for booking lifecycle: draft -> quoted -> booked -> cancel_requested.

@@ -671,7 +671,7 @@ export default function CrmEventsPage() {
             fontSize: 13,
           }}
         >
-          {hasNext ? "Daha fazla yükle" : "Kay1t kalmad1"}
+          {hasNext ? "Daha fazla yükle" : "Kayıt kalmadı"}
         </button>
       </div>
     </div>

@@ -256,6 +256,9 @@ async def book_booking_endpoint(
         "actor_type": "user",
         "actor_id": user["id"],
         "email": user["email"],
+        "roles": user.get("roles", []),
+    }
+    return await transition_to_booked(db, organization_id, booking_id, actor, request)
 
 
 @router.post("/{booking_id}/modify", dependencies=[Depends(require_roles(["agency_admin", "agency_agent"]))])

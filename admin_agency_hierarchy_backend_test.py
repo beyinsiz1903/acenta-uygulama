@@ -23,7 +23,7 @@ import uuid
 from typing import Dict, Any, List, Optional
 
 # Configuration - Use production URL from frontend/.env
-BASE_URL = "https://b2b-dashboard-3.preview.emergentagent.com"
+BASE_URL = "https://tourism-ops.preview.emergentagent.com"
 
 def login_admin():
     """Login as admin user and return token, org_id, email"""

@@ -23,7 +23,7 @@ import sys
 from typing import Dict, Any, Optional
 
 # Backend URL from frontend/.env
-BASE_URL = "https://b2b-dashboard-3.preview.emergentagent.com"
+BASE_URL = "https://tourism-ops.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api"
 
 class CRMCustomersTest:

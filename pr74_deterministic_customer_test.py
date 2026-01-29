@@ -27,7 +27,7 @@ from app.services.crm_customers import find_or_create_customer_for_booking, crea
 from bson import ObjectId
 
 # Test configuration
-BACKEND_URL = "https://b2b-dashboard-3.preview.emergentagent.com/api"
+BACKEND_URL = "https://tourism-ops.preview.emergentagent.com/api"
 TEST_ORG_ID = "695e03c80b04ed31c4eaa899"  # Admin organization
 
 class PR74TestResults:

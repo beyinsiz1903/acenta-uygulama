@@ -116,23 +116,8 @@ async def _rollback_org_creation(db: AsyncIOMotorDatabase, org_id: str) -> None:
 
 
 async def _ensure_credit_profile(db: AsyncIOMotorDatabase, org_id: str, actor_user: Dict[str, Any]) -> None:
-    existing = await db.credit_profiles.find_one({"organization_id": org_id, "name": "Standard"})
-    if existing:
-        return
-
-    now = now_utc()
-    doc = {
-        "organization_id": org_id,
-        "name": "Standard",
-        "credit_limit": STANDARD_CREDIT_LIMIT,
-        "soft_limit_pct": STANDARD_SOFT_LIMIT_PCT,
-        "currency": "TRY",
-        "created_at": now,
-        "updated_at": now,
-        "created_by": actor_user.get("email"),
-        "updated_by": actor_user.get("email"),
-    }
-    await db.credit_profiles.insert_one(doc)
+    repo = CreditProfileRepository(db)
+    await repo.ensure_standard_profile(org_id, actor_user.get("email"))
 
 
 async def _ensure_refund_policy(db: AsyncIOMotorDatabase, org_id: str, actor_user: Dict[str, Any]) -> None:

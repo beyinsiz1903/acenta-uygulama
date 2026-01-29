@@ -320,6 +320,26 @@ async def refund_approve_booking_endpoint(
         "email": user["email"],
         "roles": user.get("roles", []),
     }
+
+
+@router.post("/{booking_id}/refund-reject", dependencies=[Depends(require_roles(["agency_admin", "agency_agent"]))])
+async def refund_reject_booking_endpoint(
+    booking_id: str,
+    request: Request,
+    db=Depends(get_db),
+    user=Depends(get_current_user),
+    org=Depends(get_current_org),
+) -> Dict[str, Any]:
+    """Reject a refund request: refund_in_progress -> booked."""
+    organization_id = str(org["id"])
+    actor = {
+        "actor_type": "user",
+        "actor_id": user["id"],
+        "email": user["email"],
+        "roles": user.get("roles", []),
+    }
+    return await transition_to_refund_rejected(db, organization_id, booking_id, actor, request)
+
     return await transition_to_refunded(db, organization_id, booking_id, actor, request)
 
 

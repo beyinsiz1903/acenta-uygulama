@@ -198,6 +198,56 @@ async def _ensure_task_queues(db: AsyncIOMotorDatabase, org_id: str, actor_user:
             "organization_id": org_id,
             "name": name,
             "created_at": now,
+
+
+async def _write_audit_system_event(
+    db: AsyncIOMotorDatabase,
+    *,
+    organization_id: str,
+    actor_user: Dict[str, Any],
+    action: str,
+    target_type: str,
+    target_id: str,
+    meta: Dict[str, Any] | None = None,
+) -> None:
+    """Helper to write org-scoped audit events without an HTTP Request.
+
+    Uses a synthetic request-like object with minimal fields so that the
+    existing write_audit_log() signature can be reused.
+    """
+
+    class _FakeRequest:
+        def __init__(self) -> None:
+            self.headers = {}
+            self.client = None
+            self.method = "SYSTEM"
+
+            class _URL:
+                def __init__(self) -> None:
+                    self.path = "/system/org_init"
+
+            self.url = _URL()
+
+    actor = {
+        "actor_type": "user",
+        "actor_id": actor_user.get("id") or actor_user.get("email"),
+        "email": actor_user.get("email"),
+        "roles": actor_user.get("roles") or [],
+    }
+
+    await write_audit_log(
+        db,
+        organization_id=organization_id,
+        actor=actor,
+        request=_FakeRequest(),
+        action=action,
+        target_type=target_type,
+        target_id=target_id,
+        before=None,
+        after=None,
+        meta=meta or {},
+    )
+
             "updated_at": now,
             "created_by": actor_user.get("email"),
             "updated_by": actor_user.get("email"),

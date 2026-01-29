@@ -358,7 +358,7 @@ export default function CrmEventsPage() {
       setTotal(res.total || 0);
       setPage(res.page || nextPage);
     } catch (e) {
-      setErrMsg(e.message || "Olaylar ycklenemedi.");
+      setErrMsg(e.message || "Olaylar yüklenemedi.");
     } finally {
       const elapsed = Date.now() - start;
       const minMs = 300;

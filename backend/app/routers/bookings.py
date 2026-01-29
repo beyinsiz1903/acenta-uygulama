@@ -15,7 +15,9 @@ from app.config import API_PREFIX
 
 from app.services.email_outbox import enqueue_booking_email
 
-router = APIRouter(prefix=f"{API_PREFIX}/bookings", tags=["bookings"])
+# NOTE: server.py already includes this router with prefix=API_PREFIX.
+# Therefore we must NOT include API_PREFIX here again, otherwise paths become /api/api/bookings.
+router = APIRouter(prefix="/bookings", tags=["bookings"])
 from datetime import datetime
 
 from fastapi import Query

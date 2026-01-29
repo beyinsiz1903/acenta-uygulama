@@ -180,6 +180,17 @@ async def cancel_booking(booking_id: str, payload: BookingCancelIn, request: Req
     await write_audit_log(
         db,
         organization_id=user["organization_id"],
+        actor={"actor_type": "user", "email": user.get("email"), "roles": user.get("roles")},
+        request=request,
+        action="booking.cancel",
+        target_type="booking",
+        target_id=booking_id,
+        before=booking,
+        after=updated,
+        meta={"reason": payload.reason},
+    )
+
+    return serialize_doc(updated)
 
 
 @router.post("", status_code=status.HTTP_201_CREATED, dependencies=[Depends(require_roles(["agency_admin", "agency_agent"]))])

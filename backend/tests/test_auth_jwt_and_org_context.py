@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-import os
-from typing import Any, Dict
+from typing import Any
 
 import jwt
 import pytest
 from fastapi import status
-from httpx import AsyncClient, ASGITransport
+from httpx import ASGITransport, AsyncClient
 
 from server import app
 from app.auth import _jwt_secret
@@ -18,13 +17,16 @@ async def test_invalid_token_returns_401() -> None:
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        resp = await client.get("/api/admin/organizations", headers={"Authorization": "Bearer invalid.token"})
+        resp = await client.get(
+            "/api/admin/agencies",
+            headers={"Authorization": "Bearer invalid.token"},
+        )
     assert resp.status_code == status.HTTP_401_UNAUTHORIZED
 
 
 @pytest.mark.anyio
-async def test_missing_org_membership_returns_403(test_db: Any) -> None:
-    """Authenticated user without organization_id must see 403 when resolving org context.
+async def test_missing_org_membership_returns_401_or_403(test_db: Any) -> None:
+    """Authenticated user without organization_id must see 401/403 when resolving org context.
 
     This simulates a user record missing organization linkage.
     """
@@ -40,8 +42,10 @@ async def test_missing_org_membership_returns_403(test_db: Any) -> None:
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         resp = await client.get(
-            "/api/admin/organizations",
+            "/api/admin/agencies",
             headers={"Authorization": f"Bearer {token}"},
         )
-    # get_current_user will fail or get_current_org will raise 403 depending on mapping
+
+    # Depending on get_current_user implementation, this may be 401 (user not found)
+    # or 403 (org membership required) once get_current_org is applied broadly.
     assert resp.status_code in {status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN}

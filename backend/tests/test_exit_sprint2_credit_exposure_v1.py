@@ -69,8 +69,7 @@ async def test_credit_exposure_v1_allow_and_hold_behaviour(test_db: Any, async_c
     token_a = jwt.encode({"sub": email_a, "org": org_a_id}, _jwt_secret(), algorithm="HS256")
     token_b = jwt.encode({"sub": email_b, "org": org_b_id}, _jwt_secret(), algorithm="HS256")
 
-    transport = ASGITransport(app=app)
-    async with AsyncClient(transport=transport, base_url="http://test") as client:
+    client = async_client
         # Case A: within limit, should book successfully
         resp_create_a = await client.post(
             "/api/bookings",

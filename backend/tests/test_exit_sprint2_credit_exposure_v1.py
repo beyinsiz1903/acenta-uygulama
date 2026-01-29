@@ -81,17 +81,17 @@ async def test_credit_exposure_v1_allow_and_hold_behaviour(test_db: Any, async_c
         booking_a = resp_create_a.json()
         booking_a_id = booking_a["id"]
 
-        await client.post(
-            f"/api/bookings/{booking_a_id}/quote",
-            headers={"Authorization": f"Bearer {token_a}"},
-        )
-        resp_book_a = await client.post(
-            f"/api/bookings/{booking_a_id}/book",
-            headers={"Authorization": f"Bearer {token_a}"},
-        )
-        assert resp_book_a.status_code == status.HTTP_200_OK
-        booked_a = resp_book_a.json()
-        assert booked_a["state"] == "booked"
+    await client.post(
+        f"/api/bookings/{booking_a_id}/quote",
+        headers={"Authorization": f"Bearer {token_a}"},
+    )
+    resp_book_a = await client.post(
+        f"/api/bookings/{booking_a_id}/book",
+        headers={"Authorization": f"Bearer {token_a}"},
+    )
+    assert resp_book_a.status_code == status.HTTP_200_OK
+    booked_a = resp_book_a.json()
+    assert booked_a["state"] == "booked"
 
         # Case B: create high exposure so that next booking exceeds limit
         # Assuming STANDARD_CREDIT_LIMIT = 100000, we use an amount just below

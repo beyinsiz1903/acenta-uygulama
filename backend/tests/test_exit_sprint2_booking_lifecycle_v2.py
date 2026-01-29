@@ -9,6 +9,7 @@ from httpx import ASGITransport, AsyncClient
 from app.domain.booking_state_machine import validate_transition, BookingStateTransitionError
 from app.repositories.booking_repository import BookingRepository
 from app.services.booking_service import (
+    create_booking_draft,
     transition_to_booked,
     transition_to_cancel_requested,
 )

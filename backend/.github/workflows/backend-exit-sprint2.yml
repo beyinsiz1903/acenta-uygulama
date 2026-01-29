@@ -1,0 +1,38 @@
+name: Backend Sprint 2 Exit Gate
+
+on:
+  pull_request:
+    paths:
+      - "app/**"
+      - "backend/**"
+      - ".github/workflows/backend-exit-sprint2.yml"
+  push:
+    branches:
+      - main
+      - release/**
+
+jobs:
+  test-backend-exit-sprint2:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./backend
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+            python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Sprint 2 Exit Gate tests
+        run: |
+          pytest -m exit_sprint2 -q

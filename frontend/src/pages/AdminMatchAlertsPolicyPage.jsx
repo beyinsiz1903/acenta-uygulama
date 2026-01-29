@@ -315,9 +315,9 @@ export default function AdminMatchAlertsPolicyPage() {
             </CardHeader>
             <CardContent className="space-y-3">
               <p className="text-xs text-muted-foreground">
-                High risk tanm: <code>behavioral_not_arrived_rate &gt;= rate_threshold</code> VEYA
-                <code> repeat_not_arrived_7 &gt;= repeat_threshold_7</code>. Tm dashboard, alert ve export
-                eikleri bu profile gre hesaplanr.
+                Yüksek risk tanımı: <code>behavioral_not_arrived_rate &gt;= rate_threshold</code> VEYA
+                <code> repeat_not_arrived_7 &gt;= repeat_threshold_7</code>. Tüm dashboard, uyarı (alert) ve dışa aktarma
+                özellikleri bu profile göre hesaplanır.
               </p>
 
               <div className="grid gap-3 md:grid-cols-3">

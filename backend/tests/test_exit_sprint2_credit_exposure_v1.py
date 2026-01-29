@@ -49,6 +49,8 @@ async def test_credit_exposure_v1_allow_and_hold_behaviour(test_db: Any) -> None
     from app.services.org_service import initialize_org_defaults
     await initialize_org_defaults(test_db, org_a_id, {"email": email_a})
     await initialize_org_defaults(test_db, org_b_id, {"email": email_b})
+
+    # Create users for both organizations
     await test_db.users.insert_one(
         {
             "email": email_a,

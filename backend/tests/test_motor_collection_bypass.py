@@ -62,9 +62,6 @@ def _is_under_any(path: Path, prefixes: Iterable[Path]) -> bool:
         except ValueError:
             continue
 
-
-@pytest.mark.exit_sprint1
-
     return False
 
 

@@ -321,10 +321,6 @@ async def refund_approve_booking_endpoint(
     }
     return await transition_to_refunded(db, organization_id, booking_id, actor, request)
 
-        "roles": user.get("roles", []),
-    }
-    return await transition_to_booked(db, organization_id, booking_id, actor, request)
-
 
 @router.post("/{booking_id}/cancel-request", dependencies=[Depends(require_roles(["agency_admin", "agency_agent"]))])
 async def cancel_request_booking_endpoint(

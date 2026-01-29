@@ -205,7 +205,7 @@ function EventRow({ event, onToggle }) {
             }
             if (p.primary_id) {
               chips.push({
-                label: `Primary mffteri: ${p.primary_id}`,
+                label: `Primary müşteri: ${p.primary_id}`,
                 href: `/app/crm/customers/${p.primary_id}`,
               });
             }

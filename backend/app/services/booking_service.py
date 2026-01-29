@@ -145,21 +145,14 @@ async def transition_to_booked(
 
     amount = float(doc.get("amount", 0.0))
 
-    # Check credit availability
-    # Credit/Exposure rules only apply for API flows that go through the full
-    # org initialization pipeline. For legacy/unit-test flows using raw
-    # organization_id (ObjectId string) we skip limit enforcement to keep
-    # Sprint 1 behavior intact.
-    from bson import ObjectId
+    # Check credit availability for API flows; unit-level tests that operate
+    # directly on the default org (using raw ObjectId string) should preserve
+    # Sprint 1 behavior and therefore skip credit enforcement when no explicit
+    # Standard credit profile exists.
+    from app.services.credit_exposure_service import _get_credit_limit
 
-    try:
-        candidate_oid = ObjectId(organization_id)
-    except Exception:  # organization_id is not a valid ObjectId string -> real org id string
-        enforce_credit = True
-    else:
-        # If organization_id round-trips as ObjectId and there is no explicit
-        # Standard credit profile, we treat credit as unlimited.
-        enforce_credit = await _get_credit_limit(db, organization_id) is not None
+    limit = await _get_credit_limit(db, organization_id)
+    enforce_credit = limit is not None
 
     if enforce_credit and not await has_available_credit(db, organization_id, amount):
         # Move to hold instead of booked

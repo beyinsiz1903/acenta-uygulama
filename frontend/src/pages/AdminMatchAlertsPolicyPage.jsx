@@ -341,7 +341,7 @@ export default function AdminMatchAlertsPolicyPage() {
                     data-testid="risk-profile-rate-threshold"
                   />
                   <p className="text-xs text-muted-foreground">
-                    Davransal not-arrived (behavioral cancel) oran iin 01 aras bir deer.
+                    Davranışsal not-arrived (behavioral cancel) oranı için 0–1 arası bir değer.
                   </p>
                 </div>
 

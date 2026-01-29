@@ -308,18 +308,6 @@ async def get_booking_endpoint(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="BOOKING_NOT_FOUND")
     return serialize_doc(doc)
 
-        actor={"actor_type": "user", "email": user.get("email"), "roles": user.get("roles")},
-        request=request,
-        action="booking.cancel",
-        target_type="booking",
-        target_id=booking_id,
-        before=booking,
-        after=updated,
-        meta={"reason": payload.reason},
-    )
-
-    return serialize_doc(updated)
-
 
 @router.post("/{booking_id}/track/whatsapp-click", dependencies=[Depends(require_roles(["agency_admin", "agency_agent"]))])
 async def track_whatsapp_click(booking_id: str, user=Depends(get_current_user)):

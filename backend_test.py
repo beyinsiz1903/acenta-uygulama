@@ -46,14 +46,18 @@ def login_admin():
     user = data["user"]
     return data["access_token"], user["organization_id"], user["email"]
 
-def create_agency_admin_user(org_id: str, email: str) -> str:
-    """Create an agency_admin user in the database and return JWT token"""
+def create_agency_admin_user_and_login(org_id: str, email: str, password: str = "testpass123") -> str:
+    """Create an agency_admin user in the database and login via API to get token"""
     mongo_client = get_mongo_client()
     db = mongo_client.get_default_database()
     
-    # Create user document
+    # Create user document with password hash
+    import bcrypt
+    password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    
     user_doc = {
         "email": email,
+        "password_hash": password_hash,
         "roles": ["agency_admin"],
         "organization_id": org_id,
         "is_active": True,
@@ -66,11 +70,17 @@ def create_agency_admin_user(org_id: str, email: str) -> str:
     
     mongo_client.close()
     
-    # Forge JWT token (using same approach as test_api_org_isolation_bookings.py)
-    from app.auth import _jwt_secret
-    token = jwt.encode({"sub": email, "org": org_id}, _jwt_secret(), algorithm="HS256")
+    # Login via API to get real JWT token
+    r = requests.post(
+        f"{BASE_URL}/api/auth/login",
+        json={"email": email, "password": password},
+    )
     
-    return token
+    if r.status_code != 200:
+        raise Exception(f"Login failed for {email}: {r.status_code} - {r.text}")
+    
+    data = r.json()
+    return data["access_token"]
 
 def setup_test_org(org_suffix: str) -> str:
     """Setup test organization and return org_id"""

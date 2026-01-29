@@ -88,6 +88,8 @@ def _scan_file_forbidden_patterns(path: Path) -> List[Tuple[int, str]]:
 async def test_no_motor_collection_bypass_in_enforced_paths() -> None:
     """Fail if forbidden Motor/Mongo usage appears in enforced prefixes.
 
+@pytest.mark.exit_sprint1
+
     This is intentionally incremental: it only enforces on new Phase 1 code
     paths, leaving legacy modules untouched for now.
     """

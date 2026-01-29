@@ -53,7 +53,7 @@ async def test_booking_lifecycle_draft_to_cancel_requested(test_db: Any) -> None
     assert doc["state"] == "draft"
 
     # quoted
-    quoted = await transition_to_quoted(test_db, organization_id, booking_id, actor, request=None)  # type: ignore[arg-type]
+    quoted = await transition_to_quoted(test_db, organization_id, booking_id, actor, request=_FakeRequest())
     assert quoted["state"] == "quoted"
 
     # booked

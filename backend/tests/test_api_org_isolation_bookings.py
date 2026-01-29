@@ -11,8 +11,6 @@ from app.auth import _jwt_secret
 from app.utils import now_utc
 
 from server import app
-from app.auth import _jwt_secret
-from app.utils import now_utc
 
 
 @pytest.mark.anyio

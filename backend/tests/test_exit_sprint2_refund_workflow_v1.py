@@ -191,13 +191,11 @@ async def test_refund_workflow_v1_contract(test_db: Any, async_client: AsyncClie
     rejected = resp_reject.json()
     assert rejected["state"] == "booked"
 
-    refund_rejected = await test_db.audit_logs.find_one(
-        {
-            "organization_id": org_a_id,
-            "action": "REFUND_REJECTED",
-            "target_type": "booking",
-            "target_id": booking2_id,
-        }
+    refund_rejected = await find_audit_for_booking(
+        test_db.audit_logs,
+        organization_id=org_a_id,
+        action="REFUND_REJECTED",
+        booking_id=booking2_id,
     )
     assert refund_rejected is not None
 

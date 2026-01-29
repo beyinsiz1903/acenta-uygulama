@@ -40,6 +40,11 @@ async def test_credit_exposure_v1_allow_and_hold_behaviour(test_db: Any) -> None
     )
     org_a_id = str(org_a.inserted_id)
     org_b_id = str(org_b.inserted_id)
+    # Seed org defaults (Standard credit profile, Finance & Ops task queues, etc.)
+    from app.services.org_service import initialize_org_defaults
+    await initialize_org_defaults(test_db, org_a_id, {"email": email_a})
+
+
 
     # Users
     email_a = "s2_credit_a@example.com"

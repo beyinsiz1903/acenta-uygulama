@@ -85,12 +85,17 @@ def setup_test_org(org_suffix: str) -> str:
     """Setup test organization and return org_id"""
     print(f"   📋 Setting up test org (suffix: {org_suffix})...")
     
-    # Create unique org ID for this test
-    org_id = f"org_booking_test_{org_suffix}_{uuid.uuid4().hex[:8]}"
+    # Create unique org ID and slug for this test
+    unique_id = uuid.uuid4().hex[:8]
+    org_id = f"org_booking_test_{org_suffix}_{unique_id}"
+    slug = f"booking-test-{org_suffix}-{unique_id}"
     
     # Setup via MongoDB directly
     mongo_client = get_mongo_client()
     db = mongo_client.get_default_database()
+    
+    # Clean up any existing test orgs first
+    db.organizations.delete_many({"slug": {"$regex": f"^booking-test-{org_suffix}"}})
     
     now = datetime.utcnow()
     
@@ -98,7 +103,7 @@ def setup_test_org(org_suffix: str) -> str:
     org_doc = {
         "_id": org_id,
         "name": f"Booking Test Org {org_suffix}",
-        "slug": f"booking-test-{org_suffix}",
+        "slug": slug,
         "created_at": now,
         "updated_at": now,
         "settings": {"currency": "TRY"},

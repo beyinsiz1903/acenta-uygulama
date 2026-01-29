@@ -299,7 +299,7 @@ export default function AdminMatchAlertsPolicyPage() {
                 data-testid="match-risk-min-verified-bookings"
               />
               <p className="text-xs text-muted-foreground">
-                Verified-only mode, sadece verified_bookings bu de1ferden b fcy fck veya e5fit ise aktif olur.
+                "Sadece doğrulanmış" modu, yalnızca doğrulanmış rezervasyon sayısı bu değerden büyük veya eşit ise aktif olur.
               </p>
             </div>
           </div>

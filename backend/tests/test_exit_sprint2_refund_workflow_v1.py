@@ -12,6 +12,39 @@ from app.auth import _jwt_secret
 from app.utils import now_utc
 
 
+def _id_variants(x: str) -> list[Any]:
+    vals: list[Any] = [x]
+    try:
+        vals.append(ObjectId(x))
+    except Exception:
+        pass
+    return vals
+
+
+async def find_audit_for_booking(
+    audit_col,
+    *,
+    organization_id: str,
+    action: str,
+    booking_id: str,
+) -> Optional[Dict[str, Any]]:
+    org_variants = _id_variants(organization_id)
+    booking_variants = _id_variants(booking_id)
+
+    return await audit_col.find_one(
+        {
+            "action": action,
+            "organization_id": {"$in": org_variants},
+            "$or": [
+                {"target_type": "booking", "target_id": {"$in": booking_variants}},
+                {"target.type": "booking", "target.id": {"$in": booking_variants}},
+            ],
+        }
+    )
+
+
+
+
 @pytest.mark.exit_sprint2
 @pytest.mark.anyio
 async def test_refund_workflow_v1_contract(test_db: Any, async_client: AsyncClient) -> None:

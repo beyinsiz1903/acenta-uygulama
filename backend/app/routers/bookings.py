@@ -256,6 +256,68 @@ async def book_booking_endpoint(
         "actor_type": "user",
         "actor_id": user["id"],
         "email": user["email"],
+
+
+@router.post("/{booking_id}/modify", dependencies=[Depends(require_roles(["agency_admin", "agency_agent"]))])
+async def modify_booking_endpoint(
+    booking_id: str,
+    request: Request,
+    db=Depends(get_db),
+    user=Depends(get_current_user),
+    org=Depends(get_current_org),
+) -> Dict[str, Any]:
+    """Transition a booking from booked -> modified.
+
+    Actual modification payload/fields will be handled in later phases;
+    Sprint 2 only enforces the state transition contract.
+    """
+    organization_id = str(org["id"])
+    actor = {
+        "actor_type": "user",
+        "actor_id": user["id"],
+        "email": user["email"],
+        "roles": user.get("roles", []),
+    }
+    return await transition_to_modified(db, organization_id, booking_id, actor, request)
+
+
+@router.post("/{booking_id}/refund-request", dependencies=[Depends(require_roles(["agency_admin", "agency_agent"]))])
+async def refund_request_booking_endpoint(
+    booking_id: str,
+    request: Request,
+    db=Depends(get_db),
+    user=Depends(get_current_user),
+    org=Depends(get_current_org),
+) -> Dict[str, Any]:
+    """Transition a booking from booked -> refund_in_progress."""
+    organization_id = str(org["id"])
+    actor = {
+        "actor_type": "user",
+        "actor_id": user["id"],
+        "email": user["email"],
+        "roles": user.get("roles", []),
+    }
+    return await transition_to_refund_in_progress(db, organization_id, booking_id, actor, request)
+
+
+@router.post("/{booking_id}/refund-approve", dependencies=[Depends(require_roles(["agency_admin", "agency_agent"]))])
+async def refund_approve_booking_endpoint(
+    booking_id: str,
+    request: Request,
+    db=Depends(get_db),
+    user=Depends(get_current_user),
+    org=Depends(get_current_org),
+) -> Dict[str, Any]:
+    """Transition a booking from refund_in_progress -> refunded."""
+    organization_id = str(org["id"])
+    actor = {
+        "actor_type": "user",
+        "actor_id": user["id"],
+        "email": user["email"],
+        "roles": user.get("roles", []),
+    }
+    return await transition_to_refunded(db, organization_id, booking_id, actor, request)
+
         "roles": user.get("roles", []),
     }
     return await transition_to_booked(db, organization_id, booking_id, actor, request)

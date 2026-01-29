@@ -146,8 +146,8 @@ async def test_booking_lifecycle_v2_api_flow_with_org_isolation(test_db: Any) ->
 
 
 
-@ pytest.mark.exit_sprint2
-@ pytest.mark.anyio
+@pytest.mark.exit_sprint2
+@pytest.mark.anyio
 async def test_booking_lifecycle_v2_invalid_http_transitions(test_db: Any) -> None:
     """Invalid HTTP-level transitions must return 422 + INVALID_STATE_TRANSITION."""
     now = now_utc()

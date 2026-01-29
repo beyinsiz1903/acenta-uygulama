@@ -252,9 +252,3 @@ async def _write_audit_system_event(
         after=None,
         meta=meta or {},
     )
-
-            "updated_at": now,
-            "created_by": actor_user.get("email"),
-            "updated_by": actor_user.get("email"),
-        }
-        await db.task_queues.insert_one(doc)

@@ -198,6 +198,11 @@ async def _ensure_task_queues(db: AsyncIOMotorDatabase, org_id: str, actor_user:
             "organization_id": org_id,
             "name": name,
             "created_at": now,
+            "updated_at": now,
+            "created_by": actor_user.get("email"),
+            "updated_by": actor_user.get("email"),
+        }
+        await db.task_queues.insert_one(doc)
 
 
 async def _write_audit_system_event(

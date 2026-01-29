@@ -11,6 +11,9 @@ from app.services.booking_service import transition_to_booked
 from app.utils import now_utc
 
 
+
+@pytest.mark.exit_sprint1
+
 @pytest.mark.anyio
 async def test_invalid_state_transition_direct() -> None:
     with pytest.raises(BookingStateTransitionError):

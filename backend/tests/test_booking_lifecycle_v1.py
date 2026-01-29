@@ -28,6 +28,8 @@ class _FakeRequest:
         self.url = _URL()
 
 
+@pytest.mark.exit_sprint1
+
 @pytest.mark.anyio
 async def test_booking_lifecycle_draft_to_cancel_requested(test_db: Any) -> None:
     """Unit-level test for booking lifecycle: draft -> quoted -> booked -> cancel_requested.

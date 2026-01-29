@@ -26,6 +26,9 @@ class _FakeRequest:
         self.url = _URL()
 
 
+@pytest.mark.exit_sprint1
+
+
 @pytest.mark.anyio
 async def test_booking_audit_entries_created(test_db: Any) -> None:
     org = await test_db.organizations.find_one({"slug": "default"})

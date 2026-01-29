@@ -46,7 +46,7 @@ async def test_booking_lifecycle_draft_to_cancel_requested(test_db: Any) -> None
     repo = BookingRepository(test_db)
     payload: Dict[str, Any] = {"amount": 1000.0, "currency": "TRY"}
     # Call service to also exercise audit path
-    booking_id = await create_booking_draft(test_db, organization_id, actor, payload, request=None)  # type: ignore[arg-type]
+    booking_id = await create_booking_draft(test_db, organization_id, actor, payload, request=_FakeRequest())
 
     doc = await repo.get_by_id(organization_id, booking_id)
     assert doc is not None

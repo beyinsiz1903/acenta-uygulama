@@ -251,7 +251,7 @@ async def test_booking_lifecycle_v2_invalid_http_transitions(test_db: Any) -> No
 
         resp_refund_ok = await client.post(
             f"/api/bookings/{booking2_id}/refund-approve",
-            headers={"Authorization": f"Bearer {token_a}"},
+            headers={"Authorization": f"Bearer {token}"},
         )
         assert resp_refund_ok.status_code == status.HTTP_200_OK
         refunded = resp_refund_ok.json()

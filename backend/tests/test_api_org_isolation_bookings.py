@@ -53,9 +53,9 @@ async def test_bookings_api_org_isolation(test_db: Any) -> None:
         }
     )
 
-    # Forge JWTs for each user
-    token_a = jwt.encode({"sub": email_a}, _jwt_secret(), algorithm="HS256")
-    token_b = jwt.encode({"sub": email_b}, _jwt_secret(), algorithm="HS256")
+    # Forge JWTs for each user (must include org to satisfy get_current_user)
+    token_a = jwt.encode({"sub": email_a, "org": org_a_id}, _jwt_secret(), algorithm="HS256")
+    token_b = jwt.encode({"sub": email_b, "org": org_b_id}, _jwt_secret(), algorithm="HS256")
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:

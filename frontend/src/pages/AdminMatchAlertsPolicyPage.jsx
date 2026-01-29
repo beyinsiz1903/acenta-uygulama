@@ -363,7 +363,7 @@ export default function AdminMatchAlertsPolicyPage() {
                     data-testid="risk-profile-repeat-threshold"
                   />
                   <p className="text-xs text-muted-foreground">
-                    Son 7 g iinde bu deeri aan tekrar says yksek risk saylr.
+                    Son 7 gün içinde bu değeri aşan tekrar sayısı yüksek risk kabul edilir.
                   </p>
                 </div>
 

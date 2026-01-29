@@ -180,6 +180,123 @@ async def cancel_booking(booking_id: str, payload: BookingCancelIn, request: Req
     await write_audit_log(
         db,
         organization_id=user["organization_id"],
+
+
+@router.post("", status_code=status.HTTP_201_CREATED, dependencies=[Depends(require_roles(["agency_admin", "agency_agent"]))])
+async def create_booking_draft_endpoint(
+    payload: Dict[str, Any],
+    request: Request,
+    db=Depends(get_db),
+    user=Depends(get_current_user),
+    org=Depends(get_current_org),
+) -> Dict[str, Any]:
+    """Create a booking in draft state (Phase 1 backoffice-only)."""
+
+    organization_id = str(org["_id"])
+    actor = {
+        "actor_type": "user",
+        "actor_id": user["id"],
+        "email": user["email"],
+        "roles": user.get("roles", []),
+    }
+    booking_id = await create_booking_draft(db, organization_id, actor, payload, request)
+    repo = BookingRepository(db)
+    doc = await repo.get_by_id(organization_id, booking_id)
+    if not doc:
+        raise HTTPException(status_code=500, detail="BOOKING_PERSISTENCE_ERROR")
+    return serialize_doc(doc)
+
+
+@router.post("/{booking_id}/quote", dependencies=[Depends(require_roles(["agency_admin", "agency_agent"]))])
+async def quote_booking_endpoint(
+    booking_id: str,
+    request: Request,
+    db=Depends(get_db),
+    user=Depends(get_current_user),
+    org=Depends(get_current_org),
+) -> Dict[str, Any]:
+    organization_id = str(org["_id"])
+    actor = {
+        "actor_type": "user",
+        "actor_id": user["id"],
+        "email": user["email"],
+        "roles": user.get("roles", []),
+    }
+    return await transition_to_quoted(db, organization_id, booking_id, actor, request)
+
+
+@router.post("/{booking_id}/book", dependencies=[Depends(require_roles(["agency_admin", "agency_agent"]))])
+async def book_booking_endpoint(
+    booking_id: str,
+    request: Request,
+    db=Depends(get_db),
+    user=Depends(get_current_user),
+    org=Depends(get_current_org),
+) -> Dict[str, Any]:
+    organization_id = str(org["_id"])
+    actor = {
+        "actor_type": "user",
+        "actor_id": user["id"],
+        "email": user["email"],
+        "roles": user.get("roles", []),
+    }
+    return await transition_to_booked(db, organization_id, booking_id, actor, request)
+
+
+@router.post("/{booking_id}/cancel-request", dependencies=[Depends(require_roles(["agency_admin", "agency_agent"]))])
+async def cancel_request_booking_endpoint(
+    booking_id: str,
+    request: Request,
+    db=Depends(get_db),
+    user=Depends(get_current_user),
+    org=Depends(get_current_org),
+) -> Dict[str, Any]:
+    organization_id = str(org["_id"])
+    actor = {
+        "actor_type": "user",
+        "actor_id": user["id"],
+        "email": user["email"],
+        "roles": user.get("roles", []),
+    }
+    return await transition_to_cancel_requested(db, organization_id, booking_id, actor, request)
+
+
+@router.get("", dependencies=[Depends(require_roles(["agency_admin", "agency_agent"]))])
+async def list_bookings_endpoint(
+    state: Optional[str] = None,
+    start: Optional[datetime] = None,
+    end: Optional[datetime] = None,
+    limit: int = 50,
+    db=Depends(get_db),
+    user=Depends(get_current_user),
+    org=Depends(get_current_org),
+) -> List[Dict[str, Any]]:
+    organization_id = str(org["_id"])
+    repo = BookingRepository(db)
+    docs = await repo.list_bookings(
+        organization_id,
+        state=state,
+        start_date=start,
+        end_date=end,
+        limit=limit,
+    )
+    return [serialize_doc(d) for d in docs]
+
+
+@router.get("/{booking_id}", dependencies=[Depends(require_roles(["agency_admin", "agency_agent"]))])
+async def get_booking_endpoint(
+    booking_id: str,
+    db=Depends(get_db),
+    user=Depends(get_current_user),
+    org=Depends(get_current_org),
+) -> Dict[str, Any]:
+    organization_id = str(org["_id"])
+    repo = BookingRepository(db)
+    doc = await repo.get_by_id(organization_id, booking_id)
+    if not doc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="BOOKING_NOT_FOUND")
+    return serialize_doc(doc)
+
         actor={"actor_type": "user", "email": user.get("email"), "roles": user.get("roles")},
         request=request,
         action="booking.cancel",

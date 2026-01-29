@@ -29,6 +29,9 @@ from app.services.booking_service import (
     transition_to_booked,
     transition_to_cancel_requested,
     transition_to_quoted,
+    transition_to_modified,
+    transition_to_refund_in_progress,
+    transition_to_refunded,
 )
 
 

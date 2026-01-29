@@ -13,6 +13,8 @@ from app.utils import now_utc
 
 
 @pytest.mark.anyio
+@pytest.mark.exit_sprint1
+
 async def test_bookings_api_org_isolation(test_db: Any) -> None:
     # Arrange: create OrgA and OrgB
     now = now_utc()

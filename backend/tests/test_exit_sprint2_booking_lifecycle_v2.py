@@ -223,7 +223,7 @@ async def test_booking_lifecycle_v2_invalid_http_transitions(test_db: Any) -> No
         resp_create2 = await client.post(
             "/api/bookings",
             json={"amount": 300.0, "currency": "TRY"},
-            headers={"Authorization": f"Bearer {token_a}"},
+            headers={"Authorization": f"Bearer {token}"},
         )
         assert resp_create2.status_code == status.HTTP_201_CREATED
         booking2 = resp_create2.json()

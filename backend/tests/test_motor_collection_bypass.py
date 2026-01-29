@@ -20,6 +20,9 @@ TODO (expansion plan):
 from pathlib import Path
 from typing import Iterable, List, Tuple
 
+
+@pytest.mark.exit_sprint1
+
 import pytest
 
 # Root of the backend package for this repo

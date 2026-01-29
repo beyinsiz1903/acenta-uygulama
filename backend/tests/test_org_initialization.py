@@ -8,6 +8,9 @@ from app.services.org_service import initialize_org_defaults
 from app.utils import now_utc
 
 
+
+@pytest.mark.exit_sprint1
+
 @pytest.mark.anyio
 async def test_org_defaults_created_for_fresh_org(test_db: Any) -> None:
     # Arrange: create bare org doc

@@ -10,6 +10,7 @@ from httpx import AsyncClient
 
 from app.auth import _jwt_secret
 from app.utils import now_utc
+from app.services.org_service import initialize_org_defaults
 
 
 def _id_variants(x: str) -> list[Any]:

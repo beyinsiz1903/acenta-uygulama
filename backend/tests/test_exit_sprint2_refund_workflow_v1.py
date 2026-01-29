@@ -131,23 +131,19 @@ async def test_refund_workflow_v1_contract(test_db: Any, async_client: AsyncClie
     assert refunded["state"] == "refunded"
 
     # Refund-specific audits must exist alongside BOOKING_STATE_CHANGED audits
-    refund_requested = await test_db.audit_logs.find_one(
-        {
-            "organization_id": org_a_id,
-            "action": "REFUND_REQUESTED",
-            "target_type": "booking",
-            "target_id": booking_id,
-        }
+    refund_requested = await find_audit_for_booking(
+        test_db.audit_logs,
+        organization_id=org_a_id,
+        action="REFUND_REQUESTED",
+        booking_id=booking_id,
     )
     assert refund_requested is not None
 
-    refund_approved = await test_db.audit_logs.find_one(
-        {
-            "organization_id": org_a_id,
-            "action": "REFUND_APPROVED",
-            "target_type": "booking",
-            "target_id": booking_id,
-        }
+    refund_approved = await find_audit_for_booking(
+        test_db.audit_logs,
+        organization_id=org_a_id,
+        action="REFUND_APPROVED",
+        booking_id=booking_id,
     )
     assert refund_approved is not None
 

@@ -97,74 +97,74 @@ async def test_credit_exposure_v1_allow_and_hold_behaviour(test_db: Any, async_c
         # Assuming STANDARD_CREDIT_LIMIT = 100000, we use an amount just below
         # the limit when added to the initial 1000. First booking is 1000,
         # this exposure booking is 99000 => exposure 1000, then 99000 <= 100000.
-        resp_create_exposure = await client.post(
-            "/api/bookings",
-            json={"amount": 99000.0, "currency": "TRY"},
-            headers={"Authorization": f"Bearer {token_a}"},
-        )
-        assert resp_create_exposure.status_code == status.HTTP_201_CREATED
-        booking_exposure_id = resp_create_exposure.json()["id"]
+    resp_create_exposure = await client.post(
+        "/api/bookings",
+        json={"amount": 99000.0, "currency": "TRY"},
+        headers={"Authorization": f"Bearer {token_a}"},
+    )
+    assert resp_create_exposure.status_code == status.HTTP_201_CREATED
+    booking_exposure_id = resp_create_exposure.json()["id"]
 
-        await client.post(
-            f"/api/bookings/{booking_exposure_id}/quote",
-            headers={"Authorization": f"Bearer {token_a}"},
-        )
-        resp_book_exposure = await client.post(
-            f"/api/bookings/{booking_exposure_id}/book",
-            headers={"Authorization": f"Bearer {token_a}"},
-        )
-        assert resp_book_exposure.status_code == status.HTTP_200_OK
-        assert resp_book_exposure.json()["state"] == "booked"
+    await client.post(
+        f"/api/bookings/{booking_exposure_id}/quote",
+        headers={"Authorization": f"Bearer {token_a}"},
+    )
+    resp_book_exposure = await client.post(
+        f"/api/bookings/{booking_exposure_id}/book",
+        headers={"Authorization": f"Bearer {token_a}"},
+    )
+    assert resp_book_exposure.status_code == status.HTTP_200_OK
+    assert resp_book_exposure.json()["state"] == "booked"
 
-        # Now a new booking that would exceed limit should be held
-        resp_create_hold = await client.post(
-            "/api/bookings",
-            json={"amount": 1000.0, "currency": "TRY"},
-            headers={"Authorization": f"Bearer {token_a}"},
-        )
-        assert resp_create_hold.status_code == status.HTTP_201_CREATED
-        booking_hold = resp_create_hold.json()
-        booking_hold_id = booking_hold["id"]
+    # Now a new booking that would exceed limit should be held
+    resp_create_hold = await client.post(
+        "/api/bookings",
+        json={"amount": 1000.0, "currency": "TRY"},
+        headers={"Authorization": f"Bearer {token_a}"},
+    )
+    assert resp_create_hold.status_code == status.HTTP_201_CREATED
+    booking_hold = resp_create_hold.json()
+    booking_hold_id = booking_hold["id"]
 
-        await client.post(
-            f"/api/bookings/{booking_hold_id}/quote",
-            headers={"Authorization": f"Bearer {token_a}"},
-        )
-        resp_book_hold = await client.post(
-            f"/api/bookings/{booking_hold_id}/book",
-            headers={"Authorization": f"Bearer {token_a}"},
-        )
-        assert resp_book_hold.status_code == status.HTTP_200_OK
-        held = resp_book_hold.json()
-        assert held["state"] == "hold"
+    await client.post(
+        f"/api/bookings/{booking_hold_id}/quote",
+        headers={"Authorization": f"Bearer {token_a}"},
+    )
+    resp_book_hold = await client.post(
+        f"/api/bookings/{booking_hold_id}/book",
+        headers={"Authorization": f"Bearer {token_a}"},
+    )
+    assert resp_book_hold.status_code == status.HTTP_200_OK
+    held = resp_book_hold.json()
+    assert held["state"] == "hold"
 
-        # OrgB must not see OrgA's held booking
-        resp_get_b = await client.get(
-            f"/api/bookings/{booking_hold_id}",
-            headers={"Authorization": f"Bearer {token_b}"},
-        )
-        assert resp_get_b.status_code == status.HTTP_404_NOT_FOUND
+    # OrgB must not see OrgA's held booking
+    resp_get_b = await client.get(
+        f"/api/bookings/{booking_hold_id}",
+        headers={"Authorization": f"Bearer {token_b}"},
+    )
+    assert resp_get_b.status_code == status.HTTP_404_NOT_FOUND
 
-        # Check audit log for BOOKING_STATE_CHANGED quoted->hold
-        audit_doc = await test_db.audit_logs.find_one(
-            {
-                "organization_id": org_a_id,
-                "action": "BOOKING_STATE_CHANGED",
-                "target_type": "booking",
-                "target_id": booking_hold_id,
-            }
-        )
-        assert audit_doc is not None
-        assert audit_doc.get("meta", {}).get("from") == "quoted"
-        assert audit_doc.get("meta", {}).get("to") == "hold"
+    # Check audit log for BOOKING_STATE_CHANGED quoted->hold
+    audit_doc = await test_db.audit_logs.find_one(
+        {
+            "organization_id": org_a_id,
+            "action": "BOOKING_STATE_CHANGED",
+            "target_type": "booking",
+            "target_id": booking_hold_id,
+        }
+    )
+    assert audit_doc is not None
+    assert audit_doc.get("meta", {}).get("from") == "quoted"
+    assert audit_doc.get("meta", {}).get("to") == "hold"
 
-        # Check Finance task created for this booking
-        task_doc = await test_db.tasks.find_one(
-            {
-                "organization_id": org_a_id,
-                "entity_type": "booking",
-                "entity_id": booking_hold_id,
-                "state": "open",
-            }
-        )
-        assert task_doc is not None
+    # Check Finance task created for this booking
+    task_doc = await test_db.tasks.find_one(
+        {
+            "organization_id": org_a_id,
+            "entity_type": "booking",
+            "entity_id": booking_hold_id,
+            "state": "open",
+        }
+    )
+    assert task_doc is not None

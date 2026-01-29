@@ -5,6 +5,7 @@ from typing import Any, Dict, List
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from app.utils import now_utc
+from app.services.audit import write_audit_log
 
 
 STANDARD_CREDIT_LIMIT = 100000.0

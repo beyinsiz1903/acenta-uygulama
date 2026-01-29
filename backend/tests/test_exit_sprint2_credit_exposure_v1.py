@@ -5,17 +5,15 @@ from typing import Any
 import jwt
 import pytest
 from fastapi import status
-from httpx import ASGITransport, AsyncClient
 
 from app.auth import _jwt_secret
 from app.utils import now_utc
 from app.services.org_service import initialize_org_defaults
-from server import app
 
 
 @pytest.mark.exit_sprint2
 @pytest.mark.anyio
-async def test_credit_exposure_v1_allow_and_hold_behaviour(test_db: Any) -> None:
+async def test_credit_exposure_v1_allow_and_hold_behaviour(test_db: Any, async_client) -> None:
     """Sprint 2 Credit & Exposure v1 contract.
 
     Case A (allow):

@@ -12,6 +12,11 @@ class TaskQueueRepository:
     def __init__(self, db: AsyncIOMotorDatabase) -> None:
         self._db = db
 
+    async def list_for_org(self, organization_id: str) -> list[Dict[str, Any]]:
+        col = get_collection(self._db, "task_queues")
+        cursor = col.find(with_org_filter({}, organization_id))
+        return await cursor.to_list(100)
+
     async def ensure_default_queues(self, organization_id: str, actor_email: str | None) -> None:
         col = get_collection(self._db, "task_queues")
         now = now_utc()

@@ -205,8 +205,12 @@ def _get_ip(request: Request) -> str:
     if xff:
         # first ip
         return xff.split(",")[0].strip()
-    if request.client:
-        return request.client.host
+    try:
+        if request.client and getattr(request.client, "host", None):
+            return request.client.host
+    except Exception:
+        # Be maximally defensive; audit must never break main flows
+        return ""
     return ""
 
 

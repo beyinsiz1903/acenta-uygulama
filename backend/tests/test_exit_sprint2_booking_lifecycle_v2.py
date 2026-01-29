@@ -186,7 +186,9 @@ async def test_booking_lifecycle_v2_invalid_http_transitions(test_db: Any) -> No
             headers={"Authorization": f"Bearer {token}"},
         )
         assert resp_invalid_refund_approve.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
-        assert resp_invalid_refund_approve.json().get("detail") == "INVALID_STATE_TRANSITION"
+        body = resp_invalid_refund_approve.json()
+        # Our global error format wraps detail inside error.message
+        assert body.get("error", {}).get("message") == "INVALID_STATE_TRANSITION"
 
         # Create a refunded booking via happy path then try to book again -> invalid
         resp_create2 = await client.post(

@@ -98,6 +98,11 @@ async def test_refund_workflow_v1_contract(test_db: Any, async_client: AsyncClie
     org_a_id = str(org_a.inserted_id)
     org_b_id = str(org_b.inserted_id)
 
+    # Seed org defaults (Standard credit profile, task queues, etc.) so that
+    # refund & credit behavior is consistent with real org initialization.
+    await initialize_org_defaults(test_db, org_a_id, {"email": email_a})
+    await initialize_org_defaults(test_db, org_b_id, {"email": email_b})
+
     email_a = "s2_refund_a@example.com"
     email_b = "s2_refund_b@example.com"
 

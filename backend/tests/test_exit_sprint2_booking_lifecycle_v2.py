@@ -237,7 +237,7 @@ async def test_booking_lifecycle_v2_invalid_http_transitions(test_db: Any) -> No
 
         resp_book2 = await client.post(
             f"/api/bookings/{booking2_id}/book",
-            headers={"Authorization": f"Bearer {token_a}"},
+            headers={"Authorization": f"Bearer {token}"},
         )
         assert resp_book2.status_code == status.HTTP_200_OK
 

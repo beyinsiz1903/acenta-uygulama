@@ -32,6 +32,7 @@ from app.services.booking_service import (
     transition_to_modified,
     transition_to_refund_in_progress,
     transition_to_refunded,
+    transition_to_refund_rejected,
 )
 
 

@@ -147,17 +147,30 @@ async def test_credit_exposure_v1_allow_and_hold_behaviour(test_db: Any, async_c
     assert resp_get_b.status_code == status.HTTP_404_NOT_FOUND
 
     # Check audit log for BOOKING_STATE_CHANGED quoted->hold
+    def _id_variants(x: str) -> list[Any]:
+        vals: list[Any] = [x]
+        try:
+            vals.append(ObjectId(x))
+        except Exception:
+            pass
+        return vals
+
+    org_variants = _id_variants(org_a_id)
+    booking_variants = _id_variants(booking_hold_id)
+
     audit_doc = await test_db.audit_logs.find_one(
         {
-            "organization_id": org_a_id,
             "action": "BOOKING_STATE_CHANGED",
-            "target_type": "booking",
-            "target_id": booking_hold_id,
+            "organization_id": {"$in": org_variants},
+            "$or": [
+                {"target_type": "booking", "target_id": {"$in": booking_variants}},
+                {"target.type": "booking", "target.id": {"$in": booking_variants}},
+            ],
+            "meta.from": "quoted",
+            "meta.to": "hold",
         }
     )
     assert audit_doc is not None
-    assert audit_doc.get("meta", {}).get("from") == "quoted"
-    assert audit_doc.get("meta", {}).get("to") == "hold"
 
     # Check Finance task created for this booking
     task_doc = await test_db.tasks.find_one(

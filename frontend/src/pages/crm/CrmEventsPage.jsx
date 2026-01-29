@@ -193,7 +193,7 @@ function EventRow({ event, onToggle }) {
             const chips = [];
             if (p.customer_id) {
               chips.push({
-                label: `Mffteri: ${p.customer_id}`,
+                label: `Müşteri: ${p.customer_id}`,
                 href: `/app/crm/customers/${p.customer_id}`,
               });
             }

@@ -99,11 +99,20 @@ async def _rollback_org_creation(db: AsyncIOMotorDatabase, org_id: str) -> None:
     Used when seeding fails and transactions are not available.
     """
 
-    await db.organizations.delete_one({"_id": org_id})
-    await db.credit_profiles.delete_many({"organization_id": org_id})
-    await db.refund_policies.delete_many({"organization_id": org_id})
-    await db.risk_rules.delete_many({"organization_id": org_id})
-    await db.task_queues.delete_many({"organization_id": org_id})
+    org_repo = OrgRepository(db)
+    await org_repo.delete_org(org_id)
+
+    credit_repo = CreditProfileRepository(db)
+    await credit_repo.delete_for_org(org_id)
+
+    refund_repo = RefundPolicyRepository(db)
+    await refund_repo.delete_for_org(org_id)
+
+    risk_repo = RiskRuleRepository(db)
+    await risk_repo.delete_for_org(org_id)
+
+    queue_repo = TaskQueueRepository(db)
+    await queue_repo.delete_for_org(org_id)
 
 
 async def _ensure_credit_profile(db: AsyncIOMotorDatabase, org_id: str, actor_user: Dict[str, Any]) -> None:

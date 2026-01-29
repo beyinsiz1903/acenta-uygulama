@@ -121,70 +121,13 @@ async def _ensure_credit_profile(db: AsyncIOMotorDatabase, org_id: str, actor_us
 
 
 async def _ensure_refund_policy(db: AsyncIOMotorDatabase, org_id: str, actor_user: Dict[str, Any]) -> None:
-    existing = await db.refund_policies.find_one({"organization_id": org_id})
-    if existing:
-        return
-
-    now = now_utc()
-    doc = {
-        "organization_id": org_id,
-        "small_refund_threshold": 1000.0,
-        "large_refund_threshold": 10000.0,
-        "penalty_percent": 20.0,
-        "created_at": now,
-        "updated_at": now,
-        "created_by": actor_user.get("email"),
-        "updated_by": actor_user.get("email"),
-    }
-    await db.refund_policies.insert_one(doc)
+    repo = RefundPolicyRepository(db)
+    await repo.ensure_default_policy(org_id, actor_user.get("email"))
 
 
 async def _ensure_risk_rules(db: AsyncIOMotorDatabase, org_id: str, actor_user: Dict[str, Any]) -> None:
-    """Seed three placeholder risk rules if none exist for this org."""
-
-    existing_count = await db.risk_rules.count_documents({"organization_id": org_id})
-    if existing_count >= 3:
-        return
-
-    now = now_utc()
-    rules: List[Dict[str, Any]] = [
-        {
-            "organization_id": org_id,
-            "code": "high_amount",
-            "description": "High booking amount threshold",
-            "created_at": now,
-            "updated_at": now,
-            "created_by": actor_user.get("email"),
-            "updated_by": actor_user.get("email"),
-        },
-        {
-            "organization_id": org_id,
-            "code": "burst_bookings",
-            "description": "Burst of bookings in short time",
-            "created_at": now,
-            "updated_at": now,
-            "created_by": actor_user.get("email"),
-            "updated_by": actor_user.get("email"),
-        },
-        {
-            "organization_id": org_id,
-            "code": "high_refund_ratio",
-            "description": "High refund/cancel ratio",
-            "created_at": now,
-            "updated_at": now,
-            "created_by": actor_user.get("email"),
-            "updated_by": actor_user.get("email"),
-        },
-    ]
-
-    # Only insert missing rules to maintain idempotency in case some exist
-    for rule in rules:
-        exists = await db.risk_rules.find_one({
-            "organization_id": org_id,
-            "code": rule["code"],
-        })
-        if not exists:
-            await db.risk_rules.insert_one(rule)
+    repo = RiskRuleRepository(db)
+    await repo.ensure_default_rules(org_id, actor_user.get("email"))
 
 
 async def _ensure_task_queues(db: AsyncIOMotorDatabase, org_id: str, actor_user: Dict[str, Any]) -> None:

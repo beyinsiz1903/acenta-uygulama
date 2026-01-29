@@ -43,7 +43,11 @@ async def test_booking_audit_entries_created(test_db: Any) -> None:
     await transition_to_cancel_requested(test_db, organization_id, booking_id, actor, request=_FakeRequest())
 
     # Assert audit logs exist for this booking and org
-    logs = await test_db.audit_logs.find({"organization_id": organization_id, "target_type": "booking", "target_id": booking_id}).to_list(50)
+    logs = await test_db.audit_logs.find({
+        "organization_id": organization_id,
+        "target.type": "booking",
+        "target.id": booking_id,
+    }).to_list(50)
     actions = {log.get("action") for log in logs}
     assert "BOOKING_CREATED" in actions
     assert "BOOKING_STATE_CHANGED" in actions

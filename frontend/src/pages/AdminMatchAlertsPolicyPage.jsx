@@ -372,7 +372,7 @@ export default function AdminMatchAlertsPolicyPage() {
                     <div>Mode: {riskProfile.mode}</div>
                     {riskProfile.updated_at && (
                       <div className="mt-1">
-                        Son gncelleyen: {riskProfile.updated_by_email || "-"}
+                        Son güncelleyen: {riskProfile.updated_by_email || "-"}
                         <br />
                         Zaman: {new Date(riskProfile.updated_at).toLocaleString()}
                       </div>

@@ -135,6 +135,57 @@ async def transition_to_booked(
     )
 
 
+async def transition_to_modified(
+    db: AsyncIOMotorDatabase,
+    organization_id: str,
+    booking_id: str,
+    actor: Dict[str, Any],
+    request: Any,
+) -> Dict[str, Any]:
+    return await _transition_booking_state(
+        db,
+        organization_id,
+        booking_id,
+        target_state="modified",
+        actor=actor,
+        request=request,
+    )
+
+
+async def transition_to_refund_in_progress(
+    db: AsyncIOMotorDatabase,
+    organization_id: str,
+    booking_id: str,
+    actor: Dict[str, Any],
+    request: Any,
+) -> Dict[str, Any]:
+    return await _transition_booking_state(
+        db,
+        organization_id,
+        booking_id,
+        target_state="refund_in_progress",
+        actor=actor,
+        request=request,
+    )
+
+
+async def transition_to_refunded(
+    db: AsyncIOMotorDatabase,
+    organization_id: str,
+    booking_id: str,
+    actor: Dict[str, Any],
+    request: Any,
+) -> Dict[str, Any]:
+    return await _transition_booking_state(
+        db,
+        organization_id,
+        booking_id,
+        target_state="refunded",
+        actor=actor,
+        request=request,
+    )
+
+
 async def transition_to_cancel_requested(
     db: AsyncIOMotorDatabase,
     organization_id: str,

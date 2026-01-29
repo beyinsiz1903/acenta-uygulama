@@ -95,7 +95,6 @@ async def test_booking_lifecycle_v2_api_flow_with_org_isolation(test_db: Any) ->
     )
 
     token_a = jwt.encode({"sub": email_a, "org": org_a_id}, _jwt_secret(), algorithm="HS256")
-    token_b = jwt.encode({"sub": email_b, "org": org_b_id}, _jwt_secret(), algorithm="HS256")
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:

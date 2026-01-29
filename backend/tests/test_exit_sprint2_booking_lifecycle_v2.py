@@ -111,7 +111,7 @@ async def test_booking_lifecycle_v2_api_flow_with_org_isolation(test_db: Any) ->
         assert booking["organization_id"] == org_a_id
         booking_id = booking["id"]
 
-        # 2) Transition to quoted
+        # Happy path 1: draft -> quoted -> booked -> modify -> quoted
         resp_quote = await client.post(
             f"/api/bookings/{booking_id}/quote",
             headers={"Authorization": f"Bearer {token_a}"},
@@ -120,7 +120,6 @@ async def test_booking_lifecycle_v2_api_flow_with_org_isolation(test_db: Any) ->
         quoted = resp_quote.json()
         assert quoted["state"] == "quoted"
 
-        # 3) Transition to booked
         resp_book = await client.post(
             f"/api/bookings/{booking_id}/book",
             headers={"Authorization": f"Bearer {token_a}"},
@@ -129,17 +128,72 @@ async def test_booking_lifecycle_v2_api_flow_with_org_isolation(test_db: Any) ->
         booked = resp_book.json()
         assert booked["state"] == "booked"
 
-        # 4) OrgB must not see OrgA's booking in list or by id
+        resp_modify = await client.post(
+            f"/api/bookings/{booking_id}/modify",
+            headers={"Authorization": f"Bearer {token_a}"},
+        )
+        assert resp_modify.status_code == status.HTTP_200_OK
+        modified = resp_modify.json()
+        assert modified["state"] == "modified"
+
+        resp_requote = await client.post(
+            f"/api/bookings/{booking_id}/quote",
+            headers={"Authorization": f"Bearer {token_a}"},
+        )
+        assert resp_requote.status_code == status.HTTP_200_OK
+        requoted = resp_requote.json()
+        assert requoted["state"] == "quoted"
+
+        # Happy path 2: draft -> quoted -> booked -> refund-request -> refund-approve -> refunded
+        # Create another booking for refund flow
+        resp_create2 = await client.post(
+            "/api/bookings",
+            json={"amount": 300.0, "currency": "TRY"},
+            headers={"Authorization": f"Bearer {token_a}"},
+        )
+        assert resp_create2.status_code == status.HTTP_201_CREATED
+        booking2 = resp_create2.json()
+        booking2_id = booking2["id"]
+
+        resp_quote2 = await client.post(
+            f"/api/bookings/{booking2_id}/quote",
+            headers={"Authorization": f"Bearer {token_a}"},
+        )
+        assert resp_quote2.status_code == status.HTTP_200_OK
+
+        resp_book2 = await client.post(
+            f"/api/bookings/{booking2_id}/book",
+            headers={"Authorization": f"Bearer {token_a}"},
+        )
+        assert resp_book2.status_code == status.HTTP_200_OK
+
+        resp_refund_req = await client.post(
+            f"/api/bookings/{booking2_id}/refund-request",
+            headers={"Authorization": f"Bearer {token_a}"},
+        )
+        assert resp_refund_req.status_code == status.HTTP_200_OK
+        refund_in_progress = resp_refund_req.json()
+        assert refund_in_progress["state"] == "refund_in_progress"
+
+        resp_refund_ok = await client.post(
+            f"/api/bookings/{booking2_id}/refund-approve",
+            headers={"Authorization": f"Bearer {token_a}"},
+        )
+        assert resp_refund_ok.status_code == status.HTTP_200_OK
+        refunded = resp_refund_ok.json()
+        assert refunded["state"] == "refunded"
+
+        # OrgB must not see OrgA's booking2 in list or by id
         resp_list_b = await client.get(
             "/api/bookings",
             headers={"Authorization": f"Bearer {token_b}"},
         )
         assert resp_list_b.status_code == status.HTTP_200_OK
         bookings_b = resp_list_b.json()
-        assert all(bk["id"] != booking_id for bk in bookings_b)
+        assert all(bk["id"] != booking2_id for bk in bookings_b)
 
         resp_get_b = await client.get(
-            f"/api/bookings/{booking_id}",
+            f"/api/bookings/{booking2_id}",
             headers={"Authorization": f"Bearer {token_b}"},
         )
         assert resp_get_b.status_code == status.HTTP_404_NOT_FOUND

@@ -9,6 +9,7 @@ from httpx import ASGITransport, AsyncClient
 
 from app.auth import _jwt_secret
 from app.utils import now_utc
+from app.services.org_service import initialize_org_defaults
 from server import app
 
 

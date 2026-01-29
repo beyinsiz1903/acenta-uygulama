@@ -35,12 +35,12 @@ async def test_booking_audit_entries_created(test_db: Any) -> None:
     actor: Dict[str, Any] = {"actor_type": "user", "actor_id": "test", "email": "test@example.com", "roles": ["agency_admin"]}
 
     # Create draft via service
-    booking_id = await create_booking_draft(test_db, organization_id, actor, {"amount": 100.0, "currency": "TRY"}, request=None)  # type: ignore[arg-type]
+    booking_id = await create_booking_draft(test_db, organization_id, actor, {"amount": 100.0, "currency": "TRY"}, request=_FakeRequest())
 
     # Run through lifecycle
-    await transition_to_quoted(test_db, organization_id, booking_id, actor, request=None)  # type: ignore[arg-type]
-    await transition_to_booked(test_db, organization_id, booking_id, actor, request=None)  # type: ignore[arg-type]
-    await transition_to_cancel_requested(test_db, organization_id, booking_id, actor, request=None)  # type: ignore[arg-type]
+    await transition_to_quoted(test_db, organization_id, booking_id, actor, request=_FakeRequest())
+    await transition_to_booked(test_db, organization_id, booking_id, actor, request=_FakeRequest())
+    await transition_to_cancel_requested(test_db, organization_id, booking_id, actor, request=_FakeRequest())
 
     # Assert audit logs exist for this booking and org
     logs = await test_db.audit_logs.find({"organization_id": organization_id, "target_type": "booking", "target_id": booking_id}).to_list(50)

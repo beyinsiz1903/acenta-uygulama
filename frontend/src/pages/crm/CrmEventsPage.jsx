@@ -172,7 +172,7 @@ function EventRow({ event, onToggle }) {
               fontSize: 12,
             }}
           >
-            {open ? "Detay1 kapat" : "Detay"}
+            {open ? "Detayı kapat" : "Detay"}
           </button>
         </div>
       </div>

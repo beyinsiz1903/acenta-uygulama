@@ -30,11 +30,24 @@ async def test_booking_lifecycle_v2_states_and_transitions(test_db: Any) -> None
     - Only allow configured transitions; invalid ones => 422/BookingStateTransitionError
     """
 
-    # Direct state machine guardrail
-    # Valid: booked -> modification-related states will be tightened when implementation is added
+    # Direct state machine guardrails for Sprint 2
+    # 1) Allowed transitions should NOT raise
+    validate_transition("draft", "quoted")
+    validate_transition("quoted", "booked")
+    validate_transition("booked", "modified")
+    validate_transition("booked", "refund_in_progress")
+    validate_transition("booked", "hold")
+    validate_transition("modified", "quoted")
+    validate_transition("refund_in_progress", "refunded")
+    validate_transition("hold", "booked")
+
+    # 2) Some clearly invalid transitions must raise BookingStateTransitionError
     with pytest.raises(BookingStateTransitionError):
-        # For now, ensure we don't allow arbitrary transitions like draft -> refunded
         validate_transition("draft", "refunded")
+    with pytest.raises(BookingStateTransitionError):
+        validate_transition("refunded", "booked")
+    with pytest.raises(BookingStateTransitionError):
+        validate_transition("cancel_requested", "booked")
 
 
 @pytest.mark.exit_sprint2

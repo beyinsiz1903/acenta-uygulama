@@ -7,6 +7,9 @@ import pytest
 from fastapi import status
 from httpx import ASGITransport, AsyncClient
 
+from app.auth import _jwt_secret
+from app.utils import now_utc
+
 from server import app
 from app.auth import _jwt_secret
 from app.utils import now_utc

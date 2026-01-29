@@ -3,13 +3,28 @@ from __future__ import annotations
 from typing import Literal
 
 
-BookingState = Literal["draft", "quoted", "booked", "cancel_requested"]
+BookingState = Literal[
+    "draft",
+    "quoted",
+    "booked",
+    "cancel_requested",
+    "modified",
+    "refund_in_progress",
+    "refunded",
+    "hold",
+]
 
 
 _ALLOWED_TRANSITIONS = {
+    # Existing core lifecycle
     "draft": {"quoted"},
     "quoted": {"booked"},
-    "booked": {"cancel_requested"},
+    # Sprint 2: extended lifecycle
+    "booked": {"cancel_requested", "modified", "refund_in_progress", "hold"},
+    "modified": {"quoted"},
+    "refund_in_progress": {"refunded"},
+    "refunded": set(),
+    "hold": {"booked"},
     "cancel_requested": set(),
 }
 

@@ -207,7 +207,7 @@ async def create_booking_draft_endpoint(
 ) -> Dict[str, Any]:
     """Create a booking in draft state (Phase 1 backoffice-only)."""
 
-    organization_id = str(org["_id"])
+    organization_id = str(org["id"])
     actor = {
         "actor_type": "user",
         "actor_id": user["id"],
@@ -230,7 +230,7 @@ async def quote_booking_endpoint(
     user=Depends(get_current_user),
     org=Depends(get_current_org),
 ) -> Dict[str, Any]:
-    organization_id = str(org["_id"])
+    organization_id = str(org["id"])
     actor = {
         "actor_type": "user",
         "actor_id": user["id"],
@@ -248,7 +248,7 @@ async def book_booking_endpoint(
     user=Depends(get_current_user),
     org=Depends(get_current_org),
 ) -> Dict[str, Any]:
-    organization_id = str(org["_id"])
+    organization_id = str(org["id"])
     actor = {
         "actor_type": "user",
         "actor_id": user["id"],
@@ -266,7 +266,7 @@ async def cancel_request_booking_endpoint(
     user=Depends(get_current_user),
     org=Depends(get_current_org),
 ) -> Dict[str, Any]:
-    organization_id = str(org["_id"])
+    organization_id = str(org["id"])
     actor = {
         "actor_type": "user",
         "actor_id": user["id"],
@@ -286,7 +286,7 @@ async def list_bookings_endpoint(
     user=Depends(get_current_user),
     org=Depends(get_current_org),
 ) -> List[Dict[str, Any]]:
-    organization_id = str(org["_id"])
+    organization_id = str(org["id"])
     repo = BookingRepository(db)
     docs = await repo.list_bookings(
         organization_id,
@@ -305,7 +305,7 @@ async def get_booking_endpoint(
     user=Depends(get_current_user),
     org=Depends(get_current_org),
 ) -> Dict[str, Any]:
-    organization_id = str(org["_id"])
+    organization_id = str(org["id"])
     repo = BookingRepository(db)
     doc = await repo.get_by_id(organization_id, booking_id)
     if not doc:

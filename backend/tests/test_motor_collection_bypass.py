@@ -22,6 +22,10 @@ from typing import Iterable, List, Tuple
 
 import pytest
 
+
+@pytest.mark.exit_sprint1
+
+
 # Root of the backend package for this repo
 BACKEND_ROOT = Path(__file__).resolve().parents[1]
 APP_ROOT = BACKEND_ROOT / "app"

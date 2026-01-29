@@ -56,11 +56,10 @@ async def test_booking_lifecycle_v2_api_flow_with_org_isolation(test_db: Any) ->
     """Sprint 2: API-level lifecycle booking flow with extended states, org-isolated.
 
     Contract:
-    - POST /api/bookings creates draft in OrgA
-    - POST /api/bookings/{id}/quote -> state quoted
-    - POST /api/bookings/{id}/book  -> state booked
-    - (Later sprints will add modify/refund endpoints; this test will be extended then.)
+    - Happy path 1: draft -> quoted -> booked -> modify -> quoted
+    - Happy path 2: draft -> quoted -> booked -> refund-request -> refund-approve -> refunded
     - OrgB cannot see or fetch OrgA's booking.
+    - Invalid HTTP transitions must yield 422 with INVALID_STATE_TRANSITION.
     """
 
     now = now_utc()

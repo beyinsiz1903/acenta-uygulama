@@ -63,6 +63,9 @@ async def test_bookings_api_org_isolation(test_db: Any) -> None:
             json={"amount": 100.0, "currency": "TRY"},
             headers={"Authorization": f"Bearer {token_a}"},
         )
+        if resp_create.status_code != status.HTTP_201_CREATED:
+            # Debug aid for future failures
+            print("CREATE_RESPONSE", resp_create.status_code, resp_create.text)
         assert resp_create.status_code == status.HTTP_201_CREATED
         booking_a = resp_create.json()
         booking_id = booking_a["id"]

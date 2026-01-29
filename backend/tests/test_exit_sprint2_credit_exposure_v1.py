@@ -154,11 +154,11 @@ async def test_credit_exposure_v1_allow_and_hold_behaviour(test_db: Any) -> None
                 "action": "BOOKING_STATE_CHANGED",
                 "target_type": "booking",
                 "target_id": booking_hold_id,
-                "meta.from": "quoted",
-                "meta.to": "hold",
             }
         )
         assert audit_doc is not None
+        assert audit_doc.get("meta", {}).get("from") == "quoted"
+        assert audit_doc.get("meta", {}).get("to") == "hold"
 
         # Check Finance task created for this booking
         task_doc = await test_db.tasks.find_one(

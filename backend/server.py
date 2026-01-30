@@ -28,6 +28,7 @@ from app.routers.b2b_hotels_search import router as b2b_hotels_search_router
 from app.routers.b2b_quotes import router as b2b_quotes_router
 from app.routers.b2b_portal import router as b2b_portal_router
 from app.routers.b2b_announcements import router as b2b_announcements_router
+from app.routers.finance import router as finance_router
 from app.routers.bookings import router as bookings_router
 from app.routers.booking_outcomes import router as booking_outcomes_router
 from app.routers.inbox import router as inbox_router

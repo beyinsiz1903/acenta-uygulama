@@ -51,7 +51,7 @@ from app.routers.public_search import router as public_search_router
 from app.routers.public_checkout import router as public_checkout_router
 from app.routers.public_bookings import router as public_bookings_router
 from app.routers.search import router as search_router
-from app.routers.suppliers import router as suppliers_router
+from app.routers.suppliers import router as suppliers_router, router_paximum as suppliers_paximum_router
 from app.routers.vouchers import router as vouchers_router
 from app.routers.web_booking import router as web_booking_router
 from app.routers.web_catalog import router as web_catalog_router

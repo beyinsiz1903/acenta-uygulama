@@ -32,6 +32,17 @@ async def find_audit_for_booking(
     org_variants = _id_variants(organization_id)
     booking_variants = _id_variants(booking_id)
 
+    return await audit_col.find_one(
+        {
+            "action": action,
+            "organization_id": {"$in": org_variants},
+            "$or": [
+                {"target_type": "booking", "target_id": {"$in": booking_variants}},
+                {"target.type": "booking", "target.id": {"$in": booking_variants}},
+            ],
+        }
+    )
+
 
 async def _find_state_change(
     audit_col,

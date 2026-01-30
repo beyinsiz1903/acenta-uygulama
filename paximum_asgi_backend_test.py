@@ -192,7 +192,7 @@ async def test_paximum_happy_path_try_only():
             # 3. Call endpoint using ASGI client
             print("3️⃣  Calling POST /api/suppliers/paximum/search via ASGI...")
             
-            async with httpx.AsyncClient(app=app, base_url=BASE_URL) as client:
+            async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url=BASE_URL) as client:
                 response = await client.post(
                     "/api/suppliers/paximum/search",
                     json=payload,
@@ -276,7 +276,7 @@ async def test_paximum_currency_guard_eur():
             # 3. Call endpoint using ASGI client
             print("3️⃣  Calling POST /api/suppliers/paximum/search with EUR...")
             
-            async with httpx.AsyncClient(app=app, base_url=BASE_URL) as client:
+            async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url=BASE_URL) as client:
                 response = await client.post(
                     "/api/suppliers/paximum/search",
                     json=payload,
@@ -348,7 +348,7 @@ async def test_paximum_upstream_unavailable():
             # 3. Call endpoint using ASGI client
             print("3️⃣  Calling POST /api/suppliers/paximum/search...")
             
-            async with httpx.AsyncClient(app=app, base_url=BASE_URL) as client:
+            async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url=BASE_URL) as client:
                 response = await client.post(
                     "/api/suppliers/paximum/search",
                     json=payload,

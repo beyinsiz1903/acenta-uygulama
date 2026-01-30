@@ -162,11 +162,31 @@ async def ensure_finance_indexes_for_test_db(test_db, anyio_backend):
 
     This makes booking_payment_transactions and booking_payments idempotency
     semantics deterministic for Stripe contract and FX tests.
+
+    In CI and local Docker setups Mongo may occasionally still be wiring up
+    when tests start; index creation can see AutoReconnect. We treat this as a
+    transient setup issue and retry a few times to keep gates deterministic.
     """
 
     from app.indexes.finance_indexes import ensure_finance_indexes
+    from pymongo.errors import AutoReconnect
+    import asyncio
 
-    await ensure_finance_indexes(test_db)
+    last_exc: Exception | None = None
+    for attempt in range(3):
+        try:
+            await ensure_finance_indexes(test_db)
+            last_exc = None
+            break
+        except AutoReconnect as exc:  # pragma: no cover - infra flakiness
+            last_exc = exc
+            # simple linear backoff: 0.2s, 0.4s, 0.6s
+            await asyncio.sleep(0.2 * (attempt + 1))
+
+    if last_exc is not None:
+        # If we still failed after retries, surface the original exception
+        raise last_exc
+
     yield
 
 

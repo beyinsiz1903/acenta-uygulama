@@ -39,6 +39,7 @@ async def test_booking_lifecycle_v2_states_and_transitions(test_db: Any) -> None
     validate_transition("booked", "hold")
     validate_transition("modified", "quoted")
     validate_transition("refund_in_progress", "refunded")
+    validate_transition("refund_in_progress", "booked")
     validate_transition("hold", "booked")
 
     # 2) Some clearly invalid transitions must raise BookingStateTransitionError

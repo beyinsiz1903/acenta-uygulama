@@ -401,7 +401,7 @@ async def test_existing_sprint3_endpoints_sanity():
             "city": "IST"
         }
         
-        async with httpx.AsyncClient(app=app, base_url=BASE_URL) as client:
+        async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url=BASE_URL) as client:
             response = await client.post(
                 "/api/suppliers/mock/search",
                 json=mock_search_payload,
@@ -435,7 +435,7 @@ async def test_existing_sprint3_endpoints_sanity():
             "city": "IST"
         }
         
-        async with httpx.AsyncClient(app=app, base_url=BASE_URL) as client:
+        async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url=BASE_URL) as client:
             response = await client.post(
                 "/api/bookings/from-offer",
                 json=booking_payload,

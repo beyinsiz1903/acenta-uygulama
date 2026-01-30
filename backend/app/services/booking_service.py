@@ -100,6 +100,81 @@ async def create_booking_from_supplier_offer(
     return doc_out
 
 
+async def create_booking_from_paximum_offer(
+    db: AsyncIOMotorDatabase,
+    organization_id: str,
+    actor: Dict[str, Any],
+    payload: Dict[str, Any],
+    request: Any,
+) -> Dict[str, Any]:
+    """Create a draft booking from a Paximum offer.
+
+    Sprint 3 gate responsibilities:
+    - Enforce currency == "TRY"
+    - Use only server-side organization_id
+    - Persist booking as draft with amount, currency, supplier, offer_ref
+    - Emit BOOKING_CREATED_FROM_OFFER audit log
+    """
+    from fastapi import HTTPException
+
+    from app.errors import AppError
+
+    currency = (payload.get("currency") or "").upper()
+    if currency != "TRY":
+        # Reuse AppError to preserve global error envelope
+        raise AppError(
+            status_code=422,
+            code="UNSUPPORTED_CURRENCY",
+            message="Only TRY is supported for Paximum bookings in this phase.",
+        )
+
+    supplier = payload.get("supplier") or ""
+    if supplier != "paximum":
+        raise HTTPException(status_code=422, detail="UNSUPPORTED_SUPPLIER_FOR_PAXIMUM_OFFER")
+
+    total_amount = float(payload.get("total_amount") or 0.0)
+    search_id = payload.get("search_id") or ""
+    offer_id = payload.get("offer_id") or ""
+    offer_ref = f"paximum:{search_id}:{offer_id}" if search_id or offer_id else "paximum:unknown"
+
+    repo = BookingRepository(db)
+    draft_payload: Dict[str, Any] = {
+        "supplier_id": "paximum",  # simple string id for now
+        "amount": total_amount,
+        "currency": currency,
+        "offer_ref": offer_ref,
+    }
+
+    booking_id = await repo.create_draft(organization_id, draft_payload)
+    doc = await repo.get_by_id(organization_id, booking_id)
+    if not doc:
+        raise HTTPException(status_code=500, detail="BOOKING_PERSISTENCE_ERROR")
+
+    # Audit: BOOKING_CREATED_FROM_OFFER
+    await write_audit_log(
+        db,
+        organization_id=organization_id,
+        actor=actor,
+        request=request,
+        action="BOOKING_CREATED_FROM_OFFER",
+        target_type="booking",
+        target_id=booking_id,
+        before=None,
+        after=None,
+        meta={
+            "supplier": "paximum",
+            "search_id": search_id,
+            "offer_id": offer_id,
+        },
+    )
+
+    # Return sanitized doc with id string
+    out = dict(doc)
+    out["id"] = str(out.pop("_id"))
+    return out
+
+
+
 async def _transition_booking_state(
     db: AsyncIOMotorDatabase,
     organization_id: str,

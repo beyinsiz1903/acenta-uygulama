@@ -31,7 +31,7 @@ import sys
 # Add backend to path for imports
 sys.path.insert(0, '/app/backend')
 
-from app.main import app
+from server import app
 from app.config import PAXIMUM_BASE_URL
 from app.auth import _jwt_secret
 import jwt

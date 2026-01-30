@@ -364,8 +364,10 @@ def test_guardrails_error_cases():
         assert r.status_code == 422, f"Expected 422, got {r.status_code}: {r.text}"
         
         error_data = r.json()
-        assert "detail" in error_data, "Error response should contain 'detail' field"
-        assert error_data["detail"] == "INVALID_OFFER", f"Expected 'INVALID_OFFER', got {error_data['detail']}"
+        # Backend uses structured error format: {"error": {"message": "..."}}
+        assert "error" in error_data, "Error response should contain 'error' field"
+        assert "message" in error_data["error"], "Error should contain 'message' field"
+        assert error_data["error"]["message"] == "INVALID_OFFER", f"Expected 'INVALID_OFFER', got {error_data['error']['message']}"
         
         print(f"   ✅ Invalid offer_id returns 422 with INVALID_OFFER message")
         

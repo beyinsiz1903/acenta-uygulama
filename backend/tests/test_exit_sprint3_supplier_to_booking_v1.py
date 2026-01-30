@@ -95,8 +95,9 @@ async def test_supplier_search_to_booking_v1_contract(test_db: Any, async_client
         "offer_id": offer_id,
         "check_in": search_payload["check_in"],
         "check_out": search_payload["check_out"],
-        "guests": search_payload["guests"],
-        "city": search_payload["city"],
+        "currency": "TRY",
+        "total_amount": total_price,
+        "hotel_name": "Mock Hotel",  # not used by mock flow but required by schema
     }
 
     resp_from_offer = await client.post(

@@ -44,3 +44,9 @@ ENABLE_PARTNER_API: bool = _env_flag("ENABLE_PARTNER_API", default=True)
 ENABLE_INBOX: bool = _env_flag("ENABLE_INBOX", default=True)
 ENABLE_COUPONS: bool = _env_flag("ENABLE_COUPONS", default=True)
 MYBOOKING_REQUIRE_EMAIL: bool = _env_flag("MYBOOKING_REQUIRE_EMAIL", default=False)
+
+
+# External supplier configuration
+PAXIMUM_BASE_URL = os.environ.get("PAXIMUM_BASE_URL", "https://api.stage.paximum.com")
+PAXIMUM_API_KEY = os.environ.get("PAXIMUM_API_KEY", "")
+PAXIMUM_TIMEOUT_SECONDS = float(os.environ.get("PAXIMUM_TIMEOUT_SECONDS", "10"))

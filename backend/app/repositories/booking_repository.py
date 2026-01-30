@@ -21,6 +21,7 @@ class BookingRepository:
             "agency_id": payload.get("agency_id"),
             "customer_id": payload.get("customer_id"),
             "supplier_id": payload.get("supplier_id"),
+            "offer_ref": payload.get("offer_ref"),
             "state": "draft",
             "amount": float(payload.get("amount", 0.0)),
             "currency": payload.get("currency", "TRY"),

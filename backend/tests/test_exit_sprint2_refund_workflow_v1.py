@@ -250,15 +250,23 @@ async def test_refund_workflow_v1_contract(test_db: Any, async_client: AsyncClie
     )
     assert refund_rejected is not None
 
-    state_changes2 = await test_db.audit_logs.find(
-        {
-            "organization_id": org_a_id,
-            "action": "BOOKING_STATE_CHANGED",
-            "target_type": "booking",
-            "target_id": booking2_id,
-        }
-    ).to_list(10)
-    assert any(sc.get("meta", {}).get("from") == "booked" and sc.get("meta", {}).get("to") == "refund_in_progress" for sc in state_changes2)
+    sc2a = await _find_state_change(
+        test_db.audit_logs,
+        org_id=org_a_id,
+        booking_id=booking2_id,
+        from_state="booked",
+        to_state="refund_in_progress",
+    )
+    assert sc2a is not None
+
+    sc2b = await _find_state_change(
+        test_db.audit_logs,
+        org_id=org_a_id,
+        booking_id=booking2_id,
+        from_state="refund_in_progress",
+        to_state="booked",
+    )
+    assert sc2b is not None
     assert any(sc.get("meta", {}).get("from") == "refund_in_progress" and sc.get("meta", {}).get("to") == "booked" for sc in state_changes2)
 
     # Org isolation: OrgB cannot access OrgA's bookings

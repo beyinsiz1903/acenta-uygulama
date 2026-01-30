@@ -9,6 +9,8 @@ from app.repositories.booking_repository import BookingRepository
 from app.services.audit import write_audit_log
 from app.utils import now_utc
 
+from app.services.currency_guard import ensure_try
+
 
 async def create_booking_draft(
     db: AsyncIOMotorDatabase,
@@ -17,6 +19,9 @@ async def create_booking_draft(
     payload: Dict[str, Any],
     request: Any,
 ) -> str:
+    # Enforce TRY-only for draft bookings in this phase
+    ensure_try(payload.get("currency"))
+
     repo = BookingRepository(db)
     booking_id = await repo.create_draft(organization_id, payload)
 

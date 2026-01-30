@@ -19,13 +19,10 @@ async def search_paximum_offers(organization_id: str, payload: Dict[str, Any]) -
     - Normalize offers to {supplier, currency, search_id, offers:[...]}
     """
 
+    from app.services.currency_guard import ensure_try
+
     # Request-level currency guard
-    if (payload.get("currency") or "").upper() != "TRY":
-        raise AppError(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            code="UNSUPPORTED_CURRENCY",
-            message="Only TRY is supported for Paximum search in this phase.",
-        )
+    ensure_try(payload.get("currency"))
 
     try:
         resp = await paximum_adapter.search_hotels(payload)
@@ -51,30 +48,16 @@ async def search_paximum_offers(organization_id: str, payload: Dict[str, Any]) -
     search_id = data.get("searchId") or ""
     root_currency = (data.get("currency") or payload.get("currency") or "").upper()
 
-    # Response-level currency guard
-    if root_currency != "TRY":
-        raise AppError(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            code="UNSUPPORTED_CURRENCY",
-            message="Only TRY is supported for Paximum search in this phase.",
-            details={"supplier": "paximum", "upstream_currency": root_currency},
-        )
+    # Response-level currency guard (root)
+    from app.services.currency_guard import ensure_try
+
+    ensure_try(root_currency)
 
     offers_out = []
     for offer in data.get("offers") or []:
         pricing = offer.get("pricing") or {}
         offer_currency = (pricing.get("currency") or root_currency or "").upper()
-        if offer_currency != "TRY":
-            raise AppError(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                code="UNSUPPORTED_CURRENCY",
-                message="Only TRY is supported for Paximum search in this phase.",
-                details={
-                    "supplier": "paximum",
-                    "upstream_currency": offer_currency,
-                    "offer_id": offer.get("offerId"),
-                },
-            )
+        ensure_try(offer_currency)
 
         hotel = offer.get("hotel") or {}
         hotel_name = hotel.get("name") or hotel.get("hotelName") or ""

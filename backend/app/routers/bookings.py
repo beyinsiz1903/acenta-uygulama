@@ -220,9 +220,11 @@ async def create_booking_from_offer_endpoint(
     user=Depends(get_current_user),
     org=Depends(get_current_org),
 ) -> Dict[str, Any]:
-    """Create a quoted booking directly from a supplier offer.
+    """Create a booking from a supplier offer.
 
-    Sprint 3 gate: Supplier search -> Booking v1 contract using mock_v1 supplier.
+    Sprint 3 gates:
+    - Mock supplier: search -> booking v1 (quoted)
+    - Paximum: offer -> booking draft v1 (TRY-only)
     """
 
     organization_id = str(org["id"])
@@ -233,17 +235,42 @@ async def create_booking_from_offer_endpoint(
         "roles": user.get("roles", []),
     }
 
-    from app.services.booking_service import create_booking_from_supplier_offer
+    from app.services.booking_service import (
+        create_booking_from_supplier_offer,
+        create_booking_from_paximum_offer,
+    )
 
+    payload_dict = payload.model_dump()
+
+    if payload_dict.get("supplier") == "paximum":
+        booking_doc = await create_booking_from_paximum_offer(
+            db,
+            organization_id,
+            actor,
+            payload_dict,
+            request,
+        )
+
+        return {
+            "id": booking_doc["id"],
+            "organization_id": organization_id,
+            "state": booking_doc.get("state", "draft"),
+            "amount": booking_doc.get("amount"),
+            "currency": booking_doc.get("currency"),
+            "supplier": "paximum",
+            "offer_ref": booking_doc.get("offer_ref"),
+        }
+
+    # Fallback to existing mock supplier flow
     booking_doc = await create_booking_from_supplier_offer(
         db,
         organization_id,
         actor,
-        payload.model_dump(),
+        payload_dict,
         request,
     )
 
-    # Map internal booking document to minimal gate response
+    # Map internal booking document to minimal gate response for mock supplier
     return {
         "booking_id": booking_doc["id"],
         "state": booking_doc.get("state"),

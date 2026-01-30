@@ -206,8 +206,10 @@ class BookingFromOfferRequest(BaseModel):
     offer_id: str
     check_in: str
     check_out: str
-    guests: int
-    city: str
+    currency: str
+    total_amount: float
+    hotel_name: str
+    search_id: str | None = None
 
 
 @router.post("/from-offer", status_code=status.HTTP_201_CREATED, dependencies=[Depends(require_roles(["agency_admin", "agency_agent"]))])

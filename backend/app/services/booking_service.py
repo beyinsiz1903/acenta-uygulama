@@ -140,7 +140,7 @@ async def create_booking_from_paximum_offer(
     draft_payload: Dict[str, Any] = {
         "supplier_id": "paximum",  # simple string id for now
         "amount": total_amount,
-        "currency": currency,
+        "currency": "TRY",
         "offer_ref": offer_ref,
     }
 

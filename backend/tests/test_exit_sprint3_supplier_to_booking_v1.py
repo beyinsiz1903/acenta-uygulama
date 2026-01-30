@@ -144,7 +144,8 @@ async def test_supplier_search_to_booking_v1_contract(test_db: Any, async_client
         headers={"Authorization": f"Bearer {token_a}"},
     )
     assert resp_invalid_offer.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
-    assert resp_invalid_offer.json().get("detail") == "INVALID_OFFER"
+    body_invalid = resp_invalid_offer.json()
+    assert body_invalid.get("error", {}).get("message") == "INVALID_OFFER"
 
     # 6) Guardrail: unsupported supplier -> 422 UNSUPPORTED_SUPPLIER
     resp_unsupported_supplier = await client.post(

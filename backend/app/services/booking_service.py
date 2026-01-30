@@ -37,6 +37,69 @@ async def create_booking_draft(
     return booking_id
 
 
+
+async def create_booking_from_supplier_offer(
+    db: AsyncIOMotorDatabase,
+    organization_id: str,
+    actor: Dict[str, Any],
+    payload: Dict[str, Any],
+    request: Any,
+) -> Dict[str, Any]:
+    """Create a quoted booking from a supplier offer (mock_v1 only for now).
+
+    - Validates supplier value
+    - Calls mock supplier adapter to resolve offers
+    - Validates offer_id and currency
+    - Persists a minimal quoted booking and returns sanitized document
+    """
+    from fastapi import HTTPException, status
+
+    from app.services.suppliers.mock_supplier_service import search_mock_offers
+
+    supplier = payload.get("supplier")
+    if supplier != "mock_v1":
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="UNSUPPORTED_SUPPLIER")
+
+    search_payload = {
+        "check_in": payload.get("check_in"),
+        "check_out": payload.get("check_out"),
+        "guests": payload.get("guests"),
+        "city": payload.get("city"),
+    }
+
+    offers_response = await search_mock_offers(search_payload)
+
+    currency = offers_response.get("currency")
+    if currency != "TRY":
+        # Prepare ground for future multi-currency gate without exposing it now
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="UNSUPPORTED_CURRENCY")
+
+    items = offers_response.get("items") or []
+    target_offer_id = payload.get("offer_id")
+    match = next((item for item in items if item.get("offer_id") == target_offer_id), None)
+    if not match:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="INVALID_OFFER")
+
+    amount = float(match.get("total_price") or 0.0)
+
+    repo = BookingRepository(db)
+    booking_id = await repo.create_from_supplier_offer(
+        organization_id,
+        amount=amount,
+        currency=currency,
+        supplier=supplier,
+        offer_id=target_offer_id,
+        extra_fields=None,
+    )
+
+    # Load and sanitize for API response
+    doc = await repo.get_by_id(organization_id, booking_id)
+    assert doc is not None
+    doc_out: Dict[str, Any] = dict(doc)
+    doc_out["id"] = str(doc_out.pop("_id"))
+    return doc_out
+
+
 async def _transition_booking_state(
     db: AsyncIOMotorDatabase,
     organization_id: str,

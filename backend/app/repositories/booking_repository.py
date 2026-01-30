@@ -94,3 +94,37 @@ class BookingRepository:
         cursor = self._col.find(with_org_filter(flt, organization_id)).sort("created_at", -1).limit(limit)
         docs = await cursor.to_list(limit)
         return docs
+
+
+    async def create_from_supplier_offer(
+        self,
+        organization_id: str,
+        *,
+        amount: float,
+        currency: str,
+        supplier: str,
+        offer_id: str,
+        extra_fields: Optional[Dict[str, Any]] = None,
+    ) -> str:
+        """Create a quoted booking document from a supplier offer.
+
+        Minimal shape for Sprint 3 supplier->booking gate; additional fields can
+        be added later via extra_fields without changing the core contract.
+        """
+
+        now = now_utc()
+        doc: Dict[str, Any] = {
+            "organization_id": organization_id,
+            "state": "quoted",
+            "amount": float(amount),
+            "currency": currency,
+            "supplier": supplier,
+            "offer_id": offer_id,
+            "created_at": now,
+            "updated_at": now,
+        }
+        if extra_fields:
+            doc.update(extra_fields)
+
+        res = await self._col.insert_one(doc)
+        return str(res.inserted_id)

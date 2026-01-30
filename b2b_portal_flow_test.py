@@ -18,7 +18,7 @@ from datetime import datetime, timedelta, date
 from typing import Dict, Any, Optional
 
 # Configuration - Use production URL from frontend/.env
-BASE_URL = "https://tourism-ops.preview.emergentagent.com"
+BASE_URL = "https://alt-bayipro.preview.emergentagent.com"
 
 def login_agency_user() -> tuple[str, str, str]:
     """Login as agency user and return token, org_id, email"""

@@ -17,7 +17,7 @@ from datetime import datetime, timedelta
 from bson import ObjectId
 
 # Configuration - Use production URL from frontend/.env
-BASE_URL = "https://tourism-ops.preview.emergentagent.com"
+BASE_URL = "https://alt-bayipro.preview.emergentagent.com"
 
 def login_agency():
     """Login as agency user and return token, org_id, agency_id, email"""

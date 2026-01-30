@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 from typing import Dict, Any, List, Optional
 
 # Backend URL from frontend env
-BACKEND_URL = "https://tourism-ops.preview.emergentagent.com"
+BACKEND_URL = "https://alt-bayipro.preview.emergentagent.com"
 
 # Test credentials
 ADMIN_EMAIL = "admin@acenta.test"

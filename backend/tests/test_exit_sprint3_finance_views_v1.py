@@ -46,7 +46,7 @@ async def test_finance_exposure_view_v1_contract(test_db: Any, async_client: Asy
             {
                 "organization_id": org_a_id,
                 "email": email_a,
-                "roles": ["super_admin"],
+                "roles": ["agency_admin"],
                 "is_active": True,
                 "created_at": now,
                 "updated_at": now,
@@ -54,7 +54,7 @@ async def test_finance_exposure_view_v1_contract(test_db: Any, async_client: Asy
             {
                 "organization_id": org_b_id,
                 "email": email_b,
-                "roles": ["super_admin"],
+                "roles": ["agency_admin"],
                 "is_active": True,
                 "created_at": now,
                 "updated_at": now,

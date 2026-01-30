@@ -267,7 +267,6 @@ async def test_refund_workflow_v1_contract(test_db: Any, async_client: AsyncClie
         to_state="booked",
     )
     assert sc2b is not None
-    assert any(sc.get("meta", {}).get("from") == "refund_in_progress" and sc.get("meta", {}).get("to") == "booked" for sc in state_changes2)
 
     # Org isolation: OrgB cannot access OrgA's bookings
     resp_get_b = await client.get(

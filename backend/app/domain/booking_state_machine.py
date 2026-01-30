@@ -22,7 +22,8 @@ _ALLOWED_TRANSITIONS = {
     # Sprint 2: extended lifecycle
     "booked": {"cancel_requested", "modified", "refund_in_progress", "hold"},
     "modified": {"quoted"},
-    "refund_in_progress": {"refunded"},
+    # Refund workflow v1: allow both approve and reject from refund_in_progress
+    "refund_in_progress": {"refunded", "booked"},
     "refunded": set(),
     "hold": {"booked"},
     "cancel_requested": set(),

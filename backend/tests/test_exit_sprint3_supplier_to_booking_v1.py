@@ -157,4 +157,5 @@ async def test_supplier_search_to_booking_v1_contract(test_db: Any, async_client
         headers={"Authorization": f"Bearer {token_a}"},
     )
     assert resp_unsupported_supplier.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
-    assert resp_unsupported_supplier.json().get("detail") == "UNSUPPORTED_SUPPLIER"
+    body_unsup = resp_unsupported_supplier.json()
+    assert body_unsup.get("error", {}).get("message") == "UNSUPPORTED_SUPPLIER"

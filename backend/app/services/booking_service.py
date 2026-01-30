@@ -191,6 +191,11 @@ async def _transition_booking_state(
 
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="BOOKING_NOT_FOUND")
 
+    # Multi-currency hardening v1: transitions only allowed for TRY bookings
+    from app.services.currency_guard import ensure_try
+
+    ensure_try(doc.get("currency"))
+
     current_state = str(doc.get("state") or "")
 
     # Validate transition

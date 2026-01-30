@@ -465,7 +465,21 @@ async def minimal_search_seed(test_db, async_client: httpx.AsyncClient, agency_t
             "board": "BB",
             "base_net_price": 100.0,
         }
-        await test_db.rate_plans.insert_one(rp_doc)
+        from pymongo.errors import AutoReconnect
+        import asyncio
+
+        last_exc = None
+        for attempt in range(3):
+            try:
+                await test_db.rate_plans.insert_one(rp_doc)
+                last_exc = None
+                break
+            except AutoReconnect as exc:  # pragma: no cover - infra flakiness
+                last_exc = exc
+                await asyncio.sleep(0.1 * (attempt + 1))
+
+        if last_exc is not None:
+            raise last_exc
 
     # Seed minimal inventory/availability for inventory-based availability check
     # (b2b_pricing._price_item reads from `inventory` collection)

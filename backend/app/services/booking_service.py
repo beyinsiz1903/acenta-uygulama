@@ -183,7 +183,7 @@ async def transition_to_booked(
         return doc_out
 
     # If credit is sufficient, proceed with normal booked transition
-    return await _transition_booking_state(
+    booking = await _transition_booking_state(
         db,
         organization_id,
         booking_id,
@@ -191,6 +191,13 @@ async def transition_to_booked(
         actor=actor,
         request=request,
     )
+
+    # Evaluate simple risk rules (amount threshold) and emit audit alerts
+    from app.services.risk_rules_service import evaluate_booking_risk
+
+    await evaluate_booking_risk(db, organization_id, booking, actor, request)
+
+    return booking
 
 
 async def transition_to_modified(

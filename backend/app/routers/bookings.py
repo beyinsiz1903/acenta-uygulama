@@ -242,6 +242,11 @@ async def create_booking_from_offer_endpoint(
 
     payload_dict = payload.model_dump()
 
+    from app.services.currency_guard import ensure_try
+
+    # Multi-currency hardening v1: from-offer only supports TRY
+    ensure_try(payload_dict.get("currency"))
+
     if payload_dict.get("supplier") == "paximum":
         booking_doc = await create_booking_from_paximum_offer(
             db,

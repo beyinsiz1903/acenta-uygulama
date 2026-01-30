@@ -201,6 +201,58 @@ async def cancel_booking(booking_id: str, payload: BookingCancelIn, request: Req
     return serialize_doc(updated)
 
 
+class BookingFromOfferRequest(BaseModel):
+    supplier: str
+    offer_id: str
+    check_in: str
+    check_out: str
+    guests: int
+    city: str
+
+
+@router.post("/from-offer", status_code=status.HTTP_201_CREATED, dependencies=[Depends(require_roles(["agency_admin", "agency_agent"]))])
+async def create_booking_from_offer_endpoint(
+    payload: BookingFromOfferRequest,
+    request: Request,
+    db=Depends(get_db),
+    user=Depends(get_current_user),
+    org=Depends(get_current_org),
+) -> Dict[str, Any]:
+    """Create a quoted booking directly from a supplier offer.
+
+    Sprint 3 gate: Supplier search -> Booking v1 contract using mock_v1 supplier.
+    """
+
+    organization_id = str(org["id"])
+    actor = {
+        "actor_type": "user",
+        "actor_id": user["id"],
+        "email": user["email"],
+        "roles": user.get("roles", []),
+    }
+
+    from app.services.booking_service import create_booking_from_supplier_offer
+
+    booking_doc = await create_booking_from_supplier_offer(
+        db,
+        organization_id,
+        actor,
+        payload.model_dump(),
+        request,
+    )
+
+    # Map internal booking document to minimal gate response
+    return {
+        "booking_id": booking_doc["id"],
+        "state": booking_doc.get("state"),
+        "amount": booking_doc.get("amount"),
+        "currency": booking_doc.get("currency"),
+        "supplier": booking_doc.get("supplier"),
+        "offer_id": booking_doc.get("offer_id"),
+    }
+
+
+
 @router.post("", status_code=status.HTTP_201_CREATED, dependencies=[Depends(require_roles(["agency_admin", "agency_agent"]))])
 async def create_booking_draft_endpoint(
     payload: Dict[str, Any],

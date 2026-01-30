@@ -124,14 +124,8 @@ async def create_booking_from_paximum_offer(
 
     from app.errors import AppError
 
-    currency = (payload.get("currency") or "").upper()
-    if currency != "TRY":
-        # Reuse AppError to preserve global error envelope
-        raise AppError(
-            status_code=422,
-            code="UNSUPPORTED_CURRENCY",
-            message="Only TRY is supported for Paximum bookings in this phase.",
-        )
+    # Enforce TRY-only for Paximum bookings in this phase
+    ensure_try(payload.get("currency"))
 
     supplier = payload.get("supplier") or ""
     if supplier != "paximum":

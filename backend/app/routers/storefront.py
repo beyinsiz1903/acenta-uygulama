@@ -332,4 +332,10 @@ async def create_storefront_booking(payload: StorefrontBookingCreateIn, request:
         },
     )
 
+    # Pricing audit: idempotent emission based on booking flag
+    from app.services.pricing_audit_service import emit_pricing_audit_if_needed
+
+    await emit_pricing_audit_if_needed(db, booking_id, tenant_id, tenant_org_id, actor, request)
+
+
     return {"booking_id": booking_id, "state": "draft"}

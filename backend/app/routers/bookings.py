@@ -35,6 +35,8 @@ from app.services.booking_service import (
     transition_to_refund_rejected,
 )
 
+from app.tenant_context import forbid_cross_tenant_payload
+
 
 
 class BookingCancelIn(BaseModel):

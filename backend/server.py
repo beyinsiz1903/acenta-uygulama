@@ -113,6 +113,7 @@ from app.indexes.jobs_indexes import ensure_jobs_indexes
 from app.indexes.integration_hub_indexes import ensure_integration_hub_indexes
 from app.indexes.api_keys_indexes import ensure_api_keys_indexes
 from app.indexes.rate_limit_indexes import ensure_rate_limit_indexes
+from app.indexes.tenant_indexes import ensure_tenant_indexes
 from app.integration_sync_worker import integration_sync_loop
 from app.services.jobs import run_job_worker_loop
 

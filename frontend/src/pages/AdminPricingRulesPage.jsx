@@ -289,8 +289,8 @@ export default function AdminPricingRulesPage() {
       await api.delete(`/pricing/rules/${rule.id}`);
       await reload();
     } catch (err) {
-      // eslint-disable-next-line no-alert
       // Not: v1 için basit alert yeterli, ileride FriendlyError bileşeni ile değiştirilebilir.
+      // eslint-disable-next-line no-alert
       alert(apiErrorMessage(err));
     } finally {
       setDeleteLoadingId(null);

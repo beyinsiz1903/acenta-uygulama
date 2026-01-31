@@ -10,6 +10,8 @@ import { api, apiErrorMessage, getUser } from "../lib/api";
 import { Loader2 } from "lucide-react";
 import { makeIdempotencyKey } from "../lib/payments";
 
+import PricingTracePanel from "./PricingTracePanel";
+
 import EmptyState from "../components/EmptyState";
 import ErrorState from "../components/ErrorState";
 

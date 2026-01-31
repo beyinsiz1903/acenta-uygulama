@@ -131,7 +131,7 @@ def setup_tenant_for_org(org_id: str, tenant_key: str) -> str:
     tenant_doc = {
         "_id": tenant_id,
         "organization_id": org_id,
-        "key": tenant_key,
+        "tenant_key": tenant_key,  # Use tenant_key instead of key
         "name": f"Test Tenant {tenant_key}",
         "created_at": datetime.utcnow(),
         "updated_at": datetime.utcnow(),

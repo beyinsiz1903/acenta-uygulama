@@ -210,6 +210,7 @@ async def get_booking_pricing_trace(
 
     - Enforces organization scope
     - pricing and pricing_audit may both be null
+    - Stable shape for debugging UI
     """
 
     from bson import ObjectId
@@ -220,6 +221,7 @@ async def get_booking_pricing_trace(
     try:
         oid = ObjectId(booking_id)
     except Exception:
+        # Normalize to not_found AppError envelope
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="BOOKING_NOT_FOUND")
 
     booking = await db.bookings.find_one({"_id": oid, "organization_id": org_id})
@@ -244,10 +246,6 @@ async def get_booking_pricing_trace(
         "pricing": pricing,
         "pricing_audit": _ser(audit) if audit else None,
     }
-
-    )
-
-    return serialize_doc(updated)
 
 
 class BookingFromOfferRequest(BaseModel):

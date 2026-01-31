@@ -4,7 +4,7 @@
 # This script demonstrates the curl commands used to test the ops B2B booking detail endpoint
 # for finance_flags and credit_status functionality.
 
-BASE_URL="https://alt-bayipro.preview.emergentagent.com"
+BASE_URL="https://b2btravel.preview.emergentagent.com"
 
 echo "=== OPS B2B BOOKING DETAIL RISK INFO - CURL EXAMPLES ==="
 echo ""

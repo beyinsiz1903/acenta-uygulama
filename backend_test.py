@@ -31,7 +31,7 @@ import httpx
 import respx
 
 # Configuration - Use production URL from frontend/.env
-BASE_URL = "https://alt-bayipro.preview.emergentagent.com"
+BASE_URL = "https://b2btravel.preview.emergentagent.com"
 
 def get_mongo_client():
     """Get MongoDB client for direct database access"""

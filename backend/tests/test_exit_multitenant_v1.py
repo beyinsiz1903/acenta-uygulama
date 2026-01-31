@@ -37,7 +37,6 @@ async def test_tenant_resolve_by_header(test_db: Any, async_client: AsyncClient)
             "updated_at": now,
         }
     )
-    tenant_id = str(tenant.inserted_id)
 
     # Simple public storefront call that should require tenant
     resp = await client.get(

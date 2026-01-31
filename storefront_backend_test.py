@@ -138,7 +138,7 @@ def test_tenant_resolution():
         # 1. Test without X-Tenant-Key header -> expect 404 TENANT_NOT_FOUND
         print("1️⃣  Testing GET /storefront/health without X-Tenant-Key header...")
         
-        r = requests.get(f"{BASE_URL}/storefront/health")
+        r = requests.get(f"{BASE_URL}/api/storefront/health")
         
         print(f"   📋 Response status: {r.status_code}")
         print(f"   📋 Response body: {r.text}")

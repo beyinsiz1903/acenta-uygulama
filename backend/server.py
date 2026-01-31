@@ -135,6 +135,7 @@ async def lifespan(app: FastAPI):
     await ensure_integration_hub_indexes(db)
     await ensure_api_keys_indexes(db)
     await ensure_rate_limit_indexes(db)
+    await ensure_tenant_indexes(db)
 
     yield
 

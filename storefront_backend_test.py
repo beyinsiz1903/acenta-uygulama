@@ -139,7 +139,7 @@ def test_tenant_resolution():
         # 1. Test without X-Tenant-Key header -> expect 404 TENANT_NOT_FOUND
         print("1️⃣  Testing GET /api/storefront/health without X-Tenant-Key header...")
         
-        r = requests.get(f"{BASE_URL}/api/api/storefront/health")
+        r = requests.get(f"{BASE_URL}/api/storefront/health")
         
         print(f"   📋 Response status: {r.status_code}")
         print(f"   📋 Response body: {r.text}")
@@ -158,7 +158,7 @@ def test_tenant_resolution():
         print("2️⃣  Testing GET /api/storefront/health with valid X-Tenant-Key header...")
         
         headers = {"X-Tenant-Key": tenant_info["tenant_key"]}
-        r = requests.get(f"{BASE_URL}/api/api/storefront/health", headers=headers)
+        r = requests.get(f"{BASE_URL}/api/storefront/health", headers=headers)
         
         print(f"   📋 Response status: {r.status_code}")
         print(f"   📋 Response body: {r.text}")
@@ -199,7 +199,7 @@ def test_search_flow(tenant_info: Dict[str, str]) -> Dict[str, Any]:
             "guests": 2
         }
         
-        r = requests.get(f"{BASE_URL}/api/api/storefront/search", headers=headers, params=params)
+        r = requests.get(f"{BASE_URL}/api/storefront/search", headers=headers, params=params)
         
         print(f"   📋 Response status: {r.status_code}")
         print(f"   📋 Response body: {r.text}")

@@ -156,7 +156,7 @@ def test_tenant_resolution():
         print("2️⃣  Testing GET /storefront/health with valid X-Tenant-Key header...")
         
         headers = {"X-Tenant-Key": tenant_info["tenant_key"]}
-        r = requests.get(f"{BASE_URL}/storefront/health", headers=headers)
+        r = requests.get(f"{BASE_URL}/api/storefront/health", headers=headers)
         
         print(f"   📋 Response status: {r.status_code}")
         print(f"   📋 Response body: {r.text}")

@@ -262,8 +262,19 @@ export default function StorefrontSearchPage() {
           </form>
 
           {error && (
-            <div className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-[11px] text-destructive">
-              {error}
+            <div className="flex items-center justify-between gap-2 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-[11px] text-destructive">
+              <span>{error}</span>
+              {error.includes("Arama oturumu süresi doldu") && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="xs"
+                  className="h-7 text-[11px]"
+                  onClick={handleRetryExpired}
+                >
+                  Tekrar ara
+                </Button>
+              )}
             </div>
           )}
 

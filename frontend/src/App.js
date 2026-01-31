@@ -49,6 +49,7 @@ import AdminApprovalsPage from "./pages/AdminApprovalsPage";
 import AdminCatalogPage from "./pages/AdminCatalogPage";
 import AdminCatalogHotelsPage from "./pages/AdminCatalogHotelsPage";
 import AdminPricingPage from "./pages/AdminPricingPage";
+import AdminPricingRulesPage from "./pages/AdminPricingRulesPage";
 import AdminFunnelPage from "./pages/AdminFunnelPage";
 import AdminB2BFunnelPage from "./pages/AdminB2BFunnelPage";
 import AdminB2BAnnouncementsPage from "./pages/AdminB2BAnnouncementsPage";

@@ -142,13 +142,13 @@ async def lifespan(app: FastAPI):
     await close_mongo()
 
 
+from app.middleware.tenant_middleware import TenantResolutionMiddleware
+
 app = FastAPI(
     title=APP_NAME,
     version=APP_VERSION,
     lifespan=lifespan,
     openapi_url=f"{API_PREFIX}/openapi.json",
-from app.middleware.tenant_middleware import TenantResolutionMiddleware
-
 )
 
 # Correlation-Id middleware (request/response scoped) - should be early in the chain

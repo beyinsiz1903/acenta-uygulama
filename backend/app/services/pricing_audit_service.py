@@ -41,7 +41,7 @@ async def emit_pricing_audit_if_needed(
     applied_rule_ids = [r.get("rule_id") for r in applied_rules if r.get("rule_id")]
 
     meta = {
-        "tenant_id": tenant_id or str(doc.get("tenant_id")) if doc.get("tenant_id") else None,
+        "tenant_id": tenant_id,
         "organization_id": organization_id,
         "base_amount": base_amount,
         "final_amount": final_amount,

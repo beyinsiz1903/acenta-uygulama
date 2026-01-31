@@ -45,6 +45,7 @@ export default function PricingTracePanel({ bookingId }) {
 
   useEffect(() => {
     void load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bookingId]);
 
   const pricing = data?.pricing || null;

@@ -43,7 +43,7 @@ async def test_pricing_audit_emitted_for_storefront_booking(test_db: Any, async_
             "updated_at": now,
         }
     )
-    # tenant_id not needed explicitly in test; we assert via tenant_key
+    tenant_id = str(tenant.inserted_id)
 
     # Pricing rule: 10% markup
     await test_db.pricing_rules.insert_one(

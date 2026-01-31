@@ -915,10 +915,11 @@ def test_booking_pricing_trace():
         mongo_client = get_mongo_client()
         db = mongo_client.get_default_database()
         
-        booking_id_no_pricing = str(uuid.uuid4())
+        booking_oid_no_pricing = ObjectId()
+        booking_id_no_pricing = str(booking_oid_no_pricing)
         
         booking_doc_no_pricing = {
-            "_id": booking_id_no_pricing,
+            "_id": booking_oid_no_pricing,  # Use ObjectId instead of string
             "organization_id": admin_org_id,  # Use admin's org instead of test org
             "state": "draft",
             "amount": 500.0,

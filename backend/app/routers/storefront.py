@@ -274,8 +274,21 @@ async def create_storefront_booking(payload: StorefrontBookingCreateIn, request:
 
     total_amount_dec = Decimal(str(match["total_amount"].to_decimal()))
 
+    # Apply pricing engine v1
+    pricing = await calculate_price(
+        db,
+        base_amount=total_amount_dec,
+        organization_id=tenant_org_id,
+        currency="TRY",
+        tenant_id=tenant_id,
+        agency_id=None,
+        supplier=str(match.get("supplier")),
+        now=now,
+    )
+
     draft_payload: Dict[str, Any] = {
-        "amount": float(total_amount_dec),
+        # Store original base amount as string for legacy fields
+        "amount": str(pricing["base_amount"]),
         "currency": "TRY",
         "offer_ref": {
             "search_id": payload.search_id,
@@ -284,6 +297,15 @@ async def create_storefront_booking(payload: StorefrontBookingCreateIn, request:
         },
         "customer_email": email_lc,
         "customer_name": payload.customer.full_name,
+        "pricing": {
+            "base_amount": str(pricing["base_amount"]),
+            "final_amount": str(pricing["final_amount"]),
+            "commission_amount": str(pricing["commission_amount"]),
+            "margin_amount": str(pricing["margin_amount"]),
+            "currency": "TRY",
+            "applied_rules": pricing["applied_rules"],
+            "calculated_at": now,
+        },
     }
 
     # organization_id is always taken from tenant context, never from payload

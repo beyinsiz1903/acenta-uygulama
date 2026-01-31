@@ -198,6 +198,7 @@ async def cancel_booking(booking_id: str, payload: BookingCancelIn, request: Req
         before=booking,
         after=updated,
         meta={"reason": payload.reason},
+    )
 
 
 @router.get("/{booking_id}/pricing-trace")

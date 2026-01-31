@@ -42,7 +42,7 @@ def login_admin():
     """Login as admin user and return token, org_id, email"""
     r = requests.post(
         f"{BASE_URL}/api/auth/login",
-        json={"email": "admin@acenta.test", "password": "admin123"},
+        json={"email": "testadmin@acenta.test", "password": "testadmin123"},
     )
     assert r.status_code == 200, f"Admin login failed: {r.text}"
     data = r.json()

@@ -109,9 +109,8 @@ async def test_pricing_audit_emitted_for_storefront_booking(test_db: Any, async_
     log = logs[0]
     meta = log.get("meta") or {}
 
-    from bson import ObjectId
-
-    assert meta.get("tenant_id") == tenant_id
+    # tenant_id is recorded as the header value in storefront flow
+    assert meta.get("tenant_id") == "pricing-audit-tenant"
     assert meta.get("organization_id") == org_id
     assert meta.get("base_amount") == pricing.get("base_amount")
     assert meta.get("final_amount") == pricing.get("final_amount")

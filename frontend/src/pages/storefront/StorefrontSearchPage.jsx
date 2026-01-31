@@ -53,6 +53,23 @@ export default function StorefrontSearchPage() {
   const [tenantLoading, setTenantLoading] = useState(false);
   const [tenantError, setTenantError] = useState("");
 
+  // Apply simple theme CSS variables based on tenant.theme_config
+  useEffect(() => {
+    if (!tenant || !tenant.theme_config) return;
+    const root = document.documentElement;
+    const cfg = tenant.theme_config || {};
+    if (cfg.primary_color) {
+      root.style.setProperty("--sf-primary", cfg.primary_color);
+    }
+    if (cfg.secondary_color) {
+      root.style.setProperty("--sf-secondary", cfg.secondary_color);
+    }
+    if (cfg.font_family) {
+      root.style.setProperty("--sf-font", cfg.font_family);
+    }
+    root.setAttribute("data-storefront-tenant", tenant.tenant_key || "");
+  }, [tenant]);
+
   const [city, setCity] = useState("IST");
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");

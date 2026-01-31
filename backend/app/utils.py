@@ -30,6 +30,10 @@ def serialize_doc(doc: Any) -> Any:
     if isinstance(doc, ObjectId):
         return str(doc)
 
+    if isinstance(doc, Decimal128):
+        # Normalize Decimal128 to string for JSON responses
+        return str(doc.to_decimal())
+
     if isinstance(doc, datetime):
         return doc.isoformat()
 

@@ -124,19 +124,17 @@ export default function StorefrontSearchPage() {
     }
   }, [tenantKey]);
 
-  const handleSearch = async (e) => {
-    e.preventDefault();
+  const runSearch = async (paramsObj) => {
     if (!tenantKey) return;
-
     setLoading(true);
     setError("");
     setOffers([]);
     try {
       const params = new URLSearchParams();
-      if (checkIn) params.set("check_in", checkIn);
-      if (checkOut) params.set("check_out", checkOut);
-      if (city) params.set("city", city);
-      if (guests) params.set("guests", String(guests));
+      if (paramsObj.check_in) params.set("check_in", paramsObj.check_in);
+      if (paramsObj.check_out) params.set("check_out", paramsObj.check_out);
+      if (paramsObj.city) params.set("city", paramsObj.city);
+      if (paramsObj.guests) params.set("guests", String(paramsObj.guests));
 
       const res = await api.get(`/storefront/search?${params.toString()}`, {
         headers: { "X-Tenant-Key": tenantKey },
@@ -146,12 +144,17 @@ export default function StorefrontSearchPage() {
       setOffers(data.offers || []);
       const next = new URLSearchParams(searchParams);
       if (data.search_id) next.set("search_id", data.search_id);
+      next.set("city", paramsObj.city || "");
+      if (paramsObj.check_in) next.set("check_in", paramsObj.check_in);
+      if (paramsObj.check_out) next.set("check_out", paramsObj.check_out);
+      next.set("guests", String(paramsObj.guests || ""));
       setSearchParams(next, { replace: true });
+      setLastSearchParams(paramsObj);
     } catch (err) {
       const resp = err?.response?.data;
       const code = resp?.error?.code;
       if (code === "SESSION_EXPIRED") {
-        setError("Arama oturumu süresi doldu, lütfen tekrar arama yapın.");
+        setError("Arama oturumu süresi doldu. Lütfen tekrar arama yapın.");
       } else if (code === "TENANT_NOT_FOUND") {
         setError("Bu site bulunamadı. Lütfen geçerli bir bağlantı kullanın.");
       } else {

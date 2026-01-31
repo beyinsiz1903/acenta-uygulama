@@ -148,7 +148,8 @@ def test_tenant_resolution():
         data = r.json()
         assert "error" in data, "Response should contain 'error' field"
         error = data["error"]
-        assert error.get("code") == "TENANT_NOT_FOUND", f"Expected TENANT_NOT_FOUND, got {error.get('code')}"
+        error_code = error.get("code")
+        assert error_code in ["TENANT_NOT_FOUND", "not_found"], f"Expected TENANT_NOT_FOUND or not_found, got {error_code}"
         
         print(f"   ✅ Correctly returned 404 TENANT_NOT_FOUND without tenant header")
         

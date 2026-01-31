@@ -114,6 +114,7 @@ from app.indexes.integration_hub_indexes import ensure_integration_hub_indexes
 from app.indexes.api_keys_indexes import ensure_api_keys_indexes
 from app.indexes.rate_limit_indexes import ensure_rate_limit_indexes
 from app.indexes.tenant_indexes import ensure_tenant_indexes
+from app.indexes.storefront_indexes import ensure_storefront_indexes
 from app.integration_sync_worker import integration_sync_loop
 from app.services.jobs import run_job_worker_loop
 
@@ -136,6 +137,7 @@ async def lifespan(app: FastAPI):
     await ensure_api_keys_indexes(db)
     await ensure_rate_limit_indexes(db)
     await ensure_tenant_indexes(db)
+    await ensure_storefront_indexes(db)
 
     yield
 
@@ -156,6 +158,8 @@ app.add_middleware(CorrelationIdMiddleware)
 
 # Tenant resolution middleware (header/host/subdomain based)
 app.add_middleware(TenantResolutionMiddleware)
+
+from app.routers.storefront import router as storefront_router
 
 # CORS configuration
 app.add_middleware(
@@ -253,6 +257,8 @@ app.include_router(public_cms_pages_router)     # No prefix - router has its own
 app.include_router(public_partners_router)      # No prefix - router has its own
 app.include_router(search_router, prefix=API_PREFIX)
 app.include_router(suppliers_router, prefix=API_PREFIX)
+app.include_router(storefront_router)
+
 app.include_router(suppliers_paximum_router, prefix=API_PREFIX)
 app.include_router(vouchers_router, prefix=API_PREFIX)
 app.include_router(web_booking_router, prefix=API_PREFIX)

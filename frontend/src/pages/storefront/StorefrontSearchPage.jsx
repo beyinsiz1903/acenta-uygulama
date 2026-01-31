@@ -165,6 +165,11 @@ export default function StorefrontSearchPage() {
     }
   };
 
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    await runSearch({ city, check_in: checkIn, check_out: checkOut, guests });
+  };
+
   const handleSelectOffer = (offer) => {
     if (!tenantKey || !searchId) return;
     const qp = new URLSearchParams();

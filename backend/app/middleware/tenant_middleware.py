@@ -76,7 +76,7 @@ class TenantResolutionMiddleware(BaseHTTPMiddleware):
             request.state.tenant_resolved = False
 
         # Enforce storefront tenant requirement
-        if path.startswith("/storefront/") and not getattr(request.state, "tenant_resolved", False):
+        if (path.startswith("/storefront/") or path.startswith("/api/storefront/")) and not getattr(request.state, "tenant_resolved", False):
             from fastapi.responses import JSONResponse
 
             return JSONResponse(

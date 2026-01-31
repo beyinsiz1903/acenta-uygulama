@@ -36,7 +36,8 @@ async def calculate_price(
     # TRY-only enforcement
     ensure_try(currency)
 
-    now = now or datetime.utcnow()
+    # Normalize now to naive UTC
+    now = (now or datetime.utcnow()).replace(tzinfo=None)
 
     # Fetch rules for organization; further filtering done in Python for clarity
     cursor = db.pricing_rules.find({"organization_id": organization_id})

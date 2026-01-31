@@ -62,6 +62,7 @@ from app.routers.crm_activities import router as crm_activities_router
 from app.routers.crm_events import router as crm_events_router
 from app.routers.reservations import router as reservations_router
 from app.routers.pricing_quote import router as pricing_quote_router
+from app.routers.pricing import router as pricing_router
 from app.routers.admin_funnel import router as admin_funnel_router
 
 from app.routers.theme import router as theme_router

@@ -82,6 +82,18 @@ export default function StorefrontSearchPage() {
 
   useEffect(() => {
     if (!tenantKey) return;
+
+    const cacheKey = `storefront:tenant:${tenantKey}`;
+    const cached = window.sessionStorage.getItem(cacheKey);
+    if (cached) {
+      try {
+        const parsed = JSON.parse(cached);
+        setTenant(parsed);
+      } catch {
+        // ignore parse errors
+      }
+    }
+
     async function loadTheme() {
       setTenantLoading(true);
       setTenantError("");
@@ -89,7 +101,11 @@ export default function StorefrontSearchPage() {
         const res = await api.get("/storefront/health", {
           headers: { "X-Tenant-Key": tenantKey },
         });
-        setTenant(res.data || null);
+        const data = res.data || null;
+        setTenant(data);
+        if (data) {
+          window.sessionStorage.setItem(cacheKey, JSON.stringify(data));
+        }
       } catch (err) {
         const msg = apiErrorMessage(err);
         setTenantError(msg);
@@ -97,7 +113,9 @@ export default function StorefrontSearchPage() {
         setTenantLoading(false);
       }
     }
-    void loadTheme();
+    if (!cached) {
+      void loadTheme();
+    }
   }, [tenantKey]);
 
   const handleSearch = async (e) => {

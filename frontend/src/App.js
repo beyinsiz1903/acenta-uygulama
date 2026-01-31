@@ -26,6 +26,9 @@ import PublicCMSPage from "./pages/public/PublicCMSPage";
 import PublicCampaignPage from "./pages/public/PublicCampaignPage";
 import PublicPartnerApplyPage from "./pages/public/PublicPartnerApplyPage";
 import PublicHomePage from "./pages/PublicHomePage";
+import StorefrontSearchPage from "./pages/storefront/StorefrontSearchPage";
+import StorefrontOfferPage from "./pages/storefront/StorefrontOfferPage";
+import StorefrontCheckoutPage from "./pages/storefront/StorefrontCheckoutPage";
 
 import HotelLayout from "./layouts/HotelLayout";
 import AdminAgenciesPage from "./pages/AdminAgenciesPage";

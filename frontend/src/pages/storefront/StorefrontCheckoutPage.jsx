@@ -64,6 +64,11 @@ export default function StorefrontCheckoutPage() {
       const code = resp?.error?.code;
       if (code === "SESSION_EXPIRED") {
         setError("Arama oturumu süresi doldu. Lütfen yeniden arama yapın.");
+        const qp = new URLSearchParams();
+        qp.set("search_id", searchId);
+        qp.set("offer_id", offerId);
+        navigate(`/s/${encodeURIComponent(tenantKey)}/search?${qp.toString()}`);
+        return;
       } else if (code === "INVALID_OFFER") {
         setError("Bu teklif artık geçerli değil. Lütfen yeni bir teklif seçin.");
       } else {

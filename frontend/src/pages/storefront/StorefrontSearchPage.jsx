@@ -170,6 +170,10 @@ export default function StorefrontSearchPage() {
     await runSearch({ city, check_in: checkIn, check_out: checkOut, guests });
   };
 
+  const handleRetryExpired = async () => {
+    await runSearch(lastSearchParams);
+  };
+
   const handleSelectOffer = (offer) => {
     if (!tenantKey || !searchId) return;
     const qp = new URLSearchParams();

@@ -88,8 +88,6 @@ async def calculate_price(
         value_dec = Decimal(str(value_raw))
         stackable = bool(r.get("stackable", True))
 
-        before = current
-
         if rule_type == "markup_pct":
             current = _q2(current * (Decimal("1.00") + value_dec / Decimal("100")))
         elif rule_type == "markup_fixed":

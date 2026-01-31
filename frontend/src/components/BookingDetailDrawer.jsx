@@ -741,6 +741,18 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
                 </div>
               </div>
 
+            <button
+              type="button"
+              className={
+                activeTab === "pricing_trace"
+                  ? "border-b-2 border-primary pb-2 font-medium"
+                  : "pb-2 text-muted-foreground"
+              }
+              onClick={() => setActiveTab("pricing_trace")}
+            >
+              Pricing Trace
+            </button>
+
             </div>
             <StatusBadge status_tr={booking?.status_tr} status={booking?.status} />
           </div>

@@ -163,4 +163,5 @@ async def test_cross_tenant_forbidden_on_payload_org_id_mismatch(test_db: Any, a
 
     assert resp.status_code == status.HTTP_403_FORBIDDEN
     body = resp.json()
-    assert body.get("detail") == "CROSS_TENANT_FORBIDDEN"
+    err = body.get("error", {})
+    assert err.get("message") == "CROSS_TENANT_FORBIDDEN"

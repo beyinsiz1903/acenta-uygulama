@@ -197,7 +197,7 @@ def test_search_flow(tenant_info: Dict[str, str]) -> Dict[str, Any]:
             "guests": 2
         }
         
-        r = requests.get(f"{BASE_URL}/storefront/search", headers=headers, params=params)
+        r = requests.get(f"{BASE_URL}/api/storefront/search", headers=headers, params=params)
         
         print(f"   📋 Response status: {r.status_code}")
         print(f"   📋 Response body: {r.text}")

@@ -263,10 +263,9 @@ async def test_storefront_booking_persists_pricing(test_db: Any, async_client: A
     booking_id = data_book["booking_id"]
 
     # 3) Read booking directly from DB to inspect pricing field
-    booking_doc = await test_db.bookings.find_one({"id": booking_id})
-    if not booking_doc:
-        # Some code paths use _id as primary identifier
-        booking_doc = await test_db.bookings.find_one({"_id": booking_id})
+    from bson import ObjectId
+
+    booking_doc = await test_db.bookings.find_one({"_id": ObjectId(booking_id)})
 
     assert booking_doc is not None
     pricing_block = booking_doc.get("pricing")

@@ -88,6 +88,8 @@ async def test_pricing_audit_emitted_for_storefront_booking(test_db: Any, async_
     booking_id = data_book["booking_id"]
 
     # 3) Assert booking.pricing exists
+    from bson import ObjectId
+
     booking_doc = await test_db.bookings.find_one({"_id": ObjectId(booking_id)})
     assert booking_doc is not None
     pricing = booking_doc.get("pricing") or {}

@@ -270,6 +270,7 @@ app.include_router(crm_deals_router)
 app.include_router(crm_tasks_router)
 app.include_router(crm_activities_router)
 app.include_router(pricing_quote_router)
+app.include_router(pricing_router, prefix=API_PREFIX)
 
 app.include_router(crm_events_router)
 app.include_router(reservations_router, prefix=API_PREFIX)

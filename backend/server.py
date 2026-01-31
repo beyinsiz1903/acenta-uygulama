@@ -145,10 +145,15 @@ app = FastAPI(
     version=APP_VERSION,
     lifespan=lifespan,
     openapi_url=f"{API_PREFIX}/openapi.json",
+from app.middleware.tenant_middleware import TenantResolutionMiddleware
+
 )
 
 # Correlation-Id middleware (request/response scoped) - should be early in the chain
 app.add_middleware(CorrelationIdMiddleware)
+
+# Tenant resolution middleware (header/host/subdomain based)
+app.add_middleware(TenantResolutionMiddleware)
 
 # CORS configuration
 app.add_middleware(

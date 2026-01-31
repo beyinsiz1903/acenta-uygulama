@@ -21,7 +21,7 @@ from app.services.pricing_audit_service import emit_pricing_audit_if_needed
 async def test_pricing_audit_emitted_for_storefront_booking(test_db: Any, async_client: AsyncClient) -> None:
     """Creating a storefront booking should emit a single PRICING_RULE_APPLIED event."""
 
-    client: AsyncClient = async_client
+    # client not needed; we invoke helper directly
     now = now_utc()
 
     # Org + tenant
@@ -123,7 +123,7 @@ async def test_pricing_audit_emitted_for_storefront_booking(test_db: Any, async_
 async def test_pricing_audit_idempotent_helper(test_db: Any, async_client: AsyncClient) -> None:
     """emit_pricing_audit_if_needed must be idempotent per booking."""
 
-    client: AsyncClient = async_client
+    # client not needed; we invoke helper directly
     now = now_utc()
 
     # Org + tenant

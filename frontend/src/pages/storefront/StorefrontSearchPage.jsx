@@ -120,15 +120,6 @@ export default function StorefrontSearchPage() {
       }
     }
     if (!cached) {
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    await runSearch({ city, check_in: checkIn, check_out: checkOut, guests });
-  };
-
-  const handleRetryExpired = async () => {
-    await runSearch(lastSearchParams);
-  };
-
       void loadTheme();
     }
   }, [tenantKey]);

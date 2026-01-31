@@ -13,6 +13,7 @@ from pydantic import BaseModel, EmailStr
 from app.db import get_db
 from app.services.suppliers.mock_supplier_service import search_mock_offers
 from app.utils import now_utc
+from app.services.pricing_service import calculate_price
 
 router = APIRouter(prefix="/storefront", tags=["storefront"])
 

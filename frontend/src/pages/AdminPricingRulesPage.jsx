@@ -85,6 +85,7 @@ function usePricingRules(initialFilters) {
 
   useEffect(() => {
     void load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters.active_only, filters.supplier, filters.rule_type]);
 
   return {

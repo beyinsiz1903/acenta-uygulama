@@ -88,7 +88,7 @@ def setup_demo_tenant() -> Dict[str, str]:
         
         print(f"   ✅ Created new tenant: {tenant_key} (ID: {tenant_id})")
     
-    mongo_client.close()
+    mongo_client.client.close()
     
     return {
         "tenant_key": tenant_key,
@@ -119,7 +119,7 @@ def cleanup_test_data(tenant_info: Dict[str, str]):
             if result.deleted_count > 0:
                 print(f"   🧹 Cleaned {result.deleted_count} documents from {collection_name}")
         
-        mongo_client.close()
+        mongo_client.client.close()
         print(f"   ✅ Cleanup completed for tenant {tenant_info['tenant_key']}")
         
     except Exception as e:

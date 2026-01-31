@@ -24,7 +24,7 @@ async def test_tenant_resolve_by_header(test_db: Any, async_client: AsyncClient)
     )
     org_id = str(org.inserted_id)
 
-    tenant = await test_db.tenants.insert_one(
+    await test_db.tenants.insert_one(
         {
             "tenant_key": "tenant-a",
             "organization_id": org_id,

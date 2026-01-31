@@ -33,7 +33,8 @@ BASE_URL = "https://b2btravel.preview.emergentagent.com"
 def get_mongo_client():
     """Get MongoDB client for direct database access"""
     mongo_url = "mongodb://localhost:27017"
-    return MongoClient(mongo_url)
+    client = MongoClient(mongo_url)
+    return client["test_database"]
 
 def setup_demo_tenant() -> Dict[str, str]:
     """Setup or reuse demo tenant for testing"""

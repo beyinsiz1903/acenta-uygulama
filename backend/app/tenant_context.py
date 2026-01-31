@@ -67,6 +67,10 @@ def forbid_cross_tenant_payload(payload: Dict[str, Any], request: Request) -> No
     if not tenant_org_id:
         return
 
+    # Backward-compatible behavior: if caller does not send organization_id,
+    # we do not force it here. Enforcement happens primarily when queries are
+    # built via enforce_tenant_org(). If a client does send organization_id
+    # and it mismatches the tenant, we forbid.
     body_org = payload.get("organization_id")
     if body_org is not None and body_org != tenant_org_id:
         raise HTTPException(

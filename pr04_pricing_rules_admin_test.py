@@ -917,7 +917,7 @@ def test_booking_pricing_trace():
         
         booking_doc_no_pricing = {
             "_id": booking_id_no_pricing,
-            "organization_id": admin_org_id,
+            "organization_id": admin_org_id,  # Use admin's org instead of test org
             "state": "draft",
             "amount": 500.0,
             "currency": "TRY",

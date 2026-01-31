@@ -1011,6 +1011,10 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
                   <Separator />
 
                   <div className="text-xs text-muted-foreground">
+          {activeTab === "pricing_trace" && (
+            <PricingTracePanel bookingId={bookingId} />
+          )}
+
                     <p>
                       Bu görünüm, voucher ve email metinleri için normalize edilmiş{' '}
                       rezervasyon özetidir.

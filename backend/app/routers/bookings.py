@@ -299,6 +299,9 @@ async def create_booking_draft_endpoint(
 ) -> Dict[str, Any]:
     """Create a booking in draft state (Phase 1 backoffice-only)."""
 
+    # Enforce tenant/org consistency if a tenant context is present
+    forbid_cross_tenant_payload(payload, request)
+
     organization_id = str(org["id"])
     actor = {
         "actor_type": "user",

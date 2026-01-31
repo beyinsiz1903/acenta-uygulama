@@ -802,11 +802,13 @@ def test_booking_pricing_trace():
         mongo_client = get_mongo_client()
         db = mongo_client.get_default_database()
         
-        booking_id = str(uuid.uuid4())
+        from bson import ObjectId
+        booking_oid = ObjectId()
+        booking_id = str(booking_oid)
         
         # Create booking document with pricing
         booking_doc = {
-            "_id": booking_id,
+            "_id": booking_oid,  # Use ObjectId instead of string
             "organization_id": admin_org_id,  # Use admin's org instead of test org
             "state": "booked",
             "amount": 1000.0,

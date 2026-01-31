@@ -290,7 +290,6 @@ export default function AdminPricingRulesPage() {
       await reload();
     } catch (err) {
       // Not: v1 için basit alert yeterli, ileride FriendlyError bileşeni ile değiştirilebilir.
-      // eslint-disable-next-line no-alert
       alert(apiErrorMessage(err));
     } finally {
       setDeleteLoadingId(null);

@@ -250,7 +250,7 @@ async def update_pricing_rule(
 
 
 @router.delete("/{rule_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_pricing_rule(rule_id: str, user=Depends(get_current_user)) -> None:
+async def delete_pricing_rule(rule_id: str, user=Depends(get_current_user)) -> None:  # noqa: D401
     db = await get_db()
     org_id = user["organization_id"]
 

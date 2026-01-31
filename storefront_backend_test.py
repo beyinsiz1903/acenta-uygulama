@@ -100,7 +100,7 @@ def cleanup_test_data(tenant_info: Dict[str, str]):
     """Clean up test data after testing"""
     try:
         mongo_client = get_mongo_client()
-        db = mongo_client.get_default_database()
+        db = mongo_client
         
         tenant_id = tenant_info["tenant_id"]
         tenant_org_id = tenant_info["tenant_org_id"]

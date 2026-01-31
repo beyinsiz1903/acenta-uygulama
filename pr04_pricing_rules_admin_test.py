@@ -807,7 +807,7 @@ def test_booking_pricing_trace():
         # Create booking document with pricing
         booking_doc = {
             "_id": booking_id,
-            "organization_id": admin_org_id,
+            "organization_id": admin_org_id,  # Use admin's org instead of test org
             "state": "booked",
             "amount": 1000.0,
             "currency": "TRY",
@@ -829,12 +829,12 @@ def test_booking_pricing_trace():
         
         # Create audit log for pricing
         audit_doc = {
-            "organization_id": admin_org_id,
+            "organization_id": admin_org_id,  # Use admin's org instead of test org
             "action": "PRICING_RULE_APPLIED",
             "target": {"type": "booking", "id": booking_id},
             "meta": {
                 "tenant_id": None,
-                "organization_id": admin_org_id,
+                "organization_id": admin_org_id,  # Use admin's org instead of test org
                 "base_amount": "900.00",
                 "final_amount": "1000.00",
                 "currency": "TRY",

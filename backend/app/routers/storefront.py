@@ -164,7 +164,12 @@ async def _load_session_or_expired(request: Request, search_id: str) -> Dict[str
 
     now = now_utc()
     expires_at: datetime = session.get("expires_at")
-    if expires_at and expires_at < now:
+    if expires_at:
+        # Normalize to naive UTC if stored as aware, to avoid comparison issues
+        if expires_at.tzinfo is not None:
+            expires_at = expires_at.astimezone(timezone.utc).replace(tzinfo=None)
+        now_naive = now.replace(tzinfo=None)
+        if expires_at < now_naive:
         # Optional cleanup
         await db.storefront_sessions.delete_one({"_id": session["_id"]})
         from app.errors import AppError

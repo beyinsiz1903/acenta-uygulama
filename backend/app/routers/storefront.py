@@ -170,15 +170,15 @@ async def _load_session_or_expired(request: Request, search_id: str) -> Dict[str
             expires_at = expires_at.astimezone(timezone.utc).replace(tzinfo=None)
         now_naive = now.replace(tzinfo=None)
         if expires_at < now_naive:
-        # Optional cleanup
-        await db.storefront_sessions.delete_one({"_id": session["_id"]})
-        from app.errors import AppError
+            # Optional cleanup
+            await db.storefront_sessions.delete_one({"_id": session["_id"]})
+            from app.errors import AppError
 
-        raise AppError(
-            status_code=status.HTTP_410_GONE,
-            code="SESSION_EXPIRED",
-            message="Storefront session expired.",
-        )
+            raise AppError(
+                status_code=status.HTTP_410_GONE,
+                code="SESSION_EXPIRED",
+                message="Storefront session expired.",
+            )
 
     return session
 

@@ -261,7 +261,7 @@ app.include_router(public_cms_pages_router)     # No prefix - router has its own
 app.include_router(public_partners_router)      # No prefix - router has its own
 app.include_router(search_router, prefix=API_PREFIX)
 app.include_router(suppliers_router, prefix=API_PREFIX)
-app.include_router(storefront_router)
+app.include_router(storefront_router, prefix=API_PREFIX)
 
 app.include_router(suppliers_paximum_router, prefix=API_PREFIX)
 app.include_router(vouchers_router, prefix=API_PREFIX)

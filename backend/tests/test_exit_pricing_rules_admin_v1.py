@@ -157,7 +157,8 @@ async def test_pricing_rules_crud_and_listing_active_only(test_db: Any, async_cl
 
     # 6) Delete rule2 (hard delete) and ensure it disappears from listing
     resp_del = await client.delete(f"/api/pricing/rules/{rule2['id']}", headers=base_headers)
-    assert resp_del.status_code == status.HTTP_204_NO_CONTENT, resp_del.text
+    assert resp_del.status_code == status.HTTP_200_OK, resp_del.text
+    assert resp_del.json().get("ok") is True
 
     # List again: only rule1 remains
     resp_list_after_del = await client.get("/api/pricing/rules", headers=base_headers)

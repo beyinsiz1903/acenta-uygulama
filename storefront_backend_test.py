@@ -7,15 +7,15 @@ to validate backend functionality now that they are exercised from the new UI.
 
 Test Scenarios:
 1. Tenant resolution for storefront
-   - GET /storefront/health without X-Tenant-Key -> expect 404 TENANT_NOT_FOUND
-   - GET /storefront/health with valid X-Tenant-Key -> expect 200 with tenant info
+   - GET /api/storefront/health without X-Tenant-Key -> expect 404 TENANT_NOT_FOUND
+   - GET /api/storefront/health with valid X-Tenant-Key -> expect 200 with tenant info
 2. Search flow
-   - GET /storefront/search with valid tenant -> expect 200 with search_id and offers
+   - GET /api/storefront/search with valid tenant -> expect 200 with search_id and offers
 3. Offer detail
-   - GET /storefront/offers/{offer_id}?search_id={search_id} -> expect 200 with offer details
+   - GET /api/storefront/offers/{offer_id}?search_id={search_id} -> expect 200 with offer details
    - Test invalid search_id -> expect 410 SESSION_EXPIRED
 4. Booking creation
-   - POST /storefront/bookings with valid data -> expect 201 with booking_id
+   - POST /api/storefront/bookings with valid data -> expect 201 with booking_id
    - Test invalid offer_id -> expect 422 INVALID_OFFER
 """
 
@@ -128,7 +128,7 @@ def test_tenant_resolution():
     """Test 1: Tenant resolution for storefront"""
     print("\n" + "=" * 80)
     print("TEST 1: TENANT RESOLUTION FOR STOREFRONT")
-    print("Testing GET /storefront/health with and without X-Tenant-Key header")
+    print("Testing GET /api/storefront/health with and without X-Tenant-Key header")
     print("=" * 80 + "\n")
     
     # Setup demo tenant
@@ -136,9 +136,9 @@ def test_tenant_resolution():
     
     try:
         # 1. Test without X-Tenant-Key header -> expect 404 TENANT_NOT_FOUND
-        print("1️⃣  Testing GET /storefront/health without X-Tenant-Key header...")
+        print("1️⃣  Testing GET /api/storefront/health without X-Tenant-Key header...")
         
-        r = requests.get(f"{BASE_URL}/api/storefront/health")
+        r = requests.get(f"{BASE_URL}/api/api/storefront/health")
         
         print(f"   📋 Response status: {r.status_code}")
         print(f"   📋 Response body: {r.text}")
@@ -153,10 +153,10 @@ def test_tenant_resolution():
         print(f"   ✅ Correctly returned 404 TENANT_NOT_FOUND without tenant header")
         
         # 2. Test with valid X-Tenant-Key header -> expect 200 with tenant info
-        print("2️⃣  Testing GET /storefront/health with valid X-Tenant-Key header...")
+        print("2️⃣  Testing GET /api/storefront/health with valid X-Tenant-Key header...")
         
         headers = {"X-Tenant-Key": tenant_info["tenant_key"]}
-        r = requests.get(f"{BASE_URL}/api/storefront/health", headers=headers)
+        r = requests.get(f"{BASE_URL}/api/api/storefront/health", headers=headers)
         
         print(f"   📋 Response status: {r.status_code}")
         print(f"   📋 Response body: {r.text}")
@@ -182,12 +182,12 @@ def test_search_flow(tenant_info: Dict[str, str]) -> Dict[str, Any]:
     """Test 2: Search flow"""
     print("\n" + "=" * 80)
     print("TEST 2: SEARCH FLOW")
-    print("Testing GET /storefront/search with valid tenant header")
+    print("Testing GET /api/storefront/search with valid tenant header")
     print("=" * 80 + "\n")
     
     try:
-        # Test GET /storefront/search with simple params
-        print("1️⃣  Testing GET /storefront/search with search parameters...")
+        # Test GET /api/storefront/search with simple params
+        print("1️⃣  Testing GET /api/storefront/search with search parameters...")
         
         headers = {"X-Tenant-Key": tenant_info["tenant_key"]}
         params = {
@@ -197,7 +197,7 @@ def test_search_flow(tenant_info: Dict[str, str]) -> Dict[str, Any]:
             "guests": 2
         }
         
-        r = requests.get(f"{BASE_URL}/api/storefront/search", headers=headers, params=params)
+        r = requests.get(f"{BASE_URL}/api/api/storefront/search", headers=headers, params=params)
         
         print(f"   📋 Response status: {r.status_code}")
         print(f"   📋 Response body: {r.text}")
@@ -249,7 +249,7 @@ def test_offer_detail(tenant_info: Dict[str, str], search_data: Dict[str, Any]):
     """Test 3: Offer detail"""
     print("\n" + "=" * 80)
     print("TEST 3: OFFER DETAIL")
-    print("Testing GET /storefront/offers/{offer_id}?search_id={search_id}")
+    print("Testing GET /api/storefront/offers/{offer_id}?search_id={search_id}")
     print("=" * 80 + "\n")
     
     try:
@@ -257,12 +257,12 @@ def test_offer_detail(tenant_info: Dict[str, str], search_data: Dict[str, Any]):
         offer_id = search_data["offer_id"]
         
         # 1. Test valid offer detail request
-        print("1️⃣  Testing GET /storefront/offers/{offer_id} with valid search_id...")
+        print("1️⃣  Testing GET /api/storefront/offers/{offer_id} with valid search_id...")
         
         headers = {"X-Tenant-Key": tenant_info["tenant_key"]}
         params = {"search_id": search_id}
         
-        r = requests.get(f"{BASE_URL}/storefront/offers/{offer_id}", headers=headers, params=params)
+        r = requests.get(f"{BASE_URL}/api/storefront/offers/{offer_id}", headers=headers, params=params)
         
         print(f"   📋 Response status: {r.status_code}")
         print(f"   📋 Response body: {r.text}")
@@ -283,12 +283,12 @@ def test_offer_detail(tenant_info: Dict[str, str], search_data: Dict[str, Any]):
         print(f"   ✅ Offer detail retrieved: id={data['offer_id']}, supplier={data['supplier']}, amount={data['total_amount']} {data['currency']}")
         
         # 2. Test invalid search_id -> expect 410 SESSION_EXPIRED
-        print("2️⃣  Testing GET /storefront/offers/{offer_id} with invalid search_id...")
+        print("2️⃣  Testing GET /api/storefront/offers/{offer_id} with invalid search_id...")
         
         invalid_search_id = str(uuid.uuid4())
         params = {"search_id": invalid_search_id}
         
-        r = requests.get(f"{BASE_URL}/storefront/offers/{offer_id}", headers=headers, params=params)
+        r = requests.get(f"{BASE_URL}/api/storefront/offers/{offer_id}", headers=headers, params=params)
         
         print(f"   📋 Response status: {r.status_code}")
         print(f"   📋 Response body: {r.text}")
@@ -312,7 +312,7 @@ def test_booking_creation(tenant_info: Dict[str, str], search_data: Dict[str, An
     """Test 4: Booking creation"""
     print("\n" + "=" * 80)
     print("TEST 4: BOOKING CREATION")
-    print("Testing POST /storefront/bookings with valid and invalid data")
+    print("Testing POST /api/storefront/bookings with valid and invalid data")
     print("=" * 80 + "\n")
     
     try:
@@ -320,7 +320,7 @@ def test_booking_creation(tenant_info: Dict[str, str], search_data: Dict[str, An
         offer_id = search_data["offer_id"]
         
         # 1. Test valid booking creation
-        print("1️⃣  Testing POST /storefront/bookings with valid data...")
+        print("1️⃣  Testing POST /api/storefront/bookings with valid data...")
         
         headers = {"X-Tenant-Key": tenant_info["tenant_key"]}
         payload = {
@@ -333,7 +333,7 @@ def test_booking_creation(tenant_info: Dict[str, str], search_data: Dict[str, An
             }
         }
         
-        r = requests.post(f"{BASE_URL}/storefront/bookings", headers=headers, json=payload)
+        r = requests.post(f"{BASE_URL}/api/storefront/bookings", headers=headers, json=payload)
         
         print(f"   📋 Response status: {r.status_code}")
         print(f"   📋 Response body: {r.text}")
@@ -355,7 +355,7 @@ def test_booking_creation(tenant_info: Dict[str, str], search_data: Dict[str, An
         print(f"   ✅ Booking created successfully: id={booking_id}, state={state}")
         
         # 2. Test invalid offer_id -> expect 422 INVALID_OFFER
-        print("2️⃣  Testing POST /storefront/bookings with invalid offer_id...")
+        print("2️⃣  Testing POST /api/storefront/bookings with invalid offer_id...")
         
         invalid_payload = {
             "search_id": search_id,
@@ -367,7 +367,7 @@ def test_booking_creation(tenant_info: Dict[str, str], search_data: Dict[str, An
             }
         }
         
-        r = requests.post(f"{BASE_URL}/storefront/bookings", headers=headers, json=invalid_payload)
+        r = requests.post(f"{BASE_URL}/api/storefront/bookings", headers=headers, json=invalid_payload)
         
         print(f"   📋 Response status: {r.status_code}")
         print(f"   📋 Response body: {r.text}")

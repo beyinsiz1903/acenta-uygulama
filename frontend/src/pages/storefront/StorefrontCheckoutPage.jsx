@@ -156,7 +156,27 @@ export default function StorefrontCheckoutPage() {
                 <span>{result.state}</span>
               </div>
             </div>
-            <div className="pt-2 text-[11px] text-muted-foreground">
+            <div className="flex flex-wrap items-center gap-2 pt-2 text-[11px] text-muted-foreground">
+              <Button
+                type="button"
+                size="xs"
+                variant="outline"
+                className="h-7 text-[11px]"
+                onClick={handleBackToSearch}
+              >
+                Yeni arama yap
+              </Button>
+              <Button
+                type="button"
+                size="xs"
+                variant="outline"
+                className="h-7 text-[11px]"
+                onClick={() => navigator.clipboard?.writeText(result.booking_id || "")}
+              >
+                Rezervasyon numarasını kopyala
+              </Button>
+            </div>
+            <div className="pt-1 text-[11px] text-muted-foreground">
               Bu ekran POC amaçlıdır; ileriki fazlarda B2C ödeme ve voucher akışları eklenecektir.
             </div>
           </Card>

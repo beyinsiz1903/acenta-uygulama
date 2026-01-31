@@ -152,7 +152,7 @@ async def test_storefront_session_expired_behaviour(test_db: Any, async_client: 
 
     # Create an expired session directly in DB
     expired_at = now - timedelta(minutes=5)
-    session = await test_db.storefront_sessions.insert_one(
+    await test_db.storefront_sessions.insert_one(
         {
             "tenant_id": "sf-tenant-c-id",
             "search_id": "expired-search",

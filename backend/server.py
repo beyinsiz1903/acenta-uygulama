@@ -63,6 +63,7 @@ from app.routers.crm_events import router as crm_events_router
 from app.routers.reservations import router as reservations_router
 from app.routers.pricing_quote import router as pricing_quote_router
 from app.routers.pricing import router as pricing_router
+from app.routers.pricing_rules import router as pricing_rules_router
 from app.routers.admin_funnel import router as admin_funnel_router
 
 from app.routers.theme import router as theme_router
@@ -272,6 +273,7 @@ app.include_router(crm_tasks_router)
 app.include_router(crm_activities_router)
 app.include_router(pricing_quote_router)
 app.include_router(pricing_router, prefix=API_PREFIX)
+app.include_router(pricing_rules_router, prefix=API_PREFIX)
 
 app.include_router(crm_events_router)
 app.include_router(reservations_router, prefix=API_PREFIX)

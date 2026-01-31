@@ -198,6 +198,53 @@ async def cancel_booking(booking_id: str, payload: BookingCancelIn, request: Req
         before=booking,
         after=updated,
         meta={"reason": payload.reason},
+
+
+@router.get("/{booking_id}/pricing-trace")
+async def get_booking_pricing_trace(
+    booking_id: str,
+    request: Request,
+    user=Depends(get_current_user),
+) -> Dict[str, Any]:
+    """Return pricing breakdown and latest pricing audit for a booking.
+
+    - Enforces organization scope
+    - pricing and pricing_audit may both be null
+    """
+
+    from bson import ObjectId
+
+    db = await get_db()
+    org_id = user["organization_id"]
+
+    try:
+        oid = ObjectId(booking_id)
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="BOOKING_NOT_FOUND")
+
+    booking = await db.bookings.find_one({"_id": oid, "organization_id": org_id})
+    if not booking:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="BOOKING_NOT_FOUND")
+
+    pricing = booking.get("pricing") or None
+
+    audit = await db.audit_logs.find_one(
+        {
+            "organization_id": org_id,
+            "action": "PRICING_RULE_APPLIED",
+            "target.id": booking_id,
+        },
+        sort=[("created_at", -1)],
+    )
+
+    from app.utils import serialize_doc as _ser
+
+    return {
+        "booking_id": booking_id,
+        "pricing": pricing,
+        "pricing_audit": _ser(audit) if audit else None,
+    }
+
     )
 
     return serialize_doc(updated)

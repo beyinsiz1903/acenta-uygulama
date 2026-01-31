@@ -30,7 +30,7 @@ async def test_pricing_audit_emitted_for_storefront_booking(test_db: Any, async_
     )
     org_id = str(org.inserted_id)
 
-    tenant = await test_db.tenants.insert_one(
+    await test_db.tenants.insert_one(
         {
             "tenant_key": "pricing-audit-tenant",
             "organization_id": org_id,

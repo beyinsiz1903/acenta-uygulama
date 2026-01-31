@@ -249,7 +249,7 @@ async def test_storefront_cross_tenant_isolation_on_search_id(test_db: Any, asyn
 
     # TenantB tries to re-use TenantA's search_id => SESSION_EXPIRED (no session for that tenant+search_id)
     resp_offer_b = await client.get(
-        f"/storefront/offers/ANY",
+        "/storefront/offers/ANY",
         params={"search_id": search_id_a},
         headers={"X-Tenant-Key": "sf-tenant-d2"},
     )

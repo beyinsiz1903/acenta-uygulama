@@ -41,7 +41,7 @@ def setup_demo_tenant() -> Dict[str, str]:
     print("   📋 Setting up demo tenant...")
     
     mongo_client = get_mongo_client()
-    db = mongo_client.get_default_database()
+    db = mongo_client
     
     tenant_key = "demo-tenant"
     

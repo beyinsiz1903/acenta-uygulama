@@ -76,6 +76,12 @@ export default function StorefrontSearchPage() {
   const [guests, setGuests] = useState(2);
 
   const [searchId, setSearchId] = useState(searchParams.get("search_id") || "");
+  const [lastSearchParams, setLastSearchParams] = useState({
+    city: searchParams.get("city") || "IST",
+    check_in: searchParams.get("check_in") || "",
+    check_out: searchParams.get("check_out") || "",
+    guests: Number(searchParams.get("guests") || 2),
+  });
   const [offers, setOffers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");

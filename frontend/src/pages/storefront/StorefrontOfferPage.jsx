@@ -31,6 +31,10 @@ export default function StorefrontOfferPage() {
         const code = resp?.error?.code;
         if (code === "SESSION_EXPIRED") {
           setError("Arama oturumu süresi doldu, lütfen yeniden arama yapın.");
+          const qp = new URLSearchParams();
+          if (searchId) qp.set("search_id", searchId);
+          navigate(`/s/${encodeURIComponent(tenantKey)}/search?${qp.toString()}`);
+          return;
         } else if (code === "OFFER_NOT_FOUND") {
           setError("Bu teklif oturumda bulunamadı. Lütfen yeniden arayın.");
         } else {

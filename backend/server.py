@@ -115,6 +115,7 @@ from app.indexes.api_keys_indexes import ensure_api_keys_indexes
 from app.indexes.rate_limit_indexes import ensure_rate_limit_indexes
 from app.indexes.tenant_indexes import ensure_tenant_indexes
 from app.indexes.storefront_indexes import ensure_storefront_indexes
+from app.indexes.pricing_indexes import ensure_pricing_indexes
 from app.integration_sync_worker import integration_sync_loop
 from app.services.jobs import run_job_worker_loop
 
@@ -138,6 +139,7 @@ async def lifespan(app: FastAPI):
     await ensure_rate_limit_indexes(db)
     await ensure_tenant_indexes(db)
     await ensure_storefront_indexes(db)
+    await ensure_pricing_indexes(db)
 
     yield
 

@@ -249,11 +249,13 @@ async def update_pricing_rule(
     return serialize_doc(doc)
 
 
-@router.delete("/{rule_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_pricing_rule(rule_id: str, user=Depends(get_current_user)) -> None:  # noqa: D401
+@router.delete("/{rule_id}", status_code=status.HTTP_200_OK)
+async def delete_pricing_rule(rule_id: str, user=Depends(get_current_user)) -> Dict[str, Any]:
+    """Hard-delete a pricing rule scoped to the current organization."""
+
     db = await get_db()
     org_id = user["organization_id"]
 
     existing = await _get_org_scoped_rule(db, org_id, rule_id)
     await db.pricing_rules.delete_one({"_id": existing["_id"]})
-    return None
+    return {"ok": True}

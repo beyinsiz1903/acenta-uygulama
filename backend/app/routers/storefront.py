@@ -8,6 +8,7 @@ from uuid import uuid4
 
 from bson.decimal128 import Decimal128
 from fastapi import APIRouter, HTTPException, Query, Request, status
+from bson import ObjectId
 from pydantic import BaseModel, EmailStr
 
 from app.db import get_db
@@ -45,14 +46,31 @@ def _decimal_to_str(value: Decimal) -> str:
 
 @router.get("/health")
 async def storefront_health(request: Request) -> Dict[str, Any]:
-    """Simple health endpoint that requires a resolved tenant."""
+    """Simple health endpoint that requires a resolved tenant.
+
+    v2: also returns brand_name and theme_config from the tenant document so that
+    the storefront UI can render a branded experience per tenant.
+    """
 
     ctx = _tenant_context(request)
     if not ctx["tenant_id"]:
         # Should normally be handled by middleware, but keep an explicit guard
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="TENANT_NOT_FOUND")
 
-    return {"ok": True, "tenant_key": ctx["tenant_key"], "tenant_id": ctx["tenant_id"]}
+    data: Dict[str, Any] = {"ok": True, "tenant_key": ctx["tenant_key"], "tenant_id": ctx["tenant_id"]}
+
+    # Best-effort theme/branding enrichment; failures should not break health.
+    try:
+        db = await get_db()
+        tenant_doc = await db.tenants.find_one({"_id": ObjectId(ctx["tenant_id"])})
+        if tenant_doc:
+            data["brand_name"] = tenant_doc.get("brand_name")
+            data["theme_config"] = tenant_doc.get("theme_config") or {}
+    except Exception:
+        # Swallow errors here to keep health deterministic; UI can fall back.
+        pass
+
+    return data
 
 
 @router.get("/search")

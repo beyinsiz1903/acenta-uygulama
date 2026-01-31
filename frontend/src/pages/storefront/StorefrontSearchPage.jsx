@@ -70,10 +70,10 @@ export default function StorefrontSearchPage() {
     root.setAttribute("data-storefront-tenant", tenant.tenant_key || "");
   }, [tenant]);
 
-  const [city, setCity] = useState("IST");
-  const [checkIn, setCheckIn] = useState("");
-  const [checkOut, setCheckOut] = useState("");
-  const [guests, setGuests] = useState(2);
+  const [city, setCity] = useState(searchParams.get("city") || "IST");
+  const [checkIn, setCheckIn] = useState(searchParams.get("check_in") || "");
+  const [checkOut, setCheckOut] = useState(searchParams.get("check_out") || "");
+  const [guests, setGuests] = useState(Number(searchParams.get("guests") || 2));
 
   const [searchId, setSearchId] = useState(searchParams.get("search_id") || "");
   const [lastSearchParams, setLastSearchParams] = useState({

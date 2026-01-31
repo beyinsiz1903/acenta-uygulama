@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 from typing import Any, Iterable
 
 from bson import ObjectId
+from bson.decimal128 import Decimal128
 
 
 def now_utc() -> datetime:

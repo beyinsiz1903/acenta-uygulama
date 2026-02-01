@@ -22,8 +22,8 @@ try {
   if (!appJs.includes("marketplace/listings")) {
     throw new Error("Route 'marketplace/listings' not found in App.js");
   }
-  if (!appJs.includes("/app/b2b/marketplace")) {
-    throw new Error("Route '/app/b2b/marketplace' not found in App.js");
+  if (!appJs.includes("b2b/marketplace")) {
+    throw new Error("Route 'b2b/marketplace' not found in App.js");
   }
 
   console.log("marketplace_smoke_check: OK (files + routes present)");

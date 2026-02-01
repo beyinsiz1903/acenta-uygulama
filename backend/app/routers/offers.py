@@ -196,7 +196,7 @@ async def search_offers(
             "children": payload.children,
             "supplier_codes": supplier_codes,
         },
-        offers=offers_for_session,
+        offers=offers_dicts,
     )
 
     return OfferSearchResponse(

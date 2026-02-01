@@ -219,9 +219,25 @@ async def test_search_session_ttl_and_indexes(test_db: Any, async_client: AsyncC
     session_id = data["session_id"]
 
     # Check session document exists in DB
-    session_doc = await test_db.search_sessions.find_one({"_id": __import__("bson").ObjectId(session_id)})
+    from bson import ObjectId
+
+    session_doc = await test_db.search_sessions.find_one({"_id": ObjectId(session_id)})
     assert session_doc is not None
     assert "expires_at" in session_doc
+
+    # Check offer_index and offers are consistent
+    offers = session_doc.get("offers") or []
+    offer_index = session_doc.get("offer_index") or {}
+    tokens = set()
+    for o in offers:
+        token = o.get("offer_token")
+        assert token is not None
+        tokens.add(token)
+        idx = offer_index.get(token)
+        assert idx is not None
+        assert idx.get("supplier_offer_id") == o.get("supplier_offer_id")
+        assert idx.get("supplier_code") == o.get("supplier_code")
+    assert len(tokens) == len(offers)
 
     # Check TTL index exists on search_sessions.expires_at
     indexes = await test_db.search_sessions.index_information()

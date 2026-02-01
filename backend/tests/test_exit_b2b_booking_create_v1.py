@@ -245,9 +245,12 @@ async def test_b2b_booking_create_forbidden_without_access(test_db: Any, async_c
             "email": "b2b2@example.com",
             "phone": "+900000000001",
         },
+        "travellers": [
+            {"first_name": "Test", "last_name": "User"},
+        ],
     }
 
-    resp = await client.post("/api/b2b/bookings-from-marketplace", json=payload, headers=headers)
+    resp = await client.post("/api/b2b/bookings", json=payload, headers=headers)
     assert resp.status_code == status.HTTP_403_FORBIDDEN
     err = resp.json().get("error", {})
     assert err.get("message") == "MARKETPLACE_ACCESS_FORBIDDEN"

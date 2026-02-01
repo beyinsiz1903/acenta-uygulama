@@ -648,12 +648,36 @@ async def confirm_b2b_booking(
         user_id=str(user.get("id") or ""),
     )
 
+    result = None
     try:
-        result = await adapter.confirm_booking(ctx, booking)
+        result = await run_with_deadline(adapter.confirm_booking(ctx, booking), ctx)
     except SupplierAdapterError as exc:
         # Map adapter-level errors to HTTP responses and audit
         retryable = getattr(exc, "retryable", False)
         details = getattr(exc, "details", {})
+
+        # Audit supplier confirm failure
+        actor = {"actor_type": "user", "email": user.get("email"), "roles": user.get("roles")}
+        await write_audit_log(
+            db,
+            organization_id=org_id,
+            actor=actor,
+            request=request,
+            action="SUPPLIER_CONFIRM_FAILED",
+            target_type="booking",
+            target_id=booking_id,
+            before=None,
+            after=None,
+            meta={
+                "supplier": supplier_name,
+                "supplier_code_canonical": supplier_doc.get("code") or supplier_name,
+                "supplier_code_legacy": supplier_name,
+                "retryable": retryable,
+                "timeout_ms": ctx.timeout_ms,
+                "error_code": exc.code,
+            },
+        )
+
         raise AppError(
             502 if retryable else 409,
             exc.code,
@@ -668,11 +692,11 @@ async def confirm_b2b_booking(
         if supplier_booking_id:
             update_fields["offer_ref.supplier_booking_id"] = supplier_booking_id
 
-        # Persist normalized supplier snapshot
+        # Persist normalized supplier snapshot (with redacted confirm snapshot)
         update_fields["supplier.code"] = result.supplier_code
         update_fields["supplier.offer_id"] = supplier_offer_id
         update_fields["supplier.booking_id"] = supplier_booking_id
-        update_fields["supplier.confirm_snapshot"] = result.raw
+        update_fields["supplier.confirm_snapshot"] = redact_sensitive_fields(result.raw or {})
 
         await db.bookings.update_one(
             {"_id": oid, "organization_id": org_id},

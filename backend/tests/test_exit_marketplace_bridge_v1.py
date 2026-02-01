@@ -149,7 +149,6 @@ async def test_marketplace_to_storefront_bridge_flow(test_db: Any, async_client:
     from urllib.parse import urlparse, parse_qs
 
     parsed = urlparse(redirect_url)
-    path = parsed.path
     qs = parse_qs(parsed.query)
     search_id_from_url = qs.get("search_id", [None])[0]
     assert search_id_from_url == search_id

@@ -86,6 +86,7 @@ async def test_confirm_timeout_enforced_returns_upstream_timeout(test_db: Any, a
     async def slow_confirm(self, ctx, booking):  # type: ignore[override]
         # Force a very small timeout_ms and sleep beyond it
         ctx.timeout_ms = 50
+        ctx.deadline_at = None  # force re-compute based on new timeout
         await asyncio.sleep(0.1)
         return ConfirmResult(
             supplier_code="mock",

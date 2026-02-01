@@ -110,7 +110,7 @@ async def search_offers(
 
     supplier_codes = [s.lower() for s in (payload.supplier_codes or ["mock", "paximum"])]
 
-    canonical_offers: List[CanonicalHotelOfferOut] = []
+    canonical_offers: List[CanonicalHotelOfferOut] = []  # response models
 
     # Mock supplier
     if "mock" in supplier_codes:

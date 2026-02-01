@@ -218,7 +218,7 @@ async def _change_status(db, org_id: str, listing_id: str, request: Request, new
     updated = await _get_seller_listing(db, org_id, listing_id)
 
     # Audit v1 minimal
-    from app.services.audit_service import write_audit_log
+    from app.services.audit import write_audit_log
 
     await write_audit_log(
         db,
@@ -276,7 +276,7 @@ async def grant_access(payload: MarketplaceAccessGrant, request: Request, user=D
         upsert=True,
     )
 
-    from app.services.audit_service import write_audit_log
+    from app.services.audit import write_audit_log
 
     await write_audit_log(
         db,
@@ -309,7 +309,7 @@ async def revoke_access(payload: MarketplaceAccessGrant, request: Request, user=
         }
     )
 
-    from app.services.audit_service import write_audit_log
+    from app.services.audit import write_audit_log
 
     await write_audit_log(
         db,

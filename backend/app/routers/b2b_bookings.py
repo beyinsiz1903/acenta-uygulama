@@ -505,7 +505,66 @@ async def confirm_b2b_booking(
 
     status_val = booking.get("status")
     if status_val == "CONFIRMED":
-        # Idempotent confirm: booking already confirmed, do not emit new events
+        # Idempotent confirm when projection is already CONFIRMED.
+        # Ensure at least one BOOKING_CONFIRMED lifecycle event + audit exists,
+        # but do not create duplicates on repeated calls.
+        existing_event = await db.booking_events.find_one(
+            {"organization_id": org_id, "booking_id": booking_id, "event": "BOOKING_CONFIRMED"}
+        )
+        existing_audit = await db.audit_logs.find_one(
+            {
+                "organization_id": org_id,
+                "action": "B2B_BOOKING_CONFIRMED",
+                "target.id": booking_id,
+            }
+        )
+        if not existing_event or not existing_audit:
+            from uuid import uuid4
+            from app.services.booking_lifecycle import BookingLifecycleService
+
+            attempt_id = str(uuid4())
+            source = booking.get("source")
+            offer_ref = (booking.get("offer_ref") or {})
+            supplier_name = (offer_ref.get("supplier") or "").strip()
+            supplier_offer_id = (offer_ref.get("supplier_offer_id") or "").strip()
+
+            lifecycle = BookingLifecycleService(db)
+            await lifecycle.append_event(
+                organization_id=org_id,
+                agency_id=booking.get("agency_id") or "",
+                booking_id=booking_id,
+                event="BOOKING_CONFIRMED",
+                request_id=attempt_id,
+                before={"status": status_val},
+                after={"status": "CONFIRMED"},
+                meta={
+                    "source": source,
+                    "supplier": supplier_name,
+                    "supplier_offer_id": supplier_offer_id,
+                },
+            )
+
+            actor = {"actor_type": "user", "email": user.get("email"), "roles": user.get("roles")}
+            meta = {
+                "source": "supplier_fulfilment",
+                "supplier": supplier_name,
+                "supplier_offer_id": supplier_offer_id,
+                "tenant_id": offer_ref.get("buyer_tenant_id"),
+                "attempt_id": attempt_id,
+            }
+            await write_audit_log(
+                db,
+                organization_id=org_id,
+                actor=actor,
+                request=request,
+                action="B2B_BOOKING_CONFIRMED",
+                target_type="booking",
+                target_id=booking_id,
+                before=None,
+                after=None,
+                meta=meta,
+            )
+
         return {"booking_id": booking_id, "state": "confirmed"}
 
     if status_val not in {None, "PENDING"}:

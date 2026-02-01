@@ -280,7 +280,7 @@ export default function AdminMarketplaceListingsPage() {
         <div>
           <div className="text-lg font-semibold">Marketplace Listings</div>
           <div className="max-w-xl text-[11px] text-muted-foreground">
-            Tenant bazlı marketplace ürünleri. Bu ekrandan kendi tenant'ınız için draft/published/archived listing'leri
+            Tenant bazlı marketplace ürünleri. Bu ekrandan kendi tenantiniz için draft/published/archived listingleri
             yönetebilirsiniz.
           </div>
         </div>

@@ -147,9 +147,9 @@ async def lifespan(app: FastAPI):
     await ensure_storefront_indexes(db)
     await ensure_pricing_indexes(db)
     await ensure_marketplace_indexes(db)
+    from app.indexes.marketplace_indexes import ensure_offers_indexes
+    await ensure_offers_indexes(db)
     # Supplier adapters are lazily initialized in AdapterRegistry._ensure_defaults_loaded()
-
-    await ensure_marketplace_indexes(db)
 
     yield
 

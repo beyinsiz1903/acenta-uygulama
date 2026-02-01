@@ -47,7 +47,7 @@ async function ensureMarketplaceSeed(baseURL: string) {
 
   try {
     // 1) API login as super admin (same creds as UI)
-    const loginRes = await apiRequest.post('/auth/login', {
+    const loginRes = await apiRequest.post('/api/auth/login', {
       data: {
         email: 'muratsutay@hotmail.com',
         password: 'murat1903',

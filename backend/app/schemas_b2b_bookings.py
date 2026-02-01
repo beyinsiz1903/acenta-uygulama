@@ -41,9 +41,6 @@ class BookingCreateResponse(BaseModel):
 
 
 class BookingListItem(BaseModel):
-
-
-class BookingListItem(BaseModel):
     booking_id: str
     status: str
     created_at: datetime

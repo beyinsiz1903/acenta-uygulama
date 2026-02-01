@@ -6,6 +6,7 @@ This test validates the new B2B marketplace booking create flow with:
 1. Happy path (marketplace source)
 2. Access denied scenarios (no marketplace_access)
 3. Missing tenant context scenarios
+4. Legacy quote flow regression check
 
 Tests the POST /api/b2b/bookings endpoint with source="marketplace" branching.
 """
@@ -371,61 +372,7 @@ class B2BMarketplaceBookingTester:
         
         return result
     
-    async def test_legacy_quote_flow_regression(self) -> Dict[str, Any]:
-        """Test 4: Legacy quote flow regression check (source absent/"quote")."""
-        print("🧪 Testing Legacy Quote Flow Regression...")
-        
-        # Setup test data
-        setup = await self.create_test_org_and_tenants()
-        org_id = setup["org_id"]
-        
-        # Create user
-        email = f"b2b_admin_{uuid.uuid4().hex[:8]}@example.com"
-        await self.create_test_user(org_id, email)
-        
-        # Generate JWT token
-        token = self.generate_jwt_token(email, org_id)
-        
-        # Prepare request (legacy quote flow - no source or source="quote")
-        headers = {
-            "Authorization": f"Bearer {token}",
-            "Idempotency-Key": f"legacy-test-{uuid.uuid4().hex[:8]}",
-            "Content-Type": "application/json"
-        }
-        
-        payload = {
-            # No source field (should default to quote flow)
-            "quote_id": "non-existent-quote-id",  # This will fail but should hit quote flow
-            "customer": {
-                "name": "Legacy Customer",
-                "email": "legacy-customer@example.com"
-            },
-            "travellers": [
-                {"first_name": "Test", "last_name": "User"}
-            ]
-        }
-        
-        # Make HTTP request
-        response = await self.client.post(
-            f"{BACKEND_URL}/api/b2b/bookings",
-            json=payload,
-            headers=headers
-        )
-        
-        result = {
-            "test_name": "Legacy Quote Flow Regression",
-            "status_code": response.status_code,
-            "success": response.status_code in [400, 403, 422],  # Should fail but not crash
-            "response_body": response.json() if response.status_code in [400, 403, 422] else response.text,
-            "expected_status": "4xx (not 500)",
-            "setup_data": setup
-        }
-        
-        # The important thing is that it doesn't crash (500) and follows the quote flow
-        if response.status_code < 500:
-            result["regression_check"] = "Legacy quote flow path accessible (no 500 error)"
-        
-        return result
+    async def test_missing_tenant_context(self) -> Dict[str, Any]:
         """Test 3: Missing tenant context scenario (no X-Tenant-Key)."""
         print("🧪 Testing Missing Tenant Context Scenario...")
         
@@ -490,6 +437,62 @@ class B2BMarketplaceBookingTester:
                 "error_message": error_message,
                 "is_tenant_context_required": error_message == "TENANT_CONTEXT_REQUIRED"
             }
+        
+        return result
+    
+    async def test_legacy_quote_flow_regression(self) -> Dict[str, Any]:
+        """Test 4: Legacy quote flow regression check (source absent/"quote")."""
+        print("🧪 Testing Legacy Quote Flow Regression...")
+        
+        # Setup test data
+        setup = await self.create_test_org_and_tenants()
+        org_id = setup["org_id"]
+        
+        # Create user
+        email = f"b2b_admin_{uuid.uuid4().hex[:8]}@example.com"
+        await self.create_test_user(org_id, email)
+        
+        # Generate JWT token
+        token = self.generate_jwt_token(email, org_id)
+        
+        # Prepare request (legacy quote flow - no source or source="quote")
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Idempotency-Key": f"legacy-test-{uuid.uuid4().hex[:8]}",
+            "Content-Type": "application/json"
+        }
+        
+        payload = {
+            # No source field (should default to quote flow)
+            "quote_id": "non-existent-quote-id",  # This will fail but should hit quote flow
+            "customer": {
+                "name": "Legacy Customer",
+                "email": "legacy-customer@example.com"
+            },
+            "travellers": [
+                {"first_name": "Test", "last_name": "User"}
+            ]
+        }
+        
+        # Make HTTP request
+        response = await self.client.post(
+            f"{BACKEND_URL}/api/b2b/bookings",
+            json=payload,
+            headers=headers
+        )
+        
+        result = {
+            "test_name": "Legacy Quote Flow Regression",
+            "status_code": response.status_code,
+            "success": response.status_code in [400, 403, 422],  # Should fail but not crash
+            "response_body": response.json() if response.status_code in [400, 403, 422] else response.text,
+            "expected_status": "4xx (not 500)",
+            "setup_data": setup
+        }
+        
+        # The important thing is that it doesn't crash (500) and follows the quote flow
+        if response.status_code < 500:
+            result["regression_check"] = "Legacy quote flow path accessible (no 500 error)"
         
         return result
     
@@ -569,6 +572,9 @@ async def main():
             if "error_validation" in result:
                 error_val = result["error_validation"]
                 print(f"   ✓ Error message: {error_val.get('error_message')}")
+            
+            if "regression_check" in result:
+                print(f"   ✓ {result['regression_check']}")
         else:
             print(f"   ❌ Response: {result.get('response_body', 'No response body')}")
     

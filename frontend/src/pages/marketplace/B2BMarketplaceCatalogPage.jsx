@@ -91,8 +91,8 @@ export default function B2BMarketplaceCatalogPage() {
         <div>
           <div className="text-lg font-semibold">B2B Marketplace</div>
           <div className="max-w-xl text-[11px] text-muted-foreground">
-            Diğer tenant'ların yayınladığı marketplace listing'lerini buradan görebilir, kiminle çalışmak
-            istediğinizi keşfedebilirsiniz. V1'de sadece katalog görünürlüğü vardır; rezervasyon akışı ayrıdır.
+            Diğer tenantların yayınladığı marketplace listinglerini buradan görebilir, kiminle çalışmak istediğinizi
+            keşfedebilirsiniz. V1'de sadece katalog görünürlüğü vardır; rezervasyon akışı ayrıdır.
           </div>
         </div>
       </div>

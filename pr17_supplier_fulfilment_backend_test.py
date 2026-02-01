@@ -138,6 +138,7 @@ def setup_marketplace_infrastructure(org_id: str, buyer_tenant_key: str = "buyer
         "tenant_key": seller_tenant_key,
         "name": "Seller Tenant",
         "type": "seller",
+        "is_active": True,
         "created_at": now,
         "updated_at": now,
     }
@@ -151,6 +152,7 @@ def setup_marketplace_infrastructure(org_id: str, buyer_tenant_key: str = "buyer
         "tenant_key": buyer_tenant_key,
         "name": "Buyer Tenant",
         "type": "buyer",
+        "is_active": True,
         "created_at": now,
         "updated_at": now,
     }

@@ -25,10 +25,10 @@ import uuid
 # Configuration
 BACKEND_URL = "https://bayipanel.preview.emergentagent.com"
 MONGO_URL = os.environ.get("MONGO_URL", "mongodb://localhost:27017")
-DATABASE_NAME = "bayipanel"
+DATABASE_NAME = os.environ.get("DB_NAME", "test_database")
 
 # JWT Secret (from backend auth module)
-JWT_SECRET = "your-secret-key-here"  # This should match the backend's JWT secret
+JWT_SECRET = os.environ.get("JWT_SECRET", "dev_jwt_secret_change_me")
 
 class B2BMarketplaceBookingTester:
     def __init__(self):

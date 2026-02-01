@@ -131,7 +131,7 @@ async def test_b2b_booking_create_happy_path(test_db: Any, async_client: AsyncCl
         },
     }
 
-    resp = await client.post("/api/b2b/bookings", json=payload, headers=headers)
+    resp = await client.post("/api/b2b/bookings-from-marketplace", json=payload, headers=headers)
     assert resp.status_code == status.HTTP_201_CREATED, resp.text
     data = resp.json()
     booking_id = data["booking_id"]

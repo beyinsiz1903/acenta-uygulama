@@ -266,14 +266,23 @@ async def grant_access(payload: MarketplaceAccessGrant, request: Request, user=D
 
     # Optional convenience: resolve from tenant_key if IDs are not provided
     if (not seller_tenant_id or not buyer_tenant_id) and (payload.seller_tenant_key or payload.buyer_tenant_key):
-        # Resolve by keys within same org
+        keys: list[str] = [k for k in [payload.seller_tenant_key, payload.buyer_tenant_key] if k]
+        # Resolve by keys within same org; support both "tenant_key" and legacy "key" fields
         tenants = await db.tenants.find(
             {
                 "organization_id": filter_base["organization_id"],
-                "tenant_key": {"$in": [k for k in [payload.seller_tenant_key, payload.buyer_tenant_key] if k]},
+                "$or": [
+                    {"tenant_key": {"$in": keys}},
+                    {"key": {"$in": keys}},
+                ],
             }
-        ).to_list(length=10)
-        key_to_id = {t["tenant_key"]: str(t["_id"]) for t in tenants}
+        ).to_list(length=20)
+
+        key_to_id: dict[str, str] = {}
+        for t in tenants:
+            tk = t.get("tenant_key") or t.get("key")
+            if tk:
+                key_to_id[tk] = str(t["_id"])
 
         if payload.seller_tenant_key and not seller_tenant_id:
             seller_tenant_id = key_to_id.get(payload.seller_tenant_key)

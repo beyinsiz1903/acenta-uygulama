@@ -159,9 +159,24 @@ async def search_offers(
         from app.services.offers.normalizers.paximum_normalizer import normalize_paximum_search_result as _pn
 
         normalized = await _pn(pax_payload, pax_resp)
-        canonical_offers.extend(
-            [CanonicalHotelOfferOut.model_validate(o.__dict__) for o in normalized]
-        )
+        for o in normalized:
+            canonical_offers.append(
+                CanonicalHotelOfferOut(
+                    offer_token=o.offer_token,
+                    supplier_code=o.supplier_code,
+                    supplier_offer_id=o.supplier_offer_id,
+                    product_type=o.product_type,
+                    hotel=CanonicalHotel(**o.hotel.__dict__),
+                    stay=CanonicalStay(**o.stay.__dict__),
+                    room=CanonicalRoom(**o.room.__dict__),
+                    cancellation_policy=CanonicalCancellationPolicy(**o.cancellation_policy.__dict__)
+                    if o.cancellation_policy
+                    else None,
+                    price=CanonicalMoney(**o.price.__dict__),
+                    availability_token=o.availability_token,
+                    raw_fingerprint=o.raw_fingerprint,
+                )
+            )
 
     # Persist search session
     # We convert Pydantic models back to dicts for storage.

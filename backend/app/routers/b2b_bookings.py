@@ -20,7 +20,8 @@ from app.services.audit import write_audit_log
 from app.services.supplier_mapping_service import resolve_listing_supplier, apply_supplier_mapping
 from app.services.credit_exposure_service import has_available_credit
 from app.services.suppliers.registry import registry as supplier_registry
-from app.services.suppliers.contracts import SupplierContext, ConfirmStatus, SupplierAdapterError
+from app.services.suppliers.contracts import SupplierContext, ConfirmStatus, SupplierAdapterError, run_with_deadline
+from app.services.suppliers.redaction import redact_sensitive_fields
 from bson import Decimal128, ObjectId
 from decimal import Decimal
 from pydantic import BaseModel, EmailStr

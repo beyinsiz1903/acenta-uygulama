@@ -41,7 +41,7 @@ def get_idem_repo(db=Depends(get_db)) -> IdempotencyRepo:
 @router.post(
     "/bookings",
     response_model=BookingCreateResponse,
-    dependencies=[Depends(require_roles(["agency_agent", "agency_admin"]))],
+    dependencies=[Depends(require_roles(["agency_agent", "agency_admin", "super_admin"]))],
 )
 async def create_b2b_booking(
     payload: BookingCreateRequest,
@@ -262,6 +262,7 @@ async def create_b2b_booking(
 
 async def _get_visible_listing(
     db,
+    request: Request,
     *,
     organization_id: str,
     listing_id: str,

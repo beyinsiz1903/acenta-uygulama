@@ -60,3 +60,19 @@ async def ensure_marketplace_indexes(db: AsyncIOMotorDatabase) -> None:
         [("buyer_tenant_id", ASCENDING)],
         name="marketplace_access_buyer_tenant",
     )
+
+
+
+async def ensure_offers_indexes(db: AsyncIOMotorDatabase) -> None:
+    """Indexes for canonical offers search_sessions cache (TTL)."""
+
+    from pymongo.errors import OperationFailure
+
+    try:
+        await db.search_sessions.create_index("expires_at", expireAfterSeconds=0)
+    except OperationFailure as e:  # pragma: no cover - defensive guard similar to marketplace
+        msg = str(e).lower()
+        if "already exists" in msg or "indexoptionsconflict" in msg or "indexkeyspecsconflict" in msg:
+            logger.warning("[offers_indexes] Keeping existing TTL index on search_sessions: %s", msg)
+        else:
+            raise

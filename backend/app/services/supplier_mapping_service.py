@@ -7,7 +7,7 @@ from fastapi import status
 
 from app.errors import AppError
 from app.utils import now_utc
-from app.services.suppliers.mock_supplier_service import resolve_mock_offer
+# For v1 we do not call real supplier APIs; mapping is deterministic from external_ref.
 
 
 @dataclass

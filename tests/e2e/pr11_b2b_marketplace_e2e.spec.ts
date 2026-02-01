@@ -89,7 +89,9 @@ async function ensureMarketplaceSeed(baseURL: string) {
     });
 
     if (!createRes.ok()) {
-      throw new Error(`Create listing failed: ${createRes.status()} ${await createRes.text()}`);
+      throw new Error(
+        `[e2e-seed] create listing failed url=${createRes.url()} status=${createRes.status()} body=${await createRes.text()}`,
+      );
     }
     const created = await createRes.json();
     const listingId = created.id;

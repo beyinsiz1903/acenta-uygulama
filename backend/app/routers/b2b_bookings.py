@@ -164,6 +164,24 @@ async def create_b2b_booking(
             buyer_tenant_id=buyer_tenant_id,
         )
 
+        # Supplier mapping (lazy resolve)
+        supplier_mapping = (listing.get("supplier_mapping") or {})
+        supplier_name: Optional[str] = None
+        supplier_offer_id: Optional[str] = None
+
+        if supplier_mapping.get("status") == "resolved":
+            supplier_name = supplier_mapping.get("supplier")
+            supplier_offer_id = supplier_mapping.get("offer_id")
+        else:
+            # Try to resolve via adapter; surface AppError codes as-is
+            offer_ref = await resolve_listing_supplier(listing=listing, organization_id=org_id)
+            listing = await apply_supplier_mapping(db, listing=listing, mapping=offer_ref)
+            supplier_mapping = (listing.get("supplier_mapping") or {})
+            if supplier_mapping.get("status") != "resolved":
+                raise AppError(500, "SUPPLIER_RESOLVE_FAILED", "SUPPLIER_RESOLVE_FAILED")
+            supplier_name = supplier_mapping.get("supplier")
+            supplier_offer_id = supplier_mapping.get("offer_id")
+
         currency = listing.get("currency") or "TRY"
         if currency != "TRY":
             raise AppError(422, "UNSUPPORTED_CURRENCY", "UNSUPPORTED_CURRENCY")

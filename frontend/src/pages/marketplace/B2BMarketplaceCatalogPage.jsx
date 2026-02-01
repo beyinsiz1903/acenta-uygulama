@@ -310,6 +310,7 @@ export default function B2BMarketplaceCatalogPage() {
               >
                 Vitrine gönder
               </Button>
+              </div>
             </div>
           </Card>
         ))}

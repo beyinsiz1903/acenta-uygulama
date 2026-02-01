@@ -98,7 +98,7 @@ async function ensureMarketplaceSeed(baseURL: string) {
     console.log('[e2e-seed] listing created:', listingId);
 
     // 2.b) Publish listing
-    const publishRes = await apiRequest.post(`/marketplace/listings/${listingId}/publish`, {
+    const publishRes = await apiRequest.post(`/api/marketplace/listings/${listingId}/publish`, {
       headers: {
         ...authHeaders,
         'X-Tenant-Key': sellerTenantKey,

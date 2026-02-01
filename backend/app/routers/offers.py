@@ -179,7 +179,6 @@ async def search_offers(
             )
 
     # Persist search session
-    # We convert Pydantic models back to dicts for storage.
     offers_dicts = [c.model_dump() for c in canonical_offers]
 
     session = await create_search_session(

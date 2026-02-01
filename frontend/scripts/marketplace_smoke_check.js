@@ -35,8 +35,14 @@ try {
       "Bridge call string 'create-storefront-session' not found in B2BMarketplaceCatalogPage.jsx",
     );
   }
+  if (!catalogSource.includes("/b2b/bookings")) {
+    throw new Error("B2B booking create call '/b2b/bookings' not found in B2BMarketplaceCatalogPage.jsx");
+  }
+  if (!catalogSource.includes("source: \"marketplace\"")) {
+    throw new Error("Marketplace booking payload with source=marketplace not found in B2BMarketplaceCatalogPage.jsx");
+  }
 
-  console.log("marketplace_smoke_check: OK (files + routes + bridge present)");
+  console.log("marketplace_smoke_check: OK (files + routes + bridge + b2b booking CTA present)");
   process.exit(0);
 } catch (err) {
   console.error("marketplace_smoke_check: FAILED", err && err.message ? err.message : err);

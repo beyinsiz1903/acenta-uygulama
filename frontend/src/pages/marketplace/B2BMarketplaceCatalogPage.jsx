@@ -261,7 +261,7 @@ export default function B2BMarketplaceCatalogPage() {
                       const details = parseErrorDetails(err);
                       const code = details?.code;
                       if (code === "TENANT_CONTEXT_REQUIRED") {
-                        setError("Tenant se31melisiniz.");
+                        setError("Tenant seçmelisiniz.");
                       } else if (code === "MARKETPLACE_ACCESS_FORBIDDEN") {
                         setError("Bu listing'e eri5fiminiz yok.");
                       } else {

@@ -260,11 +260,6 @@ async def create_b2b_booking(
     raise AppError(422, "UNSUPPORTED_SOURCE", "UNSUPPORTED_SOURCE")
 
 
-class B2BMarketplaceBookingCreateResponse(BaseModel):
-    booking_id: str
-    state: str
-
-
 async def _get_visible_listing(
     db,
     *,

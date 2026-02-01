@@ -281,6 +281,7 @@ app.include_router(pricing_quote_router)
 app.include_router(pricing_router, prefix=API_PREFIX)
 app.include_router(pricing_rules_router, prefix=API_PREFIX)
 app.include_router(marketplace_router, prefix=API_PREFIX)
+app.include_router(marketplace_supplier_mapping_router, prefix=API_PREFIX)
 app.include_router(b2b_marketplace_booking_router, prefix=API_PREFIX)
 
 app.include_router(crm_events_router)

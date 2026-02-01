@@ -13,7 +13,7 @@ from app.services.pricing_service import calculate_price
 from app.services.pricing_audit_service import emit_pricing_audit_if_needed
 from app.utils import now_utc, serialize_doc
 
-router = APIRouter(prefix="/api/b2b", tags=["b2b-bookings-marketplace"])
+router = APIRouter(tags=["b2b-bookings-marketplace"])
 
 
 class CustomerIn(BaseModel):

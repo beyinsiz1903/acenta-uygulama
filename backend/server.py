@@ -118,6 +118,7 @@ from app.indexes.rate_limit_indexes import ensure_rate_limit_indexes
 from app.indexes.tenant_indexes import ensure_tenant_indexes
 from app.indexes.storefront_indexes import ensure_storefront_indexes
 from app.indexes.pricing_indexes import ensure_pricing_indexes
+from app.indexes.marketplace_indexes import ensure_marketplace_indexes
 from app.integration_sync_worker import integration_sync_loop
 from app.services.jobs import run_job_worker_loop
 

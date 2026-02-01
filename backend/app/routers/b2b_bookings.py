@@ -770,7 +770,15 @@ async def confirm_b2b_booking(
             target_id=booking_id,
             before=None,
             after=None,
-            meta={"status": "rejected", "supplier": supplier_name, "raw": result.raw},
+            meta={
+                "status": "rejected",
+                "supplier": supplier_name,
+                "supplier_code_canonical": result.supplier_code,
+                "supplier_code_legacy": supplier_name,
+                "retryable": False,
+                "timeout_ms": ctx.timeout_ms,
+                "raw": redact_sensitive_fields(result.raw or {}),
+            },
         )
         raise AppError(
             409,
@@ -791,7 +799,15 @@ async def confirm_b2b_booking(
             target_id=booking_id,
             before=None,
             after=None,
-            meta={"status": "pending", "supplier": supplier_name, "raw": result.raw},
+            meta={
+                "status": "pending",
+                "supplier": supplier_name,
+                "supplier_code_canonical": result.supplier_code,
+                "supplier_code_legacy": supplier_name,
+                "retryable": False,
+                "timeout_ms": ctx.timeout_ms,
+                "raw": redact_sensitive_fields(result.raw or {}),
+            },
         )
         return AppError(
             202,
@@ -812,7 +828,15 @@ async def confirm_b2b_booking(
             target_id=booking_id,
             before=None,
             after=None,
-            meta={"status": "not_supported", "supplier": supplier_name, "raw": result.raw},
+            meta={
+                "status": "not_supported",
+                "supplier": supplier_name,
+                "supplier_code_canonical": result.supplier_code,
+                "supplier_code_legacy": supplier_name,
+                "retryable": False,
+                "timeout_ms": ctx.timeout_ms,
+                "raw": redact_sensitive_fields(result.raw or {}),
+            },
         )
         raise AppError(
             501,

@@ -125,9 +125,10 @@ def setup_marketplace_infrastructure(org_id: str, test_suffix: str):
     """Setup complete marketplace infrastructure for testing"""
     print(f"   📋 Setting up marketplace infrastructure...")
     
-    # Make tenant keys unique per test
-    buyer_tenant_key = f"buyer-tenant-{test_suffix}"
-    seller_tenant_key = f"seller-tenant-{test_suffix}"
+    # Make tenant keys unique per test with additional randomness
+    random_suffix = uuid.uuid4().hex[:8]
+    buyer_tenant_key = f"buyer-tenant-{test_suffix}-{random_suffix}"
+    seller_tenant_key = f"seller-tenant-{test_suffix}-{random_suffix}"
     
     mongo_client = get_mongo_client()
     db = mongo_client.get_default_database()

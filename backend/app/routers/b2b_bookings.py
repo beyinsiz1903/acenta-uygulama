@@ -58,90 +58,206 @@ async def create_b2b_booking(
     if not agency_id:
         raise AppError(403, "forbidden", "User is not bound to an agency")
 
-    endpoint = "b2b_bookings_create"
-    method = "POST"
-    path = "/api/b2b/bookings"
+    source = (payload.source or "quote").strip().lower()
 
-    async def compute():
-        quote_doc = await pricing.ensure_quote_valid(
-            organization_id=org_id,
+    # Legacy quote-based flow (P0.2)
+    if source in {"", "quote"}:
+        endpoint = "b2b_bookings_create"
+        method = "POST"
+        path = "/api/b2b/bookings"
+
+        async def compute_quote():
+            quote_doc = await pricing.ensure_quote_valid(
+                organization_id=org_id,
+                agency_id=agency_id,
+                quote_id=payload.quote_id,
+            )
+
+            # Funnel: b2b.checkout.started
+            try:
+                await log_funnel_event(
+                    await get_db(),
+                    organization_id=org_id,
+                    correlation_id=correlation_id,
+                    event_name="b2b.checkout.started",
+                    entity_type="quote",
+                    entity_id=str(quote_doc.get("_id")) if quote_doc else None,
+                    channel="b2b",
+                    user={
+                        "user_id": user.get("id"),
+                        "email": user.get("email"),
+                        "roles": user.get("roles") or [],
+                    },
+                    context={},
+                    trace={
+                        "idempotency_key": idempotency_key,
+                    },
+                )
+            except Exception:
+                pass
+
+            # Context mismatch check (agency already enforced via query, channel optional here)
+            booking = await booking_svc.create_booking_from_quote(
+                organization_id=org_id,
+                agency_id=agency_id,
+                user_email=user.get("email"),
+                quote_doc=quote_doc,
+                booking_req=payload,
+                request_id=idempotency_key,
+            )
+
+            # Funnel: b2b.booking.created
+            try:
+                await log_funnel_event(
+                    await get_db(),
+                    organization_id=org_id,
+                    correlation_id=correlation_id,
+                    event_name="b2b.booking.created",
+                    entity_type="booking",
+                    entity_id=booking.booking_id,
+                    channel="b2b",
+                    user={
+                        "user_id": user.get("id"),
+                        "email": user.get("email"),
+                        "roles": user.get("roles") or [],
+                    },
+                    context={},
+                    trace={
+                        "idempotency_key": idempotency_key,
+                    },
+                )
+            except Exception:
+                pass
+
+            return 200, booking.model_dump()
+
+        status, body = await idem.store_or_replay(
+            org_id=org_id,
             agency_id=agency_id,
-            quote_id=payload.quote_id,
+            endpoint=endpoint,
+            key=idempotency_key,
+            method=method,
+            path=path,
+            request_body=payload.model_dump(),
+            compute_response_fn=compute_quote,
         )
 
-        # Funnel: b2b.checkout.started
-        try:
-            await log_funnel_event(
-                await get_db(),
-                organization_id=org_id,
-                correlation_id=correlation_id,
-                event_name="b2b.checkout.started",
-                entity_type="quote",
-                entity_id=str(quote_doc.get("_id")) if quote_doc else None,
-                channel="b2b",
-                user={
-                    "user_id": user.get("id"),
-                    "email": user.get("email"),
-                    "roles": user.get("roles") or [],
-                },
-                context={},
-                trace={
-                    "idempotency_key": idempotency_key,
-                },
-            )
-        except Exception:
-            pass
+        if status == 200:
+            return BookingCreateResponse(**body)
 
-        # Context mismatch check (agency already enforced via query, channel optional here)
-        booking = await booking_svc.create_booking_from_quote(
+        return JSONResponse(status_code=status, content=body)
+
+    # Marketplace flow (PR-10)
+    if source == "marketplace":
+        if not payload.listing_id:
+            raise AppError(422, "INVALID_LISTING_ID", "INVALID_LISTING_ID")
+
+        db = await get_db()
+        buyer_tenant_id: Optional[str] = getattr(request.state, "tenant_id", None)
+        if not buyer_tenant_id:
+            raise AppError(403, "TENANT_CONTEXT_REQUIRED", "TENANT_CONTEXT_REQUIRED")
+
+        listing = await _get_visible_listing(
+            db,
             organization_id=org_id,
-            agency_id=agency_id,
-            user_email=user.get("email"),
-            quote_doc=quote_doc,
-            booking_req=payload,
-            request_id=idempotency_key,
+            listing_id=payload.listing_id,
+            buyer_tenant_id=buyer_tenant_id,
         )
 
-        # Funnel: b2b.booking.created
-        try:
-            await log_funnel_event(
-                await get_db(),
-                organization_id=org_id,
-                correlation_id=correlation_id,
-                event_name="b2b.booking.created",
-                entity_type="booking",
-                entity_id=booking.booking_id,
-                channel="b2b",
-                user={
-                    "user_id": user.get("id"),
-                    "email": user.get("email"),
-                    "roles": user.get("roles") or [],
-                },
-                context={},
-                trace={
-                    "idempotency_key": idempotency_key,
-                },
-            )
-        except Exception:
-            pass
+        currency = listing.get("currency") or "TRY"
+        if currency != "TRY":
+            raise AppError(422, "UNSUPPORTED_CURRENCY", "UNSUPPORTED_CURRENCY")
 
-        return 200, booking.model_dump()
+        base_price = listing.get("base_price")
+        if isinstance(base_price, Decimal128):
+            base_amount_dec = base_price.to_decimal()
+        else:
+            base_amount_dec = Decimal(str(base_price or "0"))
 
-    status, body = await idem.store_or_replay(
-        org_id=org_id,
-        agency_id=agency_id,
-        endpoint=endpoint,
-        key=idempotency_key,
-        method=method,
-        path=path,
-        request_body=payload.model_dump(),
-        compute_response_fn=compute,
-    )
+        pricing = await calculate_price(
+            db,
+            base_amount=base_amount_dec,
+            organization_id=org_id,
+            currency=currency,
+            tenant_id=buyer_tenant_id,
+            supplier="marketplace",
+        )
 
-    if status == 200:
-        return BookingCreateResponse(**body)
+        now = now_utc()
+        customer = payload.customer
+        customer_email = customer.email.lower()
+        customer_name = customer.full_name or customer.name
+        if not customer_name:
+            raise AppError(422, "INVALID_CUSTOMER_NAME", "INVALID_CUSTOMER_NAME")
 
-    return JSONResponse(status_code=status, content=body)
+        seller_tenant_id = listing.get("tenant_id")
+
+        booking_doc: Dict[str, Any] = {
+            "organization_id": org_id,
+            "state": "draft",
+            "source": "b2b_marketplace",
+            "currency": currency,
+            # Keep numeric amount as float to avoid changing legacy behaviour
+            "amount": float(pricing["final_amount"]),
+            "customer_email": customer_email,
+            "customer_name": customer_name,
+            "customer_phone": customer.phone,
+            "offer_ref": {
+                "source": "marketplace",
+                "listing_id": payload.listing_id,
+                "seller_tenant_id": seller_tenant_id,
+                "buyer_tenant_id": buyer_tenant_id,
+            },
+            "pricing": {
+                "base_amount": str(pricing["base_amount"]),
+                "final_amount": str(pricing["final_amount"]),
+                "commission_amount": str(pricing["commission_amount"]),
+                "margin_amount": str(pricing["margin_amount"]),
+                "currency": currency,
+                "applied_rules": pricing["applied_rules"],
+                "calculated_at": now,
+            },
+            "pricing_audit_emitted": False,
+            "created_at": now,
+            "updated_at": now,
+        }
+
+        res = await db.bookings.insert_one(booking_doc)
+        booking_id = str(res.inserted_id)
+
+        actor = {"actor_type": "user", "email": user.get("email"), "roles": user.get("roles")}
+
+        await write_audit_log(
+            db,
+            organization_id=org_id,
+            actor=actor,
+            request=request,
+            action="B2B_BOOKING_CREATED",
+            target_type="booking",
+            target_id=booking_id,
+            before=None,
+            after=booking_doc,
+            meta={
+                "source": "marketplace",
+                "listing_id": payload.listing_id,
+                "buyer_tenant_id": buyer_tenant_id,
+                "seller_tenant_id": seller_tenant_id,
+            },
+        )
+
+        await emit_pricing_audit_if_needed(
+            db,
+            booking_id=booking_id,
+            tenant_id=buyer_tenant_id,
+            organization_id=org_id,
+            actor=actor,
+            request=request,
+        )
+
+        return B2BMarketplaceBookingCreateResponse(booking_id=booking_id, state="draft")
+
+    # Unknown source
+    raise AppError(422, "UNSUPPORTED_SOURCE", "UNSUPPORTED_SOURCE")
 
 
 class CustomerIn(BaseModel):

@@ -461,6 +461,191 @@ async def create_b2b_booking_from_marketplace(
 
 
 
+
+
+@router.post(
+    "/bookings/{booking_id}/confirm",
+    dependencies=[Depends(require_roles(["agency_agent", "agency_admin", "super_admin"]))],
+)
+async def confirm_b2b_booking(
+    booking_id: str,
+    request: Request,
+    user=Depends(get_current_user),
+    db=Depends(get_db),
+):
+    """Confirm a draft B2B booking via supplier fulfilment (v1).
+
+    Behaviour:
+    - 404 BOOKING_NOT_FOUND if booking does not exist
+    - If booking.status == CONFIRMED -> 200 idempotent response
+    - If booking.status is anything else than PENDING (legacy) -> 422 BOOKING_NOT_CONFIRMABLE
+    - For marketplace bookings (source == b2b_marketplace):
+      - Requires tenant context (X-Tenant-Key)
+      - buyer_tenant_id in offer_ref must match request.state.tenant_id
+    - Requires offer_ref.supplier and offer_ref.supplier_offer_id; otherwise
+      422 INVALID_SUPPLIER_MAPPING
+    - On successful supplier fulfilment, appends BOOKING_CONFIRMED lifecycle
+      event and emits B2B_BOOKING_CONFIRMED audit log.
+    """
+
+    from bson import ObjectId
+    from uuid import uuid4
+
+    org_id = user.get("organization_id")
+    agency_id = user.get("agency_id")
+    if not agency_id:
+        raise AppError(403, "forbidden", "User is not bound to an agency")
+
+    try:
+        oid = ObjectId(booking_id)
+    except Exception:
+        raise AppError(404, "BOOKING_NOT_FOUND", "BOOKING_NOT_FOUND")
+
+    booking = await db.bookings.find_one({"_id": oid, "organization_id": org_id})
+    if not booking:
+        raise AppError(404, "BOOKING_NOT_FOUND", "BOOKING_NOT_FOUND")
+
+    status_val = booking.get("status")
+    if status_val == "CONFIRMED":
+        # Idempotent confirm
+        return {"booking_id": booking_id, "state": "confirmed"}
+
+    if status_val not in {None, "PENDING"}:
+        raise AppError(
+            422,
+            "BOOKING_NOT_CONFIRMABLE",
+            "Booking is not in a confirmable state",
+            details={"reason": "invalid_state", "status": status_val},
+        )
+
+    source = booking.get("source")
+    offer_ref = (booking.get("offer_ref") or {})
+
+    # Tenant context guard for marketplace
+    if source == "b2b_marketplace":
+        buyer_tenant_id = offer_ref.get("buyer_tenant_id")
+        req_tenant_id = getattr(request.state, "tenant_id", None)
+        if not req_tenant_id:
+            raise AppError(403, "TENANT_CONTEXT_REQUIRED", "TENANT_CONTEXT_REQUIRED")
+        if buyer_tenant_id and req_tenant_id != buyer_tenant_id:
+            raise AppError(
+                422,
+                "BOOKING_NOT_CONFIRMABLE",
+                "Booking tenant does not match current tenant context",
+                details={"reason": "invalid_state"},
+            )
+
+    supplier_name = (offer_ref.get("supplier") or "").strip()
+    supplier_offer_id = (offer_ref.get("supplier_offer_id") or "").strip()
+
+    if not supplier_name:
+        raise AppError(
+            422,
+            "INVALID_SUPPLIER_MAPPING",
+            "Missing supplier on offer_ref for fulfilment",
+            details={"reason": "missing_supplier"},
+        )
+
+    if not supplier_offer_id:
+        raise AppError(
+            422,
+            "INVALID_SUPPLIER_MAPPING",
+            "Missing supplier_offer_id on offer_ref for fulfilment",
+            details={"reason": "missing_supplier_offer_id"},
+        )
+
+    # v1: only mock_supplier_v1 is supported
+    if supplier_name != "mock_supplier_v1":
+        raise AppError(
+            422,
+            "INVALID_SUPPLIER_MAPPING",
+            "Supplier is not supported for fulfilment in v1",
+            details={"reason": "unsupported_supplier", "supplier": supplier_name},
+        )
+
+    # Supplier fulfilment mock call
+    attempt_id = str(uuid4())
+
+    try:
+        # For v1 we do not have a real adapter; we simply simulate success.
+        supplier_response = {"status": "confirmed", "supplier_booking_id": f"MOCK-BKG-{supplier_offer_id}"}
+    except AppError as e:
+        # Map known supplier AppErrors directly
+        raise e
+    except Exception as exc:  # pragma: no cover - defensive
+        raise AppError(
+            500,
+            "SUPPLIER_FULFILMENT_FAILED",
+            "Supplier fulfilment failed due to unexpected error",
+            details={"reason": "unexpected_exception", "error": str(exc)},
+        ) from exc
+
+    if supplier_response.get("status") != "confirmed":
+        # In a real adapter we would inspect error codes here; for v1 we
+        # surface a generic rejection.
+        raise AppError(
+            502,
+            "SUPPLIER_REJECTED",
+            "Supplier rejected booking fulfilment",
+        )
+
+    # Update booking projection with supplier_booking_id (if provided)
+    supplier_booking_id = supplier_response.get("supplier_booking_id")
+    update_fields: dict[str, Any] = {"updated_at": now_utc()}
+    if supplier_booking_id:
+        update_fields["offer_ref.supplier_booking_id"] = supplier_booking_id
+
+    await db.bookings.update_one(
+        {"_id": oid, "organization_id": org_id},
+        {"$set": update_fields},
+    )
+
+    # Append lifecycle BOOKING_CONFIRMED event (idempotent per request_id)
+    from app.services.booking_lifecycle import BookingLifecycleService
+
+    lifecycle = BookingLifecycleService(db)
+    await lifecycle.append_event(
+        organization_id=org_id,
+        agency_id=agency_id,
+        booking_id=booking_id,
+        event="BOOKING_CONFIRMED",
+        request_id=attempt_id,
+        before={"status": status_val or "PENDING"},
+        after={"status": "CONFIRMED"},
+        meta={
+            "source": source,
+            "supplier": supplier_name,
+            "supplier_offer_id": supplier_offer_id,
+        },
+    )
+
+    # Audit log for B2B booking confirmation
+    actor = {"actor_type": "user", "email": user.get("email"), "roles": user.get("roles")}
+    meta = {
+        "source": "supplier_fulfilment",
+        "supplier": supplier_name,
+        "supplier_offer_id": supplier_offer_id,
+        "tenant_id": offer_ref.get("buyer_tenant_id"),
+        "attempt_id": attempt_id,
+    }
+    if supplier_booking_id:
+        meta["supplier_booking_id"] = supplier_booking_id
+
+    await write_audit_log(
+        db,
+        organization_id=org_id,
+        actor=actor,
+        request=request,
+        action="B2B_BOOKING_CONFIRMED",
+        target_type="booking",
+        target_id=booking_id,
+        before=None,
+        after=None,
+        meta=meta,
+    )
+
+    return {"booking_id": booking_id, "state": "confirmed"}
+
 @router.post("/bookings/{booking_id}/refund-requests")
 async def create_refund_request(
     booking_id: str,

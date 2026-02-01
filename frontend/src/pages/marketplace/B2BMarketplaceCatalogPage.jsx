@@ -217,7 +217,7 @@ export default function B2BMarketplaceCatalogPage() {
               </div>
             </div>
             <div className="mt-2 text-[10px] text-muted-foreground">
-              Bu kart sadece katalog içindir; rezervasyon/teklif akışı ayrı PR'larda eklenecektir.
+              Bu kart sadece katalog içindir; rezervasyon/teklif akışı ayrı PR larda eklenecektir.
             </div>
           </Card>
         ))}

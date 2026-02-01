@@ -119,7 +119,11 @@ async def test_b2b_booking_create_happy_path(test_db: Any, async_client: AsyncCl
         }
     )
 
-    headers = {"Authorization": f"Bearer {token}", "X-Tenant-Key": "buyer-b2b"}
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "X-Tenant-Key": "buyer-b2b",
+        "Idempotency-Key": "mkp-test-1",
+    }
 
     payload = {
         "source": "marketplace",

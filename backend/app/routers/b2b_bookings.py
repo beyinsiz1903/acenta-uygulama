@@ -255,7 +255,11 @@ async def create_b2b_booking(
             request=request,
         )
 
-        return B2BMarketplaceBookingCreateResponse(booking_id=booking_id, state="draft")
+        # Marketplace create returns 201 + minimal draft payload
+        return JSONResponse(
+            status_code=201,
+            content={"booking_id": booking_id, "state": "draft"},
+        )
 
     # Unknown source
     raise AppError(422, "UNSUPPORTED_SOURCE", "UNSUPPORTED_SOURCE")

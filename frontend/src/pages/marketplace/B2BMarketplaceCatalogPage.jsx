@@ -218,14 +218,66 @@ export default function B2BMarketplaceCatalogPage() {
             </div>
             <div className="mt-2 flex items-center justify-between text-[10px] text-muted-foreground">
               <span>
-                Bu kart sadece katalog içindir; rezervasyon/teklif akışı ayrı PR larda eklenecektir.
+                Bu kart sadece katalog i 7f31n31r; rezervasyon/teklif ak7f31 ayr31 PR larda eklenecektir.
               </span>
-              <Button
-                type="button"
-                size="xs"
-                className="h-7 text-[11px]"
-                variant="outline"
-                onClick={async () => {
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  size="xs"
+                  className="h-7 text-[11px]"
+                  variant="default"
+                  onClick={async () => {
+                    try {
+                      if (!tenantKey) {
+                        setError("Marketplace katalo7f31n31 g31rmek i31n tenant se31melisiniz.");
+                        return;
+                      }
+
+                      setError("");
+                      const res = await api.post(
+                        "/b2b/bookings",
+                        {
+                          source: "marketplace",
+                          listing_id: item.id,
+                          customer: {
+                            full_name: "Marketplace M 7f3131eri",
+                            email: "marketplace@example.com",
+                            phone: "+900000000000",
+                          },
+                          travellers: [
+                            { first_name: "Test", last_name: "User" },
+                          ],
+                        },
+                        { headers },
+                      );
+
+                      const bookingId = res?.data?.booking_id;
+                      if (bookingId) {
+                        window.alert(`Taslak olu7fturuldu: ${bookingId}`);
+                      } else {
+                        setError("Taslak olu7fturma cevab31 beklenen formatta de31l.");
+                      }
+                    } catch (err) {
+                      const details = parseErrorDetails(err);
+                      const code = details?.code;
+                      if (code === "TENANT_CONTEXT_REQUIRED") {
+                        setError("Tenant se31melisiniz.");
+                      } else if (code === "MARKETPLACE_ACCESS_FORBIDDEN") {
+                        setError("Bu listing'e eri5fiminiz yok.");
+                      } else {
+                        setError(apiErrorMessage(err));
+                      }
+                    }
+                  }}
+                >
+                  B2B Taslak Olu7ftur
+                </Button>
+                <Button
+                  type="button"
+                  size="xs"
+                  className="h-7 text-[11px]"
+                  variant="outline"
+                  onClick={async () => {
                   try {
                     if (!tenantKey) {
                       setError("Marketplace kataloğunu görmek için tenant seçmelisiniz.");

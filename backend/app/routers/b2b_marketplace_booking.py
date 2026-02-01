@@ -68,7 +68,11 @@ async def _get_visible_listing(
   return listing
 
 
-@router.post("/bookings", response_model=B2BBookingCreateResponse)
+@router.post(
+  "/b2b/bookings",
+  response_model=B2BBookingCreateResponse,
+  dependencies=[Depends(require_roles(["agency_agent", "agency_admin"]))],
+)
 async def create_b2b_booking_from_marketplace(
   payload: B2BBookingCreateRequest,
   request: Request,

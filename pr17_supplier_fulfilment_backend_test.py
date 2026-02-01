@@ -121,9 +121,14 @@ def setup_test_org(org_suffix: str) -> str:
     print(f"   ✅ Created org: {org_id}")
     return org_id
 
-def setup_marketplace_infrastructure(org_id: str, buyer_tenant_key: str = "buyer-tenant", seller_tenant_key: str = "seller-tenant"):
+def setup_marketplace_infrastructure(org_id: str, test_suffix: str = None):
     """Setup complete marketplace infrastructure for testing"""
     print(f"   📋 Setting up marketplace infrastructure...")
+    
+    # Make tenant keys unique per test
+    unique_suffix = test_suffix or uuid.uuid4().hex[:8]
+    buyer_tenant_key = f"buyer-tenant-{unique_suffix}"
+    seller_tenant_key = f"seller-tenant-{unique_suffix}"
     
     mongo_client = get_mongo_client()
     db = mongo_client.get_default_database()

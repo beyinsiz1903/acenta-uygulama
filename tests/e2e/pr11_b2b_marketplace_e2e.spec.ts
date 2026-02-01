@@ -131,7 +131,8 @@ test.describe('PR-11 B2B Marketplace E2E (@exit_b2b_marketplace_e2e_v1)', () => 
     await page.goto('/app/b2b/marketplace');
     await page.waitForLoadState('networkidle');
 
-    await expect(page.getByText('B2B Marketplace')).toBeVisible();
+    // Page heading inside main content
+    await expect(page.getByRole('main').getByText('B2B Marketplace')).toBeVisible();
 
     const cards2 = page.locator('div.grid div[data-testid="marketplace-card"], div.grid .flex.flex-col.justify-between');
     const firstCard2 = cards2.first();

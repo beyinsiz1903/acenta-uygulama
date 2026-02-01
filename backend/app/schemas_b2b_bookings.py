@@ -5,21 +5,29 @@ from typing import List, Optional, Literal
 from pydantic import BaseModel, EmailStr, Field
 
 
+class Customer(BaseModel):
+    # Quote/original flow
+    name: Optional[str] = None
+    email: EmailStr
+    # Marketplace flow can prefer full_name + phone
+    full_name: Optional[str] = None
+    phone: Optional[str] = None
+
+
 class Traveller(BaseModel):
     first_name: str
     last_name: str
 
 
-class Customer(BaseModel):
-    name: str
-    email: EmailStr
-
-
 class BookingCreateRequest(BaseModel):
-    quote_id: str
+    # Legacy quote-based flow
+    quote_id: Optional[str] = None
     customer: Customer
     travellers: List[Traveller] = Field(min_length=1)
     notes: Optional[str] = None
+    # PR-10 marketplace flow
+    source: Optional[str] = None
+    listing_id: Optional[str] = None
 
 
 BookingStatus = Literal["PENDING", "CONFIRMED"]
@@ -30,6 +38,9 @@ class BookingCreateResponse(BaseModel):
     status: BookingStatus
     voucher_status: Literal["pending", "ready"] = "pending"
     finance_flags: Optional[dict] = None
+
+
+class BookingListItem(BaseModel):
 
 
 class BookingListItem(BaseModel):

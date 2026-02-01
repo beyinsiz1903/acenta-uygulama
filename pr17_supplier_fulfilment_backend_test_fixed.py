@@ -279,6 +279,7 @@ def setup_credit_profile(org_id: str, limit_amount: float = 50000.0):
     
     credit_profile_doc = {
         "organization_id": org_id,
+        "name": "Standard",  # Required field for credit profile lookup
         "credit_limit": Decimal128(str(limit_amount)),
         "currency": "TRY",
         "status": "active",
@@ -287,7 +288,7 @@ def setup_credit_profile(org_id: str, limit_amount: float = 50000.0):
     }
     
     db.credit_profiles.replace_one(
-        {"organization_id": org_id},
+        {"organization_id": org_id, "name": "Standard"},
         credit_profile_doc,
         upsert=True
     )

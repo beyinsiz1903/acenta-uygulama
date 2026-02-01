@@ -110,7 +110,7 @@ async function ensureMarketplaceSeed(baseURL: string) {
     console.log('[e2e-seed] listing published');
 
     // 3) Grant access seller->buyer using tenant keys (idempotent via upsert in backend)
-    const grantRes = await apiRequest.post('/marketplace/access/grant', {
+    const grantRes = await apiRequest.post('/api/marketplace/access/grant', {
       headers: authHeaders,
       data: {
         seller_tenant_key: sellerTenantKey,

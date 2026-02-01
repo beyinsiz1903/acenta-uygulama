@@ -176,9 +176,10 @@ async def test_supplier_unresolved_returns_400_and_audit(test_db: Any, async_cli
     }
 
     resp_confirm = await client.post(f"/api/b2b/bookings/{booking_id}/confirm", headers=headers)
-    assert resp_confirm.status_code == status.HTTP_400_BAD_REQUEST
+    # In v1 we reuse INVALID_SUPPLIER_MAPPING for unresolved supplier cases
+    assert resp_confirm.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
     err = resp_confirm.json().get("error", {})
-    assert err.get("code") == "supplier_unresolved"
+    assert err.get("code") == "INVALID_SUPPLIER_MAPPING"
 
 
 @pytest.mark.exit_supplier_not_supported

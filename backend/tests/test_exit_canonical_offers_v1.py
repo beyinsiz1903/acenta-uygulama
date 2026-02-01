@@ -41,7 +41,7 @@ async def test_canonical_offers_schema_and_no_raw_leakage(test_db: Any, async_cl
         {
             "organization_id": org_id,
             "email": email,
-            "roles": ["admin"],
+            "roles": ["agency_agent"],
             "is_active": True,
             "created_at": now,
             "updated_at": now,
@@ -124,7 +124,7 @@ async def test_canonical_offers_no_supplier_raw_leakage(test_db: Any, async_clie
         {
             "organization_id": org_id,
             "email": email,
-            "roles": ["admin"],
+            "roles": ["agency_agent"],
             "is_active": True,
             "created_at": now,
             "updated_at": now,
@@ -183,7 +183,7 @@ async def test_search_session_ttl_and_indexes(test_db: Any, async_client: AsyncC
         {
             "organization_id": org_id,
             "email": email,
-            "roles": ["admin"],
+            "roles": ["agency_agent"],
             "is_active": True,
             "created_at": now,
             "updated_at": now,
@@ -258,7 +258,7 @@ async def test_booking_from_canonical_offer_creates_draft_booking(test_db: Any, 
         {
             "organization_id": org_id,
             "email": email,
-            "roles": ["admin"],
+            "roles": ["agency_agent"],
             "is_active": True,
             "created_at": now,
             "updated_at": now,

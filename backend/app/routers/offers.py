@@ -209,12 +209,15 @@ async def get_search_session_offers(
     organization_id = str(org["id"])
     session = await get_search_session(db, organization_id=organization_id, session_id=session_id)
     if not session:
+        # For simplicity and leak-safety we do not distinguish between missing
+        # and expired sessions at the API surface.
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="SEARCH_SESSION_NOT_FOUND")
 
     offers = session.get("offers") or []
     expires_at = session.get("expires_at")
     if not expires_at:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="SEARCH_SESSION_EXPIRED")
+        # Consider sessions without an expires_at as effectively not found
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="SEARCH_SESSION_NOT_FOUND")
 
     return OfferSearchSessionResponse(
         session_id=session_id,

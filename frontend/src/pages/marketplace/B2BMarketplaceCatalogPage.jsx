@@ -112,7 +112,7 @@ export default function B2BMarketplaceCatalogPage() {
           {!tenantKey && (
             <div className="flex items-center gap-1 text-[11px] text-destructive">
               <AlertCircle className="h-4 w-4" />
-              <span>Marketplace'e erişmek için bir tenant key girin.</span>
+              <span>Marketplace erişimi için bir tenant key girin.</span>
             </div>
           )}
         </div>

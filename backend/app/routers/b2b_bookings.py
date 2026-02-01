@@ -604,7 +604,7 @@ async def confirm_b2b_booking(
     lifecycle = BookingLifecycleService(db)
     await lifecycle.append_event(
         organization_id=org_id,
-        agency_id=agency_id,
+        agency_id=booking.get("agency_id") or "",
         booking_id=booking_id,
         event="BOOKING_CONFIRMED",
         request_id=attempt_id,

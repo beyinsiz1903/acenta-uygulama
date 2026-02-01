@@ -7,7 +7,7 @@ from bson import Decimal128, ObjectId
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, EmailStr
 
-from app.auth import get_current_user
+from app.auth import get_current_user, require_roles
 from app.db import get_db
 from app.services.pricing_service import calculate_price
 from app.services.pricing_audit_service import emit_pricing_audit_if_needed

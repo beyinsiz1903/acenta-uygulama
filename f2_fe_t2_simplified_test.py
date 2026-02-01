@@ -7,7 +7,7 @@ Testing the core functionality without strict language validation
 import asyncio
 from playwright.async_api import async_playwright
 
-BASE_URL = "https://bayipanel.preview.emergentagent.com"
+BASE_URL = "https://b2bportal-6.preview.emergentagent.com"
 PRODUCT_ID = "696564845776721d56136a1c"
 ORG_ID = "org_public_checkout"
 

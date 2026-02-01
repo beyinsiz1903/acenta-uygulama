@@ -14,7 +14,7 @@ import os
 from bson import ObjectId
 
 # Configuration
-BASE_URL = "https://bayipanel.preview.emergentagent.com"
+BASE_URL = "https://b2bportal-6.preview.emergentagent.com"
 
 def get_mongo_client():
     """Get MongoDB client for direct database access"""

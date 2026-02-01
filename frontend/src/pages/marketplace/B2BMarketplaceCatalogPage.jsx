@@ -189,7 +189,11 @@ export default function B2BMarketplaceCatalogPage() {
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         {items.map((item) => (
-          <Card key={item.id} className="flex flex-col justify-between p-3 text-[11px]">
+          <Card
+            key={item.id}
+            data-testid="marketplace-card"
+            className="flex flex-col justify-between p-3 text-[11px]"
+          >
             <div className="space-y-1">
               <div className="flex items-center justify-between gap-2">
                 <div>

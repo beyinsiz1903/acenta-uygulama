@@ -24,6 +24,7 @@ async def test_confirm_timeout_enforced_returns_upstream_timeout(test_db: Any, a
     """
 
     from app.services.suppliers.mock_adapter import MockSupplierAdapter
+    import app.routers.b2b_bookings as b2b_bookings
 
     client: AsyncClient = async_client
     now = now_utc()

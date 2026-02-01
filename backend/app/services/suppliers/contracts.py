@@ -58,6 +58,39 @@ class SupplierAdapter:
         raise NotImplementedError
 
     async def cancel_booking(self, ctx: SupplierContext, booking: Dict[str, Any]) -> None:  # pragma: no cover - v1 stub
+
+
+def _now_utc() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+async def run_with_deadline(coro, ctx: SupplierContext):
+    """Run supplier adapter coroutine with a hard deadline.
+
+    - Uses ctx.deadline_at if set; otherwise initializes it from timeout_ms.
+    - Maps asyncio.TimeoutError to SupplierAdapterError(upstream_timeout, retryable=True).
+    """
+
+    if ctx.deadline_at is None:
+        ctx.deadline_at = _now_utc().replace(microsecond=0) + timedelta(milliseconds=ctx.timeout_ms)  # type: ignore[name-defined]
+
+    remaining = (ctx.deadline_at - _now_utc()).total_seconds()
+    if remaining <= 0:
+        raise SupplierAdapterError(
+            code="upstream_timeout",
+            message="Supplier confirm deadline exceeded before execution",
+            retryable=True,
+        )
+
+    try:
+        return await asyncio.wait_for(coro, timeout=remaining)
+    except asyncio.TimeoutError:
+        raise SupplierAdapterError(
+            code="upstream_timeout",
+            message="Supplier confirm timed out",
+            retryable=True,
+        )
+
         return None
 
     async def healthcheck(self, ctx: SupplierContext) -> Dict[str, Any]:  # pragma: no cover - v1 stub

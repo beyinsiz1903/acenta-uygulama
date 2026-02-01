@@ -54,3 +54,14 @@ class BookingListItem(BaseModel):
 
 class BookingListResponse(BaseModel):
     items: List[BookingListItem]
+
+
+class B2BMarketplaceBookingCreateRequest(BaseModel):
+    source: str = "marketplace"
+    listing_id: str
+    customer: Customer
+
+
+class B2BMarketplaceBookingCreateResponse(BaseModel):
+    booking_id: str
+    state: str

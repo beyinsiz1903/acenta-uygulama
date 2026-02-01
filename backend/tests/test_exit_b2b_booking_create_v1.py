@@ -322,9 +322,12 @@ async def test_b2b_booking_create_requires_tenant_context(test_db: Any, async_cl
             "email": "b2b3@example.com",
             "phone": "+900000000002",
         },
+        "travellers": [
+            {"first_name": "Test", "last_name": "User"},
+        ],
     }
 
-    resp = await client.post("/api/b2b/bookings-from-marketplace", json=payload, headers=headers)
+    resp = await client.post("/api/b2b/bookings", json=payload, headers=headers)
     assert resp.status_code == status.HTTP_403_FORBIDDEN
     err = resp.json().get("error", {})
     assert err.get("message") == "TENANT_CONTEXT_REQUIRED"

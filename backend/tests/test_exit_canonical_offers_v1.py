@@ -143,7 +143,8 @@ async def test_canonical_offers_no_supplier_raw_leakage(test_db: Any, async_clie
         "check_out": "2025-06-05",
         "adults": 2,
         "children": 0,
-        "supplier_codes": ["mock", "paximum"],
+        # We include only mock here to avoid dependency on live Paximum upstream
+        "supplier_codes": ["mock"],
     }
 
     resp = await client.post("/api/offers/search", json=payload, headers=headers)

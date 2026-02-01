@@ -266,7 +266,6 @@ async def create_b2b_booking(
 
 async def _get_visible_listing(
     db,
-    request: Request,
     *,
     organization_id: str,
     listing_id: str,
@@ -277,10 +276,9 @@ async def _get_visible_listing(
     except Exception:
         raise AppError(404, "LISTING_NOT_FOUND", "LISTING_NOT_FOUND")
 
-    base_filter: Dict[str, Any] = {"_id": oid, "organization_id": organization_id, "status": "published"}
-    base_filter = enforce_tenant_org(base_filter, request)
-
-    listing = await db.marketplace_listings.find_one(base_filter)
+    listing = await db.marketplace_listings.find_one(
+        {"_id": oid, "organization_id": organization_id, "status": "published"}
+    )
     if not listing:
         raise AppError(404, "LISTING_NOT_FOUND", "LISTING_NOT_FOUND")
 

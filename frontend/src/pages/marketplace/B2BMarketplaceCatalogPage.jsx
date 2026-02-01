@@ -255,7 +255,7 @@ export default function B2BMarketplaceCatalogPage() {
                       if (bookingId) {
                         window.alert(`Taslak oluşturuldu: ${bookingId}`);
                       } else {
-                        setError("Taslak olu7fturma cevab31 beklenen formatta de31l.");
+                        setError("Taslak oluşturma cevabı beklenen formatta değil.");
                       }
                     } catch (err) {
                       const details = parseErrorDetails(err);

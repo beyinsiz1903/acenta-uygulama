@@ -65,6 +65,7 @@ from app.routers.pricing_quote import router as pricing_quote_router
 from app.routers.pricing import router as pricing_router
 from app.routers.pricing_rules import router as pricing_rules_router
 from app.routers.marketplace import router as marketplace_router
+from app.routers.b2b_marketplace_booking import router as b2b_marketplace_booking_router
 from app.routers.admin_funnel import router as admin_funnel_router
 
 from app.routers.theme import router as theme_router

@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional
 from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
-from app.services.offers.canonical import CanonicalHotelOffer
+from typing import Any
 
 
 SEARCH_SESSION_TTL_MINUTES = 30
@@ -31,7 +31,7 @@ async def create_search_session(
     organization_id: str,
     tenant_id: Optional[str],
     query: Dict[str, Any],
-    offers: List[CanonicalHotelOffer],
+    offers: List[Dict[str, Any]],
 ) -> Dict[str, Any]:
     now = _utc_now()
     expires_at = now + timedelta(minutes=SEARCH_SESSION_TTL_MINUTES)

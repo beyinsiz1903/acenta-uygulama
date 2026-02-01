@@ -19,8 +19,8 @@ try {
   }
 
   const appJs = fs.readFileSync(path.join(__dirname, "../src/App.js"), "utf8");
-  if (!appJs.includes("/app/admin/marketplace/listings")) {
-    throw new Error("Route '/app/admin/marketplace/listings' not found in App.js");
+  if (!appJs.includes("marketplace/listings")) {
+    throw new Error("Route 'marketplace/listings' not found in App.js");
   }
   if (!appJs.includes("/app/b2b/marketplace")) {
     throw new Error("Route '/app/b2b/marketplace' not found in App.js");

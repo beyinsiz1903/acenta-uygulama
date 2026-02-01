@@ -25,8 +25,16 @@ try {
     }
   }
 
-  // If we reach here, files exist; this is enough for v1 UI gate.
-  console.log("storefront_smoke_check: OK (files present)");
+  // Basic route presence check in App.js
+  const appJs = fs.readFileSync(path.join(__dirname, "../src/App.js"), "utf8");
+  if (!appJs.includes("/s/:tenantKey")) {
+    throw new Error("Route '/s/:tenantKey' not found in App.js");
+  }
+  if (!appJs.includes("/s/:tenantKey/search")) {
+    throw new Error("Route '/s/:tenantKey/search' not found in App.js");
+  }
+
+  console.log("storefront_smoke_check: OK (files + routes present)");
   process.exit(0);
 } catch (err) {
   console.error("storefront_smoke_check: FAILED", err && err.message ? err.message : err);

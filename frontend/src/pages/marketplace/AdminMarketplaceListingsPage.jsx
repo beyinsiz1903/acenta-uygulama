@@ -184,7 +184,7 @@ function ListingFormDialog({ open, onOpenChange, initial, onSaved, tenantKey }) 
               className="min-h-[60px] w-full rounded-md border bg-background p-2 text-xs font-mono"
               value={pricingHintText}
               onChange={(e) => setPricingHintText(e.target.value)}
-              placeholder="{\"recommended_markup_pct\": 10}"
+              placeholder='{"recommended_markup_pct": 10}'
             />
           </div>
           <DialogFooter className="mt-2 flex justify-end gap-2">

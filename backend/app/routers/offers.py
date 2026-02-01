@@ -182,25 +182,6 @@ async def search_offers(
     # We convert Pydantic models back to dicts for storage.
     offers_dicts = [c.model_dump() for c in canonical_offers]
 
-    from app.services.offers.canonical import CanonicalHotelOffer as _COffer
-
-    offers_for_session = [
-        _COffer(
-            offer_token=o["offer_token"],
-            supplier_code=o["supplier_code"],
-            supplier_offer_id=o["supplier_offer_id"],
-            product_type=o["product_type"],
-            hotel=o["hotel"],  # type: ignore[arg-type]
-            stay=o["stay"],  # type: ignore[arg-type]
-            room=o["room"],  # type: ignore[arg-type]
-            cancellation_policy=o.get("cancellation_policy"),  # type: ignore[arg-type]
-            price=o["price"],  # type: ignore[arg-type]
-            availability_token=o.get("availability_token"),
-            raw_fingerprint=o["raw_fingerprint"],
-        )
-        for o in offers_dicts
-    ]
-
     session = await create_search_session(
         db,
         organization_id=organization_id,

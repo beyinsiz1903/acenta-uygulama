@@ -321,7 +321,10 @@ async def test_b2b_booking_create_requires_tenant_context(test_db: Any, async_cl
     )
     listing_id = str(listing_res.inserted_id)
 
-    headers = {"Authorization": f"Bearer {token}"}  # No X-Tenant-Key
+    headers = {
+        "Authorization": f"Bearer {token}",  # No X-Tenant-Key
+        "Idempotency-Key": "mkp-test-3",
+    }
     payload = {
         "source": "marketplace",
         "listing_id": listing_id,

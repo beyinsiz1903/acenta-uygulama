@@ -157,8 +157,13 @@ async def test_b2b_booking_create_happy_path(test_db: Any, async_client: AsyncCl
     assert pricing.get("currency") == "TRY"
     assert pricing.get("base_amount") == "100.00"
     assert pricing.get("final_amount") is not None
-    assert isinstance(pricing.get("applied_rules"), list)
-    assert pricing.get("applied_rules"), "Expected at least one applied rule"
+
+    applied_rules = pricing.get("applied_rules") or []
+    assert isinstance(applied_rules, list)
+    # At least one markup_pct rule should have been applied
+    assert any(r.get("rule_type") == "markup_pct" for r in applied_rules)
+    # And final_amount should reflect that markup
+    assert Decimal(pricing["final_amount"]) != Decimal(pricing["base_amount"])
 
     # Audit: PRICING_RULE_APPLIED for this booking
     audit_cursor = test_db.audit_logs.find(

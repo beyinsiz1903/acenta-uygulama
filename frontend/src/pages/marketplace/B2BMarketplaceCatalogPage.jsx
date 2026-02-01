@@ -263,7 +263,7 @@ export default function B2BMarketplaceCatalogPage() {
                       if (code === "TENANT_CONTEXT_REQUIRED") {
                         setError("Tenant seçmelisiniz.");
                       } else if (code === "MARKETPLACE_ACCESS_FORBIDDEN") {
-                        setError("Bu listing'e eri5fiminiz yok.");
+                        setError("Bu listing'e erişiminiz yok.");
                       } else {
                         setError(apiErrorMessage(err));
                       }

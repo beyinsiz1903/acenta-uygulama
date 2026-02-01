@@ -58,6 +58,10 @@ class SupplierAdapter:
         raise NotImplementedError
 
     async def cancel_booking(self, ctx: SupplierContext, booking: Dict[str, Any]) -> None:  # pragma: no cover - v1 stub
+        return None
+
+    async def healthcheck(self, ctx: SupplierContext) -> Dict[str, Any]:  # pragma: no cover - v1 stub
+        return {"status": "ok"}
 
 
 def _now_utc() -> datetime:
@@ -72,7 +76,7 @@ async def run_with_deadline(coro, ctx: SupplierContext):
     """
 
     if ctx.deadline_at is None:
-        ctx.deadline_at = _now_utc().replace(microsecond=0) + timedelta(milliseconds=ctx.timeout_ms)  # type: ignore[name-defined]
+        ctx.deadline_at = _now_utc().replace(microsecond=0) + timedelta(milliseconds=ctx.timeout_ms)
 
     remaining = (ctx.deadline_at - _now_utc()).total_seconds()
     if remaining <= 0:
@@ -90,8 +94,3 @@ async def run_with_deadline(coro, ctx: SupplierContext):
             message="Supplier confirm timed out",
             retryable=True,
         )
-
-        return None
-
-    async def healthcheck(self, ctx: SupplierContext) -> Dict[str, Any]:  # pragma: no cover - v1 stub
-        return {"status": "ok"}

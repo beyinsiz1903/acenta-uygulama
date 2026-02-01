@@ -18,6 +18,9 @@ from app.services.pricing_service import calculate_price
 from app.services.pricing_audit_service import emit_pricing_audit_if_needed
 from app.services.audit import write_audit_log
 from app.services.supplier_mapping_service import resolve_listing_supplier, apply_supplier_mapping
+from app.services.credit_exposure_service import has_available_credit
+from app.services.suppliers.registry import registry as supplier_registry
+from app.services.suppliers.contracts import SupplierContext, ConfirmStatus, SupplierAdapterError
 from bson import Decimal128, ObjectId
 from decimal import Decimal
 from pydantic import BaseModel, EmailStr

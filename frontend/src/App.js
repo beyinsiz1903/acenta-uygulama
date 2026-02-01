@@ -275,6 +275,7 @@ function App() {
           }
         >
           <Route index element={<DashboardPage />} />
+          <Route path="b2b/marketplace" element={<B2BMarketplaceCatalogPage />} />
           <Route path="products" element={<ProductsPage />} />
           <Route path="inventory" element={<InventoryPage />} />
           <Route path="reservations" element={<ReservationsPage />} />

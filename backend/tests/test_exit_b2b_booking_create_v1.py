@@ -240,7 +240,11 @@ async def test_b2b_booking_create_forbidden_without_access(test_db: Any, async_c
     )
     listing_id = str(listing_res.inserted_id)
 
-    headers = {"Authorization": f"Bearer {token}", "X-Tenant-Key": "buyer-b2b2"}
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "X-Tenant-Key": "buyer-b2b2",
+        "Idempotency-Key": "mkp-test-2",
+    }
     payload = {
         "source": "marketplace",
         "listing_id": listing_id,

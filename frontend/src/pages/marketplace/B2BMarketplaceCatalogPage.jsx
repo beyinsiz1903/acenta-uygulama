@@ -182,7 +182,7 @@ export default function B2BMarketplaceCatalogPage() {
 
       {!loading && items.length === 0 && tenantKey && !error && (
         <p className="text-[11px] text-muted-foreground">
-          Şu an için bu tenant için görünür bir marketplace listing'i bulunmuyor. Erişimi olan satıcılar henüz
+          Şu an için bu tenant için görünür bir marketplace listingi bulunmuyor. Erişimi olan satıcılar henüz
           yayınlamamış olabilir.
         </p>
       )}

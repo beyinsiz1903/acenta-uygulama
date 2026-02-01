@@ -621,9 +621,9 @@ async def confirm_b2b_booking(
 
     if not supplier_name:
         raise AppError(
-            400,
-            "supplier_unresolved",
-            "Unable to resolve supplier for booking confirm.",
+            422,
+            "INVALID_SUPPLIER_MAPPING",
+            "Missing supplier on offer_ref for fulfilment",
             details={"reason": "missing_supplier"},
         )
 
@@ -692,7 +692,8 @@ async def confirm_b2b_booking(
             after={"status": "CONFIRMED"},
             meta={
                 "source": source,
-                "supplier": result.supplier_code,
+                # Preserve legacy supplier name in events for compatibility
+                "supplier": supplier_name,
                 "supplier_offer_id": supplier_offer_id,
             },
         )
@@ -701,7 +702,8 @@ async def confirm_b2b_booking(
         actor = {"actor_type": "user", "email": user.get("email"), "roles": user.get("roles")}
         meta = {
             "source": "supplier_fulfilment",
-            "supplier": result.supplier_code,
+            # Preserve legacy supplier name in audit for compatibility
+            "supplier": supplier_name,
             "supplier_offer_id": supplier_offer_id,
             "tenant_id": offer_ref.get("buyer_tenant_id"),
             "attempt_id": attempt_id,

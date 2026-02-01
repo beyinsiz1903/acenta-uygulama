@@ -262,6 +262,8 @@ app.include_router(payments_router, prefix=API_PREFIX)
 app.include_router(payments_stripe_router, prefix=API_PREFIX)
 app.include_router(products_router, prefix=API_PREFIX)
 app.include_router(public_click_to_pay_router)  # No prefix - router has its own
+app.include_router(offers_router)
+app.include_router(offers_booking_router)
 app.include_router(public_my_booking_router)    # No prefix - router has its own
 app.include_router(public_search_router)        # No prefix - router has its own
 app.include_router(public_checkout_router)      # No prefix - router has its own

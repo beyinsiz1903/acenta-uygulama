@@ -13,8 +13,7 @@ from app.services.b2b_booking import B2BBookingService
 from app.services.booking_lifecycle import BookingLifecycleService
 from app.services.booking_financials import BookingFinancialsService
 from app.services.funnel_events import log_funnel_event
-from app.utils import get_or_create_correlation_id, now_utc
-from app.tenant_context import enforce_tenant_org
+from app.utils import get_or_create_correlation_id, now_utc, serialize_doc
 from app.services.pricing_service import calculate_price
 from app.services.pricing_audit_service import emit_pricing_audit_if_needed
 from app.services.audit import write_audit_log
@@ -55,13 +54,13 @@ async def create_b2b_booking(
     org_id = user.get("organization_id")
     agency_id = user.get("agency_id")
     correlation_id = get_or_create_correlation_id(request, None)
-    if not agency_id:
-        raise AppError(403, "forbidden", "User is not bound to an agency")
 
     source = (payload.source or "quote").strip().lower()
 
     # Legacy quote-based flow (P0.2)
     if source in {"", "quote"}:
+        if not agency_id:
+            raise AppError(403, "forbidden", "User is not bound to an agency")
         endpoint = "b2b_bookings_create"
         method = "POST"
         path = "/api/b2b/bookings"

@@ -147,6 +147,18 @@ async def lifespan(app: FastAPI):
     await ensure_storefront_indexes(db)
     await ensure_pricing_indexes(db)
     await ensure_marketplace_indexes(db)
+    # Initialize supplier adapters registry
+    from app.services.suppliers.registry import registry as supplier_registry
+    from app.services.suppliers.mock_adapter import MockSupplierAdapter
+    from app.services.suppliers.paximum_confirm_adapter import PaximumConfirmAdapter
+
+    mock_adapter = MockSupplierAdapter()
+    supplier_registry.register("mock", mock_adapter)
+    supplier_registry.alias("mock_supplier_v1", "mock")
+
+    paximum_confirm_adapter = PaximumConfirmAdapter()
+    supplier_registry.register("paximum", paximum_confirm_adapter)
+
     await ensure_marketplace_indexes(db)
 
     yield

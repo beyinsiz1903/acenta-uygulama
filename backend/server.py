@@ -142,6 +142,7 @@ async def lifespan(app: FastAPI):
     await ensure_tenant_indexes(db)
     await ensure_storefront_indexes(db)
     await ensure_pricing_indexes(db)
+    await ensure_marketplace_indexes(db)
 
     yield
 

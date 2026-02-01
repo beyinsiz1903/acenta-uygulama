@@ -16,6 +16,16 @@ async function loginAsSuperAdmin(page) {
   ]);
 }
 
+function requireBackendBaseURL(): string {
+  const explicit = process.env.E2E_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
+  if (!explicit) {
+    throw new Error(
+      'E2E_BACKEND_URL is required for seeding (must point to backend origin, e.g. http://localhost:8001).',
+    );
+  }
+  return explicit.replace(/\/$/, '');
+}
+
 // PR-11 gate: exit_b2b_marketplace_e2e_v1
 // Covers:
 // - Tenant key deterministik olarak set
@@ -24,74 +34,110 @@ async function loginAsSuperAdmin(page) {
 // - Negatif: tenant yokken uygun hata mesajı
 
 async function ensureMarketplaceSeed(baseURL: string) {
-  const request = await pwRequest.newContext();
+  const backendOrigin = requireBackendBaseURL();
+  const apiBase = backendOrigin.endsWith('/api') ? backendOrigin : `${backendOrigin}/api`;
+  console.log(`[e2e-seed] apiBase=${apiBase}`);
 
-  // 1) API login as super admin (same creds as UI)
-  const loginRes = await request.post(`${baseURL}/api/auth/login`, {
-    data: {
-      email: 'muratsutay@hotmail.com',
-      password: 'murat1903',
-    },
-  });
-  if (!loginRes.ok()) {
-    throw new Error(`Login failed: ${loginRes.status()} ${await loginRes.text()}`);
-  }
-  const loginBody = await loginRes.json();
-  const token = loginBody.access_token || loginBody.token || loginBody.jwt;
-  if (!token) {
-    throw new Error('No JWT token returned from /api/auth/login');
-  }
+  const runId = process.env.CI
+    ? `ci-${process.env.GITHUB_RUN_ID || 'unknown'}`
+    : `local-${Date.now()}`;
+  console.log(`[e2e-seed] runId=${runId}`);
 
-  const authHeaders = {
-    Authorization: `Bearer ${token}`,
-  };
+  const apiRequest = await pwRequest.newContext({ baseURL: apiBase });
 
-  // 2) Create & publish listing under a known seller tenant
-  const sellerTenantKey = 'seller-tenant-br';
-  const buyerTenantKey = 'buyer-b2b';
+  try {
+    // 1) API login as super admin (same creds as UI)
+    const loginRes = await apiRequest.post('/auth/login', {
+      data: {
+        email: 'muratsutay@hotmail.com',
+        password: 'murat1903',
+      },
+    });
+    if (!loginRes.ok()) {
+      throw new Error(`Login failed: ${loginRes.status()} ${await loginRes.text()}`);
+    }
+    const loginBody = await loginRes.json();
+    const token = loginBody.access_token || loginBody.token || loginBody.jwt;
+    if (!token) {
+      throw new Error(
+        `[e2e-seed] No token in /auth/login response keys=${Object.keys(loginBody).join(',')}`,
+      );
+    }
 
-  const createRes = await request.post(`${baseURL}/api/marketplace/listings`, {
-    headers: {
-      ...authHeaders,
-      'X-Tenant-Key': sellerTenantKey,
-    },
-    data: {
-      title: 'E2E Listing - PR13',
-      description: 'E2E test listing for PR-13',
-      category: 'hotel',
-      currency: 'TRY',
-      base_price: '100.00',
-      tags: ['pr13', 'e2e'],
-    },
-  });
+    const authHeaders = {
+      Authorization: `Bearer ${token}`,
+    };
+    console.log('[e2e-seed] login ok');
 
-  if (!createRes.ok()) {
-    throw new Error(`Create listing failed: ${createRes.status()} ${await createRes.text()}`);
-  }
-  const created = await createRes.json();
-  const listingId = created.id;
+    // 2) Create & publish listing under a known seller tenant
+    const sellerTenantKey = 'seller-tenant-br';
+    const buyerTenantKey = 'buyer-b2b';
 
-  // 2.b) Publish listing
-  const publishRes = await request.post(`${baseURL}/api/marketplace/listings/${listingId}/publish`, {
-    headers: {
-      ...authHeaders,
-      'X-Tenant-Key': sellerTenantKey,
-    },
-  });
-  if (!publishRes.ok()) {
-    throw new Error(`Publish listing failed: ${publishRes.status()} ${await publishRes.text()}`);
-  }
+    const createRes = await apiRequest.post('/marketplace/listings', {
+      headers: {
+        ...authHeaders,
+        'X-Tenant-Key': sellerTenantKey,
+      },
+      data: {
+        title: 'E2E Listing - PR13',
+        description: 'E2E test listing for PR-13',
+        category: 'hotel',
+        currency: 'TRY',
+        base_price: '100.00',
+        tags: ['pr13', 'e2e'],
+      },
+    });
 
-  // 3) Grant access seller->buyer using tenant keys (idempotent via upsert in backend)
-  const grantRes = await request.post(`${baseURL}/api/marketplace/access/grant`, {
-    headers: authHeaders,
-    data: {
-      seller_tenant_key: sellerTenantKey,
-      buyer_tenant_key: buyerTenantKey,
-    },
-  });
-  if (!grantRes.ok()) {
-    throw new Error(`Grant access failed: ${grantRes.status()} ${await grantRes.text()}`);
+    if (!createRes.ok()) {
+      throw new Error(`Create listing failed: ${createRes.status()} ${await createRes.text()}`);
+    }
+    const created = await createRes.json();
+    const listingId = created.id;
+    console.log('[e2e-seed] listing created:', listingId);
+
+    // 2.b) Publish listing
+    const publishRes = await apiRequest.post(`/marketplace/listings/${listingId}/publish`, {
+      headers: {
+        ...authHeaders,
+        'X-Tenant-Key': sellerTenantKey,
+      },
+    });
+    if (!publishRes.ok()) {
+      throw new Error(`Publish listing failed: ${publishRes.status()} ${await publishRes.text()}`);
+    }
+    console.log('[e2e-seed] listing published');
+
+    // 3) Grant access seller->buyer using tenant keys (idempotent via upsert in backend)
+    const grantRes = await apiRequest.post('/marketplace/access/grant', {
+      headers: authHeaders,
+      data: {
+        seller_tenant_key: sellerTenantKey,
+        buyer_tenant_key: buyerTenantKey,
+      },
+    });
+    if (!grantRes.ok()) {
+      throw new Error(`Grant access failed: ${grantRes.status()} ${await grantRes.text()}`);
+    }
+    console.log('[e2e-seed] access granted');
+
+    // 4) Sanity check: buyer catalog sees at least one item
+    const catalogRes = await apiRequest.get('/marketplace/catalog', {
+      headers: {
+        ...authHeaders,
+        'X-Tenant-Key': buyerTenantKey,
+      },
+    });
+    if (!catalogRes.ok()) {
+      throw new Error(`Catalog failed: ${catalogRes.status()} ${await catalogRes.text()}`);
+    }
+    const catalogBody = await catalogRes.json();
+    const items = catalogBody.items || [];
+    if (!items.length) {
+      throw new Error('[e2e-seed] catalog returned 0 items for buyer-b2b');
+    }
+    console.log('[e2e-seed] catalog ok items=', items.length);
+  } finally {
+    await apiRequest.dispose();
   }
 }
 

@@ -170,7 +170,9 @@ async def test_resolve_supplier_and_booking_mapping(test_db: Any, async_client: 
     # Check booking doc in DB
     booking_doc = await test_db.bookings.find_one({"_id": ObjectId(booking_id)})
     offer_ref = (booking_doc or {}).get("offer_ref") or {}
-    assert offer_ref.get("supplier") == "mock_supplier_v1"
+    # For legacy tests without supplier mapping, fallback to "marketplace"
+    supplier = offer_ref.get("supplier") or "marketplace"
+    assert supplier == "mock_supplier_v1"
     assert offer_ref.get("supplier_offer_id") == "MOCK-MS-12345"
 
 

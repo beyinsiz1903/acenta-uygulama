@@ -468,21 +468,8 @@ metadata:
 
 test_plan:
   current_focus:
-    - "B2B Portal Agency günlük akış derinleşme (UI-only) Sprint 4.6"
-    - "Reset Password Page E2E Frontend Testing (Sprint 4.4)"
-    - "B2B Portal Daily Usage Polish (UI-only) Sprint 4.3"
-    - "Ops Tasks UI (2.3) – OpsTasksPage + Refund detail Görevler paneli"
-    - "Document Vault UI in AdminFinanceRefundsPage (Sprint 2.2)"
-    - "Refund Workflow 2.1 Multi-Step State Transitions"
-    - "Refund Workflow 2.1 Reject Lifecycle"
-    - "Refund Workflow 2.1 4-Eyes Enforcement"
-    - "Refund Workflow 2.1 Legacy Approve Compatibility"
-    - "Refund Workflow 2.1 Reject Audit Timeline"
-    - "Refund Workflow 2.1 Error Cases Validation"
-    - "Ops Playbook (2.3) – Refund-driven Task Engine + Ops Tasks API"
-    - "Admin Agency User Management Backend Endpoints (Sprint 4.1)"
-  stuck_tasks:
-    - "Refund Workflow 2.1 Legacy Approve Compatibility"
+    - "PR-16: Supplier Fulfilment v1 Backend Validation"
+  stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 

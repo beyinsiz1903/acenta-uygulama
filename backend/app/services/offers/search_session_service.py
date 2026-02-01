@@ -51,46 +51,7 @@ async def create_search_session(
         "expires_at": expires_at,
         "query": query,
         # Store canonical offers as plain dicts
-        "offers": [
-            {
-                "offer_token": o.offer_token,
-                "supplier_code": o.supplier_code,
-                "supplier_offer_id": o.supplier_offer_id,
-                "product_type": o.product_type,
-                "hotel": {
-                    "name": o.hotel.name,
-                    "city": o.hotel.city,
-                    "country": o.hotel.country,
-                    "latitude": o.hotel.latitude,
-                    "longitude": o.hotel.longitude,
-                },
-                "stay": {
-                    "check_in": o.stay.check_in,
-                    "check_out": o.stay.check_out,
-                    "nights": o.stay.nights,
-                    "adults": o.stay.adults,
-                    "children": o.stay.children,
-                },
-                "room": {
-                    "room_name": o.room.room_name,
-                    "board_type": o.room.board_type,
-                },
-                "cancellation_policy": {
-                    "refundable": o.cancellation_policy.refundable if o.cancellation_policy else None,
-                    "deadline": o.cancellation_policy.deadline if o.cancellation_policy else None,
-                    "raw": o.cancellation_policy.raw if o.cancellation_policy else None,
-                }
-                if o.cancellation_policy
-                else None,
-                "price": {
-                    "amount": o.price.amount,
-                    "currency": o.price.currency,
-                },
-                "availability_token": o.availability_token,
-                "raw_fingerprint": o.raw_fingerprint,
-            }
-            for o in offers
-        ],
+        "offers": offers,
         "offer_index": offer_index,
     }
 

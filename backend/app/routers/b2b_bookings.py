@@ -7,7 +7,7 @@ from app.auth import get_current_user, require_roles
 from app.db import get_db
 from app.errors import AppError
 from app.repos_idempotency import IdempotencyRepo
-from app.schemas_b2b_bookings import BookingCreateRequest, BookingCreateResponse
+from app.schemas_b2b_bookings import BookingCreateRequest, BookingCreateResponse, B2BMarketplaceBookingCreateRequest, B2BMarketplaceBookingCreateResponse
 from app.services.b2b_pricing import B2BPricingService
 from app.services.b2b_booking import B2BBookingService
 from app.services.booking_lifecycle import BookingLifecycleService

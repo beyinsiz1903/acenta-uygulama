@@ -19,6 +19,12 @@ router = APIRouter(prefix="/marketplace", tags=["marketplace"])
 CURRENCY_TRY = "TRY"
 
 
+class SupplierInfo(BaseModel):
+    name: Optional[str] = None
+    external_ref: Optional[str] = None
+    payload: Optional[Dict[str, Any]] = None
+
+
 class MarketplaceListingBase(BaseModel):
     title: str
     description: Optional[str] = None
@@ -27,6 +33,7 @@ class MarketplaceListingBase(BaseModel):
     base_price: str
     pricing_hint: Optional[Dict[str, Any]] = None
     tags: Optional[List[str]] = None
+    supplier: Optional[SupplierInfo] = None
 
 
 class MarketplaceListingCreate(MarketplaceListingBase):
@@ -112,6 +119,15 @@ async def create_listing(
         "created_at": now,
         "updated_at": now,
     }
+
+    if payload.supplier is not None:
+        doc["supplier"] = {
+            "name": payload.supplier.name,
+            "external_ref": payload.supplier.external_ref,
+            "payload": payload.supplier.payload or {},
+        }
+
+    # supplier_mapping will be populated lazily during supplier resolve / booking flows
 
     res = await db.marketplace_listings.insert_one(doc)
     created = await db.marketplace_listings.find_one({"_id": res.inserted_id})

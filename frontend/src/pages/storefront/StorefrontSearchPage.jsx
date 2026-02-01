@@ -250,7 +250,13 @@ export default function StorefrontSearchPage() {
               />
             </div>
             <div className="sm:col-span-4 flex justify-end gap-2">
-              <Button type="submit" size="sm" className="h-8 text-xs" disabled={loading}>
+              <Button
+                type="submit"
+                size="sm"
+                className="h-8 text-xs"
+                style={{ backgroundColor: "var(--sf-primary, #2563eb)" }}
+                disabled={loading}
+              >
                 {loading ? "Aranıyor..." : "Ara"}
               </Button>
             </div>

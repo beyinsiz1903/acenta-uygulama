@@ -35,7 +35,7 @@ function requireBackendBaseURL(): string {
 
 async function ensureMarketplaceSeed(baseURL: string) {
   const backendOrigin = requireBackendBaseURL();
-  const apiBase = backendOrigin.endsWith('/api') ? backendOrigin : `${backendOrigin}/api`;
+  const apiBase = backendOrigin.replace(/\/$/, '');
   console.log(`[e2e-seed] apiBase=${apiBase}`);
 
   const runId = process.env.CI
@@ -73,7 +73,7 @@ async function ensureMarketplaceSeed(baseURL: string) {
     const sellerTenantKey = 'seller-tenant-br';
     const buyerTenantKey = 'buyer-b2b';
 
-    const createRes = await apiRequest.post('/marketplace/listings', {
+    const createRes = await apiRequest.post('/api/marketplace/listings', {
       headers: {
         ...authHeaders,
         'X-Tenant-Key': sellerTenantKey,

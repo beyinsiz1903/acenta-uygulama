@@ -10,15 +10,17 @@ class AppError(Exception):
     code: str
     message: str
     details: Optional[Dict[str, Any]] = None
-    
+    retryable: Optional[bool] = None
+
     def to_dict(self) -> Dict[str, Any]:
-        return {
-            "error": {
-                "code": self.code,
-                "message": self.message,
-                "details": self.details or {},
-            }
+        payload: Dict[str, Any] = {
+            "code": self.code,
+            "message": self.message,
+            "details": self.details or {},
         }
+        if self.retryable is not None:
+            payload["retryable"] = self.retryable
+        return {"error": payload}
 
 
 from enum import Enum

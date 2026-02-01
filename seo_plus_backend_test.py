@@ -16,7 +16,7 @@ from pymongo import MongoClient
 sys.path.append('/app/backend')
 
 # Configuration - Use production URL from frontend/.env
-BASE_URL = "https://b2btravel.preview.emergentagent.com"
+BASE_URL = "https://bayipanel.preview.emergentagent.com"
 
 def login_admin():
     """Login as admin user and return token, org_id, email"""

@@ -24,7 +24,7 @@ from typing import Dict, Any, Optional
 from bson import ObjectId
 
 # Configuration - Use production URL from frontend/.env
-BASE_URL = "https://b2btravel.preview.emergentagent.com"
+BASE_URL = "https://bayipanel.preview.emergentagent.com"
 
 def get_mongo_client():
     """Get MongoDB client for direct database access"""

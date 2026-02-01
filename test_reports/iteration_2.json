@@ -4,7 +4,7 @@
     "critical_bugs": [
       {
         "endpoint": "/api/*",
-        "issue": "External API routing not working - 404 errors for all /api/* endpoints via https://b2btravel.preview.emergentagent.com/api/*",
+        "issue": "External API routing not working - 404 errors for all /api/* endpoints via https://bayipanel.preview.emergentagent.com/api/*",
         "impact": "Prevents frontend from communicating with backend via external URL",
         "fix_priority": "HIGH",
         "details": "Backend works correctly on localhost:8001, but external routing through ingress/proxy is not configured properly"
@@ -47,7 +47,7 @@
     "/app/frontend/src/pages/AgencyBookingTestPage.jsx", 
     "/app/frontend/src/pages/SimpleBookingTest.jsx"
   ],
-  "action_item_for_main_agent": "Fix external API routing configuration - /api/* endpoints return 404 when accessed via https://b2btravel.preview.emergentagent.com/api/*. Backend works correctly on localhost:8001 but external ingress/proxy routing is not configured properly. This prevents frontend-backend integration testing.",
+  "action_item_for_main_agent": "Fix external API routing configuration - /api/* endpoints return 404 when accessed via https://bayipanel.preview.emergentagent.com/api/*. Backend works correctly on localhost:8001 but external ingress/proxy routing is not configured properly. This prevents frontend-backend integration testing.",
   "should_call_test_agent_after_fix": true,
   "should_main_agent_test_itself": false,
   "detailed_code_analysis": {

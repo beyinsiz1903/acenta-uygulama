@@ -22,7 +22,7 @@ class SupplierContext:
     tenant_id: Optional[str] = None
     user_id: Optional[str] = None
     timeout_ms: int = 8000
-    deadline_at: Optional["datetime"] = None
+    deadline_at: Optional[datetime] = None
 
 
 @dataclass

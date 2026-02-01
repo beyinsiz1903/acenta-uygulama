@@ -505,7 +505,7 @@ async def confirm_b2b_booking(
 
     status_val = booking.get("status")
     if status_val == "CONFIRMED":
-        # Idempotent confirm
+        # Idempotent confirm: booking already confirmed, do not emit new events
         return {"booking_id": booking_id, "state": "confirmed"}
 
     if status_val not in {None, "PENDING"}:

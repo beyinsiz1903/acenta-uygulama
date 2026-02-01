@@ -131,7 +131,13 @@ export default function StorefrontCheckoutPage() {
                 />
               </div>
               <div className="flex justify-end gap-2 pt-1">
-                <Button type="submit" size="sm" className="h-8 text-xs" disabled={submitting}>
+                <Button
+                  type="submit"
+                  size="sm"
+                  className="h-8 text-xs"
+                  style={{ backgroundColor: "var(--sf-primary, #2563eb)" }}
+                  disabled={submitting}
+                >
                   {submitting ? "Gönderiliyor..." : "Rezervasyon Oluştur"}
                 </Button>
               </div>

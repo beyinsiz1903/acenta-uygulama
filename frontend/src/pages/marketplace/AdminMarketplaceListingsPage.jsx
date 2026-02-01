@@ -325,7 +325,7 @@ export default function AdminMarketplaceListingsPage() {
           {!tenantKey && (
             <div className="text-[11px] text-destructive flex items-center gap-1">
               <AlertCircle className="h-4 w-4" />
-              <span>Listing'leri görmek için önce bir tenant key girin.</span>
+              <span>Listingleri görmek için önce bir tenant key girin.</span>
             </div>
           )}
         </div>

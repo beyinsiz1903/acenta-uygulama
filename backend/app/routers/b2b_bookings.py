@@ -370,6 +370,10 @@ async def create_b2b_booking_from_marketplace(
 
     seller_tenant_id = listing["tenant_id"]
 
+    # Supplier mapping from listing (if resolved)
+    offer_ref_supplier = supplier_mapping.get("supplier")
+    offer_ref_supplier_id = supplier_mapping.get("offer_id")
+
     booking_doc: Dict[str, Any] = {
         "organization_id": org_id,
         "state": "draft",

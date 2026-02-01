@@ -235,7 +235,7 @@ async def create_b2b_booking(
             target_type="booking",
             target_id=booking_id,
             before=None,
-            after=booking_doc,
+            after=serialize_doc(booking_doc),
             meta={
                 "source": "marketplace",
                 "listing_id": payload.listing_id,

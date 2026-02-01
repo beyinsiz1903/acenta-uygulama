@@ -14,6 +14,13 @@ from app.services.booking_lifecycle import BookingLifecycleService
 from app.services.booking_financials import BookingFinancialsService
 from app.services.funnel_events import log_funnel_event
 from app.utils import get_or_create_correlation_id
+from app.tenant_context import enforce_tenant_org
+from app.services.pricing_service import calculate_price
+from app.services.pricing_audit_service import emit_pricing_audit_if_needed
+from app.services.audit import write_audit_log
+from bson import Decimal128, ObjectId
+from decimal import Decimal
+from typing import Any, Dict, Optional
 
 router = APIRouter(prefix="/api/b2b", tags=["b2b-bookings"])
 
@@ -134,6 +141,184 @@ async def create_b2b_booking(
         return BookingCreateResponse(**body)
 
     return JSONResponse(status_code=status, content=body)
+
+
+class CustomerIn(BaseModel):
+    full_name: str
+    email: EmailStr
+    phone: str
+
+
+class B2BMarketplaceBookingCreateRequest(BaseModel):
+    source: str
+    listing_id: str
+    customer: CustomerIn
+
+
+class B2BMarketplaceBookingCreateResponse(BaseModel):
+    booking_id: str
+    state: str
+
+
+async def _get_visible_listing(
+    db,
+    *,
+    organization_id: str,
+    listing_id: str,
+    buyer_tenant_id: str,
+) -> Dict[str, Any]:
+    try:
+        oid = ObjectId(listing_id)
+    except Exception:
+        raise AppError(404, "LISTING_NOT_FOUND", "LISTING_NOT_FOUND")
+
+    base_filter: Dict[str, Any] = {"_id": oid, "organization_id": organization_id, "status": "published"}
+    base_filter = enforce_tenant_org(base_filter, None)
+
+    listing = await db.marketplace_listings.find_one(base_filter)
+    if not listing:
+        raise AppError(404, "LISTING_NOT_FOUND", "LISTING_NOT_FOUND")
+
+    seller_tenant_id = listing.get("tenant_id")
+    if not seller_tenant_id:
+        raise AppError(404, "LISTING_NOT_FOUND", "LISTING_NOT_FOUND")
+
+    access = await db.marketplace_access.find_one(
+        {
+            "organization_id": organization_id,
+            "seller_tenant_id": seller_tenant_id,
+            "buyer_tenant_id": buyer_tenant_id,
+        }
+    )
+    if not access:
+        raise AppError(403, "MARKETPLACE_ACCESS_FORBIDDEN", "MARKETPLACE_ACCESS_FORBIDDEN")
+
+    return listing
+
+
+@router.post(
+    "/bookings-from-marketplace",
+    status_code=201,
+    response_model=B2BMarketplaceBookingCreateResponse,
+    dependencies=[Depends(require_roles(["agency_agent", "agency_admin"]))],
+)
+async def create_b2b_booking_from_marketplace(
+    payload: B2BMarketplaceBookingCreateRequest,
+    request: Request,
+    user=Depends(get_current_user),
+    db=Depends(get_db),
+) -> B2BMarketplaceBookingCreateResponse:
+    """Create a B2B booking draft from a marketplace listing.
+
+    - Requires buyer tenant context
+    - Enforces marketplace_access visibility
+    - Uses pricing engine with tenant_id = buyer_tenant_id
+    """
+
+    if payload.source != "marketplace":
+        raise AppError(422, "UNSUPPORTED_SOURCE", "UNSUPPORTED_SOURCE")
+
+    org_id: str = user.get("organization_id")
+    buyer_tenant_id: Optional[str] = getattr(request.state, "tenant_id", None)
+
+    if not buyer_tenant_id:
+        raise AppError(403, "TENANT_CONTEXT_REQUIRED", "TENANT_CONTEXT_REQUIRED")
+
+    listing = await _get_visible_listing(
+        db,
+        organization_id=org_id,
+        listing_id=payload.listing_id,
+        buyer_tenant_id=buyer_tenant_id,
+    )
+
+    currency = listing.get("currency") or "TRY"
+    if currency != "TRY":
+        raise AppError(422, "UNSUPPORTED_CURRENCY", "UNSUPPORTED_CURRENCY")
+
+    base_price = listing.get("base_price")
+    if isinstance(base_price, Decimal128):
+        base_amount_dec = base_price.to_decimal()
+    else:
+        base_amount_dec = Decimal(str(base_price or "0"))
+
+    # Pricing with tenant_id = buyer_tenant_id and supplier="marketplace"
+    pricing = await calculate_price(
+        db,
+        base_amount=base_amount_dec,
+        organization_id=org_id,
+        currency=currency,
+        tenant_id=buyer_tenant_id,
+        supplier="marketplace",
+    )
+
+    # Compose booking document
+    now = now_utc()
+    customer_email = payload.customer.email.lower()
+
+    seller_tenant_id = listing["tenant_id"]
+
+    booking_doc: Dict[str, Any] = {
+        "organization_id": org_id,
+        "state": "draft",
+        "source": "b2b_marketplace",
+        "currency": currency,
+        "amount": Decimal128(str(pricing["final_amount"])),
+        "customer_email": customer_email,
+        "customer_name": payload.customer.full_name,
+        "customer_phone": payload.customer.phone,
+        "offer_ref": {
+            "source": "marketplace",
+            "listing_id": payload.listing_id,
+            "seller_tenant_id": seller_tenant_id,
+            "buyer_tenant_id": buyer_tenant_id,
+        },
+        "pricing": {
+            "base_amount": str(pricing["base_amount"]),
+            "final_amount": str(pricing["final_amount"]),
+            "commission_amount": str(pricing["commission_amount"]),
+            "margin_amount": str(pricing["margin_amount"]),
+            "currency": currency,
+            "applied_rules": pricing["applied_rules"],
+            "calculated_at": now,
+        },
+        "pricing_audit_emitted": False,
+        "created_at": now,
+        "updated_at": now,
+    }
+
+    res = await db.bookings.insert_one(booking_doc)
+    booking_id = str(res.inserted_id)
+
+    actor = {"actor_type": "user", "email": user.get("email"), "roles": user.get("roles")}
+
+    await write_audit_log(
+        db,
+        organization_id=org_id,
+        actor=actor,
+        request=request,
+        action="B2B_BOOKING_CREATED",
+        target_type="booking",
+        target_id=booking_id,
+        before=None,
+        after=booking_doc,
+        meta={
+            "source": "marketplace",
+            "listing_id": payload.listing_id,
+            "buyer_tenant_id": buyer_tenant_id,
+            "seller_tenant_id": seller_tenant_id,
+        },
+    )
+
+    await emit_pricing_audit_if_needed(
+        db,
+        booking_id=booking_id,
+        tenant_id=buyer_tenant_id,
+        organization_id=org_id,
+        actor=actor,
+        request=request,
+    )
+
+    return B2BMarketplaceBookingCreateResponse(booking_id=booking_id, state="draft")
 
 
 

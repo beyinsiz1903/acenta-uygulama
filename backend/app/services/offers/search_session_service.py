@@ -39,9 +39,9 @@ async def create_search_session(
     # Build offer_index for quick lookup by offer_token
     offer_index: Dict[str, Dict[str, Any]] = {}
     for o in offers:
-        offer_index[o.offer_token] = {
-            "supplier_code": o.supplier_code,
-            "supplier_offer_id": o.supplier_offer_id,
+        offer_index[o["offer_token"]] = {
+            "supplier_code": o["supplier_code"],
+            "supplier_offer_id": o["supplier_offer_id"],
         }
 
     doc = {

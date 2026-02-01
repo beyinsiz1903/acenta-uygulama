@@ -9,8 +9,8 @@ async function loginAsSuperAdmin(page) {
   const passwordInput = page.getByTestId('login-password');
   const submitButton = page.getByTestId('login-submit');
 
-  await emailInput.fill('admin@acenta.test');
-  await passwordInput.fill('admin123');
+  await emailInput.fill('muratsutay@hotmail.com');
+  await passwordInput.fill('murat1903');
 
   await Promise.all([
     page.waitForNavigation({ waitUntil: 'networkidle' }),

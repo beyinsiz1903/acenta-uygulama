@@ -240,6 +240,11 @@ async def test_search_session_ttl_and_indexes(test_db: Any, async_client: AsyncC
         assert idx.get("supplier_code") == o.get("supplier_code")
     assert len(tokens) == len(offers)
 
+    # Ensure TTL index helper is invoked for test DB as well
+    from app.indexes.marketplace_indexes import ensure_offers_indexes
+
+    await ensure_offers_indexes(test_db)
+
     # Check TTL index exists on search_sessions.expires_at
     indexes = await test_db.search_sessions.index_information()
     ttl_index = None

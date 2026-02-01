@@ -536,6 +536,7 @@ def test_tenant_mismatch():
             "tenant_key": different_tenant_key,
             "name": f"Different Tenant {infrastructure['unique_id']}",
             "type": "buyer",
+            "is_active": True,
             "created_at": datetime.utcnow(),
             "updated_at": datetime.utcnow(),
         }

@@ -512,6 +512,9 @@ class B2BMarketplaceBookingTester:
             # Test 3: Missing tenant context
             results["missing_tenant_context"] = await self.test_missing_tenant_context()
             
+            # Test 4: Legacy quote flow regression
+            results["legacy_regression"] = await self.test_legacy_quote_flow_regression()
+            
             # Summary
             total_tests = len(results)
             passed_tests = sum(1 for r in results.values() if r["success"])

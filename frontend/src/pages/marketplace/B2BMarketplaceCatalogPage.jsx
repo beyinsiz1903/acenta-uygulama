@@ -216,8 +216,48 @@ export default function B2BMarketplaceCatalogPage() {
                 ))}
               </div>
             </div>
-            <div className="mt-2 text-[10px] text-muted-foreground">
-              Bu kart sadece katalog içindir; rezervasyon/teklif akışı ayrı PR larda eklenecektir.
+            <div className="mt-2 flex items-center justify-between text-[10px] text-muted-foreground">
+              <span>
+                Bu kart sadece katalog içindir; rezervasyon/teklif akışı ayrı PR larda eklenecektir.
+              </span>
+              <Button
+                type="button"
+                size="xs"
+                className="h-7 text-[11px]"
+                variant="outline"
+                onClick={async () => {
+                  try {
+                    if (!tenantKey) {
+                      setError("Marketplace kataloğunu görmek için tenant seçmelisiniz.");
+                      return;
+                    }
+                    setError("");
+                    const res = await api.post(
+                      `/marketplace/catalog/${encodeURIComponent(item.id)}/create-storefront-session`,
+                      null,
+                      { headers },
+                    );
+                    const redirectUrl = res?.data?.redirect_url;
+                    if (redirectUrl) {
+                      window.open(redirectUrl, "_blank");
+                    } else {
+                      setError("Redirect URL alınamadı.");
+                    }
+                  } catch (err) {
+                    const details = parseErrorDetails(err);
+                    const code = details?.code;
+                    if (code === "TENANT_CONTEXT_REQUIRED") {
+                      setError("Marketplace kataloğunu görmek için tenant seçmelisiniz.");
+                    } else if (code === "MARKETPLACE_ACCESS_FORBIDDEN") {
+                      setError("Bu listing'e erişimin yok.");
+                    } else {
+                      setError(apiErrorMessage(err));
+                    }
+                  }
+                }}
+              >
+                Vitrine gönder
+              </Button>
             </div>
           </Card>
         ))}

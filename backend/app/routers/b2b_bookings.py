@@ -720,6 +720,9 @@ async def confirm_b2b_booking(
                 # Preserve legacy supplier name in events for compatibility
                 "supplier": supplier_name,
                 "supplier_offer_id": supplier_offer_id,
+                "supplier_code_canonical": result.supplier_code,
+                "supplier_code_legacy": supplier_name,
+                "timeout_ms": ctx.timeout_ms,
             },
         )
 
@@ -732,6 +735,10 @@ async def confirm_b2b_booking(
             "supplier_offer_id": supplier_offer_id,
             "tenant_id": offer_ref.get("buyer_tenant_id"),
             "attempt_id": attempt_id,
+            "supplier_code_canonical": result.supplier_code,
+            "supplier_code_legacy": supplier_name,
+            "retryable": False,
+            "timeout_ms": ctx.timeout_ms,
         }
         if supplier_booking_id:
             meta["supplier_booking_id"] = supplier_booking_id

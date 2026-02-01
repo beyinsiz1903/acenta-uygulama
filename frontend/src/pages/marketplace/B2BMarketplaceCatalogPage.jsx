@@ -240,7 +240,7 @@ export default function B2BMarketplaceCatalogPage() {
                           source: "marketplace",
                           listing_id: item.id,
                           customer: {
-                            full_name: "Marketplace M 7f3131eri",
+                            full_name: "Marketplace Müşterisi",
                             email: "marketplace@example.com",
                             phone: "+900000000000",
                           },
@@ -253,7 +253,7 @@ export default function B2BMarketplaceCatalogPage() {
 
                       const bookingId = res?.data?.booking_id;
                       if (bookingId) {
-                        window.alert(`Taslak olu7fturuldu: ${bookingId}`);
+                        window.alert(`Taslak oluşturuldu: ${bookingId}`);
                       } else {
                         setError("Taslak olu7fturma cevab31 beklenen formatta de31l.");
                       }

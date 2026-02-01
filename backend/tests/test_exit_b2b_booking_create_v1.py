@@ -2,6 +2,9 @@ from __future__ import annotations
 
 from typing import Any
 
+from datetime import timedelta
+from decimal import Decimal
+
 import jwt
 import pytest
 from bson import Decimal128, ObjectId

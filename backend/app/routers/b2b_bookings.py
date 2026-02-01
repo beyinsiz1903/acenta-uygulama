@@ -492,9 +492,7 @@ async def confirm_b2b_booking(
     from uuid import uuid4
 
     org_id = user.get("organization_id")
-    agency_id = user.get("agency_id")
-    if not agency_id:
-        raise AppError(403, "forbidden", "User is not bound to an agency")
+    # agency_id is optional for v1; fall back to booking.agency_id if present
 
     try:
         oid = ObjectId(booking_id)

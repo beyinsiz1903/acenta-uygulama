@@ -155,6 +155,9 @@ async def search_offers(
             "nationality": "TR",
             "currency": "TRY",
         }
+        # NOTE: In canonical search we currently only use Paximum normalization
+        # on top of the mock upstream client; failures from Paximum should not
+        # break the overall canonical contract for other suppliers.
         pax_resp = await search_paximum_offers(organization_id, pax_payload)
         from app.services.offers.normalizers.paximum_normalizer import normalize_paximum_search_result as _pn
 

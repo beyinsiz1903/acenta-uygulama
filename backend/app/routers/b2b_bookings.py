@@ -274,7 +274,7 @@ async def _get_visible_listing(
         raise AppError(404, "LISTING_NOT_FOUND", "LISTING_NOT_FOUND")
 
     base_filter: Dict[str, Any] = {"_id": oid, "organization_id": organization_id, "status": "published"}
-    base_filter = enforce_tenant_org(base_filter, None)
+    base_filter = enforce_tenant_org(base_filter, request)
 
     listing = await db.marketplace_listings.find_one(base_filter)
     if not listing:

@@ -280,7 +280,7 @@ def setup_credit_profile(org_id: str, limit_amount: float = 50000.0):
     credit_profile_doc = {
         "organization_id": org_id,
         "name": "Standard",  # Required field for credit profile lookup
-        "credit_limit": Decimal128(str(limit_amount)),
+        "credit_limit": limit_amount,  # Use float directly, not Decimal128
         "currency": "TRY",
         "status": "active",
         "created_at": now,

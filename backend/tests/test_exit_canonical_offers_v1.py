@@ -149,8 +149,16 @@ async def test_canonical_offers_no_supplier_raw_leakage(test_db: Any, async_clie
     resp = await client.post("/api/offers/search", json=payload, headers=headers)
     assert resp.status_code == status.HTTP_200_OK, resp.text
     body = resp.text
-    # No obvious supplier raw markers
-    assert "offers\":" not in body or "offerId" not in body  # no upstream JSON passthrough
+    # No obvious supplier raw markers (rough signature scan)
+    forbidden_signatures = [
+        "<xml",  # XML payloads
+        "offerId",  # upstream Paximum field
+        "rateKey",  # typical supplier rate identifier
+        "HotelSearch",
+        "Paximum",
+    ]
+    for sig in forbidden_signatures:
+        assert sig not in body, f"Unexpected raw supplier signature found: {sig}"
 
 
 @pytest.mark.exit_search_cache_ttl

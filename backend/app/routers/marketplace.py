@@ -44,8 +44,10 @@ class MarketplaceListingUpdate(BaseModel):
 
 
 class MarketplaceAccessGrant(BaseModel):
-    seller_tenant_id: str
-    buyer_tenant_id: str
+    seller_tenant_id: Optional[str] = None
+    buyer_tenant_id: Optional[str] = None
+    seller_tenant_key: Optional[str] = None
+    buyer_tenant_key: Optional[str] = None
 
 
 def _parse_price(value: str) -> Decimal:
@@ -258,19 +260,47 @@ async def grant_access(payload: MarketplaceAccessGrant, request: Request, user=D
     # org scope enforcement (even if someone sends different org in body later)
     filter_base = enforce_tenant_org({"organization_id": org_id}, request)
 
+    # Backwards compatible: if explicit IDs provided, use them as-is
+    seller_tenant_id = payload.seller_tenant_id
+    buyer_tenant_id = payload.buyer_tenant_id
+
+    # Optional convenience: resolve from tenant_key if IDs are not provided
+    if (not seller_tenant_id or not buyer_tenant_id) and (payload.seller_tenant_key or payload.buyer_tenant_key):
+        # Resolve by keys within same org
+        tenants = await db.tenants.find(
+            {
+                "organization_id": filter_base["organization_id"],
+                "tenant_key": {"$in": [k for k in [payload.seller_tenant_key, payload.buyer_tenant_key] if k]},
+            }
+        ).to_list(length=10)
+        key_to_id = {t["tenant_key"]: str(t["_id"]) for t in tenants}
+
+        if payload.seller_tenant_key and not seller_tenant_id:
+            seller_tenant_id = key_to_id.get(payload.seller_tenant_key)
+            if not seller_tenant_id:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="TENANT_NOT_FOUND")
+
+        if payload.buyer_tenant_key and not buyer_tenant_id:
+            buyer_tenant_id = key_to_id.get(payload.buyer_tenant_key)
+            if not buyer_tenant_id:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="TENANT_NOT_FOUND")
+
+    if not seller_tenant_id or not buyer_tenant_id:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="TENANT_IDS_REQUIRED")
+
     now = now_utc()
     doc = {
         "organization_id": filter_base["organization_id"],
-        "seller_tenant_id": payload.seller_tenant_id,
-        "buyer_tenant_id": payload.buyer_tenant_id,
+        "seller_tenant_id": seller_tenant_id,
+        "buyer_tenant_id": buyer_tenant_id,
         "created_at": now,
     }
 
     await db.marketplace_access.update_one(
         {
             "organization_id": filter_base["organization_id"],
-            "seller_tenant_id": payload.seller_tenant_id,
-            "buyer_tenant_id": payload.buyer_tenant_id,
+            "seller_tenant_id": seller_tenant_id,
+            "buyer_tenant_id": buyer_tenant_id,
         },
         {"$set": doc},
         upsert=True,

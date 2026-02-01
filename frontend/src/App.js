@@ -59,6 +59,8 @@ import AdminB2BAnnouncementsPage from "./pages/AdminB2BAnnouncementsPage";
 import AdminB2BDashboardPage from "./pages/AdminB2BDashboardPage";
 import AdminExecutiveDashboardPage from "./pages/AdminExecutiveDashboardPage";
 import AdminB2BMarketplacePage from "./pages/AdminB2BMarketplacePage";
+import AdminMarketplaceListingsPage from "./pages/marketplace/AdminMarketplaceListingsPage";
+import B2BMarketplaceCatalogPage from "./pages/marketplace/B2BMarketplaceCatalogPage";
 import AdminThemePage from "./pages/AdminThemePage";
 import AdminReportingPage from "./pages/AdminReportingPage";
 import AdminVillaCalendarPage from "./pages/AdminVillaCalendarPage";
@@ -231,6 +233,7 @@ function App() {
             <Route path="pricing/rules" element={<AdminPricingRulesPage />} />
             <Route path="pricing/funnel" element={<AdminFunnelPage />} />
             <Route path="b2b/funnel" element={<AdminB2BFunnelPage />} />
+            <Route path="marketplace/listings" element={<AdminMarketplaceListingsPage />} />
             <Route path="b2b/announcements" element={<AdminB2BAnnouncementsPage />} />
             <Route path="pricing/incidents" element={<AdminPricingIncidentsPage />} />
             <Route path="b2b/discounts" element={<AdminB2BDiscountsPage />} />

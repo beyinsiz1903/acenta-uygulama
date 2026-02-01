@@ -373,6 +373,7 @@ async def create_b2b_booking_from_marketplace(
             "listing_id": payload.listing_id,
             "seller_tenant_id": seller_tenant_id,
             "buyer_tenant_id": buyer_tenant_id,
+            # Supplier mapping will be injected here when available
         },
         "pricing": {
             "base_amount": str(pricing["base_amount"]),

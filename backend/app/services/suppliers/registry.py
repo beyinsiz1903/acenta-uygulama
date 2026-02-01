@@ -22,7 +22,30 @@ class AdapterRegistry:
         canonical = self._normalize_code(canonical_code)
         self._aliases[legacy] = canonical
 
+    def _ensure_defaults_loaded(self) -> None:
+        """Lazy-load default adapters for core suppliers.
+
+        This is used both in app startup and tests to ensure that the
+        registry always has at least the built-in adapters registered.
+        """
+        if self._adapters:
+            return
+
+        from app.services.suppliers.mock_adapter import MockSupplierAdapter
+        from app.services.suppliers.paximum_confirm_adapter import PaximumConfirmAdapter
+
+        mock_adapter = MockSupplierAdapter()
+        self.register("mock", mock_adapter)
+        # Legacy alias used in existing data and tests
+        self.alias("mock_supplier_v1", "mock")
+
+        paximum_confirm_adapter = PaximumConfirmAdapter()
+        self.register("paximum", paximum_confirm_adapter)
+
     def get(self, supplier_code: str) -> SupplierAdapter:
+        # Ensure defaults are available for core suppliers
+        self._ensure_defaults_loaded()
+
         code = self._normalize_code(supplier_code)
         if code in self._aliases:
             code = self._aliases[code]

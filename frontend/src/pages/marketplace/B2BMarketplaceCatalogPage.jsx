@@ -270,7 +270,7 @@ export default function B2BMarketplaceCatalogPage() {
                     }
                   }}
                 >
-                  B2B Taslak Olu7ftur
+                  B2B Taslak Oluştur
                 </Button>
                 <Button
                   type="button"
@@ -278,7 +278,7 @@ export default function B2BMarketplaceCatalogPage() {
                   className="h-7 text-[11px]"
                   variant="outline"
                   onClick={async () => {
-                  try {
+                    try {
                     if (!tenantKey) {
                       setError("Marketplace kataloğunu görmek için tenant seçmelisiniz.");
                       return;

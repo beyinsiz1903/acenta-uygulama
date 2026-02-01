@@ -17,6 +17,7 @@ from app.utils import get_or_create_correlation_id, now_utc, serialize_doc
 from app.services.pricing_service import calculate_price
 from app.services.pricing_audit_service import emit_pricing_audit_if_needed
 from app.services.audit import write_audit_log
+from app.services.supplier_mapping_service import resolve_listing_supplier, apply_supplier_mapping
 from bson import Decimal128, ObjectId
 from decimal import Decimal
 from pydantic import BaseModel, EmailStr
@@ -332,6 +333,16 @@ async def create_b2b_booking_from_marketplace(
         listing_id=payload.listing_id,
         buyer_tenant_id=buyer_tenant_id,
     )
+
+    # Lazy supplier mapping resolve (v1)
+    supplier_mapping = (listing.get("supplier_mapping") or {})
+    if supplier_mapping.get("status") != "resolved":
+        try:
+            offer_ref = await resolve_listing_supplier(listing, organization_id=org_id)
+            listing = await apply_supplier_mapping(db, listing, offer_ref)
+            supplier_mapping = (listing.get("supplier_mapping") or {})
+        except AppError:
+            raise
 
     currency = listing.get("currency") or "TRY"
     if currency != "TRY":

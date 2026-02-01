@@ -354,6 +354,130 @@ async def list_access(
     return [serialize_doc(d) for d in docs]
 
 
+@router.post("/catalog/{listing_id}/create-storefront-session")
+async def create_storefront_session_for_listing(
+    listing_id: str,
+    request: Request,
+    user=Depends(get_current_user),
+) -> Dict[str, Any]:
+    """Bridge: from marketplace listing to seller's storefront session.
+
+    - Requires buyer tenant context
+    - Ensures listing is published and buyer has marketplace_access to seller tenant
+    - Creates a storefront_sessions document under seller tenant with one offer snapshot
+    - Returns redirect_url for B2C storefront UI
+    """
+
+    db = await get_db()
+    org_id = user["organization_id"]
+
+    buyer_tenant_id = getattr(request.state, "tenant_id", None)
+    if not buyer_tenant_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="TENANT_CONTEXT_REQUIRED")
+
+    # Load listing and ensure it belongs to this org and is published
+    try:
+        oid = ObjectId(listing_id)
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="LISTING_NOT_FOUND")
+
+    listing = await db.marketplace_listings.find_one(
+        {"_id": oid, "organization_id": org_id, "status": "published"}
+    )
+    if not listing:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="LISTING_NOT_FOUND")
+
+    seller_tenant_id = listing.get("tenant_id")
+    if not seller_tenant_id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="LISTING_NOT_FOUND")
+
+    # Check marketplace_access for this buyer
+    access = await db.marketplace_access.find_one(
+        {
+            "organization_id": org_id,
+            "seller_tenant_id": seller_tenant_id,
+            "buyer_tenant_id": buyer_tenant_id,
+        }
+    )
+    if not access:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="MARKETPLACE_ACCESS_FORBIDDEN")
+
+    # Resolve seller tenant_key for redirect
+    seller_tenant_doc = await db.tenants.find_one({"_id": ObjectId(seller_tenant_id)})
+    if not seller_tenant_doc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="TENANT_NOT_FOUND")
+
+    seller_tenant_key = seller_tenant_doc.get("tenant_key")
+
+    # Create storefront session for seller tenant
+    from uuid import uuid4
+
+    search_id = str(uuid4())
+    now = now_utc()
+    expires_at = now + timedelta(minutes=30)
+
+    price = listing.get("base_price")
+    if isinstance(price, Decimal128):
+        total_amount = price
+    else:
+        total_amount = Decimal128(str(_parse_price(str(price or "0"))))
+
+    offer = {
+        "offer_id": f"MP-{listing_id}",
+        "supplier": "marketplace",
+        "currency": "TRY",
+        "total_amount": total_amount,
+        "raw_ref": {
+            "source": "marketplace",
+            "listing_id": listing_id,
+            "seller_tenant_id": seller_tenant_id,
+            "title": listing.get("title"),
+            "category": listing.get("category"),
+            "tags": listing.get("tags") or [],
+        },
+    }
+
+    session_doc = {
+        "tenant_id": seller_tenant_id,
+        "search_id": search_id,
+        "offers_snapshot": [offer],
+        "expires_at": expires_at,
+        "created_at": now,
+    }
+
+    await db.storefront_sessions.insert_one(session_doc)
+
+    # Audit log
+    from app.services.audit import write_audit_log
+
+    await write_audit_log(
+        db,
+        organization_id=org_id,
+        actor={"actor_type": "user"},
+        request=request,
+        action="MARKETPLACE_STOREFRONT_SESSION_CREATED",
+        target_type="marketplace_listing",
+        target_id=listing_id,
+        before=None,
+        after=session_doc,
+        meta={
+            "listing_id": listing_id,
+            "seller_tenant_id": seller_tenant_id,
+            "buyer_tenant_id": buyer_tenant_id,
+            "search_id": search_id,
+        },
+    )
+
+    redirect_url = f"/s/{seller_tenant_key}/search?search_id={search_id}"
+
+    return {
+        "seller_tenant_id": seller_tenant_id,
+        "storefront_search_id": search_id,
+        "expires_at": expires_at.isoformat(),
+        "redirect_url": redirect_url,
+    }
+
+
 @router.get("/catalog")
 async def marketplace_catalog(
     request: Request,

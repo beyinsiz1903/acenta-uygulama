@@ -218,7 +218,7 @@ export default function B2BMarketplaceCatalogPage() {
             </div>
             <div className="mt-2 flex items-center justify-between text-[10px] text-muted-foreground">
               <span>
-                Bu kart sadece katalog i 7f31n31r; rezervasyon/teklif ak7f31 ayr31 PR larda eklenecektir.
+                Bu kart sadece katalog içindir; rezervasyon/teklif akışı ayrı PR'larda eklenecektir.
               </span>
               <div className="flex items-center gap-2">
                 <Button
@@ -229,7 +229,7 @@ export default function B2BMarketplaceCatalogPage() {
                   onClick={async () => {
                     try {
                       if (!tenantKey) {
-                        setError("Marketplace katalo7f31n31 g31rmek i31n tenant se31melisiniz.");
+                        setError("Marketplace kataloğunu görmek için tenant seçmelisiniz.");
                         return;
                       }
 

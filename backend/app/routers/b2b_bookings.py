@@ -225,6 +225,8 @@ async def create_b2b_booking(
                 "listing_id": payload.listing_id,
                 "seller_tenant_id": seller_tenant_id,
                 "buyer_tenant_id": buyer_tenant_id,
+                "supplier": supplier_name,
+                "supplier_offer_id": supplier_offer_id,
             },
             "pricing": {
                 "base_amount": str(pricing["base_amount"]),

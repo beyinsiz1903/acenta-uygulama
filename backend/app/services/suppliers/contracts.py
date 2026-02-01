@@ -3,6 +3,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Dict, Optional
+from datetime import datetime, timezone
+import asyncio
+
 
 
 class ConfirmStatus(str, Enum):
@@ -18,7 +21,8 @@ class SupplierContext:
     organization_id: str
     tenant_id: Optional[str] = None
     user_id: Optional[str] = None
-    timeout_seconds: int = 10
+    timeout_ms: int = 8000
+    deadline_at: Optional["datetime"] = None
 
 
 @dataclass

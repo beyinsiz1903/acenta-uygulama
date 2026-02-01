@@ -159,6 +159,7 @@ async def create_b2b_booking(
 
         listing = await _get_visible_listing(
             db,
+            request,
             organization_id=org_id,
             listing_id=payload.listing_id,
             buyer_tenant_id=buyer_tenant_id,

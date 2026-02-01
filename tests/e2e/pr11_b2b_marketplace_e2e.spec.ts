@@ -1,10 +1,8 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, request as pwRequest } from '@playwright/test';
 
-// Helper: perform login using existing /login page (admin@acenta.test / admin123)
 async function loginAsSuperAdmin(page) {
   await page.goto('/login');
 
-  // Fill demo credentials if not already filled
   const emailInput = page.getByTestId('login-email');
   const passwordInput = page.getByTestId('login-password');
   const submitButton = page.getByTestId('login-submit');
@@ -25,8 +23,89 @@ async function loginAsSuperAdmin(page) {
 // - "B2B Taslak Oluştur" CTA: /api/b2b/bookings 201 + booking_id
 // - Negatif: tenant yokken uygun hata mesajı
 
+async function ensureMarketplaceSeed(baseURL: string) {
+  const request = await pwRequest.newContext();
+
+  // 1) API login as super admin (same creds as UI)
+  const loginRes = await request.post(`${baseURL}/api/auth/login`, {
+    data: {
+      email: 'muratsutay@hotmail.com',
+      password: 'murat1903',
+    },
+  });
+  if (!loginRes.ok()) {
+    throw new Error(`Login failed: ${loginRes.status()} ${await loginRes.text()}`);
+  }
+  const loginBody = await loginRes.json();
+  const token = loginBody.access_token || loginBody.token || loginBody.jwt;
+  if (!token) {
+    throw new Error('No JWT token returned from /api/auth/login');
+  }
+
+  const authHeaders = {
+    Authorization: `Bearer ${token}`,
+  };
+
+  // 2) Create & publish listing under a known seller tenant
+  const sellerTenantKey = 'seller-tenant-br';
+  const buyerTenantKey = 'buyer-b2b';
+
+  const createRes = await request.post(`${baseURL}/api/marketplace/listings`, {
+    headers: {
+      ...authHeaders,
+      'X-Tenant-Key': sellerTenantKey,
+    },
+    data: {
+      title: 'E2E Listing - PR13',
+      description: 'E2E test listing for PR-13',
+      category: 'hotel',
+      currency: 'TRY',
+      base_price: '100.00',
+      tags: ['pr13', 'e2e'],
+    },
+  });
+
+  if (!createRes.ok()) {
+    throw new Error(`Create listing failed: ${createRes.status()} ${await createRes.text()}`);
+  }
+  const created = await createRes.json();
+  const listingId = created.id;
+
+  // 2.b) Publish listing
+  const publishRes = await request.post(`${baseURL}/api/marketplace/listings/${listingId}/publish`, {
+    headers: {
+      ...authHeaders,
+      'X-Tenant-Key': sellerTenantKey,
+    },
+  });
+  if (!publishRes.ok()) {
+    throw new Error(`Publish listing failed: ${publishRes.status()} ${await publishRes.text()}`);
+  }
+
+  // 3) Grant access seller->buyer using tenant keys (idempotent via upsert in backend)
+  const grantRes = await request.post(`${baseURL}/api/marketplace/access/grant`, {
+    headers: authHeaders,
+    data: {
+      seller_tenant_key: sellerTenantKey,
+      buyer_tenant_key: buyerTenantKey,
+    },
+  });
+  if (!grantRes.ok()) {
+    throw new Error(`Grant access failed: ${grantRes.status()} ${await grantRes.text()}`);
+  }
+}
+
+// PR-11 gate: exit_b2b_marketplace_e2e_v1
+
 test.describe('PR-11 B2B Marketplace E2E (@exit_b2b_marketplace_e2e_v1)', () => {
-  test('exit_b2b_marketplace_e2e_v1 - happy paths and negative tenant case', async ({ page }) => {
+  test('exit_b2b_marketplace_e2e_v1 - happy paths and negative tenant case', async ({ page, baseURL }) => {
+    if (!baseURL) {
+      throw new Error('baseURL is not defined in Playwright config');
+    }
+
+    // Seed data via API (idempotent)
+    await ensureMarketplaceSeed(baseURL);
+
     // 1) Login as super admin via existing login flow
     await loginAsSuperAdmin(page);
 

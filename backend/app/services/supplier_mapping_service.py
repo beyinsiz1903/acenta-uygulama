@@ -81,6 +81,7 @@ async def apply_supplier_mapping(db, listing: Dict[str, Any], mapping: SupplierO
             "status": "resolved",
             "resolved_at": now,
             "offer_id": mapping.supplier_offer_id,
+            "supplier": mapping.supplier,
             "raw": mapping.raw,
         },
         "updated_at": now,

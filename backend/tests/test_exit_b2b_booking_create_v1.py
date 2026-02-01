@@ -190,7 +190,7 @@ async def test_b2b_booking_create_forbidden_without_access(test_db: Any, async_c
     )
     seller_tenant_id = str(seller.inserted_id)
 
-    buyer = await test_db.tenants.insert_one(
+    await test_db.tenants.insert_one(
         {
             "tenant_key": "buyer-b2b2",
             "organization_id": org_id,
@@ -203,7 +203,6 @@ async def test_b2b_booking_create_forbidden_without_access(test_db: Any, async_c
             "updated_at": now,
         }
     )
-    buyer_tenant_id = str(buyer.inserted_id)
 
     email = "b2b_admin2@example.com"
     await test_db.users.insert_one(

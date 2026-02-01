@@ -112,7 +112,12 @@ export default function StorefrontOfferPage() {
               ileriki fazlarda eklenecektir.
             </div>
             <div className="flex justify-end mt-2">
-              <Button size="sm" className="h-8 text-xs" onClick={handleCheckout}>
+              <Button
+                size="sm"
+                className="h-8 text-xs"
+                style={{ backgroundColor: "var(--sf-primary, #2563eb)" }}
+                onClick={handleCheckout}
+              >
                 Rezervasyon Oluştur
               </Button>
             </div>

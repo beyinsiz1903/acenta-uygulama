@@ -13,13 +13,14 @@ from app.services.b2b_booking import B2BBookingService
 from app.services.booking_lifecycle import BookingLifecycleService
 from app.services.booking_financials import BookingFinancialsService
 from app.services.funnel_events import log_funnel_event
-from app.utils import get_or_create_correlation_id
+from app.utils import get_or_create_correlation_id, now_utc
 from app.tenant_context import enforce_tenant_org
 from app.services.pricing_service import calculate_price
 from app.services.pricing_audit_service import emit_pricing_audit_if_needed
 from app.services.audit import write_audit_log
 from bson import Decimal128, ObjectId
 from decimal import Decimal
+from pydantic import BaseModel, EmailStr
 from typing import Any, Dict, Optional
 
 router = APIRouter(prefix="/api/b2b", tags=["b2b-bookings"])

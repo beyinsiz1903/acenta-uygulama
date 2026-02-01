@@ -621,8 +621,8 @@ async def confirm_b2b_booking(
 
     if not supplier_name:
         raise AppError(
-            422,
-            "INVALID_SUPPLIER_MAPPING",
+            400,
+            "supplier_unresolved",
             "Unable to resolve supplier for booking confirm.",
             details={"reason": "missing_supplier"},
         )

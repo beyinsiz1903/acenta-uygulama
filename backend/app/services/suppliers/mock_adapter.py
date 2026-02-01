@@ -14,7 +14,8 @@ class MockSupplierAdapter(SupplierAdapter):
     async def confirm_booking(self, ctx: SupplierContext, booking: Dict[str, Any]) -> ConfirmResult:
         offer_ref = booking.get("offer_ref") or {}
         supplier_offer_id = str(offer_ref.get("supplier_offer_id"))
-        supplier_code = (offer_ref.get("supplier") or "mock").strip().lower()
+        # Canonical supplier code for mock adapter is always "mock"
+        supplier_code = "mock"
 
         supplier_booking_id = f"MOCK-BKG-{supplier_offer_id}"
         raw = {"mock": True, "supplier_offer_id": supplier_offer_id}

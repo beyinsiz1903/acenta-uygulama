@@ -124,6 +124,7 @@ def setup_marketplace_infrastructure(org_suffix: str) -> Dict[str, Any]:
         "tenant_key": f"seller-tenant-{unique_id}",
         "name": f"Seller Tenant {unique_id}",
         "type": "seller",
+        "is_active": True,
         "created_at": now,
         "updated_at": now,
     }
@@ -136,6 +137,7 @@ def setup_marketplace_infrastructure(org_suffix: str) -> Dict[str, Any]:
         "tenant_key": f"buyer-tenant-{unique_id}",
         "name": f"Buyer Tenant {unique_id}",
         "type": "buyer",
+        "is_active": True,
         "created_at": now,
         "updated_at": now,
     }

@@ -325,6 +325,12 @@ async def search_offers(
                     "final_amount": float(fp.get("amount") or 0.0),
                     "pricing_rule_id": b2b.get("pricing_rule_id"),
                     "pricing_trace": b2b.get("pricing_trace") or [],
+                    # PR-20 enrichment
+                    "model_version": pricing_graph.get("model_version"),
+                    "graph_path": pricing_graph.get("graph_path"),
+                    "pricing_rule_ids": pricing_graph.get("pricing_rule_ids"),
+                    "steps_count": len(pricing_graph.get("steps") or []),
+                    "effective_total_markup_pct": float(b2b.get("applied_markup_pct") or 0.0),
                 },
             )
 

@@ -291,7 +291,6 @@ async def is_supplier_circuit_open(
                     "organization_id": organization_id,
                     "supplier_code": supplier_code,
                     "circuit.state": "open",
-                    "circuit.until": {"$lte": now},
                 },
                 {
                     "$set": {

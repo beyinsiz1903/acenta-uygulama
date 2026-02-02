@@ -43,6 +43,7 @@ from app.routers.ops_cases import router as ops_cases_router
 from app.routers.ops_click_to_pay import router as ops_click_to_pay_router
 from app.routers.ops_finance import router as ops_finance_router
 from app.routers.ops_tasks import router as ops_tasks_router
+from app.routers.ops_incidents import router as ops_incidents_router
 from app.routers.payments import router as payments_router
 from app.routers.payments_stripe import router as payments_stripe_router
 from app.routers.products import router as products_router

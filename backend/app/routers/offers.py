@@ -142,23 +142,22 @@ async def search_offers(
 
         normalized = await _norm(mock_payload, mock_raw)
         for o in normalized:
-            canonical_offers.append(
-                CanonicalHotelOfferOut(
-                    offer_token=o.offer_token,
-                    supplier_code=o.supplier_code,
-                    supplier_offer_id=o.supplier_offer_id,
-                    product_type=o.product_type,
-                    hotel=CanonicalHotel(**o.hotel.__dict__),
-                    stay=CanonicalStay(**o.stay.__dict__),
-                    room=CanonicalRoom(**o.room.__dict__),
-                    cancellation_policy=CanonicalCancellationPolicy(**o.cancellation_policy.__dict__)
-                    if o.cancellation_policy
-                    else None,
-                    price=CanonicalMoney(**o.price.__dict__),
-                    availability_token=o.availability_token,
-                    raw_fingerprint=o.raw_fingerprint,
-                )
+            offer_out = CanonicalHotelOfferOut(
+                offer_token=o.offer_token,
+                supplier_code=o.supplier_code,
+                supplier_offer_id=o.supplier_offer_id,
+                product_type=o.product_type,
+                hotel=CanonicalHotel(**o.hotel.__dict__),
+                stay=CanonicalStay(**o.stay.__dict__),
+                room=CanonicalRoom(**o.room.__dict__),
+                cancellation_policy=CanonicalCancellationPolicy(**o.cancellation_policy.__dict__)
+                if o.cancellation_policy
+                else None,
+                price=CanonicalMoney(**o.price.__dict__),
+                availability_token=o.availability_token,
+                raw_fingerprint=o.raw_fingerprint,
             )
+            canonical_offers.append(offer_out)
 
     # Paximum supplier
     if "paximum" in supplier_codes:

@@ -395,17 +395,21 @@ async def search_offers(
                 },
             )
 
-    # Convert supplier warnings to response format
-    warnings_out = None
+    # Map internal warnings to API model
+    warnings_out: Optional[List[SupplierWarningOut]] = None
     if supplier_warnings:
+        warnings_sorted = sort_warnings(supplier_warnings)
         warnings_out = [
             SupplierWarningOut(
                 supplier_code=w.supplier_code,
-                warning_type=w.warning_type,
+                code=w.code,
                 message=w.message,
-                details=w.details
+                retryable=w.retryable,
+                http_status=w.http_status,
+                timeout_ms=w.timeout_ms,
+                duration_ms=w.duration_ms,
             )
-            for w in supplier_warnings
+            for w in warnings_sorted
         ]
 
     return OfferSearchResponse(

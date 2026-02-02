@@ -273,6 +273,29 @@ async def search_offers(
                 "currency": base_price.currency,
             }
 
+    # If all suppliers failed, raise SUPPLIER_ALL_FAILED with normalized warnings.
+    if not canonical_offers and supplier_warnings:
+        warnings_sorted = sort_warnings(supplier_warnings)
+        details_warnings = [
+            {
+                "supplier_code": w.supplier_code,
+                "code": w.code,
+                "message": w.message,
+                "retryable": w.retryable,
+                "http_status": w.http_status,
+                "timeout_ms": int(w.timeout_ms) if w.timeout_ms is not None else None,
+                "duration_ms": int(w.duration_ms) if w.duration_ms is not None else None,
+            }
+            for w in warnings_sorted
+        ]
+        # All-failed must always have a non-empty warnings list
+        raise AppError(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            code="SUPPLIER_ALL_FAILED",
+            message="All suppliers failed during offers search.",
+            details={"warnings": details_warnings},
+        )
+
     # Persist search session
     offers_dicts = [c.model_dump() for c in canonical_offers]
 

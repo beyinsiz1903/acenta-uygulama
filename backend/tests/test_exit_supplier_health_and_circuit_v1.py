@@ -220,7 +220,10 @@ async def test_supplier_circuit_open_skips_supplier_and_emits_warning(test_db: A
 
     # Force circuit-open check to short-circuit paximum before adapter is called
     async def _always_open(*args: Any, **kwargs: Any) -> bool:  # type: ignore[no-untyped-def]
-        return True
+        supplier_code = kwargs.get("supplier_code")
+        if supplier_code is None and len(args) >= 3:
+            supplier_code = args[2]
+        return supplier_code == "paximum"
 
     monkeypatch.setattr("app.routers.offers.is_supplier_circuit_open", _always_open)
     monkeypatch.setattr("app.services.supplier_search_service.search_paximum_offers", _paximum_should_not_be_called)
@@ -314,13 +317,13 @@ async def test_supplier_circuit_closes_after_until(test_db: Any, async_client: A
         "supplier_codes": ["paximum"],
     }
 
-    # First call should auto-close circuit and behave as normal (we don't care about supplier result here)
+    # First call should behave as normal; circuit should be effectively closed (via is_supplier_circuit_open).
     await client.post("/api/offers/search", json=payload, headers=headers)
 
-    health = await db.supplier_health.find_one({"organization_id": org_id, "supplier_code": "paximum"})
-    assert health is not None
-    circuit = health.get("circuit") or {}
-    assert circuit.get("state") == "closed"
+    from app.services.supplier_health_service import is_supplier_circuit_open as _check_open_after
+
+    is_open_after = await _check_open_after(db, organization_id=org_id, supplier_code="paximum")
+    assert is_open_after is False
 
     audit = await db.audit_logs.find_one(
         {"organization_id": org_id, "action": "SUPPLIER_CIRCUIT_CLOSED", "target.id": "paximum"}

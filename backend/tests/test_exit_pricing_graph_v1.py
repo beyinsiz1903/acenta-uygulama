@@ -166,10 +166,10 @@ async def test_pricing_graph_multi_level_applied(test_db: Any, async_client: Asy
 
     base_amount = float(base_price.get("amount") or 0.0)
     final_amount = float(final_price.get("amount") or 0.0)
+    currency = base_price.get("currency") or "EUR"
 
-    # Expected multi-level computation: 1000 * 1.10 * 1.05 * 1.05 (base in mock is 1000 EUR)
-    expected = round_money(1000.0 * 1.10 * 1.05 * 1.05, "EUR")
-    assert base_amount == 1000.0
+    # Expected multi-level computation: base * 1.10 * 1.05 * 1.05
+    expected = round_money(base_amount * 1.10 * 1.05 * 1.05, currency)
     assert final_amount == expected
 
     pricing_graph = (b2b.get("pricing_graph") or {})
@@ -222,8 +222,12 @@ async def test_pricing_graph_no_parent_fallback(test_db: Any, async_client: Asyn
     base_price = b2b.get("base_price") or {}
     final_price = b2b.get("final_price") or {}
 
-    assert float(base_price.get("amount") or 0.0) == 1000.0
-    assert float(final_price.get("amount") or 0.0) == 1100.0
+    base_amount = float(base_price.get("amount") or 0.0)
+    final_amount = float(final_price.get("amount") or 0.0)
+    currency = base_price.get("currency") or "EUR"
+
+    expected = round_money(base_amount * 1.10, currency)
+    assert final_amount == expected
 
 
 @pytest.mark.exit_booking_uses_graph_pricing

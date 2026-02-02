@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional, Tuple
 
-from app.schemas_supplier_health import SupplierHealthItemOut
 from app.schemas_ops_incidents import SupplierHealthBadgeOut
 
 

@@ -176,7 +176,8 @@ async def get_pricing_trace_by_session_offer(
     overlay_index = session.get("pricing_overlay_index") or {}
     overlay = overlay_index.get(offer_token)
     if not overlay:
-        raise AppError(404, "OFFER_TOKEN_NOT_FOUND", "Offer token not found in session", {"offer_token": offer_token})
+        # Keep consistent 404 payload shape with existing API (detail only)
+        raise AppError(404, "OFFER_TOKEN_NOT_FOUND", "OFFER_TOKEN_NOT_FOUND", {})
 
     buyer_tenant_id = session.get("tenant_id")
 

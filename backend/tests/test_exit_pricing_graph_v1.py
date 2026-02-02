@@ -43,7 +43,8 @@ async def _seed_org_user_and_tenant(test_db: Any) -> tuple[str, str]:
 
 
 def _make_headers(org_id: str, tenant_key: str) -> dict[str, str]:
-    token = jwt.encode({"sub": "agent@example.com", "org": org_id}, _jwt_secret(), algorithm="HS256")
+    # Use seeded demo agency user (agency1@demo.test) for auth
+    token = jwt.encode({"sub": "agency1@demo.test", "org": org_id}, _jwt_secret(), algorithm="HS256")
     return {"Authorization": f"Bearer {token}", "X-Tenant-Key": tenant_key}
 
 

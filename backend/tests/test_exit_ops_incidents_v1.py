@@ -108,7 +108,12 @@ async def test_ops_incident_created_for_risk_review(test_db: Any, async_client: 
 
     monkeypatch.setattr("app.services.risk.engine.evaluate_booking_risk", _fake_evaluate)
 
-    headers = {"x-org-id": org_id, "x-user-email": email}
+    # Use JWT-based auth similar to existing risk tests
+    import jwt
+    from app.auth import _jwt_secret
+
+    token = jwt.encode({"sub": email, "org": org_id, "roles": ["agency_admin"]}, _jwt_secret(), algorithm="HS256")
+    headers = {"Authorization": f"Bearer {token}", "X-Tenant-Key": "risk-tenant-rr"}
     resp = await client.post(f"/api/b2b/bookings/{booking_id}/confirm", headers=headers)
     assert resp.status_code == 202
 

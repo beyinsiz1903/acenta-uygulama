@@ -198,6 +198,7 @@ app.include_router(admin_funnel_router)
 app.include_router(admin_catalog_router)
 app.include_router(admin_metrics_router)
 app.include_router(admin_pricing_router)
+app.include_router(admin_pricing_trace_router)
 app.include_router(admin_coupons_router)  # router already has /api prefix
 app.include_router(admin_hotels_router)
 app.include_router(admin_reporting_router)

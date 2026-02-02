@@ -165,7 +165,9 @@ async def test_risk_review_sets_risk_review_status_and_skips_supplier(test_db: A
     now = now_utc()
 
     org_id, tenant_id, booking_id = await _create_org_user_and_agency_booking(
-        test_db, amount=25_000.0
+        test_db,
+        amount=25_000.0,
+        applied_markup_pct=10.0,
     )
 
     # Configure credit so utilization is moderate

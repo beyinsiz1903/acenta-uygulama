@@ -93,7 +93,9 @@ async def test_risk_blocked_prevents_supplier_confirm(test_db: Any, async_client
 
     # Seed org, tenant, booking with high amount
     org_id, tenant_id, booking_id = await _create_org_user_and_agency_booking(
-        test_db, amount=60_000.0
+        test_db,
+        amount=60_000.0,
+        applied_markup_pct=30.0,
     )
 
     # Create Standard credit profile with low limit to trigger high utilization

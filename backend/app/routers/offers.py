@@ -124,6 +124,11 @@ async def search_offers(
 
     canonical_offers: List[CanonicalHotelOfferOut] = []  # response models
 
+    # Helper to compute B2B overlay using simple pricing rules
+    from app.services.pricing_rules import PricingRulesService
+
+    rules_svc = PricingRulesService(db)
+
     # Mock supplier
     if "mock" in supplier_codes:
         mock_payload = {

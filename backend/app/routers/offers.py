@@ -206,44 +206,70 @@ async def search_offers(
             base_price = offer.price
             check_in_date = payload.check_in if isinstance(payload.check_in, _date) else payload.check_in
 
-            winner_rule = await rules_svc.resolve_winner_rule(
-                organization_id=organization_id,
-                agency_id=tenant_id,
-                product_id=None,
-                product_type="hotel",
-                check_in=check_in_date,
-            )
-            if winner_rule is not None:
-                markup_pct = await rules_svc.resolve_markup_percent(
-                    organization_id,
-                    agency_id=tenant_id,
-                    product_id=None,
-                    product_type="hotel",
-                    check_in=check_in_date,
-                )
-                pricing_rule_id = str(winner_rule.get("_id")) if winner_rule.get("_id") is not None else None
-            else:
-                markup_pct = 0.0
-                pricing_rule_id = None
+            # Build minimal pricing context for rules engine
+            context = {
+                "check_in": check_in_date,
+                "product_type": "hotel",
+                "product_id": None,
+            }
 
-            final_amount = round_money(base_price.amount * (1 + float(markup_pct) / 100), base_price.currency)
+            try:
+                graph: Optional[PricingGraphResult] = await price_offer_with_graph(
+                    db,
+                    organization_id=organization_id,
+                    buyer_tenant_id=tenant_id,
+                    base_amount=float(base_price.amount),
+                    currency=base_price.currency,
+                    context=context,
+                )
+            except Exception as exc:  # fail-open
+                graph = None
+
+            if graph is None:
+                # Fallback to no-overlay semantics
+                offer.b2b_pricing = None
+                continue
+
+            # Map graph result into legacy b2b_pricing shape
+            applied_pct = float(graph.applied_total_markup_pct or 0.0)
+            final_amount = float(graph.final_price.get("amount") or 0.0)
+            buyer_rule_id = graph.pricing_rule_ids[0] if graph.pricing_rule_ids else None
 
             offer.b2b_pricing = {
-                "base_price": base_price.model_dump(),
-                "applied_markup_pct": float(markup_pct),
-                "final_price": {"amount": final_amount, "currency": base_price.currency},
-                "pricing_rule_id": pricing_rule_id,
-                "pricing_trace": [
-                    f"base={base_price.amount}",
-                    f"markup_pct={float(markup_pct)}",
-                    f"final={final_amount}",
-                ],
+                "base_price": graph.base_price,
+                "final_price": graph.final_price,
+                "applied_markup_pct": applied_pct,
+                "pricing_rule_id": buyer_rule_id,
+                "pricing_trace": graph.pricing_trace,
+                "pricing_graph": {
+                    "model_version": graph.model_version,
+                    "graph_path": graph.graph_path,
+                    "pricing_rule_ids": graph.pricing_rule_ids,
+                    "steps": [
+                        {
+                            "level": s.level,
+                            "tenant_id": s.tenant_id,
+                            "node_type": s.node_type,
+                            "rule_id": s.rule_id,
+                            "markup_pct": s.markup_pct,
+                            "base_amount": s.base_amount,
+                            "delta_amount": s.delta_amount,
+                            "amount_after": s.amount_after,
+                            "currency": s.currency,
+                            "notes": s.notes,
+                        }
+                        for s in graph.steps
+                    ],
+                },
             }
 
             pricing_overlay_index[offer.offer_token] = {
                 "final_amount": final_amount,
-                "applied_markup_pct": float(markup_pct),
-                "pricing_rule_id": pricing_rule_id,
+                "applied_markup_pct": applied_pct,
+                "pricing_rule_id": buyer_rule_id,
+                "pricing_rule_ids": graph.pricing_rule_ids,
+                "graph_path": graph.graph_path,
+                "model_version": graph.model_version,
                 "currency": base_price.currency,
             }
 

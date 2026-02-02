@@ -82,7 +82,8 @@ async def test_pricing_overlay_applied_audit_written(test_db: Any, async_client:
     assert audit is not None
     meta = audit.get("meta") or {}
     assert meta.get("event_source") == "offers_search"
-    assert meta.get("buyer_tenant_id") == "obs-tenant-1"
+    # buyer_tenant_id is stored as the internal tenant ObjectId string, not the public tenant_key
+    assert meta.get("buyer_tenant_id") == str(tenant.inserted_id)
     assert meta.get("offer_token") == offer_token
     assert "session_id" in meta
     assert isinstance(meta.get("base_amount"), (int, float))

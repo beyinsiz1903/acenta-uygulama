@@ -240,6 +240,13 @@ async def search_offers(
                 ],
             }
 
+            pricing_overlay_index[offer.offer_token] = {
+                "final_amount": final_amount,
+                "applied_markup_pct": float(markup_pct),
+                "pricing_rule_id": pricing_rule_id,
+                "currency": base_price.currency,
+            }
+
     # Persist search session
     offers_dicts = [c.model_dump() for c in canonical_offers]
 

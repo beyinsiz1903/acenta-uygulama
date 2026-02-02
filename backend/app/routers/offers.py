@@ -420,6 +420,7 @@ class OfferSearchSessionResponse(BaseModel):
     session_id: str
     expires_at: str
     offers: List[CanonicalHotelOfferOut]
+    warnings: Optional[List[SupplierWarningOut]] = None
 
 
 @router.get("/search-sessions/{session_id}", response_model=OfferSearchSessionResponse, dependencies=[Depends(require_roles(["agency_admin", "agency_agent"]))])

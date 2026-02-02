@@ -25,6 +25,7 @@ def map_exception_to_warning(supplier_code: str, exc: Exception) -> SupplierWarn
     # Simple v1 mapping based on AppError and generic exception types.
     from app.errors import AppError
 
+    # Keep message short/redacted to avoid leaking internals
     message = "Supplier call failed"
     http_status: Optional[int] = None
     code = "SUPPLIER_NETWORK_ERROR"

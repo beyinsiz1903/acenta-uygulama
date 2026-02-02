@@ -263,6 +263,7 @@ app.include_router(ops_click_to_pay_router)  # No prefix - router has its own
 app.include_router(ops_finance_router)
 app.include_router(ops_tasks_router)  # No prefix - router has its own
 app.include_router(ops_incidents_router)  # Unified Ops Incident Console
+app.include_router(admin_supplier_health_router)  # Supplier health snapshot
 app.include_router(payments_router, prefix=API_PREFIX)
 app.include_router(payments_stripe_router, prefix=API_PREFIX)
 app.include_router(products_router, prefix=API_PREFIX)

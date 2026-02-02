@@ -117,8 +117,8 @@ async def create_booking_from_canonical_offer(
 
     booking_payload: Dict[str, Any] = {
         "source": "b2b_marketplace",  # v1: reuse B2B marketplace semantics for canonical offers
-        "currency": price.get("currency") or "TRY",
-        "amount": float(price.get("amount") or 0.0),
+        "currency": currency,
+        "amount": final_amount,
         "offer_ref": {
             "supplier": supplier_code,
             "supplier_offer_id": supplier_offer_id,

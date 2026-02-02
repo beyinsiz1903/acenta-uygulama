@@ -291,6 +291,19 @@ async def search_offers(
     # Successful supplier = call+parse OK (tracked in succeeded_suppliers),
     # offers may legitimately be empty.
     if not succeeded_suppliers and supplier_warnings:
+        # Build a deterministic fingerprint for this failed request for dedup/ops.
+        fingerprint_payload = {
+            "destination": payload.destination,
+            "check_in": payload.check_in.strftime("%Y-%m-%d"),
+            "check_out": payload.check_out.strftime("%Y-%m-%d"),
+            "adults": payload.adults,
+            "children": payload.children,
+            "supplier_codes": sorted(supplier_codes),
+        }
+        raw_fp = json.dumps(fingerprint_payload, sort_keys=True)
+        request_fingerprint = hashlib.sha1(raw_fp.encode("utf-8")).hexdigest()[:16]
+        synthetic_session_id = f"sess_fail_{uuid4().hex}"
+
         warnings_sorted = sort_warnings(supplier_warnings)
         details_warnings = [
             {

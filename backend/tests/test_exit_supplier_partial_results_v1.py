@@ -36,7 +36,7 @@ async def test_supplier_partial_results_returns_200_with_warnings(test_db: Any, 
     org_id, email = await _get_default_org_and_user(test_db)
 
     # Create tenant for header
-    tenant = await test_db.tenants.insert_one(
+    await test_db.tenants.insert_one(
         {
             "tenant_key": "partial-tenant-1",
             "organization_id": org_id,
@@ -97,7 +97,7 @@ async def test_supplier_partial_results_audit_written(test_db: Any, async_client
 
     org_id, email = await _get_default_org_and_user(test_db)
 
-    tenant = await test_db.tenants.insert_one(
+    await test_db.tenants.insert_one(
         {
             "tenant_key": "partial-tenant-2",
             "organization_id": org_id,
@@ -158,7 +158,7 @@ async def test_supplier_all_failed_returns_503(test_db: Any, async_client: Async
 
     org_id, email = await _get_default_org_and_user(test_db)
 
-    tenant = await test_db.tenants.insert_one(
+    await test_db.tenants.insert_one(
         {
             "tenant_key": "partial-tenant-3",
             "organization_id": org_id,
@@ -216,7 +216,7 @@ async def test_supplier_partial_results_offers_empty_but_successful_supplier(tes
 
     org_id, email = await _get_default_org_and_user(test_db)
 
-    tenant = await test_db.tenants.insert_one(
+    await test_db.tenants.insert_one(
         {
             "tenant_key": "partial-tenant-4",
             "organization_id": org_id,
@@ -274,7 +274,7 @@ async def test_supplier_warnings_ordering_deterministic(test_db: Any, async_clie
 
     org_id, email = await _get_default_org_and_user(test_db)
 
-    tenant = await test_db.tenants.insert_one(
+    await test_db.tenants.insert_one(
         {
             "tenant_key": "partial-tenant-5",
             "organization_id": org_id,

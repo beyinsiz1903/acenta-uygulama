@@ -116,7 +116,6 @@ async def create_booking_from_canonical_offer(
     }
 
     stay = offer.get("stay") or {}
-    price = offer.get("price") or {}
 
     booking_payload: Dict[str, Any] = {
         "source": "b2b_marketplace",  # v1: reuse B2B marketplace semantics for canonical offers

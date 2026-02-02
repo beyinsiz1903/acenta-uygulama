@@ -91,8 +91,8 @@ async def list_incidents(
         reverse=True,
     )
 
-    l, o = _enforce_pagination(limit, offset)
-    page = raw[o : o + l]
+    page_limit, page_offset = _enforce_pagination(limit, offset)
+    page = raw[page_offset : page_offset + page_limit]
 
     items = []
     for d in page:

@@ -279,7 +279,9 @@ async def search_offers(
             }
 
     # If all suppliers failed, raise SUPPLIER_ALL_FAILED with normalized warnings.
-    if not canonical_offers and supplier_warnings:
+    # Successful supplier = call+parse OK (tracked in succeeded_suppliers),
+    # offers may legitimately be empty.
+    if not succeeded_suppliers and supplier_warnings:
         warnings_sorted = sort_warnings(supplier_warnings)
         details_warnings = [
             {

@@ -400,11 +400,37 @@ async def search_offers(
                     }
                     for w in failed_suppliers
                 ],
-                "succeeded_suppliers": succeeded_suppliers,
+                "succeeded_suppliers": succeeded_suppliers_sorted,
                 "offers_count": len(canonical_offers),
                 "warnings_count": len(supplier_warnings),
             },
         )
+
+        # Best-effort ops incident for supplier_partial_failure
+        try:
+            from app.services.ops_incidents_service import create_supplier_partial_failure_incident
+
+            await create_supplier_partial_failure_incident(
+                db,
+                organization_id=organization_id,
+                session_id=session["session_id"],
+                failed_suppliers=[
+                    {
+                        "supplier_code": w.supplier_code,
+                        "code": w.code,
+                        "retryable": w.retryable,
+                        "http_status": w.http_status,
+                        "duration_ms": int(w.duration_ms) if w.duration_ms is not None else None,
+                        "timeout_ms": int(w.timeout_ms) if w.timeout_ms is not None else None,
+                    }
+                    for w in failed_suppliers
+                ],
+                succeeded_suppliers=succeeded_suppliers_sorted,
+                warnings_count=len(supplier_warnings),
+                offers_count=len(canonical_offers),
+            )
+        except Exception:
+            pass
 
     # Audit pricing overlays for observability
     if tenant_id:

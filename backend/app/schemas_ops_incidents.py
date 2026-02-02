@@ -53,6 +53,7 @@ class OpsIncidentSummaryOut(BaseModel):
     summary: str
     created_at: datetime
     source_ref: OpsIncidentSourceRef
+    supplier_health: Optional[SupplierHealthBadgeOut] = None
 
 
 class OpsIncidentDetailOut(BaseModel):

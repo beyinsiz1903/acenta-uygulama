@@ -142,9 +142,7 @@ async def test_ops_incident_list_filtering(test_db: Any, async_client: AsyncClie
     client: AsyncClient = async_client
     db = test_db
 
-    from backend.tests.conftest import _get_default_org_and_user
-
-    org_id, email = await _get_default_org_and_user(db)
+    org_id, email = await _create_org_and_user(db, roles=["agency_admin"])
 
     now = now_utc()
     docs = [
@@ -205,9 +203,7 @@ async def test_ops_incident_resolve_flow(test_db: Any, async_client: AsyncClient
     client: AsyncClient = async_client
     db = test_db
 
-    from backend.tests.conftest import _get_default_org_and_user
-
-    org_id, email = await _get_default_org_and_user(db)
+    org_id, email = await _create_org_and_user(db, roles=["agency_admin"])
 
     now = now_utc()
     doc = {
@@ -282,9 +278,7 @@ async def test_ops_incident_rbac_denied(test_db: Any, async_client: AsyncClient)
     client: AsyncClient = async_client
     db = test_db
 
-    from backend.tests.conftest import _get_default_org_and_user
-
-    org_id, email = await _get_default_org_and_user(db)
+    org_id, email = await _create_org_and_user(db, roles=["agency_admin"])
 
     headers = {"x-org-id": org_id, "x-user-email": email, "x-user-roles": "agency_agent"}
     resp = await client.get("/api/admin/ops/incidents", headers=headers)

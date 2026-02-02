@@ -302,30 +302,6 @@ async def search_offers(
                 },
             )
 
-    # Add PRICING_OVERLAY_APPLIED audit for offers with b2b_pricing
-    if tenant_id:
-        from app.services.audit import write_audit_log
-        
-        for offer in canonical_offers:
-            if offer.b2b_pricing:
-                await write_audit_log(
-                    db,
-                    organization_id=organization_id,
-                    actor=user,
-                    request=request,
-                    action="PRICING_OVERLAY_APPLIED",
-                    target_type="offer",
-                    target_id=offer.offer_token,
-                    meta={
-                        "session_id": session["session_id"],
-                        "tenant_id": tenant_id,
-                        "base_price": offer.b2b_pricing["base_price"],
-                        "final_price": offer.b2b_pricing["final_price"],
-                        "applied_markup_pct": offer.b2b_pricing["applied_markup_pct"],
-                        "pricing_rule_id": offer.b2b_pricing["pricing_rule_id"],
-                    }
-                )
-
     return OfferSearchResponse(
         session_id=session["session_id"],
         expires_at=session["expires_at"].isoformat(),

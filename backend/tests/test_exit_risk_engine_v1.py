@@ -207,7 +207,6 @@ async def test_risk_allow_allows_supplier_confirm_flow(test_db: Any, async_clien
     """Low-risk booking should go through normal supplier confirm and emit RISK_EVALUATED."""
 
     client: AsyncClient = async_client
-    now = now_utc()
 
     # For allow case, reuse existing PR-17 style happy path by creating a booking
     # that uses mock_supplier_v1 adapter and has low amount.

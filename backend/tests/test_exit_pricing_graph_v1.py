@@ -8,6 +8,7 @@ from httpx import AsyncClient
 
 from app.auth import _jwt_secret
 from app.utils import now_utc
+from app.routers.offers import round_money
 
 
 async def _seed_org_user_and_tenant(test_db: Any) -> tuple[str, str]:

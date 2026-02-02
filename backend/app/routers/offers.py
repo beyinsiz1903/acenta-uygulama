@@ -6,6 +6,8 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel, Field
 
+from app.schemas_offers import SupplierWarningOut
+
 from app.auth import get_current_user, require_roles
 from app.config import API_PREFIX
 from app.context.org_context import get_current_org

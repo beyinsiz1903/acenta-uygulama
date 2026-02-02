@@ -24,7 +24,6 @@ from app.services.offers.search_session_service import (
 from app.services.supplier_search_service import search_paximum_offers
 from app.services.suppliers.mock_supplier_service import search_mock_offers
 from app.services.pricing_graph.graph import price_offer_with_graph, PricingGraphResult
-from app.services.supplier_warnings import SupplierWarning, sort_warnings, map_exception_to_warning  # noqa: F401
 
 
 router = APIRouter(prefix=f"{API_PREFIX}/offers", tags=["offers"])

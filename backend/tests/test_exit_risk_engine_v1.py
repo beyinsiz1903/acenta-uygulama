@@ -17,6 +17,7 @@ async def _create_org_user_and_agency_booking(
     *,
     amount: float,
     status_value: str | None = None,
+    applied_markup_pct: float = 0.0,
 ) -> tuple[str, str, str]:
     """Helper to seed org, tenant (agency) and marketplace booking.
 

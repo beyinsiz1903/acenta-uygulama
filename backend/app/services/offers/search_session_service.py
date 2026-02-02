@@ -32,6 +32,7 @@ async def create_search_session(
     tenant_id: Optional[str],
     query: Dict[str, Any],
     offers: List[Dict[str, Any]],
+    pricing_overlay_index: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     now = _utc_now()
     expires_at = now + timedelta(minutes=SEARCH_SESSION_TTL_MINUTES)

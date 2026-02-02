@@ -30,7 +30,7 @@ from app.services.email_outbox import dispatch_pending_emails
 from app.utils import now_utc
 
 # Test configuration
-BACKEND_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://riskaware-b2b.preview.emergentagent.com')
+BACKEND_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://partialresults.preview.emergentagent.com')
 API_BASE = f"{BACKEND_URL}/api"
 
 class FAZ3Ticket3BackendTest:

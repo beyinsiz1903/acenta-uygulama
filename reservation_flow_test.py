@@ -8,7 +8,7 @@ import sys
 from datetime import datetime, timedelta
 
 class ReservationFlowTester:
-    def __init__(self, base_url="https://riskaware-b2b.preview.emergentagent.com"):
+    def __init__(self, base_url="https://partialresults.preview.emergentagent.com"):
         self.base_url = base_url
         self.token = None
         self.tests_run = 0

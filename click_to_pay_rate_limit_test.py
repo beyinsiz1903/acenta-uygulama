@@ -22,7 +22,7 @@ import httpx
 from bson import ObjectId
 
 # Test configuration
-BACKEND_URL = "https://riskaware-b2b.preview.emergentagent.com/api"
+BACKEND_URL = "https://partialresults.preview.emergentagent.com/api"
 ADMIN_EMAIL = "admin@acenta.test"
 ADMIN_PASSWORD = "admin123"
 

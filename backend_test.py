@@ -31,7 +31,7 @@ import httpx
 import respx
 
 # Configuration - Use production URL from frontend/.env
-BASE_URL = "https://riskaware-b2b.preview.emergentagent.com"
+BASE_URL = "https://partialresults.preview.emergentagent.com"
 
 def get_mongo_client():
     """Get MongoDB client for direct database access"""

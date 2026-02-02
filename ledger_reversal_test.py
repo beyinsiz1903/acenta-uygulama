@@ -16,7 +16,7 @@ from typing import Dict, Any
 class LedgerReversalTestInvestigator:
     def __init__(self):
         # Get backend URL from frontend env
-        self.backend_url = "https://riskaware-b2b.preview.emergentagent.com"
+        self.backend_url = "https://partialresults.preview.emergentagent.com"
         self.admin_token = None
         
     async def get_admin_token(self) -> str:

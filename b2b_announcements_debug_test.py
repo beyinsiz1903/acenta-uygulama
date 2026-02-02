@@ -7,7 +7,7 @@ import requests
 import json
 
 # Backend URL from frontend/.env
-BACKEND_URL = "https://riskaware-b2b.preview.emergentagent.com"
+BACKEND_URL = "https://partialresults.preview.emergentagent.com"
 
 def login_admin():
     """Login as admin and return JWT token and user info"""

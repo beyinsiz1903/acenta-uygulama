@@ -298,24 +298,30 @@ async def is_supplier_circuit_open(
                 },
             )
             try:
-                from app.services.audit import write_audit_log
+                from uuid import uuid4
 
-                await write_audit_log(
-                    db,
-                    organization_id=organization_id,
-                    actor={"actor_type": "system"},
-                    request=None,
-                    action="SUPPLIER_CIRCUIT_CLOSED",
-                    target_type="supplier",
-                    target_id=supplier_code,
-                    before={"state": "open"},
-                    after={"state": "closed"},
-                    meta={
-                        "supplier_code": supplier_code,
-                        "previous_state": "open",
-                        "new_state": "closed",
-                        "window_sec": window_sec,
-                    },
+                await db.audit_logs.insert_one(
+                    {
+                        "_id": str(uuid4()),
+                        "organization_id": organization_id,
+                        "actor": {
+                            "actor_type": "system",
+                            "actor_id": "system",
+                            "email": None,
+                            "roles": [],
+                        },
+                        "origin": {},
+                        "action": "SUPPLIER_CIRCUIT_CLOSED",
+                        "target": {"type": "supplier", "id": supplier_code},
+                        "diff": {},
+                        "meta": {
+                            "supplier_code": supplier_code,
+                            "previous_state": "open",
+                            "new_state": "closed",
+                            "window_sec": window_sec,
+                        },
+                        "created_at": now_utc(),
+                    }
                 )
             except Exception:
                 pass

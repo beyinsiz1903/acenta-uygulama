@@ -8,6 +8,9 @@ from pydantic import BaseModel, Field
 
 from app.schemas_offers_legacy import OfferSearchRequest, OfferSearchResponse, SupplierWarningOut
 from app.services.supplier_warnings import SupplierWarning, sort_warnings, map_exception_to_warning
+from uuid import uuid4
+import hashlib
+import json
 
 from app.auth import get_current_user, require_roles
 from app.config import API_PREFIX

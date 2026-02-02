@@ -717,6 +717,22 @@ async def confirm_b2b_booking(
             },
         )
 
+        # Best-effort ops incident for manual risk review
+        try:
+            from app.services.ops_incidents_service import create_risk_review_incident
+
+            await create_risk_review_incident(
+                db,
+                organization_id=org_id,
+                booking_id=booking_id,
+                risk_score=float(risk_result.score),
+                tenant_id=buyer_tenant_id,
+                amount=amount,
+                currency=booking.get("currency") or "",
+            )
+        except Exception:
+            pass
+
         # 202 with standard error envelope
         raise AppError(
             202,

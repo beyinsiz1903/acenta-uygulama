@@ -96,6 +96,14 @@ async def list_incidents(
     page_limit, page_offset = _enforce_pagination(limit, offset)
     page = raw[page_offset : page_offset + page_limit]
 
+    # Optional supplier health enrichment on the page slice
+    page = await attach_supplier_health_badges(
+        db,
+        organization_id=organization_id,
+        incidents=page,
+        include_supplier_health=include_supplier_health,
+    )
+
     items = []
     for d in page:
         src = d.get("source_ref") or {}
@@ -109,6 +117,7 @@ async def list_incidents(
                 "summary": d.get("summary"),
                 "created_at": d.get("created_at"),
                 "source_ref": src_model,
+                "supplier_health": d.get("supplier_health"),
             }
         )
 

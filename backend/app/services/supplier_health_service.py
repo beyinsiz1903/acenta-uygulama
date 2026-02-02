@@ -270,6 +270,59 @@ async def is_supplier_circuit_open(
 
     try:
         now = now_utc()
+
+        # First, attempt an atomic auto-close based on DB state
+        from uuid import uuid4
+
+        result = await db.supplier_health.update_one(
+            {
+                "organization_id": organization_id,
+                "supplier_code": supplier_code,
+                "circuit.state": "open",
+                "circuit.until": {"$lte": now},
+            },
+            {
+                "$set": {
+                    "circuit.state": "closed",
+                    "circuit.opened_at": None,
+                    "circuit.until": None,
+                    "circuit.reason_code": None,
+                    "circuit.consecutive_failures": 0,
+                    "circuit.last_transition_at": now,
+                }
+            },
+        )
+        if result.modified_count == 1:
+            # Exactly-once CLOSED audit
+            try:
+                await db.audit_logs.insert_one(
+                    {
+                        "_id": str(uuid4()),
+                        "organization_id": organization_id,
+                        "actor": {
+                            "actor_type": "system",
+                            "actor_id": "system",
+                            "email": None,
+                            "roles": [],
+                        },
+                        "origin": {},
+                        "action": "SUPPLIER_CIRCUIT_CLOSED",
+                        "target": {"type": "supplier", "id": supplier_code},
+                        "diff": {},
+                        "meta": {
+                            "supplier_code": supplier_code,
+                            "previous_state": "open",
+                            "new_state": "closed",
+                            "window_sec": window_sec,
+                        },
+                        "created_at": now,
+                    }
+                )
+            except Exception:
+                pass
+            return False
+
+        # If we didn't close it just now, read current circuit snapshot
         doc = await db.supplier_health.find_one(
             {"organization_id": organization_id, "supplier_code": supplier_code},
             {"_id": 0},
@@ -282,57 +335,7 @@ async def is_supplier_circuit_open(
         if circuit.state != "open":
             return False
 
-        if circuit.until and now >= circuit.until:
-            # Auto-close and treat as closed (exactly-once via conditional update)
-            from uuid import uuid4
-
-            result = await db.supplier_health.update_one(
-                {
-                    "organization_id": organization_id,
-                    "supplier_code": supplier_code,
-                    "circuit.state": "open",
-                },
-                {
-                    "$set": {
-                        "circuit.state": "closed",
-                        "circuit.opened_at": None,
-                        "circuit.until": None,
-                        "circuit.reason_code": None,
-                        "circuit.consecutive_failures": 0,
-                        "circuit.last_transition_at": now,
-                    }
-                },
-            )
-            if result.modified_count == 1:
-                try:
-                    await db.audit_logs.insert_one(
-                        {
-                            "_id": str(uuid4()),
-                            "organization_id": organization_id,
-                            "actor": {
-                                "actor_type": "system",
-                                "actor_id": "system",
-                                "email": None,
-                                "roles": [],
-                            },
-                            "origin": {},
-                            "action": "SUPPLIER_CIRCUIT_CLOSED",
-                            "target": {"type": "supplier", "id": supplier_code},
-                            "diff": {},
-                            "meta": {
-                                "supplier_code": supplier_code,
-                                "previous_state": "open",
-                                "new_state": "closed",
-                                "window_sec": window_sec,
-                            },
-                            "created_at": now,
-                        }
-                    )
-                except Exception:
-                    pass
-            return False
-
-        # still open and within until
+        # still open and until is either None or in the future
         return True
     except Exception:
         return False

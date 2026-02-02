@@ -4,14 +4,20 @@ const BASE_URL = process.env.E2E_BASE_URL || "http://localhost:3000";
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "muratsutay@hotmail.com";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "murat1903";
 
-async function loginAsAdmin(page) {
+async function loginAsSuperAdmin(page) {
   await page.goto(`${BASE_URL}/login`);
 
-  await page.getByTestId("login-email-input").fill(ADMIN_EMAIL);
-  await page.getByTestId("login-password-input").fill(ADMIN_PASSWORD);
-  await page.getByTestId("login-password-input").press("Enter");
+  const emailInput = page.getByTestId("login-email");
+  const passwordInput = page.getByTestId("login-password");
+  const submitButton = page.getByTestId("login-submit");
 
-  await page.waitForURL("**/app/**", { timeout: 15_000 });
+  await emailInput.fill(ADMIN_EMAIL);
+  await passwordInput.fill(ADMIN_PASSWORD);
+
+  await Promise.all([
+    page.waitForNavigation({ waitUntil: "networkidle" }),
+    submitButton.click(),
+  ]);
 }
 
 // Golden path: list + supplier health + detail drawer

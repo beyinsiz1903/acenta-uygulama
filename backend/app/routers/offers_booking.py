@@ -62,11 +62,10 @@ async def create_booking_from_canonical_offer(
     if not supplier_code or not supplier_offer_id:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="INVALID_CANONICAL_OFFER")
 
-    # Re-evaluate B2B pricing for booking consistency
+    # Re-evaluate B2B pricing for booking consistency using pricing graph
     from app.routers.offers import round_money
-    from app.services.pricing_rules import PricingRulesService
+    from app.services.pricing.graph import price_offer_with_graph, PricingGraphResult
 
-    rules_svc = PricingRulesService(db)
     base_price = offer.get("price") or {}
     base_amount = float(base_price.get("amount") or 0.0)
     currency = base_price.get("currency") or "TRY"
@@ -84,26 +83,30 @@ async def create_booking_from_canonical_offer(
 
     markup_pct = 0.0
     pricing_rule_id = None
-    if check_in_date is not None:
-        winner_rule = await rules_svc.resolve_winner_rule(
-            organization_id=organization_id,
-            agency_id=payload.buyer_tenant_id,
-            product_id=None,
-            product_type="hotel",
-            check_in=check_in_date,
-        )
-        if winner_rule is not None:
-            markup_pct = await rules_svc.resolve_markup_percent(
-                organization_id,
-                agency_id=payload.buyer_tenant_id,
-                product_id=None,
-                product_type="hotel",
-                check_in=check_in_date,
+    graph_result: Optional[PricingGraphResult] = None
+    if check_in_date is not None and base_amount > 0:
+        context = {"check_in": check_in_date, "product_type": "hotel", "product_id": None}
+        try:
+            graph_result = await price_offer_with_graph(
+                db,
+                organization_id=organization_id,
+                buyer_tenant_id=payload.buyer_tenant_id,
+                base_amount=base_amount,
+                currency=currency,
+                context=context,
             )
-            if winner_rule.get("_id") is not None:
-                pricing_rule_id = str(winner_rule.get("_id"))
+        except Exception:
+            graph_result = None
 
-    final_amount = round_money(base_amount * (1 + float(markup_pct) / 100), currency)
+    if graph_result is not None:
+        final_amount = float(graph_result.final_price.get("amount") or 0.0)
+        markup_pct = float(graph_result.applied_total_markup_pct or 0.0)
+        pricing_rule_id = graph_result.pricing_rule_ids[0] if graph_result.pricing_rule_ids else None
+    else:
+        # Fail-open fallback: no markup change
+        final_amount = round_money(base_amount, currency)
+        markup_pct = 0.0
+        pricing_rule_id = None
 
     actor = {
         "actor_type": "user",

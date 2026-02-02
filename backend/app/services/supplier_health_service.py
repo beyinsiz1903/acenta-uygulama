@@ -23,7 +23,7 @@ async def _compute_metrics_from_events(
     Returns (metrics_model, raw_events).
     """
 
-    now = now_utc().replace(tzinfo=None)
+    now = now_utc()
     window_start = now - timedelta(seconds=window_sec)
 
     flt = {

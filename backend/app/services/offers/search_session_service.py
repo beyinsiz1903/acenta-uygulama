@@ -54,6 +54,7 @@ async def create_search_session(
         # Store canonical offers as plain dicts
         "offers": offers,
         "offer_index": offer_index,
+        "pricing_overlay_index": pricing_overlay_index or {},
     }
 
     res = await db.search_sessions.insert_one(doc)

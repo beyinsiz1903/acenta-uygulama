@@ -1,3 +1,3 @@
 # Packaging module for pricing services
 
-# NOTE: Do not import from app.services.pricing here to avoid circular imports.
+from app.services.pricing import calc_price_for_date  # type: ignore[attr-defined]

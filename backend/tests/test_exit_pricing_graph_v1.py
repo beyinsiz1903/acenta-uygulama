@@ -12,12 +12,18 @@ from app.routers.offers import round_money
 
 
 async def _seed_org_user_and_tenant(test_db: Any) -> tuple[str, str]:
-    now = now_utc()
-    org = await test_db.organizations.insert_one(
-        {"name": "Graph Org", "slug": "graph_org", "created_at": now, "updated_at": now}
-    )
-    org_id = str(org.inserted_id)
+    """Reuse default org from seed_default_org_and_users and attach a new tenant.
 
+    The JWT will carry org=default_org_id and user email=agency1@demo.test,
+    which already exists thanks to the global seed fixture.
+    """
+
+    # Default org seeded in conftest has slug="default"
+    org = await test_db.organizations.find_one({"slug": "default"})
+    assert org is not None
+    org_id = str(org["_id"])
+
+    now = now_utc()
     tenant = await test_db.tenants.insert_one(
         {
             "tenant_key": "buyer-tenant-graph",
@@ -32,17 +38,6 @@ async def _seed_org_user_and_tenant(test_db: Any) -> tuple[str, str]:
         }
     )
     tenant_id = str(tenant.inserted_id)
-
-    await test_db.users.insert_one(
-        {
-            "organization_id": org_id,
-            "email": "agent@example.com",
-            "roles": ["agency_agent"],
-            "is_active": True,
-            "created_at": now,
-            "updated_at": now,
-        }
-    )
 
     return org_id, tenant_id
 

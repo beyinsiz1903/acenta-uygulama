@@ -30,13 +30,22 @@ function SupplierHealthBadge({ badge }) {
 
   if (notes.includes("health_not_found")) {
     return (
-      <Badge
-        variant="outline"
-        className="text-[10px] bg-slate-50 text-slate-700 border-slate-200"
-        data-testid="ops-incidents-health-no-health"
-      >
-        NO HEALTH
-      </Badge>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Badge
+              variant="outline"
+              className="text-[10px] bg-slate-50 text-slate-700 border-slate-200"
+              data-testid="ops-incidents-health-no-health"
+            >
+              NO HEALTH
+            </Badge>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="text-[11px]">
+            Health snapshot not found (fail-open).
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     );
   }
 

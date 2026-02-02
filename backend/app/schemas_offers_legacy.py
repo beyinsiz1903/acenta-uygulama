@@ -14,7 +14,7 @@ else:
 
 
 class SupplierWarningOut(BaseModel):
-    scope: str = Field("supplier", const=True)
+    scope: str = "supplier"
     supplier_code: str
     code: str
     message: str

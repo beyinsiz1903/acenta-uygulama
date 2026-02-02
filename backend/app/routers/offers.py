@@ -141,7 +141,13 @@ async def search_offers(
             "guests": payload.adults + payload.children,
             "city": payload.destination,
         }
-        mock_raw = await search_mock_offers(mock_payload)
+        try:
+            mock_raw = await search_mock_offers(mock_payload)
+            # Normalize mock offers into canonical shape
+        except AppError as exc:
+            supplier_warnings.append(map_exception_to_warning("mock", exc))
+            mock_raw = {"offers": [], "supplier": "mock"}
+        
         from app.services.offers.normalizers.mock_normalizer import normalize_mock_search_result as _norm
 
         normalized = await _norm(mock_payload, mock_raw)

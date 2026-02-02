@@ -269,7 +269,7 @@ async def is_supplier_circuit_open(
     """
 
     try:
-        now = now_utc().replace(tzinfo=None)
+        now = now_utc()
         doc = await db.supplier_health.find_one(
             {"organization_id": organization_id, "supplier_code": supplier_code},
             {"_id": 0},

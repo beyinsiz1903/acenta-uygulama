@@ -61,15 +61,24 @@ function SupplierHealthBadge({ badge }) {
     );
   }
 
-  if (badge.circuit_state === "closed") {
+  if (badge.circuit_state === "closed" || (!badge.circuit_state && (!notes || notes.length === 0))) {
     return (
-      <Badge
-        variant="outline"
-        className="text-[10px] bg-emerald-50 text-emerald-900 border-emerald-200"
-        data-testid="ops-incidents-health-closed"
-      >
-        Circuit: CLOSED
-      </Badge>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Badge
+              variant="outline"
+              className="text-[10px] bg-emerald-50 text-emerald-900 border-emerald-200"
+              data-testid="ops-incidents-health-closed"
+            >
+              Circuit: CLOSED
+            </Badge>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="text-[11px]">
+            Circuit is closed; supplier is allowed for routing.
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     );
   }
 

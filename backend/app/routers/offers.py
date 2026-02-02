@@ -113,6 +113,7 @@ async def search_offers(
 
     canonical_offers: List[CanonicalHotelOfferOut] = []  # response models
     supplier_warnings: list[SupplierWarning] = []
+    succeeded_suppliers: set[str] = set()
 
     # Helper to compute B2B overlay using simple pricing rules
     from app.services.pricing_rules import PricingRulesService

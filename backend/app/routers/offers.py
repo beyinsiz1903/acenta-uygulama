@@ -21,9 +21,9 @@ from app.services.offers.search_session_service import (
     find_offer_in_session,
     get_search_session,
 )
-from app.services.supplier_search_service import search_paximum_offers
-from app.services.suppliers.mock_supplier_service import search_mock_offers
 from app.services.pricing_graph.graph import price_offer_with_graph, PricingGraphResult
+import app.services.supplier_search_service as supplier_search_service
+import app.services.suppliers.mock_supplier_service as mock_supplier_service
 
 
 router = APIRouter(prefix=f"{API_PREFIX}/offers", tags=["offers"])
